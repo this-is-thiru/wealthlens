@@ -5,42 +5,26 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-
         <groupId>org.springframework.boot</groupId>
-
         <artifactId>spring-boot-starter-parent</artifactId>
-
-        <version>4.0.0</version>
-
+        <version>4.1.0</version>
         <relativePath/>
-
     </parent>
 
     <groupId>com.thiru</groupId>
-
     <artifactId>wealthlens</artifactId>
-
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-
     <name>wealthlens</name>
-
     <description>WealthLens</description>
 
     <properties>
-
         <java.version>25</java.version>
-
         <jjwt.version>0.13.0</jjwt.version>
-
         <spring-modulith.version>2.1.0</spring-modulith.version>
-
         <poi-ooxml.version>5.5.1</poi-ooxml.version>
-
         <itextpdf.version>5.5.13.4</itextpdf.version>
-
         <flying-saucer-pdf.version>10.0.6</flying-saucer-pdf.version>
-
     </properties>
 
     <dependencyManagement>
@@ -52,267 +36,125 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- JWT (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+
+            <!-- Apache POI (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi-ooxml.version}</version>
+            </dependency>
+
+            <!-- PDF (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>org.xhtmlrenderer</groupId>
+                <artifactId>flying-saucer-pdf</artifactId>
+                <version>${flying-saucer-pdf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>itextpdf</artifactId>
+                <version>${itextpdf.version}</version>
+            </dependency>
+
+            <!-- Testcontainers (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-mongodb</artifactId>
+                <version>2.0.5</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-junit-jupiter</artifactId>
+                <version>2.0.5</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- REST Assured (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>io.rest-assured</groupId>
+                <artifactId>rest-assured</artifactId>
+                <version>5.5.7</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- jspecify (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>org.jspecify</groupId>
+                <artifactId>jspecify</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+
+            <!-- Spring Modulith (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-starter-core</artifactId>
+                <version>${spring-modulith.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-starter-test</artifactId>
+                <version>${spring-modulith.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Lombok (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.46</version>
+                <scope>provided</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-
+        <!-- Only lombok is truly common to all modules -->
         <dependency>
-
-            <groupId>org.springframework.boot</groupId>
-
-            <artifactId>spring-boot-starter-data-mongodb</artifactId>
-
-        </dependency>
-
-        <dependency>
-
             <groupId>org.projectlombok</groupId>
-
             <artifactId>lombok</artifactId>
-
             <scope>provided</scope>
-
         </dependency>
-
-        <dependency>
-
-            <groupId>org.springframework.boot</groupId>
-
-            <artifactId>spring-boot-starter-webmvc</artifactId>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.springframework.boot</groupId>
-
-            <artifactId>spring-boot-starter-test</artifactId>
-
-            <scope>test</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.springframework.boot</groupId>
-
-            <artifactId>spring-boot-starter-security</artifactId>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.springframework.security</groupId>
-
-            <artifactId>spring-security-test</artifactId>
-
-            <scope>test</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>io.jsonwebtoken</groupId>
-
-            <artifactId>jjwt-api</artifactId>
-
-            <version>${jjwt.version}</version>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>io.jsonwebtoken</groupId>
-
-            <artifactId>jjwt-impl</artifactId>
-
-            <version>${jjwt.version}</version>
-
-            <scope>runtime</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>io.jsonwebtoken</groupId>
-
-            <artifactId>jjwt-jackson</artifactId>
-
-            <version>${jjwt.version}</version>
-
-            <scope>runtime</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.apache.poi</groupId>
-
-            <artifactId>poi-ooxml</artifactId>
-
-            <version>${poi-ooxml.version}</version>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>junit</groupId>
-
-            <artifactId>junit</artifactId>
-
-            <scope>test</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.junit.jupiter</groupId>
-
-            <artifactId>junit-jupiter</artifactId>
-
-
-            <scope>test</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.mockito</groupId>
-
-            <artifactId>mockito-junit-jupiter</artifactId>
-
-            <scope>test</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.springframework.boot</groupId>
-
-            <artifactId>spring-boot-starter-validation</artifactId>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.springframework.boot</groupId>
-
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.xhtmlrenderer</groupId>
-
-            <artifactId>flying-saucer-pdf</artifactId>
-
-            <version>${flying-saucer-pdf.version}</version>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>com.itextpdf</groupId>
-
-            <artifactId>itextpdf</artifactId>
-
-            <version>${itextpdf.version}</version>
-
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.testcontainers</groupId>
-
-            <artifactId>testcontainers-mongodb</artifactId>
-
-            <version>2.0.5</version>
-
-            <scope>test</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>org.testcontainers</groupId>
-
-            <artifactId>testcontainers-junit-jupiter</artifactId>
-
-            <version>2.0.5</version>
-
-            <scope>test</scope>
-
-        </dependency>
-
-        <dependency>
-
-            <groupId>io.rest-assured</groupId>
-
-            <artifactId>rest-assured</artifactId>
-
-            <version>5.5.7</version>
-
-            <scope>test</scope>
-
-        </dependency>
-
-        <dependency>
-            <groupId>org.jspecify</groupId>
-            <artifactId>jspecify</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.modulith</groupId>
-            <artifactId>spring-modulith-starter-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.modulith</groupId>
-            <artifactId>spring-modulith-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
-
         <finalName>wealthlens</finalName>
-
         <plugins>
-
             <plugin>
-
                 <groupId>org.springframework.boot</groupId>
-
                 <artifactId>spring-boot-maven-plugin</artifactId>
-
             </plugin>
 
             <plugin>
-
                 <groupId>org.apache.maven.plugins</groupId>
-
                 <artifactId>maven-compiler-plugin</artifactId>
-
                 <configuration>
-
                     <annotationProcessorPaths>
-
                         <path>
-
                             <groupId>org.projectlombok</groupId>
-
                             <artifactId>lombok</artifactId>
-
                         </path>
-
                     </annotationProcessorPaths>
-
                 </configuration>
-
             </plugin>
 
             <plugin>
@@ -345,9 +187,7 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
-
     </build>
 
     <modules>
