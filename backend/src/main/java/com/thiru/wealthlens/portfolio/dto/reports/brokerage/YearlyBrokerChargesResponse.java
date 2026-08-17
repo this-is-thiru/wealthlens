@@ -1,11 +1,10 @@
 package com.thiru.wealthlens.portfolio.dto.reports.brokerage;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import java.time.Month;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

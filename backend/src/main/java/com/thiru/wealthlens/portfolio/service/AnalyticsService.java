@@ -8,10 +8,8 @@ import com.thiru.wealthlens.portfolio.dto.analytics.PortfolioSummaryResponse;
 import com.thiru.wealthlens.portfolio.dto.analytics.StockPerformance;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrResponse;
-import com.thiru.wealthlens.shared.util.calculator.XirrCalculator;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
-import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
@@ -21,17 +19,17 @@ import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.stereotype.Service;
-
+import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.util.calculator.XirrCalculator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.stereotype.Service;
 
 @Log4j2
 @Service

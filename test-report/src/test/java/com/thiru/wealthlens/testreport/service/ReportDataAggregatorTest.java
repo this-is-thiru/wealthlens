@@ -1,19 +1,18 @@
 package com.thiru.wealthlens.testreport.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+
 import com.thiru.wealthlens.testreport.dto.ExecutionSummary;
 import com.thiru.wealthlens.testreport.dto.TestClassSummary;
 import com.thiru.wealthlens.testreport.parser.JacksonXmlSurefireParser;
 import com.thiru.wealthlens.testreport.parser.xml.SurefireTestSuite;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class ReportDataAggregatorTest {
 

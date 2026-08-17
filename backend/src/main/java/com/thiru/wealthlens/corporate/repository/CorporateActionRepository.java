@@ -1,14 +1,10 @@
 package com.thiru.wealthlens.corporate.repository;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
-
-import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
-import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 public interface CorporateActionRepository extends MongoRepository<CorporateActionEntity, String> {
     List<CorporateActionEntity> findByType(CorporateActionType type);

@@ -1,10 +1,9 @@
 package com.thiru.wealthlens.portfolio.entity.model;
 
+import java.time.LocalDateTime;
 import lombok.Data;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.time.LocalDateTime;
 
 @Data
 public class BrokerChargesReport {

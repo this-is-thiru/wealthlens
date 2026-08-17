@@ -1,21 +1,20 @@
 package com.thiru.wealthlens.integration;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.thiru.wealthlens.finance.dto.FinanceRequest;
 import com.thiru.wealthlens.finance.dto.FinanceResponse;
 import com.thiru.wealthlens.finance.dto.enums.CalculationType;
 import com.thiru.wealthlens.finance.service.FinancesService;
 import io.restassured.RestAssured;
+import java.io.IOException;
+import java.net.URI;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.net.URI;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class FinancesIntegrationTest extends AbstractIntegrationTest {
 

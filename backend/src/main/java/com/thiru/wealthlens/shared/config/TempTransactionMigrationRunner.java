@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.config;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.bson.Document;
@@ -7,8 +8,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * On startup, migrates any remaining documents from the legacy

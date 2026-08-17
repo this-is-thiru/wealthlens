@@ -1,17 +1,26 @@
 package com.thiru.wealthlens.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
-import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.brokercharges.dto.enums.BrokerageAggregatorType;
-import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.brokercharges.entity.BrokerCharges;
 import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
-import com.thiru.wealthlens.portfolio.entity.model.BrokerageCharges;
 import com.thiru.wealthlens.brokercharges.repository.UserBrokerChargesRepository;
 import com.thiru.wealthlens.brokercharges.service.BrokerChargeService;
 import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
+import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.entity.model.BrokerageCharges;
+import com.thiru.wealthlens.shared.dto.user.UserMail;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,16 +28,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserBrokerChargeServiceTest {

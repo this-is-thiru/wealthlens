@@ -1,0 +1,20 @@
+{
+  "taxYear": "2025-26",
+  "status": "ACTIVE",
+  "sourceReference": "Income Tax Act 1961, Rule 3; CBDT Circulars",
+  "carLeq1600ccOrEvNoDriver": 5000,
+  "carLeq1600ccOrEvWithDriver": 8000,
+  "carGt1600ccNoDriver": 7000,
+  "carGt1600ccWithDriver": 10000,
+  "driverPerquisiteMonthly": 3000,
+  "mealPerMealAmount": 200,
+  "mealMealsPerDay": 2,
+  "mealWorkingDaysPerMonth": 22,
+  "giftAnnualLimit": 15000,
+  "concessionalLoanExemptLimit": 200000,
+  "accommodationMetroPercent": 10.0,
+  "accommodationLargeCityPercent": 7.5,
+  "accommodationOtherPercent": 5.0,
+  "employerSchoolMonthlyPerChild": 3000,
+  "carDepreciationRatePercent": 10.0
+}

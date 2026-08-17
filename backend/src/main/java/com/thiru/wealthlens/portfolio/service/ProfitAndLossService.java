@@ -1,20 +1,16 @@
 package com.thiru.wealthlens.portfolio.service;
-import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
-import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
-
 import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
+import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
+import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
+import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
+import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
-import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
-import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
-import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
-import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
-import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
 import com.thiru.wealthlens.portfolio.entity.model.BrokerChargesReport;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.FortnightReport;
@@ -24,20 +20,21 @@ import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.entity.model.ReportModel;
 import com.thiru.wealthlens.portfolio.entity.model.YearlyBrokerCharges;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.Map;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Accumulates realised profit/loss figures per financial year. Class-level

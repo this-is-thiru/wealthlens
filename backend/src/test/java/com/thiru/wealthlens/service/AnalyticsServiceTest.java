@@ -1,5 +1,8 @@
 package com.thiru.wealthlens.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.thiru.wealthlens.portfolio.dto.analytics.AssetAllocationResponse;
 import com.thiru.wealthlens.portfolio.dto.analytics.MarketPriceEntry;
 import com.thiru.wealthlens.portfolio.dto.analytics.PerformanceMetricsResponse;
@@ -8,29 +11,25 @@ import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrResponse;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
-import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
-import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
+import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
-import com.thiru.wealthlens.portfolio.service.AnalyticsService;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
+import com.thiru.wealthlens.portfolio.service.AnalyticsService;
+import com.thiru.wealthlens.shared.dto.user.UserMail;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AnalyticsServiceTest {

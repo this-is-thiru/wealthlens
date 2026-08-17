@@ -1,9 +1,8 @@
 package com.thiru.wealthlens.portfolio.service;
 
 //import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor

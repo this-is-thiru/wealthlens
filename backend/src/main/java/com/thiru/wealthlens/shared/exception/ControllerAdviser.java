@@ -3,6 +3,7 @@ package com.thiru.wealthlens.shared.exception;
 
 import com.thiru.wealthlens.shared.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.Instant;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-
-import java.time.Instant;
 
 @Log4j2
 @RestControllerAdvice
@@ -33,10 +32,16 @@ public class ControllerAdviser {
         return buildErrorResponse(HttpStatus.BAD_REQUEST.value(), message, request);
     }
 
-    @ExceptionHandler({AccessDeniedException.class, BadCredentialsException.class})
+    @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex, HttpServletRequest request) {
         log(ex);
         return buildErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(Exception ex, HttpServletRequest request) {
+        log(ex);
+        return buildErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

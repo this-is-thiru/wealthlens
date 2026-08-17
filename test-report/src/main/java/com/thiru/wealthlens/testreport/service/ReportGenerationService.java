@@ -1,14 +1,13 @@
 package com.thiru.wealthlens.testreport.service;
 
 import com.thiru.wealthlens.testreport.dto.ExecutionSummary;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 @Slf4j
 @RequiredArgsConstructor

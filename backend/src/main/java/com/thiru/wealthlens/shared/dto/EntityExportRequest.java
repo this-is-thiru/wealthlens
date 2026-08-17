@@ -1,11 +1,10 @@
 package com.thiru.wealthlens.shared.dto;
 
 import com.thiru.wealthlens.shared.entity.query.QueryFilter;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

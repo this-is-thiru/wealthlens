@@ -1,8 +1,7 @@
 package com.thiru.wealthlens.portfolio.service.parser.model;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface RequestParser<RequestType> {
 

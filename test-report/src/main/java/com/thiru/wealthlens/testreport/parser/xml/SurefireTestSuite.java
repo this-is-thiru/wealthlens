@@ -1,12 +1,11 @@
 package com.thiru.wealthlens.testreport.parser.xml;
 
+import java.util.List;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @JacksonXmlRootElement(localName = "testsuite")
 @Data

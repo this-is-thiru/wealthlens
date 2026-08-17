@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.portfolio.migration;
 
-import com.thiru.wealthlens.shared.config.TradeOutcomeMigrationRunner;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -9,6 +8,14 @@ import com.thiru.wealthlens.portfolio.service.TradeMatchingService;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.BuyLot;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.MatchedTrade;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.SellRequest;
+import com.thiru.wealthlens.shared.config.TradeOutcomeMigrationRunner;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -17,14 +24,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Transaction-based migration that rebuilds TradeOutcomeEntity directly from

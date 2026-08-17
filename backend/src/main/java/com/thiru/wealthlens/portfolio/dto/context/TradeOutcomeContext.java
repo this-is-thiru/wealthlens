@@ -1,15 +1,12 @@
 package com.thiru.wealthlens.portfolio.dto.context;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
-
-import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
-import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
-import lombok.*;
-
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import java.time.LocalDate;
 import java.util.List;
+import lombok.*;
 
 @Data
 @Getter

@@ -3,9 +3,10 @@ package com.thiru.wealthlens.insurance.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.insurance.dto.enums.InsuranceType;
 import com.thiru.wealthlens.insurance.dto.enums.PolicyType;
+import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,8 +15,6 @@ import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-
-import java.util.List;
 
 @Document(value = "insurances")
 @AllArgsConstructor

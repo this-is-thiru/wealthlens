@@ -2,12 +2,11 @@ package com.thiru.wealthlens.shared.entity.query;
 
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Getter;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 public class QueryBuilder {

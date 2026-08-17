@@ -1,8 +1,8 @@
 package com.thiru.wealthlens.testreport.parser.xml;
 
-import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 @Data
 @NoArgsConstructor

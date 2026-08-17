@@ -1,15 +1,14 @@
 package com.thiru.wealthlens.util.calculator;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.thiru.wealthlens.portfolio.dto.analytics.CashFlow;
 import com.thiru.wealthlens.shared.util.calculator.XirrCalculator;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class XirrCalculatorTest {

@@ -1,18 +1,17 @@
 package com.thiru.wealthlens.integration;
 
-import com.thiru.wealthlens.shared.dto.user.UserMail;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class MongoTemplateIntegrationTest extends AbstractIntegrationTest {
 

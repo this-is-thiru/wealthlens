@@ -1,13 +1,10 @@
 package com.thiru.wealthlens.portfolio.entity.model;
-import com.thiru.wealthlens.portfolio.entity.model.YearlyBrokerCharges;
-
+import java.io.Serializable;
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor(staticName = "empty")

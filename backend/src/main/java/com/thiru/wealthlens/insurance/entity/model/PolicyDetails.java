@@ -1,9 +1,8 @@
 package com.thiru.wealthlens.insurance.entity.model;
 
+import java.time.LocalDate;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.time.LocalDate;
 
 @Data
 public class PolicyDetails {

@@ -5,11 +5,10 @@ import com.thiru.wealthlens.shared.dto.InputRecords;
 import com.thiru.wealthlens.shared.dto.enums.ExcelDataType;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import org.springframework.web.multipart.MultipartFile;
 
 public abstract class AbstractRequestParser<RequestType> implements RequestParser<RequestType> {
 

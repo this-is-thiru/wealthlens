@@ -1,0 +1,16 @@
+[
+  { "allowanceCode": "80C", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "annualLimitFixed": 150000, "limitFormula": "min(actual_investment, 150000)", "status": "ACTIVE" },
+  { "allowanceCode": "80D", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "annualLimitFixed": 25000, "status": "ACTIVE" },
+  { "allowanceCode": "80CCD_1B", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "annualLimitFixed": 50000, "status": "ACTIVE" },
+  { "allowanceCode": "24B", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "annualLimitFixed": 200000, "status": "ACTIVE" },
+  { "allowanceCode": "CHILDREN_EDUCATION", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "monthlyLimitFixed": 3000, "annualLimitFixed": 72000, "status": "ACTIVE" },
+  { "allowanceCode": "HOSTEL_ALLOWANCE", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "monthlyLimitFixed": 9000, "annualLimitFixed": 216000, "status": "ACTIVE" },
+  { "allowanceCode": "EMPLOYER_PF", "taxYear": "2025-26", "regimeType": "NEW_REGIME", "ratePercent": 12.0, "status": "ACTIVE" },
+  { "allowanceCode": "EMPLOYER_PF", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "ratePercent": 12.0, "status": "ACTIVE" },
+  { "allowanceCode": "NPS_EMPLOYER", "taxYear": "2025-26", "regimeType": "NEW_REGIME", "employerType": "GOVT", "ratePercent": 14.0, "limitFormula": "min(0.14 * (basic + da), actual_nps)", "status": "ACTIVE" },
+  { "allowanceCode": "NPS_EMPLOYER", "taxYear": "2025-26", "regimeType": "NEW_REGIME", "employerType": "PSU", "ratePercent": 14.0, "limitFormula": "min(0.14 * (basic + da), actual_nps)", "status": "ACTIVE" },
+  { "allowanceCode": "NPS_EMPLOYER", "taxYear": "2025-26", "regimeType": "NEW_REGIME", "employerType": "PRIVATE", "ratePercent": 14.0, "limitFormula": "min(0.14 * (basic + da), actual_nps)", "status": "ACTIVE" },
+  { "allowanceCode": "NPS_EMPLOYER", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "employerType": "GOVT", "ratePercent": 14.0, "limitFormula": "min(0.14 * (basic + da), actual_nps)", "status": "ACTIVE" },
+  { "allowanceCode": "NPS_EMPLOYER", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "employerType": "PSU", "ratePercent": 14.0, "limitFormula": "min(0.14 * (basic + da), actual_nps)", "status": "ACTIVE" },
+  { "allowanceCode": "NPS_EMPLOYER", "taxYear": "2025-26", "regimeType": "OLD_REGIME", "employerType": "PRIVATE", "ratePercent": 10.0, "limitFormula": "min(0.10 * (basic + da), actual_nps)", "status": "ACTIVE" }
+]

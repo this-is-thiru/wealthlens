@@ -1,11 +1,9 @@
 package com.thiru.wealthlens.insurance.dto;
 
-import java.util.List;
-
 import com.thiru.wealthlens.insurance.dto.enums.InsuranceType;
 import com.thiru.wealthlens.insurance.dto.enums.PolicyType;
 import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
-
+import java.util.List;
 import lombok.Data;
 
 @Data

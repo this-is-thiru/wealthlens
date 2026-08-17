@@ -7,15 +7,13 @@ import com.thiru.wealthlens.testreport.dto.TestClassSummary;
 import com.thiru.wealthlens.testreport.dto.TestStatus;
 import com.thiru.wealthlens.testreport.parser.xml.SurefireTestCase;
 import com.thiru.wealthlens.testreport.parser.xml.SurefireTestSuite;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor

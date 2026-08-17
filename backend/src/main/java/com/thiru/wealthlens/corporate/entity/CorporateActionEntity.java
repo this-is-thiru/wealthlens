@@ -1,12 +1,10 @@
 package com.thiru.wealthlens.corporate.entity;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.model.DemergerDetail;
-import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
-
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.corporate.entity.model.DemergerDetail;
+import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,8 +13,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-
-import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor

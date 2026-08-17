@@ -1,9 +1,10 @@
 package com.thiru.wealthlens.portfolio.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,8 +13,6 @@ import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-
-import java.time.LocalDateTime;
 
 @Document(value = "profit_and_loss")
 @AllArgsConstructor

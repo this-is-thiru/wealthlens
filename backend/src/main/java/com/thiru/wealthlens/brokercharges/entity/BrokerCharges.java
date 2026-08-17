@@ -4,10 +4,11 @@ package com.thiru.wealthlens.brokercharges.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.entity.model.BrokerageCharges;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.portfolio.entity.model.BrokerageCharges;
+import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,8 +18,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-
-import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor

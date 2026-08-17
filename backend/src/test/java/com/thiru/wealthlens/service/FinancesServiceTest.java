@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.thiru.wealthlens.finance.dto.FinanceRequest;
 import com.thiru.wealthlens.finance.dto.FinanceResponse;
 import com.thiru.wealthlens.finance.dto.enums.CalculationType;
@@ -8,8 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class FinancesServiceTest {

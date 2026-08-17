@@ -3,6 +3,11 @@ package com.thiru.wealthlens.integration;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.restassured.RestAssured;
+import java.util.Base64;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import javax.crypto.SecretKey;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,12 +20,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
-
-import javax.crypto.SecretKey;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration-test")
@@ -72,7 +71,9 @@ public abstract class AbstractIntegrationTest {
         mongoTemplate.getDb().getCollection("insurances").drop();
         mongoTemplate.getDb().getCollection("broker_charges").drop();
         mongoTemplate.getDb().getCollection("user_broker_charges").drop();
-        mongoTemplate.getDb().getCollection("asset_management_details").drop();
+
+        mongoTemplate.getDb().getCollection("salary_profiles").drop();
+        mongoTemplate.getDb().getCollection("tax_computations").drop();
     }
 
     protected String generateToken(String email) {

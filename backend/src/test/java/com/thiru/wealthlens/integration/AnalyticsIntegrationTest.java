@@ -1,5 +1,8 @@
 package com.thiru.wealthlens.integration;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.thiru.wealthlens.portfolio.dto.analytics.MarketPriceEntry;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -14,6 +17,10 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import io.restassured.RestAssured;
+import java.io.IOException;
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,14 +30,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.net.URI;
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
 

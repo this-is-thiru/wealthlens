@@ -6,15 +6,14 @@ import com.thiru.wealthlens.testreport.parser.xml.SurefireTestSuite;
 import com.thiru.wealthlens.testreport.service.ReportDataAggregator;
 import com.thiru.wealthlens.testreport.service.ReportGenerationService;
 import com.thiru.wealthlens.testreport.template.ThymeleafTemplateEngineFactory;
-import lombok.extern.slf4j.Slf4j;
-import org.thymeleaf.TemplateEngine;
-
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.thymeleaf.TemplateEngine;
 
 @Slf4j
 public class TestReportApplication {

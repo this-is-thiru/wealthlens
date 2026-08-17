@@ -1,15 +1,14 @@
 package com.thiru.wealthlens.portfolio.service;
 
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
-import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
+import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @Log4j2

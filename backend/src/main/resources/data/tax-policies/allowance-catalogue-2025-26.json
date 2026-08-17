@@ -1,0 +1,1510 @@
+{
+  "items": [
+    {
+      "code": "HRA",
+      "displayName": "House Rent Allowance",
+      "shortName": "HRA",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": true,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(actual_hra, 0.5 * (basic + da), rent_paid - 0.1 * (basic + da))",
+      "itSection": "Section 10(13A)",
+      "itActReference": "Rule 2A",
+      "description": "Allowance granted to meet expenditure incurred on payment of rent for accommodation",
+      "whyItMatters": "Can significantly reduce taxable salary for employees paying rent",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Submit rent receipts and landlord PAN declaration to HR",
+      "hrAskTemplate": "I would like to opt for HRA exemption. I am paying rent of Rs [amount] per month for accommodation at [address]. Please advise the process to submit documents.",
+      "whatIfHrSaysNo": "Cannot claim via ITR as it requires employer certificate. Consider negotiating as part of salary restructuring.",
+      "documentsRequired": [
+        "Rent receipts",
+        "Landlord PAN (if rent > 8333/month)",
+        "Rent agreement"
+      ],
+      "documentsToKeep": [
+        " rent receipts for 5 years",
+        "Landlord PAN copy",
+        "Rent agreement copy"
+      ],
+      "eligibilityConditions": [
+        "Must be paying rent",
+        "Accommodation must not be owned by employee/spouse/HUF",
+        "Employee must not receive accommodation from employer"
+      ],
+      "commonMistakes": [
+        "Not submitting rent receipts on time",
+        "Forgetting to claim metro/non-metro deduction",
+        "Not updating HRA when rent changes"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "LTA",
+      "displayName": "Leave Travel Allowance",
+      "shortName": "LTA",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "actual_expense (2 trips in a block of 4 years, economy class)",
+      "itSection": "Section 10(5)",
+      "itActReference": "Rule 2B",
+      "description": "Exemption for travel expenses incurred while on leave to anywhere in India",
+      "whyItMatters": "Tax-free exemption for actual travel costs, capped at economy class",
+      "availabilityPath": "BOTH",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Submit travel tickets and boarding passes after the trip",
+      "hrAskTemplate": "I intend to claim LTA for my trip to [destination]. Please provide the claim form and list of required documents.",
+      "whatIfHrSaysNo": "Can claim in ITR using Form 10BB if employer certificate not available",
+      "documentsRequired": [
+        "Travel tickets",
+        "Boarding passes",
+        "Hotel bills"
+      ],
+      "documentsToKeep": [
+        "Travel tickets for 5 years",
+        " boarding passes"
+      ],
+      "eligibilityConditions": [
+        "Must be a salaried employee",
+        "Travel must be within India",
+        "Must actually travel",
+        "Economy class for flights"
+      ],
+      "commonMistakes": [
+        "Claiming for international travel",
+        "Not using block year correctly",
+        "Not preserving boarding passes"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "NPS_EMPLOYER",
+      "displayName": "National Pension System - Employer Contribution",
+      "shortName": "NPS Employer",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(0.14 * (basic + da), actual_nps)",
+      "itSection": "Section 80CCD(2)",
+      "itActReference": "Section 80CCD(2)",
+      "description": "Employer contribution to NPS, exempt up to 10% of salary (basic+DA) for private sector, 14% for government",
+      "whyItMatters": "Tax-free employer contribution reduces taxable income significantly",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "MEDIUM",
+      "howToAvailViaHr": "NPS must be set up; employer contributes directly to NPS account",
+      "hrAskTemplate": "I would like to contribute to NPS. Please set up employer contribution to my NPS account.",
+      "whatIfHrSaysNo": "Cannot claim via ITR - requires employer to contribute",
+      "documentsRequired": [
+        "NPS account details",
+        "PRAN card"
+      ],
+      "documentsToKeep": [
+        "NPS statements",
+        "Annual contribution certificates"
+      ],
+      "eligibilityConditions": [
+        "Must have NPS account",
+        "Employer must agree to contribute",
+        "Contribution must be in NPS Tier-I"
+      ],
+      "commonMistakes": [
+        "Not knowing the 10%/14% cap",
+        "Not reconciling with Form 16"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "NPS_EMPLOYER",
+      "displayName": "National Pension System - Employer Contribution",
+      "shortName": "NPS Employer",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(0.14 * (basic + da), actual_nps)",
+      "itSection": "Section 80CCD(2)",
+      "itActReference": "Section 80CCD(2)",
+      "description": "Employer contribution to NPS, exempt up to 10% of salary (basic+DA) for private sector, 14% for government",
+      "whyItMatters": "Tax-free employer contribution reduces taxable income significantly",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "MEDIUM",
+      "howToAvailViaHr": "NPS must be set up; employer contributes directly to NPS account",
+      "hrAskTemplate": "I would like to contribute to NPS. Please set up employer contribution to my NPS account.",
+      "whatIfHrSaysNo": "Cannot claim via ITR - requires employer to contribute",
+      "documentsRequired": [
+        "NPS account details",
+        "PRAN card"
+      ],
+      "documentsToKeep": [
+        "NPS statements",
+        "Annual contribution certificates"
+      ],
+      "eligibilityConditions": [
+        "Must have NPS account",
+        "Employer must agree to contribute",
+        "Contribution must be in NPS Tier-I"
+      ],
+      "commonMistakes": [
+        "Not knowing the 10%/14% cap",
+        "Not reconciling with Form 16"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "NPS_SELF",
+      "displayName": "National Pension System - Self Contribution",
+      "shortName": "NPS Self (80CCD1B)",
+      "category": "DEDUCTION",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 50000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(actual_contribution, 50000)",
+      "itSection": "Section 80CCD(1B)",
+      "itActReference": "Section 80CCD(1B)",
+      "description": "Additional deduction for self-contribution to NPS, over and above 80C limit",
+      "whyItMatters": "Extra Rs 50,000 deduction for old regime taxpayers",
+      "availabilityPath": "SELF_DECLARE_ITR",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": "Claim directly in ITR; ensure NPS is registered",
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": "Claim directly in ITR",
+      "documentsRequired": [
+        "NPS contribution statement",
+        "Form 16"
+      ],
+      "documentsToKeep": [
+        "NPS annual statements",
+        "Contribution receipts"
+      ],
+      "eligibilityConditions": [
+        "Must have NPS account",
+        "Contribution must be to NPS Tier-I"
+      ],
+      "commonMistakes": [
+        "Confusing with 80C NPS limit",
+        "Not claiming over 80C ceiling"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "MEAL_VOUCHER",
+      "displayName": "Meal Vouchers / Food Coupons",
+      "shortName": "Meal Voucher",
+      "category": "PERQUISITE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": 105600,
+      "monthlyLimitFixed": 8800,
+      "limitFormula": "min(actual_meal_voucher, 8800 * 12)",
+      "itSection": "Section 10(17)",
+      "itActReference": "Rule 3(7)(i)",
+      "description": "Meal vouchers exempt up to Rs 200 per meal, 2 meals per day = Rs 8800/month",
+      "whyItMatters": "Fully exempt up to limit; employer-provided meals are a tax-efficient benefit",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Opt in through HR during annual benefits enrollment",
+      "hrAskTemplate": "I would like to opt for meal vouchers as a tax-saving benefit. Please advise the process.",
+      "whatIfHrSaysNo": "Cannot claim via ITR; consider Sodexo/Food wallets as alternative",
+      "documentsRequired": [],
+      "documentsToKeep": [
+        "Meal voucher monthly statements"
+      ],
+      "eligibilityConditions": [
+        "Employer must offer the benefit",
+        "Must be in form of meal vouchers, not cash"
+      ],
+      "commonMistakes": [
+        "Exceeding Rs 200 per meal limit",
+        "Confusing with employer-provided free meals"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "MEAL_VOUCHER",
+      "displayName": "Meal Vouchers / Food Coupons",
+      "shortName": "Meal Voucher",
+      "category": "PERQUISITE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": 105600,
+      "monthlyLimitFixed": 8800,
+      "limitFormula": "min(actual_meal_voucher, 8800 * 12)",
+      "itSection": "Section 10(17)",
+      "itActReference": "Rule 3(7)(i)",
+      "description": "Meal vouchers exempt up to Rs 200 per meal, 2 meals per day = Rs 8800/month",
+      "whyItMatters": "Fully exempt up to limit; employer-provided meals are a tax-efficient benefit",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Opt in through HR during annual benefits enrollment",
+      "hrAskTemplate": "I would like to opt for meal vouchers as a tax-saving benefit. Please advise the process.",
+      "whatIfHrSaysNo": "Cannot claim via ITR; consider Sodexo/Food wallets as alternative",
+      "documentsRequired": [],
+      "documentsToKeep": [
+        "Meal voucher monthly statements"
+      ],
+      "eligibilityConditions": [
+        "Employer must offer the benefit",
+        "Must be in form of meal vouchers, not cash"
+      ],
+      "commonMistakes": [
+        "Exceeding Rs 200 per meal limit",
+        "Confusing with employer-provided free meals"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "CAR_PERQUISITE",
+      "displayName": "Car Perquisite (Employer-provided)",
+      "shortName": "Car Perquisite",
+      "category": "PERQUISITE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "As per rules: <=1600cc no driver Rs 5000/mo, <=1600cc with driver Rs 8000/mo, >1600cc no driver Rs 7000/mo, >1600cc with driver Rs 10000/mo",
+      "itSection": "Rule 3",
+      "itActReference": "Rule 3(1)(i)",
+      "description": "Valuation of employer-provided car. EV treated as <=1600cc bucket.",
+      "whyItMatters": "Can be tax-efficient if employer provides car; driver valuation is separate",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "EMPLOYER_DISCRETION",
+      "howToAvailViaHr": "Negotiate car as part of CTC; ensure ownership is clear (employer-owned vs leased)",
+      "hrAskTemplate": "I would like to discuss car benefit as part of my salary restructuring. Please share the company car policy.",
+      "whatIfHrSaysNo": "Cannot claim via ITR; explore leased car options",
+      "documentsRequired": [
+        "Car details (make, model, cc)",
+        "Ownership proof"
+      ],
+      "documentsToKeep": [
+        "Car policy documents",
+        "Driver salary Slips if applicable"
+      ],
+      "eligibilityConditions": [
+        "Employer must provide car",
+        "Rules depend on engine capacity and ownership"
+      ],
+      "commonMistakes": [
+        "Not valuing driver separately",
+        "Confusing leased vs employer-owned treatment"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "CAR_PERQUISITE",
+      "displayName": "Car Perquisite (Employer-provided)",
+      "shortName": "Car Perquisite",
+      "category": "PERQUISITE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "As per rules: <=1600cc no driver Rs 5000/mo, <=1600cc with driver Rs 8000/mo, >1600cc no driver Rs 7000/mo, >1600cc with driver Rs 10000/mo",
+      "itSection": "Rule 3",
+      "itActReference": "Rule 3(1)(i)",
+      "description": "Valuation of employer-provided car. EV treated as <=1600cc bucket.",
+      "whyItMatters": "Can be tax-efficient if employer provides car; driver valuation is separate",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "EMPLOYER_DISCRETION",
+      "howToAvailViaHr": "Negotiate car as part of CTC; ensure ownership is clear (employer-owned vs leased)",
+      "hrAskTemplate": "I would like to discuss car benefit as part of my salary restructuring. Please share the company car policy.",
+      "whatIfHrSaysNo": "Cannot claim via ITR; explore leased car options",
+      "documentsRequired": [
+        "Car details (make, model, cc)",
+        "Ownership proof"
+      ],
+      "documentsToKeep": [
+        "Car policy documents",
+        "Driver salary Slips if applicable"
+      ],
+      "eligibilityConditions": [
+        "Employer must provide car",
+        "Rules depend on engine capacity and ownership"
+      ],
+      "commonMistakes": [
+        "Not valuing driver separately",
+        "Confusing leased vs employer-owned treatment"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "TELEPHONE_MOBILE",
+      "displayName": "Telephone / Mobile Phone Reimbursement",
+      "shortName": "Mobile Reimbursement",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "actual_expense (if business use only; personal calls taxable)",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB",
+      "description": "Reimbursement of official telephone/mobile expenses is exempt",
+      "whyItMatters": "Fully exempt if documented as business use",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Submit monthly mobile bills to HR for reimbursement",
+      "hrAskTemplate": "Please add mobile reimbursement as a salary component. I will submit monthly bills.",
+      "whatIfHrSaysNo": "Claim in ITR if employer provides certificate",
+      "documentsRequired": [
+        "Mobile bills",
+        "Employer certificate"
+      ],
+      "documentsToKeep": [
+        "Mobile bills for 5 years"
+      ],
+      "eligibilityConditions": [
+        "Must be used for business purposes",
+        "Employer must approve"
+      ],
+      "commonMistakes": [
+        "Including personal calls in reimbursement",
+        "Not submitting bills on time"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "TELEPHONE_MOBILE",
+      "displayName": "Telephone / Mobile Phone Reimbursement",
+      "shortName": "Mobile Reimbursement",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "actual_expense (if business use only; personal calls taxable)",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB",
+      "description": "Reimbursement of official telephone/mobile expenses is exempt",
+      "whyItMatters": "Fully exempt if documented as business use",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Submit monthly mobile bills to HR for reimbursement",
+      "hrAskTemplate": "Please add mobile reimbursement as a salary component. I will submit monthly bills.",
+      "whatIfHrSaysNo": "Claim in ITR if employer provides certificate",
+      "documentsRequired": [
+        "Mobile bills",
+        "Employer certificate"
+      ],
+      "documentsToKeep": [
+        "Mobile bills for 5 years"
+      ],
+      "eligibilityConditions": [
+        "Must be used for business purposes",
+        "Employer must approve"
+      ],
+      "commonMistakes": [
+        "Including personal calls in reimbursement",
+        "Not submitting bills on time"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "BOOKS_PERIODICALS",
+      "displayName": "Books and Periodicals Allowance",
+      "shortName": "Books Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "actual_expense (for books, journals, periodicals for official use)",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(1)(b)",
+      "description": "Exemption for books and periodicals required for official duties",
+      "whyItMatters": "Fully exempt up to actual amount spent",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "MEDIUM",
+      "howToAvailViaHr": "Submit book/journal purchase bills to HR",
+      "hrAskTemplate": "I would like to claim books and periodicals allowance. Please advise on the process.",
+      "whatIfHrSaysNo": "Cannot claim via ITR; consider self-study deduction under 80C",
+      "documentsRequired": [
+        "Purchase bills",
+        "Book/journal details"
+      ],
+      "documentsToKeep": [
+        "Purchase receipts"
+      ],
+      "eligibilityConditions": [
+        "Must be used for official purposes",
+        "Professionals/technical staff"
+      ],
+      "commonMistakes": [
+        "Claiming personal reading books",
+        "Not submitting within deadline"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "PROFESSIONAL_DEVELOPMENT",
+      "displayName": "Professional Development / Training Allowance",
+      "shortName": "Training Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "actual_expense (for training, certifications, professional membership)",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(1)(a)",
+      "description": "Exemption for professional development expenses required for employment",
+      "whyItMatters": "Fully exempt if related to employment duties",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "MEDIUM",
+      "howToAvailViaHr": "Submit training/ertification bills to HR",
+      "hrAskTemplate": "I am planning to attend [training name] for professional development. Can this be covered under training allowance?",
+      "whatIfHrSaysNo": "Claim as self-development expense; some employer certifications qualify",
+      "documentsRequired": [
+        "Training invoice",
+        "Course completion certificate"
+      ],
+      "documentsToKeep": [
+        "Training certificates",
+        "Receipts"
+      ],
+      "eligibilityConditions": [
+        "Must be job-related",
+        "Employer must approve"
+      ],
+      "commonMistakes": [
+        "Claiming non-job-related courses",
+        "Not getting pre-approval"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "UNIFORM_ALLOWANCE",
+      "displayName": "Uniform / Clothes Allowance",
+      "shortName": "Uniform Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "actual_expense (for uniform, livery, specialized clothing required for work)",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(1)(c)",
+      "description": "Exemption for cost of uniform, clothes required for work",
+      "whyItMatters": "Fully exempt if mandatory work uniform",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Submit uniform purchase bills to HR",
+      "hrAskTemplate": "I need to purchase [uniform items] for work. Can this be claimed as uniform allowance?",
+      "whatIfHrSaysNo": "Cannot claim via ITR if employer doesn't provide",
+      "documentsRequired": [
+        "Uniform purchase bills",
+        "Employer policy confirming mandatory uniform"
+      ],
+      "documentsToKeep": [
+        "Purchase receipts"
+      ],
+      "eligibilityConditions": [
+        "Uniform must be mandatory",
+        "Employer must specify requirements"
+      ],
+      "commonMistakes": [
+        "Claiming personal clothing",
+        "Not meeting employer uniform policy"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "COMMUTED_PENSION",
+      "displayName": "Commuted Value of Pension",
+      "shortName": "Commuted Pension",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Govt employee: fully exempt. Non-govt: 1/3 exempt if gratuity received, else 1/2 exempt",
+      "itSection": "Section 10(10A)",
+      "itActReference": "Section 10(10A)",
+      "description": "Lump sum commutation of pension is partially exempt",
+      "whyItMatters": "Significant tax saving on retirement",
+      "availabilityPath": "NOT_APPLICABLE",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": null,
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [
+        "Commutation calculation sheet",
+        "Gratuity details if applicable"
+      ],
+      "documentsToKeep": [
+        "Commutation documents",
+        "Form 10E"
+      ],
+      "eligibilityConditions": [
+        "Must be receiving commuted pension",
+        "Rules differ for govt/non-govt"
+      ],
+      "commonMistakes": [
+        "Not understanding the commutation formula",
+        "Confusing with uncommuted pension"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "COMMUTED_PENSION",
+      "displayName": "Commuted Value of Pension",
+      "shortName": "Commuted Pension",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Govt employee: fully exempt. Non-govt: 1/3 exempt if gratuity received, else 1/2 exempt",
+      "itSection": "Section 10(10A)",
+      "itActReference": "Section 10(10A)",
+      "description": "Lump sum commutation of pension is partially exempt",
+      "whyItMatters": "Significant tax saving on retirement",
+      "availabilityPath": "NOT_APPLICABLE",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": null,
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [
+        "Commutation calculation sheet",
+        "Gratuity details if applicable"
+      ],
+      "documentsToKeep": [
+        "Commutation documents",
+        "Form 10E"
+      ],
+      "eligibilityConditions": [
+        "Must be receiving commuted pension",
+        "Rules differ for govt/non-govt"
+      ],
+      "commonMistakes": [
+        "Not understanding the commutation formula",
+        "Confusing with uncommuted pension"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "GRATUITY_RECEIVED",
+      "displayName": "Gratuity Received",
+      "shortName": "Gratuity",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 2000000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(actual_gratuity, 20 * monthly_last_salary * years_service) or Rs 20 lakhs, whichever is lower",
+      "itSection": "Section 10(10)",
+      "itActReference": "Section 10(10)",
+      "description": "Gratuity received on retirement/death is exempt up to Rs 20 lakhs",
+      "whyItMatters": "Major tax-free component at retirement",
+      "availabilityPath": "NOT_APPLICABLE",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": null,
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [
+        "Form 10E",
+        "Service and salary details"
+      ],
+      "documentsToKeep": [
+        "Gratuity calculation sheet",
+        "Form 10E receipt"
+      ],
+      "eligibilityConditions": [
+        "Must have completed 5 years of continuous service",
+        "For retirement, superannuation, or death"
+      ],
+      "commonMistakes": [
+        "Not filing Form 10E",
+        "Exceeding the Rs 20 lakh exemption"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "GRATUITY_RECEIVED",
+      "displayName": "Gratuity Received",
+      "shortName": "Gratuity",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 2000000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(actual_gratuity, 20 * monthly_last_salary * years_service) or Rs 20 lakhs, whichever is lower",
+      "itSection": "Section 10(10)",
+      "itActReference": "Section 10(10)",
+      "description": "Gratuity received on retirement/death is exempt up to Rs 20 lakhs",
+      "whyItMatters": "Major tax-free component at retirement",
+      "availabilityPath": "NOT_APPLICABLE",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": null,
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [
+        "Form 10E",
+        "Service and salary details"
+      ],
+      "documentsToKeep": [
+        "Gratuity calculation sheet",
+        "Form 10E receipt"
+      ],
+      "eligibilityConditions": [
+        "Must have completed 5 years of continuous service",
+        "For retirement, superannuation, or death"
+      ],
+      "commonMistakes": [
+        "Not filing Form 10E",
+        "Exceeding the Rs 20 lakh exemption"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "LEAVE_ENCASHMENT",
+      "displayName": "Leave Encashment",
+      "shortName": "Leave Encashment",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Govt: fully exempt. Non-govt: min(actual_encashment, 10 * monthly_salary * leave_days) or Rs 3 lakhs",
+      "itSection": "Section 10(10AA)",
+      "itActReference": "Section 10(10AA)",
+      "description": "Leave encashment on retirement is partially exempt",
+      "whyItMatters": "Reduces tax liability at retirement",
+      "availabilityPath": "NOT_APPLICABLE",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": null,
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [
+        "Leave encashment calculation",
+        "Form 10E"
+      ],
+      "documentsToKeep": [
+        "Leave records",
+        "Encashment statements"
+      ],
+      "eligibilityConditions": [
+        "Must be encashing earned/privilege leave",
+        "During retirement/resignation"
+      ],
+      "commonMistakes": [
+        "Not knowing the Rs 3 lakh cap for non-govt",
+        "Confusing sick leave with earned leave"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "LEAVE_ENCASHMENT",
+      "displayName": "Leave Encashment",
+      "shortName": "Leave Encashment",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Govt: fully exempt. Non-govt: min(actual_encashment, 10 * monthly_salary * leave_days) or Rs 3 lakhs",
+      "itSection": "Section 10(10AA)",
+      "itActReference": "Section 10(10AA)",
+      "description": "Leave encashment on retirement is partially exempt",
+      "whyItMatters": "Reduces tax liability at retirement",
+      "availabilityPath": "NOT_APPLICABLE",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": null,
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [
+        "Leave encashment calculation",
+        "Form 10E"
+      ],
+      "documentsToKeep": [
+        "Leave records",
+        "Encashment statements"
+      ],
+      "eligibilityConditions": [
+        "Must be encashing earned/privilege leave",
+        "During retirement/resignation"
+      ],
+      "commonMistakes": [
+        "Not knowing the Rs 3 lakh cap for non-govt",
+        "Confusing sick leave with earned leave"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "VRS_RECEIVED",
+      "displayName": "Voluntary Retirement Compensation (VRS)",
+      "shortName": "VRS",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 500000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(actual_vrs, 500000) if conditions met, else fully taxable",
+      "itSection": "Section 10(10C)",
+      "itActReference": "Section 10(10C)",
+      "description": "VRS compensation up to Rs 5 lakhs is exempt if conditions are met",
+      "whyItMatters": "Significant tax saving for those taking VRS",
+      "availabilityPath": "NOT_APPLICABLE",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": null,
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [
+        "VRS scheme details",
+        "Form 10C"
+      ],
+      "documentsToKeep": [
+        "VRS calculation",
+        "Form 10C receipt"
+      ],
+      "eligibilityConditions": [
+        "Must be under VRS scheme",
+        "Not already claimed u/s 89",
+        "Employer must be eligible"
+      ],
+      "commonMistakes": [
+        "Not filing Form 10C",
+        "Claiming if previously claimed under section 89"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "VRS_RECEIVED",
+      "displayName": "Voluntary Retirement Compensation (VRS)",
+      "shortName": "VRS",
+      "category": "RETIREMENT",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 500000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(actual_vrs, 500000) if conditions met, else fully taxable",
+      "itSection": "Section 10(10C)",
+      "itActReference": "Section 10(10C)",
+      "description": "VRS compensation up to Rs 5 lakhs is exempt if conditions are met",
+      "whyItMatters": "Significant tax saving for those taking VRS",
+      "availabilityPath": "NOT_APPLICABLE",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": null,
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [
+        "VRS scheme details",
+        "Form 10C"
+      ],
+      "documentsToKeep": [
+        "VRS calculation",
+        "Form 10C receipt"
+      ],
+      "eligibilityConditions": [
+        "Must be under VRS scheme",
+        "Not already claimed u/s 89",
+        "Employer must be eligible"
+      ],
+      "commonMistakes": [
+        "Not filing Form 10C",
+        "Claiming if previously claimed under section 89"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "CHILDREN_EDUCATION",
+      "displayName": "Children Education Allowance",
+      "shortName": "Children Edu Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 9600,
+      "monthlyLimitFixed": null,
+      "limitFormula": "100 per month per child (max 2 children)",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(2)",
+      "description": "Exemption for children education allowance, Rs 100/month per child (max 2 children)",
+      "whyItMatters": "Small but useful exemption for parents",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Claim through HR; no bills required",
+      "hrAskTemplate": "I have [number] children studying in [school]. I would like to claim children education allowance.",
+      "whatIfHrSaysNo": "Can claim in ITR if supported by employer certificate",
+      "documentsRequired": [
+        "Children school details",
+        "Age proof if asked"
+      ],
+      "documentsToKeep": [
+        "School admission records"
+      ],
+      "eligibilityConditions": [
+        "Child must be studying",
+        "Maximum 2 children",
+        " Rs 100/month per child"
+      ],
+      "commonMistakes": [
+        "Claiming for more than 2 children",
+        "Not knowing it's only Rs 100/month"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "HOSTEL_ALLOWANCE",
+      "displayName": "Hostel Allowance for Children",
+      "shortName": "Hostel Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 18000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "300 per month per child (max 2 children)",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(2)",
+      "description": "Exemption for hostel allowance for children, Rs 300/month per child (max 2 children)",
+      "whyItMatters": "Complements children education allowance for parents with hostel-going children",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Claim through HR; no bills required",
+      "hrAskTemplate": "My child is staying in hostel at [college]. I would like to claim hostel allowance.",
+      "whatIfHrSaysNo": "Can claim in ITR if supported by employer certificate",
+      "documentsRequired": [
+        "Hostel confirmation letter",
+        "Fee receipts"
+      ],
+      "documentsToKeep": [
+        "Hostel records",
+        "Fee receipts"
+      ],
+      "eligibilityConditions": [
+        "Child must be in hostel",
+        "Maximum 2 children",
+        "Rs 300/month per child"
+      ],
+      "commonMistakes": [
+        "Claiming for day scholars",
+        "Not knowing the Rs 300/month cap"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "TRANSPORT_ALLOWANCE",
+      "displayName": "Transport Allowance (Conveyance)",
+      "shortName": "Transport Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 19200,
+      "monthlyLimitFixed": null,
+      "limitFormula": "1600 per month (for commuting to office); exempt for physically disabled employees",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(1)(d)",
+      "description": "Transport allowance for commuting to office; exempt up to Rs 1600/month",
+      "whyItMatters": "Fully exempt if employer provides allowance",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Typically part of salary structure; ensure it's separately structured",
+      "hrAskTemplate": "Please ensure transport allowance is separately structured in my salary to avail the exemption.",
+      "whatIfHrSaysNo": "Cannot claim via ITR as it's an allowance structure issue",
+      "documentsRequired": [],
+      "documentsToKeep": [
+        "Salary slips showing transport allowance"
+      ],
+      "eligibilityConditions": [
+        "Must be a salaried employee",
+        "Allowance must be for commuting to office"
+      ],
+      "commonMistakes": [
+        "Not structuring it separately in salary",
+        "Claiming for work-from-home days"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "MEDICAL_ALLOWANCE",
+      "displayName": "Medical Allowance / Reimbursement",
+      "shortName": "Medical Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Reimbursement of actual medical expenses; some companies allow fixed monthly allowance exempt up to Rs 1250/month",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(3)",
+      "description": "Medical allowance or reimbursement for medical expenses",
+      "whyItMatters": "Fully exempt with bills; otherwise taxable",
+      "availabilityPath": "BOTH",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Submit medical bills to HR for reimbursement",
+      "hrAskTemplate": "I have medical expenses of Rs [amount]. Please advise on the process to claim reimbursement.",
+      "whatIfHrSaysNo": "Claim in ITR if bills are preserved",
+      "documentsRequired": [
+        "Medical bills",
+        "Prescription",
+        "Doctor's certificate"
+      ],
+      "documentsToKeep": [
+        "All medical bills for 5 years"
+      ],
+      "eligibilityConditions": [
+        "Expenses must be for employee/family",
+        "Employer policy determines limit"
+      ],
+      "commonMistakes": [
+        "Not submitting bills within deadline",
+        "Claiming for non-covered treatments"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "GIFTS",
+      "displayName": "Gift Voucher / Gift from Employer",
+      "shortName": "Gift Voucher",
+      "category": "PERQUISITE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": 15000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Up to Rs 15,000 in a year is exempt; beyond that taxable",
+      "itSection": "Section 17(2)",
+      "itActReference": "Section 17(2)",
+      "description": "Gifts from employer up to Rs 15,000 per year are exempt",
+      "whyItMatters": "Tax-free benefit within the annual limit",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Typically given during festivals/occasions; no action needed",
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [],
+      "documentsToKeep": [
+        "Gift value records",
+        "Festival gift details"
+      ],
+      "eligibilityConditions": [
+        "Total gifts must not exceed Rs 15,000 in a year",
+        "Cash gifts always taxable"
+      ],
+      "commonMistakes": [
+        "Not tracking cumulative gift value",
+        "Confusing cash gifts with gift vouchers"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "GIFTS",
+      "displayName": "Gift Voucher / Gift from Employer",
+      "shortName": "Gift Voucher",
+      "category": "PERQUISITE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": 15000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Up to Rs 15,000 in a year is exempt; beyond that taxable",
+      "itSection": "Section 17(2)",
+      "itActReference": "Section 17(2)",
+      "description": "Gifts from employer up to Rs 15,000 per year are exempt",
+      "whyItMatters": "Tax-free benefit within the annual limit",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Typically given during festivals/occasions; no action needed",
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": null,
+      "documentsRequired": [],
+      "documentsToKeep": [
+        "Gift value records",
+        "Festival gift details"
+      ],
+      "eligibilityConditions": [
+        "Total gifts must not exceed Rs 15,000 in a year",
+        "Cash gifts always taxable"
+      ],
+      "commonMistakes": [
+        "Not tracking cumulative gift value",
+        "Confusing cash gifts with gift vouchers"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "INTEREST_CONCESSION",
+      "displayName": "Interest Concession on Housing Loan",
+      "shortName": "Interest Concession",
+      "category": "PERQUISITE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Difference between SBI PLR and rate charged to employee; exempt up to Rs 2 lakhs for self-occupied property",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(4)",
+      "description": "Concessional interest on housing loan provided by employer is a perquisite",
+      "whyItMatters": "Can be significant tax benefit if employer provides housing loan at concessional rate",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "LOW",
+      "howToAvailViaHr": "Must be part of employer-provided loan facility",
+      "hrAskTemplate": "Does the company offer housing loan at concessional rates? I would like to explore this option.",
+      "whatIfHrSaysNo": "Cannot claim via ITR",
+      "documentsRequired": [
+        "Housing loan documents",
+        "Interest certificate"
+      ],
+      "documentsToKeep": [
+        "Loan statements",
+        "Interest calculation"
+      ],
+      "eligibilityConditions": [
+        "Employer must offer this facility",
+        "Property must be in employee's name"
+      ],
+      "commonMistakes": [
+        "Not knowing the Rs 2 lakh cap",
+        "Confusing with home loan interest deduction"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "INTEREST_CONCESSION",
+      "displayName": "Interest Concession on Housing Loan",
+      "shortName": "Interest Concession",
+      "category": "PERQUISITE",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": true,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Difference between SBI PLR and rate charged to employee; exempt up to Rs 2 lakhs for self-occupied property",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB(4)",
+      "description": "Concessional interest on housing loan provided by employer is a perquisite",
+      "whyItMatters": "Can be significant tax benefit if employer provides housing loan at concessional rate",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "LOW",
+      "howToAvailViaHr": "Must be part of employer-provided loan facility",
+      "hrAskTemplate": "Does the company offer housing loan at concessional rates? I would like to explore this option.",
+      "whatIfHrSaysNo": "Cannot claim via ITR",
+      "documentsRequired": [
+        "Housing loan documents",
+        "Interest certificate"
+      ],
+      "documentsToKeep": [
+        "Loan statements",
+        "Interest calculation"
+      ],
+      "eligibilityConditions": [
+        "Employer must offer this facility",
+        "Property must be in employee's name"
+      ],
+      "commonMistakes": [
+        "Not knowing the Rs 2 lakh cap",
+        "Confusing with home loan interest deduction"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "RELOCATION_ALLOWANCE",
+      "displayName": "Relocation / Transfer Allowance",
+      "shortName": "Relocation Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Actual expenses incurred on relocation; varies by employer policy",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB",
+      "description": "Allowance for relocation/transfer expenses",
+      "whyItMatters": "Reduces taxable income by the relocation amount",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Submit relocation expense bills to HR",
+      "hrAskTemplate": "I am being relocated to [city]. Please provide the relocation allowance claim process.",
+      "whatIfHrSaysNo": "Cannot claim via ITR; these are typically structured as reimbursements",
+      "documentsRequired": [
+        "Relocation bills",
+        "Transfer order"
+      ],
+      "documentsToKeep": [
+        "All relocation receipts",
+        " agreements"
+      ],
+      "eligibilityConditions": [
+        "Must be a genuine company-initiated transfer",
+        "Expenses must be documented"
+      ],
+      "commonMistakes": [
+        "Not submitting bills on time",
+        "Claiming personal relocation not covered by policy"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "RELOCATION_ALLOWANCE",
+      "displayName": "Relocation / Transfer Allowance",
+      "shortName": "Relocation Allowance",
+      "category": "ALLOWANCE",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Actual expenses incurred on relocation; varies by employer policy",
+      "itSection": "Section 10(14)",
+      "itActReference": "Rule 2BB",
+      "description": "Allowance for relocation/transfer expenses",
+      "whyItMatters": "Reduces taxable income by the relocation amount",
+      "availabilityPath": "HR_RESTRUCTURE",
+      "hrSupportLikelihood": "HIGH",
+      "howToAvailViaHr": "Submit relocation expense bills to HR",
+      "hrAskTemplate": "I am being relocated to [city]. Please provide the relocation allowance claim process.",
+      "whatIfHrSaysNo": "Cannot claim via ITR; these are typically structured as reimbursements",
+      "documentsRequired": [
+        "Relocation bills",
+        "Transfer order"
+      ],
+      "documentsToKeep": [
+        "All relocation receipts",
+        " agreements"
+      ],
+      "eligibilityConditions": [
+        "Must be a genuine company-initiated transfer",
+        "Expenses must be documented"
+      ],
+      "commonMistakes": [
+        "Not submitting bills on time",
+        "Claiming personal relocation not covered by policy"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "NEW_TAX_REGIME_DEFAULT",
+      "displayName": "Standard Deduction (New Regime)",
+      "shortName": "Standard Deduction",
+      "category": "DEDUCTION",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 75000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Fixed Rs 75,000 per year",
+      "itSection": "Section 16",
+      "itActReference": "Section 16(ia)",
+      "description": "Standard deduction of Rs 75,000 for new regime taxpayers",
+      "whyItMatters": "Automatic deduction, no action needed from employee",
+      "availabilityPath": "SELF_DECLARE_ITR",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": "Automatically considered by employer in TDS",
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": "Claim in ITR",
+      "documentsRequired": [],
+      "documentsToKeep": [
+        "Form 16"
+      ],
+      "eligibilityConditions": [
+        "Must opt for new regime",
+        "All salaried employees eligible"
+      ],
+      "commonMistakes": [
+        "Not knowing it's automatic",
+        "Confusing with other deductions"
+      ],
+      "regimeType": "NEW_REGIME"
+    },
+    {
+      "code": "OLD_TAX_REGIME_STANDARD_DEDUCTION",
+      "displayName": "Standard Deduction (Old Regime)",
+      "shortName": "Std Deduction Old",
+      "category": "DEDUCTION",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 50000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Fixed Rs 50,000 per year",
+      "itSection": "Section 16",
+      "itActReference": "Section 16(ia)",
+      "description": "Standard deduction of Rs 50,000 for old regime taxpayers",
+      "whyItMatters": "Automatic deduction; reduces taxable income",
+      "availabilityPath": "SELF_DECLARE_ITR",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": "Automatically considered by employer in TDS",
+      "hrAskTemplate": null,
+      "whatIfHrSaysNo": "Claim in ITR",
+      "documentsRequired": [],
+      "documentsToKeep": [
+        "Form 16"
+      ],
+      "eligibilityConditions": [
+        "Must opt for old regime",
+        "All salaried employees eligible"
+      ],
+      "commonMistakes": [
+        "Not knowing it's automatic",
+        "Claiming in addition to other deductions"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "SECTION_80C",
+      "displayName": "Section 80C Investments & Expenses",
+      "shortName": "80C",
+      "category": "DEDUCTION",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 150000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "min(actual_investment, 150000)",
+      "itSection": "Section 80C",
+      "itActReference": "Section 80C",
+      "description": "Deduction for investments and expenses like PPF, ELSS, insurance, home loan principal, NSC, etc.",
+      "whyItMatters": "Rs 1.5 lakh deduction from taxable income",
+      "availabilityPath": "SELF_DECLARE_ITR",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": "Declare investments to employer for TDS adjustment, or claim directly in ITR",
+      "hrAskTemplate": "I have invested Rs [amount] under Section 80C. Please update my TDS calculation.",
+      "whatIfHrSaysNo": "Claim in ITR; ensure you have investment proofs",
+      "documentsRequired": [
+        "Investment proofs (ELSS, PPF, insurance premium, etc.)",
+        "Home loan principal certificate"
+      ],
+      "documentsToKeep": [
+        "All 80C investment receipts",
+        "Form 16",
+        "Insurance premium receipts"
+      ],
+      "eligibilityConditions": [
+        "Must have eligible investments/expenses",
+        "Investments must be in specified instruments"
+      ],
+      "commonMistakes": [
+        "Exceeding Rs 1.5 lakh limit",
+        "Not knowing which investments qualify"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "SECTION_80D",
+      "displayName": "Section 80D Health Insurance Premium",
+      "shortName": "80D",
+      "category": "DEDUCTION",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Self/spouse/children: 25000 (basic) + 50000 (senior citizen); Parents: additional 25000/50000; Preventive health checkup: 5000 within limit",
+      "itSection": "Section 80D",
+      "itActReference": "Section 80D",
+      "description": "Deduction for health insurance premium paid for self, spouse, children, and parents",
+      "whyItMatters": "Up to Rs 1 lakh deduction depending on age and coverage",
+      "availabilityPath": "SELF_DECLARE_ITR",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": "Declare premium to employer or claim directly in ITR",
+      "hrAskTemplate": "I have paid health insurance premium of Rs [amount]. Please advise on claiming the deduction.",
+      "whatIfHrSaysNo": "Claim in ITR with premium receipt",
+      "documentsRequired": [
+        "Health insurance premium receipt",
+        "Policy copy"
+      ],
+      "documentsToKeep": [
+        "Insurance premium receipts",
+        "Form 16"
+      ],
+      "eligibilityConditions": [
+        "Must have health insurance policy",
+        "Policy must be for self, spouse, children, or parents"
+      ],
+      "commonMistakes": [
+        "Not including parents' premium",
+        "Confusing with employer health insurance"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "SECTION_80E",
+      "displayName": "Section 80E Education Loan Interest",
+      "shortName": "80E",
+      "category": "DEDUCTION",
+      "taxYear": "2025-26",
+      "requiresBills": false,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Actual interest paid on education loan (no upper limit)",
+      "itSection": "Section 80E",
+      "itActReference": "Section 80E",
+      "description": "Deduction for interest paid on education loan for self or dependent",
+      "whyItMatters": "No upper limit; entire interest is deductible",
+      "availabilityPath": "SELF_DECLARE_ITR",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": "Cannot be claimed through employer TDS; must claim in ITR",
+      "hrAskTemplate": "I am paying education loan interest. How do I claim this in my tax return?",
+      "whatIfHrSaysNo": "Claim directly in ITR",
+      "documentsRequired": [
+        "Education loan interest certificate from bank",
+        "Loan account statement"
+      ],
+      "documentsToKeep": [
+        "Loan documents",
+        "Interest certificates"
+      ],
+      "eligibilityConditions": [
+        "Loan must be for higher education (India or abroad)",
+        "For self or dependent (spouse, children)"
+      ],
+      "commonMistakes": [
+        "Claiming principal amount",
+        "Not knowing the 8-year repayment limit"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "SECTION_24",
+      "displayName": "Section 24 - Home Loan Interest",
+      "shortName": "Home Loan Interest",
+      "category": "DEDUCTION",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": 200000,
+      "monthlyLimitFixed": null,
+      "limitFormula": "Self-occupied: min(actual_interest, 200000). Let-out property: no limit",
+      "itSection": "Section 24",
+      "itActReference": "Section 24",
+      "description": "Deduction for interest paid on home loan for self-occupied property up to Rs 2 lakh",
+      "whyItMatters": "Rs 2 lakh annual deduction for home loan interest",
+      "availabilityPath": "SELF_DECLARE_ITR",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": "Cannot be claimed through employer TDS; must claim in ITR",
+      "hrAskTemplate": "I am paying home loan interest. How do I claim section 24 deduction?",
+      "whatIfHrSaysNo": "Claim directly in ITR",
+      "documentsRequired": [
+        "Home loan interest certificate from bank",
+        "Possession certificate"
+      ],
+      "documentsToKeep": [
+        "Loan statements",
+        "Interest certificates"
+      ],
+      "eligibilityConditions": [
+        "Property must be owned by taxpayer",
+        "Self-occupied property has Rs 2 lakh cap"
+      ],
+      "commonMistakes": [
+        "Not knowing the Rs 2 lakh cap",
+        "Confusing with home loan principal under 80C"
+      ],
+      "regimeType": "OLD_REGIME"
+    },
+    {
+      "code": "SECTION_80G",
+      "displayName": "Section 80G - Charitable Donations",
+      "shortName": "80G Donations",
+      "category": "DEDUCTION",
+      "taxYear": "2025-26",
+      "requiresBills": true,
+      "requiresRentReceipt": false,
+      "isEmployerContribution": false,
+      "annualLimitFixed": null,
+      "monthlyLimitFixed": null,
+      "limitFormula": "50% or 100% depending on charity; subject to 10% of gross total income",
+      "itSection": "Section 80G",
+      "itActReference": "Section 80G",
+      "description": "Deduction for donations to specified charitable institutions",
+      "whyItMatters": "50-100% deduction depending on the charity",
+      "availabilityPath": "SELF_DECLARE_ITR",
+      "hrSupportLikelihood": "NOT_APPLICABLE",
+      "howToAvailViaHr": "Cannot be claimed through employer TDS; must claim in ITR",
+      "hrAskTemplate": "I made a donation of Rs [amount] to [charity]. How do I claim this deduction?",
+      "whatIfHrSaysNo": "Claim directly in ITR",
+      "documentsRequired": [
+        "Donation receipt with 80G certificate",
+        "PAN of the trust/charity"
+      ],
+      "documentsToKeep": [
+        "Donation receipts",
+        "80G certificates"
+      ],
+      "eligibilityConditions": [
+        "Donation must be to approved charities",
+        "Must have 80G certificate",
+        "Cash donations > 2000 not allowed"
+      ],
+      "commonMistakes": [
+        "Donating without 80G certificate",
+        "Not knowing 50% vs 100% rules"
+      ],
+      "regimeType": "OLD_REGIME"
+    }
+  ]
+}

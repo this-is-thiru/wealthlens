@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.helper.controller;
 
 import com.thiru.wealthlens.shared.dto.ShippingLabel;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import org.springframework.http.*;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,9 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/template")
@@ -69,7 +68,7 @@ public class TemplateController {
                 .senderState("MA")
                 .senderZip("02108")
                 .senderCountry("USA")
-                
+
                 // Recipient Information
                 .recipientName("Jane Doe")
                 .recipientCompany("XYZ Inc")
@@ -78,7 +77,7 @@ public class TemplateController {
                 .recipientState("CA")
                 .recipientZip("94102")
                 .recipientCountry("USA")
-                
+
                 // Shipping Information
                 .trackingNumber("1Z999AA10123456784")
                 .serviceType("Priority Overnight")

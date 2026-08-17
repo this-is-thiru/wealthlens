@@ -3,13 +3,12 @@ package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.entity.query.QueryBuilder;
 import com.thiru.wealthlens.shared.entity.query.QueryFilter;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * Read-only MongoDB query service. Uses {@link MongoTemplate} directly; no

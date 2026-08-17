@@ -1,14 +1,9 @@
 package com.thiru.wealthlens.portfolio.entity.model;
 
+import java.time.Month;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.HashMap;
-import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

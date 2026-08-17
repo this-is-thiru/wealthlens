@@ -1,17 +1,23 @@
 package com.thiru.wealthlens.integration;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
+import com.thiru.wealthlens.brokercharges.dto.enums.BrokerageAggregatorType;
 import com.thiru.wealthlens.brokercharges.dto.helper.BrokerageChargesDto;
 import com.thiru.wealthlens.brokercharges.dto.request.AssetManagementDetailsRequest;
 import com.thiru.wealthlens.brokercharges.dto.request.BrokerChargesRequest;
-import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
-import com.thiru.wealthlens.brokercharges.dto.enums.BrokerageAggregatorType;
-import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.brokercharges.entity.BrokerCharges;
 import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
+import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import io.restassured.RestAssured;
+import java.io.IOException;
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpHeaders;
@@ -22,14 +28,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.net.URI;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class BrokerChargesIntegrationTest extends AbstractIntegrationTest {
 

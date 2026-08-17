@@ -1,23 +1,22 @@
 package com.thiru.wealthlens.testreport.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.thiru.wealthlens.testreport.dto.ClassStatusCount;
 import com.thiru.wealthlens.testreport.dto.ExecutionSummary;
 import com.thiru.wealthlens.testreport.dto.TestCaseResult;
 import com.thiru.wealthlens.testreport.dto.TestClassSummary;
 import com.thiru.wealthlens.testreport.dto.TestStatus;
 import com.thiru.wealthlens.testreport.template.ThymeleafTemplateEngineFactory;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.thymeleaf.TemplateEngine;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.thymeleaf.TemplateEngine;
 
 class ReportGenerationServiceTest {
 

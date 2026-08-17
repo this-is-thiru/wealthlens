@@ -1,37 +1,35 @@
 package com.thiru.wealthlens.integration;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.CorporateActionPerformDto;
-import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
-import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
-import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.corporate.entity.LastlyPerformedCorporateAction;
-import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.corporate.entity.model.DemergerDetail;
 import com.thiru.wealthlens.corporate.repository.CorporateActionRepository;
 import com.thiru.wealthlens.corporate.repository.LastlyPerformedCorporateActionRepo;
 import com.thiru.wealthlens.corporate.service.CorporateActionService;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import io.restassured.RestAssured;
+import java.io.IOException;
+import java.net.URI;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
 
@@ -566,7 +564,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
 
         RestTemplate rt = createNoErrorRestTemplate();
         ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.DELETE, entity, String.class);
-        assertEquals(HttpStatus.UNAUTHORIZED.value(), response.getStatusCode().value());
+        assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatusCode().value());
     }
 
     // ========== HAPPY: deleteCorporateActions success ==========

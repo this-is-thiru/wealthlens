@@ -11,6 +11,7 @@
         <!-- No wildcard imports -->
         <module name="AvoidStarImport">
             <property name="severity" value="error"/>
+            <property name="excludes" value="java.util,lombok,org.springframework.web.bind.annotation,org.springframework.http,org.apache.poi.ss.usermodel"/>
         </module>
     </module>
 </module>

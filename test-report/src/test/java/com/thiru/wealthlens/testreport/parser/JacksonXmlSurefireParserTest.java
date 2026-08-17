@@ -1,15 +1,14 @@
 package com.thiru.wealthlens.testreport.parser;
 
-import com.thiru.wealthlens.testreport.parser.xml.SurefireTestSuite;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.testreport.parser.xml.SurefireTestSuite;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class JacksonXmlSurefireParserTest {
 

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Tax Comparison Report</title>
+</head>
+<body style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 20px;">
+
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #1a237e; margin-bottom: 5px;">WealthLens Tax Planning</h1>
+        <h2 style="color: #455a64; margin-top: 0;">Tax Comparison Report</h2>
+        <p style="font-size: 0.9em; color: #666;">Generated on: <span th:text="${#temporals.format(generatedOn, 'dd MMMM yyyy')}">01 Jan 2025</span></p>
+    </div>
+
+    <!-- Employee Info -->
+    <div style="margin-bottom: 25px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+        <h3 style="margin-top: 0; color: #37474f;">Employee Details</h3>
+        <table style="width: 100%;">
+            <tr>
+                <td style="padding: 4px 0;"><strong>Name:</strong> <span th:text="${profile.profileName}">Employee</span></td>
+                <td style="padding: 4px 0;"><strong>Email:</strong> <span th:text="${profile.email}">email</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;"><strong>Employer:</strong> <span th:text="${profile.employerName}">Company</span></td>
+                <td style="padding: 4px 0;"><strong>Tax Year:</strong> <span th:text="${profile.taxYear}">2025-26</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;"><strong>City:</strong> <span th:text="${profile.cityName}">City</span></td>
+                <td style="padding: 4px 0;"><strong>Current Regime:</strong> <span th:text="${profile.regimeType}">NEW_REGIME</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0;"><strong>Annual CTC:</strong> ₹<span th:text="${#numbers.formatDecimal(profile.annualCtc, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Tax Computation Table -->
+    <div style="margin-bottom: 25px;">
+        <h3 style="color: #37474f; border-bottom: 2px solid #1a237e; padding-bottom: 5px;">Tax Computation Comparison</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr style="background-color: #e8eaf6;">
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Metric</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">New Regime</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Old Regime</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Gross Salary</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.grossSalary, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.grossSalary, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr style="background-color: #fafafa;">
+                    <td style="border: 1px solid #ddd; padding: 8px;">Less: Exemptions</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.totalExemptions, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.totalExemptions, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Less: Deductions</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.totalDeductions, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.totalDeductions, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr style="background-color: #fafafa;">
+                    <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">Taxable Income</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.taxableIncome, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.taxableIncome, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Basic Tax (before rebate)</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.basicTaxBeforeRebate, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.basicTaxBeforeRebate, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr style="background-color: #fafafa;">
+                    <td style="border: 1px solid #ddd; padding: 8px;">Rebate u/s 87A</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.rebate87aApplied, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.rebate87aApplied, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Tax After Rebate</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.taxAfterRebate, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.taxAfterRebate, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr style="background-color: #fafafa;">
+                    <td style="border: 1px solid #ddd; padding: 8px;">Surcharge</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.surcharge, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.surcharge, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Cess (4%)</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.cess, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.cess, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr style="background-color: #e8f5e9;">
+                    <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">Total Tax</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.totalTax, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.totalTax, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+                <tr style="background-color: #fff8e1;">
+                    <td style="border: 1px solid #ddd; padding: 8px;">Net Take Home (Annual)</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">₹<span th:text="${#numbers.formatDecimal(computation.newRegimeResult.netTakeHome, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">₹<span th:text="${#numbers.formatDecimal(computation.oldRegimeResult.netTakeHome, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recommended Regime -->
+    <div style="margin-bottom: 25px; padding: 15px; background-color: #e3f2fd; border-radius: 5px; text-align: center;">
+        <h3 style="margin-top: 0; color: #1565c0;">Recommended Regime: <span th:text="${computation.recommendedRegime}">NEW_REGIME</span> <span th:if="${computation.recommendedRegime.name() == 'NEW_REGIME'}">&#9733;</span><span th:if="${computation.recommendedRegime.name() == 'OLD_REGIME'}">&#9733;</span></h3>
+        <p style="font-size: 1.1em; color: #2e7d32; font-weight: bold; margin-bottom: 0;">
+            Estimated Annual Saving: ₹<span th:text="${#numbers.formatDecimal(computation.annualSavingVsCurrent, 1, 'COMMA', 0, 'POINT')}">0</span>
+        </p>
+    </div>
+
+    <!-- Restructuring Section -->
+    <div th:if="${restructuring != null}" style="margin-bottom: 25px;">
+        <h3 style="color: #37474f; border-bottom: 2px solid #1a237e; padding-bottom: 5px;">Restructured CTC Comparison</h3>
+        <table style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr style="background-color: #e8eaf6;">
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Metric</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">New Regime</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Old Regime</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background-color: #e8f5e9;">
+                    <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">Total Tax after Restructuring</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">₹<span th:text="${#numbers.formatDecimal(restructuring.restructuredNewRegimeTax, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">₹<span th:text="${#numbers.formatDecimal(restructuring.restructuredOldRegimeTax, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4 style="margin-top: 20px; color: #37474f;">Recommendations</h4>
+        <table style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr style="background-color: #fff3e0;">
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Priority</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Component</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Amount</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Tax Saving</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Action Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="rec : ${restructuring.recommendations}">
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;" th:text="${rec.priority}">1</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;" th:text="${rec.displayName}">Component</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹<span th:text="${#numbers.formatDecimal(rec.suggestedAnnualAmount, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; color: #2e7d32;">₹<span th:text="${#numbers.formatDecimal(rec.estimatedTaxSaving, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                    <td style="border: 1px solid #ddd; padding: 8px;" th:text="${rec.actionRequired}">Action</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 15px; padding: 10px; background-color: #fff8e1; border-radius: 5px;">
+            <p style="margin: 0; color: #e65100;">
+                <strong>Total Optimized Saving:</strong> ₹<span th:text="${#numbers.formatDecimal(restructuring.totalOptimizedSaving, 1, 'COMMA', 0, 'POINT')}">0</span>
+            </p>
+        </div>
+
+        <div style="margin-top: 15px; padding: 10px; background-color: #fce4ec; border-radius: 5px;">
+            <p style="margin: 0; font-size: 0.9em; color: #880e4f;">
+                <strong>ITR Note:</strong> If HR does not support restructuring, you can claim certain exemptions directly in ITR.
+            </p>
+        </div>
+    </div>
+
+    <!-- Disclaimer Footer -->
+    <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 0.8em; color: #666;">
+        <p><strong>Disclaimer:</strong> <span th:text="${disclaimer}">This is an indicative computation only.</span></p>
+        <p style="margin-bottom: 0;">WealthLens does not provide certified tax advisory services and does not file taxes on your behalf.</p>
+    </div>
+
+</body>
+</html>

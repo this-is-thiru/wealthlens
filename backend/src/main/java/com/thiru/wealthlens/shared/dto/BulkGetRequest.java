@@ -1,11 +1,8 @@
 package com.thiru.wealthlens.shared.dto;
 
+import com.thiru.wealthlens.shared.entity.query.QueryFilter;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.thiru.wealthlens.shared.dto.DateRange;
-import com.thiru.wealthlens.shared.entity.query.QueryFilter;
-
 import lombok.Data;
 
 @Data

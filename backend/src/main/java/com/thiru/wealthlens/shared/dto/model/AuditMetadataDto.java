@@ -3,10 +3,9 @@ package com.thiru.wealthlens.shared.dto.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter

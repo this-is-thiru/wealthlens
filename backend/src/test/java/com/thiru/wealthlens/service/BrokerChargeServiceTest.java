@@ -1,31 +1,28 @@
 package com.thiru.wealthlens.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
-import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.brokercharges.service.BrokerChargeService;
 import com.thiru.wealthlens.brokercharges.dto.enums.BrokerageAggregatorType;
-import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.brokercharges.dto.helper.BrokerageChargesDto;
 import com.thiru.wealthlens.brokercharges.dto.request.BrokerChargesRequest;
 import com.thiru.wealthlens.brokercharges.entity.BrokerCharges;
-import com.thiru.wealthlens.portfolio.entity.model.BrokerageCharges;
-import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.brokercharges.repository.BrokerChargesRepository;
-import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
+import com.thiru.wealthlens.brokercharges.service.BrokerChargeService;
+import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
+import com.thiru.wealthlens.shared.exception.BadRequestException;
+import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BrokerChargeServiceTest {

@@ -3,9 +3,8 @@ package com.thiru.wealthlens.finance.service;
 
 import com.thiru.wealthlens.finance.dto.InterestRateResponse;
 import com.thiru.wealthlens.finance.dto.StepUpSIPRequest;
-import org.springframework.stereotype.Service;
-
 import java.text.DecimalFormat;
+import org.springframework.stereotype.Service;
 
 @Service
 public class StepUpSIPCalculator {

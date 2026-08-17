@@ -3,12 +3,11 @@ package com.thiru.wealthlens.portfolio.repository;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.entity.AssetManagementDetails;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 public interface AssetManagementRepository extends MongoRepository<AssetManagementDetails, String> {
 

@@ -1,13 +1,11 @@
 package com.thiru.wealthlens.brokercharges.repository;
 
-import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-
+import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 public interface UserBrokerChargesRepository extends MongoRepository<UserBrokerCharges, String> {
 

@@ -1,15 +1,14 @@
 package com.thiru.wealthlens.testreport.parser;
 
-import tools.jackson.databind.DeserializationFeature;
 import com.thiru.wealthlens.testreport.parser.xml.SurefireTestSuite;
-import lombok.extern.slf4j.Slf4j;
-import tools.jackson.dataformat.xml.XmlMapper;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.dataformat.xml.XmlMapper;
 
 @Slf4j
 public class JacksonXmlSurefireParser implements SurefireReportParser {

@@ -1,0 +1,26 @@
+{
+  "taxYear": "2025-26",
+  "regimeType": "NEW_REGIME",
+  "status": "ACTIVE",
+  "sourceReference": "Finance Act 2025 / Income Tax Act 1961 as amended; Budget 2025",
+  "standardDeduction": 75000,
+  "rebate87aLimit": 1200000,
+  "rebate87aAmount": 60000,
+  "basicExemptionLimit": 400000,
+  "slabs": [
+    {"fromAmount": 0, "toAmount": 400000, "ratePercent": 0.0},
+    {"fromAmount": 400001, "toAmount": 800000, "ratePercent": 5.0},
+    {"fromAmount": 800001, "toAmount": 1200000, "ratePercent": 10.0},
+    {"fromAmount": 1200001, "toAmount": 1600000, "ratePercent": 15.0},
+    {"fromAmount": 1600001, "toAmount": 2000000, "ratePercent": 20.0},
+    {"fromAmount": 2000001, "toAmount": 2400000, "ratePercent": 25.0},
+    {"fromAmount": 2400001, "toAmount": null, "ratePercent": 30.0}
+  ],
+  "surchargeSlabs": [
+    {"regimeType": "NEW_REGIME", "fromAmount": 50000000, "toAmount": 100000000, "ratePercent": 10.0, "marginalReliefApplicable": true},
+    {"regimeType": "NEW_REGIME", "fromAmount": 100000001, "toAmount": 200000000, "ratePercent": 15.0, "marginalReliefApplicable": true},
+    {"regimeType": "NEW_REGIME", "fromAmount": 200000001, "toAmount": 500000000, "ratePercent": 25.0, "marginalReliefApplicable": true},
+    {"regimeType": "NEW_REGIME", "fromAmount": 500000001, "toAmount": null, "ratePercent": 25.0, "marginalReliefApplicable": true}
+  ],
+  "cessPercentage": 4.0
+}
