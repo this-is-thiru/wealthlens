@@ -111,28 +111,4 @@ public class AllowanceCatalogueEntity implements AuditableEntity {
     @Field("audit_metadata")
     @Setter(value = AccessLevel.NONE)
     private AuditMetadata auditMetadata = new AuditMetadata();
-
-    @Getter @Setter @ToString @EqualsAndHashCode
-    public static class ItrPortalPath {
-        @Field("step_number")
-        private Integer stepNumber;
-
-        @Field("section_name")
-        private String sectionName;
-
-        @Field("field_name")
-        private String fieldName;
-
-        @Field("how_to_fill")
-        private String howToFill;
-    }
-
-    @Getter @Setter @ToString @EqualsAndHashCode
-    public static class FaqEntry {
-        @Field("question")
-        private String question;
-
-        @Field("answer")
-        private String answer;
-    }
 }

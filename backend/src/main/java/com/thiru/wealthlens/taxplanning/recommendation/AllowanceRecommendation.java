@@ -5,7 +5,12 @@ import com.thiru.wealthlens.taxplanning.enums.HrSupportLikelihood;
 import com.thiru.wealthlens.taxplanning.policy.entity.AllowanceCatalogueEntity;
 import java.util.List;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.Value;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Value
 @Builder
@@ -23,11 +28,28 @@ public class AllowanceRecommendation {
     String actionRequired;
     String hrAskTemplate;
     String whatIfHrSaysNo;
-    AllowanceCatalogueEntity.ItrPortalPath itrPortalPath;
+    ItrPortalPath itrPortalPath;
     List<String> documentsRequired;
     List<String> documentsToKeep;
     String itSection;
     List<String> eligibilityConditions;
     List<String> commonMistakes;
-    List<AllowanceCatalogueEntity.FaqEntry> beginnerFaq;
+    List<FaqEntry> beginnerFaq;
+
+    @Getter
+    @Setter
+    @ToString
+    @EqualsAndHashCode
+    public static class ItrPortalPath {
+        private Integer stepNumber;
+        private String sectionName;
+        private String fieldName;
+        private String howToFill;
+    }
+
+    @Getter @Setter @ToString @EqualsAndHashCode
+    public static class FaqEntry {
+        private String question;
+        private String answer;
+    }
 }
