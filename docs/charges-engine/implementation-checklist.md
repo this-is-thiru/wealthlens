@@ -4,7 +4,7 @@
 **Read first:** `prd.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Chunk -1 complete and verified (340 tests green, 78%/59% coverage baseline); Chunk 0 decisions open
+**Status:** Chunk -1 merged to master (PR #59). Chunk 0 settled. Chunk 1 in progress.
 **Last updated:** 2026-09-05
 
 ---
@@ -57,34 +57,76 @@ From `../testing/test-framework-audit.md`. These land **before** engine code, be
 
 ---
 
-## Chunk 0 — Decisions locked before coding
+## Chunk 0 — Decisions locked before coding ✅
 
-- [ ] Which brokers get seed rate cards on day one (ZERODHA / UPSTOX / FYERS) → **decision:** ______
-- [ ] Verify live rates from each broker's charges page; record `sourceUrl` + `verifiedOn` per schedule
-- [ ] OD-1 module rename (`brokercharges` → `charges`): defer to Phase C / do now → **decision:** ______
-- [x] OD-3 F&O — **settled: model-only.** Phase A seeds EQUITY/DELIVERY only; `amountBasis`, `lotSize`, `orderId` are carried so F&O stays a Tier-1 change (tech-spec §13.2)
-- [ ] OD-5 populate `planCode` in Phase A? → **decision:** ______
-- [ ] OD-9 `charge_accounts` as a new entity in Phase A (recommended) vs adapting `AssetManagementDetails` → **decision:** ______
+| # | Decision | Settled as |
+|---|---|---|
+| Brokers | Seed cards for which brokers | **Zerodha only.** Prove the engine end-to-end on one broker; Upstox and Fyers are data-only additions afterwards |
+| Cards | Which schedules | **Three: EQUITY/DELIVERY, EQUITY/INTRADAY, MUTUAL_FUND.** Intraday proves the `TradeSegment` dimension resolves; MF proves `FORMULA` + `eligibility` (exit load on holding period) |
+| Rates | How rate values are sourced | **Placeholders, clearly marked.** Structurally valid cards with `verifiedOn: null`. See the caveat below |
+| Cadence | Review points | **After every chunk.** |
+| Commits | Granularity | **One commit per chunk**, local to this branch |
+| OD-1 | Module rename `brokercharges` → `charges` | Deferred to Phase C, as a separate mechanical commit |
+| OD-2 | Engine vs manual entry for cost basis | Engine replaces manual entry — that is the point of the work |
+| OD-3 | F&O | Model-only. `amountBasis`, `lotSize`, `orderId` carried; no seed cards |
+| OD-5 | `planCode` | Dimension exists on the schedule; not populated in Phase A |
+| OD-9 | AMC accounts | New `ChargeAccountEntity`; `AssetManagementDetails` untouched until Phase C |
 
-*Settled, no longer open:* OD-2 — the engine replaces manual charge entry; that is the point of the work.
+### ⚠️ Consequence of placeholder rates
+
+Golden contract-note fixtures (test-plan Tier E) will assert against **fictional numbers**. They still do real work — they pin the engine's arithmetic, rounding and GST base, and they fail loudly if any of that regresses. What they do **not** yet prove is that the output matches a real Zerodha contract note.
+
+Therefore:
+- **AC-2 ("matches a real contract note to ₹0.01") is BLOCKED** until real rates are supplied. It is the one acceptance criterion Phase A cannot close.
+- Every seeded card carries `verifiedOn: null` and a `PLACEHOLDER` marker in `notes`.
+- `ChargeSeederServiceTest` asserts that a card with `verifiedOn: null` logs a startup WARN, so unverified rates cannot go unnoticed in a running system.
+- Replacing the rates later changes JSON only — the golden fixtures are regenerated from the simulate endpoint and re-verified once.
 
 ---
 
 # PHASE A — standalone engine
 
-## Chunk 1 — Enums and value objects *(no behaviour, no risk)*
+## Chunk 1 — Enums and value objects ✅
 
-- [ ] `brokercharges/dto/enums/ChargeBasis.java`
-- [ ] `brokercharges/dto/enums/ChargeCategory.java`
-- [ ] `brokercharges/dto/enums/ChargeEvent.java`
-- [ ] `brokercharges/dto/enums/ChargeSide.java`
-- [ ] `brokercharges/dto/enums/DedupeScope.java`
-- [ ] `brokercharges/dto/enums/AggregatorType.java`
-- [ ] `brokercharges/dto/enums/RoundingPolicy.java`
-- [ ] `brokercharges/dto/enums/AmountBasis.java` — carried for F&O, only `TURNOVER` used in Phase A (tech-spec §13.2)
-- [ ] `brokercharges/dto/enums/TradeSegment.java` — **lives in the charges module in Phase A**; promoted to `portfolio` only in Phase C
+- [x] `ChargeBasis` — TURNOVER, FLAT, PER_UNIT, SLAB, SCOPED_FLAT, DERIVED, FORMULA
+- [x] `ChargeCategory` — BROKERAGE, STATUTORY, EXCHANGE, REGULATORY, DEPOSITORY, TAX, SUBSCRIPTION, FUND
+- [x] `ChargeEvent` — BUY, SELL, ACCOUNT_OPENING, AMC_CYCLE, CALL_AND_TRADE, AUTO_SQUARE_OFF, PLEDGE
+- [x] `ChargeSide` — BUY, SELL, BOTH
+- [x] `DedupeScope` — NONE, PER_SCRIP_PER_DAY, PER_ORDER, PER_DAY
+- [x] `AggregatorType` — MIN, MAX
+- [x] `RoundingPolicy` — NONE, HALF_UP_2, CEILING_2, HALF_UP_0
+- [x] `AmountBasis` — TURNOVER, NOTIONAL, PREMIUM, INTRINSIC, PRINCIPAL *(only TURNOVER used in Phase A)*
+- [x] `TradeSegment` — DELIVERY, INTRADAY, FUTURES, OPTIONS, NA *(charges-owned in Phase A; promoted to `portfolio` at cutover)*
+- [x] `SlabBandBasis` — TURNOVER, HOLDING_DAYS, QUANTITY
+- [x] `ChargeRuleSource` — SCHEDULE, INSTRUMENT
+- [x] `FundCategory` — EQUITY, DEBT, HYBRID, LIQUID, ELSS, INDEX, ETF, FUND_OF_FUNDS, OTHER
+- [x] `PlanType` — DIRECT, REGULAR *(decides whether a distributor transaction fee can apply)*
+- [x] `ChargeResolution` — RESOLVED, NO_MATCHING_RULES, NO_SCHEDULE, NO_INSTRUMENT_PROFILE, PROVISIONAL
+- [ ] Delete `BrokerageAggregatorType` *(Phase C, once its last usage is gone)*
 
-**Done when:** `./mvnw clean install -pl backend -am -DskipTests` compiles.
+**Verified:** `./mvnw compile -pl backend -am` BUILD SUCCESS; `spotless:check` clean. Commit `62d864f`.
+
+### Design change absorbed in this chunk
+
+Mutual fund charges differ **per scheme**, not per broker — exit load is an AMC attribute, so two funds bought through the same broker on the same day carry different loads. Forcing that into `ChargeScheduleEntity` would mean one schedule document per fund. Three additions cover it (tech-spec §4.6, §5.7, §6):
+
+- **`ChargeInstrumentEntity`** (`charge_instruments`) as a second rule source, merged into one ordered evaluation so tax bases and rounding are unaffected. Also the only home for `equityOriented`, without which *"STT on equity MF but not debt MF"* cannot be expressed at all.
+- **`ChargeSlab.slabBandBasis`** — graded exit loads taper by holding days (liquid funds: 0.0070% day 1 → nil by day 7), not by trade size.
+- **`ChargeRule.perLot` + `ChargeContext.lots`** — exit load applies per FIFO lot. Transaction-level averaging can be wrong by the entire charge: 100 units held 22 months plus 50 held 1 month averages to ~15 months and computes **zero**, where the correct answer is 1% on 50 units.
+- **`PlanType`** + the rule-ownership principle (tech-spec §4.6.1). The MF distributor transaction fee has *three* sources at once — the broker sets the amount, the scheme's DIRECT/REGULAR status decides whether it applies, and AMFI caps it at ₹150 for a first-time investor versus ₹100 thereafter. Resolved by: **a rule lives where its rate is decided, and reads the other sources through its eligibility predicate.** This requires instrument attributes to be injected into the evaluation context for *every* rule, not only instrument-sourced ones.
+- **Precedence** (tech-spec §4.6.2): when both sources declare the same charge code, the instrument wins and the schedule rule is skipped. Applying both would double-charge silently.
+
+### Defect found and corrected in this chunk
+
+**Superseding a rate card would have broken backfilled transactions** (tech-spec §14.1). `EntityStatus` carries `SUPERSEDED`, and the existing resolver query filters `status: 'ACTIVE'`. Supersede a 2024 card in 2025, upload a 2024 transaction in 2026, and nothing resolves — the charge computes as zero, silently.
+
+Date validity and record legitimacy are two orthogonal concepts sharing one field. Corrected by:
+- superseding sets `endDate` only and **never** touches `status`;
+- the resolver filters `status != INACTIVE` rather than `== ACTIVE`, so it survives a future maintainer setting `SUPERSEDED`;
+- `INACTIVE` means retracted-in-error — unusable for *any* date, not merely expired;
+- currency is `endDate == null`, never a status.
+
+Three consequences, all specced in §14.2–14.4: unresolved charges are **persisted with a `ChargeResolution`** rather than only logged, so backfill gaps are queryable; order-sensitive rules (`#firstTimeInvestor`, per-lot exit load) are marked `PROVISIONAL`; and recomputation **rebuilds** P&L charge aggregates from `user_charges` instead of accumulating deltas, which incremental merging cannot survive.
 
 ---
 
