@@ -12,8 +12,8 @@
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | 4 — one code commit (Chunk 1 enums) and three documentation commits |
-| **Phase** | A (standalone engine). Chunks 1–2 of 9 complete. |
-| **Next action** | Chunk 3 — engine core |
+| **Phase** | A (standalone engine). Chunks 1–2 complete; Chunk 3 part-built. |
+| **Next action** | Finish Chunk 3 — `ChargeEngine`, the orchestrator. See §11 |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
 
 ---
@@ -200,3 +200,34 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 | **Volume-tiered pricing** on cumulative monthly turnover | Needs historical aggregation before the current trade can be priced |
 | **Seeded rates are placeholders** | Only a human comparing against the broker's live charges page can close AC-2 |
 | **Performance under load** | Resolver cache is asserted for correctness, not latency |
+
+---
+
+## 11. Resume point — paused mid-Chunk 3
+
+**Paused:** 2026-09-05, end of session. Build green: **213 unit tests passing**, `spotless:check` clean.
+
+### Committed
+
+Last commit `d13281f` — `ChargeRounding`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, plus `ChargeContext`, `ChargeComputation` and `LotSlice`.
+
+### In the working tree, NOT committed
+
+The repository owner reviews before each commit, and these arrived after the last review:
+
+- `engine/ChargeCalculator.java` — the strategy interface
+- `engine/ChargeCalculatorRegistry.java` — dispatch by basis; refuses to start if a `ChargeBasis` constant has no calculator, or if two claim one
+- `test/.../engine/ChargeCalculatorRegistryTest.java` — 6 tests, all passing
+
+**First action on resuming:** show these for review, then commit. Do not build on top of unreviewed work.
+
+### Then: `ChargeEngine`
+
+The only thing left in Chunk 3. Test-first, per the working agreement in §6. The contract is tech-spec §5.4 (resolve → filter → sort → dispatch → modifiers → assemble) and §5.5 (modifier order: aggregator, then min/max, then rounding — applied by the engine, never inside a calculator). Test cases are test-plan Tier B, roughly 30 of them.
+
+Everything the engine needs now exists apart from the calculators themselves, which are Chunk 4. Engine tests will stub `ChargeCalculator`, exactly as `ChargeCalculatorRegistryTest` already does.
+
+### What TDD has caught so far, worth continuing for
+
+1. `#charges['CODE']` threw `EL1027E` — SpEL indexes `Map`, and the lookup was backed by a record. Implementation-first, this would have surfaced later inside the engine with a murkier trace.
+2. `20.00 * 0.18` returned `3.5999999999999996`. The failing assertion turned out to be the *test's* error: ADR-15 settles that rounding happens once in the orchestrator, so an unrounded return is correct. A test written afterwards would have been shaped to whatever the code did.
