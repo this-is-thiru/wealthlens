@@ -196,6 +196,16 @@
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <!--
+                              Instrument only our own classes. Without this the agent also
+                              instruments every Spring, Mongo and Jackson class the tests load,
+                              which is pure overhead — we never report on them.
+                            -->
+                            <includes>
+                                <include>com/thiru/wealthlens/**</include>
+                            </includes>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>report</id>

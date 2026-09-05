@@ -21,16 +21,17 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Fails fast on formatting drift before spending time on the test suite.
-      - name: Verify formatting
-        run: ./mvnw -q spotless:check
-
+      # spotless:check runs inside this single invocation rather than as its own step.
+      # A separate ./mvnw call costs a full JVM boot plus reactor and plugin resolution
+      # on a cold runner — tens of seconds for a check that takes ~2s of actual work.
+      # It still runs before the tests, so formatting drift fails fast.
+      #
       # -Dmaven.test.failure.ignore=true is set HERE ONLY, so the build reaches `verify`
       # and the consolidated HTML report is generated even when tests fail. The gate below
       # is what fails the pipeline. Local and IDE runs use the default (false) and fail
       # immediately on a test failure, so an exit code means what it says.
-      - name: Run Maven tests and generate consolidated report
-        run: ./mvnw clean test verify -Dmaven.test.failure.ignore=true
+      - name: Verify formatting, run tests, generate consolidated report
+        run: ./mvnw clean spotless:check test verify -Dmaven.test.failure.ignore=true
 
       - name: Check for test failures
         run: |
@@ -65,12 +66,16 @@ jobs:
           name: consolidated-test-report
           path: test-report/target/consolidated-test-report.html
 
-      - name: Upload coverage report
+      # The full JaCoCo HTML site is 471 files. upload-artifact transfers file by file,
+      # which costs far more than the report is worth on every run. The XML is one file
+      # and is what any coverage tooling consumes; the HTML is reproducible locally with
+      # `./mvnw test -pl backend` -> backend/target/site/jacoco/index.html
+      - name: Upload coverage data
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: jacoco-coverage-report
-          path: backend/target/site/jacoco/
+          name: jacoco-coverage-xml
+          path: backend/target/site/jacoco/jacoco.xml
 
       # 2. NEW: Step to determine the Docker tag based on the event type
       - name: Set Docker Image Tag
