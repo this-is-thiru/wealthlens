@@ -521,8 +521,9 @@ public class ProfitAndLossService {
     private static BrokerChargeContext brokerChargeContext(ProfitLossContext context) {
         BrokerChargeTransactionType transactionType = toBrokerChargeTransactionType(context.transactionType());
         double totalAmount = context.price() * context.quantity();
-        return new BrokerChargeContext(context.transactionId(), context.stockCode(), context.brokerName(), transactionType,
-                context.date(), context.exchangeName(), context.actionType(), totalAmount);
+        return new BrokerChargeContext(context.transactionId(), context.stockCode(), context.accountHolder(),
+                context.brokerName(), transactionType, context.date(), context.exchangeName(),
+                context.actionType(), totalAmount);
     }
 
     private static BrokerChargeTransactionType toBrokerChargeTransactionType(TransactionType type) {

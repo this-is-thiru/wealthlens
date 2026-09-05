@@ -36,6 +36,14 @@ public class UserBrokerCharges implements AuditableEntity {
     @Field("stock_code")
     private String stockCode;
 
+    /**
+     * The person whose demat account the trade settled in. Part of the depository-charge
+     * deduplication key: a DP charge is levied per demat account, so the same scrip sold on the
+     * same day under two account holders attracts two charges, not one.
+     */
+    @Field("account_holder")
+    private String accountHolder;
+
     @Field("transaction_date")
     private LocalDate transactionDate;
 

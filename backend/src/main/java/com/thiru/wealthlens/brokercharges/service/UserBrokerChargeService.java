@@ -56,11 +56,12 @@ public class UserBrokerChargeService {
 
         double dpCharges = 0;
         if (brokerChargeContext.transactionType() == BrokerChargeTransactionType.SELL) {
-            dpCharges = getDpCharges(userMail, brokerChargeContext.brokerName(), brokerChargeContext.stockCode(), brokerChargeContext.transactionDate(), brokerCharges);
+            dpCharges = getDpCharges(userMail, brokerChargeContext, brokerCharges);
         }
         userBrokerCharges.setEmail(userMail.getEmail());
         userBrokerCharges.setBrokerName(brokerChargeContext.brokerName());
         userBrokerCharges.setStockCode(brokerChargeContext.stockCode());
+        userBrokerCharges.setAccountHolder(brokerChargeContext.accountHolder());
         userBrokerCharges.setTransactionDate(brokerChargeContext.transactionDate());
         userBrokerCharges.setType(brokerChargeContext.transactionType());
         userBrokerCharges.setBrokerage(getBrokerage(brokerChargeContext, brokerCharges.getBrokerageCharges()));
@@ -78,6 +79,7 @@ public class UserBrokerChargeService {
         UserBrokerCharges userBrokerCharges = new UserBrokerCharges();
         userBrokerCharges.setEmail(userMail.getEmail());
         userBrokerCharges.setBrokerName(brokerChargeContext.brokerName());
+        userBrokerCharges.setAccountHolder(brokerChargeContext.accountHolder());
         userBrokerCharges.setTransactionDate(brokerChargeContext.transactionDate());
         userBrokerCharges.setType(BrokerChargeTransactionType.AMC_CHARGES);
 
@@ -138,12 +140,17 @@ public class UserBrokerChargeService {
         return 0.0;
     }
 
-    private double getDpCharges(UserMail userMail, BrokerName brokerName, String stockCode, LocalDate transactionDate, BrokerCharges brokerCharges) {
-        var brokerCharge = userBrokerChargesRepository.findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate(userMail.getEmail(), brokerName, stockCode, transactionDate);
-        if (brokerCharge.isEmpty()) {
-            return brokerCharges.getDpChargesPerScrip();
-        }
-        return 0.0;
+    /**
+     * A depository charge is levied once per scrip, per demat account, per day — however many sell
+     * transactions occur. {@code accountHolder} is therefore part of the key: a user tracking
+     * holdings for more than one person who sells the same scrip on the same day in two accounts
+     * incurs two separate debits, and so two charges.
+     */
+    private double getDpCharges(UserMail userMail, BrokerChargeContext context, BrokerCharges brokerCharges) {
+        boolean alreadyCharged = userBrokerChargesRepository.existsSellWithDpChargeOnDate(
+                userMail.getEmail(), context.accountHolder(), context.brokerName(),
+                context.stockCode(), context.transactionDate());
+        return alreadyCharged ? 0.0 : brokerCharges.getDpChargesPerScrip();
     }
 
 //    private static void setIfAmcOrAccountOpeningCharges(UserBrokerCharges userBrokerCharges, BrokerCharges brokerCharges, BrokerChargeTransactionType type) {
