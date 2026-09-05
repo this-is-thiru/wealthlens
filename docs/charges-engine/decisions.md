@@ -257,3 +257,19 @@ Superseding sets `endDate = newStartDate.minusDays(1)` and leaves `status` untou
 **Why.** ~190 engine tests, nearly all asserting money, were about to land in a suite that could not measure coverage, whose exit code was meaningless, that asserted rupee amounts with exact `double` equality, and that required Docker for a pure unit test. Fixing that afterwards would have meant rewriting the suite.
 
 **Consequences.** The gates that make QA-replacement credible now exist: JaCoCo scoped to `brokercharges.engine*` at 90% line / 85% branch, and PIT mutation testing at 85% on the calculation engines. **Mutation score, not coverage, is the gate that matters** — coverage proves a line ran; mutation proves a test would have caught it being wrong.
+
+---
+
+## ADR-23 — Corporate-action transactions are exempt from charges by default
+
+**Context.** Bonus shares, split allotments and demerger entitlements are issued free. `AssetEntity` and `TransactionEntity` both carry `corporateActionType`, so such records are already marked. The superseded `BrokerChargeContext` carried the field too — but no calculator ever read it, and an earlier draft of `ChargeContext` dropped it entirely.
+
+There is also a live asymmetry in `ProfitAndLossService.updateProfitAndLoss:312`: the SELL path guards `actionType == null`, the **BUY path does not**. Both current call sites happen to pass `null`, so nothing is wrong today — but a corporate-action BUY would reach the charge path unguarded the moment Phase C wires the engine in.
+
+**Decision.** `ChargeContext` carries `corporateActionType`. When it is non-null, a rule is evaluated only if it declares `appliesToCorporateActions: true` (default `false`). With no opt-in the computation is empty with `resolution: CORPORATE_ACTION_EXEMPT`.
+
+**Why default-deny.** The failure modes are not symmetric. Charging brokerage and STT on free shares takes money the user never spent. Missing a charge on a buyback understates a cost, which reconciliation catches. A blanket exemption would be wrong too — a buyback tender genuinely attracts brokerage and STT, and a rights subscription involves payment — so the opt-in exists rather than a hard exclusion. Corporate actions are rare relative to trades, so per-rule opt-in costs almost nothing.
+
+**Why an explicit resolution value.** A zero charge on a corporate action must be distinguishable from a zero charge caused by a missing rate card. Both would otherwise be an empty computation.
+
+**Consequences.** Phase C must also close the BUY/SELL guard asymmetry in `updateProfitAndLoss`; until then the engine's own default is the protection. A test asserts that a bonus-share BUY produces `CORPORATE_ACTION_EXEMPT` and zero lines.

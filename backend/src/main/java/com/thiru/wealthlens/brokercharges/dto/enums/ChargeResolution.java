@@ -29,5 +29,15 @@ public enum ChargeResolution {
      * The computation depends on facts that may still change — user history, or FIFO lots not yet
      * uploaded. Correct as of now, but a candidate for recomputation.
      */
-    PROVISIONAL
+    PROVISIONAL,
+
+    /**
+     * The transaction arose from a corporate action and no rule opted in to charging it. Bonus
+     * shares, split allotments and demerger entitlements are issued free and must attract no
+     * brokerage, tax or duty.
+     *
+     * <p>Recorded explicitly rather than left as an empty result, so that a zero charge on a
+     * corporate action is visibly deliberate rather than indistinguishable from a missing rate card.
+     */
+    CORPORATE_ACTION_EXEMPT
 }

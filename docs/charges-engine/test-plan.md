@@ -143,6 +143,12 @@ Each `RoundingPolicy` at `.005` boundaries, negative-zero, and very large values
 - **no schedule resolved → empty computation + WARN** *(AC-12)*
 - schedule with zero matching rules → empty, no exception
 
+**Corporate actions** *(ADR-23)*
+- a bonus-share BUY with non-null `corporateActionType` produces zero lines and `CORPORATE_ACTION_EXEMPT`
+- a rule declaring `appliesToCorporateActions: true` **does** apply to it
+- a normal BUY with null `corporateActionType` is unaffected by the exemption
+- `CORPORATE_ACTION_EXEMPT` is distinguishable from `NO_SCHEDULE` — both are empty computations
+
 **Modifier order** — the §5.5 contract, asserted explicitly
 - aggregator applied before min/max
 - min/max applied before rounding

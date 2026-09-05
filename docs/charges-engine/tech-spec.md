@@ -188,7 +188,8 @@ public enum FundCategory {
 public enum PlanType { DIRECT, REGULAR }   // decides whether a distributor fee can apply at all
 
 public enum ChargeResolution {
-    RESOLVED, NO_MATCHING_RULES, NO_SCHEDULE, NO_INSTRUMENT_PROFILE, PROVISIONAL
+    RESOLVED, NO_MATCHING_RULES, NO_SCHEDULE, NO_INSTRUMENT_PROFILE,
+    PROVISIONAL, CORPORATE_ACTION_EXEMPT
 }
 
 // lives in portfolio.dto.enums — shared trade vocabulary, see §9.1
@@ -241,6 +242,7 @@ Indexes: compound `{broker_name:1, asset_type:1, segment:1, start_date:-1}`, plu
 | `slabs` | `slabs` | `List<ChargeSlab>` | for SLAB |
 | `slabBandBasis` | `slab_band_basis` | `SlabBandBasis` | which dimension the slabs band over; default `TURNOVER` |
 | `perLot` | `per_lot` | boolean | evaluate once per FIFO lot and sum, rather than once per transaction. See §5.8 |
+| `appliesToCorporateActions` | `applies_to_corporate_actions` | boolean | default **false**. See §5.9 |
 | `baseCodes` | `base_codes` | `List<String>` | for DERIVED — the taxable base (fixes D1) |
 | `formula` | `formula` | String | for FORMULA — SpEL |
 | `eligibility` | `eligibility` | String | optional SpEL predicate, e.g. `#holdingDays < 365` |
@@ -367,6 +369,7 @@ public record ChargeContext(
         String planCode,
         ChargeEvent event,
         LocalDate transactionDate,
+        CorporateActionType corporateActionType,  // non-null when the trade arose from a corporate action
         double quantity,
         double price,
         int lotSize,                             // 1 for cash-segment instruments
@@ -491,7 +494,19 @@ public record LotSlice(double quantity, LocalDate acquisitionDate, double price)
 
 For a rule that is not `perLot`, `lots` is ignored. For a BUY, it is empty.
 
-### 5.8 Scoped (deduplicated) charges
+### 5.8 Corporate actions are exempt by default
+
+Bonus shares, split allotments and demerger entitlements are **issued free**. Charging brokerage, STT or stamp duty on them would take money the user never spent.
+
+But a blanket exemption is equally wrong: a buyback tender attracts brokerage and STT, and a rights subscription involves a real payment.
+
+**The rule is default-deny with explicit opt-in.** When `ChargeContext.corporateActionType` is non-null, a rule is evaluated only if it declares `appliesToCorporateActions: true`. If no rule opts in, the computation is empty with `resolution: CORPORATE_ACTION_EXEMPT` — recorded explicitly, so a zero charge on a corporate action is visibly deliberate rather than indistinguishable from a missing rate card.
+
+Default-deny rather than default-allow because the failure modes are not symmetric: charging free shares takes money from the user, while missing a buyback charge understates a cost and is caught by reconciliation. Corporate actions are also rare relative to trades, so an explicit opt-in costs almost nothing.
+
+**This corrects two things.** The superseded `BrokerChargeContext` carried `corporateActionType` but no calculator ever read it, and an earlier draft of `ChargeContext` dropped the field altogether. Separately, `ProfitAndLossService.updateProfitAndLoss:312` guards `actionType == null` on the SELL path but **not** on BUY — so a corporate-action BUY reaches the charge path unguarded. Phase C must close that asymmetry; until then the engine's own default is the protection.
+
+### 5.9 Scoped (deduplicated) charges
 `ScopedFlatChargeCalculator` resolves `dedupeScope` against `UserChargeRepository`:
 - `PER_SCRIP_PER_DAY` → `existsByEmailAndBrokerNameAndStockCodeAndTransactionDateAndAmountByCodeKey(...)` — an `exists` query, not a `List` (fixes D9).
 - The check runs inside the same `@Transactional` boundary as the write; because MongoDB transactions are enabled (`app.mongodb.transactions-enabled`), read-your-own-write within the transaction holds.
