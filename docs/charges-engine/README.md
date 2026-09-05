@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-05, branch `feature/charges-engine` at commit `67ec107`.
+**Last verified against the repository:** 2026-09-05, branch `feature/charges-engine` at commit `982a2e3`, rebased onto `master` after PR #60.
 
 ---
 
@@ -10,8 +10,8 @@
 
 | | |
 |---|---|
-| **Branch** | `feature/charges-engine`, branched from `master` after PR #59 merged |
-| **Commits beyond master** | 1 — `67ec107` "feat(charges): add charge engine enums (Chunk 1)" |
+| **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
+| **Commits beyond master** | 4 — one code commit (Chunk 1 enums) and three documentation commits |
 | **Phase** | A (standalone engine). Chunk 1 of 9 complete. |
 | **Next action** | Chunk 2 — entities and repositories |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
@@ -35,7 +35,11 @@ ChargeBasis         ChargeResolution    FundCategory      SlabBandBasis
 
 Plus documentation: this file and the five listed in §3.
 
-### Landed earlier, on `master` via PR #59 (test framework hardening)
+### Landed on `master` via PR #60 (D10 — a defect found while designing this)
+
+The DP dedupe query omitted `accountHolder`, so a user tracking more than one account holder was charged once for what were two separate demat debits. Fixed in the **existing** implementation rather than waiting for Phase C, because users were being undercharged now. `BrokerChargeContext` and `UserBrokerCharges` gained `accountHolder`; the dedupe query became an `exists` returning `boolean`; AMC entries pass `dematAccountId`.
+
+### Landed on `master` via PR #59 (test framework hardening)
 
 - `backend/src/test/java/com/thiru/wealthlens/testsupport/MoneyAssert.java` — `assertMoney`, `assertNoCharge`, `assertBreakdown`
 - `backend/src/test/java/com/thiru/wealthlens/architecture/` — `ArchitectureTest` (8 ArchUnit rules) + `SnakeCaseFieldCondition`
