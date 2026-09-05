@@ -25,6 +25,18 @@
         <poi-ooxml.version>5.5.1</poi-ooxml.version>
         <itextpdf.version>5.5.13.4</itextpdf.version>
         <flying-saucer-pdf.version>10.0.6</flying-saucer-pdf.version>
+        <archunit.version>1.3.0</archunit.version>
+        <jacoco.version>0.8.14</jacoco.version>
+        <pitest.version>1.17.0</pitest.version>
+        <pitest-junit5.version>1.2.1</pitest-junit5.version>
+
+        <!--
+          Surefire honours this property natively. It defaults to false so that a failing
+          test fails the build for every local and IDE run. CI passes -Dmaven.test.failure.ignore=true
+          so that the `verify` phase is still reached and the consolidated HTML report is generated;
+          the workflow's surefire-XML gate is what fails the pipeline there.
+        -->
+        <maven.test.failure.ignore>false</maven.test.failure.ignore>
     </properties>
 
     <dependencyManagement>
@@ -117,6 +129,14 @@
                 <scope>test</scope>
             </dependency>
 
+            <!-- ArchUnit (not managed by Spring Boot parent) -->
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit.version}</version>
+                <scope>test</scope>
+            </dependency>
+
             <!-- Lombok (not managed by Spring Boot parent) -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -161,8 +181,66 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <testFailureIgnore>true</testFailureIgnore>
+                    <!-- @{argLine} preserves the JaCoCo agent injected by prepare-agent. -->
+                    <argLine>@{argLine}</argLine>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <!--
+                      The gate is scoped to the charges engine only. That package does not exist yet,
+                      so the rule matches no classes and passes; it begins enforcing automatically the
+                      moment the engine is created. A global threshold would fail on day one and be
+                      switched off, which is worse than no gate.
+                    -->
+                    <execution>
+                        <id>check-charges-engine</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <haltOnFailure>true</haltOnFailure>
+                            <rules>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>com.thiru.wealthlens.brokercharges.engine*</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.90</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.85</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -209,5 +287,91 @@
         <module>backend</module>
         <module>test-report</module>
     </modules>
+
+
+    <profiles>
+        <!--
+          Test tiering. The default build runs every test, unchanged — module-level
+          integration tests are the primary tier here and must not become opt-in.
+          These profiles exist for a fast inner loop and for CI splitting.
+
+            ./mvnw test              → everything (needs Docker)
+            ./mvnw test -Punit       → unit only, no Docker, seconds
+            ./mvnw test -Pintegration → integration only
+        -->
+        <profile>
+            <id>unit</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludedGroups>integration</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>integration</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <groups>integration</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+          Mutation testing. Scoped to calculation code only — mutating DTOs and entities
+          produces noise and slows the run for no signal.
+              ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend
+        -->
+        <profile>
+            <id>mutation</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>${pitest.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>${pitest-junit5.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <targetClasses>
+                                <param>com.thiru.wealthlens.brokercharges.engine.*</param>
+                                <param>com.thiru.wealthlens.taxplanning.engine.*</param>
+                            </targetClasses>
+                            <targetTests>
+                                <param>com.thiru.wealthlens.brokercharges.*</param>
+                                <param>com.thiru.wealthlens.taxplanning.*</param>
+                            </targetTests>
+                            <excludedGroups>
+                                <excludedGroup>integration</excludedGroup>
+                            </excludedGroups>
+                            <mutationThreshold>85</mutationThreshold>
+                            <outputFormats>
+                                <outputFormat>HTML</outputFormat>
+                                <outputFormat>XML</outputFormat>
+                            </outputFormats>
+                            <timestampedReports>false</timestampedReports>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

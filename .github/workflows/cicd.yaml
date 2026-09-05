@@ -21,11 +21,30 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # Fails fast on formatting drift before spending time on the test suite.
+      - name: Verify formatting
+        run: ./mvnw -q spotless:check
+
+      # -Dmaven.test.failure.ignore=true is set HERE ONLY, so the build reaches `verify`
+      # and the consolidated HTML report is generated even when tests fail. The gate below
+      # is what fails the pipeline. Local and IDE runs use the default (false) and fail
+      # immediately on a test failure, so an exit code means what it says.
       - name: Run Maven tests and generate consolidated report
-        run: ./mvnw clean test verify
+        run: ./mvnw clean test verify -Dmaven.test.failure.ignore=true
 
       - name: Check for test failures
         run: |
+          # A missing report is not a pass. If the suite did not run, fail rather than
+          # succeed on absent evidence.
+          MIN_REPORTS=25
+          REPORT_COUNT=$(ls backend/target/surefire-reports/TEST-*.xml \
+                            test-report/target/surefire-reports/TEST-*.xml 2>/dev/null | wc -l | tr -d ' ')
+          echo "Found $REPORT_COUNT surefire report(s)."
+          if [ "$REPORT_COUNT" -lt "$MIN_REPORTS" ]; then
+            echo "Expected at least $MIN_REPORTS reports. The test suite did not run to completion."
+            exit 1
+          fi
+
           FAILED=0
           for f in backend/target/surefire-reports/TEST-*.xml test-report/target/surefire-reports/TEST-*.xml; do
             [ -f "$f" ] || continue
@@ -45,6 +64,13 @@ jobs:
         with:
           name: consolidated-test-report
           path: test-report/target/consolidated-test-report.html
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-coverage-report
+          path: backend/target/site/jacoco/
 
       # 2. NEW: Step to determine the Docker tag based on the event type
       - name: Set Docker Image Tag
