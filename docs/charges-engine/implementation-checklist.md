@@ -24,6 +24,8 @@ Chunks 1–7 and 9 are Phase A. Chunk 8 is Phase B. Chunks 10–11 are Phase C.
 
 ## Ground rules for every chunk
 
+- **Test-driven.** The test comes first and must be seen to fail before any implementation exists. Chunks 1 and 2 each surfaced a defect that only appeared once something ran — a Mongo query whose parameter binding could have failed silently, and index annotations that created nothing. Both would have been caught at specification time by a test written first.
+
 - Conventions per `CLAUDE.md`: `@RequiredArgsConstructor` + `private final`; services `@Service @Log4j2 @Transactional`; entities `@Data @AllArgsConstructor @NoArgsConstructor @Document @Field`; snake_case Mongo fields; `@MongoId`; implement `AuditableEntity`; 4-space indent; no star imports.
 - Tests: `@ExtendWith(MockitoExtension.class)`, `// Given` `// When` `// Then`, `methodName_whenCondition_expectedResult`.
 - **Surefire has `testFailureIgnore=true`** — a green exit code means nothing. After every chunk:
