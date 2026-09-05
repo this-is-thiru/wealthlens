@@ -12,8 +12,8 @@
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | 4 — one code commit (Chunk 1 enums) and three documentation commits |
-| **Phase** | A (standalone engine). Chunk 1 of 9 complete. |
-| **Next action** | Chunk 2 — entities and repositories |
+| **Phase** | A (standalone engine). Chunks 1–2 of 9 complete. |
+| **Next action** | Chunk 3 — engine core |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
 
 ---
@@ -48,9 +48,17 @@ The DP dedupe query omitted `accountHolder`, so a user tracking more than one ac
 - Root `pom.xml` — JaCoCo 0.8.14, `-Punit` / `-Pintegration` / `-Pmutation` profiles, `maven.test.failure.ignore` defaulting to `false`
 - `.github/workflows/cicd.yaml` — spotless folded into the main invocation, minimum-report gate, `jacoco.xml` artifact
 
+Eight entities in `entity/`: `ChargeSlab`, `ChargeRule`, `ChargeLine`, `ChargeScheduleEntity`, `ChargeInstrumentEntity`, `UserChargeEntity`, `ChargeCatalogueEntity`, `ChargeAccountEntity`.
+
+Five repositories in `repository/`: `ChargeScheduleRepository`, `ChargeInstrumentRepository`, `UserChargeRepository`, `ChargeCatalogueRepository`, `ChargeAccountRepository`.
+
+`config/ChargeIndexInitializer` — creates the declared indexes, because `auto-index-creation` is off application-wide and the annotations would otherwise create nothing.
+
+`ChargeRepositoryIntegrationTest` — 14 tests proving the documents map and the queries execute.
+
 ### NOT written yet — do not assume any of it exists
 
-No entity, repository, service, engine, calculator, controller, seed JSON or test belonging to the charges engine has been written. Specifically absent: `ChargeScheduleEntity`, `ChargeRule`, `ChargeSlab`, `ChargeLine`, `UserChargeEntity`, `ChargeCatalogueEntity`, `ChargeInstrumentEntity`, `ChargeAccountEntity`, `ChargeEngine`, every `*Calculator`, `ChargeFormulaEvaluator`, `ChargeScheduleResolver`, `ChargeScheduleValidator`, `ChargeSeederService`, `UserChargeService`, and everything under `resources/data/charges/`.
+No service, engine, calculator, controller or seed data has been written. Specifically absent: `ChargeEngine`, every `*Calculator`, `ChargeCalculatorRegistry`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, `ChargeContext`, `ChargeComputation`, `ChargeScheduleResolver`, `ChargeInstrumentResolver`, `ChargeScheduleValidator`, `ChargeScheduleService`, `ChargeSeederService`, `UserChargeService`, `AmcChargeService`, every controller, and everything under `resources/data/charges/`.
 
 ### The old implementation is fully intact and untouched
 
