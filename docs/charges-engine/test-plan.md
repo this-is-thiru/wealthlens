@@ -94,6 +94,8 @@ Fixed amount returned; zero amount; quantity irrelevant; min/max still applied; 
 | `PER_SCRIP_PER_DAY`, prior same scrip *different* day | charged |
 | `PER_SCRIP_PER_DAY`, prior *different* scrip same day | charged |
 | `PER_SCRIP_PER_DAY`, prior same scrip same day *different broker* | charged |
+| `PER_SCRIP_PER_DAY`, prior same scrip same day *different `accountHolder`* | **charged** — separate demat account, separate debit *(pins D10)* |
+| `PER_SCRIP_PER_DAY`, prior same scrip same day *same `accountHolder`* | 0.00 |
 | `PER_ORDER`, second trade of same order | 0.00 |
 | `PER_DAY`, second trade any scrip same day | 0.00 |
 | repository throws | exception propagates, no silent 0 |
@@ -184,6 +186,8 @@ Each `RoundingPolicy` at `.005` boundaries, negative-zero, and very large values
 ## 7. Tier D — Validator
 
 `ChargeScheduleValidatorTest` — one test per FR-2 rejection, each asserting the **message**, not just the exception type.
+
+An expression referencing an unknown variable (`#equityOrientd`) is rejected — a typo that would otherwise parse, evaluate null, and silently disable its rule forever *(ADR-24)*.
 
 Duplicate `code`; DERIVED → unknown `baseCode`; DERIVED whose base has `order >=` its own; DERIVED with empty `baseCodes`; TURNOVER without `rate`; FLAT without `flatAmount`; PER_UNIT without `perUnitAmount`; SLAB with empty slabs; SLAB with overlapping bands; SLAB with a gap; rate + flat without `aggregator` *(D7)*; unparseable `formula`; unparseable `eligibility`; `code` absent from `charge_catalogue`; `endDate` before `startDate`; negative rate. *(16 cases)*
 
@@ -299,6 +303,12 @@ The scenario driving these: **a user uploads a 2024 transaction in 2026, after t
 - superseding sets `endDate` and leaves `status` untouched
 - three chained supersessions: a date in each window resolves to the correct generation
 - an instrument profile revised by the AMC behaves identically for a backdated redemption
+
+**Instrument profiles** *(ADR-24)*
+- a mutual fund trade with no instrument profile still computes broker-level charges
+- it records `NO_INSTRUMENT_PROFILE` and appears in the gaps report
+- an equity trade records nothing of the sort — its schedule does not set `requiresInstrumentProfile`
+- seeding the profile and recomputing turns it `RESOLVED` and adds the exit-load line
 
 **Visible gaps**
 - a transaction predating every card persists a `UserChargeEntity` with `resolution: NO_SCHEDULE` and zero lines

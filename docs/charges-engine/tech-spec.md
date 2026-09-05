@@ -217,6 +217,7 @@ public enum TradeSegment { DELIVERY, INTRADAY, FUTURES, OPTIONS, NA }
 | `endDate` | `end_date` | LocalDate | inclusive, null = open-ended (fixes D6) |
 | `status` | `status` | `EntityStatus` | |
 | `currency` | `currency` | String | default `INR` |
+| `requiresInstrumentProfile` | `requires_instrument_profile` | boolean | default false. When true, a trade with no resolvable instrument profile records `NO_INSTRUMENT_PROFILE`. The mutual fund card sets it; the equity cards do not. See §6.2 |
 | `rules` | `rules` | `List<ChargeRule>` | |
 | `sourceUrl` | `source_url` | String | broker rate-card URL, for verification |
 | `verifiedOn` | `verified_on` | LocalDate | when a human last checked the rates |
@@ -508,7 +509,9 @@ Default-deny rather than default-allow because the failure modes are not symmetr
 
 ### 5.9 Scoped (deduplicated) charges
 `ScopedFlatChargeCalculator` resolves `dedupeScope` against `UserChargeRepository`:
-- `PER_SCRIP_PER_DAY` → `existsByEmailAndBrokerNameAndStockCodeAndTransactionDateAndAmountByCodeKey(...)` — an `exists` query, not a `List` (fixes D9).
+- `PER_SCRIP_PER_DAY` → an `exists` query, not a `List` (fixes D9), keyed on **`{email, accountHolder, brokerName, stockCode, transactionDate}`**.
+
+  **`accountHolder` is part of the key, and its omission is a live bug** (D10). A depository charge is levied per demat account. A user tracking holdings for more than one person who sells the same scrip on the same day in two accounts incurs two debits and therefore two charges; keying without `accountHolder` records only one. `PER_ORDER` and `PER_DAY` are keyed the same way for the same reason.
 - The check runs inside the same `@Transactional` boundary as the write; because MongoDB transactions are enabled (`app.mongodb.transactions-enabled`), read-your-own-write within the transaction holds.
 
 ---
@@ -541,6 +544,20 @@ Highest score wins; ties broken by latest `startDate`; a remaining tie is a data
 Cached in a `ConcurrentHashMap` keyed by the resolution tuple, evicted whenever `ChargeScheduleService` writes. Rate cards change monthly at most; per-transaction Mongo lookups are pure waste.
 
 **Supersede on publish (FR-1):** publishing a schedule whose scope matches an existing open one sets the incumbent's `endDate = newStartDate.minusDays(1)` in the same transaction, instead of throwing.
+
+### 6.2 A missing instrument profile is recorded, never fatal
+
+An instrument profile is expected only where the schedule says so, via `requiresInstrumentProfile`. The mutual fund card sets it; the equity cards have no scheme-level charges and do not.
+
+When it is expected and none resolves, the engine **computes the broker-level charges anyway** and records `resolution: NO_INSTRUMENT_PROFILE`. The row appears in the gaps report. Blocking the transaction would stop a legitimate quarterly upload because reference data is missing, which is the wrong trade.
+
+**The reason this needs recording rather than a log line** is that a missing profile silently disables a *statutory* charge, not merely exit load. The STT rule's eligibility reads `#equityOriented`; with no profile that variable is null, `null == true` is false, and STT is quietly not charged. Recording the gap is what makes that visible.
+
+### 6.3 Expression variables are validated against an allow-list
+
+`ChargeScheduleValidator` extracts every `#variable` referenced by a rule's `eligibility` or `formula` and rejects any name not in the known context vocabulary — the `ChargeContext` fields, the `AmountBasis` keys, the instrument attributes, and `#charges['CODE']`.
+
+Without this, a typo such as `#equityOrientd` parses cleanly, evaluates to null, silently disables its rule, and does so permanently. Rate cards are data, so the compiler cannot catch this; the validator must.
 
 ---
 

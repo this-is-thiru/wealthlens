@@ -273,3 +273,42 @@ There is also a live asymmetry in `ProfitAndLossService.updateProfitAndLoss:312`
 **Why an explicit resolution value.** A zero charge on a corporate action must be distinguishable from a zero charge caused by a missing rate card. Both would otherwise be an empty computation.
 
 **Consequences.** Phase C must also close the BUY/SELL guard asymmetry in `updateProfitAndLoss`; until then the engine's own default is the protection. A test asserts that a bonus-share BUY produces `CORPORATE_ACTION_EXEMPT` and zero lines.
+
+---
+
+## ADR-24 — A missing instrument profile is recorded, never fatal
+
+**Context.** A mutual fund transaction whose scheme has no `ChargeInstrumentEntity`. Open item 4.
+
+**Decision.** Three parts:
+1. `ChargeScheduleEntity.requiresInstrumentProfile` declares when a profile is expected. The mutual fund card sets it; the equity cards do not, because equity has no scheme-level charges.
+2. When expected and absent, broker-level charges are computed anyway and the row records `resolution: NO_INSTRUMENT_PROFILE`, surfacing in the gaps report.
+3. `ChargeScheduleValidator` checks every `#variable` in an `eligibility` or `formula` expression against an allow-list of known context variables.
+
+**Why not fatal.** Blocking the transaction would stop a legitimate quarterly upload because reference data is missing. That is the wrong trade — the charge is incomplete, not the trade invalid.
+
+**Why not merely a log line.** A missing profile silently disables a *statutory* charge, not just exit load. The STT rule's eligibility reads `#equityOriented`; with no profile that variable is null, `null == true` is false, and STT is quietly not charged. A warning would let a government levy go unbilled invisibly. Recording it makes the gap queryable and fixable by seeding the profile and recomputing.
+
+**Why the allow-list.** Rate cards are data, so no compiler sees them. A typo such as `#equityOrientd` parses cleanly, evaluates to null, silently disables its rule, and stays broken forever. The validator is the only place this can be caught.
+
+**Consequences.** One field on the schedule, one validator rule, and one extra `ChargeResolution` value already present.
+
+---
+
+## ADR-25 — `AccountType` does not change charges, but `accountHolder` belongs in the dedupe key
+
+**Context.** `AccountType` is `{SELF, OUTSOURCED}` and `accountHolder` is a separate `String` partitioning holdings — `findEligibleHoldingsForSell(email, stockCode, brokerName, accountHolder, date)`. Open item 5.
+
+**Decision.** Charges do not vary by `AccountType`: the broker levies the same amounts regardless of beneficial owner, and the distinction affects only which P&L bucket the result lands in.
+
+**But every dedupe scope is keyed per account holder.** `PER_SCRIP_PER_DAY`, `PER_ORDER` and `PER_DAY` all include `accountHolder`.
+
+**Why — this is a live defect (D10).** The existing query is:
+
+```java
+@Query("{ 'email': ?0, 'broker_name': ?1, 'stock_code': ?2, 'transaction_date': ?3, 'type': 'SELL' }")
+```
+
+`accountHolder` is absent. A depository charge is levied **per demat account**. A user tracking holdings for more than one person who sells the same scrip on the same day in two accounts incurs two separate demat debits and therefore two charges — but only one is recorded. The design inherited this key before the omission was noticed.
+
+**Consequences.** The dedupe index becomes `{email, account_holder, broker_name, stock_code, transaction_date}`. `ChargeAccountEntity` is likewise keyed per demat account, since each account attracts its own AMC. A test asserts that two same-day sells of one scrip under *different* account holders produce two DP charges, while two under the *same* holder produce one.

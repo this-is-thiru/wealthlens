@@ -31,6 +31,7 @@ The system is being extended to cover mutual funds and other instruments, and br
 | D7 | `getBrokerage` returns 0 when `brokerageAggregator` is null, rather than failing loudly. | `UserBrokerChargeService:171` | Misconfiguration presents as "free trading". |
 | D8 | Charge amounts are **typed in by the user** as `AssetRequest.brokerCharges` and flow into cost basis, trade outcome and net P&L; the engine's computed figure feeds only the charges report and is never reconciled against it. | `PortfolioService:290,569`; `ProfitAndLossService:200` | Manual entry is error-prone, cannot produce a per-component breakdown, and does not scale. **Removing this input is the primary motivation for the whole effort.** |
 | D9 | `findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate` is named "findTop" but returns a `List`, and DP dedupe depends on read-your-own-write ordering inside the transaction. | `UserBrokerChargesRepository:12` | Fragile first-sell-of-day detection. |
+| D10 | The DP dedupe query keys on `{email, broker_name, stock_code, transaction_date}` and **omits `accountHolder`**. A user holding accounts for more than one person sells the same scrip on the same day in two of them — two separate demat debits — and only one DP charge is recorded. | `UserBrokerChargesRepository:12` | Silent undercharge whenever a user tracks more than one account holder. |
 
 ---
 
