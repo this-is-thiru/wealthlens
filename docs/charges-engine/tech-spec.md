@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-05
 **Status:** Draft for review
-**Companion docs:** `prd.md` (requirements), `implementation-checklist.md` (build tracker)
+**Start at** `README.md` — current state and how to resume. **Rationale** lives in `decisions.md`.
 **Branch:** `feature/charges-engine`
 **Precedent followed (shape only, no shared code):** the `taxplanning` policy layer — seeded JSON policy documents, a SpEL evaluator, a resolution service, pluggable engines. The charges module builds its own equivalents; nothing is imported across that boundary.
 
@@ -793,8 +793,8 @@ Building for F&O now would be waste. Building so F&O *cannot* be added later wou
 **Built in Phase A despite not being needed** — because it is the escape hatch that makes the Tier-1 promise true for charges nobody has thought of yet:
 `FORMULA` calculator + `ChargeFormulaEvaluator`.
 
-**Deliberately deferred** — no seeded card needs them, and each is ~30 lines when a card does:
-`PER_UNIT` (per-lot), `SLAB` (full-service tiers). The registry means adding one later changes no existing class.
+**Also built, after correction** — an earlier draft deferred these as unused:
+`PER_UNIT` and `SLAB`. `SlabBandBasis` exists so graded exit loads can band on holding days, so deferring `SlabChargeCalculator` would leave that enum dead. And a `ChargeBasis` constant with no registered calculator is a trap for whoever first writes a rule using it — `ChargeCalculatorRegistry` therefore fails fast at startup if any constant lacks a calculator.
 
 **Carried but unused** — cheap now, a migration later:
 `amountBasis` on the rule; `lotSize`, `orderId`, `baseAmounts` on the context; `ChargeEvent` values for `CALL_AND_TRADE`, `AUTO_SQUARE_OFF`, `PLEDGE`; the `planCode` and `exchange` schedule dimensions.

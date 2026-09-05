@@ -1,7 +1,7 @@
 # Charges Engine — Implementation Checklist
 
 **Purpose:** the build tracker. If context is lost mid-implementation, resume from the first unticked box.
-**Read first:** `prd.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
+**Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
 **Status:** Chunk -1 merged to master (PR #59). Chunk 0 settled. Chunk 1 in progress.
@@ -165,22 +165,17 @@ Three consequences, all specced in §14.2–14.4: unresolved charges are **persi
 
 ## Chunk 4 — Calculators *(one class each, independently testable)*
 
-Scope decision per tech-spec §13.4: build what equity delivery needs, **plus** the formula escape hatch. Defer the two nobody's rate card uses yet — the registry makes adding them later a pure addition.
+**All seven are built.** An earlier draft deferred `PER_UNIT` and `SLAB` as unused. That was wrong on two counts: `SlabBandBasis` exists specifically so graded exit loads can band on holding days, so deferring `SlabChargeCalculator` would leave that enum dead code; and a `ChargeBasis` constant with no registered calculator is a runtime trap for whoever first writes a rule using it. Each is ~30–50 lines.
 
-**Required by the equity-delivery cards:**
 - [ ] `engine/calculator/TurnoverChargeCalculator.java` — reads `rule.amountBasis()` from `context.baseAmounts()`
 - [ ] `engine/calculator/FlatChargeCalculator.java`
+- [ ] `engine/calculator/PerUnitChargeCalculator.java` — amount × quantity; per share, or per lot via `lotSize`
+- [ ] `engine/calculator/SlabChargeCalculator.java` — bands by `slabBandBasis`: TURNOVER, HOLDING_DAYS or QUANTITY
 - [ ] `engine/calculator/ScopedFlatChargeCalculator.java` — dedupe via `UserChargeRepository.existsBy…`
 - [ ] `engine/calculator/DerivedChargeCalculator.java` — **sums only `baseCodes`; fixes D1**
-
-**Built despite not being needed** — the escape hatch that keeps future charges Tier-1:
 - [ ] `engine/calculator/FormulaChargeCalculator.java` — delegates to `ChargeFormulaEvaluator`
-
-**Deferred until a seeded rate card needs them** (~30 lines each, no existing class changes):
-- [ ] ~~`PerUnitChargeCalculator`~~ — per-lot F&O charges
-- [ ] ~~`SlabChargeCalculator`~~ — full-service brokerage tiers
-
-- [ ] One `*CalculatorTest` per calculator built — test-plan Tier A (~55 cases, `@ParameterizedTest` tables)
+- [ ] `ChargeCalculatorRegistry` fails fast at startup if any `ChargeBasis` constant has no calculator
+- [ ] One `*CalculatorTest` per calculator, covering min/max/aggregator boundaries and rounding
 - [ ] `DerivedChargeCalculatorTest` must include the **STT-excluded-from-GST-base** case that pins D1
 
 ---
