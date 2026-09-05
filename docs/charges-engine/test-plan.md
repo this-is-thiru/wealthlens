@@ -1,7 +1,7 @@
 # Charges Engine — Test Plan
 
 **Date:** 2026-09-05
-**Companion docs:** `prd.md`, `tech-spec.md`, `implementation-checklist.md`, `../testing/test-framework-audit.md`
+**Start at** `README.md` — current state and how to resume. **Rationale** lives in `decisions.md`.
 **Objective:** the engine is verified to a standard where manual QA of charge calculations is unnecessary.
 
 ---

@@ -3,7 +3,7 @@
 **Date:** 2026-09-05
 **Status:** Draft for review
 **Supersedes:** the `brokercharges` module as built in ITS-15 / commit `52000e1`
-**Companion docs:** `tech-spec.md` (design), `implementation-checklist.md` (build tracker)
+**Start at** `README.md` — current state and how to resume. **Rationale** lives in `decisions.md`.
 **Branch:** `feature/charges-engine`
 
 ---
