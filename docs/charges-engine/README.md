@@ -159,15 +159,15 @@ Each of these was established by investigation or corrected after being got wron
 
 ## 9. Open items
 
-Everything design-level is settled. These are the only things still genuinely open, and none of them block Chunk 2.
+Everything design-level is settled. Two remain open, neither blocking Chunk 2.
 
 | # | Item | State |
 |---|---|---|
 | 1 | **AC-2 cannot be closed in Phase A** — golden fixtures assert against placeholder rates, so they pin the arithmetic but not reality | Decided (ADR-18). Needs real Zerodha rates, then one re-verification |
 | 2 | **`ChargeAccountEntity` shape** — AMC billing cycles, `lastBilledThrough`, multiple demat accounts per broker (`AssetManagementDetails` carries `dematAccountId`) | Designed, not yet reviewed. Lands in Chunk 2 |
 | 3 | **`charge_catalogue` initial code list** — the registry of valid charge codes | Drafted in tech-spec §7. Confirm the list when Chunk 6 seeds it |
-| 4 | **Is a missing instrument profile an error or a warning for a mutual fund?** `NO_INSTRUMENT_PROFILE` records it either way | Open. Decide when `ChargeInstrumentResolver` is written in Chunk 5 |
-| 5 | **`AccountType` (SELF vs outsourced)** — P&L splits reports by it; charges are presumably identical either way, only the reporting bucket differs | Assumed no charge impact. Confirm at Phase B |
+| 4 | ~~Missing instrument profile: error or warning?~~ | **Settled — ADR-24.** Recorded, never fatal. Gated by `requiresInstrumentProfile`; validator checks expression variables against an allow-list |
+| 5 | ~~Does `AccountType` affect charges?~~ | **Settled — ADR-25.** No rate impact, but `accountHolder` joins every dedupe key. Uncovered defect D10: DP charges are undercounted across account holders |
 | 6 | **`exchangeName` is `"NSE"` everywhere in tests and the API collection** — plain uppercase codes, so the schedule's `exchange` dimension matches directly. BSE is untested | Low risk, noted |
 
 ### Verified non-issues
