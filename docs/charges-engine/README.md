@@ -119,6 +119,7 @@ git log --oneline master..HEAD          # what has been committed on this branch
 Then open `implementation-checklist.md` and start at the first unticked box.
 
 **Working agreement, as instructed by the repository owner:**
+- **Test-driven.** Write the failing test first, watch it fail, then implement until it passes. Not tests-alongside, and not tests-afterwards. In Java the first red is usually a compile error, which proves nothing — create minimal skeletons so the test compiles, then show real assertion failures before implementing. Pure data carriers with no branch or calculation have no behaviour to drive out and are exempt.
 - Stop for review **after each chunk**.
 - **One commit per chunk**, local to this branch; not pushed until asked.
 - Build quality-first — no compromises taken for speed.
