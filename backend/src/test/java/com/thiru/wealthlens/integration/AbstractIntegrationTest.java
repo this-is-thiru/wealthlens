@@ -7,11 +7,15 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import javax.crypto.SecretKey;
+import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -21,12 +25,27 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 
+@Tag("integration")
+@Isolated
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration-test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractIntegrationTest {
 
     private static final int JWT_EXPIRATION_SECONDS = 60 * 30;
+
+    /**
+     * Collections seeded once per Spring context (PolicySeederService runs at @PostConstruct)
+     * and shared read-only by every test. Everything else is per-test state and is cleared
+     * after each test. Anything not listed here is wiped, so a new collection needs no
+     * change to this class — which is the point.
+     */
+    private static final Set<String> SEEDED_REFERENCE_COLLECTIONS = Set.of(
+            "allowance_catalogue",
+            "allowance_limits",
+            "tax_slab_policies",
+            "tax_year_registry",
+            "perquisite_policies");
 
     static final MongoDBContainer mongoDBContainer;
     static {
@@ -59,21 +78,21 @@ public abstract class AbstractIntegrationTest {
         RestAssured.port = port;
     }
 
+    /**
+     * Clears every collection except the seeded reference data.
+     *
+     * <p>Uses {@code deleteMany} rather than {@code drop} deliberately: dropping a collection
+     * also drops its indexes, forcing a rebuild on the next write. Deleting documents is faster
+     * and keeps index behaviour under test realistic.
+     */
     @AfterEach
     void cleanDatabase() {
-        mongoTemplate.getDb().getCollection("transactions").drop();
-        mongoTemplate.getDb().getCollection("assets").drop();
-        mongoTemplate.getDb().getCollection("corporate_action").drop();
-        mongoTemplate.getDb().getCollection("lastly_performed_corporate_action").drop();
-        mongoTemplate.getDb().getCollection("profit_and_loss").drop();
-        mongoTemplate.getDb().getCollection("reports").drop();
-        mongoTemplate.getDb().getCollection("user_details").drop();
-        mongoTemplate.getDb().getCollection("insurances").drop();
-        mongoTemplate.getDb().getCollection("broker_charges").drop();
-        mongoTemplate.getDb().getCollection("user_broker_charges").drop();
-
-        mongoTemplate.getDb().getCollection("salary_profiles").drop();
-        mongoTemplate.getDb().getCollection("tax_computations").drop();
+        for (String collectionName : mongoTemplate.getDb().listCollectionNames()) {
+            if (SEEDED_REFERENCE_COLLECTIONS.contains(collectionName)) {
+                continue;
+            }
+            mongoTemplate.getDb().getCollection(collectionName).deleteMany(new Document());
+        }
     }
 
     protected String generateToken(String email) {

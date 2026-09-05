@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxplanning.recommendation;
 
 import com.thiru.wealthlens.taxplanning.enums.AvailabilityPath;
 import com.thiru.wealthlens.taxplanning.enums.HrSupportLikelihood;
-import com.thiru.wealthlens.taxplanning.policy.entity.AllowanceCatalogueEntity;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -10,7 +9,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.Value;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 @Value
 @Builder

@@ -21,11 +21,31 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Maven tests and generate consolidated report
-        run: ./mvnw clean test verify
+      # spotless:check runs inside this single invocation rather than as its own step.
+      # A separate ./mvnw call costs a full JVM boot plus reactor and plugin resolution
+      # on a cold runner — tens of seconds for a check that takes ~2s of actual work.
+      # It still runs before the tests, so formatting drift fails fast.
+      #
+      # -Dmaven.test.failure.ignore=true is set HERE ONLY, so the build reaches `verify`
+      # and the consolidated HTML report is generated even when tests fail. The gate below
+      # is what fails the pipeline. Local and IDE runs use the default (false) and fail
+      # immediately on a test failure, so an exit code means what it says.
+      - name: Verify formatting, run tests, generate consolidated report
+        run: ./mvnw clean spotless:check test verify -Dmaven.test.failure.ignore=true
 
       - name: Check for test failures
         run: |
+          # A missing report is not a pass. If the suite did not run, fail rather than
+          # succeed on absent evidence.
+          MIN_REPORTS=25
+          REPORT_COUNT=$(ls backend/target/surefire-reports/TEST-*.xml \
+                            test-report/target/surefire-reports/TEST-*.xml 2>/dev/null | wc -l | tr -d ' ')
+          echo "Found $REPORT_COUNT surefire report(s)."
+          if [ "$REPORT_COUNT" -lt "$MIN_REPORTS" ]; then
+            echo "Expected at least $MIN_REPORTS reports. The test suite did not run to completion."
+            exit 1
+          fi
+
           FAILED=0
           for f in backend/target/surefire-reports/TEST-*.xml test-report/target/surefire-reports/TEST-*.xml; do
             [ -f "$f" ] || continue
@@ -45,6 +65,17 @@ jobs:
         with:
           name: consolidated-test-report
           path: test-report/target/consolidated-test-report.html
+
+      # The full JaCoCo HTML site is 471 files. upload-artifact transfers file by file,
+      # which costs far more than the report is worth on every run. The XML is one file
+      # and is what any coverage tooling consumes; the HTML is reproducible locally with
+      # `./mvnw test -pl backend` -> backend/target/site/jacoco/index.html
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-coverage-xml
+          path: backend/target/site/jacoco/jacoco.xml
 
       # 2. NEW: Step to determine the Docker tag based on the event type
       - name: Set Docker Image Tag

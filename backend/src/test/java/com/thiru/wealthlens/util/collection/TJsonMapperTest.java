@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.util.collection;
 
-import com.thiru.wealthlens.dto.Student;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
+import com.thiru.wealthlens.testsupport.Student;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.thiru.wealthlens.dto;
+package com.thiru.wealthlens.testsupport;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
