@@ -51,6 +51,7 @@ Without this, golden-file tests to ₹0.01 will be flaky and people will widen t
 | H. Persistence & dedupe | DP-once-per-day, provenance, aggregation | ~14 | yes | ~15s |
 | I. API | Simulate, publish/supersede, history | ~12 | yes | ~20s |
 | J. Extensibility guarantee | A JSON-only charge reaches the report | 3 | yes | ~5s |
+| K. Temporal correctness | Backfilled transactions resolve historical rate cards | ~14 | mixed | ~10s |
 | **Total** | | **~176** | | |
 
 Tiers A–G are pure JVM. That is deliberate: **~147 of ~176 tests run in under 5 seconds with no Docker**, so the engine is developed against a real feedback loop.
@@ -280,6 +281,44 @@ This is the test that catches a bad rate card **at build time**. It is the singl
 If anyone later hard-codes a charge name into a `switch` or a field, test 1 fails. That is the design promise defended by the build.
 
 ---
+
+## 13a. Tier K — Temporal correctness
+
+The scenario driving these: **a user uploads a 2024 transaction in 2026, after the 2024 rate card was superseded in 2025.** Tech-spec §14.
+
+**Historical resolution**
+- a superseded card still resolves for a date inside its historical window *(pins the §14.1 defect)*
+- a card with `status: SUPERSEDED` set by a future maintainer still resolves — the predicate is `!= INACTIVE`, not `== ACTIVE`
+- a card with `status: INACTIVE` resolves for **no** date, including dates inside its window
+- superseding sets `endDate` and leaves `status` untouched
+- three chained supersessions: a date in each window resolves to the correct generation
+- an instrument profile revised by the AMC behaves identically for a backdated redemption
+
+**Visible gaps**
+- a transaction predating every card persists a `UserChargeEntity` with `resolution: NO_SCHEDULE` and zero lines
+- `GET /user-charges/user/{email}/gaps` returns it
+- seeding the missing card and recomputing turns it into `RESOLVED`
+- a card applies but no rule matches the event → `NO_MATCHING_RULES`, not `NO_SCHEDULE`
+
+**Quarterly batch processing** *(the actual upload model: quarterly, chronological)*
+- a quarter of transactions processed in one batch produces one `UserChargeEntity` per transaction
+- **re-uploading the same quarter does not double-charge** — rows are replaced, not appended
+- two same-day sells of one scrip **within a single batch** yield exactly one DP charge
+- ordering within the batch is respected: the earlier transaction carries the DP charge
+- an AMC cycle already covered by `lastBilledThrough` is skipped on a re-run
+- a batch spanning a rate-card boundary charges each transaction against the card in force on its own date
+- resolver cache: a 200-transaction batch on one rate card performs one schedule lookup, not 200
+
+**Out-of-sequence detection** *(the guarantee is operational, so it is verified rather than assumed)*
+- a batch reaching back before the latest recorded transaction marks its computations `PROVISIONAL`
+- those rows appear in the gaps endpoint
+- an in-sequence batch marks nothing `PROVISIONAL`
+- recompute after an out-of-sequence batch corrects `#firstTimeInvestor` across both purchases
+
+**Recomputation**
+- recompute is idempotent: running twice yields identical rows
+- recompute rebuilds the financial year's charge aggregates rather than accumulating, so totals do not drift *(the §14.4 invariant)*
+- recomputing after a rate correction updates the stored lines and the P&L projection together
 
 ## 14. Gates
 
