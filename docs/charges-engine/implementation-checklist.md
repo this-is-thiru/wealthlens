@@ -130,20 +130,41 @@ Three consequences, all specced in §14.2–14.4: unresolved charges are **persi
 
 ---
 
-## Chunk 2 — Entities and repositories
+## Chunk 2 — Entities and repositories ✅
 
-- [ ] `entity/ChargeRule.java` (embedded; every field per tech-spec §4.2)
-- [ ] `entity/ChargeSlab.java`
-- [ ] `entity/ChargeLine.java`
-- [ ] `entity/ChargeScheduleEntity.java` — `@Document("charge_schedules")`, `AuditableEntity`
-- [ ] `entity/UserChargeEntity.java` — `@Document("user_charges")`, `AuditableEntity`
-- [ ] `entity/ChargeCatalogueEntity.java` — `@Document("charge_catalogue")`
-- [ ] `entity/ChargeAccountEntity.java` — `@Document("charge_accounts")`
-- [ ] `repository/ChargeScheduleRepository.java` — `findCandidates(brokerName, date)` covering open-ended `end_date: null`
-- [ ] `repository/UserChargeRepository.java` — `existsBy…` for PER_SCRIP_PER_DAY dedupe (an `exists`, **not** a `List` — fixes D9), `findByEmail`, `deleteByEmail`
-- [ ] `repository/ChargeCatalogueRepository.java`
-- [ ] `repository/ChargeAccountRepository.java`
-- [ ] Compound indexes per tech-spec §4.1 / §4.5
+**Eight documents** in `brokercharges/entity/`:
+- [x] `ChargeSlab` — embedded band; the quantity banded is named by the owning rule's `slabBandBasis`
+- [x] `ChargeRule` — embedded; the unit of extensibility. Carries `perLot`, `appliesToCorporateActions`, `amountBasis`, `slabBandBasis`, `baseCodes`, `eligibility`, `formula`
+- [x] `ChargeLine` — embedded computed line, carrying `rate` and `baseAmount` so a stored charge is re-derivable rather than taken on trust
+- [x] `ChargeScheduleEntity` — `charge_schedules`, with `requiresInstrumentProfile`, `sourceUrl`, `verifiedOn`
+- [x] `ChargeInstrumentEntity` — `charge_instruments`, the second rule source; holds `equityOriented` and `planType`
+- [x] `UserChargeEntity` — `user_charges`, source of truth; `resolution`, `computedOn`, `accountHolder`, `amountByCode`
+- [x] `ChargeCatalogueEntity` — `charge_catalogue`, the code registry standing in for a compiler
+- [x] `ChargeAccountEntity` — `charge_accounts`, with `lastBilledThrough` and embedded `BillingEvent`
+
+**Five repositories** in `brokercharges/repository/`:
+- [x] `ChargeScheduleRepository` — `findCandidates` filters `status != INACTIVE`, handles null `end_date`
+- [x] `ChargeInstrumentRepository` — same validity semantics for AMC exit-load revisions
+- [x] `UserChargeRepository` — three `exists` dedupe queries, gaps query, out-of-sequence probe
+- [x] `ChargeCatalogueRepository`, `ChargeAccountRepository` (`findDueForAmc`)
+
+**Indexes:** unique on `schedule_code` and `code`; compound unique on `{email, transaction_id}`; dedupe on `{email, account_holder, broker_name, stock_code, transaction_date}`; history on `{email, transaction_date desc}`; unique on `{email, broker_name, demat_account_id}`.
+
+### Defect found: index annotations were doing nothing
+
+`spring.data.mongodb.auto-index-creation` is not set, and Spring Data MongoDB has defaulted it to **false** since 3.0. `@Indexed` and `@CompoundIndex` were therefore decorative — the unique index meant to make a re-uploaded quarter idempotent would not have existed, and every dedupe lookup would have been a collection scan. **The existing `@Indexed` annotations in `taxplanning` are non-functional for the same reason.**
+
+Enabling the setting globally would build indexes for every entity in the application at startup, including collections this module knows nothing about. So `config/ChargeIndexInitializer` applies the annotations for the charges collections only, via `MongoPersistentEntityIndexResolver`. The annotations stay the single declaration; `createIndex` is idempotent, so it is a no-op after the first start.
+
+### Verification
+- [x] `ChargeRepositoryIntegrationTest` — **14 tests, all passing** against real MongoDB
+- [x] The superseded-card regression (ADR-12): a card closed in 2025 still prices a 2024 trade
+- [x] `status: SUPERSEDED` still resolves; `status: INACTIVE` resolves nothing at any date
+- [x] `existsChargeForScripOnDate` — proves the parameter substituted into the field path (`amount_by_code.?5`) actually binds, which would otherwise fail silently
+- [x] Different `accountHolder` does not suppress a depository charge (D10 semantics carried into the new model)
+- [x] Duplicate `transaction_id` rejected — which also proves the index initializer works
+- [x] Full suite **356 tests green**; ArchUnit's snake_case `@Field` rule passes across ~80 new annotations
+- [x] Phase A isolation intact: `git diff master --stat -- .../portfolio/` empty
 
 ---
 
