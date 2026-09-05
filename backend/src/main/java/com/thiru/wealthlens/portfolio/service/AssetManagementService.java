@@ -65,8 +65,8 @@ public class AssetManagementService {
 
         LocalDate transactionDate = assetManagementDetail.getLastAmcChargesDeductedOn();
 
-        BrokerChargeContext brokerChargeContext = new BrokerChargeContext(null, null, assetManagementDetail.getBrokerName(),
-                BrokerChargeTransactionType.AMC_CHARGES, transactionDate, null, null, 0);
+        BrokerChargeContext brokerChargeContext = new BrokerChargeContext(null, null, assetManagementDetail.getDematAccountId(),
+                assetManagementDetail.getBrokerName(), BrokerChargeTransactionType.AMC_CHARGES, transactionDate, null, null, 0);
         var userBrokerCharges = profitAndLossService.updateProfitAndLossWithAmcCharges(UserMail.from(assetManagementDetail.getEmail()), brokerChargeContext);
         double totalAmount = userBrokerCharges.getAmcCharges() + userBrokerCharges.getTaxes();
         return new AssetManagementDetails.AmcChargesEvent(userBrokerCharges.getId(), transactionDate.plusDays(1), totalAmount, List.of(fromDate, transactionDate));

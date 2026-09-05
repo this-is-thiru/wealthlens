@@ -9,9 +9,18 @@ import org.springframework.data.mongodb.repository.Query;
 
 public interface UserBrokerChargesRepository extends MongoRepository<UserBrokerCharges, String> {
 
-    @Query("{ 'email': ?0, 'broker_name': ?1, 'stock_code': ?2, 'transaction_date': ?3, 'type': 'SELL' }")
-    List<UserBrokerCharges> findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate(
-            String email, BrokerName brokerName, String stockCode, LocalDate transactionDate
+    /**
+     * Whether a depository charge has already been levied for this scrip, in this demat account,
+     * on this date.
+     *
+     * <p>{@code accountHolder} is part of the key because a DP charge is levied per demat account.
+     * A user tracking holdings for more than one person who sells the same scrip on the same day in
+     * two accounts incurs two separate debits, and so two charges.
+     */
+    @Query(value = "{ 'email': ?0, 'account_holder': ?1, 'broker_name': ?2, 'stock_code': ?3, "
+            + "'transaction_date': ?4, 'type': 'SELL', 'dp_charges': { $gt: 0 } }", exists = true)
+    boolean existsSellWithDpChargeOnDate(
+            String email, String accountHolder, BrokerName brokerName, String stockCode, LocalDate transactionDate
     );
 
     void deleteByEmail(String email);

@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.service;
 
+import static com.thiru.wealthlens.testsupport.MoneyAssert.assertMoney;
+import static com.thiru.wealthlens.testsupport.MoneyAssert.assertNoCharge;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,8 +21,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.entity.model.BrokerageCharges;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +37,8 @@ class UserBrokerChargeServiceTest {
 
     @Mock
     private BrokerChargeService brokerChargeService;
+
+    private static final String ACCOUNT_HOLDER = "self";
 
     @InjectMocks
     private UserBrokerChargeService userBrokerChargeService;
@@ -70,7 +72,7 @@ class UserBrokerChargeServiceTest {
     void addUserBrokerChargeEntry_buy_success() {
         // Given
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-001", "RELIANCE", BrokerName.ZERODHA,
+                "txn-001", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 50000.0
         );
@@ -112,15 +114,15 @@ class UserBrokerChargeServiceTest {
     void addUserBrokerChargeEntry_sell_success() {
         // Given
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-002", "RELIANCE", BrokerName.ZERODHA,
+                "txn-002", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.SELL, LocalDate.of(2024, 1, 15),
                 "NSE", null, 60000.0
         );
         when(brokerChargeService.getBrokerCharge(BrokerName.ZERODHA, LocalDate.of(2024, 1, 15)))
                 .thenReturn(brokerCharges);
-        when(userBrokerChargesRepository.findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate(
-                "test@example.com", BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
-                .thenReturn(Collections.emptyList());
+        when(userBrokerChargesRepository.existsSellWithDpChargeOnDate(
+                "test@example.com", ACCOUNT_HOLDER, BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
+                .thenReturn(false);
         when(userBrokerChargesRepository.save(any(UserBrokerCharges.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
@@ -153,16 +155,16 @@ class UserBrokerChargeServiceTest {
     void addUserBrokerChargeEntry_sell_dpChargeDedup_firstSellApplied() {
         // Given
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-003", "RELIANCE", BrokerName.ZERODHA,
+                "txn-003", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.SELL, LocalDate.of(2024, 1, 15),
                 "NSE", null, 30000.0
         );
         when(brokerChargeService.getBrokerCharge(BrokerName.ZERODHA, LocalDate.of(2024, 1, 15)))
                 .thenReturn(brokerCharges);
         // No existing sell transaction - DP charges should apply
-        when(userBrokerChargesRepository.findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate(
-                "test@example.com", BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
-                .thenReturn(Collections.emptyList());
+        when(userBrokerChargesRepository.existsSellWithDpChargeOnDate(
+                "test@example.com", ACCOUNT_HOLDER, BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
+                .thenReturn(false);
         when(userBrokerChargesRepository.save(any(UserBrokerCharges.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
@@ -181,7 +183,7 @@ class UserBrokerChargeServiceTest {
     void addUserBrokerChargeEntry_sell_dpChargeDedup_secondSellSkipped() {
         // Given
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-004", "RELIANCE", BrokerName.ZERODHA,
+                "txn-004", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.SELL, LocalDate.of(2024, 1, 15),
                 "NSE", null, 25000.0
         );
@@ -190,9 +192,9 @@ class UserBrokerChargeServiceTest {
         // Existing sell transaction found - DP charges should be skipped
         UserBrokerCharges existingSell = new UserBrokerCharges();
         existingSell.setId("existing-id");
-        when(userBrokerChargesRepository.findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate(
-                "test@example.com", BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
-                .thenReturn(List.of(existingSell));
+        when(userBrokerChargesRepository.existsSellWithDpChargeOnDate(
+                "test@example.com", ACCOUNT_HOLDER, BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
+                .thenReturn(true);
         when(userBrokerChargesRepository.save(any(UserBrokerCharges.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
@@ -214,7 +216,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setAmcChargeFrequency(AmcChargeFrequency.QUARTERLY);
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-005", null, BrokerName.ZERODHA,
+                "txn-005", null, ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.AMC_CHARGES, LocalDate.of(2024, 1, 15),
                 null, null, 0.0
         );
@@ -245,7 +247,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setAmcChargeFrequency(AmcChargeFrequency.ANNUALLY);
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-006", null, BrokerName.ZERODHA,
+                "txn-006", null, ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.AMC_CHARGES, LocalDate.of(2024, 1, 15),
                 null, null, 0.0
         );
@@ -273,7 +275,7 @@ class UserBrokerChargeServiceTest {
     void addUserBrokerChargeEntry_noBrokerTemplate_returnsNull() {
         // Given
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-007", "RELIANCE", BrokerName.ZERODHA,
+                "txn-007", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 50000.0
         );
@@ -294,7 +296,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setAmcChargeFrequency(null);
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-008", null, BrokerName.ZERODHA,
+                "txn-008", null, ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.AMC_CHARGES, LocalDate.of(2024, 1, 15),
                 null, null, 0.0
         );
@@ -312,7 +314,7 @@ class UserBrokerChargeServiceTest {
     void getBrokerage_minAggregator() {
         // Given - MIN aggregator: max(minimumBrokerage, percentageAmount), then min(result, fixedCharges)
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-009", "RELIANCE", BrokerName.ZERODHA,
+                "txn-009", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 50000.0 // 0.1% = 50, minBrokerage = 10, fixed = 20
         );
@@ -339,7 +341,7 @@ class UserBrokerChargeServiceTest {
     void getBrokerage_maxAggregator() {
         // Given - MAX aggregator: min(maximumBrokerage, percentageAmount), then max(result, fixedCharges)
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-010", "RELIANCE", BrokerName.ZERODHA,
+                "txn-010", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 50000.0 // 0.1% = 50, maxBrokerage = 50, fixed = 20
         );
@@ -376,7 +378,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setBrokerageCharges(null);
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-011", "RELIANCE", BrokerName.ZERODHA,
+                "txn-011", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 50000.0
         );
@@ -400,7 +402,7 @@ class UserBrokerChargeServiceTest {
     void getGovtCharges_buy_includesStampDuty() {
         // Given
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-012", "RELIANCE", BrokerName.ZERODHA,
+                "txn-012", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 100000.0
         );
@@ -428,15 +430,15 @@ class UserBrokerChargeServiceTest {
     void getGovtCharges_sell_excludesStampDuty() {
         // Given
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-013", "RELIANCE", BrokerName.ZERODHA,
+                "txn-013", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.SELL, LocalDate.of(2024, 1, 15),
                 "NSE", null, 100000.0
         );
         when(brokerChargeService.getBrokerCharge(BrokerName.ZERODHA, LocalDate.of(2024, 1, 15)))
                 .thenReturn(brokerCharges);
-        when(userBrokerChargesRepository.findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate(
-                "test@example.com", BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
-                .thenReturn(Collections.emptyList());
+        when(userBrokerChargesRepository.existsSellWithDpChargeOnDate(
+                "test@example.com", ACCOUNT_HOLDER, BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
+                .thenReturn(false);
         when(userBrokerChargesRepository.save(any(UserBrokerCharges.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
@@ -461,7 +463,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setGstApplicableDescription("18%-brokerage,18%-stt");
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-014", "RELIANCE", BrokerName.ZERODHA,
+                "txn-014", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 100000.0
         );
@@ -491,7 +493,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setGstApplicableDescription(null);
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-015", "RELIANCE", BrokerName.ZERODHA,
+                "txn-015", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 50000.0
         );
@@ -517,7 +519,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setGstApplicableDescription("   ");
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-016", "RELIANCE", BrokerName.ZERODHA,
+                "txn-016", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 50000.0
         );
@@ -543,7 +545,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setGstApplicableDescription("18%-brokerage,18%-unknown_charge,18%-stt");
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-017", "RELIANCE", BrokerName.ZERODHA,
+                "txn-017", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.BUY, LocalDate.of(2024, 1, 15),
                 "NSE", null, 100000.0
         );
@@ -572,7 +574,7 @@ class UserBrokerChargeServiceTest {
         brokerCharges.setGstApplicableDescription("18%-amc_charges");
 
         BrokerChargeContext context = new BrokerChargeContext(
-                "txn-018", null, BrokerName.ZERODHA,
+                "txn-018", null, ACCOUNT_HOLDER, BrokerName.ZERODHA,
                 BrokerChargeTransactionType.AMC_CHARGES, LocalDate.of(2024, 1, 15),
                 null, null, 0.0
         );
@@ -602,4 +604,54 @@ class UserBrokerChargeServiceTest {
         // Then
         verify(userBrokerChargesRepository).deleteByEmail("test@example.com");
     }
+    @Test
+    void addUserBrokerChargeEntry_whenSameScripSoldSameDayUnderDifferentAccountHolder_chargesDpAgain() {
+        // Given — a DP charge already exists for this scrip and date, but under a different holder.
+        // A depository charge is levied per demat account, so this sale attracts its own charge.
+        BrokerChargeContext context = new BrokerChargeContext(
+                "txn-002", "RELIANCE", "spouse", BrokerName.ZERODHA,
+                BrokerChargeTransactionType.SELL, LocalDate.of(2024, 1, 15),
+                "NSE", null, 60000.0
+        );
+        when(brokerChargeService.getBrokerCharge(BrokerName.ZERODHA, LocalDate.of(2024, 1, 15)))
+                .thenReturn(brokerCharges);
+        when(userBrokerChargesRepository.existsSellWithDpChargeOnDate(
+                "test@example.com", "spouse", BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
+                .thenReturn(false);
+        when(userBrokerChargesRepository.save(any(UserBrokerCharges.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        UserBrokerCharges saved = userBrokerChargeService.addUserBrokerChargeEntry(UserMail.from("test@example.com"), context);
+
+        // Then
+        assertMoney(brokerCharges.getDpChargesPerScrip(), saved.getDpCharges());
+        assertEquals("spouse", saved.getAccountHolder());
+        verify(userBrokerChargesRepository).existsSellWithDpChargeOnDate(
+                "test@example.com", "spouse", BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15));
+    }
+
+    @Test
+    void addUserBrokerChargeEntry_whenSameScripSoldSameDaySameAccountHolder_doesNotChargeDpAgain() {
+        // Given — the same holder already incurred a DP charge for this scrip today
+        BrokerChargeContext context = new BrokerChargeContext(
+                "txn-003", "RELIANCE", ACCOUNT_HOLDER, BrokerName.ZERODHA,
+                BrokerChargeTransactionType.SELL, LocalDate.of(2024, 1, 15),
+                "NSE", null, 60000.0
+        );
+        when(brokerChargeService.getBrokerCharge(BrokerName.ZERODHA, LocalDate.of(2024, 1, 15)))
+                .thenReturn(brokerCharges);
+        when(userBrokerChargesRepository.existsSellWithDpChargeOnDate(
+                "test@example.com", ACCOUNT_HOLDER, BrokerName.ZERODHA, "RELIANCE", LocalDate.of(2024, 1, 15)))
+                .thenReturn(true);
+        when(userBrokerChargesRepository.save(any(UserBrokerCharges.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        UserBrokerCharges saved = userBrokerChargeService.addUserBrokerChargeEntry(UserMail.from("test@example.com"), context);
+
+        // Then
+        assertNoCharge(saved.getDpCharges());
+    }
+
 }

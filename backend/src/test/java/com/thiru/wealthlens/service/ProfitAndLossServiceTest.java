@@ -355,7 +355,7 @@ class ProfitAndLossServiceTest {
         UserMail userMail = UserMail.from(TEST_EMAIL);
         LocalDate txnDate = LocalDate.of(2024, 2, 15);
         BrokerChargeContext brokerChargeContext = new BrokerChargeContext(
-                "txn-amc-1", STOCK_CODE, BROKER, BrokerChargeTransactionType.BUY,
+                "txn-amc-1", STOCK_CODE, ACCOUNT_HOLDER, BROKER, BrokerChargeTransactionType.BUY,
                 txnDate, EXCHANGE, null, 1000.0
         );
 

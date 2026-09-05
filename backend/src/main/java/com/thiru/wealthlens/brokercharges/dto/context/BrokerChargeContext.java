@@ -7,6 +7,7 @@ import java.time.LocalDate;
 public record BrokerChargeContext(
         String transactionId,
         String stockCode,
+        String accountHolder,
         BrokerName brokerName,
         BrokerChargeTransactionType transactionType,
         LocalDate transactionDate,
