@@ -1,0 +1,58 @@
+{
+  "scheduleCode": "ZERODHA_EQ_DELIVERY_2025_04",
+  "brokerName": "ZERODHA",
+  "assetType": "EQUITY",
+  "segment": "DELIVERY",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://zerodha.com/charges",
+  "verifiedOn": null,
+  "rules": [
+    { "code": "BROKERAGE", "displayName": "Brokerage", "category": "BROKERAGE",
+      "basis": "FLAT", "side": "BOTH", "events": ["BUY", "SELL"],
+      "flatAmount": 0.0, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 10,
+      "notes": "PLACEHOLDER — delivery brokerage is advertised as nil. Verify before relying on it." },
+
+    { "code": "STT", "displayName": "Securities Transaction Tax", "category": "STATUTORY",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 0.1, "rounding": "HALF_UP_0", "taxable": false, "active": true, "order": 20,
+      "notes": "PLACEHOLDER — taken to the nearest rupee by convention. Never part of a GST base." },
+
+    { "code": "EXCHANGE_TXN", "displayName": "Exchange transaction charges", "category": "EXCHANGE",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 0.00297, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 30,
+      "notes": "PLACEHOLDER — NSE rate. BSE differs; a card naming an exchange would outrank this one." },
+
+    { "code": "SEBI_FEE", "displayName": "SEBI turnover fees", "category": "REGULATORY",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 0.0001, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 40,
+      "notes": "PLACEHOLDER" },
+
+    { "code": "IPFT", "displayName": "Investor Protection Fund Trust", "category": "EXCHANGE",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 0.0001, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 50,
+      "notes": "PLACEHOLDER" },
+
+    { "code": "STAMP_DUTY", "displayName": "Stamp duty", "category": "STATUTORY",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BUY", "events": ["BUY"],
+      "rate": 0.015, "rounding": "HALF_UP_0", "taxable": false, "active": true, "order": 60,
+      "notes": "PLACEHOLDER — purchases only. Never part of a GST base." },
+
+    { "code": "DP", "displayName": "Depository participant charges", "category": "DEPOSITORY",
+      "basis": "SCOPED_FLAT", "side": "SELL", "events": ["SELL"],
+      "flatAmount": 13.5, "dedupeScope": "PER_SCRIP_PER_DAY",
+      "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 70,
+      "notes": "PLACEHOLDER — once per scrip per day per demat account, however many sells." },
+
+    { "code": "GST", "displayName": "Goods and Services Tax", "category": "TAX",
+      "basis": "DERIVED", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 18.0, "baseCodes": ["BROKERAGE", "EXCHANGE_TXN", "SEBI_FEE", "IPFT", "DP"],
+      "rounding": "HALF_UP_2", "taxable": false, "active": true, "order": 100,
+      "notes": "PLACEHOLDER — the base is listed explicitly. STT and stamp duty are absent by design (D1)." }
+  ]
+}

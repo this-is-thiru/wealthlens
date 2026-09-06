@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,6 +48,16 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private UserChargeRepository userChargeRepository;
+
+    /**
+     * The application seeds its shipped rate cards at startup, and this class asserts over exactly
+     * the cards it writes. Clearing first makes that true whatever ran before it.
+     */
+    @BeforeEach
+    void clearShippedRateCards() {
+        mongoTemplate.getCollection("charge_schedules").deleteMany(new org.bson.Document());
+        mongoTemplate.getCollection("charge_instruments").deleteMany(new org.bson.Document());
+    }
 
     @Test
     void schedule_roundTripsWithItsEmbeddedRules() {

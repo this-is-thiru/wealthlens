@@ -1,0 +1,54 @@
+{
+  "scheduleCode": "FYERS_EQ_DELIVERY_2025_04",
+  "brokerName": "FYERS",
+  "assetType": "EQUITY",
+  "segment": "DELIVERY",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://fyers.in/pricing/",
+  "verifiedOn": null,
+  "rules": [
+    { "code": "BROKERAGE", "displayName": "Brokerage", "category": "BROKERAGE",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 0.1, "flatAmount": 20.0, "aggregator": "MIN",
+      "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 10,
+      "notes": "PLACEHOLDER — a percentage capped by a flat fee." },
+
+    { "code": "STT", "displayName": "Securities Transaction Tax", "category": "STATUTORY",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 0.1, "rounding": "HALF_UP_0", "taxable": false, "active": true, "order": 20,
+      "notes": "PLACEHOLDER — statutory, so identical across brokers." },
+
+    { "code": "EXCHANGE_TXN", "displayName": "Exchange transaction charges", "category": "EXCHANGE",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 0.00297, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 30,
+      "notes": "PLACEHOLDER" },
+
+    { "code": "SEBI_FEE", "displayName": "SEBI turnover fees", "category": "REGULATORY",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 0.0001, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 40,
+      "notes": "PLACEHOLDER" },
+
+    { "code": "STAMP_DUTY", "displayName": "Stamp duty", "category": "STATUTORY",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BUY", "events": ["BUY"],
+      "rate": 0.015, "rounding": "HALF_UP_0", "taxable": false, "active": true, "order": 60,
+      "notes": "PLACEHOLDER" },
+
+    { "code": "DP", "displayName": "Depository participant charges", "category": "DEPOSITORY",
+      "basis": "SCOPED_FLAT", "side": "SELL", "events": ["SELL"],
+      "flatAmount": 12.5, "dedupeScope": "PER_SCRIP_PER_DAY",
+      "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 70,
+      "notes": "PLACEHOLDER" },
+
+    { "code": "GST", "displayName": "Goods and Services Tax", "category": "TAX",
+      "basis": "DERIVED", "side": "BOTH", "events": ["BUY", "SELL"],
+      "rate": 18.0, "baseCodes": ["BROKERAGE", "EXCHANGE_TXN", "SEBI_FEE", "DP"],
+      "rounding": "HALF_UP_2", "taxable": false, "active": true, "order": 100,
+      "notes": "PLACEHOLDER" }
+  ]
+}
