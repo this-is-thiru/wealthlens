@@ -1,0 +1,11 @@
+{
+  "name": "fyers-equity-delivery-sell-100k",
+  "describes": "The same trade again at a third broker, differing only in the depository charge. Three brokers priced from three data files and no Java.",
+  "context": { "brokerName": "FYERS", "assetType": "EQUITY", "segment": "DELIVERY", "exchange": "NSE",
+               "event": "SELL", "price": 1000, "quantity": 100, "transactionDate": "2025-06-02" },
+  "expected": {
+    "lines": { "BROKERAGE": 20.00, "STT": 100.00, "EXCHANGE_TXN": 2.97, "SEBI_FEE": 0.10,
+               "DP": 12.50, "GST": 6.40 },
+    "total": 141.97
+  }
+}

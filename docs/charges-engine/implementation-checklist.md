@@ -4,8 +4,17 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Chunk -1 merged to master (PR #59). Chunk 0 settled. Chunk 1 in progress.
-**Last updated:** 2026-09-05
+**Status:** Chunks -1 through 6 complete. **Resume at Chunk 7.**
+**Last updated:** 2026-09-06 — 683 tests green, `spotless:check` clean, both quality gates passing.
+
+Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
+
+| Box | Why it is open |
+|---|---|
+| `ChargeEngineProperties` (Chunk 3) | Nothing reads a flag yet. Belongs with Chunk 8 |
+| AMC rate card (Chunk 6) | Not on the original list, and it would be the broker's second unscoped card |
+| Rate verification (Chunk 6) | Needs a human against the broker's page. **Blocks AC-2** |
+| `BrokerageAggregatorType` deletion (Chunk 1) | Phase C, once its last usage is gone |
 
 ---
 
@@ -54,8 +63,8 @@ From `../testing/test-framework-audit.md`. These land **before** engine code, be
 - [x] **T8** `ArchitectureTest` — 8 ArchUnit rules encoding CLAUDE.md, all passing
 - [x] **T10** parallel execution by class; integration classes `@Isolated`
 - [x] **T12** `spotless:check` in CI; **T13** CI report-count gate; **T14** `Student.java` moved to `testsupport/`
-- [ ] **T11** charge-specific test fixture builders — deferred to Chunk 2, when the entities exist
-- [ ] **Design:** engine arithmetic in `BigDecimal` internally, `double` only at the persistence boundary (test-plan §2.1)
+- [x] **T11** charge-specific test fixture builders — `ChargeFixtures` (public, shared across the engine and service test packages) and `testsupport/LogCapture`
+- [x] **Design:** engine arithmetic in `BigDecimal` internally, `double` only at the persistence boundary (test-plan §2.1)
 
 ---
 
@@ -170,75 +179,89 @@ Enabling the setting globally would build indexes for every entity in the applic
 
 ---
 
-## Chunk 3 — Engine core
+## Chunk 3 — Engine core ✅
 
-- [ ] `config/ChargeEngineProperties.java` — `@ConfigurationProperties("app.charges")`: `engineEnabled`, `shadowRecording`, `authoritative`, `cacheEnabled`
-- [ ] `engine/ChargeAccumulator.java` — holds lines, `sumOf(List<String> codes)`, `amountOf(code)`
-- [ ] `engine/ChargeCalculator.java` — the strategy interface
-- [ ] `engine/ChargeRounding.java` — `RoundingPolicy` application
-- [ ] `engine/ChargeFormulaEvaluator.java` — charges-owned SpEL wrapper (tech-spec §5.6): `evaluate`, `matches`, `validate`
-- [ ] `engine/ChargeCalculatorRegistry.java` — `List<ChargeCalculator>` → `Map<ChargeBasis, …>`, fails fast on duplicate or missing basis
-- [ ] `dto/context/ChargeContext.java` — record + `forTrade` / `forAmcCycle` factories
-- [ ] `dto/context/ChargeComputation.java` — record + `empty()`, `amountOf`, `amountByCode`
-- [ ] `engine/ChargeEngine.java` — resolve → filter → sort → dispatch → modifiers → assemble (tech-spec §5.4, §5.5)
-- [ ] `ChargeEngineTest` — test-plan Tier B (~30 cases: selection, ordering, assembly, modifier order)
-- [ ] `ChargeFormulaEvaluatorTest` — variable exposure, accumulator access, `validate` rejects bad syntax
+- [ ] `config/ChargeEngineProperties.java` — **not built.** Nothing reads a flag yet; the engine has no live caller. Belongs with Chunk 8, where `shadowRecording` first means something
+- [x] `engine/ChargeAccumulator.java` — holds lines, `sumOf(List<String> codes)`, `amountOf(code)`
+- [x] `engine/ChargeCalculator.java` — the strategy interface
+- [x] `engine/ChargeRounding.java` — `RoundingPolicy` application
+- [x] `engine/ChargeFormulaEvaluator.java` — charges-owned SpEL wrapper (tech-spec §5.6): `evaluate`, `matches`, `validate`, `referencedVariables`
+- [x] `engine/ChargeCalculatorRegistry.java` — `List<ChargeCalculator>` → `Map<ChargeBasis, …>`, fails fast on duplicate or missing basis
+- [x] `dto/context/ChargeContext.java` — record. **No `forTrade` / `forAmcCycle` factories:** every caller so far builds the record directly, and a factory nothing calls is a guess about the caller. `AmcChargeService` builds its own cycle context. Also gained `email`, which the scoped dedupe key needs
+- [x] `dto/context/ChargeComputation.java` — record + `empty(resolution)`, `amountOf`, `amountByCode`. `empty()` takes a resolution: an empty computation must say *why*
+- [x] `engine/ChargeEngine.java` — resolve → filter → sort → dispatch → modifiers → assemble (tech-spec §5.4, §5.5)
+- [x] `ChargeEngineTest` — test-plan Tier B, 56 cases
+- [x] `ChargeFormulaEvaluatorTest` — variable exposure, accumulator access, `validate` rejects bad syntax
+- [x] `ApplicationContextIntegrationTest` — **added, not planned.** A `@Component` on the registry broke startup with every unit test green; nothing asserted the application starts
+
+**Done when:** the engine prices a trade from a stubbed schedule. ✅
 
 ---
 
-## Chunk 4 — Calculators *(one class each, independently testable)*
+## Chunk 4 — Calculators ✅ *(one class each, independently testable)*
 
 **All seven are built.** An earlier draft deferred `PER_UNIT` and `SLAB` as unused. That was wrong on two counts: `SlabBandBasis` exists specifically so graded exit loads can band on holding days, so deferring `SlabChargeCalculator` would leave that enum dead code; and a `ChargeBasis` constant with no registered calculator is a runtime trap for whoever first writes a rule using it. Each is ~30–50 lines.
 
-- [ ] `engine/calculator/TurnoverChargeCalculator.java` — reads `rule.amountBasis()` from `context.baseAmounts()`
-- [ ] `engine/calculator/FlatChargeCalculator.java`
-- [ ] `engine/calculator/PerUnitChargeCalculator.java` — amount × quantity; per share, or per lot via `lotSize`
-- [ ] `engine/calculator/SlabChargeCalculator.java` — bands by `slabBandBasis`: TURNOVER, HOLDING_DAYS or QUANTITY
-- [ ] `engine/calculator/ScopedFlatChargeCalculator.java` — dedupe via `UserChargeRepository.existsBy…`
-- [ ] `engine/calculator/DerivedChargeCalculator.java` — **sums only `baseCodes`; fixes D1**
-- [ ] `engine/calculator/FormulaChargeCalculator.java` — delegates to `ChargeFormulaEvaluator`
-- [ ] `ChargeCalculatorRegistry` fails fast at startup if any `ChargeBasis` constant has no calculator
-- [ ] One `*CalculatorTest` per calculator, covering min/max/aggregator boundaries and rounding
-- [ ] `DerivedChargeCalculatorTest` must include the **STT-excluded-from-GST-base** case that pins D1
+All seven live in `engine/`, not `engine/calculator/` — a flat package, so both quality gates (`brokercharges.engine*`) cover them without a pom change.
+
+- [x] `TurnoverChargeCalculator` — reads `rule.effectiveAmountBasis()` from `context.baseAmounts()`; warns and charges nothing when the context lacks that amount
+- [x] `FlatChargeCalculator`
+- [x] `PerUnitChargeCalculator` — amount × quantity. **Per-lot derivatives pricing is not implemented:** nothing in the context distinguishes a quantity of lots from one of units, and Phase A seeds no F&O card
+- [x] `SlabChargeCalculator` — bands by `slabBandBasis`: TURNOVER, HOLDING_DAYS or QUANTITY, with the rate applied to `amountBasis` rather than to the banded quantity
+- [x] `ScopedFlatChargeCalculator` — dedupe via `UserChargeRepository`, keyed on the account holder (D10)
+- [x] `DerivedChargeCalculator` — **sums only `baseCodes`; fixes D1**
+- [x] `FormulaChargeCalculator` — delegates to `ChargeFormulaEvaluator`
+- [x] `ChargeCalculatorRegistry` fails fast at startup if any `ChargeBasis` constant has no calculator — and is now a `@Component`, verified wired by `ApplicationContextIntegrationTest`
+- [x] One `*CalculatorTest` per calculator — 81 tests. **Min/max/aggregator and rounding are asserted in `ChargeEngineTest`, not here.** ADR-15 puts those in the orchestrator; a calculator that applied them too would round twice
+- [x] `DerivedChargeCalculatorTest` includes the **STT-excluded-from-GST-base** case that pins D1
+
+**Done when:** every basis is served and the application starts. ✅
 
 ---
 
-## Chunk 5 — Resolution, validation, services
+## Chunk 5 — Resolution, validation, services ✅
 
-- [ ] `service/ChargeScheduleValidator.java` — every FR-2 rule:
-  - [ ] duplicate `code` within a schedule
-  - [ ] `DERIVED` referencing an unknown `baseCode`
-  - [ ] `DERIVED` whose `baseCode` has `order >=` its own
-  - [ ] basis missing its required parameter
-  - [ ] `rate` + `flatAmount` present without `aggregator` (**fixes D7**)
-  - [ ] `formula` / `eligibility` that fails `ChargeFormulaEvaluator.validate`
-  - [ ] `code` absent from `charge_catalogue`
-- [ ] `service/ChargeScheduleResolver.java` — specificity scoring (tech-spec §6), caching, eviction on write
-- [ ] `service/ChargeScheduleService.java` — publish with **auto-supersede** (fixes D6), fetch, list, close
-- [ ] `service/UserChargeService.java` — `computeAndRecord`, history queries, `deleteByEmail`
-- [ ] `service/ChargeAccountService.java` — CRUD over `charge_accounts`
-- [ ] `service/AmcChargeService.java` — AMC cycle billing via `ChargeEvent.AMC_CYCLE`
-- [ ] `ChargeScheduleResolverTest` — test-plan Tier C (~18 cases)
-- [ ] `ChargeScheduleValidatorTest` — test-plan Tier D (~16 cases, each asserting the *message*)
-- [ ] `ChargeScheduleServiceTest`, `AmcChargeServiceTest`
-- [ ] `ChargeInvariantTest` — test-plan Tier F (~10 properties over generated schedules)
+- [x] `service/ChargeScheduleValidator.java` — every FR-2 rule, and each reported together rather than one per run:
+  - [x] duplicate `code` within a schedule
+  - [x] `DERIVED` referencing an unknown `baseCode`
+  - [x] `DERIVED` whose `baseCode` has `order >=` its own
+  - [x] basis missing its required parameter
+  - [x] `rate` + `flatAmount` present without `aggregator`, and an `aggregator` without both operands (**fixes D7**)
+  - [x] `formula` / `eligibility` that fails `ChargeFormulaEvaluator.validate`
+  - [x] `code` absent from `charge_catalogue`
+  - [x] expression naming a variable outside the known vocabulary (**ADR-24**, `#equityOrientd`)
+  - [x] slab bands that overlap or leave a gap; negative amounts; a card with no rules; an end date before its start
+- [x] `engine/ChargeScheduleResolver.java` — specificity scoring (tech-spec §6), caching including misses, eviction on write. **Lives in `engine/`, not `service/`:** the engine depends on it, and both quality gates already cover that package. A class, not an interface — a second implementation was never coming
+- [x] `engine/ChargeInstrumentResolver.java` — **not on the original list.** The engine merges instrument-sourced rules, so something had to resolve them
+- [x] `service/ChargeScheduleService.java` — publish with **auto-supersede** (fixes D6), fetch, list, close, and resolver-cache eviction on every write
+- [x] `service/UserChargeService.java` — `computeAndRecord`, batch with the out-of-sequence guard, history, gaps, `deleteByEmail`
+- [x] `service/ChargeAccountService.java` — CRUD over `charge_accounts`, preserving billing history across re-registration
+- [x] `service/AmcChargeService.java` — AMC cycle billing via `ChargeEvent.AMC_CYCLE`, idempotent per account and period
+- [x] `ChargeScheduleResolverTest` — test-plan Tier C, 14 cases. **The date and status rows are not re-tested here:** they belong to the repository query and are asserted against a real Mongo in `ChargeRepositoryIntegrationTest`. Tier C's `status != ACTIVE → not selected` row contradicts ADR-12 and is wrong; a superseded card must still price a backdated trade
+- [x] `ChargeInstrumentResolverTest` — 7 cases
+- [x] `ChargeScheduleValidatorTest` — test-plan Tier D, 31 cases, each asserting the *message*
+- [x] `ChargeScheduleServiceTest` (17), `UserChargeServiceTest` (20), `ChargeAccountServiceTest` (8), `AmcChargeServiceTest` (12)
+- [x] `ChargeInvariantTest` — test-plan Tier F, 10 properties over 200 generated cards each, verified non-vacuous by reintroducing D1 and watching two properties fail
 
-**Done when:** publishing over an open schedule closes the incumbent rather than throwing (AC-8).
+**Done when:** publishing over an open schedule closes the incumbent rather than throwing (AC-8). ✅
+
+**Found while building this:** the engine applied *both* sources' version of a shared charge code, double-charging silently against tech-spec §4.6.2. Fixed with a failing test first. And `NO_MATCHING_RULES` was missing from the gaps report, so a trade priced by a catch-all card charged zero invisibly.
 
 ---
 
-## Chunk 6 — Seed data
+## Chunk 6 — Seed data ✅ *(bar the rate verification, which is not ours to do)*
 
-- [ ] `resources/data/charges/charge-catalogue.json` — BROKERAGE, STT, EXCHANGE_TXN, SEBI_FEE, IPFT, STAMP_DUTY, DP, GST, AMC, ACCOUNT_OPENING, EXIT_LOAD, MF_TXN_FEE
-- [ ] `zerodha-equity-delivery-2025-04-01.json`
-- [ ] `zerodha-equity-intraday-2025-04-01.json` *(optional — proves the segment dimension works; skip if scope is tight)*
-- [ ] `zerodha-mutual-fund-2025-04-01.json` *(optional — proves FORMULA/exit-load works)*
-- [ ] `upstox-equity-delivery-2025-04-01.json`
-- [ ] `fyers-equity-delivery-2025-04-01.json`
-- [ ] `service/ChargeSeederService.java` — `@PostConstruct`, idempotent by `scheduleCode`, validates before persisting, **fails fast** on a bad card
-- [ ] `ChargeSeederServiceTest` — test-plan Tier G (~6 cases). **Highest-value test in the plan** — catches a rate-card typo at build time
-- [ ] `ChargeGoldenFileTest` + fixtures — test-plan Tier E (~12 contract notes, incl. the D1 regression fixture)
-- [ ] ⚠️ Every rate verified against the broker's live charges page; `sourceUrl` + `verifiedOn` filled
+- [x] `resources/data/charges/charge-catalogue.json` — all 12 codes
+- [x] `zerodha-equity-delivery-2025-04-01.json`
+- [x] `zerodha-equity-intraday-2025-04-01.json` — proves the segment dimension and the MIN aggregator
+- [x] `zerodha-mutual-fund-2025-04-01.json` — proves `requiresInstrumentProfile` and eligibility on a scheme attribute. **Exit load is not on it:** exit load belongs to the instrument profile, and no profile is seeded
+- [x] `upstox-equity-delivery-2025-04-01.json`
+- [x] `fyers-equity-delivery-2025-04-01.json`
+- [ ] **No AMC rate card.** `AmcChargeService` has nothing to bill against until one is seeded, and it must leave `assetType` unset — which makes it the broker's second unscoped card. Not on the original list; flagged rather than improvised
+- [x] `service/ChargeSeederService.java` — `@PostConstruct`, catalogue first, idempotent by code, validates before persisting, **fails fast** on a bad card
+- [x] `ChargeSeederServiceTest` — test-plan Tier G, 14 cases against the real files
+- [x] `ChargeGoldenFileTest` + fixtures — test-plan Tier E, 12 contract notes including the D1 regression fixture, verified non-vacuous
+- [ ] ⚠️ Every rate verified against the broker's live charges page; `sourceUrl` + `verifiedOn` filled — **`sourceUrl` is populated on every card; `verifiedOn` is null by design (ADR-18) and Tier G asserts it. This box needs a human and blocks AC-2**
 
 ---
 
@@ -334,25 +357,27 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 
 ## Acceptance criteria sign-off *(from PRD §6)*
 
-- [ ] AC-1 new charge = JSON only, no Java *(A)*
-- [ ] AC-2 equity delivery buy matches a real contract note to ₹0.01 *(A)*
-- [ ] AC-3 sell: STT sell-side, DP once, no stamp duty *(A)*
-- [ ] AC-4 second sell same scrip same day → no second DP *(A)*
-- [ ] AC-5 GST base excludes STT and stamp duty *(A)*
-- [ ] AC-6 MF exit load applies only under the holding-period predicate *(A)*
-- [ ] AC-7 intraday: STT sell-only, no DP, intraday stamp rate *(A)*
-- [ ] AC-8 publishing supersedes the incumbent schedule *(A)*
-- [ ] AC-9 invalid rate card rejected at seed with a readable message *(A)*
-- [ ] AC-10 cost basis uses the computed total *(C)*
-- [ ] AC-11 modulith verification green *(A, B, C)*
-- [ ] AC-12 no schedule match → empty computation + WARN, no exception *(A)*
+Ticked only where something actually asserts it. The evidence is named so the claim can be checked rather than taken on trust.
+
+- [ ] **AC-1** new charge = JSON only, no Java *(A)* — true of the design and demonstrated informally by five cards sharing one engine, but `ChargeExtensibilityTest` (Tier J) is Chunk 9. Not claimed until it exists
+- [ ] **AC-2** equity delivery buy matches a real contract note to ₹0.01 *(A)* — **blocked by design.** Golden fixtures pin the arithmetic against placeholder rates; only a human comparing them to a broker's published page can close this (ADR-18)
+- [x] **AC-3** sell: STT sell-side, DP once, no stamp duty *(A)* — golden `zerodha-equity-delivery-sell-100k`
+- [x] **AC-4** second sell same scrip same day → no second DP *(A)* — golden `zerodha-equity-delivery-sell-second-same-day`, plus `ScopedFlatChargeCalculatorTest`
+- [x] **AC-5** GST base excludes STT and stamp duty *(A)* — golden `zerodha-equity-delivery-sell-d1-regression`, `DerivedChargeCalculatorTest`, and a Tier F property over generated cards
+- [ ] **AC-6** MF exit load applies only under the holding-period predicate *(A)* — the *engine* does this, asserted by `ChargeEngineTest`'s per-lot cases. Not closed because no instrument profile carrying an exit load is seeded, so nothing exercises it end to end
+- [x] **AC-7** intraday: STT sell-only, no DP, intraday stamp rate *(A)* — golden `zerodha-equity-intraday-sell-100k` and `zerodha-equity-intraday-buy-100k`
+- [x] **AC-8** publishing supersedes the incumbent schedule *(A)* — `ChargeScheduleServiceTest`
+- [x] **AC-9** invalid rate card rejected at seed with a readable message *(A)* — `ChargeSeederServiceTest`, and `ChargeScheduleValidatorTest` asserts the messages themselves
+- [ ] **AC-10** cost basis uses the computed total *(C)* — Phase C, not started
+- [x] **AC-11** modulith verification green *(A, B, C)* — `WealthLensModulithTest`, green throughout
+- [x] **AC-12** no schedule match → empty computation + WARN, no exception *(A)* — `ChargeEngineTest` and `ChargeScheduleResolverTest`, the warning asserted through `LogCapture`
 
 ---
 
 ## Known traps
 
 1. **Surefire `testFailureIgnore=true`** — always grep the XML; the exit code lies.
-2. **`cleanDatabase()`** — the four new collections must be registered or integration tests leak state between classes.
+2. **`cleanDatabase()`** — `charge_catalogue` is registered as seeded reference data, because `ChargeSeederService` is `@PostConstruct` and would never re-run. `charge_schedules` deliberately is **not**: tests assert over the cards they create, and shipped cards in the same collection would make those assertions depend on which class ran first. `ChargeRepositoryIntegrationTest` clears it itself. Chunk 9 must still register `user_charges` and `charge_accounts`.
 3. **`buyStock` ordering** *(Phase C)* — the charge must be computed before the lot is mutated, or the cost basis is stale.
 4. **Integration tests need Docker** (Testcontainers `mongo:7.0` replica set); `*IntegrationTest` matches the default Surefire includes, so a plain `./mvnw test` starts a container.
 5. **`ResponseWrapperAdvice` is disabled under the `integration-test` profile** — those tests assert unwrapped payloads.

@@ -1,0 +1,10 @@
+{
+  "name": "zerodha-equity-intraday-sell-10k",
+  "describes": "The same card on a small trade, where the aggregator picks the other operand: 0.03% of ₹10,000 is ₹3, below the ₹20 flat fee. The pair of intraday fixtures is what proves MIN is genuinely comparing rather than always returning one side.",
+  "context": { "brokerName": "ZERODHA", "assetType": "EQUITY", "segment": "INTRADAY", "exchange": "NSE",
+               "event": "SELL", "price": 1000, "quantity": 10, "transactionDate": "2025-06-02" },
+  "expected": {
+    "lines": { "BROKERAGE": 3.00, "STT": 3.00, "EXCHANGE_TXN": 0.30, "SEBI_FEE": 0.01, "GST": 0.60 },
+    "total": 6.91
+  }
+}

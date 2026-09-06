@@ -1,0 +1,10 @@
+{
+  "name": "zerodha-equity-intraday-sell-100k",
+  "describes": "Intraday, where 0.03% of the trade is ₹30 and the flat fee is ₹20, so the MIN aggregator takes ₹20. Securities transaction tax is lower than delivery's and falls on the sell leg only; there is no depository charge because nothing is delivered.",
+  "context": { "brokerName": "ZERODHA", "assetType": "EQUITY", "segment": "INTRADAY", "exchange": "NSE",
+               "event": "SELL", "price": 1000, "quantity": 100, "transactionDate": "2025-06-02" },
+  "expected": {
+    "lines": { "BROKERAGE": 20.00, "STT": 25.00, "EXCHANGE_TXN": 2.97, "SEBI_FEE": 0.10, "GST": 4.15 },
+    "total": 52.22
+  }
+}
