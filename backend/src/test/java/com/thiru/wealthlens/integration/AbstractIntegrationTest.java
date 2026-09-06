@@ -45,7 +45,15 @@ public abstract class AbstractIntegrationTest {
             "allowance_limits",
             "tax_slab_policies",
             "tax_year_registry",
-            "perquisite_policies");
+            "perquisite_policies",
+            // Seeded once per context by ChargeSeederService, which is @PostConstruct: dropped
+            // between tests it would never come back, and every rate card written afterwards would
+            // be rejected for naming codes no longer in the catalogue.
+            //
+            // charge_schedules is deliberately NOT here. Tests assert over the cards they create,
+            // and shipped cards in the same collection would make those assertions depend on which
+            // class happened to run first. A test needing a rate card writes one.
+            "charge_catalogue");
 
     static final MongoDBContainer mongoDBContainer;
     static {

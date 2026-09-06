@@ -1,0 +1,27 @@
+{
+  "scheduleCode": "ZERODHA_MF_2025_04",
+  "brokerName": "ZERODHA",
+  "assetType": "MUTUAL_FUND",
+  "segment": null,
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": true,
+  "sourceUrl": "https://zerodha.com/charges",
+  "verifiedOn": null,
+  "rules": [
+    { "code": "STAMP_DUTY", "displayName": "Stamp duty", "category": "STATUTORY",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BUY", "events": ["BUY"],
+      "rate": 0.005, "rounding": "HALF_UP_0", "taxable": false, "active": true, "order": 10,
+      "notes": "PLACEHOLDER — levied on the amount invested." },
+
+    { "code": "STT", "displayName": "Securities Transaction Tax", "category": "STATUTORY",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "SELL", "events": ["SELL"],
+      "eligibility": "#equityOriented == true",
+      "rate": 0.001, "rounding": "HALF_UP_0", "taxable": false, "active": true, "order": 20,
+      "notes": "PLACEHOLDER — equity-oriented schemes only. The scheme attribute comes from the instrument profile, which is why this card requires one: with no profile the variable is unset, this rule is quietly skipped, and the gap is recorded as NO_INSTRUMENT_PROFILE rather than passing unnoticed." }
+  ]
+}

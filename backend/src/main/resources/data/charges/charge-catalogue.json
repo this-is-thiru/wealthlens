@@ -1,0 +1,49 @@
+[
+  { "code": "BROKERAGE", "displayName": "Brokerage", "category": "BROKERAGE", "status": "ACTIVE",
+    "description": "The broker's own fee for executing the order.",
+    "statutoryReference": null },
+
+  { "code": "STT", "displayName": "Securities Transaction Tax", "category": "STATUTORY", "status": "ACTIVE",
+    "description": "Levied on the value of the trade. Not a taxable service, so it never forms part of a GST base.",
+    "statutoryReference": "Finance (No. 2) Act, 2004, Chapter VII" },
+
+  { "code": "EXCHANGE_TXN", "displayName": "Exchange transaction charges", "category": "EXCHANGE", "status": "ACTIVE",
+    "description": "Charged by the exchange on turnover. NSE and BSE differ, which is why a rate card may name an exchange.",
+    "statutoryReference": null },
+
+  { "code": "SEBI_FEE", "displayName": "SEBI turnover fees", "category": "REGULATORY", "status": "ACTIVE",
+    "description": "Regulator's turnover fee.",
+    "statutoryReference": "SEBI (Regulatory Fee on Stock Exchanges) Regulations, 2006" },
+
+  { "code": "IPFT", "displayName": "Investor Protection Fund Trust", "category": "EXCHANGE", "status": "ACTIVE",
+    "description": "Exchange levy funding investor protection.",
+    "statutoryReference": null },
+
+  { "code": "STAMP_DUTY", "displayName": "Stamp duty", "category": "STATUTORY", "status": "ACTIVE",
+    "description": "Levied on purchases only. Not a taxable service, so it never forms part of a GST base.",
+    "statutoryReference": "Indian Stamp Act, 1899, as amended 2020" },
+
+  { "code": "DP", "displayName": "Depository participant charges", "category": "DEPOSITORY", "status": "ACTIVE",
+    "description": "Levied once per scrip per day per demat account on a sell, however many transactions make it up.",
+    "statutoryReference": null },
+
+  { "code": "GST", "displayName": "Goods and Services Tax", "category": "TAX", "status": "ACTIVE",
+    "description": "A percentage of the taxable services only. The rule must name its base codes explicitly; securities transaction tax and stamp duty are never among them.",
+    "statutoryReference": "CGST Act, 2017" },
+
+  { "code": "AMC", "displayName": "Annual maintenance charge", "category": "SUBSCRIPTION", "status": "ACTIVE",
+    "description": "Billed per demat account on a cycle rather than on a trade.",
+    "statutoryReference": null },
+
+  { "code": "ACCOUNT_OPENING", "displayName": "Account opening charge", "category": "SUBSCRIPTION", "status": "ACTIVE",
+    "description": "One-off charge when an account is opened.",
+    "statutoryReference": null },
+
+  { "code": "EXIT_LOAD", "displayName": "Exit load", "category": "FUND", "status": "ACTIVE",
+    "description": "Levied by the scheme, not the broker, and depends on how long each redeemed lot was held. Belongs on an instrument profile rather than a rate card.",
+    "statutoryReference": null },
+
+  { "code": "MF_TXN_FEE", "displayName": "Mutual fund transaction fee", "category": "FUND", "status": "ACTIVE",
+    "description": "Distributor transaction fee, applicable only to regular plans.",
+    "statutoryReference": "SEBI Circular CIR/IMD/DF/13/2011" }
+]

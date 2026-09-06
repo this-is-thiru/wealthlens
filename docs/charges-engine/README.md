@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 5 complete. Full suite green: 658 tests, unit and integration.
+**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 6 part-built. Full suite green: 672 tests, unit and integration.
 
 ---
 
@@ -12,8 +12,8 @@
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | 18 — eleven code commits and seven documentation commits |
-| **Phase** | A (standalone engine). Chunks 1–5 complete, including every service. |
-| **Next action** | Chunk 6 — seed data. See §11 |
+| **Phase** | A (standalone engine). Chunks 1–5 complete; Chunk 6 has seeds and the seeder, not the golden files. |
+| **Next action** | Finish Chunk 6 — Tier E golden contract notes. See §11 |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
 
 ---
@@ -80,9 +80,13 @@ Five services in `brokercharges/service/`: `ChargeScheduleValidator`, `ChargeSch
 
 Both quality gates now cover `brokercharges.service` as well as the engine — the JaCoCo rule per class, so a new service cannot be carried by its neighbours. Engine 98.5% line / 91.9% branch; every charges class at 100% mutation but `ChargeFormulaEvaluator`'s one equivalent mutant.
 
+### Written by Chunk 6 so far
+
+`resources/data/charges/`: `charge-catalogue.json` (12 codes) and five rate cards — Zerodha delivery, intraday and mutual fund; Upstox and Fyers delivery. `service/ChargeSeederService` (`@PostConstruct`, catalogue first, idempotent by code, validating before persisting, failing fast). `ChargeSeederServiceTest` — 14 tests, test-plan Tier G, run against the real files.
+
 ### NOT written yet — do not assume any of it exists
 
-No controller and no seed data. Specifically absent: `ChargeSeederService`, every controller, and everything under `resources/data/charges/`.
+No controller, no golden contract notes, and no AMC rate card — `AmcChargeService` has nothing to bill against until one is seeded. Specifically absent: `ChargeGoldenFileTest` and its fixtures, and every controller.
 
 **Nothing calls any of this yet.** The services are beans, they are complete, and no production code invokes them. The simulate endpoint in Chunk 9 is the first caller; Phase B is what puts the engine in the live path.
 
