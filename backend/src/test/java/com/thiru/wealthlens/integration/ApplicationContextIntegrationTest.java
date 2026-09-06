@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeBasis;
 import com.thiru.wealthlens.brokercharges.engine.ChargeCalculator;
 import com.thiru.wealthlens.brokercharges.engine.ChargeCalculatorRegistry;
+import com.thiru.wealthlens.brokercharges.engine.ChargeEngine;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ class ApplicationContextIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ChargeCalculatorRegistry chargeCalculatorRegistry;
+
+    @Autowired
+    private ChargeEngine chargeEngine;
 
     @Test
     void applicationContext_whenEveryBeanIsWired_starts() {
@@ -48,5 +52,15 @@ class ApplicationContextIntegrationTest extends AbstractIntegrationTest {
         assertThat(calculators).doesNotContainNull().doesNotHaveDuplicates();
         assertThat(calculators).extracting(ChargeCalculator::basis)
                 .containsExactly(ChargeBasis.values());
+    }
+
+    @Test
+    void chargeEngine_isWiredWithBothResolvers() {
+        // Given — the engine became a bean only once both resolvers had implementations. Asserting
+        // the injection is what distinguishes "it starts" from "it starts and could actually price
+        // a trade".
+
+        // When / Then
+        assertThat(chargeEngine).isNotNull();
     }
 }

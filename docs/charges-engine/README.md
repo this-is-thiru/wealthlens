@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 4 complete. Full suite green: 524 tests, unit and integration.
+**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 5 complete. Full suite green: 558 tests, unit and integration.
 
 ---
 
@@ -11,9 +11,9 @@
 | | |
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
-| **Commits beyond master** | 13 — six code commits and seven documentation commits |
-| **Phase** | A (standalone engine). Chunks 1–4 complete. |
-| **Next action** | Chunk 5 — `ChargeScheduleResolver` and `ChargeInstrumentResolver`. See §11 |
+| **Commits beyond master** | 14 — seven code commits and seven documentation commits |
+| **Phase** | A (standalone engine). Chunks 1–5 complete. The engine can price a trade end to end. |
+| **Next action** | Chunk 6 — validator, seeds and `ChargeScheduleService`. See §11 |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
 
 ---
@@ -68,11 +68,19 @@ Seven calculators in `brokercharges/engine/`, one per `ChargeBasis`, all `@Compo
 
 `ChargeCalculatorRegistry` is now a `@Component` — every basis is served, so its completeness check can pass. `ChargeEngine` is still not one; it needs a `ChargeScheduleResolver` bean, which is Chunk 5.
 
-Tests: 81 across seven classes, plus `ApplicationContextIntegrationTest` (2) and `testsupport/LogCapture`. Engine package: 97.9% line, 91.9% branch, 99.4% mutation.
+Tests: 81 across seven classes, plus `testsupport/LogCapture`.
+
+### Written by Chunk 5
+
+`ChargeScheduleResolver` (specificity ranking, tie-breaks, cache) and `ChargeInstrumentResolver`, both `@Component`. `ChargeEngine` is now a `@Service` and merges instrument-sourced rules into one ordered evaluation, publishing the scheme's attributes to eligibility predicates.
+
+Tests: `ChargeScheduleResolverTest` (14), `ChargeInstrumentResolverTest` (7), `ChargeEngineTest` grown to 54, `ApplicationContextIntegrationTest` (3). Engine package: 98.5% line, 91.9% branch, 99.6% mutation — every class at 100% but one equivalent mutant.
 
 ### NOT written yet — do not assume any of it exists
 
-No calculator, service, controller or seed data has been written. Specifically absent: every `*Calculator` implementation, the `ChargeScheduleResolver` *implementation*, `ChargeInstrumentResolver`, `ChargeScheduleValidator`, `ChargeScheduleService`, `ChargeSeederService`, `UserChargeService`, `AmcChargeService`, every controller, and everything under `resources/data/charges/`.
+No service, controller or seed data has been written. Specifically absent: `ChargeScheduleValidator`, `ChargeScheduleService`, `ChargeSeederService`, `UserChargeService`, `AmcChargeService`, every controller, and everything under `resources/data/charges/`.
+
+Nothing calls `ChargeEngine` yet either — it is a bean, it is complete, and no production code invokes it. The simulate endpoint in Chunk 7 is its first caller.
 
 ### The old implementation is fully intact and untouched
 
@@ -188,7 +196,7 @@ Each of these was established by investigation or corrected after being got wron
 
 9. **`portfolio` already produces FIFO lots.** `PortfolioService.updateQuantityBySavingReportAndProfitAndLoss1` builds `List<BuyContext>` (quantity, date, price). Phase C consumes it; Phase A supplies lots through the simulate endpoint instead.
 
-10. **`ChargeEngine` is still not a Spring bean, and `@Service` must not go on it yet.** It needs a `ChargeScheduleResolver`, which is an interface with no implementation until Chunk 5; annotating it takes application startup down. The calculators and `ChargeCalculatorRegistry` became beans in Chunk 4 because every `ChargeBasis` is now served. `ApplicationContextIntegrationTest` is what tells you if an annotation goes on early — it was added after exactly that mistake reached a commit.
+10. **Both resolvers cache, and both must be evicted when a card is written.** `ChargeScheduleResolver.evictAll()` and `ChargeInstrumentResolver.evictAll()` exist and nothing calls them yet — `ChargeScheduleService` does, in Chunk 6. Until then a published card is invisible to an already-warm resolver. Misses are cached too, deliberately: backfilling a period with no card must not re-query per trade.
 
 11. **Logging is Logback, not Log4j2.** `@Log4j2` is Lombok's API annotation; the implementation behind it is Logback via `log4j-to-slf4j`, and `log4j-core` is not on the classpath. `testsupport/LogCapture` binds to Logback for that reason. `CLAUDE.md` says "Log4j2", which is true of the annotation and misleading about the backend.
 
@@ -230,41 +238,41 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ---
 
-## 11. Resume point — Chunk 4 complete
+## 11. Resume point — Chunk 5 complete
 
-**Paused:** 2026-09-06. Build green: **524 tests** (unit + integration), `spotless:check` clean, JaCoCo gate passing, mutation score 99.4% on the engine package.
+**Paused:** 2026-09-06. Build green: **558 tests**, `spotless:check` clean, JaCoCo gate passing, mutation score 99.6% on the engine package.
 
 ### Committed
 
-- `d13281f` — rounding, accumulator, formula evaluator, context records (Chunk 3, part 1)
-- `ddd3afc` — calculator strategy and registry (Chunk 3, part 2)
-- `d5596a7` — `ChargeEngine` and the resolver interface (Chunk 3, part 3)
-- *this commit* — the seven calculators (Chunk 4)
+- `d13281f`, `ddd3afc`, `d5596a7` — Chunk 3, in three parts
+- `8c12945` — the seven calculators (Chunk 4)
+- *this commit* — both resolvers, the instrument merge, and `ChargeEngine` as a `@Service` (Chunk 5)
 
-Nothing is left uncommitted.
+Nothing is left uncommitted. **The engine can now price a trade end to end** — resolve card, resolve profile, merge, evaluate, assemble — and nothing calls it yet.
 
-### The wiring is half done, on purpose
+### Decisions taken while building
 
-The seven calculators and `ChargeCalculatorRegistry` are `@Component`s, and the application starts with them — `ApplicationContextIntegrationTest` asserts the registry resolves a distinct calculator for every `ChargeBasis`, from Spring rather than from a test fixture.
+1. **`ChargeScheduleResolver` became a class, not an interface with one implementation.** The engine mocks it directly in tests; a second implementation was never coming.
+2. **The instrument profile is looked up only when the card sets `requiresInstrumentProfile`.** Equity cards carry no scheme-level charges and this runs per transaction. The consequence is that an instrument profile attached to an equity is ignored — correct for Phase A, and worth remembering when the first non-fund profile appears.
+3. **Rule provenance is not written onto the rule.** Rules live inside cached schedule and instrument documents, so stamping `source` on them would mutate shared state through the resolver cache. The engine pairs each rule with where it was read from instead.
+4. **The instrument's attributes win** over anything the caller supplied under the same name. It is the source of truth for its own facts. The caller's other attributes survive.
 
-**`ChargeEngine` is deliberately still not a bean.** An earlier note in this file said all the annotations would go on together in Chunk 4; that was wrong. The engine also needs a `ChargeScheduleResolver`, and that has no implementation until Chunk 5. Its `@Service` goes on then.
+### A conflict in the test plan, resolved
 
-### What the gates caught in this chunk
+Test-plan Tier C lists `status != ACTIVE → not selected`. That contradicts ADR-12, which is settled and is what the repository query implements: the filter is `!= INACTIVE`, so a **superseded card still prices a transaction backdated into its own window**. Filtering on `== ACTIVE` would find nothing and silently charge zero for every backdated quarter — the exact failure ADR-12 exists to prevent.
 
-- **Warn-only branches are unkillable by construction.** `TurnoverChargeCalculator` sat at 28.6% mutation coverage with five survivors, all in a branch that only logged. A charge pricing on an amount the trade does not carry silently returns zero — the exact failure this design exists to prevent — so the warning is load-bearing and now asserted. `testsupport/LogCapture` exists for that, and applies to the other warn paths as they come.
-- **`PER_ORDER` deduplication was only tested from one side.** Every assertion expected zero, so a check stuck at "already charged" would have passed. The same hole existed for `PER_DAY`.
-- **The project logs through Logback, not Log4j2** (§8 fact 11). Found by writing `LogCapture` against `log4j-core` and having it fail to compile.
+`ChargeRepositoryIntegrationTest` already asserts the correct behaviour against a real Mongo, from Chunk 2. The Tier C row is wrong and the resolver's unit tests do not re-litigate validity at all — they test only the choice between cards that are already valid.
 
-### Then: Chunk 5 — the resolvers
+### Then: Chunk 6 — validator, seeds and the schedule service
 
-`ChargeScheduleResolver`'s implementation, per tech-spec §6.1: candidate query, specificity scoring (`planCode` 8, `exchange` 4, `segment` 2, `assetType` 1), ties broken by latest `startDate`, a remaining tie a `BadRequestException` naming both codes, and a `ConcurrentHashMap` cache evicted on write. Then `ChargeInstrumentResolver` and the merge of instrument-sourced rules into the engine's evaluation, which is what finally populates `ChargeComputation.instrumentId` and `NO_INSTRUMENT_PROFILE`.
+`ChargeScheduleValidator` first: test-plan Tier D is 16 rejections, each asserting the *message*. It is what makes a rate card safe to accept, and several engine behaviours are documented as "the validator prevents this" — the D7 ambiguous rule, a `DERIVED` rule ordered before its own base, and expression variables checked against an allow-list so `#equityOrientd` cannot silently disable a rule forever.
 
-`ChargeEngine` becomes a `@Service` in that chunk. Test-plan Tier C is the definition of done.
+Then `ChargeScheduleService` (publish, supersede-on-publish per FR-1, **and evicting both resolver caches**) and `ChargeSeederService` with the Zerodha placeholder cards.
 
 ### What TDD has caught so far, worth continuing for
 
 1. `#charges['CODE']` threw `EL1027E` — SpEL indexes `Map`, and the lookup was backed by a record.
-2. `20.00 * 0.18` returned `3.5999999999999996`. The failing assertion turned out to be the *test's* error: ADR-15 settles that rounding happens once in the orchestrator.
-3. `ChargeCalculatorRegistry` annotated `@Component` broke application startup with all 213 unit tests green. Test-first at the *integration* tier turned "the app is broken and no test knows" into a two-minute red-green.
-4. The null `amountBasis` default. One engine test failed for a reason that was neither the test's fault nor the engine's — a contract missing from the rule itself, which all seven calculators would have copied.
-5. Mutation testing found a dead negative-zero guard in `ChargeRounding` and, this chunk, five unkillable mutants that were really one untested warning.
+2. `20.00 * 0.18` returned `3.5999999999999996`. The failing assertion was the *test's* error: ADR-15 settles that rounding happens once in the orchestrator.
+3. `ChargeCalculatorRegistry` annotated `@Component` broke application startup with all 213 unit tests green. Test-first at the *integration* tier turned that into a two-minute red-green.
+4. The null `amountBasis` default — a contract missing from the rule itself, which all seven calculators would have copied.
+5. Mutation testing found a dead negative-zero guard in `ChargeRounding`, five unkillable mutants that were one untested warning, and in this chunk three scheme attributes that were published but never read by any test.
