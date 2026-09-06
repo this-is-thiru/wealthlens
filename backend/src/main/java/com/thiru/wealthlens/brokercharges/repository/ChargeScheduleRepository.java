@@ -39,5 +39,8 @@ public interface ChargeScheduleRepository extends MongoRepository<ChargeSchedule
     Optional<ChargeScheduleEntity> findOpenScheduleForScope(
             BrokerName brokerName, String assetType, String segment, String exchange, String planCode);
 
+    /** Every card on file for a broker, newest window first. Drives the admin listing. */
+    List<ChargeScheduleEntity> findByBrokerNameOrderByStartDateDesc(BrokerName brokerName);
+
     List<ChargeScheduleEntity> findByVerifiedOnIsNull();
 }
