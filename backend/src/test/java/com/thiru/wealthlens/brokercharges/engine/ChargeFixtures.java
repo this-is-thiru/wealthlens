@@ -26,18 +26,18 @@ import java.util.Set;
  * keeps the difference the only thing a test states, and means a change to {@code ChargeContext}
  * lands in one place rather than seven.
  */
-final class ChargeFixtures {
+public final class ChargeFixtures {
 
-    static final String EMAIL = "investor@example.com";
-    static final String ACCOUNT_HOLDER = "self";
-    static final String STOCK_CODE = "RELIANCE";
-    static final LocalDate TRADE_DATE = LocalDate.of(2025, 6, 1);
+    public static final String EMAIL = "investor@example.com";
+    public static final String ACCOUNT_HOLDER = "self";
+    public static final String STOCK_CODE = "RELIANCE";
+    public static final LocalDate TRADE_DATE = LocalDate.of(2025, 6, 1);
 
     private ChargeFixtures() {
     }
 
     /** A rule that applies to everything, so a test only has to say what makes it special. */
-    static ChargeRule rule(String code, ChargeBasis basis) {
+    public static ChargeRule rule(String code, ChargeBasis basis) {
         ChargeRule rule = new ChargeRule();
         rule.setCode(code);
         rule.setDisplayName(code);
@@ -53,24 +53,24 @@ final class ChargeFixtures {
     }
 
     /** A sell of 100 at 1000, so turnover is 100000. */
-    static ChargeContext trade() {
+    public static ChargeContext trade() {
         return trade(100000.0);
     }
 
-    static ChargeContext trade(double turnover) {
+    public static ChargeContext trade(double turnover) {
         Map<AmountBasis, Double> amounts = new EnumMap<>(AmountBasis.class);
         amounts.put(AmountBasis.TURNOVER, turnover);
         return trade(amounts, Map.of(), List.of());
     }
 
-    static ChargeContext tradeWithAttributes(Map<String, Object> attributes) {
+    public static ChargeContext tradeWithAttributes(Map<String, Object> attributes) {
         Map<AmountBasis, Double> amounts = new EnumMap<>(AmountBasis.class);
         amounts.put(AmountBasis.TURNOVER, 100000.0);
         return trade(amounts, attributes, List.of());
     }
 
     /** A trade whose scope dimensions are what the test is about. */
-    static ChargeContext tradeInScope(AssetType assetType, TradeSegment segment, String exchange, String planCode) {
+    public static ChargeContext tradeInScope(AssetType assetType, TradeSegment segment, String exchange, String planCode) {
         Map<AmountBasis, Double> amounts = new EnumMap<>(AmountBasis.class);
         amounts.put(AmountBasis.TURNOVER, 100000.0);
 
@@ -80,7 +80,7 @@ final class ChargeFixtures {
                 100, 1000, 1, amounts, List.of(), new HashMap<>());
     }
 
-    static ChargeContext trade(
+    public static ChargeContext trade(
             Map<AmountBasis, Double> amounts, Map<String, Object> attributes, List<LotSlice> lots) {
 
         return new ChargeContext(

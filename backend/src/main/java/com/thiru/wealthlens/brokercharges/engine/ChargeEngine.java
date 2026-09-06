@@ -16,9 +16,11 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -190,13 +192,42 @@ public class ChargeEngine {
                 ? Stream.empty()
                 : sourced(instrument.getRules(), ChargeRuleSource.INSTRUMENT);
 
-        return Stream.concat(fromSchedule, fromInstrument)
+        List<SourcedRule> applicable = Stream.concat(fromSchedule, fromInstrument)
                 .filter(sourced -> sourced.rule().isActive())
                 .filter(sourced -> declaresEvent(sourced.rule(), context))
                 .filter(sourced -> sideMatches(sourced.rule(), context))
                 .filter(sourced -> survivesCorporateActionExemption(sourced.rule(), context))
-                .sorted(EVALUATION_ORDER)
                 .toList();
+
+        return resolveOverrides(applicable).stream().sorted(EVALUATION_ORDER).toList();
+    }
+
+    /**
+     * When both sources declare the same code, the instrument wins and the card's rule is skipped.
+     *
+     * <p>The more specific source overrides the more general, which is how the schedule resolver
+     * already ranks cards. It is also the only safe default: applying both would charge the same
+     * thing twice, and silently.
+     *
+     * <p>Overrides are resolved among the rules that actually apply, not across every rule declared.
+     * A scheme's exit load levied on redemption alone drops out on a purchase, and suppressing the
+     * broker's rule alongside it would lose a charge that does apply.
+     */
+    private static Collection<SourcedRule> resolveOverrides(List<SourcedRule> applicable) {
+        Map<String, SourcedRule> byCode = new LinkedHashMap<>();
+
+        for (SourcedRule sourced : applicable) {
+            SourcedRule existing = byCode.putIfAbsent(sourced.rule().getCode(), sourced);
+            if (existing == null) {
+                continue;
+            }
+            if (sourced.source() == ChargeRuleSource.INSTRUMENT && existing.source() != ChargeRuleSource.INSTRUMENT) {
+                byCode.put(sourced.rule().getCode(), sourced);
+                log.debug("Instrument rule {} overrides the schedule's rule of the same code",
+                        sourced.rule().getCode());
+            }
+        }
+        return byCode.values();
     }
 
     private static Stream<SourcedRule> sourced(List<ChargeRule> rules, ChargeRuleSource source) {

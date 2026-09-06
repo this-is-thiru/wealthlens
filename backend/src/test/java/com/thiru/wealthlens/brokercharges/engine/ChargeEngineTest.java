@@ -891,6 +891,41 @@ class ChargeEngineTest {
         }
     }
 
+    @Test
+    void compute_whenBothSourcesDeclareTheSameCode_theInstrumentOverridesTheCard() {
+        // Given — the broker's card carries a default exit load and the scheme states its own.
+        // Applying both would double-charge silently, so the more specific source wins outright,
+        // exactly as the resolver prefers the more specific card (tech-spec §4.6.2).
+        givenSchedule(true, flatRule("EXIT_LOAD", 50.0, 10), flatRule("BROKERAGE", 20.0, 20));
+        givenInstrument("prof-1", Map.of(), flatRule("EXIT_LOAD", 100.0, 30));
+
+        // When
+        ChargeComputation computation = engine().compute(sell());
+
+        // Then — one exit load, the scheme's, at the scheme's position in the ordering
+        assertThat(codesOf(computation)).containsExactly("BROKERAGE", "EXIT_LOAD");
+        assertMoney(100.0, computation.amountOf("EXIT_LOAD"));
+        assertMoney(120.0, computation.total());
+        assertThat(computation.lines().get(1).getSource()).isEqualTo(ChargeRuleSource.INSTRUMENT);
+    }
+
+    @Test
+    void compute_whenTheInstrumentsVersionOfACodeDoesNotApply_theCardsStillDoes() {
+        // Given — the scheme's exit load is levied on redemption only. On a purchase it drops out,
+        // and suppressing the broker's rule alongside it would lose a charge that does apply.
+        ChargeRule schemeRule = flatRule("EXIT_LOAD", 100.0, 30);
+        schemeRule.setEvents(Set.of(ChargeEvent.SELL));
+        givenSchedule(true, flatRule("EXIT_LOAD", 50.0, 10));
+        givenInstrument("prof-1", Map.of(), schemeRule);
+
+        // When
+        ChargeComputation computation = engine().compute(buy());
+
+        // Then
+        assertMoney(50.0, computation.total());
+        assertThat(computation.lines().getFirst().getSource()).isEqualTo(ChargeRuleSource.SCHEDULE);
+    }
+
     // ---------------------------------------------------------------- fixtures
 
     private ChargeEngine engine() {
