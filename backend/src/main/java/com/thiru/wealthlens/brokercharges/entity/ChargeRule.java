@@ -159,4 +159,15 @@ public class ChargeRule {
     public AmountBasis effectiveAmountBasis() {
         return amountBasis == null ? AmountBasis.TURNOVER : amountBasis;
     }
+
+    /**
+     * The quantity the slabs are banded over, with the default resolved.
+     *
+     * <p>Not the same question as {@link #effectiveAmountBasis()}, and conflating the two is the
+     * trap a tiered charge sets: an exit load banded by holding period charges a percentage of the
+     * redemption, not of the number of days.
+     */
+    public SlabBandBasis effectiveSlabBandBasis() {
+        return slabBandBasis == null ? SlabBandBasis.TURNOVER : slabBandBasis;
+    }
 }

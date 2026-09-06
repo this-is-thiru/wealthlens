@@ -13,6 +13,11 @@ import java.util.Map;
 /**
  * Everything the engine needs to price one chargeable event.
  *
+ * @param email              whose charges these are. Carried on the context rather than passed
+ *                           beside it because a calculator receives nothing else — and the
+ *                           deduplication key a scoped charge is levied against is
+ *                           {@code {email, accountHolder, brokerName, stockCode, transactionDate}},
+ *                           four parts of which already live here
  * @param orderId            brokerage is capped per order while the engine runs per trade, so
  *                           order-scoped deduplication needs a key
  * @param accountHolder      whose demat account the trade settles in; part of every deduplication
@@ -30,6 +35,7 @@ import java.util.Map;
  *                           broker-owned rule depend on a scheme attribute
  */
 public record ChargeContext(
+        String email,
         String transactionId,
         String orderId,
         String stockCode,

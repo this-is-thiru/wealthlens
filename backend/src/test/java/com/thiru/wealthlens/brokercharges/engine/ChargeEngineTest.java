@@ -657,7 +657,7 @@ class ChargeEngineTest {
 
         ChargeContext trade = contextWith(ChargeEvent.SELL, null, Map.of("fundCategory", "DEBT"));
         ChargeContext withLots = new ChargeContext(
-                trade.transactionId(), trade.orderId(), trade.stockCode(), trade.accountHolder(),
+                trade.email(), trade.transactionId(), trade.orderId(), trade.stockCode(), trade.accountHolder(),
                 trade.brokerName(), trade.assetType(), trade.segment(), trade.exchange(),
                 trade.planCode(), trade.event(), trade.transactionDate(), trade.corporateActionType(),
                 trade.quantity(), trade.price(), trade.lotSize(), trade.baseAmounts(),
@@ -684,7 +684,7 @@ class ChargeEngineTest {
 
         ChargeContext trade = sell();
         ChargeContext withLots = new ChargeContext(
-                trade.transactionId(), trade.orderId(), trade.stockCode(), trade.accountHolder(),
+                trade.email(), trade.transactionId(), trade.orderId(), trade.stockCode(), trade.accountHolder(),
                 trade.brokerName(), trade.assetType(), trade.segment(), trade.exchange(),
                 trade.planCode(), trade.event(), trade.transactionDate(), trade.corporateActionType(),
                 trade.quantity(), trade.price(), trade.lotSize(), baseAmounts,
@@ -767,7 +767,7 @@ class ChargeEngineTest {
     private static ChargeContext sellFromLots(List<LotSlice> lots) {
         ChargeContext base = sell();
         return new ChargeContext(
-                base.transactionId(), base.orderId(), base.stockCode(), base.accountHolder(),
+                base.email(), base.transactionId(), base.orderId(), base.stockCode(), base.accountHolder(),
                 base.brokerName(), base.assetType(), base.segment(), base.exchange(), base.planCode(),
                 base.event(), base.transactionDate(), base.corporateActionType(), base.quantity(),
                 base.price(), base.lotSize(), base.baseAmounts(), lots, base.attributes());
@@ -780,7 +780,7 @@ class ChargeEngineTest {
         baseAmounts.put(AmountBasis.TURNOVER, 100000.0);
 
         return new ChargeContext(
-                "txn-1", "ord-1", "RELIANCE", "self", BrokerName.ZERODHA, AssetType.EQUITY,
+                "investor@example.com", "txn-1", "ord-1", "RELIANCE", "self", BrokerName.ZERODHA, AssetType.EQUITY,
                 TradeSegment.DELIVERY, "NSE", null, event, TRADE_DATE, corporateActionType,
                 100, 1000, 1, baseAmounts, List.of(), new HashMap<>(attributes));
     }
