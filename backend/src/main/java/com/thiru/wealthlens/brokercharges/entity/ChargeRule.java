@@ -147,4 +147,16 @@ public class ChargeRule {
     /** Free text: why this rate, which statute, which broker page it came from. */
     @Field("notes")
     private String notes;
+
+    /**
+     * The amount a percentage applies to, with the default resolved.
+     *
+     * <p>Lives here rather than in the engine because the engine is not the only reader: every
+     * calculator that prices a percentage asks the same question, and a default re-derived in eight
+     * places is a default that will eventually disagree with itself. A rule omitting the field is
+     * priced on turnover, which is what every cash-segment charge means.
+     */
+    public AmountBasis effectiveAmountBasis() {
+        return amountBasis == null ? AmountBasis.TURNOVER : amountBasis;
+    }
 }
