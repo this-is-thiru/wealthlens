@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-05, branch `feature/charges-engine` at commit `982a2e3`, rebased onto `master` after PR #60.
+**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 3 part 2. Full suite green: 407 tests, unit and integration.
 
 ---
 
@@ -11,8 +11,8 @@
 | | |
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
-| **Commits beyond master** | 4 — one code commit (Chunk 1 enums) and three documentation commits |
-| **Phase** | A (standalone engine). Chunks 1–2 complete; Chunk 3 part-built. |
+| **Commits beyond master** | 10 — four code commits and six documentation commits |
+| **Phase** | A (standalone engine). Chunks 1–2 complete; Chunk 3 all but the orchestrator. |
 | **Next action** | Finish Chunk 3 — `ChargeEngine`, the orchestrator. See §11 |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
 
@@ -56,9 +56,15 @@ Five repositories in `repository/`: `ChargeScheduleRepository`, `ChargeInstrumen
 
 `ChargeRepositoryIntegrationTest` — 14 tests proving the documents map and the queries execute.
 
+### Written by Chunk 3 (commits `d13281f` and the one after it)
+
+In `brokercharges/engine/`: `ChargeRounding`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, `ChargeCalculator`, `ChargeCalculatorRegistry`. In `dto/context/`: `ChargeContext`, `ChargeComputation`, `LotSlice`.
+
+Tests: `ChargeRoundingTest` (20), `ChargeAccumulatorTest` (9), `ChargeFormulaEvaluatorTest` (15), `ChargeCalculatorRegistryTest` (6), `ApplicationContextIntegrationTest` (1).
+
 ### NOT written yet — do not assume any of it exists
 
-No service, engine, calculator, controller or seed data has been written. Specifically absent: `ChargeEngine`, every `*Calculator`, `ChargeCalculatorRegistry`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, `ChargeContext`, `ChargeComputation`, `ChargeScheduleResolver`, `ChargeInstrumentResolver`, `ChargeScheduleValidator`, `ChargeScheduleService`, `ChargeSeederService`, `UserChargeService`, `AmcChargeService`, every controller, and everything under `resources/data/charges/`.
+No service, controller or seed data has been written, and the orchestrator is still outstanding. Specifically absent: `ChargeEngine`, every `*Calculator` implementation, `ChargeScheduleResolver`, `ChargeInstrumentResolver`, `ChargeScheduleValidator`, `ChargeScheduleService`, `ChargeSeederService`, `UserChargeService`, `AmcChargeService`, every controller, and everything under `resources/data/charges/`.
 
 ### The old implementation is fully intact and untouched
 
@@ -166,7 +172,9 @@ Each of these was established by investigation or corrected after being got wron
 
 9. **`portfolio` already produces FIFO lots.** `PortfolioService.updateQuantityBySavingReportAndProfitAndLoss1` builds `List<BuyContext>` (quantity, date, price). Phase C consumes it; Phase A supplies lots through the simulate endpoint instead.
 
-10. **`AssetEntity` has no ISIN or scheme code** — only `stockCode` and `stockName`. `ChargeInstrumentEntity` is keyed on `stockCode` for that reason, with `isin` stored for later.
+10. **`ChargeCalculatorRegistry` is deliberately not a `@Component`.** Its constructor refuses to build unless every `ChargeBasis` is served, so annotating it before the Chunk 4 calculators exist takes the whole application down at startup. The annotation goes on when the last basis is served. Do not add it back early — it was added once, and nothing caught it because unit tests construct the registry directly.
+
+11. **`AssetEntity` has no ISIN or scheme code** — only `stockCode` and `stockName`. `ChargeInstrumentEntity` is keyed on `stockCode` for that reason, with `isin` stored for later.
 
 ---
 
@@ -203,31 +211,45 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ---
 
-## 11. Resume point — paused mid-Chunk 3
+## 11. Resume point — Chunk 3 complete bar the orchestrator
 
-**Paused:** 2026-09-05, end of session. Build green: **213 unit tests passing**, `spotless:check` clean.
+**Paused:** 2026-09-06. Build green: **407 tests** (unit + integration, Docker up), `spotless:check` clean.
 
 ### Committed
 
-Last commit `d13281f` — `ChargeRounding`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, plus `ChargeContext`, `ChargeComputation` and `LotSlice`.
+- `d13281f` — `ChargeRounding`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, plus `ChargeContext`, `ChargeComputation` and `LotSlice` (Chunk 3, part 1)
+- *this commit* — `ChargeCalculator`, `ChargeCalculatorRegistry`, `ChargeCalculatorRegistryTest`, `ApplicationContextIntegrationTest` (Chunk 3, part 2)
 
-### In the working tree, NOT committed
+Nothing is left uncommitted. The registry was reviewed before it went in, and the review found a
+real defect — see below.
 
-The repository owner reviews before each commit, and these arrived after the last review:
+### What the review caught
 
-- `engine/ChargeCalculator.java` — the strategy interface
-- `engine/ChargeCalculatorRegistry.java` — dispatch by basis; refuses to start if a `ChargeBasis` constant has no calculator, or if two claim one
-- `test/.../engine/ChargeCalculatorRegistryTest.java` — 6 tests, all passing
+`ChargeCalculatorRegistry` was annotated `@Component`. Its constructor refuses to build unless every
+`ChargeBasis` is served, and the calculators are Chunk 4 — so the application could not start, and
+every integration test would have failed the moment Docker came back. All 213 unit tests were green
+throughout, because they construct the registry directly.
 
-**First action on resuming:** show these for review, then commit. Do not build on top of unreviewed work.
+The gap was that **nothing asserted the application starts**. `ApplicationContextIntegrationTest`
+now does, and it was written first: red against the real Spring Boot context with the exact
+`IllegalStateException`, green once the annotation came off. That test is the lasting part of this
+fix — the annotation would have been re-added eventually by someone wiring Chunk 4, and now the
+build says so immediately.
+
+Recorded as §8 fact 10 so the annotation is not restored early.
 
 ### Then: `ChargeEngine`
 
-The only thing left in Chunk 3. Test-first, per the working agreement in §6. The contract is tech-spec §5.4 (resolve → filter → sort → dispatch → modifiers → assemble) and §5.5 (modifier order: aggregator, then min/max, then rounding — applied by the engine, never inside a calculator). Test cases are test-plan Tier B, roughly 30 of them.
+The only thing left in Chunk 3. Test-first, per the working agreement in §6. The contract is
+tech-spec §5.4 (resolve → filter → sort → dispatch → modifiers → assemble) and §5.5 (modifier order:
+aggregator, then min/max, then rounding — applied by the engine, never inside a calculator). Test
+cases are test-plan Tier B, roughly 30 of them.
 
-Everything the engine needs now exists apart from the calculators themselves, which are Chunk 4. Engine tests will stub `ChargeCalculator`, exactly as `ChargeCalculatorRegistryTest` already does.
+Everything the engine needs now exists apart from the calculators themselves, which are Chunk 4.
+Engine tests stub `ChargeCalculator`, exactly as `ChargeCalculatorRegistryTest` already does.
 
 ### What TDD has caught so far, worth continuing for
 
 1. `#charges['CODE']` threw `EL1027E` — SpEL indexes `Map`, and the lookup was backed by a record. Implementation-first, this would have surfaced later inside the engine with a murkier trace.
 2. `20.00 * 0.18` returned `3.5999999999999996`. The failing assertion turned out to be the *test's* error: ADR-15 settles that rounding happens once in the orchestrator, so an unrounded return is correct. A test written afterwards would have been shaped to whatever the code did.
+3. The `@Component` above. Applying test-first to the *integration* tier, not just units, is what turned "the app is broken and no test knows" into a two-minute red-green.
