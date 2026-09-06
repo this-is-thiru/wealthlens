@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 5 complete. Full suite green: 558 tests, unit and integration.
+**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 5 complete. Full suite green: 658 tests, unit and integration.
 
 ---
 
@@ -11,9 +11,9 @@
 | | |
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
-| **Commits beyond master** | 14 — seven code commits and seven documentation commits |
-| **Phase** | A (standalone engine). Chunks 1–5 complete. The engine can price a trade end to end. |
-| **Next action** | Chunk 6 — validator, seeds and `ChargeScheduleService`. See §11 |
+| **Commits beyond master** | 18 — eleven code commits and seven documentation commits |
+| **Phase** | A (standalone engine). Chunks 1–5 complete, including every service. |
+| **Next action** | Chunk 6 — seed data. See §11 |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
 
 ---
@@ -74,13 +74,17 @@ Tests: 81 across seven classes, plus `testsupport/LogCapture`.
 
 `ChargeScheduleResolver` (specificity ranking, tie-breaks, cache) and `ChargeInstrumentResolver`, both `@Component`. `ChargeEngine` is now a `@Service` and merges instrument-sourced rules into one ordered evaluation, publishing the scheme's attributes to eligibility predicates.
 
-Tests: `ChargeScheduleResolverTest` (14), `ChargeInstrumentResolverTest` (7), `ChargeEngineTest` grown to 54, `ApplicationContextIntegrationTest` (3). Engine package: 98.5% line, 91.9% branch, 99.6% mutation — every class at 100% but one equivalent mutant.
+Tests: `ChargeScheduleResolverTest` (14), `ChargeInstrumentResolverTest` (7), `ChargeEngineTest` grown to 56, `ApplicationContextIntegrationTest` (3).
+
+Five services in `brokercharges/service/`: `ChargeScheduleValidator`, `ChargeScheduleService`, `UserChargeService`, `ChargeAccountService`, `AmcChargeService`. Tests: 31, 17, 20, 8 and 12 respectively, plus `ChargeInvariantTest` (10 properties over 200 generated cards each) and `testsupport/LogCapture`.
+
+Both quality gates now cover `brokercharges.service` as well as the engine — the JaCoCo rule per class, so a new service cannot be carried by its neighbours. Engine 98.5% line / 91.9% branch; every charges class at 100% mutation but `ChargeFormulaEvaluator`'s one equivalent mutant.
 
 ### NOT written yet — do not assume any of it exists
 
-No service, controller or seed data has been written. Specifically absent: `ChargeScheduleValidator`, `ChargeScheduleService`, `ChargeSeederService`, `UserChargeService`, `AmcChargeService`, every controller, and everything under `resources/data/charges/`.
+No controller and no seed data. Specifically absent: `ChargeSeederService`, every controller, and everything under `resources/data/charges/`.
 
-Nothing calls `ChargeEngine` yet either — it is a bean, it is complete, and no production code invokes it. The simulate endpoint in Chunk 7 is its first caller.
+**Nothing calls any of this yet.** The services are beans, they are complete, and no production code invokes them. The simulate endpoint in Chunk 9 is the first caller; Phase B is what puts the engine in the live path.
 
 ### The old implementation is fully intact and untouched
 
@@ -240,39 +244,49 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ## 11. Resume point — Chunk 5 complete
 
-**Paused:** 2026-09-06. Build green: **558 tests**, `spotless:check` clean, JaCoCo gate passing, mutation score 99.6% on the engine package.
+**Paused:** 2026-09-06. Build green: **658 tests**, `spotless:check` clean, both JaCoCo gates passing, charges mutation score 95.9% overall with every new class at 100%.
 
 ### Committed
 
-- `d13281f`, `ddd3afc`, `d5596a7` — Chunk 3, in three parts
-- `8c12945` — the seven calculators (Chunk 4)
-- *this commit* — both resolvers, the instrument merge, and `ChargeEngine` as a `@Service` (Chunk 5)
+Chunk 3 in three parts (`d13281f`, `ddd3afc`, `d5596a7`), the calculators (`8c12945`), the resolvers (`ded37b2`), then Chunk 5's services one at a time: the validator and gate widening (`f1caee5`), `ChargeScheduleService` (`824c1c0`), `UserChargeService` (`76fcaba`), the account and AMC services (`71b139c`).
 
-Nothing is left uncommitted. **The engine can now price a trade end to end** — resolve card, resolve profile, merge, evaluate, assemble — and nothing calls it yet.
+### The whole of Chunk 5 is done
 
-### Decisions taken while building
+The checklist's Chunk 5 is broader than "resolution" — it covers validation and every service. All of it now exists:
 
-1. **`ChargeScheduleResolver` became a class, not an interface with one implementation.** The engine mocks it directly in tests; a second implementation was never coming.
-2. **The instrument profile is looked up only when the card sets `requiresInstrumentProfile`.** Equity cards carry no scheme-level charges and this runs per transaction. The consequence is that an instrument profile attached to an equity is ignored — correct for Phase A, and worth remembering when the first non-fund profile appears.
-3. **Rule provenance is not written onto the rule.** Rules live inside cached schedule and instrument documents, so stamping `source` on them would mutate shared state through the resolver cache. The engine pairs each rule with where it was read from instead.
-4. **The instrument's attributes win** over anything the caller supplied under the same name. It is the source of truth for its own facts. The caller's other attributes survive.
+| | Does what | Exit criterion |
+|---|---|---|
+| `ChargeScheduleValidator` | Rejects a card that would price wrongly, reporting every problem at once | Tier D, each asserting the message |
+| `ChargeScheduleService` | Publish with auto-supersede, close, list | **AC-8** |
+| `UserChargeService` | Compute, record, batch with the sequence guard, gaps | Rows written even when nothing is charged |
+| `ChargeAccountService` | The demat accounts AMC bills against | Billing history survives re-registration |
+| `AmcChargeService` | The cycle, run over accounts rather than trades | Re-running is a no-op |
+| `ChargeInvariantTest` | Tier F — 10 properties over 200 generated cards each | Verified non-vacuous |
 
-### A conflict in the test plan, resolved
+### Defects found in my own earlier work, while building this
 
-Test-plan Tier C lists `status != ACTIVE → not selected`. That contradicts ADR-12, which is settled and is what the repository query implements: the filter is `!= INACTIVE`, so a **superseded card still prices a transaction backdated into its own window**. Filtering on `== ACTIVE` would find nothing and silently charge zero for every backdated quarter — the exact failure ADR-12 exists to prevent.
+1. **The engine applied both sources' version of a charge code.** Tech-spec §4.6.2 says the instrument wins and the card's rule is skipped; it did not, so a scheme with its own exit load on a card that also carried one was charged twice, silently. Found by re-reading the spec during Chunk 5, fixed with a failing test first.
+2. **The old services were assumed to fail a widened quality gate.** They do not — 100% and 97.9% line coverage — so no exemption was written into the build.
 
-`ChargeRepositoryIntegrationTest` already asserts the correct behaviour against a real Mongo, from Chunk 2. The Tier C row is wrong and the resolver's unit tests do not re-litigate validity at all — they test only the choice between cards that are already valid.
+### Then: Chunk 6 — seed data
 
-### Then: Chunk 6 — validator, seeds and the schedule service
+`charge-catalogue.json` first, since the validator rejects any code absent from it. Then the Zerodha cards, `ChargeSeederService` (`@PostConstruct`, idempotent by `scheduleCode`, validating before persisting, failing fast), and test-plan Tier G — the checklist calls it the highest-value test in the plan, because it catches a rate-card typo at build time.
 
-`ChargeScheduleValidator` first: test-plan Tier D is 16 rejections, each asserting the *message*. It is what makes a rate card safe to accept, and several engine behaviours are documented as "the validator prevents this" — the D7 ambiguous rule, a `DERIVED` rule ordered before its own base, and expression variables checked against an allow-list so `#equityOrientd` cannot silently disable a rule forever.
+**⚠️ Rates are placeholders and only a human can close that.** AC-2 stays blocked until someone compares each figure against the broker's published charges page and fills in `sourceUrl` and `verifiedOn`.
 
-Then `ChargeScheduleService` (publish, supersede-on-publish per FR-1, **and evicting both resolver caches**) and `ChargeSeederService` with the Zerodha placeholder cards.
+Two things the seed author needs to know, learned while building the services:
+
+- A **maintenance card must leave `assetType` unset**. The AMC cycle context carries no scrip, quantity or asset type, so a card declaring that dimension is disqualified by the resolver and the cycle bills nothing. Not silently, to be clear — the resolver warns, the engine warns, `AmcChargeService` warns, and the billing watermark is deliberately left where it was so the period can be billed once the card is fixed.
+
+- **Exactly one unscoped card per broker.** An unscoped maintenance card is a candidate for every trade of that broker: it declares no dimension, so it agrees with all of them. It loses on specificity wherever a real card exists, which is the intended behaviour — but two unscoped cards sharing a start date are indistinguishable and the resolver refuses both by name.
+
+  Where no card exists for an asset type, the unscoped card wins by default and then matches none of its rules, giving `NO_MATCHING_RULES` and a zero. That is why `NO_MATCHING_RULES` is in the gaps report: a card that resolves and prices nothing is nearly always a seeding mistake, and it must not read as a free trade.
+- **A new expression variable has to be added in two places** — published by the engine, and listed in `ChargeScheduleValidator`'s vocabulary. That is the price of catching `#equityOrientd`, per ADR-24.
 
 ### What TDD has caught so far, worth continuing for
 
 1. `#charges['CODE']` threw `EL1027E` — SpEL indexes `Map`, and the lookup was backed by a record.
-2. `20.00 * 0.18` returned `3.5999999999999996`. The failing assertion was the *test's* error: ADR-15 settles that rounding happens once in the orchestrator.
+2. `20.00 * 0.18` returned `3.5999999999999996`. The failing assertion was the *test's* error, not the code's — as was a later Mockito assertion that could not tell two `@Data` entities apart.
 3. `ChargeCalculatorRegistry` annotated `@Component` broke application startup with all 213 unit tests green. Test-first at the *integration* tier turned that into a two-minute red-green.
 4. The null `amountBasis` default — a contract missing from the rule itself, which all seven calculators would have copied.
-5. Mutation testing found a dead negative-zero guard in `ChargeRounding`, five unkillable mutants that were one untested warning, and in this chunk three scheme attributes that were published but never read by any test.
+5. Mutation testing found a dead negative-zero guard, five unkillable mutants that were one untested warning, three scheme attributes no test read, and several fields written but never asserted. `testsupport/LogCapture` exists because a branch that only logs is otherwise indistinguishable from one that was deleted.
