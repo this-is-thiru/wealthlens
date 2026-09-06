@@ -323,11 +323,17 @@ class UserChargeServiceTest {
 
     @Test
     void findGaps_returnsEveryRowWhoseChargesCouldNotBeFullyAssessed() {
-        // Given — the three reasons a stored number should not be trusted at face value
+        // Given — the four reasons a stored zero should not be read as "this trade was free".
+        //
+        // NO_MATCHING_RULES is one of them because a card can resolve and still price nothing: an
+        // unscoped card — a maintenance card is the obvious one — matches every dimension of a trade
+        // whose asset type has no card of its own, wins by default, and then matches none of its
+        // rules against a trade event. Without this the trade charges zero and never surfaces.
         List<UserChargeEntity> rows = List.of(new UserChargeEntity());
         when(userChargeRepository.findByEmailAndResolutionIn(EMAIL, List.of(
                 ChargeResolution.NO_SCHEDULE,
                 ChargeResolution.NO_INSTRUMENT_PROFILE,
+                ChargeResolution.NO_MATCHING_RULES,
                 ChargeResolution.PROVISIONAL))).thenReturn(rows);
 
         // When / Then

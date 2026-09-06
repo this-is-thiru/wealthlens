@@ -41,10 +41,20 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserChargeService {
 
-    /** The three reasons a stored number should not be taken at face value. */
+    /**
+     * The reasons a stored zero must not be read as "this trade was free".
+     *
+     * <p>{@code NO_MATCHING_RULES} belongs here because a card can resolve and still price nothing.
+     * An unscoped card — a maintenance card is the obvious one, since an AMC cycle carries no asset
+     * type to scope against — matches every dimension of a trade whose asset type has no card of its
+     * own. It wins by default, none of its rules declare that trade's event, and the result is a
+     * zero that looks deliberate. That is the failure this design exists to prevent, reached by a
+     * different route than a missing card.
+     */
     private static final List<ChargeResolution> UNRESOLVED = List.of(
             ChargeResolution.NO_SCHEDULE,
             ChargeResolution.NO_INSTRUMENT_PROFILE,
+            ChargeResolution.NO_MATCHING_RULES,
             ChargeResolution.PROVISIONAL);
 
     private final ChargeEngine chargeEngine;
