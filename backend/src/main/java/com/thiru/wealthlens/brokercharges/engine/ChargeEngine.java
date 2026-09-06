@@ -231,7 +231,7 @@ public class ChargeEngine {
         attributes.put("holdingDays", lot.holdingDays(context.transactionDate()));
 
         return new ChargeContext(
-                context.transactionId(), context.orderId(), context.stockCode(), context.accountHolder(),
+                context.email(), context.transactionId(), context.orderId(), context.stockCode(), context.accountHolder(),
                 context.brokerName(), context.assetType(), context.segment(), context.exchange(),
                 context.planCode(), context.event(), context.transactionDate(), context.corporateActionType(),
                 lot.quantity(), lot.price(), context.lotSize(), baseAmounts, List.of(lot), attributes);

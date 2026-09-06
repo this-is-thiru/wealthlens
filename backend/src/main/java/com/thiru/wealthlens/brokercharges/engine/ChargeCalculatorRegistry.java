@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 /**
  * Dispatches a rule's basis to the implementation that serves it.
@@ -17,11 +18,8 @@ import java.util.Map;
  * application would start, and the charge would simply go missing when a trade was priced. Two
  * calculators claiming one basis is worse still, resolving arbitrarily by bean ordering. Both are
  * refused at startup.
- *
- * <p>Deliberately not a {@code @Component} yet. The calculators arrive in Chunk 4; until then the
- * completeness check would refuse to construct and take the whole application down with it. The
- * annotation goes on when the last basis is served — the guard is only useful once it can pass.
  */
+@Component
 public class ChargeCalculatorRegistry {
 
     private final Map<ChargeBasis, ChargeCalculator> byBasis = new EnumMap<>(ChargeBasis.class);

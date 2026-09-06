@@ -189,7 +189,7 @@ class ChargeFormulaEvaluatorTest {
 
     private static ChargeContext context(Map<String, Object> attributes) {
         return new ChargeContext(
-                "txn-1", "ord-1", "RELIANCE", "self", BrokerName.ZERODHA, AssetType.EQUITY,
+                "investor@example.com", "txn-1", "ord-1", "RELIANCE", "self", BrokerName.ZERODHA, AssetType.EQUITY,
                 TradeSegment.DELIVERY, "NSE", null, ChargeEvent.SELL, LocalDate.of(2025, 6, 1),
                 null, 100, 1000, 1,
                 Map.of(AmountBasis.TURNOVER, 100000.0),
