@@ -3,7 +3,7 @@
 **Date:** 2026-09-05
 **Status:** Draft for review
 **Supersedes:** the `brokercharges` module as built in ITS-15 / commit `52000e1`
-**Companion docs:** `tech-spec.md` (design), `implementation-checklist.md` (build tracker)
+**Start at** `README.md` — current state and how to resume. **Rationale** lives in `decisions.md`.
 **Branch:** `feature/charges-engine`
 
 ---
@@ -31,6 +31,7 @@ The system is being extended to cover mutual funds and other instruments, and br
 | D7 | `getBrokerage` returns 0 when `brokerageAggregator` is null, rather than failing loudly. | `UserBrokerChargeService:171` | Misconfiguration presents as "free trading". |
 | D8 | Charge amounts are **typed in by the user** as `AssetRequest.brokerCharges` and flow into cost basis, trade outcome and net P&L; the engine's computed figure feeds only the charges report and is never reconciled against it. | `PortfolioService:290,569`; `ProfitAndLossService:200` | Manual entry is error-prone, cannot produce a per-component breakdown, and does not scale. **Removing this input is the primary motivation for the whole effort.** |
 | D9 | `findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate` is named "findTop" but returns a `List`, and DP dedupe depends on read-your-own-write ordering inside the transaction. | `UserBrokerChargesRepository:12` | Fragile first-sell-of-day detection. |
+| D10 | ~~The DP dedupe query omitted `accountHolder`, so a user tracking more than one account holder was charged once for what were two separate demat debits.~~ **Fixed ahead of the engine in PR #60** — the correction reached users rather than waiting for Phase C. The new design carries the same key. | `UserBrokerChargesRepository` | Was a silent undercharge scaling with the number of account holders. |
 
 ---
 

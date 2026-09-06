@@ -1,0 +1,10 @@
+{
+  "name": "zerodha-equity-intraday-sell-5000k",
+  "describes": "A ₹50,00,000 intraday sale. Brokerage stays at ₹20 while every turnover-based charge scales with the trade, which is the behaviour a flat cap exists to produce.",
+  "context": { "brokerName": "ZERODHA", "assetType": "EQUITY", "segment": "INTRADAY", "exchange": "NSE",
+               "event": "SELL", "price": 1000, "quantity": 5000, "transactionDate": "2025-06-02" },
+  "expected": {
+    "lines": { "BROKERAGE": 20.00, "STT": 1250.00, "EXCHANGE_TXN": 148.50, "SEBI_FEE": 5.00, "GST": 31.23 },
+    "total": 1454.73
+  }
+}

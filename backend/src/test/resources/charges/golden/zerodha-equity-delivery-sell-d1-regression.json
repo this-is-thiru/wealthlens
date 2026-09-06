@@ -1,0 +1,17 @@
+{
+  "name": "zerodha-equity-delivery-sell-d1-regression",
+  "describes": "The D1 defect, frozen. The superseded implementation applied GST to a merged government-charges bucket that included securities transaction tax, which is not a taxable service. On this trade it billed ₹21.00 of GST against a correct ₹3.00 — an overcharge of ₹18.00 on a single ₹1,00,000 sale. If GST is ever computed over STT again, this fixture fails with a self-explanatory diff.",
+  "context": { "brokerName": "ZERODHA", "assetType": "EQUITY", "segment": "DELIVERY", "exchange": "NSE",
+               "event": "SELL", "price": 1000, "quantity": 100, "transactionDate": "2025-06-02" },
+  "supersededImplementation": {
+    "gstBase": 116.67,
+    "gst": 21.00,
+    "overcharge": 18.00,
+    "note": "Base wrongly included STT at ₹100.00. The correct base is ₹16.67. The tech spec quotes ₹17.45 for this defect; that figure came from a different set of assumed rates, and the arithmetic here follows the placeholder card actually shipped."
+  },
+  "expected": {
+    "lines": { "BROKERAGE": 0.00, "STT": 100.00, "EXCHANGE_TXN": 2.97, "SEBI_FEE": 0.10,
+               "IPFT": 0.10, "DP": 13.50, "GST": 3.00 },
+    "total": 119.67
+  }
+}

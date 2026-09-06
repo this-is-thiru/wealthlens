@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-05
 **Status:** Draft for review
-**Companion docs:** `prd.md` (requirements), `implementation-checklist.md` (build tracker)
+**Start at** `README.md` — current state and how to resume. **Rationale** lives in `decisions.md`.
 **Branch:** `feature/charges-engine`
 **Precedent followed (shape only, no shared code):** the `taxplanning` policy layer — seeded JSON policy documents, a SpEL evaluator, a resolution service, pluggable engines. The charges module builds its own equivalents; nothing is imported across that boundary.
 
@@ -173,6 +173,25 @@ public enum AmountBasis {
     PRINCIPAL     // amount invested / remitted
 }
 
+public enum SlabBandBasis {
+    TURNOVER,      // full-service brokerage tiers
+    HOLDING_DAYS,  // graded mutual fund exit loads
+    QUANTITY
+}
+
+public enum ChargeRuleSource { SCHEDULE, INSTRUMENT }   // provenance on each computed line
+
+public enum FundCategory {
+    EQUITY, DEBT, HYBRID, LIQUID, ELSS, INDEX, ETF, FUND_OF_FUNDS, OTHER
+}
+
+public enum PlanType { DIRECT, REGULAR }   // decides whether a distributor fee can apply at all
+
+public enum ChargeResolution {
+    RESOLVED, NO_MATCHING_RULES, NO_SCHEDULE, NO_INSTRUMENT_PROFILE,
+    PROVISIONAL, CORPORATE_ACTION_EXEMPT
+}
+
 // lives in portfolio.dto.enums — shared trade vocabulary, see §9.1
 public enum TradeSegment { DELIVERY, INTRADAY, FUTURES, OPTIONS, NA }
 ```
@@ -198,6 +217,7 @@ public enum TradeSegment { DELIVERY, INTRADAY, FUTURES, OPTIONS, NA }
 | `endDate` | `end_date` | LocalDate | inclusive, null = open-ended (fixes D6) |
 | `status` | `status` | `EntityStatus` | |
 | `currency` | `currency` | String | default `INR` |
+| `requiresInstrumentProfile` | `requires_instrument_profile` | boolean | default false. When true, a trade with no resolvable instrument profile records `NO_INSTRUMENT_PROFILE`. The mutual fund card sets it; the equity cards do not. See §6.2 |
 | `rules` | `rules` | `List<ChargeRule>` | |
 | `sourceUrl` | `source_url` | String | broker rate-card URL, for verification |
 | `verifiedOn` | `verified_on` | LocalDate | when a human last checked the rates |
@@ -213,6 +233,7 @@ Indexes: compound `{broker_name:1, asset_type:1, segment:1, start_date:-1}`, plu
 | `displayName` | `display_name` | String | contract-note label |
 | `category` | `category` | `ChargeCategory` | |
 | `basis` | `basis` | `ChargeBasis` | |
+| `source` | `source` | `ChargeRuleSource` | set by the engine from where the rule was read |
 | `side` | `side` | `ChargeSide` | |
 | `events` | `events` | `Set<ChargeEvent>` | which occasions trigger it |
 | `amountBasis` | `amount_basis` | `AmountBasis` | which context amount the rate applies to; default `TURNOVER` |
@@ -220,6 +241,9 @@ Indexes: compound `{broker_name:1, asset_type:1, segment:1, start_date:-1}`, plu
 | `flatAmount` | `flat_amount` | Double | for FLAT / SCOPED_FLAT |
 | `perUnitAmount` | `per_unit_amount` | Double | for PER_UNIT |
 | `slabs` | `slabs` | `List<ChargeSlab>` | for SLAB |
+| `slabBandBasis` | `slab_band_basis` | `SlabBandBasis` | which dimension the slabs band over; default `TURNOVER` |
+| `perLot` | `per_lot` | boolean | evaluate once per FIFO lot and sum, rather than once per transaction. See §5.8 |
+| `appliesToCorporateActions` | `applies_to_corporate_actions` | boolean | default **false**. See §5.9 |
 | `baseCodes` | `base_codes` | `List<String>` | for DERIVED — the taxable base (fixes D1) |
 | `formula` | `formula` | String | for FORMULA — SpEL |
 | `eligibility` | `eligibility` | String | optional SpEL predicate, e.g. `#holdingDays < 365` |
@@ -234,7 +258,7 @@ Indexes: compound `{broker_name:1, asset_type:1, segment:1, start_date:-1}`, plu
 | `notes` | `notes` | String | why this rate, statute reference |
 
 ### 4.3 `ChargeSlab` — embedded
-`fromTurnover`, `toTurnover` (null = ∞), `rate`, `flatAmount`.
+`fromValue`, `toValue` (null = ∞), `rate`, `flatAmount`. The banded quantity is named by the owning rule's `slabBandBasis`, so the same structure expresses a turnover tier and a graded exit load that tapers by holding period.
 
 ### 4.4 `ChargeLine` — embedded computed line item
 `code`, `displayName`, `category`, `basis`, `rate`, `baseAmount`, `amount`, `taxable`, `ruleCode`.
@@ -256,6 +280,9 @@ Indexes: compound `{broker_name:1, asset_type:1, segment:1, start_date:-1}`, plu
 | `scheduleId` / `scheduleCode` | `schedule_id` / `schedule_code` | String — provenance |
 | `turnover` | `turnover` | double |
 | `quantity` | `quantity` | double |
+| `resolution` | `resolution` | `ChargeResolution` — why these lines, or why none. See §14 |
+| `instrumentId` | `instrument_id` | String — provenance for scheme-sourced lines |
+| `computedOn` | `computed_on` | LocalDateTime — distinct from `transactionDate`; a backfilled trade is computed long after it occurred |
 | `lines` | `lines` | `List<ChargeLine>` — the contract note (G3) |
 | `amountByCode` | `amount_by_code` | `Map<String, Double>` — denormalised for aggregation |
 | `totalCharges` | `total_charges` | double |
@@ -263,7 +290,66 @@ Indexes: compound `{broker_name:1, asset_type:1, segment:1, start_date:-1}`, plu
 
 Indexes: `{email:1, transaction_date:-1}`, and for DP dedupe `{email:1, broker_name:1, stock_code:1, transaction_date:1, event:1}`.
 
-### 4.6 `ChargeCatalogueEntity` — collection `charge_catalogue`
+### 4.6 `ChargeInstrumentEntity` — collection `charge_instruments`
+
+**Charges have two independent origins, and the model must reflect that.** Brokerage, statutory and exchange charges belong to the broker's rate card and are identical across every instrument it trades. **Exit load belongs to the scheme.** Two mutual funds bought through the same broker on the same day carry different exit loads, and an index fund may carry none at all.
+
+Forcing exit load into `ChargeScheduleEntity` would mean one schedule document per fund — thousands of near-identical documents differing in a single rule.
+
+| Field | Mongo | Type | Notes |
+|---|---|---|---|
+| `id` | `_id` | String | |
+| `stockCode` | `stock_code` | String | the identifier transactions actually carry today |
+| `isin` | `isin` | String | stored now, keyed on later without a re-key |
+| `name` | `name` | String | |
+| `assetType` | `asset_type` | `AssetType` | |
+| `fundCategory` | `fund_category` | `FundCategory` | classification and rule eligibility |
+| `planType` | `plan_type` | `PlanType` | DIRECT or REGULAR — decides whether a distributor transaction fee can apply |
+| `equityOriented` | `equity_oriented` | Boolean | **explicit, not inferred.** Whether a scheme is equity-oriented for STT depends on actual allocation, not marketing category — an index fund, an ELSS and a plain equity fund can all qualify |
+| `amc` | `amc` | String | |
+| `startDate` / `endDate` / `status` | | | same versioning and supersede flow as `ChargeScheduleEntity` — AMCs revise exit loads |
+| `rules` | `rules` | `List<ChargeRule>` | exit load, scheme-level fees |
+| `auditMetadata` | `audit_metadata` | `AuditMetadata` | |
+
+This document is not optional machinery. The rule *"STT applies to equity-oriented mutual funds but not debt funds"* needs `equityOriented` to exist somewhere; without this collection that rule cannot be expressed at all.
+
+The engine merges schedule rules and instrument rules into **one ordered evaluation**, so GST bases, ordering and rounding behave identically regardless of origin. Each emitted line records its `ChargeRuleSource`.
+
+#### 4.6.1 Which source owns a rule
+
+Charges do not divide cleanly into "broker's" and "scheme's". The mutual fund distributor transaction fee is the awkward case, and it decides the rule:
+
+- Its **amount** is the broker's decision — whether to levy it at all, and ₹100 or ₹150.
+- Its **applicability** is the scheme's — a DIRECT plan has no distributor and can never attract one.
+- Its **rate** also depends on the *user* — AMFI caps it at ₹150 for a first-time investor and ₹100 thereafter.
+
+Three sources for one charge. The resolving principle:
+
+> **A rule lives where its rate is decided. It reads the other sources through its eligibility predicate.**
+
+So the transaction fee lives on the **broker schedule**, and reads the instrument and the user:
+
+```json
+{ "code": "MF_TXN_FEE_NEW", "basis": "FLAT", "flatAmount": 150.0,
+  "eligibility": "#planType == 'REGULAR' and #turnover >= 10000 and #firstTimeInvestor",
+  "events": ["BUY"], "order": 10 },
+
+{ "code": "MF_TXN_FEE_EXISTING", "basis": "FLAT", "flatAmount": 100.0,
+  "eligibility": "#planType == 'REGULAR' and #turnover >= 10000 and !#firstTimeInvestor",
+  "events": ["BUY"], "order": 10 }
+```
+
+`#planType` comes from the resolved instrument; `#firstTimeInvestor` is derived by `UserChargeService` from prior MF purchase records. Neither needs a model change — both arrive through `ChargeContext.attributes`.
+
+**Instrument attributes are injected into the evaluation context for every rule**, not only instrument-sourced ones. Without that, a schedule rule could not read `planType` and this charge would be inexpressible.
+
+If a platform genuinely varies the fee per scheme, the same rule moves to that instrument's `rules` — no engine change, because both sources feed one evaluation.
+
+#### 4.6.2 Precedence when both sources declare the same code
+
+The instrument rule wins and the schedule rule is skipped; the emitted line records `source: INSTRUMENT`, and the override is logged at DEBUG. This matches the resolver's specificity philosophy — the more specific source overrides the more general — and is the only safe default, since applying both would double-charge silently.
+
+### 4.7 `ChargeCatalogueEntity` — collection `charge_catalogue`
 `code`, `displayName`, `category`, `description`, `statutoryReference`, `status`. A registry so `code` stays a validated free string rather than a Java enum (OD-4) — the same trick `AllowanceCatalogueEntity` uses in `taxplanning`.
 
 ---
@@ -284,11 +370,13 @@ public record ChargeContext(
         String planCode,
         ChargeEvent event,
         LocalDate transactionDate,
+        CorporateActionType corporateActionType,  // non-null when the trade arose from a corporate action
         double quantity,
         double price,
         int lotSize,                             // 1 for cash-segment instruments
         Map<AmountBasis, Double> baseAmounts,    // see below
-        Map<String, Object> attributes           // holdingDays, fundCategory, … -> SpEL vars
+        List<LotSlice> lots,                     // FIFO lots consumed by this trade; see §5.8
+        Map<String, Object> attributes           // fundCategory, equityOriented, … -> SpEL vars
 ) {
     public static ChargeContext forTrade(...)
     public static ChargeContext forAmcCycle(...)
@@ -384,14 +472,60 @@ public class ChargeFormulaEvaluator {
 
 Exposed variables: `#turnover`, `#quantity`, `#price`, `#side`, every key of `ChargeContext.attributes()` (e.g. `#holdingDays`, `#fundCategory`), and `#charges['CODE']` reading the live accumulator. Returns `double` — money to two decimals. `validate` runs during schedule validation so a malformed formula is rejected at seed time, never at trade time.
 
-### 5.7 Scoped (deduplicated) charges
+### 5.7 Per-lot evaluation
+
+A rule marked `perLot` is evaluated once for each FIFO lot the trade consumes, and the results summed. Everything else is evaluated once against the aggregate.
+
+```java
+public record LotSlice(double quantity, LocalDate acquisitionDate, double price) {
+    public long holdingDays(LocalDate disposalDate);
+}
+```
+
+**Why this is not optional.** Exit load applies per unit, based on how long *that unit* was held. Averaging over a transaction can be wrong by the entire charge, not by a rounding error:
+
+> Buy 100 units Jan 2024. Buy 100 more Oct 2025. Redeem 150 in Nov 2025.
+> FIFO gives 100 units held ~22 months (no load) and 50 held ~1 month (1% load).
+> A transaction-level weighted-average holding period of ~15 months computes **zero** exit load.
+> The correct answer is 1% on 50 units.
+
+**Why it is cheap.** The data already exists: `PortfolioService.updateQuantityBySavingReportAndProfitAndLoss1` builds `List<BuyContext>` (quantity, date, price) from FIFO matching before P&L is updated. The engine needs one field on the context and one loop; in Phase A the simulate endpoint supplies lots directly, so no portfolio file changes.
+
+**Why now rather than later.** `ChargeContext` is a record. Adding lots afterwards would change the record, change the engine's evaluation loop, and require re-verifying every existing rule — a Tier-3 change by the framework in §13.1. Building it now keeps every holding-period-dependent charge permanently Tier-1.
+
+For a rule that is not `perLot`, `lots` is ignored. For a BUY, it is empty.
+
+### 5.8 Corporate actions are exempt by default
+
+Bonus shares, split allotments and demerger entitlements are **issued free**. Charging brokerage, STT or stamp duty on them would take money the user never spent.
+
+But a blanket exemption is equally wrong: a buyback tender attracts brokerage and STT, and a rights subscription involves a real payment.
+
+**The rule is default-deny with explicit opt-in.** When `ChargeContext.corporateActionType` is non-null, a rule is evaluated only if it declares `appliesToCorporateActions: true`. If no rule opts in, the computation is empty with `resolution: CORPORATE_ACTION_EXEMPT` — recorded explicitly, so a zero charge on a corporate action is visibly deliberate rather than indistinguishable from a missing rate card.
+
+Default-deny rather than default-allow because the failure modes are not symmetric: charging free shares takes money from the user, while missing a buyback charge understates a cost and is caught by reconciliation. Corporate actions are also rare relative to trades, so an explicit opt-in costs almost nothing.
+
+**This corrects two things.** The superseded `BrokerChargeContext` carried `corporateActionType` but no calculator ever read it, and an earlier draft of `ChargeContext` dropped the field altogether. Separately, `ProfitAndLossService.updateProfitAndLoss:312` guards `actionType == null` on the SELL path but **not** on BUY — so a corporate-action BUY reaches the charge path unguarded. Phase C must close that asymmetry; until then the engine's own default is the protection.
+
+### 5.9 Scoped (deduplicated) charges
 `ScopedFlatChargeCalculator` resolves `dedupeScope` against `UserChargeRepository`:
-- `PER_SCRIP_PER_DAY` → `existsByEmailAndBrokerNameAndStockCodeAndTransactionDateAndAmountByCodeKey(...)` — an `exists` query, not a `List` (fixes D9).
+- `PER_SCRIP_PER_DAY` → an `exists` query, not a `List` (fixes D9), keyed on **`{email, accountHolder, brokerName, stockCode, transactionDate}`**.
+
+  **`accountHolder` is part of the key, and its omission is a live bug** (D10). A depository charge is levied per demat account. A user tracking holdings for more than one person who sells the same scrip on the same day in two accounts incurs two debits and therefore two charges; keying without `accountHolder` records only one. `PER_ORDER` and `PER_DAY` are keyed the same way for the same reason.
 - The check runs inside the same `@Transactional` boundary as the write; because MongoDB transactions are enabled (`app.mongodb.transactions-enabled`), read-your-own-write within the transaction holds.
 
 ---
 
-## 6. Schedule Resolution
+## 6. Rule Resolution
+
+Two sources are resolved independently and merged into one ordered rule list before evaluation:
+
+1. `ChargeScheduleResolver` — the broker rate card, by the specificity rules below.
+2. `ChargeInstrumentResolver` — the instrument's own rules, by `stockCode` and date, using the same validity-window and supersede semantics.
+
+Merged rules are sorted by `order` as a single list, so a `DERIVED` GST rule on the broker card can include an instrument-sourced line in its base if the rate card declares that code. Each line records its `ChargeRuleSource`.
+
+### 6.1 Schedule specificity
 
 Candidate query: `brokerName` matches, `status == ACTIVE`, `startDate <= date`, and (`endDate` is null or `endDate >= date`).
 
@@ -410,6 +544,20 @@ Highest score wins; ties broken by latest `startDate`; a remaining tie is a data
 Cached in a `ConcurrentHashMap` keyed by the resolution tuple, evicted whenever `ChargeScheduleService` writes. Rate cards change monthly at most; per-transaction Mongo lookups are pure waste.
 
 **Supersede on publish (FR-1):** publishing a schedule whose scope matches an existing open one sets the incumbent's `endDate = newStartDate.minusDays(1)` in the same transaction, instead of throwing.
+
+### 6.2 A missing instrument profile is recorded, never fatal
+
+An instrument profile is expected only where the schedule says so, via `requiresInstrumentProfile`. The mutual fund card sets it; the equity cards have no scheme-level charges and do not.
+
+When it is expected and none resolves, the engine **computes the broker-level charges anyway** and records `resolution: NO_INSTRUMENT_PROFILE`. The row appears in the gaps report. Blocking the transaction would stop a legitimate quarterly upload because reference data is missing, which is the wrong trade.
+
+**The reason this needs recording rather than a log line** is that a missing profile silently disables a *statutory* charge, not merely exit load. The STT rule's eligibility reads `#equityOriented`; with no profile that variable is null, `null == true` is false, and STT is quietly not charged. Recording the gap is what makes that visible.
+
+### 6.3 Expression variables are validated against an allow-list
+
+`ChargeScheduleValidator` extracts every `#variable` referenced by a rule's `eligibility` or `formula` and rejects any name not in the known context vocabulary — the `ChargeContext` fields, the `AmountBasis` keys, the instrument attributes, and `#charges['CODE']`.
+
+Without this, a typo such as `#equityOrientd` parses cleanly, evaluates to null, silently disables its rule, and does so permanently. Rate cards are data, so the compiler cannot catch this; the validator must.
 
 ---
 
@@ -677,8 +825,8 @@ Building for F&O now would be waste. Building so F&O *cannot* be added later wou
 **Built in Phase A despite not being needed** — because it is the escape hatch that makes the Tier-1 promise true for charges nobody has thought of yet:
 `FORMULA` calculator + `ChargeFormulaEvaluator`.
 
-**Deliberately deferred** — no seeded card needs them, and each is ~30 lines when a card does:
-`PER_UNIT` (per-lot), `SLAB` (full-service tiers). The registry means adding one later changes no existing class.
+**Also built, after correction** — an earlier draft deferred these as unused:
+`PER_UNIT` and `SLAB`. `SlabBandBasis` exists so graded exit loads can band on holding days, so deferring `SlabChargeCalculator` would leave that enum dead. And a `ChargeBasis` constant with no registered calculator is a trap for whoever first writes a rule using it — `ChargeCalculatorRegistry` therefore fails fast at startup if any constant lacks a calculator.
 
 **Carried but unused** — cheap now, a migration later:
 `amountBasis` on the rule; `lotSize`, `orderId`, `baseAmounts` on the context; `ChargeEvent` values for `CALL_AND_TRADE`, `AUTO_SQUARE_OFF`, `PLEDGE`; the `planCode` and `exchange` schedule dimensions.
@@ -701,3 +849,95 @@ Named honestly, so they are decisions rather than surprises:
 3. assert the line appears in the computation, in `amountByCode`, and in the aggregated summary report.
 
 If someone later hard-codes a charge name in a `switch` or a field, this test fails. That is AC-1 made permanent.
+
+---
+
+## 14. Temporal Correctness and Backfilled Transactions
+
+Rate cards change. Users upload transactions long after they occurred, including transactions predating anything currently on file. A charge must always be computed against the rate card **in force on the transaction date**, never the card in force when the upload happened.
+
+This section exists because the design as first written got that wrong.
+
+### 14.1 The defect being corrected
+
+The existing `BrokerChargesRepository` resolves with:
+
+```java
+@Query("{'broker_name': ?0, 'status': 'ACTIVE', 'start_date': {$lte: ?1}, 'end_date': {$gte: ?1}}")
+```
+
+`EntityStatus` carries `ACTIVE`, `INACTIVE` and `SUPERSEDED`. If superseding a rate card marks it `SUPERSEDED`, then:
+
+> A 2024 card is superseded in 2025. In 2026 the user uploads a 2024 transaction.
+> The query requires `ACTIVE`; the 2024 card is `SUPERSEDED`; **no schedule matches**.
+> The charge computes as zero, silently.
+
+Two orthogonal concepts share one field.
+
+| Concept | Expressed by |
+|---|---|
+| Which card applies on a given date | `startDate` / `endDate` **alone** |
+| Whether the record is legitimate data | `status` — `ACTIVE` versus retracted-in-error |
+| Whether a card is the *current* one | `endDate == null` — **never** a status |
+
+**Rules:**
+1. Superseding sets `endDate = newStartDate.minusDays(1)`. It **never** changes `status`.
+2. `INACTIVE` means the card was entered in error and must not be used for **any** date — it is a data retraction, not an expiry.
+3. The resolver filters `status: { $ne: "INACTIVE" }`, not `status == "ACTIVE"`. Defensive: if a future maintainer sets `SUPERSEDED` believing it correct, backfill still resolves rather than silently returning nothing.
+4. `ChargeScheduleValidatorTest` and `ChargeInstrumentResolverTest` both assert that a superseded card still resolves for a date inside its historical window.
+
+The same applies to `ChargeInstrumentEntity`: an AMC that revises exit load closes the old profile's window, and a redemption backdated into that window uses the old load.
+
+### 14.2 A missing charge must be visible, not merely logged
+
+Backfilling several years will cross periods with no rate card on file. AC-12 says the engine returns an empty computation and logs a WARN — correct, but a warning scrolls away and the gap becomes invisible.
+
+Therefore a `UserChargeEntity` is persisted **even when nothing is computed**, carrying a `ChargeResolution`. `NO_SCHEDULE` rows are queryable, so a data-quality report can list every transaction whose charges could not be assessed, and re-running after seeding the missing card fixes them.
+
+`GET /user-charges/user/{email}/gaps` returns exactly that.
+
+### 14.3 The upload model: quarterly and chronological
+
+Transactions arrive in **quarterly batches, in chronological order**. A user may load 2024's quarters during 2026, but Q1 precedes Q2 precedes Q3. That guarantee removes most of the ordering risk:
+
+| Rule | Risk without sequencing | Under sequential upload |
+|---|---|---|
+| `#firstTimeInvestor` (₹150 vs ₹100) | Both computations wrong if the later purchase arrives first | **Safe** — the earliest purchase always arrives first |
+| Exit load, `perLot` | Incomplete FIFO lots give wrong holding periods | **Safe** — purchases always precede their redemption |
+| DP charge, `PER_SCRIP_PER_DAY` | — | **Safe** either way; dedupe is keyed on transaction date |
+
+So `PROVISIONAL` becomes a safety net rather than a routine state.
+
+**It stays, because the guarantee is operational, not enforced.** Sequencing is a process convention: someone will eventually upload a forgotten file, re-run a quarter, or load two quarters in the wrong order. A system that assumes an unenforced convention produces silently wrong numbers when it breaks.
+
+The guard is cheap. Before processing a batch, `UserChargeService` compares its earliest transaction date against the latest already recorded for that user. If the batch reaches back before it, every affected computation is marked `PROVISIONAL` and surfaced through the gaps endpoint. That converts a silent wrongness into a visible flag, and costs one indexed query per batch.
+
+### 14.4 Quarterly batch processing
+
+Four properties the batch path must hold, none of which follow from single-transaction correctness:
+
+**Idempotent re-upload.** Re-loading a quarter — to correct a file, or by accident — must not double-charge. `UserChargeEntity` is keyed on `transactionId`: a recomputation replaces the existing row rather than appending. Enforced by a unique index on `{email, transaction_id}`.
+
+**Intra-batch deduplication.** Two sells of the same scrip on the same day within one batch must produce exactly one DP charge. `ScopedFlatChargeCalculator` queries rows written earlier in the *same* batch, so the batch must run inside a single MongoDB transaction where read-your-own-writes holds, and transactions must be processed in order within it. `app.mongodb.transactions-enabled=true` is a prerequisite, not an optimisation.
+
+**AMC not double-billed.** `ChargeAccountEntity` carries `lastBilledThrough`; a cycle already covered by it is skipped. Re-running a quarter's AMC is then a no-op rather than a second charge — the same guard `AssetManagementDetails.lastAmcChargesDeductedOn` provides today.
+
+**Resolution cost amortised.** A quarter may hold hundreds of transactions resolving to the same one or two rate cards. The resolver cache (§6) turns that into one lookup per distinct scope rather than one per transaction, which is the difference between a batch that completes and one that hammers Mongo.
+
+### 14.4 Recomputation
+
+`POST /charges/recompute` re-evaluates a scope — a user, a date range, or every row referencing a given `scheduleId`. Needed in three situations:
+
+1. A seeded rate was wrong and has been corrected.
+2. A batch arrived out of sequence and was flagged `PROVISIONAL`.
+3. A previously `NO_SCHEDULE` period now has a card.
+
+Idempotent, keyed on `transactionId`: recomputing replaces that transaction's `UserChargeEntity` rather than appending.
+
+**This forces a change to how P&L charge aggregates are maintained.** The current design accumulates incrementally (`report.merge(...)` per transaction), which cannot survive a recomputation — the old contribution is already folded into a sum and cannot be subtracted reliably.
+
+So: the live path stays incremental for speed, but recomputation **rebuilds the affected financial year's charge aggregates wholesale from `user_charges`** rather than applying deltas. `user_charges` is the source of truth; the P&L charge hierarchy is a derived projection of it. Stating that explicitly is what keeps the two from drifting.
+
+### 14.5 What this costs
+
+One enum, two fields on `UserChargeEntity`, a changed resolver predicate, one endpoint, and a rebuild path in the recompute job. Every one of them is cheaper now than after a user has backfilled four years of transactions against rate cards that have since been superseded.

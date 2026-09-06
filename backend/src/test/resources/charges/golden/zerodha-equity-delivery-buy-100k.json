@@ -1,0 +1,11 @@
+{
+  "name": "zerodha-equity-delivery-buy-100k",
+  "describes": "A ₹1,00,000 delivery purchase. Stamp duty applies because it is a buy; depository charges do not, because nothing leaves the demat account.",
+  "context": { "brokerName": "ZERODHA", "assetType": "EQUITY", "segment": "DELIVERY", "exchange": "NSE",
+               "event": "BUY", "price": 1000, "quantity": 100, "transactionDate": "2025-06-02" },
+  "expected": {
+    "lines": { "BROKERAGE": 0.00, "STT": 100.00, "EXCHANGE_TXN": 2.97, "SEBI_FEE": 0.10,
+               "IPFT": 0.10, "STAMP_DUTY": 15.00, "GST": 0.57 },
+    "total": 118.74
+  }
+}

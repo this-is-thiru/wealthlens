@@ -1,0 +1,10 @@
+{
+  "name": "zerodha-equity-intraday-buy-100k",
+  "describes": "The intraday buy leg. Securities transaction tax is absent because intraday levies it on the sell only, there is no depository charge because nothing is delivered, and stamp duty is at the intraday rate of 0.003% rather than delivery's 0.015% — three differences from the delivery card on the same trade.",
+  "context": { "brokerName": "ZERODHA", "assetType": "EQUITY", "segment": "INTRADAY", "exchange": "NSE",
+               "event": "BUY", "price": 1000, "quantity": 100, "transactionDate": "2025-06-02" },
+  "expected": {
+    "lines": { "BROKERAGE": 20.00, "EXCHANGE_TXN": 2.97, "SEBI_FEE": 0.10, "STAMP_DUTY": 3.00, "GST": 4.15 },
+    "total": 30.22
+  }
+}

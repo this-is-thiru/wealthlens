@@ -1,0 +1,11 @@
+{
+  "name": "upstox-equity-delivery-sell-100k",
+  "describes": "The same trade at a different broker. Brokerage is a percentage capped at ₹20 rather than nil, and the depository charge differs — which is the whole reason a rate card is per broker.",
+  "context": { "brokerName": "UPSTOX", "assetType": "EQUITY", "segment": "DELIVERY", "exchange": "NSE",
+               "event": "SELL", "price": 1000, "quantity": 100, "transactionDate": "2025-06-02" },
+  "expected": {
+    "lines": { "BROKERAGE": 20.00, "STT": 100.00, "EXCHANGE_TXN": 2.97, "SEBI_FEE": 0.10,
+               "DP": 18.50, "GST": 7.48 },
+    "total": 149.05
+  }
+}
