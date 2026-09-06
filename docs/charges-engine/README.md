@@ -119,7 +119,15 @@ must be **empty**. If it is not, scope has leaked and the cutover is no longer r
 ```bash
 git checkout feature/charges-engine
 git log --oneline master..HEAD          # what has been committed on this branch
-./mvnw test -pl backend -am -Punit      # ~161 tests, ~7s, no Docker — confirms the framework works
+./mvnw test -pl backend -am -Punit      # unit tier, no Docker — confirms the framework works
+./mvnw verify -pl backend               # full suite plus the JaCoCo gate; needs Docker
+
+# Mutation score for the charges engine. Scoped to this package on purpose: the profile's
+# own target list also covers taxplanning, whose score is deferred (§9 item 7), so the
+# unscoped invocation fails on the aggregate and tells you nothing about this work.
+./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend \
+  '-DtargetClasses=com.thiru.wealthlens.brokercharges.engine.*' \
+  '-DtargetTests=com.thiru.wealthlens.brokercharges.*'
 ```
 
 Then open `implementation-checklist.md` and start at the first unticked box.
@@ -191,7 +199,7 @@ Everything design-level is settled. Two remain open, neither blocking Chunk 2.
 | 3 | **`charge_catalogue` initial code list** — the registry of valid charge codes | Drafted in tech-spec §7. Confirm the list when Chunk 6 seeds it |
 | 4 | ~~Missing instrument profile: error or warning?~~ | **Settled — ADR-24.** Recorded, never fatal. Gated by `requiresInstrumentProfile`; validator checks expression variables against an allow-list |
 | 5 | ~~Does `AccountType` affect charges?~~ | **Settled — ADR-25.** No rate impact, but `accountHolder` joins every dedupe key. Uncovered defect D10: DP charges are undercounted across account holders |
-| 7 | **`taxplanning` mutation score is 34.4%** — 133 of 387 mutants killed, with `FormulaEvaluator`, `FbpOptimizer`, `ItrFormAdvisor` and `TaxEngineFactory` at zero. Pre-existing, and invisible until pitest was bumped to a version that runs on Java 25. The `-Pmutation` profile fails on the aggregate, so it cannot gate the charges engine until this is addressed separately | Recorded, not this feature's work |
+| 7 | **`taxplanning` mutation score is 34.4%** — 133 of 387 mutants killed, with `FormulaEvaluator`, `FbpOptimizer`, `ItrFormAdvisor` and `TaxEngineFactory` at zero. Pre-existing, and invisible until pitest was bumped to a version that runs on Java 25 | **Deferred by the repository owner** to the full layer, 2026-09-06. Not a defect to re-raise. Consequence: `-Pmutation` fails on the aggregate, so the charges engine is gated by running the profile scoped to its own package (see §6) |
 | 6 | **`exchangeName` is `"NSE"` everywhere in tests and the API collection** — plain uppercase codes, so the schedule's `exchange` dimension matches directly. BSE is untested | Low risk, noted |
 
 ### Verified non-issues
