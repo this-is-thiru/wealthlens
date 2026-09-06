@@ -166,6 +166,27 @@ class ChargeFormulaEvaluatorTest {
         assertThat(evaluator.referencedVariables(null)).isEmpty();
     }
 
+    @Test
+    void evaluate_readsLotSizeAndSide() {
+        // Given — both are part of the documented vocabulary. A derivatives rule prices on lot
+        // size, and a rule that differs between buying and selling reads the side.
+        ChargeContext context = context(Map.of());
+
+        // When / Then
+        assertThat(evaluator.evaluate("#lotSize", context, new ChargeAccumulator()))
+                .isEqualByComparingTo("1");
+        assertThat(evaluator.matches("#side == 'SELL'", context, new ChargeAccumulator())).isTrue();
+        assertThat(evaluator.matches("#side == 'BUY'", context, new ChargeAccumulator())).isFalse();
+    }
+
+    @Test
+    void evaluate_whenTheExpressionYieldsNothing_isZeroRatherThanNull() {
+        // Given — a formula naming a fact this context does not carry. It must contribute nothing,
+        // the same way an absent expression does, rather than returning null into the arithmetic.
+        assertThat(evaluator.evaluate("#unknownFact", context(Map.of()), new ChargeAccumulator()))
+                .isEqualByComparingTo("0");
+    }
+
     private static ChargeContext context(Map<String, Object> attributes) {
         return new ChargeContext(
                 "txn-1", "ord-1", "RELIANCE", "self", BrokerName.ZERODHA, AssetType.EQUITY,

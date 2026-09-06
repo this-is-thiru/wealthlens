@@ -14,6 +14,11 @@ import java.math.RoundingMode;
  * <p>Brokers do not round uniformly. Securities transaction tax and stamp duty are conventionally
  * taken to the nearest rupee, while brokerage and exchange charges carry paise, so the policy is
  * declared per rule rather than fixed here.
+ *
+ * <p>Nothing here guards against {@code -0.00}. It cannot arise: {@code BigDecimal} has no signed
+ * zero, so a value rounding to zero from below is plain {@code 0.00}. That is one more reason the
+ * engine's arithmetic is {@code BigDecimal} rather than {@code double}, where {@code -0.0} is real
+ * and does reach a JSON payload.
  */
 public final class ChargeRounding {
 
@@ -34,21 +39,11 @@ public final class ChargeRounding {
         }
 
         RoundingPolicy effective = policy == null ? RoundingPolicy.HALF_UP_2 : policy;
-        BigDecimal rounded = switch (effective) {
+        return switch (effective) {
             case NONE -> amount;
             case HALF_UP_2 -> amount.setScale(PAISE_SCALE, RoundingMode.HALF_UP);
             case CEILING_2 -> amount.setScale(PAISE_SCALE, RoundingMode.CEILING);
             case HALF_UP_0 -> amount.setScale(RUPEE_SCALE, RoundingMode.HALF_UP);
         };
-
-        return normaliseNegativeZero(rounded);
-    }
-
-    /**
-     * A value that rounds to zero from below keeps its sign in BigDecimal, and renders as
-     * {@code -0.00} — alarming on a contract note and in a JSON payload alike.
-     */
-    private static BigDecimal normaliseNegativeZero(BigDecimal value) {
-        return value.signum() == 0 ? value.abs() : value;
     }
 }

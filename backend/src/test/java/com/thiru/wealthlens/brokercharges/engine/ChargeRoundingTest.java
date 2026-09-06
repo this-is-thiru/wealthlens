@@ -80,8 +80,9 @@ class ChargeRoundingTest {
 
     @Test
     void apply_neverProducesNegativeZero() {
-        // Negative zero compares equal to zero but serialises as "-0.0", which is alarming on a
-        // contract note and in a JSON payload.
+        // Not a guard the class implements — BigDecimal has no signed zero, so a value rounding to
+        // zero from below is plain 0.00. Asserted because the property is relied on downstream, and
+        // because it is exactly what would stop holding if the arithmetic ever moved to double.
         assertThat(ChargeRounding.apply(new BigDecimal("-0.0001"), RoundingPolicy.HALF_UP_2).toPlainString())
                 .isEqualTo("0.00");
     }

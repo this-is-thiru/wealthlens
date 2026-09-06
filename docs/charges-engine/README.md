@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 3 part 2. Full suite green: 407 tests, unit and integration.
+**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 3 complete. Full suite green: 451 tests, unit and integration.
 
 ---
 
@@ -11,9 +11,9 @@
 | | |
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
-| **Commits beyond master** | 10 — four code commits and six documentation commits |
-| **Phase** | A (standalone engine). Chunks 1–2 complete; Chunk 3 all but the orchestrator. |
-| **Next action** | Finish Chunk 3 — `ChargeEngine`, the orchestrator. See §11 |
+| **Commits beyond master** | 11 — five code commits and six documentation commits |
+| **Phase** | A (standalone engine). Chunks 1–3 complete. |
+| **Next action** | Chunk 4 — the seven calculators. See §11 |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
 
 ---
@@ -56,15 +56,15 @@ Five repositories in `repository/`: `ChargeScheduleRepository`, `ChargeInstrumen
 
 `ChargeRepositoryIntegrationTest` — 14 tests proving the documents map and the queries execute.
 
-### Written by Chunk 3 (commits `d13281f` and the one after it)
+### Written by Chunk 3
 
-In `brokercharges/engine/`: `ChargeRounding`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, `ChargeCalculator`, `ChargeCalculatorRegistry`. In `dto/context/`: `ChargeContext`, `ChargeComputation`, `LotSlice`.
+In `brokercharges/engine/`: `ChargeRounding`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, `ChargeCalculator`, `ChargeCalculatorRegistry`, `ChargeEngine`, and `ChargeScheduleResolver` **as an interface only**. In `dto/context/`: `ChargeContext`, `ChargeComputation`, `LotSlice`.
 
-Tests: `ChargeRoundingTest` (20), `ChargeAccumulatorTest` (9), `ChargeFormulaEvaluatorTest` (15), `ChargeCalculatorRegistryTest` (6), `ApplicationContextIntegrationTest` (1).
+Tests: `ChargeEngineTest` (42), `ChargeRoundingTest` (20), `ChargeFormulaEvaluatorTest` (17), `ChargeAccumulatorTest` (9), `ChargeCalculatorRegistryTest` (6), `ApplicationContextIntegrationTest` (1). Engine package: 97.4% line, 93.9% branch, 99.2% mutation.
 
 ### NOT written yet — do not assume any of it exists
 
-No service, controller or seed data has been written, and the orchestrator is still outstanding. Specifically absent: `ChargeEngine`, every `*Calculator` implementation, `ChargeScheduleResolver`, `ChargeInstrumentResolver`, `ChargeScheduleValidator`, `ChargeScheduleService`, `ChargeSeederService`, `UserChargeService`, `AmcChargeService`, every controller, and everything under `resources/data/charges/`.
+No calculator, service, controller or seed data has been written. Specifically absent: every `*Calculator` implementation, the `ChargeScheduleResolver` *implementation*, `ChargeInstrumentResolver`, `ChargeScheduleValidator`, `ChargeScheduleService`, `ChargeSeederService`, `UserChargeService`, `AmcChargeService`, every controller, and everything under `resources/data/charges/`.
 
 ### The old implementation is fully intact and untouched
 
@@ -172,9 +172,11 @@ Each of these was established by investigation or corrected after being got wron
 
 9. **`portfolio` already produces FIFO lots.** `PortfolioService.updateQuantityBySavingReportAndProfitAndLoss1` builds `List<BuyContext>` (quantity, date, price). Phase C consumes it; Phase A supplies lots through the simulate endpoint instead.
 
-10. **`ChargeCalculatorRegistry` is deliberately not a `@Component`.** Its constructor refuses to build unless every `ChargeBasis` is served, so annotating it before the Chunk 4 calculators exist takes the whole application down at startup. The annotation goes on when the last basis is served. Do not add it back early — it was added once, and nothing caught it because unit tests construct the registry directly.
+10. **Nothing in `engine/` is a Spring bean yet, and that is deliberate.** `ChargeCalculatorRegistry` refuses to construct unless every `ChargeBasis` is served; `ChargeEngine` depends on it and on a `ChargeScheduleResolver` that has no implementation before Chunk 5. Annotating any of the three takes application startup down. The annotations go on in Chunk 4, together. `ApplicationContextIntegrationTest` is what tells you if one goes on early.
 
-11. **`AssetEntity` has no ISIN or scheme code** — only `stockCode` and `stockName`. `ChargeInstrumentEntity` is keyed on `stockCode` for that reason, with `isin` stored for later.
+11. **`ChargeCalculatorRegistry` is deliberately not a `@Component`.** Its constructor refuses to build unless every `ChargeBasis` is served, so annotating it before the Chunk 4 calculators exist takes the whole application down at startup. The annotation goes on when the last basis is served. Do not add it back early — it was added once, and nothing caught it because unit tests construct the registry directly.
+
+12. **`AssetEntity` has no ISIN or scheme code** — only `stockCode` and `stockName`. `ChargeInstrumentEntity` is keyed on `stockCode` for that reason, with `isin` stored for later.
 
 ---
 
@@ -189,6 +191,7 @@ Everything design-level is settled. Two remain open, neither blocking Chunk 2.
 | 3 | **`charge_catalogue` initial code list** — the registry of valid charge codes | Drafted in tech-spec §7. Confirm the list when Chunk 6 seeds it |
 | 4 | ~~Missing instrument profile: error or warning?~~ | **Settled — ADR-24.** Recorded, never fatal. Gated by `requiresInstrumentProfile`; validator checks expression variables against an allow-list |
 | 5 | ~~Does `AccountType` affect charges?~~ | **Settled — ADR-25.** No rate impact, but `accountHolder` joins every dedupe key. Uncovered defect D10: DP charges are undercounted across account holders |
+| 7 | **`taxplanning` mutation score is 34.4%** — 133 of 387 mutants killed, with `FormulaEvaluator`, `FbpOptimizer`, `ItrFormAdvisor` and `TaxEngineFactory` at zero. Pre-existing, and invisible until pitest was bumped to a version that runs on Java 25. The `-Pmutation` profile fails on the aggregate, so it cannot gate the charges engine until this is addressed separately | Recorded, not this feature's work |
 | 6 | **`exchangeName` is `"NSE"` everywhere in tests and the API collection** — plain uppercase codes, so the schedule's `exchange` dimension matches directly. BSE is untested | Low risk, noted |
 
 ### Verified non-issues
@@ -211,45 +214,40 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ---
 
-## 11. Resume point — Chunk 3 complete bar the orchestrator
+## 11. Resume point — Chunk 3 complete
 
-**Paused:** 2026-09-06. Build green: **407 tests** (unit + integration, Docker up), `spotless:check` clean.
+**Paused:** 2026-09-06. Build green: **451 tests** (unit + integration), `spotless:check` clean, JaCoCo gate passing, mutation score 99.2% on the engine package.
 
 ### Committed
 
-- `d13281f` — `ChargeRounding`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, plus `ChargeContext`, `ChargeComputation` and `LotSlice` (Chunk 3, part 1)
-- *this commit* — `ChargeCalculator`, `ChargeCalculatorRegistry`, `ChargeCalculatorRegistryTest`, `ApplicationContextIntegrationTest` (Chunk 3, part 2)
+- `d13281f` — `ChargeRounding`, `ChargeAccumulator`, `ChargeFormulaEvaluator`, `ChargeContext`, `ChargeComputation`, `LotSlice` (Chunk 3, part 1)
+- `ddd3afc` — `ChargeCalculator`, `ChargeCalculatorRegistry`, `ApplicationContextIntegrationTest` (Chunk 3, part 2)
+- *this commit* — `ChargeEngine` and `ChargeScheduleResolver` as an interface (Chunk 3, part 3)
 
-Nothing is left uncommitted. The registry was reviewed before it went in, and the review found a
-real defect — see below.
+Nothing is left uncommitted.
 
-### What the review caught
+### Deviations from the spec, decided while building
 
-`ChargeCalculatorRegistry` was annotated `@Component`. Its constructor refuses to build unless every
-`ChargeBasis` is served, and the calculators are Chunk 4 — so the application could not start, and
-every integration test would have failed the moment Docker came back. All 213 unit tests were green
-throughout, because they construct the registry directly.
+1. **`compute(ChargeContext)`, not `compute(UserMail, ChargeContext)`** as tech-spec §5.4 has it. A calculator receives `(rule, context, accumulator)` and cannot see a separate parameter, so threading identity that way would leave the engine holding an argument it never reads. When the Chunk 4 scoped calculator needs an email for its dedupe key, it joins `ChargeContext` — which already carries four of the five parts of that key.
+2. **`ChargeRule.effectiveAmountBasis()`**, added because a null `amountBasis` means turnover and *every* percentage calculator has to know that. Defaulting it in the engine alone left the calculators reading a raw null and pricing on zero. Found by a failing test, not by review.
+3. **`ChargeScheduleResolver` is an interface only.** The engine is written against it; the specificity ranking, validity window and cache are Chunk 5.
+4. **Instrument-sourced rules are not merged yet.** `ChargeComputation.instrumentId` stays null and `NO_INSTRUMENT_PROFILE` is unused until `ChargeInstrumentResolver` lands. `ChargeLine.source` is already populated and honours a rule that declares `INSTRUMENT`, so the merge is additive.
 
-The gap was that **nothing asserted the application starts**. `ApplicationContextIntegrationTest`
-now does, and it was written first: red against the real Spring Boot context with the exact
-`IllegalStateException`, green once the annotation came off. That test is the lasting part of this
-fix — the annotation would have been re-added eventually by someone wiring Chunk 4, and now the
-build says so immediately.
+### What the quality gates caught, beyond the tests
 
-Recorded as §8 fact 10 so the annotation is not restored early.
+- **`ChargeRounding.normaliseNegativeZero` was dead code.** `BigDecimal` has no signed zero, so a value rounding to zero from below is already `0.00` — the method could never change a value and its javadoc claimed the opposite. A surviving mutant is what exposed it; removed, and the test kept, restated as a property `BigDecimal` gives us rather than one the class enforces.
+- **No test proved a `side: BUY` rule is actually levied on a purchase.** Only the negative case was asserted, so a side filter that rejected everything would have looked correct.
+- **The mutation profile had never run on this toolchain.** pitest 1.17.0 cannot read Java 25 bytecode — `Unsupported class file major version 69`. Bumped to 1.20.3. See §9 item 7 for what it then reported about `taxplanning`.
 
-### Then: `ChargeEngine`
+### Then: Chunk 4 — the calculators
 
-The only thing left in Chunk 3. Test-first, per the working agreement in §6. The contract is
-tech-spec §5.4 (resolve → filter → sort → dispatch → modifiers → assemble) and §5.5 (modifier order:
-aggregator, then min/max, then rounding — applied by the engine, never inside a calculator). Test
-cases are test-plan Tier B, roughly 30 of them.
+Seven implementations of `ChargeCalculator`, one per `ChargeBasis`, test-first per §6. When the last one lands, `@Component` goes on all seven, on `ChargeCalculatorRegistry` and on `ChargeEngine` in the same commit — that is the point at which startup can succeed, and `ApplicationContextIntegrationTest` proves it.
 
-Everything the engine needs now exists apart from the calculators themselves, which are Chunk 4.
-Engine tests stub `ChargeCalculator`, exactly as `ChargeCalculatorRegistryTest` already does.
+`ScopedFlatChargeCalculator` is the one carrying design left over from this chunk: its dedupe key needs the user's email, per §5.9 and deviation 1 above.
 
 ### What TDD has caught so far, worth continuing for
 
 1. `#charges['CODE']` threw `EL1027E` — SpEL indexes `Map`, and the lookup was backed by a record. Implementation-first, this would have surfaced later inside the engine with a murkier trace.
 2. `20.00 * 0.18` returned `3.5999999999999996`. The failing assertion turned out to be the *test's* error: ADR-15 settles that rounding happens once in the orchestrator, so an unrounded return is correct. A test written afterwards would have been shaped to whatever the code did.
-3. The `@Component` above. Applying test-first to the *integration* tier, not just units, is what turned "the app is broken and no test knows" into a two-minute red-green.
+3. `ChargeCalculatorRegistry` annotated `@Component` broke application startup, with all 213 unit tests green. Applying test-first to the *integration* tier is what turned "the app is broken and no test knows" into a two-minute red-green.
+4. The null `amountBasis` default (deviation 2). One engine test failed for a reason that was neither the test's fault nor the engine's — it was a contract missing from the rule itself, which would have been copied into all seven calculators.
