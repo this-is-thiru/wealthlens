@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 6 part-built. Full suite green: 672 tests, unit and integration.
+**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 6 complete. Full suite green: 683 tests, unit and integration.
 
 ---
 
@@ -12,8 +12,8 @@
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | 18 — eleven code commits and seven documentation commits |
-| **Phase** | A (standalone engine). Chunks 1–5 complete; Chunk 6 has seeds and the seeder, not the golden files. |
-| **Next action** | Finish Chunk 6 — Tier E golden contract notes. See §11 |
+| **Phase** | A (standalone engine). Chunks 1–6 complete. |
+| **Next action** | Chunk 7 — the charge summary reporting model. See §11 |
 | **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
 
 ---
@@ -82,11 +82,11 @@ Both quality gates now cover `brokercharges.service` as well as the engine — t
 
 ### Written by Chunk 6 so far
 
-`resources/data/charges/`: `charge-catalogue.json` (12 codes) and five rate cards — Zerodha delivery, intraday and mutual fund; Upstox and Fyers delivery. `service/ChargeSeederService` (`@PostConstruct`, catalogue first, idempotent by code, validating before persisting, failing fast). `ChargeSeederServiceTest` — 14 tests, test-plan Tier G, run against the real files.
+`resources/data/charges/`: `charge-catalogue.json` (12 codes) and five rate cards — Zerodha delivery, intraday and mutual fund; Upstox and Fyers delivery. `service/ChargeSeederService` (`@PostConstruct`, catalogue first, idempotent by code, validating before persisting, failing fast). `ChargeSeederServiceTest` — 14 tests, test-plan Tier G, run against the real files. `ChargeGoldenFileTest` — 11 frozen contract notes in `src/test/resources/charges/golden/`, test-plan Tier E, priced through the real resolver, engine and calculators against the shipped cards.
 
 ### NOT written yet — do not assume any of it exists
 
-No controller, no golden contract notes, and no AMC rate card — `AmcChargeService` has nothing to bill against until one is seeded. Specifically absent: `ChargeGoldenFileTest` and its fixtures, and every controller.
+No controller, no charge summary reporting model, and **no AMC rate card** — `AmcChargeService` has nothing to bill against until one is seeded. Specifically absent: `entity/model/ChargeSummaryReport` and its yearly/monthly forms, and every controller.
 
 **Nothing calls any of this yet.** The services are beans, they are complete, and no production code invokes them. The simulate endpoint in Chunk 9 is the first caller; Phase B is what puts the engine in the live path.
 
@@ -143,24 +143,39 @@ must be **empty**. If it is not, scope has leaked and the cutover is no longer r
 ```bash
 git checkout feature/charges-engine
 git log --oneline master..HEAD          # what has been committed on this branch
-./mvnw test -pl backend -am -Punit      # unit tier, no Docker — confirms the framework works
-./mvnw verify -pl backend               # full suite plus the JaCoCo gate; needs Docker
 
-# Mutation score for the charges work. Scoped on purpose: the profile's own target list
-# also covers taxplanning, whose score is deferred (§9 item 7), so the unscoped invocation
-# fails on the aggregate and tells you nothing about this feature.
+# 1. Where you are. The checklist is the tracker; resume at its first unticked box.
+sed -n '1,25p' docs/charges-engine/implementation-checklist.md
+
+# 2. Confirm the branch is still green before changing anything.
+./mvnw verify -pl backend               # full suite + both JaCoCo gates; needs Docker
+./mvnw test -pl backend -am -Punit      # fast inner loop, no Docker
+
+# 3. Surefire's exit code is trustworthy, but the checklist's own gate is cheap:
+grep -l 'failures="[1-9]"\|errors="[1-9]"' backend/target/surefire-reports/TEST-*.xml
+# must print nothing.
+
+# 4. Mutation score for the charges work. Scoped on purpose: the profile's own
+#    target list also covers taxplanning, whose score is deferred (§9 item 7), so
+#    the unscoped invocation fails on the aggregate and says nothing about this.
 ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend \
   '-DtargetClasses=com.thiru.wealthlens.brokercharges.engine.*,com.thiru.wealthlens.brokercharges.service.*' \
   '-DtargetTests=com.thiru.wealthlens.*'
+
+# 5. Phase A's exit criterion — must be empty, or the cutover stops being reversible.
+git diff master --stat -- backend/src/main/java/com/thiru/wealthlens/portfolio/
+
+./mvnw spotless:apply -pl backend        # before every commit; not bound to a phase
 ```
 
-Then open `implementation-checklist.md` and start at the first unticked box.
+**Read in this order when context is lost:** this file §1 and §11, then `implementation-checklist.md` for the sequence, then `decisions.md` only if you intend to change the design.
 
 **Working agreement, as instructed by the repository owner:**
-- **Test-driven.** Write the failing test first, watch it fail, then implement until it passes. Not tests-alongside, and not tests-afterwards. In Java the first red is usually a compile error, which proves nothing — create minimal skeletons so the test compiles, then show real assertion failures before implementing. Pure data carriers with no branch or calculation have no behaviour to drive out and are exempt.
-- Stop for review **after each chunk**.
+- **Test-driven, including integration and module tests.** Write the failing test first, watch it fail, then implement. In Java the first red is usually a compile error, which proves nothing — create minimal skeletons so the test compiles, then show real assertion failures before implementing. Pure data carriers with no branch or calculation are exempt.
+- **The repository owner reviews before every commit.** Present the work, wait, then commit. Approval to continue building is not approval to commit.
 - **One commit per chunk**, local to this branch; not pushed until asked.
 - Build quality-first — no compromises taken for speed.
+- **Tick the checklist as you go.** It is the tracker, and this file is only the narrative.
 
 ---
 
