@@ -138,12 +138,12 @@ git log --oneline master..HEAD          # what has been committed on this branch
 ./mvnw test -pl backend -am -Punit      # unit tier, no Docker — confirms the framework works
 ./mvnw verify -pl backend               # full suite plus the JaCoCo gate; needs Docker
 
-# Mutation score for the charges engine. Scoped to this package on purpose: the profile's
-# own target list also covers taxplanning, whose score is deferred (§9 item 7), so the
-# unscoped invocation fails on the aggregate and tells you nothing about this work.
+# Mutation score for the charges work. Scoped on purpose: the profile's own target list
+# also covers taxplanning, whose score is deferred (§9 item 7), so the unscoped invocation
+# fails on the aggregate and tells you nothing about this feature.
 ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend \
-  '-DtargetClasses=com.thiru.wealthlens.brokercharges.engine.*' \
-  '-DtargetTests=com.thiru.wealthlens.brokercharges.*'
+  '-DtargetClasses=com.thiru.wealthlens.brokercharges.engine.*,com.thiru.wealthlens.brokercharges.service.*' \
+  '-DtargetTests=com.thiru.wealthlens.*'
 ```
 
 Then open `implementation-checklist.md` and start at the first unticked box.

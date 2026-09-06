@@ -215,10 +215,15 @@
                         </goals>
                     </execution>
                     <!--
-                      The gate is scoped to the charges engine only. That package does not exist yet,
-                      so the rule matches no classes and passes; it begins enforcing automatically the
-                      moment the engine is created. A global threshold would fail on day one and be
-                      switched off, which is worse than no gate.
+                      Scoped to the charges work rather than applied globally. A global threshold
+                      would fail on day one and be switched off, which is worse than no gate.
+
+                      Two rules, because the two areas need different shapes. The engine is judged as
+                      a package, so a thin class does not have to carry the same ratio as the
+                      orchestrator. The charges services are judged per class, with the superseded
+                      implementation excluded by name — BrokerChargeService and UserBrokerChargeService
+                      are deleted in Phase C, and holding them to a standard they were never written
+                      to would only teach everyone to disable the gate.
                     -->
                     <execution>
                         <id>check-charges-engine</id>
@@ -233,6 +238,24 @@
                                     <element>PACKAGE</element>
                                     <includes>
                                         <include>com.thiru.wealthlens.brokercharges.engine*</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.90</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.85</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>CLASS</element>
+                                    <includes>
+                                        <include>com.thiru.wealthlens.brokercharges.service.*</include>
                                     </includes>
                                     <limits>
                                         <limit>
@@ -362,6 +385,7 @@
                         <configuration>
                             <targetClasses>
                                 <param>com.thiru.wealthlens.brokercharges.engine.*</param>
+                                <param>com.thiru.wealthlens.brokercharges.service.*</param>
                                 <param>com.thiru.wealthlens.taxplanning.engine.*</param>
                             </targetClasses>
                             <targetTests>
