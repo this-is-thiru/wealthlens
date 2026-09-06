@@ -5,6 +5,7 @@ import static com.thiru.wealthlens.testsupport.MoneyAssert.assertNoCharge;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
@@ -18,8 +19,11 @@ import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeRuleSource;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeSide;
+import com.thiru.wealthlens.brokercharges.dto.enums.FundCategory;
+import com.thiru.wealthlens.brokercharges.dto.enums.PlanType;
 import com.thiru.wealthlens.brokercharges.dto.enums.RoundingPolicy;
 import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
+import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
@@ -27,6 +31,7 @@ import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.testsupport.LogCapture;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -56,6 +61,9 @@ class ChargeEngineTest {
 
     @Mock
     private ChargeScheduleResolver scheduleResolver;
+
+    @Mock
+    private ChargeInstrumentResolver instrumentResolver;
 
     // ---------------------------------------------------------------- rule selection
 
@@ -694,18 +702,231 @@ class ChargeEngineTest {
         assertMoney(50.0, engine().compute(withLots).total());
     }
 
+    // ---------------------------------------------------------------- instrument merge (§6)
+
+    @Test
+    void compute_whenTheCardRequiresAProfile_mergesTheInstrumentsOwnRules() {
+        // Given — exit load belongs to the scheme, not to the broker. Holding it on the rate card
+        // would mean one card per fund.
+        givenSchedule(true, flatRule("BROKERAGE", 20.0, 10));
+        givenInstrument("prof-1", Map.of(), flatRule("EXIT_LOAD", 100.0, 20));
+
+        // When
+        ChargeComputation computation = engine().compute(sell());
+
+        // Then
+        assertThat(codesOf(computation)).containsExactly("BROKERAGE", "EXIT_LOAD");
+        assertMoney(120.0, computation.total());
+    }
+
+    @Test
+    void compute_ordersInstrumentRulesAmongTheBrokersRatherThanAfterThem() {
+        // Given — one ordered list, not two. A derived broker rule can then include an
+        // instrument-sourced line in its base, which is the point of merging rather than appending.
+        givenSchedule(true, flatRule("BROKERAGE", 20.0, 30), derivedRule("GST", 18.0, List.of("EXIT_LOAD"), 100));
+        givenInstrument("prof-1", Map.of(), flatRule("EXIT_LOAD", 100.0, 10));
+
+        // When
+        ChargeComputation computation = engine().compute(sell());
+
+        // Then
+        assertThat(codesOf(computation)).containsExactly("EXIT_LOAD", "BROKERAGE", "GST");
+        assertMoney(18.0, computation.amountOf("GST"));
+    }
+
+    @Test
+    void compute_marksInstrumentSourcedLinesAsSuch() {
+        // Given — a stored line has to say whether the broker or the fund levied it
+        givenSchedule(true, flatRule("BROKERAGE", 20.0, 10));
+        givenInstrument("prof-1", Map.of(), flatRule("EXIT_LOAD", 100.0, 20));
+
+        // When
+        ChargeComputation computation = engine().compute(sell());
+
+        // Then
+        assertThat(computation.lines()).extracting(ChargeLine::getSource)
+                .containsExactly(ChargeRuleSource.SCHEDULE, ChargeRuleSource.INSTRUMENT);
+        assertThat(computation.instrumentId()).isEqualTo("prof-1");
+    }
+
+    @Test
+    void compute_publishesInstrumentAttributesToEligibilityPredicates() {
+        // Given — the statutory rule "securities transaction tax applies to equity-oriented funds"
+        // cannot be expressed unless the scheme's own attribute reaches the predicate
+        ChargeRule stt = flatRule("STT", 100.0, 10);
+        stt.setEligibility("#equityOriented == true");
+        givenSchedule(true, stt);
+        givenInstrument("prof-1", Map.of("equityOriented", true));
+
+        // When / Then
+        assertMoney(100.0, engine().compute(sell()).total());
+    }
+
+    @Test
+    void compute_whenTheProfileIsRequiredButMissing_pricesTheBrokerChargesAndRecordsTheGap() {
+        // Given — a fund whose reference data has not been loaded. Blocking the upload would be the
+        // wrong trade; charging nothing silently would be worse.
+        ChargeRule stt = flatRule("STT", 100.0, 10);
+        stt.setEligibility("#equityOriented == true");
+        givenSchedule(true, flatRule("BROKERAGE", 20.0, 20), stt);
+        when(instrumentResolver.resolve(any())).thenReturn(Optional.empty());
+
+        // When
+        ChargeComputation computation = engine().compute(sell());
+
+        // Then — brokerage still priced; the statutory charge silently disabled by the missing
+        // attribute is what makes the gap worth recording rather than logging
+        assertMoney(20.0, computation.total());
+        assertThat(computation.resolution()).isEqualTo(ChargeResolution.NO_INSTRUMENT_PROFILE);
+        assertThat(computation.instrumentId()).isNull();
+    }
+
+    @Test
+    void compute_whenTheCardDoesNotRequireAProfile_doesNotLookOneUp() {
+        // Given — equity cards carry no scheme-level charges, and this runs per transaction
+        givenSchedule(false, flatRule("BROKERAGE", 20.0, 10));
+
+        // When
+        ChargeComputation computation = engine().compute(sell());
+
+        // Then
+        assertThat(computation.resolution()).isEqualTo(ChargeResolution.RESOLVED);
+        verifyNoInteractions(instrumentResolver);
+    }
+
+    @Test
+    void compute_whenTheProfileIsRequiredAndMissingAndNothingIsCharged_stillReportsTheMissingProfile() {
+        // Given — two empty results with different causes. The gaps report needs them apart.
+        givenSchedule(true);
+        when(instrumentResolver.resolve(any())).thenReturn(Optional.empty());
+
+        // When
+        ChargeComputation computation = engine().compute(sell());
+
+        // Then
+        assertThat(computation.resolution()).isEqualTo(ChargeResolution.NO_INSTRUMENT_PROFILE);
+        assertNoCharge(computation.total());
+    }
+
+    @Test
+    void compute_publishesEverySchemeAttributeAPredicateMightRead() {
+        // Given — a distributor fee that can only apply to a regular plan of a debt fund from one
+        // asset management company. Every one of those facts belongs to the scheme, not the broker.
+        ChargeRule distributorFee = flatRule("DISTRIBUTOR_FEE", 50.0, 10);
+        distributorFee.setEligibility(
+                "#fundCategory == 'DEBT' and #planType == 'REGULAR' and #amc == 'Example AMC'");
+        givenSchedule(true, distributorFee);
+
+        ChargeInstrumentEntity instrument = new ChargeInstrumentEntity();
+        instrument.setId("prof-1");
+        instrument.setFundCategory(FundCategory.DEBT);
+        instrument.setPlanType(PlanType.REGULAR);
+        instrument.setAmc("Example AMC");
+        instrument.setRules(new ArrayList<>());
+        when(instrumentResolver.resolve(any())).thenReturn(Optional.of(instrument));
+
+        // When / Then
+        assertMoney(50.0, engine().compute(sell()).total());
+    }
+
+    @Test
+    void compute_whenTheSchemeAttributeDiffers_theRuleDoesNotApply() {
+        // Given — the same rule against a direct plan, where no distributor was involved
+        ChargeRule distributorFee = flatRule("DISTRIBUTOR_FEE", 50.0, 10);
+        distributorFee.setEligibility("#planType == 'REGULAR'");
+        givenSchedule(true, distributorFee);
+
+        ChargeInstrumentEntity instrument = new ChargeInstrumentEntity();
+        instrument.setId("prof-1");
+        instrument.setPlanType(PlanType.DIRECT);
+        instrument.setRules(new ArrayList<>());
+        when(instrumentResolver.resolve(any())).thenReturn(Optional.of(instrument));
+
+        // When / Then
+        assertThat(engine().compute(sell()).lines()).isEmpty();
+    }
+
+    @Test
+    void compute_keepsTheCallersAttributesWhenMergingTheSchemesIn() {
+        // Given — the caller supplies facts the profile knows nothing about. Enrichment must add to
+        // them, not replace them.
+        ChargeRule rule = flatRule("EXIT_LOAD", 100.0, 10);
+        rule.setEligibility("#fundCategory == 'DEBT' and #switchIn == true");
+        givenSchedule(true, rule);
+        givenInstrumentWithCategory("prof-1", FundCategory.DEBT);
+
+        // When
+        ChargeComputation computation = engine().compute(
+                contextWith(ChargeEvent.SELL, null, Map.of("switchIn", true)));
+
+        // Then
+        assertMoney(100.0, computation.total());
+    }
+
+    @Test
+    void compute_whenTheProfileIsRequiredButMissing_warnsNamingTheCardAndTheScrip() {
+        // Given — the gap is recorded on the computation, and said out loud, because what it
+        // silently disables is a statutory charge rather than an optional one
+        givenSchedule(true, flatRule("BROKERAGE", 20.0, 10));
+        when(instrumentResolver.resolve(any())).thenReturn(Optional.empty());
+
+        // When / Then
+        try (LogCapture logs = LogCapture.on(ChargeEngine.class)) {
+            engine().compute(sell());
+            assertThat(logs.warnings()).singleElement().asString()
+                    .contains("ZERODHA_EQ_DELIVERY_2025_04").contains("RELIANCE");
+        }
+    }
+
+    @Test
+    void compute_whenTheProfileIsFound_doesNotWarn() {
+        // Given — the ordinary case stays quiet, or the warning above means nothing
+        givenSchedule(true, flatRule("BROKERAGE", 20.0, 10));
+        givenInstrument("prof-1", Map.of());
+
+        // When / Then
+        try (LogCapture logs = LogCapture.on(ChargeEngine.class)) {
+            engine().compute(sell());
+            assertThat(logs.warnings()).isEmpty();
+        }
+    }
+
     // ---------------------------------------------------------------- fixtures
 
     private ChargeEngine engine() {
-        return new ChargeEngine(scheduleResolver, stubRegistry(), new ChargeFormulaEvaluator());
+        return new ChargeEngine(scheduleResolver, instrumentResolver, stubRegistry(), new ChargeFormulaEvaluator());
     }
 
     private void givenSchedule(ChargeRule... rules) {
+        givenSchedule(false, rules);
+    }
+
+    private void givenSchedule(boolean requiresInstrumentProfile, ChargeRule... rules) {
         ChargeScheduleEntity schedule = new ChargeScheduleEntity();
         schedule.setId("sched-1");
         schedule.setScheduleCode("ZERODHA_EQ_DELIVERY_2025_04");
+        schedule.setRequiresInstrumentProfile(requiresInstrumentProfile);
         schedule.setRules(new ArrayList<>(List.of(rules)));
         when(scheduleResolver.resolve(any())).thenReturn(Optional.of(schedule));
+    }
+
+    private void givenInstrumentWithCategory(String id, FundCategory fundCategory) {
+        ChargeInstrumentEntity instrument = new ChargeInstrumentEntity();
+        instrument.setId(id);
+        instrument.setFundCategory(fundCategory);
+        instrument.setRules(new ArrayList<>());
+        when(instrumentResolver.resolve(any())).thenReturn(Optional.of(instrument));
+    }
+
+    private void givenInstrument(String id, Map<String, Object> attributes, ChargeRule... rules) {
+        ChargeInstrumentEntity instrument = new ChargeInstrumentEntity();
+        instrument.setId(id);
+        instrument.setStockCode("RELIANCE");
+        instrument.setRules(new ArrayList<>(List.of(rules)));
+        if (attributes.containsKey("equityOriented")) {
+            instrument.setEquityOriented((Boolean) attributes.get("equityOriented"));
+        }
+        when(instrumentResolver.resolve(any())).thenReturn(Optional.of(instrument));
     }
 
     private static List<String> codesOf(ChargeComputation computation) {
