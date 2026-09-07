@@ -205,13 +205,30 @@ class ChargeSimulationServiceTest {
 
     @Test
     void simulate_whenPriceIsNegative_isRejected() {
-        // Given — zero is allowed: a bonus allotment is issued free and still attracts charges
         ChargeSimulationRequest request = sellRequest();
         request.setPrice(-1.0);
 
         assertThatThrownBy(() -> chargeSimulationService.simulate(request))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("price");
+    }
+
+    @Test
+    void simulate_whenPriceIsZero_isAccepted() {
+        // Given — bonus shares and split allotments are issued free and still attract charges, so
+        // zero is a real price rather than missing input. Mutation testing found this: the boundary
+        // was stated in a comment and asserted nowhere, and >= 0 mutated to > 0 with every test
+        // still passing.
+        when(chargeEngine.compute(any())).thenReturn(computation(line("DP", 13.50)));
+        ChargeSimulationRequest request = sellRequest();
+        request.setPrice(0.0);
+
+        // When
+        ChargeBreakdownResponse response = chargeSimulationService.simulate(request);
+
+        // Then
+        assertMoney(13.50, response.getTotalCharges());
+        assertMoney(0.00, capturedContext().amount(AmountBasis.TURNOVER));
     }
 
     @Test

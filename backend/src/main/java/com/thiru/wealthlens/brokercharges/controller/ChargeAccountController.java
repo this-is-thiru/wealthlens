@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,8 +51,12 @@ public class ChargeAccountController {
     /**
      * Bills every account of the given frequency not yet covered through the given date.
      *
+     * <p>Restricted to a super user: one call bills every account of a frequency, across every
+     * user, and the charges it writes are real money against real cost bases.
+     *
      * @return the accounts actually billed, so a caller can see what a run did rather than assume
      */
+    @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/charges/amc/impose")
     public List<ChargeAccountEntity> imposeAmc(
             @RequestParam AmcChargeFrequency frequency,

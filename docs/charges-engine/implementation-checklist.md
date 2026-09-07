@@ -4,8 +4,8 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Chunks -1 through 7 complete. **Resume at Chunk 9** (Chunk 8 is Phase B and comes after it).
-**Last updated:** 2026-09-07 — 499 unit-tier tests green, plus `ArchitectureTest` and `WealthLensModulithTest`. The integration tier was not run in this session: Docker was unavailable, so Testcontainers could not start. It must be run before the Phase A gate is claimed.
+**Status:** Chunks -1 through 7 and 9 complete — **all of Phase A**. **Resume at the Phase A gate below**, then Chunk 8 (Phase B).
+**Last updated:** 2026-09-07 — 744 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, `brokercharges.engine` at 99% mutation score.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
 
@@ -287,27 +287,73 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 
 ---
 
-## Chunk 9 — Controllers and API *(still Phase A)*
+## Chunk 9 — Controllers and API ✅ *(still Phase A)*
 
-- [ ] `controller/ChargeScheduleController.java` (tech-spec §10)
-- [ ] `controller/ChargeSimulationController.java` — `POST /charges/simulate`, persists nothing
-- [ ] `controller/UserChargesController.java` — history + per-transaction contract note
-- [ ] `controller/ChargeAccountController.java`
-- [ ] `auth/config/AuthConfig` review — schedule admin endpoints must **not** be public
-- [ ] `api-collection/` updated with the new endpoints
-- [ ] Golden-file fixtures under `src/test/resources/charges/golden/`, authored through the simulate endpoint
-- [ ] `ChargesIntegrationTest extends AbstractIntegrationTest`
-- [ ] `ChargeExtensibilityTest` — test-plan Tier J (3 cases; makes AC-1 permanent)
-- [ ] Tier H persistence/dedupe cases (~14) and Tier I API cases (~12)
-- [ ] **Add `charge_schedules`, `user_charges`, `charge_catalogue`, `charge_accounts` to `cleanDatabase()`**
+- [x] `controller/ChargeScheduleController.java` (tech-spec §10) — publish, fetch, list by broker, close, unverified, catalogue
+- [x] `controller/ChargeSimulationController.java` — `POST /charges/simulate`, persists nothing
+- [x] `controller/UserChargesController.java` — history, per-transaction contract note, gaps
+- [x] `controller/ChargeAccountController.java` — register, list, AMC cycle
+- [x] `auth/config/AuthConfig` review — **this found a live gap.** The chain ends in
+      `anyRequest().permitAll()`, so all five new prefixes were public. Now authenticated, and
+      `chargeEndpoints_rejectAnUnauthenticatedRequest` pins it
+- [x] `api-collection/` — new `Charges Engine` folder, 11 requests, each documenting its own
+      rejection cases rather than only its happy path
+- [x] Golden-file fixtures — **already authored in Chunk 6, through the engine rather than the
+      endpoint.** Faster and identical in coverage; the simulate path is exercised by Tier I instead
+- [x] `ChargesIntegrationTest extends AbstractIntegrationTest` — 24 cases
+- [x] `ChargeExtensibilityTest` — test-plan Tier J, 3 cases; makes AC-1 permanent
+- [x] Tier H persistence/dedupe and Tier I API cases — 24 across the two tiers, plus 3 in Tier J
+- [x] `cleanDatabase()` — **no change needed, by design.** It wipes every collection *except* a
+      seeded whitelist, so the four charge collections were already cleared. `charge_catalogue` is
+      on the whitelist (its seeder is `@PostConstruct` and would never re-run); the one test that
+      adds a code to it removes it in an `@AfterEach`
 
-### ✅ Phase A gate
-- [ ] AC-1 through AC-9 and AC-12 pass
-- [ ] Line coverage ≥ 90%, branch ≥ 85% on `brokercharges.**`
-- [ ] **Mutation score ≥ 85% on `brokercharges.engine.**`** — the gate that replaces manual QA of the maths
-- [ ] All golden contract notes pass at ₹0.01
-- [ ] `git diff master --stat -- backend/src/main/java/com/thiru/wealthlens/portfolio/` is **empty**
-- [ ] `WealthLensModulithTest.modulithStructureIsValid()` green
+### Two defects found by writing these tests
+
+- **Rate-card and AMC endpoints were open to any authenticated user.** Publishing a card reprices
+  every user's trades and `/charges/amc/impose` bills real money across every account. Both now
+  carry `@PreAuthorize("hasRole('SUPER_USER')")`, matching the tax-planning policy endpoints.
+- **A zero price was rejected by a boundary nobody tested.** Mutation testing killed the claim: the
+  comment said a bonus allotment is issued free and still attracts charges, `>= 0` mutated to `> 0`,
+  and every test still passed. Now asserted.
+
+### Two test expectations that were wrong, not the code
+
+- Superseding a card **does not** set `SUPERSEDED`. It closes the window and leaves the status
+  alone, because `findCandidates` excludes nothing but `INACTIVE` and a superseded card must still
+  price the trades inside its own window. The test now asserts the window and says why.
+- The resolver caches by scope and date, and **only the publish path evicts.** A test writing
+  straight to the repository saw a stale card. That is a real operational constraint — a rate card
+  written outside `ChargeScheduleService` is invisible until eviction — and is now recorded in the
+  test that tripped over it.
+
+### Deviations from the spec
+
+- Schedules are addressed by `scheduleCode`, not Mongo id. The code is what the seed files, the
+  validator and every stored charge row already carry, and the only one of the two a human can quote.
+- `GET /charge-catalogue` is served by `ChargeScheduleController`, since it is the registry those
+  cards are validated against. It needed a `ChargeCatalogueService` — a controller reaching for a
+  repository fails `ArchitectureTest`.
+- `ChargeSimulationService` was not on the list. The controller could have called the engine
+  directly, but then "persists nothing" would be a comment; as a service holding the engine and no
+  repository, it is a property the test asserts by reading the class's own fields.
+
+### ✅ Phase A gate — verified 2026-09-07, one item open
+
+- [ ] **AC-1 through AC-9 and AC-12 pass** — AC-1, 3, 4, 5, 7, 8, 9 and 12 are signed off with named
+      evidence below. **AC-2 and AC-6 remain open and neither is code work:** AC-2 needs a human to
+      compare each shipped rate against the broker's published page (`GET
+      /charge-schedules/unverified` is the worklist), and AC-6 needs an instrument profile carrying
+      an exit load to be seeded so the predicate is exercised end to end
+- [x] **Line coverage ≥ 90%, branch ≥ 85%** — both JaCoCo rules pass under `mvn verify`
+- [x] **Mutation score ≥ 85% on `brokercharges.engine.**`** — **99%**, 256 of 257 mutants killed, 0
+      uncovered. The charges services score 99% on the same scoping (211/212); the aggregate
+      `-Pmutation` invocation still fails on the deferred `taxplanning` score, which is why the
+      scoped command in `README.md` §6 is the one that gates this work
+- [x] **All golden contract notes pass at ₹0.01** — 12 fixtures, asserted line by line and in total
+- [x] **`git diff master --stat -- .../portfolio/` is empty** — re-checked at the end of Chunk 9
+- [x] **`WealthLensModulithTest.modulithStructureIsValid()` green**
+- [x] **744 tests green across both tiers**, surefire XML gate clean, `spotless:check` clean
 - [ ] **Discuss results before starting Phase B**
 
 ---
@@ -371,7 +417,7 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 
 Ticked only where something actually asserts it. The evidence is named so the claim can be checked rather than taken on trust.
 
-- [ ] **AC-1** new charge = JSON only, no Java *(A)* — true of the design and demonstrated informally by five cards sharing one engine, but `ChargeExtensibilityTest` (Tier J) is Chunk 9. Not claimed until it exists
+- [x] **AC-1** new charge = JSON only, no Java *(A)* — `ChargeExtensibilityTest`. `SYNTHETIC_LEVY_FOR_TEST` exists in a catalogue row and a rate card and nowhere in Java; the three tests assert it is computed, recorded and aggregated, that a `DERIVED` rule can name it in its base, and that repricing it applies only after the boundary
 - [ ] **AC-2** equity delivery buy matches a real contract note to ₹0.01 *(A)* — **blocked by design.** Golden fixtures pin the arithmetic against placeholder rates; only a human comparing them to a broker's published page can close this (ADR-18)
 - [x] **AC-3** sell: STT sell-side, DP once, no stamp duty *(A)* — golden `zerodha-equity-delivery-sell-100k`
 - [x] **AC-4** second sell same scrip same day → no second DP *(A)* — golden `zerodha-equity-delivery-sell-second-same-day`, plus `ScopedFlatChargeCalculatorTest`

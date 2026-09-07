@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,7 +40,14 @@ public class ChargeScheduleController {
     private final ChargeScheduleService chargeScheduleService;
     private final ChargeCatalogueService chargeCatalogueService;
 
-    /** Publishes a card, superseding the incumbent for the same scope in the same transaction. */
+    /**
+     * Publishes a card, superseding the incumbent for the same scope in the same transaction.
+     *
+     * <p>Restricted to a super user, as the tax-planning policy endpoints are. A rate card decides
+     * what every user of the application is charged, and being authenticated is not the same as
+     * being entitled to reprice other people's trades.
+     */
+    @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/charge-schedules")
     public ChargeScheduleEntity publish(@RequestBody ChargeScheduleEntity schedule) {
         return chargeScheduleService.publish(schedule);
@@ -68,6 +76,7 @@ public class ChargeScheduleController {
     }
 
     /** Withdraws a card without replacing it. Past dates still resolve against it. */
+    @PreAuthorize("hasRole('SUPER_USER')")
     @PatchMapping("/charge-schedules/{scheduleCode}/close")
     public ChargeScheduleEntity close(@PathVariable String scheduleCode,
                                       @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
