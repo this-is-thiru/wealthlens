@@ -7,6 +7,7 @@ import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.engine.ChargeEngine;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDate;
@@ -99,6 +100,39 @@ public class UserChargeService {
 
     public List<UserChargeEntity> findHistory(String email) {
         return userChargeRepository.findByEmailOrderByTransactionDateDesc(email);
+    }
+
+    /**
+     * Charge history, optionally narrowed.
+     *
+     * <p>The date range is answered by the database and the asset type in memory, which is
+     * deliberate rather than lazy: {@code {email, transaction_date}} is indexed, so the range is the
+     * predicate that does the selective work, and what survives it is one period of one user's
+     * charges — small enough that a second index earns nothing.
+     *
+     * @param from        inclusive, or null for no range. Both bounds or neither
+     * @param to          inclusive, or null for no range
+     * @param assetType   null to keep every asset type
+     * @throws BadRequestException if only one bound is supplied, or the range runs backwards.
+     *                             A half-open range reads as "since April" to one caller and "up to
+     *                             April" to another, and guessing wrong looks like missing charges
+     */
+    public List<UserChargeEntity> findHistory(String email, LocalDate from, LocalDate to, AssetType assetType) {
+        if ((from == null) != (to == null)) {
+            throw new BadRequestException("A date range needs both from and to, or neither");
+        }
+        if (from != null && from.isAfter(to)) {
+            throw new BadRequestException("Date range starts after it ends: " + from + " is after " + to);
+        }
+
+        List<UserChargeEntity> charges = from == null
+                ? userChargeRepository.findByEmailOrderByTransactionDateDesc(email)
+                : userChargeRepository.findByEmailAndTransactionDateBetween(email, from, to);
+
+        if (assetType == null) {
+            return charges;
+        }
+        return charges.stream().filter(charge -> charge.getAssetType() == assetType).toList();
     }
 
     /** Rows whose charges could not be fully assessed. Drives the gaps report. */

@@ -412,4 +412,77 @@ class UserChargeServiceTest {
                 base.event(), date, base.corporateActionType(), base.quantity(), base.price(),
                 base.lotSize(), base.baseAmounts(), base.lots(), base.attributes());
     }
+
+    // ------------------------------------------------------- filtered history (Chunk 9)
+
+    @Test
+    void findHistory_whenNoFilterIsGiven_returnsEverythingNewestFirst() {
+        // Given
+        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL))
+                .thenReturn(List.of(charge(AssetType.EQUITY, LocalDate.of(2025, 6, 2))));
+
+        // When
+        List<UserChargeEntity> history = service.findHistory(EMAIL, null, null, null);
+
+        // Then — no dates means no range query; the full history is already ordered
+        assertThat(history).hasSize(1);
+        verify(userChargeRepository).findByEmailOrderByTransactionDateDesc(EMAIL);
+    }
+
+    @Test
+    void findHistory_whenBothDatesAreGiven_queriesTheRangeRatherThanFilteringInMemory() {
+        // Given — the selective predicate belongs in the database; a year of charges is not a
+        // list worth pulling across to discard most of it
+        LocalDate from = LocalDate.of(2025, 4, 1);
+        LocalDate to = LocalDate.of(2025, 6, 30);
+        when(userChargeRepository.findByEmailAndTransactionDateBetween(EMAIL, from, to))
+                .thenReturn(List.of(charge(AssetType.EQUITY, LocalDate.of(2025, 6, 2))));
+
+        // When
+        List<UserChargeEntity> history = service.findHistory(EMAIL, from, to, null);
+
+        // Then
+        assertThat(history).hasSize(1);
+        verify(userChargeRepository).findByEmailAndTransactionDateBetween(EMAIL, from, to);
+    }
+
+    @Test
+    void findHistory_whenOnlyOneDateIsGiven_isRejectedRatherThanGuessed() {
+        // Given / When / Then — an open-ended range could mean "since April" or "up to April",
+        // and answering the wrong one looks like missing charges
+        assertThatThrownBy(() -> service.findHistory(EMAIL, LocalDate.of(2025, 4, 1), null, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("both");
+    }
+
+    @Test
+    void findHistory_whenRangeIsInverted_isRejected() {
+        assertThatThrownBy(() -> service.findHistory(
+                EMAIL, LocalDate.of(2025, 6, 30), LocalDate.of(2025, 4, 1), null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("after");
+    }
+
+    @Test
+    void findHistory_whenAssetTypeIsGiven_keepsOnlyThatAssetType() {
+        // Given
+        when(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).thenReturn(List.of(
+                charge(AssetType.EQUITY, LocalDate.of(2025, 6, 2)),
+                charge(AssetType.MUTUAL_FUND, LocalDate.of(2025, 6, 3))));
+
+        // When
+        List<UserChargeEntity> history = service.findHistory(EMAIL, null, null, AssetType.MUTUAL_FUND);
+
+        // Then
+        assertThat(history).extracting(UserChargeEntity::getAssetType)
+                .containsExactly(AssetType.MUTUAL_FUND);
+    }
+
+    private static UserChargeEntity charge(AssetType assetType, LocalDate date) {
+        UserChargeEntity charge = new UserChargeEntity();
+        charge.setEmail(EMAIL);
+        charge.setAssetType(assetType);
+        charge.setTransactionDate(date);
+        return charge;
+    }
 }
