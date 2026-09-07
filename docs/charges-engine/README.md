@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-06, branch `feature/charges-engine`, Chunk 6 complete. Full suite green: 683 tests, unit and integration.
+**Last verified against the repository:** 2026-09-07, branch `feature/charges-engine`, **Phase A complete** (Chunks 1–7 and 9). Full suite green: 744 tests, unit and integration.
 
 ---
 
@@ -11,10 +11,10 @@
 | | |
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
-| **Commits beyond master** | 18 — eleven code commits and seven documentation commits |
-| **Phase** | A (standalone engine). Chunks 1–6 complete. |
-| **Next action** | Chunk 7 — the charge summary reporting model. See §11 |
-| **Blocking questions** | None. All Chunk 0 decisions are settled (§7). |
+| **Commits beyond master** | 25 — eighteen code commits and seven documentation commits |
+| **Phase** | A (standalone engine) — **complete**. Chunks 1–7 and 9 done |
+| **Next action** | Review the Phase A results, then Chunk 8 (Phase B, shadow recording). See §11 |
+| **Blocking questions** | None for code. Two acceptance criteria are open and neither is code work — see §9 |
 
 ---
 
@@ -84,11 +84,21 @@ Both quality gates now cover `brokercharges.service` as well as the engine — t
 
 `resources/data/charges/`: `charge-catalogue.json` (12 codes) and five rate cards — Zerodha delivery, intraday and mutual fund; Upstox and Fyers delivery. `service/ChargeSeederService` (`@PostConstruct`, catalogue first, idempotent by code, validating before persisting, failing fast). `ChargeSeederServiceTest` — 14 tests, test-plan Tier G, run against the real files. `ChargeGoldenFileTest` — 11 frozen contract notes in `src/test/resources/charges/golden/`, test-plan Tier E, priced through the real resolver, engine and calculators against the shipped cards.
 
+### Written by Chunk 7
+
+`entity/model/ChargeSummaryReport` and its `YearlyChargeSummary` / `MonthlyChargeSummary` forms — a map keyed by charge code replacing six fixed columns, summed in `BigDecimal` with the total recomputed from the parts rather than accumulated beside them. `ChargeSummaryReportTest`, 11 cases. Nothing writes one yet: `ProfitAndLossService` keeps the old `BrokerChargesReport` until Phase C.
+
+### Written by Chunk 9
+
+Four controllers — `ChargeScheduleController` (publish, fetch, list, close, unverified, catalogue), `ChargeSimulationController` (`POST /charges/simulate`), `UserChargesController` (history, contract note, gaps) and `ChargeAccountController` (register, list, AMC cycle). Two services behind them: `ChargeSimulationService` (holds the engine and no repository, so a dry run cannot write) and `ChargeCatalogueService`. `UserChargeService.findHistory` gained a date range and asset-type filter. `ChargesIntegrationTest` (24 cases) and `ChargeExtensibilityTest` (3, Tier J). An eleven-request `Charges Engine` folder in `api-collection/`.
+
+`AuthConfig` gained the five new prefixes. It needed them: the chain ends in `anyRequest().permitAll()`, so every charges endpoint was public. Publishing a rate card and running the AMC cycle additionally require `SUPER_USER`.
+
 ### NOT written yet — do not assume any of it exists
 
-No controller, no charge summary reporting model, and **no AMC rate card** — `AmcChargeService` has nothing to bill against until one is seeded. Specifically absent: `entity/model/ChargeSummaryReport` and its yearly/monthly forms, and every controller.
+**No AMC rate card** — `AmcChargeService` has nothing to bill against until one is seeded, so `/charges/amc/impose` returns an empty list against the shipped data.
 
-**Nothing calls any of this yet.** The services are beans, they are complete, and no production code invokes them. The simulate endpoint in Chunk 9 is the first caller; Phase B is what puts the engine in the live path.
+**Nothing in the live path calls any of this.** The simulate endpoint and the user-charges endpoints are the first callers, and they stand beside the existing flow rather than in it. Phase B is what puts the engine in the trade path; Phase C is what makes it authoritative.
 
 ### The old implementation is fully intact and untouched
 
@@ -261,26 +271,40 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ---
 
-## 11. Resume point — Chunk 5 complete
+## 11. Resume point — Phase A complete
 
-**Paused:** 2026-09-06. Build green: **658 tests**, `spotless:check` clean, both JaCoCo gates passing, charges mutation score 95.9% overall with every new class at 100%.
+**Paused:** 2026-09-07. Build green: **744 tests** across both tiers, `spotless:check` clean, both JaCoCo gates passing, `brokercharges.engine` at **99% mutation score** (256/257, 0 uncovered) and the charges services at 99% on the same scoping.
 
-### Committed
+### The Phase A gate, item by item
 
-Chunk 3 in three parts (`d13281f`, `ddd3afc`, `d5596a7`), the calculators (`8c12945`), the resolvers (`ded37b2`), then Chunk 5's services one at a time: the validator and gate widening (`f1caee5`), `ChargeScheduleService` (`824c1c0`), `UserChargeService` (`76fcaba`), the account and AMC services (`71b139c`).
+| Item | Status |
+|---|---|
+| Line ≥ 90%, branch ≥ 85% | ✅ both JaCoCo rules pass under `mvn verify` |
+| Mutation ≥ 85% on `brokercharges.engine` | ✅ 99%. Run it scoped — the aggregate `-Pmutation` still fails on the deferred `taxplanning` score (§9) |
+| 12 golden contract notes at ₹0.01 | ✅ asserted line by line and in total |
+| `git diff master --stat -- .../portfolio/` empty | ✅ re-checked at the end of Chunk 9 |
+| `WealthLensModulithTest` green | ✅ |
+| AC-1, 3, 4, 5, 7, 8, 9, 12 | ✅ each with named evidence in the checklist |
+| **AC-2** — rates match the broker's published page | ❌ **open, and not code work.** `GET /charge-schedules/unverified` is the worklist |
+| **AC-6** — MF exit load under the holding-period predicate | ❌ **open.** The engine does it and `ChargeEngineTest` asserts it; no seeded instrument profile carries an exit load, so nothing exercises it end to end |
 
-### The whole of Chunk 5 is done
+### What Chunk 9 found
 
-The checklist's Chunk 5 is broader than "resolution" — it covers validation and every service. All of it now exists:
+Two defects, both of the kind only an integration test can see:
 
-| | Does what | Exit criterion |
-|---|---|---|
-| `ChargeScheduleValidator` | Rejects a card that would price wrongly, reporting every problem at once | Tier D, each asserting the message |
-| `ChargeScheduleService` | Publish with auto-supersede, close, list | **AC-8** |
-| `UserChargeService` | Compute, record, batch with the sequence guard, gaps | Rows written even when nothing is charged |
-| `ChargeAccountService` | The demat accounts AMC bills against | Billing history survives re-registration |
-| `AmcChargeService` | The cycle, run over accounts rather than trades | Re-running is a no-op |
-| `ChargeInvariantTest` | Tier F — 10 properties over 200 generated cards each | Verified non-vacuous |
+1. **Every charges endpoint was public.** `AuthConfig` ends in `anyRequest().permitAll()`, so a prefix nobody lists is open — including one that reprices every user's trades and one that bills real money. Fixed, and pinned by a test that asserts an unauthenticated request is refused.
+2. **Publishing a rate card and imposing AMC charges were open to any authenticated user.** Both now require `SUPER_USER`.
+
+And two test expectations that were wrong rather than the code, both worth knowing before touching this again:
+
+- **Superseding a card does not set `SUPERSEDED`.** It closes the window and leaves the status alone, because `findCandidates` excludes only `INACTIVE` and a superseded card must still price the trades inside its own window.
+- **The resolver cache is evicted only by the publish path.** A rate card written straight to the repository is invisible to the engine until something evicts. That is an operational constraint, not merely a test detail.
+
+Mutation testing found a third, smaller one: a zero price was documented as valid in a comment and asserted nowhere, so the `>= 0` boundary mutated cleanly.
+
+### Then: Chunk 8 — Phase B, shadow recording
+
+**Discuss the Phase A results before starting.** Phase B is the first change to `portfolio/`, which ends the isolation property that has made every step so far reversible.
 
 ### Defects found in my own earlier work, while building this
 
