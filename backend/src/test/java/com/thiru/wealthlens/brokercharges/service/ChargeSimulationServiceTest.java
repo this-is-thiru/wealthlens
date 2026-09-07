@@ -25,6 +25,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -234,9 +235,9 @@ class ChargeSimulationServiceTest {
     @Test
     void simulate_cannotPersist_becauseItHoldsNothingThatCould() {
         // Given / When — the structural guarantee behind "persists nothing"
-        List<Class<?>> dependencies = java.util.Arrays.stream(ChargeSimulationService.class.getDeclaredFields())
+        List<Class<?>> dependencies = Arrays.stream(ChargeSimulationService.class.getDeclaredFields())
                 .filter(field -> !field.isSynthetic())
-                .map(Field::getType)
+                .<Class<?>>map(Field::getType)
                 .toList();
 
         // Then
@@ -269,7 +270,7 @@ class ChargeSimulationServiceTest {
     }
 
     private static ChargeComputation computation(ChargeLine... lines) {
-        double total = java.util.Arrays.stream(lines).mapToDouble(ChargeLine::getAmount).sum();
+        double total = Arrays.stream(lines).mapToDouble(ChargeLine::getAmount).sum();
         return new ChargeComputation("sched-1", "zerodha-equity-2025", null,
                 ChargeResolution.RESOLVED, List.of(lines), total);
     }
