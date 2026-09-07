@@ -387,6 +387,11 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 - [ ] Remove `brokerCharges` from `AssetRequest`; add `userChargeId` to `TransactionEntity`
 - [ ] Promote `TradeSegment` into `portfolio/dto/enums`; add to `AssetRequest`, `TransactionEntity`, `AssetEntity` (default `DELIVERY`)
 - [ ] Re-verify `toTradeOutcomeContext` pro-rating (`:569`) across partial sells with computed charges
+- [ ] **Retire `ProfitAndLossService.updateProfitAndLoss(UserMail, ProfitAndLossContext)`** — deprecated
+      `forRemoval`, and `PortfolioService` (`:507`, the V1 sell path) is its last production caller.
+      Its tests are right to call it while it ships, so this is a migration, not a warning to silence.
+      Surfaced as CI annotations once `setup-java@v6` added a javac problem matcher; pre-existing on
+      `master`, and out of bounds for Phase A because it is `portfolio/` work
 - [ ] Rewire `RealisedProfits` to `YearlyChargeSummary`; `ProfitAndLossService.updateBrokerCharges` (`:507`) → a single `merge` call
 - [ ] Retire `AssetManagementDetails` in favour of `charge_accounts`
 
