@@ -82,7 +82,7 @@ Both quality gates now cover `brokercharges.service` as well as the engine — t
 
 ### Written by Chunk 6 so far
 
-`resources/data/charges/`: `charge-catalogue.json` (12 codes) and five rate cards — Zerodha delivery, intraday and mutual fund; Upstox and Fyers delivery. `service/ChargeSeederService` (`@PostConstruct`, catalogue first, idempotent by code, validating before persisting, failing fast). `ChargeSeederServiceTest` — 14 tests, test-plan Tier G, run against the real files. `ChargeGoldenFileTest` — 11 frozen contract notes in `src/test/resources/charges/golden/`, test-plan Tier E, priced through the real resolver, engine and calculators against the shipped cards.
+`resources/data/charges/`: `charge-catalogue.json` (12 codes) and five rate cards — Zerodha delivery, intraday and mutual fund; Upstox and Fyers delivery. `service/ChargeSeederService` (`@PostConstruct`, catalogue first, idempotent by code, validating before persisting, failing fast). `ChargeSeederServiceTest` — 14 tests, test-plan Tier G, run against the real files. `ChargeGoldenFileTest` — 12 frozen contract notes in `src/test/resources/charges/golden/`, test-plan Tier E, priced through the real resolver, engine and calculators against the shipped cards.
 
 ### Written by Chunk 7
 
@@ -239,16 +239,17 @@ Each of these was established by investigation or corrected after being got wron
 
 ## 9. Open items
 
-Everything design-level is settled. Two remain open, neither blocking Chunk 2.
+Everything design-level is settled. Two acceptance criteria remain open and neither is code work; the rest below are closed or recorded.
 
 | # | Item | State |
 |---|---|---|
 | 1 | **AC-2 cannot be closed in Phase A** — golden fixtures assert against placeholder rates, so they pin the arithmetic but not reality | Decided (ADR-18). Needs real Zerodha rates, then one re-verification |
-| 2 | **`ChargeAccountEntity` shape** — AMC billing cycles, `lastBilledThrough`, multiple demat accounts per broker (`AssetManagementDetails` carries `dematAccountId`) | Designed, not yet reviewed. Lands in Chunk 2 |
-| 3 | **`charge_catalogue` initial code list** — the registry of valid charge codes | Drafted in tech-spec §7. Confirm the list when Chunk 6 seeds it |
+| 2 | ~~**`ChargeAccountEntity` shape**~~ | **Closed.** Built in Chunk 2 and exercised by `ChargeAccountService` in Chunk 5; billing history survives re-registration |
+| 3 | ~~**`charge_catalogue` initial code list**~~ | **Closed.** Chunk 6 seeded 12 codes; `GET /charge-catalogue` lists them and the validator rejects any rule naming one that is absent |
 | 4 | ~~Missing instrument profile: error or warning?~~ | **Settled — ADR-24.** Recorded, never fatal. Gated by `requiresInstrumentProfile`; validator checks expression variables against an allow-list |
 | 5 | ~~Does `AccountType` affect charges?~~ | **Settled — ADR-25.** No rate impact, but `accountHolder` joins every dedupe key. Uncovered defect D10: DP charges are undercounted across account holders |
 | 7 | **`taxplanning` mutation score is 34.4%** — 133 of 387 mutants killed, with `FormulaEvaluator`, `FbpOptimizer`, `ItrFormAdvisor` and `TaxEngineFactory` at zero. Pre-existing, and invisible until pitest was bumped to a version that runs on Java 25 | **Deferred by the repository owner** to the full layer, 2026-09-06. Not a defect to re-raise. Consequence: `-Pmutation` fails on the aggregate, so the charges engine is gated by running the profile scoped to its own package (see §6) |
+| 8 | **AC-6 cannot be closed yet** — the engine applies the holding-period predicate and `ChargeEngineTest` asserts it, but no seeded instrument profile carries an exit load, so nothing exercises it end to end | Needs one seeded mutual-fund profile with an exit load. Small, and not blocking |
 | 6 | **`exchangeName` is `"NSE"` everywhere in tests and the API collection** — plain uppercase codes, so the schedule's `exchange` dimension matches directly. BSE is untested | Low risk, noted |
 
 ### Verified non-issues
@@ -268,6 +269,7 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 | **Volume-tiered pricing** on cumulative monthly turnover | Needs historical aggregation before the current trade can be priced |
 | **Seeded rates are placeholders** | Only a human comparing against the broker's live charges page can close AC-2 |
 | **Performance under load** | Resolver cache is asserted for correctness, not latency |
+| **A rate card written outside `ChargeScheduleService` is invisible** | The resolver caches by scope and date and only `publish` and `close` evict. Writing straight to `ChargeScheduleRepository` leaves the previously resolved card in memory. Found by a Chunk 9 test that did exactly that |
 
 ---
 
