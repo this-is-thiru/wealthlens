@@ -4,8 +4,8 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Chunks -1 through 6 complete. **Resume at Chunk 7.**
-**Last updated:** 2026-09-06 — 683 tests green, `spotless:check` clean, both quality gates passing.
+**Status:** Chunks -1 through 7 complete. **Resume at Chunk 9** (Chunk 8 is Phase B and comes after it).
+**Last updated:** 2026-09-07 — 499 unit-tier tests green, plus `ArchitectureTest` and `WealthLensModulithTest`. The integration tier was not run in this session: Docker was unavailable, so Testcontainers could not start. It must be run before the Phase A gate is claimed.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
 
@@ -265,13 +265,25 @@ All seven live in `engine/`, not `engine/calculator/` — a flat package, so bot
 
 ---
 
-## Chunk 7 — Charge summary reporting model *(new types, old ones untouched)*
+## Chunk 7 — Charge summary reporting model ✅ *(new types, old ones untouched)*
 
 Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` still writes the old `BrokerChargesReport` until Phase C.
 
-- [ ] `entity/model/ChargeSummaryReport.java` (in `brokercharges`) — `Map<String, Double> amountByCode`, `totalCharges`, `merge(Map<String,Double>)`
-- [ ] `entity/model/YearlyChargeSummary.java`, `MonthlyChargeSummary.java`
-- [ ] `ChargeSummaryReportTest` — merging an unknown code surfaces it with no code change (AC-1)
+- [x] `entity/model/ChargeSummaryReport.java` (in `brokercharges`) — `Map<String, Double> amountByCode`, `totalCharges`, `merge(Map<String,Double>)`
+- [x] `entity/model/YearlyChargeSummary.java`, `MonthlyChargeSummary.java`
+- [x] `ChargeSummaryReportTest` — 11 cases; merging an unknown code surfaces it with no code change (AC-1)
+
+### Decisions taken in this chunk
+
+- **`merge` sums in `BigDecimal`, not `double`.** A period accumulates hundreds of paise-scale amounts, and `0.10` added ten times in `double` is `0.9999999999999999`. `merge_acrossManyIncrements_doesNotDrift` asserts exact equality rather than within-a-paisa, because within-a-paisa is precisely what this type must not need.
+- **`totalCharges` is recomputed from `amountByCode`, never accumulated beside it.** The total and the columns printed next to it now cannot disagree; the test asserts the relationship rather than a number.
+- **`merge` stamps `lastUpdatedTime` itself.** `@LastModifiedDate` fires for an aggregate root, not for a nested object, so the annotation the old `BrokerChargesReport` carries leaves the field null forever. Dropped it and set the value explicitly, through `TLocalDateTime.now()` — the first draft of the test compared against `LocalDateTime.now()` and failed by exactly 5:30, which is the convention working.
+- **A null amount is rejected, a null map is not.** A null map is the legitimate zero-charge row written for a period with no rate card on file; a null *amount* is a caller defect, and folding it in as zero would hide it.
+- **A fortnight half stays null until something is charged in it**, rather than being pre-created empty: a month with no trades in its second half should read as having none, not as having charged zero.
+
+### Deviation from the spec
+
+`MonthlyChargeSummary` carries `@NoArgsConstructor` alongside the `Month` constructor, which `MonthlyBrokerCharges` does not. With one constructor Spring Data must map through it; with a no-arg constructor available it materialises fields directly, which is the behaviour the rest of the module's entities rely on.
 
 ---
 
