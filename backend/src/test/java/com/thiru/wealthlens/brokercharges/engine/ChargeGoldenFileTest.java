@@ -9,11 +9,14 @@ import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
+import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
 import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
+import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -26,7 +29,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -86,6 +88,17 @@ class ChargeGoldenFileTest {
                         .map(Map.Entry::getKey).toList());
 
         assertMoney(name + " / total", fixture.get("expected").get("total").asDouble(), computation.total());
+
+        // Why nothing was charged, where a fixture says so. A contract note costing zero is
+        // otherwise vacuous: a scheme profile that failed to load and a holding period that puts the
+        // lot outside the load are the same number and completely different facts, and only one of
+        // them is the behaviour being pinned.
+        JsonNode expectedResolution = fixture.get("expected").get("resolution");
+        if (expectedResolution != null && !expectedResolution.isNull()) {
+            assertThat(computation.resolution())
+                    .as("%s resolution", name)
+                    .isEqualTo(ChargeResolution.valueOf(expectedResolution.asString()));
+        }
     }
 
     // ---------------------------------------------------------------- harness
@@ -108,8 +121,15 @@ class ChargeGoldenFileTest {
                 anyString(), anyString(), any(), anyString(), any(), anyString()))
                 .thenAnswer(call -> alreadyCharged.contains(call.getArgument(5)));
 
-        ChargeInstrumentResolver instrumentResolver = mock(ChargeInstrumentResolver.class);
-        when(instrumentResolver.resolve(any())).thenReturn(instrumentFrom(fixture));
+        // The real instrument resolver over the shipped profiles, so a fixture naming a scheme is
+        // priced by the exit load this application actually ships rather than by a stub of one.
+        ChargeInstrumentRepository instrumentRepository = mock(ChargeInstrumentRepository.class);
+        when(instrumentRepository.findCandidates(anyString(), any())).thenAnswer(call ->
+                instrumentProfiles(fixture).stream()
+                        .filter(profile -> profile.getStockCode().equals(call.getArgument(0)))
+                        .filter(profile -> !profile.getStartDate().isAfter(call.getArgument(1)))
+                        .toList());
+        ChargeInstrumentResolver instrumentResolver = new ChargeInstrumentResolver(instrumentRepository);
 
         ChargeFormulaEvaluator evaluator = new ChargeFormulaEvaluator();
         ChargeCalculatorRegistry registry = new ChargeCalculatorRegistry(List.of(
@@ -125,16 +145,25 @@ class ChargeGoldenFileTest {
                 instrumentResolver, registry, evaluator);
     }
 
-    private static Optional<ChargeInstrumentEntity> instrumentFrom(JsonNode fixture) {
-        if (!fixture.has("instrument")) {
-            return Optional.empty();
+    /**
+     * Every shipped scheme profile, plus the one a fixture declares inline.
+     *
+     * <p>An inline profile carries an attribute and no rules — it exists to vary one scheme fact and
+     * watch a broker-owned rule react. A fixture naming a {@code stockCode} instead is priced by the
+     * shipped profile of that name, which is what makes the exit-load fixtures end to end.
+     */
+    private static List<ChargeInstrumentEntity> instrumentProfiles(JsonNode fixture) {
+        List<ChargeInstrumentEntity> profiles = new ArrayList<>(shippedProfiles());
+        if (fixture.has("instrument")) {
+            ChargeInstrumentEntity inline = new ChargeInstrumentEntity();
+            inline.setId("golden-profile");
+            inline.setStockCode(stockCode(fixture.get("context")));
+            inline.setStartDate(LocalDate.MIN);
+            inline.setEquityOriented(fixture.get("instrument").get("equityOriented").asBoolean());
+            inline.setRules(new ArrayList<>());
+            profiles.add(inline);
         }
-        ChargeInstrumentEntity instrument = new ChargeInstrumentEntity();
-        instrument.setId("golden-profile");
-        instrument.setStockCode("GOLDEN");
-        instrument.setEquityOriented(fixture.get("instrument").get("equityOriented").asBoolean());
-        instrument.setRules(new ArrayList<>());
-        return Optional.of(instrument);
+        return profiles;
     }
 
     private static ChargeContext contextFrom(JsonNode node) {
@@ -145,15 +174,44 @@ class ChargeGoldenFileTest {
         baseAmounts.put(AmountBasis.TURNOVER, price * quantity);
 
         return new ChargeContext(
-                "investor@example.com", "txn-golden", "ord-golden", "GOLDEN", "self",
+                "investor@example.com", "txn-golden", "ord-golden", stockCode(node), "self",
                 BrokerName.valueOf(node.get("brokerName").asString()),
-                AssetType.valueOf(node.get("assetType").asString()),
+                assetType(node),
                 optionalEnum(node, "segment"),
                 text(node, "exchange"),
                 null,
                 ChargeEvent.valueOf(node.get("event").asString()),
                 LocalDate.parse(node.get("transactionDate").asString()),
-                null, quantity, price, 1, baseAmounts, List.of(), new HashMap<>());
+                null, quantity, price, 1, baseAmounts, lotsFrom(node), new HashMap<>());
+    }
+
+    /** {@code GOLDEN} unless the fixture names a scheme, which is how it reaches a shipped profile. */
+    private static String stockCode(JsonNode node) {
+        String value = text(node, "stockCode");
+        return value == null ? "GOLDEN" : value;
+    }
+
+    /**
+     * The FIFO lots a disposal consumed. Empty for a purchase, and for a sale of something whose
+     * charges do not depend on how long it was held.
+     */
+    private static List<LotSlice> lotsFrom(JsonNode node) {
+        JsonNode lots = node.get("lots");
+        if (lots == null || lots.isNull()) {
+            return List.of();
+        }
+        return lots.valueStream()
+                .map(lot -> new LotSlice(
+                        lot.get("quantity").asDouble(),
+                        LocalDate.parse(lot.get("acquisitionDate").asString()),
+                        lot.get("price").asDouble()))
+                .toList();
+    }
+
+    /** Null for an account-level event such as a maintenance cycle, which names no asset type. */
+    private static AssetType assetType(JsonNode node) {
+        String value = text(node, "assetType");
+        return value == null ? null : AssetType.valueOf(value);
     }
 
     private static TradeSegment optionalEnum(JsonNode node, String field) {
@@ -164,6 +222,12 @@ class ChargeGoldenFileTest {
     private static String text(JsonNode node, String field) {
         JsonNode value = node.get(field);
         return value == null || value.isNull() ? null : value.asString();
+    }
+
+    private static List<ChargeInstrumentEntity> shippedProfiles() {
+        return read("classpath*:data/charges/instruments/*.json").stream()
+                .map(resource -> parse(resource, ChargeInstrumentEntity.class))
+                .toList();
     }
 
     private static List<ChargeScheduleEntity> shippedCards() {

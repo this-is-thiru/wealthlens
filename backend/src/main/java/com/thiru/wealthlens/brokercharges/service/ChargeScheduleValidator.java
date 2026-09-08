@@ -4,12 +4,14 @@ import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeBasis;
 import com.thiru.wealthlens.brokercharges.engine.ChargeFormulaEvaluator;
 import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
+import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeSlab;
 import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -62,21 +64,8 @@ public class ChargeScheduleValidator {
      * @throws BadRequestException listing every problem found, naming the rule each belongs to
      */
     public void validate(ChargeScheduleEntity schedule) {
-        Set<String> catalogue = chargeCatalogueRepository.findByStatus(EntityStatus.ACTIVE).stream()
-                .map(ChargeCatalogueEntity::getCode)
-                .collect(Collectors.toSet());
-
-        List<String> errors = new ArrayList<>();
-        validateValidityWindow(schedule, errors);
-
-        List<ChargeRule> rules = schedule.getRules() == null ? List.of() : schedule.getRules();
-        if (rules.isEmpty()) {
-            // An empty card still resolves, and then prices every trade at zero — indistinguishable
-            // from a broker that charges nothing.
-            errors.add("it declares no rules");
-        } else {
-            validateRules(rules, catalogue, errors);
-        }
+        List<String> errors = validateCard(
+                schedule.getStartDate(), schedule.getEndDate(), schedule.getRules());
 
         if (!errors.isEmpty()) {
             throw new BadRequestException("Charge schedule " + schedule.getScheduleCode()
@@ -84,16 +73,56 @@ public class ChargeScheduleValidator {
         }
     }
 
-    private static void validateValidityWindow(ChargeScheduleEntity schedule, List<String> errors) {
-        if (schedule.getStartDate() == null) {
+    /**
+     * The same checks against a scheme's own charges.
+     *
+     * <p>A rule is a rule wherever it was authored, and the engine merges both sources into one
+     * evaluation — so validating only the broker's card would leave exit load, the one charge a rate
+     * card cannot express, unchecked. It is also the rule most worth checking: conditioned on a
+     * holding period, a mistake in it is invisible on every redemption the condition excludes.
+     *
+     * @throws BadRequestException naming the scheme, because that is the file whoever fixes it opens
+     */
+    public void validate(ChargeInstrumentEntity instrument) {
+        List<String> errors = validateCard(
+                instrument.getStartDate(), instrument.getEndDate(), instrument.getRules());
+
+        if (!errors.isEmpty()) {
+            throw new BadRequestException("Charge instrument profile " + instrument.getStockCode()
+                    + " is invalid: " + String.join("; ", errors));
+        }
+    }
+
+    /** Every problem with a validity window and a set of rules, whichever document carries them. */
+    private List<String> validateCard(LocalDate startDate, LocalDate endDate, List<ChargeRule> declared) {
+        Set<String> catalogue = chargeCatalogueRepository.findByStatus(EntityStatus.ACTIVE).stream()
+                .map(ChargeCatalogueEntity::getCode)
+                .collect(Collectors.toSet());
+
+        List<String> errors = new ArrayList<>();
+        validateValidityWindow(startDate, endDate, errors);
+
+        List<ChargeRule> rules = declared == null ? List.of() : declared;
+        if (rules.isEmpty()) {
+            // An empty card still resolves, and then prices every trade at zero — indistinguishable
+            // from a broker that charges nothing. An empty profile is worse: it satisfies the card's
+            // requiresInstrumentProfile flag, so the gap stops being reported as well.
+            errors.add("it declares no rules");
+        } else {
+            validateRules(rules, catalogue, errors);
+        }
+        return errors;
+    }
+
+    private static void validateValidityWindow(LocalDate startDate, LocalDate endDate, List<String> errors) {
+        if (startDate == null) {
             // Which card applies is decided by the window alone, so a card without one is never
             // selected for any trade.
             errors.add("it has no start date");
             return;
         }
-        if (schedule.getEndDate() != null && schedule.getEndDate().isBefore(schedule.getStartDate())) {
-            errors.add("its end date " + schedule.getEndDate() + " precedes its start date "
-                    + schedule.getStartDate());
+        if (endDate != null && endDate.isBefore(startDate)) {
+            errors.add("its end date " + endDate + " precedes its start date " + startDate);
         }
     }
 

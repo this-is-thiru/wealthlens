@@ -1,0 +1,27 @@
+{
+  "scheduleCode": "ZERODHA_MAINTENANCE_2025_04",
+  "brokerName": "ZERODHA",
+  "assetType": null,
+  "segment": null,
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://zerodha.com/charges",
+  "verifiedOn": null,
+  "rules": [
+    { "code": "AMC", "displayName": "Annual maintenance charge", "category": "SUBSCRIPTION",
+      "basis": "FLAT", "side": "BOTH", "events": ["AMC_CYCLE"],
+      "flatAmount": 300.0, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 10,
+      "notes": "PLACEHOLDER — billed per demat account by AmcChargeService's cycle, never by a trade. This card leaves assetType, segment, exchange and planCode unset on purpose: the cycle context carries no scrip, quantity or asset type, so a card declaring any of those dimensions is disqualified by the resolver and the cycle bills nothing." },
+
+    { "code": "GST", "displayName": "Goods and Services Tax", "category": "TAX",
+      "basis": "DERIVED", "side": "BOTH", "events": ["AMC_CYCLE"],
+      "rate": 18.0, "baseCodes": ["AMC"],
+      "rounding": "HALF_UP_2", "taxable": false, "active": true, "order": 100,
+      "notes": "PLACEHOLDER — maintenance is a service, so it is taxable and the base names it explicitly." }
+  ]
+}

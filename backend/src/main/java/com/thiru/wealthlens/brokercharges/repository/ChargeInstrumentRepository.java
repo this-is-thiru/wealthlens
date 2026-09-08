@@ -24,4 +24,13 @@ public interface ChargeInstrumentRepository extends MongoRepository<ChargeInstru
     Optional<ChargeInstrumentEntity> findOpenProfile(String stockCode);
 
     Optional<ChargeInstrumentEntity> findByIsin(String isin);
+
+    /**
+     * A profile's identity for seeding purposes.
+     *
+     * <p>A profile has no code of its own, so the pair that a shipped file cannot change without
+     * becoming a different profile is the scheme and the date its version took effect — the
+     * counterpart of {@code scheduleCode} on a rate card.
+     */
+    Optional<ChargeInstrumentEntity> findByStockCodeAndStartDate(String stockCode, LocalDate startDate);
 }

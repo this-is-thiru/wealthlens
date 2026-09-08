@@ -13,10 +13,12 @@ import com.thiru.wealthlens.brokercharges.dto.enums.ChargeSide;
 import com.thiru.wealthlens.brokercharges.dto.enums.DedupeScope;
 import com.thiru.wealthlens.brokercharges.engine.ChargeFormulaEvaluator;
 import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
+import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeSlab;
 import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
@@ -412,7 +414,71 @@ class ChargeScheduleValidatorTest {
                 .hasMessageContaining("gap");
     }
 
+    // ---------------------------------------------------------------- instrument profiles
+
+    @Test
+    void validate_whenTheInstrumentProfileIsSound_passes() {
+        // Given — a scheme's own charges are rules of exactly the same shape, read from a different
+        // document. Validating only the broker's card would leave the source that carries exit load
+        // — the one charge a rate card cannot express — entirely unchecked.
+        assertThatCode(() -> validator.validate(profile(exitLoad()))).doesNotThrowAnyException();
+    }
+
+    @Test
+    void validate_whenAProfileRuleNamesAnUncataloguedCode_isRejected() {
+        // Given
+        ChargeRule unknown = flat("MYSTERY_FEE", 10.0, 10);
+
+        // When / Then — the profile is named, because that is the file whoever fixes it opens
+        assertThatThrownBy(() -> validator.validate(profile(unknown)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("PARAGPARIKHFLEXICAP")
+                .hasMessageContaining("MYSTERY_FEE");
+    }
+
+    @Test
+    void validate_whenAProfileDeclaresNoRules_isRejected() {
+        // Given — a profile exists to carry charges. An empty one satisfies the card's
+        // requiresInstrumentProfile flag, so the gap stops being reported and nothing is charged.
+        assertThatThrownBy(() -> validator.validate(profile()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("no rules");
+    }
+
+    @Test
+    void validate_whenAProfilesWindowIsInverted_isRejected() {
+        // Given — same temporal rule as a rate card: a redemption backdated into a closed window is
+        // priced by the load in force then, so the window has to mean something
+        ChargeInstrumentEntity profile = profile(exitLoad());
+        profile.setEndDate(profile.getStartDate().minusDays(1));
+
+        assertThatThrownBy(() -> validator.validate(profile))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("precedes its start date");
+    }
+
     // ---------------------------------------------------------------- fixtures
+
+    private static ChargeInstrumentEntity profile(ChargeRule... rules) {
+        ChargeInstrumentEntity profile = new ChargeInstrumentEntity();
+        profile.setStockCode("PARAGPARIKHFLEXICAP");
+        profile.setAssetType(AssetType.MUTUAL_FUND);
+        profile.setStartDate(LocalDate.of(2025, 4, 1));
+        profile.setStatus(EntityStatus.ACTIVE);
+        profile.setRules(new ArrayList<>(Arrays.asList(rules)));
+        return profile;
+    }
+
+    private static ChargeRule exitLoad() {
+        ChargeRule rule = rule("EXIT_LOAD", ChargeBasis.TURNOVER, 15);
+        rule.setSide(ChargeSide.SELL);
+        rule.setEvents(Set.of(ChargeEvent.SELL));
+        rule.setEligibility("#holdingDays < 365");
+        rule.setRate(1.0);
+        rule.setPerLot(true);
+        return rule;
+    }
+
 
     private static ChargeScheduleEntity schedule(ChargeRule... rules) {
         ChargeScheduleEntity schedule = new ChargeScheduleEntity();
