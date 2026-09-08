@@ -32,6 +32,7 @@ import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
 import com.thiru.wealthlens.brokercharges.service.AmcChargeService;
+import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
@@ -68,9 +69,10 @@ import org.springframework.web.client.RestTemplate;
  * the other: the security chain ends in {@code anyRequest().permitAll()}, so whether a rate-card
  * endpoint is protected is a property of the filter chain, not of any class.
  *
- * <p>Every test writes the rate card it depends on. The shipped cards are seeded once per context
- * by a {@code @PostConstruct} seeder and {@code charge_schedules} is deliberately cleared between
- * tests, so a test leaning on a shipped card would pass alone and fail in company.
+ * <p>Every test writes the rate card it depends on. Seeding is an explicit operation rather than a
+ * startup side effect (ADR-27), and {@code @BeforeEach} runs it for the catalogue's sake and then
+ * clears the shipped cards and profiles — so a test leaning on shipped data would pass alone and
+ * fail in company.
  */
 class ChargesIntegrationTest extends AbstractIntegrationTest {
 
@@ -98,8 +100,19 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ChargeInstrumentRepository instrumentRepository;
 
+    @Autowired
+    private ChargeSeederService chargeSeederService;
+
     @BeforeEach
     void seedOneKnownRateCard() {
+        // The catalogue has to exist before anything can be published: the validator rejects a rule
+        // whose code it does not carry. Nothing seeds at startup any more (ADR-27), so this asks for
+        // it explicitly rather than depending on which test happened to run first.
+        chargeSeederService.seed("integration-test");
+
+        // Then the shipped cards and profiles go, because this class asserts over the ones it
+        // writes and shipped data in the same collections would make those assertions depend on
+        // ordering. charge_catalogue survives — it is reference data, and every card needs it.
         mongoTemplate.getCollection("charge_schedules").deleteMany(new Document());
         mongoTemplate.getCollection("charge_instruments").deleteMany(new Document());
         scheduleRepository.save(equityCard("IT_EQ_2025", LocalDate.of(2025, 1, 1), null, 0.0));
@@ -337,6 +350,72 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(response.getBody()).contains("900").contains("1000");
+    }
+
+    @Test
+    void seedEndpoint_appliesTheShippedDataAndSaysWhoAskedForIt() {
+        // Given — nothing seeds at startup any more, so this is the only way cards arrive
+        long before = scheduleRepository.count();
+
+        // When
+        ResponseEntity<String> response = post("/charges/seed", adminToken(), null);
+
+        // Then — every document it wrote names the caller, which auditing never did: the
+        // annotations live inside AuditMetadata, an embedded document, and the callbacks fire for
+        // an aggregate root
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getBody()).contains("\"seededBy\":\"" + EMAIL + "\"");
+        assertThat(scheduleRepository.count()).isGreaterThan(before);
+
+        ChargeScheduleEntity seeded =
+                scheduleRepository.findByScheduleCode("ZERODHA_EQ_DELIVERY_2025_04").orElseThrow();
+        assertThat(seeded.getAuditMetadata().getCreatedBy()).isEqualTo(EMAIL);
+        assertThat(seeded.getAuditMetadata().getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    void seedEndpoint_runTwice_writesNothingTheSecondTime() {
+        // Given — safe to put on a deployment checklist rather than something to be careful about
+        post("/charges/seed", adminToken(), null);
+
+        // When
+        ResponseEntity<String> second = post("/charges/seed", adminToken(), null);
+
+        // Then
+        assertThat(second.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
+        assertThat(second.getBody()).contains("\"schedulesCreated\":[]");
+    }
+
+    @Test
+    void seedEndpoint_isRefusedToAnOrdinaryUser() {
+        // Given — it writes the rate cards every user is charged against
+        ResponseEntity<String> response = post("/charges/seed", token(EMAIL), null);
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void driftEndpoint_reportsShippedCardsThatTheDatabaseDoesNotMatch() {
+        // Given — @BeforeEach clears charge_schedules, so every shipped card is absent. That is the
+        // state a deployment is in before anybody has seeded it, and it must be reported rather
+        // than mistaken for agreement.
+        ResponseEntity<String> response = get("/charge-schedules/drift", adminToken());
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getBody())
+                .contains("ZERODHA_EQ_DELIVERY_2025_04")
+                .contains("absent from the database");
+    }
+
+    @Test
+    void driftEndpoint_isRefusedToAnOrdinaryUser() {
+        // Given — it discloses every broker's full pricing
+        ResponseEntity<String> response = get("/charge-schedules/drift", token(EMAIL));
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.FORBIDDEN.value());
     }
 
     @Test

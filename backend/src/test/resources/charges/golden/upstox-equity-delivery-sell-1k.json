@@ -1,0 +1,26 @@
+{
+  "name": "upstox-equity-delivery-sell-1k",
+  "describes": "The same Rs 1,000 sell at Upstox, whose brokerage is a flat Rs 20 with no percentage alternative. The card shipped as MIN(0.1%, Rs 20) and charged Rs 1.00 here — undercharging, which understates a cost basis rather than producing a complaint, and is the more dangerous direction of the two.",
+  "context": {
+    "brokerName": "UPSTOX",
+    "assetType": "EQUITY",
+    "segment": "DELIVERY",
+    "exchange": null,
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 1,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 1.0,
+      "EXCHANGE_TXN": 0.03,
+      "SEBI_FEE": 0.0,
+      "IPFT": 0.0,
+      "DP": 20.0,
+      "GST": 7.21
+    },
+    "total": 48.24
+  }
+}

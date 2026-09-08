@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -295,11 +296,42 @@ class ChargeScheduleServiceTest {
     }
 
     @Test
+    void findUnverified_alsoListsCardsWhoseVerificationHasGoneStale() {
+        // Given — a card checked eighteen months ago is not a checked card. NSE moved the cash
+        // transaction charge in March 2026 and Zerodha moved its depository fee in June; a
+        // verifiedOn date that never expires turns rate verification into a one-off and lets the
+        // worklist sit empty while reality drifts away from it.
+        ChargeScheduleEntity stale = card("STALE", LocalDate.now().minusDays(120));
+        ChargeScheduleEntity never = card("NEVER", null);
+        when(chargeScheduleRepository.findByVerifiedOnIsNullOrVerifiedOnBefore(any()))
+                .thenReturn(List.of(never, stale));
+
+        // When
+        List<ChargeScheduleEntity> worklist = service.findUnverified();
+
+        // Then
+        assertThat(worklist).containsExactly(never, stale);
+    }
+
+    @Test
+    void findUnverified_asksForCardsCheckedBeforeTheStalenessHorizon() {
+        // Given / When
+        when(chargeScheduleRepository.findByVerifiedOnIsNullOrVerifiedOnBefore(any())).thenReturn(List.of());
+        service.findUnverified();
+
+        // Then — the cut-off is the horizon behind us, not today: a card checked this morning is
+        // current, and one checked the day before the horizon is not
+        ArgumentCaptor<LocalDate> cutoff = ArgumentCaptor.forClass(LocalDate.class);
+        verify(chargeScheduleRepository).findByVerifiedOnIsNullOrVerifiedOnBefore(cutoff.capture());
+        assertThat(cutoff.getValue()).isEqualTo(LocalDate.now().minusDays(90));
+    }
+
+    @Test
     void findUnverified_listsCardsWhoseRatesNobodyHasChecked() {
         // Given — seeded cards carry placeholder rates until a human compares them against the
         // broker's published page, and an unverified card is a known gap rather than a defect
         List<ChargeScheduleEntity> cards = List.of(card("A", APRIL));
-        when(chargeScheduleRepository.findByVerifiedOnIsNull()).thenReturn(cards);
+        when(chargeScheduleRepository.findByVerifiedOnIsNullOrVerifiedOnBefore(any())).thenReturn(cards);
 
         // When / Then
         assertThat(service.findUnverified()).isEqualTo(cards);

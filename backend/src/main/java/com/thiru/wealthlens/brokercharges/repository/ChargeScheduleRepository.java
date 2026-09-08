@@ -42,5 +42,5 @@ public interface ChargeScheduleRepository extends MongoRepository<ChargeSchedule
     /** Every card on file for a broker, newest window first. Drives the admin listing. */
     List<ChargeScheduleEntity> findByBrokerNameOrderByStartDateDesc(BrokerName brokerName);
 
-    List<ChargeScheduleEntity> findByVerifiedOnIsNull();
+    List<ChargeScheduleEntity> findByVerifiedOnIsNullOrVerifiedOnBefore(LocalDate horizon);
 }

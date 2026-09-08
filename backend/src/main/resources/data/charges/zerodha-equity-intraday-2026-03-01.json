@@ -1,12 +1,12 @@
 {
-  "scheduleCode": "ZERODHA_EQ_INTRADAY_2025_04",
+  "scheduleCode": "ZERODHA_EQ_INTRADAY_2026_03",
   "brokerName": "ZERODHA",
   "assetType": "EQUITY",
   "segment": "INTRADAY",
   "exchange": null,
   "planCode": null,
-  "startDate": "2025-04-01",
-  "endDate": "2026-02-28",
+  "startDate": "2026-03-01",
+  "endDate": null,
   "status": "ACTIVE",
   "currency": "INR",
   "requiresInstrumentProfile": false,
@@ -61,12 +61,12 @@
         "BUY",
         "SELL"
       ],
-      "rate": 0.00297,
+      "rate": 0.0030699,
       "rounding": "HALF_UP_2",
       "taxable": true,
       "active": true,
       "order": 30,
-      "notes": "NSE cash market transaction charge, 0.00297%, which applied from 2024-10-01 until the revision of 2026-03-01. BSE differs; a card naming an exchange would outrank this one."
+      "notes": "NSE cash market transaction charge, revised to 0.0030699% with effect from 2026-03-01 (NSE circular of 2026-02-27). The preceding card carries 0.00297%, which is what applied from 2024-10-01 until then."
     },
     {
       "code": "SEBI_FEE",
