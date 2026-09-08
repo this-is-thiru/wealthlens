@@ -58,6 +58,25 @@ Tokens expire in 30 minutes. Re-run this when a call starts returning 401/403.
 
 ---
 
+## 2a. Apply the seed data — required after every deploy to a fresh database
+
+Nothing seeds at startup (ADR-27). A database that has never been seeded has no rate cards, and
+every trade prices as `NO_SCHEDULE` until this is run.
+
+```bash
+curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $TOKEN" \
+  | jq '.data | {seededBy, catalogueCreated: (.catalogueCreated|length),
+                 schedulesCreated, instrumentsCreated, schedulesSkipped, drift: (.drift|length)}'
+```
+
+Expect on a fresh database: 12 catalogue codes, 11 rate cards, 2 scheme profiles, nothing skipped,
+no drift. Every document it writes records `seededBy` and the time — which is the reason this is an
+endpoint and not a startup hook.
+
+**Idempotent.** Run it again and `schedulesCreated` is empty. Safe on a deployment checklist.
+
+Requires `SUPER_USER`: it writes the rate cards every user is charged against.
+
 ## 3. Confirm the deployment has its seed data
 
 ### 3.1 The charge catalogue — 12 codes
@@ -76,18 +95,24 @@ curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $TOKEN" \
   | jq '.data | map({scheduleCode, brokerName, assetType, segment, startDate, sourceUrl, verifiedOn})'
 ```
 
-Expect **all 6 shipped cards**, every one with `"verifiedOn": null`:
+Expect **`[]`**. Every shipped card was verified on 2026-09-08 and carries a `verifiedOn` date, which
+is what closed AC-2 (see `ac2-rate-verification.md`).
 
-| scheduleCode | assetType | segment |
+A card appearing here means someone published one without checking its rates, or an existing one lost
+its date. It is a worklist, not a historical record — re-run it after every publish.
+
+Eleven cards ship, in three generations where a rate changed:
+
+| scheduleCode | scope | window |
 |---|---|---|
-| `ZERODHA_EQ_DELIVERY_2025_04` | EQUITY | DELIVERY |
-| `ZERODHA_EQ_INTRADAY_2025_04` | EQUITY | INTRADAY |
-| `ZERODHA_MF_2025_04` | MUTUAL_FUND | — |
-| `ZERODHA_MAINTENANCE_2025_04` | — | — |
-| `UPSTOX_EQ_DELIVERY_2025_04` | EQUITY | DELIVERY |
-| `FYERS_EQ_DELIVERY_2025_04` | EQUITY | DELIVERY |
-
-**This list emptying is what closes AC-2.**
+| `ZERODHA_EQ_DELIVERY_2025_04` | EQUITY / DELIVERY | 2025-04-01 → 2026-02-28 |
+| `ZERODHA_EQ_DELIVERY_2026_03` | " | 2026-03-01 → 2026-06-18 |
+| `ZERODHA_EQ_DELIVERY_2026_06` | " | 2026-06-19 → open |
+| `ZERODHA_EQ_INTRADAY_2025_04` / `_2026_03` | EQUITY / INTRADAY | split at 2026-03-01 |
+| `UPSTOX_EQ_DELIVERY_2025_04` / `_2026_03` | EQUITY / DELIVERY | split at 2026-03-01 |
+| `FYERS_EQ_DELIVERY_2025_04` / `_2026_03` | EQUITY / DELIVERY | split at 2026-03-01 |
+| `ZERODHA_MF_2025_04` | MUTUAL_FUND | 2025-04-01 → open |
+| `ZERODHA_MAINTENANCE_2025_04` | unscoped | 2025-04-01 → open |
 
 ### 3.3 One broker's cards
 
@@ -161,7 +186,7 @@ curl -sS -X POST "$BASE/charges/simulate" \
 ```
 
 Expect `scheduleCode: ZERODHA_EQ_INTRADAY_2025_04`, `BROKERAGE 20.00, STT 25.00, EXCHANGE_TXN 2.97,
-SEBI_FEE 0.10, GST 4.15` — **total ₹52.22**. No DP, no stamp duty on a sell.
+SEBI_FEE 0.10, IPFT 0.10, GST 4.17` — **total ₹52.34**. No DP, no stamp duty on a sell.
 
 ### 4.4 The brokerage cap — same card, three trade sizes
 
@@ -178,7 +203,11 @@ done
 ```
 
 Expect brokerage `3.00`, `20.00`, `20.00` — the percentage rate below the cap, then the cap twice.
-Totals `6.91`, `52.22`, `1454.73`.
+Totals `6.92`, `52.34`, `1460.63`.
+
+Worth running for a second reason: **the cap is where two shipped brokerage rates hid**. Fyers was
+0.1% against a published 0.3%, and Upstox carried a percentage it does not have — both invisible at
+₹1,00,000 because the ₹20 cap binds either way. Small trades are the only size that tests a rate.
 
 ### 4.5 Mutual fund, equity-oriented — a charge the old design could not express
 
@@ -225,6 +254,24 @@ curl -sS -X POST "$BASE/charges/simulate" \
 
 Expect `resolution: NO_INSTRUMENT_PROFILE`, `instrumentId: null`, total `0.0`. Only two schemes have
 profiles; every other fund lands here by design (ADR-24) rather than being blocked.
+
+### 4.7b The same trade after a rate change
+
+```bash
+for DATE in 2025-06-02 2026-04-01 2026-07-01; do
+  echo "--- $DATE"
+  curl -sS -X POST "$BASE/charges/simulate" \
+    -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+    -d "{\"brokerName\":\"ZERODHA\",\"assetType\":\"EQUITY\",\"segment\":\"DELIVERY\",
+         \"exchange\":\"NSE\",\"event\":\"SELL\",\"stockCode\":\"INFY\",\"price\":1000,
+         \"quantity\":100,\"transactionDate\":\"$DATE\"}" \
+    | jq -c '.data | {schedule: .scheduleCode, EXCHANGE_TXN: .amountByCode.EXCHANGE_TXN, DP: .amountByCode.DP, total: .totalCharges}'
+done
+```
+
+Expect three different cards and three different totals — **₹119.67**, **₹119.79**, **₹119.20**. NSE
+raised the transaction charge on 2026-03-01 and Zerodha cut its depository fee on 2026-06-19, and a
+backfilled 2025 trade still prices at 2025 rates. This is the temporal model earning its place.
 
 ### 4.8 Exit load — a redemption drawn from two lots of different ages
 
@@ -368,7 +415,7 @@ Both bounds or neither — a half-open range is rejected rather than guessed at.
 ## 6. Failure cases worth confirming once
 
 ```bash
-# No token → 403
+# No token → 401
 curl -sS -o /dev/null -w '%{http_code}\n' "$BASE/charge-schedules/unverified"
 
 # Missing transactionDate → 400, naming the field
@@ -451,9 +498,59 @@ curl -sS -X PATCH "$BASE/charge-schedules/ZERODHA_EQ_DELIVERY_2025_04/close?endD
 curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $TOKEN" | jq '.data | length'
 ```
 
-`0` closes AC-2. Tick it in `implementation-checklist.md`, and update ADR-18's consequence.
+`0` closes AC-2 — as it was closed on 2026-09-08.
+
+**It will not stay `0`.** A card's verification ages out after 90 days and returns here, which is
+deliberate: NSE revised the transaction charge and Zerodha cut its depository fee inside the window
+of cards that had already been signed off. Re-running this quarterly is the job, not a one-off.
 
 ---
+
+## 7a. Before and after any deploy — check for drift
+
+```bash
+curl -sS "$BASE/charge-schedules/drift" -H "Authorization: Bearer $TOKEN" | jq '.data'
+```
+
+Expect **`[]`** on a healthy deployment.
+
+Entries mean the shipped files and the database disagree, and the endpoint deliberately does not say
+which is right:
+
+| What you see | What it means | Fix |
+|---|---|---|
+| `"absent from the database"` | A card ships that this environment has never seeded | `POST /charges/seed` |
+| A list of fields | A card on file differs from the file beside it | Decide which is right — see below |
+
+A field list has two opposite causes. Either somebody corrected a rate in production through
+`POST /charge-schedules` and the repository has not caught up, in which case **the database is
+right** and the seed file should be updated to match. Or somebody edited a seed file expecting a
+deploy to apply it, in which case **the file is right** and it needs publishing through the API —
+because the seeder will never overwrite a card already on file, by design.
+
+**The rule that keeps this list empty is ADR-26: never edit a card that has been deployed.** A rate
+change is a new generation with a new `scheduleCode`, applied by one call to `POST /charges/seed`.
+
+## 7b. One-off: an environment seeded before 2026-09-08
+
+The AC-2 corrections edited cards that had already been deployed, and the seeder never overwrites a
+card on file. So an environment seeded before that date keeps the **old, defective** `_2025_04` cards
+and merely gains the five new generations beside them — with the old ones still open-ended, which
+also breaks the timeline the tests assert.
+
+`GET /charge-schedules/drift` names them. `reseed-staging.js` in this directory fixes them:
+
+```bash
+mongosh "<connection-string>" docs/charges-engine/reseed-staging.js
+# then: POST /charges/seed
+```
+
+It checks whether anything was priced by those cards before deleting anything, because deleting a
+card orphans the provenance of every charge it priced.
+
+**This is needed once.** Under ADR-26 a rate change ships as a new generation with a new
+`scheduleCode`, which the seeder applies on the next deploy — no deletion, no manual step. If you
+ever need this script again, something was edited that should have been superseded.
 
 ## 8. Two things to know before you start
 

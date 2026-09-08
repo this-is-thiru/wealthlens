@@ -12,8 +12,8 @@ Four boxes in the completed chunks are deliberately left unticked rather than qu
 | Box | Why it is open |
 |---|---|
 | `ChargeEngineProperties` (Chunk 3) | Nothing reads a flag yet. Belongs with Chunk 8 |
-| AMC rate card (Chunk 6) | Not on the original list, and it would be the broker's second unscoped card |
-| Rate verification (Chunk 6) | Needs a human against the broker's page. **Blocks AC-2** |
+| ~~AMC rate card (Chunk 6)~~ | **Done 2026-09-08.** `ZERODHA_MAINTENANCE_2025_04`, unscoped so the cycle can resolve it |
+| ~~Rate verification (Chunk 6)~~ | **Done 2026-09-08.** All eleven cards verified; AC-2 closed. See `ac2-rate-verification.md` |
 | `BrokerageAggregatorType` deletion (Chunk 1) | Phase C, once its last usage is gone |
 
 ---
@@ -85,13 +85,16 @@ From `../testing/test-framework-audit.md`. These land **before** engine code, be
 
 ### ⚠️ Consequence of placeholder rates
 
-Golden contract-note fixtures (test-plan Tier E) will assert against **fictional numbers**. They still do real work — they pin the engine's arithmetic, rounding and GST base, and they fail loudly if any of that regresses. What they do **not** yet prove is that the output matches a real Zerodha contract note.
+*This section described the position until 2026-09-08 and is kept because the reasoning still applies to any newly authored card.*
 
-Therefore:
-- **AC-2 ("matches a real contract note to ₹0.01") is BLOCKED** until real rates are supplied. It is the one acceptance criterion Phase A cannot close.
-- Every seeded card carries `verifiedOn: null` and a `PLACEHOLDER` marker in `notes`.
-- `ChargeSeederServiceTest` asserts that a card with `verifiedOn: null` logs a startup WARN, so unverified rates cannot go unnoticed in a running system.
-- Replacing the rates later changes JSON only — the golden fixtures are regenerated from the simulate endpoint and re-verified once.
+Golden contract-note fixtures (test-plan Tier E) originally asserted against **fictional numbers**. They still did real work — they pinned the engine's arithmetic, rounding and GST base — but they did not prove the output matched a real contract note.
+
+**Resolved 2026-09-08.** Every rate was compared against the brokers' published pages, the fixtures were recomputed from the corrected cards, and AC-2 closed. What the episode showed, and what applies to the next card anybody writes:
+
+- Replacing rates changed **JSON only**, exactly as predicted. No Java moved.
+- The two brokerage defects were invisible at ₹1,00,000 because a ₹20 cap binds whatever the percentage says. **A fixture at one trade size tests one trade size.** Small-trade fixtures now exist for both brokers.
+- Two rates had changed *inside* the shipped window, so the correction was successor cards rather than edits — the temporal model's first real use.
+- `verifiedOn` is the mechanism: null puts a card on `GET /charge-schedules/unverified`, and Tier G now asserts it is *populated* rather than null.
 
 ---
 
@@ -261,11 +264,13 @@ All seven live in `engine/`, not `engine/calculator/` — a flat package, so bot
 - [x] `instruments/parag-parikh-flexi-cap-2025-04-01.json` and `instruments/hdfc-liquid-fund-2025-04-01.json` — **the scheme profiles**, added after the chunk to close AC-6. One graded exit load (`SLAB` banded on `HOLDING_DAYS`, tapering to a declared nil band) and one expressed as a predicate (`#holdingDays < 7`), both `perLot`. Their own directory: the schedule pattern does not descend into it, so a profile can never be parsed as a rate card with every field null
 - [x] `ChargeSeederService.seedInstruments()` — profiles seeded last, since they name catalogue codes and are what the mutual fund card's `requiresInstrumentProfile` refers to. Idempotent by scheme **and start date**, a profile having no code of its own; validated before persisting; `ChargeInstrumentResolver.evictAll()` now called alongside the schedule resolver's
 - [x] `ChargeScheduleValidator.validate(ChargeInstrumentEntity)` — the same window and rule checks against a profile. Validating only the broker's card left exit load, the one charge a rate card cannot express, entirely unchecked
+- [x] **Seeding moved off startup (ADR-27)** — the repository owner's proposal while resolving ADR-26: an authenticated `POST /charges/seed` rather than `@PostConstruct`, so a deployment never writes rate cards as a side effect of booting and every seeded document names who asked. Building it turned up that seeded cards carried no audit metadata at all: Jackson constructs them through Lombok's `@AllArgsConstructor`, which leaves `auditMetadata` null, and Spring Data's auditing fills that object rather than creating one. Parsing into a pre-built instance fixes it, and nothing assigns an audit field by hand. AC-9's guarantee moved from startup to the endpoint and did not weaken: `ChargeSeederServiceTest` validates every shipped file at build time, which was always the stronger check
+- [x] **Rate-card lifecycle for production (ADR-26)** — raised by the repository owner while reviewing the AC-2 work: seeding is idempotent by `scheduleCode`, so an edited file never reaches a database that already seeded it, and nothing said so. The rule is that a deployed card is superseded rather than edited, which the generation-stamped `scheduleCode` already supports. Two guards added: the seeder warns when a card on file differs from its shipped file and `GET /charge-schedules/drift` lists the differences, and `findUnverified()` now ages out a `verifiedOn` after 90 days so the worklist refills. The third piece, `POST /charges/recompute`, is designed in tech-spec §14.4 and belongs with Phase C
 - [x] `ChargeSimulationRequest.lots` — added so AC-6 is visible from the API and not only from the suite. Without it `ChargeSimulationService` passed an empty lot list and a `perLot` rule evaluated zero times, so `/charges/simulate` answered ₹0 exit load whatever the profile said. A lot set that does not account for its disposal, carries no `acquisitionDate`, or postdates the trade is rejected rather than priced: each of those makes the charge *smaller* rather than making the call fail, which is the failure mode this endpoint must not have
 - [x] `service/ChargeSeederService.java` — `@PostConstruct`, catalogue first, idempotent by code, validates before persisting, **fails fast** on a bad card
 - [x] `ChargeSeederServiceTest` — test-plan Tier G, 14 cases against the real files
 - [x] `ChargeGoldenFileTest` + fixtures — test-plan Tier E, 12 contract notes including the D1 regression fixture, verified non-vacuous
-- [ ] ⚠️ Every rate verified against the broker's live charges page; `sourceUrl` + `verifiedOn` filled — **`sourceUrl` is populated on every card; `verifiedOn` is null by design (ADR-18) and Tier G asserts it. This box needs a human and blocks AC-2. Scheduled for staging after the merge, so it stays open across the merge rather than holding it up**
+- [x] ⚠️ Every rate verified against the broker's live charges page; `sourceUrl` + `verifiedOn` filled — **done 2026-09-08.** Tier G's assertion was inverted with it: it required a null `verifiedOn` on every card, which was correct until the day it was not. `noShippedRuleStillCallsItselfAPlaceholder` now fails the build if a rule calls itself a placeholder on a card claiming to be verified
 
 ---
 
@@ -344,11 +349,10 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 
 ### ✅ Phase A gate — verified 2026-09-07, one item open
 
-- [ ] **AC-1 through AC-9 and AC-12 pass** — every one but AC-2 is signed off with named evidence
-      below. **AC-6 closed on 2026-09-08** by seeding the two scheme profiles. **AC-2 remains open
-      and is not code work:** it needs a human to compare each shipped rate against the broker's
-      published page, and `GET /charge-schedules/unverified` is the worklist. The owner has
-      scheduled it for staging after the merge, so it does **not** gate this branch
+- [x] **AC-1 through AC-9 and AC-12 pass** — every one signed off with named evidence below,
+      **including AC-2 and AC-6, both closed on 2026-09-08.** AC-6 by seeding the two scheme
+      profiles; AC-2 by verifying all eleven cards against the brokers' published pages. Every Phase A
+      acceptance criterion is now signed off with named evidence
 - [x] **Line coverage ≥ 90%, branch ≥ 85%** — both JaCoCo rules pass under `mvn verify`
 - [x] **Mutation score ≥ 85% on `brokercharges.engine.**`** — **99%**, 256 of 257 mutants killed, 0
       uncovered. The charges services score 99% on the same scoping (211/212); the aggregate
@@ -357,8 +361,9 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 - [x] **All golden contract notes pass at ₹0.01** — 12 fixtures, asserted line by line and in total
 - [x] **`git diff master --stat -- .../portfolio/` is empty** — re-checked at the end of Chunk 9
 - [x] **`WealthLensModulithTest.modulithStructureIsValid()` green**
-- [x] **779 tests green across both tiers** (744 at the end of Chunk 9; +35 from the AMC card, the
-      scheme profiles and simulate's FIFO lots), surefire XML gate clean, `spotless:check` clean
+- [x] **801 tests green across both tiers** (744 at the end of Chunk 9; +56 from the AMC card, the
+      scheme profiles, simulate's FIFO lots, the AC-2 rate corrections, ADR-26's two guards and
+      ADR-27's seed endpoint), surefire XML gate clean, `spotless:check` clean
 - [ ] **Discuss results before starting Phase B**
 
 ---
@@ -428,14 +433,14 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 Ticked only where something actually asserts it. The evidence is named so the claim can be checked rather than taken on trust.
 
 - [x] **AC-1** new charge = JSON only, no Java *(A)* — `ChargeExtensibilityTest`. `SYNTHETIC_LEVY_FOR_TEST` exists in a catalogue row and a rate card and nowhere in Java; the three tests assert it is computed, recorded and aggregated, that a `DERIVED` rule can name it in its base, and that repricing it applies only after the boundary
-- [ ] **AC-2** equity delivery buy matches a real contract note to ₹0.01 *(A)* — **blocked by design, and deferred by decision.** Golden fixtures pin the arithmetic against placeholder rates; only a human comparing them to a broker's published page can close this (ADR-18). The owner has scheduled that for **staging, after this branch merges to `master`** — it does not gate the merge, and this box stays unticked until it is actually done there
+- [x] **AC-2** equity delivery buy matches a real contract note to ₹0.01 *(A)* — **closed 2026-09-08**, on this branch rather than post-merge. Every rate compared against Zerodha's, Upstox's and Fyers' published pages; five defects found and fixed, five successor cards added for the NSE transaction-charge revision of 2026-03-01 and Zerodha's depository-fee cut, and all eleven cards carry `verifiedOn`. Evidence in `ac2-rate-verification.md`; the two brokerage errors were both invisible at ₹1,00,000 and are now pinned by small-trade fixtures
 - [x] **AC-3** sell: STT sell-side, DP once, no stamp duty *(A)* — golden `zerodha-equity-delivery-sell-100k`
 - [x] **AC-4** second sell same scrip same day → no second DP *(A)* — golden `zerodha-equity-delivery-sell-second-same-day`, plus `ScopedFlatChargeCalculatorTest`
 - [x] **AC-5** GST base excludes STT and stamp duty *(A)* — golden `zerodha-equity-delivery-sell-d1-regression`, `DerivedChargeCalculatorTest`, and a Tier F property over generated cards
 - [x] **AC-6** MF exit load applies only under the holding-period predicate *(A)* — golden `zerodha-mutual-fund-sell-spanning-the-exit-load-window` prices a redemption drawn from two lots of different ages through the shipped profile and charges the younger one alone; `…-liquid-within-the-load-period` and `…-liquid-after-the-load-period` are the predicate's two sides. The zero-charge fixture asserts `NO_MATCHING_RULES` rather than only ₹0, so a profile that failed to load fails it as `NO_INSTRUMENT_PROFILE` instead of passing quietly — verified by hiding the profiles and watching all three go red. `ChargesIntegrationTest` repeats it over a real document, where `perLot` and `slabBandBasis` are fields a mapping could drop
 - [x] **AC-7** intraday: STT sell-only, no DP, intraday stamp rate *(A)* — golden `zerodha-equity-intraday-sell-100k` and `zerodha-equity-intraday-buy-100k`
 - [x] **AC-8** publishing supersedes the incumbent schedule *(A)* — `ChargeScheduleServiceTest`
-- [x] **AC-9** invalid rate card rejected at seed with a readable message *(A)* — `ChargeSeederServiceTest`, and `ChargeScheduleValidatorTest` asserts the messages themselves
+- [x] **AC-9** invalid rate card rejected at seed with a readable message *(A)* — `ChargeSeederServiceTest`, and `ChargeScheduleValidatorTest` asserts the messages themselves. Since ADR-27 the rejection surfaces from `POST /charges/seed` rather than from startup; the build-time check against the real shipped files is unchanged and is the one that matters
 - [ ] **AC-10** cost basis uses the computed total *(C)* — Phase C, not started
 - [x] **AC-11** modulith verification green *(A, B, C)* — `WealthLensModulithTest`, green throughout
 - [x] **AC-12** no schedule match → empty computation + WARN, no exception *(A)* — `ChargeEngineTest` and `ChargeScheduleResolverTest`, the warning asserted through `LogCapture`
