@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
+import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeBasis;
@@ -14,14 +15,20 @@ import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeSide;
 import com.thiru.wealthlens.brokercharges.dto.enums.DedupeScope;
+import com.thiru.wealthlens.brokercharges.dto.enums.FundCategory;
+import com.thiru.wealthlens.brokercharges.dto.enums.PlanType;
 import com.thiru.wealthlens.brokercharges.dto.enums.RoundingPolicy;
+import com.thiru.wealthlens.brokercharges.dto.enums.SlabBandBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
 import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
+import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
+import com.thiru.wealthlens.brokercharges.entity.ChargeSlab;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.entity.model.ChargeSummaryReport;
 import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
 import com.thiru.wealthlens.brokercharges.service.AmcChargeService;
@@ -88,9 +95,13 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ChargeAccountRepository chargeAccountRepository;
 
+    @Autowired
+    private ChargeInstrumentRepository instrumentRepository;
+
     @BeforeEach
     void seedOneKnownRateCard() {
         mongoTemplate.getCollection("charge_schedules").deleteMany(new Document());
+        mongoTemplate.getCollection("charge_instruments").deleteMany(new Document());
         scheduleRepository.save(equityCard("IT_EQ_2025", LocalDate.of(2025, 1, 1), null, 0.0));
     }
 
@@ -239,6 +250,46 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         // Then — a duplicate charge is indistinguishable from a legitimate one once written
         assertThat(secondRun).isEmpty();
         assertThat(userChargeService.findHistory(EMAIL)).hasSize(1);
+    }
+
+    @Test
+    void exitLoad_isChargedOnTheLotsInsideTheWindowAndOnNoOthers() {
+        // Given — AC-6, over a real document rather than an object in memory. The load lives on the
+        // scheme's profile, is banded by holding period and is priced per FIFO lot; all three of
+        // those are fields that a mapping can drop silently, and each drop changes the amount.
+        scheduleRepository.save(mutualFundCard());
+        instrumentRepository.save(gradedExitLoadProfile());
+
+        // When — ₹1,00,000 redeemed from two lots: 600 units held sixteen months, 400 held three
+        ChargeComputation computation = userChargeService.computeAndRecord(redemption(
+                List.of(new LotSlice(600, LocalDate.of(2024, 2, 1), 100),
+                        new LotSlice(400, LocalDate.of(2025, 3, 1), 100))));
+
+        // Then — 1% of the younger lot's ₹40,000 and nothing on the older one. Averaging the load
+        // over the whole redemption would charge ₹1,000; ignoring perLot, the same. Banding by
+        // turnover rather than by holding period would charge nothing at all.
+        assertMoney(400.00, computation.amountOf("EXIT_LOAD"));
+
+        UserChargeEntity stored = userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-mf").orElseThrow();
+        assertThat(stored.getInstrumentId()).isNotBlank();
+        assertBreakdown(Map.of("EXIT_LOAD", 400.00, "STT", 1.00), stored.getAmountByCode());
+    }
+
+    @Test
+    void exitLoad_whenEveryLotIsOutsideTheWindow_isNotCharged() {
+        // Given — the *only* in AC-6. A redemption of units held past the load period is free, and
+        // has to read as free rather than as a scheme whose profile failed to load.
+        scheduleRepository.save(mutualFundCard());
+        instrumentRepository.save(gradedExitLoadProfile());
+
+        // When
+        ChargeComputation computation = userChargeService.computeAndRecord(redemption(
+                List.of(new LotSlice(1000, LocalDate.of(2023, 1, 1), 100))));
+
+        // Then — priced, resolved, and zero, which is a different fact from NO_INSTRUMENT_PROFILE
+        assertThat(computation.resolution()).isEqualTo(ChargeResolution.RESOLVED);
+        assertMoney(0.00, computation.amountOf("EXIT_LOAD"));
+        assertMoney(1.00, computation.total());
     }
 
     // ------------------------------------------------------------------ Tier I — API
@@ -560,6 +611,79 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
 
         schedule.setRules(new java.util.ArrayList<>(List.of(brokerageRule, stt, dp, gst)));
         return schedule;
+    }
+
+    /** The shipped mutual fund card's shape: it expects a profile, and taxes equity-oriented ones. */
+    private static ChargeScheduleEntity mutualFundCard() {
+        ChargeScheduleEntity schedule = new ChargeScheduleEntity();
+        schedule.setScheduleCode("IT_MF_2025");
+        schedule.setBrokerName(BrokerName.ZERODHA);
+        schedule.setAssetType(AssetType.MUTUAL_FUND);
+        schedule.setStartDate(LocalDate.of(2025, 1, 1));
+        schedule.setStatus(EntityStatus.ACTIVE);
+        schedule.setCurrency("INR");
+        schedule.setSourceUrl("https://example.test/charges");
+        schedule.setRequiresInstrumentProfile(true);
+
+        ChargeRule stt = new ChargeRule();
+        stt.setCode("STT");
+        stt.setDisplayName("Securities Transaction Tax");
+        stt.setCategory(ChargeCategory.STATUTORY);
+        stt.setBasis(ChargeBasis.TURNOVER);
+        stt.setAmountBasis(AmountBasis.TURNOVER);
+        stt.setSide(ChargeSide.SELL);
+        stt.setEvents(Set.of(ChargeEvent.SELL));
+        stt.setEligibility("#equityOriented == true");
+        stt.setRate(0.001);
+        stt.setRounding(RoundingPolicy.HALF_UP_0);
+        stt.setTaxable(false);
+        stt.setActive(true);
+        stt.setOrder(20);
+
+        schedule.setRules(new java.util.ArrayList<>(List.of(stt)));
+        return schedule;
+    }
+
+    /** An exit load tapering to nil after a year, which is the shipped flexi-cap profile's shape. */
+    private static ChargeInstrumentEntity gradedExitLoadProfile() {
+        ChargeInstrumentEntity profile = new ChargeInstrumentEntity();
+        profile.setStockCode("PARAGPARIKHFLEXICAP");
+        profile.setAssetType(AssetType.MUTUAL_FUND);
+        profile.setFundCategory(FundCategory.EQUITY);
+        profile.setEquityOriented(true);
+        profile.setPlanType(PlanType.DIRECT);
+        profile.setStartDate(LocalDate.of(2025, 1, 1));
+        profile.setStatus(EntityStatus.ACTIVE);
+        profile.setSourceUrl("https://example.test/scheme");
+
+        ChargeRule exitLoad = new ChargeRule();
+        exitLoad.setCode("EXIT_LOAD");
+        exitLoad.setDisplayName("Exit load");
+        exitLoad.setCategory(ChargeCategory.FUND);
+        exitLoad.setBasis(ChargeBasis.SLAB);
+        exitLoad.setSlabBandBasis(SlabBandBasis.HOLDING_DAYS);
+        exitLoad.setAmountBasis(AmountBasis.TURNOVER);
+        exitLoad.setSide(ChargeSide.SELL);
+        exitLoad.setEvents(Set.of(ChargeEvent.SELL));
+        exitLoad.setPerLot(true);
+        exitLoad.setSlabs(List.of(new ChargeSlab(0.0, 365.0, 1.0, null),
+                new ChargeSlab(365.0, null, 0.0, null)));
+        exitLoad.setRounding(RoundingPolicy.HALF_UP_2);
+        exitLoad.setTaxable(false);
+        exitLoad.setActive(true);
+        exitLoad.setOrder(15);
+
+        profile.setRules(new java.util.ArrayList<>(List.of(exitLoad)));
+        return profile;
+    }
+
+    private static ChargeContext redemption(List<LotSlice> lots) {
+        Map<AmountBasis, Double> baseAmounts = new EnumMap<>(AmountBasis.class);
+        baseAmounts.put(AmountBasis.TURNOVER, 1_00_000.00);
+
+        return new ChargeContext(EMAIL, "txn-mf", "ord-mf", "PARAGPARIKHFLEXICAP", HOLDER,
+                BrokerName.ZERODHA, AssetType.MUTUAL_FUND, null, null, null,
+                ChargeEvent.SELL, TRADE_DATE, null, 1000, 100, 1, baseAmounts, lots, new HashMap<>());
     }
 
     private static ChargeScheduleEntity amcCard() {

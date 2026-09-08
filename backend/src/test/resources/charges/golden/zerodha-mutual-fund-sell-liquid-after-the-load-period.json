@@ -1,0 +1,13 @@
+{
+  "name": "zerodha-mutual-fund-sell-liquid-after-the-load-period",
+  "describes": "The same liquid scheme redeemed on the eighth day, which is the half of AC-6 the word *only* carries: the predicate is false, the rule contributes nothing, and the redemption is genuinely free. It reads as NO_MATCHING_RULES rather than as a priced trade costing zero, which is what the gaps report is for.",
+  "context": { "brokerName": "ZERODHA", "assetType": "MUTUAL_FUND", "segment": null, "exchange": null,
+               "stockCode": "HDFCLIQUID",
+               "event": "SELL", "price": 100, "quantity": 1000, "transactionDate": "2025-06-02",
+               "lots": [ { "quantity": 1000, "price": 100, "acquisitionDate": "2025-05-25" } ] },
+  "expected": {
+    "lines": {},
+    "resolution": "NO_MATCHING_RULES",
+    "total": 0.00
+  }
+}

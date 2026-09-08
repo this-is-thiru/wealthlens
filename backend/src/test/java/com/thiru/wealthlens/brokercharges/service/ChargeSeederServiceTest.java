@@ -10,14 +10,20 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
+import com.thiru.wealthlens.brokercharges.dto.enums.SlabBandBasis;
 import com.thiru.wealthlens.brokercharges.engine.ChargeFormulaEvaluator;
+import com.thiru.wealthlens.brokercharges.engine.ChargeInstrumentResolver;
 import com.thiru.wealthlens.brokercharges.engine.ChargeScheduleResolver;
 import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
+import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
+import com.thiru.wealthlens.shared.exception.BadRequestException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -49,6 +55,8 @@ class ChargeSeederServiceTest {
     private ChargeCatalogueRepository chargeCatalogueRepository;
     private ChargeScheduleRepository chargeScheduleRepository;
     private ChargeScheduleResolver chargeScheduleResolver;
+    private ChargeInstrumentRepository chargeInstrumentRepository;
+    private ChargeInstrumentResolver chargeInstrumentResolver;
     private ChargeSeederService seeder;
 
     @BeforeEach
@@ -56,16 +64,18 @@ class ChargeSeederServiceTest {
         chargeCatalogueRepository = mock(ChargeCatalogueRepository.class);
         chargeScheduleRepository = mock(ChargeScheduleRepository.class);
         chargeScheduleResolver = mock(ChargeScheduleResolver.class);
+        chargeInstrumentRepository = mock(ChargeInstrumentRepository.class);
+        chargeInstrumentResolver = mock(ChargeInstrumentResolver.class);
 
         // Nothing seeded yet, and the catalogue answers with whatever the seeder just wrote to it.
         when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(false);
         when(chargeScheduleRepository.findByScheduleCode(anyString())).thenReturn(Optional.empty());
+        when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
+                .thenReturn(Optional.empty());
         when(chargeCatalogueRepository.findByStatus(EntityStatus.ACTIVE))
                 .thenAnswer(call -> seededCatalogue());
 
-        seeder = new ChargeSeederService(chargeCatalogueRepository, chargeScheduleRepository,
-                new ChargeScheduleValidator(chargeCatalogueRepository, new ChargeFormulaEvaluator()),
-                chargeScheduleResolver, new PathMatchingResourcePatternResolver());
+        seeder = seederWith(new PathMatchingResourcePatternResolver());
     }
 
     @Test
@@ -87,6 +97,7 @@ class ChargeSeederServiceTest {
                         "ZERODHA_EQ_DELIVERY_2025_04",
                         "ZERODHA_EQ_INTRADAY_2025_04",
                         "ZERODHA_MF_2025_04",
+                        "ZERODHA_MAINTENANCE_2025_04",
                         "UPSTOX_EQ_DELIVERY_2025_04",
                         "FYERS_EQ_DELIVERY_2025_04");
         assertThat(seededCatalogue()).hasSize(12);
@@ -158,6 +169,153 @@ class ChargeSeederServiceTest {
     }
 
     @Test
+    void theMaintenanceCardLeavesEveryTradeDimensionUnset() {
+        // Given — an annual maintenance cycle names no scrip, no quantity and no asset type, so a
+        // card declaring any of those dimensions is disqualified by the resolver and the cycle bills
+        // nothing. The card has to be unscoped to be resolvable at all.
+        seeder.seed();
+
+        // When
+        ChargeScheduleEntity maintenance = seededSchedules().stream()
+                .filter(schedule -> "ZERODHA_MAINTENANCE_2025_04".equals(schedule.getScheduleCode()))
+                .findFirst()
+                .orElseThrow();
+
+        // Then
+        assertThat(maintenance.getAssetType()).isNull();
+        assertThat(maintenance.getSegment()).isNull();
+        assertThat(maintenance.getExchange()).isNull();
+        assertThat(maintenance.getPlanCode()).isNull();
+    }
+
+    @Test
+    void theMaintenanceCardChargesOnlyOnAnAmcCycle() {
+        // Given — it is the broker's unscoped card, so it is the fallback for every trade of that
+        // broker in an asset type no specific card covers. A rule of its own reaching BUY or SELL
+        // would price those trades as maintenance.
+        seeder.seed();
+
+        // When
+        ChargeScheduleEntity maintenance = seededSchedules().stream()
+                .filter(schedule -> "ZERODHA_MAINTENANCE_2025_04".equals(schedule.getScheduleCode()))
+                .findFirst()
+                .orElseThrow();
+
+        // Then
+        assertThat(maintenance.getRules()).isNotEmpty().allSatisfy(rule ->
+                assertThat(rule.getEvents()).as("events of %s", rule.getCode())
+                        .containsExactly(ChargeEvent.AMC_CYCLE));
+    }
+
+    // ---------------------------------------------------------- instrument profiles
+
+    @Test
+    void seed_shipsTheInstrumentProfilesTheMutualFundCardRequires() {
+        // Given — ZERODHA_MF_2025_04 declares requiresInstrumentProfile, and until a profile is on
+        // file every redemption it prices is recorded as NO_INSTRUMENT_PROFILE (AC-6)
+        seeder.seed();
+
+        // When / Then
+        assertThat(seededProfiles()).extracting(ChargeInstrumentEntity::getStockCode)
+                .containsExactlyInAnyOrder("PARAGPARIKHFLEXICAP", "HDFCLIQUID");
+    }
+
+    @Test
+    void everyShippedProfileCarriesAnExitLoadThatIsPricedPerLot() {
+        // Given — exit load is per FIFO lot, not per redemption. A rule that forgets perLot is
+        // evaluated once over the whole disposal, which charges lots that no longer attract a load
+        // and can be wrong by the entire charge rather than by a rounding error.
+        seeder.seed();
+        assertThat(seededProfiles()).isNotEmpty();
+
+        // When / Then
+        for (ChargeInstrumentEntity profile : seededProfiles()) {
+            ChargeRule exitLoad = profile.getRules().stream()
+                    .filter(rule -> "EXIT_LOAD".equals(rule.getCode()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError(profile.getStockCode() + " carries no exit load"));
+
+            assertThat(exitLoad.isPerLot()).as("%s prices its exit load per lot", profile.getStockCode())
+                    .isTrue();
+            assertThat(exitLoad.getEvents()).as("events of %s", profile.getStockCode())
+                    .containsExactly(ChargeEvent.SELL);
+            assertThat(exitLoad.isActive()).isTrue();
+        }
+    }
+
+    @Test
+    void everyShippedProfileDependsOnTheHoldingPeriod() {
+        // Given — an exit load that reads no holding period is levied on every redemption forever,
+        // which is the one thing this charge must not do (AC-6)
+        seeder.seed();
+        assertThat(seededProfiles()).isNotEmpty();
+
+        // When / Then — either a predicate over #holdingDays, or bands over it
+        for (ChargeInstrumentEntity profile : seededProfiles()) {
+            ChargeRule exitLoad = profile.getRules().stream()
+                    .filter(rule -> "EXIT_LOAD".equals(rule.getCode()))
+                    .findFirst().orElseThrow();
+
+            boolean readsHoldingPeriod =
+                    (exitLoad.getEligibility() != null && exitLoad.getEligibility().contains("holdingDays"))
+                            || exitLoad.effectiveSlabBandBasis() == SlabBandBasis.HOLDING_DAYS;
+
+            assertThat(readsHoldingPeriod)
+                    .as("%s's exit load depends on how long the lot was held", profile.getStockCode())
+                    .isTrue();
+        }
+    }
+
+    @Test
+    void everyProfileRuleCodeIsInTheCatalogue() {
+        // Given — the same rejection the cards get. A profile is validated before it is persisted,
+        // so an exit load misspelled in a seed file stops startup rather than pricing redemptions.
+        seeder.seed();
+        List<String> catalogue = seededCatalogue().stream().map(ChargeCatalogueEntity::getCode).toList();
+        assertThat(seededProfiles()).isNotEmpty();
+
+        // When / Then
+        for (ChargeInstrumentEntity profile : seededProfiles()) {
+            assertThat(profile.getRules()).extracting(ChargeRule::getCode)
+                    .as("codes in %s", profile.getStockCode())
+                    .isSubsetOf(catalogue);
+        }
+    }
+
+    @Test
+    void everyProfileSaysWhereItsLoadCameFromAndAdmitsItIsUnverified() {
+        // Given — ADR-18 applies to a scheme's own charges as much as to a broker's
+        seeder.seed();
+        assertThat(seededProfiles()).isNotEmpty();
+
+        // When / Then
+        for (ChargeInstrumentEntity profile : seededProfiles()) {
+            assertThat(profile.getSourceUrl()).as("sourceUrl of %s", profile.getStockCode())
+                    .isNotBlank().startsWith("https://");
+            assertThat(profile.getVerifiedOn()).as("%s carries a placeholder load", profile.getStockCode())
+                    .isNull();
+            assertThat(profile.getStatus()).isEqualTo(EntityStatus.ACTIVE);
+        }
+    }
+
+    @Test
+    void noTwoShippedProfilesCoverTheSameSchemeAtTheSameTime() {
+        // Given — two profiles in force for one scheme are indistinguishable, and the instrument
+        // resolver refuses both by name at redemption time. This is where that should surface.
+        seeder.seed();
+        List<ChargeInstrumentEntity> profiles = seededProfiles();
+
+        // When / Then
+        for (int i = 0; i < profiles.size(); i++) {
+            for (int j = i + 1; j < profiles.size(); j++) {
+                assertThat(profiles.get(i).getStockCode())
+                        .as("two profiles for one scheme")
+                        .isNotEqualTo(profiles.get(j).getStockCode());
+            }
+        }
+    }
+
+    @Test
     void everyCardSaysWhereItsRatesCameFromAndAdmitsTheyAreUnverified() {
         // Given — ADR-18. The rates shipped here are placeholders, and pretending otherwise would
         // make AC-2 look closed. sourceUrl is what makes verifying them possible; a null verifiedOn
@@ -197,6 +355,8 @@ class ChargeSeederServiceTest {
         when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(true);
         when(chargeScheduleRepository.findByScheduleCode(anyString()))
                 .thenReturn(Optional.of(new ChargeScheduleEntity()));
+        when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
+                .thenReturn(Optional.of(new ChargeInstrumentEntity()));
 
         // When
         seeder.seed();
@@ -204,6 +364,7 @@ class ChargeSeederServiceTest {
         // Then
         verify(chargeScheduleRepository, never()).save(any());
         verify(chargeCatalogueRepository, never()).save(any());
+        verify(chargeInstrumentRepository, never()).save(any());
     }
 
     @Test
@@ -219,12 +380,47 @@ class ChargeSeederServiceTest {
     }
 
     @Test
+    void seed_whenOnlyTheRateCardIsInvalid_stillFailsAndNamesTheCard() {
+        // Given — the test above cannot tell which of the two validations fired: an empty catalogue
+        // invalidates the cards and the profiles at once, so either check alone satisfies it.
+        // Mutation testing proved that by deleting each call in turn with every test still green.
+        // Here only the card is rejected, so nothing but the card's own validation can save it.
+        ChargeScheduleValidator validator = mock(ChargeScheduleValidator.class);
+        org.mockito.Mockito.doThrow(new BadRequestException("bad card"))
+                .when(validator).validate(any(ChargeScheduleEntity.class));
+
+        // When / Then — and it names the file rather than the rule, because that is what gets opened
+        assertThatThrownBy(() -> seederWith(validator).seed())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("rate card")
+                .hasMessageContaining(".json");
+    }
+
+    @Test
+    void seed_whenOnlyAnInstrumentProfileIsInvalid_stillFailsAndNamesTheProfile() {
+        // Given — the other half. A scheme profile carries exit load, which no rate card can
+        // express, so a profile accepted unchecked is a charge nothing else in the application
+        // would have caught.
+        ChargeScheduleValidator validator = mock(ChargeScheduleValidator.class);
+        org.mockito.Mockito.doThrow(new BadRequestException("bad profile"))
+                .when(validator).validate(any(ChargeInstrumentEntity.class));
+
+        // When / Then
+        assertThatThrownBy(() -> seederWith(validator).seed())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("instrument profile")
+                .hasMessageContaining(".json");
+    }
+
+    @Test
     void seed_evictsTheResolverCache() {
         // Given — the resolver may already have answered for a scope during startup
         seeder.seed();
 
-        // Then
+        // Then — both resolvers cache misses as well as hits, so a profile seeded after one has
+        // answered is invisible until eviction
         verify(chargeScheduleResolver).evictAll();
+        verify(chargeInstrumentResolver).evictAll();
     }
 
     @Test
@@ -269,10 +465,17 @@ class ChargeSeederServiceTest {
                 .hasMessageContaining("broken-card.json");
     }
 
+    private ChargeSeederService seederWith(ChargeScheduleValidator validator) {
+        return new ChargeSeederService(chargeCatalogueRepository, chargeScheduleRepository,
+                chargeInstrumentRepository, validator, chargeScheduleResolver, chargeInstrumentResolver,
+                new PathMatchingResourcePatternResolver());
+    }
+
     private ChargeSeederService seederWith(ResourcePatternResolver resolver) {
         return new ChargeSeederService(chargeCatalogueRepository, chargeScheduleRepository,
+                chargeInstrumentRepository,
                 new ChargeScheduleValidator(chargeCatalogueRepository, new ChargeFormulaEvaluator()),
-                chargeScheduleResolver, resolver);
+                chargeScheduleResolver, chargeInstrumentResolver, resolver);
     }
 
     // ---------------------------------------------------------------- helpers
@@ -280,6 +483,12 @@ class ChargeSeederServiceTest {
     private List<ChargeCatalogueEntity> seededCatalogue() {
         ArgumentCaptor<ChargeCatalogueEntity> captor = ArgumentCaptor.forClass(ChargeCatalogueEntity.class);
         verify(chargeCatalogueRepository, org.mockito.Mockito.atLeast(0)).save(captor.capture());
+        return new ArrayList<>(captor.getAllValues());
+    }
+
+    private List<ChargeInstrumentEntity> seededProfiles() {
+        ArgumentCaptor<ChargeInstrumentEntity> captor = ArgumentCaptor.forClass(ChargeInstrumentEntity.class);
+        verify(chargeInstrumentRepository, org.mockito.Mockito.atLeast(0)).save(captor.capture());
         return new ArrayList<>(captor.getAllValues());
     }
 

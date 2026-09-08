@@ -1,9 +1,12 @@
 package com.thiru.wealthlens.brokercharges.service;
 
+import com.thiru.wealthlens.brokercharges.engine.ChargeInstrumentResolver;
 import com.thiru.wealthlens.brokercharges.engine.ChargeScheduleResolver;
 import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
+import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
+import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import jakarta.annotation.PostConstruct;
@@ -32,12 +35,15 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <h2>Order matters</h2>
  * The catalogue is written before the cards, because the validator rejects any rule code absent from
- * it. Seeding a card first would fail against an empty catalogue.
+ * it. Seeding a card first would fail against an empty catalogue. Instrument profiles come last:
+ * they are what the mutual fund cards declare {@code requiresInstrumentProfile} against, and they
+ * name catalogue codes of their own.
  *
  * <h2>Idempotent by code</h2>
  * The seeder runs on every startup. A catalogue entry already present is left alone, and so is a
  * schedule whose {@code scheduleCode} is on file — including one an operator has since edited, which
- * must not be silently overwritten by the shipped version.
+ * must not be silently overwritten by the shipped version. A profile carries no code, so its
+ * identity is the scheme and the date its version took effect.
  */
 @Log4j2
 @Service
@@ -46,12 +52,15 @@ public class ChargeSeederService {
 
     private static final String CATALOGUE = "classpath:data/charges/charge-catalogue.json";
     private static final String SCHEDULES = "classpath*:data/charges/*.json";
+    private static final String INSTRUMENTS = "classpath*:data/charges/instruments/*.json";
     private static final String CATALOGUE_FILE = "charge-catalogue.json";
 
     private final ChargeCatalogueRepository chargeCatalogueRepository;
     private final ChargeScheduleRepository chargeScheduleRepository;
+    private final ChargeInstrumentRepository chargeInstrumentRepository;
     private final ChargeScheduleValidator chargeScheduleValidator;
     private final ChargeScheduleResolver chargeScheduleResolver;
+    private final ChargeInstrumentResolver chargeInstrumentResolver;
 
     /**
      * Injected rather than constructed, so the failure path when the classpath cannot be listed is
@@ -74,8 +83,11 @@ public class ChargeSeederService {
         log.info("Seeding charge catalogue and rate cards");
         seedCatalogue();
         seedSchedules();
+        seedInstruments();
         // Startup may already have resolved for a scope; the newly seeded cards must be visible.
+        // Both resolvers cache misses as well as hits, so neither would re-ask on its own.
         chargeScheduleResolver.evictAll();
+        chargeInstrumentResolver.evictAll();
         log.info("Charge seeding completed");
     }
 
@@ -113,15 +125,49 @@ public class ChargeSeederService {
         }
     }
 
+    /**
+     * The scheme profiles the mutual fund cards depend on.
+     *
+     * <p>A profile is not a rate card and must not be read as one, which is why they live in their
+     * own directory: the schedule pattern does not descend into it, so adding a profile cannot
+     * accidentally be parsed as a schedule with every field null.
+     */
+    private void seedInstruments() {
+        for (Resource file : seedFiles(INSTRUMENTS, "charge instrument profiles")) {
+            ChargeInstrumentEntity instrument = read(file, ChargeInstrumentEntity.class);
+
+            if (chargeInstrumentRepository
+                    .findByStockCodeAndStartDate(instrument.getStockCode(), instrument.getStartDate())
+                    .isPresent()) {
+                // Possibly edited since; the shipped version must not overwrite it.
+                continue;
+            }
+
+            try {
+                chargeScheduleValidator.validate(instrument);
+            } catch (BadRequestException e) {
+                throw new IllegalStateException("Shipped charge instrument profile " + file.getFilename()
+                        + " is invalid: " + e.getMessage(), e);
+            }
+            chargeInstrumentRepository.save(instrument);
+            log.info("Seeded charge instrument profile for {}", instrument.getStockCode());
+        }
+    }
+
     /** Sorted, so seeding order is the same on every machine and a failure reproduces. */
     private List<Resource> scheduleFiles() {
+        return seedFiles(SCHEDULES, "charge rate cards").stream()
+                .filter(resource -> !CATALOGUE_FILE.equals(resource.getFilename()))
+                .toList();
+    }
+
+    private List<Resource> seedFiles(String pattern, String what) {
         try {
-            return Arrays.stream(resourceResolver.getResources(SCHEDULES))
-                    .filter(resource -> !CATALOGUE_FILE.equals(resource.getFilename()))
+            return Arrays.stream(resourceResolver.getResources(pattern))
                     .sorted(Comparator.comparing(Resource::getFilename))
                     .toList();
         } catch (IOException e) {
-            throw new IllegalStateException("Could not list the shipped charge rate cards", e);
+            throw new IllegalStateException("Could not list the shipped " + what, e);
         }
     }
 
