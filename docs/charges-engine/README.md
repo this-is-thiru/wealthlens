@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-07, branch `feature/charges-engine`, **Phase A complete** (Chunks 1–7 and 9). Full suite green: 744 tests, unit and integration.
+**Last verified against the repository:** 2026-09-08, branch `feature/charges-engine`, **Phase A complete** (Chunks 1–7 and 9), with the two seed-data items Chunk 6 left open now closed. Full suite green: 764 tests, unit and integration.
 
 ---
 
@@ -11,10 +11,10 @@
 | | |
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
-| **Commits beyond master** | 25 — eighteen code commits and seven documentation commits |
+| **Commits beyond master** | 33 — twenty-two code (15 `feat`, 3 `test`, 2 `fix`, 1 `ci`, 1 `chore`) and eleven documentation. Counted with `git rev-list master..HEAD --count`; the figure here previously read 25 against an actual 31, so trust the command over this cell |
 | **Phase** | A (standalone engine) — **complete**. Chunks 1–7 and 9 done |
 | **Next action** | Review the Phase A results, then Chunk 8 (Phase B, shadow recording). See §11 |
-| **Blocking questions** | None for code. Two acceptance criteria are open and neither is code work — see §9 |
+| **Blocking questions** | None. **AC-2** is the only acceptance criterion still open and it is **not a merge blocker** — the owner has scheduled the rate verification for staging, after this branch merges (ADR-18) |
 
 ---
 
@@ -80,9 +80,19 @@ Five services in `brokercharges/service/`: `ChargeScheduleValidator`, `ChargeSch
 
 Both quality gates now cover `brokercharges.service` as well as the engine — the JaCoCo rule per class, so a new service cannot be carried by its neighbours. Engine 98.5% line / 91.9% branch; every charges class at 100% mutation but `ChargeFormulaEvaluator`'s one equivalent mutant.
 
-### Written by Chunk 6 so far
+### Written by Chunk 6
 
-`resources/data/charges/`: `charge-catalogue.json` (12 codes) and five rate cards — Zerodha delivery, intraday and mutual fund; Upstox and Fyers delivery. `service/ChargeSeederService` (`@PostConstruct`, catalogue first, idempotent by code, validating before persisting, failing fast). `ChargeSeederServiceTest` — 14 tests, test-plan Tier G, run against the real files. `ChargeGoldenFileTest` — 12 frozen contract notes in `src/test/resources/charges/golden/`, test-plan Tier E, priced through the real resolver, engine and calculators against the shipped cards.
+`resources/data/charges/`: `charge-catalogue.json` (12 codes) and six rate cards — Zerodha delivery, intraday, mutual fund and **maintenance**; Upstox and Fyers delivery. `service/ChargeSeederService` (`@PostConstruct`, catalogue first, idempotent by code, validating before persisting, failing fast). `ChargeSeederServiceTest` — 14 tests, test-plan Tier G, run against the real files. `ChargeGoldenFileTest` — 16 frozen contract notes in `src/test/resources/charges/golden/`, test-plan Tier E, priced through the real resolver, engine and calculators against the shipped cards.
+
+### Written after Chunk 9, closing what Chunk 6 left open
+
+**The AMC rate card**, `zerodha-maintenance-2025-04-01.json`. Unscoped on purpose — `assetType`, `segment`, `exchange` and `planCode` all unset — because the cycle context carries none of them and a card declaring any is disqualified by the resolver. Both its rules declare `AMC_CYCLE` and nothing else: an unscoped card is the fallback for every asset type no specific card covers, so a rule of its own reaching BUY or SELL would price ordinary trades as maintenance. Golden fixture `zerodha-maintenance-amc-cycle`.
+
+**Two scheme profiles**, in `resources/data/charges/instruments/` — a graded exit load banded on `HOLDING_DAYS`, and one expressed as the predicate `#holdingDays < 7`, both `perLot`. This is what closes AC-6. They live in their own directory because the schedule pattern does not descend into it, so a profile can never be read as a rate card with every field null.
+
+`ChargeSeederService` gained `seedInstruments()` (last, after the catalogue and the cards; idempotent by scheme **and start date**, a profile having no code of its own) and now evicts `ChargeInstrumentResolver` alongside the schedule resolver's cache. `ChargeScheduleValidator` gained `validate(ChargeInstrumentEntity)`: the same window and rule checks, because validating only the broker's card left exit load — the one charge a rate card cannot express — entirely unchecked.
+
+Tests: `ChargeSeederServiceTest` 14 → 24, `ChargeScheduleValidatorTest` 31 → 35, four new golden fixtures, two new cases in `ChargesIntegrationTest`.
 
 ### Written by Chunk 7
 
@@ -95,8 +105,6 @@ Four controllers — `ChargeScheduleController` (publish, fetch, list, close, un
 `AuthConfig` gained the five new prefixes. It needed them: the chain ends in `anyRequest().permitAll()`, so every charges endpoint was public. Publishing a rate card and running the AMC cycle additionally require `SUPER_USER`.
 
 ### NOT written yet — do not assume any of it exists
-
-**No AMC rate card** — `AmcChargeService` has nothing to bill against until one is seeded, so `/charges/amc/impose` returns an empty list against the shipped data.
 
 **Nothing in the live path calls any of this.** The simulate endpoint and the user-charges endpoints are the first callers, and they stand beside the existing flow rather than in it. Phase B is what puts the engine in the trade path; Phase C is what makes it authoritative.
 
@@ -120,6 +128,7 @@ Read in this order:
 | 4 | **tech-spec.md** | The design. Entities, engine contracts, algorithms, seed format, extensibility analysis (§13), temporal semantics (§14) | 912 |
 | 5 | **test-plan.md** | How it is verified. ~190 tests across 11 tiers, with gates | 347 |
 | 6 | **implementation-checklist.md** | The build tracker. Resume from the first unticked box | 339 |
+| 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return. Written for the AC-2 verification | 425 |
 | — | `../testing/test-framework-audit.md` | The framework work that preceded this, and why | 221 |
 
 **If you change the design, update `decisions.md` and `tech-spec.md` together.** A decision recorded in only one of them will be lost.
@@ -171,6 +180,14 @@ grep -l 'failures="[1-9]"\|errors="[1-9]"' backend/target/surefire-reports/TEST-
 ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend \
   '-DtargetClasses=com.thiru.wealthlens.brokercharges.engine.*,com.thiru.wealthlens.brokercharges.service.*' \
   '-DtargetTests=com.thiru.wealthlens.*'
+# Reports 96% (546/566). That figure is not this work's score: `service.*` also matches
+# BrokerChargeService and UserBrokerChargeService — the superseded implementation, which carries
+# 17 of the 20 survivors and is deleted in Chunk 11. Neither file nor its tests has been touched
+# on this branch, so those survivors are pre-existing. For the score that gates this work:
+./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend \
+  '-DtargetClasses=com.thiru.wealthlens.brokercharges.engine.*,com.thiru.wealthlens.brokercharges.service.Charge*,com.thiru.wealthlens.brokercharges.service.UserChargeService,com.thiru.wealthlens.brokercharges.service.AmcChargeService' \
+  '-DtargetTests=com.thiru.wealthlens.*'
+# → 99%, 475/476. The survivor is ChargeFormulaEvaluator's known equivalent mutant.
 
 # 5. Phase A's exit criterion — must be empty, or the cutover stops being reversible.
 git diff master --stat -- backend/src/main/java/com/thiru/wealthlens/portfolio/
@@ -233,23 +250,27 @@ Each of these was established by investigation or corrected after being got wron
 
 11. **Logging is Logback, not Log4j2.** `@Log4j2` is Lombok's API annotation; the implementation behind it is Logback via `log4j-to-slf4j`, and `log4j-core` is not on the classpath. `testsupport/LogCapture` binds to Logback for that reason. `CLAUDE.md` says "Log4j2", which is true of the annotation and misleading about the backend.
 
-12. **`AssetEntity` has no ISIN or scheme code** — only `stockCode` and `stockName`. `ChargeInstrumentEntity` is keyed on `stockCode` for that reason, with `isin` stored for later.
+12. **Scheme profiles are seeded from `data/charges/instruments/`, a subdirectory.** The schedule pattern is `data/charges/*.json` and does not descend, which is the only thing stopping a profile from being parsed as a rate card with every field null — a card that would then resolve for everything and price it at zero. A new profile goes in that directory or it is a rate card.
+
+13. **The maintenance card is the only unscoped card, and that is load-bearing twice over.** It must leave every trade dimension unset or the AMC cycle — which carries no scrip, quantity or asset type — cannot resolve it at all. And because an unscoped card agrees with every trade, it is Zerodha's fallback wherever no specific card exists: such a trade now resolves to it and reads `NO_MATCHING_RULES` rather than `NO_SCHEDULE`. Both are gaps and both are reported; they are different sentences in the gaps report. Its rules declare `AMC_CYCLE` alone so that the fallback prices nothing rather than billing maintenance on a trade.
+
+14. **`AssetEntity` has no ISIN or scheme code** — only `stockCode` and `stockName`. `ChargeInstrumentEntity` is keyed on `stockCode` for that reason, with `isin` stored for later.
 
 ---
 
 ## 9. Open items
 
-Everything design-level is settled. Two acceptance criteria remain open and neither is code work; the rest below are closed or recorded.
+Everything design-level is settled. **One** acceptance criterion remains open and it is not code work; the rest below are closed or recorded.
 
 | # | Item | State |
 |---|---|---|
-| 1 | **AC-2 cannot be closed in Phase A** — golden fixtures assert against placeholder rates, so they pin the arithmetic but not reality | Decided (ADR-18). Needs real Zerodha rates, then one re-verification |
+| 1 | **AC-2 cannot be closed in Phase A** — golden fixtures assert against placeholder rates, so they pin the arithmetic but not reality | **Scheduled, not blocking.** Owner's decision 2026-09-08: verify against Zerodha's live page in **staging, after the merge to `master`** — not on this branch. Worklist `GET /charge-schedules/unverified`; fill `verifiedOn`, then re-run the golden fixtures to see which trades moved (ADR-18) |
 | 2 | ~~**`ChargeAccountEntity` shape**~~ | **Closed.** Built in Chunk 2 and exercised by `ChargeAccountService` in Chunk 5; billing history survives re-registration |
 | 3 | ~~**`charge_catalogue` initial code list**~~ | **Closed.** Chunk 6 seeded 12 codes; `GET /charge-catalogue` lists them and the validator rejects any rule naming one that is absent |
 | 4 | ~~Missing instrument profile: error or warning?~~ | **Settled — ADR-24.** Recorded, never fatal. Gated by `requiresInstrumentProfile`; validator checks expression variables against an allow-list |
 | 5 | ~~Does `AccountType` affect charges?~~ | **Settled — ADR-25.** No rate impact, but `accountHolder` joins every dedupe key. Uncovered defect D10: DP charges are undercounted across account holders |
 | 7 | **`taxplanning` mutation score is 34.4%** — 133 of 387 mutants killed, with `FormulaEvaluator`, `FbpOptimizer`, `ItrFormAdvisor` and `TaxEngineFactory` at zero. Pre-existing, and invisible until pitest was bumped to a version that runs on Java 25 | **Deferred by the repository owner** to the full layer, 2026-09-06. Not a defect to re-raise. Consequence: `-Pmutation` fails on the aggregate, so the charges engine is gated by running the profile scoped to its own package (see §6) |
-| 8 | **AC-6 cannot be closed yet** — the engine applies the holding-period predicate and `ChargeEngineTest` asserts it, but no seeded instrument profile carries an exit load, so nothing exercises it end to end | Needs one seeded mutual-fund profile with an exit load. Small, and not blocking |
+| 8 | ~~**AC-6 cannot be closed yet**~~ | **Closed 2026-09-08.** Two scheme profiles seeded — one graded, one predicate-based — and three golden fixtures plus two integration cases exercise the predicate end to end. The zero-charge fixture asserts `NO_MATCHING_RULES`, so a profile that fails to load fails it rather than passing as a free redemption |
 | 6 | **`exchangeName` is `"NSE"` everywhere in tests and the API collection** — plain uppercase codes, so the schedule's `exchange` dimension matches directly. BSE is untested | Low risk, noted |
 
 ### Verified non-issues
@@ -270,25 +291,29 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 | **Seeded rates are placeholders** | Only a human comparing against the broker's live charges page can close AC-2 |
 | **Performance under load** | Resolver cache is asserted for correctness, not latency |
 | **A rate card written outside `ChargeScheduleService` is invisible** | The resolver caches by scope and date and only `publish` and `close` evict. Writing straight to `ChargeScheduleRepository` leaves the previously resolved card in memory. Found by a Chunk 9 test that did exactly that |
+| **A scheme profile written outside the seeder is invisible too** | Same eviction rule, and `ChargeInstrumentResolver` has no publishing service in front of it at all. Only `ChargeSeederService` calls its `evictAll()`. A profile added at runtime needs one before the next redemption of that scheme |
+| **Only two schemes have profiles** | Every other mutual fund resolves to `NO_INSTRUMENT_PROFILE` and accrues no exit load. That is the designed behaviour — recorded, never fatal (ADR-24) — but it means the shipped data prices two funds and gaps the rest |
+| **Exit load cannot be exercised through the API** | `ChargeSimulationRequest` carries no FIFO lots, so `ChargeSimulationService` passes an empty list and a `perLot` rule evaluates zero times. `POST /charges/simulate` therefore returns ₹0 exit load however the profile is written. The charge is asserted by the golden fixtures and `ChargesIntegrationTest`, both of which reach the engine directly; the live caller that supplies lots is Phase B. Adding `lots` to the request would close the gap and is the one change that would make AC-6 demonstrable in staging |
+| **Scheme profiles have no publishing endpoint** | They are seeded at startup, and `ChargeInstrumentResolver.evictAll()` is called by nothing else. A profile added at runtime needs a restart — rate cards have `ChargeScheduleService` in front of them, profiles have nothing |
 
 ---
 
 ## 11. Resume point — Phase A complete
 
-**Paused:** 2026-09-07. Build green: **744 tests** across both tiers, `spotless:check` clean, both JaCoCo gates passing, `brokercharges.engine` at **99% mutation score** (256/257, 0 uncovered) and the charges services at 99% on the same scoping.
+**Paused:** 2026-09-08. Build green: **764 tests** across both tiers, `spotless:check` clean, both JaCoCo gates passing, and **99% mutation score** (475/476) across the engine and the new services, the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant.
 
 ### The Phase A gate, item by item
 
 | Item | Status |
 |---|---|
 | Line ≥ 90%, branch ≥ 85% | ✅ both JaCoCo rules pass under `mvn verify` |
-| Mutation ≥ 85% on `brokercharges.engine` | ✅ 99%. Run it scoped — the aggregate `-Pmutation` still fails on the deferred `taxplanning` score (§9) |
-| 12 golden contract notes at ₹0.01 | ✅ asserted line by line and in total |
+| Mutation ≥ 85% on `brokercharges.engine` | ✅ 99%. Run it scoped — the aggregate `-Pmutation` still fails on the deferred `taxplanning` score (§9), and see the §6 caveat about what `brokercharges.service.*` sweeps in |
+| 16 golden contract notes at ₹0.01 | ✅ asserted line by line and in total |
 | `git diff master --stat -- .../portfolio/` empty | ✅ re-checked at the end of Chunk 9 |
 | `WealthLensModulithTest` green | ✅ |
 | AC-1, 3, 4, 5, 7, 8, 9, 12 | ✅ each with named evidence in the checklist |
-| **AC-2** — rates match the broker's published page | ❌ **open, and not code work.** `GET /charge-schedules/unverified` is the worklist |
-| **AC-6** — MF exit load under the holding-period predicate | ❌ **open.** The engine does it and `ChargeEngineTest` asserts it; no seeded instrument profile carries an exit load, so nothing exercises it end to end |
+| **AC-2** — rates match the broker's published page | ❌ **open by decision, and deliberately not a merge blocker.** Done in staging after merge; `GET /charge-schedules/unverified` is the worklist |
+| **AC-6** — MF exit load under the holding-period predicate | ✅ closed 2026-09-08. Two scheme profiles seeded; three golden fixtures and two integration cases |
 
 ### What Chunk 9 found
 
