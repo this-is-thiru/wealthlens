@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-08, branch `feature/charges-engine`, **Phase A complete** (Chunks 1–7 and 9), with the two seed-data items Chunk 6 left open now closed. Full suite green: 779 tests, unit and integration.
+**Last verified against the repository:** 2026-09-08, branch `feature/charges-engine`, **Phase A complete** (Chunks 1–7 and 9), with the two seed-data items Chunk 6 left open now closed. Full suite green: 801 tests, unit and integration.
 
 ---
 
@@ -11,10 +11,10 @@
 | | |
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
-| **Commits beyond master** | 33 — twenty-two code (15 `feat`, 3 `test`, 2 `fix`, 1 `ci`, 1 `chore`) and eleven documentation. Counted with `git rev-list master..HEAD --count`; the figure here previously read 25 against an actual 31, so trust the command over this cell |
+| **Commits beyond master** | 37 — twenty-four code (16 `feat`, 3 `test`, 2 `fix`, 1 `ci`, 2 `chore`) and thirteen documentation. Counted with `git rev-list master..HEAD --count`; the figure here previously read 25 against an actual 31, so trust the command over this cell |
 | **Phase** | A (standalone engine) — **complete**. Chunks 1–7 and 9 done |
 | **Next action** | Review the Phase A results, then Chunk 8 (Phase B, shadow recording). See §11 |
-| **Blocking questions** | None. **AC-2** is the only acceptance criterion still open and it is **not a merge blocker** — the owner has scheduled the rate verification for staging, after this branch merges (ADR-18) |
+| **Blocking questions** | None. **AC-2 closed 2026-09-08** — rates verified against the brokers' published pages on this branch; see `ac2-rate-verification.md`. Every Phase A criterion is now signed off |
 
 ---
 
@@ -90,6 +90,10 @@ Both quality gates now cover `brokercharges.service` as well as the engine — t
 
 **Two scheme profiles**, in `resources/data/charges/instruments/` — a graded exit load banded on `HOLDING_DAYS`, and one expressed as the predicate `#holdingDays < 7`, both `perLot`. This is what closes AC-6. They live in their own directory because the schedule pattern does not descend into it, so a profile can never be read as a rate card with every field null.
 
+**Seeding is an operation, not a startup hook (ADR-27).** `POST /charges/seed` — `SUPER_USER` — is the only way shipped data enters a database; `@PostConstruct` is gone, so no deployment writes rate cards as a side effect of booting. Every document it writes records the authenticated caller — through Spring Data's auditing, with no audit field assigned anywhere. That needed one fix in the seeder: it parsed cards into instances Jackson constructed, whose `auditMetadata` is null because Lombok's `@ConstructorProperties` makes `@AllArgsConstructor` a creator and the field initialiser never runs. Auditing fills an `AuditMetadata`; it cannot create one. Parsing into a pre-built instance (`readerForUpdating`) is the whole change.
+
+`ChargeScheduleService.findUnverified()` now returns cards whose `verifiedOn` is older than 90 days as well as those with none, so verification is a standing obligation rather than a one-off (ADR-26). `ChargeSeederService.findDrift()` and `GET /charge-schedules/drift` report where the shipped files and the database disagree — the seeder skips a card already on file, correctly, and used to do it silently.
+
 `ChargeSimulationRequest` gained `lots`, so `POST /charges/simulate` can price a redemption per FIFO lot — without it a `perLot` rule evaluated zero times and exit load answered ₹0 through the API however the profile was written. A lot set that does not describe its disposal is rejected rather than priced: every way of getting it wrong makes the charge smaller rather than making the call fail.
 
 `ChargeSeederService` gained `seedInstruments()` (last, after the catalogue and the cards; idempotent by scheme **and start date**, a profile having no code of its own) and now evicts `ChargeInstrumentResolver` alongside the schedule resolver's cache. `ChargeScheduleValidator` gained `validate(ChargeInstrumentEntity)`: the same window and rule checks, because validating only the broker's card left exit load — the one charge a rate card cannot express — entirely unchecked.
@@ -130,7 +134,11 @@ Read in this order:
 | 4 | **tech-spec.md** | The design. Entities, engine contracts, algorithms, seed format, extensibility analysis (§13), temporal semantics (§14) | 912 |
 | 5 | **test-plan.md** | How it is verified. ~190 tests across 11 tiers, with gates | 347 |
 | 6 | **implementation-checklist.md** | The build tracker. Resume from the first unticked box | 339 |
-| 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return. Written for the AC-2 verification | 425 |
+| 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return | 460 |
+| 8 | **ac2-rate-verification.md** | The AC-2 evidence: every shipped rate against the broker's page, what was wrong, and what closing it changed | 180 |
+| — | `reseed-staging.js` | One-off, for an environment seeded before 2026-09-08. Checks before it deletes | 39 |
+
+**ADR-26 is the one to read before deploying anything.** It states the rule that keeps rate cards deployable — a deployed card is never edited, only superseded — and what to do in the two cases where that is not enough.
 | — | `../testing/test-framework-audit.md` | The framework work that preceded this, and why | 221 |
 
 **If you change the design, update `decisions.md` and `tech-spec.md` together.** A decision recorded in only one of them will be lost.
@@ -266,7 +274,7 @@ Everything design-level is settled. **One** acceptance criterion remains open an
 
 | # | Item | State |
 |---|---|---|
-| 1 | **AC-2 cannot be closed in Phase A** — golden fixtures assert against placeholder rates, so they pin the arithmetic but not reality | **Scheduled, not blocking.** Owner's decision 2026-09-08: verify against Zerodha's live page in **staging, after the merge to `master`** — not on this branch. Worklist `GET /charge-schedules/unverified`; fill `verifiedOn`, then re-run the golden fixtures to see which trades moved (ADR-18) |
+| 1 | ~~**AC-2 cannot be closed in Phase A**~~ | **Closed 2026-09-08.** Verified against all three brokers' published pages on this branch rather than post-merge. Five rate defects found and fixed, five successor cards added for two documented rate changes, all eleven cards carry `verifiedOn`. `ac2-rate-verification.md` holds the evidence. One operational caveat survives — see §10 |
 | 2 | ~~**`ChargeAccountEntity` shape**~~ | **Closed.** Built in Chunk 2 and exercised by `ChargeAccountService` in Chunk 5; billing history survives re-registration |
 | 3 | ~~**`charge_catalogue` initial code list**~~ | **Closed.** Chunk 6 seeded 12 codes; `GET /charge-catalogue` lists them and the validator rejects any rule naming one that is absent |
 | 4 | ~~Missing instrument profile: error or warning?~~ | **Settled — ADR-24.** Recorded, never fatal. Gated by `requiresInstrumentProfile`; validator checks expression variables against an allow-list |
@@ -290,7 +298,11 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 | **MTF interest** accrues daily on an open position, not at a trade event | Needs a cycle runner like AMC, a second execution mode |
 | **Aggregate caps** ("max ₹X brokerage per day across all trades") | `DedupeScope` charges *once*; it cannot cap a *sum* |
 | **Volume-tiered pricing** on cumulative monthly turnover | Needs historical aggregation before the current trade can be priced |
-| **Seeded rates are placeholders** | Only a human comparing against the broker's live charges page can close AC-2 |
+| **A fresh database holds no charge data until `POST /charges/seed` is called** | Deliberate (ADR-27). Until then every trade resolves to `NO_SCHEDULE` and `GET /charge-schedules/drift` reports every shipped card as absent |
+| **Any entity Jackson deserialises loses its audit trail** | Lombok's `@ConstructorProperties` on `@AllArgsConstructor` makes Jackson bypass the field initialiser, leaving `auditMetadata` null, and Spring Data's auditing fills an object rather than creating one. Fixed in the charges seeder; anywhere else this application parses an entity from JSON has the same silent hole |
+| **Seeding does not update a card already on file** | `ChargeSeederService` is idempotent by `scheduleCode`, so an edited seed file never reaches a database that already seeded it. Deliberate — an operator's correction must survive a restart — and now **reported** rather than silent: the seeder warns and `GET /charge-schedules/drift` lists the differences. The rule that makes this a non-problem is ADR-26: a rate change ships as a new generation, never an edit |
+| **Amending a card that has priced charges has no safe mechanism yet** | `POST /charges/recompute` is designed (tech-spec §14.4) and not built. Harmless through Phase A, where nothing prices anything; a real constraint once Phase B records |
+| **Zerodha's depository fee revision has no published date** | 2026-06-19 comes from secondary reporting. Wrong by a few weeks misprices only the window between the real date and that one, and correcting it is a new card |
 | **Performance under load** | Resolver cache is asserted for correctness, not latency |
 | **A rate card written outside `ChargeScheduleService` is invisible** | The resolver caches by scope and date and only `publish` and `close` evict. Writing straight to `ChargeScheduleRepository` leaves the previously resolved card in memory. Found by a Chunk 9 test that did exactly that |
 | **A scheme profile written outside the seeder is invisible too** | Same eviction rule, and `ChargeInstrumentResolver` has no publishing service in front of it at all. Only `ChargeSeederService` calls its `evictAll()`. A profile added at runtime needs one before the next redemption of that scheme |
@@ -302,7 +314,7 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ## 11. Resume point — Phase A complete
 
-**Paused:** 2026-09-08. Build green: **779 tests** across both tiers, `spotless:check` clean, both JaCoCo gates passing, and **99% mutation score** (475/476) across the engine and the new services, the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant.
+**Paused:** 2026-09-08. Build green: **801 tests** across both tiers, `spotless:check` clean, both JaCoCo gates passing, and **99% mutation score** (475/476) across the engine and the new services, the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant.
 
 ### The Phase A gate, item by item
 
@@ -314,7 +326,7 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 | `git diff master --stat -- .../portfolio/` empty | ✅ re-checked at the end of Chunk 9 |
 | `WealthLensModulithTest` green | ✅ |
 | AC-1, 3, 4, 5, 7, 8, 9, 12 | ✅ each with named evidence in the checklist |
-| **AC-2** — rates match the broker's published page | ❌ **open by decision, and deliberately not a merge blocker.** Done in staging after merge; `GET /charge-schedules/unverified` is the worklist |
+| **AC-2** — rates match the broker's published page | ✅ closed 2026-09-08. All eleven cards verified; `GET /charge-schedules/unverified` returns `[]` on a freshly seeded database |
 | **AC-6** — MF exit load under the holding-period predicate | ✅ closed 2026-09-08. Two scheme profiles seeded; three golden fixtures and two integration cases |
 
 ### What Chunk 9 found

@@ -224,7 +224,11 @@ Superseding sets `endDate = newStartDate.minusDays(1)` and leaves `status` untou
 
 **Consequences.** **AC-2 ("matches a real contract note to ₹0.01") cannot be closed in Phase A** — the one acceptance criterion that stays open. Golden fixtures still do real work: they fail loudly if the arithmetic regresses. Replacing rates later is a JSON change plus one re-verification.
 
-**When it gets done — decided by the repository owner, 2026-09-08.** After this branch merges to `master`, against staging rather than here. AC-2 is therefore **not** a merge blocker, and nobody should hold the branch open waiting on it. The worklist is `GET /charge-schedules/unverified`, which is exactly the endpoint this decision exists to populate; closing an entry means filling `verifiedOn` and confirming `sourceUrl` against the broker's live page, then re-running the golden fixtures to see which trades the corrected rates moved.
+**Closed on this branch, 2026-09-08.** Scheduled first for post-merge staging, then done here at the repository owner's direction. Every rate was compared against Zerodha's, Upstox's and Fyers' published pages; five defects were found, five successor cards added for two documented rate changes, and all eleven cards now carry `verifiedOn`. Evidence in `ac2-rate-verification.md`.
+
+**What the decision cost, in hindsight.** Placeholders were the right call — the engine was built and proved without waiting on rate research, and replacing them touched no Java, which is the extensibility claim demonstrated rather than asserted. The cost was subtler than "the numbers are wrong": two invented brokerage rates were *plausible*, agreed with reality at the one trade size every fixture used, and would have shipped. A placeholder that is obviously fake is safe; one that looks right is not. Fixtures at a second trade size are what caught them, and are cheap enough that new cards should ship with them from the start.
+
+**Two consequences that outlived the decision.** `verifiedOn` earns its place — it is the only thing separating a checked rate from an invented one, and Tier G now asserts it is populated rather than null. And seeding is a first-run convenience, not a deployment mechanism: the seeder is idempotent by `scheduleCode`, so corrected cards never reach a database that already seeded the old ones.
 
 ---
 
@@ -316,3 +320,121 @@ There is also a live asymmetry in `ProfitAndLossService.updateProfitAndLoss:312`
 **Consequences.** The dedupe index becomes `{email, account_holder, broker_name, stock_code, transaction_date}`. `ChargeAccountEntity` is likewise keyed per demat account, since each account attracts its own AMC. A test asserts that two same-day sells of one scrip under *different* account holders produce two DP charges, while two under the *same* holder produce one.
 
 **Outcome.** The defect was also **fixed in the live implementation** and merged as PR #60, rather than waiting for the Phase C cutover — users were being undercharged now, and the engine is months away. That fix threaded `accountHolder` through `BrokerChargeContext`, persisted it on `UserBrokerCharges`, converted the dedupe query to an `exists` returning `boolean` (also addressing D9's shape), and passed `dematAccountId` for AMC entries. Pre-existing rows have `account_holder` unset and group under `null`, which reproduces today's behaviour; no migration was performed and no historical charge was recomputed.
+
+---
+
+## ADR-26 — A deployed rate card is never edited; it is superseded
+
+**Decision.** Once a card has been deployed, its seed file is immutable. A rate change ships as a
+**new generation** with a new `scheduleCode` and a start date, never as an edit to the card in force.
+Editing a shipped file is reserved for cards that have not yet reached any environment, and for
+correcting a card that was wrong from the day it shipped — which is a different operation with a
+different cost, below.
+
+**Why.** Raised by the repository owner on 2026-09-08: *"this is not sustainable, what do I do when
+deploying to prod?"* The answer had three parts and only one of them was in the design.
+
+`ChargeSeederService` is idempotent by `scheduleCode`, so a card already on file is never overwritten.
+That is correct — an operator who corrects a rate through the API must not lose it on the next
+restart — but it means an edited seed file simply never arrives. The AC-2 corrections of 2026-09-08
+demonstrated it: the running application still reported six unverified cards after the files beside
+it had been fixed, and the only way to apply them was to delete the documents and restart.
+
+Deleting documents is not a deployment mechanism. But nothing needs to be: because `scheduleCode`
+carries a generation (`ZERODHA_EQ_DELIVERY_2026_03`), **a rate change is always a new code**, so the
+seeder applies it on the next deploy with no manual step and no drift. The mechanism already worked;
+what was missing was the rule that keeps it working.
+
+**The three operations, which must not be confused.**
+
+| Situation | Operation | Mechanism | Cost |
+|---|---|---|---|
+| A rate changed on a date | New generation | New `scheduleCode`; seeder applies it on deploy | A seed file, and a golden fixture in the new window |
+| A card was wrong from the start | Amend, then recompute | `POST /charge-schedules`, then `POST /charges/recompute` over its `scheduleId` (tech-spec §14.4) | Every charge it priced must be re-derived |
+| Somebody edited a deployed file anyway | Detect it | `GET /charge-schedules/drift` | A human deciding which side is right |
+
+The middle row is why the first row matters. Superseding is cheap and leaves history intact; amending
+rewrites charges that users have already been shown. Treating a rate change as an amendment, because
+editing a file is easier than writing a new one, converts a cheap operation into an expensive one and
+loses the record of what was charged and why.
+
+**Consequences.**
+
+- **Drift is reported, not silent.** The seeder now logs a warning naming the differing fields, and
+  `GET /charge-schedules/drift` lists them on demand. It deliberately does not say which side is
+  right: a rate corrected in production and a file nobody deployed look identical and need opposite
+  fixes.
+- **Verification expires.** `findUnverified()` returns cards with no `verifiedOn` *and* cards whose
+  `verifiedOn` is older than 90 days. Without that, AC-2 closes once and the worklist stays empty
+  while reality moves — which is exactly what happened between April 2025 and September 2026, when
+  NSE revised the transaction charge and Zerodha cut its depository fee under cards that had been
+  signed off. Verification is a standing obligation, not an event.
+- **The horizon is a constant, not a property.** Nothing in this application injects configuration by
+  field, and a constructor parameter would be the only other shape. It belongs on
+  `ChargeEngineProperties`, which Chunk 8 introduces for the shadow-recording flag.
+- **Recompute is now load-bearing.** It was designed in tech-spec §14.4 and is not built. Until it
+  is, the amend row of that table has no safe mechanism, so a card that has priced anything must not
+  be amended. That is fine through Phase A, where nothing prices anything, and becomes a real
+  constraint the moment Phase B starts recording.
+
+**What this does not solve.** Nothing yet promotes a verified card from staging to production; the
+files travel with the deployment and the verification is repeated per environment. Worth doing when
+there is more than one environment that matters.
+
+---
+
+## ADR-27 — Seeding is an authenticated operation, not a startup side effect
+
+**Decision.** `ChargeSeederService.seed(auditor)` is no longer `@PostConstruct`. It is reached only
+through `POST /charges/seed`, restricted to `SUPER_USER`, and every document it writes is stamped
+with the caller and the time. Nothing writes rate cards at boot, in any environment.
+
+**Why.** Proposed by the repository owner while resolving the deployment problem in ADR-26: an
+endpoint is *deliberate*, and a deliberate act has an author. Booting does not.
+
+Two things were wrong with seeding at startup:
+
+1. **A deployment wrote to the database as a side effect of starting.** In production that means a
+   restart — a rollback, a crash loop, an autoscaler — silently reapplies reference data. Idempotence
+   makes that survivable, not correct.
+2. **Nobody could say who seeded, or when.** There is no security context during `@PostConstruct`, so
+   `SecurityAuditorAware` answers `"unknown"`, and a seeded card recorded nothing about its origin.
+
+**A defect found underneath the second one.** Seeded cards carried *no* audit metadata at all — all
+four fields null — while a transaction written through the ordinary path records who created it and
+when. The first diagnosis here was that Spring Data's auditing does not descend into an embedded
+document and that `AuditableEntity` was therefore decorative across the repository. **That was
+wrong**, and the repository owner said so: auditing works, and has been working.
+
+The real cause is narrower and entirely on the seeder's side. Lombok stamps
+`@ConstructorProperties` onto `@AllArgsConstructor`; Jackson honours that as a creator; and a card
+built through it has a **null** `auditMetadata` where one built through the no-arg constructor has an
+empty one. Spring Data's auditing *fills* an `AuditMetadata` — it does not create one. Handed a null,
+it has nothing to write into and silently does nothing.
+
+The fix is one line in the seeder: parse into an instance it constructs itself, with
+`readerForUpdating`, so the field initialiser runs. No audit field is assigned anywhere;
+`@EnableMongoAuditing` and `SecurityAuditorAware` do the work they were already doing for every other
+entity. `ChargesIntegrationTest` asserts a seeded card's `createdBy` is the authenticated caller,
+against a real database.
+
+**Worth generalising.** Any entity in this codebase deserialised from JSON by Jackson has the same
+hole, and it is invisible: the document saves, the write succeeds, and only the audit trail is
+missing.
+
+**Consequences.**
+
+- **A fresh database has no charge data until somebody asks.** That is the intended trade. The
+  runbook gains a first step, and `GET /charge-schedules/drift` reports every shipped card as
+  `absent from the database` until it is run — which is a useful thing for a deployment check to say.
+- **AC-9's guarantee moved but did not weaken.** A malformed shipped card used to stop startup; it now
+  fails the seed call. The build-time guarantee is unchanged and was always the stronger one:
+  `ChargeSeederServiceTest` validates every shipped file against the real classpath, so a bad card
+  fails CI long before any environment sees it.
+- **Integration tests seed explicitly.** `ChargesIntegrationTest` calls the seeder in `@BeforeEach`
+  for the catalogue's sake and then clears the shipped cards, because the validator rejects any rule
+  whose code the catalogue does not carry.
+- **No entity changed.** An earlier attempt added a `stampWrittenBy` method to the three seeded
+  entities and dropped their `@Setter(AccessLevel.NONE)`. Both were reverted: no other entity carries
+  such a method, and none was needed once the actual cause was found. The seeded entities are
+  byte-identical to what they were.

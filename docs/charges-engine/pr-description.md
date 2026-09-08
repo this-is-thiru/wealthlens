@@ -32,7 +32,7 @@ Seven calculators behind one strategy interface; an orchestrator applying aggreg
 
 **AC-6 is now closed.** Two scheme profiles are seeded — one exit load graded by holding period, one expressed as the predicate `#holdingDays < 7`, both priced per FIFO lot. A redemption drawn from lots of different ages charges the young ones alone; averaging over the transaction would be wrong by the entire charge rather than by a rounding error. The AMC card is seeded too, unscoped because the cycle context carries no scrip, quantity or asset type and a card declaring any of those is disqualified by the resolver.
 
-**779 tests** across both tiers. **99% mutation score** (475/476) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
+**801 tests** across both tiers. **99% mutation score** (475/476) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
 
 Four test tiers do more than check examples:
 
@@ -48,10 +48,44 @@ Four test tiers do more than check examples:
 
 ## Known and deliberate
 
-- **Rates are placeholders.** Every card carries `sourceUrl` and a null `verifiedOn`, and a test asserts that state. **AC-2 stays open** until a human compares each figure against the broker's published page; `GET /charge-schedules/unverified` lists exactly those cards. **Scheduled for staging after this merges** (ADR-18), so it does not gate the merge — `docs/charges-engine/staging-runbook.md` is the curl-by-curl procedure.
+- **Seeding does not update a card already on file.** `ChargeSeederService` is idempotent by `scheduleCode`, deliberately, so an operator's edits survive a restart — which also means the AC-2 corrections do not reach a database that already seeded the old cards. Remove the `_2025_04` documents and restart, or publish through the API. Safe now because nothing in the trade path prices anything; it stops being safe when Phase B starts recording.
 - **Depository deduplication is not visible from `/charges/simulate`.** It checks recorded charges, and in Phase A nothing in the trade path records any, so a scoped charge always prices as a first occurrence. The trade path starts recording in Phase B.
 - **The resolver cache is evicted only by the publish path.** A rate card written straight to the repository is invisible to the engine until something evicts it.
 - The old implementation is intact and still live, including `/broker-charges/amc/impose` — which is *not* the same endpoint as the new one, and running both against one period would charge twice. It is deleted in Phase C, not before.
+
+## AC-2 is closed, and finding out how cost more than expected
+
+Rates shipped as marked placeholders (ADR-18) so the engine could be built without waiting on rate research. Verifying them against Zerodha's, Upstox's and Fyers' published pages turned up five defects and two rate changes:
+
+| | |
+|---|---|
+| **Fyers brokerage** | 0.1% against a published 0.3% |
+| **Upstox brokerage** | modelled as `MIN(0.1%, ₹20)`; it is a flat ₹20 with no percentage at all, so every trade below ₹20,000 was **undercharged** |
+| **IPFT** | missing entirely from the Zerodha intraday, Upstox and Fyers cards, and from their GST bases |
+| **Upstox depository fee** | ₹18.50 against ₹20.00 |
+| **NSE transaction charge** | raised 0.00297% → 0.0030699% on **2026-03-01**, inside the shipped cards' window |
+| **Zerodha depository fee** | cut from ₹13.50 to ₹13.00, mid-2026, likewise inside the window |
+
+**Both brokerage errors were invisible at ₹1,00,000**, because a ₹20 cap binds whatever the percentage says — and ₹1,00,000 is the trade size every golden fixture used. A fixture at one trade size tests one trade size. Small-trade fixtures now exist for both.
+
+The two rate changes are the more interesting half: they landed *inside* the cards' validity window, so the correction was not to edit the cards but to publish successors. Eleven cards now ship in three generations, and the same ₹1,00,000 Zerodha sell prices at **₹119.67**, **₹119.79** and **₹119.20** depending on its date. That is ADR-12's temporal model doing the job it was designed for, on its first contact with a real rate change — and replacing every rate touched **JSON only**, which is the extensibility claim demonstrated rather than asserted.
+
+Evidence, with every figure sourced: `docs/charges-engine/ac2-rate-verification.md`.
+
+## Making rate cards deployable (ADR-26)
+
+Raised while reviewing the AC-2 work, and the sharpest question asked of this design: *what happens when this deploys to production?*
+
+The seeder is idempotent by `scheduleCode`, so a card already on file is never overwritten — correct, because an operator's correction must survive a restart, but it means an edited seed file simply never arrives, silently and for ever. Applying the AC-2 corrections needed the documents deleted by hand, which is not a deployment mechanism.
+
+Nothing needs to be. `scheduleCode` carries a generation, so **a rate change is always a new code** and the seeder applies it on the next deploy with no manual step. The mechanism already worked; the missing piece was the rule that keeps it working — *a deployed card is never edited, only superseded* — plus two guards:
+
+- **Drift is reported.** The seeder warns when a card on file differs from its shipped file, and `GET /charge-schedules/drift` lists the differences. It deliberately does not say which side is right: a rate corrected in production and a file nobody deployed look identical and need opposite fixes.
+- **Verification expires.** `findUnverified()` now ages out a `verifiedOn` after 90 days. Without it AC-2 closes once and the worklist stays empty while reality moves — which is exactly what happened between April 2025 and September 2026, under cards that had been signed off.
+
+**Seeding also stopped happening at startup (ADR-27).** `POST /charges/seed`, `SUPER_USER`, is now the only way shipped data enters a database — so no deployment writes rate cards as a side effect of booting, and every seeded document records who asked and when. Building that turned up a defect worth more than the feature: seeded cards carried **no audit metadata at all**, while an ordinary transaction records who wrote it. The cause is not the auditing, which works — it is that Lombok stamps `@ConstructorProperties` on `@AllArgsConstructor`, Jackson honours it as a creator, and the field initialiser never runs, so the entity reaches Spring Data with a null `AuditMetadata` for it to fill. Parsing into a pre-built instance is the entire fix; no audit field is assigned anywhere. **Any entity this application deserialises from JSON has the same silent hole.**
+
+`POST /charges/recompute`, the third piece, is designed in tech-spec §14.4 and belongs with Phase C, where something finally records charges for it to recompute.
 
 ## Review guide
 
