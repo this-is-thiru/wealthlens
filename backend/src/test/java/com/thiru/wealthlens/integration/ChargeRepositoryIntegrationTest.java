@@ -134,17 +134,30 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void findByVerifiedOnIsNull_findsCardsWithUnverifiedRates() {
-        // Given
+    void findByVerifiedOnIsNullOrVerifiedOnBefore_findsUncheckedAndStaleCardsAlike() {
+        // Given — three states the worklist has to tell apart: never checked, checked long ago, and
+        // checked recently. The middle one is why the query grew a horizon: a verifiedOn date that
+        // never expires makes rate verification a one-off, and rates move without asking.
         scheduleRepository.save(schedule("UNVERIFIED", LocalDate.of(2024, 1, 1), null));
-        ChargeScheduleEntity verified = schedule("VERIFIED", LocalDate.of(2024, 1, 1), null);
-        verified.setBrokerName(BrokerName.UPSTOX);
-        verified.setVerifiedOn(LocalDate.of(2024, 1, 1));
-        scheduleRepository.save(verified);
 
-        // When / Then
-        assertThat(scheduleRepository.findByVerifiedOnIsNull())
-                .extracting(ChargeScheduleEntity::getScheduleCode).containsExactly("UNVERIFIED");
+        ChargeScheduleEntity stale = schedule("STALE", LocalDate.of(2024, 1, 1), null);
+        stale.setBrokerName(BrokerName.UPSTOX);
+        stale.setVerifiedOn(LocalDate.now().minusDays(200));
+        scheduleRepository.save(stale);
+
+        ChargeScheduleEntity fresh = schedule("FRESH", LocalDate.of(2024, 1, 1), null);
+        fresh.setBrokerName(BrokerName.FYERS);
+        fresh.setVerifiedOn(LocalDate.now().minusDays(1));
+        scheduleRepository.save(fresh);
+
+        // When
+        List<ChargeScheduleEntity> worklist =
+                scheduleRepository.findByVerifiedOnIsNullOrVerifiedOnBefore(LocalDate.now().minusDays(90));
+
+        // Then
+        assertThat(worklist).extracting(ChargeScheduleEntity::getScheduleCode)
+                .containsExactlyInAnyOrder("UNVERIFIED", "STALE")
+                .doesNotContain("FRESH");
     }
 
     @Test

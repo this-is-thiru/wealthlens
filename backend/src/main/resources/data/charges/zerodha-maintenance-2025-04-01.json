@@ -11,17 +11,42 @@
   "currency": "INR",
   "requiresInstrumentProfile": false,
   "sourceUrl": "https://zerodha.com/charges",
-  "verifiedOn": null,
+  "verifiedOn": "2026-09-08",
   "rules": [
-    { "code": "AMC", "displayName": "Annual maintenance charge", "category": "SUBSCRIPTION",
-      "basis": "FLAT", "side": "BOTH", "events": ["AMC_CYCLE"],
-      "flatAmount": 300.0, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 10,
-      "notes": "PLACEHOLDER — billed per demat account by AmcChargeService's cycle, never by a trade. This card leaves assetType, segment, exchange and planCode unset on purpose: the cycle context carries no scrip, quantity or asset type, so a card declaring any of those dimensions is disqualified by the resolver and the cycle bills nothing." },
-
-    { "code": "GST", "displayName": "Goods and Services Tax", "category": "TAX",
-      "basis": "DERIVED", "side": "BOTH", "events": ["AMC_CYCLE"],
-      "rate": 18.0, "baseCodes": ["AMC"],
-      "rounding": "HALF_UP_2", "taxable": false, "active": true, "order": 100,
-      "notes": "PLACEHOLDER — maintenance is a service, so it is taxable and the base names it explicitly." }
+    {
+      "code": "AMC",
+      "displayName": "Annual maintenance charge",
+      "category": "SUBSCRIPTION",
+      "basis": "FLAT",
+      "side": "BOTH",
+      "events": [
+        "AMC_CYCLE"
+      ],
+      "flatAmount": 300.0,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "Rs 300 per year plus GST for a resident individual demat account, billed by AmcChargeService's cycle rather than by a trade. Zerodha deducts it quarterly as Rs 75 plus GST; this card bills annually, which is the same money on a different rhythm. Not modelled: the first-year waiver for accounts opened on or after 2026-06-01, and the BSDA exemption below Rs 4 lakh of holdings. Verified 2026-09-08 against https://zerodha.com/charges."
+    },
+    {
+      "code": "GST",
+      "displayName": "Goods and Services Tax",
+      "category": "TAX",
+      "basis": "DERIVED",
+      "side": "BOTH",
+      "events": [
+        "AMC_CYCLE"
+      ],
+      "rate": 18.0,
+      "baseCodes": [
+        "AMC"
+      ],
+      "rounding": "HALF_UP_2",
+      "taxable": false,
+      "active": true,
+      "order": 100,
+      "notes": "18%. Maintenance is a service, so it is taxable and the base names it explicitly."
+    }
   ]
 }

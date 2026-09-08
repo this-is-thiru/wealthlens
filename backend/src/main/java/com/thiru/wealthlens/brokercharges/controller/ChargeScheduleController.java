@@ -1,10 +1,14 @@
 package com.thiru.wealthlens.brokercharges.controller;
 
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeScheduleDrift;
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeSeedReport;
 import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.service.ChargeCatalogueService;
 import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
+import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +36,10 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>{@code GET /charge-catalogue} lives here rather than in a controller of its own. It is the
  * registry a rate card's codes are validated against, so it is read by whoever is authoring one.
+ * {@code GET /charge-schedules/drift} is here for the same reason: it answers a question about
+ * these cards, and the answer is only useful next to the list of them. {@code POST /charges/seed}
+ * sits here too, under the other prefix, because it is the operation that creates them —
+ * {@code ChargeAccountController} already carries the same split for the AMC cycle.
  */
 @RequiredArgsConstructor
 @RestController
@@ -39,6 +47,7 @@ public class ChargeScheduleController {
 
     private final ChargeScheduleService chargeScheduleService;
     private final ChargeCatalogueService chargeCatalogueService;
+    private final ChargeSeederService chargeSeederService;
 
     /**
      * Publishes a card, superseding the incumbent for the same scope in the same transaction.
@@ -81,6 +90,45 @@ public class ChargeScheduleController {
     public ChargeScheduleEntity close(@PathVariable String scheduleCode,
                                       @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         return chargeScheduleService.close(scheduleCode, endDate);
+    }
+
+    /**
+     * Applies the shipped catalogue, rate cards and scheme profiles to this database.
+     *
+     * <p>Deliberately an operation rather than a startup side effect. Seeding writes the rate cards
+     * every user is charged against, and doing that automatically on boot meant it happened in
+     * production without anyone asking, without anyone knowing when, and — because there is no
+     * security context during startup — without a single seeded document able to say who wrote it.
+     * Now it is a call somebody makes, and every document it writes carries their name (ADR-27).
+     *
+     * <p>Idempotent. A second run writes nothing and says so, so it is safe to make part of a
+     * deployment checklist rather than something to be careful about.
+     *
+     * @param principal the caller, recorded on every document this run writes
+     */
+    @PreAuthorize("hasRole('SUPER_USER')")
+    @PostMapping("/charges/seed")
+    public ChargeSeedReport seed(Principal principal) {
+        return chargeSeederService.seed(principal.getName());
+    }
+
+    /**
+     * Where the shipped rate cards and the database disagree.
+     *
+     * <p>Seeding is idempotent by {@code scheduleCode}, so a card already on file is never
+     * overwritten by the file that ships beside it. Without this endpoint that divergence is
+     * invisible: the repository says one thing, production charges another, and nothing reports it.
+     *
+     * <p>It does not say which side is right. A rate corrected in production through {@code POST
+     * /charge-schedules} shows here, and so does a card edited in the repository that no deployment
+     * has applied — opposite problems needing opposite fixes, which is why it takes a human.
+     *
+     * <p>Restricted to a super user: it discloses the full pricing of every broker.
+     */
+    @PreAuthorize("hasRole('SUPER_USER')")
+    @GetMapping("/charge-schedules/drift")
+    public List<ChargeScheduleDrift> drift() {
+        return chargeSeederService.findDrift();
     }
 
     @GetMapping("/charge-catalogue")

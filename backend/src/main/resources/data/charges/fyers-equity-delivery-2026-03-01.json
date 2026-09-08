@@ -1,16 +1,16 @@
 {
-  "scheduleCode": "ZERODHA_EQ_INTRADAY_2025_04",
-  "brokerName": "ZERODHA",
+  "scheduleCode": "FYERS_EQ_DELIVERY_2026_03",
+  "brokerName": "FYERS",
   "assetType": "EQUITY",
-  "segment": "INTRADAY",
+  "segment": "DELIVERY",
   "exchange": null,
   "planCode": null,
-  "startDate": "2025-04-01",
-  "endDate": "2026-02-28",
+  "startDate": "2026-03-01",
+  "endDate": null,
   "status": "ACTIVE",
   "currency": "INR",
   "requiresInstrumentProfile": false,
-  "sourceUrl": "https://zerodha.com/charges",
+  "sourceUrl": "https://fyers.in/pricing/",
   "verifiedOn": "2026-09-08",
   "rules": [
     {
@@ -24,14 +24,14 @@
         "BUY",
         "SELL"
       ],
-      "rate": 0.03,
+      "rate": 0.3,
       "flatAmount": 20.0,
       "aggregator": "MIN",
       "rounding": "HALF_UP_2",
       "taxable": true,
       "active": true,
       "order": 10,
-      "notes": "0.03% or Rs 20 per executed order, whichever is lower. Verified 2026-09-08 against https://zerodha.com/charges."
+      "notes": "Rs 20 or 0.3% per executed order, whichever is lower. Verified 2026-09-08 against https://fyers.in/charges-list. Shipped at 0.1% until then, which agreed at 1,00,000 because the cap binds either way and diverged below 20,000. Verified 2026-09-08 against https://fyers.in/charges-list."
     },
     {
       "code": "STT",
@@ -39,16 +39,17 @@
       "category": "STATUTORY",
       "basis": "TURNOVER",
       "amountBasis": "TURNOVER",
-      "side": "SELL",
+      "side": "BOTH",
       "events": [
+        "BUY",
         "SELL"
       ],
-      "rate": 0.025,
+      "rate": 0.1,
       "rounding": "HALF_UP_0",
       "taxable": false,
       "active": true,
       "order": 20,
-      "notes": "0.025% on the sell side only. Statutory; never part of a GST base."
+      "notes": "0.1% on buy and sell. Statutory; taken to the nearest rupee by convention and never part of a GST base."
     },
     {
       "code": "EXCHANGE_TXN",
@@ -61,12 +62,12 @@
         "BUY",
         "SELL"
       ],
-      "rate": 0.00297,
+      "rate": 0.0030699,
       "rounding": "HALF_UP_2",
       "taxable": true,
       "active": true,
       "order": 30,
-      "notes": "NSE cash market transaction charge, 0.00297%, which applied from 2024-10-01 until the revision of 2026-03-01. BSE differs; a card naming an exchange would outrank this one."
+      "notes": "NSE cash market transaction charge, revised to 0.0030699% with effect from 2026-03-01 (NSE circular of 2026-02-27). The preceding card carries 0.00297%, which is what applied from 2024-10-01 until then."
     },
     {
       "code": "SEBI_FEE",
@@ -114,12 +115,29 @@
       "events": [
         "BUY"
       ],
-      "rate": 0.003,
+      "rate": 0.015,
       "rounding": "HALF_UP_0",
       "taxable": false,
       "active": true,
       "order": 60,
-      "notes": "0.003%, or Rs 300 per crore, on the buy side only. Statutory; never part of a GST base."
+      "notes": "0.015%, or Rs 1500 per crore, on the buy side only. Statutory; never part of a GST base."
+    },
+    {
+      "code": "DP",
+      "displayName": "Depository participant charges",
+      "category": "DEPOSITORY",
+      "basis": "SCOPED_FLAT",
+      "side": "SELL",
+      "events": [
+        "SELL"
+      ],
+      "flatAmount": 12.5,
+      "dedupeScope": "PER_SCRIP_PER_DAY",
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 70,
+      "notes": "Rs 12.50 plus GST per scrip per day (Rs 3.50 CDSL, Rs 9.00 Fyers). Verified 2026-09-08. Verified 2026-09-08 against https://fyers.in/charges-list."
     },
     {
       "code": "GST",
@@ -136,7 +154,8 @@
         "BROKERAGE",
         "EXCHANGE_TXN",
         "SEBI_FEE",
-        "IPFT"
+        "IPFT",
+        "DP"
       ],
       "rounding": "HALF_UP_2",
       "taxable": false,

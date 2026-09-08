@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.enums.SlabBandBasis;
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeScheduleDrift;
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeSeedReport;
 import com.thiru.wealthlens.brokercharges.engine.ChargeFormulaEvaluator;
 import com.thiru.wealthlens.brokercharges.engine.ChargeInstrumentResolver;
 import com.thiru.wealthlens.brokercharges.engine.ChargeScheduleResolver;
@@ -24,19 +26,26 @@ import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.testsupport.LogCapture;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
 
 /**
  * The rate cards this application ships with.
@@ -51,6 +60,8 @@ import org.springframework.core.io.support.ResourcePatternResolver;
  * rather than pretending otherwise — see {@code everyCardSaysWhereItsRatesCameFrom}.
  */
 class ChargeSeederServiceTest {
+
+    private static final String AUDITOR = "ops@wealthlens.test";
 
     private ChargeCatalogueRepository chargeCatalogueRepository;
     private ChargeScheduleRepository chargeScheduleRepository;
@@ -75,13 +86,13 @@ class ChargeSeederServiceTest {
         when(chargeCatalogueRepository.findByStatus(EntityStatus.ACTIVE))
                 .thenAnswer(call -> seededCatalogue());
 
-        seeder = seederWith(new PathMatchingResourcePatternResolver());
+        seeder = seederWith(new GenericApplicationContext());
     }
 
     @Test
     void seed_parsesAndAcceptsEveryShippedCard() {
         // Given / When / Then — parsing and validation both happen inside seed()
-        assertThatCode(() -> seeder.seed()).doesNotThrowAnyException();
+        assertThatCode(() -> seeder.seed(AUDITOR)).doesNotThrowAnyException();
         assertThat(seededSchedules()).isNotEmpty();
     }
 
@@ -89,17 +100,22 @@ class ChargeSeederServiceTest {
     void seed_shipsExactlyTheCardsThisApplicationClaimsTo() {
         // Given — every loop-based assertion below is vacuous on an empty list, so what actually
         // got seeded is pinned first
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // When / Then
         assertThat(seededSchedules()).extracting(ChargeScheduleEntity::getScheduleCode)
                 .containsExactlyInAnyOrder(
                         "ZERODHA_EQ_DELIVERY_2025_04",
+                        "ZERODHA_EQ_DELIVERY_2026_03",
+                        "ZERODHA_EQ_DELIVERY_2026_06",
                         "ZERODHA_EQ_INTRADAY_2025_04",
+                        "ZERODHA_EQ_INTRADAY_2026_03",
                         "ZERODHA_MF_2025_04",
                         "ZERODHA_MAINTENANCE_2025_04",
                         "UPSTOX_EQ_DELIVERY_2025_04",
-                        "FYERS_EQ_DELIVERY_2025_04");
+                        "UPSTOX_EQ_DELIVERY_2026_03",
+                        "FYERS_EQ_DELIVERY_2025_04",
+                        "FYERS_EQ_DELIVERY_2026_03");
         assertThat(seededCatalogue()).hasSize(12);
     }
 
@@ -107,7 +123,7 @@ class ChargeSeederServiceTest {
     void seed_writesTheCatalogueBeforeTheCardsThatDependOnIt() {
         // Given — the validator rejects any rule code absent from the catalogue, so seeding a card
         // first would fail against an empty one
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // Then
         assertThat(seededCatalogue()).isNotEmpty();
@@ -117,7 +133,7 @@ class ChargeSeederServiceTest {
     @Test
     void everyRuleCodeIsInTheCatalogue() {
         // Given
-        seeder.seed();
+        seeder.seed(AUDITOR);
         List<String> catalogue = seededCatalogue().stream().map(ChargeCatalogueEntity::getCode).toList();
         assertThat(seededSchedules()).isNotEmpty();
 
@@ -133,7 +149,7 @@ class ChargeSeederServiceTest {
     void noTwoShippedCardsCoverTheSameScopeAtTheSameTime() {
         // Given — two cards a trade cannot choose between is a resolver error at trade time, and
         // this is where it should surface instead
-        seeder.seed();
+        seeder.seed(AUDITOR);
         List<ChargeScheduleEntity> schedules = seededSchedules();
         assertThat(schedules).hasSizeGreaterThan(1);
 
@@ -154,7 +170,7 @@ class ChargeSeederServiceTest {
     void atMostOneShippedCardPerBrokerIsUnscoped() {
         // Given — an unscoped card matches every dimension of every trade, so it is the fallback
         // wherever no specific card exists. Two of them for one broker are indistinguishable.
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // When / Then
         assertThat(seededSchedules()).isNotEmpty();
@@ -173,7 +189,7 @@ class ChargeSeederServiceTest {
         // Given — an annual maintenance cycle names no scrip, no quantity and no asset type, so a
         // card declaring any of those dimensions is disqualified by the resolver and the cycle bills
         // nothing. The card has to be unscoped to be resolvable at all.
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // When
         ChargeScheduleEntity maintenance = seededSchedules().stream()
@@ -193,7 +209,7 @@ class ChargeSeederServiceTest {
         // Given — it is the broker's unscoped card, so it is the fallback for every trade of that
         // broker in an asset type no specific card covers. A rule of its own reaching BUY or SELL
         // would price those trades as maintenance.
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // When
         ChargeScheduleEntity maintenance = seededSchedules().stream()
@@ -207,13 +223,192 @@ class ChargeSeederServiceTest {
                         .containsExactly(ChargeEvent.AMC_CYCLE));
     }
 
+    @Test
+    void seed_handsEveryDocumentToMongoWithSomethingAuditingCanFill() {
+        // Given — Spring Data's auditing populates an AuditMetadata; it does not create one. A card
+        // Jackson built through @AllArgsConstructor carries null there, because Lombok stamps
+        // @ConstructorProperties on it and Jackson honours that as a creator, so the field
+        // initialiser never runs. Seeded cards were saved with no audit metadata at all while every
+        // normally-built entity in this application records who wrote it.
+        //
+        // Who and when is Spring's job and is asserted against a real database in
+        // ChargesIntegrationTest. What this pins is the precondition it needs.
+        seeder.seed(AUDITOR);
+
+        // When / Then
+        assertThat(seededSchedules()).isNotEmpty().allSatisfy(schedule ->
+                assertThat(schedule.getAuditMetadata())
+                        .as("audit metadata of %s", schedule.getScheduleCode()).isNotNull());
+        assertThat(seededProfiles()).isNotEmpty().allSatisfy(profile ->
+                assertThat(profile.getAuditMetadata()).isNotNull());
+        assertThat(seededCatalogue()).isNotEmpty().allSatisfy(entry ->
+                assertThat(entry.getAuditMetadata()).isNotNull());
+    }
+
+    @Test
+    void seed_reportsWhatItWrote() {
+        // Given / When — "run it and see" is not an answer for something that writes the rate cards
+        // every user is charged against
+        ChargeSeedReport report = seeder.seed(AUDITOR);
+
+        // Then
+        assertThat(report.seededBy()).isEqualTo(AUDITOR);
+        assertThat(report.catalogueCreated()).hasSize(12);
+        assertThat(report.schedulesCreated()).hasSize(11);
+        assertThat(report.instrumentsCreated()).containsExactlyInAnyOrder("PARAGPARIKHFLEXICAP", "HDFCLIQUID");
+        assertThat(report.schedulesSkipped()).isEmpty();
+        assertThat(report.wroteNothing()).isFalse();
+    }
+
+    @Test
+    void seed_whenEverythingIsAlreadyOnFile_reportsThatItWroteNothing() {
+        // Given — the second run of a deployment checklist, which must be boring
+        when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(true);
+        when(chargeScheduleRepository.findByScheduleCode(anyString()))
+                .thenAnswer(call -> shipped(call.getArgument(0)));
+        when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
+                .thenReturn(Optional.of(new ChargeInstrumentEntity()));
+
+        // When
+        ChargeSeedReport report = seeder.seed(AUDITOR);
+
+        // Then
+        assertThat(report.wroteNothing()).isTrue();
+        assertThat(report.schedulesSkipped()).hasSize(11);
+        assertThat(report.drift()).isEmpty();
+    }
+
+    // ---------------------------------------------------------------- drift
+
+    @Test
+    void findDrift_whenTheDatabaseMatchesTheShippedFiles_reportsNothing() {
+        // Given — the ordinary state. Every shipped card is on file exactly as shipped.
+        when(chargeScheduleRepository.findByScheduleCode(anyString())).thenAnswer(call ->
+                shipped(call.getArgument(0)));
+
+        // When / Then
+        assertThat(seeder.findDrift()).isEmpty();
+    }
+
+    @Test
+    void findDrift_whenACardOnFileDiffersFromTheShippedFile_namesTheCardAndTheFields() {
+        // Given — the failure this exists for. The seeder is idempotent by scheduleCode, so a card
+        // already on file is skipped however far it has drifted from the file that ships beside it:
+        // silently, for ever, with the repository and the database disagreeing about what every
+        // user is charged. Skipping is right — an operator's correction must survive a restart —
+        // but doing it without saying so is not.
+        when(chargeScheduleRepository.findByScheduleCode(anyString())).thenAnswer(call -> {
+            Optional<ChargeScheduleEntity> onFile = shipped(call.getArgument(0));
+            onFile.ifPresent(card -> {
+                if ("ZERODHA_EQ_DELIVERY_2025_04".equals(card.getScheduleCode())) {
+                    card.getRules().stream()
+                            .filter(rule -> "DP".equals(rule.getCode()))
+                            .forEach(rule -> rule.setFlatAmount(99.0));
+                    card.setVerifiedOn(null);
+                }
+            });
+            return onFile;
+        });
+
+        // When
+        List<ChargeScheduleDrift> drift = seeder.findDrift();
+
+        // Then
+        assertThat(drift).singleElement().satisfies(d -> {
+            assertThat(d.scheduleCode()).isEqualTo("ZERODHA_EQ_DELIVERY_2025_04");
+            assertThat(d.differingFields()).contains("rules", "verifiedOn");
+        });
+    }
+
+    @Test
+    void findDrift_whenAShippedCardIsNotOnFileAtAll_reportsItAsAbsent() {
+        // Given — a card that a deployment has not applied yet, which is a different problem from a
+        // card that was applied and then changed, and needs a different fix
+        when(chargeScheduleRepository.findByScheduleCode(anyString())).thenReturn(Optional.empty());
+
+        // When
+        List<ChargeScheduleDrift> drift = seeder.findDrift();
+
+        // Then
+        assertThat(drift).isNotEmpty().allSatisfy(d ->
+                assertThat(d.differingFields()).containsExactly("absent from the database"));
+    }
+
+    @Test
+    void findDrift_ignoresTheFieldsTheDatabaseOwns() {
+        // Given — a card read back from MongoDB carries audit metadata that no shipped file has:
+        // who wrote it and when. Comparing those would report every single card as drifted, and a
+        // report that is never empty is one nobody reads.
+        //
+        // The id is not enough to prove this. It is @JsonIgnore'd on the entity, so it never reaches
+        // the comparison whatever this method does — which is exactly what mutation testing said
+        // when deleting the exclusion left every test green.
+        when(chargeScheduleRepository.findByScheduleCode(anyString())).thenAnswer(call -> {
+            Optional<ChargeScheduleEntity> onFile = shipped(call.getArgument(0));
+            onFile.ifPresent(card -> {
+                card.setId("mongo-generated-id");
+                stampAuditMetadata(card);
+            });
+            return onFile;
+        });
+
+        // When / Then
+        assertThat(seeder.findDrift()).isEmpty();
+    }
+
+    @Test
+    void seed_whenACardOnFileHasDrifted_warnsRatherThanOverwriting() {
+        // Given — the operator's edit must survive, and must not survive quietly
+        when(chargeScheduleRepository.findByScheduleCode(anyString())).thenAnswer(call -> {
+            Optional<ChargeScheduleEntity> onFile = shipped(call.getArgument(0));
+            onFile.ifPresent(card -> card.setSourceUrl("https://someone-edited-this.test"));
+            return onFile;
+        });
+
+        try (LogCapture logs = LogCapture.on(ChargeSeederService.class)) {
+            // When
+            seeder.seed(AUDITOR);
+
+            // Then
+            verify(chargeScheduleRepository, never()).save(any());
+            assertThat(logs.warnings()).anySatisfy(message ->
+                    assertThat(message).contains("differs from the shipped file"));
+        }
+    }
+
+    /**
+     * What a stored card carries and no seed file does: who wrote it and when.
+     *
+     * <p>A card parsed from a file has none — the field is null on anything Jackson built — which is
+     * precisely why comparing it would report every card in the database as drifted.
+     */
+    private static void stampAuditMetadata(ChargeScheduleEntity card) {
+        card.getAuditMetadata().setCreatedBy("seeder");
+        card.getAuditMetadata().setCreatedAt(LocalDateTime.of(2025, 4, 1, 9, 0));
+        card.getAuditMetadata().setUpdatedAt(LocalDateTime.of(2026, 9, 8, 17, 30));
+    }
+
+    /** The shipped file, parsed fresh, standing in for a database that seeded it earlier. */
+    private Optional<ChargeScheduleEntity> shipped(String scheduleCode) {
+        try {
+            return Arrays.stream(new PathMatchingResourcePatternResolver()
+                            .getResources("classpath*:data/charges/*.json"))
+                    .filter(resource -> !"charge-catalogue.json".equals(resource.getFilename()))
+                    .map(resource -> seeder.read(resource, ChargeScheduleEntity::new))
+                    .filter(card -> card.getScheduleCode().equals(scheduleCode))
+                    .findFirst();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     // ---------------------------------------------------------- instrument profiles
 
     @Test
     void seed_shipsTheInstrumentProfilesTheMutualFundCardRequires() {
         // Given — ZERODHA_MF_2025_04 declares requiresInstrumentProfile, and until a profile is on
         // file every redemption it prices is recorded as NO_INSTRUMENT_PROFILE (AC-6)
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // When / Then
         assertThat(seededProfiles()).extracting(ChargeInstrumentEntity::getStockCode)
@@ -225,7 +420,7 @@ class ChargeSeederServiceTest {
         // Given — exit load is per FIFO lot, not per redemption. A rule that forgets perLot is
         // evaluated once over the whole disposal, which charges lots that no longer attract a load
         // and can be wrong by the entire charge rather than by a rounding error.
-        seeder.seed();
+        seeder.seed(AUDITOR);
         assertThat(seededProfiles()).isNotEmpty();
 
         // When / Then
@@ -247,7 +442,7 @@ class ChargeSeederServiceTest {
     void everyShippedProfileDependsOnTheHoldingPeriod() {
         // Given — an exit load that reads no holding period is levied on every redemption forever,
         // which is the one thing this charge must not do (AC-6)
-        seeder.seed();
+        seeder.seed(AUDITOR);
         assertThat(seededProfiles()).isNotEmpty();
 
         // When / Then — either a predicate over #holdingDays, or bands over it
@@ -270,7 +465,7 @@ class ChargeSeederServiceTest {
     void everyProfileRuleCodeIsInTheCatalogue() {
         // Given — the same rejection the cards get. A profile is validated before it is persisted,
         // so an exit load misspelled in a seed file stops startup rather than pricing redemptions.
-        seeder.seed();
+        seeder.seed(AUDITOR);
         List<String> catalogue = seededCatalogue().stream().map(ChargeCatalogueEntity::getCode).toList();
         assertThat(seededProfiles()).isNotEmpty();
 
@@ -285,7 +480,7 @@ class ChargeSeederServiceTest {
     @Test
     void everyProfileSaysWhereItsLoadCameFromAndAdmitsItIsUnverified() {
         // Given — ADR-18 applies to a scheme's own charges as much as to a broker's
-        seeder.seed();
+        seeder.seed(AUDITOR);
         assertThat(seededProfiles()).isNotEmpty();
 
         // When / Then
@@ -302,7 +497,7 @@ class ChargeSeederServiceTest {
     void noTwoShippedProfilesCoverTheSameSchemeAtTheSameTime() {
         // Given — two profiles in force for one scheme are indistinguishable, and the instrument
         // resolver refuses both by name at redemption time. This is where that should surface.
-        seeder.seed();
+        seeder.seed(AUDITOR);
         List<ChargeInstrumentEntity> profiles = seededProfiles();
 
         // When / Then
@@ -316,11 +511,12 @@ class ChargeSeederServiceTest {
     }
 
     @Test
-    void everyCardSaysWhereItsRatesCameFromAndAdmitsTheyAreUnverified() {
-        // Given — ADR-18. The rates shipped here are placeholders, and pretending otherwise would
-        // make AC-2 look closed. sourceUrl is what makes verifying them possible; a null verifiedOn
-        // is what puts the card in findUnverified() until someone has.
-        seeder.seed();
+    void everyCardSaysWhereItsRatesCameFromAndWhenTheyWereChecked() {
+        // Given — the inverse of what this asserted until AC-2 was closed on 2026-09-08. Every rate
+        // was compared against the broker's published page that day, so sourceUrl says where to look
+        // and verifiedOn says when someone last did. A card that loses either drops back into
+        // findUnverified(), which is the worklist and must not fill up silently.
+        seeder.seed(AUDITOR);
         assertThat(seededSchedules()).isNotEmpty();
 
         // When / Then
@@ -329,7 +525,58 @@ class ChargeSeederServiceTest {
                     .as("sourceUrl of %s", schedule.getScheduleCode())
                     .isNotBlank().startsWith("https://");
             assertThat(schedule.getVerifiedOn())
-                    .as("%s carries placeholder rates until a human checks them", schedule.getScheduleCode())
+                    .as("%s must say when its rates were last checked", schedule.getScheduleCode())
+                    .isNotNull();
+        }
+    }
+
+    @Test
+    void noShippedRuleStillCallsItselfAPlaceholder() {
+        // Given — the notes were the other half of ADR-18's promise. A rule marked PLACEHOLDER on a
+        // card carrying a verifiedOn date is one of the two lying, and the note is the thing a human
+        // reads when deciding whether to trust a figure.
+        seeder.seed(AUDITOR);
+
+        // When / Then
+        for (ChargeScheduleEntity schedule : seededSchedules()) {
+            assertThat(schedule.getRules()).allSatisfy(rule ->
+                    assertThat(rule.getNotes()).as("%s / %s", schedule.getScheduleCode(), rule.getCode())
+                            .doesNotContain("PLACEHOLDER"));
+        }
+    }
+
+    @Test
+    void everyBrokersCardsFormOneUnbrokenTimeline() {
+        // Given — three generations of the Zerodha delivery card now cover three windows. A gap
+        // between them resolves to NO_SCHEDULE and prices trades in it at nothing, which is the
+        // failure this arrangement exists to avoid; an overlap is refused by the resolver instead.
+        seeder.seed(AUDITOR);
+
+        Map<String, List<ChargeScheduleEntity>> byScope = seededSchedules().stream()
+                .collect(Collectors.groupingBy(schedule -> schedule.getBrokerName() + "/"
+                        + schedule.getAssetType() + "/" + schedule.getSegment()));
+
+        // When / Then
+        for (List<ChargeScheduleEntity> generations : byScope.values()) {
+            List<ChargeScheduleEntity> ordered = generations.stream()
+                    .sorted(Comparator.comparing(ChargeScheduleEntity::getStartDate))
+                    .toList();
+
+            for (int i = 0; i < ordered.size() - 1; i++) {
+                ChargeScheduleEntity earlier = ordered.get(i);
+                ChargeScheduleEntity later = ordered.get(i + 1);
+
+                assertThat(earlier.getEndDate())
+                        .as("%s is superseded by %s and must close its window",
+                                earlier.getScheduleCode(), later.getScheduleCode())
+                        .isNotNull();
+                assertThat(earlier.getEndDate().plusDays(1))
+                        .as("%s ends the day before %s begins, with no day priced by neither",
+                                earlier.getScheduleCode(), later.getScheduleCode())
+                        .isEqualTo(later.getStartDate());
+            }
+            assertThat(ordered.getLast().getEndDate())
+                    .as("the current card for %s must stay open-ended", ordered.getLast().getScheduleCode())
                     .isNull();
         }
     }
@@ -338,7 +585,7 @@ class ChargeSeederServiceTest {
     void everyCardDeclaresItsRulesActive() {
         // Given — active defaults to false on the entity, so a rule that forgets the field is
         // silently inert and its charge simply never appears
-        seeder.seed();
+        seeder.seed(AUDITOR);
         assertThat(seededSchedules()).isNotEmpty();
 
         for (ChargeScheduleEntity schedule : seededSchedules()) {
@@ -359,7 +606,7 @@ class ChargeSeederServiceTest {
                 .thenReturn(Optional.of(new ChargeInstrumentEntity()));
 
         // When
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // Then
         verify(chargeScheduleRepository, never()).save(any());
@@ -374,7 +621,7 @@ class ChargeSeederServiceTest {
         when(chargeCatalogueRepository.findByStatus(EntityStatus.ACTIVE)).thenReturn(List.of());
 
         // When / Then — the application must not come up quietly pricing trades from a bad card
-        assertThatThrownBy(() -> seeder.seed())
+        assertThatThrownBy(() -> seeder.seed(AUDITOR))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("charge");
     }
@@ -390,7 +637,7 @@ class ChargeSeederServiceTest {
                 .when(validator).validate(any(ChargeScheduleEntity.class));
 
         // When / Then — and it names the file rather than the rule, because that is what gets opened
-        assertThatThrownBy(() -> seederWith(validator).seed())
+        assertThatThrownBy(() -> seederWith(validator).seed(AUDITOR))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("rate card")
                 .hasMessageContaining(".json");
@@ -406,7 +653,7 @@ class ChargeSeederServiceTest {
                 .when(validator).validate(any(ChargeInstrumentEntity.class));
 
         // When / Then
-        assertThatThrownBy(() -> seederWith(validator).seed())
+        assertThatThrownBy(() -> seederWith(validator).seed(AUDITOR))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("instrument profile")
                 .hasMessageContaining(".json");
@@ -415,7 +662,7 @@ class ChargeSeederServiceTest {
     @Test
     void seed_evictsTheResolverCache() {
         // Given — the resolver may already have answered for a scope during startup
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // Then — both resolvers cache misses as well as hits, so a profile seeded after one has
         // answered is invisible until eviction
@@ -428,7 +675,7 @@ class ChargeSeederServiceTest {
         // Given — the validator loads the catalogue with findByStatus(ACTIVE). An entry that omits
         // its status is invisible to that query, so every card naming its code is rejected — one
         // missing field in one file breaking every rate card in the application.
-        seeder.seed();
+        seeder.seed(AUDITOR);
 
         // When / Then
         assertThat(seededCatalogue()).isNotEmpty().allSatisfy(entry ->
@@ -439,13 +686,13 @@ class ChargeSeederServiceTest {
     @Test
     void seed_whenTheClasspathCannotBeListed_failsFast() {
         // Given — starting with no rate cards at all would price every trade at zero
-        ResourcePatternResolver broken = mock(ResourcePatternResolver.class);
+        ApplicationContext broken = mock(ApplicationContext.class);
         when(broken.getResource(anyString()))
                 .thenReturn(new PathMatchingResourcePatternResolver()
                         .getResource("classpath:data/charges/charge-catalogue.json"));
         assertThatThrownBy(() -> {
             when(broken.getResources(anyString())).thenThrow(new IOException("classpath unreadable"));
-            seederWith(broken).seed();
+            seederWith(broken).seed(AUDITOR);
         }).isInstanceOf(IllegalStateException.class).hasMessageContaining("rate cards");
     }
 
@@ -460,7 +707,7 @@ class ChargeSeederServiceTest {
         };
 
         // When / Then
-        assertThatThrownBy(() -> seeder.read(malformed, ChargeScheduleEntity.class))
+        assertThatThrownBy(() -> seeder.read(malformed, ChargeScheduleEntity::new))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("broken-card.json");
     }
@@ -468,10 +715,10 @@ class ChargeSeederServiceTest {
     private ChargeSeederService seederWith(ChargeScheduleValidator validator) {
         return new ChargeSeederService(chargeCatalogueRepository, chargeScheduleRepository,
                 chargeInstrumentRepository, validator, chargeScheduleResolver, chargeInstrumentResolver,
-                new PathMatchingResourcePatternResolver());
+                new GenericApplicationContext());
     }
 
-    private ChargeSeederService seederWith(ResourcePatternResolver resolver) {
+    private ChargeSeederService seederWith(ApplicationContext resolver) {
         return new ChargeSeederService(chargeCatalogueRepository, chargeScheduleRepository,
                 chargeInstrumentRepository,
                 new ChargeScheduleValidator(chargeCatalogueRepository, new ChargeFormulaEvaluator()),

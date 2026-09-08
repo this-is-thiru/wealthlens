@@ -6,53 +6,159 @@
   "exchange": null,
   "planCode": null,
   "startDate": "2025-04-01",
-  "endDate": null,
+  "endDate": "2026-02-28",
   "status": "ACTIVE",
   "currency": "INR",
   "requiresInstrumentProfile": false,
   "sourceUrl": "https://zerodha.com/charges",
-  "verifiedOn": null,
+  "verifiedOn": "2026-09-08",
   "rules": [
-    { "code": "BROKERAGE", "displayName": "Brokerage", "category": "BROKERAGE",
-      "basis": "FLAT", "side": "BOTH", "events": ["BUY", "SELL"],
-      "flatAmount": 0.0, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 10,
-      "notes": "PLACEHOLDER — delivery brokerage is advertised as nil. Verify before relying on it." },
-
-    { "code": "STT", "displayName": "Securities Transaction Tax", "category": "STATUTORY",
-      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
-      "rate": 0.1, "rounding": "HALF_UP_0", "taxable": false, "active": true, "order": 20,
-      "notes": "PLACEHOLDER — taken to the nearest rupee by convention. Never part of a GST base." },
-
-    { "code": "EXCHANGE_TXN", "displayName": "Exchange transaction charges", "category": "EXCHANGE",
-      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
-      "rate": 0.00297, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 30,
-      "notes": "PLACEHOLDER — NSE rate. BSE differs; a card naming an exchange would outrank this one." },
-
-    { "code": "SEBI_FEE", "displayName": "SEBI turnover fees", "category": "REGULATORY",
-      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
-      "rate": 0.0001, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 40,
-      "notes": "PLACEHOLDER" },
-
-    { "code": "IPFT", "displayName": "Investor Protection Fund Trust", "category": "EXCHANGE",
-      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BOTH", "events": ["BUY", "SELL"],
-      "rate": 0.0001, "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 50,
-      "notes": "PLACEHOLDER" },
-
-    { "code": "STAMP_DUTY", "displayName": "Stamp duty", "category": "STATUTORY",
-      "basis": "TURNOVER", "amountBasis": "TURNOVER", "side": "BUY", "events": ["BUY"],
-      "rate": 0.015, "rounding": "HALF_UP_0", "taxable": false, "active": true, "order": 60,
-      "notes": "PLACEHOLDER — purchases only. Never part of a GST base." },
-
-    { "code": "DP", "displayName": "Depository participant charges", "category": "DEPOSITORY",
-      "basis": "SCOPED_FLAT", "side": "SELL", "events": ["SELL"],
-      "flatAmount": 13.5, "dedupeScope": "PER_SCRIP_PER_DAY",
-      "rounding": "HALF_UP_2", "taxable": true, "active": true, "order": 70,
-      "notes": "PLACEHOLDER — once per scrip per day per demat account, however many sells." },
-
-    { "code": "GST", "displayName": "Goods and Services Tax", "category": "TAX",
-      "basis": "DERIVED", "side": "BOTH", "events": ["BUY", "SELL"],
-      "rate": 18.0, "baseCodes": ["BROKERAGE", "EXCHANGE_TXN", "SEBI_FEE", "IPFT", "DP"],
-      "rounding": "HALF_UP_2", "taxable": false, "active": true, "order": 100,
-      "notes": "PLACEHOLDER — the base is listed explicitly. STT and stamp duty are absent by design (D1)." }
+    {
+      "code": "BROKERAGE",
+      "displayName": "Brokerage",
+      "category": "BROKERAGE",
+      "basis": "FLAT",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "flatAmount": 0.0,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "Nil on delivery. Verified 2026-09-08 against https://zerodha.com/charges."
+    },
+    {
+      "code": "STT",
+      "displayName": "Securities Transaction Tax",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.1,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 20,
+      "notes": "0.1% on buy and sell. Statutory; taken to the nearest rupee by convention and never part of a GST base."
+    },
+    {
+      "code": "EXCHANGE_TXN",
+      "displayName": "Exchange transaction charges",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.00297,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 30,
+      "notes": "NSE cash market transaction charge, 0.00297%, which applied from 2024-10-01 until the revision of 2026-03-01. BSE differs; a card naming an exchange would outrank this one."
+    },
+    {
+      "code": "SEBI_FEE",
+      "displayName": "SEBI turnover fees",
+      "category": "REGULATORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0001,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 40,
+      "notes": "SEBI turnover fee, Rs 10 per crore of traded value."
+    },
+    {
+      "code": "IPFT",
+      "displayName": "Investor Protection Fund Trust",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0001,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 50,
+      "notes": "NSE Investor Protection Fund Trust, Rs 10 per crore of traded value, raised from Rs 0.01 per crore with effect from 2023-04-01. Zerodha's and Fyers' charges pages still print the pre-2023 figure; Upstox's states Rs 0.10 per lakh, which is the same thing. Verified against the revision rather than the pages, by the repository owner's decision of 2026-09-08."
+    },
+    {
+      "code": "STAMP_DUTY",
+      "displayName": "Stamp duty",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BUY",
+      "events": [
+        "BUY"
+      ],
+      "rate": 0.015,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 60,
+      "notes": "0.015%, or Rs 1500 per crore, on the buy side only. Statutory; never part of a GST base."
+    },
+    {
+      "code": "DP",
+      "displayName": "Depository participant charges",
+      "category": "DEPOSITORY",
+      "basis": "SCOPED_FLAT",
+      "side": "SELL",
+      "events": [
+        "SELL"
+      ],
+      "flatAmount": 13.5,
+      "dedupeScope": "PER_SCRIP_PER_DAY",
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 70,
+      "notes": "Rs 13.50 plus GST per scrip per day, once however many sells. Verified 2026-09-08 against https://zerodha.com/charges."
+    },
+    {
+      "code": "GST",
+      "displayName": "Goods and Services Tax",
+      "category": "TAX",
+      "basis": "DERIVED",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 18.0,
+      "baseCodes": [
+        "BROKERAGE",
+        "EXCHANGE_TXN",
+        "SEBI_FEE",
+        "IPFT",
+        "DP"
+      ],
+      "rounding": "HALF_UP_2",
+      "taxable": false,
+      "active": true,
+      "order": 100,
+      "notes": "18% on the taxable services. The base is listed explicitly; securities transaction tax and stamp duty are absent by design (D1)."
+    }
   ]
 }

@@ -46,9 +46,10 @@ public abstract class AbstractIntegrationTest {
             "tax_slab_policies",
             "tax_year_registry",
             "perquisite_policies",
-            // Seeded once per context by ChargeSeederService, which is @PostConstruct: dropped
-            // between tests it would never come back, and every rate card written afterwards would
-            // be rejected for naming codes no longer in the catalogue.
+            // Written by ChargeSeederService, which since ADR-27 runs only when asked. Dropping it
+            // between tests would leave whichever test seeds it carrying the cost for the rest, and
+            // any rate card published afterwards would be rejected for naming codes the catalogue
+            // no longer holds. It is reference data; it survives.
             //
             // charge_schedules is deliberately NOT here. Tests assert over the cards they create,
             // and shipped cards in the same collection would make those assertions depend on which

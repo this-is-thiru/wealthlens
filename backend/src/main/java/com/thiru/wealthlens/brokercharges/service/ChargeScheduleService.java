@@ -38,6 +38,21 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ChargeScheduleService {
 
+    /**
+     * How long a rate verification stays good for.
+     *
+     * <p>A {@code verifiedOn} date that never expires makes verification a one-off. Rates move
+     * without asking: NSE revised the cash transaction charge in March 2026 and Zerodha cut its
+     * depository fee that June, both inside the window of cards that had already been checked and
+     * signed off. Ageing the date is what returns a card to the worklist before somebody discovers
+     * the drift through a customer's contract note.
+     *
+     * <p>A constant rather than a property because nothing in this application injects configuration
+     * by field today, and a constructor parameter would be the only alternative shape. It belongs on
+     * {@code ChargeEngineProperties}, which Chunk 8 introduces for the shadow-recording flag.
+     */
+    private static final int VERIFICATION_MAX_AGE_DAYS = 90;
+
     private final ChargeScheduleRepository chargeScheduleRepository;
     private final ChargeScheduleValidator chargeScheduleValidator;
     private final ChargeScheduleResolver chargeScheduleResolver;
@@ -90,8 +105,15 @@ public class ChargeScheduleService {
     }
 
     /** Cards whose rates no human has checked against the broker's published page. */
+    /**
+     * The worklist: cards nobody has checked, and cards nobody has checked <em>recently</em>.
+     *
+     * <p>The second half is what keeps this from emptying permanently. Verification is a standing
+     * obligation, not an event — see AC-2 and {@code ac2-rate-verification.md}.
+     */
     public List<ChargeScheduleEntity> findUnverified() {
-        return chargeScheduleRepository.findByVerifiedOnIsNull();
+        return chargeScheduleRepository.findByVerifiedOnIsNullOrVerifiedOnBefore(
+                LocalDate.now().minusDays(VERIFICATION_MAX_AGE_DAYS));
     }
 
     private void supersedeIncumbent(ChargeScheduleEntity schedule) {

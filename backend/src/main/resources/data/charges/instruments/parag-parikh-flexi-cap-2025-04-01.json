@@ -21,6 +21,6 @@
         { "fromValue": 365.0, "toValue": null, "rate": 0.0 }
       ],
       "rounding": "HALF_UP_2", "taxable": false, "active": true, "order": 15,
-      "notes": "PLACEHOLDER — graded by holding period, so the bands are what select the rate and the redemption value is what the rate applies to. Priced per FIFO lot: a redemption drawn from lots of different ages attracts the load on the young ones alone, and averaging it over the transaction can be wrong by the entire charge. The band above 365 days is declared at nil rather than left uncovered, because an uncovered band is how the calculator says the card has a gap in it." }
+      "notes": "PLACEHOLDER — graded by holding period, so the bands are what select the rate and the redemption value is what the rate applies to. Priced per FIFO lot: a redemption drawn from lots of different ages attracts the load on the young ones alone, and averaging it over the transaction can be wrong by the entire charge. The band above 365 days is declared at nil rather than left uncovered, because an uncovered band is how the calculator says the card has a gap in it. The visible consequence is that a redemption past the year still lists an exit load, at 0.00, where the liquid fund's predicate form lists nothing at all." }
   ]
 }
