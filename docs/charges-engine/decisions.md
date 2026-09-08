@@ -224,6 +224,8 @@ Superseding sets `endDate = newStartDate.minusDays(1)` and leaves `status` untou
 
 **Consequences.** **AC-2 ("matches a real contract note to ₹0.01") cannot be closed in Phase A** — the one acceptance criterion that stays open. Golden fixtures still do real work: they fail loudly if the arithmetic regresses. Replacing rates later is a JSON change plus one re-verification.
 
+**When it gets done — decided by the repository owner, 2026-09-08.** After this branch merges to `master`, against staging rather than here. AC-2 is therefore **not** a merge blocker, and nobody should hold the branch open waiting on it. The worklist is `GET /charge-schedules/unverified`, which is exactly the endpoint this decision exists to populate; closing an entry means filling `verifiedOn` and confirming `sourceUrl` against the broker's live page, then re-running the golden fixtures to see which trades the corrected rates moved.
+
 ---
 
 ## ADR-19 — Zerodha only, three schedules
