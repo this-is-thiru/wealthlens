@@ -261,6 +261,7 @@ All seven live in `engine/`, not `engine/calculator/` — a flat package, so bot
 - [x] `instruments/parag-parikh-flexi-cap-2025-04-01.json` and `instruments/hdfc-liquid-fund-2025-04-01.json` — **the scheme profiles**, added after the chunk to close AC-6. One graded exit load (`SLAB` banded on `HOLDING_DAYS`, tapering to a declared nil band) and one expressed as a predicate (`#holdingDays < 7`), both `perLot`. Their own directory: the schedule pattern does not descend into it, so a profile can never be parsed as a rate card with every field null
 - [x] `ChargeSeederService.seedInstruments()` — profiles seeded last, since they name catalogue codes and are what the mutual fund card's `requiresInstrumentProfile` refers to. Idempotent by scheme **and start date**, a profile having no code of its own; validated before persisting; `ChargeInstrumentResolver.evictAll()` now called alongside the schedule resolver's
 - [x] `ChargeScheduleValidator.validate(ChargeInstrumentEntity)` — the same window and rule checks against a profile. Validating only the broker's card left exit load, the one charge a rate card cannot express, entirely unchecked
+- [x] `ChargeSimulationRequest.lots` — added so AC-6 is visible from the API and not only from the suite. Without it `ChargeSimulationService` passed an empty lot list and a `perLot` rule evaluated zero times, so `/charges/simulate` answered ₹0 exit load whatever the profile said. A lot set that does not account for its disposal, carries no `acquisitionDate`, or postdates the trade is rejected rather than priced: each of those makes the charge *smaller* rather than making the call fail, which is the failure mode this endpoint must not have
 - [x] `service/ChargeSeederService.java` — `@PostConstruct`, catalogue first, idempotent by code, validates before persisting, **fails fast** on a bad card
 - [x] `ChargeSeederServiceTest` — test-plan Tier G, 14 cases against the real files
 - [x] `ChargeGoldenFileTest` + fixtures — test-plan Tier E, 12 contract notes including the D1 regression fixture, verified non-vacuous
@@ -356,8 +357,8 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 - [x] **All golden contract notes pass at ₹0.01** — 12 fixtures, asserted line by line and in total
 - [x] **`git diff master --stat -- .../portfolio/` is empty** — re-checked at the end of Chunk 9
 - [x] **`WealthLensModulithTest.modulithStructureIsValid()` green**
-- [x] **764 tests green across both tiers** (744 at the end of Chunk 9; +20 from the AMC card and the
-      scheme profiles), surefire XML gate clean, `spotless:check` clean
+- [x] **779 tests green across both tiers** (744 at the end of Chunk 9; +35 from the AMC card, the
+      scheme profiles and simulate's FIFO lots), surefire XML gate clean, `spotless:check` clean
 - [ ] **Discuss results before starting Phase B**
 
 ---

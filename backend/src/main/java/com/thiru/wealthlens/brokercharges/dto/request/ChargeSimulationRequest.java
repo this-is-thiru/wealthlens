@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.brokercharges.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
@@ -8,6 +9,7 @@ import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -68,6 +70,20 @@ public class ChargeSimulationRequest {
     private int lotSize;
 
     private Map<AmountBasis, Double> baseAmounts;
+
+    /**
+     * The FIFO lots this disposal consumed, newest rules aside.
+     *
+     * <p>Optional, and only charges conditioned on how long a holding was held read them — exit
+     * load being the one that exists today. Omitted, a {@code perLot} rule evaluates zero times and
+     * therefore charges nothing, which is the right answer for a purchase and the wrong one for a
+     * redemption whose lots the caller simply did not send. Supplying them is what makes the
+     * holding-period predicate answerable here rather than only in the trade path.
+     *
+     * <p>Their quantities must add up to {@code quantity}: a disposal partly accounted for prices
+     * the shortfall at nothing and returns a confidently small number.
+     */
+    private List<LotSlice> lots;
 
     /** Instrument and user facts a rule's eligibility predicate can read. */
     private Map<String, Object> attributes;

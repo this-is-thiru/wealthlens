@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-08, branch `feature/charges-engine`, **Phase A complete** (Chunks 1–7 and 9), with the two seed-data items Chunk 6 left open now closed. Full suite green: 764 tests, unit and integration.
+**Last verified against the repository:** 2026-09-08, branch `feature/charges-engine`, **Phase A complete** (Chunks 1–7 and 9), with the two seed-data items Chunk 6 left open now closed. Full suite green: 779 tests, unit and integration.
 
 ---
 
@@ -90,9 +90,11 @@ Both quality gates now cover `brokercharges.service` as well as the engine — t
 
 **Two scheme profiles**, in `resources/data/charges/instruments/` — a graded exit load banded on `HOLDING_DAYS`, and one expressed as the predicate `#holdingDays < 7`, both `perLot`. This is what closes AC-6. They live in their own directory because the schedule pattern does not descend into it, so a profile can never be read as a rate card with every field null.
 
+`ChargeSimulationRequest` gained `lots`, so `POST /charges/simulate` can price a redemption per FIFO lot — without it a `perLot` rule evaluated zero times and exit load answered ₹0 through the API however the profile was written. A lot set that does not describe its disposal is rejected rather than priced: every way of getting it wrong makes the charge smaller rather than making the call fail.
+
 `ChargeSeederService` gained `seedInstruments()` (last, after the catalogue and the cards; idempotent by scheme **and start date**, a profile having no code of its own) and now evicts `ChargeInstrumentResolver` alongside the schedule resolver's cache. `ChargeScheduleValidator` gained `validate(ChargeInstrumentEntity)`: the same window and rule checks, because validating only the broker's card left exit load — the one charge a rate card cannot express — entirely unchecked.
 
-Tests: `ChargeSeederServiceTest` 14 → 24, `ChargeScheduleValidatorTest` 31 → 35, four new golden fixtures, two new cases in `ChargesIntegrationTest`.
+Tests: `ChargeSeederServiceTest` 14 → 24, `ChargeScheduleValidatorTest` 31 → 35, `ChargeSimulationServiceTest` 14 → 27, four new golden fixtures, four new cases in `ChargesIntegrationTest`.
 
 ### Written by Chunk 7
 
@@ -292,15 +294,15 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 | **Performance under load** | Resolver cache is asserted for correctness, not latency |
 | **A rate card written outside `ChargeScheduleService` is invisible** | The resolver caches by scope and date and only `publish` and `close` evict. Writing straight to `ChargeScheduleRepository` leaves the previously resolved card in memory. Found by a Chunk 9 test that did exactly that |
 | **A scheme profile written outside the seeder is invisible too** | Same eviction rule, and `ChargeInstrumentResolver` has no publishing service in front of it at all. Only `ChargeSeederService` calls its `evictAll()`. A profile added at runtime needs one before the next redemption of that scheme |
+| **Depository deduplication is not visible from simulate** | It checks *recorded* charges, and in Phase A nothing in the trade path records any, so a scoped charge always prices as a first occurrence unless the account already carries a row from the AMC cycle |
 | **Only two schemes have profiles** | Every other mutual fund resolves to `NO_INSTRUMENT_PROFILE` and accrues no exit load. That is the designed behaviour — recorded, never fatal (ADR-24) — but it means the shipped data prices two funds and gaps the rest |
-| **Exit load cannot be exercised through the API** | `ChargeSimulationRequest` carries no FIFO lots, so `ChargeSimulationService` passes an empty list and a `perLot` rule evaluates zero times. `POST /charges/simulate` therefore returns ₹0 exit load however the profile is written. The charge is asserted by the golden fixtures and `ChargesIntegrationTest`, both of which reach the engine directly; the live caller that supplies lots is Phase B. Adding `lots` to the request would close the gap and is the one change that would make AC-6 demonstrable in staging |
 | **Scheme profiles have no publishing endpoint** | They are seeded at startup, and `ChargeInstrumentResolver.evictAll()` is called by nothing else. A profile added at runtime needs a restart — rate cards have `ChargeScheduleService` in front of them, profiles have nothing |
 
 ---
 
 ## 11. Resume point — Phase A complete
 
-**Paused:** 2026-09-08. Build green: **764 tests** across both tiers, `spotless:check` clean, both JaCoCo gates passing, and **99% mutation score** (475/476) across the engine and the new services, the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant.
+**Paused:** 2026-09-08. Build green: **779 tests** across both tiers, `spotless:check` clean, both JaCoCo gates passing, and **99% mutation score** (475/476) across the engine and the new services, the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant.
 
 ### The Phase A gate, item by item
 

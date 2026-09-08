@@ -295,6 +295,51 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
     // ------------------------------------------------------------------ Tier I — API
 
     @Test
+    void simulateEndpoint_withFifoLots_chargesExitLoadOnTheLotsInsideTheWindow() {
+        // Given — AC-6 over HTTP, which is the only way a human can see it. The scheme's exit load
+        // is priced per lot, so the request has to be able to say which lots the redemption drew on.
+        scheduleRepository.save(mutualFundCard());
+        instrumentRepository.save(gradedExitLoadProfile());
+        long before = userChargeRepository.count();
+
+        // When — ₹1,00,000 redeemed from 600 units held sixteen months and 400 held three
+        ResponseEntity<String> response = post("/charges/simulate", token(EMAIL), Map.of(
+                "brokerName", "ZERODHA", "assetType", "MUTUAL_FUND", "event", "SELL",
+                "stockCode", "PARAGPARIKHFLEXICAP", "price", 100, "quantity", 1000,
+                "transactionDate", "2025-06-02",
+                "lots", List.of(
+                        Map.of("quantity", 600, "acquisitionDate", "2024-02-01", "price", 100),
+                        Map.of("quantity", 400, "acquisitionDate", "2025-03-01", "price", 100))));
+
+        // Then — 1% of the younger lot's ₹40,000 and nothing on the older one. Before lots were
+        // accepted here this endpoint answered ₹0 however the profile was written.
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getBody()).contains("\"EXIT_LOAD\"").contains("400.0");
+        assertThat(userChargeRepository.count()).isEqualTo(before);
+    }
+
+    @Test
+    void simulateEndpoint_whenTheLotsDoNotAddUpToTheTrade_isRejected() {
+        // Given — a redemption of 1,000 units with 900 accounted for. Priced as sent, the shortfall
+        // costs nothing and the caller gets a smaller number rather than an error.
+        scheduleRepository.save(mutualFundCard());
+        instrumentRepository.save(gradedExitLoadProfile());
+
+        // When
+        ResponseEntity<String> response = post("/charges/simulate", token(EMAIL), Map.of(
+                "brokerName", "ZERODHA", "assetType", "MUTUAL_FUND", "event", "SELL",
+                "stockCode", "PARAGPARIKHFLEXICAP", "price", 100, "quantity", 1000,
+                "transactionDate", "2025-06-02",
+                "lots", List.of(
+                        Map.of("quantity", 500, "acquisitionDate", "2024-02-01", "price", 100),
+                        Map.of("quantity", 400, "acquisitionDate", "2025-03-01", "price", 100))));
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response.getBody()).contains("900").contains("1000");
+    }
+
+    @Test
     void simulateEndpoint_returnsTheBreakdownAndPersistsNothing() {
         // Given
         long before = userChargeRepository.count();

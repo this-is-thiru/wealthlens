@@ -2,11 +2,13 @@ package com.thiru.wealthlens.brokercharges.service;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
+import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.request.ChargeSimulationRequest;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBreakdownResponse;
 import com.thiru.wealthlens.brokercharges.engine.ChargeEngine;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import java.math.BigDecimal;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -29,11 +31,26 @@ import org.springframework.stereotype.Service;
  * <p>Missing input is rejected rather than defaulted. The one that matters is the transaction date:
  * it selects the rate card, so quietly substituting today would price a trade from two years ago
  * against this year's rates and return a confident wrong number.
+ *
+ * <p>The same reasoning governs the FIFO lots. They are optional — a purchase consumes none, and
+ * only holding-period charges read them — but a set that does not describe the disposal is rejected
+ * rather than priced, because every way of getting them wrong makes the charge smaller rather than
+ * making the request fail.
  */
 @Log4j2
 @Service
 @RequiredArgsConstructor
 public class ChargeSimulationService {
+
+    /**
+     * A single unit's worth of rounding, at the precision fund units are quoted to.
+     *
+     * <p>A {@code BigDecimal} rather than a {@code double} for the same reason the engine's
+     * arithmetic is: {@code 1e-4} is not exactly representable in binary, so a comparison against it
+     * has a boundary no input can land on — untestable, and quietly asymmetric about which side a
+     * given pair of quantities falls.
+     */
+    private static final BigDecimal LOT_QUANTITY_TOLERANCE = new BigDecimal("0.0001");
 
     private final ChargeEngine chargeEngine;
 
@@ -62,6 +79,47 @@ public class ChargeSimulationService {
                         + "would price a backfilled trade against today's rates");
         require(request.getQuantity() > 0, "quantity must be greater than zero");
         require(request.getPrice() >= 0, "price must not be negative");
+        validateLots(request);
+    }
+
+    /**
+     * Lots are optional; supplied, they have to describe the disposal they claim to.
+     *
+     * <p>Every check here exists because the engine's failure mode is silence. A lot with no
+     * acquisition date, one acquired after the disposal, or a set that does not add up all produce
+     * a smaller charge rather than an error — and a smaller charge from an endpoint whose whole
+     * purpose is answering "what will this cost?" is worse than no answer.
+     */
+    private static void validateLots(ChargeSimulationRequest request) {
+        List<LotSlice> lots = request.getLots();
+        if (lots == null || lots.isEmpty()) {
+            return;
+        }
+
+        BigDecimal accounted = BigDecimal.ZERO;
+        for (LotSlice lot : lots) {
+            require(lot != null, "a lot must not be null");
+            require(lot.acquisitionDate() != null,
+                    "every lot needs an acquisitionDate: it is what a holding-period charge is measured from");
+            require(!lot.acquisitionDate().isAfter(request.getTransactionDate()),
+                    "a lot acquired on " + lot.acquisitionDate() + " cannot be disposed of on "
+                            + request.getTransactionDate());
+            require(lot.quantity() > 0, "every lot needs a quantity greater than zero");
+            require(lot.price() >= 0, "a lot price must not be negative");
+            accounted = accounted.add(BigDecimal.valueOf(lot.quantity()));
+        }
+
+        // Fractional units are the norm for the asset class exit load belongs to, so this compares
+        // within a unit's rounding rather than exactly.
+        BigDecimal declared = BigDecimal.valueOf(request.getQuantity());
+        require(accounted.subtract(declared).abs().compareTo(LOT_QUANTITY_TOLERANCE) <= 0,
+                "the lots supplied account for " + trim(accounted) + " units but the trade disposes of "
+                        + trim(declared) + "; the difference would be priced at nothing");
+    }
+
+    /** Renders a quantity the way the caller wrote it, so the message can be matched to the input. */
+    private static String trim(BigDecimal quantity) {
+        return quantity.stripTrailingZeros().toPlainString();
     }
 
     private static void require(boolean condition, String message) {
@@ -91,7 +149,7 @@ public class ChargeSimulationService {
                 request.getPrice(),
                 lotSize,
                 baseAmounts(request, lotSize),
-                List.of(),
+                request.getLots() == null ? List.of() : List.copyOf(request.getLots()),
                 request.getAttributes() == null ? new HashMap<>() : new HashMap<>(request.getAttributes()));
     }
 

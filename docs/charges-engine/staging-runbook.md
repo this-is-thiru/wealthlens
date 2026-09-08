@@ -226,18 +226,57 @@ curl -sS -X POST "$BASE/charges/simulate" \
 Expect `resolution: NO_INSTRUMENT_PROFILE`, `instrumentId: null`, total `0.0`. Only two schemes have
 profiles; every other fund lands here by design (ADR-24) rather than being blocked.
 
-### ⚠️ What `/charges/simulate` cannot show you
+### 4.8 Exit load — a redemption drawn from two lots of different ages
 
-**Exit load will always come back ₹0 from this endpoint.** `ChargeSimulationRequest` carries no FIFO
-lots, so `ChargeSimulationService` passes an empty lot list, and a `perLot` rule evaluates zero
-times. The charge is real — the golden fixtures and `ChargesIntegrationTest` price it through the
-engine — but the API has no way to hand it the lots it needs.
+This is AC-6 over HTTP. Exit load is priced **per FIFO lot**, so the request has to say which lots
+the redemption drew on; without `lots` a `perLot` rule evaluates zero times and answers ₹0 however
+the profile is written.
 
-The same limitation hides depository-charge deduplication: simulate checks recorded charges, and in
-Phase A nothing in the trade path records any, so DP is always priced as a first occurrence.
+```bash
+curl -sS -X POST "$BASE/charges/simulate" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{
+        "brokerName": "ZERODHA", "assetType": "MUTUAL_FUND",
+        "event": "SELL", "stockCode": "PARAGPARIKHFLEXICAP",
+        "price": 100, "quantity": 1000, "transactionDate": "2025-06-02",
+        "lots": [
+          { "quantity": 600, "acquisitionDate": "2024-02-01", "price": 100 },
+          { "quantity": 400, "acquisitionDate": "2025-03-01", "price": 100 }
+        ]
+      }' | jq '.data | {resolution, amountByCode, totalCharges}'
+```
 
-Both are Phase A's shape, not defects. Adding `lots` to the simulate request would make exit load
-demonstrable here — worth doing if you want AC-6 visible in staging rather than only in the suite.
+Expect `EXIT_LOAD 400.00, STT 1.00` — **total ₹401.00**. That is 1% of the *younger* lot's ₹40,000.
+The 600 units held sixteen months attract nothing, and averaging the load over the whole redemption
+would have charged ₹1,000.
+
+Move the second lot's `acquisitionDate` back beyond a year and the exit load disappears entirely,
+leaving `STT 1.00`. That is the predicate, visible.
+
+### 4.9 A lot set that does not describe its disposal is refused
+
+```bash
+curl -sS -X POST "$BASE/charges/simulate" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{
+        "brokerName": "ZERODHA", "assetType": "MUTUAL_FUND",
+        "event": "SELL", "stockCode": "PARAGPARIKHFLEXICAP",
+        "price": 100, "quantity": 1000, "transactionDate": "2025-06-02",
+        "lots": [ { "quantity": 900, "acquisitionDate": "2025-03-01", "price": 100 } ]
+      }' -o /dev/null -w '%{http_code}\n'
+```
+
+Expect **400**. Priced as sent, the unaccounted 100 units would cost nothing and you would get a
+smaller exit load rather than an error — which is the one failure an endpoint answering "what will
+this cost?" must not produce. A lot acquired after the trade, or one with no `acquisitionDate`, is
+refused for the same reason.
+
+### ⚠️ What `/charges/simulate` still cannot show you
+
+**Depository-charge deduplication.** Simulate checks *recorded* charges, and in Phase A nothing in
+the trade path records any, so DP always prices as a first occurrence unless the account already
+carries a row from the AMC cycle. That is Phase A's shape, not a defect — the trade path starts
+recording in Phase B.
 
 ---
 
