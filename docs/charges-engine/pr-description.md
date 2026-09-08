@@ -28,11 +28,11 @@ Writing the integration tier found two more, both of the kind no unit test can s
 
 Seven calculators behind one strategy interface; an orchestrator applying aggregator → floor/cap → rounding once per line, in that order and never inside a calculator; two resolvers with specificity ranking and caching; a write-time validator; seven services; twelve catalogue codes, six seeded rate cards and two seeded scheme profiles; a code-keyed reporting model; four controllers and eleven documented requests in `api-collection/`.
 
-`POST /charges/simulate` is the one worth calling out. It prices a trade and records nothing — structurally, not by promise: the service holds the engine and no repository, and a test reads the class's own fields and fails if that stops being true. It makes the whole engine exercisable without a portfolio to mutate.
+`POST /charges/simulate` is the one worth calling out. It prices a trade and records nothing — structurally, not by promise: the service holds the engine and no repository, and a test reads the class's own fields and fails if that stops being true. It makes the whole engine exercisable without a portfolio to mutate, FIFO lots included, so a holding-period charge can be seen from the API rather than only from the suite.
 
 **AC-6 is now closed.** Two scheme profiles are seeded — one exit load graded by holding period, one expressed as the predicate `#holdingDays < 7`, both priced per FIFO lot. A redemption drawn from lots of different ages charges the young ones alone; averaging over the transaction would be wrong by the entire charge rather than by a rounding error. The AMC card is seeded too, unscoped because the cycle context carries no scrip, quantity or asset type and a card declaring any of those is disqualified by the resolver.
 
-**764 tests** across both tiers. **99% mutation score** (475/476) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
+**779 tests** across both tiers. **99% mutation score** (475/476) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
 
 Four test tiers do more than check examples:
 
@@ -49,7 +49,7 @@ Four test tiers do more than check examples:
 ## Known and deliberate
 
 - **Rates are placeholders.** Every card carries `sourceUrl` and a null `verifiedOn`, and a test asserts that state. **AC-2 stays open** until a human compares each figure against the broker's published page; `GET /charge-schedules/unverified` lists exactly those cards. **Scheduled for staging after this merges** (ADR-18), so it does not gate the merge — `docs/charges-engine/staging-runbook.md` is the curl-by-curl procedure.
-- **Exit load cannot be exercised through the API.** `ChargeSimulationRequest` carries no FIFO lots, so a `perLot` rule evaluates zero times and `/charges/simulate` returns ₹0 exit load however the profile is written. The charge itself is asserted by the golden fixtures and the integration tier, both of which reach the engine directly; the caller that supplies lots is Phase B.
+- **Depository deduplication is not visible from `/charges/simulate`.** It checks recorded charges, and in Phase A nothing in the trade path records any, so a scoped charge always prices as a first occurrence. The trade path starts recording in Phase B.
 - **The resolver cache is evicted only by the publish path.** A rate card written straight to the repository is invisible to the engine until something evicts it.
 - The old implementation is intact and still live, including `/broker-charges/amc/impose` — which is *not* the same endpoint as the new one, and running both against one period would charge twice. It is deleted in Phase C, not before.
 

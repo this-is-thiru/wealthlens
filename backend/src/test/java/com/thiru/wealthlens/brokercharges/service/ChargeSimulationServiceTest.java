@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
+import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeCategory;
@@ -148,6 +149,191 @@ class ChargeSimulationServiceTest {
         // Then
         assertThat(capturedContext().attributes()).isNotNull().isEmpty();
         assertThat(capturedContext().lots()).isNotNull().isEmpty();
+    }
+
+    // ------------------------------------------------------- FIFO lots (AC-6 through the API)
+
+    @Test
+    void simulate_whenLotsAreSupplied_passesThemToTheEngine() {
+        // Given — a charge conditioned on holding period is answered per lot, and the engine can
+        // only do that if the caller can say which lots the disposal consumed. Without them a
+        // perLot rule evaluates zero times and exit load silently prices at nothing.
+        when(chargeEngine.compute(any())).thenReturn(computation());
+        ChargeSimulationRequest request = sellRequest();
+        request.setPrice(100);
+        request.setQuantity(1000);
+        request.setLots(List.of(
+                new LotSlice(600, LocalDate.of(2024, 2, 1), 100),
+                new LotSlice(400, LocalDate.of(2025, 3, 1), 100)));
+
+        // When
+        chargeSimulationService.simulate(request);
+
+        // Then
+        assertThat(capturedContext().lots()).hasSize(2);
+        assertThat(capturedContext().lots().getFirst().holdingDays(request.getTransactionDate()))
+                .isEqualTo(487);
+    }
+
+    @Test
+    void simulate_whenLotQuantitiesDoNotSumToTheTrade_isRejected() {
+        // Given — 1,000 units disposed of but only 900 accounted for. Priced as given, the shortfall
+        // is charged nothing and the answer looks like a smaller exit load rather than a bad
+        // request, which is the failure this endpoint exists to avoid producing confidently.
+        ChargeSimulationRequest request = sellRequest();
+        request.setQuantity(1000);
+        request.setLots(List.of(
+                new LotSlice(500, LocalDate.of(2024, 2, 1), 100),
+                new LotSlice(400, LocalDate.of(2025, 3, 1), 100)));
+
+        // When / Then
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("900")
+                .hasMessageContaining("1000");
+    }
+
+    @Test
+    void simulate_whenLotQuantitiesSumToExactlyTheTolerance_isAccepted() {
+        // Given — the boundary itself. Mutual fund units are quoted to four decimals, so a holding
+        // reassembled from its parts can miss by exactly one unit of that precision; rejecting it
+        // would make the endpoint unusable for the very asset class exit load belongs to.
+        when(chargeEngine.compute(any())).thenReturn(computation());
+        ChargeSimulationRequest request = sellRequest();
+        request.setQuantity(100);
+        request.setLots(List.of(
+                new LotSlice(50.0, LocalDate.of(2025, 1, 1), 100),
+                new LotSlice(50.0001, LocalDate.of(2025, 2, 1), 100)));
+
+        // When / Then — inclusive, and asserted as such because it is a boundary a card's author
+        // will sit on rather than near
+        assertThat(chargeSimulationService.simulate(request)).isNotNull();
+    }
+
+    @Test
+    void simulate_whenLotQuantitiesMissByMoreThanTheTolerance_isRejected() {
+        // Given — twice the tolerance is a real discrepancy, not rounding
+        ChargeSimulationRequest request = sellRequest();
+        request.setQuantity(100);
+        request.setLots(List.of(
+                new LotSlice(50.0, LocalDate.of(2025, 1, 1), 100),
+                new LotSlice(50.0002, LocalDate.of(2025, 2, 1), 100)));
+
+        // When / Then
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("100.0002");
+    }
+
+    @Test
+    void simulate_whenALotIsNull_isRejected() {
+        // Given — a JSON array with a hole in it deserialises to exactly this
+        ChargeSimulationRequest request = sellRequest();
+        request.setLots(java.util.Collections.singletonList(null));
+
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("must not be null");
+    }
+
+    @Test
+    void simulate_whenALotHasNoQuantity_isRejected() {
+        // Given — a zero-unit lot contributes nothing to the sum check either, so without this the
+        // request is rejected for a reason that does not name the actual mistake
+        ChargeSimulationRequest request = sellRequest();
+        request.setLots(List.of(new LotSlice(0, LocalDate.of(2025, 1, 1), 100)));
+
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("quantity greater than zero");
+    }
+
+    @Test
+    void simulate_whenALotPriceIsZero_isAccepted() {
+        // Given — the same boundary the trade itself has. Bonus units are allotted free, so a lot
+        // acquired at nothing is real input rather than a missing field; it simply contributes no
+        // turnover of its own. Mutation testing asked for this one: >= 0 mutated to > 0 and every
+        // other test still passed.
+        when(chargeEngine.compute(any())).thenReturn(computation());
+        ChargeSimulationRequest request = sellRequest();
+        request.setLots(List.of(new LotSlice(100, LocalDate.of(2025, 1, 1), 0)));
+
+        // When / Then
+        assertThat(chargeSimulationService.simulate(request)).isNotNull();
+        assertThat(capturedContext().lots()).hasSize(1);
+    }
+
+    @Test
+    void simulate_whenALotPriceIsNegative_isRejected() {
+        // Given — the lot's own price sets its turnover, so a negative one produces a negative
+        // charge: money back on a redemption
+        ChargeSimulationRequest request = sellRequest();
+        request.setLots(List.of(new LotSlice(100, LocalDate.of(2025, 1, 1), -1)));
+
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("price must not be negative");
+    }
+
+    @Test
+    void simulate_whenALotWasAcquiredAfterTheTrade_isRejected() {
+        // Given — a negative holding period. A band of [0, 365) does not cover it, so the charge
+        // quietly disappears instead of the impossible input being reported.
+        ChargeSimulationRequest request = sellRequest();
+        request.setLots(List.of(new LotSlice(100, request.getTransactionDate().plusDays(1), 100)));
+
+        // When / Then
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("acquired");
+    }
+
+    @Test
+    void simulate_whenALotHasNoAcquisitionDate_isRejected() {
+        // Given — the one field the whole per-lot mechanism reads
+        ChargeSimulationRequest request = sellRequest();
+        request.setLots(List.of(new LotSlice(100, null, 100)));
+
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("acquisitionDate");
+    }
+
+    @Test
+    void simulate_whenTheLotsDoNotAddUpAndTheQuantitiesAreFractional_saysSoInTheCallersUnits() {
+        // Given — fund units are fractional, and a message that rounded them to whole numbers would
+        // report "100 units against 100" for a genuine shortfall
+        ChargeSimulationRequest request = sellRequest();
+        request.setQuantity(100.5);
+        request.setLots(List.of(new LotSlice(99.25, LocalDate.of(2025, 1, 1), 100)));
+
+        // When / Then
+        assertThatThrownBy(() -> chargeSimulationService.simulate(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("99.25")
+                .hasMessageContaining("100.5");
+    }
+
+    @Test
+    void simulate_whenTheRequestIsNull_isRejected() {
+        // Given / When / Then — the guard existed and nothing exercised it; the branch gate found
+        // that when the lot checks were added beside it
+        assertThatThrownBy(() -> chargeSimulationService.simulate(null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("must be supplied");
+    }
+
+    @Test
+    void simulate_whenNoLotsAreSupplied_stillPrices() {
+        // Given — lots are optional. A purchase consumes none, and most charges do not read them.
+        when(chargeEngine.compute(any())).thenReturn(computation(line("STT", 100.00)));
+
+        // When
+        ChargeBreakdownResponse response = chargeSimulationService.simulate(sellRequest());
+
+        // Then
+        assertMoney(100.00, response.getTotalCharges());
+        assertThat(capturedContext().lots()).isEmpty();
     }
 
     @Test
