@@ -36,6 +36,8 @@ import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
+import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
@@ -695,6 +697,91 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
     }
 
+
+    // ------------------------------------------------------------ Phase B — backfill
+
+    /**
+     * The two halves together: backfill gives the reconciliation report its data, and the entered
+     * figures it compares against are the ones already on the user's transactions.
+     */
+    @Test
+    void backfillEndpoint_pricesExistingTransactionsAndFeedsTheReconciliationReport() {
+        // Given — a history with no computed charges at all, which is what a real database looks
+        // like the moment before shadow recording is switched on
+        transactionRepository.save(trade("t-buy", TransactionType.BUY, 100, 1000.00, TRADE_DATE, 90.00));
+        transactionRepository.save(trade("t-sell", TransactionType.SELL, 100, 1200.00, TRADE_DATE.plusMonths(3), 150.00));
+        assertThat(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).isEmpty();
+
+        // When
+        ResponseEntity<String> backfill = post("/charges/backfill/user/" + EMAIL, adminToken(), null);
+
+        // Then
+        assertThat(backfill.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
+        assertThat(backfill.getBody()).contains("\"priced\":2");
+        assertThat(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).hasSize(2);
+
+        // And the report now has something to compare
+        ResponseEntity<String> reconciliation =
+                get("/user-charges/user/" + EMAIL + "/reconciliation", token(EMAIL));
+        assertThat(reconciliation.getBody())
+                .contains("\"comparableCount\":2")
+                .contains("\"transactionsWithoutComputation\":0")
+                .contains("t-buy")
+                .contains("t-sell");
+    }
+
+    /**
+     * A row is keyed on {email, transactionId} and replaced, so a second pass reprices rather than
+     * duplicating. That matters more than it sounds: an operator who is unsure whether the first run
+     * finished must be able to just run it again.
+     */
+    @Test
+    void backfillEndpoint_isSafeToRunTwice() {
+        // Given
+        transactionRepository.save(trade("t-buy", TransactionType.BUY, 100, 1000.00, TRADE_DATE, 90.00));
+
+        // When
+        post("/charges/backfill/user/" + EMAIL, adminToken(), null);
+        post("/charges/backfill/user/" + EMAIL, adminToken(), null);
+
+        // Then
+        assertThat(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).hasSize(1);
+    }
+
+    @Test
+    void backfillEndpoint_leavesATransactionThatWasNeverProcessedAlone() {
+        // Given
+        TransactionEntity temporary = trade("t-temp", TransactionType.BUY, 100, 1000.00, TRADE_DATE, 90.00);
+        temporary.setStatus(TransactionStatus.TEMPORARY);
+        transactionRepository.save(temporary);
+
+        // When
+        ResponseEntity<String> response = post("/charges/backfill/user/" + EMAIL, adminToken(), null);
+
+        // Then
+        assertThat(response.getBody()).contains("\"priced\":0").contains("\"skipped\":1");
+        assertThat(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).isEmpty();
+    }
+
+    /** It reprices somebody's whole history and writes a row per trade. Not an ordinary user's call. */
+    @Test
+    void backfillEndpoint_refusesAnOrdinaryUser() {
+        // When
+        ResponseEntity<String> response = post("/charges/backfill/user/" + EMAIL, token(EMAIL), null);
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void backfillEndpoint_refusesAnUnauthenticatedRequest() {
+        // When
+        ResponseEntity<String> response = post("/charges/backfill/user/" + EMAIL, null, null);
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    }
+
     // ------------------------------------------------------------------- harness
 
     private String token(String email) {
@@ -942,6 +1029,25 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         transaction.setAccountHolder(HOLDER);
         transaction.setTransactionDate(TRADE_DATE);
         transaction.setBrokerCharges(enteredCharges);
+        return transaction;
+    }
+
+    private static TransactionEntity trade(String id, TransactionType type, double quantity,
+                                           double price, LocalDate date, double enteredCharges) {
+        TransactionEntity transaction = new TransactionEntity();
+        transaction.setId(id);
+        transaction.setEmail(EMAIL);
+        transaction.setStockCode("INFY");
+        transaction.setExchangeName("NSE");
+        transaction.setBrokerName(BrokerName.ZERODHA);
+        transaction.setAccountHolder(HOLDER);
+        transaction.setAssetType(AssetType.EQUITY);
+        transaction.setTransactionType(type);
+        transaction.setQuantity(quantity);
+        transaction.setPrice(price);
+        transaction.setTransactionDate(date);
+        transaction.setBrokerCharges(enteredCharges);
+        transaction.setStatus(TransactionStatus.PROCESSED);
         return transaction;
     }
 

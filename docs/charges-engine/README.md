@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`, **Phase A complete and Phase B built** (Chunks 1–9). Full suite green: 836 tests, unit and integration, both JaCoCo gates passing, 99% mutation score (538/539).
+**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`, **Phase A complete and Phase B built** (Chunks 1–9). Full suite green: 854 tests, unit and integration, both JaCoCo gates passing, 99% mutation score (572/573).
 
 ---
 
@@ -137,6 +137,26 @@ Tests: `ChargeRecordingGatewayImplTest` (15), `ChargeReconciliationServiceTest` 
 asset-type dimension at all, so removing it as the checklist originally said would have priced mutual
 funds as equity and written that into the P&L. And only the **V2** flow is instrumented, the V1
 `addTransaction` path being unused and kept for version history.
+
+### Written after Chunk 8 — the backfill
+
+`service/ChargeBackfillService` and `POST /charges/backfill/user/{email}` (`SUPER_USER`). It prices a
+user's existing transactions and records one `user_charges` row each — nothing else is touched, and a
+row is keyed on `{email, transactionId}` and replaced, so a re-run reprices rather than duplicates.
+
+**The FIFO reconstruction is the part that is not a loop over a repository.** A `TransactionEntity`
+for a sell does not record the lots it consumed: the live path is handed them by `PortfolioService`'s
+walk over open holdings, and that walk is destructive, so by the time a backfill runs the holdings
+are gone or changed. Replaying the buys in date order, per scrip *and* broker *and* account holder,
+is the only way to recover them. Without lots a `perLot` rule evaluates zero times, so a fund
+redeemed inside its exit-load window would be backfilled as free — and it would read as the engine
+disagreeing with the user rather than as missing input. `sellsWithNoLotsFound` on the report is how
+far that reconstruction got, and it caps how much the exit-load figures can be trusted.
+
+Tests: `ChargeBackfillServiceTest` (16) and five integration cases. Two of the unit tests exist
+because mutation testing found the FIFO walk's edges unguarded — a sell consuming a lot *exactly*
+must remove it rather than leave a zero-quantity husk for the next sell to draw from, and a sell
+exceeding what is open must take the remainder rather than the amount asked for.
 
 ### Written by Chunk 7
 
@@ -372,11 +392,20 @@ and its answer is recorded as a baseline in §5b.5b. Shadow rows were written fo
 a number: entered ₹0.00 because the old implementation skips non-equity, computed ₹2.00 because the
 engine does not.
 
-**One box remains, and it needs data rather than a decision:** read
-`GET /user-charges/user/{email}/reconciliation` against **genuine user transactions** and explain the
-deltas. The entered figures in the baseline were typed by hand, so the equity deltas there are not
-evidence about the engine. That comparison is the entire reason the phase exists (PRD OD-8), and
-Phase C must not start until it is understood.
+**A blocker surfaced while preparing to do that, and is now fixed.** Turning the flag on does
+*nothing* for a database that already has transactions: shadow recording only fires on trades
+flowing through the live path afterwards, so every historical trade has no computed charge and the
+reconciliation report comes back with `rows: []`. Driving fresh trades does not help either — their
+entered figures are ones a tester invented. The only route to a real delta is to price the
+**existing** history, every row of which already carries a figure a user typed.
+
+`POST /charges/backfill/user/{email}` (`SUPER_USER`) is that route, added after the Chunk 8 commit.
+It is also where `UserChargeService.computeAndRecordBatch` finally gets a caller — it had been built
+in Chunk 5 and called by nothing since.
+
+**One box remains, and it needs data rather than a decision:** start the application against a
+populated environment, backfill, then read the report and explain the deltas. That comparison is the
+entire reason the phase exists (PRD OD-8), and Phase C must not start until it is understood.
 
 Watch `unresolvedCount` and `transactionsWithoutComputation` first. The first says the seed data has
 gaps for the asset types being traded; the second says shadow recording is not reaching those trades
