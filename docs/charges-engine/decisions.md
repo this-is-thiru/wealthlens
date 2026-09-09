@@ -492,3 +492,67 @@ single path:
   either (`updateProfitAndLoss` dispatches to `handleNormalSellCase` only when `actionType == null`).
   Recording a charge for an event the P&L ignores would put a row in the reconciliation report with
   nothing to reconcile it against.
+
+---
+
+## ADR-29 — An instrument master is the single source of truth, and charge profiles key off it
+
+**Status:** decided by the repository owner, 2026-09-09. **Scheduled for Milestone 2** — not built,
+and not part of Phase C.
+
+**Decision.** One registry holds every instrument the application recognises — equities and mutual
+fund schemes alike. Upload validates against it: a transaction naming an instrument the registry does
+not carry is rejected rather than stored. `ChargeInstrumentEntity` then keys on the registry's
+canonical code instead of a free-text `stockCode`.
+
+**What prompted it.** The Phase B backfill against real data
+(`phase-b-reconciliation-findings.md` §5). 43 mutual-fund buys across 8 schemes resolved
+`NO_INSTRUMENT_PROFILE`, and the reason was not that the profiles were missing — it was that they
+could never have matched. Real holdings carry `stockCode` values like
+
+```
+EDELWEISS NIFTY SMALLCAP 250 INDEX FUND - DIRECT PLAN
+```
+
+— the full scheme name as the user's broker statement spells it — while the shipped profiles are
+keyed on short codes such as `HDFCLIQUID`. `ChargeInstrumentEntity` is keyed on `stockCode`
+(README §8.14), so the two can only meet if whoever writes a profile happens to reproduce the exact
+string the portfolio stored, punctuation and spacing included.
+
+That is a convention holding two subsystems together, and conventions of that kind fail silently
+here: the redemption is priced, the exit load is simply absent, and the result is a smaller charge
+rather than an error. It is the same failure shape as ADR-24's missing profile, reached by a route no
+validation can see — because the profile *is* present and *is* valid, it just describes a scheme
+nobody can name the same way twice.
+
+**Why a registry rather than normalising the string.** Case-folding, trimming and punctuation-
+stripping would close most of the gap and leave the interesting part open: two brokers spell the same
+scheme differently, a scheme is renamed, a direct plan and a regular plan differ by one word. Every
+normalisation rule is a guess about which differences are meaningful. A registry moves the question
+to where it can be answered once, by a human, and then enforced.
+
+**Why rejecting the upload is the right severity.** It contradicts ADR-24, which says a missing
+instrument profile is recorded and never fatal — and the distinction is worth being precise about.
+ADR-24 governs *charges*: an instrument the engine cannot fully price still produces a transaction,
+because a portfolio is more than its charges. ADR-29 governs *identity*: an instrument the
+application cannot name is one it cannot hold a position in, aggregate, or report on. A charge gap
+degrades one number. An identity gap corrupts the holding.
+
+**Consequences.**
+
+- **The mismatch becomes impossible by construction.** `AssetEntity`, `TransactionEntity` and
+  `ChargeInstrumentEntity` all carry the same canonical code because nothing else can be stored, so a
+  profile either resolves or names an instrument that does not exist — which is a startable error
+  rather than a silent zero.
+- **Exit load becomes reachable for real funds.** Today only two schemes have profiles and neither is
+  one anybody holds. A registry makes "write a profile for this scheme" a task somebody can do
+  correctly.
+- **`ChargeInstrumentEntity.isin` stops being speculative.** It is stored and unused today
+  (README §8.14); the registry is what gives it something to join to.
+- **Rejection needs a route back.** A user whose upload is refused because a scheme is unknown must
+  be able to get that scheme added, or the validation becomes a wall. Whether that is an admin
+  endpoint, a seeded catalogue refreshed from an external source, or self-service is a Milestone 2
+  design question, not settled here.
+- **Existing data will not satisfy it.** All 319 transactions on `it-staging` predate the registry, so
+  a migration has to map what is already stored onto canonical codes — with the 8 unmatched schemes
+  above as the known worklist.

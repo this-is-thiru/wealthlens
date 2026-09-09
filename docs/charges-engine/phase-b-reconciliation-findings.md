@@ -107,7 +107,7 @@ the replacement has been shown to get it right on documents nobody wrote for a t
 
 ## 5. Gaps found in the shipped data
 
-**227 trades have no rate card (71% of the history).** Every card starts 2025-04-01, and this user's
+**227 trades have no rate card (71% of the history).** *Scheduled as M2-2.* Every card starts 2025-04-01, and this user's
 history starts 2023-06-22. They are recorded as `NO_SCHEDULE` and are visible in the gaps report
 rather than silently priced at zero — which is the designed behaviour — but backfilling a portfolio's
 real history means most of it cannot be priced at all. **Closing this needs 2023 and 2024 generations
@@ -122,6 +122,12 @@ exit load is a redemption charge. The exposure is latent, not realised.
 name. The shipped profiles are keyed on short codes. `ChargeInstrumentEntity` is keyed on
 `stockCode` (README §8.14), so a profile must use the exact string the portfolio stores, not a tidy
 code, or it will never resolve.
+
+> **Resolved by decision, 2026-09-09 — ADR-29, scheduled M2-1.** An instrument master becomes the
+> single source of truth for every recognised equity and scheme; upload rejects a transaction naming
+> an instrument it does not carry, and charge profiles key off the canonical code. That makes this
+> mismatch impossible by construction rather than something each profile author has to get right.
+> The 8 schemes above are the migration's known worklist.
 
 **No account holder.** All 319 rows have `accountHolder: null`. Deduplication keys include it
 (ADR-25, D10), so it is consistent here — but the D10 defect it was written for cannot occur on this
