@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.portfolio.service;
-
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
+import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
@@ -67,6 +68,8 @@ public class PortfolioService {
     private final TransactionRepository transactionRepository;
 //    private final UserBrokerChargeService userBrokerChargeService;
     private final TemporaryTransactionService temporaryTransactionService;
+    private final ChargeRecordingGateway chargeRecordingGateway;
+    private final ChargeEngineProperties chargeEngineProperties;
 
     /**
      * Multi-document write: creates a TransactionEntity and, for BUY/SELL, also
@@ -314,6 +317,11 @@ public class PortfolioService {
         portfolioRepository.save(assetEntity);
     }
 
+    /**
+     * The V2 buy. Deliberately no longer shares {@link #updateBrokerChargesAndProfitAndLoss} with
+     * V1 {@code buyStock}: the charge is computed <b>before</b> the lot is written so the computed
+     * total can become the cost basis, and V1 is unused and left exactly as it was.
+     */
     public void buyStockV2(UserMail userMail, String transactionId, AssetRequest assetRequest) {
 
         String email = userMail.getEmail();
@@ -322,11 +330,43 @@ public class PortfolioService {
         double totalValueOfTransaction = getTotalValue(assetRequest);
 //        assetEntity.setTotalValue(totalValueOfTransaction);
 
-        // Update the broker charges entry
-        updateBrokerChargesAndProfitAndLoss(userMail, transactionId, assetRequest);
+        // Priced before the lot is written. The other order works right up until the computed total
+        // becomes the cost basis, at which point the saved lot carries the figure the user typed.
+        var profitLossContext = buyContext(transactionId, assetRequest);
+        Optional<ChargeComputation> computation = chargeRecordingGateway.record(userMail, profitLossContext);
+        applyComputedCostBasis(assetEntity, computation);
+
+        // Handed on rather than recomputed, so the engine runs once per trade.
+        profitAndLossService.updateProfitAndLoss(userMail, profitLossContext, computation);
 
         assetEntity.getBuyTransactionIds().add(transactionId);
         portfolioRepository.save(assetEntity);
+    }
+
+    /**
+     * Replaces the user-entered charge with the engine's, once {@code app.charges.authoritative} is
+     * on (AC-10).
+     *
+     * <p>An absent computation leaves the entered figure alone rather than zeroing it. The engine
+     * declines for reasons that say nothing about whether the trade cost anything — no rate card for
+     * the period, the kill switch, a scheme with no profile — and overwriting a real cost with zero
+     * because we could not price it would be worse than keeping an estimate.
+     *
+     * <p>{@code brokerCharges} stays on {@code AssetRequest} deliberately: existing clients keep
+     * sending it and keep working, it simply stops being read. Removing it is a later release.
+     */
+    private void applyComputedCostBasis(AssetEntity assetEntity, Optional<ChargeComputation> computation) {
+        if (!chargeEngineProperties.authoritative() || computation.isEmpty()) {
+            return;
+        }
+        assetEntity.setBrokerCharges(computation.get().total());
+    }
+
+    private static ProfitLossContext buyContext(String transactionId, AssetRequest assetRequest) {
+        return new ProfitLossContext(transactionId, assetRequest.getQuantity(), assetRequest.getTransactionDate(),
+                assetRequest.getPrice(), assetRequest.getStockCode(), assetRequest.getBrokerName(),
+                assetRequest.getExchangeName(), assetRequest.getAssetType(), TransactionType.BUY, null,
+                assetRequest.getAccountType(), assetRequest.getAccountHolder(), Collections.emptyList());
     }
 
     public void sellStockV2(UserMail userMail, String transactionId, AssetRequest assetRequest) {

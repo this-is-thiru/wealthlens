@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
+import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
 import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
 import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
@@ -49,6 +50,13 @@ public class ProfitAndLossService {
 
     private static final int MARCH = 3;
     private static final int DAY_31 = 31;
+
+    /**
+     * Set only for the duration of one {@code updateProfitAndLoss} call that was handed a
+     * computation. A field rather than a parameter threaded through four private methods, and safe
+     * because the call is synchronous, single-threaded and clears it in a finally block.
+     */
+    private Optional<ChargeComputation> precomputedCharge;
 
     private final ProfitAndLossRepository profitAndLossRepository;
     private final UserBrokerChargeService userBrokerChargeService;
@@ -307,6 +315,33 @@ public class ProfitAndLossService {
      * @param profitLossContext the purchase/sell context used to compute realized profit; must not be null
      */
     public void updateProfitAndLoss(UserMail userMail, ProfitLossContext profitLossContext) {
+        updateProfitAndLoss(userMail, profitLossContext, null);
+    }
+
+    /**
+     * The variant for a caller that has already priced the trade.
+     *
+     * <p>{@code PortfolioService.buyStockV2} computes the charge itself, because cost basis is set
+     * from it and that has to happen before the lot is written (Chunk 10a). It then hands the result
+     * here so the engine runs <b>once</b> per trade rather than once for cost basis and again for
+     * the shadow record.
+     *
+     * @param precomputed the computation the caller already obtained, or {@code null} to price the
+     *                    trade here as before. {@code Optional.empty()} is distinct from
+     *                    {@code null}: it means the caller asked and the engine declined, so asking
+     *                    again would only repeat the decline
+     */
+    public void updateProfitAndLoss(UserMail userMail, ProfitLossContext profitLossContext,
+                                    Optional<ChargeComputation> precomputed) {
+        this.precomputedCharge = precomputed;
+        try {
+            dispatch(userMail, profitLossContext);
+        } finally {
+            this.precomputedCharge = null;
+        }
+    }
+
+    private void dispatch(UserMail userMail, ProfitLossContext profitLossContext) {
         TransactionType transactionType = profitLossContext.transactionType();
         CorporateActionType actionType = profitLossContext.actionType();
 
@@ -335,7 +370,7 @@ public class ProfitAndLossService {
         // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
         // engine has that dimension, so every asset type reaches it (FR-8). The return value is
         // ignored -- nothing here may touch cost basis until Phase C.
-        chargeRecordingGateway.record(userMail, profitLossContext);
+        recordCharge(userMail, profitLossContext);
 
         // calculate and update the broker charges
         if (profitLossContext.assetType() == AssetType.EQUITY) {
@@ -370,7 +405,7 @@ public class ProfitAndLossService {
         // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
         // engine has that dimension, so every asset type reaches it (FR-8). The return value is
         // ignored -- nothing here may touch cost basis until Phase C.
-        chargeRecordingGateway.record(userMail, profitLossContext);
+        recordCharge(userMail, profitLossContext);
 
         // calculate and update the broker charges
         if (profitLossContext.assetType() == AssetType.EQUITY) {
@@ -566,5 +601,12 @@ public class ProfitAndLossService {
 
     private record InternalContext(double purchaseAmount, double sellAmount,
                                    LocalDate sellDate, boolean isShortTermHeld) {
+    }
+
+    /** Uses what the caller already computed, or prices the trade if nobody has. */
+    private void recordCharge(UserMail userMail, ProfitLossContext profitLossContext) {
+        if (precomputedCharge == null) {
+            chargeRecordingGateway.record(userMail, profitLossContext);
+        }
     }
 }
