@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
@@ -23,10 +24,10 @@ import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import java.time.LocalDate;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -57,8 +58,13 @@ class ChargeBackfillServiceTest {
     @Mock
     private UserChargeService userChargeService;
 
-    @InjectMocks
     private ChargeBackfillService chargeBackfillService;
+
+    @BeforeEach
+    void setUp() {
+        chargeBackfillService = new ChargeBackfillService(
+                transactionRepository, userChargeService, new ChargeEngineProperties(true, false, false));
+    }
 
     private static TransactionEntity txn(String id, TransactionType type, String stockCode,
                                          double quantity, double price, LocalDate date) {
@@ -430,5 +436,19 @@ class ChargeBackfillServiceTest {
         // Then
         assertThat(report.skipped()).isEqualTo(1);
         verifyNoInteractions(userChargeService);
+    }
+
+    /** It writes a row per trade across a whole history. A disabled engine must not be doing that. */
+    @Test
+    void backfill_whenTheEngineIsDisabled_refusesWithoutReadingAnything() {
+        // Given
+        ChargeBackfillService disabled = new ChargeBackfillService(
+                transactionRepository, userChargeService, new ChargeEngineProperties(false, false, false));
+
+        // When / Then
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> disabled.backfill(EMAIL))
+                .isInstanceOf(com.thiru.wealthlens.shared.exception.ServiceUnavailableException.class)
+                .hasMessageContaining("charges engine is disabled");
+        verifyNoInteractions(userChargeService, transactionRepository);
     }
 }

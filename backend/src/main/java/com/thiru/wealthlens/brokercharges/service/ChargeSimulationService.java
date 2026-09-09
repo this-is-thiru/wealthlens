@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.brokercharges.service;
 
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
@@ -53,8 +54,13 @@ public class ChargeSimulationService {
     private static final BigDecimal LOT_QUANTITY_TOLERANCE = new BigDecimal("0.0001");
 
     private final ChargeEngine chargeEngine;
+    private final ChargeEngineProperties chargeEngineProperties;
 
     public ChargeBreakdownResponse simulate(ChargeSimulationRequest request) {
+        // A dry run writes nothing, but if the engine is switched off it is because its numbers are
+        // not trusted, and "what will this cost?" answered with an untrusted number is worse than
+        // not answered at all.
+        ChargeEngineSwitch.requireEnabled(chargeEngineProperties);
         validate(request);
 
         ChargeContext context = toContext(request);

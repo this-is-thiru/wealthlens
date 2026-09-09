@@ -64,7 +64,10 @@ public class ChargeRecordingGatewayImpl implements ChargeRecordingGateway {
 
     @Override
     public Optional<ChargeComputation> record(UserMail userMail, ProfitLossContext profitLossContext) {
-        if (!chargeEngineProperties.shadowRecording()) {
+        // The master switch outranks the phase flag, so switching the engine off does not also
+        // require finding and clearing shadow-recording. Unlike every other entry point this one
+        // refuses silently rather than throwing: it sits in the trade path, and the trade must save.
+        if (!chargeEngineProperties.engineEnabled() || !chargeEngineProperties.shadowRecording()) {
             return Optional.empty();
         }
         if (userMail == null || profitLossContext == null) {

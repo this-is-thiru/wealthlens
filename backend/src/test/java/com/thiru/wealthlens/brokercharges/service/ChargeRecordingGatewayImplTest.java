@@ -55,8 +55,12 @@ class ChargeRecordingGatewayImplTest {
     private UserChargeService userChargeService;
 
     private ChargeRecordingGatewayImpl gateway(boolean shadowRecording) {
+        return gateway(true, shadowRecording);
+    }
+
+    private ChargeRecordingGatewayImpl gateway(boolean engineEnabled, boolean shadowRecording) {
         return new ChargeRecordingGatewayImpl(
-                new ChargeEngineProperties(true, shadowRecording, false), userChargeService);
+                new ChargeEngineProperties(engineEnabled, shadowRecording, false), userChargeService);
     }
 
     private static UserMail userMail() {
@@ -330,5 +334,24 @@ class ChargeRecordingGatewayImplTest {
 
         // Then
         assertThat(recordedContext().lots()).isEmpty();
+    }
+
+    /**
+     * The kill switch outranks the phase flag. An operator switching the engine off mid-incident
+     * should not have to find and clear every other flag as well — and this is the one caller that
+     * must refuse silently rather than throw, because it sits in the trade path and a trade must
+     * still save.
+     */
+    @Test
+    void record_whenTheEngineIsDisabled_recordsNothingEvenThoughShadowRecordingIsOn() {
+        // Given
+        ChargeRecordingGatewayImpl gateway = gateway(false, true);
+
+        // When
+        Optional<ChargeComputation> result = gateway.record(userMail(), buy(AssetType.EQUITY));
+
+        // Then
+        assertThat(result).isEmpty();
+        verifyNoInteractions(userChargeService);
     }
 }
