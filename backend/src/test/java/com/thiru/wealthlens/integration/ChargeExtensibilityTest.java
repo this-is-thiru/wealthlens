@@ -15,6 +15,7 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.entity.model.ChargeSummaryReport;
 import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
+import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
@@ -55,11 +56,32 @@ class ChargeExtensibilityTest extends AbstractIntegrationTest {
     private ChargeScheduleService chargeScheduleService;
 
     @Autowired
+    private ChargeSeederService chargeSeederService;
+
+    @Autowired
     private UserChargeService userChargeService;
 
+    /**
+     * Seeds the shipped catalogue before adding the synthetic code, because the cards published here
+     * also carry real ones — {@code GST} among them — and the validator rejects a rule naming a code
+     * the catalogue does not hold.
+     *
+     * <p>This class used to rely on some earlier class having seeded, since {@code charge_catalogue}
+     * is whitelisted to survive {@code cleanDatabase()}. That worked only for as long as a seeding
+     * class happened to run first: seeding stopped being automatic at ADR-27, so nothing guarantees
+     * it. Adding two integration classes in Chunk 10 changed the order and the dependency surfaced in
+     * CI as {@code rule GST is not in the charge catalogue}. Seeding is idempotent by code, so doing
+     * it here costs nothing and makes the class self-sufficient.
+     */
     @BeforeEach
     void clearRateCardsAndRegisterTheSyntheticCode() {
+        chargeSeederService.seed("extensibility-test");
+
+        // The shipped cards go: this class asserts over the ones it publishes, and leaving eleven
+        // more in the collection would make those assertions depend on which card resolved first.
         mongoTemplate.getCollection("charge_schedules").deleteMany(new Document());
+        mongoTemplate.getCollection("charge_instruments").deleteMany(new Document());
+
         mongoTemplate.getCollection("charge_catalogue").insertOne(new Document()
                 .append("code", SYNTHETIC_CODE)
                 .append("display_name", "Synthetic levy")
