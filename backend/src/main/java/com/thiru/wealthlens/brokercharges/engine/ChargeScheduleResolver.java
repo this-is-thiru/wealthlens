@@ -1,11 +1,11 @@
 package com.thiru.wealthlens.brokercharges.engine;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
-import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
 import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import java.time.LocalDate;
 import java.util.Comparator;

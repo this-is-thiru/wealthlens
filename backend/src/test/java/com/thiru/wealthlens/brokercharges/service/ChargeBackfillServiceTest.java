@@ -12,11 +12,11 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
-import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBackfillReport;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -450,5 +450,35 @@ class ChargeBackfillServiceTest {
                 .isInstanceOf(com.thiru.wealthlens.shared.exception.ServiceUnavailableException.class)
                 .hasMessageContaining("charges engine is disabled");
         verifyNoInteractions(userChargeService, transactionRepository);
+    }
+
+    @Test
+    void backfill_carriesTheSegmentTheTransactionRecorded() {
+        // Given
+        TransactionEntity intraday = txn("t1", TransactionType.BUY, "RELIANCE", 100, 1000, LocalDate.of(2025, 6, 10));
+        intraday.setSegment(TradeSegment.INTRADAY);
+        when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of(intraday));
+        when(userChargeService.computeAndRecordBatch(any())).thenReturn(List.of(computed(1)));
+
+        // When
+        chargeBackfillService.backfill(EMAIL);
+
+        // Then
+        assertThat(pricedContexts().getFirst().segment()).isEqualTo(TradeSegment.INTRADAY);
+    }
+
+    /** Everything recorded before Chunk 10b has no segment, and all of it was delivery. */
+    @Test
+    void backfill_whenTheTransactionRecordedNoSegment_pricesItAsDelivery() {
+        // Given
+        when(transactionRepository.findByEmail(EMAIL)).thenReturn(List.of(
+                txn("t1", TransactionType.BUY, "RELIANCE", 100, 1000, LocalDate.of(2025, 6, 10))));
+        when(userChargeService.computeAndRecordBatch(any())).thenReturn(List.of(computed(1)));
+
+        // When
+        chargeBackfillService.backfill(EMAIL);
+
+        // Then
+        assertThat(pricedContexts().getFirst().segment()).isEqualTo(TradeSegment.DELIVERY);
     }
 }

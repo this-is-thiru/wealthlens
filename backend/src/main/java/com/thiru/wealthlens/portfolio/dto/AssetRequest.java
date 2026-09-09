@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -40,6 +41,20 @@ public class AssetRequest implements AssetEntityProtoType, TransactionEntityProt
     private AccountType accountType = AccountType.SELF;
     private String accountHolder;
     private String orderId;
+
+    /**
+     * Delivery unless the client says otherwise. A rate card differs sharply by segment even for the
+     * same scrip — intraday attracts STT on the sell side only and at a quarter the rate, and no
+     * depository charge — so a trade priced in the wrong segment is wrong by more than a rounding.
+     */
+    private TradeSegment segment = TradeSegment.DELIVERY;
+
+    /**
+     * @deprecated the charges engine computes this. Still accepted and still stored so existing
+     *     clients keep working, but once {@code app.charges.authoritative} is on it is no longer
+     *     read: the computed total becomes the cost basis (AC-10). Removed in a later release.
+     */
+    @Deprecated(since = "Chunk 10a")
     private double brokerCharges;
     private double miscCharges;
     private String comment;
