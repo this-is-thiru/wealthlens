@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.brokercharges.service;
 
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
@@ -40,6 +41,7 @@ public class AmcChargeService {
 
     private final ChargeAccountRepository chargeAccountRepository;
     private final UserChargeService userChargeService;
+    private final ChargeEngineProperties chargeEngineProperties;
 
     /**
      * Bills every account of the given frequency not yet covered through the given date.
@@ -47,6 +49,9 @@ public class AmcChargeService {
      * @return the accounts actually billed
      */
     public List<ChargeAccountEntity> runCycle(AmcChargeFrequency frequency, LocalDate billedThrough) {
+        // This one bills real money against real accounts.
+        ChargeEngineSwitch.requireEnabled(chargeEngineProperties);
+
         List<ChargeAccountEntity> billed = new ArrayList<>();
 
         for (ChargeAccountEntity account : chargeAccountRepository.findDueForAmc(frequency, billedThrough)) {

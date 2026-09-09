@@ -7,8 +7,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmcChargeFrequency;
@@ -26,10 +28,10 @@ import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -57,8 +59,12 @@ class AmcChargeServiceTest {
     @Mock
     private UserChargeService userChargeService;
 
-    @InjectMocks
     private AmcChargeService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new AmcChargeService(chargeAccountRepository, userChargeService, new ChargeEngineProperties(true, false, false));
+    }
 
     @Test
     void runCycle_billsEveryAccountThatIsDue() {
@@ -283,5 +289,20 @@ class AmcChargeServiceTest {
         account.setBillingEvents(new ArrayList<>());
         account.setStatus(EntityStatus.ACTIVE);
         return account;
+    }
+
+    /** The AMC cycle bills real money against real accounts. A disabled engine must not run one. */
+    @Test
+    void runCycle_whenTheEngineIsDisabled_refusesWithoutBillingAnything() {
+        // Given
+        AmcChargeService disabled = new AmcChargeService(
+                chargeAccountRepository, userChargeService, new ChargeEngineProperties(false, false, false));
+
+        // When / Then
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> disabled.runCycle(AmcChargeFrequency.ANNUALLY, BILLED_THROUGH))
+                .isInstanceOf(com.thiru.wealthlens.shared.exception.ServiceUnavailableException.class)
+                .hasMessageContaining("charges engine is disabled");
+        verifyNoInteractions(userChargeService, chargeAccountRepository);
     }
 }

@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.brokercharges.service;
 
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
@@ -78,8 +79,12 @@ public class ChargeBackfillService {
 
     private final TransactionRepository transactionRepository;
     private final UserChargeService userChargeService;
+    private final ChargeEngineProperties chargeEngineProperties;
 
     public ChargeBackfillReport backfill(String email) {
+        // Writes a row per trade across a whole history. A disabled engine must not be doing that.
+        ChargeEngineSwitch.requireEnabled(chargeEngineProperties);
+
         List<TransactionEntity> transactions = transactionRepository.findByEmail(email);
 
         // Date order first: replay order decides which lots a sell draws, and a sell read before its

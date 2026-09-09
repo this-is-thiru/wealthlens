@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`, **Phase A complete and Phase B built** (Chunks 1–9). Full suite green: 854 tests, unit and integration, both JaCoCo gates passing, 99% mutation score (572/573).
+**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`, **Phase A complete and Phase B built** (Chunks 1–9). Full suite green: 864 tests, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578).
 
 ---
 
@@ -158,6 +158,28 @@ because mutation testing found the FIFO walk's edges unguarded — a sell consum
 must remove it rather than leave a zero-quantity husk for the next sell to draw from, and a sell
 exceeding what is open must take the remainder rather than the amount asked for.
 
+### The configuration flags, and which of them do anything
+
+`app.charges.*`, declared in all three profile yamls. **ADR-30** is the entry to read.
+
+| Flag | Ships | Effect |
+|---|---|---|
+| `engine-enabled` | `true` | **Master switch.** `false` → simulate, backfill and the AMC cycle answer **503**; shadow recording records nothing whatever `shadow-recording` says. Reads stay up |
+| `shadow-recording` | `false` | `true` → every V2 buy and sell is priced and a `user_charges` row written, result ignored. No effect when the engine is disabled |
+| `authoritative` | `false` | **Read by nothing.** Becomes real in Chunk 10; setting it today changes nothing |
+
+Two things about this that are easy to get wrong later:
+
+- **The kill switch is checked at the entry points, never inside `ChargeEngine.compute`.** A disabled
+  engine returning an empty computation would be recorded by `UserChargeService` as a row
+  indistinguishable from "no rate card on file", so switching the engine off would quietly fill the
+  database with rows the gaps report blames on the seed data. A disabled engine must write nothing.
+- **`app.mongodb.transactions-enabled` reads backwards.** It is
+  `@ConditionalOnProperty(matchIfMissing = true)`, so transactions are **on when the property is
+  absent** — it is a switch to turn them off. Staging and prod omit it and are correct. With the
+  `MongoTransactionManager` bean gone, every `@Transactional` silently becomes a no-op, which is why
+  `TransactionSafetyAuditor` warns at startup.
+
 ### Written by Chunk 7
 
 `entity/model/ChargeSummaryReport` and its `YearlyChargeSummary` / `MonthlyChargeSummary` forms — a map keyed by charge code replacing six fixed columns, summed in `BigDecimal` with the total recomputed from the parts rather than accumulated beside them. `ChargeSummaryReportTest`, 11 cases. Nothing writes one yet: `ProfitAndLossService` keeps the old `BrokerChargesReport` until Phase C.
@@ -187,7 +209,7 @@ Read in this order:
 | # | Document | What it answers | Lines |
 |---|---|---|---|
 | 1 | **README.md** *(this file)* | Where things stand; how to resume | 171 |
-| 2 | **decisions.md** | *Why* the design is the way it is. 29 decisions, each with context, rationale and consequences. **ADR-26 before deploying; ADR-28 before touching the trade path** | 380 |
+| 2 | **decisions.md** | *Why* the design is the way it is. 30 decisions, each with context, rationale and consequences. **ADR-26 before deploying; ADR-28 before touching the trade path** | 380 |
 | 3 | **prd.md** | Requirements, 9 catalogued defects in the old code, 12 acceptance criteria | 187 |
 | 4 | **tech-spec.md** | The design. Entities, engine contracts, algorithms, seed format, extensibility analysis (§13), temporal semantics (§14) | 912 |
 | 5 | **test-plan.md** | How it is verified. ~190 tests across 11 tiers, with gates | 347 |

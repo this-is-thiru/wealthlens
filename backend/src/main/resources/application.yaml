@@ -15,11 +15,15 @@ app:
   mongodb:
     transactions-enabled: true
   charges:
-    # Phase A: the engine is live and the simulate API is usable.
+    # MASTER SWITCH. Set false to stop the charges engine computing or recording anything:
+    # /charges/simulate, /charges/backfill and the AMC cycle all answer 503, and shadow recording
+    # records nothing whatever shadow-recording below says. Reading charges already recorded still
+    # works, which is what you need in order to decide whether to turn it back on.
     engine-enabled: true
     # Phase B: the engine prices and records every trade beside the live flow, and the result is
     # ignored. Off by default -- turning it on is what makes the reconciliation report have data,
-    # and turning it off is the whole rollback.
+    # and turning it off is the whole rollback. Has no effect when engine-enabled is false.
     shadow-recording: false
-    # Phase C: the computed total drives cost basis. Nothing reads this yet.
+    # Phase C: the computed total drives cost basis. NOTHING READS THIS YET -- setting it true
+    # changes nothing until Chunk 10 lands.
     authoritative: false

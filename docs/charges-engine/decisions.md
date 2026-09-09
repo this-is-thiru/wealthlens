@@ -556,3 +556,53 @@ degrades one number. An identity gap corrupts the holding.
 - **Existing data will not satisfy it.** All 319 transactions on `it-staging` predate the registry, so
   a migration has to map what is already stored onto canonical codes — with the 8 unmatched schemes
   above as the known worklist.
+
+---
+
+## ADR-30 — `engine-enabled` is a real kill switch, gated at the entry points
+
+**Decision.** `app.charges.engine-enabled` stops the charges engine computing or recording anything.
+It is checked at the four entry points that invoke the engine — simulate, backfill, the AMC cycle and
+the shadow-recording gateway — and **not** inside `ChargeEngine.compute`.
+
+**Why it needed doing at all.** The flag existed from Chunk 8 and was read by nothing. It shipped as
+`engine-enabled: true` with a comment stating "the engine is live", which reads as an assertion about
+a live switch. It was decorative: setting it `false` changed nothing at all. That is the worst shape
+a flag can have — `authoritative` is equally inert but says so, whereas this one invited an operator
+to reach for it during an incident and get no effect and no error.
+
+**Why not inside `ChargeEngine.compute`.** One check there would have covered every caller, and it is
+the wrong place. The engine's contract is to return a `ChargeComputation`, and a disabled one would
+have to return an empty result carrying some resolution. Every available resolution already means
+something else, and `UserChargeService` would dutifully **record** it — so switching the engine off
+would quietly fill `user_charges` with rows indistinguishable from "no rate card on file", the gaps
+report would blame the seed data, and the damage would outlast the incident. Adding an
+`ENGINE_DISABLED` resolution would avoid the ambiguity and still write rows nobody wants.
+
+A disabled engine must write **nothing**, and only the callers know how to decline: refuse the
+request, or skip the recording. So the check lives with them, behind `ChargeEngineSwitch`.
+
+**Why 503, and a new exception type.** `ServiceUnavailableException` is added to `shared/exception`
+and mapped by `ControllerAdviser`, following the pattern already there. The caller did nothing wrong
+and cannot fix anything, so 400 would send them hunting for a fault in their own request; 500 would
+send somebody looking for a crash that did not happen. 503 is the one status that says "an operator
+turned this off". It lives in `shared` because the adviser is in `shared` and `shared` may not depend
+on `brokercharges` — the modulith test enforces that.
+
+**Why the gateway refuses silently instead.** It sits in the trade path. Throwing there would mean a
+trade failing to save because a charge could not be computed, which is exactly the outcome ADR-28's
+error handling exists to prevent. It returns empty, and the absence shows up as
+`transactionsWithoutComputation` in the reconciliation report.
+
+**Consequences.**
+
+- **One flag stops everything.** `engine-enabled` outranks `shadow-recording`, so an operator does
+  not have to find and clear a second flag. That is the only property that makes a kill switch usable
+  when it is actually needed.
+- **Reads stay up.** Charge history, gaps, the catalogue and the reconciliation report all keep
+  working while the engine is off — which is what somebody needs in order to decide whether to turn
+  it back on.
+- **`ChargeEngineDisabledIntegrationTest` is the only class running with it false**, so every other
+  integration class staying green is the evidence that it ships on.
+- **`authoritative` is still inert**, and its comment now says so in capitals. It becomes real in
+  Chunk 10; until then setting it changes nothing.

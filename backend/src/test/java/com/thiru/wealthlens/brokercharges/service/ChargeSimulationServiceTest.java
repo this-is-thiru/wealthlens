@@ -4,8 +4,10 @@ import static com.thiru.wealthlens.testsupport.MoneyAssert.assertMoney;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
@@ -24,15 +26,16 @@ import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.shared.exception.ServiceUnavailableException;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -56,8 +59,12 @@ class ChargeSimulationServiceTest {
     @Mock
     private ChargeEngine chargeEngine;
 
-    @InjectMocks
     private ChargeSimulationService chargeSimulationService;
+
+    @BeforeEach
+    void setUp() {
+        chargeSimulationService = new ChargeSimulationService(chargeEngine, new ChargeEngineProperties(true, false, false));
+    }
 
     @Test
     void simulate_pricesTheRequestedTradeThroughTheEngine() {
@@ -464,5 +471,24 @@ class ChargeSimulationServiceTest {
     private static ChargeLine line(String code, double amount) {
         return new ChargeLine(code, code, ChargeCategory.BROKERAGE, ChargeBasis.FLAT,
                 ChargeRuleSource.SCHEDULE, null, 0.0, amount, true);
+    }
+
+    /**
+     * A dry run is harmless, but if the engine has been switched off it is because its numbers are
+     * not trusted — and "what will this cost?" answered with an untrusted number is worse than not
+     * answered. Refused as 503 rather than 400: the caller's request is fine, an operator turned
+     * something off.
+     */
+    @Test
+    void simulate_whenTheEngineIsDisabled_refusesRatherThanPricing() {
+        // Given
+        ChargeSimulationService disabled =
+                new ChargeSimulationService(chargeEngine, new ChargeEngineProperties(false, false, false));
+
+        // When / Then
+        assertThatThrownBy(() -> disabled.simulate(sellRequest()))
+                .isInstanceOf(ServiceUnavailableException.class)
+                .hasMessageContaining("charges engine is disabled");
+        verifyNoInteractions(chargeEngine);
     }
 }
