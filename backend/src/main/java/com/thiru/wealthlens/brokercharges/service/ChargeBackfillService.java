@@ -7,8 +7,8 @@ import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
-import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBackfillReport;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -69,13 +69,8 @@ public class ChargeBackfillService {
     /** Cash-segment instruments trade in units of one; derivatives do not reach this path. */
     private static final int CASH_SEGMENT_LOT_SIZE = 1;
 
-    /**
-     * No segment is recorded on a transaction, so every backfilled trade is priced as delivery —
-     * the same assumption the live shadow path makes, and stated in both places rather than in
-     * neither. An intraday trade is therefore priced against a delivery card until Phase C puts a
-     * segment on the portfolio types.
-     */
-    private static final TradeSegment ASSUMED_SEGMENT = TradeSegment.DELIVERY;
+    /** Everything recorded before Chunk 10b carries no segment, and all of it was delivery. */
+    private static final TradeSegment SEGMENT_BEFORE_IT_WAS_RECORDED = TradeSegment.DELIVERY;
 
     private final TransactionRepository transactionRepository;
     private final UserChargeService userChargeService;
@@ -225,7 +220,7 @@ public class ChargeBackfillService {
                 transaction.getAccountHolder(),
                 transaction.getBrokerName(),
                 transaction.getAssetType(),
-                ASSUMED_SEGMENT,
+                segmentOf(transaction),
                 transaction.getExchangeName(),
                 null,
                 event,
@@ -250,5 +245,9 @@ public class ChargeBackfillService {
             this.acquisitionDate = acquisitionDate;
             this.price = price;
         }
+    }
+
+    private static TradeSegment segmentOf(TransactionEntity transaction) {
+        return transaction.getSegment() == null ? SEGMENT_BEFORE_IT_WAS_RECORDED : transaction.getSegment();
     }
 }

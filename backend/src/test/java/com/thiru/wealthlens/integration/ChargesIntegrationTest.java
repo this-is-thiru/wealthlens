@@ -19,7 +19,6 @@ import com.thiru.wealthlens.brokercharges.dto.enums.FundCategory;
 import com.thiru.wealthlens.brokercharges.dto.enums.PlanType;
 import com.thiru.wealthlens.brokercharges.dto.enums.RoundingPolicy;
 import com.thiru.wealthlens.brokercharges.dto.enums.SlabBandBasis;
-import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
 import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeInstrumentEntity;
 import com.thiru.wealthlens.brokercharges.entity.ChargeRule;
@@ -36,6 +35,7 @@ import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -780,6 +780,31 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    }
+
+
+    /**
+     * Every transaction and holding written before Chunk 10b has no {@code segment} field at all.
+     * The field initialiser says {@code DELIVERY}, but ADR-27 is the standing reminder that an
+     * initialiser is not a guarantee: Lombok's {@code @AllArgsConstructor} carries
+     * {@code @ConstructorProperties}, and a mapper that picks the all-args constructor passes null
+     * and never runs the initialiser. That is exactly how seeded rate cards lost their audit
+     * metadata. A null segment here would disqualify every legacy trade from resolving a card.
+     */
+    @Test
+    void aTransactionWrittenBeforeSegmentExisted_readsBackAsDelivery() {
+        // Given — a raw document with no segment field, as every pre-Chunk-10b row is
+        mongoTemplate.getCollection("transactions").insertOne(new Document()
+                .append("_id", "legacy-txn")
+                .append("email", EMAIL)
+                .append("stock_code", "INFY")
+                .append("transaction_type", "BUY"));
+
+        // When
+        TransactionEntity read = transactionRepository.findById("legacy-txn").orElseThrow();
+
+        // Then
+        assertThat(read.getSegment()).isEqualTo(TradeSegment.DELIVERY);
     }
 
     // ------------------------------------------------------------------- harness

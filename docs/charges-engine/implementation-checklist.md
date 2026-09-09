@@ -423,10 +423,22 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
 ## Chunk 10b — The rest of the cutover
 
 - [ ] Sell path: the computed charge reaches realised P&L
-- [ ] `TradeSegment` promoted into `portfolio/dto/enums`; added to `AssetRequest`, `TransactionEntity`,
-      `AssetEntity` (default `DELIVERY`). Until this lands every trade is priced as delivery
-- [ ] Deprecate `AssetRequest.brokerCharges` in the DTO (kept, not removed — see 10a)
-- [ ] `userChargeId` on `TransactionEntity` for traceability
+- [x] `TradeSegment` promoted into `portfolio/dto/enums`; added to `AssetRequest`, `TransactionEntity`,
+      `AssetEntity`, all defaulting `DELIVERY`. Both persisted uses store the enum's *name*, so the
+      package move needed no data migration. The gateway and the backfill now read the trade's own
+      segment instead of assuming delivery
+- [x] Deprecate `AssetRequest.brokerCharges` in the DTO (kept, not removed — see 10a)
+- [x] **A legacy document reads back as `DELIVERY`, and it is pinned by a test.** ADR-27 is the
+      standing reminder that a field initialiser is not a guarantee — Lombok's `@AllArgsConstructor`
+      carries `@ConstructorProperties`, and a mapper choosing it passes null and never runs the
+      initialiser, which is exactly how seeded rate cards lost their audit metadata. A null segment
+      would disqualify every pre-Chunk-10b trade from resolving a card
+- [ ] ~~`userChargeId` on `TransactionEntity` for traceability~~ — **recommend dropping this.** The
+      link already exists and is already used: `UserChargeEntity.transactionId` points at the
+      transaction, and `{email, transactionId}` is unique — it is what makes `record` an upsert and
+      the backfill re-runnable, and what `ChargeReconciliationService` joins on. A reverse pointer
+      would be a second source of truth for one relationship, needing the transaction rewritten every
+      time a charge is recomputed. Awaiting a decision
 - [ ] Remove the `assetType == EQUITY` gate at `ProfitAndLossService` (moved here from Chunk 8 by ADR-28)
       — **safe only once the superseded path behind it is deleted, so it belongs with Chunk 11**
 - [ ] `PortfolioService.buyStock` (`:311`) — **move charge computation ahead of the entity mutation**

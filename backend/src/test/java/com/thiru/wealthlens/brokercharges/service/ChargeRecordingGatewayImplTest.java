@@ -13,12 +13,12 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
-import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -156,8 +156,8 @@ class ChargeRecordingGatewayImplTest {
     }
 
     /**
-     * {@code ProfitLossContext} carries no segment — that field arrives in Phase C. Until it does
-     * every trade is priced as delivery, which is what the existing flow already assumes.
+     * A trade that declares no segment is priced as delivery, which is what every trade recorded
+     * before Chunk 10b implicitly was.
      */
     @Test
     void record_whenContextCarriesNoSegment_pricesItAsDelivery() {
@@ -353,5 +353,25 @@ class ChargeRecordingGatewayImplTest {
         // Then
         assertThat(result).isEmpty();
         verifyNoInteractions(userChargeService);
+    }
+
+    /**
+     * Chunk 10b. Until the segment reached the engine every trade was priced against a delivery
+     * card, and an intraday trade is not close: STT applies on the sell side only and at a quarter
+     * the rate, and there is no depository charge at all.
+     */
+    @Test
+    void record_carriesTheSegmentTheTradeDeclares() {
+        // Given
+        when(userChargeService.computeAndRecord(any())).thenReturn(computed());
+        ProfitLossContext intraday = new ProfitLossContext(TRANSACTION_ID, 10, TRADE_DATE, 100.0, STOCK_CODE,
+                BrokerName.ZERODHA, "NSE", AssetType.EQUITY, TransactionType.BUY, null, AccountType.SELF,
+                ACCOUNT_HOLDER, List.of(), TradeSegment.INTRADAY);
+
+        // When
+        gateway(true).record(userMail(), intraday);
+
+        // Then
+        assertThat(recordedContext().segment()).isEqualTo(TradeSegment.INTRADAY);
     }
 }

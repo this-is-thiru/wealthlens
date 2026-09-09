@@ -6,7 +6,6 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.LotSlice;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
-import com.thiru.wealthlens.brokercharges.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
@@ -48,13 +47,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class ChargeRecordingGatewayImpl implements ChargeRecordingGateway {
-
-    /**
-     * {@code ProfitLossContext} carries no segment; the field arrives on the portfolio types in
-     * Phase C. Until then every trade is priced as delivery, which is what the existing flow already
-     * assumes — it has no intraday concept either.
-     */
-    private static final TradeSegment ASSUMED_SEGMENT = TradeSegment.DELIVERY;
 
     /** Cash-segment instruments trade in units of one; derivatives do not reach this path yet. */
     private static final int CASH_SEGMENT_LOT_SIZE = 1;
@@ -116,7 +108,7 @@ public class ChargeRecordingGatewayImpl implements ChargeRecordingGateway {
                 context.accountHolder(),
                 context.brokerName(),
                 context.assetType(),
-                ASSUMED_SEGMENT,
+                context.segment(),
                 context.exchangeName(),
                 null,
                 event,

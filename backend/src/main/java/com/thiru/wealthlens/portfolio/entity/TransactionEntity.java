@@ -6,6 +6,7 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
@@ -57,6 +58,13 @@ public class TransactionEntity implements AuditableEntity {
 
 	@Field("total_value")
 	private double totalValue;
+
+
+	/** Delivery for everything recorded before Chunk 10b; there was no segment concept until then. */
+
+	@Field(name = "segment", targetType = FieldType.STRING)
+
+	private TradeSegment segment = TradeSegment.DELIVERY;
 
 	@Field("broker_charges")
 	private double brokerCharges;

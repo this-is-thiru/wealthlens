@@ -366,7 +366,8 @@ public class PortfolioService {
         return new ProfitLossContext(transactionId, assetRequest.getQuantity(), assetRequest.getTransactionDate(),
                 assetRequest.getPrice(), assetRequest.getStockCode(), assetRequest.getBrokerName(),
                 assetRequest.getExchangeName(), assetRequest.getAssetType(), TransactionType.BUY, null,
-                assetRequest.getAccountType(), assetRequest.getAccountHolder(), Collections.emptyList());
+                assetRequest.getAccountType(), assetRequest.getAccountHolder(), Collections.emptyList(),
+                assetRequest.getSegment());
     }
 
     public void sellStockV2(UserMail userMail, String transactionId, AssetRequest assetRequest) {
