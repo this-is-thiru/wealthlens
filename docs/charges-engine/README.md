@@ -187,7 +187,7 @@ Read in this order:
 | # | Document | What it answers | Lines |
 |---|---|---|---|
 | 1 | **README.md** *(this file)* | Where things stand; how to resume | 171 |
-| 2 | **decisions.md** | *Why* the design is the way it is. 28 decisions, each with context, rationale and consequences. **ADR-26 before deploying; ADR-28 before touching the trade path** | 320 |
+| 2 | **decisions.md** | *Why* the design is the way it is. 29 decisions, each with context, rationale and consequences. **ADR-26 before deploying; ADR-28 before touching the trade path** | 380 |
 | 3 | **prd.md** | Requirements, 9 catalogued defects in the old code, 12 acceptance criteria | 187 |
 | 4 | **tech-spec.md** | The design. Entities, engine contracts, algorithms, seed format, extensibility analysis (§13), temporal semantics (§14) | 912 |
 | 5 | **test-plan.md** | How it is verified. ~190 tests across 11 tiers, with gates | 347 |
@@ -340,6 +340,8 @@ Everything design-level is settled. **One** acceptance criterion remains open an
 | 5 | ~~Does `AccountType` affect charges?~~ | **Settled — ADR-25.** No rate impact, but `accountHolder` joins every dedupe key. Uncovered defect D10: DP charges are undercounted across account holders |
 | 7 | **`taxplanning` mutation score is 34.4%** — 133 of 387 mutants killed, with `FormulaEvaluator`, `FbpOptimizer`, `ItrFormAdvisor` and `TaxEngineFactory` at zero. Pre-existing, and invisible until pitest was bumped to a version that runs on Java 25 | **Deferred by the repository owner** to the full layer, 2026-09-06. Not a defect to re-raise. Consequence: `-Pmutation` fails on the aggregate, so the charges engine is gated by running the profile scoped to its own package (see §6) |
 | 8 | ~~**AC-6 cannot be closed yet**~~ | **Closed 2026-09-08.** Two scheme profiles seeded — one graded, one predicate-based — and three golden fixtures plus two integration cases exercise the predicate end to end. The zero-charge fixture asserts `NO_MATCHING_RULES`, so a profile that fails to load fails it rather than passing as a free redemption |
+| 9 | **Instrument identity has no single source of truth** — real mutual fund holdings key on the full scheme name, shipped charge profiles on short codes, and `ChargeInstrumentEntity` is keyed on `stockCode`, so they can only meet by coincidence. Found by the Phase B backfill: 43 of 319 real transactions | **Decided 2026-09-09 — ADR-29, scheduled M2-1.** One registry of every recognised instrument; upload rejects what it does not carry; charge profiles key off the canonical code. Makes the mismatch impossible by construction rather than by convention |
+| 10 | **No rate cards before 2025-04-01**, so 71% of a real history resolves `NO_SCHEDULE` | **Scheduled M2-2.** Rate archaeology, not code. Ships as new generations under ADR-26, never as edits |
 | 6 | **`exchangeName` is `"NSE"` everywhere in tests and the API collection** — plain uppercase codes, so the schedule's `exchange` dimension matches directly. BSE is untested | Low risk, noted |
 
 ### Verified non-issues
@@ -371,7 +373,8 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 | **A rate card written outside `ChargeScheduleService` is invisible** | The resolver caches by scope and date and only `publish` and `close` evict. Writing straight to `ChargeScheduleRepository` leaves the previously resolved card in memory. Found by a Chunk 9 test that did exactly that |
 | **A scheme profile written outside the seeder is invisible too** | Same eviction rule, and `ChargeInstrumentResolver` has no publishing service in front of it at all. Only `ChargeSeederService` calls its `evictAll()`. A profile added at runtime needs one before the next redemption of that scheme |
 | **Depository deduplication is not visible from simulate** | It checks *recorded* charges, and in Phase A nothing in the trade path records any, so a scoped charge always prices as a first occurrence unless the account already carries a row from the AMC cycle |
-| **Only two schemes have profiles** | Every other mutual fund resolves to `NO_INSTRUMENT_PROFILE` and accrues no exit load. That is the designed behaviour — recorded, never fatal (ADR-24) — but it means the shipped data prices two funds and gaps the rest |
+| **Only two schemes have profiles** | Every other mutual fund resolves to `NO_INSTRUMENT_PROFILE` and accrues no exit load. That is the designed behaviour — recorded, never fatal (ADR-24) — but it means the shipped data prices two funds and gaps the rest. **Worse than it looks, and now scheduled:** real holdings key on the full scheme name and the profiles key on short codes, so they could never have matched. **ADR-29 / M2-1** |
+| **71% of a real history cannot be priced** | Every card starts 2025-04-01; the `it-staging` history starts 2023-06-22, so 227 of 319 trades resolve `NO_SCHEDULE`. Correct behaviour, and visible in the gaps report — but a backfilled portfolio is mostly unpriced until 2023 and 2024 card generations exist. **M2-2** |
 | **Scheme profiles have no publishing endpoint** | They are seeded at startup, and `ChargeInstrumentResolver.evictAll()` is called by nothing else. A profile added at runtime needs a restart — rate cards have `ChargeScheduleService` in front of them, profiles have nothing |
 
 ---
