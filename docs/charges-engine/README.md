@@ -12,8 +12,8 @@
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | 37 — twenty-four code (16 `feat`, 3 `test`, 2 `fix`, 1 `ci`, 2 `chore`) and thirteen documentation. Counted with `git rev-list master..HEAD --count`; the figure here previously read 25 against an actual 31, so trust the command over this cell |
-| **Phase** | A **complete**; B (shadow recording) **built and green**, awaiting a run against real data. Chunks 1–9 done |
-| **Next action** | Turn `app.charges.shadow-recording` on in staging, drive real trades through it, and read `GET /user-charges/user/{email}/reconciliation`. That is the last Phase B box. See §11 |
+| **Phase** | A **complete**; B **complete** — built, and run against 319 real transactions on `it-staging`. Chunks 1–9 done |
+| **Next action** | Decide whether to amend the Phase B gate (see §11), then Chunk 10 — Phase C cutover |
 | **Blocking questions** | None. **AC-2 closed 2026-09-08**; **ADR-28 settled the EQUITY gate 2026-09-09**. The remaining Phase B work needs an environment, not a decision |
 
 ---
@@ -194,6 +194,7 @@ Read in this order:
 | 6 | **implementation-checklist.md** | The build tracker. Resume from the first unticked box | 339 |
 | 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return | 460 |
 | 8 | **ac2-rate-verification.md** | The AC-2 evidence: every shipped rate against the broker's page, what was wrong, and what closing it changed | 180 |
+| 9 | **phase-b-reconciliation-findings.md** | The Phase B exit artifact: the backfill and reconciliation run against 319 real transactions, what it proved, and why the deltas could not mean what the gate assumed | 143 |
 | — | `reseed-staging.js` | One-off, for an environment seeded before 2026-09-08. Checks before it deletes | 39 |
 
 **ADR-26 is the one to read before deploying anything.** It states the rule that keeps rate cards deployable — a deployed card is never edited, only superseded — and what to do in the two cases where that is not enough.
@@ -382,34 +383,36 @@ JaCoCo gates passing, and **99% mutation score** (538/539) across the engine and
 services — the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant. Every
 Chunk 8 class is at 100%.
 
-### The one thing left in Phase B
+### Phase B is done, with one decision outstanding
 
-**The mechanism is proven end to end.** On 2026-09-09 the whole of runbook §5b was walked against a
-running application — a local replica set, the shipped seed data, `shadow-recording=true`, and four
-V2 trades driven through `POST /portfolio/user/{email}/transaction/v2`. Every command ran verbatim
-and its answer is recorded as a baseline in §5b.5b. Shadow rows were written for all four, the
-2019 trade was correctly excluded from the totals, and the mutual-fund row showed the coverage gap as
-a number: entered ₹0.00 because the old implementation skips non-equity, computed ₹2.00 because the
-engine does not.
+**Run against real data on 2026-09-09** — `it-staging`, 319 transactions spanning 2023-06-22 to
+2026-01-12. Backfilled and reconciled. Full write-up in `phase-b-reconciliation-findings.md`; the
+short version:
 
-**A blocker surfaced while preparing to do that, and is now fixed.** Turning the flag on does
-*nothing* for a database that already has transactions: shadow recording only fires on trades
-flowing through the live path afterwards, so every historical trade has no computed charge and the
-reconciliation report comes back with `rows: []`. Driving fresh trades does not help either — their
-entered figures are ones a tester invented. The only route to a real delta is to price the
-**existing** history, every row of which already carries a figure a user typed.
+**The engine is correct.** A resolution breakdown was predicted from the data before running and
+matched exactly — 227 trades predate every shipped card and resolved `NO_SCHEDULE`, 92 fell inside
+one. A contract note was checked line by line and agrees to the paisa, including STT's whole-rupee
+statutory rounding and a GST base that excludes STT (the D1 defect, seen fixed on a real trade). AC-4
+deduplication was proven on three same-day sells of one scrip: DP charged once, ₹12.50 then ₹0.00,
+₹0.00. FIFO lots were reconstructed for all 43 sells with none missing.
 
-`POST /charges/backfill/user/{email}` (`SUPER_USER`) is that route, added after the Chunk 8 commit.
-It is also where `UserChargeService.computeAndRecordBatch` finally gets a caller — it had been built
-in Chunk 5 and called by nothing since.
+**But the comparison the gate asked for could not be made.** Entered broker charges total **₹5.32
+across 49 comparable trades** — 37 of them exactly ₹0.01, against computed figures of ₹16 to ₹29. The
+manual field was never populated. So the ₹235.30 delta is not two opinions about one charge; it is
+the whole computed total measured against a blank.
 
-**One box remains, and it needs data rather than a decision:** start the application against a
-populated environment, backfill, then read the report and explain the deltas. That comparison is the
-entire reason the phase exists (PRD OD-8), and Phase C must not start until it is understood.
+That is the strongest possible argument *for* the engine — manual entry was supposed to happen and
+did not — but it means PRD OD-8's proof-before-cutover cannot be produced from this database.
+**Recommendation: amend the gate to record that the comparison was attempted and the baseline was
+absent**, rather than block Phase C waiting for data nobody captured.
 
-Watch `unresolvedCount` and `transactionsWithoutComputation` first. The first says the seed data has
-gaps for the asset types being traded; the second says shadow recording is not reaching those trades
-at all. Neither is a delta, and either will make the delta column misleading if ignored.
+**Two things Phase C must not discover late:**
+
+1. **Cost basis will move for every trade** once the computed total becomes authoritative — from
+   effectively zero charges to real ones. That is user-visible in realised P&L and should be
+   announced, not discovered.
+2. **71% of this history cannot be priced at all.** Every shipped card starts 2025-04-01; the history
+   starts 2023-06-22. Closing that needs 2023 and 2024 card generations — rate archaeology, not code.
 
 ### What Chunk 8 decided, and why it is not what the checklist said
 
