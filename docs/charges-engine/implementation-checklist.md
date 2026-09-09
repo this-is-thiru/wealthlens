@@ -4,8 +4,8 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Phase A and Phase B closed; **Chunk 10a done** — the engine is authoritative for cost basis behind `app.charges.authoritative`, which ships `false`. **Resume at Chunk 10b.**
-**Last updated:** 2026-09-09 — 854 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
+**Status:** Phases A and B closed. **Chunk 10a done** (AC-10 — cost basis from the computed total, behind `app.charges.authoritative`, which ships `false`) and **Chunk 10b part 1 done** (a trade carries its own `TradeSegment`). **Resume at Chunk 10b part 2 — the sell path into `YearlyChargeSummary` — after answering the design question in `README.md` §11.2.**
+**Last updated:** 2026-09-09 (paused here) — 873 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
 
@@ -420,9 +420,13 @@ version history, so `buyStockV2` no longer shares `updateBrokerChargesAndProfitA
 **Only the buy path.** On a sell the computed charge belongs to realised P&L, not to the holding's
 cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's report rewiring.
 
-## Chunk 10b — The rest of the cutover
+## Chunk 10b — The rest of the cutover *(part 1 done 2026-09-09)*
 
-- [ ] Sell path: the computed charge reaches realised P&L
+- [ ] **Sell path: the computed charge reaches realised P&L.** ← **resume here.** Answer first:
+      does `YearlyChargeSummary` sit *beside* `BrokerChargesReport` or *replace* it? Recommendation is
+      beside — it matches how everything else here was built, parallel first and deleted later, and
+      Chunk 11 removes the old hierarchy anyway. `ChargeSummaryReport` / `YearlyChargeSummary` were
+      built in Chunk 7 and **nothing writes them yet**
 - [x] `TradeSegment` promoted into `portfolio/dto/enums`; added to `AssetRequest`, `TransactionEntity`,
       `AssetEntity`, all defaulting `DELIVERY`. Both persisted uses store the enum's *name*, so the
       package move needed no data migration. The gateway and the backfill now read the trade's own

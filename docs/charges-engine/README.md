@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`, **Phase A complete and Phase B built** (Chunks 1–9). Full suite green: 864 tests, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578).
+**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`. **Phases A and B closed; Chunk 10a and 10b-part-1 done.** Full suite green: **873 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
 
 ---
 
@@ -11,10 +11,10 @@
 | | |
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
-| **Commits beyond master** | 37 — twenty-four code (16 `feat`, 3 `test`, 2 `fix`, 1 `ci`, 2 `chore`) and thirteen documentation. Counted with `git rev-list master..HEAD --count`; the figure here previously read 25 against an actual 31, so trust the command over this cell |
-| **Phase** | A and B both **closed**. B ran against 319 real transactions on `it-staging` and closed by ADR-31. Chunks 1–9 done |
-| **Next action** | **Chunk 10 — Phase C cutover.** Phase B closed 2026-09-09 (ADR-31). Build behind `authoritative: false`; flipping it is a separate, announced decision |
-| **Blocking questions** | None. **AC-2 closed 2026-09-08**; **ADR-28 settled the EQUITY gate 2026-09-09**. The remaining Phase B work needs an environment, not a decision |
+| **Commits beyond master** | **46**, of which **11 are unpushed** (`git log origin/feature/charges-engine..HEAD`). Counted with `git rev-list master..HEAD --count` — trust the command over this cell, which has been wrong before |
+| **Phase** | A and B **closed** (B by ADR-31, run against 319 real transactions on `it-staging`). **C in progress:** Chunk 10a done, 10b part 1 done |
+| **Next action** | **Chunk 10b part 2** — the sell path into realised P&L via `YearlyChargeSummary`. See §11 for the design question it opens and the two decisions waiting |
+| **Blocking questions** | **Two, both non-urgent** — see §11.2. (1) Does `YearlyChargeSummary` sit beside `BrokerChargesReport` or replace it? (2) Keep or drop `userChargeId` on `TransactionEntity`? Neither blocks reading the code |
 
 ---
 
@@ -180,6 +180,25 @@ Two things about this that are easy to get wrong later:
   `MongoTransactionManager` bean gone, every `@Transactional` silently becomes a no-op, which is why
   `TransactionSafetyAuditor` warns at startup.
 
+### Written by Chunk 10a and 10b part 1 — Phase C so far
+
+**`PortfolioService` is authoritative for cost basis when the flag says so.** `buyStockV2` computes
+the charge before writing the lot and, under `app.charges.authoritative`, stores the engine's total
+instead of the entered one (AC-10). It has its own path now — V1 `buyStock` still calls the shared
+`updateBrokerChargesAndProfitAndLoss` and is byte-for-byte unchanged.
+`ProfitAndLossService.updateProfitAndLoss(userMail, context, precomputed)` is the 3-arg overload that
+uses a computation it is handed, so the engine runs once per trade.
+
+**`TradeSegment` now lives in `portfolio/dto/enums`** and is a field on `AssetRequest`,
+`TransactionEntity`, `AssetEntity` and `ProfitLossContext`, defaulting `DELIVERY`.
+`ChargeRecordingGatewayImpl` and `ChargeBackfillService` read it rather than assuming delivery.
+
+**`AssetRequest.brokerCharges` is `@Deprecated`** — accepted and stored, no longer read once
+`authoritative` is on.
+
+Tests: `PortfolioServiceTest` 6 → 11, `ChargeRecordingGatewayImplTest` → 17,
+`ChargeBackfillServiceTest` → 19, `ChargesIntegrationTest` → 43.
+
 ### Written by Chunk 7
 
 `entity/model/ChargeSummaryReport` and its `YearlyChargeSummary` / `MonthlyChargeSummary` forms — a map keyed by charge code replacing six fixed columns, summed in `BigDecimal` with the total recomputed from the parts rather than accumulated beside them. `ChargeSummaryReportTest`, 11 cases. Nothing writes one yet: `ProfitAndLossService` keeps the old `BrokerChargesReport` until Phase C.
@@ -191,6 +210,10 @@ Four controllers — `ChargeScheduleController` (publish, fetch, list, close, un
 `AuthConfig` gained the five new prefixes. It needed them: the chain ends in `anyRequest().permitAll()`, so every charges endpoint was public. Publishing a rate card and running the AMC cycle additionally require `SUPER_USER`.
 
 ### NOT written yet — do not assume any of it exists
+
+**Since Chunk 10a the live path *can* depend on this, but does not by default.** With
+`authoritative: false` — which is what ships — a V2 buy still stores the entered charge, exactly as
+before. The paragraph below describes the shipped default.
 
 **Nothing in the live path *depends* on any of this.** Since Chunk 8 the trade path does call the engine — `ProfitAndLossService` hands every V2 buy and sell to `ChargeRecordingGateway` — but only when `app.charges.shadow-recording` is on, and it ignores the result. No cost basis, no P&L figure and no stored transaction reads a computed charge. Phase C is what makes it authoritative.
 
@@ -401,12 +424,78 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ---
 
-## 11. Resume point — Phase B built, awaiting a run against real data
+## 11. Resume point — paused mid-Chunk-10b, 2026-09-09
 
-**Paused:** 2026-09-09. Build green: **836 tests** across both tiers, `spotless:check` clean, both
-JaCoCo gates passing, and **99% mutation score** (538/539) across the engine and the charges
-services — the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant. Every
-Chunk 8 class is at 100%.
+**Paused deliberately, working tree clean, everything committed.** Build green: **873 tests** across
+both tiers, `spotless:check` clean, both JaCoCo gates passing. The last mutation run measured
+577/578 (99%) before the segment work; the single survivor is `ChargeFormulaEvaluator`'s known
+equivalent mutant.
+
+### 11.1 What to do first when you pick this up
+
+```bash
+git checkout feature/charges-engine
+git log --oneline origin/feature/charges-engine..HEAD   # 11 commits not yet pushed
+./mvnw clean verify -pl backend                          # needs Docker; 873 tests
+sed -n '1,20p' docs/charges-engine/implementation-checklist.md
+```
+
+Then read §11.2 below — there are two open decisions, and one of them shapes the next commit.
+
+### 11.2 The two open decisions
+
+**(1) Does `YearlyChargeSummary` sit beside `BrokerChargesReport`, or replace it?** This is the next
+piece of work and the question has to be answered first. `ChargeSummaryReport` /
+`YearlyChargeSummary` were built in Chunk 7 and **nothing writes them yet**; the old
+`BrokerChargesReport` hierarchy still carries every P&L charge figure. *Recommendation: beside.* It
+matches how the whole engine has been built — parallel first, delete later — and Chunk 11 removes the
+old one anyway. Replacing in place would put a cutover and a rewrite in one commit.
+
+**(2) Keep or drop `userChargeId` on `TransactionEntity`?** The checklist asks for it and it is left
+**unticked with a recommendation against**. The link already exists and is already load-bearing:
+`UserChargeEntity` carries `transactionId`, the pair `{email, transactionId}` is unique — it is what
+makes `record` an upsert, the backfill safely re-runnable, and what `ChargeReconciliationService`
+joins on. A reverse pointer would be a second source of truth for one relationship, needing the
+transaction rewritten whenever a charge is recomputed. *Recommendation: drop it.*
+
+### 11.3 Environment state left behind
+
+- **`app.charges.shadow-recording` and `authoritative` both ship `false`**, and `engine-enabled`
+  ships `true`. Nothing in the trade path behaves differently from `master` until a flag is flipped.
+- **`it-staging` holds 319 backfilled `user_charges` rows** written on 2026-09-09. Nothing else was
+  touched — no cost basis, no P&L, no transaction documents. Dropping that collection undoes it.
+- The repository owner was running the branch's JAR locally on **:8080 against `it-staging` with
+  `shadow-recording=true`**. If it is still up, new trades are still being shadow-recorded. Stopping
+  it, or clearing the flag, is the whole rollback.
+
+### 11.4 What Phase C has done so far
+
+**Chunk 10a — AC-10, the last acceptance criterion.** With `app.charges.authoritative=true` a V2 buy
+stores the engine's total as its cost basis. Ships `false`. **V2 only**, at the owner's direction:
+`buyStockV2` no longer shares `updateBrokerChargesAndProfitAndLoss` with V1 `buyStock`, and the
+`PortfolioService` diff removes exactly one line, inside V2. The charge is computed **before** the lot
+is written and the ordering is asserted with `InOrder`, because a value assertion passes just as
+happily if the code reorders and applies the total by overwrite. `ProfitAndLossService` gained a
+3-arg overload that uses a computation it is handed, so the engine runs once per trade; the 2-arg
+version is untouched, which is what keeps V1 identical. An absent computation **leaves the entered
+figure alone** rather than zeroing it.
+
+**Chunk 10b part 1 — a trade carries its own segment.** `TradeSegment` moved to
+`portfolio.dto.enums` (no data migration: both persisted uses store the enum's *name*).
+`AssetRequest`, `TransactionEntity` and `AssetEntity` gained the field defaulting `DELIVERY`;
+`ProfitLossContext` gained a 14th component with a 13-arg convenience constructor. The gateway and
+the backfill now read the trade's segment instead of assuming delivery.
+`AssetRequest.brokerCharges` is **deprecated, not removed** — clients keep working, it just stops
+being read.
+
+### 11.5 What remains
+
+| | |
+|---|---|
+| **Chunk 10b part 2** | The sell path into realised P&L via `YearlyChargeSummary`. Blocked on decision (1) |
+| **Chunk 11** | Delete the superseded implementation — 13 files, plus the `assetType == EQUITY` gate, which is only safe to remove once the path behind it is gone (ADR-28) |
+| **Chunk 12** | Final verification |
+| **Milestone 2** | The instrument master (ADR-29, M2-1) and historical rate cards (M2-2). Both surfaced by the real-data run and neither is Phase C work |
 
 ### Phase B is closed (ADR-31)
 
