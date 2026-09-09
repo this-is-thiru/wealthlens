@@ -52,6 +52,7 @@ public class ProfitAndLossService {
 
     private final ProfitAndLossRepository profitAndLossRepository;
     private final UserBrokerChargeService userBrokerChargeService;
+    private final ChargeRecordingGateway chargeRecordingGateway;
 
     /**
      * Updates the profit and loss aggregates for the given user and the financial year
@@ -329,6 +330,13 @@ public class ProfitAndLossService {
         Optional<ProfitAndLossEntity> optionalProfitAndLoss = profitAndLossRepository.findByEmailAndFinancialYear(email, financialYear);
         ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
 
+        // Phase B -- shadow recording. Deliberately outside the EQUITY gate below: that gate guards
+        // the superseded implementation, which resolves a rate card by broker and date with no
+        // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
+        // engine has that dimension, so every asset type reaches it (FR-8). The return value is
+        // ignored -- nothing here may touch cost basis until Phase C.
+        chargeRecordingGateway.record(userMail, profitLossContext);
+
         // calculate and update the broker charges
         if (profitLossContext.assetType() == AssetType.EQUITY) {
             BrokerChargeContext brokerChargeContext = brokerChargeContext(profitLossContext);
@@ -356,6 +364,13 @@ public class ProfitAndLossService {
             InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld);
             updateProfitAndLossReport(profitAndLossEntity, profitLossContext, internalContext);
         }
+
+        // Phase B -- shadow recording. Deliberately outside the EQUITY gate below: that gate guards
+        // the superseded implementation, which resolves a rate card by broker and date with no
+        // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
+        // engine has that dimension, so every asset type reaches it (FR-8). The return value is
+        // ignored -- nothing here may touch cost basis until Phase C.
+        chargeRecordingGateway.record(userMail, profitLossContext);
 
         // calculate and update the broker charges
         if (profitLossContext.assetType() == AssetType.EQUITY) {

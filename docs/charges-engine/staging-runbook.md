@@ -1,15 +1,17 @@
 # Charges Engine — staging runbook
 
 Every request the charges engine answers, in the order they make sense to run, with the numbers each
-one should return. Written for the AC-2 rate verification, which the repository owner scheduled for
-staging after the merge (ADR-18), but the read-only half is also the fastest way to confirm a
-deployment came up with its seed data intact.
+one should return. It began as the AC-2 rate-verification script; with AC-2 closed it is now the
+fastest way to confirm a deployment came up with its seed data intact, and §5b is where Phase B's
+shadow recording gets exercised.
 
-**Expected figures come from the golden fixtures**, so a mismatch means either the deployment is not
-running this branch, or the rates have already been corrected — which is the point of the exercise.
+**Expected figures come from the golden fixtures**, so a mismatch means the deployment is not running
+this branch — or is running an environment seeded before 2026-09-08, which §7b fixes.
 
-> **The rates below are placeholders.** They are what the shipped cards say, not what Zerodha
-> charges. Step 7 is where that gets fixed.
+> **The rates were verified on 2026-09-08** against Zerodha's, Upstox's and Fyers' published pages;
+> the evidence is in `ac2-rate-verification.md`. All eleven cards carry a `verifiedOn`, so
+> `GET /charge-schedules/unverified` returns `[]` on a freshly seeded database. §7 is how you correct
+> a rate when one changes — by superseding the card, never by editing it (ADR-26).
 
 ---
 
@@ -412,6 +414,108 @@ Both bounds or neither — a half-open range is rejected rather than guessed at.
 
 ---
 
+## 5b. Phase B — shadow recording and the reconciliation report
+
+This is the last open box in Phase B, and it is the reason the phase exists. Everything above prices
+trades you asked it to price; this watches the engine price the trades the application was already
+processing anyway, and compares its answer to what the user typed.
+
+### 5b.1 Turn it on
+
+Shadow recording is **off** in all three profile yamls. Turn it on for the environment only:
+
+```bash
+# as an environment variable on the running service
+APP_CHARGES_SHADOW_RECORDING=true
+```
+
+or in the profile's yaml:
+
+```yaml
+app:
+  charges:
+    shadow-recording: true
+```
+
+Restart, then confirm the flag took by driving one trade and looking for its row (5b.3). There is no
+endpoint that reports the flag's value — if the row does not appear, the flag did not take.
+
+**What turning it on changes:** `ProfitAndLossService` hands every V2 buy and sell to the engine,
+which prices it and writes a `user_charges` row. **Nothing else.** No cost basis, no P&L figure and
+no stored transaction reads the computed number. Turning the flag back off is the entire rollback —
+the rows already written stay, and remain readable through the endpoints below.
+
+### 5b.2 Drive real trades
+
+Use the ordinary transaction API — `POST /transactions/user/{email}/transaction/v2`. The **v2** path
+is the one instrumented; V1 `POST .../transaction` is unused and deliberately untouched (ADR-28).
+
+Include at least one **non-equity** trade. The superseded implementation skips those entirely, so
+they are the trades where the engine is doing something nothing else does — and where the shipped
+seed data is most likely to have a gap.
+
+### 5b.3 Confirm a row was written
+
+```bash
+curl -sS "$BASE/user-charges/user/$USER_EMAIL" -H "Authorization: Bearer $TOKEN" \
+  | jq '.data | map({transactionId, event, assetType, resolution, totalCharges}) | .[0:5]'
+```
+
+A row per trade, each carrying the resolution that produced it. No rows at all means the flag did not
+take.
+
+### 5b.4 Read the reconciliation report — the actual deliverable
+
+```bash
+curl -sS "$BASE/user-charges/user/$USER_EMAIL/reconciliation" -H "Authorization: Bearer $TOKEN" \
+  | jq '.data | {totalComputed, totalEntered, totalDelta, comparableCount, unresolvedCount, transactionsWithoutComputation}'
+```
+
+**Read the three counts before the three totals.** They decide whether the totals mean anything:
+
+| Field | What a non-zero value tells you |
+|---|---|
+| `unresolvedCount` | The seed data has no card for some of what was traded. Those rows computed zero for a stated reason and are **excluded** from the totals — check them in 5b.5 before trusting the delta |
+| `transactionsWithoutComputation` | Shadow recording did not reach those trades. Expected for anything traded before the flag went on; unexpected otherwise, and worth investigating before reading a delta |
+| `comparableCount` | How many rows the totals are actually built from. If this is much smaller than the row count, the delta is describing a minority of the portfolio |
+
+Then the per-trade detail:
+
+```bash
+curl -sS "$BASE/user-charges/user/$USER_EMAIL/reconciliation" -H "Authorization: Bearer $TOKEN" \
+  | jq '.data.rows | map(select(.comparable)) | sort_by(-(.delta | fabs)) | .[0:10]
+        | map({transactionId, stockCode, assetType, computed, entered, delta})'
+```
+
+Largest absolute differences first — that is where an explanation is either found or owed.
+
+### 5b.5 The rows the totals left out
+
+```bash
+curl -sS "$BASE/user-charges/user/$USER_EMAIL/reconciliation" -H "Authorization: Bearer $TOKEN" \
+  | jq '.data.rows | map(select(.comparable | not)) | map({transactionId, resolution, note})'
+```
+
+Every one carries a `note` saying why it was not compared. Two shapes appear: the computation did not
+resolve, or no transaction with that id is on file.
+
+### 5b.6 Deltas you should expect, and what each means
+
+A non-zero delta is **not** automatically a defect on either side. Before reporting one, rule these
+out:
+
+| Cause | How it shows |
+|---|---|
+| The user typed a rounded figure | Small, unsigned, scattered — a few paise to a rupee across many trades |
+| **Segment**: every shadow row is priced as `DELIVERY` | An intraday trade reconciles against a delivery card. `ProfitLossContext` carries no segment until Phase C, and this is stated in README §10 |
+| The old GST defect (D1) | The engine is **lower** on sells by roughly ₹17 per ₹1,00,000, because the superseded implementation applied GST over a bucket including STT and stamp duty. This delta is the engine being right |
+| Depository deduplication | A second sell of the same scrip on the same day carries no DP charge. If the user entered one on both, the engine is lower by the DP charge and its tax |
+| A rate card generation boundary | A trade near 2026-03-01 or 2026-06-19 prices against a different generation than the user may have assumed. `scheduleCode` on the row names which card answered |
+
+**Phase C does not start until every delta on this list is either explained or fixed.**
+
+---
+
 ## 6. Failure cases worth confirming once
 
 ```bash
@@ -552,10 +656,14 @@ card orphans the provenance of every charge it priced.
 `scheduleCode`, which the seeder applies on the next deploy — no deletion, no manual step. If you
 ever need this script again, something was edited that should have been superseded.
 
-## 8. Two things to know before you start
+## 8. Three things to know before you start
 
 1. **A rate card written straight to MongoDB is invisible to the engine.** The resolver caches by
    scope and date, and only `POST /charge-schedules` and the close endpoint evict it. Always go
    through the API.
 2. **Scheme profiles have no publishing endpoint at all** — they are seeded at startup and nothing
    else evicts `ChargeInstrumentResolver`. A profile added by hand needs an application restart.
+3. **Shadow recording never fails a trade.** Every error inside the gateway is caught and logged with
+   the transaction id, and the trade saves regardless. So a `user_charges` row that never appeared is
+   reported by its *absence* — `transactionsWithoutComputation` in the reconciliation report — not by
+   anything the user saw go wrong. Grep the logs for `Shadow charge recording failed`.

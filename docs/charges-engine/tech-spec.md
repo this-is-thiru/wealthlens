@@ -688,7 +688,11 @@ Implemented in `brokercharges` as `ChargeRecordingGatewayImpl`; injected into `P
 What this buys: on real transactions you can compare the engine's total against what the user actually typed into `AssetRequest.brokerCharges`, per trade, before trusting it. That comparison is the reason this phase exists (PRD OD-8).
 
 Also in Phase B:
-- remove the `assetType == EQUITY` gate at `ProfitAndLossService:333` and `:361`, so non-equity trades start producing shadow records (FR-8);
+- place the shadow call **outside** the `assetType == EQUITY` gate, so non-equity trades reach the
+  engine (FR-8). The gate itself stays until Phase C — **corrected, see ADR-28**: it guards the
+  superseded implementation, which resolves a rate card by broker and date with no asset-type
+  dimension, so removing it would price a mutual fund with equity brokerage, STT and stamp duty
+  and write those into the P&L. This paragraph previously said to remove it;
 - a reconciliation endpoint, `GET /user-charges/user/{email}/reconciliation`, listing computed vs entered per transaction with the delta.
 
 ### 9.3 Phase C — cutover

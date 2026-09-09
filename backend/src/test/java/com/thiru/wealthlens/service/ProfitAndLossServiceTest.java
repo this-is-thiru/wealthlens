@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
+import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
 import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
@@ -16,7 +18,9 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
+import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
+import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -47,6 +51,9 @@ class ProfitAndLossServiceTest {
 
     @Mock
     private UserBrokerChargeService userBrokerChargeService;
+
+    @Mock
+    private ChargeRecordingGateway chargeRecordingGateway;
 
     @InjectMocks
     private ProfitAndLossService profitAndLossService;
@@ -384,5 +391,152 @@ class ProfitAndLossServiceTest {
         ProfitAndLossEntity savedEntity = captor.getValue();
         assertNotNull(savedEntity.getRealisedProfits());
         assertNotNull(savedEntity.getRealisedProfits().getYearlyBrokerCharges());
+    }
+
+    // ========================================
+    // Phase B — shadow recording
+    //
+    // The engine sees every trade the live flow processes, and changes none of it. The pairing that
+    // matters is this block against updateProfitAndLoss_buyNonEquity_skipsBrokerCharges above: the
+    // superseded implementation still skips a mutual fund, and the engine still sees it.
+    // ========================================
+
+    @Test
+    void updateProfitAndLoss_buyEquity_handsTheTradeToTheChargeEngine() {
+        // Given
+        UserMail userMail = UserMail.from(TEST_EMAIL);
+        LocalDate buyDate = LocalDate.of(2024, 1, 15);
+        ProfitLossContext context = new ProfitLossContext(
+                "txn-shadow-buy", 10.0, buyDate, 100.0, STOCK_CODE, BROKER, EXCHANGE,
+                AssetType.EQUITY, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER,
+                List.of()
+        );
+
+        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
+                .thenReturn(Optional.empty());
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        profitAndLossService.updateProfitAndLoss(userMail, context);
+
+        // Then
+        verify(chargeRecordingGateway).record(userMail, context);
+    }
+
+    @Test
+    void updateProfitAndLoss_sellEquity_handsTheTradeToTheChargeEngine() {
+        // Given
+        UserMail userMail = UserMail.from(TEST_EMAIL);
+        LocalDate sellDate = LocalDate.of(2024, 6, 15);
+        ProfitLossContext context = new ProfitLossContext(
+                "txn-shadow-sell", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
+                AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
+                List.of(new BuyContext(10.0, LocalDate.of(2024, 1, 15), 100.0))
+        );
+
+        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2024-2025")))
+                .thenReturn(Optional.empty());
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        profitAndLossService.updateProfitAndLoss(userMail, context);
+
+        // Then
+        verify(chargeRecordingGateway).record(userMail, context);
+    }
+
+    /**
+     * FR-8. The {@code assetType == EQUITY} gate guards the superseded implementation only; the
+     * engine is handed every asset type, which is the whole reason Phase B produces data worth
+     * reconciling for mutual funds and bonds.
+     */
+    @Test
+    void updateProfitAndLoss_buyNonEquity_stillHandsTheTradeToTheChargeEngine() {
+        // Given
+        UserMail userMail = UserMail.from(TEST_EMAIL);
+        LocalDate buyDate = LocalDate.of(2024, 1, 15);
+        ProfitLossContext context = new ProfitLossContext(
+                "txn-shadow-mf", 10.0, buyDate, 100.0, STOCK_CODE, BROKER, EXCHANGE,
+                AssetType.MUTUAL_FUND, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER,
+                List.of()
+        );
+
+        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
+                .thenReturn(Optional.empty());
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        profitAndLossService.updateProfitAndLoss(userMail, context);
+
+        // Then
+        verify(chargeRecordingGateway).record(userMail, context);
+        verify(userBrokerChargeService, never()).addUserBrokerChargeEntry(any(), any());
+    }
+
+    /**
+     * The property the whole phase rests on: what the engine returns reaches nothing. The gateway
+     * answers with a total and the saved P&L carries no trace of it.
+     */
+    @Test
+    void updateProfitAndLoss_whenTheEngineComputesACharge_theSavedPnlIsUnchanged() {
+        // Given
+        UserMail userMail = UserMail.from(TEST_EMAIL);
+        LocalDate sellDate = LocalDate.of(2024, 6, 15);
+        ProfitLossContext context = new ProfitLossContext(
+                "txn-shadow-ignored", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
+                AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
+                List.of(new BuyContext(10.0, LocalDate.of(2024, 1, 15), 100.0))
+        );
+
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.of(
+                new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+                        ChargeResolution.RESOLVED, List.of(), 999.99)));
+        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2024-2025")))
+                .thenReturn(Optional.empty());
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        profitAndLossService.updateProfitAndLoss(userMail, context);
+
+        // Then
+        ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
+        verify(profitAndLossRepository).save(captor.capture());
+
+        ProfitAndLossEntity savedEntity = captor.getValue();
+        // The figures are the trade's own -- 10 bought at 100, sold at 150 -- and the engine's
+        // 999.99 reached no bucket at all. (getProfit() is 0 here because the yearly report
+        // accumulates purchase and sell amounts only; that is pre-existing behaviour, not a
+        // consequence of shadow recording.)
+        FinancialReport stcg = savedEntity.getRealisedProfits().getShortTermCapitalGains();
+        assertEquals(1000.0, stcg.getPurchaseAmount());
+        assertEquals(1500.0, stcg.getSellAmount());
+        assertEquals(0.0, stcg.getBrokerage());
+        assertNull(savedEntity.getRealisedProfits().getYearlyBrokerCharges());
+    }
+
+    /**
+     * A corporate-action sell is not processed by the live flow, so it is not shadow-recorded
+     * either. Recording a charge for an event the P&L ignores would put a row in the reconciliation
+     * report with nothing to reconcile it against.
+     */
+    @Test
+    void updateProfitAndLoss_corporateActionSell_isNotHandedToTheChargeEngine() {
+        // Given
+        UserMail userMail = UserMail.from(TEST_EMAIL);
+        ProfitLossContext context = new ProfitLossContext(
+                "txn-shadow-ca", 10.0, LocalDate.of(2024, 6, 15), 150.0, STOCK_CODE, BROKER, EXCHANGE,
+                AssetType.EQUITY, TransactionType.SELL, CorporateActionType.BONUS, AccountType.SELF,
+                ACCOUNT_HOLDER, List.of()
+        );
+
+        // When
+        profitAndLossService.updateProfitAndLoss(userMail, context);
+
+        // Then
+        verify(chargeRecordingGateway, never()).record(any(), any());
     }
 }

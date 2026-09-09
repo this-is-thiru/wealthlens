@@ -1,4 +1,6 @@
-Phase A of the charges engine, complete: a standalone replacement for the broker-charges implementation, built alongside the existing one. It has an API of its own and nothing in the live trade path calls it — `portfolio/` is untouched, and `git diff master --stat -- backend/src/main/java/com/thiru/wealthlens/portfolio/` is empty. That is Phase A's exit criterion and what keeps the eventual cutover reversible.
+Phase A of the charges engine plus Phase B's shadow recording: a standalone replacement for the broker-charges implementation, built alongside the existing one and now computing beside it under a flag that ships **off**.
+
+Phase A's exit criterion held to the end — nothing under `portfolio/` changed while the engine was being built. Phase B then spends that isolation deliberately and minimally: `git diff master --stat -- backend/src/main/java/com/thiru/wealthlens/portfolio/` is one file and fifteen inserted lines, plus one new interface. Turning `app.charges.shadow-recording` off is the entire rollback.
 
 ## The problem
 
@@ -24,6 +26,26 @@ Writing the integration tier found two more, both of the kind no unit test can s
 | **D11** | Every charges endpoint was **public**. `AuthConfig`'s chain ends in `anyRequest().permitAll()`, so a prefix nobody lists is open — including one exposing a user's whole trading history. Now authenticated, and a test asserts an unauthenticated request is refused |
 | **D12** | Publishing a rate card and running the AMC cycle were open to **any authenticated user**. Publishing reprices every user's trades; `/charges/amc/impose` bills real money across every account. Both now require `SUPER_USER`, matching the tax-planning policy endpoints |
 
+## Phase B — shadow recording
+
+The engine now sees every trade the live flow processes and changes none of it. `ProfitAndLossService` hands each V2 buy and sell to a `ChargeRecordingGateway` — an interface owned by `portfolio`, implemented in `brokercharges` — and **ignores what comes back**. No cost basis, no P&L figure and no stored transaction reads a computed charge. `GET /user-charges/user/{email}/reconciliation` is what the phase is for: computed against user-entered, per trade, with the delta.
+
+Two decisions here are worth reading before touching this code, both recorded as **ADR-28**.
+
+**The `assetType == EQUITY` gate stays.** The checklist and tech-spec §9.2 both said to remove it, citing FR-8. That instruction was wrong, and following it would have been a live behaviour change: `UserBrokerChargeService` resolves a rate card by **broker and date only**, with no asset-type dimension anywhere in it, so a mutual fund passed through the superseded implementation would be charged equity brokerage, STT and stamp duty — and `updateBrokerChargesReport` would write those figures into the P&L. Chunk 8's own gate forbids exactly that, so the checklist held two instructions that could not both be satisfied. The shadow call goes **outside** the gate instead: every asset type reaches the new engine, which does have that dimension, and the gate is removed in Phase C where the branch behind it is deleted anyway.
+
+**Only the V2 flow is instrumented**, V1 `addTransaction` being unused and kept for version history. That maps exactly onto the two `updateProfitAndLoss` overloads, which are distinct methods rather than one path — the `ProfitLossContext` overload is instrumented, the `@Deprecated(forRemoval = true)` one reached only from V1 `sellStock` is untouched.
+
+Three properties are asserted rather than asserted-about:
+
+- **Off by default.** `ShadowRecordingIntegrationTest` is the only class running with the flag on, so every other integration class staying green is itself the evidence that recording is opt-in.
+- **Nothing escapes into the trade path.** Every failure in the gateway is caught and logged with the transaction id. A trade must not fail to save because its shadow copy could not be priced; the missing row shows up as `transactionsWithoutComputation` in the reconciliation report.
+- **The P&L is untouched.** The gateway returns a total of ₹999.99 and the saved document carries no trace of it — with the recording asserted present first, so the test is not vacuous.
+
+The reconciliation report excludes two kinds of row from its totals and says why on each: a computation that did not resolve, and a row whose transaction is gone. Subtracting either produces a number that reads as a defect and is not one — the first as the engine undercharging by the whole entered amount, the second as it overcharging by its whole total.
+
+**What is not done:** the flag has not been turned on against real data, and the deltas have not been reviewed. That is the last Phase B box and it needs an environment; `staging-runbook.md` §5b is the procedure, including the deltas that are expected and what each means.
+
 ## What is here
 
 Seven calculators behind one strategy interface; an orchestrator applying aggregator → floor/cap → rounding once per line, in that order and never inside a calculator; two resolvers with specificity ranking and caching; a write-time validator; seven services; twelve catalogue codes, six seeded rate cards and two seeded scheme profiles; a code-keyed reporting model; four controllers and eleven documented requests in `api-collection/`.
@@ -32,7 +54,7 @@ Seven calculators behind one strategy interface; an orchestrator applying aggreg
 
 **AC-6 is now closed.** Two scheme profiles are seeded — one exit load graded by holding period, one expressed as the predicate `#holdingDays < 7`, both priced per FIFO lot. A redemption drawn from lots of different ages charges the young ones alone; averaging over the transaction would be wrong by the entire charge rather than by a rounding error. The AMC card is seeded too, unscoped because the cycle context carries no scrip, quantity or asset type and a card declaring any of those is disqualified by the resolver.
 
-**801 tests** across both tiers. **99% mutation score** (475/476) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
+**836 tests** across both tiers. **99% mutation score** (538/539) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
 
 Four test tiers do more than check examples:
 

@@ -438,3 +438,57 @@ missing.
   entities and dropped their `@Setter(AccessLevel.NONE)`. Both were reverted: no other entity carries
   such a method, and none was needed once the actual cause was found. The seeded entities are
   byte-identical to what they were.
+
+---
+
+## ADR-28 — The `assetType == EQUITY` gate stays; the shadow call goes outside it
+
+**Decision.** Phase B does **not** remove the `assetType == EQUITY` gate in
+`ProfitAndLossService.handleNormalBuyCase` / `handleNormalSellCase`. The shadow recording call is
+placed *outside* it instead, so every asset type reaches the engine while the superseded
+implementation continues to see equity only. The gate is removed in Phase C, when the path it guards
+is deleted.
+
+**Why this reverses a written instruction.** The Chunk 8 checklist and tech-spec §9.2 both said to
+remove the gate, citing FR-8. Taken literally that would have been a live behaviour change, and the
+wrong one:
+
+`UserBrokerChargeService.addUserBrokerChargeEntry` resolves a rate card by **broker and date only**.
+It has no asset-type dimension anywhere in it — `getBrokerage`, `getGovtCharges` and `setTaxes` all
+read the same `BrokerCharges` document whatever the instrument is. Removing the gate would therefore
+have priced a mutual fund redemption and a bond purchase with equity brokerage, securities
+transaction tax and stamp duty, and written those figures into the P&L through
+`updateBrokerChargesReport`. That is precisely what Chunk 8's own gate forbids — "assert **no**
+change to P&L numbers when shadow recording is on" — so the checklist contained two instructions that
+could not both be satisfied.
+
+**FR-8 is satisfied as written.** The PRD says "Every asset type flows through the engine". The
+engine is the new one. Nothing in FR-8 requires the superseded implementation to start pricing
+instruments it was never given rates for; the gate's removal was a means that had been recorded as
+if it were the end.
+
+**Raised by the repository owner, and settled with a further constraint:** V1 `addTransaction` —
+`buyStock` and `sellStock` — is unused and kept only for version history. Phase B therefore targets
+the V2 flow. That maps cleanly onto the two overloads, which are distinct methods rather than a
+single path:
+
+| Overload | Reached from | Shadow recording |
+|---|---|---|
+| `updateProfitAndLoss(UserMail, ProfitLossContext)` | `buyStockV2` → `updateBrokerChargesAndProfitAndLoss`; `sellStockV2` → `updateQuantityBySavingReportAndProfitAndLoss1` | **Yes** — both handlers |
+| `updateProfitAndLoss(UserMail, ProfitAndLossContext)` | V1 `sellStock` only. Already `@Deprecated(forRemoval = true)` | **No** — untouched |
+
+**Consequences.**
+
+- Phase B's entire footprint in `portfolio/` is one new interface and fifteen inserted lines in one
+  file. `git diff master --stat -- .../portfolio/` shows `ProfitAndLossService.java` alone.
+- A non-equity trade now produces a shadow row and no P&L change. Where the shipped data has no card
+  for that asset type the row records `NO_SCHEDULE` or `NO_MATCHING_RULES` rather than a silent zero,
+  and the reconciliation report leaves it out of the totals rather than reporting the entered amount
+  as an undercharge.
+- The checklist line and tech-spec §9.2 are corrected rather than quietly skipped, and the gate
+  removal is moved to Chunk 10 where it belongs — by then the branch behind it is being deleted, so
+  removing it changes nothing.
+- A corporate-action **sell** is not shadow-recorded, because the live flow does not process one
+  either (`updateProfitAndLoss` dispatches to `handleNormalSellCase` only when `actionType == null`).
+  Recording a charge for an event the P&L ignores would put a row in the reconciliation report with
+  nothing to reconcile it against.

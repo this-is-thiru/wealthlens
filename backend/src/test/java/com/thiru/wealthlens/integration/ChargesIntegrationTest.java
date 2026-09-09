@@ -36,6 +36,8 @@ import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import io.restassured.RestAssured;
 import java.io.IOException;
@@ -90,6 +92,9 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private UserChargeRepository userChargeRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @Autowired
     private ChargeScheduleRepository scheduleRepository;
@@ -618,6 +623,78 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         assertThat(chargeAccountRepository.findByEmail(OTHER_EMAIL)).isEmpty();
     }
 
+
+    // ------------------------------------------------------- Phase B — reconciliation
+
+    /**
+     * The report the phase exists to produce, over real documents in two collections. The join is
+     * {@code UserChargeEntity.transactionId} to {@code TransactionEntity.id}, and a unit test that
+     * stubs both repositories proves only that the stubs agree.
+     */
+    @Test
+    void reconciliationEndpoint_reportsTheDifferenceBetweenComputedAndEntered() {
+        // Given — the engine priced the trade, and the user had typed a figure of their own
+        ChargeComputation computation = userChargeService.computeAndRecord(sell("txn-1", "INFY", HOLDER, TRADE_DATE));
+        transactionRepository.save(transaction("txn-1", computation.total() - 5.00));
+
+        // When
+        ResponseEntity<String> response = get("/user-charges/user/" + EMAIL + "/reconciliation", token(EMAIL));
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getBody())
+                .contains("txn-1")
+                .contains("\"delta\":5.0")
+                .contains("\"comparable\":true")
+                .contains("\"comparableCount\":1");
+    }
+
+    /**
+     * A trade from before any card starts computes zero for a stated reason. Subtracting the entered
+     * figure from that zero would report the engine as undercharging by the whole amount.
+     */
+    @Test
+    void reconciliationEndpoint_leavesATradeItCouldNotPriceOutOfTheTotals() {
+        // Given
+        userChargeService.computeAndRecord(sell("txn-old", "INFY", HOLDER, LocalDate.of(2019, 4, 1)));
+        transactionRepository.save(transaction("txn-old", 120.00));
+
+        // When
+        ResponseEntity<String> response = get("/user-charges/user/" + EMAIL + "/reconciliation", token(EMAIL));
+
+        // Then
+        assertThat(response.getBody())
+                .contains("txn-old")
+                .contains("NO_SCHEDULE")
+                .contains("\"comparable\":false")
+                .contains("\"comparableCount\":0")
+                .contains("\"totalDelta\":0.0")
+                .contains("\"unresolvedCount\":1");
+    }
+
+    @Test
+    void reconciliationEndpoint_countsTradesTheEngineNeverSaw() {
+        // Given — one priced, one that shadow recording never reached
+        userChargeService.computeAndRecord(sell("txn-1", "INFY", HOLDER, TRADE_DATE));
+        transactionRepository.save(transaction("txn-1", 100.00));
+        transactionRepository.save(transaction("txn-unseen", 80.00));
+
+        // When
+        ResponseEntity<String> response = get("/user-charges/user/" + EMAIL + "/reconciliation", token(EMAIL));
+
+        // Then
+        assertThat(response.getBody()).contains("\"transactionsWithoutComputation\":1");
+    }
+
+    @Test
+    void reconciliationEndpoint_refusesAnUnauthenticatedRequest() {
+        // When
+        ResponseEntity<String> response = get("/user-charges/user/" + EMAIL + "/reconciliation", null);
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    }
+
     // ------------------------------------------------------------------- harness
 
     private String token(String email) {
@@ -854,6 +931,18 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         rule.setActive(true);
         rule.setOrder(order);
         return rule;
+    }
+
+    private static TransactionEntity transaction(String id, double enteredCharges) {
+        TransactionEntity transaction = new TransactionEntity();
+        transaction.setId(id);
+        transaction.setEmail(EMAIL);
+        transaction.setStockCode("INFY");
+        transaction.setBrokerName(BrokerName.ZERODHA);
+        transaction.setAccountHolder(HOLDER);
+        transaction.setTransactionDate(TRADE_DATE);
+        transaction.setBrokerCharges(enteredCharges);
+        return transaction;
     }
 
     private static ChargeAccountEntity account() {

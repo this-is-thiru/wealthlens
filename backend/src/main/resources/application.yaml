@@ -14,3 +14,12 @@ app:
     key-secret: ${JWT_SECURITY_KEY}
   mongodb:
     transactions-enabled: true
+  charges:
+    # Phase A: the engine is live and the simulate API is usable.
+    engine-enabled: true
+    # Phase B: the engine prices and records every trade beside the live flow, and the result is
+    # ignored. Off by default -- turning it on is what makes the reconciliation report have data,
+    # and turning it off is the whole rollback.
+    shadow-recording: false
+    # Phase C: the computed total drives cost basis. Nothing reads this yet.
+    authoritative: false
