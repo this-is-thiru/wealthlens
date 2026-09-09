@@ -5,7 +5,7 @@
 
 **Branch:** `feature/charges-engine`
 **Status:** Chunks -1 through 9 complete — **all of Phase A, and Chunk 8 (Phase B) built and exercised against a running application**. One box remains and it needs genuine user data, not a mechanism: the delta review. **Resume at the Phase B gate below.**
-**Last updated:** 2026-09-09 — 836 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
+**Last updated:** 2026-09-09 — 854 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
 
@@ -382,7 +382,8 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 - [x] `ChargeRecordingGatewayImplTest` (15), `ChargeReconciliationServiceTest` (7); `ProfitAndLossServiceTest` extended 11 → 15 with no existing assertion changed
 - [x] `ShadowRecordingIntegrationTest` (4) — the only class running with the flag on, so the other integration classes staying green is itself the evidence recording is opt-in. Four reconciliation cases added to `ChargesIntegrationTest` (33 → 37)
 - [x] Run end to end against a running application — done 2026-09-09 against a local replica set with the shipped seed data and `shadow-recording=true`. Four V2 trades through `POST /portfolio/user/{email}/transaction/v2`; every runbook §5b command run verbatim and its answer recorded as the baseline in §5b.5b. This found two documentation defects (below) and confirmed the mutual-fund coverage gap shows up as a real number
-- [ ] Review the deltas **on real user data** — still open. The figures in §5b.5b were entered by hand, so the equity deltas are not evidence about the engine. Needs a staging environment carrying genuine transactions
+- [x] `service/ChargeBackfillService` + `POST /charges/backfill/user/{email}` (`SUPER_USER`) — **the missing piece.** Shadow recording only fires on trades after the flag goes on, so an existing database has no computed charges and the reconciliation report comes back empty. This prices the history, reconstructing the FIFO lots a sell consumed by replaying the buys in date order — without them a `perLot` rule evaluates zero times and a redemption inside its exit-load window backfills as free. `computeAndRecordBatch` had been built in Chunk 5 and had no caller until now. 16 unit tests, 5 integration
+- [ ] Review the deltas **on real user data** — still open, and now unblocked. Needs the staging app started with the secrets, then backfill and read the report
 
 ### ✅ Phase B gate
 - [x] Existing `PortfolioServiceTest`, `ProfitAndLossServiceTest`, `TradeMatchingServiceTest` green with no existing assertion changed. `ProfitAndLossServiceTest` gained a `@Mock` field and four tests; every pre-existing method is byte-identical

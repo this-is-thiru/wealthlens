@@ -467,6 +467,35 @@ Include at least one **non-equity** trade. The superseded implementation skips t
 they are the trades where the engine is doing something nothing else does — and where the shipped
 seed data is most likely to have a gap.
 
+### 5b.2b Backfill the history — the step that makes the report mean anything
+
+**On any database that already has transactions, do this before reading the report.** Shadow
+recording only fires on trades that flow through the live path *after* the flag went on. Everything
+older carries no computed charge, so without this step §5b.4 returns `rows: []` and
+`transactionsWithoutComputation` equal to the user's entire history — an empty report that looks
+like a broken one.
+
+It is also the only way to get a delta against a figure a **user** actually typed. Trades driven by
+hand in §5b.2 carry entered figures that were invented for the test; the history does not.
+
+```bash
+curl -sS -X POST "$BASE/charges/backfill/user/$USER_EMAIL" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+```
+
+`SUPER_USER` only. **It writes** — one `user_charges` row per priced transaction, and nothing else:
+no cost basis, no P&L figure and no transaction document is touched. Reversible by dropping the rows
+it wrote. Safe to re-run: a row is keyed on `{email, transactionId}` and replaced, not appended.
+
+Read the response in this order:
+
+| Field | What to do about it |
+|---|---|
+| `skipped` | Transactions never processed (`TEMPORARY`, `FAILED`) or missing a date, quantity or side. A temporary transaction is blocked by a corporate action and has not happened yet |
+| `sellsWithNoLotsFound` | Sells whose buys are not in the history. Any holding-period charge on those prices at zero, so this **caps how far the exit-load figures can be trusted**. Expect a non-zero count on a database whose earliest buys predate its transaction records |
+| `byResolution` | Anything outside `RESOLVED` and `CORPORATE_ACTION_EXEMPT` is a gap in the seed data for what was actually traded. `GET /user-charges/user/:email/gaps` lists them |
+| `priced` | What the totals in §5b.4 will be built from |
+
 ### 5b.3 Confirm a row was written
 
 ```bash
