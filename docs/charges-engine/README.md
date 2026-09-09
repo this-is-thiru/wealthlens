@@ -12,8 +12,8 @@
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | 37 — twenty-four code (16 `feat`, 3 `test`, 2 `fix`, 1 `ci`, 2 `chore`) and thirteen documentation. Counted with `git rev-list master..HEAD --count`; the figure here previously read 25 against an actual 31, so trust the command over this cell |
-| **Phase** | A **complete**; B **complete** — built, and run against 319 real transactions on `it-staging`. Chunks 1–9 done |
-| **Next action** | Decide whether to amend the Phase B gate (see §11), then Chunk 10 — Phase C cutover |
+| **Phase** | A and B both **closed**. B ran against 319 real transactions on `it-staging` and closed by ADR-31. Chunks 1–9 done |
+| **Next action** | **Chunk 10 — Phase C cutover.** Phase B closed 2026-09-09 (ADR-31). Build behind `authoritative: false`; flipping it is a separate, announced decision |
 | **Blocking questions** | None. **AC-2 closed 2026-09-08**; **ADR-28 settled the EQUITY gate 2026-09-09**. The remaining Phase B work needs an environment, not a decision |
 
 ---
@@ -209,7 +209,7 @@ Read in this order:
 | # | Document | What it answers | Lines |
 |---|---|---|---|
 | 1 | **README.md** *(this file)* | Where things stand; how to resume | 171 |
-| 2 | **decisions.md** | *Why* the design is the way it is. 30 decisions, each with context, rationale and consequences. **ADR-26 before deploying; ADR-28 before touching the trade path** | 380 |
+| 2 | **decisions.md** | *Why* the design is the way it is. 31 decisions, each with context, rationale and consequences. **ADR-26 before deploying; ADR-28 before touching the trade path** | 380 |
 | 3 | **prd.md** | Requirements, 9 catalogued defects in the old code, 12 acceptance criteria | 187 |
 | 4 | **tech-spec.md** | The design. Entities, engine contracts, algorithms, seed format, extensibility analysis (§13), temporal semantics (§14) | 912 |
 | 5 | **test-plan.md** | How it is verified. ~190 tests across 11 tiers, with gates | 347 |
@@ -408,36 +408,33 @@ JaCoCo gates passing, and **99% mutation score** (538/539) across the engine and
 services — the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant. Every
 Chunk 8 class is at 100%.
 
-### Phase B is done, with one decision outstanding
+### Phase B is closed (ADR-31)
 
 **Run against real data on 2026-09-09** — `it-staging`, 319 transactions spanning 2023-06-22 to
-2026-01-12. Backfilled and reconciled. Full write-up in `phase-b-reconciliation-findings.md`; the
-short version:
+2026-01-12. Full write-up in `phase-b-reconciliation-findings.md`.
 
-**The engine is correct.** A resolution breakdown was predicted from the data before running and
-matched exactly — 227 trades predate every shipped card and resolved `NO_SCHEDULE`, 92 fell inside
-one. A contract note was checked line by line and agrees to the paisa, including STT's whole-rupee
-statutory rounding and a GST base that excludes STT (the D1 defect, seen fixed on a real trade). AC-4
-deduplication was proven on three same-day sells of one scrip: DP charged once, ₹12.50 then ₹0.00,
-₹0.00. FIFO lots were reconstructed for all 43 sells with none missing.
+**The engine is correct.** A resolution breakdown predicted from the data *before* running matched
+exactly — 227 trades predate every shipped card and resolved `NO_SCHEDULE`, 92 fell inside one. A
+contract note was checked line by line and agrees to the paisa, including STT's whole-rupee statutory
+rounding and a GST base excluding STT (the D1 defect, seen fixed on a real trade). AC-4 deduplication
+was proven on three same-day sells of one scrip: DP charged once, ₹12.50 then ₹0.00, ₹0.00. FIFO lots
+were reconstructed for all 43 sells with none missing.
 
-**But the comparison the gate asked for could not be made.** Entered broker charges total **₹5.32
-across 49 comparable trades** — 37 of them exactly ₹0.01, against computed figures of ₹16 to ₹29. The
-manual field was never populated. So the ₹235.30 delta is not two opinions about one charge; it is
-the whole computed total measured against a blank.
+**The comparison PRD OD-8 asked for returned no usable signal, and the gate is amended to say so.**
+Entered broker charges total ₹40.72 across the whole history and **₹5.32 across the 49 comparable
+trades — 37 of them exactly ₹0.01**, against computed figures of ₹16 to ₹29. That is not a population
+of user estimates; it is a field with a placeholder in it. The ₹235.30 delta is the computed total
+measured against a blank, and **should not be cited as an engine finding**.
 
-That is the strongest possible argument *for* the engine — manual entry was supposed to happen and
-did not — but it means PRD OD-8's proof-before-cutover cannot be produced from this database.
-**Recommendation: amend the gate to record that the comparison was attempted and the baseline was
-absent**, rather than block Phase C waiting for data nobody captured.
+Running Phase B was still right: it is what produced this finding, and the backfill, the FIFO
+reconstruction and ADR-29's instrument-master gap would otherwise all be undiscovered.
 
-**Two things Phase C must not discover late:**
+**Two things Chunk 10 inherits:**
 
-1. **Cost basis will move for every trade** once the computed total becomes authoritative — from
-   effectively zero charges to real ones. That is user-visible in realised P&L and should be
-   announced, not discovered.
-2. **71% of this history cannot be priced at all.** Every shipped card starts 2025-04-01; the history
-   starts 2023-06-22. Closing that needs 2023 and 2024 card generations — rate archaeology, not code.
+1. **Cost basis moves for every trade** once `authoritative` flips — from effectively zero charges to
+   real ones. User-visible in realised P&L; announce it, do not let it be discovered.
+2. **There is no numerical baseline to diff the cutover against.** Correctness rests on the golden
+   fixtures, the invariants, and ADR-31's verification.
 
 ### What Chunk 8 decided, and why it is not what the checklist said
 

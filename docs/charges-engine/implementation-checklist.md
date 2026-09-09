@@ -4,7 +4,7 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Chunks -1 through 9 complete — **all of Phase A, and Chunk 8 (Phase B) built and exercised against a running application**. One box remains and it needs genuine user data, not a mechanism: the delta review. **Resume at the Phase B gate below.**
+**Status:** Chunks -1 through 9 complete — **Phase A and Phase B are both closed** (Phase B by ADR-31). **Resume at Chunk 10**, the Phase C cutover.
 **Last updated:** 2026-09-09 — 854 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
@@ -390,8 +390,8 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 - [x] 836 tests green across both tiers, surefire XML gate clean, `spotless:check` clean, both JaCoCo gates passing, **99% mutation score** (538/539 — the survivor is `ChargeFormulaEvaluator`'s known equivalent mutant; every Chunk 8 class is at 100%)
 - [x] `WealthLensModulithTest` green — `portfolio` → `brokercharges` and `brokercharges` → `portfolio` are both already declared
 - [x] Reconciliation deltas reviewed and explained — done, **with the finding that there is no baseline to explain them against.** Entered broker charges total ₹5.32 across 49 comparable trades (37 of them exactly ₹0.01), so the ₹235.30 delta is very nearly the whole computed total measured against a field nobody filled in. The engine was therefore verified independently instead: a resolution breakdown predicted before the run and matched exactly (227 `NO_SCHEDULE` / 92 in-window), one contract note checked line by line to the paisa, and AC-4 deduplication proven on three same-day sells of one scrip. See `phase-b-reconciliation-findings.md` §4
-- [ ] **Decide whether to amend the gate** (recommendation: yes) — the comparison PRD OD-8 asked for cannot be made on data where the manual field was never populated. Waiting for it would block Phase C indefinitely
-- [ ] **Discuss before starting Phase C**
+- [x] **Gate amended — ADR-31, decided 2026-09-09.** The comparison PRD OD-8 asked for was made and returned no usable signal: the manual field was never populated. Phase B closes on that finding rather than waiting for data nobody captured. PRD OD-8 is amended in place, not deleted — running Phase B is what produced the finding
+- [x] **Discussed before starting Phase C** — 2026-09-09. **Phase B is closed.** Carry two things into Chunk 10: (1) cost basis moves for *every* trade once `authoritative` flips, from effectively zero charges to real ones — user-visible in realised P&L and to be announced, not discovered; (2) there is no numerical baseline to diff the cutover against, so correctness rests on the golden fixtures, the invariants and ADR-31's verification
 
 ---
 

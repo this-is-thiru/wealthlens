@@ -606,3 +606,62 @@ error handling exists to prevent. It returns empty, and the absence shows up as
   integration class staying green is the evidence that it ships on.
 - **`authoritative` is still inert**, and its comment now says so in capitals. It becomes real in
   Chunk 10; until then setting it changes nothing.
+
+---
+
+## ADR-31 — The Phase B gate is amended: the baseline it assumed does not exist
+
+**Decision.** The Phase B exit criterion is satisfied. The comparison PRD OD-8 asked for —
+computed totals against what users actually typed — **was made and returned no usable signal**,
+because the manual field was never populated. Phase B is closed on that finding rather than held open
+waiting for data nobody captured. Taken by the repository owner, 2026-09-09.
+
+**What OD-8 assumed.** "Run it — it is the only way to check computed totals against what users
+actually typed." The assumption underneath is that users typed something. On `it-staging`, across 319
+real transactions spanning two and a half years:
+
+- entered broker charges total **₹40.72** over the whole history, and **₹5.32** across the 49
+  trades that could be compared;
+- **37 of those 49 rows read exactly ₹0.01**, against computed charges of ₹16 to ₹29;
+- the largest entered figure anywhere is ₹3.40, where a ₹1,00,000 delivery sell costs about ₹120.
+
+That is not a population of user estimates to reconcile against. It is a field with a placeholder in
+it. `phase-b-reconciliation-findings.md` has the evidence.
+
+**Why this closes the gate rather than failing it.** OD-8 wanted proof before cutover. What it named
+as the source of proof turned out to be unavailable — but the thing it wanted proof *of* was
+established by stronger means, and the finding is itself the answer:
+
+1. **A prediction made before the run and matched exactly.** From transaction dates against the
+   cards' windows: 227 trades predate every shipped card and must resolve `NO_SCHEDULE`, 92 fall
+   inside one. The engine returned 227 and 92, splitting 45 / 43 / 4.
+2. **One contract note verified by hand, line by line, to the paisa** — including STT's whole-rupee
+   statutory rounding and a GST base that excludes STT, which is the D1 defect observed fixed on a
+   real trade rather than in a fixture.
+3. **AC-4 proven on real documents.** Three same-day sells of one scrip; the depository charge
+   appears once. Both of the old implementation's defects in that deduplication, D9 and D10, would
+   have shown here.
+
+A comparison against ₹0.01 could not have established any of that. Holding the gate open for a
+better dataset would block Phase C on the outcome of a data-collection exercise nobody has scheduled
+and no user has reason to complete.
+
+**The finding is the strongest argument for the work.** Charges were meant to be entered by hand and
+were not — 40 rupees across 319 trades. Manual entry did not fail at the margin; it did not happen.
+The engine is not replacing a working process, it is supplying one that was never there. That reads
+as a better justification for Phase C than any delta would have.
+
+**Consequences.**
+
+- **PRD OD-8 is amended, not deleted.** Phase B ran, and running it is what produced this finding.
+  The claim "the delta on real data is the only real proof" is what proved false; had we cut straight
+  to Phase C we would have learned none of it, and the backfill, the FIFO reconstruction and the
+  instrument-master gap (ADR-29) would all still be undiscovered.
+- **Phase C loses its numerical pre-check.** There is no baseline to diff the cutover against, so
+  correctness there rests on the golden fixtures, the invariants and the verification above.
+- **Cost basis will move for every trade, and that is now a certainty rather than a risk.** From
+  effectively zero charges to real ones — ₹240 on 49 trades in this sample, and more once M2-2's
+  historical cards let the other 227 price. This is user-visible in realised P&L and must be
+  announced before `authoritative` is flipped, not discovered afterwards.
+- **Do not read the ₹235.30 delta as an engine finding.** It is the computed total measured against
+  a blank. Anyone citing it later should cite the finding instead.
