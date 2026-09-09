@@ -4,7 +4,7 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Chunks -1 through 9 complete — **Phase A and Phase B are both closed** (Phase B by ADR-31). **Resume at Chunk 10**, the Phase C cutover.
+**Status:** Phase A and Phase B closed; **Chunk 10a done** — the engine is authoritative for cost basis behind `app.charges.authoritative`, which ships `false`. **Resume at Chunk 10b.**
 **Last updated:** 2026-09-09 — 854 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
@@ -397,10 +397,38 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 
 # PHASE C — cutover
 
-## Chunk 10 — Make the engine authoritative
+## Chunk 10a — Make the engine authoritative for cost basis *(done 2026-09-09)*
 
-- [ ] `app.charges.authoritative=true` path: `assetEntity.setBrokerCharges(computation.total())`
-- [ ] Remove the `assetType == EQUITY` gate at `ProfitAndLossService` (moved here from Chunk 8 by ADR-28) — safe only once the superseded path behind it is deleted
+**V2 only**, at the repository owner's direction: `buyStock`/`sellStock` are unused and kept for
+version history, so `buyStockV2` no longer shares `updateBrokerChargesAndProfitAndLoss` with V1.
+
+- [x] `app.charges.authoritative=true` path: `assetEntity.setBrokerCharges(computation.total())` (AC-10)
+- [x] `PortfolioService.buyStockV2` computes the charge **before** the lot is written, and the ordering
+      is asserted with `InOrder` rather than inferred from the value
+- [x] The engine runs **once** per trade: `buyStockV2` prices it and hands the result to
+      `ProfitAndLossService.updateProfitAndLoss(userMail, context, precomputed)`, a new overload that
+      uses what it is given instead of asking the gateway again. The 2-arg version is unchanged, so V1
+      behaves exactly as before
+- [x] An absent computation **leaves the entered figure alone** rather than zeroing it — no card for the
+      period, the kill switch, or a scheme with no profile all say nothing about whether the trade cost
+      anything, and a real cost overwritten with zero is worse than an estimate
+- [x] `brokerCharges` stays on `AssetRequest` (owner's decision): clients keep sending it and keep
+      working, it simply stops being read once `authoritative` is on. Removal is a later release
+- [x] 5 tests in `PortfolioServiceTest` (6 → 11), every pre-existing one unchanged. Verified non-vacuous
+      by breaking the assignment and watching `expected: <118.74> but was: <125.5>`
+
+**Only the buy path.** On a sell the computed charge belongs to realised P&L, not to the holding's
+cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's report rewiring.
+
+## Chunk 10b — The rest of the cutover
+
+- [ ] Sell path: the computed charge reaches realised P&L
+- [ ] `TradeSegment` promoted into `portfolio/dto/enums`; added to `AssetRequest`, `TransactionEntity`,
+      `AssetEntity` (default `DELIVERY`). Until this lands every trade is priced as delivery
+- [ ] Deprecate `AssetRequest.brokerCharges` in the DTO (kept, not removed — see 10a)
+- [ ] `userChargeId` on `TransactionEntity` for traceability
+- [ ] Remove the `assetType == EQUITY` gate at `ProfitAndLossService` (moved here from Chunk 8 by ADR-28)
+      — **safe only once the superseded path behind it is deleted, so it belongs with Chunk 11**
 - [ ] `PortfolioService.buyStock` (`:311`) — **move charge computation ahead of the entity mutation**
 - [ ] Same for `buyStockV2`, `sellStockV2`, `updateQuantityBySavingReportAndProfitAndLoss1`
 - [ ] Remove `brokerCharges` from `AssetRequest`; add `userChargeId` to `TransactionEntity`
