@@ -541,16 +541,17 @@ curl -sS "$BASE/user-charges/user/$USER_EMAIL/reconciliation" -H "Authorization:
 Every one carries a `note` saying why it was not compared. Two shapes appear: the computation did not
 resolve, or no transaction with that id is on file.
 
-### 5b.5b A known-good baseline — this whole section was walked on 2026-09-09
+### 5b.5b Known-good baselines
 
-Against a local replica set with the shipped seed data, `shadow-recording=true`, and four V2 trades
-driven through `POST /portfolio/user/{email}/transaction/v2`. Every command above was run verbatim;
-these are the answers it gave.
+Two runs, kept because they answer different questions.
+
+**A synthetic run (2026-09-09, local replica set)** — four hand-driven V2 trades, useful for checking
+the plumbing works before pointing anything at real data:
 
 | Trade | Computed | Entered | Delta |
 |---|---|---|---|
 | RELIANCE ×100 @ ₹1,000 BUY, 2025-06-10 | 118.74 | 125.50 | −6.76 |
-| PARAGPARIKHFLEXICAP ×500 @ ₹75.25 BUY, 2025-06-11 | 2.00 | 0.00 | **+2.00** |
+| PARAGPARIKHFLEXICAP ×500 @ ₹75.25 BUY | 2.00 | 0.00 | +2.00 |
 | RELIANCE ×100 @ ₹1,200 SELL, 2025-09-15 | 140.41 | 140.00 | +0.41 |
 | INFY ×10 @ ₹800 BUY, **2019**-04-01 | 0.00 | 45.00 | *excluded* |
 
@@ -559,17 +560,22 @@ these are the answers it gave.
   "comparableCount": 3, "unresolvedCount": 1, "transactionsWithoutComputation": 0 }
 ```
 
-Three things to read out of it:
+The entered figures here were invented, so the deltas are not evidence about the engine. What this
+run *does* prove is the exclusion rule: adding the 2019 trade moved `unresolvedCount` 0 → 1 and left
+`totalDelta` at −4.35. Subtracted, it would have read −49.35 and looked like a ₹45 undercharge.
 
-- **The mutual fund row is the one that matters.** Entered ₹0.00 because the superseded
-  implementation skips non-equity entirely; computed ₹2.00 because the engine has an asset-type
-  dimension. That +2.00 is not a discrepancy to reconcile away — it is the coverage gap FR-8 exists
-  to close, appearing as a number for the first time.
-- **The 2019 trade is excluded, and the totals prove it.** Adding it moved `unresolvedCount` from 0
-  to 1 and left `totalDelta` at −4.35 and `comparableCount` at 3. Had it been subtracted, the delta
-  would have read −49.35 and looked like a ₹45 undercharge.
-- **The entered figures here are invented**, so the equity deltas are not evidence about the engine.
-  On real data they are the ones to explain, using the table below.
+**The real run (2026-09-09, `it-staging`, 319 transactions)** — backfilled, then reconciled:
+
+```
+backfill:  transactionsRead 319 | priced 319 | skipped 0 | sellsWithNoLotsFound 0
+           RESOLVED 45 | NO_SCHEDULE 227 | NO_INSTRUMENT_PROFILE 43 | CORPORATE_ACTION_EXEMPT 4
+report:    totalComputed 240.62 | totalEntered 5.32 | totalDelta 235.30
+           comparableCount 49 | unresolvedCount 270 | transactionsWithoutComputation 0
+```
+
+**Read `phase-b-reconciliation-findings.md` before drawing anything from those deltas.** The entered
+side is ₹5.32 across 49 trades — 37 of them exactly ₹0.01 — so the delta is the computed total
+measured against a field nobody filled in, not a disagreement about a charge.
 
 ### 5b.6 Deltas you should expect, and what each means
 
