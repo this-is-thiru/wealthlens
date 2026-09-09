@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-08, branch `feature/charges-engine`, **Phase A complete** (Chunks 1–7 and 9), with the two seed-data items Chunk 6 left open now closed. Full suite green: 801 tests, unit and integration.
+**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`, **Phase A complete and Phase B built** (Chunks 1–9). Full suite green: 836 tests, unit and integration, both JaCoCo gates passing, 99% mutation score (538/539).
 
 ---
 
@@ -12,9 +12,9 @@
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | 37 — twenty-four code (16 `feat`, 3 `test`, 2 `fix`, 1 `ci`, 2 `chore`) and thirteen documentation. Counted with `git rev-list master..HEAD --count`; the figure here previously read 25 against an actual 31, so trust the command over this cell |
-| **Phase** | A (standalone engine) — **complete**. Chunks 1–7 and 9 done |
-| **Next action** | Review the Phase A results, then Chunk 8 (Phase B, shadow recording). See §11 |
-| **Blocking questions** | None. **AC-2 closed 2026-09-08** — rates verified against the brokers' published pages on this branch; see `ac2-rate-verification.md`. Every Phase A criterion is now signed off |
+| **Phase** | A **complete**; B (shadow recording) **built and green**, awaiting a run against real data. Chunks 1–9 done |
+| **Next action** | Turn `app.charges.shadow-recording` on in staging, drive real trades through it, and read `GET /user-charges/user/{email}/reconciliation`. That is the last Phase B box. See §11 |
+| **Blocking questions** | None. **AC-2 closed 2026-09-08**; **ADR-28 settled the EQUITY gate 2026-09-09**. The remaining Phase B work needs an environment, not a decision |
 
 ---
 
@@ -100,6 +100,44 @@ Both quality gates now cover `brokercharges.service` as well as the engine — t
 
 Tests: `ChargeSeederServiceTest` 14 → 24, `ChargeScheduleValidatorTest` 31 → 35, `ChargeSimulationServiceTest` 14 → 27, four new golden fixtures, four new cases in `ChargesIntegrationTest`.
 
+### Written by Chunk 8 — Phase B, shadow recording
+
+**The engine now sees every trade the live flow processes, and changes none of it.**
+
+`config/ChargeEngineProperties` — `app.charges.{engine-enabled,shadow-recording,authoritative}`,
+declared in all three profile yamls with **shadow recording off**. Turning it on is what gives the
+reconciliation report data; turning it off is the whole rollback.
+
+`portfolio/service/ChargeRecordingGateway` — an interface owned by `portfolio`, returning
+`Optional<ChargeComputation>`. `brokercharges/service/ChargeRecordingGatewayImpl` implements it:
+it maps a `ProfitLossContext` onto a `ChargeContext` and calls the existing
+`UserChargeService.computeAndRecord`. Every failure inside it is caught and logged — a shadow record
+exists to be compared later, and a trade that failed to save because its shadow copy could not be
+priced would be strictly worse than having no shadow copy.
+
+`ProfitAndLossService` calls it in both handlers and **ignores what comes back**. Phase B's entire
+footprint in `portfolio/` is that one file, fifteen inserted lines, plus the interface.
+
+`service/ChargeReconciliationService` and `GET /user-charges/user/{email}/reconciliation` — computed
+against entered, per trade, with the delta. Sums are `BigDecimal`; two kinds of row are listed with a
+note and **left out of the totals**, because subtracting either produces a figure that reads as a
+defect and is not one: a computation that did not resolve, and a row whose transaction is gone.
+
+`ChargeResolution.UNRESOLVED` and `isUnresolved()` — promoted onto the enum from a private constant
+in `UserChargeService`, because the gaps report and the reconciliation report must agree on what
+"unresolved" means and a duplicated list is how they start not to.
+
+Tests: `ChargeRecordingGatewayImplTest` (15), `ChargeReconciliationServiceTest` (7),
+`ProfitAndLossServiceTest` 11 → 15 with **no existing assertion changed**,
+`ShadowRecordingIntegrationTest` (4) and four reconciliation cases in `ChargesIntegrationTest`
+(33 → 37). `LogCapture` gained `errors()` alongside `warnings()`.
+
+**Two decisions are recorded as ADR-28 and are the ones to read before touching this.** The
+`assetType == EQUITY` gate **stays** — it guards the superseded implementation, which has no
+asset-type dimension at all, so removing it as the checklist originally said would have priced mutual
+funds as equity and written that into the P&L. And only the **V2** flow is instrumented, the V1
+`addTransaction` path being unused and kept for version history.
+
 ### Written by Chunk 7
 
 `entity/model/ChargeSummaryReport` and its `YearlyChargeSummary` / `MonthlyChargeSummary` forms — a map keyed by charge code replacing six fixed columns, summed in `BigDecimal` with the total recomputed from the parts rather than accumulated beside them. `ChargeSummaryReportTest`, 11 cases. Nothing writes one yet: `ProfitAndLossService` keeps the old `BrokerChargesReport` until Phase C.
@@ -112,7 +150,7 @@ Four controllers — `ChargeScheduleController` (publish, fetch, list, close, un
 
 ### NOT written yet — do not assume any of it exists
 
-**Nothing in the live path calls any of this.** The simulate endpoint and the user-charges endpoints are the first callers, and they stand beside the existing flow rather than in it. Phase B is what puts the engine in the trade path; Phase C is what makes it authoritative.
+**Nothing in the live path *depends* on any of this.** Since Chunk 8 the trade path does call the engine — `ProfitAndLossService` hands every V2 buy and sell to `ChargeRecordingGateway` — but only when `app.charges.shadow-recording` is on, and it ignores the result. No cost basis, no P&L figure and no stored transaction reads a computed charge. Phase C is what makes it authoritative.
 
 ### The old implementation is fully intact and untouched
 
@@ -129,7 +167,7 @@ Read in this order:
 | # | Document | What it answers | Lines |
 |---|---|---|---|
 | 1 | **README.md** *(this file)* | Where things stand; how to resume | 171 |
-| 2 | **decisions.md** | *Why* the design is the way it is. 22 decisions, each with context, rationale and consequences | 260 |
+| 2 | **decisions.md** | *Why* the design is the way it is. 28 decisions, each with context, rationale and consequences. **ADR-26 before deploying; ADR-28 before touching the trade path** | 320 |
 | 3 | **prd.md** | Requirements, 9 catalogued defects in the old code, 12 acceptance criteria | 187 |
 | 4 | **tech-spec.md** | The design. Entities, engine contracts, algorithms, seed format, extensibility analysis (§13), temporal semantics (§14) | 912 |
 | 5 | **test-plan.md** | How it is verified. ~190 tests across 11 tiers, with gates | 347 |
@@ -155,8 +193,8 @@ The existing broker-charges implementation models a rate card as a **fixed set o
 
 | Phase | Scope | Touches `portfolio`? |
 |---|---|---|
-| **A** *(current)* | Standalone engine: schedules, instruments, rules, calculators, seeds, simulate API | **No.** Hard rule. |
-| **B** | Shadow: engine computes and persists alongside the live flow, result ignored; reconciliation report | One interface + injection |
+| **A** *(done)* | Standalone engine: schedules, instruments, rules, calculators, seeds, simulate API | **No.** Hard rule. |
+| **B** *(current)* | Shadow: engine computes and persists alongside the live flow, result ignored; reconciliation report | One interface + injection — and that is literally all it was: `ChargeRecordingGateway.java` plus 15 lines in `ProfitAndLossService.java` |
 | **C** | Cutover: computed total drives cost basis, manual charge entry retired, old code deleted | Yes |
 
 **Phase A exit criterion, checked literally:**
@@ -304,6 +342,11 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 | **Amending a card that has priced charges has no safe mechanism yet** | `POST /charges/recompute` is designed (tech-spec §14.4) and not built. Harmless through Phase A, where nothing prices anything; a real constraint once Phase B records |
 | **Zerodha's depository fee revision has no published date** | 2026-06-19 comes from secondary reporting. Wrong by a few weeks misprices only the window between the real date and that one, and correcting it is a new card |
 | **Performance under load** | Resolver cache is asserted for correctness, not latency |
+| **Shadow recording is off in every shipped profile** | Deliberate (ADR-28's companion, `app.charges.shadow-recording: false`). Until it is turned on, the trade path calls the gateway and the gateway returns immediately, so the reconciliation report is empty and `transactionsWithoutComputation` equals the user's whole transaction count |
+| **A shadow computation that fails is swallowed** | On purpose. `ChargeRecordingGatewayImpl` catches every `RuntimeException`, logs it with the transaction id, and returns empty. A trade must not fail to save because its shadow copy could not be priced — the missing row is visible in the reconciliation report as a transaction with no computation |
+| **A non-equity trade with no card for its asset type records a gap, not a charge** | The shipped data covers equity delivery, equity intraday, mutual funds and maintenance. Anything else resolves to `NO_SCHEDULE` or `NO_MATCHING_RULES`, is recorded with that reason, and is excluded from the reconciliation totals rather than counted as an undercharge |
+| **A corporate-action sell is not shadow-recorded** | The live flow does not process one either — `updateProfitAndLoss` reaches `handleNormalSellCase` only when `actionType == null`. Recording a charge for an event the P&L ignores would put a row in the reconciliation report with nothing to reconcile it against (ADR-28) |
+| **Shadow recording is not instrumented for segment** | `ProfitLossContext` carries no `TradeSegment`, so every shadow row is priced as `DELIVERY`. The field arrives on the portfolio types in Phase C; until then an intraday trade reconciles against a delivery card and the delta will be real but explainable |
 | **A rate card written outside `ChargeScheduleService` is invisible** | The resolver caches by scope and date and only `publish` and `close` evict. Writing straight to `ChargeScheduleRepository` leaves the previously resolved card in memory. Found by a Chunk 9 test that did exactly that |
 | **A scheme profile written outside the seeder is invisible too** | Same eviction rule, and `ChargeInstrumentResolver` has no publishing service in front of it at all. Only `ChargeSeederService` calls its `evictAll()`. A profile added at runtime needs one before the next redemption of that scheme |
 | **Depository deduplication is not visible from simulate** | It checks *recorded* charges, and in Phase A nothing in the trade path records any, so a scoped charge always prices as a first occurrence unless the account already carries a row from the AMC cycle |
@@ -312,60 +355,66 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ---
 
-## 11. Resume point — Phase A complete
+## 11. Resume point — Phase B built, awaiting a run against real data
 
-**Paused:** 2026-09-08. Build green: **801 tests** across both tiers, `spotless:check` clean, both JaCoCo gates passing, and **99% mutation score** (475/476) across the engine and the new services, the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant.
+**Paused:** 2026-09-09. Build green: **836 tests** across both tiers, `spotless:check` clean, both
+JaCoCo gates passing, and **99% mutation score** (538/539) across the engine and the charges
+services — the single survivor being `ChargeFormulaEvaluator`'s known equivalent mutant. Every
+Chunk 8 class is at 100%.
 
-### The Phase A gate, item by item
+### The one thing left in Phase B
 
-| Item | Status |
-|---|---|
-| Line ≥ 90%, branch ≥ 85% | ✅ both JaCoCo rules pass under `mvn verify` |
-| Mutation ≥ 85% on `brokercharges.engine` | ✅ 99%. Run it scoped — the aggregate `-Pmutation` still fails on the deferred `taxplanning` score (§9), and see the §6 caveat about what `brokercharges.service.*` sweeps in |
-| 16 golden contract notes at ₹0.01 | ✅ asserted line by line and in total |
-| `git diff master --stat -- .../portfolio/` empty | ✅ re-checked at the end of Chunk 9 |
-| `WealthLensModulithTest` green | ✅ |
-| AC-1, 3, 4, 5, 7, 8, 9, 12 | ✅ each with named evidence in the checklist |
-| **AC-2** — rates match the broker's published page | ✅ closed 2026-09-08. All eleven cards verified; `GET /charge-schedules/unverified` returns `[]` on a freshly seeded database |
-| **AC-6** — MF exit load under the holding-period predicate | ✅ closed 2026-09-08. Two scheme profiles seeded; three golden fixtures and two integration cases |
+Everything Chunk 8 could build and verify locally is built and verified. **Two boxes remain and both
+need a running environment**, not a decision:
 
-### What Chunk 9 found
+1. **Turn `app.charges.shadow-recording` on in staging and drive real trades through it.** The flag
+   is off in all three profile yamls, so nothing records until somebody sets it.
+2. **Read `GET /user-charges/user/{email}/reconciliation` and explain the deltas.** That comparison
+   is the entire reason the phase exists (PRD OD-8), and Phase C must not start until it is
+   understood.
 
-Two defects, both of the kind only an integration test can see:
+Watch `unresolvedCount` and `transactionsWithoutComputation` first. The first says the seed data has
+gaps for the asset types being traded; the second says shadow recording is not reaching those trades
+at all. Neither is a delta, and either will make the delta column misleading if ignored.
 
-1. **Every charges endpoint was public.** `AuthConfig` ends in `anyRequest().permitAll()`, so a prefix nobody lists is open — including one that reprices every user's trades and one that bills real money. Fixed, and pinned by a test that asserts an unauthenticated request is refused.
-2. **Publishing a rate card and imposing AMC charges were open to any authenticated user.** Both now require `SUPER_USER`.
+### What Chunk 8 decided, and why it is not what the checklist said
 
-And two test expectations that were wrong rather than the code, both worth knowing before touching this again:
+**ADR-28.** The checklist and tech-spec §9.2 both said to remove the `assetType == EQUITY` gate in
+`ProfitAndLossService`. Doing that literally would have been a live behaviour change and the wrong
+one: `UserBrokerChargeService` resolves a rate card by **broker and date only**, with no asset-type
+dimension anywhere in it, so a mutual fund passed through it would be charged equity brokerage, STT
+and stamp duty — and those figures would reach the P&L. Chunk 8's own gate forbids exactly that. The
+shadow call went **outside** the gate instead: every asset type reaches the engine (FR-8), nothing
+else changes, and the gate is removed in Chunk 10 where the branch behind it is deleted anyway.
 
-- **Superseding a card does not set `SUPERSEDED`.** It closes the window and leaves the status alone, because `findCandidates` excludes only `INACTIVE` and a superseded card must still price the trades inside its own window.
-- **The resolver cache is evicted only by the publish path.** A rate card written straight to the repository is invisible to the engine until something evicts. That is an operational constraint, not merely a test detail.
+**V2 only.** V1 `addTransaction` — `buyStock` and `sellStock` — is unused and kept for version
+history, per the repository owner. That maps exactly onto the two `updateProfitAndLoss` overloads,
+which are distinct methods rather than one path: the `ProfitLossContext` overload (V2) is
+instrumented; the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload, reached only from
+V1 `sellStock`, is untouched.
 
-Mutation testing found a third, smaller one: a zero price was documented as valid in a comment and asserted nowhere, so the `>= 0` boundary mutated cleanly.
+### What Chunk 8 found
 
-### Then: Chunk 8 — Phase B, shadow recording
+- **The checklist contained two instructions that could not both be satisfied** — remove the EQUITY
+  gate, and change no P&L numbers. Reading what the gate actually guards is what settled it. ADR-28.
+- **Mutation testing found four guards on states that cannot occur** in `ChargeReconciliationService`
+  — a null-id filter and a merge function on documents read from one collection, and a debug log
+  restating a field already in the response. All four were removed rather than tested around; code
+  that cannot be reached is code that cannot be right.
+- **One test was symmetric enough to survive negation.** Counting transactions the engine never saw,
+  with one reconciled row and one unseen row, gives the same answer whichever side of the filter you
+  count. It now uses three transactions and two unseen.
 
-**Discuss the Phase A results before starting.** Phase B is the first change to `portfolio/`, which ends the isolation property that has made every step so far reversible.
+### Then: Chunk 10 — Phase C, cutover
+
+**Discuss the Phase B deltas before starting.** Phase C is where the computed total drives cost
+basis and the old implementation is deleted; it is the first step that is not reversible by turning
+a flag off.
 
 ### Defects found in my own earlier work, while building this
 
 1. **The engine applied both sources' version of a charge code.** Tech-spec §4.6.2 says the instrument wins and the card's rule is skipped; it did not, so a scheme with its own exit load on a card that also carried one was charged twice, silently. Found by re-reading the spec during Chunk 5, fixed with a failing test first.
 2. **The old services were assumed to fail a widened quality gate.** They do not — 100% and 97.9% line coverage — so no exemption was written into the build.
-
-### Then: Chunk 6 — seed data
-
-`charge-catalogue.json` first, since the validator rejects any code absent from it. Then the Zerodha cards, `ChargeSeederService` (`@PostConstruct`, idempotent by `scheduleCode`, validating before persisting, failing fast), and test-plan Tier G — the checklist calls it the highest-value test in the plan, because it catches a rate-card typo at build time.
-
-**⚠️ Rates are placeholders and only a human can close that.** AC-2 stays blocked until someone compares each figure against the broker's published charges page and fills in `sourceUrl` and `verifiedOn`.
-
-Two things the seed author needs to know, learned while building the services:
-
-- A **maintenance card must leave `assetType` unset**. The AMC cycle context carries no scrip, quantity or asset type, so a card declaring that dimension is disqualified by the resolver and the cycle bills nothing. Not silently, to be clear — the resolver warns, the engine warns, `AmcChargeService` warns, and the billing watermark is deliberately left where it was so the period can be billed once the card is fixed.
-
-- **Exactly one unscoped card per broker.** An unscoped maintenance card is a candidate for every trade of that broker: it declares no dimension, so it agrees with all of them. It loses on specificity wherever a real card exists, which is the intended behaviour — but two unscoped cards sharing a start date are indistinguishable and the resolver refuses both by name.
-
-  Where no card exists for an asset type, the unscoped card wins by default and then matches none of its rules, giving `NO_MATCHING_RULES` and a zero. That is why `NO_MATCHING_RULES` is in the gaps report: a card that resolves and prices nothing is nearly always a seeding mistake, and it must not read as a free trade.
-- **A new expression variable has to be added in two places** — published by the engine, and listed in `ChargeScheduleValidator`'s vocabulary. That is the price of catching `#equityOrientd`, per ADR-24.
 
 ### What TDD has caught so far, worth continuing for
 

@@ -4,14 +4,14 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Chunks -1 through 7 and 9 complete — **all of Phase A**. **Resume at the Phase A gate below**, then Chunk 8 (Phase B).
-**Last updated:** 2026-09-07 — 744 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, `brokercharges.engine` at 99% mutation score.
+**Status:** Chunks -1 through 9 complete — **all of Phase A, and Chunk 8 (Phase B) built**. Two boxes remain, both needing a running environment: the shadow run against real data and the delta review. **Resume at the Phase B gate below.**
+**Last updated:** 2026-09-09 — 836 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
 
 | Box | Why it is open |
 |---|---|
-| `ChargeEngineProperties` (Chunk 3) | Nothing reads a flag yet. Belongs with Chunk 8 |
+| ~~`ChargeEngineProperties` (Chunk 3)~~ | **Done 2026-09-09** in Chunk 8, where `shadowRecording` first means something |
 | ~~AMC rate card (Chunk 6)~~ | **Done 2026-09-08.** `ZERODHA_MAINTENANCE_2025_04`, unscoped so the cycle can resolve it |
 | ~~Rate verification (Chunk 6)~~ | **Done 2026-09-08.** All eleven cards verified; AC-2 closed. See `ac2-rate-verification.md` |
 | `BrokerageAggregatorType` deletion (Chunk 1) | Phase C, once its last usage is gone |
@@ -364,7 +364,7 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 - [x] **801 tests green across both tiers** (744 at the end of Chunk 9; +56 from the AMC card, the
       scheme profiles, simulate's FIFO lots, the AC-2 rate corrections, ADR-26's two guards and
       ADR-27's seed endpoint), surefire XML gate clean, `spotless:check` clean
-- [ ] **Discuss results before starting Phase B**
+- [x] **Discuss results before starting Phase B** — done 2026-09-09. Two decisions came out of it: Phase B proceeds, and ADR-28 (the EQUITY gate stays, V2 only)
 
 ---
 
@@ -372,17 +372,22 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 
 ## Chunk 8 — Parallel flow, no behaviour change
 
-- [ ] `portfolio/service/ChargeRecordingGateway.java` — interface owned by `portfolio`, returns `Optional<ChargeComputation>`
-- [ ] `brokercharges/service/ChargeRecordingGatewayImpl.java` — computes + persists when `app.charges.shadow-recording=true`
-- [ ] Inject into `ProfitAndLossService`; **ignore the return value** — cost basis untouched
-- [ ] Remove the `assetType == EQUITY` gate at `ProfitAndLossService:333` and `:361` (FR-8) so non-equity trades produce shadow records
-- [ ] `GET /user-charges/user/{email}/reconciliation` — computed vs user-entered per transaction, with delta
-- [ ] `ChargeRecordingGatewayImplTest`; extend `ProfitAndLossServiceTest` to assert **no** change to P&L numbers when shadow recording is on
-- [ ] Run against real data; review the deltas
+- [x] `config/ChargeEngineProperties.java` — `app.charges.{engine-enabled,shadow-recording,authoritative}`, declared in all three profile yamls with shadow recording **off**
+- [x] `portfolio/service/ChargeRecordingGateway.java` — interface owned by `portfolio`, returns `Optional<ChargeComputation>`
+- [x] `brokercharges/service/ChargeRecordingGatewayImpl.java` — computes + persists when `app.charges.shadow-recording=true`. Every failure is caught and logged: a trade must not fail to save because its shadow copy could not be priced
+- [x] Inject into `ProfitAndLossService`; **return value ignored** — cost basis untouched
+- [x] ~~Remove the `assetType == EQUITY` gate~~ — **reversed, ADR-28.** The gate guards the *superseded* implementation, which resolves a rate card by broker and date with no asset-type dimension; removing it would price a mutual fund as equity and write that into the P&L, which Chunk 8's own gate forbids. The shadow call goes **outside** the gate instead, so every asset type reaches the engine (FR-8) and nothing else changes. Gate removal moved to Chunk 10
+- [x] Wired into the **V2** flow only, per the repository owner: V1 `buyStock`/`sellStock` is unused and kept for version history. The two `updateProfitAndLoss` overloads are distinct methods, so this is exact — `ProfitLossContext` (V2) is instrumented, the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload is untouched
+- [x] `GET /user-charges/user/{email}/reconciliation` — computed vs user-entered per transaction, with delta. Rows the engine could not price, and rows whose transaction is gone, are listed with a note and **excluded from the totals**
+- [x] `ChargeRecordingGatewayImplTest` (15), `ChargeReconciliationServiceTest` (7); `ProfitAndLossServiceTest` extended 11 → 15 with no existing assertion changed
+- [x] `ShadowRecordingIntegrationTest` (4) — the only class running with the flag on, so the other integration classes staying green is itself the evidence recording is opt-in. Four reconciliation cases added to `ChargesIntegrationTest` (33 → 37)
+- [ ] Run against real data; review the deltas — **needs a staging environment**; see the runbook
 
 ### ✅ Phase B gate
-- [ ] Existing `PortfolioServiceTest`, `ProfitAndLossServiceTest`, `TradeMatchingServiceTest` unchanged and green
-- [ ] Reconciliation deltas reviewed and explained
+- [x] Existing `PortfolioServiceTest`, `ProfitAndLossServiceTest`, `TradeMatchingServiceTest` green with no existing assertion changed. `ProfitAndLossServiceTest` gained a `@Mock` field and four tests; every pre-existing method is byte-identical
+- [x] 836 tests green across both tiers, surefire XML gate clean, `spotless:check` clean, both JaCoCo gates passing, **99% mutation score** (538/539 — the survivor is `ChargeFormulaEvaluator`'s known equivalent mutant; every Chunk 8 class is at 100%)
+- [x] `WealthLensModulithTest` green — `portfolio` → `brokercharges` and `brokercharges` → `portfolio` are both already declared
+- [ ] Reconciliation deltas reviewed and explained — **blocked on the run against real data above**
 - [ ] **Discuss before starting Phase C**
 
 ---
@@ -392,6 +397,7 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 ## Chunk 10 — Make the engine authoritative
 
 - [ ] `app.charges.authoritative=true` path: `assetEntity.setBrokerCharges(computation.total())`
+- [ ] Remove the `assetType == EQUITY` gate at `ProfitAndLossService` (moved here from Chunk 8 by ADR-28) — safe only once the superseded path behind it is deleted
 - [ ] `PortfolioService.buyStock` (`:311`) — **move charge computation ahead of the entity mutation**
 - [ ] Same for `buyStockV2`, `sellStockV2`, `updateQuantityBySavingReportAndProfitAndLoss1`
 - [ ] Remove `brokerCharges` from `AssetRequest`; add `userChargeId` to `TransactionEntity`

@@ -50,6 +50,10 @@ public final class LogCapture implements AutoCloseable {
         return messages().stream().filter(message -> message.startsWith("WARN ")).toList();
     }
 
+    public List<String> errors() {
+        return messages().stream().filter(message -> message.startsWith("ERROR ")).toList();
+    }
+
     @Override
     public void close() {
         logger.detachAppender(appender);

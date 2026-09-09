@@ -1,7 +1,9 @@
 package com.thiru.wealthlens.brokercharges.controller;
 
 import com.thiru.wealthlens.brokercharges.dto.response.ChargeBreakdownResponse;
+import com.thiru.wealthlens.brokercharges.dto.response.ChargeReconciliationResponse;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import com.thiru.wealthlens.brokercharges.service.ChargeReconciliationService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import java.time.LocalDate;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserChargesController {
 
     private final UserChargeService userChargeService;
+    private final ChargeReconciliationService chargeReconciliationService;
 
     /**
      * Charge history, newest first, optionally narrowed by date range and asset type.
@@ -59,5 +62,21 @@ public class UserChargesController {
     @GetMapping("/gaps")
     public List<UserChargeEntity> gaps(@PathVariable String email) {
         return userChargeService.findGaps(email);
+    }
+
+    /**
+     * What the engine computed against what the user entered, per trade, with the difference.
+     *
+     * <p>The reason Phase B exists. Shadow recording accumulates computed charges beside the
+     * user-entered ones and changes nothing; this is where the two are compared, and the deltas are
+     * what has to be understood before the computed total is allowed near cost basis.
+     *
+     * <p>Rows the engine could not price, and rows whose transaction is gone, are listed with a note
+     * and left out of the totals. Subtracting either produces a figure that reads as a defect and is
+     * not one.
+     */
+    @GetMapping("/reconciliation")
+    public ChargeReconciliationResponse reconciliation(@PathVariable String email) {
+        return chargeReconciliationService.reconcile(email);
     }
 }

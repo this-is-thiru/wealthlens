@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.brokercharges.dto.enums;
 
+import java.util.List;
+
 /**
  * Why a charge computation produced the lines it did — or produced none.
  *
@@ -39,5 +41,26 @@ public enum ChargeResolution {
      * <p>Recorded explicitly rather than left as an empty result, so that a zero charge on a
      * corporate action is visibly deliberate rather than indistinguishable from a missing rate card.
      */
-    CORPORATE_ACTION_EXEMPT
+    CORPORATE_ACTION_EXEMPT;
+
+    /**
+     * The resolutions under which the engine did not reach an answer it stands behind.
+     *
+     * <p>{@code NO_MATCHING_RULES} belongs here because a card can resolve and still price nothing.
+     * An unscoped card — a maintenance card is the obvious one, since an AMC cycle carries no asset
+     * type to scope against — matches every dimension of a trade whose asset type has no card of its
+     * own. It wins by default, none of its rules declare that trade's event, and the result is a
+     * zero that looks deliberate. That is the failure this design exists to prevent, reached by a
+     * different route than a missing card.
+     *
+     * <p>{@code CORPORATE_ACTION_EXEMPT} is deliberately absent: a bonus allotment charging nothing
+     * is an answer, not a gap.
+     */
+    public static final List<ChargeResolution> UNRESOLVED =
+            List.of(NO_SCHEDULE, NO_INSTRUMENT_PROFILE, NO_MATCHING_RULES, PROVISIONAL);
+
+    /** Whether the engine reached a figure it stands behind. */
+    public boolean isUnresolved() {
+        return UNRESOLVED.contains(this);
+    }
 }
