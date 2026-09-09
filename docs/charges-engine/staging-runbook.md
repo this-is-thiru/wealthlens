@@ -447,8 +447,21 @@ the rows already written stay, and remain readable through the endpoints below.
 
 ### 5b.2 Drive real trades
 
-Use the ordinary transaction API — `POST /transactions/user/{email}/transaction/v2`. The **v2** path
-is the one instrumented; V1 `POST .../transaction` is unused and deliberately untouched (ADR-28).
+Use the ordinary transaction API — `POST /portfolio/user/{email}/transaction/v2`. Note the prefix:
+it is `/portfolio/`, not `/transactions/` — the latter is `TransactionController`, which only reads.
+The **v2** path is the one instrumented; V1 `POST .../transaction` is unused and deliberately
+untouched (ADR-28).
+
+```bash
+curl -sS -X POST "$BASE/portfolio/user/$USER_EMAIL/transaction/v2" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{
+    "stockCode":"RELIANCE","stockName":"Reliance Industries","exchangeName":"NSE",
+    "brokerName":"ZERODHA","assetType":"EQUITY","transactionType":"BUY",
+    "accountType":"SELF","accountHolder":"self",
+    "quantity":100,"price":1000,"brokerCharges":125.50,"miscCharges":0,
+    "transactionDate":"2025-06-10","orderExecutionTime":"2025-06-10T10:15:00"
+  }'
+```
 
 Include at least one **non-equity** trade. The superseded implementation skips those entirely, so
 they are the trades where the engine is doing something nothing else does — and where the shipped
@@ -498,6 +511,36 @@ curl -sS "$BASE/user-charges/user/$USER_EMAIL/reconciliation" -H "Authorization:
 
 Every one carries a `note` saying why it was not compared. Two shapes appear: the computation did not
 resolve, or no transaction with that id is on file.
+
+### 5b.5b A known-good baseline — this whole section was walked on 2026-09-09
+
+Against a local replica set with the shipped seed data, `shadow-recording=true`, and four V2 trades
+driven through `POST /portfolio/user/{email}/transaction/v2`. Every command above was run verbatim;
+these are the answers it gave.
+
+| Trade | Computed | Entered | Delta |
+|---|---|---|---|
+| RELIANCE ×100 @ ₹1,000 BUY, 2025-06-10 | 118.74 | 125.50 | −6.76 |
+| PARAGPARIKHFLEXICAP ×500 @ ₹75.25 BUY, 2025-06-11 | 2.00 | 0.00 | **+2.00** |
+| RELIANCE ×100 @ ₹1,200 SELL, 2025-09-15 | 140.41 | 140.00 | +0.41 |
+| INFY ×10 @ ₹800 BUY, **2019**-04-01 | 0.00 | 45.00 | *excluded* |
+
+```
+{ "totalComputed": 261.15, "totalEntered": 265.50, "totalDelta": -4.35,
+  "comparableCount": 3, "unresolvedCount": 1, "transactionsWithoutComputation": 0 }
+```
+
+Three things to read out of it:
+
+- **The mutual fund row is the one that matters.** Entered ₹0.00 because the superseded
+  implementation skips non-equity entirely; computed ₹2.00 because the engine has an asset-type
+  dimension. That +2.00 is not a discrepancy to reconcile away — it is the coverage gap FR-8 exists
+  to close, appearing as a number for the first time.
+- **The 2019 trade is excluded, and the totals prove it.** Adding it moved `unresolvedCount` from 0
+  to 1 and left `totalDelta` at −4.35 and `comparableCount` at 3. Had it been subtracted, the delta
+  would have read −49.35 and looked like a ₹45 undercharge.
+- **The entered figures here are invented**, so the equity deltas are not evidence about the engine.
+  On real data they are the ones to explain, using the table below.
 
 ### 5b.6 Deltas you should expect, and what each means
 
