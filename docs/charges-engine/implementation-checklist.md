@@ -4,7 +4,7 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Chunks -1 through 9 complete — **all of Phase A, and Chunk 8 (Phase B) built**. Two boxes remain, both needing a running environment: the shadow run against real data and the delta review. **Resume at the Phase B gate below.**
+**Status:** Chunks -1 through 9 complete — **all of Phase A, and Chunk 8 (Phase B) built and exercised against a running application**. One box remains and it needs genuine user data, not a mechanism: the delta review. **Resume at the Phase B gate below.**
 **Last updated:** 2026-09-09 — 836 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
@@ -381,13 +381,14 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 - [x] `GET /user-charges/user/{email}/reconciliation` — computed vs user-entered per transaction, with delta. Rows the engine could not price, and rows whose transaction is gone, are listed with a note and **excluded from the totals**
 - [x] `ChargeRecordingGatewayImplTest` (15), `ChargeReconciliationServiceTest` (7); `ProfitAndLossServiceTest` extended 11 → 15 with no existing assertion changed
 - [x] `ShadowRecordingIntegrationTest` (4) — the only class running with the flag on, so the other integration classes staying green is itself the evidence recording is opt-in. Four reconciliation cases added to `ChargesIntegrationTest` (33 → 37)
-- [ ] Run against real data; review the deltas — **needs a staging environment**; see the runbook
+- [x] Run end to end against a running application — done 2026-09-09 against a local replica set with the shipped seed data and `shadow-recording=true`. Four V2 trades through `POST /portfolio/user/{email}/transaction/v2`; every runbook §5b command run verbatim and its answer recorded as the baseline in §5b.5b. This found two documentation defects (below) and confirmed the mutual-fund coverage gap shows up as a real number
+- [ ] Review the deltas **on real user data** — still open. The figures in §5b.5b were entered by hand, so the equity deltas are not evidence about the engine. Needs a staging environment carrying genuine transactions
 
 ### ✅ Phase B gate
 - [x] Existing `PortfolioServiceTest`, `ProfitAndLossServiceTest`, `TradeMatchingServiceTest` green with no existing assertion changed. `ProfitAndLossServiceTest` gained a `@Mock` field and four tests; every pre-existing method is byte-identical
 - [x] 836 tests green across both tiers, surefire XML gate clean, `spotless:check` clean, both JaCoCo gates passing, **99% mutation score** (538/539 — the survivor is `ChargeFormulaEvaluator`'s known equivalent mutant; every Chunk 8 class is at 100%)
 - [x] `WealthLensModulithTest` green — `portfolio` → `brokercharges` and `brokercharges` → `portfolio` are both already declared
-- [ ] Reconciliation deltas reviewed and explained — **blocked on the run against real data above**
+- [ ] Reconciliation deltas reviewed and explained — **blocked on real user data.** The mechanism is proven and baselined (§5b.5b); what is missing is a population of genuine entered figures to explain
 - [ ] **Discuss before starting Phase C**
 
 ---

@@ -364,14 +364,19 @@ Chunk 8 class is at 100%.
 
 ### The one thing left in Phase B
 
-Everything Chunk 8 could build and verify locally is built and verified. **Two boxes remain and both
-need a running environment**, not a decision:
+**The mechanism is proven end to end.** On 2026-09-09 the whole of runbook §5b was walked against a
+running application — a local replica set, the shipped seed data, `shadow-recording=true`, and four
+V2 trades driven through `POST /portfolio/user/{email}/transaction/v2`. Every command ran verbatim
+and its answer is recorded as a baseline in §5b.5b. Shadow rows were written for all four, the
+2019 trade was correctly excluded from the totals, and the mutual-fund row showed the coverage gap as
+a number: entered ₹0.00 because the old implementation skips non-equity, computed ₹2.00 because the
+engine does not.
 
-1. **Turn `app.charges.shadow-recording` on in staging and drive real trades through it.** The flag
-   is off in all three profile yamls, so nothing records until somebody sets it.
-2. **Read `GET /user-charges/user/{email}/reconciliation` and explain the deltas.** That comparison
-   is the entire reason the phase exists (PRD OD-8), and Phase C must not start until it is
-   understood.
+**One box remains, and it needs data rather than a decision:** read
+`GET /user-charges/user/{email}/reconciliation` against **genuine user transactions** and explain the
+deltas. The entered figures in the baseline were typed by hand, so the equity deltas there are not
+evidence about the engine. That comparison is the entire reason the phase exists (PRD OD-8), and
+Phase C must not start until it is understood.
 
 Watch `unresolvedCount` and `transactionsWithoutComputation` first. The first says the seed data has
 gaps for the asset types being traded; the second says shadow recording is not reaching those trades
@@ -392,6 +397,20 @@ history, per the repository owner. That maps exactly onto the two `updateProfitA
 which are distinct methods rather than one path: the `ProfitLossContext` overload (V2) is
 instrumented; the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload, reached only from
 V1 `sellStock`, is untouched.
+
+### What running it actually found
+
+Two documentation defects, both of which had already misled a reader — me:
+
+1. **`CLAUDE.md` gave the wrong path for the live trade flow.** It said `addTransaction` is
+   `POST /transactions/user/{email}/transaction`. It is `POST /portfolio/user/{email}/transaction`,
+   served by `PortfolioController`; `/transactions/user/{email}` is `TransactionController`, which
+   only *reads* transactions. Corrected, with the distinction spelled out.
+2. **The runbook repeated the same wrong prefix** in §5b.2, so following it returned a 404. Corrected,
+   and it now carries a worked `curl` rather than only a path.
+
+Neither would have been caught by the suite — the tests call `ProfitAndLossService` directly, and a
+wrong URL in prose compiles fine.
 
 ### What Chunk 8 found
 
