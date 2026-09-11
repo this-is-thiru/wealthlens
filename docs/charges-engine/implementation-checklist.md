@@ -5,7 +5,7 @@
 
 **Branch:** `feature/charges-engine`
 **Status:** **All twelve chunks done.** Phases A, B and C complete; the superseded implementation is deleted and its collections dropped. **No outstanding cutover item.** Three things stay open and none blocks a merge: one accepted limit (the summary accumulates), and two V1-bound items that are void by decision. One unrelated pre-existing gap is recorded — V2 sells write no `trade_outcomes` row.
-**Last updated:** 2026-09-11 — 881 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (597/598) across the engine and the charges services.
+**Last updated:** 2026-09-11 — 886 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (597/598) across the engine and the charges services.
 
 Everything that was once deliberately left unticked is now closed:
 
