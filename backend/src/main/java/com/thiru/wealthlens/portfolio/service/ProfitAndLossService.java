@@ -12,7 +12,6 @@ import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
-import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.BrokerChargesReport;
@@ -314,7 +313,7 @@ public class ProfitAndLossService {
      * @param profitLossContext the purchase/sell context used to compute realized profit; must not be null
      */
     public void updateProfitAndLoss(UserMail userMail, ProfitLossContext profitLossContext) {
-        dispatch(userMail, profitLossContext, null);
+        dispatch(userMail, profitLossContext, Optional.empty());
     }
 
     /**
@@ -368,14 +367,6 @@ public class ProfitAndLossService {
         // ignored -- nothing here may touch cost basis until Phase C.
         recordCharge(userMail, profitLossContext, precomputed);
 
-        // calculate and update the broker charges
-        if (profitLossContext.assetType() == AssetType.EQUITY) {
-            BrokerChargeContext brokerChargeContext = brokerChargeContext(profitLossContext);
-            UserBrokerCharges userBrokerCharges = userBrokerChargeService.addUserBrokerChargeEntry(userMail, brokerChargeContext);
-            if (userBrokerCharges != null) {
-                updateBrokerChargesReport(profitAndLossEntity, profitLossContext.accountType(), userBrokerCharges);
-            }
-        }
 
         mergeChargeSummary(profitAndLossEntity, profitLossContext, precomputed);
         profitAndLossRepository.save(profitAndLossEntity);
@@ -406,14 +397,6 @@ public class ProfitAndLossService {
         // ignored -- nothing here may touch cost basis until Phase C.
         recordCharge(userMail, profitLossContext, precomputed);
 
-        // calculate and update the broker charges
-        if (profitLossContext.assetType() == AssetType.EQUITY) {
-            BrokerChargeContext brokerChargeContext = brokerChargeContext(profitLossContext);
-            UserBrokerCharges userBrokerCharges = userBrokerChargeService.addUserBrokerChargeEntry(userMail, brokerChargeContext);
-            if (userBrokerCharges != null) {
-                updateBrokerChargesReport(profitAndLossEntity, profitLossContext.accountType(), userBrokerCharges);
-            }
-        }
 
         mergeChargeSummary(profitAndLossEntity, profitLossContext, precomputed);
         profitAndLossRepository.save(profitAndLossEntity);
@@ -607,7 +590,7 @@ public class ProfitAndLossService {
     /** Prices the trade, unless the caller already did. */
     private void recordCharge(UserMail userMail, ProfitLossContext profitLossContext,
                               Optional<ChargeComputation> precomputed) {
-        if (precomputed == null) {
+        if (precomputed.isEmpty()) {
             chargeRecordingGateway.record(userMail, profitLossContext);
         }
     }
@@ -632,7 +615,7 @@ public class ProfitAndLossService {
     private static void mergeChargeSummary(ProfitAndLossEntity profitAndLossEntity,
                                            ProfitLossContext profitLossContext,
                                            Optional<ChargeComputation> precomputed) {
-        if (precomputed == null || precomputed.isEmpty()) {
+        if (precomputed.isEmpty()) {
             return;
         }
         Map<String, Double> amountByCode = precomputed.get().amountByCode();

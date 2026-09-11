@@ -4,7 +4,7 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Phases A and B closed. **Chunk 10a done** (AC-10 — cost basis from the computed total, behind `app.charges.authoritative`, which ships `false`) and **Chunk 10b part 1 done** (a trade carries its own `TradeSegment`). **Resume at Chunk 10b part 2 — the sell path into `YearlyChargeSummary` — after answering the design question in `README.md` §11.2.**
+**Status:** Phases A and B closed. **Chunk 10a done** (AC-10 — cost basis from the computed total, behind `app.charges.authoritative`, which ships `false`) and **Chunk 10b parts 1 and 2 done**, plus Cut 1. **One Chunk 10 item remains and it blocks Chunk 11: retiring `AssetManagementDetails`.**
 **Last updated:** 2026-09-09 — 881 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
@@ -422,6 +422,15 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
 
 ## Chunk 10b — The rest of the cutover *(part 1 done 2026-09-09)*
 
+- [x] **Cut 1 — the superseded implementation is no longer called from the trade path** *(2026-09-09)*.
+      The `assetType == EQUITY` block is gone from both handlers, so neither V1 buy nor V2 reaches
+      `UserBrokerChargeService`. ADR-28 deferred this to Chunk 11 on the reasoning that removing it
+      would let the old path price a mutual fund as equity — true, but moot: with no rate-card
+      template `addUserBrokerChargeEntry` returns null, and production holds **zero**
+      `yearly_broker_charges` documents, so the block has never written anything there. **It is not
+      dead everywhere** — the integration tests seed `broker_charges` and did create rows, so any
+      environment with templates was doing real work through it. Two integration assertions are
+      inverted rather than deleted, so the removal stays pinned
 - [x] **The computed charge reaches realised P&L** *(done 2026-09-09)*. `RealisedProfits` gains
       `yearlyChargeSummary` **beside** `yearlyBrokerCharges`; Chunk 11 deletes the old one. Written
       only when a computation is **passed in**, which is V2 — V1 reaches the two-arg overload, prices
@@ -466,7 +475,14 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
       Surfaced as CI annotations once `setup-java@v6` added a javac problem matcher; pre-existing on
       `master`, and out of bounds for Phase A because it is `portfolio/` work
 - [ ] Rewire `RealisedProfits` to `YearlyChargeSummary`; `ProfitAndLossService.updateBrokerCharges` (`:507`) → a single `merge` call
-- [ ] Retire `AssetManagementDetails` in favour of `charge_accounts`
+- [ ] **Retire `AssetManagementDetails` in favour of `charge_accounts`** ← **the last Chunk 10 item,
+      and the sole blocker for Chunk 11.** After Cut 1 the superseded implementation has exactly one
+      live caller left: `AssetManagementService` → `ProfitAndLossService.updateProfitAndLoss\
+WithAmcCharges` → `userBrokerChargeService` and `updateBrokerChargesReport`. That one method keeps
+      the entire old cluster referenced. Kill it and every file on Chunk 11's list goes unreferenced
+      in one step. Sizing depends on `db.asset_management_details.countDocuments()`: empty means
+      repoint three endpoints and delete, non-empty means copying rows into `charge_accounts` and
+      deciding what `account_opening_charges` becomes (a rate-card rule, not a column on an account)
 
 ## Chunk 11 — Delete the old implementation
 

@@ -1187,12 +1187,14 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         assertNotNull(savedAsset, "Asset should be created via v2 endpoint");
         assertEquals(10.0, savedAsset.getQuantity());
 
-        // Verify UserBrokerCharges created in user_broker_charges collection
+        // The superseded implementation is no longer called from the trade path (Cut 1), so a buy
+        // writes nothing to user_broker_charges. This asserted the opposite while that path was
+        // live; it is kept, inverted, so the removal stays pinned rather than merely done.
         List<UserBrokerCharges> charges = mongoTemplate.find(
                 new org.springframework.data.mongodb.core.query.Query(
                         Criteria.where("email").is(TEST_EMAIL)),
                 UserBrokerCharges.class, "user_broker_charges");
-        assertFalse(charges.isEmpty(), "UserBrokerCharges should be created");
+        assertTrue(charges.isEmpty(), "the superseded implementation must not be called from the trade path");
     }
 
     @Test
@@ -1233,12 +1235,14 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         double totalQty = assets.stream().mapToDouble(AssetEntity::getQuantity).sum();
         assertEquals(5.0, totalQty, "Quantity should be reduced after partial sell");
 
-        // Verify UserBrokerCharges created for both buy and sell
+        // The superseded implementation is no longer called from the trade path (Cut 1), so a buy and a sell
+        // writes nothing to user_broker_charges. This asserted the opposite while that path was
+        // live; it is kept, inverted, so the removal stays pinned rather than merely done.
         List<UserBrokerCharges> charges = mongoTemplate.find(
                 new org.springframework.data.mongodb.core.query.Query(
                         Criteria.where("email").is(TEST_EMAIL)),
                 UserBrokerCharges.class, "user_broker_charges");
-        assertFalse(charges.isEmpty(), "UserBrokerCharges should be created for buy and sell");
+        assertTrue(charges.isEmpty(), "the superseded implementation must not be called from the trade path");
     }
 
     private void seedBrokerCharges() {
