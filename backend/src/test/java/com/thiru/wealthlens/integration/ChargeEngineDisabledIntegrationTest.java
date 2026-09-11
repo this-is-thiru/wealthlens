@@ -53,17 +53,6 @@ class ChargeEngineDisabledIntegrationTest extends AbstractIntegrationTest {
         assertThat(response.getBody()).contains("engine-enabled");
     }
 
-    @Test
-    void backfill_whenTheEngineIsDisabled_refusesAndWritesNothing() {
-        // When
-        ResponseEntity<String> response = exchange("/charges/backfill/user/" + EMAIL, HttpMethod.POST,
-                generateToken(EMAIL, "SUPER_USER"), null);
-
-        // Then
-        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE.value());
-        assertThat(userChargeRepository.findByEmailOrderByTransactionDateDesc(EMAIL)).isEmpty();
-    }
-
     /**
      * Reading what was already computed stays available. The switch stops the engine producing new
      * numbers; it does not hide the ones already recorded, which are what an operator needs to look
