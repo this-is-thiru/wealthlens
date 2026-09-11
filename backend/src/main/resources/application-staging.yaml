@@ -14,7 +14,7 @@ app:
     key-secret: ${JWT_SECURITY_KEY}
   charges:
     # MASTER SWITCH. Set false to stop the charges engine computing or recording anything:
-    # /charges/simulate, /charges/backfill and the AMC cycle all answer 503, and shadow recording
+    # /charges/simulate and the AMC cycle answer 503, and shadow recording
     # records nothing whatever shadow-recording below says. Reading charges already recorded still
     # works, which is what you need in order to decide whether to turn it back on.
     engine-enabled: true

@@ -111,8 +111,8 @@ Every stored transaction and holding predates both changes.
 - **Whether to reprice history at all is an open decision, not an assumption.** ADR-32 says the
   cutover does not re-drive transactions. If this release wants historical trades priced so the
   report reads completely, that is a deliberate choice to make here.
-  `POST /charges/backfill/user/{email}` is the tool if so — idempotent by `{email, transactionId}`,
-  so it reprices rather than duplicating.
+  The tool that did this was deleted with ADR-32, so pricing history means building it again —
+  deliberately, as part of this release, rather than finding a dormant endpoint and running it.
 
 ## 6. Release acceptance criteria
 

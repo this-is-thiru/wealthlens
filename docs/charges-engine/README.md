@@ -138,25 +138,14 @@ asset-type dimension at all, so removing it as the checklist originally said wou
 funds as equity and written that into the P&L. And only the **V2** flow is instrumented, the V1
 `addTransaction` path being **in live use** and deliberately left alone.
 
-### Written after Chunk 8 — the backfill
+### Removed after Phase B — the backfill
 
-`service/ChargeBackfillService` and `POST /charges/backfill/user/{email}` (`SUPER_USER`). It prices a
-user's existing transactions and records one `user_charges` row each — nothing else is touched, and a
-row is keyed on `{email, transactionId}` and replaced, so a re-run reprices rather than duplicates.
-
-**The FIFO reconstruction is the part that is not a loop over a repository.** A `TransactionEntity`
-for a sell does not record the lots it consumed: the live path is handed them by `PortfolioService`'s
-walk over open holdings, and that walk is destructive, so by the time a backfill runs the holdings
-are gone or changed. Replaying the buys in date order, per scrip *and* broker *and* account holder,
-is the only way to recover them. Without lots a `perLot` rule evaluates zero times, so a fund
-redeemed inside its exit-load window would be backfilled as free — and it would read as the engine
-disagreeing with the user rather than as missing input. `sellsWithNoLotsFound` on the report is how
-far that reconstruction got, and it caps how much the exit-load figures can be trusted.
-
-Tests: `ChargeBackfillServiceTest` (16) and five integration cases. Two of the unit tests exist
-because mutation testing found the FIFO walk's edges unguarded — a sell consuming a lot *exactly*
-must remove it rather than leave a zero-quantity husk for the next sell to draw from, and a sell
-exceeding what is open must take the remainder rather than the amount asked for.
+`ChargeBackfillService` and `POST /charges/backfill/user/{email}` priced a user's existing
+transactions, reconstructing the FIFO lots a sell consumed by replaying the buys in date order. It
+produced the Phase B evidence in `phase-b-reconciliation-findings.md` and was then **deleted**:
+ADR-32 settles that existing transactions are never re-driven, so an endpoint whose only purpose is
+re-driving them could do nothing correct and plenty that was wrong. The reasoning survives in that
+findings document and in git history.
 
 ### The configuration flags, and which of them do anything
 
@@ -164,7 +153,7 @@ exceeding what is open must take the remainder rather than the amount asked for.
 
 | Flag | Ships | Effect |
 |---|---|---|
-| `engine-enabled` | `true` | **Master switch.** `false` → simulate, backfill and the AMC cycle answer **503**; shadow recording records nothing whatever `shadow-recording` says. Reads stay up |
+| `engine-enabled` | `true` | **Master switch.** `false` → simulate and the AMC cycle answer **503**; shadow recording records nothing whatever `shadow-recording` says. Reads stay up |
 | `shadow-recording` | `false` | `true` → every V2 buy and sell is priced and a `user_charges` row written, result ignored. No effect when the engine is disabled |
 | `authoritative` | `false` | **Read by nothing.** Becomes real in Chunk 10; setting it today changes nothing |
 
@@ -191,13 +180,13 @@ uses a computation it is handed, so the engine runs once per trade.
 
 **`TradeSegment` now lives in `portfolio/dto/enums`** and is a field on `AssetRequest`,
 `TransactionEntity`, `AssetEntity` and `ProfitLossContext`, defaulting `DELIVERY`.
-`ChargeRecordingGatewayImpl` and `ChargeBackfillService` read it rather than assuming delivery.
+`ChargeRecordingGatewayImpl` reads it rather than assuming delivery.
 
 **`AssetRequest.brokerCharges` is `@Deprecated`** — accepted and stored, no longer read once
 `authoritative` is on.
 
 Tests: `PortfolioServiceTest` 6 → 11, `ChargeRecordingGatewayImplTest` → 17,
-`ChargeBackfillServiceTest` → 19, `ChargesIntegrationTest` → 43.
+`ChargesIntegrationTest` → 43.
 
 ### Written by Chunk 7
 

@@ -29,7 +29,7 @@ logs for `NO RATE CARDS`. But the warning is a backstop, not the plan. Step 2 is
 |---|---|---|
 | 1.1 | Set `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY` | The app will not start without the JWT key — deliberate, a defaulted signing key is a forged-token vulnerability |
 | 1.2 | Confirm MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` will warn at startup |
-| 1.3 | Ensure a `SUPER_USER` account exists | Steps 2 and 5 require one. Seeding, publishing rate cards, the AMC cycle and the backfill are all `SUPER_USER`-only |
+| 1.3 | Ensure a `SUPER_USER` account exists | Steps 2 and 5 require one. Seeding, publishing rate cards and the AMC cycle are all `SUPER_USER`-only |
 
 There is **no data migration**. The superseded implementation and its three collections
 (`broker_charges`, `user_broker_charges`, `asset_management_details`) were deleted in Chunk 11, and
@@ -108,25 +108,17 @@ Nothing below is scheduled. Each is a deliberate act, by a `SUPER_USER`.
 
 ---
 
-## 6. Optional: pricing history that predates the deployment
+## 6. History that predates the deployment is not priced
 
-Trades made before this deployment carry no computed charge, and **they are not repriced
-automatically** — ADR-32 settles that the cutover applies forward only.
+Trades made before this deployment carry no computed charge, and **there is no way to give them
+one**. ADR-32 settles that the cutover applies forward only, and the endpoint that could have
+re-priced a history was removed for exactly that reason — an operation nothing should ever run is
+an operation that can only be run by mistake.
 
-If a complete charge history is wanted for a user:
-
-```bash
-curl -sS -X POST "$BASE/charges/backfill/user/$USER_EMAIL" \
-  -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
-```
-
-**It writes** — one `user_charges` row per priced transaction, and nothing else. No cost basis, no
-P&L figure and no transaction document is touched. Reversible by deleting those rows. Safe to
-re-run: a row is keyed on `{email, transactionId}` and replaced rather than appended.
-
-Expect `NO_SCHEDULE` on anything before **2025-04-01** — every shipped card starts there. On the
-one real history measured, that was 227 of 319 trades. Closing it needs historical card generations,
-which is the [priced-portfolio epic](../epics/priced-portfolio.md), not a deployment step.
+So a charge report covering a period before the deployment will be sparse, and that is correct
+rather than broken. If pricing history ever becomes wanted, it is the
+[priced-portfolio epic](../epics/priced-portfolio.md), and it needs historical rate cards before it
+needs a tool.
 
 ---
 
@@ -140,7 +132,7 @@ app:
     engine-enabled: false
 ```
 
-Simulate, backfill and the AMC cycle answer **503**; nothing is recorded. Reads keep working —
+Simulate and the AMC cycle answer **503**; nothing is recorded. Reads keep working —
 charge history, gaps and the reconciliation report all still respond, which is what you need in
 order to decide whether to turn it back on.
 
