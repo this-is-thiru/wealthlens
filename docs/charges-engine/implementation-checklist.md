@@ -4,17 +4,32 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** Phases A and B closed. **Chunk 10a done** (AC-10 — cost basis from the computed total, behind `app.charges.authoritative`, which ships `false`) and **Chunk 10b parts 1 and 2 done**, plus Cut 1. **One Chunk 10 item remains and it blocks Chunk 11: retiring `AssetManagementDetails`.**
-**Last updated:** 2026-09-09 — 881 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
+**Status:** **All twelve chunks done.** Phases A, B and C complete; the superseded implementation is deleted and its collections dropped. **One technical item is outstanding — `toTradeOutcomeContext` pro-rating, see Chunk 10b — and two are open by decision.**
+**Last updated:** 2026-09-11 — 877 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (597/598) across the engine and the charges services.
 
-Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
+Everything that was once deliberately left unticked is now closed:
 
-| Box | Why it is open |
+| Box | Outcome |
 |---|---|
-| ~~`ChargeEngineProperties` (Chunk 3)~~ | **Done 2026-09-09** in Chunk 8, where `shadowRecording` first means something |
+| ~~`ChargeEngineProperties` (Chunk 3)~~ | **Done** in Chunk 8; it is also a real kill switch since ADR-30 |
 | ~~AMC rate card (Chunk 6)~~ | **Done 2026-09-08.** `ZERODHA_MAINTENANCE_2025_04`, unscoped so the cycle can resolve it |
-| ~~Rate verification (Chunk 6)~~ | **Done 2026-09-08.** All eleven cards verified; AC-2 closed. See `ac2-rate-verification.md` |
-| `BrokerageAggregatorType` deletion (Chunk 1) | Phase C, once its last usage is gone |
+| ~~Rate verification (Chunk 6)~~ | **Done 2026-09-08.** All eleven cards verified; AC-2 closed |
+| ~~`BrokerageAggregatorType` deletion (Chunk 1)~~ | **Done** in Chunk 11 with the rest of the cluster |
+
+**What is genuinely still open** — three things, and only the first is code:
+
+1. **`toTradeOutcomeContext` pro-rating (`PortfolioService:621`).** The buy side pro-rates
+   `assetEntity.getBrokerCharges()`, which under `authoritative` is the engine's figure — correct.
+   The **sell** side pro-rates `assetRequest.getBrokerCharges()`, the deprecated user-entered field,
+   which is not. So a trade outcome carries a computed buy-side charge beside a user-entered
+   sell-side one, and since that field holds ₹0.01 in practice, `trade_outcomes.sell_broker_charges`
+   is effectively zero. **This was on the original Chunk 10 list and was missed** when the chunk was
+   split into 10a and 10b.
+2. **`YearlyChargeSummary` accumulates** rather than being derived from `user_charges`, so
+   reprocessing one trade twice counts it twice. Recorded, accepted, and worth revisiting now that
+   the old hierarchy it matched is gone.
+3. **Deriving the summary from `user_charges`** would fix (2) and give per-broker and per-asset-type
+   breakdowns the summary cannot express today.
 
 ---
 
@@ -116,7 +131,7 @@ Golden contract-note fixtures (test-plan Tier E) originally asserted against **f
 - [x] `FundCategory` — EQUITY, DEBT, HYBRID, LIQUID, ELSS, INDEX, ETF, FUND_OF_FUNDS, OTHER
 - [x] `PlanType` — DIRECT, REGULAR *(decides whether a distributor transaction fee can apply)*
 - [x] `ChargeResolution` — RESOLVED, NO_MATCHING_RULES, NO_SCHEDULE, NO_INSTRUMENT_PROFILE, PROVISIONAL
-- [ ] Delete `BrokerageAggregatorType` *(Phase C, once its last usage is gone)*
+- [x] Delete `BrokerageAggregatorType` — **done in Chunk 11**
 
 **Verified:** `./mvnw compile -pl backend -am` BUILD SUCCESS; `spotless:check` clean. Commit `62d864f`.
 
@@ -184,7 +199,7 @@ Enabling the setting globally would build indexes for every entity in the applic
 
 ## Chunk 3 — Engine core ✅
 
-- [ ] `config/ChargeEngineProperties.java` — **not built.** Nothing reads a flag yet; the engine has no live caller. Belongs with Chunk 8, where `shadowRecording` first means something
+- [x] `config/ChargeEngineProperties.java` — **built in Chunk 8**, and made a real kill switch in ADR-30
 - [x] `engine/ChargeAccumulator.java` — holds lines, `sumOf(List<String> codes)`, `amountOf(code)`
 - [x] `engine/ChargeCalculator.java` — the strategy interface
 - [x] `engine/ChargeRounding.java` — `RoundingPolicy` application
@@ -456,25 +471,38 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
       carries `@ConstructorProperties`, and a mapper choosing it passes null and never runs the
       initialiser, which is exactly how seeded rate cards lost their audit metadata. A null segment
       would disqualify every pre-Chunk-10b trade from resolving a card
-- [ ] ~~`userChargeId` on `TransactionEntity` for traceability~~ — **recommend dropping this.** The
-      link already exists and is already used: `UserChargeEntity.transactionId` points at the
-      transaction, and `{email, transactionId}` is unique — it is what makes `record` an upsert and
-      the backfill re-runnable, and what `ChargeReconciliationService` joins on. A reverse pointer
-      would be a second source of truth for one relationship, needing the transaction rewritten every
-      time a charge is recomputed. Awaiting a decision
-- [ ] Remove the `assetType == EQUITY` gate at `ProfitAndLossService` (moved here from Chunk 8 by ADR-28)
-      — **safe only once the superseded path behind it is deleted, so it belongs with Chunk 11**
-- [ ] `PortfolioService.buyStock` (`:311`) — **move charge computation ahead of the entity mutation**
-- [ ] Same for `buyStockV2`, `sellStockV2`, `updateQuantityBySavingReportAndProfitAndLoss1`
-- [ ] Remove `brokerCharges` from `AssetRequest`; add `userChargeId` to `TransactionEntity`
-- [ ] Promote `TradeSegment` into `portfolio/dto/enums`; add to `AssetRequest`, `TransactionEntity`, `AssetEntity` (default `DELIVERY`)
-- [ ] Re-verify `toTradeOutcomeContext` pro-rating (`:569`) across partial sells with computed charges
-- [ ] **Retire `ProfitAndLossService.updateProfitAndLoss(UserMail, ProfitAndLossContext)`** — deprecated
-      `forRemoval`, and `PortfolioService` (`:507`, the V1 sell path) is its last production caller.
-      Its tests are right to call it while it ships, so this is a migration, not a warning to silence.
-      Surfaced as CI annotations once `setup-java@v6` added a javac problem matcher; pre-existing on
-      `master`, and out of bounds for Phase A because it is `portfolio/` work
-- [ ] Rewire `RealisedProfits` to `YearlyChargeSummary`; `ProfitAndLossService.updateBrokerCharges` (`:507`) → a single `merge` call
+- [x] ~~`userChargeId` on `TransactionEntity`~~ — **dropped, decided 2026-09-09.** The link already
+      exists and is load-bearing: `{email, transactionId}` is unique on `UserChargeEntity`, which is
+      what makes `record` an upsert, the backfill re-runnable, and the reconciliation join work
+
+- [x] Remove the `assetType == EQUITY` gate at `ProfitAndLossService` — **done as Cut 1**, ahead of
+      Chunk 11 rather than with it, once production's zero `yearly_broker_charges` documents showed
+      the block had never written anything there
+- [x] Move charge computation ahead of the entity mutation — **done for `buyStockV2`**, asserted with
+      `InOrder`. ~~`PortfolioService.buyStock` (`:311`)~~ and ~~`sellStock`~~ are **void by decision**:
+      V1 is in live use and was never to be touched
+- [x] `sellStockV2` / `updateQuantityBySavingReportAndProfitAndLoss1` price first and hand the
+      computation on, so the engine runs once per trade
+- [ ] **`toTradeOutcomeContext` pro-rating (`:621`) — OUTSTANDING, and it is a real gap.** The buy side
+      pro-rates `assetEntity.getBrokerCharges()`, which under `authoritative` is the computed figure.
+      The sell side pro-rates `assetRequest.getBrokerCharges()`, the deprecated user-entered field —
+      so a trade outcome mixes a computed buy-side charge with a user-entered sell-side one, and that
+      field holds ₹0.01 in practice. `trade_outcomes.sell_broker_charges` is therefore ~0 under
+      `authoritative`. **Missed when Chunk 10 was split into 10a and 10b**; found auditing this file
+      on 2026-09-11
+- [x] ~~Remove `brokerCharges` from `AssetRequest`~~ — **decided against.** Deprecated and kept, so
+      existing clients keep working; it is simply no longer read once `authoritative` is on
+- [x] ~~Add `userChargeId` to `TransactionEntity`~~ — **decided against.** `UserChargeEntity` already
+      carries `transactionId` under a unique index on `{email, transaction_id}`, which is what makes
+      `record` an upsert, the backfill re-runnable and the reconciliation join work. A reverse pointer
+      would be a second source of truth for one relationship
+- [x] Promote `TradeSegment` into `portfolio/dto/enums` and onto `AssetRequest`, `TransactionEntity`,
+      `AssetEntity` and `ProfitLossContext`, defaulting `DELIVERY` — **done in 10b part 1**
+- [ ] ~~Retire `ProfitAndLossService.updateProfitAndLoss(UserMail, ProfitAndLossContext)`~~ — **void by
+      decision.** V1 `sellStock` is its only caller and V1 is in live use, so the overload stays
+      deprecated rather than being removed
+- [x] Rewire `RealisedProfits` to `YearlyChargeSummary` — **done in 10b part 2**, and since Chunk 11
+      it is the only charge hierarchy a P&L document carries
 - [x] **Retire `AssetManagementDetails`** *(2026-09-09)*. No migration: it was never in production, so
       the entity, its repository, `AssetManagementService` and `AssetManagementDetailsRequest` are
       simply deleted. `ChargeAccountController` already served the whole replacement surface —
