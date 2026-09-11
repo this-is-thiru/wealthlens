@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`. **Phases A and B closed; Chunk 10a and 10b-part-1 done.** Full suite green: **873 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
+**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`. **Phases A and B closed; Chunk 10 complete (10a and 10b).** Full suite green: **881 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
 
 ---
 
@@ -12,8 +12,8 @@
 |---|---|
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | **46**, of which **11 are unpushed** (`git log origin/feature/charges-engine..HEAD`). Counted with `git rev-list master..HEAD --count` — trust the command over this cell, which has been wrong before |
-| **Phase** | A and B **closed** (B by ADR-31, run against 319 real transactions on `it-staging`). **C in progress:** Chunk 10a done, 10b part 1 done |
-| **Next action** | **Chunk 10b part 2** — the sell path into realised P&L via `YearlyChargeSummary`. See §11 for the design question it opens and the two decisions waiting |
+| **Phase** | A and B **closed** (B by ADR-31). **C in progress: Chunk 10 complete**, Chunk 11 next |
+| **Next action** | **Chunk 11 — delete the superseded implementation. ⚠️ Re-scope it first:** it was written when V1 was believed dead. V1 is live and depends on things that list deletes. See §11.2 |
 | **Blocking questions** | **Two, both non-urgent** — see §11.2. (1) Does `YearlyChargeSummary` sit beside `BrokerChargesReport` or replace it? (2) Keep or drop `userChargeId` on `TransactionEntity`? Neither blocks reading the code |
 
 ---
@@ -443,21 +443,25 @@ sed -n '1,20p' docs/charges-engine/implementation-checklist.md
 
 Then read §11.2 below — there are two open decisions, and one of them shapes the next commit.
 
-### 11.2 The two open decisions
+### 11.2 The one thing to settle before Chunk 11
 
-**(1) Does `YearlyChargeSummary` sit beside `BrokerChargesReport`, or replace it?** This is the next
-piece of work and the question has to be answered first. `ChargeSummaryReport` /
-`YearlyChargeSummary` were built in Chunk 7 and **nothing writes them yet**; the old
-`BrokerChargesReport` hierarchy still carries every P&L charge figure. *Recommendation: beside.* It
-matches how the whole engine has been built — parallel first, delete later — and Chunk 11 removes the
-old one anyway. Replacing in place would put a cutover and a rewrite in one commit.
+**Chunk 11 deletes the superseded implementation, and it was planned when V1 was believed to be
+dead code. V1 is live** (clarified 2026-09-09), and the live V1 path depends on things on that
+deletion list:
 
-**(2) Keep or drop `userChargeId` on `TransactionEntity`?** The checklist asks for it and it is left
-**unticked with a recommendation against**. The link already exists and is already load-bearing:
-`UserChargeEntity` carries `transactionId`, the pair `{email, transactionId}` is unique — it is what
-makes `record` an upsert, the backfill safely re-runnable, and what `ChargeReconciliationService`
-joins on. A reverse pointer would be a second source of truth for one relationship, needing the
-transaction rewritten whenever a charge is recomputed. *Recommendation: drop it.*
+- V1 `buyStock` → `updateBrokerChargesAndProfitAndLoss` → `UserBrokerChargeService`
+- V1 `sellStock:548` is the **last caller** of the `@Deprecated(forRemoval = true)`
+  `ProfitAndLossContext` overload
+
+Deleting `UserBrokerChargeService`, `BrokerChargeService`, their repositories or that overload would
+break a flow serving users. **Either V1 moves onto the engine first, or those files stay** and
+Chunk 11 shrinks to whatever is genuinely unreferenced. That is a decision, not a detail.
+
+**A known limit carried forward from 10b**, recorded rather than fixed: `YearlyChargeSummary`
+*accumulates*, so reprocessing one trade twice counts it twice. The hierarchy beside it has always
+behaved that way. Deriving the summary from `user_charges` would be idempotent by construction, and
+Chunk 11 is the moment to revisit it — that is when the old hierarchy goes and
+`ChargeSummaryReport.merge` stops having a peer to match.
 
 ### 11.3 Environment state left behind
 
@@ -493,8 +497,7 @@ being read.
 
 | | |
 |---|---|
-| **Chunk 10b part 2** | The sell path into realised P&L via `YearlyChargeSummary`. Blocked on decision (1) |
-| **Chunk 11** | Delete the superseded implementation — 13 files, plus the `assetType == EQUITY` gate, which is only safe to remove once the path behind it is gone (ADR-28) |
+| **Chunk 11** | Delete the superseded implementation. **Re-scope first — V1 is live and depends on part of that list.** The `assetType == EQUITY` gate belongs here too, and is only safe to remove once the path behind it is gone (ADR-28) |
 | **Chunk 12** | Final verification |
 | **[Priced-portfolio epic](../epics/priced-portfolio.md)** | Instrument identity (ADR-29) and historical rate coverage. Surfaced by the real-data run, **not Phase C work**, and shipped as one comprehensive release after this branch merges — not as follow-on tickets |
 

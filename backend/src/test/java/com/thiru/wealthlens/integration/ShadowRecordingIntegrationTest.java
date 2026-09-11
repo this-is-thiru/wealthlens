@@ -2,9 +2,11 @@ package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeEvent;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
+import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
 import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
@@ -14,6 +16,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
+import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -56,6 +59,9 @@ class ShadowRecordingIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ChargeSeederService chargeSeederService;
+
+    @Autowired
+    private ChargeRecordingGateway chargeRecordingGateway;
 
     @BeforeEach
     void seedTheShippedCards() {
@@ -130,5 +136,40 @@ class ShadowRecordingIntegrationTest extends AbstractIntegrationTest {
                 profitAndLossRepository.findByEmailAndFinancialYear(EMAIL, "2025-2026");
         assertThat(profitAndLoss).isPresent();
         assertThat(profitAndLoss.get().getRealisedProfits()).isNull();
+    }
+
+    /**
+     * Chunk 10b part 2, over a real document. The summary is a {@code Map<String, Double>} nested two
+     * levels inside {@code ProfitAndLossEntity}, which is precisely the shape a mapping drops without
+     * complaining — the write succeeds, the read comes back empty, and only a report notices.
+     */
+    @Test
+    void aV2Buy_writesTheComputedChargesIntoTheYearlyChargeSummary() {
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(EMAIL), buy("txn-summary", AssetType.EQUITY),
+                userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-summary").isPresent()
+                        ? Optional.empty()
+                        : Optional.of(chargeSimulationOf("txn-summary")));
+
+        // Then — read back from Mongo, not from the object that was written
+        ProfitAndLossEntity saved = profitAndLossRepository
+                .findByEmailAndFinancialYear(EMAIL, "2025-2026").orElseThrow();
+        YearlyChargeSummary summary = saved.getRealisedProfits().getYearlyChargeSummary();
+
+        assertThat(summary).isNotNull();
+        assertThat(summary.getAmountByCode()).containsKeys("BROKERAGE", "STT");
+        assertThat(summary.getTotalCharges()).isGreaterThan(0.0);
+        assertThat(summary.getMonthlyReport().get(TRADE_DATE.getMonth())).isNotNull();
+        assertThat(summary.getMonthlyReport().get(TRADE_DATE.getMonth()).getFirstHalfCharges())
+                .isNotNull();
+
+        // The old hierarchy is still written beside it, untouched by this chunk.
+        assertThat(saved.getRealisedProfits().getYearlyBrokerCharges()).isNull();
+    }
+
+    /** Prices the trade through the real engine so the codes are the shipped card's, not invented. */
+    private ChargeComputation chargeSimulationOf(String transactionId) {
+        return chargeRecordingGateway.record(UserMail.from(EMAIL), buy(transactionId, AssetType.EQUITY))
+                .orElseThrow(() -> new IllegalStateException("the engine declined to price the fixture"));
     }
 }

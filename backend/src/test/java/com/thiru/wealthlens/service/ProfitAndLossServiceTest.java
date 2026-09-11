@@ -9,7 +9,10 @@ import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
+import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
 import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
+import com.thiru.wealthlens.brokercharges.entity.model.MonthlyChargeSummary;
+import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
 import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
@@ -25,8 +28,10 @@ import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -538,5 +543,177 @@ class ProfitAndLossServiceTest {
 
         // Then
         verify(chargeRecordingGateway, never()).record(any(), any());
+    }
+
+    // ========================================
+    // Chunk 10b part 2 — the computed charge reaches realised P&L
+    //
+    // Written only when a computation is *passed in*, which is the V2 flow. V1 reaches the two-arg
+    // overload, prices its trade through the gateway as before, and writes no summary — its
+    // behaviour is untouched.
+    // ========================================
+
+    private static ChargeComputation computedWith(double brokerage, double stt, double gst) {
+        List<ChargeLine> lines = List.of(line("BROKERAGE", brokerage), line("STT", stt), line("GST", gst));
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+                ChargeResolution.RESOLVED, lines, brokerage + stt + gst);
+    }
+
+    private static ChargeLine line(String code, double amount) {
+        ChargeLine chargeLine = new ChargeLine();
+        chargeLine.setCode(code);
+        chargeLine.setAmount(amount);
+        return chargeLine;
+    }
+
+    private ProfitAndLossEntity savedPnl() {
+        ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
+        verify(profitAndLossRepository).save(captor.capture());
+        return captor.getValue();
+    }
+
+    private void expectNoExistingPnl(String financialYear) {
+        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq(financialYear)))
+                .thenReturn(Optional.empty());
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
+    private static ProfitLossContext buyOn(LocalDate date, AssetType assetType, AccountType accountType) {
+        return new ProfitLossContext("txn-sum", 10.0, date, 100.0, STOCK_CODE, BROKER, EXCHANGE,
+                assetType, TransactionType.BUY, null, accountType, ACCOUNT_HOLDER, List.of());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenAComputationIsPassedIn_mergesItIntoTheChargeSummary() {
+        // Given
+        expectNoExistingPnl("2025-2026");
+        ProfitLossContext context = buyOn(LocalDate.of(2025, 6, 10), AssetType.EQUITY, AccountType.SELF);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context,
+                Optional.of(computedWith(20.00, 100.00, 3.60)));
+
+        // Then
+        YearlyChargeSummary summary = savedPnl().getRealisedProfits().getYearlyChargeSummary();
+        assertNotNull(summary);
+        assertEquals(123.60, summary.getTotalCharges(), 0.001);
+        assertEquals(20.00, summary.getAmountByCode().get("BROKERAGE"), 0.001);
+        assertEquals(100.00, summary.getAmountByCode().get("STT"), 0.001);
+    }
+
+    /** The month and the fortnight the trade fell in, mirroring the report the old path draws. */
+    @Test
+    void updateProfitAndLoss_mergesIntoTheMonthAndTheFortnightTheTradeFellIn() {
+        // Given — the 10th, so the first half of June
+        expectNoExistingPnl("2025-2026");
+        ProfitLossContext context = buyOn(LocalDate.of(2025, 6, 10), AssetType.EQUITY, AccountType.SELF);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context,
+                Optional.of(computedWith(20.00, 100.00, 3.60)));
+
+        // Then
+        MonthlyChargeSummary june = savedPnl().getRealisedProfits()
+                .getYearlyChargeSummary().getMonthlyReport().get(Month.JUNE);
+        assertNotNull(june);
+        assertEquals(123.60, june.getTotalCharges(), 0.001);
+        assertEquals(123.60, june.getFirstHalfCharges().getTotalCharges(), 0.001);
+        // A fortnight with no trades reads as having none, not as having charged zero.
+        assertNull(june.getSecondHalfCharges());
+    }
+
+    /** Mirrors the old report exactly: anything that is not SELF lands in the out-sourced bucket. */
+    @Test
+    void updateProfitAndLoss_whenTheAccountIsNotSelf_mergesIntoTheOutSourcedSummary() {
+        // Given
+        expectNoExistingPnl("2025-2026");
+        ProfitLossContext context = buyOn(LocalDate.of(2025, 6, 10), AssetType.EQUITY, AccountType.OUTSOURCED);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context,
+                Optional.of(computedWith(20.00, 100.00, 3.60)));
+
+        // Then
+        ProfitAndLossEntity saved = savedPnl();
+        assertNotNull(saved.getOutSourcedRealisedProfits().getYearlyChargeSummary());
+        assertNull(saved.getRealisedProfits());
+    }
+
+    /** FR-8 again: the summary has no asset-type gate, so a mutual fund reaches it. */
+    @Test
+    void updateProfitAndLoss_whenAssetTypeIsNotEquity_stillMergesIntoTheChargeSummary() {
+        // Given
+        expectNoExistingPnl("2025-2026");
+        ProfitLossContext context = buyOn(LocalDate.of(2025, 6, 10), AssetType.MUTUAL_FUND, AccountType.SELF);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context,
+                Optional.of(computedWith(0.0, 0.0, 2.00)));
+
+        // Then
+        assertNotNull(savedPnl().getRealisedProfits().getYearlyChargeSummary());
+        verify(userBrokerChargeService, never()).addUserBrokerChargeEntry(any(), any());
+    }
+
+    /**
+     * The V1 shape. Nothing is passed in, so the trade is priced through the gateway exactly as
+     * before and no summary is written — V1's behaviour is unchanged by this chunk.
+     */
+    @Test
+    void updateProfitAndLoss_whenNoComputationIsPassedIn_writesNoChargeSummary() {
+        // Given
+        expectNoExistingPnl("2025-2026");
+        ProfitLossContext context = buyOn(LocalDate.of(2025, 6, 10), AssetType.EQUITY, AccountType.SELF);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context);
+
+        // Then
+        assertNull(savedPnl().getRealisedProfits());
+        verify(chargeRecordingGateway).record(any(), any());
+    }
+
+    /** The engine declined — no card, or the kill switch. There is nothing to merge. */
+    @Test
+    void updateProfitAndLoss_whenTheComputationIsEmpty_writesNoChargeSummary() {
+        // Given
+        expectNoExistingPnl("2025-2026");
+        ProfitLossContext context = buyOn(LocalDate.of(2025, 6, 10), AssetType.EQUITY, AccountType.SELF);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context, Optional.empty());
+
+        // Then
+        assertNull(savedPnl().getRealisedProfits());
+    }
+
+    /** Two trades in one period accumulate rather than replace. */
+    @Test
+    void updateProfitAndLoss_asecondTradeInThePeriodAccumulates() {
+        // Given — the repository has to behave like one: the second read returns what the first
+        // write saved, or there is nothing to accumulate onto and the test proves nothing.
+        AtomicReference<ProfitAndLossEntity> stored = new AtomicReference<>();
+        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2025-2026")))
+                .thenAnswer(invocation -> Optional.ofNullable(stored.get()));
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> {
+                    stored.set(invocation.getArgument(0));
+                    return invocation.getArgument(0);
+                });
+        ProfitLossContext context = buyOn(LocalDate.of(2025, 6, 10), AssetType.EQUITY, AccountType.SELF);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context,
+                Optional.of(computedWith(20.00, 100.00, 3.60)));
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context,
+                Optional.of(computedWith(20.00, 100.00, 3.60)));
+
+        // Then
+        ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
+        verify(profitAndLossRepository, times(2)).save(captor.capture());
+        YearlyChargeSummary summary = captor.getAllValues().getLast().getRealisedProfits().getYearlyChargeSummary();
+        assertEquals(247.20, summary.getTotalCharges(), 0.001);
+        assertEquals(40.00, summary.getAmountByCode().get("BROKERAGE"), 0.001);
     }
 }
