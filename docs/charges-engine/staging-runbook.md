@@ -713,27 +713,6 @@ because the seeder will never overwrite a card already on file, by design.
 **The rule that keeps this list empty is ADR-26: never edit a card that has been deployed.** A rate
 change is a new generation with a new `scheduleCode`, applied by one call to `POST /charges/seed`.
 
-## 7b. One-off: an environment seeded before 2026-09-08
-
-The AC-2 corrections edited cards that had already been deployed, and the seeder never overwrites a
-card on file. So an environment seeded before that date keeps the **old, defective** `_2025_04` cards
-and merely gains the five new generations beside them — with the old ones still open-ended, which
-also breaks the timeline the tests assert.
-
-`GET /charge-schedules/drift` names them. `reseed-staging.js` in this directory fixes them:
-
-```bash
-mongosh "<connection-string>" docs/charges-engine/reseed-staging.js
-# then: POST /charges/seed
-```
-
-It checks whether anything was priced by those cards before deleting anything, because deleting a
-card orphans the provenance of every charge it priced.
-
-**This is needed once.** Under ADR-26 a rate change ships as a new generation with a new
-`scheduleCode`, which the seeder applies on the next deploy — no deletion, no manual step. If you
-ever need this script again, something was edited that should have been superseded.
-
 ## 8. Three things to know before you start
 
 1. **A rate card written straight to MongoDB is invisible to the engine.** The resolver caches by
