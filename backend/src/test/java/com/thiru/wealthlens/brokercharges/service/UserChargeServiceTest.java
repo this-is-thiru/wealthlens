@@ -29,7 +29,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
-import com.thiru.wealthlens.testsupport.LogCapture;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -178,138 +177,14 @@ class UserChargeServiceTest {
 
     // ---------------------------------------------------------------- batches
 
-    @Test
-    void computeAndRecordBatch_pricesInChronologicalOrder() {
-        // Given — deduplication reads rows written earlier in the same batch, so a later trade must
-        // never be priced before an earlier one
-        givenComputation(computation(ChargeResolution.RESOLVED, line("BROKERAGE", 20.0)));
-        givenNoExistingRow();
-        when(userChargeRepository.findFirstByEmailOrderByTransactionDateDesc(EMAIL))
-                .thenReturn(Optional.empty());
 
-        // When — handed to the service newest first
-        service.computeAndRecordBatch(List.of(
-                tradeOn("txn-late", LocalDate.of(2025, 6, 30)),
-                tradeOn("txn-early", LocalDate.of(2025, 6, 1))));
 
-        // Then
-        ArgumentCaptor<ChargeContext> priced = ArgumentCaptor.forClass(ChargeContext.class);
-        verify(chargeEngine, times(2)).compute(priced.capture());
-        assertThat(priced.getAllValues()).extracting(ChargeContext::transactionId)
-                .containsExactly("txn-early", "txn-late");
-    }
 
-    @Test
-    void computeAndRecordBatch_whenItReachesBackBeforeWhatIsAlreadyRecorded_marksTheRowsProvisional() {
-        // Given — a forgotten quarter uploaded after a later one. Holding periods and first-purchase
-        // rules were computed without it, so what this batch produces may be wrong.
-        givenRecordedUpTo(LocalDate.of(2025, 9, 30));
-        givenComputation(computation(ChargeResolution.RESOLVED, line("BROKERAGE", 20.0)));
-        givenNoExistingRow();
 
-        // When
-        service.computeAndRecordBatch(List.of(tradeOn("txn-1", LocalDate.of(2025, 6, 1))));
 
-        // Then — a silent wrongness turned into a visible flag
-        assertThat(captureSaved().getResolution()).isEqualTo(ChargeResolution.PROVISIONAL);
-    }
 
-    @Test
-    void computeAndRecordBatch_whenItFollowsOnFromWhatIsRecorded_marksNothingProvisional() {
-        // Given — the ordinary case
-        givenRecordedUpTo(LocalDate.of(2025, 3, 31));
-        givenComputation(computation(ChargeResolution.RESOLVED, line("BROKERAGE", 20.0)));
-        givenNoExistingRow();
 
-        // When
-        service.computeAndRecordBatch(List.of(tradeOn("txn-1", LocalDate.of(2025, 6, 1))));
 
-        // Then
-        assertThat(captureSaved().getResolution()).isEqualTo(ChargeResolution.RESOLVED);
-    }
-
-    @Test
-    void computeAndRecordBatch_whenNothingIsRecordedYet_marksNothingProvisional() {
-        // Given — a user's first upload cannot be out of sequence with itself
-        when(userChargeRepository.findFirstByEmailOrderByTransactionDateDesc(EMAIL))
-                .thenReturn(Optional.empty());
-        givenComputation(computation(ChargeResolution.RESOLVED, line("BROKERAGE", 20.0)));
-        givenNoExistingRow();
-
-        // When
-        service.computeAndRecordBatch(List.of(tradeOn("txn-1", LocalDate.of(2025, 6, 1))));
-
-        // Then
-        assertThat(captureSaved().getResolution()).isEqualTo(ChargeResolution.RESOLVED);
-    }
-
-    @Test
-    void computeAndRecordBatch_whenARowAlreadyCarriesAGap_keepsTheMoreSpecificReason() {
-        // Given — an out-of-sequence batch over a period with no rate card. "No schedule" says more
-        // than "may be wrong", and the row appears in the gaps report under either.
-        givenRecordedUpTo(LocalDate.of(2025, 9, 30));
-        givenComputation(ChargeComputation.empty(ChargeResolution.NO_SCHEDULE));
-        givenNoExistingRow();
-
-        // When
-        service.computeAndRecordBatch(List.of(tradeOn("txn-1", LocalDate.of(2025, 6, 1))));
-
-        // Then
-        assertThat(captureSaved().getResolution()).isEqualTo(ChargeResolution.NO_SCHEDULE);
-    }
-
-    @Test
-    void computeAndRecordBatch_returnsOneComputationPerTradeInDateOrder() {
-        // Given
-        ChargeComputation computed = computation(ChargeResolution.RESOLVED, line("BROKERAGE", 20.0));
-        givenComputation(computed);
-        givenNoExistingRow();
-        when(userChargeRepository.findFirstByEmailOrderByTransactionDateDesc(EMAIL))
-                .thenReturn(Optional.empty());
-
-        // When
-        List<ChargeComputation> computations = service.computeAndRecordBatch(List.of(
-                tradeOn("txn-late", LocalDate.of(2025, 6, 30)),
-                tradeOn("txn-early", LocalDate.of(2025, 6, 1))));
-
-        // Then
-        assertThat(computations).containsExactly(computed, computed);
-    }
-
-    @Test
-    void computeAndRecordBatch_whenItReachesBack_warnsSoTheFlagIsNotOnlyInTheDatabase() {
-        // Given — the row carries PROVISIONAL, but whoever ran the upload should hear about it then
-        // rather than discover it in a report later
-        givenRecordedUpTo(LocalDate.of(2025, 9, 30));
-        givenComputation(computation(ChargeResolution.RESOLVED, line("BROKERAGE", 20.0)));
-        givenNoExistingRow();
-
-        // When / Then
-        try (LogCapture logs = LogCapture.on(UserChargeService.class)) {
-            service.computeAndRecordBatch(List.of(tradeOn("txn-1", LocalDate.of(2025, 6, 1))));
-            assertThat(logs.warnings()).singleElement().asString()
-                    .contains(EMAIL).contains("PROVISIONAL");
-        }
-    }
-
-    @Test
-    void computeAndRecordBatch_whenItFollowsOn_staysQuiet() {
-        // Given — the ordinary case, or the warning above stops meaning anything
-        givenRecordedUpTo(LocalDate.of(2025, 3, 31));
-        givenComputation(computation(ChargeResolution.RESOLVED, line("BROKERAGE", 20.0)));
-        givenNoExistingRow();
-
-        // When / Then
-        try (LogCapture logs = LogCapture.on(UserChargeService.class)) {
-            service.computeAndRecordBatch(List.of(tradeOn("txn-1", LocalDate.of(2025, 6, 1))));
-            assertThat(logs.warnings()).isEmpty();
-        }
-    }
-
-    @Test
-    void computeAndRecordBatch_whenTheBatchIsEmpty_doesNothing() {
-        assertThat(service.computeAndRecordBatch(List.of())).isEmpty();
-    }
 
     // ---------------------------------------------------------------- queries
 
@@ -376,12 +251,6 @@ class UserChargeServiceTest {
                 .thenReturn(Optional.empty());
     }
 
-    private void givenRecordedUpTo(LocalDate latest) {
-        UserChargeEntity row = new UserChargeEntity();
-        row.setTransactionDate(latest);
-        when(userChargeRepository.findFirstByEmailOrderByTransactionDateDesc(EMAIL))
-                .thenReturn(Optional.of(row));
-    }
 
     private UserChargeEntity captureSaved() {
         ArgumentCaptor<UserChargeEntity> captor = ArgumentCaptor.forClass(UserChargeEntity.class);

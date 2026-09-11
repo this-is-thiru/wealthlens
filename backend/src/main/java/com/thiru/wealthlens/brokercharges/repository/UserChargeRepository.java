@@ -46,15 +46,5 @@ public interface UserChargeRepository extends MongoRepository<UserChargeEntity, 
     /** Rows whose charges could not be fully assessed. Drives the gaps report. */
     List<UserChargeEntity> findByEmailAndResolutionIn(String email, List<ChargeResolution> resolutions);
 
-    /** Every row a given rate card produced, so a corrected card can find what it touched. */
-    List<UserChargeEntity> findByScheduleId(String scheduleId);
-
-    /**
-     * The latest trade already recorded for a user, used to detect a batch arriving out of
-     * sequence. Uploads are quarterly and chronological by convention, but the convention is not
-     * enforced, so it is checked rather than assumed.
-     */
-    Optional<UserChargeEntity> findFirstByEmailOrderByTransactionDateDesc(String email);
-
     void deleteByEmail(String email);
 }

@@ -12,9 +12,7 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -47,40 +45,7 @@ public class UserChargeService {
     private final UserChargeRepository userChargeRepository;
 
     public ChargeComputation computeAndRecord(ChargeContext context) {
-        return record(context, false);
-    }
-
-    /**
-     * Prices a batch in date order, flagging it if it reaches back before what is already recorded.
-     *
-     * <p>Ordering is not a nicety. Deduplicated charges consult rows written earlier in the same
-     * batch, and a holding period depends on the purchase having been seen before the redemption.
-     *
-     * <p>Uploads are meant to be chronological, but that is a process convention rather than
-     * something the system enforces: someone will re-run a quarter or load a forgotten file. One
-     * indexed query turns the resulting silent wrongness into a visible flag.
-     */
-    public List<ChargeComputation> computeAndRecordBatch(List<ChargeContext> contexts) {
-        if (contexts == null || contexts.isEmpty()) {
-            return List.of();
-        }
-
-        List<ChargeContext> inOrder = contexts.stream()
-                .sorted(Comparator.comparing(ChargeContext::transactionDate))
-                .toList();
-
-        boolean outOfSequence = reachesBackBeforeWhatIsRecorded(inOrder);
-        if (outOfSequence) {
-            log.warn("Charge batch for {} starts on {}, before the latest transaction already recorded;"
-                            + " its computations are marked PROVISIONAL",
-                    inOrder.getFirst().email(), inOrder.getFirst().transactionDate());
-        }
-
-        List<ChargeComputation> computations = new ArrayList<>();
-        for (ChargeContext context : inOrder) {
-            computations.add(record(context, outOfSequence));
-        }
-        return computations;
+        return record(context);
     }
 
     public List<UserChargeEntity> findHistory(String email) {
@@ -135,7 +100,7 @@ public class UserChargeService {
         userChargeRepository.deleteByEmail(email);
     }
 
-    private ChargeComputation record(ChargeContext context, boolean provisional) {
+    private ChargeComputation record(ChargeContext context) {
         ChargeComputation computation = chargeEngine.compute(context);
 
         UserChargeEntity row = userChargeRepository
@@ -154,7 +119,7 @@ public class UserChargeService {
         row.setEvent(context.event());
         row.setTransactionDate(context.transactionDate());
         row.setComputedOn(TLocalDateTime.now());
-        row.setResolution(resolutionOf(computation, provisional));
+        row.setResolution(computation.resolution());
         row.setScheduleId(computation.scheduleId());
         row.setScheduleCode(computation.scheduleCode());
         row.setInstrumentId(computation.instrumentId());
@@ -166,28 +131,5 @@ public class UserChargeService {
 
         userChargeRepository.save(row);
         return computation;
-    }
-
-    /**
-     * A more specific gap is kept over {@code PROVISIONAL}. "No rate card on file" says more than
-     * "this may be wrong", and either way the row appears in the gaps report.
-     */
-    private static ChargeResolution resolutionOf(ChargeComputation computation, boolean provisional) {
-        if (provisional && computation.resolution() == ChargeResolution.RESOLVED) {
-            return ChargeResolution.PROVISIONAL;
-        }
-        return computation.resolution();
-    }
-
-    private boolean reachesBackBeforeWhatIsRecorded(List<ChargeContext> inOrder) {
-        Optional<UserChargeEntity> latest = userChargeRepository
-                .findFirstByEmailOrderByTransactionDateDesc(inOrder.getFirst().email());
-
-        if (latest.isEmpty() || latest.get().getTransactionDate() == null) {
-            return false;
-        }
-
-        LocalDate earliestInBatch = inOrder.getFirst().transactionDate();
-        return earliestInBatch.isBefore(latest.get().getTransactionDate());
     }
 }

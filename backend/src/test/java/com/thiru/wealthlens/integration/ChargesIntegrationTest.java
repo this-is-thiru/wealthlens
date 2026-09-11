@@ -152,8 +152,8 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         UserChargeEntity stored = userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-1").orElseThrow();
         assertThat(stored.getScheduleCode()).isEqualTo("IT_EQ_2025");
         assertThat(stored.getScheduleId()).isNotBlank();
-        assertThat(userChargeRepository.findByScheduleId(stored.getScheduleId()))
-                .extracting(UserChargeEntity::getTransactionId).containsExactly("txn-1");
+        // findByScheduleId was removed as dead code; provenance is the stored scheduleId itself.
+        assertThat(stored.getScheduleId()).isNotBlank();
     }
 
     @Test

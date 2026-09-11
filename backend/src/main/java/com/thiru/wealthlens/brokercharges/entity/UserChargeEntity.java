@@ -53,12 +53,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
     @CompoundIndex(name = "user_charge_dedupe_idx",
             def = "{'email': 1, 'account_holder': 1, 'broker_name': 1, 'stock_code': 1, 'transaction_date': 1}"),
     /** Charge history and the gaps report. */
-    @CompoundIndex(name = "user_charge_history_idx", def = "{'email': 1, 'transaction_date': -1}"),
-    /**
-     * Everything one rate card priced, which is how a corrected card finds what it touched. Spans
-     * users, so without an index it scans the whole collection.
-     */
-    @CompoundIndex(name = "user_charge_schedule_idx", def = "{'schedule_id': 1}")
+    @CompoundIndex(name = "user_charge_history_idx", def = "{'email': 1, 'transaction_date': -1}")
 })
 public class UserChargeEntity implements AuditableEntity {
 
