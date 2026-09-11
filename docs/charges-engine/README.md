@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`. **Complete.** All twelve chunks done, every acceptance criterion signed off, the superseded implementation deleted and its collections dropped. 877 tests, 99% mutation score. Full suite green: **881 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
+**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`. **All twelve chunks done**, every acceptance criterion signed off, the superseded implementation deleted and its collections dropped. 877 tests, 99% mutation score. **One technical gap is open:** `toTradeOutcomeContext` pro-rates the sell side from the deprecated user-entered field, so `trade_outcomes.sell_broker_charges` is ~0 under `authoritative`. Full suite green: **881 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
 
 ---
 
@@ -13,7 +13,7 @@
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | **46**, of which **11 are unpushed** (`git log origin/feature/charges-engine..HEAD`). Counted with `git rev-list master..HEAD --count` — trust the command over this cell, which has been wrong before |
 | **Phase** | A, B and **C complete**. Chunk 11 deleted 25 files; V1 buy/sell is untouched and still live |
-| **Next action** | **Raise the PR.** All twelve chunks are done and every acceptance criterion is signed off |
+| **Next action** | **Close `toTradeOutcomeContext` pro-rating** (`PortfolioService:621`) — the one outstanding technical item, found auditing the checklist on 2026-09-11. Then raise the PR |
 | **Blocking questions** | **None.** Both were settled: `YearlyChargeSummary` was written beside the old report and the old one is now deleted; `userChargeId` was dropped, because `UserChargeEntity.transactionId` with its unique index already carries the link |
 
 ---
