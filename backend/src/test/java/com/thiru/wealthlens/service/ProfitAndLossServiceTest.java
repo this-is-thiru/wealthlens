@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
@@ -68,46 +69,7 @@ class ProfitAndLossServiceTest {
     // ========================================
 
     @Test
-    void updateProfitAndLoss_buyEquity_recordsBrokerCharges() {
-        // Given
-        UserMail userMail = UserMail.from(TEST_EMAIL);
-        LocalDate buyDate = LocalDate.of(2024, 1, 15);
-        ProfitLossContext context = new ProfitLossContext(
-                "txn-123", 10.0, buyDate, 100.0, STOCK_CODE, BROKER, EXCHANGE,
-                AssetType.EQUITY, TransactionType.BUY, null, AccountType.SELF, ACCOUNT_HOLDER,
-                List.of()
-        );
-
-        UserBrokerCharges userBrokerCharges = new UserBrokerCharges();
-        userBrokerCharges.setBrokerage(10.0);
-        userBrokerCharges.setAmcCharges(0.0);
-        userBrokerCharges.setTransactionDate(buyDate);
-
-        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
-                .thenReturn(Optional.empty());
-        when(userBrokerChargeService.addUserBrokerChargeEntry(any(UserMail.class), any(BrokerChargeContext.class)))
-                .thenReturn(userBrokerCharges);
-        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
-        profitAndLossService.updateProfitAndLoss(userMail, context);
-
-        // Then
-        ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
-        verify(profitAndLossRepository).save(captor.capture());
-
-        ProfitAndLossEntity savedEntity = captor.getValue();
-        assertNotNull(savedEntity.getRealisedProfits());
-        assertNotNull(savedEntity.getRealisedProfits().getYearlyBrokerCharges());
-        assertEquals(TEST_EMAIL, savedEntity.getEmail());
-        assertEquals("2023-2024", savedEntity.getFinancialYear());
-
-        verify(userBrokerChargeService).addUserBrokerChargeEntry(any(UserMail.class), any(BrokerChargeContext.class));
-    }
-
-    @Test
-    void updateProfitAndLoss_buyNonEquity_skipsBrokerCharges() {
+    void updateProfitAndLoss_buyNonEquity_savesThePeriodWithNoRealisedProfit() {
         // Given
         UserMail userMail = UserMail.from(TEST_EMAIL);
         LocalDate buyDate = LocalDate.of(2024, 1, 15);
@@ -715,5 +677,42 @@ class ProfitAndLossServiceTest {
         YearlyChargeSummary summary = captor.getAllValues().getLast().getRealisedProfits().getYearlyChargeSummary();
         assertEquals(247.20, summary.getTotalCharges(), 0.001);
         assertEquals(40.00, summary.getAmountByCode().get("BROKERAGE"), 0.001);
+    }
+
+    /**
+     * Cut 1. The superseded implementation is no longer called from the trade path at all — by V1
+     * buy, which reached it through the two-arg overload, or by V2.
+     *
+     * <p>Safe because it never did anything: it calls {@code addUserBrokerChargeEntry}, which
+     * returns null when no {@code broker_charges} template exists for the broker and date, and
+     * production holds zero {@code yearly_broker_charges} documents — the only thing that block
+     * could have written. It logged an error per trade and produced nothing.
+     */
+    @Test
+    void updateProfitAndLoss_neverCallsTheSupersededImplementation() {
+        // Given
+        expectNoExistingPnl("2025-2026");
+        ProfitLossContext equityBuy = buyOn(LocalDate.of(2025, 6, 10), AssetType.EQUITY, AccountType.SELF);
+
+        // When — the V1 shape: nothing passed in
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), equityBuy);
+
+        // Then
+        verifyNoInteractions(userBrokerChargeService);
+    }
+
+    @Test
+    void updateProfitAndLoss_sellNeverCallsTheSupersededImplementation() {
+        // Given
+        expectNoExistingPnl("2025-2026");
+        ProfitLossContext sell = new ProfitLossContext("txn-cut1", 10.0, LocalDate.of(2025, 6, 15), 150.0,
+                STOCK_CODE, BROKER, EXCHANGE, AssetType.EQUITY, TransactionType.SELL, null,
+                AccountType.SELF, ACCOUNT_HOLDER, List.of(new BuyContext(10.0, LocalDate.of(2025, 1, 5), 100.0)));
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), sell);
+
+        // Then
+        verifyNoInteractions(userBrokerChargeService);
     }
 }
