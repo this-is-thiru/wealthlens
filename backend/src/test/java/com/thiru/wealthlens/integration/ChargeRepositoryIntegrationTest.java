@@ -252,7 +252,6 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
         schedule.setStartDate(from);
         schedule.setEndDate(to);
         schedule.setStatus(EntityStatus.ACTIVE);
-        schedule.setCurrency("INR");
         return schedule;
     }
 

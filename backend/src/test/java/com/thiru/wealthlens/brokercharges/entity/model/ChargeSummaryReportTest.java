@@ -9,6 +9,7 @@ import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -190,5 +191,32 @@ class ChargeSummaryReportTest {
         assertMoney(20.00, april.getFirstHalfCharges().getTotalCharges());
         assertMoney(15.00, april.getSecondHalfCharges().getTotalCharges());
         assertMoney(35.00, april.getTotalCharges());
+    }
+
+    /**
+     * A financial year runs April to March, but {@code Map<Month, …>} iterates in calendar order, so
+     * a report rendered straight from the map opens in January — three months into the year it is
+     * reporting, with April through December after it. The old {@code YearlyBrokerCharges} has the
+     * same defect; this is the accessor that avoids inheriting it.
+     */
+    @Test
+    void monthsInFinancialYearOrder_startsInAprilAndEndsInMarch() {
+        // Given — inserted in an order chosen to be neither calendar nor financial
+        YearlyChargeSummary yearly = new YearlyChargeSummary();
+        for (Month month : List.of(Month.JANUARY, Month.APRIL, Month.MARCH, Month.DECEMBER)) {
+            yearly.getMonthlyReport().put(month, new MonthlyChargeSummary(month));
+        }
+
+        // When
+        List<Month> ordered = yearly.monthsInFinancialYearOrder().stream()
+                .map(MonthlyChargeSummary::getMonth).toList();
+
+        // Then
+        assertThat(ordered).containsExactly(Month.APRIL, Month.DECEMBER, Month.JANUARY, Month.MARCH);
+    }
+
+    @Test
+    void monthsInFinancialYearOrder_whenNothingWasCharged_isEmpty() {
+        assertThat(new YearlyChargeSummary().monthsInFinancialYearOrder()).isEmpty();
     }
 }

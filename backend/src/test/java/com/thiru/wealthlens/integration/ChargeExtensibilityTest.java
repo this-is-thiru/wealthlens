@@ -176,7 +176,6 @@ class ChargeExtensibilityTest extends AbstractIntegrationTest {
         schedule.setSegment(TradeSegment.DELIVERY);
         schedule.setStartDate(from);
         schedule.setStatus(EntityStatus.ACTIVE);
-        schedule.setCurrency("INR");
         schedule.setSourceUrl("https://example.test/charges");
         schedule.setRules(new ArrayList<>(List.of(rules)));
         return schedule;

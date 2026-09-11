@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -40,6 +41,13 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(value = "charge_instruments")
+/**
+ * Seeding is idempotent by scheme and start date. That was enforced only in
+ * {@code ChargeSeederService}, so two concurrent seeds could each check, each miss, and each write.
+ * The uniqueness is a property of the data, so it belongs in the database.
+ */
+@CompoundIndex(name = "charge_instrument_scheme_idx",
+        def = "{'stock_code': 1, 'start_date': 1}", unique = true)
 public class ChargeInstrumentEntity implements AuditableEntity {
 
     @JsonIgnore
@@ -52,6 +60,8 @@ public class ChargeInstrumentEntity implements AuditableEntity {
     private String stockCode;
 
     /** Stored now so profiles can be re-keyed on it later without a migration. */
+    /** Indexed because ADR-29 makes it the join key to the instrument registry. */
+    @Indexed(sparse = true)
     @Field("isin")
     private String isin;
 
