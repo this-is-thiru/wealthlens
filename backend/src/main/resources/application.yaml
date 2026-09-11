@@ -20,10 +20,15 @@ app:
     # records nothing whatever shadow-recording below says. Reading charges already recorded still
     # works, which is what you need in order to decide whether to turn it back on.
     engine-enabled: true
-    # Phase B: the engine prices and records every trade beside the live flow, and the result is
-    # ignored. Off by default -- turning it on is what makes the reconciliation report have data,
-    # and turning it off is the whole rollback. Has no effect when engine-enabled is false.
-    shadow-recording: false
-    # Phase C: the computed total drives cost basis. NOTHING READS THIS YET -- setting it true
-    # changes nothing until Chunk 10 lands.
-    authoritative: false
+    # The engine prices and records every V2 trade beside the live flow. On: the reconciliation
+    # report has data and GET /user-charges/user/{email} shows what each trade cost. Turning it
+    # off again is the whole rollback. Has no effect when engine-enabled is false.
+    shadow-recording: true
+    # The computed total becomes the cost basis on a V2 buy (AC-10). On: new trades are costed by
+    # the engine rather than by whatever the client sent in AssetRequest.brokerCharges.
+    #
+    # ORDER MATTERS. Both flags above need rate cards to exist, and seeding is a deliberate act
+    # (ADR-27) -- a fresh database has none. Run POST /charges/seed BEFORE the first trade, or
+    # every trade resolves NO_SCHEDULE and is charged nothing. ChargeReadinessAuditor warns at
+    # startup when that is the case; docs/charges-engine/production-runbook.md is the procedure.
+    authoritative: true

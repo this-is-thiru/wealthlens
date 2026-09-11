@@ -13,7 +13,7 @@
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | **46**, of which **11 are unpushed** (`git log origin/feature/charges-engine..HEAD`). Counted with `git rev-list master..HEAD --count` — trust the command over this cell, which has been wrong before |
 | **Phase** | A, B and **C complete**. Chunk 11 deleted 25 files; V1 buy/sell is untouched and still live |
-| **Next action** | **Raise the PR.** Nothing outstanding blocks it — see the checklist header for the three open items, all either accepted or V1-bound |
+| **Next action** | **Raise the PR**, then follow `production-runbook.md` on deploy — `POST /charges/seed` before the first trade. Nothing outstanding blocks it — see the checklist header for the three open items, all either accepted or V1-bound |
 | **Blocking questions** | **None.** Both were settled: `YearlyChargeSummary` was written beside the old report and the old one is now deleted; `userChargeId` was dropped, because `UserChargeEntity.transactionId` with its unique index already carries the link |
 
 ---
@@ -246,6 +246,7 @@ Read in this order:
 | 4 | **tech-spec.md** | The design. Entities, engine contracts, algorithms, seed format, extensibility analysis (§13), temporal semantics (§14) | 912 |
 | 5 | **test-plan.md** | How it is verified. ~190 tests across 11 tiers, with gates | 347 |
 | 6 | **implementation-checklist.md** | The build tracker. Resume from the first unticked box | 339 |
+| 7a | **production-runbook.md** | **Read before deploying.** Every step that must be run by hand, in order — seeding first, because the flags now ship on | 190 |
 | 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return | 460 |
 | 8 | **ac2-rate-verification.md** | The AC-2 evidence: every shipped rate against the broker's page, what was wrong, and what closing it changed | 180 |
 | 9 | **phase-b-reconciliation-findings.md** | The Phase B exit artifact: the backfill and reconciliation run against 319 real transactions, what it proved, and why the deltas could not mean what the gate assumed | 143 |
