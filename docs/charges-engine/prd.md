@@ -168,7 +168,7 @@ The `assetType == EQUITY` gate is removed. Every asset type flows through the en
 ## 7. Out-of-scope Risks to Note
 
 - **Rate accuracy is a data problem, not a code problem.** The engine will faithfully compute whatever is seeded. Seed values must be verified against live broker rate cards; a `sourceUrl` + `verifiedOn` field is included on each schedule for this reason.
-- **Trade segment does not exist in the portfolio model today** (`HoldingType` is only SHORT_TERM/LONG_TERM). The engine takes `TradeSegment` on its own input record from Phase A, so no `portfolio` type changes until Phase C, where the field is added defaulting to `DELIVERY`.
+- ~~**Trade segment does not exist in the portfolio model today**~~ — **resolved in Chunk 10b (2026-09-11):** `TradeSegment` was promoted to `portfolio.dto.enums` and is a field on `AssetRequest`, `TransactionEntity`, `AssetEntity` and `ProfitLossContext`, defaulting `DELIVERY`. Originally: (`HoldingType` is only SHORT_TERM/LONG_TERM). The engine takes `TradeSegment` on its own input record from Phase A, so no `portfolio` type changes until Phase C, where the field is added defaulting to `DELIVERY`.
 - **Options premium vs notional** requires the caller to pass turnover explicitly. The engine accepts it; the portfolio module does not yet produce F&O trades, so this stays latent but designed-for.
 
 ---
