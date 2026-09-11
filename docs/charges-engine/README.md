@@ -431,37 +431,37 @@ equivalent mutant.
 
 ```bash
 git checkout feature/charges-engine
-git log --oneline origin/feature/charges-engine..HEAD   # 11 commits not yet pushed
-./mvnw clean verify -pl backend                          # needs Docker; 881 tests
-sed -n '1,20p' docs/charges-engine/implementation-checklist.md
+./mvnw clean test verify        # 848 tests, needs Docker
+sed -n '1,25p' docs/charges-engine/implementation-checklist.md
 ```
 
-Then read §11.2 below for what is still open. None of it blocks a merge.
+**The work is complete.** All twelve chunks, every acceptance criterion signed off, the superseded
+implementation deleted and its collections dropped. The next action is **raising the PR**, not
+writing code — `pr-description.md` is written and current.
 
-### 11.2 What is still open
-
-**Nothing blocks a merge.** Three items, and the checklist header lists them by kind:
+### 11.2 What is open, and none of it blocks the PR
 
 1. **`YearlyChargeSummary` accumulates** rather than being derived from `user_charges`, so
-   reprocessing one trade twice counts it twice. Accepted rather than fixed. Deriving it would make
-   it idempotent by construction and would also give the per-broker and per-asset-type breakdowns the
-   summary cannot express — `user_charges` carries both.
+   reprocessing one trade twice counts it twice. Accepted. Deriving it would make it idempotent by
+   construction and give per-broker and per-asset-type breakdowns the summary cannot express.
 2. **Two V1-bound items are void by decision** — `toTradeOutcomeContext` pro-rating and retiring the
    `ProfitAndLossContext` overload. Both are V1-only code and V1 is in live use.
-3. **V2 sells write no `trade_outcomes` row** — `sellStockV2` reaches
-   `updateQuantityBySavingReportAndProfitAndLoss1`, which never calls `saveTradeOutcome`. Only the V1
-   sell path populates that collection. Pre-existing, unrelated to charges, recorded because it was
-   found while auditing.
+3. **V2 sells write no `trade_outcomes` row.** Pre-existing, unrelated to charges, found while
+   auditing.
+4. **The [priced-portfolio epic](../epics/priced-portfolio.md)** — instrument identity and historical
+   rate coverage. Not this branch, not a cutover blocker (ADR-32).
 
-### 11.3 Environment state left behind
+### 11.3 Environment state, and what deploying now means
 
-- **`app.charges.shadow-recording` and `authoritative` both ship `false`**, and `engine-enabled`
-  ships `true`. Nothing in the trade path behaves differently from `master` until a flag is flipped.
-- **`it-staging` holds 319 backfilled `user_charges` rows** written on 2026-09-09. Nothing else was
-  touched — no cost basis, no P&L, no transaction documents. Dropping that collection undoes it.
-- The repository owner was running the branch's JAR locally on **:8080 against `it-staging` with
-  `shadow-recording=true`**. If it is still up, new trades are still being shadow-recorded. Stopping
-  it, or clearing the flag, is the whole rollback.
+- **The flags ship ON.** `shadow-recording: true` and `authoritative: true` in all three profiles,
+  `engine-enabled: true` as the kill switch. A V2 trade is priced by the engine and the computed
+  total is its cost basis. **This is the one thing that changed today** — before, merging was inert.
+- **`POST /charges/seed` must run before the first trade on any database.** Without rate cards every
+  trade resolves `NO_SCHEDULE` and is charged nothing, and `authoritative` makes that zero the cost
+  basis. `ChargeReadinessAuditor` warns at startup; `production-runbook.md` is the ordered procedure.
+- **`it-staging` holds 319 backfilled `user_charges` rows** from 2026-09-09. The endpoint that wrote
+  them has since been deleted, so that run is not repeatable.
+- **History is never re-priced** (ADR-32). Trades predating a deployment stay unpriced, by design.
 
 ### 11.4 What Phase C has done so far
 
