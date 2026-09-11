@@ -30,6 +30,11 @@ public enum ChargeResolution {
     /**
      * The computation depends on facts that may still change — user history, or FIFO lots not yet
      * uploaded. Correct as of now, but a candidate for recomputation.
+     *
+     * <p><b>Nothing sets this today.</b> It was written by the batch upload path, which was removed
+     * with the backfill: ADR-32 means transactions are never re-driven, so no caller prices a batch
+     * that could reach back before what is already recorded. Kept because it is the right name for
+     * that state if batching returns, and because it costs nothing to leave in the enum.
      */
     PROVISIONAL,
 

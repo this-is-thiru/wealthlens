@@ -36,7 +36,9 @@ class ChargeIndexIntegrationTest extends AbstractIntegrationTest {
         // Then — {email, transaction_id} being unique is what makes record() replace rather than
         // append, and therefore what makes the backfill safe to re-run.
         assertThat(indexes).contains("user_charge_txn_idx", "user_charge_dedupe_idx",
-                "user_charge_history_idx", "user_charge_schedule_idx");
+                "user_charge_history_idx");
+        // No schedule_id index: the query it supported was dead code and went with it.
+        assertThat(indexes).doesNotContain("user_charge_schedule_idx");
 
         Document txnIdx = StreamSupport
                 .stream(mongoTemplate.getCollection("user_charges").listIndexes().spliterator(), false)

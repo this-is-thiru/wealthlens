@@ -20,11 +20,6 @@ public interface ChargeInstrumentRepository extends MongoRepository<ChargeInstru
             + " $or: [ { 'end_date': null }, { 'end_date': { $gte: ?1 } } ] }")
     List<ChargeInstrumentEntity> findCandidates(String stockCode, LocalDate transactionDate);
 
-    @Query("{ 'stock_code': ?0, 'status': { $ne: 'INACTIVE' }, 'end_date': null }")
-    Optional<ChargeInstrumentEntity> findOpenProfile(String stockCode);
-
-    Optional<ChargeInstrumentEntity> findByIsin(String isin);
-
     /**
      * A profile's identity for seeding purposes.
      *

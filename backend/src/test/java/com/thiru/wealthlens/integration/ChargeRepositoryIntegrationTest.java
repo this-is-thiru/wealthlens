@@ -172,7 +172,9 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
         // Then — a redemption backdated into the old window uses the load in force then
         assertThat(candidates).hasSize(1);
         assertThat(candidates.get(0).getEndDate()).isEqualTo(LocalDate.of(2024, 12, 31));
-        assertThat(instrumentRepository.findOpenProfile("HDFCFLEXI").orElseThrow().getEndDate()).isNull();
+        // findOpenProfile was removed as dead code; the property it proved is the stored endDate.
+        assertThat(instrumentRepository.findByStockCodeAndStartDate("HDFCFLEXI", LocalDate.of(2025, 1, 1))
+                .orElseThrow().getEndDate()).isNull();
     }
 
     @Test
@@ -230,18 +232,6 @@ class ChargeRepositoryIntegrationTest extends AbstractIntegrationTest {
                 .extracting(UserChargeEntity::getTransactionId).containsExactly("txn-gap");
     }
 
-    @Test
-    void findFirstByEmailOrderByTransactionDateDesc_findsTheLatestRecordedTrade() {
-        // Given — used to detect a batch reaching back before what is already recorded
-        userChargeRepository.save(userCharge("txn-old", "self", "RELIANCE", Map.of()));
-        UserChargeEntity later = userCharge("txn-new", "self", "TCS", Map.of());
-        later.setTransactionDate(LocalDate.of(2025, 3, 1));
-        userChargeRepository.save(later);
-
-        // When / Then
-        assertThat(userChargeRepository.findFirstByEmailOrderByTransactionDateDesc(EMAIL).orElseThrow()
-                .getTransactionId()).isEqualTo("txn-new");
-    }
 
     private static ChargeScheduleEntity schedule(String code, LocalDate from, LocalDate to) {
         ChargeScheduleEntity schedule = new ChargeScheduleEntity();

@@ -2,9 +2,7 @@ package com.thiru.wealthlens.brokercharges.service;
 
 import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
-import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
-import com.thiru.wealthlens.shared.exception.BadRequestException;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -59,12 +57,6 @@ public class ChargeAccountService {
         return chargeAccountRepository.findByEmail(email);
     }
 
-    public ChargeAccountEntity findAccount(String email, BrokerName brokerName, String dematAccountId) {
-        return chargeAccountRepository
-                .findByEmailAndBrokerNameAndDematAccountId(email, brokerName, dematAccountId)
-                .orElseThrow(() -> new BadRequestException(
-                        "No charge account on file for demat account " + dematAccountId));
-    }
 
     public void deleteByEmail(String email) {
         chargeAccountRepository.deleteByEmail(email);

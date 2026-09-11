@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.brokercharges.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -12,7 +11,6 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeAccountEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeAccountRepository;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
-import com.thiru.wealthlens.shared.exception.BadRequestException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -122,23 +120,7 @@ class ChargeAccountServiceTest {
         assertThat(service.findByEmail(EMAIL)).isEqualTo(accounts);
     }
 
-    @Test
-    void findAccount_returnsTheAccount() {
-        ChargeAccountEntity account = account(DEMAT);
-        when(chargeAccountRepository.findByEmailAndBrokerNameAndDematAccountId(EMAIL, BrokerName.ZERODHA, DEMAT))
-                .thenReturn(Optional.of(account));
 
-        assertThat(service.findAccount(EMAIL, BrokerName.ZERODHA, DEMAT)).isSameAs(account);
-    }
-
-    @Test
-    void findAccount_whenThereIsNoSuchAccount_isRejectedNamingIt() {
-        givenNoExistingAccount();
-
-        assertThatThrownBy(() -> service.findAccount(EMAIL, BrokerName.ZERODHA, DEMAT))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining(DEMAT);
-    }
 
     @Test
     void deleteByEmail_removesEveryAccountForTheUser() {
