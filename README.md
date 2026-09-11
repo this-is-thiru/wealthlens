@@ -667,7 +667,7 @@ curl -X POST "http://localhost:8080/portfolio/user/user@example.com/transaction/
 - **Indian Market Context:** Asset types, exchange names, and broker names are oriented toward Indian stock market conventions.
 - **Holding Period:** Long-term vs short-term classification is based on a 1-year holding period (≥366 days) for **all asset types** uniformly, not just equities.
 - **Rate Card Required:** a trade is priced only if a `ChargeScheduleEntity` covers its broker, dimensions and date. If none does, the trade still completes and the computation is recorded as `NO_SCHEDULE`, so the gap is visible in `GET /user-charges/user/{email}/gaps` rather than silently costing nothing.
-- **GST Description Format:** The `gstApplicableDescription` field in `BrokerChargesRequest` follows the format `XX%-component_name,XX%-component_name` (e.g. `18%-brokerage,18%-stt`). The percentage symbol is optional; components not matching known names are silently ignored.
+- **GST names the charges it taxes.** A `DERIVED` rule lists its `baseCodes` explicitly, so GST is computed over exactly those lines and never over STT or stamp duty. This replaced a CSV string (`18%-brokerage,18%-stt`) parsed at runtime, where a component name that matched nothing was silently ignored — defect D1.
 - **DP Charge Deduplication:** DP charges are applied only once per stock per day on SELL transactions. Multiple sells of the same stock on the same day incur DP charges only on the first sell.
 - **AMC Frequency:** Quarterly AMC uses a fixed 91-day interval (not strict calendar quarters). Annual AMC uses a 1-year interval.
 - **Quarterly Corporate Actions:** Corporate actions are batched and processed per financial quarter rather than individually per record date.
