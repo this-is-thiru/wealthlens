@@ -14,7 +14,7 @@
 | **Commits beyond master** | **46**, of which **11 are unpushed** (`git log origin/feature/charges-engine..HEAD`). Counted with `git rev-list master..HEAD --count` — trust the command over this cell, which has been wrong before |
 | **Phase** | A, B and **C complete**. Chunk 11 deleted 25 files; V1 buy/sell is untouched and still live |
 | **Next action** | **Raise the PR.** All twelve chunks are done and every acceptance criterion is signed off |
-| **Blocking questions** | **Two, both non-urgent** — see §11.2. (1) Does `YearlyChargeSummary` sit beside `BrokerChargesReport` or replace it? (2) Keep or drop `userChargeId` on `TransactionEntity`? Neither blocks reading the code |
+| **Blocking questions** | **None.** Both were settled: `YearlyChargeSummary` was written beside the old report and the old one is now deleted; `userChargeId` was dropped, because `UserChargeEntity.transactionId` with its unique index already carries the link |
 
 ---
 
@@ -201,7 +201,7 @@ Tests: `PortfolioServiceTest` 6 → 11, `ChargeRecordingGatewayImplTest` → 17,
 
 ### Written by Chunk 7
 
-`entity/model/ChargeSummaryReport` and its `YearlyChargeSummary` / `MonthlyChargeSummary` forms — a map keyed by charge code replacing six fixed columns, summed in `BigDecimal` with the total recomputed from the parts rather than accumulated beside them. `ChargeSummaryReportTest`, 11 cases. Nothing writes one yet: `ProfitAndLossService` keeps the old `BrokerChargesReport` until Phase C.
+`entity/model/ChargeSummaryReport` and its `YearlyChargeSummary` / `MonthlyChargeSummary` forms — a map keyed by charge code replacing six fixed columns, summed in `BigDecimal` with the total recomputed from the parts rather than accumulated beside them. `ChargeSummaryReportTest`, 13 cases. Written by `ProfitAndLossService` since Chunk 10b, and since Chunk 11 it is the **only** charge hierarchy a P&L document carries.
 
 ### Written by Chunk 9
 
@@ -217,11 +217,20 @@ before. The paragraph below describes the shipped default.
 
 **Nothing in the live path *depends* on any of this.** Since Chunk 8 the trade path does call the engine — `ProfitAndLossService` hands every V2 buy and sell to `ChargeRecordingGateway` — but only when `app.charges.shadow-recording` is on, and it ignores the result. No cost basis, no P&L figure and no stored transaction reads a computed charge. Phase C is what makes it authoritative.
 
-### The old implementation is fully intact and untouched
+### The old implementation is deleted (Chunk 11, 2026-09-09)
 
-13 files under `brokercharges/` still implement the superseded design: `BrokerCharges`, `UserBrokerCharges`, `BrokerChargeService`, `UserBrokerChargeService`, both repositories, both controllers, `BrokerChargeContext`, `BrokerChargesRequest`, `BrokerageChargesDto`, `AssetManagementDetailsRequest`, `package-info`. Three old enums also remain: `AmcChargeFrequency`, `BrokerChargeTransactionType`, `BrokerageAggregatorType`.
+Twenty-five files went: `BrokerCharges`, `UserBrokerCharges`, their services, repositories,
+controllers and DTOs; `BrokerChargeTransactionType` (defect D5) and `BrokerageAggregatorType`;
+`BrokerageCharges`, `BrokerChargesReport`, `YearlyBrokerCharges`, `MonthlyBrokerCharges` and
+`RealisedProfits.yearlyBrokerCharges`; `AssetManagementService`, `AssetManagementDetails` and its
+repository and request DTO; 106 lines of charge machinery out of `ProfitAndLossService`; and their
+tests. The `broker_charges`, `user_broker_charges` and `asset_management_details` collections were
+dropped by the repository owner on 2026-09-11.
 
-**It is deleted in Phase C, not before.** Nothing in `portfolio/` has been modified, and that is a hard rule for Phase A (§5).
+**What survives, deliberately:** V1 `buyStock` / `sellStock`, which are in live use and were never
+touched, and the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload that V1 sell
+depends on. `AssetRequest.brokerCharges` is also deprecated-but-kept: clients keep sending it and it
+is simply no longer read once `authoritative` is on.
 
 ---
 
@@ -334,7 +343,7 @@ Full rationale in `decisions.md`. Summary:
 | Manual charge entry | The engine replaces it — that is the point of the work |
 | Module rename `brokercharges` → `charges` | Deferred to Phase C |
 | `planCode` dimension | Exists on the schedule; not populated in Phase A |
-| AMC accounts | New `ChargeAccountEntity`; `AssetManagementDetails` untouched until Phase C |
+| AMC accounts | `ChargeAccountEntity`. `AssetManagementDetails` was deleted in Chunk 11 with no migration — it was never in production |
 | Upload model | **Quarterly batches, chronological** — with a guard, because the guarantee is operational not enforced |
 
 ---
