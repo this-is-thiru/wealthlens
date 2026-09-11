@@ -1,12 +1,8 @@
 package com.thiru.wealthlens.portfolio.service;
-import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
-import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
-import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
 import com.thiru.wealthlens.brokercharges.entity.model.ChargeSummaryReport;
 import com.thiru.wealthlens.brokercharges.entity.model.MonthlyChargeSummary;
 import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
-import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
@@ -14,14 +10,11 @@ import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
-import com.thiru.wealthlens.portfolio.entity.model.BrokerChargesReport;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.FortnightReport;
-import com.thiru.wealthlens.portfolio.entity.model.MonthlyBrokerCharges;
 import com.thiru.wealthlens.portfolio.entity.model.MonthlyReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.entity.model.ReportModel;
-import com.thiru.wealthlens.portfolio.entity.model.YearlyBrokerCharges;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -57,7 +50,6 @@ public class ProfitAndLossService {
     private static final int FORTNIGHT_BOUNDARY = 15;
 
     private final ProfitAndLossRepository profitAndLossRepository;
-    private final UserBrokerChargeService userBrokerChargeService;
     private final ChargeRecordingGateway chargeRecordingGateway;
 
     /**
@@ -477,110 +469,10 @@ public class ProfitAndLossService {
         fortnightReport.setSellAmount(fortnightReport.getSellAmount() + internalContext.sellAmount());
     }
 
-    private static void updateBrokerChargesReport(ProfitAndLossEntity profitAndLossEntity, AccountType accountType, UserBrokerCharges userBrokerCharges) {
-        if (accountType == AccountType.SELF) {
-            RealisedProfits existingRealisedProfits = TOptional.mapO(profitAndLossEntity.getRealisedProfits(), RealisedProfits.empty());
-            RealisedProfits calculatedProfitDetails = calculateBrokerChargesDetails(existingRealisedProfits, userBrokerCharges);
-            profitAndLossEntity.setRealisedProfits(calculatedProfitDetails);
-        } else {
-            RealisedProfits outSourcedRealisedProfits = TOptional.mapO(profitAndLossEntity.getOutSourcedRealisedProfits(), RealisedProfits.empty());
-            RealisedProfits calculatedProfitDetails = calculateBrokerChargesDetails(outSourcedRealisedProfits, userBrokerCharges);
-            profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
-        }
-
-        profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
-    }
-
-    private static RealisedProfits calculateBrokerChargesDetails(RealisedProfits realisedProfits, UserBrokerCharges userBrokerCharges) {
-        YearlyBrokerCharges yearlyBrokerCharges = realisedProfits.getYearlyBrokerCharges();
-        if (realisedProfits.getYearlyBrokerCharges() == null) {
-            yearlyBrokerCharges = new YearlyBrokerCharges();
-            realisedProfits.setYearlyBrokerCharges(yearlyBrokerCharges);
-        }
-
-        Map<Month, MonthlyBrokerCharges> monthlyBrokerCharges = updateMonthlyReport(yearlyBrokerCharges.getMonthlyReport(), userBrokerCharges);
-        yearlyBrokerCharges.setMonthlyReport(monthlyBrokerCharges);
-
-        updateYearlyBrokerCharges(yearlyBrokerCharges, userBrokerCharges);
-        return realisedProfits;
-    }
-
-    private static Map<Month, MonthlyBrokerCharges> updateMonthlyReport(Map<Month, MonthlyBrokerCharges> monthlyBrokerCharges, UserBrokerCharges userBrokerCharges) {
-        LocalDate transactionDate = userBrokerCharges.getTransactionDate();
-        Month month = transactionDate.getMonth();
-        MonthlyBrokerCharges monthlyBrokerCharge = monthlyBrokerCharges.getOrDefault(month, new MonthlyBrokerCharges(month));
-
-        BrokerChargesReport fortnightReport;
-        if (transactionDate.getDayOfMonth() <= 15) {
-            fortnightReport = TOptional.mapO(monthlyBrokerCharge.getFirstHalfBrokerCharges(), new BrokerChargesReport());
-            monthlyBrokerCharge.setFirstHalfBrokerCharges(fortnightReport);
-        } else {
-            fortnightReport = TOptional.mapO(monthlyBrokerCharge.getSecondHalfBrokerCharges(), new BrokerChargesReport());
-            monthlyBrokerCharge.setSecondHalfBrokerCharges(fortnightReport);
-        }
-
-        updateFortnightBrokerCharges(fortnightReport, userBrokerCharges);
-        updateMonthlyBrokerCharges(monthlyBrokerCharge, userBrokerCharges);
-        monthlyBrokerCharges.put(month, monthlyBrokerCharge);
-
-        return monthlyBrokerCharges;
-    }
-
-    private static void updateYearlyBrokerCharges(YearlyBrokerCharges yearlyBrokerCharges, UserBrokerCharges userBrokerCharges) {
-        updateBrokerCharges(yearlyBrokerCharges, userBrokerCharges);
-    }
-
-    private static void updateMonthlyBrokerCharges(MonthlyBrokerCharges monthlyBrokerCharge, UserBrokerCharges userBrokerCharges) {
-        updateBrokerCharges(monthlyBrokerCharge, userBrokerCharges);
-    }
-
-    private static void updateFortnightBrokerCharges(BrokerChargesReport fortnightBrokerChargesReport, UserBrokerCharges userBrokerCharges) {
-        updateBrokerCharges(fortnightBrokerChargesReport, userBrokerCharges);
-    }
-
-    private static void updateBrokerCharges(BrokerChargesReport brokerChargesReport, UserBrokerCharges userBrokerCharges) {
-        brokerChargesReport.setBrokerage(brokerChargesReport.getBrokerage() + userBrokerCharges.getBrokerage());
-        brokerChargesReport.setAccountOpeningCharges(brokerChargesReport.getAccountOpeningCharges() + userBrokerCharges.getAccountOpeningCharges());
-        brokerChargesReport.setAmcCharges(brokerChargesReport.getAmcCharges() + userBrokerCharges.getAmcCharges());
-        brokerChargesReport.setGovtCharges(brokerChargesReport.getGovtCharges() + userBrokerCharges.getGovtCharges());
-        brokerChargesReport.setTaxes(brokerChargesReport.getTaxes() + userBrokerCharges.getTaxes());
-        brokerChargesReport.setDpCharges(brokerChargesReport.getDpCharges() + userBrokerCharges.getDpCharges());
-    }
-
+    /** Short term is a disposal inside one year of acquisition. */
     private static boolean isShortTermCapitalGain(LocalDate buyDate, LocalDate sellDate) {
         LocalDate thresholdDate = buyDate.plusYears(1);
         return sellDate.isBefore(thresholdDate);
-    }
-
-    private static BrokerChargeContext brokerChargeContext(ProfitLossContext context) {
-        BrokerChargeTransactionType transactionType = toBrokerChargeTransactionType(context.transactionType());
-        double totalAmount = context.price() * context.quantity();
-        return new BrokerChargeContext(context.transactionId(), context.stockCode(), context.accountHolder(),
-                context.brokerName(), transactionType, context.date(), context.exchangeName(),
-                context.actionType(), totalAmount);
-    }
-
-    private static BrokerChargeTransactionType toBrokerChargeTransactionType(TransactionType type) {
-        return switch (type) {
-            case BUY -> BrokerChargeTransactionType.BUY;
-            case SELL -> BrokerChargeTransactionType.SELL;
-        };
-    }
-
-    public UserBrokerCharges updateProfitAndLossWithAmcCharges(UserMail userMail, BrokerChargeContext brokerChargeContext) {
-
-        String email = userMail.getEmail();
-        String financialYear = sanitizeFinancialYear(brokerChargeContext.transactionDate());
-
-        Optional<ProfitAndLossEntity> optionalProfitAndLoss = profitAndLossRepository.findByEmailAndFinancialYear(email, financialYear);
-        ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
-
-        UserBrokerCharges userBrokerCharges = userBrokerChargeService.addUserBrokerChargeEntry(userMail, brokerChargeContext);
-        if (userBrokerCharges != null) {
-            updateBrokerChargesReport(profitAndLossEntity, AccountType.SELF, userBrokerCharges);
-        }
-        profitAndLossRepository.save(profitAndLossEntity);
-        return userBrokerCharges;
     }
 
     private record InternalContext(double purchaseAmount, double sellAmount,

@@ -17,8 +17,6 @@ public class RealisedProfits implements Serializable {
     @Field("long_term_capital_gains")
 	private FinancialReport longTermCapitalGains;
 
-    @Field("yearly_broker_charges")
-    private YearlyBrokerCharges yearlyBrokerCharges;
 
     /**
      * What the charges engine computed for this period, keyed by charge code.

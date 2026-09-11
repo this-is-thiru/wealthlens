@@ -475,36 +475,35 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
       Surfaced as CI annotations once `setup-java@v6` added a javac problem matcher; pre-existing on
       `master`, and out of bounds for Phase A because it is `portfolio/` work
 - [ ] Rewire `RealisedProfits` to `YearlyChargeSummary`; `ProfitAndLossService.updateBrokerCharges` (`:507`) → a single `merge` call
-- [ ] **Retire `AssetManagementDetails` in favour of `charge_accounts`** ← **the last Chunk 10 item,
-      and the sole blocker for Chunk 11.** After Cut 1 the superseded implementation has exactly one
-      live caller left: `AssetManagementService` → `ProfitAndLossService.updateProfitAndLoss\
-WithAmcCharges` → `userBrokerChargeService` and `updateBrokerChargesReport`. That one method keeps
-      the entire old cluster referenced. Kill it and every file on Chunk 11's list goes unreferenced
-      in one step. Sizing depends on `db.asset_management_details.countDocuments()`: empty means
-      repoint three endpoints and delete, non-empty means copying rows into `charge_accounts` and
-      deciding what `account_opening_charges` becomes (a rate-card rule, not a column on an account)
+- [x] **Retire `AssetManagementDetails`** *(2026-09-09)*. No migration: it was never in production, so
+      the entity, its repository, `AssetManagementService` and `AssetManagementDetailsRequest` are
+      simply deleted. `ChargeAccountController` already served the whole replacement surface —
+      `POST`/`GET /charge-accounts/user/{email}` and `POST /charges/amc/impose` — so there was nothing
+      to repoint and no response-shape change to negotiate
 
-## Chunk 11 — Delete the old implementation
+## Chunk 11 — Delete the old implementation *(done 2026-09-09)*
 
-> **⚠️ Re-scope this before starting.** It was written when V1 was believed to be dead. **V1 is
-> live** (clarified 2026-09-09), and the live V1 path depends on things on this list:
-> `buyStock` → `updateBrokerChargesAndProfitAndLoss` → `updateProfitAndLoss(UserMail,
-> ProfitLossContext)` → `UserBrokerChargeService.addUserBrokerChargeEntry`, and V1 `sellStock:507`
-> is the last caller of the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload.
-> Deleting `UserBrokerChargeService`, `BrokerChargeService`, their repositories or that overload
-> would break a flow that is serving users. Either V1 moves onto the engine first, or these stay.
+Twenty-five files, in one pass, once Cut 1 and the AMC retirement left the cluster unreferenced.
 
-- [ ] `entity/BrokerCharges.java`, `entity/UserBrokerCharges.java`
-- [ ] `service/BrokerChargeService.java`, `service/UserBrokerChargeService.java`
-- [ ] `repository/BrokerChargesRepository.java`, `repository/UserBrokerChargesRepository.java`
-- [ ] `dto/request/BrokerChargesRequest.java`, `dto/helper/BrokerageChargesDto.java`, `dto/context/BrokerChargeContext.java`
-- [ ] `dto/enums/BrokerChargeTransactionType.java` (fixes D5), `dto/enums/BrokerageAggregatorType.java`
-- [ ] `portfolio/entity/model/BrokerageCharges.java`
-- [ ] `portfolio/entity/model/BrokerChargesReport.java`, `YearlyBrokerCharges.java`, `MonthlyBrokerCharges.java`
-- [ ] `controller/BrokerChargesController.java`, `controller/UserBrokerChargesController.java`
-- [ ] `BrokerChargeServiceTest`, `UserBrokerChargeServiceTest`
-- [ ] Drop the `broker_charges` and `user_broker_charges` collections
-- [ ] `grep -rn "BrokerCharges\|brokerCharge" backend/src` returns nothing unintended
+- [x] `BrokerCharges`, `UserBrokerCharges`, their services, repositories, controllers and DTOs
+- [x] `BrokerChargeTransactionType` (fixes D5), `BrokerageAggregatorType`, `BrokerageCharges`
+- [x] `BrokerChargesReport`, `YearlyBrokerCharges`, `MonthlyBrokerCharges`, and
+      `RealisedProfits.yearlyBrokerCharges` — the embedded report is gone, and `YearlyChargeSummary`
+      is now the only charge figure a P&L document carries
+- [x] `AssetManagementService`, `AssetManagementDetails`, its repository and request DTO
+- [x] 106 lines of charge machinery out of `ProfitAndLossService`, including
+      `updateProfitAndLossWithAmcCharges` and the whole `updateBrokerChargesReport` family
+- [x] Their tests: `BrokerChargeServiceTest`, `UserBrokerChargeServiceTest`,
+      `AssetManagementServiceTest`, `BrokerChargesIntegrationTest`
+- [x] The six superseded requests and their folder, in `api-collection`
+- [ ] **Drop the `broker_charges`, `user_broker_charges` and `asset_management_details` collections**
+      — an operator action, not a code change. Nothing writes or reads them any more
+- [x] No live code references the deleted cluster; the only deprecation warnings left are the two
+      deliberate ones (`AssetRequest.brokerCharges`, the V1-sell `ProfitAndLossContext` overload) and
+      two pre-existing library deprecations
+
+**What survives, deliberately:** V1 `buyStock`/`sellStock` — in live use and untouched throughout —
+and the deprecated `ProfitAndLossContext` overload V1 sell depends on.
 
 ## Chunk 12 — Final verification
 

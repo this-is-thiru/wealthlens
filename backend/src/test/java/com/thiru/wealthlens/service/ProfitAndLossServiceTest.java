@@ -4,17 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verifyNoInteractions;
 
-import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
-import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
-import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
 import com.thiru.wealthlens.brokercharges.entity.model.MonthlyChargeSummary;
 import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
-import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
@@ -56,9 +51,6 @@ class ProfitAndLossServiceTest {
     private ProfitAndLossRepository profitAndLossRepository;
 
     @Mock
-    private UserBrokerChargeService userBrokerChargeService;
-
-    @Mock
     private ChargeRecordingGateway chargeRecordingGateway;
 
     @InjectMocks
@@ -96,8 +88,6 @@ class ProfitAndLossServiceTest {
         assertEquals("2023-2024", savedEntity.getFinancialYear());
         // No realized profits set for BUY transactions
         assertNull(savedEntity.getRealisedProfits());
-
-        verify(userBrokerChargeService, never()).addUserBrokerChargeEntry(any(), any());
     }
 
     @Test
@@ -118,8 +108,6 @@ class ProfitAndLossServiceTest {
         // Dec 15, 2023 -> FY 2023-2024 (after March 31, 2023)
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
                 .thenReturn(Optional.empty());
-        when(userBrokerChargeService.addUserBrokerChargeEntry(any(UserMail.class), any(BrokerChargeContext.class)))
-                .thenReturn(null);
         when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -153,8 +141,6 @@ class ProfitAndLossServiceTest {
         // June 15, 2023 -> FY 2022-2023 (before April 1, 2023)
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2022-2023")))
                 .thenReturn(Optional.empty());
-        when(userBrokerChargeService.addUserBrokerChargeEntry(any(UserMail.class), any(BrokerChargeContext.class)))
-                .thenReturn(null);
         when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -192,8 +178,6 @@ class ProfitAndLossServiceTest {
         // Dec 15, 2023 -> FY 2023-2024
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
                 .thenReturn(Optional.empty());
-        when(userBrokerChargeService.addUserBrokerChargeEntry(any(UserMail.class), any(BrokerChargeContext.class)))
-                .thenReturn(null);
         when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -230,8 +214,6 @@ class ProfitAndLossServiceTest {
         // Dec 15, 2023 -> FY 2023-2024
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
                 .thenReturn(Optional.empty());
-        when(userBrokerChargeService.addUserBrokerChargeEntry(any(UserMail.class), any(BrokerChargeContext.class)))
-                .thenReturn(null);
         when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -261,8 +243,6 @@ class ProfitAndLossServiceTest {
 
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
                 .thenReturn(Optional.empty());
-        when(userBrokerChargeService.addUserBrokerChargeEntry(any(UserMail.class), any(BrokerChargeContext.class)))
-                .thenReturn(null);
         when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -316,49 +296,11 @@ class ProfitAndLossServiceTest {
 
         // Then: should not save anything for corporate action sell
         verify(profitAndLossRepository, never()).save(any());
-        verify(userBrokerChargeService, never()).addUserBrokerChargeEntry(any(), any());
     }
 
     // ========================================
     // updateProfitAndLossWithAmcCharges
     // ========================================
-
-    @Test
-    void updateProfitAndLossWithAmcCharges_success() {
-        // Given
-        UserMail userMail = UserMail.from(TEST_EMAIL);
-        LocalDate txnDate = LocalDate.of(2024, 2, 15);
-        BrokerChargeContext brokerChargeContext = new BrokerChargeContext(
-                "txn-amc-1", STOCK_CODE, ACCOUNT_HOLDER, BROKER, BrokerChargeTransactionType.BUY,
-                txnDate, EXCHANGE, null, 1000.0
-        );
-
-        UserBrokerCharges userBrokerCharges = new UserBrokerCharges();
-        userBrokerCharges.setBrokerage(0.0);
-        userBrokerCharges.setAmcCharges(50.0);
-        userBrokerCharges.setTransactionDate(txnDate);
-
-        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
-                .thenReturn(Optional.empty());
-        when(userBrokerChargeService.addUserBrokerChargeEntry(userMail, brokerChargeContext))
-                .thenReturn(userBrokerCharges);
-        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
-        UserBrokerCharges result = profitAndLossService.updateProfitAndLossWithAmcCharges(userMail, brokerChargeContext);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(50.0, result.getAmcCharges());
-
-        ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
-        verify(profitAndLossRepository).save(captor.capture());
-
-        ProfitAndLossEntity savedEntity = captor.getValue();
-        assertNotNull(savedEntity.getRealisedProfits());
-        assertNotNull(savedEntity.getRealisedProfits().getYearlyBrokerCharges());
-    }
 
     // ========================================
     // Phase B — shadow recording
@@ -440,7 +382,6 @@ class ProfitAndLossServiceTest {
 
         // Then
         verify(chargeRecordingGateway).record(userMail, context);
-        verify(userBrokerChargeService, never()).addUserBrokerChargeEntry(any(), any());
     }
 
     /**
@@ -482,7 +423,6 @@ class ProfitAndLossServiceTest {
         assertEquals(1000.0, stcg.getPurchaseAmount());
         assertEquals(1500.0, stcg.getSellAmount());
         assertEquals(0.0, stcg.getBrokerage());
-        assertNull(savedEntity.getRealisedProfits().getYearlyBrokerCharges());
     }
 
     /**
@@ -615,7 +555,6 @@ class ProfitAndLossServiceTest {
 
         // Then
         assertNotNull(savedPnl().getRealisedProfits().getYearlyChargeSummary());
-        verify(userBrokerChargeService, never()).addUserBrokerChargeEntry(any(), any());
     }
 
     /**
@@ -698,7 +637,6 @@ class ProfitAndLossServiceTest {
         profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), equityBuy);
 
         // Then
-        verifyNoInteractions(userBrokerChargeService);
     }
 
     @Test
@@ -713,6 +651,5 @@ class ProfitAndLossServiceTest {
         profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), sell);
 
         // Then
-        verifyNoInteractions(userBrokerChargeService);
     }
 }
