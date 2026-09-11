@@ -143,6 +143,9 @@ public class ChargeSeederService {
     private List<String> seedCatalogue() {
         List<String> created = new ArrayList<>();
         for (ChargeCatalogueEntity entry : readAll(resource(CATALOGUE), ChargeCatalogueEntity::new)) {
+            // The gate every code enters through. A code is a Mongo field name downstream, so one
+            // that cannot be used as a field name has to be refused here rather than at save time.
+            ChargeCodes.validate(entry.getCode());
             if (chargeCatalogueRepository.existsByCode(entry.getCode())) {
                 continue;
             }
@@ -154,6 +157,12 @@ public class ChargeSeederService {
     }
 
     private void seedSchedules(List<String> created, List<String> skipped) {
+        // Checked across the shipped set, not per file: an overlap is a relationship between two
+        // cards, so no amount of validating one of them can see it.
+        ChargeScheduleWindows.requireNoOverlap(scheduleFiles().stream()
+                .map(file -> read(file, ChargeScheduleEntity::new))
+                .toList());
+
         for (Resource file : scheduleFiles()) {
             ChargeScheduleEntity schedule = read(file, ChargeScheduleEntity::new);
 

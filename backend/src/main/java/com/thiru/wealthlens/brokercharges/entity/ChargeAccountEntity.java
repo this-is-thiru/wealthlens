@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -34,8 +35,17 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(value = "charge_accounts")
-@CompoundIndex(name = "charge_account_idx",
-        def = "{'email': 1, 'broker_name': 1, 'demat_account_id': 1}", unique = true)
+@CompoundIndexes({
+    @CompoundIndex(name = "charge_account_idx",
+            def = "{'email': 1, 'broker_name': 1, 'demat_account_id': 1}", unique = true),
+    /**
+     * The AMC cycle's selection, and the only query in the charges module that spans users rather
+     * than sitting under one email. Without this it collection-scans every account on every run —
+     * cheap while there are tens, the worst query in the system once there are thousands.
+     */
+    @CompoundIndex(name = "charge_account_amc_due_idx",
+            def = "{'amc_frequency': 1, 'status': 1, 'last_billed_through': 1}")
+})
 public class ChargeAccountEntity implements AuditableEntity {
 
     @JsonIgnore

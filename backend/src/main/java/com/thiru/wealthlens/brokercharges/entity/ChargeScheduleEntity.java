@@ -83,9 +83,6 @@ public class ChargeScheduleEntity implements AuditableEntity {
     @Field(name = "status", targetType = FieldType.STRING)
     private EntityStatus status;
 
-    @Field("currency")
-    private String currency;
-
     /**
      * Whether a trade under this card is expected to have an instrument profile.
      *

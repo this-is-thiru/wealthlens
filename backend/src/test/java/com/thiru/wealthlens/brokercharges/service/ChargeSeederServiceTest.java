@@ -24,11 +24,15 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeScheduleEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeInstrumentRepository;
 import com.thiru.wealthlens.brokercharges.repository.ChargeScheduleRepository;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.testsupport.LogCapture;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -757,5 +761,118 @@ class ChargeSeederServiceTest {
         boolean leftEndsBefore = left.getEndDate() != null && left.getEndDate().isBefore(right.getStartDate());
         boolean rightEndsBefore = right.getEndDate() != null && right.getEndDate().isBefore(left.getStartDate());
         return !leftEndsBefore && !rightEndsBefore;
+    }
+
+    // ========================================
+    // A charge code becomes a Mongo field name
+    // ========================================
+
+    /**
+     * {@code amount_by_code} is keyed by charge code, so a code is a <em>field name</em> in MongoDB —
+     * and Mongo rejects field names containing a dot or starting with {@code $}. Such a code passes
+     * the catalogue check, prices correctly, and then fails when the row is saved: the charge is
+     * computed and lost. Rejected at the gate every code enters through instead.
+     */
+    @Test
+    void seed_whenACatalogueCodeContainsADot_refusesIt() {
+        // Given / When / Then
+        assertThatThrownBy(() -> ChargeCodes.validate("MTF.INTEREST"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("MTF.INTEREST");
+    }
+
+    @Test
+    void seed_whenACatalogueCodeStartsWithADollar_refusesIt() {
+        assertThatThrownBy(() -> ChargeCodes.validate("$STT"))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    /**
+     * Mongo's unique index is case-sensitive, so {@code BROKERAGE} and {@code brokerage} would be two
+     * catalogue rows for one charge. Rules name codes exactly, so the second is unreachable — and a
+     * charge nobody can name is worse than one that was refused.
+     */
+    @Test
+    void seed_whenACatalogueCodeIsNotUppercase_refusesIt() {
+        assertThatThrownBy(() -> ChargeCodes.validate("brokerage"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("upper case");
+    }
+
+    @Test
+    void seed_acceptsTheShapeEveryShippedCodeUses() {
+        // The twelve shipped codes, and the shape a new one must follow.
+        for (String code : List.of("BROKERAGE", "STT", "EXCHANGE_TXN", "SEBI_FEE", "IPFT",
+                "STAMP_DUTY", "DP", "GST", "AMC", "ACCOUNT_OPENING", "EXIT_LOAD", "MF_TXN_FEE")) {
+            ChargeCodes.validate(code);
+        }
+    }
+
+    @Test
+    void seed_whenACatalogueCodeIsBlank_refusesIt() {
+        assertThatThrownBy(() -> ChargeCodes.validate("  "))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    // ========================================
+    // Overlapping validity windows
+    // ========================================
+
+    /**
+     * {@code findCandidates} matches {@code start_date <= d <= end_date}, inclusive at both ends, so
+     * a card ending on the day its successor starts makes both candidates for that day. The
+     * validator checks one card in isolation and cannot see it; publishing supersedes and cannot
+     * produce it. Seeding several files can, and the result is a day priced by whichever card the
+     * resolver's tie-break happens to prefer.
+     */
+    @Test
+    void seed_whenTwoShippedCardsShareAScopeAndOverlap_refusesThem() {
+        // Given — same scope, and the first ends on the day the second begins
+        ChargeScheduleEntity first = card("A", LocalDate.of(2025, 4, 1), LocalDate.of(2026, 3, 1));
+        ChargeScheduleEntity second = card("B", LocalDate.of(2026, 3, 1), null);
+
+        // When / Then
+        assertThatThrownBy(() -> ChargeScheduleWindows.requireNoOverlap(List.of(first, second)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("A")
+                .hasMessageContaining("B");
+    }
+
+    /** The shape the shipped generations actually use: one ends the day before the next begins. */
+    @Test
+    void seed_whenGenerationsAbutWithoutOverlapping_acceptsThem() {
+        ChargeScheduleWindows.requireNoOverlap(List.of(
+                card("A", LocalDate.of(2025, 4, 1), LocalDate.of(2026, 2, 28)),
+                card("B", LocalDate.of(2026, 3, 1), null)));
+    }
+
+    /** Two open-ended cards for one scope is the same fault, reached a different way. */
+    @Test
+    void seed_whenTwoCardsForOneScopeAreBothOpenEnded_refusesThem() {
+        assertThatThrownBy(() -> ChargeScheduleWindows.requireNoOverlap(List.of(
+                card("A", LocalDate.of(2025, 4, 1), null),
+                card("B", LocalDate.of(2026, 3, 1), null))))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    /** Different scopes may overlap freely — that is how delivery and intraday coexist. */
+    @Test
+    void seed_whenOverlappingCardsHaveDifferentScopes_acceptsThem() {
+        ChargeScheduleEntity delivery = card("A", LocalDate.of(2025, 4, 1), null);
+        ChargeScheduleEntity intraday = card("B", LocalDate.of(2025, 4, 1), null);
+        intraday.setSegment(TradeSegment.INTRADAY);
+
+        ChargeScheduleWindows.requireNoOverlap(List.of(delivery, intraday));
+    }
+
+    private static ChargeScheduleEntity card(String code, LocalDate from, LocalDate to) {
+        ChargeScheduleEntity schedule = new ChargeScheduleEntity();
+        schedule.setScheduleCode(code);
+        schedule.setBrokerName(BrokerName.ZERODHA);
+        schedule.setAssetType(AssetType.EQUITY);
+        schedule.setSegment(TradeSegment.DELIVERY);
+        schedule.setStartDate(from);
+        schedule.setEndDate(to);
+        return schedule;
     }
 }

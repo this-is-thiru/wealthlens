@@ -875,7 +875,6 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         schedule.setStartDate(from);
         schedule.setEndDate(to);
         schedule.setStatus(EntityStatus.ACTIVE);
-        schedule.setCurrency("INR");
         schedule.setSourceUrl("https://example.test/charges");
 
         ChargeRule brokerageRule = flatRule("BROKERAGE", ChargeCategory.BROKERAGE, brokerage, 10);
@@ -934,7 +933,6 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         schedule.setAssetType(AssetType.MUTUAL_FUND);
         schedule.setStartDate(LocalDate.of(2025, 1, 1));
         schedule.setStatus(EntityStatus.ACTIVE);
-        schedule.setCurrency("INR");
         schedule.setSourceUrl("https://example.test/charges");
         schedule.setRequiresInstrumentProfile(true);
 
@@ -1005,7 +1003,6 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         schedule.setBrokerName(BrokerName.ZERODHA);
         schedule.setStartDate(LocalDate.of(2025, 1, 1));
         schedule.setStatus(EntityStatus.ACTIVE);
-        schedule.setCurrency("INR");
         schedule.setSourceUrl("https://example.test/charges");
 
         ChargeRule amc = flatRule("AMC", ChargeCategory.SUBSCRIPTION, 300.00, 10);
