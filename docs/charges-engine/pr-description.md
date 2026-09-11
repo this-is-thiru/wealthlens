@@ -4,7 +4,7 @@ The build was staged so each step was reversible on its own. **Phase A** built t
 
 **Nothing changes on merge.** `shadow-recording` and `authoritative` both ship `false`, `engine-enabled` ships `true`, so the trade path behaves exactly as it does on `master` until somebody turns a flag on. That is a separate, reversible decision.
 
-**877 tests**, 99% mutation score (597/598), both JaCoCo gates passing.
+**881 tests**, 99% mutation score (597/598), both JaCoCo gates passing.
 
 ## What Phase B found, which is the reason to trust the rest
 
@@ -74,7 +74,7 @@ Seven calculators behind one strategy interface; an orchestrator applying aggreg
 
 **AC-6 is now closed.** Two scheme profiles are seeded — one exit load graded by holding period, one expressed as the predicate `#holdingDays < 7`, both priced per FIFO lot. A redemption drawn from lots of different ages charges the young ones alone; averaging over the transaction would be wrong by the entire charge rather than by a rounding error. The AMC card is seeded too, unscoped because the cycle context carries no scrip, quantity or asset type and a card declaring any of those is disqualified by the resolver.
 
-**877 tests** across both tiers. **99% mutation score** (597/598) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
+**881 tests** across both tiers. **99% mutation score** (597/598) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
 
 Four test tiers do more than check examples:
 

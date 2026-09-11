@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`. **All twelve chunks done**, every acceptance criterion signed off, the superseded implementation deleted and its collections dropped. 877 tests, 99% mutation score. **Nothing outstanding blocks a merge.** `toTradeOutcomeContext` pro-rating is V1-only code and therefore void by decision; separately, V2 sells write no `trade_outcomes` row at all, which is pre-existing and unrelated to charges. Full suite green: **881 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
+**Last verified against the repository:** 2026-09-11, branch `feature/charges-engine`. **All twelve chunks done**, every acceptance criterion signed off, the superseded implementation deleted and its collections dropped. 877 tests, 99% mutation score. **Nothing outstanding blocks a merge.** `toTradeOutcomeContext` pro-rating is V1-only code and therefore void by decision; separately, V2 sells write no `trade_outcomes` row at all, which is pre-existing and unrelated to charges. Full suite green: **881 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
 
 ---
 
@@ -261,7 +261,7 @@ Read in this order:
 
 ## 4. The problem, in one paragraph
 
-The existing broker-charges implementation models a rate card as a **fixed set of Java fields** — one named column per charge, repeated across `BrokerCharges`, `UserBrokerCharges` and `BrokerChargesReport`. Adding one charge is an eight-file change across two modules. There is no asset-type dimension, so `ProfitAndLossService` gates on `assetType == EQUITY` and mutual funds, bonds and gold bonds accrue nothing. GST is parsed from a CSV string and applied over a merged `govtCharges` bucket that includes STT and stamp duty, which is wrong — roughly ₹17 of overcharge on a ₹1,00,000 sell. The replacement makes a rate card a **list of rules**, evaluated by **strategies chosen per basis**, so that adding or repricing a charge is a data change.
+The superseded broker-charges implementation modelled a rate card as a **fixed set of Java fields** — one named column per charge, repeated across `BrokerCharges`, `UserBrokerCharges` and `BrokerChargesReport`. Adding one charge was an eight-file change across two modules. There was no asset-type dimension, so `ProfitAndLossService` gated on `assetType == EQUITY` and mutual funds, bonds and gold bonds accrued nothing. GST was parsed from a CSV string and applied over a merged `govtCharges` bucket including STT and stamp duty, which is wrong — roughly ₹17 of overcharge on a ₹1,00,000 sell. The replacement makes a rate card a **list of rules**, evaluated by **strategies chosen per basis**, so adding or repricing a charge is a data change. It shipped, and the old implementation was deleted in Chunk 11.
 
 ---
 
@@ -298,20 +298,17 @@ sed -n '1,25p' docs/charges-engine/implementation-checklist.md
 grep -l 'failures="[1-9]"\|errors="[1-9]"' backend/target/surefire-reports/TEST-*.xml
 # must print nothing.
 
-# 4. Mutation score for the charges work. Scoped on purpose: the profile's own
-#    target list also covers taxplanning, whose score is deferred (§9 item 7), so
-#    the unscoped invocation fails on the aggregate and says nothing about this.
+# 4. Mutation score for the charges work. Still scoped, but for one reason only now: the
+#    profile's own target list also covers taxplanning, whose score is deferred (§9 item 7),
+#    so the unscoped invocation fails on the aggregate and says nothing about this.
 ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend \
   '-DtargetClasses=com.thiru.wealthlens.brokercharges.engine.*,com.thiru.wealthlens.brokercharges.service.*' \
   '-DtargetTests=com.thiru.wealthlens.*'
-# Reports 96% (546/566). That figure is not this work's score: `service.*` also matches
-# BrokerChargeService and UserBrokerChargeService — the superseded implementation, which carries
-# 17 of the 20 survivors and is deleted in Chunk 11. Neither file nor its tests has been touched
-# on this branch, so those survivors are pre-existing. For the score that gates this work:
-./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend \
-  '-DtargetClasses=com.thiru.wealthlens.brokercharges.engine.*,com.thiru.wealthlens.brokercharges.service.Charge*,com.thiru.wealthlens.brokercharges.service.UserChargeService,com.thiru.wealthlens.brokercharges.service.AmcChargeService' \
-  '-DtargetTests=com.thiru.wealthlens.*'
-# → 99%, 475/476. The survivor is ChargeFormulaEvaluator's known equivalent mutant.
+# → 99%, 597/598. The survivor is ChargeFormulaEvaluator's known equivalent mutant.
+#
+# This used to need a second, narrower invocation: `service.*` swept in BrokerChargeService and
+# UserBrokerChargeService, which carried most of the survivors and said nothing about this work.
+# Chunk 11 deleted them, so the simple command above is now the one that gates it.
 
 # 5. Phase A's exit criterion — must be empty, or the cutover stops being reversible.
 git diff master --stat -- backend/src/main/java/com/thiru/wealthlens/portfolio/
@@ -436,7 +433,7 @@ Not oversights — decisions with reasons, recorded so nobody rediscovers them a
 
 ## 11. Resume point — paused mid-Chunk-10b, 2026-09-09
 
-**Paused deliberately, working tree clean, everything committed.** Build green: **873 tests** across
+**All twelve chunks complete.** Build green: **881 tests** across
 both tiers, `spotless:check` clean, both JaCoCo gates passing. The last mutation run measured
 577/578 (99%) before the segment work; the single survivor is `ChargeFormulaEvaluator`'s known
 equivalent mutant.
@@ -446,31 +443,26 @@ equivalent mutant.
 ```bash
 git checkout feature/charges-engine
 git log --oneline origin/feature/charges-engine..HEAD   # 11 commits not yet pushed
-./mvnw clean verify -pl backend                          # needs Docker; 873 tests
+./mvnw clean verify -pl backend                          # needs Docker; 881 tests
 sed -n '1,20p' docs/charges-engine/implementation-checklist.md
 ```
 
-Then read §11.2 below — there are two open decisions, and one of them shapes the next commit.
+Then read §11.2 below for what is still open. None of it blocks a merge.
 
-### 11.2 The one thing to settle before Chunk 11
+### 11.2 What is still open
 
-**Chunk 11 deletes the superseded implementation, and it was planned when V1 was believed to be
-dead code. V1 is live** (clarified 2026-09-09), and the live V1 path depends on things on that
-deletion list:
+**Nothing blocks a merge.** Three items, and the checklist header lists them by kind:
 
-- V1 `buyStock` → `updateBrokerChargesAndProfitAndLoss` → `UserBrokerChargeService`
-- V1 `sellStock:548` is the **last caller** of the `@Deprecated(forRemoval = true)`
-  `ProfitAndLossContext` overload
-
-Deleting `UserBrokerChargeService`, `BrokerChargeService`, their repositories or that overload would
-break a flow serving users. **Either V1 moves onto the engine first, or those files stay** and
-Chunk 11 shrinks to whatever is genuinely unreferenced. That is a decision, not a detail.
-
-**A known limit carried forward from 10b**, recorded rather than fixed: `YearlyChargeSummary`
-*accumulates*, so reprocessing one trade twice counts it twice. The hierarchy beside it has always
-behaved that way. Deriving the summary from `user_charges` would be idempotent by construction, and
-Chunk 11 is the moment to revisit it — that is when the old hierarchy goes and
-`ChargeSummaryReport.merge` stops having a peer to match.
+1. **`YearlyChargeSummary` accumulates** rather than being derived from `user_charges`, so
+   reprocessing one trade twice counts it twice. Accepted rather than fixed. Deriving it would make
+   it idempotent by construction and would also give the per-broker and per-asset-type breakdowns the
+   summary cannot express — `user_charges` carries both.
+2. **Two V1-bound items are void by decision** — `toTradeOutcomeContext` pro-rating and retiring the
+   `ProfitAndLossContext` overload. Both are V1-only code and V1 is in live use.
+3. **V2 sells write no `trade_outcomes` row** — `sellStockV2` reaches
+   `updateQuantityBySavingReportAndProfitAndLoss1`, which never calls `saveTradeOutcome`. Only the V1
+   sell path populates that collection. Pre-existing, unrelated to charges, recorded because it was
+   found while auditing.
 
 ### 11.3 Environment state left behind
 
