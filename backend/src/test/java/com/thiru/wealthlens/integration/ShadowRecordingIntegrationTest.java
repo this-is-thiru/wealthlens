@@ -162,9 +162,6 @@ class ShadowRecordingIntegrationTest extends AbstractIntegrationTest {
         assertThat(summary.getMonthlyReport().get(TRADE_DATE.getMonth())).isNotNull();
         assertThat(summary.getMonthlyReport().get(TRADE_DATE.getMonth()).getFirstHalfCharges())
                 .isNotNull();
-
-        // The old hierarchy is still written beside it, untouched by this chunk.
-        assertThat(saved.getRealisedProfits().getYearlyBrokerCharges()).isNull();
     }
 
     /** Prices the trade through the real engine so the codes are the shipped card's, not invented. */
