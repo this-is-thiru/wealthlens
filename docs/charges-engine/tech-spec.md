@@ -649,6 +649,11 @@ public class ChargeSummaryReport {
 
 ## 9. Delivery Phasing and Portfolio Integration
 
+> **All three phases are complete (2026-09-11).** This section is written in the future tense
+> because it was the plan; it is kept as the plan rather than rewritten, so the sequencing argument
+> survives. For what the code does now, read `README.md` §2. Where this section says "until Phase C",
+> read "until 2026-09-09", when Chunk 11 deleted the superseded implementation.
+
 The engine is built **standalone first**. `portfolio` is not touched until the engine is provably correct in isolation, and the cutover is a flag flip rather than a rewrite.
 
 `ChargeEngineProperties` (`app.charges.*`) drives the phase:

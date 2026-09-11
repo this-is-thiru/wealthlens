@@ -20,7 +20,7 @@ Repository Layer   → Spring Data MongoDB
 |--------|---------|-----------|
 | **portfolio** | Core portfolio engine: transactions, P&L, trade matching, asset management, analytics, Excel export, temporary transaction redrive | PortfolioService, TransactionService, ProfitAndLossService, AssetEntity, TransactionEntity, AssetRequest |
 | **corporate** | Corporate action processing: bonus, demerger, stock split, name/symbol change | CorporateActionService, CorporateActionEntity, CorporateActionType, LastlyPerformedCorporateAction |
-| **brokercharges** | Broker & AMC charge computation, user-specific broker charge configuration | BrokerChargeService, UserBrokerChargeService, BrokerCharges, UserBrokerCharges |
+| **brokercharges** | Rules-based charge engine: rate cards, calculators, per-user charge records, AMC | ChargeEngine, ChargeScheduleResolver, ChargeScheduleEntity, UserChargeService, AmcChargeService |
 | **auth** | JWT-based Spring Security: login, registration, role upgrades | AuthService, AuthFilter, SecurityConfig, UserDetail |
 | **shared** | Cross-cutting utilities, common DTOs, audit entities, config, query helpers | ApiResponse, ErrorResponse, UserMail, TCollectionUtil, ExcelBuilder, XirrCalculator, MongoConfig |
 | **helper** | Auxiliary controllers and file utilities | HelperController, SpecialController, TemplateController, TestController, FileHelper, FileStream, FileType |
@@ -308,25 +308,58 @@ SELL transactions iterate over `AssetEntity` purchase lots in ascending transact
 
 When a `FILTERABLE_CORPORATE_ACTION` (BONUS, DEMERGER, STOCK_SPLIT) blocks a new transaction, the transaction is saved with `status = TEMPORARY` and its original `AssetRequest` is stored in the `assetRequest` field. Redrive via `POST /temporary-transactions/user/{email}/redrive` re-processes them once the corporate action is handled.
 
-### Broker Charge Templates
+### Charges Engine
 
-`BrokerCharges` stores per-broker charge configurations with a validity window (`startDate`–`endDate`). Each template defines brokerage percentage/fixed/minimum/maximum charges, government levies (STT, SEBI, stamp duty), DP charges per scrip, AMC rates, and a GST applicability description (e.g. `18%-brokerage,18%-dp_charges,18%-stt`).
+A rate card is a **list of rules**, not a fixed set of columns. `ChargeScheduleEntity` is
+validity-windowed per broker and scoped by asset type, segment, exchange and plan code; each
+`ChargeRule` carries a `ChargeBasis` — TURNOVER, FLAT, PER_UNIT, SLAB, SCOPED_FLAT, DERIVED or
+FORMULA — served by one calculator apiece. Adding or repricing a charge is therefore a data change,
+not a code change across two modules.
 
-On each BUY/SELL transaction, `UserBrokerChargeService` looks up the active template for the transaction's broker and date, then computes:
-- **Brokerage:** using a MIN or MAX aggregator across percentage-based and fixed charges
-- **Government Charges:** STT + SEBI (+ stamp duty for BUY only)
-- **DP Charges:** applied only on the first SELL per stock per day
-- **Taxes (GST):** parsed from the template's GST description and applied component-wise
+`ChargeScheduleResolver` selects the card by specificity for the trade's date and dimensions,
+`ChargeEngine` evaluates the matching rules in declared order, and `UserChargeService` records one
+`UserChargeEntity` per transaction — unique on `{email, transaction_id}`, carrying both the ordered
+`lines` (the contract note) and an `amount_by_code` map (for aggregation).
 
-### AMC (Account Maintenance Charge) Imposition
+Charge codes are validated against a seeded `charge_catalogue`. A code becomes a MongoDB field name
+inside `amount_by_code`, so `ChargeCodes` restricts it to `[A-Z][A-Z0-9_]*`.
 
-`AssetManagementDetails` tracks per-user-per-broker demat account configuration, including account opening charges and AMC frequency (quarterly or annually). An administrative endpoint (`POST /broker-charges/amc/impose`) processes all overdue accounts and creates `UserBrokerCharges` entries for the computed AMC amount.
+Notable properties:
+
+- **GST names its base explicitly.** A `DERIVED` rule lists the codes it taxes, so STT and stamp duty
+  are never inside it.
+- **Depository charges deduplicate** per `{email, account holder, broker, scrip, date}`, so a second
+  sell of one scrip on one day is not charged twice.
+- **Scheme-level charges apply per FIFO lot.** Mutual-fund exit load lives on
+  `ChargeInstrumentEntity`, and a redemption drawn from lots of different ages is charged per lot.
+- **An absent charge is recorded, never silent.** Every computation stores a `ChargeResolution`, so a
+  period with no rate card is queryable through `GET /user-charges/user/{email}/gaps` rather than
+  indistinguishable from a free trade.
+
+Seed data is JSON under `resources/data/charges/` and reaches a database only through
+`POST /charges/seed` (`SUPER_USER`) — never as a side effect of starting up.
+
+### AMC (Account Maintenance Charge)
+
+`ChargeAccountEntity` (`charge_accounts`) holds a demat account's broker, plan, AMC frequency,
+billing watermark and billing history. `POST /charges/amc/impose` bills every account due, through
+the same engine using `ChargeEvent.AMC_CYCLE`, and is idempotent per account and period.
+
+### Charge engine flags
+
+`app.charges.*`, declared in all three profile yamls:
+
+| Flag | Ships | Effect |
+|---|---|---|
+| `engine-enabled` | `true` | Master kill switch. `false` → simulate, backfill and the AMC cycle answer **503**, and nothing is shadow-recorded. Reads of already-recorded charges keep working |
+| `shadow-recording` | `false` | The trade path prices and records every V2 trade; the result is ignored |
+| `authoritative` | `false` | The computed total becomes the cost basis on a V2 buy |
 
 ### Parallel P&L Reporting Hierarchy
 
-The `ProfitAndLossEntity` now contains two independent report hierarchies:
+The `ProfitAndLossEntity` contains two independent report hierarchies:
 1. **Capital Gains:** `RealisedProfits` → `FinancialReport` → `MonthlyReport` → `FortnightReport` (tracks purchase/sell amounts, profit)
-2. **Broker Charges:** `RealisedProfits` → `YearlyBrokerCharges` → `MonthlyBrokerCharges` → `BrokerChargesReport` (tracks brokerage, government charges, taxes, DP charges, AMC)
+2. **Charges:** `RealisedProfits` → `YearlyChargeSummary` → `MonthlyChargeSummary` → half-month buckets, keyed by charge code rather than by fixed columns
 
 This separation allows independent analysis of trading costs versus trading profits.
 
@@ -633,7 +666,7 @@ curl -X POST "http://localhost:8080/portfolio/user/user@example.com/transaction/
 - **User Email as Identifier:** The `email` path variable serves as the user identifier across all portfolio endpoints. Authentication extracts the user from JWT but the API still accepts email explicitly in paths. ⚠️ **Security gap:** Controllers currently do not validate that the path `email` matches the authenticated JWT principal. Path variable email is used directly without authorization checks.
 - **Indian Market Context:** Asset types, exchange names, and broker names are oriented toward Indian stock market conventions.
 - **Holding Period:** Long-term vs short-term classification is based on a 1-year holding period (≥366 days) for **all asset types** uniformly, not just equities.
-- **Broker Charge Template Required:** For automatic broker charge calculation on BUY/SELL transactions, an active `BrokerCharges` template must exist for the broker and transaction date. If missing, the transaction proceeds without broker charges.
+- **Rate Card Required:** a trade is priced only if a `ChargeScheduleEntity` covers its broker, dimensions and date. If none does, the trade still completes and the computation is recorded as `NO_SCHEDULE`, so the gap is visible in `GET /user-charges/user/{email}/gaps` rather than silently costing nothing.
 - **GST Description Format:** The `gstApplicableDescription` field in `BrokerChargesRequest` follows the format `XX%-component_name,XX%-component_name` (e.g. `18%-brokerage,18%-stt`). The percentage symbol is optional; components not matching known names are silently ignored.
 - **DP Charge Deduplication:** DP charges are applied only once per stock per day on SELL transactions. Multiple sells of the same stock on the same day incur DP charges only on the first sell.
 - **AMC Frequency:** Quarterly AMC uses a fixed 91-day interval (not strict calendar quarters). Annual AMC uses a 1-year interval.
@@ -647,7 +680,7 @@ curl -X POST "http://localhost:8080/portfolio/user/user@example.com/transaction/
 ### In Progress / Partially Implemented
 - **Insurance Module:** Data model (`InsuranceEntity`, `PolicyDetails`, DTOs) exists but service layer is an empty stub and no controller endpoints are exposed.
 - **Advanced Analytics:** Portfolio performance metrics (win/loss ratio, avg profit/loss, best/worst stock, turnover) and asset allocation by type are already available via `AnalyticsController`. Missing: sector allocation (no sector field in entities), benchmark comparison, and charting endpoints.
-- **Broker Charge Analytics:** Transaction-level broker charges are fully captured in `UserBrokerCharges` and the P&L entity has a `YearlyBrokerCharges` → `MonthlyBrokerCharges` → `BrokerChargesReport` hierarchy. Missing: aggregation endpoints, dashboard views, and financial year grouping queries.
+- **Charge Analytics:** transaction-level charges are captured in `user_charges` and the P&L entity carries a `YearlyChargeSummary` → `MonthlyChargeSummary` → half-month hierarchy keyed by charge code. `GET /user-charges/user/{email}` and `.../reconciliation` exist; missing: dashboard views and financial-year grouping queries. Because `user_charges` carries broker, asset type and account holder per row, per-broker and per-asset-type breakdowns are answerable from it without schema change.
 
 ### Not Started
 - **Frontend Application:** Build a React/Angular web UI for portfolio visualization and transaction entry.

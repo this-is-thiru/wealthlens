@@ -1,6 +1,16 @@
-Phase A of the charges engine plus Phase B's shadow recording: a standalone replacement for the broker-charges implementation, built alongside the existing one and now computing beside it under a flag that ships **off**.
+**All three phases.** A rules-based charges engine replaces the broker-charges implementation, which is now deleted.
 
-Phase A's exit criterion held to the end — nothing under `portfolio/` changed while the engine was being built. Phase B then spends that isolation deliberately and minimally: `git diff master --stat -- backend/src/main/java/com/thiru/wealthlens/portfolio/` is one file and fifteen inserted lines, plus one new interface. Turning `app.charges.shadow-recording` off is the entire rollback.
+The build was staged so each step was reversible on its own. **Phase A** built the engine standalone — `git diff master -- portfolio/` stayed empty throughout, which is what kept the cutover optional. **Phase B** put it in the trade path with the result ignored, costing one interface and fifteen lines. **Phase C** made the computed total authoritative behind a flag, then deleted the old implementation: 25 files, and `git diff master --stat -- portfolio/` now reads 16 files, **+289 / −409** — net negative, because what left is bigger than what arrived.
+
+**Nothing changes on merge.** `shadow-recording` and `authoritative` both ship `false`, `engine-enabled` ships `true`, so the trade path behaves exactly as it does on `master` until somebody turns a flag on. That is a separate, reversible decision.
+
+**877 tests**, 99% mutation score (597/598), both JaCoCo gates passing.
+
+## What Phase B found, which is the reason to trust the rest
+
+The engine ran against 319 real transactions on staging. A resolution breakdown predicted from the data *before* the run matched exactly — 227 trades predate every shipped rate card and resolved `NO_SCHEDULE`, 92 fell inside one. A contract note was checked by hand and agrees to the paisa, including STT's whole-rupee statutory rounding and a GST base excluding STT: defect D1, seen fixed on a real trade rather than in a fixture. Depository deduplication was proven on three same-day sells of one scrip — charged once.
+
+The reconciliation PRD OD-8 asked for could not be completed, and that is the most useful thing this work learned. Entered broker charges total **₹5.32 across 49 comparable trades** — 37 of them exactly ₹0.01 — against computed figures of ₹16 to ₹29. The manual field was never populated. Manual charge entry did not fail at the margin; it did not happen. The engine is not replacing a working process, it is supplying one that was never there (ADR-31).
 
 ## The problem
 
@@ -46,6 +56,16 @@ The reconciliation report excludes two kinds of row from its totals and says why
 
 **What is not done:** the flag has not been turned on against real data, and the deltas have not been reviewed. That is the last Phase B box and it needs an environment; `staging-runbook.md` §5b is the procedure, including the deltas that are expected and what each means.
 
+## Phase C — cutover, and deletion
+
+`app.charges.authoritative` makes a V2 buy store the engine's total as its cost basis (AC-10, the last acceptance criterion). The charge is computed **before** the lot is written, and the ordering is pinned with `InOrder` rather than inferred from the value — a value assertion passes just as happily if the code reorders and applies the total by overwrite. An absent computation leaves the entered figure alone rather than zeroing it: the engine declines for reasons that say nothing about whether a trade cost anything.
+
+The computed charge also reaches realised P&L. `YearlyChargeSummary` is keyed by charge code rather than by six fixed columns, so a new charge is a data change there too.
+
+**V1 `buyStock`/`sellStock` were never touched.** They are in live use, and the one place the work came close — `buyStockV2` shared a helper with V1 `buyStock` — was resolved by giving V2 its own path rather than changing the shared one.
+
+Then the old implementation went: 25 files, plus its three collections. Two things made that safe to do rather than defer. Production held **zero** `yearly_broker_charges` documents, so the superseded charge path had never successfully written anything there; and `AssetManagementDetails` was never in production either, so retiring it needed no migration and `ChargeAccountController` already served the whole replacement surface.
+
 ## What is here
 
 Seven calculators behind one strategy interface; an orchestrator applying aggregator → floor/cap → rounding once per line, in that order and never inside a calculator; two resolvers with specificity ranking and caching; a write-time validator; seven services; twelve catalogue codes, six seeded rate cards and two seeded scheme profiles; a code-keyed reporting model; four controllers and eleven documented requests in `api-collection/`.
@@ -54,7 +74,7 @@ Seven calculators behind one strategy interface; an orchestrator applying aggreg
 
 **AC-6 is now closed.** Two scheme profiles are seeded — one exit load graded by holding period, one expressed as the predicate `#holdingDays < 7`, both priced per FIFO lot. A redemption drawn from lots of different ages charges the young ones alone; averaging over the transaction would be wrong by the entire charge rather than by a rounding error. The AMC card is seeded too, unscoped because the cycle context carries no scrip, quantity or asset type and a card declaring any of those is disqualified by the resolver.
 
-**836 tests** across both tiers. **99% mutation score** (538/539) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
+**877 tests** across both tiers. **99% mutation score** (597/598) across the engine and the new services, the single survivor being a known equivalent mutant; both JaCoCo gates green.
 
 Four test tiers do more than check examples:
 
@@ -73,7 +93,7 @@ Four test tiers do more than check examples:
 - **Seeding does not update a card already on file.** `ChargeSeederService` is idempotent by `scheduleCode`, deliberately, so an operator's edits survive a restart — which also means the AC-2 corrections do not reach a database that already seeded the old cards. Remove the `_2025_04` documents and restart, or publish through the API. Safe now because nothing in the trade path prices anything; it stops being safe when Phase B starts recording.
 - **Depository deduplication is not visible from `/charges/simulate`.** It checks recorded charges, and in Phase A nothing in the trade path records any, so a scoped charge always prices as a first occurrence. The trade path starts recording in Phase B.
 - **The resolver cache is evicted only by the publish path.** A rate card written straight to the repository is invisible to the engine until something evicts it.
-- The old implementation is intact and still live, including `/broker-charges/amc/impose` — which is *not* the same endpoint as the new one, and running both against one period would charge twice. It is deleted in Phase C, not before.
+- ~~The old implementation is intact and still live~~ — **deleted in Phase C**, along with `/broker-charges/amc/impose`. `POST /charges/amc/impose` is the only AMC endpoint now, so the double-charging hazard that existed while both ran is gone with it.
 
 ## AC-2 is closed, and finding out how cost more than expected
 

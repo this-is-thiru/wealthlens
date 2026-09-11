@@ -585,7 +585,7 @@ out:
 | Cause | How it shows |
 |---|---|
 | The user typed a rounded figure | Small, unsigned, scattered — a few paise to a rupee across many trades |
-| **Segment**: every shadow row is priced as `DELIVERY` | An intraday trade reconciles against a delivery card. `ProfitLossContext` carries no segment until Phase C, and this is stated in README §10 |
+| **Segment**: a trade priced in the wrong segment | **Fixed in Chunk 10b** — `AssetRequest`, `TransactionEntity`, `AssetEntity` and `ProfitLossContext` all carry `TradeSegment`, defaulting `DELIVERY`. Anything recorded *before* that still reads as delivery, so an intraday trade from an older row reconciles against a delivery card |
 | The old GST defect (D1) | The engine is **lower** on sells by roughly ₹17 per ₹1,00,000, because the superseded implementation applied GST over a bucket including STT and stamp duty. This delta is the engine being right |
 | Depository deduplication | A second sell of the same scrip on the same day carries no DP charge. If the user entered one on both, the engine is lower by the DP charge and its tax |
 | A rate card generation boundary | A trade near 2026-03-01 or 2026-06-19 prices against a different generation than the user may have assumed. `scheduleCode` on the row names which card answered |
