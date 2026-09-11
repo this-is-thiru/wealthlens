@@ -32,6 +32,10 @@ anyone would ship.
 **This release closes both gaps together**, because closing either alone leaves the report visibly
 incomplete and a user cannot tell which of the two reasons applies to any given row.
 
+> **Not a cutover blocker (ADR-32).** Existing transactions keep their charges and are never
+> re-driven through the engine, so none of this gates Phase C. What it gates is a charges report a
+> user would call complete.
+
 ## 2. Why it is one release rather than two
 
 The two workstreams are independent in implementation and inseparable in value.
@@ -41,9 +45,13 @@ say "no rate card". Ship the historical cards alone and equity prices back to 20
 gap. In both cases the user-facing answer is still "your portfolio is partly priced", and the
 follow-up question is still "which part, and why".
 
-There is also a shared piece of work neither can avoid: a **migration of existing data**, since
-every stored transaction predates both changes. Doing that once is materially cheaper and safer than
-doing it twice.
+There is also a shared piece of work neither can avoid: **mapping existing stored data onto the new
+identities**, since every stored transaction predates both changes. Doing that once is materially
+cheaper and safer than doing it twice.
+
+Note what that is *not*: ADR-32 settles that transactions are never re-driven through the engine to
+recompute their charges. What this release maps is **identity** — which instrument a stored row
+refers to — and repricing history is a separate decision nobody has taken.
 
 ## 3. Workstream A — instrument identity
 
@@ -100,8 +108,11 @@ Every stored transaction and holding predates both changes.
   on `it-staging` that resolved `NO_INSTRUMENT_PROFILE`.
 - Decide what happens to a stored instrument that cannot be mapped. It cannot be rejected — it is
   already there — so it needs a state, and that state has to be visible.
-- Re-run `POST /charges/backfill/user/{email}` afterwards. It is idempotent by
-  `{email, transactionId}`, so it reprices rather than duplicating.
+- **Whether to reprice history at all is an open decision, not an assumption.** ADR-32 says the
+  cutover does not re-drive transactions. If this release wants historical trades priced so the
+  report reads completely, that is a deliberate choice to make here.
+  `POST /charges/backfill/user/{email}` is the tool if so — idempotent by `{email, transactionId}`,
+  so it reprices rather than duplicating.
 
 ## 6. Release acceptance criteria
 

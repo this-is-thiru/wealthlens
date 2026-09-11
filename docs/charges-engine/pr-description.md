@@ -34,7 +34,7 @@ Two decisions here are worth reading before touching this code, both recorded as
 
 **The `assetType == EQUITY` gate stays.** The checklist and tech-spec §9.2 both said to remove it, citing FR-8. That instruction was wrong, and following it would have been a live behaviour change: `UserBrokerChargeService` resolves a rate card by **broker and date only**, with no asset-type dimension anywhere in it, so a mutual fund passed through the superseded implementation would be charged equity brokerage, STT and stamp duty — and `updateBrokerChargesReport` would write those figures into the P&L. Chunk 8's own gate forbids exactly that, so the checklist held two instructions that could not both be satisfied. The shadow call goes **outside** the gate instead: every asset type reaches the new engine, which does have that dimension, and the gate is removed in Phase C where the branch behind it is deleted anyway.
 
-**Only the V2 flow is instrumented**, V1 `addTransaction` being unused and kept for version history. That maps exactly onto the two `updateProfitAndLoss` overloads, which are distinct methods rather than one path — the `ProfitLossContext` overload is instrumented, the `@Deprecated(forRemoval = true)` one reached only from V1 `sellStock` is untouched.
+**Only the V2 flow is instrumented**, V1 `addTransaction` being in live use and deliberately left alone. That maps exactly onto the two `updateProfitAndLoss` overloads, which are distinct methods rather than one path — the `ProfitLossContext` overload is instrumented, the `@Deprecated(forRemoval = true)` one reached only from V1 `sellStock` is untouched.
 
 Three properties are asserted rather than asserted-about:
 

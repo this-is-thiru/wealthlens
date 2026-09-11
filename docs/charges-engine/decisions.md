@@ -468,7 +468,7 @@ instruments it was never given rates for; the gate's removal was a means that ha
 if it were the end.
 
 **Raised by the repository owner, and settled with a further constraint:** V1 `addTransaction` —
-`buyStock` and `sellStock` — is unused and kept only for version history. Phase B therefore targets
+`buyStock` and `sellStock` — is **in live use** and must not be touched; V2 is being built out beside it. Phase B therefore targets
 the V2 flow. That maps cleanly onto the two overloads, which are distinct methods rather than a
 single path:
 
@@ -666,3 +666,33 @@ as a better justification for Phase C than any delta would have.
   announced before `authoritative` is flipped, not discovered afterwards.
 - **Do not read the ₹235.30 delta as an engine finding.** It is the computed total measured against
   a blank. Anyone citing it later should cite the finding instead.
+
+---
+
+## ADR-32 — Existing transactions keep their charges; the engine applies going forward
+
+**Decision.** Turning on `app.charges.authoritative` changes **new** trades only. Transactions
+already stored keep whatever charge figure they carry, and are not re-driven through the engine.
+Decided by the repository owner, 2026-09-09.
+
+**What this retires.** The Phase B gate carried a warning, repeated in ADR-31 and in the README, that
+"cost basis will move for every trade once `authoritative` flips, from effectively zero charges to
+real ones — user-visible in realised P&L". **That risk does not exist.** Nothing rewrites a stored
+`AssetEntity`; Chunk 10a sets the cost basis at the moment a lot is written and never revisits one.
+The implementation already behaved this way — the warning was about a migration nobody had decided
+to do, and it is now decided against.
+
+**What follows from it.**
+
+- **No migration, and no repricing.** The 227 `it-staging` trades with no rate card for their period
+  stay as they are. They do not become wrong, and they do not need fixing before cutover.
+- **The historical rate cards stop being a cutover blocker.** They were listed as one because 71% of
+  a real history could not be priced. That matters for a *charges report's completeness*, which is
+  the [priced-portfolio epic](../epics/priced-portfolio.md), not for making the engine authoritative.
+- **`POST /charges/backfill` is not part of the cutover path.** It was built to produce Phase B's
+  evidence and it did. It remains available and `SUPER_USER`-only, but nothing in Phase C requires
+  running it, and the rows it already wrote to `it-staging` can stay or be dropped.
+- **Old and new coexist in the reports.** A period spanning the cutover carries some trades charged
+  by the superseded implementation and some by the engine. That is the intended outcome of applying
+  a change forward rather than backward, and it is worth stating in whatever release note accompanies
+  the flag being turned on.
