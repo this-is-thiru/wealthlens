@@ -1,6 +1,6 @@
 # Charges Engine — Test Plan
 
-**Date:** 2026-09-05
+**Date:** 2026-09-05. **Actuals recorded 2026-09-11**, after all twelve chunks.
 **Start at** `README.md` — current state and how to resume. **Rationale** lives in `decisions.md`.
 **Objective:** the engine is verified to a standard where manual QA of charge calculations is unnecessary.
 
@@ -52,9 +52,22 @@ Without this, golden-file tests to ₹0.01 will be flaky and people will widen t
 | I. API | Simulate, publish/supersede, history | ~12 | yes | ~20s |
 | J. Extensibility guarantee | A JSON-only charge reaches the report | 3 | yes | ~5s |
 | K. Temporal correctness | Backfilled transactions resolve historical rate cards | ~14 | mixed | ~10s |
-| **Total** | | **~176** | | |
+| **L. Shadow recording** *(Phase B)* | The engine sees every V2 trade and changes nothing | 17 + 5 | mixed | ~8s |
+| **M. Backfill & reconciliation** *(Phase B)* | Historical trades priced; computed vs entered | 19 + 7 | mixed | ~5s |
+| **N. Cutover** *(Phase C)* | Computed total drives cost basis; summary written | 11 + 13 | mixed | ~5s |
+| **O. Kill switch** *(ADR-30)* | `engine-enabled=false` stops everything and answers 503 | 3 | yes | ~5s |
+| **P. Index creation** | The declared indexes exist — nothing else asserts it | 4 | yes | ~5s |
+| **Total planned** | | **~176** | | |
+| **Total actual** | | **536** | | |
 
-Tiers A–G are pure JVM. That is deliberate: **~147 of ~176 tests run in under 5 seconds with no Docker**, so the engine is developed against a real feedback loop.
+Tiers A–G are pure JVM. That is deliberate: the unit tier runs with no Docker, so the engine is
+developed against a real feedback loop.
+
+**The estimate was low by 3×** — 536 charges tests against ~176 planned. Most of the excess is
+Tiers A–D: the table-driven approach produced more cases per basis than estimated, and every defect
+found along the way (D1, D5, D9, D10, the AC-2 rate errors, the two seed-guard call sites) arrived
+with its own regression. Tiers L–P did not exist when this plan was written; Phases B and C added
+them.
 
 ---
 
@@ -331,25 +344,35 @@ The scenario driving these: **a user uploads a 2024 transaction in 2026, after t
 - an in-sequence batch marks nothing `PROVISIONAL`
 - recompute after an out-of-sequence batch corrects `#firstTimeInvestor` across both purchases
 
-**Recomputation**
+**Recomputation** — ⚠️ **not built, so none of these exist.** `POST /charges/recompute` is designed
+in tech-spec §14.4 and was never implemented; amending a card that has already priced charges has no
+safe mechanism (README §10). These stay as the specification for when it is built.
 - recompute is idempotent: running twice yields identical rows
 - recompute rebuilds the financial year's charge aggregates rather than accumulating, so totals do not drift *(the §14.4 invariant)*
 - recomputing after a rate correction updates the stored lines and the P&L projection together
 
 ## 14. Gates
 
-| Gate | Threshold | Scope |
+| Gate | Threshold | Scope — **as actually configured** |
 |---|---|---|
-| Line coverage | ≥ 90% | `brokercharges.**` |
-| Branch coverage | ≥ 85% | `brokercharges.**` |
-| **Mutation score** | **≥ 85%** | `brokercharges.engine.**` |
+| Line coverage | ≥ 90% | `brokercharges.engine*`, at **package** level |
+| Branch coverage | ≥ 85% | `brokercharges.engine*`, at **package** level |
+| Line coverage | ≥ 90% | `brokercharges.service.*`, **per class** — so one service cannot be carried by its neighbours |
+| Branch coverage | ≥ 85% | `brokercharges.service.*`, per class |
+| **Mutation score** | **≥ 85%** | `brokercharges.engine.*` **and** `brokercharges.service.*` |
 | Golden files | 100% pass, ₹0.01 tolerance | all |
 | Seed validation | 100% pass | all shipped cards |
 | Modulith | green | whole app |
 
+Two corrections to what this section originally claimed. Coverage is **not** scoped to
+`brokercharges.**` — entities and DTOs are deliberately outside it, so the gate enforces where it
+was meant to rather than failing on data carriers. And PIT is **not** scoped to `engine` only; it
+covers the services too, which is what caught the two seed-guard call sites that were wired in but
+never asserted.
+
 Mutation score is the gate that actually replaces QA effort. Line coverage proves a calculator executed; mutation score proves that if the calculator returned the wrong number, **a test would have failed**. For money code that is the only meaningful standard.
 
-Scope PIT to `engine` only — mutating DTOs and entities produces noise and slows the run for no signal.
+PIT covers `engine.*` and `service.*`. DTOs and entities stay out — mutating data carriers produces noise and slows the run for no signal.
 
 ---
 
