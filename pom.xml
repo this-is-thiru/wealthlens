@@ -168,6 +168,16 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
+                    <!--
+                        Report every use of a deprecated API. The superseded broker-charges
+                        implementation is deprecated in full while it waits on human testing, and
+                        this is what turns "which live code still depends on it" into a build
+                        output rather than a grep. javac reports removal warnings by default but
+                        ordinary deprecation warnings only under this flag.
+                    -->
+                    <compilerArgs>
+                        <arg>-Xlint:deprecation</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
