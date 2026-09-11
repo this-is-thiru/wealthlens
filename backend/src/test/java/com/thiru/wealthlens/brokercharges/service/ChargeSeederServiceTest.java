@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -874,5 +876,50 @@ class ChargeSeederServiceTest {
         schedule.setStartDate(from);
         schedule.setEndDate(to);
         return schedule;
+    }
+
+    // ========================================
+    // The guards are wired in, not merely present
+    // ========================================
+
+    /**
+     * Mutation testing found both of these unasserted: {@code ChargeCodes} and
+     * {@code ChargeScheduleWindows} were exercised directly, so deleting the seeder's call to either
+     * left every test green and the validation silently gone. These assert the wiring rather than the
+     * rule.
+     */
+    @Test
+    void seed_appliesTheCodeShapeGuardToTheCatalogueItReads() {
+        // Given — a catalogue whose code could not be used as a Mongo field name
+        ApplicationContext badCatalogue = mock(ApplicationContext.class);
+        when(badCatalogue.getResource(anyString()))
+                .thenReturn(new PathMatchingResourcePatternResolver()
+                        .getResource("classpath:charges/badseed/bad-code-catalogue.json"));
+
+        // When / Then
+        assertThatThrownBy(() -> seederWith(badCatalogue).seed(AUDITOR))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("MTF.INTEREST");
+    }
+
+    @Test
+    void seed_appliesTheOverlapGuardToTheCardsItReads() throws Exception {
+        // Given — the real catalogue, and two cards of one scope whose windows touch
+        ApplicationContext overlapping = mock(ApplicationContext.class);
+        when(overlapping.getResource(anyString()))
+                .thenReturn(new PathMatchingResourcePatternResolver()
+                        .getResource("classpath:data/charges/charge-catalogue.json"));
+        when(overlapping.getResources(contains("instruments"))).thenReturn(new Resource[0]);
+        when(overlapping.getResources(argThat(pattern -> pattern != null && !pattern.contains("instruments"))))
+                .thenReturn(new Resource[]{
+                        new PathMatchingResourcePatternResolver()
+                                .getResource("classpath:data/charges/zerodha-equity-delivery-2025-04-01.json"),
+                        new PathMatchingResourcePatternResolver()
+                                .getResource("classpath:data/charges/zerodha-equity-delivery-2025-04-01.json")});
+
+        // When / Then — the same card twice is the simplest possible overlap
+        assertThatThrownBy(() -> seederWith(overlapping).seed(AUDITOR))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("overlapping validity windows");
     }
 }

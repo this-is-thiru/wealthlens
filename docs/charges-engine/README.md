@@ -2,7 +2,7 @@
 
 **Purpose of this file:** the single entry point. If you are resuming this work — new session, new person, lost context — read this first and trust nothing about the codebase that is not stated here or verified from the code.
 
-**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`. **Phases A, B and C complete.** Chunks 10 and 11 done: the engine is authoritative behind a flag, and the superseded implementation is deleted. Full suite green: **881 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
+**Last verified against the repository:** 2026-09-09, branch `feature/charges-engine`. **Complete.** All twelve chunks done, every acceptance criterion signed off, the superseded implementation deleted and its collections dropped. 877 tests, 99% mutation score. Full suite green: **881 tests**, unit and integration, both JaCoCo gates passing, 99% mutation score (577/578 at last measurement, before the segment work).
 
 ---
 
@@ -13,7 +13,7 @@
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | **46**, of which **11 are unpushed** (`git log origin/feature/charges-engine..HEAD`). Counted with `git rev-list master..HEAD --count` — trust the command over this cell, which has been wrong before |
 | **Phase** | A, B and **C complete**. Chunk 11 deleted 25 files; V1 buy/sell is untouched and still live |
-| **Next action** | **Chunk 12 — final verification**, then the PR. One operator action outstanding: drop the three superseded collections |
+| **Next action** | **Raise the PR.** All twelve chunks are done and every acceptance criterion is signed off |
 | **Blocking questions** | **Two, both non-urgent** — see §11.2. (1) Does `YearlyChargeSummary` sit beside `BrokerChargesReport` or replace it? (2) Keep or drop `userChargeId` on `TransactionEntity`? Neither blocks reading the code |
 
 ---

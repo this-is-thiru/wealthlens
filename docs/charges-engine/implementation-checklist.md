@@ -496,8 +496,8 @@ Twenty-five files, in one pass, once Cut 1 and the AMC retirement left the clust
 - [x] Their tests: `BrokerChargeServiceTest`, `UserBrokerChargeServiceTest`,
       `AssetManagementServiceTest`, `BrokerChargesIntegrationTest`
 - [x] The six superseded requests and their folder, in `api-collection`
-- [ ] **Drop the `broker_charges`, `user_broker_charges` and `asset_management_details` collections**
-      — an operator action, not a code change. Nothing writes or reads them any more
+- [x] **Dropped the `broker_charges`, `user_broker_charges` and `asset_management_details`
+      collections** — done by the repository owner, 2026-09-11
 - [x] No live code references the deleted cluster; the only deprecation warnings left are the two
       deliberate ones (`AssetRequest.brokerCharges`, the V1-sell `ProfitAndLossContext` overload) and
       two pre-existing library deprecations
@@ -505,12 +505,25 @@ Twenty-five files, in one pass, once Cut 1 and the AMC retirement left the clust
 **What survives, deliberately:** V1 `buyStock`/`sellStock` — in live use and untouched throughout —
 and the deprecated `ProfitAndLossContext` overload V1 sell depends on.
 
-## Chunk 12 — Final verification
+## Chunk 12 — Final verification *(done 2026-09-11)*
 
-- [ ] `./mvnw clean test verify` → `test-report/target/consolidated-test-report.html`
-- [ ] `grep -l 'failures="[1-9]"\|errors="[1-9]"' backend/target/surefire-reports/TEST-*.xml` prints nothing
-- [ ] `WealthLensModulithTest.modulithStructureIsValid()` green (AC-11)
-- [ ] `./mvnw spotless:apply`
+- [x] `./mvnw clean test verify` → **877 tests, 877 passed, 0 failed**, consolidated report generated
+- [x] `grep -l 'failures="[1-9]"\|errors="[1-9]"' backend/target/surefire-reports/TEST-*.xml` prints nothing
+- [x] `WealthLensModulithTest.modulithStructureIsValid()` green (**AC-11**)
+- [x] `./mvnw spotless:check` clean
+- [x] Both JaCoCo gates pass
+- [x] **Mutation 99% — 597/598.** The one survivor is `ChargeFormulaEvaluator`'s known equivalent
+      mutant. The scoped invocation no longer needs the caveat that `brokercharges.service.*` sweeps
+      in the superseded services: they are deleted, so the figure now describes only this work
+
+**Mutation testing earned its keep once more at the end.** It found the two guards added in the
+schema pass — `ChargeCodes` and `ChargeScheduleWindows` — were exercised directly but never asserted
+to be *called*, so deleting either call site left the suite green and the validation silently gone.
+Two tests now assert the wiring rather than the rule.
+
+**The Phase A isolation rule is now deliberately broken**, which is what Phase C means:
+`git diff master --stat -- .../portfolio/` shows 16 files, +289/−409. It was empty through Phases A
+and B, and the net negative is the superseded implementation leaving.
 
 ---
 
@@ -539,7 +552,7 @@ Ticked only where something actually asserts it. The evidence is named so the cl
 - [x] **AC-7** intraday: STT sell-only, no DP, intraday stamp rate *(A)* — golden `zerodha-equity-intraday-sell-100k` and `zerodha-equity-intraday-buy-100k`
 - [x] **AC-8** publishing supersedes the incumbent schedule *(A)* — `ChargeScheduleServiceTest`
 - [x] **AC-9** invalid rate card rejected at seed with a readable message *(A)* — `ChargeSeederServiceTest`, and `ChargeScheduleValidatorTest` asserts the messages themselves. Since ADR-27 the rejection surfaces from `POST /charges/seed` rather than from startup; the build-time check against the real shipped files is unchanged and is the one that matters
-- [ ] **AC-10** cost basis uses the computed total *(C)* — Phase C, not started
+- [x] **AC-10** cost basis uses the computed total *(C)* — `PortfolioServiceTest.buyStockV2_whenAuthoritative_setsCostBasisFromTheComputedTotal`, and the ordering pinned with `InOrder` so the charge is computed before the lot is written. Behind `app.charges.authoritative`, which ships `false`
 - [x] **AC-11** modulith verification green *(A, B, C)* — `WealthLensModulithTest`, green throughout
 - [x] **AC-12** no schedule match → empty computation + WARN, no exception *(A)* — `ChargeEngineTest` and `ChargeScheduleResolverTest`, the warning asserted through `LogCapture`
 
