@@ -249,7 +249,6 @@ Read in this order:
 | 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return | 460 |
 | 8 | **ac2-rate-verification.md** | The AC-2 evidence: every shipped rate against the broker's page, what was wrong, and what closing it changed | 180 |
 | 9 | **phase-b-reconciliation-findings.md** | The Phase B exit artifact: the backfill and reconciliation run against 319 real transactions, what it proved, and why the deltas could not mean what the gate assumed | 143 |
-| — | `reseed-staging.js` | One-off, for an environment seeded before 2026-09-08. Checks before it deletes | 39 |
 | — | **[`../epics/priced-portfolio.md`](../epics/priced-portfolio.md)** | **Not this branch.** The epic that makes a *real* portfolio fully priced — instrument identity and historical rate coverage. Read it to understand what the engine still cannot do, and why that is data rather than code | 138 |
 
 **ADR-26 is the one to read before deploying anything.** It states the rule that keeps rate cards deployable — a deployed card is never edited, only superseded — and what to do in the two cases where that is not enough.
