@@ -136,7 +136,7 @@ Tests: `ChargeRecordingGatewayImplTest` (15), `ChargeReconciliationServiceTest` 
 `assetType == EQUITY` gate **stays** — it guards the superseded implementation, which has no
 asset-type dimension at all, so removing it as the checklist originally said would have priced mutual
 funds as equity and written that into the P&L. And only the **V2** flow is instrumented, the V1
-`addTransaction` path being unused and kept for version history.
+`addTransaction` path being **in live use** and deliberately left alone.
 
 ### Written after Chunk 8 — the backfill
 
@@ -521,8 +521,10 @@ reconstruction and ADR-29's instrument-master gap would otherwise all be undisco
 
 **Two things Chunk 10 inherits:**
 
-1. **Cost basis moves for every trade** once `authoritative` flips — from effectively zero charges to
-   real ones. User-visible in realised P&L; announce it, do not let it be discovered.
+1. ~~Cost basis moves for every trade once `authoritative` flips.~~ **Retired by ADR-32
+   (2026-09-09): existing transactions keep their charges and are never re-driven.** The flag applies
+   forward only, so a period spanning the cutover simply carries some trades charged the old way and
+   some the new — worth a release note, not a migration.
 2. **There is no numerical baseline to diff the cutover against.** Correctness rests on the golden
    fixtures, the invariants, and ADR-31's verification.
 
@@ -536,8 +538,8 @@ and stamp duty — and those figures would reach the P&L. Chunk 8's own gate for
 shadow call went **outside** the gate instead: every asset type reaches the engine (FR-8), nothing
 else changes, and the gate is removed in Chunk 10 where the branch behind it is deleted anyway.
 
-**V2 only.** V1 `addTransaction` — `buyStock` and `sellStock` — is unused and kept for version
-history, per the repository owner. That maps exactly onto the two `updateProfitAndLoss` overloads,
+**V2 only.** V1 `addTransaction` — `buyStock` and `sellStock` — is **in live use**, per the
+repository owner, and must never be touched; V2 is built out beside it. That maps exactly onto the two `updateProfitAndLoss` overloads,
 which are distinct methods rather than one path: the `ProfitLossContext` overload (V2) is
 instrumented; the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload, reached only from
 V1 `sellStock`, is untouched.

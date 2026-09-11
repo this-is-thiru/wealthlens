@@ -449,8 +449,8 @@ the rows already written stay, and remain readable through the endpoints below.
 
 Use the ordinary transaction API — `POST /portfolio/user/{email}/transaction/v2`. Note the prefix:
 it is `/portfolio/`, not `/transactions/` — the latter is `TransactionController`, which only reads.
-The **v2** path is the one instrumented; V1 `POST .../transaction` is unused and deliberately
-untouched (ADR-28).
+The **v2** path is the one instrumented; V1 `POST .../transaction` is **in live use** and
+deliberately untouched (ADR-28).
 
 ```bash
 curl -sS -X POST "$BASE/portfolio/user/$USER_EMAIL/transaction/v2" \

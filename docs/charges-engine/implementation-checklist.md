@@ -377,7 +377,7 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 - [x] `brokercharges/service/ChargeRecordingGatewayImpl.java` — computes + persists when `app.charges.shadow-recording=true`. Every failure is caught and logged: a trade must not fail to save because its shadow copy could not be priced
 - [x] Inject into `ProfitAndLossService`; **return value ignored** — cost basis untouched
 - [x] ~~Remove the `assetType == EQUITY` gate~~ — **reversed, ADR-28.** The gate guards the *superseded* implementation, which resolves a rate card by broker and date with no asset-type dimension; removing it would price a mutual fund as equity and write that into the P&L, which Chunk 8's own gate forbids. The shadow call goes **outside** the gate instead, so every asset type reaches the engine (FR-8) and nothing else changes. Gate removal moved to Chunk 10
-- [x] Wired into the **V2** flow only, per the repository owner: V1 `buyStock`/`sellStock` is unused and kept for version history. The two `updateProfitAndLoss` overloads are distinct methods, so this is exact — `ProfitLossContext` (V2) is instrumented, the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload is untouched
+- [x] Wired into the **V2** flow only, per the repository owner: V1 `buyStock`/`sellStock` is **in live use** and must not be touched — V2 is built out beside it. The two `updateProfitAndLoss` overloads are distinct methods, so this is exact — `ProfitLossContext` (V2) is instrumented, the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload is untouched
 - [x] `GET /user-charges/user/{email}/reconciliation` — computed vs user-entered per transaction, with delta. Rows the engine could not price, and rows whose transaction is gone, are listed with a note and **excluded from the totals**
 - [x] `ChargeRecordingGatewayImplTest` (15), `ChargeReconciliationServiceTest` (7); `ProfitAndLossServiceTest` extended 11 → 15 with no existing assertion changed
 - [x] `ShadowRecordingIntegrationTest` (4) — the only class running with the flag on, so the other integration classes staying green is itself the evidence recording is opt-in. Four reconciliation cases added to `ChargesIntegrationTest` (33 → 37)
@@ -399,8 +399,8 @@ Phase A adds the aggregation shape without rewiring P&L. `ProfitAndLossService` 
 
 ## Chunk 10a — Make the engine authoritative for cost basis *(done 2026-09-09)*
 
-**V2 only**, at the repository owner's direction: `buyStock`/`sellStock` are unused and kept for
-version history, so `buyStockV2` no longer shares `updateBrokerChargesAndProfitAndLoss` with V1.
+**V2 only**, at the repository owner's direction: `buyStock`/`sellStock` are **in live use** and must
+not be touched, so `buyStockV2` no longer shares `updateBrokerChargesAndProfitAndLoss` with V1.
 
 - [x] `app.charges.authoritative=true` path: `assetEntity.setBrokerCharges(computation.total())` (AC-10)
 - [x] `PortfolioService.buyStockV2` computes the charge **before** the lot is written, and the ordering
@@ -459,6 +459,14 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
 - [ ] Retire `AssetManagementDetails` in favour of `charge_accounts`
 
 ## Chunk 11 — Delete the old implementation
+
+> **⚠️ Re-scope this before starting.** It was written when V1 was believed to be dead. **V1 is
+> live** (clarified 2026-09-09), and the live V1 path depends on things on this list:
+> `buyStock` → `updateBrokerChargesAndProfitAndLoss` → `updateProfitAndLoss(UserMail,
+> ProfitLossContext)` → `UserBrokerChargeService.addUserBrokerChargeEntry`, and V1 `sellStock:507`
+> is the last caller of the `@Deprecated(forRemoval = true)` `ProfitAndLossContext` overload.
+> Deleting `UserBrokerChargeService`, `BrokerChargeService`, their repositories or that overload
+> would break a flow that is serving users. Either V1 moves onto the engine first, or these stay.
 
 - [ ] `entity/BrokerCharges.java`, `entity/UserBrokerCharges.java`
 - [ ] `service/BrokerChargeService.java`, `service/UserBrokerChargeService.java`
