@@ -581,11 +581,16 @@ public class PortfolioService {
                 sellQuantity = 0;
             }
         }
+        // V2 sell. Priced here and handed on, so the engine runs once and the computed charge
+        // reaches the period's summary. V1 sellStock takes the deprecated ProfitAndLossContext
+        // overload and is not affected by any of this.
         var profitLossContext = toProfitLossContext(assetRequest, buyContexts, transactionId);
-        profitAndLossService.updateProfitAndLoss(userMail, profitLossContext);
+        Optional<ChargeComputation> computation = chargeRecordingGateway.record(userMail, profitLossContext);
+        profitAndLossService.updateProfitAndLoss(userMail, profitLossContext, computation);
     }
 
     private static ProfitLossContext toProfitLossContext(AssetRequest assetRequest, List<BuyContext> buyContexts, String transactionId) {
+
 
         double sellQuantity = assetRequest.getQuantity();
         LocalDate sellDate = assetRequest.getTransactionDate();
@@ -596,7 +601,8 @@ public class PortfolioService {
         BrokerName brokerName = assetRequest.getBrokerName();
 
         return new ProfitLossContext(transactionId, sellQuantity, sellDate, price, stockCode, brokerName, assetRequest.getExchangeName(),
-                assetRequest.getAssetType(), TransactionType.SELL, null, accountType, accountHolder, buyContexts);
+                assetRequest.getAssetType(), TransactionType.SELL, null, accountType, accountHolder, buyContexts,
+                assetRequest.getSegment());
     }
 
     private TradeOutcomeContext toTradeOutcomeContext(String email, AssetEntity assetEntity, AssetRequest assetRequest,

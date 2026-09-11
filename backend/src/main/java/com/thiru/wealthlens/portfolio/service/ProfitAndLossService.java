@@ -3,6 +3,9 @@ import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
 import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
+import com.thiru.wealthlens.brokercharges.entity.model.ChargeSummaryReport;
+import com.thiru.wealthlens.brokercharges.entity.model.MonthlyChargeSummary;
+import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
 import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
@@ -51,12 +54,8 @@ public class ProfitAndLossService {
     private static final int MARCH = 3;
     private static final int DAY_31 = 31;
 
-    /**
-     * Set only for the duration of one {@code updateProfitAndLoss} call that was handed a
-     * computation. A field rather than a parameter threaded through four private methods, and safe
-     * because the call is synchronous, single-threaded and clears it in a finally block.
-     */
-    private Optional<ChargeComputation> precomputedCharge;
+    /** The day a month's first fortnight ends, matching the report this sits beside. */
+    private static final int FORTNIGHT_BOUNDARY = 15;
 
     private final ProfitAndLossRepository profitAndLossRepository;
     private final UserBrokerChargeService userBrokerChargeService;
@@ -315,7 +314,7 @@ public class ProfitAndLossService {
      * @param profitLossContext the purchase/sell context used to compute realized profit; must not be null
      */
     public void updateProfitAndLoss(UserMail userMail, ProfitLossContext profitLossContext) {
-        updateProfitAndLoss(userMail, profitLossContext, null);
+        dispatch(userMail, profitLossContext, null);
     }
 
     /**
@@ -333,30 +332,27 @@ public class ProfitAndLossService {
      */
     public void updateProfitAndLoss(UserMail userMail, ProfitLossContext profitLossContext,
                                     Optional<ChargeComputation> precomputed) {
-        this.precomputedCharge = precomputed;
-        try {
-            dispatch(userMail, profitLossContext);
-        } finally {
-            this.precomputedCharge = null;
-        }
+        dispatch(userMail, profitLossContext, precomputed);
     }
 
-    private void dispatch(UserMail userMail, ProfitLossContext profitLossContext) {
+    private void dispatch(UserMail userMail, ProfitLossContext profitLossContext,
+                          Optional<ChargeComputation> precomputed) {
         TransactionType transactionType = profitLossContext.transactionType();
         CorporateActionType actionType = profitLossContext.actionType();
 
         if (transactionType == TransactionType.SELL) {
             if (actionType == null) {
-                handleNormalSellCase(userMail, profitLossContext);
+                handleNormalSellCase(userMail, profitLossContext, precomputed);
             }
         } else if (transactionType == TransactionType.BUY) {
-            handleNormalBuyCase(userMail, profitLossContext);
+            handleNormalBuyCase(userMail, profitLossContext, precomputed);
         } else {
             log.error("Invalid transaction type: {}", transactionType);
         }
     }
 
-    private void handleNormalBuyCase(UserMail userMail, ProfitLossContext profitLossContext) {
+    private void handleNormalBuyCase(UserMail userMail, ProfitLossContext profitLossContext,
+                                     Optional<ChargeComputation> precomputed) {
         String email = userMail.getEmail();
 
         LocalDate transactionDate = profitLossContext.date();
@@ -370,7 +366,7 @@ public class ProfitAndLossService {
         // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
         // engine has that dimension, so every asset type reaches it (FR-8). The return value is
         // ignored -- nothing here may touch cost basis until Phase C.
-        recordCharge(userMail, profitLossContext);
+        recordCharge(userMail, profitLossContext, precomputed);
 
         // calculate and update the broker charges
         if (profitLossContext.assetType() == AssetType.EQUITY) {
@@ -380,10 +376,13 @@ public class ProfitAndLossService {
                 updateBrokerChargesReport(profitAndLossEntity, profitLossContext.accountType(), userBrokerCharges);
             }
         }
+
+        mergeChargeSummary(profitAndLossEntity, profitLossContext, precomputed);
         profitAndLossRepository.save(profitAndLossEntity);
     }
 
-    private void handleNormalSellCase(UserMail userMail, ProfitLossContext profitLossContext) {
+    private void handleNormalSellCase(UserMail userMail, ProfitLossContext profitLossContext,
+                                      Optional<ChargeComputation> precomputed) {
         String email = userMail.getEmail();
 
         LocalDate transactionDate = profitLossContext.date();
@@ -405,7 +404,7 @@ public class ProfitAndLossService {
         // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
         // engine has that dimension, so every asset type reaches it (FR-8). The return value is
         // ignored -- nothing here may touch cost basis until Phase C.
-        recordCharge(userMail, profitLossContext);
+        recordCharge(userMail, profitLossContext, precomputed);
 
         // calculate and update the broker charges
         if (profitLossContext.assetType() == AssetType.EQUITY) {
@@ -415,6 +414,8 @@ public class ProfitAndLossService {
                 updateBrokerChargesReport(profitAndLossEntity, profitLossContext.accountType(), userBrokerCharges);
             }
         }
+
+        mergeChargeSummary(profitAndLossEntity, profitLossContext, precomputed);
         profitAndLossRepository.save(profitAndLossEntity);
     }
 
@@ -603,10 +604,80 @@ public class ProfitAndLossService {
                                    LocalDate sellDate, boolean isShortTermHeld) {
     }
 
-    /** Uses what the caller already computed, or prices the trade if nobody has. */
-    private void recordCharge(UserMail userMail, ProfitLossContext profitLossContext) {
-        if (precomputedCharge == null) {
+    /** Prices the trade, unless the caller already did. */
+    private void recordCharge(UserMail userMail, ProfitLossContext profitLossContext,
+                              Optional<ChargeComputation> precomputed) {
+        if (precomputed == null) {
             chargeRecordingGateway.record(userMail, profitLossContext);
         }
+    }
+
+    /**
+     * Folds one trade's computed charges into the period's summary.
+     *
+     * <p>Only when a computation was <b>passed in</b>, which is the V2 flow. V1 reaches the two-arg
+     * overload, prices its trade through the gateway exactly as before and writes no summary: it is
+     * a live path and this chunk does not change what it stores.
+     *
+     * <p>The account split mirrors the report this sits beside — {@code SELF} into
+     * {@code realisedProfits}, anything else into {@code outSourcedRealisedProfits} — so the two can
+     * be compared bucket for bucket while both are being written.
+     *
+     * <p>Accumulates rather than recalculates, which is the model {@code ChargeSummaryReport} was
+     * built for. The consequence is that reprocessing one trade twice counts it twice; the hierarchy
+     * beside it has always had that property. Deriving the summary from {@code user_charges}
+     * instead would be idempotent by construction, and is the alternative to revisit when the old
+     * hierarchy is deleted.
+     */
+    private static void mergeChargeSummary(ProfitAndLossEntity profitAndLossEntity,
+                                           ProfitLossContext profitLossContext,
+                                           Optional<ChargeComputation> precomputed) {
+        if (precomputed == null || precomputed.isEmpty()) {
+            return;
+        }
+        Map<String, Double> amountByCode = precomputed.get().amountByCode();
+        if (amountByCode.isEmpty()) {
+            return;
+        }
+
+        boolean self = profitLossContext.accountType() == AccountType.SELF;
+        RealisedProfits realisedProfits = self
+                ? TOptional.mapO(profitAndLossEntity.getRealisedProfits(), RealisedProfits.empty())
+                : TOptional.mapO(profitAndLossEntity.getOutSourcedRealisedProfits(), RealisedProfits.empty());
+
+        YearlyChargeSummary yearly = realisedProfits.getYearlyChargeSummary();
+        if (yearly == null) {
+            yearly = new YearlyChargeSummary();
+            realisedProfits.setYearlyChargeSummary(yearly);
+        }
+        yearly.merge(amountByCode);
+        mergeIntoMonth(yearly, profitLossContext.date(), amountByCode);
+
+        if (self) {
+            profitAndLossEntity.setRealisedProfits(realisedProfits);
+        } else {
+            profitAndLossEntity.setOutSourcedRealisedProfits(realisedProfits);
+        }
+        profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
+    }
+
+    /** A fortnight stays null until something is charged in it, so an empty half reads as empty. */
+    private static void mergeIntoMonth(YearlyChargeSummary yearly, LocalDate transactionDate,
+                                       Map<String, Double> amountByCode) {
+        Month month = transactionDate.getMonth();
+        MonthlyChargeSummary monthly = yearly.getMonthlyReport()
+                .computeIfAbsent(month, MonthlyChargeSummary::new);
+
+        ChargeSummaryReport half;
+        if (transactionDate.getDayOfMonth() <= FORTNIGHT_BOUNDARY) {
+            half = TOptional.mapO(monthly.getFirstHalfCharges(), new ChargeSummaryReport());
+            monthly.setFirstHalfCharges(half);
+        } else {
+            half = TOptional.mapO(monthly.getSecondHalfCharges(), new ChargeSummaryReport());
+            monthly.setSecondHalfCharges(half);
+        }
+
+        half.merge(amountByCode);
+        monthly.merge(amountByCode);
     }
 }

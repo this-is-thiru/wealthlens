@@ -5,7 +5,7 @@
 
 **Branch:** `feature/charges-engine`
 **Status:** Phases A and B closed. **Chunk 10a done** (AC-10 — cost basis from the computed total, behind `app.charges.authoritative`, which ships `false`) and **Chunk 10b part 1 done** (a trade carries its own `TradeSegment`). **Resume at Chunk 10b part 2 — the sell path into `YearlyChargeSummary` — after answering the design question in `README.md` §11.2.**
-**Last updated:** 2026-09-09 (paused here) — 873 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
+**Last updated:** 2026-09-09 — 881 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (538/539) across the engine and the charges services.
 
 Four boxes in the completed chunks are deliberately left unticked rather than quietly dropped. Each says why on its own line:
 
@@ -422,11 +422,21 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
 
 ## Chunk 10b — The rest of the cutover *(part 1 done 2026-09-09)*
 
-- [ ] **Sell path: the computed charge reaches realised P&L.** ← **resume here.** Answer first:
-      does `YearlyChargeSummary` sit *beside* `BrokerChargesReport` or *replace* it? Recommendation is
-      beside — it matches how everything else here was built, parallel first and deleted later, and
-      Chunk 11 removes the old hierarchy anyway. `ChargeSummaryReport` / `YearlyChargeSummary` were
-      built in Chunk 7 and **nothing writes them yet**
+- [x] **The computed charge reaches realised P&L** *(done 2026-09-09)*. `RealisedProfits` gains
+      `yearlyChargeSummary` **beside** `yearlyBrokerCharges`; Chunk 11 deletes the old one. Written
+      only when a computation is **passed in**, which is V2 — V1 reaches the two-arg overload, prices
+      through the gateway exactly as before and writes no summary, so its stored data is unchanged
+- [x] V2 sell prices first and hands the computation on, matching what 10a did for the buy. The four
+      call sites now map exactly: V1 buy → shared helper → 2-arg (no summary); V1 sell → deprecated
+      `ProfitAndLossContext` overload (untouched); V2 buy and V2 sell → 3-arg with a computation
+- [x] Account split mirrors the old report — `SELF` into `realisedProfits`, anything else into
+      `outSourcedRealisedProfits` — so the two can be compared bucket for bucket while both are written
+- [x] The hidden `precomputedCharge` field introduced in 10a is gone; the computation is threaded as a
+      parameter through `dispatch` and both handlers
+- [ ] **Known limit, deliberately accepted:** the summary *accumulates*, so reprocessing one trade
+      twice counts it twice. The hierarchy beside it has always had that property. Deriving the summary
+      from `user_charges` instead would be idempotent by construction — **revisit when Chunk 11 deletes
+      the old hierarchy**, since that is when `ChargeSummaryReport.merge` stops having a peer to match
 - [x] `TradeSegment` promoted into `portfolio/dto/enums`; added to `AssetRequest`, `TransactionEntity`,
       `AssetEntity`, all defaulting `DELIVERY`. Both persisted uses store the enum's *name*, so the
       package move needed no data migration. The gateway and the backfill now read the trade's own
