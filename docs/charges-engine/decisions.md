@@ -497,8 +497,9 @@ single path:
 
 ## ADR-29 — An instrument master is the single source of truth, and charge profiles key off it
 
-**Status:** decided by the repository owner, 2026-09-09. **Scheduled for Milestone 2** — not built,
-and not part of Phase C.
+**Status:** decided by the repository owner, 2026-09-09. Not built, and **not part of Phase C**.
+Delivered by the [priced-portfolio epic](../epics/priced-portfolio.md), as one comprehensive release
+rather than as follow-on tickets against the charges checklist.
 
 **Decision.** One registry holds every instrument the application recognises — equities and mutual
 fund schemes alike. Upload validates against it: a transaction naming an instrument the registry does
@@ -551,8 +552,8 @@ degrades one number. An identity gap corrupts the holding.
   (README §8.14); the registry is what gives it something to join to.
 - **Rejection needs a route back.** A user whose upload is refused because a scheme is unknown must
   be able to get that scheme added, or the validation becomes a wall. Whether that is an admin
-  endpoint, a seeded catalogue refreshed from an external source, or self-service is a Milestone 2
-  design question, not settled here.
+  endpoint, a seeded catalogue refreshed from an external source, or self-service is an open
+  question for the epic, not settled here.
 - **Existing data will not satisfy it.** All 319 transactions on `it-staging` predate the registry, so
   a migration has to map what is already stored onto canonical codes — with the 8 unmatched schemes
   above as the known worklist.
@@ -660,7 +661,7 @@ as a better justification for Phase C than any delta would have.
 - **Phase C loses its numerical pre-check.** There is no baseline to diff the cutover against, so
   correctness there rests on the golden fixtures, the invariants and the verification above.
 - **Cost basis will move for every trade, and that is now a certainty rather than a risk.** From
-  effectively zero charges to real ones — ₹240 on 49 trades in this sample, and more once M2-2's
+  effectively zero charges to real ones — ₹240 on 49 trades in this sample, and more once the epic's
   historical cards let the other 227 price. This is user-visible in realised P&L and must be
   announced before `authoritative` is flipped, not discovered afterwards.
 - **Do not read the ₹235.30 delta as an engine finding.** It is the computed total measured against

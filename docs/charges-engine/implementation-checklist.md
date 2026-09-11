@@ -481,43 +481,15 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
 
 ---
 
-# MILESTONE 2 — after the cutover
+# Beyond this branch
 
-Not Phase C. These are scheduled beyond the charges engine's own delivery and are tracked here
-because Phase B's run against real data is what identified them.
+Two gaps found by the Phase B run against real data are **not** charges-engine work and have been
+lifted out of this tracker into an epic of their own:
+**[`../epics/priced-portfolio.md`](../epics/priced-portfolio.md)**.
 
-## M2-1 — Instrument master, and charge profiles keyed off it
-
-**Decided 2026-09-09 (ADR-29).** One registry of every instrument the application recognises,
-equities and mutual fund schemes alike; upload validates against it and rejects a transaction naming
-an instrument it does not carry.
-
-- [ ] The registry itself — canonical code, display name, asset type, ISIN / scheme code, status
-- [ ] Upload validation: a transaction naming an unknown instrument is rejected, not stored
-- [ ] A route back for a user whose upload is refused — admin endpoint, refreshed catalogue, or
-      self-service. Without one the validation is a wall (ADR-29)
-- [ ] `ChargeInstrumentEntity` keys on the canonical code rather than free-text `stockCode`, which is
-      what makes the Phase B mismatch impossible by construction rather than by convention
-- [ ] Join `ChargeInstrumentEntity.isin` to the registry — stored and unused today (README §8.14)
-- [ ] Migrate the existing data onto canonical codes. Known worklist: the 8 mutual fund schemes on
-      `it-staging` that resolved `NO_INSTRUMENT_PROFILE`, whose `stockCode` is the full scheme name
-- [ ] Write exit-load profiles for the schemes users actually hold. Only two ship today and neither is
-      one anybody holds, so exit load is unreachable in practice
-
-**Why it belongs to the charges engine's story.** 43 of 319 real transactions could not resolve an
-instrument profile, and not because one was missing — because the key shapes could never meet. Fixing
-it in the charges module alone would mean normalising scheme names, which is a pile of guesses about
-which spelling differences are meaningful. The registry answers that once.
-
-## M2-2 — Historical rate card generations
-
-- [ ] 2023 and 2024 generations of each shipped card
-
-**227 of 319 real transactions (71%) resolved `NO_SCHEDULE`** because every shipped card starts
-2025-04-01 while the history starts 2023-06-22. The behaviour is correct — recorded and visible in the
-gaps report rather than silently zeroed — but a backfilled portfolio is mostly unpriced until these
-exist. This is rate archaeology rather than code, and ADR-26 already says how it ships: new
-generations with new `scheduleCode`s, never edits to a deployed card.
+They are instrument identity (ADR-29) and historical rate coverage. Neither is a follow-on ticket
+against this checklist — at the repository owner's direction they ship together, as one
+comprehensive release, after Phase C merges. Do not start them from here.
 
 ---
 
