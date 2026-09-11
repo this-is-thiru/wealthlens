@@ -4,7 +4,7 @@
 **Read first:** `README.md` (where things stand), then `decisions.md` (why), `tech-spec.md` (what), `test-plan.md` (how it is verified). This file is *only* the sequence.
 
 **Branch:** `feature/charges-engine`
-**Status:** **All twelve chunks done.** Phases A, B and C complete; the superseded implementation is deleted and its collections dropped. **One technical item is outstanding — `toTradeOutcomeContext` pro-rating, see Chunk 10b — and two are open by decision.**
+**Status:** **All twelve chunks done.** Phases A, B and C complete; the superseded implementation is deleted and its collections dropped. **No outstanding cutover item.** Three things stay open and none blocks a merge: one accepted limit (the summary accumulates), and two V1-bound items that are void by decision. One unrelated pre-existing gap is recorded — V2 sells write no `trade_outcomes` row.
 **Last updated:** 2026-09-11 — 877 tests green across both tiers, `spotless:check` clean, both JaCoCo gates passing, 99% mutation score (597/598) across the engine and the charges services.
 
 Everything that was once deliberately left unticked is now closed:
@@ -16,20 +16,17 @@ Everything that was once deliberately left unticked is now closed:
 | ~~Rate verification (Chunk 6)~~ | **Done 2026-09-08.** All eleven cards verified; AC-2 closed |
 | ~~`BrokerageAggregatorType` deletion (Chunk 1)~~ | **Done** in Chunk 11 with the rest of the cluster |
 
-**What is genuinely still open** — three things, and only the first is code:
+**What is genuinely still open** — none of it blocks a merge:
 
-1. **`toTradeOutcomeContext` pro-rating (`PortfolioService:621`).** The buy side pro-rates
-   `assetEntity.getBrokerCharges()`, which under `authoritative` is the engine's figure — correct.
-   The **sell** side pro-rates `assetRequest.getBrokerCharges()`, the deprecated user-entered field,
-   which is not. So a trade outcome carries a computed buy-side charge beside a user-entered
-   sell-side one, and since that field holds ₹0.01 in practice, `trade_outcomes.sell_broker_charges`
-   is effectively zero. **This was on the original Chunk 10 list and was missed** when the chunk was
-   split into 10a and 10b.
-2. **`YearlyChargeSummary` accumulates** rather than being derived from `user_charges`, so
-   reprocessing one trade twice counts it twice. Recorded, accepted, and worth revisiting now that
-   the old hierarchy it matched is gone.
-3. **Deriving the summary from `user_charges`** would fix (2) and give per-broker and per-asset-type
+1. **`YearlyChargeSummary` accumulates** rather than being derived from `user_charges`, so
+   reprocessing one trade twice counts it twice. Accepted; worth revisiting now that the old
+   hierarchy it was matching is deleted. Deriving it would also give per-broker and per-asset-type
    breakdowns the summary cannot express today.
+2. **Two V1-bound items are void by decision** — `toTradeOutcomeContext` pro-rating and retiring the
+   `ProfitAndLossContext` overload. Both are V1-only code, and V1 is in live use.
+3. **V2 sells write no `trade_outcomes` row** (`sellStockV2` → `…AndProfitAndLoss1`, which never calls
+   `saveTradeOutcome`). Pre-existing and unrelated to charges; recorded here because it was found
+   while auditing this file, not because it belongs to this work.
 
 ---
 
@@ -483,13 +480,19 @@ cost basis, so AC-10 is a buy-path criterion. The sell side is Chunk 10b's repor
       V1 is in live use and was never to be touched
 - [x] `sellStockV2` / `updateQuantityBySavingReportAndProfitAndLoss1` price first and hand the
       computation on, so the engine runs once per trade
-- [ ] **`toTradeOutcomeContext` pro-rating (`:621`) — OUTSTANDING, and it is a real gap.** The buy side
-      pro-rates `assetEntity.getBrokerCharges()`, which under `authoritative` is the computed figure.
-      The sell side pro-rates `assetRequest.getBrokerCharges()`, the deprecated user-entered field —
-      so a trade outcome mixes a computed buy-side charge with a user-entered sell-side one, and that
-      field holds ₹0.01 in practice. `trade_outcomes.sell_broker_charges` is therefore ~0 under
-      `authoritative`. **Missed when Chunk 10 was split into 10a and 10b**; found auditing this file
-      on 2026-09-11
+- [ ] ~~Re-verify `toTradeOutcomeContext` pro-rating~~ — **void by decision: it is V1-only code.**
+      `toTradeOutcomeContext` and `saveTradeOutcome` are called from `updateQuantityBySaving\
+ReportAndProfitAndLoss` (`:517`), reached only from V1 `sellStock:404`. V1 must not be touched, so
+      the sell side keeps pro-rating `assetRequest.getBrokerCharges()`. One narrow case survives and
+      is accepted: a **V2 buy followed by a V1 sell** pro-rates a computed buy-side charge against a
+      user-entered sell-side one. It needs a client mixing endpoints, and the fix would be in V1
+
+- [ ] **V2 sells write no trade outcome at all** — the real gap, and it is not about charges.
+      `sellStockV2:383` → `updateQuantityBySavingReportAndProfitAndLoss1:559`, which never calls
+      `saveTradeOutcome`. Only the V1 sell path populates `trade_outcomes`. Pre-existing, unrelated to
+      this work, and squarely V2 territory so it can be fixed — but it is new functionality rather
+      than a cutover item, and nobody has asked for it
+
 - [x] ~~Remove `brokerCharges` from `AssetRequest`~~ — **decided against.** Deprecated and kept, so
       existing clients keep working; it is simply no longer read once `authoritative` is on
 - [x] ~~Add `userChargeId` to `TransactionEntity`~~ — **decided against.** `UserChargeEntity` already
