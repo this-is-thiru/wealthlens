@@ -905,4 +905,30 @@ class ProfitAndLossServiceTest {
         // Then
         assertEquals("2023-2024", saved.getFinancialYear());
     }
+
+    @Test
+    void updateProfitAndLoss_accumulatingManySells_keepsTheStoredTotalExact() {
+        // Given -- ten sells of Rs.0.10 into one period. Raw `+=` gives 0.9999999999999999, which
+        // prints as 1.00 and fails every equality check and every exact Mongo query (TL-8).
+        ProfitAndLossEntity accumulating = new ProfitAndLossEntity(TEST_EMAIL, "2023-2024");
+        when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024"))
+                .thenReturn(Optional.of(accumulating));
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        for (int i = 0; i < 10; i++) {
+            ProfitLossContext context = new ProfitLossContext(
+                    "txn-" + i, 1.0, LocalDate.of(2023, 12, 15), 0.10, STOCK_CODE, BROKER, EXCHANGE,
+                    AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
+                    List.of(new BuyContext(1.0, LocalDate.of(2023, 6, 15), 0.05)),
+                    TradeSegment.DELIVERY);
+            profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context);
+        }
+
+        // Then -- exact equality, deliberately
+        FinancialReport yearly = accumulating.getRealisedProfits().getShortTermCapitalGains();
+        assertEquals(1.00, yearly.getSellAmount());
+        assertEquals(0.50, yearly.getPurchaseAmount());
+    }
 }

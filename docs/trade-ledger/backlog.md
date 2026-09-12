@@ -81,14 +81,48 @@ expected to return nothing. It becomes urgent the first time they do not.
 
 ---
 
+## B-5 — V1 writes uncanonicalised amounts into the same fields
+
+TL-8 canonicalises the V2 accumulation in `ProfitAndLossService` (`InternalContext`, the
+`update*TransactionReport` family). The V1 family (`InternalTransactionContext`,
+`updateReportMetadata` and `updateFortnightReport`) still accumulates with raw `+=`, because it is
+the live V1 sell path and is not to be touched.
+
+So `profit_and_loss` now holds canonical amounts where V2 wrote and drifted ones where V1 did, in
+the same fields. That is strictly better than uniform drift — each write is independently more
+correct — but it is not uniform, and it should be said out loud rather than discovered.
+
+**Done looks like.** The V1 family uses `TMoney.add` too, taken with whatever else retires V1.
+
+---
+
+## B-6 — Pro-rating loses a paisa across lots
+
+Splitting a ₹100 sell charge across three lots gives ₹33.33 each once canonicalised: ₹99.99
+recorded against ₹100.00 charged. Found by the TL-8 test that made pro-rated amounts canonical.
+
+Before TL-8 the three rows held `33.33333333333333`, which summed correctly and was not an amount of
+money. Now they hold real paise that sum a paisa short. The second is more honest and still wrong.
+
+**Why it matters.** The sum of a sell's `trade_outcomes` charges no longer equals its
+`user_charges` total, so anything reconciling those two will see a one-paisa gap per split sell.
+
+**Done looks like.** Largest-remainder allocation in `TradeOutcomeRecorder.share` — floor every
+share, then hand the leftover paise to the largest fractional parts, so the parts sum to the whole.
+Standard, small, and needs a test that the allocation is stable rather than order-dependent.
+
+---
+
 ## B-3 — Money is stored as `double` (this is TL-8, not really backlog)
 
 The engine computes in `BigDecimal` and rounds once, which is right. Every *stored* amount is a
 `double`. `ChargeSummaryReport.merge` re-derives its total in `BigDecimal` on every write to work
 around the drift, which is the symptom rather than the fix.
 
-Still the last open item on the implementation checklist. It is a decision before it is a build, and
-it gets harder every month the data grows.
+**Decided and implemented, 2026-09-12.** `double` stays; every stored amount is canonicalised to
+paise through `TMoney`. See [`money-representation-analysis.md`](money-representation-analysis.md)
+for the measurements, and its §7 for the five triggers that would make a full `BigDecimal`
+migration the answer after all. This entry stays as the pointer to that decision.
 
 ---
 

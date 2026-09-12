@@ -5,8 +5,8 @@ import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.repository.UserChargeRepository;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
+import com.thiru.wealthlens.shared.util.money.TMoney;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -130,7 +130,8 @@ public class ChargeReconciliationService {
                 note);
     }
 
+    /** Delegates so there is one paise rounding in the codebase, not three (TL-8). */
     private static double scaled(BigDecimal amount) {
-        return amount.setScale(PAISE_SCALE, RoundingMode.HALF_UP).doubleValue();
+        return TMoney.scale(amount.doubleValue());
     }
 }

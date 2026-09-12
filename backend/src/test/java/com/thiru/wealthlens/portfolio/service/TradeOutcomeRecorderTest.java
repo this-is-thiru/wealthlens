@@ -275,4 +275,29 @@ class TradeOutcomeRecorderTest {
         MoneyAssert.assertNoCharge(row.getSellBrokerCharges());
         assertEquals(Map.of(), row.getSellChargeBreakup());
     }
+
+    @Test
+    @DisplayName("pro-rated amounts are canonical to paise, not raw division output (TL-8)")
+    void record_whenProRatingAcrossThreeLots_writesCanonicalAmounts() {
+        // Given -- a 3-way split of Rs.100, which does not divide evenly into paise
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 10.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-2", 0.0, 100.0, 10.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-3", 0.0, 100.0, 10.0), 1.0, 1.0));
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(3.0, 200.0, TradeSegment.DELIVERY), "sell-1",
+                lots, Optional.of(computation(Map.of("BROKERAGE", 100.0))));
+
+        // Then -- every stored amount must equal its own two-decimal rounding
+        for (TradeOutcomeContext row : captureSaved(3)) {
+            MoneyAssert.assertCanonicalToPaise("sellBrokerCharges", row.getSellBrokerCharges());
+            MoneyAssert.assertCanonicalToPaise("buyBrokerCharges", row.getBuyBrokerCharges());
+            MoneyAssert.assertCanonicalToPaise("totalBuyValue", row.getTotalBuyValue());
+            MoneyAssert.assertCanonicalToPaise("totalSellValue", row.getTotalSellValue());
+            MoneyAssert.assertCanonicalToPaise("netProfit", row.getNetProfit());
+            row.getSellChargeBreakup().forEach(MoneyAssert::assertCanonicalToPaise);
+        }
+    }
+
 }

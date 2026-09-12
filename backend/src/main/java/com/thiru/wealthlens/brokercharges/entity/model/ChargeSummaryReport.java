@@ -1,8 +1,7 @@
 package com.thiru.wealthlens.brokercharges.entity.model;
 
+import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +43,7 @@ public class ChargeSummaryReport {
     /**
      * Folds one event's charge breakdown into this period.
      *
-     * <p>Arithmetic is {@code BigDecimal} rather than {@code double}. A period accumulates hundreds
+     * <p>Arithmetic goes through {@link TMoney} rather than {@code double}. A period accumulates hundreds
      * of paise-scale amounts, and {@code 0.10} added ten times in {@code double} is
      * {@code 0.9999999999999999} — which reaches a report as ₹1.00 only by luck of formatting, and
      * reaches a comparison against a broker's statement as a mismatch.
@@ -68,17 +67,10 @@ public class ChargeSummaryReport {
             if (increment == null) {
                 throw new IllegalArgumentException("Charge amount for code " + code + " must not be null");
             }
-            BigDecimal running = BigDecimal.valueOf(amountByCode.getOrDefault(code, 0.0));
-            amountByCode.put(code, scaled(running.add(BigDecimal.valueOf(increment))));
+            amountByCode.put(code, TMoney.add(amountByCode.getOrDefault(code, 0.0), increment));
         });
 
-        totalCharges = scaled(amountByCode.values().stream()
-                .map(BigDecimal::valueOf)
-                .reduce(BigDecimal.ZERO, BigDecimal::add));
+        totalCharges = TMoney.sum(amountByCode.values());
         lastUpdatedTime = TLocalDateTime.now();
-    }
-
-    private static double scaled(BigDecimal amount) {
-        return amount.setScale(PAISE_SCALE, RoundingMode.HALF_UP).doubleValue();
     }
 }

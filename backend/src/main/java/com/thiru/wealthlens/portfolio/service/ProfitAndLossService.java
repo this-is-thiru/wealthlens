@@ -25,6 +25,7 @@ import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
+import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -473,19 +474,32 @@ public class ProfitAndLossService {
         return monthlyReports;
     }
 
+    /**
+     * Accumulation is {@link TMoney#add}, not {@code +=} (TL-8).
+     *
+     * <p>A period folds in hundreds of paise-scale amounts, and raw {@code double} addition leaves
+     * ₹1.00 stored as {@code 0.9999999999999999} — which prints correctly and then fails every
+     * exact query and every reconciliation against a broker's statement. The three levels below
+     * accumulate the same figures, so all three need it or the year disagrees with its months.
+     *
+     * <p><b>The V1 family above ({@code InternalTransactionContext}) is deliberately untouched.</b>
+     * It is the live V1 sell path; the two families were already forked, so canonicalising here
+     * reaches no V1 code. That leaves V1 writing drifted values into the same fields — recorded as
+     * B-5 rather than fixed quietly.
+     */
     private static void updateYearlyTransactionReport(FinancialReport financialReport, InternalContext internalContext) {
-        financialReport.setPurchaseAmount(financialReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        financialReport.setSellAmount(financialReport.getSellAmount() + internalContext.sellAmount());
+        financialReport.setPurchaseAmount(TMoney.add(financialReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        financialReport.setSellAmount(TMoney.add(financialReport.getSellAmount(), internalContext.sellAmount()));
     }
 
     private static void updateMonthlyTransactionReport(MonthlyReport monthlyReport, InternalContext internalContext) {
-        monthlyReport.setPurchaseAmount(monthlyReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        monthlyReport.setSellAmount(monthlyReport.getSellAmount() + internalContext.sellAmount());
+        monthlyReport.setPurchaseAmount(TMoney.add(monthlyReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        monthlyReport.setSellAmount(TMoney.add(monthlyReport.getSellAmount(), internalContext.sellAmount()));
     }
 
     private static void updateFortnightTransactionReport(FortnightReport fortnightReport, InternalContext internalContext) {
-        fortnightReport.setPurchaseAmount(fortnightReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        fortnightReport.setSellAmount(fortnightReport.getSellAmount() + internalContext.sellAmount());
+        fortnightReport.setPurchaseAmount(TMoney.add(fortnightReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        fortnightReport.setSellAmount(TMoney.add(fortnightReport.getSellAmount(), internalContext.sellAmount()));
     }
 
     /**

@@ -2,6 +2,8 @@ package com.thiru.wealthlens.brokercharges.service;
 
 import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
+import com.thiru.wealthlens.shared.util.money.TMoney;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -37,13 +39,11 @@ public class ChargeDeductibilityService {
         if (amountByCode == null || amountByCode.isEmpty()) {
             return 0.0;
         }
-        double total = 0.0;
-        for (Map.Entry<String, Double> entry : amountByCode.entrySet()) {
-            if (isDeductible(entry.getKey())) {
-                total += entry.getValue() == null ? 0.0 : entry.getValue();
-            }
-        }
-        return total;
+        List<Double> deductible = amountByCode.entrySet().stream()
+                .filter(entry -> isDeductible(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .toList();
+        return TMoney.sum(deductible);
     }
 
     private boolean isDeductible(String code) {

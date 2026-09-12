@@ -5,8 +5,8 @@ lost, resume from the first unticked box.
 
 **Branch:** `feature/charges-engine` (this work continues on it; the charges engine itself is
 complete — see `../charges-engine/README.md`).
-**Status:** 8 of 8 decided. **TL-8 is decided; its implementation is the only work left.**
-**Last updated:** 2026-09-12 — 907 tests green (unit + integration), both JaCoCo gates passing,
+**Status:** 8 of 8 done. Remaining work is in [`backlog.md`](backlog.md).
+**Last updated:** 2026-09-12 — 917 tests green (unit + integration), both JaCoCo gates passing,
 surefire XML gate clean, spotless clean.
 **Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
 **Backlog:** [`backlog.md`](backlog.md) — found, real, deliberately not done.
@@ -250,7 +250,15 @@ blocking startup, so grep for `Could not create index` after deploying.
 
 - [x] **Decided 2026-09-12: `double` stays, and every stored amount is canonicalised to paise.**
       Analysis in [`money-representation-analysis.md`](money-representation-analysis.md)
-- [ ] Implement: `TMoney` utility, the 31 write sites, an ArchUnit rule, then tighten `MoneyAssert`
+- [x] **Implemented 2026-09-12.** `TMoney` in `shared/util/money`; the V2 accumulation in
+      `ProfitAndLossService`; every pro-rated and derived amount in `TradeOutcomeRecorder`; the
+      deductible sum. Three independent copies of the same paise rounding existed —
+      `ChargeSummaryReport`, `ChargeReconciliationService` and `TMoney` — now one, guarded by an
+      ArchUnit rule verified to fail when a second is added. `MoneyAssert` gained `assertCanonical`
+      and `assertCanonicalToPaise`, so a stored amount is compared exactly and the half-paisa
+      tolerance is reserved for intermediates
+- [ ] Carried to backlog: **B-5** V1 still accumulates with raw `+=`; **B-6** pro-rating loses a
+      paisa across lots
 
 The engine computes in `BigDecimal` and rounds once, which is right — but every *stored* amount is a
 `double`. `ChargeSummaryReport.merge` already re-derives its total in `BigDecimal` on every write to

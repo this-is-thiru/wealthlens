@@ -13,6 +13,7 @@ import com.thiru.wealthlens.portfolio.holding.TradeClassificationQuery;
 import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
@@ -73,20 +74,23 @@ public class TradeOutcomeRecorder {
                 sellComputation.map(ChargeComputation::amountByCode).orElseGet(Map::of), sellShare);
         Map<String, Double> buyBreakup = share(buyBreakupFor(userMail, asset), buyShare);
 
-        double sellCharges = sellComputation.map(ChargeComputation::total).orElse(0.0) * sellShare;
-        double buyCharges = asset.getBrokerCharges() * buyShare;
-        double buyMiscCharges = asset.getMiscCharges() * buyShare;
+        // Pro-rating divides, so every figure below is canonicalised to paise before it is stored
+        // (TL-8). A three-way split of Rs.100 is 33.33333333333333 otherwise, which is not an
+        // amount of money and has no business on a row a tax return is filed from.
+        double sellCharges = TMoney.scale(sellComputation.map(ChargeComputation::total).orElse(0.0) * sellShare);
+        double buyCharges = TMoney.scale(asset.getBrokerCharges() * buyShare);
+        double buyMiscCharges = TMoney.scale(asset.getMiscCharges() * buyShare);
         // Misc charges stay user-entered -- the engine does not produce them, so there is no
         // computed figure to prefer over this one, unlike the broker charge above.
-        double sellMiscCharges = sell.getMiscCharges() * sellShare;
+        double sellMiscCharges = TMoney.scale(sell.getMiscCharges() * sellShare);
 
         TradeClassification classification = tradeClassifier.classify(new TradeClassificationQuery(
                 sell.getStockCode(), sell.getAssetType(), sell.getSegment(),
                 asset.getTransactionDate(), sell.getTransactionDate()));
 
-        double totalBuyValue = (asset.getPrice() * lot.quantity()) + buyCharges + buyMiscCharges;
-        double totalSellValue = (sell.getPrice() * lot.quantity()) - sellCharges - sellMiscCharges;
-        double netProfit = totalSellValue - totalBuyValue;
+        double totalBuyValue = TMoney.scale((asset.getPrice() * lot.quantity()) + buyCharges + buyMiscCharges);
+        double totalSellValue = TMoney.scale((sell.getPrice() * lot.quantity()) - sellCharges - sellMiscCharges);
+        double netProfit = TMoney.scale(totalSellValue - totalBuyValue);
 
         return TradeOutcomeContext.builder()
                 .email(userMail.getEmail())
@@ -170,7 +174,7 @@ public class TradeOutcomeRecorder {
             return Map.of();
         }
         Map<String, Double> scaled = new LinkedHashMap<>();
-        breakup.forEach((code, amount) -> scaled.put(code, (amount == null ? 0.0 : amount) * share));
+        breakup.forEach((code, amount) -> scaled.put(code, TMoney.scale((amount == null ? 0.0 : amount) * share)));
         return scaled;
     }
 }
