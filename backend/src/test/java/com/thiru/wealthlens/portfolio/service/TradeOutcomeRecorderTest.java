@@ -370,4 +370,29 @@ class TradeOutcomeRecorderTest {
         MoneyAssert.assertCanonical("sums to the whole", 10.00,
                 TMoney.sum(rows.stream().map(TradeOutcomeContext::getSellBrokerCharges).toList()));
     }
+
+    @Test
+    @DisplayName("a lot's buy charge is allocated once across its lifetime, not re-charged per sell (B-7)")
+    void record_whenALotIsSoldInPieces_theBuyChargeSumsToWhatWasPaid() {
+        // Given -- one lot of 3 units carrying Rs.10 of buy charge, sold one unit at a time.
+        // MatchedLot.originalQuantity is the quantity remaining BEFORE each sell, and nothing
+        // decrements the lot's stored charge, so each sell divides the FULL Rs.10 again.
+        AssetEntity asset = lot("buy-1", 3.0, 100.0, 10.0);
+        double allocated = 0;
+
+        // When -- three successive single-unit sells against the same lot
+        double[] remainingBefore = {3.0, 2.0, 1.0};
+        for (double before : remainingBefore) {
+            recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY), "sell-" + before,
+                    List.of(new TradeOutcomeRecorder.MatchedLot(asset, 1.0, before)),
+                    Optional.of(computation(Map.of("BROKERAGE", 3.0))));
+            asset.setQuantity(before - 1.0);
+        }
+
+        // Then -- the lot cost Rs.10 to buy, so Rs.10 is all that may ever be deducted
+        for (TradeOutcomeContext row : captureSaved(3)) {
+            allocated = TMoney.add(allocated, row.getBuyBrokerCharges());
+        }
+        MoneyAssert.assertCanonical("lifetime buy charge allocated", 10.00, allocated);
+    }
 }

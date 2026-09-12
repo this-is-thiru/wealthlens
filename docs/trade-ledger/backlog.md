@@ -81,25 +81,41 @@ expected to return nothing. It becomes urgent the first time they do not.
 
 ---
 
-## B-7 — A lot's buy charge is re-allocated on every partial sell
+## B-8 — V1 over-allocates a lot's buy charge, exactly as V2 did
 
-B-6 fixed allocation *within* one sell. The buy side has the same problem *across time* and it is
-not fixed.
+**This is the same defect as B-7, still live in V1**, in two places:
 
-A lot of 3 units carrying ₹10 of buy charge, sold one unit at a time, allocates
-`10 × 1/3 = 3.33` each time — ₹9.99 of a ₹10.00 charge, and nothing tracks what has already been
-allocated. Sell it in two halves and the arithmetic differs again.
+- `PortfolioService.toTradeOutcomeContext` — `(assetEntity.getBrokerCharges() / assetQuantity) * sellQuantity`
+- `ProfitAndLossContext.perUnit` — same shape, now guarded against divide-by-zero but not against
+  re-charging
 
-Harder than B-6 because the lots are consumed over time: the allocation cannot be computed in one
-pass, since the future sells are not known when the first one runs.
+A 3-unit lot carrying ₹10, sold one unit at a time, deducts ₹3.33, then ₹5.00, then ₹10.00 —
+**₹18.33 against ₹10.00 paid**. It inflates the cost base and understates the gain, which is the
+direction that under-reports tax.
 
-**Done looks like.** `AssetEntity` carries `allocatedBuyCharges`, and each sell takes
-`min(remaining, its share)` — so the last sell of a lot picks up whatever paise are left and the
-lifetime allocation sums exactly. Needs care with a lot that is never fully sold.
+**Not fixed because it is a genuine logic change to a live path**, unlike the canonicalisation in
+B-5 which moved only the last bits of a double. The fix is the one V2 now uses: allocate from
+`brokerCharges - allocatedBuyCharges` rather than from the full charge, and update the running
+total. `AssetEntity` already carries the fields, and V1's `sellStock` already saves the holdings
+afterwards, so it is mechanically the same change.
 
-**Why it matters less than B-6.** It is a rounding residue on a cost base, not a mismatch against a
-figure a broker will hand you on a statement. Real, bounded, and worth doing when the buy side is
-next touched.
+**Needs the owner's decision**, because it changes the figures V1 writes from wrong to right, and
+any lot already partially sold has over-deducted amounts sitting in `trade_outcomes` and
+`profit_and_loss` that the code fix does not correct.
+
+---
+
+## B-9 — `TestController` mutates state without saving the lots
+
+`POST /test/user/{email}/transact/sell` (authenticated — it is in `AuthConfig`'s list) takes
+`stockEntities` from the request body and calls the V2 sell helper, but never saves them.
+
+So it writes profit and loss, charge records and trade outcomes, while discarding the lot mutations
+— including the quantity decrement and, since B-7, `allocatedBuyCharges`. The next real sell of
+those lots would re-deduct the buy charge, which is the bug B-7 just closed.
+
+**Done looks like.** Either the endpoint saves what it mutates, or it goes. It reads as a debugging
+aid that outlived its purpose; nothing in the repository calls it.
 
 ---
 
@@ -126,6 +142,13 @@ migration the answer after all. This entry stays as the pointer to that decision
   parts sum to the whole by construction rather than by a correction pass. Chosen over
   largest-remainder, which needs a sort and a tie-break rule. Each row's lumped total is derived
   from its own allocated lines.
+- **B-7 — a lot's buy charge was re-charged on every partial sell.** *(2026-09-12)* Worse than the
+  rounding residue this entry originally claimed: `MatchedLot.originalQuantity` is the quantity
+  remaining *before* a sell, and nothing decremented the stored charge, so a 3-unit lot carrying ₹10
+  sold one unit at a time deducted ₹3.33, ₹5.00 and ₹10.00 — **₹18.33 against ₹10.00 paid**,
+  inflating the cost base and understating the gain. `AssetEntity` now carries
+  `allocatedBuyCharges`, and each sell takes a share of what is left, so the last one necessarily
+  takes the remainder. Still live in V1 — see B-8.
 - **A zero-quantity lot wrote `Infinity` into profit and loss.** *(2026-09-12)*
   `ProfitAndLossContext.from` divided a charge by the lot's quantity with no guard, so a
   zero-quantity asset produced `10.0 / 0.0`. It never threw, and the test covering it was named

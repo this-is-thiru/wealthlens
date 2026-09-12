@@ -119,8 +119,8 @@ public class TradeOutcomeRecorder {
         // separately, so "the total equals the sum of the columns beside it" holds per row as well
         // as across rows. Two figures that must agree come from one.
         double sellCharges = TMoney.sum(sellBreakup.values());
-        double buyCharges = TMoney.scale(asset.getBrokerCharges() * buyShare);
-        double buyMiscCharges = TMoney.scale(asset.getMiscCharges() * buyShare);
+        double buyCharges = deductFromLot(asset, buyShare, true);
+        double buyMiscCharges = deductFromLot(asset, buyShare, false);
         // Misc charges stay user-entered -- the engine does not produce them, so there is no
         // computed figure to prefer over this one, unlike the broker charge above.
         double sellMiscCharges = TMoney.scale(sell.getMiscCharges() * sellShare);
@@ -207,6 +207,40 @@ public class TradeOutcomeRecorder {
                 .flatMap(id -> userChargeService.findOptionalForTransaction(userMail.getEmail(), id))
                 .map(UserChargeEntity::getAmountByCode)
                 .orElseGet(Map::of);
+    }
+
+    /**
+     * This sell's share of a buy-side charge, taken from <em>what is left</em> of it (B-7).
+     *
+     * <p>{@code MatchedLot.originalQuantity} is the quantity remaining before this sell, not the
+     * lot's original size, and nothing decremented the stored charge — so dividing the full charge
+     * by it re-charged the lot on every partial sell. A 3-unit lot carrying ₹10, sold one unit at a
+     * time, deducted ₹3.33, then ₹5.00 (half of the whole ₹10 again), then ₹10.00: ₹18.33 against
+     * ₹10.00 paid, inflating the cost base and understating the gain.
+     *
+     * <p>Taking a share of the <em>remainder</em> instead makes the lifetime allocation sum to what
+     * was paid, and the final sell — where {@code quantity == originalQuantity} — necessarily takes
+     * whatever is left, so nothing is stranded and nothing is double-counted.
+     *
+     * <p>Mutates the lot. {@code sellStockV2} saves the holdings after this runs, so the running
+     * total persists; a caller that does not save would silently lose it, which is why this lives
+     * beside the code that mutates the quantity rather than somewhere further away.
+     */
+    private static double deductFromLot(AssetEntity asset, double buyShare, boolean broker) {
+        double paid = broker ? asset.getBrokerCharges() : asset.getMiscCharges();
+        double alreadyDeducted = broker ? asset.getAllocatedBuyCharges() : asset.getAllocatedBuyMiscCharges();
+        double remaining = TMoney.scale(paid - alreadyDeducted);
+        if (remaining <= 0) {
+            return 0.0;
+        }
+
+        double share = TMoney.scale(remaining * buyShare);
+        if (broker) {
+            asset.setAllocatedBuyCharges(TMoney.add(alreadyDeducted, share));
+        } else {
+            asset.setAllocatedBuyMiscCharges(TMoney.add(alreadyDeducted, share));
+        }
+        return share;
     }
 
     /** One lot's share of a charge breakdown, pro-rated by quantity. */
