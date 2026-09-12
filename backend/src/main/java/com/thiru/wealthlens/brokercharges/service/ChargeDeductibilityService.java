@@ -3,6 +3,7 @@ package com.thiru.wealthlens.brokercharges.service;
 import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
 import com.thiru.wealthlens.brokercharges.repository.ChargeCatalogueRepository;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -46,18 +47,25 @@ public class ChargeDeductibilityService {
     }
 
     private boolean isDeductible(String code) {
-        return chargeCatalogueRepository.findByCode(code)
-                .map(ChargeCatalogueEntity::getDeductibleForCapitalGains)
-                .map(deductible -> {
-                    if (!deductible) {
-                        log.debug("Charge code {} is not deductible against capital gains", code);
-                    }
-                    return deductible;
-                })
-                .orElseGet(() -> {
-                    log.warn("Charge code {} is not in the catalogue, so it cannot be shown to be"
-                            + " deductible; excluding it from the deductible cost", code);
-                    return false;
-                });
+        Optional<ChargeCatalogueEntity> entry = chargeCatalogueRepository.findByCode(code);
+        if (entry.isEmpty()) {
+            log.warn("Charge code {} is not in the catalogue, so it cannot be shown to be deductible;"
+                    + " excluding it from the deductible cost", code);
+            return false;
+        }
+        Boolean deductible = entry.get().getDeductibleForCapitalGains();
+        if (deductible == null) {
+            // Distinct from the branch above, and the distinction matters operationally: the code
+            // IS catalogued, it just predates the flag. Reporting it as absent from the catalogue
+            // sends whoever reads this log looking in the wrong place.
+            log.warn("Charge code {} is catalogued but does not declare deductibleForCapitalGains,"
+                    + " so it is excluded from the deductible cost. Re-run POST /charges/seed to"
+                    + " backfill it", code);
+            return false;
+        }
+        if (!deductible) {
+            log.debug("Charge code {} is not deductible against capital gains", code);
+        }
+        return deductible;
     }
 }

@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -45,6 +46,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationContext;
@@ -85,7 +87,7 @@ class ChargeSeederServiceTest {
         chargeInstrumentResolver = mock(ChargeInstrumentResolver.class);
 
         // Nothing seeded yet, and the catalogue answers with whatever the seeder just wrote to it.
-        when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(false);
+        when(chargeCatalogueRepository.findByCode(anyString())).thenReturn(Optional.empty());
         when(chargeScheduleRepository.findByScheduleCode(anyString())).thenReturn(Optional.empty());
         when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
                 .thenReturn(Optional.empty());
@@ -269,7 +271,13 @@ class ChargeSeederServiceTest {
     @Test
     void seed_whenEverythingIsAlreadyOnFile_reportsThatItWroteNothing() {
         // Given — the second run of a deployment checklist, which must be boring
-        when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(true);
+        // Already on file AND already declaring deductibility, so the backfill is a no-op.
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity stored = new ChargeCatalogueEntity();
+            stored.setCode(invocation.getArgument(0));
+            stored.setDeductibleForCapitalGains(true);
+            return Optional.of(stored);
+        });
         when(chargeScheduleRepository.findByScheduleCode(anyString()))
                 .thenAnswer(call -> shipped(call.getArgument(0)));
         when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
@@ -605,7 +613,13 @@ class ChargeSeederServiceTest {
     @Test
     void seed_whenACardIsAlreadyOnFile_doesNotWriteItAgain() {
         // Given — the seeder runs on every startup
-        when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(true);
+        // Already on file AND already declaring deductibility, so the backfill is a no-op.
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity stored = new ChargeCatalogueEntity();
+            stored.setCode(invocation.getArgument(0));
+            stored.setDeductibleForCapitalGains(true);
+            return Optional.of(stored);
+        });
         when(chargeScheduleRepository.findByScheduleCode(anyString()))
                 .thenReturn(Optional.of(new ChargeScheduleEntity()));
         when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
@@ -1001,5 +1015,56 @@ class ChargeSeederServiceTest {
         } catch (java.io.IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Test
+    @DisplayName("seeding backfills deductibility onto a code stored before the flag existed")
+    void seed_whenAStoredCodeDoesNotDeclareDeductibility_backfillsIt() {
+        // Given -- a catalogue seeded before TL-5. Without the backfill every charge reads as
+        // non-deductible, so every trade outcome records zero deductible cost.
+        when(chargeScheduleRepository.findByScheduleCode(anyString()))
+                .thenAnswer(call -> shipped(call.getArgument(0)));
+        when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
+                .thenReturn(Optional.of(new ChargeInstrumentEntity()));
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity stored = new ChargeCatalogueEntity();
+            stored.setCode(invocation.getArgument(0));
+            stored.setDeductibleForCapitalGains(null);
+            return Optional.of(stored);
+        });
+
+        // When
+        seeder.seed(AUDITOR);
+
+        // Then -- STT is backfilled as false, brokerage as true; nothing is invented
+        ArgumentCaptor<ChargeCatalogueEntity> captor = ArgumentCaptor.forClass(ChargeCatalogueEntity.class);
+        verify(chargeCatalogueRepository, atLeastOnce()).save(captor.capture());
+        Map<String, Boolean> written = captor.getAllValues().stream()
+                .collect(Collectors.toMap(ChargeCatalogueEntity::getCode,
+                        ChargeCatalogueEntity::getDeductibleForCapitalGains, (a, _) -> a));
+        assertThat(written.get("STT")).isFalse();
+        assertThat(written.get("BROKERAGE")).isTrue();
+    }
+
+    @Test
+    @DisplayName("a code that already declares deductibility is never rewritten")
+    void seed_whenAStoredCodeAlreadyDeclaresDeductibility_leavesItAlone() {
+        // Given -- a deliberate value must not be clobbered by a re-seed
+        when(chargeScheduleRepository.findByScheduleCode(anyString()))
+                .thenAnswer(call -> shipped(call.getArgument(0)));
+        when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
+                .thenReturn(Optional.of(new ChargeInstrumentEntity()));
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity stored = new ChargeCatalogueEntity();
+            stored.setCode(invocation.getArgument(0));
+            stored.setDeductibleForCapitalGains(false);
+            return Optional.of(stored);
+        });
+
+        // When
+        seeder.seed(AUDITOR);
+
+        // Then
+        verify(chargeCatalogueRepository, never()).save(any(ChargeCatalogueEntity.class));
     }
 }

@@ -80,4 +80,23 @@ class ChargeDeductibilityServiceTest {
         MoneyAssert.assertMoney(0.0, chargeDeductibilityService.deductibleTotal(null));
         MoneyAssert.assertMoney(0.0, chargeDeductibilityService.deductibleTotal(Map.of()));
     }
+
+    @Test
+    @DisplayName("a code catalogued before the flag existed is excluded, not assumed deductible")
+    void deductibleTotal_whenTheStoredCodeDoesNotDeclareTheFlag_excludesIt() {
+        // Given -- exactly what a charge_catalogue seeded before TL-5 holds. This is the state that
+        // makes every trade record zero deductible cost until POST /charges/seed backfills it.
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity entry = new ChargeCatalogueEntity();
+            entry.setCode(invocation.getArgument(0));
+            entry.setDeductibleForCapitalGains(null);
+            return Optional.of(entry);
+        });
+        Map<String, Double> breakdown = new LinkedHashMap<>();
+        breakdown.put("BROKERAGE", 20.0);
+        breakdown.put("GST", 3.6);
+
+        // When / Then
+        MoneyAssert.assertMoney(0.0, chargeDeductibilityService.deductibleTotal(breakdown));
+    }
 }

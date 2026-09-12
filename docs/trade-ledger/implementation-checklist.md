@@ -6,9 +6,10 @@ lost, resume from the first unticked box.
 **Branch:** `feature/charges-engine` (this work continues on it; the charges engine itself is
 complete — see `../charges-engine/README.md`).
 **Status:** 7 of 8 items done. **Resume at TL-8** — a decision, not a build.
-**Last updated:** 2026-09-12 — 901 tests green (unit + integration), both JaCoCo gates passing,
+**Last updated:** 2026-09-12 — 907 tests green (unit + integration), both JaCoCo gates passing,
 surefire XML gate clean, spotless clean.
 **Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
+**Deploying:** [`migration.md`](migration.md) — two mandatory data steps and three checks. Read it before any deploy.
 
 ---
 
