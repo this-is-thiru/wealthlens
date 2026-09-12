@@ -26,6 +26,7 @@ import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -300,4 +301,73 @@ class TradeOutcomeRecorderTest {
         }
     }
 
+
+    @Test
+    @DisplayName("the allocated sell charges sum to exactly what was charged (B-6)")
+    void record_whenSplitThreeWays_theAllocatedChargesSumToTheWhole() {
+        // Given -- Rs.100 across three equal lots does not divide into paise
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 0.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-2", 0.0, 100.0, 0.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-3", 0.0, 100.0, 0.0), 1.0, 1.0));
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(3.0, 200.0, TradeSegment.DELIVERY), "sell-1",
+                lots, Optional.of(computation(Map.of("BROKERAGE", 100.0))));
+
+        // Then -- 33.33 + 33.33 + 33.33 would be 99.99, a paisa short of what the broker charged
+        List<TradeOutcomeContext> rows = captureSaved(3);
+        MoneyAssert.assertCanonical("allocated total", 100.0,
+                TMoney.sum(rows.stream().map(TradeOutcomeContext::getSellBrokerCharges).toList()));
+        MoneyAssert.assertCanonical("allocated BROKERAGE", 100.0,
+                TMoney.sum(rows.stream().map(r -> r.getSellChargeBreakup().get("BROKERAGE")).toList()));
+    }
+
+    @Test
+    @DisplayName("every charge code is allocated whole, not just the lumped total")
+    void record_whenSplitAcrossLots_everyCodeSumsToItsOwnTotal() {
+        // Given -- three codes, none dividing evenly by three
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 0.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-2", 0.0, 100.0, 0.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-3", 0.0, 100.0, 0.0), 1.0, 1.0));
+        Map<String, Double> byCode = new LinkedHashMap<>();
+        byCode.put("BROKERAGE", 20.00);
+        byCode.put("STT", 100.00);
+        byCode.put("GST", 3.61);
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(3.0, 200.0, TradeSegment.DELIVERY), "sell-1",
+                lots, Optional.of(computation(byCode)));
+
+        // Then
+        List<TradeOutcomeContext> rows = captureSaved(3);
+        byCode.forEach((code, expected) -> MoneyAssert.assertCanonical(code, expected,
+                TMoney.sum(rows.stream().map(r -> r.getSellChargeBreakup().get(code)).toList())));
+        // and each row's lumped total is the sum of its own lines, not a separate calculation
+        for (TradeOutcomeContext row : rows) {
+            MoneyAssert.assertCanonical("row total equals its lines",
+                    TMoney.sum(row.getSellChargeBreakup().values()), row.getSellBrokerCharges());
+        }
+    }
+
+    @Test
+    @DisplayName("an uneven split allocates in proportion, and still sums to the whole")
+    void record_whenLotsAreUnequal_allocatesInProportion() {
+        // Given -- 1 unit and 2 units of a 3-unit sell
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 0.0), 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-2", 0.0, 100.0, 0.0), 2.0, 2.0));
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(3.0, 200.0, TradeSegment.DELIVERY), "sell-1",
+                lots, Optional.of(computation(Map.of("BROKERAGE", 10.00))));
+
+        // Then
+        List<TradeOutcomeContext> rows = captureSaved(2);
+        MoneyAssert.assertCanonical("one third", 3.33, rows.get(0).getSellBrokerCharges());
+        MoneyAssert.assertCanonical("two thirds", 6.67, rows.get(1).getSellBrokerCharges());
+        MoneyAssert.assertCanonical("sums to the whole", 10.00,
+                TMoney.sum(rows.stream().map(TradeOutcomeContext::getSellBrokerCharges).toList()));
+    }
 }

@@ -16,6 +16,7 @@ import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,27 +58,67 @@ public class TradeOutcomeRecorder {
             return;
         }
 
-        for (MatchedLot lot : lots) {
+        List<Map<String, Double>> sellAllocation = allocate(
+                sellComputation.map(ChargeComputation::amountByCode).orElseGet(Map::of),
+                lots, totalSellQuantity);
+
+        for (int i = 0; i < lots.size(); i++) {
             tradeOutcomeService.saveTradeOutcome(userMail,
-                    buildRow(userMail, sell, sellTransactionId, lot, sellComputation, totalSellQuantity));
+                    buildRow(userMail, sell, sellTransactionId, lots.get(i), sellAllocation.get(i),
+                            lots.get(i).quantity() / totalSellQuantity));
         }
     }
 
+    /**
+     * Splits each charge code across the lots so the parts sum to the whole (B-6).
+     *
+     * <p>Pro-rating and rounding independently loses money: ₹100 across three lots is ₹33.33 each,
+     * which is ₹99.99 against ₹100.00 actually charged. A paisa per split sell, and the sum of a
+     * sell's {@code trade_outcomes} charges then disagrees with its {@code user_charges} total.
+     *
+     * <p>So each lot gets <em>the running total up to it, minus what has already been handed
+     * out</em>. The last lot's running total is the whole amount by definition, so the allocation
+     * sums exactly — <b>by construction rather than by a correction pass</b>. That is why this is
+     * preferred over largest-remainder, which reaches the same place but needs a sort and a
+     * tie-break rule, both of which are things to get wrong.
+     *
+     * <p>Allocation is per <em>code</em>, not on the lumped total, so every code sums to its own
+     * figure and a row's total can be derived from its own lines. Which lot receives a leftover
+     * paisa depends on position — and position here is FIFO lot order, which is already the
+     * ordering the domain assigns meaning to.
+     */
+    private static List<Map<String, Double>> allocate(Map<String, Double> breakup,
+                                                      List<MatchedLot> lots, double totalQuantity) {
+        List<Map<String, Double>> perLot = new ArrayList<>();
+        for (int i = 0; i < lots.size(); i++) {
+            perLot.add(new LinkedHashMap<>());
+        }
+        breakup.forEach((code, amount) -> {
+            double total = amount == null ? 0.0 : amount;
+            double cumulativeQuantity = 0;
+            double allocated = 0;
+            for (int i = 0; i < lots.size(); i++) {
+                cumulativeQuantity += lots.get(i).quantity();
+                double upToHere = TMoney.scale(total * cumulativeQuantity / totalQuantity);
+                perLot.get(i).put(code, TMoney.scale(upToHere - allocated));
+                allocated = upToHere;
+            }
+        });
+        return perLot;
+    }
+
     private TradeOutcomeContext buildRow(UserMail userMail, AssetRequest sell, String sellTransactionId,
-                                         MatchedLot lot, Optional<ChargeComputation> sellComputation,
-                                         double totalSellQuantity) {
+                                         MatchedLot lot, Map<String, Double> sellBreakup,
+                                         double sellShare) {
         AssetEntity asset = lot.asset();
-        double sellShare = lot.quantity() / totalSellQuantity;
         double buyShare = lot.originalQuantity() > 0 ? lot.quantity() / lot.originalQuantity() : 0.0;
 
-        Map<String, Double> sellBreakup = share(
-                sellComputation.map(ChargeComputation::amountByCode).orElseGet(Map::of), sellShare);
         Map<String, Double> buyBreakup = share(buyBreakupFor(userMail, asset), buyShare);
 
-        // Pro-rating divides, so every figure below is canonicalised to paise before it is stored
-        // (TL-8). A three-way split of Rs.100 is 33.33333333333333 otherwise, which is not an
-        // amount of money and has no business on a row a tax return is filed from.
-        double sellCharges = TMoney.scale(sellComputation.map(ChargeComputation::total).orElse(0.0) * sellShare);
+        // The lumped total is derived from this row's own allocated lines rather than computed
+        // separately, so "the total equals the sum of the columns beside it" holds per row as well
+        // as across rows. Two figures that must agree come from one.
+        double sellCharges = TMoney.sum(sellBreakup.values());
         double buyCharges = TMoney.scale(asset.getBrokerCharges() * buyShare);
         double buyMiscCharges = TMoney.scale(asset.getMiscCharges() * buyShare);
         // Misc charges stay user-entered -- the engine does not produce them, so there is no

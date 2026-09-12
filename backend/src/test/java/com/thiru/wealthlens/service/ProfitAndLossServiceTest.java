@@ -11,17 +11,20 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
 import com.thiru.wealthlens.brokercharges.entity.model.MonthlyChargeSummary;
 import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
+import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.FinancialReportResponse;
 import com.thiru.wealthlens.portfolio.dto.MonthlyReportResponse;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.dto.ReportModelResponse;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
+import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.HoldingPeriodPolicyEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
@@ -930,5 +933,79 @@ class ProfitAndLossServiceTest {
         FinancialReport yearly = accumulating.getRealisedProfits().getShortTermCapitalGains();
         assertEquals(1.00, yearly.getSellAmount());
         assertEquals(0.50, yearly.getPurchaseAmount());
+    }
+
+    @Test
+    void updateProfitAndLoss_v1_accumulatingManySells_keepsTheStoredTotalExact() {
+        // Given -- the same ten Rs.0.10 sells, through the V1 overload (B-5). Canonicalising here
+        // changes no logic: the same amounts fold into the same fields in the same order.
+        ProfitAndLossEntity accumulating = new ProfitAndLossEntity(TEST_EMAIL, "2023-2024");
+        when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024"))
+                .thenReturn(Optional.of(accumulating));
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AssetEntity lot = new AssetEntity();
+        lot.setPrice(0.05);
+        lot.setQuantity(100.0);
+        lot.setTransactionDate(LocalDate.of(2023, 6, 15));
+        lot.setAssetType(AssetType.EQUITY);
+
+        AssetRequest sell = new AssetRequest();
+        sell.setPrice(0.10);
+        sell.setQuantity(1.0);
+        sell.setTransactionDate(LocalDate.of(2023, 12, 15));
+        sell.setAssetType(AssetType.EQUITY);
+        sell.setAccountType(AccountType.SELF);
+
+        // When
+        for (int i = 0; i < 10; i++) {
+            profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL),
+                    ProfitAndLossContext.from(lot, sell, 1.0));
+        }
+
+        // Then -- raw += gives 0.9999999999999999 here too
+        FinancialReport yearly = accumulating.getRealisedProfits().getShortTermCapitalGains();
+        MoneyAssert.assertCanonical("V1 sell amount", 1.00, yearly.getSellAmount());
+        MoneyAssert.assertCanonical("V1 purchase amount", 0.50, yearly.getPurchaseAmount());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenTheLotHasZeroQuantity_writesZeroChargeRatherThanInfinity() {
+        // Given -- a charge divided by zero quantity. This used to produce Infinity, which was
+        // accumulated into the period and stored; every later trade then added to Infinity and
+        // stayed there. It never threw, so it read as handled.
+        ProfitAndLossEntity accumulating = new ProfitAndLossEntity(TEST_EMAIL, "2024-2025");
+        when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2024-2025"))
+                .thenReturn(Optional.of(accumulating));
+        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AssetEntity zeroQuantityLot = new AssetEntity();
+        zeroQuantityLot.setPrice(100.0);
+        zeroQuantityLot.setQuantity(0.0);
+        zeroQuantityLot.setBrokerCharges(10.0);
+        zeroQuantityLot.setMiscCharges(5.0);
+        zeroQuantityLot.setTransactionDate(LocalDate.of(2024, 6, 15));
+        zeroQuantityLot.setAssetType(AssetType.EQUITY);
+
+        AssetRequest sell = new AssetRequest();
+        sell.setPrice(150.0);
+        sell.setQuantity(1.0);
+        sell.setBrokerCharges(8.0);
+        sell.setTransactionDate(LocalDate.of(2024, 12, 15));
+        sell.setAssetType(AssetType.EQUITY);
+        sell.setAccountType(AccountType.SELF);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL),
+                ProfitAndLossContext.from(zeroQuantityLot, sell, 1.0));
+
+        // Then -- nothing stored may be non-finite, at any level of the hierarchy
+        FinancialReport yearly = accumulating.getRealisedProfits().getShortTermCapitalGains();
+        assertTrue(Double.isFinite(yearly.getBrokerage()), "brokerage was " + yearly.getBrokerage());
+        assertTrue(Double.isFinite(yearly.getMiscCharges()), "miscCharges was " + yearly.getMiscCharges());
+        assertTrue(Double.isFinite(yearly.getProfit()), "profit was " + yearly.getProfit());
+        MoneyAssert.assertCanonical("no charge can be spread over zero units", 8.0, yearly.getBrokerage());
     }
 }

@@ -32,12 +32,32 @@ public final class TMoney {
 
     /** One amount, rounded to paise. HALF_UP, which is how money rounds outside of banking. */
     public static double scale(double amount) {
-        return BigDecimal.valueOf(amount).setScale(PAISE_SCALE, RoundingMode.HALF_UP).doubleValue();
+        return BigDecimal.valueOf(finite(amount)).setScale(PAISE_SCALE, RoundingMode.HALF_UP).doubleValue();
+    }
+
+    /**
+     * Rejects a non-finite amount, loudly and by name.
+     *
+     * <p>{@code BigDecimal.valueOf} already refuses these, but with
+     * {@code NumberFormatException: Infinite or NaN}, which says nothing about where the money came
+     * from. NaN and Infinity reach here from a divide by zero — a charge spread over zero units —
+     * and the reason to fail rather than coerce to zero is that they <b>propagate</b>: one poisoned
+     * amount makes every subsequent total in that document non-finite, permanently. Better to stop
+     * the trade than to corrupt the record silently, which is what adding raw doubles did.
+     */
+    private static double finite(double amount) {
+        if (Double.isNaN(amount) || Double.isInfinite(amount)) {
+            throw new IllegalArgumentException(
+                    "A money amount was " + amount + ", which usually means a divide by zero"
+                            + " upstream — a charge spread over zero quantity. Refusing it here"
+                            + " rather than letting it propagate through the stored totals.");
+        }
+        return amount;
     }
 
     /** Two amounts added exactly, then canonicalised. */
     public static double add(double left, double right) {
-        return scaled(BigDecimal.valueOf(left).add(BigDecimal.valueOf(right)));
+        return scaled(BigDecimal.valueOf(finite(left)).add(BigDecimal.valueOf(finite(right))));
     }
 
     /**
@@ -50,7 +70,7 @@ public final class TMoney {
     public static double sum(Collection<Double> amounts) {
         BigDecimal total = BigDecimal.ZERO;
         for (Double amount : amounts) {
-            total = total.add(amount == null ? BigDecimal.ZERO : BigDecimal.valueOf(amount));
+            total = total.add(amount == null ? BigDecimal.ZERO : BigDecimal.valueOf(finite(amount)));
         }
         return scaled(total);
     }

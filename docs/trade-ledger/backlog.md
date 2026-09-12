@@ -81,35 +81,25 @@ expected to return nothing. It becomes urgent the first time they do not.
 
 ---
 
-## B-5 — V1 writes uncanonicalised amounts into the same fields
+## B-7 — A lot's buy charge is re-allocated on every partial sell
 
-TL-8 canonicalises the V2 accumulation in `ProfitAndLossService` (`InternalContext`, the
-`update*TransactionReport` family). The V1 family (`InternalTransactionContext`,
-`updateReportMetadata` and `updateFortnightReport`) still accumulates with raw `+=`, because it is
-the live V1 sell path and is not to be touched.
+B-6 fixed allocation *within* one sell. The buy side has the same problem *across time* and it is
+not fixed.
 
-So `profit_and_loss` now holds canonical amounts where V2 wrote and drifted ones where V1 did, in
-the same fields. That is strictly better than uniform drift — each write is independently more
-correct — but it is not uniform, and it should be said out loud rather than discovered.
+A lot of 3 units carrying ₹10 of buy charge, sold one unit at a time, allocates
+`10 × 1/3 = 3.33` each time — ₹9.99 of a ₹10.00 charge, and nothing tracks what has already been
+allocated. Sell it in two halves and the arithmetic differs again.
 
-**Done looks like.** The V1 family uses `TMoney.add` too, taken with whatever else retires V1.
+Harder than B-6 because the lots are consumed over time: the allocation cannot be computed in one
+pass, since the future sells are not known when the first one runs.
 
----
+**Done looks like.** `AssetEntity` carries `allocatedBuyCharges`, and each sell takes
+`min(remaining, its share)` — so the last sell of a lot picks up whatever paise are left and the
+lifetime allocation sums exactly. Needs care with a lot that is never fully sold.
 
-## B-6 — Pro-rating loses a paisa across lots
-
-Splitting a ₹100 sell charge across three lots gives ₹33.33 each once canonicalised: ₹99.99
-recorded against ₹100.00 charged. Found by the TL-8 test that made pro-rated amounts canonical.
-
-Before TL-8 the three rows held `33.33333333333333`, which summed correctly and was not an amount of
-money. Now they hold real paise that sum a paisa short. The second is more honest and still wrong.
-
-**Why it matters.** The sum of a sell's `trade_outcomes` charges no longer equals its
-`user_charges` total, so anything reconciling those two will see a one-paisa gap per split sell.
-
-**Done looks like.** Largest-remainder allocation in `TradeOutcomeRecorder.share` — floor every
-share, then hand the leftover paise to the largest fractional parts, so the parts sum to the whole.
-Standard, small, and needs a test that the allocation is stable rather than order-dependent.
+**Why it matters less than B-6.** It is a rounding residue on a cost base, not a mismatch against a
+figure a broker will hand you on a statement. Real, bounded, and worth doing when the buy side is
+next touched.
 
 ---
 
@@ -125,6 +115,24 @@ for the measurements, and its §7 for the five triggers that would make a full `
 migration the answer after all. This entry stays as the pointer to that decision.
 
 ---
+
+## Closed by fixing
+
+- **B-5 — V1 accumulated with raw `+=`.** *(2026-09-12)* Canonicalised through `TMoney` alongside
+  V2, with the owner's agreement that it changes no logic: the same amounts fold into the same
+  fields in the same order, and only the last bits of the stored double change.
+- **B-6 — pro-rating lost a paisa across lots.** *(2026-09-12)* Cumulative allocation per charge
+  code: each lot receives the running total up to it minus what has already been handed out, so the
+  parts sum to the whole by construction rather than by a correction pass. Chosen over
+  largest-remainder, which needs a sort and a tie-break rule. Each row's lumped total is derived
+  from its own allocated lines.
+- **A zero-quantity lot wrote `Infinity` into profit and loss.** *(2026-09-12)*
+  `ProfitAndLossContext.from` divided a charge by the lot's quantity with no guard, so a
+  zero-quantity asset produced `10.0 / 0.0`. It never threw, and the test covering it was named
+  `shouldHandleGracefully` — but the value was accumulated and stored, and `Infinity + anything`
+  stays `Infinity`, so one such asset poisoned every later total in that document permanently.
+  **Found only because TL-8 routed accumulation through `TMoney`, which refuses a non-finite
+  amount.** That is the case for canonicalising in one place rather than adding doubles inline.
 
 ## Closed by checking
 

@@ -159,12 +159,20 @@ public class ProfitAndLossService {
 		updateReportMetadata(financialReport, internalContext);
 	}
 
+    /**
+     * Accumulation is {@link TMoney#add}, not {@code +=} (TL-8, B-5).
+     *
+     * <p>This is the V1 family. Canonicalising here changes no logic and no flow — the same amounts
+     * are folded into the same fields in the same order; only the last few bits of the stored
+     * double change, from {@code 0.9999999999999999} to {@code 1.00}. Without it, one field holds
+     * canonical amounts where V2 wrote and drifted ones where V1 did.
+     */
     private static void updateReportMetadata(ReportModel metadata, InternalTransactionContext internalContext) {
-        metadata.setPurchaseAmount(metadata.getPurchaseAmount() + internalContext.getPurchasePrice());
-        metadata.setSellAmount(metadata.getSellAmount() + internalContext.getSellPrice());
-        metadata.setProfit(metadata.getProfit() + internalContext.getProfit());
-        metadata.setBrokerage(metadata.getBrokerage() + internalContext.getBrokerCharges());
-        metadata.setMiscCharges(metadata.getMiscCharges() + internalContext.getMiscCharges());
+        metadata.setPurchaseAmount(TMoney.add(metadata.getPurchaseAmount(), internalContext.getPurchasePrice()));
+        metadata.setSellAmount(TMoney.add(metadata.getSellAmount(), internalContext.getSellPrice()));
+        metadata.setProfit(TMoney.add(metadata.getProfit(), internalContext.getProfit()));
+        metadata.setBrokerage(TMoney.add(metadata.getBrokerage(), internalContext.getBrokerCharges()));
+        metadata.setMiscCharges(TMoney.add(metadata.getMiscCharges(), internalContext.getMiscCharges()));
 //        metadata.setLastUpdatedTime(LocalDateTime.now());
     }
 
@@ -197,16 +205,16 @@ public class ProfitAndLossService {
 
         double purchasePrice = profitAndLossContext.getPurchaseContext().getPrice()
                 * profitAndLossContext.getSellContext().getQuantity();
-        fortnightReport.setPurchaseAmount(fortnightReport.getPurchaseAmount() + purchasePrice);
+        fortnightReport.setPurchaseAmount(TMoney.add(fortnightReport.getPurchaseAmount(), purchasePrice));
 
         double sellPrice = profitAndLossContext.getSellContext().getPrice()
                 * profitAndLossContext.getSellContext().getQuantity();
-        fortnightReport.setSellAmount(fortnightReport.getSellAmount() + sellPrice);
+        fortnightReport.setSellAmount(TMoney.add(fortnightReport.getSellAmount(), sellPrice));
 
         double purchaseBrokerCharges = profitAndLossContext.getPurchaseContext().getBrokerCharges();
         double sellBrokerCharges = profitAndLossContext.getSellContext().getBrokerCharges();
         double brokerCharges = purchaseBrokerCharges + sellBrokerCharges;
-        fortnightReport.setBrokerage(fortnightReport.getBrokerage() + brokerCharges);
+        fortnightReport.setBrokerage(TMoney.add(fortnightReport.getBrokerage(), brokerCharges));
 
 		double purchaseMiscCharges = profitAndLossContext.getPurchaseContext().getMiscCharges();
 		double sellMiscCharges = profitAndLossContext.getSellContext().getMiscCharges();

@@ -6,7 +6,7 @@ lost, resume from the first unticked box.
 **Branch:** `feature/charges-engine` (this work continues on it; the charges engine itself is
 complete — see `../charges-engine/README.md`).
 **Status:** 8 of 8 done. Remaining work is in [`backlog.md`](backlog.md).
-**Last updated:** 2026-09-12 — 917 tests green (unit + integration), both JaCoCo gates passing,
+**Last updated:** 2026-09-12 — 922 tests green (unit + integration), both JaCoCo gates passing,
 surefire XML gate clean, spotless clean.
 **Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
 **Backlog:** [`backlog.md`](backlog.md) — found, real, deliberately not done.
@@ -257,8 +257,11 @@ blocking startup, so grep for `Could not create index` after deploying.
       ArchUnit rule verified to fail when a second is added. `MoneyAssert` gained `assertCanonical`
       and `assertCanonicalToPaise`, so a stored amount is compared exactly and the half-paisa
       tolerance is reserved for intermediates
-- [ ] Carried to backlog: **B-5** V1 still accumulates with raw `+=`; **B-6** pro-rating loses a
-      paisa across lots
+- [x] **B-5 and B-6 both closed 2026-09-12.** V1's accumulation canonicalised too; sell charges
+      allocated across lots by cumulative rounding so the parts sum to the whole. Doing so exposed
+      a zero-quantity lot writing `Infinity` into profit and loss — silent until `TMoney` refused
+      it. **B-7** carries the remaining case: a lot's buy charge is re-allocated on every partial
+      sell, with nothing tracking what was already allocated
 
 The engine computes in `BigDecimal` and rounds once, which is right — but every *stored* amount is a
 `double`. `ChargeSummaryReport.merge` already re-derives its total in `BigDecimal` on every write to
