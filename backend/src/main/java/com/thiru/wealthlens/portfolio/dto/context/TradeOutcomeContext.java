@@ -29,7 +29,7 @@ public class TradeOutcomeContext {
 
     // Buy side
     private double originalBuyPrice;
-    private double caAdjustedBuyPrice;
+    private double corporateActionAdjustedBuyPrice;
     private Double buyQuantity;
     private LocalDate buyDate;
     private double buyBrokerCharges;
@@ -56,6 +56,6 @@ public class TradeOutcomeContext {
     private String sourceBuyLotId;
 
     // CA tracking
-    private Boolean isCaDerived;
+    private Boolean corporateActionDerived;
     private List<CorporateActionEntity> appliedCorporateActions;
 }

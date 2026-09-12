@@ -350,7 +350,7 @@ class TradeMatchingServiceTest {
     }
 
     @Test
-    void shouldIdentifyCaDerivedBuys() {
+    void shouldIdentifyCorporateActionDerivedBuys() {
         // Given: A bonus buy (price=0)
         String email = "test@example.com";
         String stockCode = "RELIANCE";
@@ -370,7 +370,7 @@ class TradeMatchingServiceTest {
 
         // Then
         assertEquals(1, lots.size());
-        assertTrue(lots.get(0).isCaDerived());
+        assertTrue(lots.get(0).isCorporateActionDerived());
     }
 
     @Test
@@ -386,7 +386,7 @@ class TradeMatchingServiceTest {
                 .accountType(AccountType.SELF)
                 .accountHolder("main")
                 .originalBuyPrice(100.0)
-                .caAdjustedBuyPrice(100.0)
+                .corporateActionAdjustedBuyPrice(100.0)
                 .buyQuantity(10.0)
                 .buyDate(LocalDate.of(2023, 1, 15))
                 .buyBrokerCharges(10.0)
@@ -405,7 +405,7 @@ class TradeMatchingServiceTest {
                 .financialYear("FY2023-24")
                 .sourceSellTransactionId("sell-123")
                 .sourceBuyLotId("lot-RELIANCE-2023-01-15")
-                .isCaDerived(false)
+                .corporateActionDerived(false)
                 .appliedCorporateActions(null)
                 .build();
 
@@ -419,7 +419,7 @@ class TradeMatchingServiceTest {
         assertEquals(BrokerName.ZERODHA, entity.getBrokerName());
         assertEquals(AssetType.EQUITY, entity.getAssetType());
         assertEquals(100.0, entity.getOriginalBuyPrice(), 0.01);
-        assertEquals(100.0, entity.getCaAdjustedBuyPrice(), 0.01);
+        assertEquals(100.0, entity.getCorporateActionAdjustedBuyPrice(), 0.01);
         assertEquals(10.0, entity.getBuyQuantity(), 0.01);
         assertEquals(LocalDate.of(2023, 1, 15), entity.getBuyDate());
         assertEquals(150.0, entity.getSellPrice(), 0.01);
@@ -431,7 +431,7 @@ class TradeMatchingServiceTest {
         assertEquals("FY2023-24", entity.getFinancialYear());
         assertEquals("sell-123", entity.getSourceSellTransactionId());
         assertEquals("lot-RELIANCE-2023-01-15", entity.getSourceBuyLotId());
-        assertFalse(entity.getIsCaDerived());
+        assertFalse(entity.getCorporateActionDerived());
         assertNotNull(entity.getAuditMetadata());
     }
 

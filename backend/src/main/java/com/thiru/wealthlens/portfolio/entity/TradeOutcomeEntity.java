@@ -64,8 +64,14 @@ public class TradeOutcomeEntity implements AuditableEntity {
     @Field("original_buy_price")
     private double originalBuyPrice;
 
+    /**
+     * The buy price after corporate-action adjustment — bonus, split, demerger.
+     *
+     * <p>"CA" here is <b>corporate action</b>, never chartered accountant. The stored field keeps its
+     * original abbreviated name because live documents carry it; the Java name spells it out.
+     */
     @Field("ca_adjusted_buy_price")
-    private double caAdjustedBuyPrice;
+    private double corporateActionAdjustedBuyPrice;
 
     @Field("buy_quantity")
     private Double buyQuantity;
@@ -127,8 +133,15 @@ public class TradeOutcomeEntity implements AuditableEntity {
     private String sourceBuyLotId;
 
     // CA tracking
+    /**
+     * Whether this holding arose from a corporate action rather than a purchase — a bonus allotment
+     * or a split, which are issued free and so have no acquisition cost of their own.
+     *
+     * <p>"CA" here is <b>corporate action</b>. The stored field keeps its abbreviated name because
+     * live documents carry it; the Java name spells it out.
+     */
     @Field("is_ca_derived")
-    private Boolean isCaDerived;
+    private Boolean corporateActionDerived;
 
     @Field("applied_corporate_actions")
     private List<CorporateActionEntity> appliedCorporateActions = new ArrayList<>();

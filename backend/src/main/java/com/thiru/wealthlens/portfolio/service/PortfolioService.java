@@ -649,8 +649,8 @@ public class PortfolioService {
         double sellMiscCharges = (assetRequest.getMiscCharges() / sellReqQuantity) * sellQuantity;
 
         // Buy side values
-        double caAdjustedBuyPrice = assetEntity.getPrice();
-        double originalBuyPrice = caAdjustedBuyPrice; // Will improve later with source transaction data
+        double corporateActionAdjustedBuyPrice = assetEntity.getPrice();
+        double originalBuyPrice = corporateActionAdjustedBuyPrice; // Will improve later with source transaction data
         double buyQty = sellQuantity;
 
         // Sell side values
@@ -658,7 +658,7 @@ public class PortfolioService {
         double sellQty = sellQuantity;
 
         // Computed values
-        double totalBuyValue = (caAdjustedBuyPrice * sellQuantity) + buyBrokerCharges + buyMiscCharges;
+        double totalBuyValue = (corporateActionAdjustedBuyPrice * sellQuantity) + buyBrokerCharges + buyMiscCharges;
         double totalSellValue = (sellPrice * sellQuantity) - sellBrokerCharges - sellMiscCharges;
         double netProfit = totalSellValue - totalBuyValue;
         double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
@@ -671,7 +671,7 @@ public class PortfolioService {
         String financialYear = deriveFinancialYear(sellDate);
 
         // Check if CA-derived (bonus stock or price=0)
-        boolean isCaDerived = (assetEntity.getCorporateActions() != null && !assetEntity.getCorporateActions().isEmpty())
+        boolean corporateActionDerived = (assetEntity.getCorporateActions() != null && !assetEntity.getCorporateActions().isEmpty())
                 || (assetEntity.getPrice() == 0 && assetEntity.getCorporateActionType() != null);
 
         // Build context
@@ -685,7 +685,7 @@ public class PortfolioService {
                 .accountType(assetRequest.getAccountType())
                 .accountHolder(assetRequest.getAccountHolder())
                 .originalBuyPrice(originalBuyPrice)
-                .caAdjustedBuyPrice(caAdjustedBuyPrice)
+                .corporateActionAdjustedBuyPrice(corporateActionAdjustedBuyPrice)
                 .buyQuantity(buyQty)
                 .buyDate(buyDate)
                 .buyBrokerCharges(buyBrokerCharges)
@@ -704,7 +704,7 @@ public class PortfolioService {
                 .financialYear(financialYear)
                 .sourceSellTransactionId(transactionId)
                 .sourceBuyLotId(assetEntity.getId())
-                .isCaDerived(isCaDerived)
+                .corporateActionDerived(corporateActionDerived)
                 .appliedCorporateActions(assetEntity.getCorporateActions())
                 .build();
 

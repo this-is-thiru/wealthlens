@@ -7,6 +7,7 @@ lost, resume from the first unticked box.
 complete — see `../charges-engine/README.md`).
 **Status:** 3 of 8 items done. **Resume at TL-4.**
 **Last updated:** 2026-09-12 — 858 tests green, both JaCoCo gates passing, spotless clean.
+**Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
 
 ---
 
@@ -35,6 +36,7 @@ recorded nowhere else and cannot be reconstructed once the lots are consumed.
 | D2 | **Holding-period rules are data-driven**, validity-windowed per asset type — like rate cards. A rule change becomes a data change, and a backdated trade keeps the rule in force when it happened. Hardcoding today's thresholds was rejected for the same reason ADR-12 rejected editing rate cards | 2026-09-12 |
 | D3 | **Deductibility lives on the charge catalogue.** `deductibleForCapitalGains` per code, so each charge declares it once and the trade outcome sums only the deductible ones. Keeps "adding a charge is a data change" true | 2026-09-12 |
 | D4 | **Idempotency: client key if present, derived hash as fallback.** The client's key is authoritative when supplied; otherwise a hash of the trade's fields within a short window. Protects existing clients immediately and lets new ones do it properly | 2026-09-12 |
+| D6 | **"CA" means corporate action, never chartered accountant.** Java identifiers spell it out — `corporateActionAdjustedBuyPrice`, `corporateActionDerived`. The stored `@Field` names keep their abbreviated spelling so live documents are not orphaned; the divergence is documented on the fields | 2026-09-12 |
 | D5 | **No scheduler for AMC.** A due-query instead, so the gap is visible without anything billing money on a timer | 2026-09-11 |
 
 ---
@@ -68,14 +70,18 @@ rules are applied to mutual funds, bonds and gold bonds.
 - [ ] A validity-windowed policy per asset type (D2), seeded from JSON
 - [ ] One resolver both P&L and the trade outcome call — the rule must not exist in four places again
 - [ ] Replace all four hardcoded sites
-- [ ] Rules to encode, each with the date it took effect. **Confirm these against a CA before they
-      drive a filed number** — they changed in 2023 and again in 2024:
-      listed equity and equity MFs 12 months; non-equity 24 months from 23-Jul-2024; debt MFs
-      purchased on or after 01-Apr-2023 always short-term regardless of holding
-- [ ] **Open question — where does it live?** `taxplanning` already seeds policies from
-      `resources/data/tax-policies/*.json` and owns tax rules; this is a tax rule. But the consumer
-      is `portfolio`. Decide before writing the seed file: a new policy under `taxplanning` that
-      `portfolio` reads, or a `portfolio`-owned rule. **Needs the repository owner's steer.**
+- [ ] Rules to encode: **see [`holding-period-analysis.md`](holding-period-analysis.md)**, which
+      works them through per asset type with confidence stated per rule. The headlines: the result
+      type must allow `ALWAYS_SHORT_TERM` and `NOT_CAPITAL_GAINS`, not just a month count; two
+      different dates govern different rules (acquisition vs transfer); and `MUTUAL_FUND` cannot be
+      classified from `AssetType` alone
+- [x] **Where it lives: `portfolio`. Settled 2026-09-12.** **Do not put it in `taxplanning`** — that
+      module is salary-regime advisory (old vs new regime, perquisites, allowances) and is not used
+      by this flow. It shares the word "tax" and nothing else; linking the two would couple a trade
+      classifier to an unrelated advisory module. The rule classifies a *trade*, so it belongs where
+      trades live.
+- [ ] Seed file under `backend/src/main/resources/data/holding-periods/`, seeded by a
+      `portfolio`-owned seeder on the same terms as rate cards — explicit call, never at startup
 
 ### TL-5 — Charge deductibility on the catalogue *(blocks TL-6)*
 
@@ -96,7 +102,7 @@ Everything here touches the same row, so it ships together.
 - [ ] Sell-side charges from the **engine**, not `assetRequest.getBrokerCharges()`. Today the buy
       side uses the computed figure (under `authoritative`) and the sell side the deprecated
       user-entered one — mixed provenance in one row
-- [ ] `originalBuyPrice` to differ from `caAdjustedBuyPrice`. They are assigned identically today
+- [ ] `originalBuyPrice` to differ from `corporateActionAdjustedBuyPrice`. They are assigned identically today
       (`// Will improve later with source transaction data`), so the corporate-action adjustment the
       field exists to record is never recorded
 - [ ] Holding-period classification through TL-4's resolver
