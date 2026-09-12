@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
@@ -146,7 +147,10 @@ public class ChargeSeederService {
             // The gate every code enters through. A code is a Mongo field name downstream, so one
             // that cannot be used as a field name has to be refused here rather than at save time.
             ChargeCodes.validate(entry.getCode());
-            if (chargeCatalogueRepository.existsByCode(entry.getCode())) {
+            ChargeCodes.requireDeductibilityDeclared(entry);
+            Optional<ChargeCatalogueEntity> stored = chargeCatalogueRepository.findByCode(entry.getCode());
+            if (stored.isPresent()) {
+                backfillDeductibility(stored.get(), entry);
                 continue;
             }
             chargeCatalogueRepository.save(entry);
@@ -154,6 +158,27 @@ public class ChargeSeederService {
             log.info("Seeded charge code {}", entry.getCode());
         }
         return created;
+    }
+
+    /**
+     * Fills in {@code deductibleForCapitalGains} on a code seeded before the field existed.
+     *
+     * <p>Seeding otherwise skips a code that is already stored, which is right — a catalogue entry
+     * that has priced something should not be silently rewritten. But a row seeded before TL-5 has
+     * <b>no</b> value for this flag, and an absent flag is not read as "unknown": it makes every
+     * charge non-deductible, so a trade outcome records zero deductible cost, overstating the gain.
+     *
+     * <p>So the backfill is strictly a gap-filler — it writes only when the stored value is null,
+     * and never overwrites a value already there.
+     */
+    private void backfillDeductibility(ChargeCatalogueEntity stored, ChargeCatalogueEntity seed) {
+        if (stored.getDeductibleForCapitalGains() != null) {
+            return;
+        }
+        stored.setDeductibleForCapitalGains(seed.getDeductibleForCapitalGains());
+        chargeCatalogueRepository.save(stored);
+        log.info("Backfilled deductibleForCapitalGains={} on existing charge code {}",
+                seed.getDeductibleForCapitalGains(), stored.getCode());
     }
 
     private void seedSchedules(List<String> created, List<String> skipped) {

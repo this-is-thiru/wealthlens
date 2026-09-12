@@ -75,6 +75,24 @@ public class AssetEntity implements AuditableEntity {
     @Field("misc_charges")
     private double miscCharges;
 
+    /**
+     * How much of {@link #brokerCharges} has already been deducted by earlier sells of this lot.
+     *
+     * <p>Without it a partial sell divided the <em>full</em> charge by the quantity still remaining,
+     * so a 3-unit lot carrying ₹10 sold one unit at a time deducted ₹3.33, then ₹5.00, then ₹10.00
+     * — ₹18.33 against ₹10.00 actually paid. That inflates the cost base and understates the gain,
+     * which is the direction that under-reports tax (B-7).
+     *
+     * <p>Absent on a lot written before this field existed, which reads as zero. That is right for
+     * a lot never sold, and no worse than the old behaviour for one partially sold already.
+     */
+    @Field("allocated_buy_charges")
+    private double allocatedBuyCharges;
+
+    /** The same, for {@link #miscCharges}. */
+    @Field("allocated_buy_misc_charges")
+    private double allocatedBuyMiscCharges;
+
     @JsonFormat(pattern = TCollectionUtil.DATE_FORMAT)
     @Field("maturity_date")
     private LocalDate maturityDate;

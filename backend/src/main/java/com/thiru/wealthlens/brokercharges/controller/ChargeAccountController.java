@@ -56,6 +56,22 @@ public class ChargeAccountController {
      *
      * @return the accounts actually billed, so a caller can see what a run did rather than assume
      */
+    /**
+     * What an AMC run would bill, without billing it.
+     *
+     * <p>There is no scheduler: the cycle runs when somebody calls it. That makes silent
+     * non-billing the failure mode — months can pass with nobody billed and nothing saying so — and
+     * this is the endpoint that makes the gap visible. Safe to poll: it writes nothing and moves no
+     * billing watermark.
+     */
+    @PreAuthorize("hasRole('SUPER_USER')")
+    @GetMapping("/charge-accounts/due")
+    public List<ChargeAccountEntity> amcDue(
+            @RequestParam AmcChargeFrequency frequency,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate billedThrough) {
+        return amcChargeService.findDue(frequency, billedThrough);
+    }
+
     @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/charges/amc/impose")
     public List<ChargeAccountEntity> imposeAmc(

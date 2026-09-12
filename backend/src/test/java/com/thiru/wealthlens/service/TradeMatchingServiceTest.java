@@ -1,31 +1,57 @@
 package com.thiru.wealthlens.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.lenient;
 
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.entity.HoldingPeriodPolicyEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolver;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
+import com.thiru.wealthlens.portfolio.repository.HoldingPeriodPolicyRepository;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.BuyLot;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.MatchedTrade;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.SellRequest;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ClassPathResource;
 
 @ExtendWith(MockitoExtension.class)
 class TradeMatchingServiceTest {
 
-    @InjectMocks
+    @Mock
+    private HoldingPeriodPolicyRepository holdingPeriodPolicyRepository;
+
     private TradeMatchingService tradeMatchingService;
+
+    /**
+     * A real resolver over the shipped policies rather than a mock. These tests assert capital-gains
+     * classification, and a stubbed classifier would make every one of those assertions agree with
+     * whatever the stub was told to say.
+     */
+    @BeforeEach
+    void setUp() throws Exception {
+        String json = new String(new ClassPathResource(
+                "data/holding-periods/holding-period-policies.json").getInputStream().readAllBytes());
+        // Lenient: several tests here never reach a classification, and an unused stub is not a defect.
+        lenient().when(holdingPeriodPolicyRepository.findAll())
+                .thenReturn(TJsonMapper.readAsList(json, HoldingPeriodPolicyEntity.class));
+        tradeMatchingService = new TradeMatchingService(
+                new HoldingPeriodService(new HoldingPeriodResolver(holdingPeriodPolicyRepository)));
+    }
 
     @Test
     void shouldMergeSameDayBuys() {
@@ -350,7 +376,7 @@ class TradeMatchingServiceTest {
     }
 
     @Test
-    void shouldIdentifyCaDerivedBuys() {
+    void shouldIdentifyCorporateActionDerivedBuys() {
         // Given: A bonus buy (price=0)
         String email = "test@example.com";
         String stockCode = "RELIANCE";
@@ -370,7 +396,7 @@ class TradeMatchingServiceTest {
 
         // Then
         assertEquals(1, lots.size());
-        assertTrue(lots.get(0).isCaDerived());
+        assertTrue(lots.get(0).isCorporateActionDerived());
     }
 
     @Test
@@ -386,7 +412,7 @@ class TradeMatchingServiceTest {
                 .accountType(AccountType.SELF)
                 .accountHolder("main")
                 .originalBuyPrice(100.0)
-                .caAdjustedBuyPrice(100.0)
+                .corporateActionAdjustedBuyPrice(100.0)
                 .buyQuantity(10.0)
                 .buyDate(LocalDate.of(2023, 1, 15))
                 .buyBrokerCharges(10.0)
@@ -405,7 +431,7 @@ class TradeMatchingServiceTest {
                 .financialYear("FY2023-24")
                 .sourceSellTransactionId("sell-123")
                 .sourceBuyLotId("lot-RELIANCE-2023-01-15")
-                .isCaDerived(false)
+                .corporateActionDerived(false)
                 .appliedCorporateActions(null)
                 .build();
 
@@ -419,7 +445,7 @@ class TradeMatchingServiceTest {
         assertEquals(BrokerName.ZERODHA, entity.getBrokerName());
         assertEquals(AssetType.EQUITY, entity.getAssetType());
         assertEquals(100.0, entity.getOriginalBuyPrice(), 0.01);
-        assertEquals(100.0, entity.getCaAdjustedBuyPrice(), 0.01);
+        assertEquals(100.0, entity.getCorporateActionAdjustedBuyPrice(), 0.01);
         assertEquals(10.0, entity.getBuyQuantity(), 0.01);
         assertEquals(LocalDate.of(2023, 1, 15), entity.getBuyDate());
         assertEquals(150.0, entity.getSellPrice(), 0.01);
@@ -431,7 +457,7 @@ class TradeMatchingServiceTest {
         assertEquals("FY2023-24", entity.getFinancialYear());
         assertEquals("sell-123", entity.getSourceSellTransactionId());
         assertEquals("lot-RELIANCE-2023-01-15", entity.getSourceBuyLotId());
-        assertFalse(entity.getIsCaDerived());
+        assertFalse(entity.getCorporateActionDerived());
         assertNotNull(entity.getAuditMetadata());
     }
 

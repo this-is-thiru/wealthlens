@@ -83,4 +83,26 @@ class ArchitectureTest {
                     .that().areAnnotatedWith("org.springframework.data.mongodb.core.mapping.Field")
                     .should(SnakeCaseFieldCondition.snakeCase())
                     .because("CLAUDE.md: MongoDB collections and fields are snake_case");
+
+    /**
+     * Money rounding lives in one place (TL-8).
+     *
+     * <p>This does <b>not</b> enforce that every money write is canonicalised — ArchUnit reads
+     * structure, not arithmetic, so no rule can see a missing {@code TMoney.add}. Behavioural tests
+     * cover that. What it does catch is the failure that actually happened: the same HALF_UP paise
+     * rounding was independently reimplemented three times, in {@code ChargeSummaryReport},
+     * {@code ChargeReconciliationService} and again in {@code TMoney}. Three copies of a rounding
+     * rule is how two of them eventually disagree.
+     *
+     * <p>{@code ChargeRounding} is exempt and is not a duplicate: it is the engine's configurable
+     * per-rule policy, which also does CEILING and rupee scale, and is a different thing from
+     * canonicalising a stored amount.
+     */
+    @ArchTest
+    static final ArchRule money_rounding_lives_in_one_place =
+            noClasses()
+                    .that().resideOutsideOfPackage("..shared.util.money..")
+                    .and().haveSimpleNameNotEndingWith("ChargeRounding")
+                    .should().callMethod(java.math.BigDecimal.class, "setScale", int.class, java.math.RoundingMode.class)
+                    .because("TL-8: paise rounding belongs to TMoney; a second copy is how two roundings diverge");
 }

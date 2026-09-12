@@ -174,3 +174,42 @@ These are deliberate. Full list in `README.md` §10.
   mechanism; it is designed in tech-spec §14.4 and not built.
 - **V1 `buyStock` / `sellStock` do not use the engine.** They are in live use and deliberately
   untouched. Only the V2 endpoints (`/portfolio/user/{email}/transaction/v2`) are priced.
+
+---
+
+## Before deploying TL-7 (trade idempotency) — check for duplicates first
+
+`PortfolioIndexInitializer` now covers the `transactions` collection. That applies, **for the first
+time**, the unique index that `TransactionEntity` has declared for a long while:
+
+```
+@Indexed(unique = true, sparse = true) source_temp_transaction_id
+```
+
+It has never actually existed, because `auto-index-creation` is off and the collection was not
+covered. So it is about to be applied to data written without it.
+
+**Run this before deploying:**
+
+```js
+db.transactions.aggregate([
+  { $match: { source_temp_transaction_id: { $ne: null } } },
+  { $group: { _id: "$source_temp_transaction_id", n: { $sum: 1 }, ids: { $push: "$_id" } } },
+  { $match: { n: { $gt: 1 } } }
+])
+```
+
+Empty is the expected answer and means nothing to do. Anything returned is a temporary transaction
+that was redriven more than once — **and each duplicate means the holding was applied twice**, which
+is the defect TL-7 fixes going forward. Resolve those rows before deploying.
+
+**If you deploy without checking, the application still starts.** Index creation is caught and
+logged at ERROR naming the collection and the keys; startup is not blocked. That is deliberate —
+failing a deploy over pre-existing data is worse — but it does mean the constraint is silently
+absent until you look. Grep the startup log for `Could not create index` after any deploy.
+
+**The idempotency window** is `app.portfolio.idempotency.window-seconds`, default 60. Two genuinely
+identical trades submitted inside it are collapsed into one. If a bulk import needs to submit
+duplicate rows, it must send an `idempotencyKey` per row — a supplied key is exact and has no
+window. Setting the window to 0 disables the derived-fingerprint fallback and leaves client keys
+working.

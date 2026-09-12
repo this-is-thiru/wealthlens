@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -45,6 +46,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationContext;
@@ -85,7 +87,7 @@ class ChargeSeederServiceTest {
         chargeInstrumentResolver = mock(ChargeInstrumentResolver.class);
 
         // Nothing seeded yet, and the catalogue answers with whatever the seeder just wrote to it.
-        when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(false);
+        when(chargeCatalogueRepository.findByCode(anyString())).thenReturn(Optional.empty());
         when(chargeScheduleRepository.findByScheduleCode(anyString())).thenReturn(Optional.empty());
         when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
                 .thenReturn(Optional.empty());
@@ -269,7 +271,13 @@ class ChargeSeederServiceTest {
     @Test
     void seed_whenEverythingIsAlreadyOnFile_reportsThatItWroteNothing() {
         // Given — the second run of a deployment checklist, which must be boring
-        when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(true);
+        // Already on file AND already declaring deductibility, so the backfill is a no-op.
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity stored = new ChargeCatalogueEntity();
+            stored.setCode(invocation.getArgument(0));
+            stored.setDeductibleForCapitalGains(true);
+            return Optional.of(stored);
+        });
         when(chargeScheduleRepository.findByScheduleCode(anyString()))
                 .thenAnswer(call -> shipped(call.getArgument(0)));
         when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
@@ -605,7 +613,13 @@ class ChargeSeederServiceTest {
     @Test
     void seed_whenACardIsAlreadyOnFile_doesNotWriteItAgain() {
         // Given — the seeder runs on every startup
-        when(chargeCatalogueRepository.existsByCode(anyString())).thenReturn(true);
+        // Already on file AND already declaring deductibility, so the backfill is a no-op.
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity stored = new ChargeCatalogueEntity();
+            stored.setCode(invocation.getArgument(0));
+            stored.setDeductibleForCapitalGains(true);
+            return Optional.of(stored);
+        });
         when(chargeScheduleRepository.findByScheduleCode(anyString()))
                 .thenReturn(Optional.of(new ChargeScheduleEntity()));
         when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
@@ -921,5 +935,136 @@ class ChargeSeederServiceTest {
         assertThatThrownBy(() -> seederWith(overlapping).seed(AUDITOR))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("overlapping validity windows");
+    }
+
+    // ========================================
+    // Deductibility against capital gains
+    // ========================================
+
+    /**
+     * Every shipped code must say whether it can be deducted from a capital gain, because the trade
+     * outcome sums only the deductible ones and a code that stays silent would be summed by default.
+     * Defaulting is the failure here: it is the difference between a correct cost base and one
+     * inflated by a charge the statute disallows.
+     */
+    @Test
+    void seed_everyShippedCodeDeclaresWhetherItIsDeductible() {
+        for (ChargeCatalogueEntity code : shippedCatalogue()) {
+            assertThat(code.getDeductibleForCapitalGains())
+                    .as("charge code %s must declare deductibleForCapitalGains", code.getCode())
+                    .isNotNull();
+        }
+    }
+
+    /**
+     * STT is the one that matters most. It is disallowed as a deduction against capital gains — the
+     * trade-off for the concessional rates — and it is the largest charge on a delivery sell: about
+     * ₹100 on ₹1,00,000, against ₹20 of brokerage. Treating it as deductible inflates the cost base
+     * and understates the gain.
+     */
+    @Test
+    void seed_sttIsNotDeductible() {
+        assertThat(deductibilityOf("STT")).isFalse();
+    }
+
+    /**
+     * Account-level charges are not incurred in connection with any particular transfer, so they are
+     * not deductible against one. They also never reach a trade's breakdown — they arise from
+     * AMC_CYCLE and ACCOUNT_OPENING events rather than a buy or a sell — but the flag belongs on the
+     * code rather than on the event, so it is declared either way.
+     */
+    @Test
+    void seed_accountLevelChargesAreNotDeductible() {
+        assertThat(deductibilityOf("AMC")).isFalse();
+        assertThat(deductibilityOf("ACCOUNT_OPENING")).isFalse();
+    }
+
+    /** Everything actually incurred to execute the trade is allowable. */
+    @Test
+    void seed_transferCostsAreDeductible() {
+        for (String code : List.of("BROKERAGE", "EXCHANGE_TXN", "SEBI_FEE", "IPFT",
+                "STAMP_DUTY", "DP", "GST", "EXIT_LOAD", "MF_TXN_FEE")) {
+            assertThat(deductibilityOf(code)).as("%s should be deductible", code).isTrue();
+        }
+    }
+
+    /** A code that does not declare it is refused at the gate rather than defaulted at use. */
+    @Test
+    void seed_whenACatalogueCodeDoesNotDeclareDeductibility_refusesIt() {
+        ChargeCatalogueEntity silent = new ChargeCatalogueEntity();
+        silent.setCode("SILENT_LEVY");
+
+        assertThatThrownBy(() -> ChargeCodes.requireDeductibilityDeclared(silent))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("SILENT_LEVY");
+    }
+
+    private Boolean deductibilityOf(String code) {
+        return shippedCatalogue().stream()
+                .filter(entry -> entry.getCode().equals(code))
+                .findFirst().orElseThrow()
+                .getDeductibleForCapitalGains();
+    }
+
+    private static List<ChargeCatalogueEntity> shippedCatalogue() {
+        try {
+            String json = new String(new org.springframework.core.io.ClassPathResource(
+                    "data/charges/charge-catalogue.json").getInputStream().readAllBytes());
+            return com.thiru.wealthlens.shared.util.collection.TJsonMapper
+                    .readAsList(json, ChargeCatalogueEntity.class);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Test
+    @DisplayName("seeding backfills deductibility onto a code stored before the flag existed")
+    void seed_whenAStoredCodeDoesNotDeclareDeductibility_backfillsIt() {
+        // Given -- a catalogue seeded before TL-5. Without the backfill every charge reads as
+        // non-deductible, so every trade outcome records zero deductible cost.
+        when(chargeScheduleRepository.findByScheduleCode(anyString()))
+                .thenAnswer(call -> shipped(call.getArgument(0)));
+        when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
+                .thenReturn(Optional.of(new ChargeInstrumentEntity()));
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity stored = new ChargeCatalogueEntity();
+            stored.setCode(invocation.getArgument(0));
+            stored.setDeductibleForCapitalGains(null);
+            return Optional.of(stored);
+        });
+
+        // When
+        seeder.seed(AUDITOR);
+
+        // Then -- STT is backfilled as false, brokerage as true; nothing is invented
+        ArgumentCaptor<ChargeCatalogueEntity> captor = ArgumentCaptor.forClass(ChargeCatalogueEntity.class);
+        verify(chargeCatalogueRepository, atLeastOnce()).save(captor.capture());
+        Map<String, Boolean> written = captor.getAllValues().stream()
+                .collect(Collectors.toMap(ChargeCatalogueEntity::getCode,
+                        ChargeCatalogueEntity::getDeductibleForCapitalGains, (a, _) -> a));
+        assertThat(written.get("STT")).isFalse();
+        assertThat(written.get("BROKERAGE")).isTrue();
+    }
+
+    @Test
+    @DisplayName("a code that already declares deductibility is never rewritten")
+    void seed_whenAStoredCodeAlreadyDeclaresDeductibility_leavesItAlone() {
+        // Given -- a deliberate value must not be clobbered by a re-seed
+        when(chargeScheduleRepository.findByScheduleCode(anyString()))
+                .thenAnswer(call -> shipped(call.getArgument(0)));
+        when(chargeInstrumentRepository.findByStockCodeAndStartDate(anyString(), any()))
+                .thenReturn(Optional.of(new ChargeInstrumentEntity()));
+        when(chargeCatalogueRepository.findByCode(anyString())).thenAnswer(invocation -> {
+            ChargeCatalogueEntity stored = new ChargeCatalogueEntity();
+            stored.setCode(invocation.getArgument(0));
+            stored.setDeductibleForCapitalGains(false);
+            return Optional.of(stored);
+        });
+
+        // When
+        seeder.seed(AUDITOR);
+
+        // Then
+        verify(chargeCatalogueRepository, never()).save(any(ChargeCatalogueEntity.class));
     }
 }
