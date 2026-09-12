@@ -117,8 +117,6 @@ public class ProfitAndLossService {
 					internalContext);
 			profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
 		}
-
-		profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
 	}
 
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits,
@@ -406,8 +404,6 @@ public class ProfitAndLossService {
             RealisedProfits calculatedProfitDetails = calculateProfitDetails(outSourcedRealisedProfits, internalContext);
             profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
         }
-
-        profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
     }
 
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits, InternalContext internalContext) {
@@ -533,7 +529,6 @@ public class ProfitAndLossService {
         } else {
             profitAndLossEntity.setOutSourcedRealisedProfits(realisedProfits);
         }
-        profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
     }
 
     /** A fortnight stays null until something is charged in it, so an empty half reads as empty. */
