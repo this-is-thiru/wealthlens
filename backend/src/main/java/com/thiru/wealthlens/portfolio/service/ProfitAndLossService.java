@@ -8,6 +8,8 @@ import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
@@ -15,14 +17,20 @@ import com.thiru.wealthlens.portfolio.entity.model.FortnightReport;
 import com.thiru.wealthlens.portfolio.entity.model.MonthlyReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.entity.model.ReportModel;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
+import com.thiru.wealthlens.portfolio.holding.TradeClassificationQuery;
+import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
+import com.thiru.wealthlens.shared.util.money.TMoney;
+import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -50,6 +58,9 @@ public class ProfitAndLossService {
     private static final int FORTNIGHT_BOUNDARY = 15;
 
     private final ProfitAndLossRepository profitAndLossRepository;
+    private final HoldingPeriodService holdingPeriodService;
+
+    private final TradeClassifier tradeClassifier;
     private final ChargeRecordingGateway chargeRecordingGateway;
 
     /**
@@ -117,8 +128,6 @@ public class ProfitAndLossService {
 					internalContext);
 			profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
 		}
-
-		profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
 	}
 
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits,
@@ -150,12 +159,20 @@ public class ProfitAndLossService {
 		updateReportMetadata(financialReport, internalContext);
 	}
 
+    /**
+     * Accumulation is {@link TMoney#add}, not {@code +=} (TL-8, B-5).
+     *
+     * <p>This is the V1 family. Canonicalising here changes no logic and no flow — the same amounts
+     * are folded into the same fields in the same order; only the last few bits of the stored
+     * double change, from {@code 0.9999999999999999} to {@code 1.00}. Without it, one field holds
+     * canonical amounts where V2 wrote and drifted ones where V1 did.
+     */
     private static void updateReportMetadata(ReportModel metadata, InternalTransactionContext internalContext) {
-        metadata.setPurchaseAmount(metadata.getPurchaseAmount() + internalContext.getPurchasePrice());
-        metadata.setSellAmount(metadata.getSellAmount() + internalContext.getSellPrice());
-        metadata.setProfit(metadata.getProfit() + internalContext.getProfit());
-        metadata.setBrokerage(metadata.getBrokerage() + internalContext.getBrokerCharges());
-        metadata.setMiscCharges(metadata.getMiscCharges() + internalContext.getMiscCharges());
+        metadata.setPurchaseAmount(TMoney.add(metadata.getPurchaseAmount(), internalContext.getPurchasePrice()));
+        metadata.setSellAmount(TMoney.add(metadata.getSellAmount(), internalContext.getSellPrice()));
+        metadata.setProfit(TMoney.add(metadata.getProfit(), internalContext.getProfit()));
+        metadata.setBrokerage(TMoney.add(metadata.getBrokerage(), internalContext.getBrokerCharges()));
+        metadata.setMiscCharges(TMoney.add(metadata.getMiscCharges(), internalContext.getMiscCharges()));
 //        metadata.setLastUpdatedTime(LocalDateTime.now());
     }
 
@@ -188,16 +205,16 @@ public class ProfitAndLossService {
 
         double purchasePrice = profitAndLossContext.getPurchaseContext().getPrice()
                 * profitAndLossContext.getSellContext().getQuantity();
-        fortnightReport.setPurchaseAmount(fortnightReport.getPurchaseAmount() + purchasePrice);
+        fortnightReport.setPurchaseAmount(TMoney.add(fortnightReport.getPurchaseAmount(), purchasePrice));
 
         double sellPrice = profitAndLossContext.getSellContext().getPrice()
                 * profitAndLossContext.getSellContext().getQuantity();
-        fortnightReport.setSellAmount(fortnightReport.getSellAmount() + sellPrice);
+        fortnightReport.setSellAmount(TMoney.add(fortnightReport.getSellAmount(), sellPrice));
 
         double purchaseBrokerCharges = profitAndLossContext.getPurchaseContext().getBrokerCharges();
         double sellBrokerCharges = profitAndLossContext.getSellContext().getBrokerCharges();
         double brokerCharges = purchaseBrokerCharges + sellBrokerCharges;
-        fortnightReport.setBrokerage(fortnightReport.getBrokerage() + brokerCharges);
+        fortnightReport.setBrokerage(TMoney.add(fortnightReport.getBrokerage(), brokerCharges));
 
 		double purchaseMiscCharges = profitAndLossContext.getPurchaseContext().getMiscCharges();
 		double sellMiscCharges = profitAndLossContext.getSellContext().getMiscCharges();
@@ -225,20 +242,9 @@ public class ProfitAndLossService {
 	}
 
 	private static String sanitizeFinancialYear(LocalDate transactionDate) {
-
-		int transactionYear = transactionDate.getYear();
-		LocalDate financialYearEnd = financialYearEnd(transactionYear);
-
-		if (transactionDate.isBefore(financialYearEnd)) {
-			return (transactionYear - 1) + "-" + transactionYear;
-		}
-
-		return transactionYear + "-" + (transactionYear + 1);
+		return TLocalDate.financialYear(transactionDate);
 	}
 
-    private static LocalDate financialYearEnd(int year) {
-        return LocalDate.of(year, MARCH, DAY_31);
-    }
 
 	public ProfitAndLossResponse getProfitAndLoss(UserMail userMail, String financialYear) {
 		String email = userMail.getEmail();
@@ -375,10 +381,16 @@ public class ProfitAndLossService {
         ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
 
         for (BuyContext buyContext : profitLossContext.buyContexts()) {
-            boolean isShortTermHeld = isShortTermCapitalGain(buyContext.date(), transactionDate);
+            // Two answers, deliberately. The classification is the real one and goes in the map;
+            // the boolean is what the legacy pair has always been given and keeps it byte-identical
+            // for existing readers until V1 goes and the pair goes with it (D8).
+            CapitalGainsType classification = tradeClassifier.classify(new TradeClassificationQuery(
+                    profitLossContext.stockCode(), profitLossContext.assetType(), profitLossContext.segment(),
+                    buyContext.date(), transactionDate)).capitalGainsType();
+            boolean isShortTermHeld = isShortTermCapitalGain(profitLossContext.assetType(), buyContext.date(), transactionDate);
             double purchaseAmount = buyContext.price() * buyContext.quantity();
             double sellAmount = profitLossContext.price() * buyContext.quantity();
-            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld);
+            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld, classification);
             updateProfitAndLossReport(profitAndLossEntity, profitLossContext, internalContext);
         }
 
@@ -406,8 +418,6 @@ public class ProfitAndLossService {
             RealisedProfits calculatedProfitDetails = calculateProfitDetails(outSourcedRealisedProfits, internalContext);
             profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
         }
-
-        profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
     }
 
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits, InternalContext internalContext) {
@@ -422,8 +432,26 @@ public class ProfitAndLossService {
             realisedProfits.setLongTermCapitalGains(financialReport);
         }
 
+        recordByClassification(realisedProfits, internalContext);
+
         realisedProfits.setLastUpdatedTime(LocalDateTime.now());
         return realisedProfits;
+    }
+
+    /**
+     * The same amounts again, under the classification that is actually true (D8).
+     *
+     * <p>No branch: five classifications cannot be forced through an {@code if/else}, and that
+     * forcing is precisely the defect this exists to end. A key appears only once a disposal has
+     * been classified that way, so the map stays as small as the period's real variety.
+     */
+    private static void recordByClassification(RealisedProfits realisedProfits, InternalContext internalContext) {
+        Map<CapitalGainsType, FinancialReport> byClassification =
+                TOptional.mapO(realisedProfits.getGainsByClassification(), new EnumMap<>(CapitalGainsType.class));
+        FinancialReport report = byClassification.computeIfAbsent(
+                internalContext.classification(), _ -> FinancialReport.empty());
+        updateFinancialReport(report, internalContext);
+        realisedProfits.setGainsByClassification(byClassification);
     }
 
     private static void updateFinancialReport(FinancialReport financialReport, InternalContext internalContext) {
@@ -454,29 +482,49 @@ public class ProfitAndLossService {
         return monthlyReports;
     }
 
+    /**
+     * Accumulation is {@link TMoney#add}, not {@code +=} (TL-8).
+     *
+     * <p>A period folds in hundreds of paise-scale amounts, and raw {@code double} addition leaves
+     * ₹1.00 stored as {@code 0.9999999999999999} — which prints correctly and then fails every
+     * exact query and every reconciliation against a broker's statement. The three levels below
+     * accumulate the same figures, so all three need it or the year disagrees with its months.
+     *
+     * <p><b>The V1 family above ({@code InternalTransactionContext}) is deliberately untouched.</b>
+     * It is the live V1 sell path; the two families were already forked, so canonicalising here
+     * reaches no V1 code. That leaves V1 writing drifted values into the same fields — recorded as
+     * B-5 rather than fixed quietly.
+     */
     private static void updateYearlyTransactionReport(FinancialReport financialReport, InternalContext internalContext) {
-        financialReport.setPurchaseAmount(financialReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        financialReport.setSellAmount(financialReport.getSellAmount() + internalContext.sellAmount());
+        financialReport.setPurchaseAmount(TMoney.add(financialReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        financialReport.setSellAmount(TMoney.add(financialReport.getSellAmount(), internalContext.sellAmount()));
     }
 
     private static void updateMonthlyTransactionReport(MonthlyReport monthlyReport, InternalContext internalContext) {
-        monthlyReport.setPurchaseAmount(monthlyReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        monthlyReport.setSellAmount(monthlyReport.getSellAmount() + internalContext.sellAmount());
+        monthlyReport.setPurchaseAmount(TMoney.add(monthlyReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        monthlyReport.setSellAmount(TMoney.add(monthlyReport.getSellAmount(), internalContext.sellAmount()));
     }
 
     private static void updateFortnightTransactionReport(FortnightReport fortnightReport, InternalContext internalContext) {
-        fortnightReport.setPurchaseAmount(fortnightReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        fortnightReport.setSellAmount(fortnightReport.getSellAmount() + internalContext.sellAmount());
+        fortnightReport.setPurchaseAmount(TMoney.add(fortnightReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        fortnightReport.setSellAmount(TMoney.add(fortnightReport.getSellAmount(), internalContext.sellAmount()));
     }
 
-    /** Short term is a disposal inside one year of acquisition. */
-    private static boolean isShortTermCapitalGain(LocalDate buyDate, LocalDate sellDate) {
-        LocalDate thresholdDate = buyDate.plusYears(1);
-        return sellDate.isBefore(thresholdDate);
+    /**
+     * Resolved rather than assumed. This used to be {@code buyDate.plusYears(1)} applied to every
+     * asset type, which is the listed-equity rule — mutual funds, bonds and gold bonds each follow a
+     * different one, and some are short-term however long they are held.
+     *
+     * <p>The asset type comes from the trade's own context. The sub-class, which is what decides a
+     * mutual fund's rule, is not available here and resolves as unclassified; the service logs that
+     * and counts it short-term, which is the higher-taxed direction.
+     */
+    private boolean isShortTermCapitalGain(AssetType assetType, LocalDate buyDate, LocalDate sellDate) {
+        return holdingPeriodService.isShortTerm(assetType, null, buyDate, sellDate);
     }
 
-    private record InternalContext(double purchaseAmount, double sellAmount,
-                                   LocalDate sellDate, boolean isShortTermHeld) {
+    private record InternalContext(double purchaseAmount, double sellAmount, LocalDate sellDate,
+                                   boolean isShortTermHeld, CapitalGainsType classification) {
     }
 
     /** Prices the trade, unless the caller already did. */
@@ -533,7 +581,6 @@ public class ProfitAndLossService {
         } else {
             profitAndLossEntity.setOutSourcedRealisedProfits(realisedProfits);
         }
-        profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
     }
 
     /** A fortnight stays null until something is charged in it, so an empty half reads as empty. */

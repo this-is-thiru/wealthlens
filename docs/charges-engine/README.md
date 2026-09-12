@@ -13,7 +13,7 @@
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | **46**, of which **11 are unpushed** (`git log origin/feature/charges-engine..HEAD`). Counted with `git rev-list master..HEAD --count` — trust the command over this cell, which has been wrong before |
 | **Phase** | A, B and **C complete**. Chunk 11 deleted 25 files; V1 buy/sell is untouched and still live |
-| **Next action** | **Raise the PR**, then follow `production-runbook.md` on deploy — `POST /charges/seed` before the first trade. Nothing outstanding blocks it — see the checklist header for the three open items, all either accepted or V1-bound |
+| **Next action** | The charges engine is done. **Active work continues in [`../trade-ledger/implementation-checklist.md`](../trade-ledger/implementation-checklist.md)** — resume at its first unticked box. On deploy, follow `production-runbook.md`: `POST /charges/seed` before the first trade. Nothing outstanding blocks it — see the checklist header for the three open items, all either accepted or V1-bound |
 | **Blocking questions** | **None.** Both were settled: `YearlyChargeSummary` was written beside the old report and the old one is now deleted; `userChargeId` was dropped, because `UserChargeEntity.transactionId` with its unique index already carries the link |
 
 ---
@@ -239,6 +239,7 @@ Read in this order:
 | 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return | 460 |
 | 8 | **ac2-rate-verification.md** | The AC-2 evidence: every shipped rate against the broker's page, what was wrong, and what closing it changed | 180 |
 | 9 | **phase-b-reconciliation-findings.md** | The Phase B exit artifact: the backfill and reconciliation run against 319 real transactions, what it proved, and why the deltas could not mean what the gate assumed | 143 |
+| — | **[`../trade-ledger/implementation-checklist.md`](../trade-ledger/implementation-checklist.md)** | **Active work.** Making the realised-trade record tax-correct: holding-period rules, charge deductibility, the trade-outcome rework, trade idempotency. Continues on this branch | 190 |
 | — | **[`../epics/priced-portfolio.md`](../epics/priced-portfolio.md)** | **Not this branch.** The epic that makes a *real* portfolio fully priced — instrument identity and historical rate coverage. Read it to understand what the engine still cannot do, and why that is data rather than code | 138 |
 
 **ADR-26 is the one to read before deploying anything.** It states the rule that keeps rate cards deployable — a deployed card is never edited, only superseded — and what to do in the two cases where that is not enough.

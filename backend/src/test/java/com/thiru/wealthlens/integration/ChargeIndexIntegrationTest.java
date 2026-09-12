@@ -1,11 +1,14 @@
 package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import java.util.List;
 import java.util.stream.StreamSupport;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 /**
  * Asserts the declared indexes actually exist in MongoDB.
@@ -21,6 +24,49 @@ import org.junit.jupiter.api.Test;
  * does.
  */
 class ChargeIndexIntegrationTest extends AbstractIntegrationTest {
+
+
+    /**
+     * {@code findByEmailAndFinancialYear} runs on every buy and every sell. Without this index it
+     * scanned every profit-and-loss document of every user to do it — and nothing stopped two
+     * documents existing for one user-year, which would make an {@code Optional} read either throw
+     * or quietly answer with one of them while the other's figures became invisible.
+     */
+    @Test
+    void profitAndLoss_isUniquePerUserAndFinancialYear() {
+        assertThat(indexNamesOf("profit_and_loss")).contains("pnl_user_year_idx");
+
+        Document idx = StreamSupport
+                .stream(mongoTemplate.getCollection("profit_and_loss").listIndexes().spliterator(), false)
+                .filter(index -> "pnl_user_year_idx".equals(index.getString("name")))
+                .findFirst().orElseThrow();
+        assertThat(idx.getBoolean("unique", false)).isTrue();
+    }
+
+    /**
+     * Optimistic locking, over a real database. Every trade is a read-modify-write of the whole
+     * document, so two concurrent trades for one user and year would both read, both mutate and both
+     * write — the second silently erasing the first's capital gains and charges. The version turns
+     * that into a detected failure.
+     */
+    @Test
+    void profitAndLoss_refusesAStaleWriteRatherThanLosingIt() {
+        // Given — one document, read twice, as two concurrent trades would
+        ProfitAndLossEntity seed = new ProfitAndLossEntity("locking@wealthlens.test", "2025-2026");
+        mongoTemplate.save(seed);
+
+        ProfitAndLossEntity first = mongoTemplate.findById(seed.getId(), ProfitAndLossEntity.class);
+        ProfitAndLossEntity second = mongoTemplate.findById(seed.getId(), ProfitAndLossEntity.class);
+
+        // When — the first write succeeds and moves the version on
+        first.setEmail("locking@wealthlens.test");
+        mongoTemplate.save(first);
+
+        // Then — the second is working from a version that no longer exists
+        second.setEmail("locking@wealthlens.test");
+        assertThatThrownBy(() -> mongoTemplate.save(second))
+                .isInstanceOf(OptimisticLockingFailureException.class);
+    }
 
     private List<String> indexNamesOf(String collection) {
         return StreamSupport.stream(mongoTemplate.getCollection(collection).listIndexes().spliterator(), false)

@@ -305,4 +305,52 @@ class AmcChargeServiceTest {
                 .hasMessageContaining("charges engine is disabled");
         verifyNoInteractions(userChargeService, chargeAccountRepository);
     }
+
+    // ========================================
+    // What is due — the alternative to a scheduler
+    // ========================================
+
+    /**
+     * Nothing schedules the AMC cycle: it runs when a human calls it. That is a deliberate choice,
+     * and it makes silent non-billing the failure mode — six months could pass with nobody billed and
+     * nothing anywhere saying so. This is the query that makes the gap visible, and it is a read: it
+     * reports what {@code runCycle} would bill without billing it.
+     */
+    @Test
+    void findDue_reportsTheAccountsACycleWouldBillWithoutBillingThem() {
+        // Given
+        ChargeAccountEntity due = account(DEMAT, LocalDate.of(2025, 3, 31));
+        when(chargeAccountRepository.findDueForAmc(AmcChargeFrequency.ANNUALLY, BILLED_THROUGH))
+                .thenReturn(List.of(due));
+
+        // When
+        List<ChargeAccountEntity> result = service.findDue(AmcChargeFrequency.ANNUALLY, BILLED_THROUGH);
+
+        // Then
+        assertThat(result).containsExactly(due);
+        verifyNoInteractions(userChargeService);
+    }
+
+    @Test
+    void findDue_whenNothingIsDue_isEmpty() {
+        // Given
+        when(chargeAccountRepository.findDueForAmc(any(), any())).thenReturn(List.of());
+
+        // When / Then
+        assertThat(service.findDue(AmcChargeFrequency.QUARTERLY, BILLED_THROUGH)).isEmpty();
+        verifyNoInteractions(userChargeService);
+    }
+
+    /** The kill switch covers reads of what is due too — a disabled engine bills nothing and says so. */
+    @Test
+    void findDue_whenTheEngineIsDisabled_refuses() {
+        // Given
+        AmcChargeService disabled = new AmcChargeService(
+                chargeAccountRepository, userChargeService, new ChargeEngineProperties(false, false, false));
+
+        // When / Then
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> disabled.findDue(AmcChargeFrequency.ANNUALLY, BILLED_THROUGH))
+                .isInstanceOf(com.thiru.wealthlens.shared.exception.ServiceUnavailableException.class);
+    }
 }

@@ -75,6 +75,15 @@ an instrument it does not carry. Charge profiles key off the canonical code.
 **In scope**
 
 - The registry: canonical code, display name, asset type, ISIN / scheme code, status.
+- **The tax sub-class** — `EQUITY_ORIENTED` / `SPECIFIED` / `OTHER` for a scheme, `LISTED` /
+  `UNLISTED` for a bond. Added by decision **D7** in the
+  [trade-ledger checklist](../trade-ledger/implementation-checklist.md): holding-period
+  classification needs it, `ChargeInstrumentEntity` cannot supply it, and it is instrument
+  identity — a property of the fund, not of a rate period. Until this ships, every mutual fund and
+  bond disposal is recorded `UNCLASSIFIED` and cannot be filed from. **This makes the epic a
+  dependency of correct capital-gains classification, not only of complete charge reporting.**
+  Note the vocabulary is *not* `FundCategory`: the s.50AA test is ">65% debt and money-market",
+  which `INDEX`, `ETF` and `FUND_OF_FUNDS` do not answer.
 - Upload validation, with the rejection surfacing usefully — which row, which instrument, what to do.
 - **A route back for a rejected upload.** Admin endpoint, refreshed external catalogue, or
   self-service. Without one the validation is a wall, and this is the part most likely to be
@@ -118,6 +127,9 @@ Every stored transaction and holding predates both changes.
 
 - [ ] A real portfolio prices **substantially all** of its trades; the residue is explained per row.
 - [ ] A mutual fund redemption inside its exit-load window is charged, on a scheme a user holds.
+- [ ] A mutual fund and a bond disposal each classify to a real holding period rather than
+      `UNCLASSIFIED`, and a specified fund acquired on or after 01-Apr-2023 comes out short-term
+      however long it was held.
 - [ ] An upload naming an unknown instrument is rejected with a message naming the row and the
       instrument, **and** the user has a route to get it added.
 - [ ] Existing data is migrated, and anything unmappable is visible rather than silent.

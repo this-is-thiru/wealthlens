@@ -29,6 +29,17 @@ import lombok.ToString;
 @ToString
 public class AssetRequest implements AssetEntityProtoType, TransactionEntityProtoType {
     private String tempTransactionId; // To keep track of temp transactions
+
+    /**
+     * Optional. When supplied, two submissions bearing this key are the same submission and the
+     * second returns the first's result without repeating the work.
+     *
+     * <p>Absent is fine and is the common case — a derived fingerprint covers it within a short
+     * window. Supplying one is strictly better: it is exact, it has no window, and it lets two
+     * genuinely identical trades submitted seconds apart both be accepted, which the fingerprint
+     * fallback cannot distinguish from a retry.
+     */
+    private String idempotencyKey;
     private String email;
     private String stockCode;
     private String stockName;
