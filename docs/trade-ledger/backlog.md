@@ -81,30 +81,6 @@ expected to return nothing. It becomes urgent the first time they do not.
 
 ---
 
-## B-8 — V1 over-allocates a lot's buy charge, exactly as V2 did
-
-**This is the same defect as B-7, still live in V1**, in two places:
-
-- `PortfolioService.toTradeOutcomeContext` — `(assetEntity.getBrokerCharges() / assetQuantity) * sellQuantity`
-- `ProfitAndLossContext.perUnit` — same shape, now guarded against divide-by-zero but not against
-  re-charging
-
-A 3-unit lot carrying ₹10, sold one unit at a time, deducts ₹3.33, then ₹5.00, then ₹10.00 —
-**₹18.33 against ₹10.00 paid**. It inflates the cost base and understates the gain, which is the
-direction that under-reports tax.
-
-**Not fixed because it is a genuine logic change to a live path**, unlike the canonicalisation in
-B-5 which moved only the last bits of a double. The fix is the one V2 now uses: allocate from
-`brokerCharges - allocatedBuyCharges` rather than from the full charge, and update the running
-total. `AssetEntity` already carries the fields, and V1's `sellStock` already saves the holdings
-afterwards, so it is mechanically the same change.
-
-**Needs the owner's decision**, because it changes the figures V1 writes from wrong to right, and
-any lot already partially sold has over-deducted amounts sitting in `trade_outcomes` and
-`profit_and_loss` that the code fix does not correct.
-
----
-
 ## B-9 — `TestController` mutates state without saving the lots
 
 `POST /test/user/{email}/transact/sell` (authenticated — it is in `AuthConfig`'s list) takes
@@ -142,6 +118,17 @@ migration the answer after all. This entry stays as the pointer to that decision
   parts sum to the whole by construction rather than by a correction pass. Chosen over
   largest-remainder, which needs a sort and a tie-break rule. Each row's lumped total is derived
   from its own allocated lines.
+- **B-8 — V1 had the identical over-allocation.** *(2026-09-12)* Fixed with the owner's agreement.
+  V1 computes the share for two records — the trade outcome and the profit-and-loss entry — so a
+  naive fix would have deducted twice; it is now computed **once per sell** and handed to both.
+  `LotChargeAllocator` is shared by V1 and V2 rather than copied, on the same reasoning that
+  collapsed three copies of paise rounding into `TMoney`.
+
+  **Still open, and it is a data question:** lots already partially sold carry over-deducted amounts
+  in `trade_outcomes` and `profit_and_loss` that the code fix does not correct, and
+  `allocated_buy_charges` reads as zero on every existing lot — so the next sell of a lot already
+  partially sold will allocate from its full charge once more. Deciding what to do about that needs
+  the same treatment as the 31 March question.
 - **B-7 — a lot's buy charge was re-charged on every partial sell.** *(2026-09-12)* Worse than the
   rounding residue this entry originally claimed: `MatchedLot.originalQuantity` is the quantity
   remaining *before* a sell, and nothing decremented the stored charge, so a 3-unit lot carrying ₹10

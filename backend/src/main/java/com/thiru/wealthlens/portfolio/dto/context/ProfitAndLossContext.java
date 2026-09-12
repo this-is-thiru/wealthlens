@@ -19,12 +19,17 @@ public class ProfitAndLossContext {
 	/**
 	 * Profit and loss context while selling the asset
 	 */
-	public static ProfitAndLossContext from(AssetEntity assetEntity, AssetRequest assetRequest, double sellQuantity) {
+	/**
+	 * @param purchaseBrokerCharge this sell's share of the lot's buy charge, already deducted from
+	 *                             the lot by {@code LotChargeAllocator}. Passed in rather than
+	 *                             recomputed: the trade outcome needs the same figure, and a lot
+	 *                             that is asked twice is charged twice (B-8)
+	 */
+	public static ProfitAndLossContext from(AssetEntity assetEntity, AssetRequest assetRequest, double sellQuantity,
+	                                        double purchaseBrokerCharge, double purchaseMiscCharge) {
 		double purchasePrice = assetEntity.getPrice();
 		LocalDate purchaseDate = assetEntity.getTransactionDate();
 
-		double purchaseBrokerCharge = perUnit(assetEntity.getBrokerCharges(), assetEntity.getQuantity(), sellQuantity);
-		double purchaseMiscCharge = perUnit(assetEntity.getMiscCharges(), assetEntity.getQuantity(), sellQuantity);
 
 		AssetContext purchaseContext = AssetContext.from();
 		purchaseContext.setPrice(purchasePrice);

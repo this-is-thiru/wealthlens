@@ -9,6 +9,7 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
+import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
@@ -32,6 +33,8 @@ import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.shared.util.money.TMoney;
+import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -642,5 +645,36 @@ class PortfolioServiceTest {
         // Then
         assertEquals("Stock buy added to portfolio", result);
         verify(portfolioRepository).save(any(AssetEntity.class));
+    }
+
+    @Test
+    void sellStock_v1_whenALotIsSoldInPieces_deductsTheBuyChargeOnlyOnce() {
+        // Given -- B-8, the same defect as B-7 but on the live V1 path. A 3-unit lot carrying Rs.10
+        // sold one unit at a time deducted 3.33, then 5.00, then 10.00: Rs.18.33 against Rs.10 paid.
+        AssetEntity asset = sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10));
+        asset.setBrokerCharges(10.0);
+        when(portfolioRepository
+                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
+                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
+
+        // When -- three successive single-unit sells
+        for (int i = 0; i < 3; i++) {
+            AssetRequest sell = createAssetRequest("STOCK1");
+            sell.setQuantity(1.0);
+            sell.setPrice(200.0);
+            sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+            portfolioService.sellStock(userMail, "sell-" + i, sell);
+        }
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService, times(3)).saveTradeOutcome(eq(userMail), captor.capture());
+        double deducted = 0;
+        for (TradeOutcomeContext row : captor.getAllValues()) {
+            deducted = TMoney.add(deducted, row.getBuyBrokerCharges());
+        }
+        MoneyAssert.assertCanonical("V1 lifetime buy charge", 10.00, deducted);
     }
 }

@@ -37,6 +37,7 @@ import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.HoldingPeriodPolicyRepository;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
+import com.thiru.wealthlens.portfolio.service.LotChargeAllocator;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -961,7 +962,7 @@ class ProfitAndLossServiceTest {
         // When
         for (int i = 0; i < 10; i++) {
             profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL),
-                    ProfitAndLossContext.from(lot, sell, 1.0));
+                    ProfitAndLossContext.from(lot, sell, 1.0, 0.0, 0.0));
         }
 
         // Then -- raw += gives 0.9999999999999999 here too
@@ -998,8 +999,12 @@ class ProfitAndLossServiceTest {
         sell.setAccountType(AccountType.SELF);
 
         // When
+        // The purchase-side share is now computed by LotChargeAllocator, which returns 0 for a
+        // zero-quantity lot rather than dividing. The sell side still divides, and is still guarded.
         profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL),
-                ProfitAndLossContext.from(zeroQuantityLot, sell, 1.0));
+                ProfitAndLossContext.from(zeroQuantityLot, sell, 1.0,
+                        LotChargeAllocator.deductBroker(zeroQuantityLot, 1.0, zeroQuantityLot.getQuantity()),
+                        LotChargeAllocator.deductMisc(zeroQuantityLot, 1.0, zeroQuantityLot.getQuantity())));
 
         // Then -- nothing stored may be non-finite, at any level of the hierarchy
         FinancialReport yearly = accumulating.getRealisedProfits().getShortTermCapitalGains();

@@ -576,18 +576,26 @@ public class PortfolioService {
 
             TradeOutcomeContext tradeOutcomeContext;
             ProfitAndLossContext profitAndLossContext;
-            double sellQty;
+            double sellQty = Math.min(sellQuantity, assetQuantity);
+
+            // Deducted ONCE per sell and handed to both records (B-8). The trade outcome and the
+            // profit-and-loss entry describe the same allocation, so if each asked for its own the
+            // lot would be charged twice. Before this the full charge was divided by the quantity
+            // still remaining, with nothing tracking what had gone: a 3-unit lot carrying Rs.10
+            // sold singly deducted 3.33, then 5.00, then 10.00 -- Rs.18.33 against Rs.10 paid,
+            // inflating the cost base and understating the gain.
+            double buyBrokerCharges = LotChargeAllocator.deductBroker(assetEntity, sellQty, assetQuantity);
+            double buyMiscCharges = LotChargeAllocator.deductMisc(assetEntity, sellQty, assetQuantity);
+
             if (sellQuantity >= assetQuantity) {
-                tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, assetQuantity, transactionId);
-                profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, assetQuantity);
-                sellQty = assetQuantity;
+                tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, assetQuantity, transactionId, buyBrokerCharges, buyMiscCharges);
+                profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, assetQuantity, buyBrokerCharges, buyMiscCharges);
 
                 assetEntity.setQuantity(0D);
                 sellQuantity = sellQuantity - assetQuantity;
             } else {
-                tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, sellQuantity, transactionId);
-                profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, sellQuantity);
-                sellQty = sellQuantity;
+                tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, sellQuantity, transactionId, buyBrokerCharges, buyMiscCharges);
+                profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, sellQuantity, buyBrokerCharges, buyMiscCharges);
 
                 double remainingQuantity = assetQuantity - sellQuantity;
                 assetEntity.setQuantity(remainingQuantity);
@@ -663,15 +671,14 @@ public class PortfolioService {
     }
 
     private TradeOutcomeContext toTradeOutcomeContext(String email, AssetEntity assetEntity, AssetRequest assetRequest,
-                                                       double sellQuantity, String transactionId) {
+                                                       double sellQuantity, String transactionId,
+                                                       double buyBrokerCharges, double buyMiscCharges) {
 
         LocalDate buyDate = assetEntity.getTransactionDate();
         LocalDate sellDate = assetRequest.getTransactionDate();
 
         // Pro-rate buy-side charges based on sell quantity
         double assetQuantity = assetEntity.getQuantity() != null ? assetEntity.getQuantity() : 1.0;
-        double buyBrokerCharges = (assetEntity.getBrokerCharges() / assetQuantity) * sellQuantity;
-        double buyMiscCharges = (assetEntity.getMiscCharges() / assetQuantity) * sellQuantity;
 
         // Pro-rate sell-side charges based on sell quantity
         double sellReqQuantity = assetRequest.getQuantity() != null ? assetRequest.getQuantity() : 1.0;
