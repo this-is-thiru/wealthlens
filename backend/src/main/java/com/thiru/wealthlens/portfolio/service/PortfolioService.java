@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
+import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
@@ -60,6 +61,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class PortfolioService {
 
+    /**
+     * Returned when a submission was recognised as one already applied. Deliberately not an error:
+     * a retry that reaches this has got exactly what it asked for.
+     */
+    private static final String REPLAYED_MESSAGE =
+            "Transaction already recorded; this submission was a repeat and changed nothing";
+
     private final TransactionService transactionService;
     private final PortfolioRepository portfolioRepository;
     private final ProfitAndLossService profitAndLossService;
@@ -99,7 +107,15 @@ public class PortfolioService {
 
         TransactionType transactionType = assetRequest.getTransactionType();
         // Add transaction
-        String transactionId = addTransactionInternal(userMail, assetRequest);
+        TransactionRecord record = transactionService.recordTransaction(userMail, assetRequest);
+        if (record.replay()) {
+            // This submission was already applied. Before TL-7 the duplicate transaction row was
+            // suppressed here and the trade was then applied to the portfolio a second time anyway,
+            // adding the holding twice. buyStock and sellStock are unchanged -- this returns before
+            // reaching them.
+            return REPLAYED_MESSAGE;
+        }
+        String transactionId = record.transactionId();
 
         return switch (transactionType) {
             case BUY -> {
@@ -126,7 +142,11 @@ public class PortfolioService {
 
         TransactionType transactionType = assetRequest.getTransactionType();
         // Add transaction
-        String transactionId = addTransactionInternal(userMail, assetRequest);
+        TransactionRecord record = transactionService.recordTransaction(userMail, assetRequest);
+        if (record.replay()) {
+            return REPLAYED_MESSAGE;
+        }
+        String transactionId = record.transactionId();
 
         return switch (transactionType) {
             case BUY -> {

@@ -9,6 +9,7 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
+import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
@@ -83,6 +84,9 @@ class PortfolioServiceTest {
     void setUp() {
         portfolioService = testableService(new ChargeEngineProperties(true, true, false));
         userMail = UserMail.from("test@example.com");
+        // Every trade is a first submission unless a test says otherwise (TL-7).
+        lenient().when(transactionService.recordTransaction(any(), any()))
+                .thenAnswer(invocation -> TransactionRecord.created("txn-new"));
     }
 
     /**
@@ -504,7 +508,6 @@ class PortfolioServiceTest {
         AssetRequest request = buyRequest();
         request.setPrice(0D);
         when(temporaryTransactionService.filterOutTransaction(any(), any())).thenReturn(null);
-        when(transactionService.addTransaction(any(), any())).thenReturn("txn-free");
         when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
 
         // When / Then
@@ -578,5 +581,66 @@ class PortfolioServiceTest {
         // Then -- V1 still writes its outcome through its own path, and never through the new one
         verifyNoInteractions(tradeOutcomeRecorder);
         verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), any());
+    }
+
+    // ========================================
+    // TL-7 -- a replay must not reach the portfolio
+    // ========================================
+
+    @Test
+    void addTransactionV2_whenTheSubmissionIsAReplay_doesNotApplyTheTradeAgain() {
+        // Given
+        AssetRequest request = createAssetRequest("STOCK1");
+        request.setTransactionType(TransactionType.BUY);
+        when(transactionService.recordTransaction(any(), any()))
+                .thenReturn(TransactionRecord.replayOf("txn-original"));
+
+        // When
+        String result = portfolioService.addTransactionV2(userMail, request, new ArrayList<>());
+
+        // Then -- nothing touched the holding or profit and loss
+        assertTrue(result.contains("already recorded"), result);
+        verifyNoInteractions(portfolioRepository);
+        verifyNoInteractions(profitAndLossService);
+    }
+
+    @Test
+    void processTransaction_whenARedriveIsReplayed_doesNotAddTheHoldingTwice() {
+        // Given -- the concrete live case: a redrive that already ran. Before TL-7 the duplicate
+        // transaction row was suppressed and buyStock ran anyway, adding the holding a second time.
+        AssetRequest request = createAssetRequest("STOCK1");
+        request.setTransactionType(TransactionType.BUY);
+        request.setTempTransactionId("temp-1");
+        when(transactionService.recordTransaction(any(), any()))
+                .thenReturn(TransactionRecord.replayOf("txn-first-redrive"));
+        RealPortfolioService realService = new RealPortfolioService(
+                portfolioRepository, transactionService, profitAndLossService,
+                mongoTemplateService, tradeOutcomeService, transactionRepository,
+                temporaryTransactionService, chargeRecordingGateway,
+                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+
+        // When
+        String result = realService.addTransaction(userMail, request, new ArrayList<>());
+
+        // Then
+        assertTrue(result.contains("already recorded"), result);
+        verifyNoInteractions(portfolioRepository);
+        verifyNoInteractions(profitAndLossService);
+    }
+
+    @Test
+    void addTransactionV2_whenTheSubmissionIsNew_appliesItAsBefore() {
+        // Given
+        AssetRequest request = createAssetRequest("STOCK1");
+        request.setTransactionType(TransactionType.BUY);
+        when(transactionService.recordTransaction(any(), any()))
+                .thenReturn(TransactionRecord.created("txn-new"));
+
+        // When
+        String result = portfolioService.addTransactionV2(userMail, request, new ArrayList<>());
+
+        // Then
+        assertEquals("Stock buy added to portfolio", result);
+        verify(portfolioRepository).save(any(AssetEntity.class));
     }
 }

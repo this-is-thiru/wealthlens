@@ -5,8 +5,8 @@ lost, resume from the first unticked box.
 
 **Branch:** `feature/charges-engine` (this work continues on it; the charges engine itself is
 complete — see `../charges-engine/README.md`).
-**Status:** 6 of 8 items done. **Resume at TL-7.**
-**Last updated:** 2026-09-12 — 885 tests green (unit + integration), both JaCoCo gates passing,
+**Status:** 7 of 8 items done. **Resume at TL-8** — a decision, not a build.
+**Last updated:** 2026-09-12 — 901 tests green (unit + integration), both JaCoCo gates passing,
 surefire XML gate clean, spotless clean.
 **Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
 
@@ -211,16 +211,38 @@ on; existing rows need a decision. Separately, the migration's `TradeMatchingSer
 `FY2023-24` into `trade_outcomes` while the live paths write `2023-2024` — its *boundary* was always
 correct (`month <= 3`), only its format differs, so that collection can hold two formats.
 
-### TL-7 — Trade idempotency
+### TL-7 — Trade idempotency *(done 2026-09-12)*
 
-- [ ] Idempotency key on `AssetRequest`, unique-indexed on `TransactionEntity` (D4)
-- [ ] Derived-hash fallback within a short window when no key is supplied
-- [ ] A replay returns the original result rather than repeating the work
-- [ ] Two genuinely identical trades on one day must still both be accepted — they happen, and this
+- [x] Idempotency key on `AssetRequest`, unique-indexed on `TransactionEntity` (D4)
+- [x] Derived-hash fallback within a short window when no key is supplied
+- [x] A replay returns the original result rather than repeating the work
+- [x] Two genuinely identical trades on one day must still both be accepted — they happen, and this
       is why a pure hash was rejected
 
-Today a client that retries on a timeout creates a second transaction, a second `AssetEntity`, a
-second charge row and double-counted P&L, with nothing detecting it.
+It did, and worse than the original note said. `TransactionService.addTransaction` already deduped
+on `sourceTempTransactionId` — found the row, logged *"Duplicate transaction suppressed"*, returned
+its id — and `processTransaction` then **applied the trade to the portfolio anyway**. The duplicate
+row was suppressed; the holding was added twice and P&L updated twice, under a log line that read as
+handled. Reachable through redrive, which flips status to `PROCESSED` in a batch *after* the loop, so
+two concurrent redrives both see the same `TEMPORARY` set.
+
+Fixed by making the outcome say what happened: `recordTransaction` returns
+`TransactionRecord(transactionId, replay)`, and both orchestrators return early on a replay.
+`buyStock`, `sellStock`, `buyStockV2` and `sellStockV2` are all untouched — the guard returns before
+reaching any of them. The old `addTransaction` is deprecated rather than deleted, because returning
+an id alone is what allowed this.
+
+Three de-duplication routes in order of authority: the client's key (exact, no window), a redrive's
+`sourceTempTransactionId` (exact), and a derived fingerprint within
+`app.portfolio.idempotency.window-seconds` (default 60, a heuristic that says so). The fingerprint is
+**never** a unique index — two identical trades on one day are legitimate; it is the fingerprint plus
+the window that marks a retry, and a client key overrides it for the bulk-upload case.
+
+**Deployment hazard, documented in the charges production runbook:** covering `transactions` in
+`PortfolioIndexInitializer` applies the `source_temp_transaction_id` unique index for the first time
+— it has never existed, because `auto-index-creation` is off and the collection was not covered. If
+prod holds duplicates, creation fails. Index creation is now caught and logged at ERROR rather than
+blocking startup, so grep for `Could not create index` after deploying.
 
 ### TL-8 — Money representation *(decide, then schedule)*
 
