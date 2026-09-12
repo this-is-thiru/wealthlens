@@ -8,6 +8,7 @@ import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
@@ -15,6 +16,7 @@ import com.thiru.wealthlens.portfolio.entity.model.FortnightReport;
 import com.thiru.wealthlens.portfolio.entity.model.MonthlyReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.entity.model.ReportModel;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -50,6 +52,7 @@ public class ProfitAndLossService {
     private static final int FORTNIGHT_BOUNDARY = 15;
 
     private final ProfitAndLossRepository profitAndLossRepository;
+    private final HoldingPeriodService holdingPeriodService;
     private final ChargeRecordingGateway chargeRecordingGateway;
 
     /**
@@ -373,7 +376,7 @@ public class ProfitAndLossService {
         ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
 
         for (BuyContext buyContext : profitLossContext.buyContexts()) {
-            boolean isShortTermHeld = isShortTermCapitalGain(buyContext.date(), transactionDate);
+            boolean isShortTermHeld = isShortTermCapitalGain(profitLossContext.assetType(), buyContext.date(), transactionDate);
             double purchaseAmount = buyContext.price() * buyContext.quantity();
             double sellAmount = profitLossContext.price() * buyContext.quantity();
             InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld);
@@ -465,10 +468,17 @@ public class ProfitAndLossService {
         fortnightReport.setSellAmount(fortnightReport.getSellAmount() + internalContext.sellAmount());
     }
 
-    /** Short term is a disposal inside one year of acquisition. */
-    private static boolean isShortTermCapitalGain(LocalDate buyDate, LocalDate sellDate) {
-        LocalDate thresholdDate = buyDate.plusYears(1);
-        return sellDate.isBefore(thresholdDate);
+    /**
+     * Resolved rather than assumed. This used to be {@code buyDate.plusYears(1)} applied to every
+     * asset type, which is the listed-equity rule — mutual funds, bonds and gold bonds each follow a
+     * different one, and some are short-term however long they are held.
+     *
+     * <p>The asset type comes from the trade's own context. The sub-class, which is what decides a
+     * mutual fund's rule, is not available here and resolves as unclassified; the service logs that
+     * and counts it short-term, which is the higher-taxed direction.
+     */
+    private boolean isShortTermCapitalGain(AssetType assetType, LocalDate buyDate, LocalDate sellDate) {
+        return holdingPeriodService.isShortTerm(assetType, null, buyDate, sellDate);
     }
 
     private record InternalContext(double purchaseAmount, double sellAmount,

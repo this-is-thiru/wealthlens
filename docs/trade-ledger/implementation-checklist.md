@@ -5,8 +5,8 @@ lost, resume from the first unticked box.
 
 **Branch:** `feature/charges-engine` (this work continues on it; the charges engine itself is
 complete — see `../charges-engine/README.md`).
-**Status:** 3 of 8 items done. **Resume at TL-4.**
-**Last updated:** 2026-09-12 — 858 tests green, both JaCoCo gates passing, spotless clean.
+**Status:** 4 of 8 items done. **Resume at TL-5.**
+**Last updated:** 2026-09-12 — 870 tests green, both JaCoCo gates passing, spotless clean.
 **Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
 
 ---
@@ -61,27 +61,27 @@ recorded nowhere else and cannot be reconstructed once the lots are consumed.
 
 ## Remaining
 
-### TL-4 — Holding-period policy *(next; blocks TL-6)*
+### TL-4 — Holding-period policy *(done 2026-09-12)*
 
-One hardcoded 365-day rule currently decides STCG vs LTCG for **every asset type**, in four places:
-`PortfolioService:641`, `TradeMatchingService:173`, `ProfitAndLossService:276` and `:470`. Equity
-rules are applied to mutual funds, bonds and gold bonds.
-
-- [ ] A validity-windowed policy per asset type (D2), seeded from JSON
-- [ ] One resolver both P&L and the trade outcome call — the rule must not exist in four places again
-- [ ] Replace all four hardcoded sites
-- [ ] Rules to encode: **see [`holding-period-analysis.md`](holding-period-analysis.md)**, which
-      works them through per asset type with confidence stated per rule. The headlines: the result
-      type must allow `ALWAYS_SHORT_TERM` and `NOT_CAPITAL_GAINS`, not just a month count; two
-      different dates govern different rules (acquisition vs transfer); and `MUTUAL_FUND` cannot be
-      classified from `AssetType` alone
-- [x] **Where it lives: `portfolio`. Settled 2026-09-12.** **Do not put it in `taxplanning`** — that
-      module is salary-regime advisory (old vs new regime, perquisites, allowances) and is not used
-      by this flow. It shares the word "tax" and nothing else; linking the two would couple a trade
-      classifier to an unrelated advisory module. The rule classifies a *trade*, so it belongs where
-      trades live.
-- [ ] Seed file under `backend/src/main/resources/data/holding-periods/`, seeded by a
-      `portfolio`-owned seeder on the same terms as rate cards — explicit call, never at startup
+- [x] Validity-windowed policy per asset type, **persisted** in `holding_period_policies` and seeded
+      from `data/holding-periods/holding-period-policies.json` (D2). Eleven policies ship
+- [x] `HoldingPeriodResolver` — one classifier, database-backed, cached and evicted on seed
+- [x] All four hardcoded sites replaced: `PortfolioService`, `TradeMatchingService`, and both in
+      `ProfitAndLossService`. They did not even agree with each other — two compared
+      `plusYears(1)` and two counted 365 days, which differ across a leap year
+- [x] The result type allows `ALWAYS_SHORT_TERM` and `NOT_CAPITAL_GAINS`, not just a month count
+- [x] Each policy declares whether its window is keyed on **acquisition** or **transfer**
+- [x] `CapitalGainsType` gains `NOT_CAPITAL_GAINS` and `UNCLASSIFIED`
+- [x] Seeded by the existing `POST /charges/seed`, so one call still prepares a fresh database
+- [x] Lives in `portfolio`, **not** `taxplanning` — that module is salary-regime advisory and
+      unrelated
+- [ ] **Carried forward to TL-6: the P&L aggregate has only two buckets.** `UNCLASSIFIED` and
+      `NOT_CAPITAL_GAINS` are counted short-term there and logged, because there is nowhere else to
+      put them. Short-term is the higher-taxed direction so it does not understate a liability, but
+      it is a stopgap: a fixed deposit's interest does not belong in a capital-gains report at all
+- [ ] **Carried forward to TL-6: the sub-class is not supplied yet.** Every call passes `null`, so
+      mutual funds and bonds resolve `UNCLASSIFIED`. The data lives on `ChargeInstrumentEntity`
+      (`equityOriented`, `fundCategory`) and reaching it is part of the trade-outcome rework
 
 ### TL-5 — Charge deductibility on the catalogue *(blocks TL-6)*
 

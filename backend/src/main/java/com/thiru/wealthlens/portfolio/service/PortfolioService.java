@@ -17,6 +17,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.parser.AssetRequestParser;
@@ -70,6 +71,7 @@ public class PortfolioService {
     private final TemporaryTransactionService temporaryTransactionService;
     private final ChargeRecordingGateway chargeRecordingGateway;
     private final ChargeEngineProperties chargeEngineProperties;
+    private final HoldingPeriodService holdingPeriodService;
 
     /**
      * Multi-document write: creates a TransactionEntity and, for BUY/SELL, also
@@ -665,7 +667,11 @@ public class PortfolioService {
 
         // Holding period and capital gains type
         long holdingPeriodDays = ChronoUnit.DAYS.between(buyDate, sellDate);
-        CapitalGainsType capitalGainsType = holdingPeriodDays > 365 ? CapitalGainsType.LONG_TERM : CapitalGainsType.SHORT_TERM;
+        // Resolved rather than counted. For listed equity this is the same answer 365 days gave; for
+        // every other asset type it is the first correct one.
+        CapitalGainsType capitalGainsType = holdingPeriodService
+                .classify(assetRequest.getAssetType(), null, buyDate, sellDate)
+                .capitalGainsType();
 
         // Financial year derivation (Indian FY: April - March)
         String financialYear = deriveFinancialYear(sellDate);

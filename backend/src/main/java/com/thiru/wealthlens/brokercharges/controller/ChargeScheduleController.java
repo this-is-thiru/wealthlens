@@ -8,6 +8,7 @@ import com.thiru.wealthlens.brokercharges.service.ChargeCatalogueService;
 import com.thiru.wealthlens.brokercharges.service.ChargeScheduleService;
 import com.thiru.wealthlens.brokercharges.service.ChargeSeederService;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodSeeder;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
@@ -48,6 +49,7 @@ public class ChargeScheduleController {
     private final ChargeScheduleService chargeScheduleService;
     private final ChargeCatalogueService chargeCatalogueService;
     private final ChargeSeederService chargeSeederService;
+    private final HoldingPeriodSeeder holdingPeriodSeeder;
 
     /**
      * Publishes a card, superseding the incumbent for the same scope in the same transaction.
@@ -109,6 +111,9 @@ public class ChargeScheduleController {
     @PreAuthorize("hasRole('SUPER_USER')")
     @PostMapping("/charges/seed")
     public ChargeSeedReport seed(Principal principal) {
+        // Holding-period policies go with the rate cards: both are reference data a fresh database
+        // needs before the first trade, and two endpoints would be two chances to run only one.
+        holdingPeriodSeeder.seed(principal.getName());
         return chargeSeederService.seed(principal.getName());
     }
 

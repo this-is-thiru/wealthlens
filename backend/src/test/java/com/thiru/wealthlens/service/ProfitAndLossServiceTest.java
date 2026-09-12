@@ -16,26 +16,32 @@ import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
+import com.thiru.wealthlens.portfolio.entity.HoldingPeriodPolicyEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolver;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
+import com.thiru.wealthlens.portfolio.repository.HoldingPeriodPolicyRepository;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.core.io.ClassPathResource;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -53,8 +59,27 @@ class ProfitAndLossServiceTest {
     @Mock
     private ChargeRecordingGateway chargeRecordingGateway;
 
-    @InjectMocks
+    @Mock
+    private HoldingPeriodPolicyRepository holdingPeriodPolicyRepository;
+
     private ProfitAndLossService profitAndLossService;
+
+    /**
+     * A real classifier over the shipped policies rather than a mock. These tests assert which
+     * bucket a gain lands in, and a stubbed classifier would make that assertion say only what the
+     * stub was told to say.
+     */
+    @BeforeEach
+    void setUp() throws Exception {
+        String json = new String(new ClassPathResource(
+                "data/holding-periods/holding-period-policies.json").getInputStream().readAllBytes());
+        when(holdingPeriodPolicyRepository.findAll())
+                .thenReturn(TJsonMapper.readAsList(json, HoldingPeriodPolicyEntity.class));
+        profitAndLossService = new ProfitAndLossService(
+                profitAndLossRepository,
+                new HoldingPeriodService(new HoldingPeriodResolver(holdingPeriodPolicyRepository)),
+                chargeRecordingGateway);
+    }
 
     // ========================================
     // updateProfitAndLoss with ProfitLossContext (v2)

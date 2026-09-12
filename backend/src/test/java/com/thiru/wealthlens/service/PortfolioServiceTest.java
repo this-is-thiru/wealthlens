@@ -14,6 +14,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
@@ -66,6 +67,9 @@ class PortfolioServiceTest {
     @Mock
     private ChargeRecordingGateway chargeRecordingGateway;
 
+    @Mock
+    private HoldingPeriodService holdingPeriodService;
+
     private TestablePortfolioService portfolioService;
     private UserMail userMail;
 
@@ -89,7 +93,8 @@ class PortfolioServiceTest {
                 transactionRepository,
                 temporaryTransactionService,
                 chargeRecordingGateway,
-                properties
+                properties,
+                holdingPeriodService
         );
     }
 
@@ -107,10 +112,12 @@ class PortfolioServiceTest {
                 TransactionRepository transactionRepository,
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
-                ChargeEngineProperties chargeEngineProperties) {
+                ChargeEngineProperties chargeEngineProperties,
+                HoldingPeriodService holdingPeriodService) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties);
+                    temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties,
+                    holdingPeriodService);
         }
 
         void resetAddTransactionBehaviour() {
@@ -152,10 +159,12 @@ class PortfolioServiceTest {
                 TransactionRepository transactionRepository,
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
-                ChargeEngineProperties chargeEngineProperties) {
+                ChargeEngineProperties chargeEngineProperties,
+                HoldingPeriodService holdingPeriodService) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties);
+                    temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties,
+                    holdingPeriodService);
         }
 
         @Override
@@ -172,7 +181,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false));
+                new ChargeEngineProperties(true, true, false), holdingPeriodService);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -190,7 +199,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false));
+                new ChargeEngineProperties(true, true, false), holdingPeriodService);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
 

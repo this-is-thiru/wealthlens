@@ -6,6 +6,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import java.time.LocalDate;
@@ -27,6 +28,8 @@ import org.springframework.stereotype.Service;
 @Log4j2
 @RequiredArgsConstructor
 public class TradeMatchingService {
+
+    private final HoldingPeriodService holdingPeriodService;
 
     /**
      * Builds virtual BuyLots from BUY TransactionEntity records.
@@ -169,10 +172,11 @@ public class TradeMatchingService {
             double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
             long holdingPeriodDays = ChronoUnit.DAYS.between(lot.getBuyDate(), sell.getSellDate());
 
-            // Capital gains type
-            CapitalGainsType capitalGainsType = holdingPeriodDays > 365
-                    ? CapitalGainsType.LONG_TERM
-                    : CapitalGainsType.SHORT_TERM;
+            // Capital gains type, resolved rather than counted: 365 days is the listed-equity rule and
+            // was being applied to mutual funds, bonds and gold bonds too.
+            CapitalGainsType capitalGainsType = holdingPeriodService
+                    .classify(lot.getAssetType(), null, lot.getBuyDate(), sell.getSellDate())
+                    .capitalGainsType();
 
             // Financial year
             String financialYear = deriveFinancialYear(sell.getSellDate());
