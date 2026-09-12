@@ -54,6 +54,33 @@ rows are rewritten. Harmless until something groups by the field.
 
 ---
 
+## B-4 — `profit_and_loss` and `assets` cannot be rebuilt from `transactions`
+
+`transactions` is the source of truth. `assets` (holdings) and `profit_and_loss` are derived from it,
+and there is no way to recompute either — so any correction to them is a careful manual edit against
+a nested document.
+
+`trade_outcomes` already has exactly this: drop the collection, restart, and
+`TradeOutcomeMigrationRunner` rebuilds it from raw transactions. That is why, of the three derived
+collections, it is the only one that is easy to correct.
+
+**Why it matters.** It surfaced writing the duplicate-remediation section of
+[`migration.md`](migration.md) §3a. Unwinding one double-applied trade currently means hand-editing
+a holding's quantity and charges, then hand-adding two profit-and-loss hierarchies together across
+yearly, monthly and half-month levels. With a recompute it would be: delete the bad transaction row,
+rebuild.
+
+**Done looks like.** A `POST /portfolio/user/{email}/rebuild` that recomputes `assets` and
+`profit_and_loss` from `transactions`, behind `SUPER_USER`, with a dry-run that reports what would
+change before it changes it. Note that ADR-32 forbids re-driving transactions through the *charges
+engine* — this rebuilds holdings and totals from the charges already recorded, which is a different
+thing and should say so explicitly wherever it lands.
+
+**Why not now.** Nothing needs it today: the 31 March check returned 0 and the duplicate checks are
+expected to return nothing. It becomes urgent the first time they do not.
+
+---
+
 ## B-3 — Money is stored as `double` (this is TL-8, not really backlog)
 
 The engine computes in `BigDecimal` and rounds once, which is right. Every *stored* amount is a

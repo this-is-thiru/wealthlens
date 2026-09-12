@@ -64,11 +64,13 @@ Both carry unique indexes that, with `auto-index-creation` off, **have never act
 They are about to meet data written without them.
 
 ```js
-// transactions -- each result means a temporary transaction was redriven more than once,
-// and each of those means a holding was applied twice (the defect TL-7 fixes)
+// transactions -- each result means a temporary transaction was redriven more than once
 db.transactions.aggregate([
   { $match: { source_temp_transaction_id: { $ne: null } } },
-  { $group: { _id: "$source_temp_transaction_id", n: { $sum: 1 }, ids: { $push: "$_id" } } },
+  { $sort:  { _id: 1 } },
+  { $group: { _id: "$source_temp_transaction_id", n: { $sum: 1 }, ids: { $push: "$_id" },
+              type: { $first: "$transaction_type" }, code: { $first: "$stock_code" },
+              qty:  { $first: "$quantity" },        date: { $first: "$transaction_date" } } },
   { $match: { n: { $gt: 1 } } }
 ])
 
@@ -86,6 +88,89 @@ Empty is the expected answer for both.
 logged at ERROR naming the collection and the keys — deliberately, because failing a deploy over
 pre-existing data is worse. The cost is that the constraint can be silently absent, so after any
 deploy grep the startup log for `Could not create index`.
+
+---
+
+## 3a. If either query returns something — how to correct it
+
+**Read this first: you are not obliged to fix it before deploying.** The unique indexes are a *new*
+safety constraint, not something the application needs in order to run. Index creation already fails
+soft. So the options are, in order of how much they cost:
+
+1. **Deploy anyway.** The constraint is absent, logged at ERROR, and everything else works. Resolve
+   the data when you have time and restart to pick the index up. TL-7's replay guard stops *new*
+   duplicates regardless of whether the index exists.
+2. **Resolve the data, then deploy.** Correct, and the sections below say how.
+3. Do not "fix" it by dropping the unique flag. That silently retires the constraint, which is the
+   state we are trying to leave.
+
+### Duplicate `source_temp_transaction_id`
+
+Each duplicate is a temporary transaction that was redriven more than once. **The first row is the
+legitimate one** (the aggregate above sorts by `_id`, whose ObjectId embeds its creation time); every
+later one re-applied the same trade. So each extra row means the holding was applied twice and profit
+and loss double-counted — deleting the transaction row alone corrects the *index*, not the *money*.
+
+For each extra id, find what it touched before deleting anything:
+
+```js
+const dup = "<the second or later _id from the aggregate>";
+
+db.assets.find({ $or: [ { buy_transaction_ids: dup }, { sell_transaction_ids: dup } ] })
+db.trade_outcomes.find({ source_sell_transaction_id: dup })
+db.user_charges.find({ transaction_id: dup })
+db.transactions.find({ _id: dup })    // note its email, stock_code, transaction_date, quantity
+```
+
+Then, by case:
+
+- **A duplicated BUY.** V2 writes one `assets` document per buy, so the duplicate almost always has
+  its own document — identifiable by `buy_transaction_ids` containing only `dup`. Delete that
+  document, the `transactions` row, and its `user_charges` row. V1 merges into an existing lot
+  instead, so there the quantity and `broker_charges` have to be decremented by the duplicate's
+  amounts rather than a document deleted.
+- **A duplicated SELL.** Harder, and worth doing carefully: quantity was decremented twice across
+  possibly several lots. Restore the quantity on each `assets` document listing `dup` in
+  `sell_transaction_ids`, remove `dup` from that array, then delete the `trade_outcomes`,
+  `user_charges` and `transactions` rows.
+- **Either.** The period's `profit_and_loss` totals now include the duplicate. There is **no
+  recompute-from-transactions tool for `profit_and_loss` or `assets`** — see the note below — so the
+  affected period has to be corrected by hand or accepted.
+
+**`trade_outcomes` is the one thing that rebuilds itself.** Drop the collection and restart:
+`TradeOutcomeMigrationRunner` repopulates it from raw transactions when it finds the collection
+empty. Do that *after* the duplicate `transactions` rows are gone, so the rebuild does not reproduce
+them.
+
+### Duplicate `{email, financial_year}` in `profit_and_loss`
+
+Two documents for the same user and year, each holding part of the totals — the result of a race,
+which is exactly what the `@Version` field added in §1 now prevents.
+
+There is no merge tool and writing one is not worth it for a handful of rows. Practical order:
+
+```js
+// see how much is in each before choosing
+db.profit_and_loss.find({ email: "<email>", financial_year: "<fy>" })
+```
+
+Compare `realised_profits.short_term_capital_gains.sell_amount` and its long-term counterpart across
+the documents. If one is clearly a stub — created by a race and written to once — keep the fuller one
+and delete the stub. If both hold real figures, they have to be added together by hand: the
+hierarchy is yearly → monthly → half-month, and every level needs the same treatment.
+
+**Do not simply delete one.** These are realised capital gains; the deleted figures do not come back,
+and nothing recomputes them.
+
+### The gap this exposes
+
+`profit_and_loss` and `assets` are **derived** state with no way to rebuild them from `transactions`,
+which is the source of truth. `trade_outcomes` has exactly that (`TradeOutcomeMigrationRunner`), and
+it is why that collection is the easy one here. A recompute for the other two would make every
+correction above a one-liner instead of a careful manual edit.
+
+Recorded as **B-4** in [`backlog.md`](backlog.md). It is out of scope for this branch, but it is the
+reason "resolve the duplicates" is more work than it sounds.
 
 ---
 
