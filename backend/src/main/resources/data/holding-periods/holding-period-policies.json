@@ -1,0 +1,109 @@
+[
+  {
+    "policyCode": "MF_SPECIFIED_50AA",
+    "assetType": "MUTUAL_FUND",
+    "keyedOn": "ACQUISITION",
+    "effectiveFrom": "2023-04-01",
+    "outcome": "ALWAYS_SHORT_TERM",
+    "note": "Specified mutual fund acquired on or after 01-Apr-2023: short-term regardless of holding period (s.50AA)",
+    "subClass": "SPECIFIED"
+  },
+  {
+    "policyCode": "BOND_UNLISTED_DEEMED",
+    "assetType": "BOND",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2024-07-23",
+    "outcome": "ALWAYS_SHORT_TERM",
+    "note": "Unlisted bond or debenture transferred on or after 23-Jul-2024: short-term regardless of holding period",
+    "subClass": "UNLISTED"
+  },
+  {
+    "policyCode": "EQUITY_LISTED",
+    "assetType": "EQUITY",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2018-04-01",
+    "outcome": "LONG_TERM_AFTER_MONTHS",
+    "note": "Listed equity: long-term after twelve months",
+    "months": 12
+  },
+  {
+    "policyCode": "MF_EQUITY_ORIENTED",
+    "assetType": "MUTUAL_FUND",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2018-04-01",
+    "outcome": "LONG_TERM_AFTER_MONTHS",
+    "note": "Equity-oriented fund (over 65% domestic equity): long-term after twelve months",
+    "subClass": "EQUITY_ORIENTED",
+    "months": 12
+  },
+  {
+    "policyCode": "BOND_LISTED",
+    "assetType": "BOND",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2018-04-01",
+    "outcome": "LONG_TERM_AFTER_MONTHS",
+    "note": "Listed bond or debenture: long-term after twelve months",
+    "subClass": "LISTED",
+    "months": 12
+  },
+  {
+    "policyCode": "GOLD_BOND_LISTED",
+    "assetType": "GOLD_BOND",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2018-04-01",
+    "outcome": "LONG_TERM_AFTER_MONTHS",
+    "note": "Sovereign gold bond sold on an exchange: long-term after twelve months. Redemption at maturity or through the RBI window is exempt and is not this case",
+    "subClass": "LISTED",
+    "months": 12
+  },
+  {
+    "policyCode": "MF_OTHER_PRE_2024",
+    "assetType": "MUTUAL_FUND",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2018-04-01",
+    "outcome": "LONG_TERM_AFTER_MONTHS",
+    "note": "Non-equity fund sold before 23-Jul-2024: long-term after thirty-six months",
+    "subClass": "OTHER",
+    "effectiveTo": "2024-07-22",
+    "months": 36
+  },
+  {
+    "policyCode": "MF_OTHER",
+    "assetType": "MUTUAL_FUND",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2024-07-23",
+    "outcome": "LONG_TERM_AFTER_MONTHS",
+    "note": "Non-equity fund sold on or after 23-Jul-2024: long-term after twenty-four months",
+    "subClass": "OTHER",
+    "months": 24
+  },
+  {
+    "policyCode": "MF_SPECIFIED_PRE_RULE",
+    "assetType": "MUTUAL_FUND",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2024-07-23",
+    "outcome": "LONG_TERM_AFTER_MONTHS",
+    "note": "Specified fund acquired before 01-Apr-2023 escapes the deeming rule and follows the ordinary non-equity framework",
+    "subClass": "SPECIFIED",
+    "months": 24
+  },
+  {
+    "policyCode": "BOND_UNLISTED_PRE_2024",
+    "assetType": "BOND",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2018-04-01",
+    "outcome": "LONG_TERM_AFTER_MONTHS",
+    "note": "Unlisted bond sold before 23-Jul-2024: long-term after thirty-six months",
+    "subClass": "UNLISTED",
+    "effectiveTo": "2024-07-22",
+    "months": 36
+  },
+  {
+    "policyCode": "FD_INTEREST",
+    "assetType": "FD",
+    "keyedOn": "TRANSFER",
+    "effectiveFrom": "2018-04-01",
+    "outcome": "NOT_CAPITAL_GAINS",
+    "note": "A fixed deposit pays interest. It is income from other sources, not a capital gain"
+  }
+]

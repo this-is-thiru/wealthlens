@@ -1,0 +1,10 @@
+{
+  "name": "zerodha-maintenance-amc-cycle",
+  "describes": "An annual maintenance cycle, which is the one chargeable event that is not a trade. It names no scrip, no quantity and no asset type, so it resolves only because the maintenance card leaves every trade dimension unset — the trap that would otherwise have the cycle bill nothing and say why in a warning nobody reads.",
+  "context": { "brokerName": "ZERODHA", "assetType": null, "segment": null, "exchange": null,
+               "event": "AMC_CYCLE", "price": 0, "quantity": 0, "transactionDate": "2025-12-31" },
+  "expected": {
+    "lines": { "AMC": 300.00, "GST": 54.00 },
+    "total": 354.00
+  }
+}

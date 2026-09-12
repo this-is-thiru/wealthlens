@@ -1,0 +1,26 @@
+{
+  "name": "zerodha-equity-delivery-sell-100k-after-dp-revision",
+  "describes": "The same sell again after 2026-06-19, when Zerodha cut its share of the depository fee from Rs 10.25 to Rs 9.50, taking the charge from Rs 13.50 to Rs 13.00 before GST. Three generations of one card now price three windows, and each fixture pins the one it belongs to.",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "EQUITY",
+    "segment": "DELIVERY",
+    "exchange": null,
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 100,
+    "transactionDate": "2026-07-01"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 0.0,
+      "STT": 100.0,
+      "EXCHANGE_TXN": 3.07,
+      "SEBI_FEE": 0.1,
+      "IPFT": 0.1,
+      "DP": 13.0,
+      "GST": 2.93
+    },
+    "total": 119.2
+  }
+}

@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.portfolio.service;
-
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
+import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
@@ -8,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
+import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
@@ -16,6 +18,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.parser.AssetRequestParser;
@@ -32,7 +35,6 @@ import com.thiru.wealthlens.shared.util.parser.ExcelParser;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,6 +61,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class PortfolioService {
 
+    /**
+     * Returned when a submission was recognised as one already applied. Deliberately not an error:
+     * a retry that reaches this has got exactly what it asked for.
+     */
+    private static final String REPLAYED_MESSAGE =
+            "Transaction already recorded; this submission was a repeat and changed nothing";
+
     private final TransactionService transactionService;
     private final PortfolioRepository portfolioRepository;
     private final ProfitAndLossService profitAndLossService;
@@ -67,6 +76,11 @@ public class PortfolioService {
     private final TransactionRepository transactionRepository;
 //    private final UserBrokerChargeService userBrokerChargeService;
     private final TemporaryTransactionService temporaryTransactionService;
+    private final ChargeRecordingGateway chargeRecordingGateway;
+    private final ChargeEngineProperties chargeEngineProperties;
+    private final HoldingPeriodService holdingPeriodService;
+
+    private final TradeOutcomeRecorder tradeOutcomeRecorder;
 
     /**
      * Multi-document write: creates a TransactionEntity and, for BUY/SELL, also
@@ -93,7 +107,15 @@ public class PortfolioService {
 
         TransactionType transactionType = assetRequest.getTransactionType();
         // Add transaction
-        String transactionId = addTransactionInternal(userMail, assetRequest);
+        TransactionRecord record = transactionService.recordTransaction(userMail, assetRequest);
+        if (record.replay()) {
+            // This submission was already applied. Before TL-7 the duplicate transaction row was
+            // suppressed here and the trade was then applied to the portfolio a second time anyway,
+            // adding the holding twice. buyStock and sellStock are unchanged -- this returns before
+            // reaching them.
+            return REPLAYED_MESSAGE;
+        }
+        String transactionId = record.transactionId();
 
         return switch (transactionType) {
             case BUY -> {
@@ -120,7 +142,11 @@ public class PortfolioService {
 
         TransactionType transactionType = assetRequest.getTransactionType();
         // Add transaction
-        String transactionId = addTransactionInternal(userMail, assetRequest);
+        TransactionRecord record = transactionService.recordTransaction(userMail, assetRequest);
+        if (record.replay()) {
+            return REPLAYED_MESSAGE;
+        }
+        String transactionId = record.transactionId();
 
         return switch (transactionType) {
             case BUY -> {
@@ -134,16 +160,43 @@ public class PortfolioService {
         };
     }
 
+    /**
+     * Everything a trade must satisfy before it is allowed to change a holding.
+     *
+     * <p>The email check is conditional — the path is authenticated and the field is optional, so it
+     * only matters when the caller supplies one. <b>Everything after it is not.</b> This method used
+     * to {@code return} when the email was absent, which skipped the only other check there was, so
+     * a request with no email and no quantity was accepted.
+     *
+     * <p>Quantity must be positive rather than merely non-zero. The previous check was
+     * {@code equal(quantity, 0)}, which let a negative through: a negative buy creates a negative
+     * holding and a negative sell increases one, and neither is recoverable from the stored document
+     * alone. Price was not checked at all.
+     *
+     * <p>Zero price is deliberately allowed. Bonus shares and split allotments are issued free, and
+     * refusing them here would block the corporate-action flow that creates them.
+     */
     private static void validateAssetRequest(UserMail userMail, AssetRequest assetRequest) {
-        if (null == assetRequest.getEmail() || assetRequest.getEmail().isBlank()) {
-            return;
-        }
-        if (!userMail.getEmail().equals(assetRequest.getEmail())) {
+        String requestEmail = assetRequest.getEmail();
+        if (requestEmail != null && !requestEmail.isBlank() && !userMail.getEmail().equals(requestEmail)) {
             throw new BadRequestException("Email does not match");
         }
 
-        if (DoubleUtil.equal(assetRequest.getQuantity(), 0)) {
-            throw new BadRequestException("Invalid Quantity: " + assetRequest.getQuantity());
+        Double quantity = assetRequest.getQuantity();
+        if (quantity == null || quantity <= 0) {
+            throw new BadRequestException("Quantity must be greater than zero, but was: " + quantity);
+        }
+
+        if (assetRequest.getPrice() < 0) {
+            throw new BadRequestException("Price must not be negative, but was: " + assetRequest.getPrice());
+        }
+
+        LocalDate transactionDate = assetRequest.getTransactionDate();
+        if (transactionDate != null && transactionDate.isAfter(LocalDate.now())) {
+            throw new BadRequestException(
+                    "A trade cannot be dated in the future: " + transactionDate + ". It would be priced "
+                            + "against whichever rate card is open-ended today rather than the one in force "
+                            + "when it settles");
         }
     }
 
@@ -314,6 +367,11 @@ public class PortfolioService {
         portfolioRepository.save(assetEntity);
     }
 
+    /**
+     * The V2 buy. Deliberately no longer shares {@link #updateBrokerChargesAndProfitAndLoss} with
+     * V1 {@code buyStock}: the charge is computed <b>before</b> the lot is written so the computed
+     * total can become the cost basis, and V1 is unused and left exactly as it was.
+     */
     public void buyStockV2(UserMail userMail, String transactionId, AssetRequest assetRequest) {
 
         String email = userMail.getEmail();
@@ -322,11 +380,44 @@ public class PortfolioService {
         double totalValueOfTransaction = getTotalValue(assetRequest);
 //        assetEntity.setTotalValue(totalValueOfTransaction);
 
-        // Update the broker charges entry
-        updateBrokerChargesAndProfitAndLoss(userMail, transactionId, assetRequest);
+        // Priced before the lot is written. The other order works right up until the computed total
+        // becomes the cost basis, at which point the saved lot carries the figure the user typed.
+        var profitLossContext = buyContext(transactionId, assetRequest);
+        Optional<ChargeComputation> computation = chargeRecordingGateway.record(userMail, profitLossContext);
+        applyComputedCostBasis(assetEntity, computation);
+
+        // Handed on rather than recomputed, so the engine runs once per trade.
+        profitAndLossService.updateProfitAndLoss(userMail, profitLossContext, computation);
 
         assetEntity.getBuyTransactionIds().add(transactionId);
         portfolioRepository.save(assetEntity);
+    }
+
+    /**
+     * Replaces the user-entered charge with the engine's, once {@code app.charges.authoritative} is
+     * on (AC-10).
+     *
+     * <p>An absent computation leaves the entered figure alone rather than zeroing it. The engine
+     * declines for reasons that say nothing about whether the trade cost anything — no rate card for
+     * the period, the kill switch, a scheme with no profile — and overwriting a real cost with zero
+     * because we could not price it would be worse than keeping an estimate.
+     *
+     * <p>{@code brokerCharges} stays on {@code AssetRequest} deliberately: existing clients keep
+     * sending it and keep working, it simply stops being read. Removing it is a later release.
+     */
+    private void applyComputedCostBasis(AssetEntity assetEntity, Optional<ChargeComputation> computation) {
+        if (!chargeEngineProperties.authoritative() || computation.isEmpty()) {
+            return;
+        }
+        assetEntity.setBrokerCharges(computation.get().total());
+    }
+
+    private static ProfitLossContext buyContext(String transactionId, AssetRequest assetRequest) {
+        return new ProfitLossContext(transactionId, assetRequest.getQuantity(), assetRequest.getTransactionDate(),
+                assetRequest.getPrice(), assetRequest.getStockCode(), assetRequest.getBrokerName(),
+                assetRequest.getExchangeName(), assetRequest.getAssetType(), TransactionType.BUY, null,
+                assetRequest.getAccountType(), assetRequest.getAccountHolder(), Collections.emptyList(),
+                assetRequest.getSegment());
     }
 
     public void sellStockV2(UserMail userMail, String transactionId, AssetRequest assetRequest) {
@@ -485,18 +576,26 @@ public class PortfolioService {
 
             TradeOutcomeContext tradeOutcomeContext;
             ProfitAndLossContext profitAndLossContext;
-            double sellQty;
+            double sellQty = Math.min(sellQuantity, assetQuantity);
+
+            // Deducted ONCE per sell and handed to both records (B-8). The trade outcome and the
+            // profit-and-loss entry describe the same allocation, so if each asked for its own the
+            // lot would be charged twice. Before this the full charge was divided by the quantity
+            // still remaining, with nothing tracking what had gone: a 3-unit lot carrying Rs.10
+            // sold singly deducted 3.33, then 5.00, then 10.00 -- Rs.18.33 against Rs.10 paid,
+            // inflating the cost base and understating the gain.
+            double buyBrokerCharges = LotChargeAllocator.deductBroker(assetEntity, sellQty, assetQuantity);
+            double buyMiscCharges = LotChargeAllocator.deductMisc(assetEntity, sellQty, assetQuantity);
+
             if (sellQuantity >= assetQuantity) {
-                tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, assetQuantity, transactionId);
-                profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, assetQuantity);
-                sellQty = assetQuantity;
+                tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, assetQuantity, transactionId, buyBrokerCharges, buyMiscCharges);
+                profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, assetQuantity, buyBrokerCharges, buyMiscCharges);
 
                 assetEntity.setQuantity(0D);
                 sellQuantity = sellQuantity - assetQuantity;
             } else {
-                tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, sellQuantity, transactionId);
-                profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, sellQuantity);
-                sellQty = sellQuantity;
+                tradeOutcomeContext = toTradeOutcomeContext(userMail.getEmail(), assetEntity, assetRequest, sellQuantity, transactionId, buyBrokerCharges, buyMiscCharges);
+                profitAndLossContext = ProfitAndLossContext.from(assetEntity, assetRequest, sellQuantity, buyBrokerCharges, buyMiscCharges);
 
                 double remainingQuantity = assetQuantity - sellQuantity;
                 assetEntity.setQuantity(remainingQuantity);
@@ -520,6 +619,7 @@ public class PortfolioService {
         double sellQuantity = assetRequest.getQuantity();
         Iterator<AssetEntity> stockEntitiesIterator = stockEntities.iterator();
         List<BuyContext> buyContexts = new ArrayList<>();
+        List<TradeOutcomeRecorder.MatchedLot> matchedLots = new ArrayList<>();
         while (sellQuantity > 0) {
             AssetEntity assetEntity = stockEntitiesIterator.next();
             assetEntity.getSellTransactionIds().add(transactionId);
@@ -527,12 +627,14 @@ public class PortfolioService {
 
             if (sellQuantity >= assetQuantity) {
                 buyContexts.add(new BuyContext(assetEntity.getQuantity(), assetEntity.getTransactionDate(), assetEntity.getPrice()));
+                matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, assetQuantity, assetQuantity));
 
                 assetEntity.setQuantity(0D);
 //                assetEntity.setTotalValue(0);
                 sellQuantity = sellQuantity - assetQuantity;
             } else {
                 buyContexts.add(new BuyContext(sellQuantity, assetEntity.getTransactionDate(), assetEntity.getPrice()));
+                matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, sellQuantity, assetQuantity));
 
                 double remainingQuantity = assetQuantity - sellQuantity;
                 assetEntity.setQuantity(remainingQuantity);
@@ -540,11 +642,20 @@ public class PortfolioService {
                 sellQuantity = 0;
             }
         }
+        // V2 sell. Priced here and handed on, so the engine runs once and the computed charge
+        // reaches the period's summary. V1 sellStock takes the deprecated ProfitAndLossContext
+        // overload and is not affected by any of this.
         var profitLossContext = toProfitLossContext(assetRequest, buyContexts, transactionId);
-        profitAndLossService.updateProfitAndLoss(userMail, profitLossContext);
+        Optional<ChargeComputation> computation = chargeRecordingGateway.record(userMail, profitLossContext);
+        profitAndLossService.updateProfitAndLoss(userMail, profitLossContext, computation);
+        // The itemised capital-gains rows. Until now only the V1 sell wrote these, so a V2 user had
+        // aggregate totals and nothing to file from. Deliberately after the pricing call, because
+        // the sell charge has to exist before it can be pro-rated across the lots it was matched to.
+        tradeOutcomeRecorder.record(userMail, assetRequest, transactionId, matchedLots, computation);
     }
 
     private static ProfitLossContext toProfitLossContext(AssetRequest assetRequest, List<BuyContext> buyContexts, String transactionId) {
+
 
         double sellQuantity = assetRequest.getQuantity();
         LocalDate sellDate = assetRequest.getTransactionDate();
@@ -555,19 +666,19 @@ public class PortfolioService {
         BrokerName brokerName = assetRequest.getBrokerName();
 
         return new ProfitLossContext(transactionId, sellQuantity, sellDate, price, stockCode, brokerName, assetRequest.getExchangeName(),
-                assetRequest.getAssetType(), TransactionType.SELL, null, accountType, accountHolder, buyContexts);
+                assetRequest.getAssetType(), TransactionType.SELL, null, accountType, accountHolder, buyContexts,
+                assetRequest.getSegment());
     }
 
     private TradeOutcomeContext toTradeOutcomeContext(String email, AssetEntity assetEntity, AssetRequest assetRequest,
-                                                       double sellQuantity, String transactionId) {
+                                                       double sellQuantity, String transactionId,
+                                                       double buyBrokerCharges, double buyMiscCharges) {
 
         LocalDate buyDate = assetEntity.getTransactionDate();
         LocalDate sellDate = assetRequest.getTransactionDate();
 
         // Pro-rate buy-side charges based on sell quantity
         double assetQuantity = assetEntity.getQuantity() != null ? assetEntity.getQuantity() : 1.0;
-        double buyBrokerCharges = (assetEntity.getBrokerCharges() / assetQuantity) * sellQuantity;
-        double buyMiscCharges = (assetEntity.getMiscCharges() / assetQuantity) * sellQuantity;
 
         // Pro-rate sell-side charges based on sell quantity
         double sellReqQuantity = assetRequest.getQuantity() != null ? assetRequest.getQuantity() : 1.0;
@@ -575,8 +686,8 @@ public class PortfolioService {
         double sellMiscCharges = (assetRequest.getMiscCharges() / sellReqQuantity) * sellQuantity;
 
         // Buy side values
-        double caAdjustedBuyPrice = assetEntity.getPrice();
-        double originalBuyPrice = caAdjustedBuyPrice; // Will improve later with source transaction data
+        double corporateActionAdjustedBuyPrice = assetEntity.getPrice();
+        double originalBuyPrice = corporateActionAdjustedBuyPrice; // Will improve later with source transaction data
         double buyQty = sellQuantity;
 
         // Sell side values
@@ -584,20 +695,24 @@ public class PortfolioService {
         double sellQty = sellQuantity;
 
         // Computed values
-        double totalBuyValue = (caAdjustedBuyPrice * sellQuantity) + buyBrokerCharges + buyMiscCharges;
+        double totalBuyValue = (corporateActionAdjustedBuyPrice * sellQuantity) + buyBrokerCharges + buyMiscCharges;
         double totalSellValue = (sellPrice * sellQuantity) - sellBrokerCharges - sellMiscCharges;
         double netProfit = totalSellValue - totalBuyValue;
         double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
 
         // Holding period and capital gains type
         long holdingPeriodDays = ChronoUnit.DAYS.between(buyDate, sellDate);
-        CapitalGainsType capitalGainsType = holdingPeriodDays > 365 ? CapitalGainsType.LONG_TERM : CapitalGainsType.SHORT_TERM;
+        // Resolved rather than counted. For listed equity this is the same answer 365 days gave; for
+        // every other asset type it is the first correct one.
+        CapitalGainsType capitalGainsType = holdingPeriodService
+                .classify(assetRequest.getAssetType(), null, buyDate, sellDate)
+                .capitalGainsType();
 
         // Financial year derivation (Indian FY: April - March)
         String financialYear = deriveFinancialYear(sellDate);
 
         // Check if CA-derived (bonus stock or price=0)
-        boolean isCaDerived = (assetEntity.getCorporateActions() != null && !assetEntity.getCorporateActions().isEmpty())
+        boolean corporateActionDerived = (assetEntity.getCorporateActions() != null && !assetEntity.getCorporateActions().isEmpty())
                 || (assetEntity.getPrice() == 0 && assetEntity.getCorporateActionType() != null);
 
         // Build context
@@ -611,7 +726,7 @@ public class PortfolioService {
                 .accountType(assetRequest.getAccountType())
                 .accountHolder(assetRequest.getAccountHolder())
                 .originalBuyPrice(originalBuyPrice)
-                .caAdjustedBuyPrice(caAdjustedBuyPrice)
+                .corporateActionAdjustedBuyPrice(corporateActionAdjustedBuyPrice)
                 .buyQuantity(buyQty)
                 .buyDate(buyDate)
                 .buyBrokerCharges(buyBrokerCharges)
@@ -630,22 +745,24 @@ public class PortfolioService {
                 .financialYear(financialYear)
                 .sourceSellTransactionId(transactionId)
                 .sourceBuyLotId(assetEntity.getId())
-                .isCaDerived(isCaDerived)
+                .corporateActionDerived(corporateActionDerived)
                 .appliedCorporateActions(assetEntity.getCorporateActions())
                 .build();
 
         return context;
     }
 
+    /**
+     * V1's financial year. The body is a delegation and nothing else — the name, the signature and
+     * every call site are unchanged, because this sits on the live V1 sell path.
+     *
+     * <p>It used to compare {@code isBefore(March 31)}, which filed a trade made <em>on</em> 31
+     * March into the following year. That was wrong here, in {@code ProfitAndLossService} and in
+     * the trade-outcome recorder identically; all three now share one derivation so they cannot
+     * drift apart again.
+     */
     private static String deriveFinancialYear(LocalDate transactionDate) {
-        int transactionYear = transactionDate.getYear();
-        LocalDate financialYearEnd = LocalDate.of(transactionYear, Month.MARCH, 31);
-
-        if (transactionDate.isBefore(financialYearEnd)) {
-            return (transactionYear - 1) + "-" + transactionYear;
-        }
-
-        return transactionYear + "-" + (transactionYear + 1);
+        return TLocalDate.financialYear(transactionDate);
     }
 
     public ProfitAndLossResponse getProfitAndLoss(UserMail userMail, String financialYear) {

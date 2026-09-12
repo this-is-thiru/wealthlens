@@ -1,0 +1,26 @@
+{
+  "name": "fyers-equity-delivery-sell-1k",
+  "describes": "A Rs 1,000 delivery sell at Fyers, where brokerage is 0.3% rather than the Rs 20 cap. Every other fixture prices Rs 1,00,000, at which the cap binds and a wrong percentage cannot be seen — which is exactly how the card shipped at 0.1% and passed. Below Rs 6,667 the rate is what is charged, so this is the size that tests it.",
+  "context": {
+    "brokerName": "FYERS",
+    "assetType": "EQUITY",
+    "segment": "DELIVERY",
+    "exchange": null,
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 1,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 3.0,
+      "STT": 1.0,
+      "EXCHANGE_TXN": 0.03,
+      "SEBI_FEE": 0.0,
+      "IPFT": 0.0,
+      "DP": 12.5,
+      "GST": 2.8
+    },
+    "total": 19.33
+  }
+}

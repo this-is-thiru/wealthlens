@@ -3,9 +3,11 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import lombok.*;
 
 @Data
@@ -29,7 +31,7 @@ public class TradeOutcomeContext {
 
     // Buy side
     private double originalBuyPrice;
-    private double caAdjustedBuyPrice;
+    private double corporateActionAdjustedBuyPrice;
     private Double buyQuantity;
     private LocalDate buyDate;
     private double buyBrokerCharges;
@@ -49,6 +51,13 @@ public class TradeOutcomeContext {
     private double profitPercentage;
     private Long holdingPeriodDays;
     private CapitalGainsType capitalGainsType;
+    private TradeSegment segment;
+    private String instrumentSubClass;
+    private String classificationReason;
+    private Map<String, Double> buyChargeBreakup;
+    private Map<String, Double> sellChargeBreakup;
+    private double deductibleBuyCharges;
+    private double deductibleSellCharges;
     private String financialYear;
 
     // Linkage fields
@@ -56,6 +65,6 @@ public class TradeOutcomeContext {
     private String sourceBuyLotId;
 
     // CA tracking
-    private Boolean isCaDerived;
+    private Boolean corporateActionDerived;
     private List<CorporateActionEntity> appliedCorporateActions;
 }

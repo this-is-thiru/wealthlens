@@ -3,9 +3,6 @@ package com.thiru.wealthlens.integration;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.thiru.wealthlens.brokercharges.dto.enums.BrokerageAggregatorType;
-import com.thiru.wealthlens.brokercharges.entity.BrokerCharges;
-import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
@@ -16,14 +13,12 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.entity.model.BrokerageCharges;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
 import com.thiru.wealthlens.shared.dto.DateRange;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
-import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import io.restassured.RestAssured;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -1163,9 +1158,6 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     void addTransactionV2_buyNew_whenNewStock_expected200AndAssetCreated() {
         String token = generateToken(TEST_EMAIL);
 
-        // Seed BrokerCharges template for ZERODHA via direct mongoTemplate save
-        seedBrokerCharges();
-
         AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
 
         String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
@@ -1186,21 +1178,16 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 AssetEntity.class, "assets");
         assertNotNull(savedAsset, "Asset should be created via v2 endpoint");
         assertEquals(10.0, savedAsset.getQuantity());
-
-        // Verify UserBrokerCharges created in user_broker_charges collection
-        List<UserBrokerCharges> charges = mongoTemplate.find(
-                new org.springframework.data.mongodb.core.query.Query(
-                        Criteria.where("email").is(TEST_EMAIL)),
-                UserBrokerCharges.class, "user_broker_charges");
-        assertFalse(charges.isEmpty(), "UserBrokerCharges should be created");
+        // The superseded implementation is deleted (Chunk 11), so user_broker_charges cannot be
+        // written by anything. Asserted on the raw collection rather than a mapped type, because
+        // the type no longer exists.
+        assertEquals(0, mongoTemplate.getCollection("user_broker_charges").countDocuments(),
+                "nothing may write the superseded implementation's collection");
     }
 
     @Test
     void addTransactionV2_sell_whenEnoughStocks_expected200AndPnlUpdated() {
         String token = generateToken(TEST_EMAIL);
-
-        // Seed BrokerCharges template for ZERODHA
-        seedBrokerCharges();
 
         // First BUY some stock via v2
         AssetRequest buyRequest = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
@@ -1232,29 +1219,13 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 AssetEntity.class, "assets");
         double totalQty = assets.stream().mapToDouble(AssetEntity::getQuantity).sum();
         assertEquals(5.0, totalQty, "Quantity should be reduced after partial sell");
-
-        // Verify UserBrokerCharges created for both buy and sell
-        List<UserBrokerCharges> charges = mongoTemplate.find(
-                new org.springframework.data.mongodb.core.query.Query(
-                        Criteria.where("email").is(TEST_EMAIL)),
-                UserBrokerCharges.class, "user_broker_charges");
-        assertFalse(charges.isEmpty(), "UserBrokerCharges should be created for buy and sell");
+        // The superseded implementation is deleted (Chunk 11), so user_broker_charges cannot be
+        // written by anything. Asserted on the raw collection rather than a mapped type, because
+        // the type no longer exists.
+        assertEquals(0, mongoTemplate.getCollection("user_broker_charges").countDocuments(),
+                "nothing may write the superseded implementation's collection");
     }
 
-    private void seedBrokerCharges() {
-        BrokerCharges bc = new BrokerCharges();
-        bc.setBrokerName(BrokerName.ZERODHA);
-        bc.setStartDate(LocalDate.now().minusYears(1));
-        bc.setEndDate(LocalDate.now().plusYears(1));
-        bc.setStatus(EntityStatus.ACTIVE);
-        bc.setBrokerageCharges(new BrokerageCharges(0, 20, BrokerageAggregatorType.MIN, 0, 20));
-        bc.setStt(0.1);
-        bc.setSebiCharges(0.0001);
-        bc.setStampDuty(0.015);
-        bc.setDpChargesPerScrip(13.5);
-        bc.setGstApplicableDescription("18%-brokerage,18%-dp_charges,18%-stt,18%-amc_charges");
-        mongoTemplate.save(bc, "broker_charges");
-    }
 
     // ============================================================
     // Helper Methods

@@ -1,0 +1,11 @@
+{
+  "name": "zerodha-equity-delivery-sell-100k",
+  "describes": "A ₹1,00,000 delivery sale, first of the day for this scrip. Depository charges apply; stamp duty does not. GST is 18% of the taxable services only — brokerage, exchange, SEBI, IPFT and DP — never of the ₹100 securities transaction tax.",
+  "context": { "brokerName": "ZERODHA", "assetType": "EQUITY", "segment": "DELIVERY", "exchange": "NSE",
+               "event": "SELL", "price": 1000, "quantity": 100, "transactionDate": "2025-06-02" },
+  "expected": {
+    "lines": { "BROKERAGE": 0.00, "STT": 100.00, "EXCHANGE_TXN": 2.97, "SEBI_FEE": 0.10,
+               "IPFT": 0.10, "DP": 13.50, "GST": 3.00 },
+    "total": 119.67
+  }
+}

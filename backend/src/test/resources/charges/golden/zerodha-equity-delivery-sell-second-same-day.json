@@ -1,0 +1,12 @@
+{
+  "name": "zerodha-equity-delivery-sell-second-same-day",
+  "describes": "A second sale of the same scrip on the same day. One demat debit means one depository charge, so DP is nil — and GST falls with it, because DP was part of its base.",
+  "context": { "brokerName": "ZERODHA", "assetType": "EQUITY", "segment": "DELIVERY", "exchange": "NSE",
+               "event": "SELL", "price": 1000, "quantity": 100, "transactionDate": "2025-06-02" },
+  "alreadyChargedToday": ["DP"],
+  "expected": {
+    "lines": { "BROKERAGE": 0.00, "STT": 100.00, "EXCHANGE_TXN": 2.97, "SEBI_FEE": 0.10,
+               "IPFT": 0.10, "DP": 0.00, "GST": 0.57 },
+    "total": 103.74
+  }
+}

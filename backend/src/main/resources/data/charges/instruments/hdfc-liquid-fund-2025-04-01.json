@@ -1,0 +1,24 @@
+{
+  "stockCode": "HDFCLIQUID",
+  "isin": "INF179K01YV8",
+  "name": "HDFC Liquid Fund — Direct Plan, Growth",
+  "assetType": "MUTUAL_FUND",
+  "fundCategory": "LIQUID",
+  "equityOriented": false,
+  "planType": "DIRECT",
+  "amc": "HDFC Mutual Fund",
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "sourceUrl": "https://www.hdfcfund.com/our-products/debt/hdfc-liquid-fund",
+  "verifiedOn": null,
+  "rules": [
+    { "code": "EXIT_LOAD", "displayName": "Exit load", "category": "FUND",
+      "basis": "TURNOVER", "amountBasis": "TURNOVER",
+      "side": "SELL", "events": ["SELL"], "perLot": true,
+      "eligibility": "#holdingDays < 7",
+      "rate": 0.005,
+      "rounding": "HALF_UP_2", "taxable": false, "active": true, "order": 15,
+      "notes": "PLACEHOLDER — a liquid scheme levies its load only on units redeemed within the first week, which is the holding-period predicate AC-6 names. Stated as a predicate rather than as bands because the load does not taper here; the flexi-cap profile is the graded form. #holdingDays is published per lot by the engine, so the predicate is answered once per lot rather than once per redemption." }
+  ]
+}

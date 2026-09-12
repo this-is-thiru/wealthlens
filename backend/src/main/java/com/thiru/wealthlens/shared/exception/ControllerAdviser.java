@@ -44,6 +44,12 @@ public class ControllerAdviser {
         return buildErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), request);
     }
 
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleServiceUnavailable(Exception ex, HttpServletRequest request) {
+        log(ex);
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage(), request);
+    }
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex, HttpServletRequest request) {
         log(ex);
