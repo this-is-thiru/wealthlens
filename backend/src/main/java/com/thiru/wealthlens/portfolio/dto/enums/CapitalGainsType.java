@@ -1,5 +1,15 @@
 package com.thiru.wealthlens.portfolio.dto.enums;
 
+/**
+ * How a realised disposal is taxed.
+ *
+ * <p>Five values, and they are <b>not peers</b>. {@link #SHORT_TERM}, {@link #LONG_TERM} and
+ * {@link #SPECULATIVE} are income buckets a return actually carries; {@link #UNCLASSIFIED} is a
+ * data-quality state and {@link #NOT_CAPITAL_GAINS} belongs to a different head of income
+ * altogether. They share one map on {@code RealisedProfits} so the partition is complete and the
+ * amounts reconcile against total proceeds — which is exactly why summing that map is wrong, and
+ * why {@link #countsAsCapitalGains()} exists.
+ */
 public enum CapitalGainsType {
 
     SHORT_TERM,
@@ -7,19 +17,25 @@ public enum CapitalGainsType {
     LONG_TERM,
 
     /**
-     * Not a capital gain at all — a fixed deposit's interest, or an exempt redemption. Distinct from
-     * a zero gain: it belongs under a different head of income, so a capital-gains statement must
-     * leave it out rather than include it as nil.
+     * Intraday equity. Speculative business income taxed at slab rate, not capital gains at all
+     * (decision D1) — so it is recorded and itemised, but never folded into a capital-gains total.
      */
+    SPECULATIVE,
+
     NOT_CAPITAL_GAINS,
 
+    UNCLASSIFIED;
+
     /**
-     * The rule could not be determined, most often because a mutual fund's category is not on file.
-     * Equity-oriented would be twelve months, a specified fund short-term regardless, and anything
-     * else twenty-four — three answers with different tax, so guessing is worse than saying so.
+     * Whether an amount classified this way belongs in a capital-gains total.
      *
-     * <p>Recorded rather than defaulted, for the reason {@code ChargeResolution} records why a
-     * charge came out at zero: an unexplained figure is indistinguishable from a wrong one.
+     * <p>Deliberately an exhaustive switch with no {@code default}: a sixth classification must be
+     * a decision someone makes here, not something that inherits an answer by falling through.
      */
-    UNCLASSIFIED
+    public boolean countsAsCapitalGains() {
+        return switch (this) {
+            case SHORT_TERM, LONG_TERM -> true;
+            case SPECULATIVE, NOT_CAPITAL_GAINS, UNCLASSIFIED -> false;
+        };
+    }
 }

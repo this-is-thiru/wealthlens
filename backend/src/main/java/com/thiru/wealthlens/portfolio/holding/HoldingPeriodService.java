@@ -30,14 +30,20 @@ public class HoldingPeriodService {
     /**
      * The two-way answer the profit-and-loss aggregate needs, because it has exactly two buckets.
      *
-     * <p>{@code UNCLASSIFIED} has nowhere to go in that model, so it is reported as short-term and
-     * <b>logged</b>. Short-term is the conservative direction — it is the higher-taxed of the two, so
-     * an unknown lands on the side that does not understate a liability. It is a stopgap, not a
-     * design: the aggregate needs a third bucket, and that is TL-6's problem rather than something to
-     * solve quietly here.
+     * <p><b>Not a stopgap any more — the deliberate adapter for the legacy pair.</b> Since D8 the
+     * aggregate also carries {@code gainsByClassification}, which holds the real answer; this
+     * two-way reduction exists solely to keep {@code shortTermCapitalGains} and
+     * {@code longTermCapitalGains} behaving exactly as they always have, so no existing reader
+     * changes before those fields retire with V1. A caller that wants the truth asks
+     * {@link #classify}, or {@code TradeClassifier} when segment matters too.
+     *
+     * <p>{@code UNCLASSIFIED} has nowhere to go in a two-bucket model, so it is reported as
+     * short-term and <b>logged</b>. Short-term is the conservative direction — the higher-taxed of
+     * the two — so an unknown lands on the side that does not understate a liability.
      *
      * <p>{@code NOT_CAPITAL_GAINS} is reported the same way for the same reason, and is equally
-     * wrong — a fixed deposit's interest does not belong in a capital-gains report at all.
+     * wrong — a fixed deposit's interest does not belong in a capital-gains report at all. It is
+     * recorded correctly in the classification map, which is the point of having one.
      */
     public boolean isShortTerm(AssetType assetType, String subClass,
                                LocalDate acquisitionDate, LocalDate transferDate) {

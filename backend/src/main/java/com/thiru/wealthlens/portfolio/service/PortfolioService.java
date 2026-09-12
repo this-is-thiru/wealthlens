@@ -34,7 +34,6 @@ import com.thiru.wealthlens.shared.util.parser.ExcelParser;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,6 +71,8 @@ public class PortfolioService {
     private final ChargeRecordingGateway chargeRecordingGateway;
     private final ChargeEngineProperties chargeEngineProperties;
     private final HoldingPeriodService holdingPeriodService;
+
+    private final TradeOutcomeRecorder tradeOutcomeRecorder;
 
     /**
      * Multi-document write: creates a TransactionEntity and, for BUY/SELL, also
@@ -590,6 +591,7 @@ public class PortfolioService {
         double sellQuantity = assetRequest.getQuantity();
         Iterator<AssetEntity> stockEntitiesIterator = stockEntities.iterator();
         List<BuyContext> buyContexts = new ArrayList<>();
+        List<TradeOutcomeRecorder.MatchedLot> matchedLots = new ArrayList<>();
         while (sellQuantity > 0) {
             AssetEntity assetEntity = stockEntitiesIterator.next();
             assetEntity.getSellTransactionIds().add(transactionId);
@@ -597,12 +599,14 @@ public class PortfolioService {
 
             if (sellQuantity >= assetQuantity) {
                 buyContexts.add(new BuyContext(assetEntity.getQuantity(), assetEntity.getTransactionDate(), assetEntity.getPrice()));
+                matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, assetQuantity, assetQuantity));
 
                 assetEntity.setQuantity(0D);
 //                assetEntity.setTotalValue(0);
                 sellQuantity = sellQuantity - assetQuantity;
             } else {
                 buyContexts.add(new BuyContext(sellQuantity, assetEntity.getTransactionDate(), assetEntity.getPrice()));
+                matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, sellQuantity, assetQuantity));
 
                 double remainingQuantity = assetQuantity - sellQuantity;
                 assetEntity.setQuantity(remainingQuantity);
@@ -616,6 +620,10 @@ public class PortfolioService {
         var profitLossContext = toProfitLossContext(assetRequest, buyContexts, transactionId);
         Optional<ChargeComputation> computation = chargeRecordingGateway.record(userMail, profitLossContext);
         profitAndLossService.updateProfitAndLoss(userMail, profitLossContext, computation);
+        // The itemised capital-gains rows. Until now only the V1 sell wrote these, so a V2 user had
+        // aggregate totals and nothing to file from. Deliberately after the pricing call, because
+        // the sell charge has to exist before it can be pro-rated across the lots it was matched to.
+        tradeOutcomeRecorder.record(userMail, assetRequest, transactionId, matchedLots, computation);
     }
 
     private static ProfitLossContext toProfitLossContext(AssetRequest assetRequest, List<BuyContext> buyContexts, String transactionId) {
@@ -717,15 +725,17 @@ public class PortfolioService {
         return context;
     }
 
+    /**
+     * V1's financial year. The body is a delegation and nothing else — the name, the signature and
+     * every call site are unchanged, because this sits on the live V1 sell path.
+     *
+     * <p>It used to compare {@code isBefore(March 31)}, which filed a trade made <em>on</em> 31
+     * March into the following year. That was wrong here, in {@code ProfitAndLossService} and in
+     * the trade-outcome recorder identically; all three now share one derivation so they cannot
+     * drift apart again.
+     */
     private static String deriveFinancialYear(LocalDate transactionDate) {
-        int transactionYear = transactionDate.getYear();
-        LocalDate financialYearEnd = LocalDate.of(transactionYear, Month.MARCH, 31);
-
-        if (transactionDate.isBefore(financialYearEnd)) {
-            return (transactionYear - 1) + "-" + transactionYear;
-        }
-
-        return transactionYear + "-" + (transactionYear + 1);
+        return TLocalDate.financialYear(transactionDate);
     }
 
     public ProfitAndLossResponse getProfitAndLoss(UserMail userMail, String financialYear) {

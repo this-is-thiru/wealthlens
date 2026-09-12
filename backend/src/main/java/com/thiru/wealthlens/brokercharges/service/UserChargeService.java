@@ -13,6 +13,7 @@ import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -88,6 +89,17 @@ public class UserChargeService {
     /** Rows whose charges could not be fully assessed. Drives the gaps report. */
     public List<UserChargeEntity> findGaps(String email) {
         return userChargeRepository.findByEmailAndResolutionIn(email, ChargeResolution.UNRESOLVED);
+    }
+
+    /**
+     * The recorded charges for a transaction, or empty when there are none.
+     *
+     * <p>Distinct from {@link #findForTransaction} deliberately. A buy made before the engine was
+     * switched on has no charge row, and ADR-32 settles that it never will — so a sell that matches
+     * against such a lot must record what it can and carry on, not fail.
+     */
+    public Optional<UserChargeEntity> findOptionalForTransaction(String email, String transactionId) {
+        return userChargeRepository.findByEmailAndTransactionId(email, transactionId);
     }
 
     public UserChargeEntity findForTransaction(String email, String transactionId) {

@@ -11,9 +11,11 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolution;
 import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
@@ -22,6 +24,7 @@ import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
+import com.thiru.wealthlens.portfolio.service.TradeOutcomeRecorder;
 import com.thiru.wealthlens.portfolio.service.TradeOutcomeService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
@@ -70,6 +73,9 @@ class PortfolioServiceTest {
     @Mock
     private HoldingPeriodService holdingPeriodService;
 
+    @Mock
+    private TradeOutcomeRecorder tradeOutcomeRecorder;
+
     private TestablePortfolioService portfolioService;
     private UserMail userMail;
 
@@ -94,7 +100,8 @@ class PortfolioServiceTest {
                 temporaryTransactionService,
                 chargeRecordingGateway,
                 properties,
-                holdingPeriodService
+                holdingPeriodService,
+                tradeOutcomeRecorder
         );
     }
 
@@ -113,11 +120,11 @@ class PortfolioServiceTest {
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeEngineProperties chargeEngineProperties,
-                HoldingPeriodService holdingPeriodService) {
+                HoldingPeriodService holdingPeriodService, TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties,
-                    holdingPeriodService);
+                    holdingPeriodService, tradeOutcomeRecorder);
         }
 
         void resetAddTransactionBehaviour() {
@@ -160,11 +167,12 @@ class PortfolioServiceTest {
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeEngineProperties chargeEngineProperties,
-                HoldingPeriodService holdingPeriodService) {
+                HoldingPeriodService holdingPeriodService,
+                TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties,
-                    holdingPeriodService);
+                    holdingPeriodService, tradeOutcomeRecorder);
         }
 
         @Override
@@ -181,7 +189,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService);
+                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -199,7 +207,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService);
+                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -501,5 +509,74 @@ class PortfolioServiceTest {
 
         // When / Then
         assertDoesNotThrow(() -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    // ========================================
+    // TL-6 -- the V2 sell writes itemised trade outcomes; V1 keeps its own path
+    // ========================================
+
+    private static AssetEntity sellableLot(String txnId, double quantity, double price, LocalDate buyDate) {
+        AssetEntity asset = new AssetEntity();
+        asset.setId("asset-" + txnId);
+        asset.setEmail("test@example.com");
+        asset.setStockCode("STOCK1");
+        asset.setAssetType(AssetType.EQUITY);
+        asset.setPrice(price);
+        asset.setQuantity(quantity);
+        asset.setTransactionDate(buyDate);
+        asset.getBuyTransactionIds().add(txnId);
+        return asset;
+    }
+
+    @Test
+    void updateQuantityBySavingReportAndProfitAndLoss1_recordsTradeOutcomesForEveryConsumedLot() {
+        // Given -- a 4-unit sell across a 3-unit lot and a 5-unit lot
+        List<AssetEntity> lots = new ArrayList<>(List.of(
+                sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10)),
+                sellableLot("buy-2", 5.0, 120.0, LocalDate.of(2024, 6, 10))));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(4.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
+
+        // When
+        portfolioService.updateQuantityBySavingReportAndProfitAndLoss1(userMail, "sell-1", lots, sell);
+
+        // Then -- both lots reach the recorder, with the partially consumed one carrying its
+        // original quantity so buy-side charges can be pro-rated against the right denominator
+        ArgumentCaptor<List<TradeOutcomeRecorder.MatchedLot>> captor = ArgumentCaptor.captor();
+        verify(tradeOutcomeRecorder).record(eq(userMail), eq(sell), eq("sell-1"), captor.capture(), any());
+        List<TradeOutcomeRecorder.MatchedLot> matched = captor.getValue();
+        assertEquals(2, matched.size());
+        assertEquals(3.0, matched.get(0).quantity(), 0.001);
+        assertEquals(1.0, matched.get(1).quantity(), 0.001);
+        assertEquals(5.0, matched.get(1).originalQuantity(), 0.001);
+    }
+
+    @Test
+    void updateQuantityBySavingReportAndProfitAndLoss_v1_doesNotRecordTradeOutcomesThroughTheNewPath() {
+        // Given -- V1 is in live use and writes its outcomes through toTradeOutcomeContext.
+        // If it ever reaches the recorder as well, every V1 sell is double-counted.
+        List<AssetEntity> lots = new ArrayList<>(List.of(
+                sellableLot("buy-1", 5.0, 100.0, LocalDate.of(2024, 1, 10))));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(2.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+
+        when(portfolioRepository
+                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(
+                        any(), any(), any(), any()))
+                .thenReturn(lots);
+        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
+                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then -- V1 still writes its outcome through its own path, and never through the new one
+        verifyNoInteractions(tradeOutcomeRecorder);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), any());
     }
 }

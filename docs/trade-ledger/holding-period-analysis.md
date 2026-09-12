@@ -1,7 +1,7 @@
 # Holding-period classification — analysis
 
 **Purpose:** everything TL-4 needs to encode, and why the rule cannot be a single number.
-**Status:** analysis complete, not implemented.
+**Status:** analysis complete; TL-4 implemented it, and §5's mutual-fund source question is settled as D7.
 **Confidence:** stated per rule below. Where it is lower, it says so and says what to check.
 
 ---
@@ -120,17 +120,31 @@ This is the finding that shapes TL-4. One `MUTUAL_FUND` value covers three diffe
 | Specified (s.50AA) | see §4.1, and acquired on/after 01-Apr-2023 | **always short-term** |
 | Everything else — hybrid, and specified funds acquired before 01-Apr-2023 | — | 24 months (36 before 23-Jul-2024) |
 
-So the policy needs a **second dimension**, and the data for it already exists in the charges module:
-`ChargeInstrumentEntity` carries `equityOriented` and `fundCategory`.
+So the policy needs a **second dimension**. `ChargeInstrumentEntity` carries `equityOriented` and
+`fundCategory` and looks like the source — **it is not.** Settled 2026-09-12 as decision D7, for
+three reasons, the last of which is decisive:
 
-**But only two scheme profiles are seeded**, neither of which anyone holds — so for essentially every
-real fund that dimension is *unknown today*. TL-4 cannot silently guess it. Options, in order of
-preference:
+1. **It is keyed on a code real holdings do not match.** That is ADR-29's entire premise: profiles
+   key on short codes, holdings on full scheme names, so they meet only by coincidence. A lookup
+   from the classifier would miss for essentially every real fund — by construction, not by luck.
+2. **Absence is already spoken for.** A scheme with no exit load has no reason to carry a row, so a
+   miss means "no exit load", not "category unknown". Reading classification off it would
+   conflate two different absences into one silence.
+3. **Even fully populated, it cannot answer the question.** `equityOriented=true` gives
+   `EQUITY_ORIENTED`. But `false` must split into `SPECIFIED` and `OTHER` on the ">65% in debt and
+   money-market" test, and `FundCategory` settles that only for `DEBT` and `LIQUID`. `INDEX`, `ETF`,
+   `FUND_OF_FUNDS` and `OTHER` are each ambiguous — and per §4.1 those are precisely the categories
+   the 2024 amendment moved *out* of s.50AA. The enum is silent exactly where the answer is
+   contested, and a plausible-looking mapping would be wrong for the hardest cases while looking
+   right for the easy ones.
 
-1. Classify only when the instrument profile says so; otherwise record the trade as
-   **unclassified** and surface it, the same way `NO_INSTRUMENT_PROFILE` surfaces a missing exit
-   load. A visible gap beats a confident wrong answer.
-2. Default to the 24-month non-equity rule and flag the row as assumed.
+**The source is the instrument registry** in the priced-portfolio epic, which owns instrument
+identity under ADR-29 and is where a fund's category belongs — a property of the fund, not of a
+rate period. Until it exists, a fund is recorded **unclassified** and surfaced, the same way
+`NO_INSTRUMENT_PROFILE` surfaces a missing exit load. A visible gap beats a confident wrong answer.
+
+Defaulting to the 24-month non-equity rule was considered and rejected: it silently converts an
+unknown into a filed number, which is the one outcome this design exists to prevent.
 
 **This makes the priced-portfolio epic a dependency of correct MF classification**, not merely of
 complete charge reporting.

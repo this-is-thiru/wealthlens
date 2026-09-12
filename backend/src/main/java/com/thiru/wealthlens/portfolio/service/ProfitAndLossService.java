@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
@@ -17,14 +18,18 @@ import com.thiru.wealthlens.portfolio.entity.model.MonthlyReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.entity.model.ReportModel;
 import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
+import com.thiru.wealthlens.portfolio.holding.TradeClassificationQuery;
+import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
+import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -53,6 +58,8 @@ public class ProfitAndLossService {
 
     private final ProfitAndLossRepository profitAndLossRepository;
     private final HoldingPeriodService holdingPeriodService;
+
+    private final TradeClassifier tradeClassifier;
     private final ChargeRecordingGateway chargeRecordingGateway;
 
     /**
@@ -226,20 +233,9 @@ public class ProfitAndLossService {
 	}
 
 	private static String sanitizeFinancialYear(LocalDate transactionDate) {
-
-		int transactionYear = transactionDate.getYear();
-		LocalDate financialYearEnd = financialYearEnd(transactionYear);
-
-		if (transactionDate.isBefore(financialYearEnd)) {
-			return (transactionYear - 1) + "-" + transactionYear;
-		}
-
-		return transactionYear + "-" + (transactionYear + 1);
+		return TLocalDate.financialYear(transactionDate);
 	}
 
-    private static LocalDate financialYearEnd(int year) {
-        return LocalDate.of(year, MARCH, DAY_31);
-    }
 
 	public ProfitAndLossResponse getProfitAndLoss(UserMail userMail, String financialYear) {
 		String email = userMail.getEmail();
@@ -376,10 +372,16 @@ public class ProfitAndLossService {
         ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
 
         for (BuyContext buyContext : profitLossContext.buyContexts()) {
+            // Two answers, deliberately. The classification is the real one and goes in the map;
+            // the boolean is what the legacy pair has always been given and keeps it byte-identical
+            // for existing readers until V1 goes and the pair goes with it (D8).
+            CapitalGainsType classification = tradeClassifier.classify(new TradeClassificationQuery(
+                    profitLossContext.stockCode(), profitLossContext.assetType(), profitLossContext.segment(),
+                    buyContext.date(), transactionDate)).capitalGainsType();
             boolean isShortTermHeld = isShortTermCapitalGain(profitLossContext.assetType(), buyContext.date(), transactionDate);
             double purchaseAmount = buyContext.price() * buyContext.quantity();
             double sellAmount = profitLossContext.price() * buyContext.quantity();
-            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld);
+            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld, classification);
             updateProfitAndLossReport(profitAndLossEntity, profitLossContext, internalContext);
         }
 
@@ -421,8 +423,26 @@ public class ProfitAndLossService {
             realisedProfits.setLongTermCapitalGains(financialReport);
         }
 
+        recordByClassification(realisedProfits, internalContext);
+
         realisedProfits.setLastUpdatedTime(LocalDateTime.now());
         return realisedProfits;
+    }
+
+    /**
+     * The same amounts again, under the classification that is actually true (D8).
+     *
+     * <p>No branch: five classifications cannot be forced through an {@code if/else}, and that
+     * forcing is precisely the defect this exists to end. A key appears only once a disposal has
+     * been classified that way, so the map stays as small as the period's real variety.
+     */
+    private static void recordByClassification(RealisedProfits realisedProfits, InternalContext internalContext) {
+        Map<CapitalGainsType, FinancialReport> byClassification =
+                TOptional.mapO(realisedProfits.getGainsByClassification(), new EnumMap<>(CapitalGainsType.class));
+        FinancialReport report = byClassification.computeIfAbsent(
+                internalContext.classification(), _ -> FinancialReport.empty());
+        updateFinancialReport(report, internalContext);
+        realisedProfits.setGainsByClassification(byClassification);
     }
 
     private static void updateFinancialReport(FinancialReport financialReport, InternalContext internalContext) {
@@ -481,8 +501,8 @@ public class ProfitAndLossService {
         return holdingPeriodService.isShortTerm(assetType, null, buyDate, sellDate);
     }
 
-    private record InternalContext(double purchaseAmount, double sellAmount,
-                                   LocalDate sellDate, boolean isShortTermHeld) {
+    private record InternalContext(double purchaseAmount, double sellAmount, LocalDate sellDate,
+                                   boolean isShortTermHeld, CapitalGainsType classification) {
     }
 
     /** Prices the trade, unless the caller already did. */
