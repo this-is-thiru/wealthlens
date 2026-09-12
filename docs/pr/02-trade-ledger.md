@@ -1,6 +1,6 @@
 # Trade ledger — a realised-trade record you can file taxes from
 
-**Branch:** `feature/trade-ledger` → `feature/charges-engine-core` · 11 commits · 70 files
+**Branch:** `feature/trade-ledger` → `feature/charges-engine-core` · 16 commits
 
 **Stacked.** Review the charges engine first; this targets that branch, so the diff shown is only
 the trade-ledger work.
@@ -30,6 +30,38 @@ itemised to file from.
 - **TL-6** `TradeClassifier`, `TradeOutcomeRecorder`, per-code charge breakups, and
   `gainsByClassification` beside the legacy pair
 - **TL-7** idempotency, three routes in order of authority
+- **TL-8** money stays `double`, but every stored amount is canonicalised to paise through
+  `TMoney`. The analysis measured the alternative rather than assuming it: the drift is 1.5
+  micro-rupees over 50,000 trades and rounding recovers the exact figure, so the problem was never
+  precision — it was that ₹145.38 stored as `145.37999999999997` fails exact equality, misses a
+  Mongo query for its own value, and makes reconciliation unable to tell a real one-paisa
+  discrepancy from an artefact
+
+## Four more defects this work found, none of them in the ticket
+
+Listed loudest first. All four were live; three were silent.
+
+**A lot's buy charge was deducted again on every partial sell.** A 3-unit lot carrying ₹10, sold one
+unit at a time, deducted ₹3.33, then ₹5.00 — half of the whole ₹10 again — then ₹10.00. **₹18.33
+against ₹10.00 paid.** It inflates the cost base and understates the gain, which is the direction
+that under-reports tax. Present in both V1 and V2. `AssetEntity` now carries
+`allocatedBuyCharges`, and `LotChargeAllocator` — shared, not copied — takes a share of what is
+left. V1 needed care: it builds two records per sell and letting each ask would deduct twice, so it
+is computed once and handed to both.
+
+**A zero-quantity lot wrote `Infinity` into profit and loss.** `charges / quantity` with no guard.
+It never threw, and the test covering it was named `shouldHandleGracefully` — but the value was
+accumulated and stored, and `Infinity + anything` stays `Infinity`, so one such asset poisoned every
+later total in that document permanently. **Found only because TL-8 routed accumulation through
+`TMoney`, which refuses a non-finite amount** — which is the argument for one choke point rather
+than adding doubles inline.
+
+**Pro-rating lost a paisa across lots.** ₹100 split three ways stored ₹33.33 each. Now allocated by
+cumulative rounding, so the parts sum to the whole by construction rather than by a correction pass.
+
+**Three independent implementations of the same paise rounding** existed. Now one, with an ArchUnit
+rule stopping a fourth — verified to fail by adding one, because a rule that has never failed is not
+known to work.
 
 ## Two defects found by this work, not by the ticket
 
@@ -62,6 +94,10 @@ The one exception, agreed explicitly: `processTransaction` gained a replay guard
   escape hatch is a client-supplied key
 - **B-1 in the backlog** — `TradeOutcomeRecorder` is at 62% branch coverage and is outside both
   JaCoCo gates. It assembles the row a tax return is filed from
+- **The data left behind by the buy-charge fix.** The code is right going forward, but lots already
+  partially sold carry over-deducted amounts in `trade_outcomes` and `profit_and_loss`, and
+  `allocated_buy_charges` reads as zero on every existing lot — so the next sell of one allocates
+  from its full charge once more. A decision, not a code change
 
 ## Before merging
 
@@ -70,4 +106,4 @@ user in an existing financial year fails with `DuplicateKeyException`.
 
 ## Gates
 
-907 tests across both tiers, both JaCoCo gates passing, surefire XML gate clean, spotless clean.
+929 tests across both tiers, both JaCoCo gates passing, surefire XML gate clean, spotless clean.
