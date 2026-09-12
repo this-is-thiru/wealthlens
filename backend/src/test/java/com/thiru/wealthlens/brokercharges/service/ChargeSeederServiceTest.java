@@ -922,4 +922,84 @@ class ChargeSeederServiceTest {
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("overlapping validity windows");
     }
+
+    // ========================================
+    // Deductibility against capital gains
+    // ========================================
+
+    /**
+     * Every shipped code must say whether it can be deducted from a capital gain, because the trade
+     * outcome sums only the deductible ones and a code that stays silent would be summed by default.
+     * Defaulting is the failure here: it is the difference between a correct cost base and one
+     * inflated by a charge the statute disallows.
+     */
+    @Test
+    void seed_everyShippedCodeDeclaresWhetherItIsDeductible() {
+        for (ChargeCatalogueEntity code : shippedCatalogue()) {
+            assertThat(code.getDeductibleForCapitalGains())
+                    .as("charge code %s must declare deductibleForCapitalGains", code.getCode())
+                    .isNotNull();
+        }
+    }
+
+    /**
+     * STT is the one that matters most. It is disallowed as a deduction against capital gains — the
+     * trade-off for the concessional rates — and it is the largest charge on a delivery sell: about
+     * ₹100 on ₹1,00,000, against ₹20 of brokerage. Treating it as deductible inflates the cost base
+     * and understates the gain.
+     */
+    @Test
+    void seed_sttIsNotDeductible() {
+        assertThat(deductibilityOf("STT")).isFalse();
+    }
+
+    /**
+     * Account-level charges are not incurred in connection with any particular transfer, so they are
+     * not deductible against one. They also never reach a trade's breakdown — they arise from
+     * AMC_CYCLE and ACCOUNT_OPENING events rather than a buy or a sell — but the flag belongs on the
+     * code rather than on the event, so it is declared either way.
+     */
+    @Test
+    void seed_accountLevelChargesAreNotDeductible() {
+        assertThat(deductibilityOf("AMC")).isFalse();
+        assertThat(deductibilityOf("ACCOUNT_OPENING")).isFalse();
+    }
+
+    /** Everything actually incurred to execute the trade is allowable. */
+    @Test
+    void seed_transferCostsAreDeductible() {
+        for (String code : List.of("BROKERAGE", "EXCHANGE_TXN", "SEBI_FEE", "IPFT",
+                "STAMP_DUTY", "DP", "GST", "EXIT_LOAD", "MF_TXN_FEE")) {
+            assertThat(deductibilityOf(code)).as("%s should be deductible", code).isTrue();
+        }
+    }
+
+    /** A code that does not declare it is refused at the gate rather than defaulted at use. */
+    @Test
+    void seed_whenACatalogueCodeDoesNotDeclareDeductibility_refusesIt() {
+        ChargeCatalogueEntity silent = new ChargeCatalogueEntity();
+        silent.setCode("SILENT_LEVY");
+
+        assertThatThrownBy(() -> ChargeCodes.requireDeductibilityDeclared(silent))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("SILENT_LEVY");
+    }
+
+    private Boolean deductibilityOf(String code) {
+        return shippedCatalogue().stream()
+                .filter(entry -> entry.getCode().equals(code))
+                .findFirst().orElseThrow()
+                .getDeductibleForCapitalGains();
+    }
+
+    private static List<ChargeCatalogueEntity> shippedCatalogue() {
+        try {
+            String json = new String(new org.springframework.core.io.ClassPathResource(
+                    "data/charges/charge-catalogue.json").getInputStream().readAllBytes());
+            return com.thiru.wealthlens.shared.util.collection.TJsonMapper
+                    .readAsList(json, ChargeCatalogueEntity.class);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }

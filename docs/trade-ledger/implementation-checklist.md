@@ -5,8 +5,8 @@ lost, resume from the first unticked box.
 
 **Branch:** `feature/charges-engine` (this work continues on it; the charges engine itself is
 complete — see `../charges-engine/README.md`).
-**Status:** 4 of 8 items done. **Resume at TL-5.**
-**Last updated:** 2026-09-12 — 870 tests green, both JaCoCo gates passing, spotless clean.
+**Status:** 5 of 8 items done. **Resume at TL-6** — both its prerequisites are now in place.
+**Last updated:** 2026-09-12 — 875 tests green, both JaCoCo gates passing, spotless clean.
 **Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
 
 ---
@@ -83,13 +83,21 @@ recorded nowhere else and cannot be reconstructed once the lots are consumed.
       mutual funds and bonds resolve `UNCLASSIFIED`. The data lives on `ChargeInstrumentEntity`
       (`equityOriented`, `fundCategory`) and reaching it is part of the trade-outcome rework
 
-### TL-5 — Charge deductibility on the catalogue *(blocks TL-6)*
+### TL-5 — Charge deductibility on the catalogue *(done 2026-09-12)*
 
-- [ ] `deductibleForCapitalGains` on `ChargeCatalogueEntity` (D3)
-- [ ] Set it in `charge-catalogue.json` for all 12 shipped codes. **STT is the one that is not
-      deductible** — and it is the largest charge on a delivery sell (₹100 on ₹1,00,000, against
-      about ₹20 of brokerage), so including it inflates cost and understates the gain
-- [ ] `ChargeCodes`-style validation so a new code must declare it rather than defaulting silently
+- [x] `deductibleForCapitalGains` on `ChargeCatalogueEntity` (D3). A `Boolean`, not a `boolean`:
+      undeclared has to be distinguishable from declared-false, because silently defaulting to
+      deductible is the failure the field exists to prevent
+- [x] Declared on all 12 shipped codes. **Three are not deductible** — more than the one first
+      identified:
+      - **STT**, expressly disallowed, and the largest charge on a delivery sell (about ₹100 on
+        ₹1,00,000 against ₹20 of brokerage), so treating it as deductible inflates the cost base
+      - **AMC** and **ACCOUNT_OPENING**, which are account-level and not incurred in connection with
+        any particular transfer. They also never reach a trade's breakdown, since they arise from
+        `AMC_CYCLE` and `ACCOUNT_OPENING` events rather than a buy or sell — but the flag belongs on
+        the code, not the event, so it is declared either way
+- [x] `ChargeCodes.requireDeductibilityDeclared` refuses an undeclared code at seed time, beside the
+      existing field-name check
 
 ### TL-6 — The trade-outcome rework *(the main piece; needs TL-4 and TL-5)*
 

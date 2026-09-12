@@ -146,6 +146,7 @@ public class ChargeSeederService {
             // The gate every code enters through. A code is a Mongo field name downstream, so one
             // that cannot be used as a field name has to be refused here rather than at save time.
             ChargeCodes.validate(entry.getCode());
+            ChargeCodes.requireDeductibilityDeclared(entry);
             if (chargeCatalogueRepository.existsByCode(entry.getCode())) {
                 continue;
             }

@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.brokercharges.service;
 
+import com.thiru.wealthlens.brokercharges.entity.ChargeCatalogueEntity;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import java.util.regex.Pattern;
 
@@ -44,6 +45,22 @@ public final class ChargeCodes {
             throw new BadRequestException(
                     "Charge code " + code + " is not usable as a field name: a code is stored as the key of "
                             + "amount_by_code, so it must match [A-Z][A-Z0-9_]* — no dots, no '$', no spaces");
+        }
+    }
+
+    /**
+     * Refuses a catalogue entry that does not say whether it can be deducted from a capital gain.
+     *
+     * <p>Checked at the gate rather than defaulted at the point of use. A code that stays silent
+     * would be summed into the deductible cost by whatever reads it, and the difference between a
+     * correct cost base and one inflated by a disallowed charge is exactly the tax on it.
+     */
+    public static void requireDeductibilityDeclared(ChargeCatalogueEntity entry) {
+        if (entry.getDeductibleForCapitalGains() == null) {
+            throw new BadRequestException(
+                    "Charge code " + entry.getCode() + " must declare deductibleForCapitalGains: the trade "
+                            + "outcome sums only deductible charges, and an undeclared code would be summed "
+                            + "by default");
         }
     }
 }
