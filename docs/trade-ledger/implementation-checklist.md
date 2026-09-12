@@ -5,7 +5,7 @@ lost, resume from the first unticked box.
 
 **Branch:** `feature/charges-engine` (this work continues on it; the charges engine itself is
 complete — see `../charges-engine/README.md`).
-**Status:** 7 of 8 items done. **Resume at TL-8** — a decision, not a build.
+**Status:** 8 of 8 decided. **TL-8 is decided; its implementation is the only work left.**
 **Last updated:** 2026-09-12 — 907 tests green (unit + integration), both JaCoCo gates passing,
 surefire XML gate clean, spotless clean.
 **Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
@@ -248,7 +248,9 @@ blocking startup, so grep for `Could not create index` after deploying.
 
 ### TL-8 — Money representation *(decide, then schedule)*
 
-- [ ] Decide: `double` stays, or money becomes `BigDecimal` / minor units end to end
+- [x] **Decided 2026-09-12: `double` stays, and every stored amount is canonicalised to paise.**
+      Analysis in [`money-representation-analysis.md`](money-representation-analysis.md)
+- [ ] Implement: `TMoney` utility, the 31 write sites, an ArchUnit rule, then tighten `MoneyAssert`
 
 The engine computes in `BigDecimal` and rounds once, which is right — but every *stored* amount is a
 `double`. `ChargeSummaryReport.merge` already re-derives its total in `BigDecimal` on every write to
