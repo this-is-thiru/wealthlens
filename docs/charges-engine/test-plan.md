@@ -1,7 +1,7 @@
 # Charges Engine — Test Plan
 
-**Date:** 2026-09-05
-**Companion docs:** `prd.md`, `tech-spec.md`, `implementation-checklist.md`, `../testing/test-framework-audit.md`
+**Date:** 2026-09-05. **Actuals recorded 2026-09-11**, after all twelve chunks.
+**Start at** `README.md` — current state and how to resume. **Rationale** lives in `decisions.md`.
 **Objective:** the engine is verified to a standard where manual QA of charge calculations is unnecessary.
 
 ---
@@ -51,9 +51,23 @@ Without this, golden-file tests to ₹0.01 will be flaky and people will widen t
 | H. Persistence & dedupe | DP-once-per-day, provenance, aggregation | ~14 | yes | ~15s |
 | I. API | Simulate, publish/supersede, history | ~12 | yes | ~20s |
 | J. Extensibility guarantee | A JSON-only charge reaches the report | 3 | yes | ~5s |
-| **Total** | | **~176** | | |
+| K. Temporal correctness | Backfilled transactions resolve historical rate cards | ~14 | mixed | ~10s |
+| **L. Shadow recording** *(Phase B)* | The engine sees every V2 trade and changes nothing | 17 + 5 | mixed | ~8s |
+| **M. Backfill & reconciliation** *(Phase B)* | Historical trades priced; computed vs entered | 19 + 7 | mixed | ~5s |
+| **N. Cutover** *(Phase C)* | Computed total drives cost basis; summary written | 11 + 13 | mixed | ~5s |
+| **O. Kill switch** *(ADR-30)* | `engine-enabled=false` stops everything and answers 503 | 3 | yes | ~5s |
+| **P. Index creation** | The declared indexes exist — nothing else asserts it | 4 | yes | ~5s |
+| **Total planned** | | **~176** | | |
+| **Total actual** | | **536** | | |
 
-Tiers A–G are pure JVM. That is deliberate: **~147 of ~176 tests run in under 5 seconds with no Docker**, so the engine is developed against a real feedback loop.
+Tiers A–G are pure JVM. That is deliberate: the unit tier runs with no Docker, so the engine is
+developed against a real feedback loop.
+
+**The estimate was low by 3×** — 536 charges tests against ~176 planned. Most of the excess is
+Tiers A–D: the table-driven approach produced more cases per basis than estimated, and every defect
+found along the way (D1, D5, D9, D10, the AC-2 rate errors, the two seed-guard call sites) arrived
+with its own regression. Tiers L–P did not exist when this plan was written; Phases B and C added
+them.
 
 ---
 
@@ -93,6 +107,8 @@ Fixed amount returned; zero amount; quantity irrelevant; min/max still applied; 
 | `PER_SCRIP_PER_DAY`, prior same scrip *different* day | charged |
 | `PER_SCRIP_PER_DAY`, prior *different* scrip same day | charged |
 | `PER_SCRIP_PER_DAY`, prior same scrip same day *different broker* | charged |
+| `PER_SCRIP_PER_DAY`, prior same scrip same day *different `accountHolder`* | **charged** — separate demat account, separate debit *(pins D10)* |
+| `PER_SCRIP_PER_DAY`, prior same scrip same day *same `accountHolder`* | 0.00 |
 | `PER_ORDER`, second trade of same order | 0.00 |
 | `PER_DAY`, second trade any scrip same day | 0.00 |
 | repository throws | exception propagates, no silent 0 |
@@ -142,6 +158,12 @@ Each `RoundingPolicy` at `.005` boundaries, negative-zero, and very large values
 - **no schedule resolved → empty computation + WARN** *(AC-12)*
 - schedule with zero matching rules → empty, no exception
 
+**Corporate actions** *(ADR-23)*
+- a bonus-share BUY with non-null `corporateActionType` produces zero lines and `CORPORATE_ACTION_EXEMPT`
+- a rule declaring `appliesToCorporateActions: true` **does** apply to it
+- a normal BUY with null `corporateActionType` is unaffected by the exemption
+- `CORPORATE_ACTION_EXEMPT` is distinguishable from `NO_SCHEDULE` — both are empty computations
+
 **Modifier order** — the §5.5 contract, asserted explicitly
 - aggregator applied before min/max
 - min/max applied before rounding
@@ -177,6 +199,8 @@ Each `RoundingPolicy` at `.005` boundaries, negative-zero, and very large values
 ## 7. Tier D — Validator
 
 `ChargeScheduleValidatorTest` — one test per FR-2 rejection, each asserting the **message**, not just the exception type.
+
+An expression referencing an unknown variable (`#equityOrientd`) is rejected — a typo that would otherwise parse, evaluate null, and silently disable its rule forever *(ADR-24)*.
 
 Duplicate `code`; DERIVED → unknown `baseCode`; DERIVED whose base has `order >=` its own; DERIVED with empty `baseCodes`; TURNOVER without `rate`; FLAT without `flatAmount`; PER_UNIT without `perUnitAmount`; SLAB with empty slabs; SLAB with overlapping bands; SLAB with a gap; rate + flat without `aggregator` *(D7)*; unparseable `formula`; unparseable `eligibility`; `code` absent from `charge_catalogue`; `endDate` before `startDate`; negative rate. *(16 cases)*
 
@@ -281,20 +305,74 @@ If anyone later hard-codes a charge name into a `switch` or a field, test 1 fail
 
 ---
 
+## 13a. Tier K — Temporal correctness
+
+The scenario driving these: **a user uploads a 2024 transaction in 2026, after the 2024 rate card was superseded in 2025.** Tech-spec §14.
+
+**Historical resolution**
+- a superseded card still resolves for a date inside its historical window *(pins the §14.1 defect)*
+- a card with `status: SUPERSEDED` set by a future maintainer still resolves — the predicate is `!= INACTIVE`, not `== ACTIVE`
+- a card with `status: INACTIVE` resolves for **no** date, including dates inside its window
+- superseding sets `endDate` and leaves `status` untouched
+- three chained supersessions: a date in each window resolves to the correct generation
+- an instrument profile revised by the AMC behaves identically for a backdated redemption
+
+**Instrument profiles** *(ADR-24)*
+- a mutual fund trade with no instrument profile still computes broker-level charges
+- it records `NO_INSTRUMENT_PROFILE` and appears in the gaps report
+- an equity trade records nothing of the sort — its schedule does not set `requiresInstrumentProfile`
+- seeding the profile and recomputing turns it `RESOLVED` and adds the exit-load line
+
+**Visible gaps**
+- a transaction predating every card persists a `UserChargeEntity` with `resolution: NO_SCHEDULE` and zero lines
+- `GET /user-charges/user/{email}/gaps` returns it
+- seeding the missing card and recomputing turns it into `RESOLVED`
+- a card applies but no rule matches the event → `NO_MATCHING_RULES`, not `NO_SCHEDULE`
+
+**Quarterly batch processing** *(the actual upload model: quarterly, chronological)*
+- a quarter of transactions processed in one batch produces one `UserChargeEntity` per transaction
+- **re-uploading the same quarter does not double-charge** — rows are replaced, not appended
+- two same-day sells of one scrip **within a single batch** yield exactly one DP charge
+- ordering within the batch is respected: the earlier transaction carries the DP charge
+- an AMC cycle already covered by `lastBilledThrough` is skipped on a re-run
+- a batch spanning a rate-card boundary charges each transaction against the card in force on its own date
+- resolver cache: a 200-transaction batch on one rate card performs one schedule lookup, not 200
+
+**Out-of-sequence detection** *(the guarantee is operational, so it is verified rather than assumed)*
+- a batch reaching back before the latest recorded transaction marks its computations `PROVISIONAL`
+- those rows appear in the gaps endpoint
+- an in-sequence batch marks nothing `PROVISIONAL`
+- recompute after an out-of-sequence batch corrects `#firstTimeInvestor` across both purchases
+
+**Recomputation** — ⚠️ **not built, so none of these exist.** `POST /charges/recompute` is designed
+in tech-spec §14.4 and was never implemented; amending a card that has already priced charges has no
+safe mechanism (README §10). These stay as the specification for when it is built.
+- recompute is idempotent: running twice yields identical rows
+- recompute rebuilds the financial year's charge aggregates rather than accumulating, so totals do not drift *(the §14.4 invariant)*
+- recomputing after a rate correction updates the stored lines and the P&L projection together
+
 ## 14. Gates
 
-| Gate | Threshold | Scope |
+| Gate | Threshold | Scope — **as actually configured** |
 |---|---|---|
-| Line coverage | ≥ 90% | `brokercharges.**` |
-| Branch coverage | ≥ 85% | `brokercharges.**` |
-| **Mutation score** | **≥ 85%** | `brokercharges.engine.**` |
+| Line coverage | ≥ 90% | `brokercharges.engine*`, at **package** level |
+| Branch coverage | ≥ 85% | `brokercharges.engine*`, at **package** level |
+| Line coverage | ≥ 90% | `brokercharges.service.*`, **per class** — so one service cannot be carried by its neighbours |
+| Branch coverage | ≥ 85% | `brokercharges.service.*`, per class |
+| **Mutation score** | **≥ 85%** | `brokercharges.engine.*` **and** `brokercharges.service.*` |
 | Golden files | 100% pass, ₹0.01 tolerance | all |
 | Seed validation | 100% pass | all shipped cards |
 | Modulith | green | whole app |
 
+Two corrections to what this section originally claimed. Coverage is **not** scoped to
+`brokercharges.**` — entities and DTOs are deliberately outside it, so the gate enforces where it
+was meant to rather than failing on data carriers. And PIT is **not** scoped to `engine` only; it
+covers the services too, which is what caught the two seed-guard call sites that were wired in but
+never asserted.
+
 Mutation score is the gate that actually replaces QA effort. Line coverage proves a calculator executed; mutation score proves that if the calculator returned the wrong number, **a test would have failed**. For money code that is the only meaningful standard.
 
-Scope PIT to `engine` only — mutating DTOs and entities produces noise and slows the run for no signal.
+PIT covers `engine.*` and `service.*`. DTOs and entities stay out — mutating data carriers produces noise and slows the run for no signal.
 
 ---
 

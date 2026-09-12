@@ -1,0 +1,11 @@
+{
+  "name": "zerodha-mutual-fund-sell-100k-equity-oriented",
+  "describes": "A ₹1,00,000 redemption from an equity-oriented scheme. Securities transaction tax applies only because the instrument profile says the scheme is equity-oriented — a fact no rate card can know, and the case the superseded design could not express at all.",
+  "context": { "brokerName": "ZERODHA", "assetType": "MUTUAL_FUND", "segment": null, "exchange": null,
+               "event": "SELL", "price": 100, "quantity": 1000, "transactionDate": "2025-06-02" },
+  "instrument": { "equityOriented": true },
+  "expected": {
+    "lines": { "STT": 1.00 },
+    "total": 1.00
+  }
+}

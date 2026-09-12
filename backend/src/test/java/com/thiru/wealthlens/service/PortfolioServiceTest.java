@@ -4,12 +4,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
+import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
+import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
+import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
 import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
@@ -17,14 +25,18 @@ import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
 import com.thiru.wealthlens.portfolio.service.TradeOutcomeService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -52,20 +64,18 @@ class PortfolioServiceTest {
     @Mock
     private TemporaryTransactionService temporaryTransactionService;
 
+    @Mock
+    private ChargeRecordingGateway chargeRecordingGateway;
+
+    @Mock
+    private HoldingPeriodService holdingPeriodService;
+
     private TestablePortfolioService portfolioService;
     private UserMail userMail;
 
     @BeforeEach
     void setUp() {
-        portfolioService = new TestablePortfolioService(
-                portfolioRepository,
-                transactionService,
-                profitAndLossService,
-                mongoTemplateService,
-                tradeOutcomeService,
-                transactionRepository,
-                temporaryTransactionService
-        );
+        portfolioService = testableService(new ChargeEngineProperties(true, true, false));
         userMail = UserMail.from("test@example.com");
     }
 
@@ -73,6 +83,21 @@ class PortfolioServiceTest {
      * A testable subclass of PortfolioService that allows overriding
      * the behaviour of methods that are difficult to mock in tests.
      */
+    private TestablePortfolioService testableService(ChargeEngineProperties properties) {
+        return new TestablePortfolioService(
+                portfolioRepository,
+                transactionService,
+                profitAndLossService,
+                mongoTemplateService,
+                tradeOutcomeService,
+                transactionRepository,
+                temporaryTransactionService,
+                chargeRecordingGateway,
+                properties,
+                holdingPeriodService
+        );
+    }
+
     static class TestablePortfolioService extends PortfolioService {
         private int callCount;
         private int failFromCall;
@@ -85,10 +110,14 @@ class PortfolioServiceTest {
                 MongoTemplateService mongoTemplateService,
                 TradeOutcomeService tradeOutcomeService,
                 TransactionRepository transactionRepository,
-                TemporaryTransactionService temporaryTransactionService) {
+                TemporaryTransactionService temporaryTransactionService,
+                ChargeRecordingGateway chargeRecordingGateway,
+                ChargeEngineProperties chargeEngineProperties,
+                HoldingPeriodService holdingPeriodService) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService);
+                    temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties,
+                    holdingPeriodService);
         }
 
         void resetAddTransactionBehaviour() {
@@ -128,10 +157,14 @@ class PortfolioServiceTest {
                 MongoTemplateService mongoTemplateService,
                 TradeOutcomeService tradeOutcomeService,
                 TransactionRepository transactionRepository,
-                TemporaryTransactionService temporaryTransactionService) {
+                TemporaryTransactionService temporaryTransactionService,
+                ChargeRecordingGateway chargeRecordingGateway,
+                ChargeEngineProperties chargeEngineProperties,
+                HoldingPeriodService holdingPeriodService) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService);
+                    temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties,
+                    holdingPeriodService);
         }
 
         @Override
@@ -147,7 +180,8 @@ class PortfolioServiceTest {
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService);
+                temporaryTransactionService, chargeRecordingGateway,
+                new ChargeEngineProperties(true, true, false), holdingPeriodService);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -164,7 +198,8 @@ class PortfolioServiceTest {
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService);
+                temporaryTransactionService, chargeRecordingGateway,
+                new ChargeEngineProperties(true, true, false), holdingPeriodService);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -276,5 +311,195 @@ class PortfolioServiceTest {
         request.setTransactionDate(LocalDate.now());
         request.setEmail(userMail.getEmail());
         return request;
+    }
+
+    // ========================================
+    // Chunk 10a — AC-10: the computed total drives cost basis
+    //
+    // V2 only. buyStock/sellStock (V1) are unused and deliberately untouched, which is why
+    // buyStockV2 no longer shares updateBrokerChargesAndProfitAndLoss with them.
+    // ========================================
+
+    private static final double ENTERED_CHARGES = 125.50;
+    private static final double COMPUTED_CHARGES = 118.74;
+
+    private AssetRequest buyRequest() {
+        AssetRequest request = new AssetRequest();
+        request.setStockCode("RELIANCE");
+        request.setStockName("Reliance Industries");
+        request.setExchangeName("NSE");
+        request.setBrokerName(BrokerName.ZERODHA);
+        request.setAssetType(AssetType.EQUITY);
+        request.setTransactionType(TransactionType.BUY);
+        request.setAccountType(AccountType.SELF);
+        request.setAccountHolder("self");
+        request.setQuantity(100D);
+        request.setPrice(1000D);
+        request.setBrokerCharges(ENTERED_CHARGES);
+        request.setTransactionDate(LocalDate.of(2025, 6, 10));
+        return request;
+    }
+
+    private static ChargeComputation computed() {
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+                ChargeResolution.RESOLVED, List.of(), COMPUTED_CHARGES);
+    }
+
+    private AssetEntity savedAsset() {
+        ArgumentCaptor<AssetEntity> captor = ArgumentCaptor.forClass(AssetEntity.class);
+        verify(portfolioRepository).save(captor.capture());
+        return captor.getValue();
+    }
+
+    @Test
+    void buyStockV2_whenAuthoritative_setsCostBasisFromTheComputedTotal() {
+        // Given
+        portfolioService = testableService(new ChargeEngineProperties(true, true, true));
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.of(computed()));
+
+        // When
+        portfolioService.buyStockV2(userMail, "txn-1", buyRequest());
+
+        // Then — the engine's figure, not the one the user typed
+        assertEquals(COMPUTED_CHARGES, savedAsset().getBrokerCharges(), 0.001);
+    }
+
+    @Test
+    void buyStockV2_whenNotAuthoritative_keepsTheEnteredChargesUntouched() {
+        // Given — the default, and what every existing deployment runs
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.of(computed()));
+
+        // When
+        portfolioService.buyStockV2(userMail, "txn-1", buyRequest());
+
+        // Then
+        assertEquals(ENTERED_CHARGES, savedAsset().getBrokerCharges(), 0.001);
+    }
+
+    /**
+     * The trap the checklist names: the charge has to be computed before the lot is written, or the
+     * cost basis saved is the stale one. Asserted by ordering, not by the value alone.
+     */
+    @Test
+    void buyStockV2_computesTheChargeBeforeItSavesTheLot() {
+        // Given
+        portfolioService = testableService(new ChargeEngineProperties(true, true, true));
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.of(computed()));
+
+        // When
+        portfolioService.buyStockV2(userMail, "txn-1", buyRequest());
+
+        // Then
+        InOrder inOrder = inOrder(chargeRecordingGateway, portfolioRepository);
+        inOrder.verify(chargeRecordingGateway).record(any(), any());
+        inOrder.verify(portfolioRepository).save(any(AssetEntity.class));
+    }
+
+    /**
+     * No card for the period, or the engine switched off, and the user's own figure is all there is.
+     * Overwriting it with a zero would silently erase a cost the trade really incurred.
+     */
+    @Test
+    void buyStockV2_whenTheEngineComputedNothing_leavesTheEnteredChargesAlone() {
+        // Given
+        portfolioService = testableService(new ChargeEngineProperties(true, true, true));
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
+
+        // When
+        portfolioService.buyStockV2(userMail, "txn-1", buyRequest());
+
+        // Then
+        assertEquals(ENTERED_CHARGES, savedAsset().getBrokerCharges(), 0.001);
+    }
+
+    /** The engine runs once per trade: the gateway is called here, so P&L must not call it again. */
+    @Test
+    void buyStockV2_handsTheComputationToProfitAndLossRatherThanLettingItRecompute() {
+        // Given
+        portfolioService = testableService(new ChargeEngineProperties(true, true, true));
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.of(computed()));
+
+        // When
+        portfolioService.buyStockV2(userMail, "txn-1", buyRequest());
+
+        // Then
+        verify(chargeRecordingGateway, times(1)).record(any(), any());
+        verify(profitAndLossService).updateProfitAndLoss(any(), any(ProfitLossContext.class), eq(Optional.of(computed())));
+    }
+
+    // ========================================
+    // Request validation
+    // ========================================
+
+    /**
+     * The guard returned early when the request carried no email, so everything below it — the only
+     * quantity check there was — never ran. A trade with no email and no quantity was accepted.
+     */
+    @Test
+    void addTransactionV2_whenTheRequestHasNoEmail_stillValidatesTheRest() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setEmail(null);
+        request.setQuantity(0D);
+
+        // When / Then
+        assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    /**
+     * {@code equal(quantity, 0)} rejected zero and let everything else through. A negative buy
+     * creates a negative holding; a negative sell increases one.
+     */
+    @Test
+    void addTransactionV2_whenQuantityIsNegative_isRejected() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setQuantity(-5D);
+
+        // When / Then
+        assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    /** Price was never checked at all. A negative price inverts the cost basis. */
+    @Test
+    void addTransactionV2_whenPriceIsNegative_isRejected() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setPrice(-100D);
+
+        // When / Then
+        assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    /**
+     * A future-dated trade resolves whatever rate card is open-ended today and is charged against
+     * rates that may not apply when it settles — and it cannot be a real trade.
+     */
+    @Test
+    void addTransactionV2_whenDatedInTheFuture_isRejected() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setTransactionDate(LocalDate.now().plusDays(1));
+
+        // When / Then
+        assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    /** A zero price is legitimate: bonus shares and split allotments are issued free. */
+    @Test
+    void addTransactionV2_whenPriceIsZero_isAccepted() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setPrice(0D);
+        when(temporaryTransactionService.filterOutTransaction(any(), any())).thenReturn(null);
+        when(transactionService.addTransaction(any(), any())).thenReturn("txn-free");
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
+
+        // When / Then
+        assertDoesNotThrow(() -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
     }
 }

@@ -1,0 +1,13 @@
+{
+  "name": "zerodha-mutual-fund-sell-liquid-within-the-load-period",
+  "describes": "A ₹1,00,000 redemption from a liquid scheme three days after subscription. The load is expressed as a holding-period predicate rather than as bands, which is the other half of AC-6: the charge exists on the profile and applies only because #holdingDays says it does. No securities transaction tax — the scheme is not equity-oriented.",
+  "context": { "brokerName": "ZERODHA", "assetType": "MUTUAL_FUND", "segment": null, "exchange": null,
+               "stockCode": "HDFCLIQUID",
+               "event": "SELL", "price": 100, "quantity": 1000, "transactionDate": "2025-06-02",
+               "lots": [ { "quantity": 1000, "price": 100, "acquisitionDate": "2025-05-30" } ] },
+  "expected": {
+    "lines": { "EXIT_LOAD": 5.00 },
+    "resolution": "RESOLVED",
+    "total": 5.00
+  }
+}

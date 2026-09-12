@@ -1,0 +1,16 @@
+{
+  "name": "zerodha-mutual-fund-sell-spanning-the-exit-load-window",
+  "describes": "A ₹1,00,000 redemption drawn from two FIFO lots of one equity scheme — 600 units held over a year and 400 units held four months. The exit load applies to the younger lot alone, so averaging it over the redemption would charge the older units a load they no longer attract. This is the fixture AC-6 was open for: the load is on the shipped instrument profile, not on any rate card, and the holding period is answered per lot.",
+  "context": { "brokerName": "ZERODHA", "assetType": "MUTUAL_FUND", "segment": null, "exchange": null,
+               "stockCode": "PARAGPARIKHFLEXICAP",
+               "event": "SELL", "price": 100, "quantity": 1000, "transactionDate": "2025-06-02",
+               "lots": [
+                 { "quantity": 600, "price": 100, "acquisitionDate": "2024-02-01" },
+                 { "quantity": 400, "price": 100, "acquisitionDate": "2025-03-01" }
+               ] },
+  "expected": {
+    "lines": { "EXIT_LOAD": 400.00, "STT": 1.00 },
+    "resolution": "RESOLVED",
+    "total": 401.00
+  }
+}
