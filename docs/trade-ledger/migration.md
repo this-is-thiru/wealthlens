@@ -89,18 +89,17 @@ deploy grep the startup log for `Could not create index`.
 
 ---
 
-## 4. CHECK — trades dated 31 March
+## 4. DONE — trades dated 31 March
 
 Three financial-year derivations compared `isBefore(March 31)`, filing a trade made **on** 31 March
-into the following year. Fixed going forward; existing rows are already in the wrong bucket.
+into the following year. Fixed in code.
 
 ```js
 db.transactions.countDocuments({ transaction_date: /-03-31$/ })
 ```
 
-Zero means nothing to do. Otherwise those trades sit in the wrong `profit_and_loss` document and the
-wrong `trade_outcomes` row, and correcting them is a decision — recomputing a period is not
-something to do casually.
+**Ran against production on 2026-09-12: `0`.** No historical data to correct. Re-run it if the
+branch sits unmerged long enough for a 31 March to pass.
 
 ---
 
@@ -124,8 +123,8 @@ client can have been using their values — but any client reading the old keys 
 
 ## Order
 
-1. Run the duplicate checks (§3) and the 31 March check (§4). Resolve anything they return.
-2. Run the `version` backfill (§1). **Before deploying.**
+1. Run the duplicate checks (§3). Resolve anything they return. (§4 is already done — it returned 0.)
+2. Run the `version` backfill (§1). **Before deploying.** — *done 2026-09-12*
 3. Deploy.
 4. Grep the startup log for `Could not create index`.
 5. `POST /charges/seed` (§2), then verify the catalogue count is 0.

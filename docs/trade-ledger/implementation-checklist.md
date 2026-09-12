@@ -9,6 +9,7 @@ complete — see `../charges-engine/README.md`).
 **Last updated:** 2026-09-12 — 907 tests green (unit + integration), both JaCoCo gates passing,
 surefire XML gate clean, spotless clean.
 **Analysis:** [`holding-period-analysis.md`](holding-period-analysis.md) works TL-4's rules through per asset type.
+**Backlog:** [`backlog.md`](backlog.md) — found, real, deliberately not done.
 **Deploying:** [`migration.md`](migration.md) — two mandatory data steps and three checks. Read it before any deploy.
 
 ---
