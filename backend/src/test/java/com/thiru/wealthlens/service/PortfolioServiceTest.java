@@ -417,4 +417,80 @@ class PortfolioServiceTest {
         verify(chargeRecordingGateway, times(1)).record(any(), any());
         verify(profitAndLossService).updateProfitAndLoss(any(), any(ProfitLossContext.class), eq(Optional.of(computed())));
     }
+
+    // ========================================
+    // Request validation
+    // ========================================
+
+    /**
+     * The guard returned early when the request carried no email, so everything below it — the only
+     * quantity check there was — never ran. A trade with no email and no quantity was accepted.
+     */
+    @Test
+    void addTransactionV2_whenTheRequestHasNoEmail_stillValidatesTheRest() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setEmail(null);
+        request.setQuantity(0D);
+
+        // When / Then
+        assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    /**
+     * {@code equal(quantity, 0)} rejected zero and let everything else through. A negative buy
+     * creates a negative holding; a negative sell increases one.
+     */
+    @Test
+    void addTransactionV2_whenQuantityIsNegative_isRejected() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setQuantity(-5D);
+
+        // When / Then
+        assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    /** Price was never checked at all. A negative price inverts the cost basis. */
+    @Test
+    void addTransactionV2_whenPriceIsNegative_isRejected() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setPrice(-100D);
+
+        // When / Then
+        assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    /**
+     * A future-dated trade resolves whatever rate card is open-ended today and is charged against
+     * rates that may not apply when it settles — and it cannot be a real trade.
+     */
+    @Test
+    void addTransactionV2_whenDatedInTheFuture_isRejected() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setTransactionDate(LocalDate.now().plusDays(1));
+
+        // When / Then
+        assertThrows(BadRequestException.class,
+                () -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
+
+    /** A zero price is legitimate: bonus shares and split allotments are issued free. */
+    @Test
+    void addTransactionV2_whenPriceIsZero_isAccepted() {
+        // Given
+        AssetRequest request = buyRequest();
+        request.setPrice(0D);
+        when(temporaryTransactionService.filterOutTransaction(any(), any())).thenReturn(null);
+        when(transactionService.addTransaction(any(), any())).thenReturn("txn-free");
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.empty());
+
+        // When / Then
+        assertDoesNotThrow(() -> portfolioService.addTransactionV2(userMail, request, new ArrayList<>()));
+    }
 }

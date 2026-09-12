@@ -48,6 +48,22 @@ public class AmcChargeService {
      *
      * @return the accounts actually billed
      */
+    /**
+     * The accounts a cycle would bill, without billing them.
+     *
+     * <p>Nothing schedules the AMC cycle — it runs when somebody calls it. That is deliberate, and it
+     * makes silent non-billing the failure mode: months can pass with nobody billed and nothing
+     * anywhere saying so. This is the query that makes the gap visible, so "is anything owed?" has an
+     * answer that does not involve running the thing that charges money.
+     *
+     * <p>A read. It touches no charge and moves no watermark, which is what lets it be called as
+     * often as anyone likes.
+     */
+    public List<ChargeAccountEntity> findDue(AmcChargeFrequency frequency, LocalDate billedThrough) {
+        ChargeEngineSwitch.requireEnabled(chargeEngineProperties);
+        return chargeAccountRepository.findDueForAmc(frequency, billedThrough);
+    }
+
     public List<ChargeAccountEntity> runCycle(AmcChargeFrequency frequency, LocalDate billedThrough) {
         // This one bills real money against real accounts.
         ChargeEngineSwitch.requireEnabled(chargeEngineProperties);

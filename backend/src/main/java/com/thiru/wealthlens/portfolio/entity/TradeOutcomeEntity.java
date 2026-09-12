@@ -13,12 +13,19 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Document(value = "trade_outcomes")
+/**
+ * Indexed on {@code {email, sell_date}} because every read is one user's realised trades, and a
+ * capital-gains statement wants them in date order. Created by {@code PortfolioIndexInitializer} —
+ * {@code auto-index-creation} is off application-wide, so this annotation alone creates nothing.
+ */
+@CompoundIndex(name = "trade_outcome_user_idx", def = "{'email': 1, 'sell_date': -1}")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

@@ -137,16 +137,43 @@ public class PortfolioService {
         };
     }
 
+    /**
+     * Everything a trade must satisfy before it is allowed to change a holding.
+     *
+     * <p>The email check is conditional — the path is authenticated and the field is optional, so it
+     * only matters when the caller supplies one. <b>Everything after it is not.</b> This method used
+     * to {@code return} when the email was absent, which skipped the only other check there was, so
+     * a request with no email and no quantity was accepted.
+     *
+     * <p>Quantity must be positive rather than merely non-zero. The previous check was
+     * {@code equal(quantity, 0)}, which let a negative through: a negative buy creates a negative
+     * holding and a negative sell increases one, and neither is recoverable from the stored document
+     * alone. Price was not checked at all.
+     *
+     * <p>Zero price is deliberately allowed. Bonus shares and split allotments are issued free, and
+     * refusing them here would block the corporate-action flow that creates them.
+     */
     private static void validateAssetRequest(UserMail userMail, AssetRequest assetRequest) {
-        if (null == assetRequest.getEmail() || assetRequest.getEmail().isBlank()) {
-            return;
-        }
-        if (!userMail.getEmail().equals(assetRequest.getEmail())) {
+        String requestEmail = assetRequest.getEmail();
+        if (requestEmail != null && !requestEmail.isBlank() && !userMail.getEmail().equals(requestEmail)) {
             throw new BadRequestException("Email does not match");
         }
 
-        if (DoubleUtil.equal(assetRequest.getQuantity(), 0)) {
-            throw new BadRequestException("Invalid Quantity: " + assetRequest.getQuantity());
+        Double quantity = assetRequest.getQuantity();
+        if (quantity == null || quantity <= 0) {
+            throw new BadRequestException("Quantity must be greater than zero, but was: " + quantity);
+        }
+
+        if (assetRequest.getPrice() < 0) {
+            throw new BadRequestException("Price must not be negative, but was: " + assetRequest.getPrice());
+        }
+
+        LocalDate transactionDate = assetRequest.getTransactionDate();
+        if (transactionDate != null && transactionDate.isAfter(LocalDate.now())) {
+            throw new BadRequestException(
+                    "A trade cannot be dated in the future: " + transactionDate + ". It would be priced "
+                            + "against whichever rate card is open-ended today rather than the one in force "
+                            + "when it settles");
         }
     }
 
