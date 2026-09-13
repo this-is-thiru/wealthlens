@@ -23,7 +23,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.mongodb.MongoDBContainer;
+import org.testcontainers.containers.MongoDBContainer;
 
 @Tag("integration")
 @Isolated
@@ -45,29 +45,11 @@ public abstract class AbstractIntegrationTest {
             "allowance_limits",
             "tax_slab_policies",
             "tax_year_registry",
-            "perquisite_policies",
-            // Written by ChargeSeederService, which since ADR-27 runs only when asked. Dropping it
-            // between tests would leave whichever test seeds it carrying the cost for the rest, and
-            // any rate card published afterwards would be rejected for naming codes the catalogue
-            // no longer holds. It is reference data; it survives.
-            //
-            // charge_schedules is deliberately NOT here. Tests assert over the cards they create,
-            // and shipped cards in the same collection would make those assertions depend on which
-            // class happened to run first. A test needing a rate card writes one.
-            "charge_catalogue");
+            "perquisite_policies");
 
-    /**
-     * A single-node replica set, because this application's multi-document writes need one.
-     *
-     * <p><b>{@code withReplicaSet()} is not optional.</b> The superseded
-     * {@code org.testcontainers.containers.MongoDBContainer} always initialised a replica set;
-     * {@code org.testcontainers.mongodb.MongoDBContainer} does so only when asked. Dropping it
-     * would leave {@code app.mongodb.transactions-enabled=true} pointed at a standalone server, and
-     * every {@code @Transactional} write spanning two collections would fail.
-     */
     static final MongoDBContainer mongoDBContainer;
     static {
-        mongoDBContainer = new MongoDBContainer("mongo:8.0").withReplicaSet();
+        mongoDBContainer = new MongoDBContainer("mongo:7.0");
         mongoDBContainer.start();
     }
 

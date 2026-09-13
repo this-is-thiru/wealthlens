@@ -11,7 +11,6 @@ import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
-import com.thiru.wealthlens.portfolio.service.LotChargeAllocator;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
 import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
@@ -296,9 +295,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         sellRequest.setBrokerCharges(10.0);
         sellRequest.setMiscCharges(5.0);
 
-        ProfitAndLossContext context = ProfitAndLossContext.from(buyAsset, sellRequest, 0.0,
-                LotChargeAllocator.deductBroker(buyAsset, 0.0, buyAsset.getQuantity()),
-                LotChargeAllocator.deductMisc(buyAsset, 0.0, buyAsset.getQuantity()));
+        ProfitAndLossContext context = ProfitAndLossContext.from(buyAsset, sellRequest, 0.0);
 
         // WHEN
         profitAndLossService.updateProfitAndLoss(userMail, context);
@@ -373,9 +370,7 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         sellRequest.setBrokerCharges(10.0);
         sellRequest.setMiscCharges(5.0);
 
-        return ProfitAndLossContext.from(buyAsset, sellRequest, quantity,
-                LotChargeAllocator.deductBroker(buyAsset, quantity, buyAsset.getQuantity()),
-                LotChargeAllocator.deductMisc(buyAsset, quantity, buyAsset.getQuantity()));
+        return ProfitAndLossContext.from(buyAsset, sellRequest, quantity);
     }
 
     private ProfitAndLossEntity findPnlByEmail(String email) {

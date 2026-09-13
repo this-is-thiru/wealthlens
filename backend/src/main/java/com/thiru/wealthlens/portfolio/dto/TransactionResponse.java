@@ -2,7 +2,6 @@ package com.thiru.wealthlens.portfolio.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
-import com.thiru.wealthlens.portfolio.dto.charges.ChargeNote;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
@@ -23,14 +22,6 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class TransactionResponse {
-
-    /**
-     * The trade's own id. Exposed because it is the key a caller needs to line a row up against
-     * its charges, and because {@code TransactionEntity.id} is {@code @JsonIgnore} — so until now
-     * a response could not be joined to anything at all.
-     */
-    private String transactionId;
-
     private String email;
     private String stockCode;
     private String stockName;
@@ -61,13 +52,4 @@ public class TransactionResponse {
     List<CorporateActionDto> corporateActions = new ArrayList<>();
     private String sourceTempTransactionId;
     private AuditMetadataDto auditMetadata;
-
-    /**
-     * What the engine charged for this trade, line by line.
-     *
-     * <p>Null when no charge was ever recorded — a V1 trade, or one made before the engine was
-     * switched on, which ADR-32 settles will never be re-driven. A zero would read as "charged
-     * nothing", which is a different and sometimes correct fact.
-     */
-    private ChargeNote charges;
 }

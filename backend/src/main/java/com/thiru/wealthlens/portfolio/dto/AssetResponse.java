@@ -2,8 +2,6 @@ package com.thiru.wealthlens.portfolio.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.thiru.wealthlens.corporate.dto.CorporateActionDto;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
-import com.thiru.wealthlens.portfolio.dto.charges.AssetCharges;
-import com.thiru.wealthlens.portfolio.dto.charges.ChargeNote;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
@@ -60,13 +58,4 @@ public class AssetResponse implements AuditableResponse {
 	private Map<String, Double> transactionQuantities;
 
 	private AuditMetadataDto auditMetadata;
-
-	/**
-	 * What this holding has cost in charges, on the way in and on the way out.
-	 *
-	 * <p>Null when nothing was ever priced against it. Where the view groups several lots into one
-	 * row, the buy side is merged by code rather than presented as a contract note — see
-	 * {@link ChargeNote}.
-	 */
-	private AssetCharges charges;
 }
