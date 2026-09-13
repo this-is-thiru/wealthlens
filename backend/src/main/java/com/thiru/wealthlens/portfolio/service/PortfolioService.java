@@ -77,6 +77,7 @@ public class PortfolioService {
 //    private final UserBrokerChargeService userBrokerChargeService;
     private final TemporaryTransactionService temporaryTransactionService;
     private final ChargeRecordingGateway chargeRecordingGateway;
+    private final ChargeViewAssembler chargeViewAssembler;
     private final ChargeEngineProperties chargeEngineProperties;
     private final HoldingPeriodService holdingPeriodService;
 
@@ -487,17 +488,37 @@ public class PortfolioService {
             throw new IllegalArgumentException("Stock not found");
         }
 
-        return TCollectionUtil.map(stockEntities, asset -> TJsonMapper.copy(asset, AssetResponse.class));
+        ChargeViewAssembler.ChargeLookup lookup = chargeViewAssembler.forLots(email, stockEntities);
+        return TCollectionUtil.map(stockEntities, asset -> {
+            AssetResponse assetResponse = TJsonMapper.copy(asset, AssetResponse.class);
+            assetResponse.setCharges(chargeViewAssembler.assetCharges(lookup, List.of(asset)));
+            return assetResponse;
+        });
     }
 
     public List<AssetResponse> getAllStocks(UserMail userMail) {
 
         List<AssetEntity> stockEntities = portfolioRepository.findByEmail(userMail.getEmail());
-        Map<String, List<AssetEntity>> stockEntityMap = TCollectionUtil.groupingBy(stockEntities, stockWithCodeAndBroker());
-        List<AssetResponse> responseEntities = TCollectionUtil.map(stockEntityMap.values(), PortfolioService::combineAllDetailsOfEntities);
+        List<AssetResponse> responseEntities = groupedWithCharges(userMail, stockEntities);
 
         log.info("Fetching portfolio stocks of {}", userMail.getEmail());
         return responseEntities;
+    }
+
+    /**
+     * Groups lots into the rows this view presents, and hangs each row's charges off it.
+     *
+     * <p>The lookup is built once for every lot in the response, not once per row: the charge rows
+     * and the realised rows are each one query, whatever the size of the portfolio.
+     */
+    private List<AssetResponse> groupedWithCharges(UserMail userMail, List<AssetEntity> assetEntities) {
+        Map<String, List<AssetEntity>> assetMap = TCollectionUtil.groupingBy(assetEntities, stockWithCodeAndBroker());
+        ChargeViewAssembler.ChargeLookup lookup = chargeViewAssembler.forLots(userMail.getEmail(), assetEntities);
+        return TCollectionUtil.map(assetMap.values(), lots -> {
+            AssetResponse assetResponse = combineAllDetailsOfEntities(lots);
+            assetResponse.setCharges(chargeViewAssembler.assetCharges(lookup, lots));
+            return assetResponse;
+        });
     }
 
     public List<AssetResponse> getStocksWithDateRange(UserMail userMail, LocalDate startDate, LocalDate endDate) {
@@ -505,8 +526,7 @@ public class PortfolioService {
         String email = userMail.getEmail();
         List<AssetEntity> stockEntities = portfolioRepository.findByEmailAndTransactionDateBetween(email, startDate, endDate);
 
-        Map<String, List<AssetEntity>> stockEntityMap = TCollectionUtil.groupingBy(stockEntities, stockWithCodeAndBroker());
-        List<AssetResponse> responseEntities = TCollectionUtil.map(stockEntityMap.values(), PortfolioService::combineAllDetailsOfEntities);
+        List<AssetResponse> responseEntities = groupedWithCharges(userMail, stockEntities);
 
         log.info("Fetching stocks from portfolio between {} and {}", startDate, endDate);
         return responseEntities;
@@ -775,8 +795,7 @@ public class PortfolioService {
 
     public List<AssetResponse> getExportEntities(UserMail userMail, List<QueryFilter> queryFilters) {
         List<AssetEntity> entities = mongoTemplateService.getDocuments(userMail, queryFilters, AssetEntity.class);
-        Map<String, List<AssetEntity>> stockEntityMap = TCollectionUtil.groupingBy(entities, stockWithCodeAndBroker());
-        return TCollectionUtil.map(stockEntityMap.values(), PortfolioService::combineAllDetailsOfEntities);
+        return groupedWithCharges(userMail, entities);
     }
 
     public List<AssetEntity> stocksForCorporateActions(String stockCode, LocalDate recordDate) {
@@ -881,8 +900,7 @@ public class PortfolioService {
     private List<AssetResponse> getStockEntities(UserMail userMail, Collection<String> stockCodes) {
 
         List<AssetEntity> stockEntities = portfolioRepository.findByEmailAndStockCodeIn(userMail.getEmail(), stockCodes);
-        Map<String, List<AssetEntity>> stockEntityMap = TCollectionUtil.groupingBy(stockEntities, stockWithCodeAndBroker());
-        return TCollectionUtil.map(stockEntityMap.values(), PortfolioService::combineAllDetailsOfEntities);
+        return groupedWithCharges(userMail, stockEntities);
     }
 
     private List<AssetEntity> getLongTermHeldAssets(UserMail userMail, String oneYearBeforeDate) {
@@ -908,8 +926,7 @@ public class PortfolioService {
     public List<AssetResponse> getMutualFunds(UserMail userMail) {
 
         List<AssetEntity> mutualFunds = portfolioRepository.findByEmailAndAssetType(userMail.getEmail(), AssetType.MUTUAL_FUND);
-        Map<String, List<AssetEntity>> fundsMap = TCollectionUtil.groupingBy(mutualFunds, stockWithCodeAndBroker());
-        List<AssetResponse> responseEntities = TCollectionUtil.map(fundsMap.values(), PortfolioService::combineAllDetailsOfEntities);
+        List<AssetResponse> responseEntities = groupedWithCharges(userMail, mutualFunds);
 
         log.info("Fetch holding Mutual Funds of {}", userMail.getEmail());
         return responseEntities;

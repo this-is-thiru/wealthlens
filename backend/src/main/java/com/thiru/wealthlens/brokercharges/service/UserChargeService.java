@@ -12,8 +12,11 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -106,6 +109,23 @@ public class UserChargeService {
         return userChargeRepository.findByEmailAndTransactionId(email, transactionId)
                 .orElseThrow(() -> new BadRequestException(
                         "No charges recorded for transaction " + transactionId));
+    }
+
+    /**
+     * The recorded charges for many transactions at once, keyed by transaction id.
+     *
+     * <p>The batch form of {@link #findOptionalForTransaction}, for responses that carry a page of
+     * trades. Ids with no charge row are simply absent from the map, which keeps "never priced"
+     * distinguishable from "priced at nothing" — a distinction that outlives the rollout, because
+     * ADR-32 forbids re-driving trades made before the engine was switched on.
+     */
+    public Map<String, UserChargeEntity> findForTransactions(String email, Collection<String> transactionIds) {
+        if (transactionIds == null || transactionIds.isEmpty()) {
+            return Map.of();
+        }
+        return userChargeRepository.findByEmailAndTransactionIdIn(email, transactionIds).stream()
+                .collect(Collectors.toMap(UserChargeEntity::getTransactionId, charge -> charge,
+                        (left, _) -> left));
     }
 
     public void deleteByEmail(String email) {

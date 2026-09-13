@@ -37,6 +37,7 @@ public class TransactionService {
 
     private final IdempotencyProperties idempotencyProperties;
     private final MongoTemplateService mongoTemplateService;
+    private final ChargeViewAssembler chargeViewAssembler;
 
     /**
      * Records a trade, or recognises that this submission already did.
@@ -158,8 +159,7 @@ public class TransactionService {
     }
 
     public List<TransactionResponse> userTransactions(UserMail userMail, List<QueryFilter> queryFilters) {
-        List<TransactionEntity> transactions = getUserTransactions(userMail, queryFilters);
-        return transactions.stream().map(transaction -> TJsonMapper.copy(transaction, TransactionResponse.class)).toList();
+        return withCharges(userMail, getUserTransactions(userMail, queryFilters));
     }
 
     public List<TransactionEntity> getUserTransactions(UserMail userMail, List<QueryFilter> queryFilters) {
@@ -171,8 +171,30 @@ public class TransactionService {
     }
 
     public List<TransactionResponse> getAllUserTransactions(UserMail userMail) {
-        List<TransactionEntity> transactionEntities = transactionRepository.findByEmail(userMail.getEmail());
-        return transactionEntities.stream().map(transaction -> TJsonMapper.copy(transaction, TransactionResponse.class)).toList();
+        return withCharges(userMail, transactionRepository.findByEmail(userMail.getEmail()));
+    }
+
+    /**
+     * Maps trades to responses and hangs each one's recorded charges off it.
+     *
+     * <p>The charge rows are fetched for the whole page in one query rather than per row: a full
+     * transaction history is hundreds of trades, and asking per trade turns one screen into
+     * hundreds of round trips.
+     *
+     * <p>The id has to be carried across by hand. {@code TransactionEntity.id} is
+     * {@code @JsonIgnore} and the mapping goes through JSON, so it does not survive the copy.
+     */
+    private List<TransactionResponse> withCharges(UserMail userMail, List<TransactionEntity> transactions) {
+        List<String> transactionIds = TCollectionUtil.map(transactions, TransactionEntity::getId);
+        ChargeViewAssembler.ChargeLookup lookup =
+                chargeViewAssembler.forTransactions(userMail.getEmail(), transactionIds);
+
+        return transactions.stream().map(transaction -> {
+            TransactionResponse response = TJsonMapper.copy(transaction, TransactionResponse.class);
+            response.setTransactionId(transaction.getId());
+            response.setCharges(chargeViewAssembler.transactionNote(lookup, transaction.getId()));
+            return response;
+        }).toList();
     }
 
 
