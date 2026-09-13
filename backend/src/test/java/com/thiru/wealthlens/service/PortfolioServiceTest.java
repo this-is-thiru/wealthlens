@@ -7,6 +7,8 @@ import static org.mockito.Mockito.*;
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
+import com.thiru.wealthlens.brokercharges.service.ChargeAccountService;
+import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
@@ -79,6 +81,12 @@ class PortfolioServiceTest {
     private ChargeViewAssembler chargeViewAssembler;
 
     @Mock
+    private UserChargeService userChargeService;
+
+    @Mock
+    private ChargeAccountService chargeAccountService;
+
+    @Mock
     private HoldingPeriodService holdingPeriodService;
 
     @Mock
@@ -111,6 +119,8 @@ class PortfolioServiceTest {
                 temporaryTransactionService,
                 chargeRecordingGateway,
                 chargeViewAssembler,
+                userChargeService,
+                chargeAccountService,
                 properties,
                 holdingPeriodService,
                 tradeOutcomeRecorder
@@ -132,12 +142,14 @@ class PortfolioServiceTest {
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeViewAssembler chargeViewAssembler,
+                UserChargeService userChargeService,
+                ChargeAccountService chargeAccountService,
                 ChargeEngineProperties chargeEngineProperties,
                 HoldingPeriodService holdingPeriodService, TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                    chargeEngineProperties,
+                    userChargeService, chargeAccountService, chargeEngineProperties,
                     holdingPeriodService, tradeOutcomeRecorder);
         }
 
@@ -181,13 +193,15 @@ class PortfolioServiceTest {
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeViewAssembler chargeViewAssembler,
+                UserChargeService userChargeService,
+                ChargeAccountService chargeAccountService,
                 ChargeEngineProperties chargeEngineProperties,
                 HoldingPeriodService holdingPeriodService,
                 TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                    chargeEngineProperties,
+                    userChargeService, chargeAccountService, chargeEngineProperties,
                     holdingPeriodService, tradeOutcomeRecorder);
         }
 
@@ -205,6 +219,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                userChargeService, chargeAccountService,
                 new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
@@ -223,6 +238,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                userChargeService, chargeAccountService,
                 new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
@@ -629,6 +645,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                userChargeService, chargeAccountService,
                 new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
 
         // When

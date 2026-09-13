@@ -900,6 +900,66 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)), AssetEntity.class, "assets"));
     }
 
+    /**
+     * Every collection the wipe is responsible for, seeded and then checked.
+     *
+     * <p>The older test above asserted only that {@code assets} emptied, which is why the charges
+     * collections were able to survive a "clear all" unnoticed. Leftovers here are not inert: a
+     * surviving {@code charge_accounts} row carries a {@code lastBilledThrough} that makes the next
+     * AMC cycle skip the account, and surviving {@code user_charges} rows re-attach themselves to
+     * re-uploaded trades, since the key is {email, transaction_id} and nothing else.
+     *
+     * <p>Temporary transactions are deliberately absent: they are not their own collection but rows
+     * in {@code transactions} carrying {@code status = TEMPORARY}, so the transaction wipe covers
+     * them. {@code lastly_performed_corporate_action} is asserted even though
+     * {@code TemporaryTransactionService} already deletes it — the coupling is easy to miss and
+     * easier to remove by accident.
+     */
+    @Test
+    void clearAllRecordsForCustomer_whenEveryCollectionHasData_leavesNoneBehind() {
+        String token = generateToken(TEST_EMAIL);
+
+        mongoTemplate.save(buildAssetEntity(), "assets");
+
+        TransactionEntity txn = new TransactionEntity();
+        txn.setEmail(TEST_EMAIL);
+        txn.setStockCode(TEST_STOCK_CODE);
+        txn.setTransactionType(TransactionType.BUY);
+        txn.setStatus(TransactionStatus.PROCESSED);
+        mongoTemplate.save(txn, "transactions");
+
+        mongoTemplate.save(emailOnly(), "trade_outcomes");
+        mongoTemplate.save(emailOnly(), "profit_and_loss");
+        mongoTemplate.save(emailOnly(), "user_charges");
+        mongoTemplate.save(emailOnly(), "charge_accounts");
+        mongoTemplate.save(emailOnly(), "lastly_performed_corporate_action");
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/clear/all";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = createRestTemplate()
+                .exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        for (String collection : List.of("assets", "transactions", "trade_outcomes", "profit_and_loss",
+                "user_charges", "charge_accounts", "lastly_performed_corporate_action")) {
+            assertEquals(0, countFor(collection), collection + " still holds rows for the cleared user");
+        }
+    }
+
+    /** A document carrying nothing but the email, which is all the wipe keys on. */
+    private org.bson.Document emailOnly() {
+        return new org.bson.Document("email", TEST_EMAIL);
+    }
+
+    private long countFor(String collection) {
+        return mongoTemplate.getCollection(collection)
+                .countDocuments(new org.bson.Document("email", TEST_EMAIL));
+    }
+
     @Test
     void clearAllRecordsForCustomer_partialFailureResilience_whenOneDeleteFails_expectedContinues() {
         String token = generateToken(TEST_EMAIL);
