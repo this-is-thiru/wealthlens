@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.shared.util.time;
 
-import io.micrometer.common.lang.NonNull;
+
+import org.jspecify.annotations.NonNull;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
