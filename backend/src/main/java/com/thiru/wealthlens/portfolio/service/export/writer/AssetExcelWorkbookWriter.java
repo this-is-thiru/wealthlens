@@ -81,9 +81,13 @@ public class AssetExcelWorkbookWriter extends AbstractExcelWorkbookWriter<AssetR
         return simpleColumnValueMap;
     }
 
+    /** The per-date breakdown behind each holding, on its own sheet. */
     @Override
     protected void extraSheetWriter(XSSFWorkbook workbook, List<AssetResponse> entities) {
-        List<String> quantityHeaders = List.of(ExcelHeaders.STOCK_CODE, ExcelHeaders.BROKER_NAME, ExcelHeaders.BROKER_NAME, ExcelHeaders.QUANTITY);
+        // The third header was BROKER NAME a second time while the third value written is the
+        // transaction date, so every row of this sheet carried a date beneath a broker heading.
+        List<String> quantityHeaders = List.of(ExcelHeaders.STOCK_CODE, ExcelHeaders.BROKER_NAME,
+                ExcelHeaders.TRANSACTION_DATE, ExcelHeaders.QUANTITY);
         Sheet sheet = ExcelSheetHelper.createNewSheet(workbook, quantityHeaders, "TRANSACTIONS");
 
         int rowCount = 1;
@@ -92,9 +96,20 @@ public class AssetExcelWorkbookWriter extends AbstractExcelWorkbookWriter<AssetR
         }
     }
 
+    /**
+     * One holding's rows, or none.
+     *
+     * <p>A null breakdown is skipped rather than fatal: it is absent for any holding the portfolio
+     * view did not group, and failing the whole export over one such holding loses the other
+     * hundred.
+     */
     public static int updateTransactionSheet(Sheet transactionsSheet, int rowCount, AssetResponse assetResponse) {
 
         Map<String, Double> transactionQuantities = assetResponse.getTransactionQuantities();
+        if (transactionQuantities == null) {
+            return rowCount;
+        }
+
         for (Map.Entry<String, Double> entry : transactionQuantities.entrySet()) {
 
             Row row = transactionsSheet.createRow(rowCount);

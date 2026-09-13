@@ -60,33 +60,51 @@ invocation, which `forReadOnlyDataBinding()` disallows.
 
 ## CE-2 — Two Excel export frameworks, and only one knows about charges
 
+**Updated 2026-09-13.** The original entry called the second framework's column selection "the
+capability worth keeping." That was written without running it. **It does not work**, and the four
+defects it carried are now fixed — but the duplication itself remains, which is what this item is
+now about.
+
 **What.** The application has two independent Excel export mechanisms, both writing
 `AssetResponse`, reached by two endpoints:
 
 | Endpoint | Mechanism | Shape |
 |---|---|---|
 | `GET /portfolio/user/{email}/assets/holding/{type}/excel` | `shared/util/parser/ExcelBuilder` | `List<ExcelColumn<T>>` — header paired with extractor |
-| `POST /portfolio/user/{email}/stocks/download` | `portfolio/service/export/**` | `AbstractExcelWorkbookWriter<T>` — string keys, header map, extractor map, plus caller-selected columns |
+| `POST /portfolio/user/{email}/stocks/download` | `portfolio/service/export/**` | `AbstractExcelWorkbookWriter<T>` — declared order, header map, extractor map, plus caller-selected columns |
 
-They are roughly 110 and 660 lines respectively, they solve the same problem, and they share only
-the `ExcelHeaders` string constants.
+**What was wrong, and is now fixed.** `selectedColumns` arrives from the request body, so all of
+this was caller-reachable. Asking for `["stockCode", "price"]` produced:
 
-**Why it matters.** The computed charge columns were added to the first and therefore exist in one
-download and not the other, which is worse than being in neither — two exports of the same holdings
-now disagree about what data a holding has. The second framework also keys its columns by
-hand-written strings (`"stockCode"`, `"totalQuantity"`) mapped to headers and extractors in separate
-maps, which is a differently-shaped version of the positional drift the first one was just fixed to
-eliminate: a typo in a key yields a missing column rather than a compile error.
+```
+HEADERS(13): [EMAIL, STOCK CODE, STOCK NAME, ASSET TYPE, ...]
+DATA:        0=INFY   1=1500.0
+```
 
-**Done looks like.** One framework. The second one's column-selection feature is the capability
-worth keeping — `ExcelColumn` has no equivalent — so the likely shape is `ExcelColumn` plus a
-`select(List<String>)`, with the `export/**` writers and processors deleted and
-`EntityExportController` pointed at it. Charge columns then exist once, in both downloads.
+`headers()` walked `orderedColumns()` — always all thirteen — while the data was written at indices
+numbered from the caller's selection. The stock code landed under EMAIL. Alongside it: an
+unrecognised column name reached a null index and failed as a 500; the transactions sheet declared
+`BROKER NAME` twice and wrote the transaction date into the second one; and three of the four faults
+fixed in `ExcelBuilder` a day earlier were still present here verbatim — a `CellStyle` per cell
+(measured at 218 styles for 200 rows), a bare `RuntimeException`, and a type switch whose default
+threw `IllegalArgumentException`, reporting a programming error to the caller as a 400.
 
-**Why not now.** It is a refactor across two controllers and eleven classes with no test coverage on
-the `export/**` side, which makes it a change that needs tests written before it, not during. The
-narrower fix — adding the charge columns to the second writer too — is available if the divergence
-needs closing before the consolidation.
+All fixed, with the first tests this framework has ever had.
+
+**What remains: the duplication.** Two mechanisms solving one problem is how the above happened —
+`ExcelBuilder` was repaired and its twin was not, because nothing connected them. The computed
+charge columns are in `ExcelBuilder` only, so two downloads of the same holdings still disagree
+about what data a holding has.
+
+**Done looks like.** One framework. Column selection is now the *better*-specified of the two
+behaviours and should survive, but as a `filter` over `List<ExcelColumn<T>>` rather than as a second
+index map — on that shape, headers and values cannot diverge because they are the same list. The
+`export/**` writers and processors go, and `EntityExportController` points at the survivor. Charge
+columns then exist once, in both downloads.
+
+**Why not now.** The defects were the urgent half and are done. The consolidation touches two
+controllers and eleven classes; it now has tests underneath it, which it did not before, so it is a
+safe refactor rather than a risky one — just not a small one.
 
 ---
 
