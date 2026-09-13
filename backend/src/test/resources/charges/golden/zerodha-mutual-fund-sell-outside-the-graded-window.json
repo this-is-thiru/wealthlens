@@ -1,0 +1,30 @@
+{
+  "name": "zerodha-mutual-fund-sell-outside-the-graded-window",
+  "describes": "A redemption of units held well past a year from the graded scheme. The exit load is assessed and comes to nil, and the contract note says so: the profile declares an explicit [365, unbounded) band at zero, so the rule produces a 0.00 line rather than no line at all. That is the difference between the two shipped profiles — the liquid fund expresses its load as a predicate and simply drops out, producing nothing. Both are correct and they read differently, which is worth pinning rather than discovering from a customer asking why one redemption lists an exit load of zero and another lists none.",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "MUTUAL_FUND",
+    "segment": null,
+    "exchange": null,
+    "stockCode": "PARAGPARIKHFLEXICAP",
+    "event": "SELL",
+    "price": 100,
+    "quantity": 1000,
+    "transactionDate": "2025-06-02",
+    "lots": [
+      {
+        "quantity": 1000,
+        "price": 100,
+        "acquisitionDate": "2023-01-01"
+      }
+    ]
+  },
+  "expected": {
+    "lines": {
+      "EXIT_LOAD": 0.0,
+      "STT": 1.0
+    },
+    "resolution": "RESOLVED",
+    "total": 1.0
+  }
+}

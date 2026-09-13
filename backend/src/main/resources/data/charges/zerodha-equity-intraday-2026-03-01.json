@@ -1,0 +1,148 @@
+{
+  "scheduleCode": "ZERODHA_EQ_INTRADAY_2026_03",
+  "brokerName": "ZERODHA",
+  "assetType": "EQUITY",
+  "segment": "INTRADAY",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2026-03-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://zerodha.com/charges",
+  "verifiedOn": "2026-09-08",
+  "rules": [
+    {
+      "code": "BROKERAGE",
+      "displayName": "Brokerage",
+      "category": "BROKERAGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.03,
+      "flatAmount": 20.0,
+      "aggregator": "MIN",
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "0.03% or Rs 20 per executed order, whichever is lower. Verified 2026-09-08 against https://zerodha.com/charges."
+    },
+    {
+      "code": "STT",
+      "displayName": "Securities Transaction Tax",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "SELL",
+      "events": [
+        "SELL"
+      ],
+      "rate": 0.025,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 20,
+      "notes": "0.025% on the sell side only. Statutory; never part of a GST base."
+    },
+    {
+      "code": "EXCHANGE_TXN",
+      "displayName": "Exchange transaction charges",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0030699,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 30,
+      "notes": "NSE cash market transaction charge, revised to 0.0030699% with effect from 2026-03-01 (NSE circular of 2026-02-27). The preceding card carries 0.00297%, which is what applied from 2024-10-01 until then."
+    },
+    {
+      "code": "SEBI_FEE",
+      "displayName": "SEBI turnover fees",
+      "category": "REGULATORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0001,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 40,
+      "notes": "SEBI turnover fee, Rs 10 per crore of traded value."
+    },
+    {
+      "code": "IPFT",
+      "displayName": "Investor Protection Fund Trust",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0001,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 50,
+      "notes": "NSE Investor Protection Fund Trust, Rs 10 per crore of traded value, raised from Rs 0.01 per crore with effect from 2023-04-01. Zerodha's and Fyers' charges pages still print the pre-2023 figure; Upstox's states Rs 0.10 per lakh, which is the same thing. Verified against the revision rather than the pages, by the repository owner's decision of 2026-09-08."
+    },
+    {
+      "code": "STAMP_DUTY",
+      "displayName": "Stamp duty",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BUY",
+      "events": [
+        "BUY"
+      ],
+      "rate": 0.003,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 60,
+      "notes": "0.003%, or Rs 300 per crore, on the buy side only. Statutory; never part of a GST base."
+    },
+    {
+      "code": "GST",
+      "displayName": "Goods and Services Tax",
+      "category": "TAX",
+      "basis": "DERIVED",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 18.0,
+      "baseCodes": [
+        "BROKERAGE",
+        "EXCHANGE_TXN",
+        "SEBI_FEE",
+        "IPFT"
+      ],
+      "rounding": "HALF_UP_2",
+      "taxable": false,
+      "active": true,
+      "order": 100,
+      "notes": "18% on the taxable services. The base is listed explicitly; securities transaction tax and stamp duty are absent by design (D1)."
+    }
+  ]
+}

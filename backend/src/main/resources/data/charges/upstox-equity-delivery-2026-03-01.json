@@ -1,0 +1,164 @@
+{
+  "scheduleCode": "UPSTOX_EQ_DELIVERY_2026_03",
+  "brokerName": "UPSTOX",
+  "assetType": "EQUITY",
+  "segment": "DELIVERY",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2026-03-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://upstox.com/brokerage-charges/",
+  "verifiedOn": "2026-09-08",
+  "rules": [
+    {
+      "code": "BROKERAGE",
+      "displayName": "Brokerage",
+      "category": "BROKERAGE",
+      "basis": "FLAT",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "flatAmount": 20.0,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "Rs 20 per executed order, flat. Verified 2026-09-08 against https://upstox.com/brokerage-charges/. Shipped as MIN(0.1%, Rs 20) until then, which undercharged every trade below 20,000. Verified 2026-09-08 against https://upstox.com/brokerage-charges/."
+    },
+    {
+      "code": "STT",
+      "displayName": "Securities Transaction Tax",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.1,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 20,
+      "notes": "0.1% on buy and sell. Statutory; taken to the nearest rupee by convention and never part of a GST base."
+    },
+    {
+      "code": "EXCHANGE_TXN",
+      "displayName": "Exchange transaction charges",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0030699,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 30,
+      "notes": "NSE cash market transaction charge, revised to 0.0030699% with effect from 2026-03-01 (NSE circular of 2026-02-27). The preceding card carries 0.00297%, which is what applied from 2024-10-01 until then."
+    },
+    {
+      "code": "SEBI_FEE",
+      "displayName": "SEBI turnover fees",
+      "category": "REGULATORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0001,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 40,
+      "notes": "SEBI turnover fee, Rs 10 per crore of traded value."
+    },
+    {
+      "code": "IPFT",
+      "displayName": "Investor Protection Fund Trust",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0001,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 50,
+      "notes": "NSE Investor Protection Fund Trust, Rs 10 per crore of traded value, raised from Rs 0.01 per crore with effect from 2023-04-01. Zerodha's and Fyers' charges pages still print the pre-2023 figure; Upstox's states Rs 0.10 per lakh, which is the same thing. Verified against the revision rather than the pages, by the repository owner's decision of 2026-09-08."
+    },
+    {
+      "code": "STAMP_DUTY",
+      "displayName": "Stamp duty",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BUY",
+      "events": [
+        "BUY"
+      ],
+      "rate": 0.015,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 60,
+      "notes": "0.015%, or Rs 1500 per crore, on the buy side only. Statutory; never part of a GST base."
+    },
+    {
+      "code": "DP",
+      "displayName": "Depository participant charges",
+      "category": "DEPOSITORY",
+      "basis": "SCOPED_FLAT",
+      "side": "SELL",
+      "events": [
+        "SELL"
+      ],
+      "flatAmount": 20.0,
+      "dedupeScope": "PER_SCRIP_PER_DAY",
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 70,
+      "notes": "Rs 20.00 plus GST per scrip per day (Rs 3.50 CDSL, Rs 16.50 Upstox). Verified 2026-09-08. Verified 2026-09-08 against https://upstox.com/brokerage-charges/."
+    },
+    {
+      "code": "GST",
+      "displayName": "Goods and Services Tax",
+      "category": "TAX",
+      "basis": "DERIVED",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 18.0,
+      "baseCodes": [
+        "BROKERAGE",
+        "EXCHANGE_TXN",
+        "SEBI_FEE",
+        "IPFT",
+        "DP"
+      ],
+      "rounding": "HALF_UP_2",
+      "taxable": false,
+      "active": true,
+      "order": 100,
+      "notes": "18% on the taxable services. The base is listed explicitly; securities transaction tax and stamp duty are absent by design (D1)."
+    }
+  ]
+}

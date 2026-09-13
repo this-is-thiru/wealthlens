@@ -5,6 +5,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -32,4 +33,9 @@ public interface TransactionRepository extends MongoRepository<TransactionEntity
             String email, TransactionStatus status, String stockCode, AssetType assetType, LocalDate date);
 
     void deleteByEmailAndStatus(String email, TransactionStatus status);
+
+    Optional<TransactionEntity> findByEmailAndIdempotencyKey(String email, String idempotencyKey);
+
+    Optional<TransactionEntity> findFirstByEmailAndTradeFingerprintAndSubmittedAtAfterOrderBySubmittedAtDesc(
+            String email, String tradeFingerprint, LocalDateTime submittedAfter);
 }

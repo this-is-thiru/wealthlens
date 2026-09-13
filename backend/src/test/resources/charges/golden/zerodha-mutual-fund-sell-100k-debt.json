@@ -1,0 +1,11 @@
+{
+  "name": "zerodha-mutual-fund-sell-100k-debt",
+  "describes": "The same redemption from a debt scheme, which attracts no securities transaction tax. The only difference from the fixture above is one attribute on the instrument profile, and the charge disappears — which is exactly why a missing profile is recorded as a gap rather than logged.",
+  "context": { "brokerName": "ZERODHA", "assetType": "MUTUAL_FUND", "segment": null, "exchange": null,
+               "event": "SELL", "price": 100, "quantity": 1000, "transactionDate": "2025-06-02" },
+  "instrument": { "equityOriented": false },
+  "expected": {
+    "lines": {},
+    "total": 0.00
+  }
+}

@@ -6,6 +6,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import java.time.LocalDate;
@@ -27,6 +28,8 @@ import org.springframework.stereotype.Service;
 @Log4j2
 @RequiredArgsConstructor
 public class TradeMatchingService {
+
+    private final HoldingPeriodService holdingPeriodService;
 
     /**
      * Builds virtual BuyLots from BUY TransactionEntity records.
@@ -60,7 +63,7 @@ public class TradeMatchingService {
             double totalBrokerCharges = 0;
             double totalMiscCharges = 0;
             List<String> buyTransactionIds = new ArrayList<>();
-            boolean isCaDerived = false;
+            boolean corporateActionDerived = false;
             List<CorporateActionEntity> corporateActions = new ArrayList<>();
 
             for (TransactionEntity txn : txns) {
@@ -77,7 +80,7 @@ public class TradeMatchingService {
 
                 // Check if CA-derived
                 if (txn.getCorporateActionType() != null || price == 0) {
-                    isCaDerived = true;
+                    corporateActionDerived = true;
                 }
 
                 // Collect corporate actions
@@ -108,7 +111,7 @@ public class TradeMatchingService {
                     .buyDate(buyDate)
                     .buyTransactionIds(buyTransactionIds)
                     .corporateActions(corporateActions.isEmpty() ? null : corporateActions)
-                    .isCaDerived(isCaDerived)
+                    .corporateActionDerived(corporateActionDerived)
                     .build();
 
             lots.add(lot);
@@ -169,10 +172,11 @@ public class TradeMatchingService {
             double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
             long holdingPeriodDays = ChronoUnit.DAYS.between(lot.getBuyDate(), sell.getSellDate());
 
-            // Capital gains type
-            CapitalGainsType capitalGainsType = holdingPeriodDays > 365
-                    ? CapitalGainsType.LONG_TERM
-                    : CapitalGainsType.SHORT_TERM;
+            // Capital gains type, resolved rather than counted: 365 days is the listed-equity rule and
+            // was being applied to mutual funds, bonds and gold bonds too.
+            CapitalGainsType capitalGainsType = holdingPeriodService
+                    .classify(lot.getAssetType(), null, lot.getBuyDate(), sell.getSellDate())
+                    .capitalGainsType();
 
             // Financial year
             String financialYear = deriveFinancialYear(sell.getSellDate());
@@ -187,7 +191,7 @@ public class TradeMatchingService {
                     .accountType(sell.getAccountType())
                     .accountHolder(sell.getAccountHolder())
                     .originalBuyPrice(lot.getBuyPrice())
-                    .caAdjustedBuyPrice(lot.getBuyPrice())
+                    .corporateActionAdjustedBuyPrice(lot.getBuyPrice())
                     .buyQuantity(matchedQty)
                     .buyDate(lot.getBuyDate())
                     .buyBrokerCharges(buyBrokerCharges)
@@ -206,7 +210,7 @@ public class TradeMatchingService {
                     .financialYear(financialYear)
                     .sourceSellTransactionId(sell.getId())
                     .sourceBuyLotId(lot.getId())
-                    .isCaDerived(lot.isCaDerived())
+                    .corporateActionDerived(lot.isCorporateActionDerived())
                     .appliedCorporateActions(lot.getCorporateActions())
                     .build();
 
@@ -234,7 +238,7 @@ public class TradeMatchingService {
                 .accountType(trade.getAccountType())
                 .accountHolder(trade.getAccountHolder())
                 .originalBuyPrice(trade.getOriginalBuyPrice())
-                .caAdjustedBuyPrice(trade.getCaAdjustedBuyPrice())
+                .corporateActionAdjustedBuyPrice(trade.getCorporateActionAdjustedBuyPrice())
                 .buyQuantity(trade.getBuyQuantity())
                 .buyDate(trade.getBuyDate())
                 .buyBrokerCharges(trade.getBuyBrokerCharges())
@@ -253,7 +257,7 @@ public class TradeMatchingService {
                 .financialYear(trade.getFinancialYear())
                 .sourceSellTransactionId(trade.getSourceSellTransactionId())
                 .sourceBuyLotId(trade.getSourceBuyLotId())
-                .isCaDerived(trade.isCaDerived())
+                .corporateActionDerived(trade.isCorporateActionDerived())
                 .appliedCorporateActions(trade.getAppliedCorporateActions())
                 .build();
     }
@@ -273,7 +277,7 @@ public class TradeMatchingService {
         entity.setAccountType(trade.getAccountType());
         entity.setAccountHolder(trade.getAccountHolder());
         entity.setOriginalBuyPrice(trade.getOriginalBuyPrice());
-        entity.setCaAdjustedBuyPrice(trade.getCaAdjustedBuyPrice());
+        entity.setCorporateActionAdjustedBuyPrice(trade.getCorporateActionAdjustedBuyPrice());
         entity.setBuyQuantity(trade.getBuyQuantity());
         entity.setBuyDate(trade.getBuyDate());
         entity.setBuyBrokerCharges(trade.getBuyBrokerCharges());
@@ -292,7 +296,7 @@ public class TradeMatchingService {
         entity.setFinancialYear(trade.getFinancialYear());
         entity.setSourceSellTransactionId(trade.getSourceSellTransactionId());
         entity.setSourceBuyLotId(trade.getSourceBuyLotId());
-        entity.setIsCaDerived(trade.isCaDerived());
+        entity.setCorporateActionDerived(trade.isCorporateActionDerived());
         entity.setAppliedCorporateActions(trade.getAppliedCorporateActions());
 
         entity.setAuditMetadata(buildAuditMetadata());
@@ -364,7 +368,7 @@ public class TradeMatchingService {
         private LocalDate buyDate;
         private List<String> buyTransactionIds;
         private List<CorporateActionEntity> corporateActions;
-        private boolean isCaDerived;
+        private boolean corporateActionDerived;
     }
 
     @Data
@@ -399,7 +403,7 @@ public class TradeMatchingService {
         private String accountHolder;
 
         private double originalBuyPrice;
-        private double caAdjustedBuyPrice;
+        private double corporateActionAdjustedBuyPrice;
         private double buyQuantity;
         private LocalDate buyDate;
         private double buyBrokerCharges;
@@ -421,7 +425,7 @@ public class TradeMatchingService {
 
         private String sourceSellTransactionId;
         private String sourceBuyLotId;
-        private boolean isCaDerived;
+        private boolean corporateActionDerived;
         private List<CorporateActionEntity> appliedCorporateActions;
     }
 }

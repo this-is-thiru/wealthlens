@@ -3,7 +3,7 @@
 **Date:** 2026-09-05
 **Status:** Draft for review
 **Supersedes:** the `brokercharges` module as built in ITS-15 / commit `52000e1`
-**Companion docs:** `tech-spec.md` (design), `implementation-checklist.md` (build tracker)
+**Start at** `README.md` — current state and how to resume. **Rationale** lives in `decisions.md`.
 **Branch:** `feature/charges-engine`
 
 ---
@@ -31,6 +31,7 @@ The system is being extended to cover mutual funds and other instruments, and br
 | D7 | `getBrokerage` returns 0 when `brokerageAggregator` is null, rather than failing loudly. | `UserBrokerChargeService:171` | Misconfiguration presents as "free trading". |
 | D8 | Charge amounts are **typed in by the user** as `AssetRequest.brokerCharges` and flow into cost basis, trade outcome and net P&L; the engine's computed figure feeds only the charges report and is never reconciled against it. | `PortfolioService:290,569`; `ProfitAndLossService:200` | Manual entry is error-prone, cannot produce a per-component breakdown, and does not scale. **Removing this input is the primary motivation for the whole effort.** |
 | D9 | `findTopSellTxnByBrokerNameAndStockCodeAndTransactionDate` is named "findTop" but returns a `List`, and DP dedupe depends on read-your-own-write ordering inside the transaction. | `UserBrokerChargesRepository:12` | Fragile first-sell-of-day detection. |
+| D10 | ~~The DP dedupe query omitted `accountHolder`, so a user tracking more than one account holder was charged once for what were two separate demat debits.~~ **Fixed ahead of the engine in PR #60** — the correction reached users rather than waiting for Phase C. The new design carries the same key. | `UserBrokerChargesRepository` | Was a silent undercharge scaling with the number of account holders. |
 
 ---
 
@@ -167,7 +168,7 @@ The `assetType == EQUITY` gate is removed. Every asset type flows through the en
 ## 7. Out-of-scope Risks to Note
 
 - **Rate accuracy is a data problem, not a code problem.** The engine will faithfully compute whatever is seeded. Seed values must be verified against live broker rate cards; a `sourceUrl` + `verifiedOn` field is included on each schedule for this reason.
-- **Trade segment does not exist in the portfolio model today** (`HoldingType` is only SHORT_TERM/LONG_TERM). The engine takes `TradeSegment` on its own input record from Phase A, so no `portfolio` type changes until Phase C, where the field is added defaulting to `DELIVERY`.
+- ~~**Trade segment does not exist in the portfolio model today**~~ — **resolved in Chunk 10b (2026-09-11):** `TradeSegment` was promoted to `portfolio.dto.enums` and is a field on `AssetRequest`, `TransactionEntity`, `AssetEntity` and `ProfitLossContext`, defaulting `DELIVERY`. Originally: (`HoldingType` is only SHORT_TERM/LONG_TERM). The engine takes `TradeSegment` on its own input record from Phase A, so no `portfolio` type changes until Phase C, where the field is added defaulting to `DELIVERY`.
 - **Options premium vs notional** requires the caller to pass turnover explicitly. The engine accepts it; the portfolio module does not yet produce F&O trades, so this stays latent but designed-for.
 
 ---
@@ -183,4 +184,4 @@ Tracked in the tech spec §12; summarised here for the review conversation.
 | OD-3 | ~~Model F&O now?~~ | **Settled:** design-for-later. Phase A seeds EQUITY/DELIVERY only. The context carries `amountBasis`, `lotSize` and `orderId` from day one so F&O lands as data, not a schema change (tech-spec §13.2). |
 | OD-4 | Should `ChargeCode` be an enum or a free string? | Free string, validated against a seeded `ChargeCatalogue` — mirrors `AllowanceCatalogueEntity`, keeps G1 intact. |
 | OD-5 | Per-user negotiated rates (a user's own brokerage slab)? | Model as `planCode` on the user's broker account; out of scope for phase 1 but the dimension exists. |
-| OD-8 | Does Phase B (shadow) run before cutover, or go straight to Phase C? | Run it — it is the only way to check computed totals against what users actually typed. |
+| OD-8 | Does Phase B (shadow) run before cutover, or go straight to Phase C? | Run it — it is the only way to check computed totals against what users actually typed. **Amended 2026-09-09, ADR-31:** it ran, and the comparison returned no usable signal — the manual field was never populated (₹40.72 across 319 real transactions, 37 of 49 comparable rows reading exactly ₹0.01). The engine was verified by other means instead. Running Phase B was still right: it is what produced that finding, and the backfill, the FIFO reconstruction and ADR-29's instrument-master gap would otherwise all be undiscovered. |

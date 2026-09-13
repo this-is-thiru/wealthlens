@@ -1,32 +1,36 @@
 package com.thiru.wealthlens.portfolio.service;
-import com.thiru.wealthlens.brokercharges.dto.context.BrokerChargeContext;
-import com.thiru.wealthlens.brokercharges.dto.enums.BrokerChargeTransactionType;
-import com.thiru.wealthlens.brokercharges.entity.UserBrokerCharges;
-import com.thiru.wealthlens.brokercharges.service.UserBrokerChargeService;
+import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
+import com.thiru.wealthlens.brokercharges.entity.model.ChargeSummaryReport;
+import com.thiru.wealthlens.brokercharges.entity.model.MonthlyChargeSummary;
+import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
-import com.thiru.wealthlens.portfolio.entity.model.BrokerChargesReport;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.FortnightReport;
-import com.thiru.wealthlens.portfolio.entity.model.MonthlyBrokerCharges;
 import com.thiru.wealthlens.portfolio.entity.model.MonthlyReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.entity.model.ReportModel;
-import com.thiru.wealthlens.portfolio.entity.model.YearlyBrokerCharges;
+import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
+import com.thiru.wealthlens.portfolio.holding.TradeClassificationQuery;
+import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
+import com.thiru.wealthlens.shared.util.money.TMoney;
+import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -50,8 +54,14 @@ public class ProfitAndLossService {
     private static final int MARCH = 3;
     private static final int DAY_31 = 31;
 
+    /** The day a month's first fortnight ends, matching the report this sits beside. */
+    private static final int FORTNIGHT_BOUNDARY = 15;
+
     private final ProfitAndLossRepository profitAndLossRepository;
-    private final UserBrokerChargeService userBrokerChargeService;
+    private final HoldingPeriodService holdingPeriodService;
+
+    private final TradeClassifier tradeClassifier;
+    private final ChargeRecordingGateway chargeRecordingGateway;
 
     /**
      * Updates the profit and loss aggregates for the given user and the financial year
@@ -118,8 +128,6 @@ public class ProfitAndLossService {
 					internalContext);
 			profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
 		}
-
-		profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
 	}
 
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits,
@@ -151,12 +159,20 @@ public class ProfitAndLossService {
 		updateReportMetadata(financialReport, internalContext);
 	}
 
+    /**
+     * Accumulation is {@link TMoney#add}, not {@code +=} (TL-8, B-5).
+     *
+     * <p>This is the V1 family. Canonicalising here changes no logic and no flow — the same amounts
+     * are folded into the same fields in the same order; only the last few bits of the stored
+     * double change, from {@code 0.9999999999999999} to {@code 1.00}. Without it, one field holds
+     * canonical amounts where V2 wrote and drifted ones where V1 did.
+     */
     private static void updateReportMetadata(ReportModel metadata, InternalTransactionContext internalContext) {
-        metadata.setPurchaseAmount(metadata.getPurchaseAmount() + internalContext.getPurchasePrice());
-        metadata.setSellAmount(metadata.getSellAmount() + internalContext.getSellPrice());
-        metadata.setProfit(metadata.getProfit() + internalContext.getProfit());
-        metadata.setBrokerage(metadata.getBrokerage() + internalContext.getBrokerCharges());
-        metadata.setMiscCharges(metadata.getMiscCharges() + internalContext.getMiscCharges());
+        metadata.setPurchaseAmount(TMoney.add(metadata.getPurchaseAmount(), internalContext.getPurchasePrice()));
+        metadata.setSellAmount(TMoney.add(metadata.getSellAmount(), internalContext.getSellPrice()));
+        metadata.setProfit(TMoney.add(metadata.getProfit(), internalContext.getProfit()));
+        metadata.setBrokerage(TMoney.add(metadata.getBrokerage(), internalContext.getBrokerCharges()));
+        metadata.setMiscCharges(TMoney.add(metadata.getMiscCharges(), internalContext.getMiscCharges()));
 //        metadata.setLastUpdatedTime(LocalDateTime.now());
     }
 
@@ -189,16 +205,16 @@ public class ProfitAndLossService {
 
         double purchasePrice = profitAndLossContext.getPurchaseContext().getPrice()
                 * profitAndLossContext.getSellContext().getQuantity();
-        fortnightReport.setPurchaseAmount(fortnightReport.getPurchaseAmount() + purchasePrice);
+        fortnightReport.setPurchaseAmount(TMoney.add(fortnightReport.getPurchaseAmount(), purchasePrice));
 
         double sellPrice = profitAndLossContext.getSellContext().getPrice()
                 * profitAndLossContext.getSellContext().getQuantity();
-        fortnightReport.setSellAmount(fortnightReport.getSellAmount() + sellPrice);
+        fortnightReport.setSellAmount(TMoney.add(fortnightReport.getSellAmount(), sellPrice));
 
         double purchaseBrokerCharges = profitAndLossContext.getPurchaseContext().getBrokerCharges();
         double sellBrokerCharges = profitAndLossContext.getSellContext().getBrokerCharges();
         double brokerCharges = purchaseBrokerCharges + sellBrokerCharges;
-        fortnightReport.setBrokerage(fortnightReport.getBrokerage() + brokerCharges);
+        fortnightReport.setBrokerage(TMoney.add(fortnightReport.getBrokerage(), brokerCharges));
 
 		double purchaseMiscCharges = profitAndLossContext.getPurchaseContext().getMiscCharges();
 		double sellMiscCharges = profitAndLossContext.getSellContext().getMiscCharges();
@@ -226,20 +242,9 @@ public class ProfitAndLossService {
 	}
 
 	private static String sanitizeFinancialYear(LocalDate transactionDate) {
-
-		int transactionYear = transactionDate.getYear();
-		LocalDate financialYearEnd = financialYearEnd(transactionYear);
-
-		if (transactionDate.isBefore(financialYearEnd)) {
-			return (transactionYear - 1) + "-" + transactionYear;
-		}
-
-		return transactionYear + "-" + (transactionYear + 1);
+		return TLocalDate.financialYear(transactionDate);
 	}
 
-    private static LocalDate financialYearEnd(int year) {
-        return LocalDate.of(year, MARCH, DAY_31);
-    }
 
 	public ProfitAndLossResponse getProfitAndLoss(UserMail userMail, String financialYear) {
 		String email = userMail.getEmail();
@@ -306,21 +311,45 @@ public class ProfitAndLossService {
      * @param profitLossContext the purchase/sell context used to compute realized profit; must not be null
      */
     public void updateProfitAndLoss(UserMail userMail, ProfitLossContext profitLossContext) {
+        dispatch(userMail, profitLossContext, Optional.empty());
+    }
+
+    /**
+     * The variant for a caller that has already priced the trade.
+     *
+     * <p>{@code PortfolioService.buyStockV2} computes the charge itself, because cost basis is set
+     * from it and that has to happen before the lot is written (Chunk 10a). It then hands the result
+     * here so the engine runs <b>once</b> per trade rather than once for cost basis and again for
+     * the shadow record.
+     *
+     * @param precomputed the computation the caller already obtained, or {@code null} to price the
+     *                    trade here as before. {@code Optional.empty()} is distinct from
+     *                    {@code null}: it means the caller asked and the engine declined, so asking
+     *                    again would only repeat the decline
+     */
+    public void updateProfitAndLoss(UserMail userMail, ProfitLossContext profitLossContext,
+                                    Optional<ChargeComputation> precomputed) {
+        dispatch(userMail, profitLossContext, precomputed);
+    }
+
+    private void dispatch(UserMail userMail, ProfitLossContext profitLossContext,
+                          Optional<ChargeComputation> precomputed) {
         TransactionType transactionType = profitLossContext.transactionType();
         CorporateActionType actionType = profitLossContext.actionType();
 
         if (transactionType == TransactionType.SELL) {
             if (actionType == null) {
-                handleNormalSellCase(userMail, profitLossContext);
+                handleNormalSellCase(userMail, profitLossContext, precomputed);
             }
         } else if (transactionType == TransactionType.BUY) {
-            handleNormalBuyCase(userMail, profitLossContext);
+            handleNormalBuyCase(userMail, profitLossContext, precomputed);
         } else {
             log.error("Invalid transaction type: {}", transactionType);
         }
     }
 
-    private void handleNormalBuyCase(UserMail userMail, ProfitLossContext profitLossContext) {
+    private void handleNormalBuyCase(UserMail userMail, ProfitLossContext profitLossContext,
+                                     Optional<ChargeComputation> precomputed) {
         String email = userMail.getEmail();
 
         LocalDate transactionDate = profitLossContext.date();
@@ -329,18 +358,20 @@ public class ProfitAndLossService {
         Optional<ProfitAndLossEntity> optionalProfitAndLoss = profitAndLossRepository.findByEmailAndFinancialYear(email, financialYear);
         ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
 
-        // calculate and update the broker charges
-        if (profitLossContext.assetType() == AssetType.EQUITY) {
-            BrokerChargeContext brokerChargeContext = brokerChargeContext(profitLossContext);
-            UserBrokerCharges userBrokerCharges = userBrokerChargeService.addUserBrokerChargeEntry(userMail, brokerChargeContext);
-            if (userBrokerCharges != null) {
-                updateBrokerChargesReport(profitAndLossEntity, profitLossContext.accountType(), userBrokerCharges);
-            }
-        }
+        // Phase B -- shadow recording. Deliberately outside the EQUITY gate below: that gate guards
+        // the superseded implementation, which resolves a rate card by broker and date with no
+        // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
+        // engine has that dimension, so every asset type reaches it (FR-8). The return value is
+        // ignored -- nothing here may touch cost basis until Phase C.
+        recordCharge(userMail, profitLossContext, precomputed);
+
+
+        mergeChargeSummary(profitAndLossEntity, profitLossContext, precomputed);
         profitAndLossRepository.save(profitAndLossEntity);
     }
 
-    private void handleNormalSellCase(UserMail userMail, ProfitLossContext profitLossContext) {
+    private void handleNormalSellCase(UserMail userMail, ProfitLossContext profitLossContext,
+                                      Optional<ChargeComputation> precomputed) {
         String email = userMail.getEmail();
 
         LocalDate transactionDate = profitLossContext.date();
@@ -350,21 +381,28 @@ public class ProfitAndLossService {
         ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
 
         for (BuyContext buyContext : profitLossContext.buyContexts()) {
-            boolean isShortTermHeld = isShortTermCapitalGain(buyContext.date(), transactionDate);
+            // Two answers, deliberately. The classification is the real one and goes in the map;
+            // the boolean is what the legacy pair has always been given and keeps it byte-identical
+            // for existing readers until V1 goes and the pair goes with it (D8).
+            CapitalGainsType classification = tradeClassifier.classify(new TradeClassificationQuery(
+                    profitLossContext.stockCode(), profitLossContext.assetType(), profitLossContext.segment(),
+                    buyContext.date(), transactionDate)).capitalGainsType();
+            boolean isShortTermHeld = isShortTermCapitalGain(profitLossContext.assetType(), buyContext.date(), transactionDate);
             double purchaseAmount = buyContext.price() * buyContext.quantity();
             double sellAmount = profitLossContext.price() * buyContext.quantity();
-            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld);
+            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld, classification);
             updateProfitAndLossReport(profitAndLossEntity, profitLossContext, internalContext);
         }
 
-        // calculate and update the broker charges
-        if (profitLossContext.assetType() == AssetType.EQUITY) {
-            BrokerChargeContext brokerChargeContext = brokerChargeContext(profitLossContext);
-            UserBrokerCharges userBrokerCharges = userBrokerChargeService.addUserBrokerChargeEntry(userMail, brokerChargeContext);
-            if (userBrokerCharges != null) {
-                updateBrokerChargesReport(profitAndLossEntity, profitLossContext.accountType(), userBrokerCharges);
-            }
-        }
+        // Phase B -- shadow recording. Deliberately outside the EQUITY gate below: that gate guards
+        // the superseded implementation, which resolves a rate card by broker and date with no
+        // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
+        // engine has that dimension, so every asset type reaches it (FR-8). The return value is
+        // ignored -- nothing here may touch cost basis until Phase C.
+        recordCharge(userMail, profitLossContext, precomputed);
+
+
+        mergeChargeSummary(profitAndLossEntity, profitLossContext, precomputed);
         profitAndLossRepository.save(profitAndLossEntity);
     }
 
@@ -380,8 +418,6 @@ public class ProfitAndLossService {
             RealisedProfits calculatedProfitDetails = calculateProfitDetails(outSourcedRealisedProfits, internalContext);
             profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
         }
-
-        profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
     }
 
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits, InternalContext internalContext) {
@@ -396,8 +432,26 @@ public class ProfitAndLossService {
             realisedProfits.setLongTermCapitalGains(financialReport);
         }
 
+        recordByClassification(realisedProfits, internalContext);
+
         realisedProfits.setLastUpdatedTime(LocalDateTime.now());
         return realisedProfits;
+    }
+
+    /**
+     * The same amounts again, under the classification that is actually true (D8).
+     *
+     * <p>No branch: five classifications cannot be forced through an {@code if/else}, and that
+     * forcing is precisely the defect this exists to end. A key appears only once a disposal has
+     * been classified that way, so the map stays as small as the period's real variety.
+     */
+    private static void recordByClassification(RealisedProfits realisedProfits, InternalContext internalContext) {
+        Map<CapitalGainsType, FinancialReport> byClassification =
+                TOptional.mapO(realisedProfits.getGainsByClassification(), new EnumMap<>(CapitalGainsType.class));
+        FinancialReport report = byClassification.computeIfAbsent(
+                internalContext.classification(), _ -> FinancialReport.empty());
+        updateFinancialReport(report, internalContext);
+        realisedProfits.setGainsByClassification(byClassification);
     }
 
     private static void updateFinancialReport(FinancialReport financialReport, InternalContext internalContext) {
@@ -428,128 +482,124 @@ public class ProfitAndLossService {
         return monthlyReports;
     }
 
+    /**
+     * Accumulation is {@link TMoney#add}, not {@code +=} (TL-8).
+     *
+     * <p>A period folds in hundreds of paise-scale amounts, and raw {@code double} addition leaves
+     * ₹1.00 stored as {@code 0.9999999999999999} — which prints correctly and then fails every
+     * exact query and every reconciliation against a broker's statement. The three levels below
+     * accumulate the same figures, so all three need it or the year disagrees with its months.
+     *
+     * <p><b>The V1 family above ({@code InternalTransactionContext}) is deliberately untouched.</b>
+     * It is the live V1 sell path; the two families were already forked, so canonicalising here
+     * reaches no V1 code. That leaves V1 writing drifted values into the same fields — recorded as
+     * B-5 rather than fixed quietly.
+     */
     private static void updateYearlyTransactionReport(FinancialReport financialReport, InternalContext internalContext) {
-        financialReport.setPurchaseAmount(financialReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        financialReport.setSellAmount(financialReport.getSellAmount() + internalContext.sellAmount());
+        financialReport.setPurchaseAmount(TMoney.add(financialReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        financialReport.setSellAmount(TMoney.add(financialReport.getSellAmount(), internalContext.sellAmount()));
     }
 
     private static void updateMonthlyTransactionReport(MonthlyReport monthlyReport, InternalContext internalContext) {
-        monthlyReport.setPurchaseAmount(monthlyReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        monthlyReport.setSellAmount(monthlyReport.getSellAmount() + internalContext.sellAmount());
+        monthlyReport.setPurchaseAmount(TMoney.add(monthlyReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        monthlyReport.setSellAmount(TMoney.add(monthlyReport.getSellAmount(), internalContext.sellAmount()));
     }
 
     private static void updateFortnightTransactionReport(FortnightReport fortnightReport, InternalContext internalContext) {
-        fortnightReport.setPurchaseAmount(fortnightReport.getPurchaseAmount() + internalContext.purchaseAmount());
-        fortnightReport.setSellAmount(fortnightReport.getSellAmount() + internalContext.sellAmount());
+        fortnightReport.setPurchaseAmount(TMoney.add(fortnightReport.getPurchaseAmount(), internalContext.purchaseAmount()));
+        fortnightReport.setSellAmount(TMoney.add(fortnightReport.getSellAmount(), internalContext.sellAmount()));
     }
 
-    private static void updateBrokerChargesReport(ProfitAndLossEntity profitAndLossEntity, AccountType accountType, UserBrokerCharges userBrokerCharges) {
-        if (accountType == AccountType.SELF) {
-            RealisedProfits existingRealisedProfits = TOptional.mapO(profitAndLossEntity.getRealisedProfits(), RealisedProfits.empty());
-            RealisedProfits calculatedProfitDetails = calculateBrokerChargesDetails(existingRealisedProfits, userBrokerCharges);
-            profitAndLossEntity.setRealisedProfits(calculatedProfitDetails);
+    /**
+     * Resolved rather than assumed. This used to be {@code buyDate.plusYears(1)} applied to every
+     * asset type, which is the listed-equity rule — mutual funds, bonds and gold bonds each follow a
+     * different one, and some are short-term however long they are held.
+     *
+     * <p>The asset type comes from the trade's own context. The sub-class, which is what decides a
+     * mutual fund's rule, is not available here and resolves as unclassified; the service logs that
+     * and counts it short-term, which is the higher-taxed direction.
+     */
+    private boolean isShortTermCapitalGain(AssetType assetType, LocalDate buyDate, LocalDate sellDate) {
+        return holdingPeriodService.isShortTerm(assetType, null, buyDate, sellDate);
+    }
+
+    private record InternalContext(double purchaseAmount, double sellAmount, LocalDate sellDate,
+                                   boolean isShortTermHeld, CapitalGainsType classification) {
+    }
+
+    /** Prices the trade, unless the caller already did. */
+    private void recordCharge(UserMail userMail, ProfitLossContext profitLossContext,
+                              Optional<ChargeComputation> precomputed) {
+        if (precomputed.isEmpty()) {
+            chargeRecordingGateway.record(userMail, profitLossContext);
+        }
+    }
+
+    /**
+     * Folds one trade's computed charges into the period's summary.
+     *
+     * <p>Only when a computation was <b>passed in</b>, which is the V2 flow. V1 reaches the two-arg
+     * overload, prices its trade through the gateway exactly as before and writes no summary: it is
+     * a live path and this chunk does not change what it stores.
+     *
+     * <p>The account split mirrors the report this sits beside — {@code SELF} into
+     * {@code realisedProfits}, anything else into {@code outSourcedRealisedProfits} — so the two can
+     * be compared bucket for bucket while both are being written.
+     *
+     * <p>Accumulates rather than recalculates, which is the model {@code ChargeSummaryReport} was
+     * built for. The consequence is that reprocessing one trade twice counts it twice; the hierarchy
+     * beside it has always had that property. Deriving the summary from {@code user_charges}
+     * instead would be idempotent by construction, and is the alternative to revisit when the old
+     * hierarchy is deleted.
+     */
+    private static void mergeChargeSummary(ProfitAndLossEntity profitAndLossEntity,
+                                           ProfitLossContext profitLossContext,
+                                           Optional<ChargeComputation> precomputed) {
+        if (precomputed.isEmpty()) {
+            return;
+        }
+        Map<String, Double> amountByCode = precomputed.get().amountByCode();
+        if (amountByCode.isEmpty()) {
+            return;
+        }
+
+        boolean self = profitLossContext.accountType() == AccountType.SELF;
+        RealisedProfits realisedProfits = self
+                ? TOptional.mapO(profitAndLossEntity.getRealisedProfits(), RealisedProfits.empty())
+                : TOptional.mapO(profitAndLossEntity.getOutSourcedRealisedProfits(), RealisedProfits.empty());
+
+        YearlyChargeSummary yearly = realisedProfits.getYearlyChargeSummary();
+        if (yearly == null) {
+            yearly = new YearlyChargeSummary();
+            realisedProfits.setYearlyChargeSummary(yearly);
+        }
+        yearly.merge(amountByCode);
+        mergeIntoMonth(yearly, profitLossContext.date(), amountByCode);
+
+        if (self) {
+            profitAndLossEntity.setRealisedProfits(realisedProfits);
         } else {
-            RealisedProfits outSourcedRealisedProfits = TOptional.mapO(profitAndLossEntity.getOutSourcedRealisedProfits(), RealisedProfits.empty());
-            RealisedProfits calculatedProfitDetails = calculateBrokerChargesDetails(outSourcedRealisedProfits, userBrokerCharges);
-            profitAndLossEntity.setOutSourcedRealisedProfits(calculatedProfitDetails);
+            profitAndLossEntity.setOutSourcedRealisedProfits(realisedProfits);
         }
-
-        profitAndLossEntity.setLastUpdatedTime(LocalDateTime.now());
     }
 
-    private static RealisedProfits calculateBrokerChargesDetails(RealisedProfits realisedProfits, UserBrokerCharges userBrokerCharges) {
-        YearlyBrokerCharges yearlyBrokerCharges = realisedProfits.getYearlyBrokerCharges();
-        if (realisedProfits.getYearlyBrokerCharges() == null) {
-            yearlyBrokerCharges = new YearlyBrokerCharges();
-            realisedProfits.setYearlyBrokerCharges(yearlyBrokerCharges);
-        }
-
-        Map<Month, MonthlyBrokerCharges> monthlyBrokerCharges = updateMonthlyReport(yearlyBrokerCharges.getMonthlyReport(), userBrokerCharges);
-        yearlyBrokerCharges.setMonthlyReport(monthlyBrokerCharges);
-
-        updateYearlyBrokerCharges(yearlyBrokerCharges, userBrokerCharges);
-        return realisedProfits;
-    }
-
-    private static Map<Month, MonthlyBrokerCharges> updateMonthlyReport(Map<Month, MonthlyBrokerCharges> monthlyBrokerCharges, UserBrokerCharges userBrokerCharges) {
-        LocalDate transactionDate = userBrokerCharges.getTransactionDate();
+    /** A fortnight stays null until something is charged in it, so an empty half reads as empty. */
+    private static void mergeIntoMonth(YearlyChargeSummary yearly, LocalDate transactionDate,
+                                       Map<String, Double> amountByCode) {
         Month month = transactionDate.getMonth();
-        MonthlyBrokerCharges monthlyBrokerCharge = monthlyBrokerCharges.getOrDefault(month, new MonthlyBrokerCharges(month));
+        MonthlyChargeSummary monthly = yearly.getMonthlyReport()
+                .computeIfAbsent(month, MonthlyChargeSummary::new);
 
-        BrokerChargesReport fortnightReport;
-        if (transactionDate.getDayOfMonth() <= 15) {
-            fortnightReport = TOptional.mapO(monthlyBrokerCharge.getFirstHalfBrokerCharges(), new BrokerChargesReport());
-            monthlyBrokerCharge.setFirstHalfBrokerCharges(fortnightReport);
+        ChargeSummaryReport half;
+        if (transactionDate.getDayOfMonth() <= FORTNIGHT_BOUNDARY) {
+            half = TOptional.mapO(monthly.getFirstHalfCharges(), new ChargeSummaryReport());
+            monthly.setFirstHalfCharges(half);
         } else {
-            fortnightReport = TOptional.mapO(monthlyBrokerCharge.getSecondHalfBrokerCharges(), new BrokerChargesReport());
-            monthlyBrokerCharge.setSecondHalfBrokerCharges(fortnightReport);
+            half = TOptional.mapO(monthly.getSecondHalfCharges(), new ChargeSummaryReport());
+            monthly.setSecondHalfCharges(half);
         }
 
-        updateFortnightBrokerCharges(fortnightReport, userBrokerCharges);
-        updateMonthlyBrokerCharges(monthlyBrokerCharge, userBrokerCharges);
-        monthlyBrokerCharges.put(month, monthlyBrokerCharge);
-
-        return monthlyBrokerCharges;
-    }
-
-    private static void updateYearlyBrokerCharges(YearlyBrokerCharges yearlyBrokerCharges, UserBrokerCharges userBrokerCharges) {
-        updateBrokerCharges(yearlyBrokerCharges, userBrokerCharges);
-    }
-
-    private static void updateMonthlyBrokerCharges(MonthlyBrokerCharges monthlyBrokerCharge, UserBrokerCharges userBrokerCharges) {
-        updateBrokerCharges(monthlyBrokerCharge, userBrokerCharges);
-    }
-
-    private static void updateFortnightBrokerCharges(BrokerChargesReport fortnightBrokerChargesReport, UserBrokerCharges userBrokerCharges) {
-        updateBrokerCharges(fortnightBrokerChargesReport, userBrokerCharges);
-    }
-
-    private static void updateBrokerCharges(BrokerChargesReport brokerChargesReport, UserBrokerCharges userBrokerCharges) {
-        brokerChargesReport.setBrokerage(brokerChargesReport.getBrokerage() + userBrokerCharges.getBrokerage());
-        brokerChargesReport.setAccountOpeningCharges(brokerChargesReport.getAccountOpeningCharges() + userBrokerCharges.getAccountOpeningCharges());
-        brokerChargesReport.setAmcCharges(brokerChargesReport.getAmcCharges() + userBrokerCharges.getAmcCharges());
-        brokerChargesReport.setGovtCharges(brokerChargesReport.getGovtCharges() + userBrokerCharges.getGovtCharges());
-        brokerChargesReport.setTaxes(brokerChargesReport.getTaxes() + userBrokerCharges.getTaxes());
-        brokerChargesReport.setDpCharges(brokerChargesReport.getDpCharges() + userBrokerCharges.getDpCharges());
-    }
-
-    private static boolean isShortTermCapitalGain(LocalDate buyDate, LocalDate sellDate) {
-        LocalDate thresholdDate = buyDate.plusYears(1);
-        return sellDate.isBefore(thresholdDate);
-    }
-
-    private static BrokerChargeContext brokerChargeContext(ProfitLossContext context) {
-        BrokerChargeTransactionType transactionType = toBrokerChargeTransactionType(context.transactionType());
-        double totalAmount = context.price() * context.quantity();
-        return new BrokerChargeContext(context.transactionId(), context.stockCode(), context.accountHolder(),
-                context.brokerName(), transactionType, context.date(), context.exchangeName(),
-                context.actionType(), totalAmount);
-    }
-
-    private static BrokerChargeTransactionType toBrokerChargeTransactionType(TransactionType type) {
-        return switch (type) {
-            case BUY -> BrokerChargeTransactionType.BUY;
-            case SELL -> BrokerChargeTransactionType.SELL;
-        };
-    }
-
-    public UserBrokerCharges updateProfitAndLossWithAmcCharges(UserMail userMail, BrokerChargeContext brokerChargeContext) {
-
-        String email = userMail.getEmail();
-        String financialYear = sanitizeFinancialYear(brokerChargeContext.transactionDate());
-
-        Optional<ProfitAndLossEntity> optionalProfitAndLoss = profitAndLossRepository.findByEmailAndFinancialYear(email, financialYear);
-        ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
-
-        UserBrokerCharges userBrokerCharges = userBrokerChargeService.addUserBrokerChargeEntry(userMail, brokerChargeContext);
-        if (userBrokerCharges != null) {
-            updateBrokerChargesReport(profitAndLossEntity, AccountType.SELF, userBrokerCharges);
-        }
-        profitAndLossRepository.save(profitAndLossEntity);
-        return userBrokerCharges;
-    }
-
-    private record InternalContext(double purchaseAmount, double sellAmount,
-                                   LocalDate sellDate, boolean isShortTermHeld) {
+        half.merge(amountByCode);
+        monthly.merge(amountByCode);
     }
 }
