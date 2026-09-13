@@ -4,6 +4,7 @@ import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -38,6 +39,14 @@ public interface UserChargeRepository extends MongoRepository<UserChargeEntity, 
 
     /** Recomputation replaces a transaction's row rather than appending, so a re-upload is safe. */
     Optional<UserChargeEntity> findByEmailAndTransactionId(String email, String transactionId);
+
+    /**
+     * Every charge row for a set of trades, in one round trip.
+     *
+     * <p>Exists so a response carrying many transactions costs one query rather than one per row.
+     * Served by {@code user_charge_txn_idx}.
+     */
+    List<UserChargeEntity> findByEmailAndTransactionIdIn(String email, Collection<String> transactionIds);
 
     List<UserChargeEntity> findByEmailOrderByTransactionDateDesc(String email);
 

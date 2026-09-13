@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -28,7 +29,14 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
  * capital-gains statement wants them in date order. Created by {@code PortfolioIndexInitializer} —
  * {@code auto-index-creation} is off application-wide, so this annotation alone creates nothing.
  */
-@CompoundIndex(name = "trade_outcome_user_idx", def = "{'email': 1, 'sell_date': -1}")
+@CompoundIndexes({
+    @CompoundIndex(name = "trade_outcome_user_idx", def = "{'email': 1, 'sell_date': -1}"),
+    /**
+     * Every realised row that consumed a given buy lot. Backs the per-holding charge view, which
+     * reads a lot's allocated sell charges rather than re-deriving the split.
+     */
+    @CompoundIndex(name = "trade_outcome_buy_lot_idx", def = "{'email': 1, 'source_buy_lot_id': 1}")
+})
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

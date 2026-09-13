@@ -22,6 +22,7 @@ import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
+import com.thiru.wealthlens.portfolio.service.ChargeViewAssembler;
 import com.thiru.wealthlens.portfolio.service.MongoTemplateService;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.ProfitAndLossService;
@@ -75,6 +76,9 @@ class PortfolioServiceTest {
     private ChargeRecordingGateway chargeRecordingGateway;
 
     @Mock
+    private ChargeViewAssembler chargeViewAssembler;
+
+    @Mock
     private HoldingPeriodService holdingPeriodService;
 
     @Mock
@@ -106,6 +110,7 @@ class PortfolioServiceTest {
                 transactionRepository,
                 temporaryTransactionService,
                 chargeRecordingGateway,
+                chargeViewAssembler,
                 properties,
                 holdingPeriodService,
                 tradeOutcomeRecorder
@@ -126,11 +131,13 @@ class PortfolioServiceTest {
                 TransactionRepository transactionRepository,
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
+                ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
                 HoldingPeriodService holdingPeriodService, TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties,
+                    temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                    chargeEngineProperties,
                     holdingPeriodService, tradeOutcomeRecorder);
         }
 
@@ -173,12 +180,14 @@ class PortfolioServiceTest {
                 TransactionRepository transactionRepository,
                 TemporaryTransactionService temporaryTransactionService,
                 ChargeRecordingGateway chargeRecordingGateway,
+                ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
                 HoldingPeriodService holdingPeriodService,
                 TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
-                    temporaryTransactionService, chargeRecordingGateway, chargeEngineProperties,
+                    temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
+                    chargeEngineProperties,
                     holdingPeriodService, tradeOutcomeRecorder);
         }
 
@@ -195,7 +204,7 @@ class PortfolioServiceTest {
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway,
+                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
                 new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
@@ -213,7 +222,7 @@ class PortfolioServiceTest {
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway,
+                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
                 new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
@@ -619,7 +628,7 @@ class PortfolioServiceTest {
         RealPortfolioService realService = new RealPortfolioService(
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
-                temporaryTransactionService, chargeRecordingGateway,
+                temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
                 new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
 
         // When
