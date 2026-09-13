@@ -23,6 +23,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
+import com.thiru.wealthlens.portfolio.service.export.PortfolioExcelExporter;
 import com.thiru.wealthlens.portfolio.service.parser.AssetRequestParser;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
@@ -32,7 +33,6 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.math.DoubleUtil;
-import com.thiru.wealthlens.shared.util.parser.ExcelBuilder;
 import com.thiru.wealthlens.shared.util.parser.ExcelParser;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.io.ByteArrayInputStream;
@@ -988,7 +988,7 @@ public class PortfolioService {
 
         List<AssetResponse> assets = this.getAssets(userMail, holdingType);
         String fileName = ExcelParser.HOLDINGS_FILE_NAME;
-        ByteArrayInputStream inputStream = ExcelBuilder.downloadAssets(assets, true);
+        ByteArrayInputStream inputStream = PortfolioExcelExporter.assets(assets, List.of(), true);
         InputStreamResource resource = new InputStreamResource(inputStream);
 
         return Pair.of(resource, fileName);
