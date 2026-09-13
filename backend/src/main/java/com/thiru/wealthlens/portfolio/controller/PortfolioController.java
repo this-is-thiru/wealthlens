@@ -2,6 +2,7 @@ package com.thiru.wealthlens.portfolio.controller;
 
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
+import com.thiru.wealthlens.portfolio.dto.ErasureReport;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.dto.enums.HoldingType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -9,6 +10,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.TemporaryService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
+import com.thiru.wealthlens.portfolio.service.UserRecordsErasureService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
@@ -35,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class PortfolioController {
 
     private final PortfolioService portfolioService;
+    private final UserRecordsErasureService userRecordsErasureService;
     private final TransactionService transactionService;
     private final TemporaryService temporaryService;
 
@@ -68,9 +71,21 @@ public class PortfolioController {
         return portfolioService.getProfitAndLoss(UserMail.from(email), financialYear);
     }
 
+    /**
+     * Erases every record this user owns.
+     *
+     * <p>Answers which collections could not be cleared when any could not. It used to answer
+     * "deleted successfully" whatever happened, because the service caught each failure and logged
+     * it — telling a user their data was gone while it was still there.
+     */
     @PostMapping("/clear/all")
     public String deleteAllRecords(@PathVariable String email) {
-        return portfolioService.clearAllRecordsForCustomer(UserMail.from(email));
+        ErasureReport report = userRecordsErasureService.erase(UserMail.from(email));
+        if (report.isComplete()) {
+            return "User: " + email + ", records and transactions deleted successfully";
+        }
+        return "User: " + email + ", records partially deleted. Could not clear: "
+                + String.join(", ", report.getFailed());
     }
 
     @GetMapping("/stocks/all")

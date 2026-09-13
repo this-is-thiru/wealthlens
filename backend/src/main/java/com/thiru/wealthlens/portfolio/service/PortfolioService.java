@@ -1,8 +1,6 @@
 package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
-import com.thiru.wealthlens.brokercharges.service.ChargeAccountService;
-import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
@@ -80,8 +78,6 @@ public class PortfolioService {
     private final TemporaryTransactionService temporaryTransactionService;
     private final ChargeRecordingGateway chargeRecordingGateway;
     private final ChargeViewAssembler chargeViewAssembler;
-    private final UserChargeService userChargeService;
-    private final ChargeAccountService chargeAccountService;
     private final ChargeEngineProperties chargeEngineProperties;
     private final HoldingPeriodService holdingPeriodService;
 
@@ -812,88 +808,6 @@ public class PortfolioService {
 
     public void saveCorporateActionProcessedStocks(List<AssetEntity> stocks) {
         portfolioRepository.saveAll(stocks);
-    }
-
-    /**
-     * Erases everything this user owns.
-     *
-     * <p>Deletes from seven collections: {@code assets}, {@code trade_outcomes},
-     * {@code transactions}, {@code profit_and_loss}, {@code lastly_performed_corporate_action}
-     * (via the temporary-transaction wipe), {@code user_charges} and {@code charge_accounts}.
-     * Temporary transactions are not a collection of their own — they are {@code transactions}
-     * rows carrying {@code status = TEMPORARY} — so the transaction delete covers them.
-     *
-     * <p><b>Leftovers are not inert, which is why the list has to be complete.</b> A surviving
-     * {@code charge_accounts} row carries {@code lastBilledThrough}, so the next annual-maintenance
-     * cycle skips an account the user has re-registered. Surviving {@code user_charges} rows key on
-     * {@code {email, transaction_id}} and nothing else, so they re-attach themselves to whatever
-     * re-uploaded trade happens to take the same id. Both were missed until an integration test
-     * asserted every collection rather than only {@code assets}.
-     *
-     * <p>Insurance, salary profiles and tax computations are <b>not</b> cleared here. They are
-     * genuinely this user's data, but they live in modules {@code portfolio} may not depend on, and
-     * reaching them would have to go through an event rather than a call.
-     *
-     * <p>Each delete is wrapped individually so one failure does not silently abort the rest.
-     * Without a working MongoTransactionManager a crash partway through leaves orphaned data; with
-     * {@code app.mongodb.transactions-enabled=true} (Atlas replica set) the {@link Transactional}
-     * annotation makes the whole wipe atomic.
-     */
-    @Transactional
-    public String clearAllRecordsForCustomer(UserMail userMail) {
-
-        log.info("Initiated deletion of all records of user: {}", userMail.getEmail());
-
-        try {
-            portfolioRepository.deleteByEmail(userMail.getEmail());
-            log.info("Deleted all portfolio stocks for user: {}", userMail.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to delete portfolio stocks for user: {} — continuing with remaining collections", userMail.getEmail(), e);
-        }
-
-        try {
-            tradeOutcomeService.deleteByEmail(userMail);
-            log.info("Deleted all trade outcomes for user: {}", userMail.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to delete trade outcomes for user: {} — continuing with remaining collections", userMail.getEmail(), e);
-        }
-
-        try {
-            transactionService.deleteTransactions(userMail);
-            log.info("Deleted all transactions for user: {}", userMail.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to delete transactions for user: {} — continuing with remaining collections", userMail.getEmail(), e);
-        }
-
-        try {
-            profitAndLossService.deleteProfitAndLoss(userMail);
-            log.info("Deleted all profit and loss reports for user: {}", userMail.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to delete profit and loss for user: {} — continuing with remaining collections", userMail.getEmail(), e);
-        }
-
-        try {
-            temporaryTransactionService.deleteTemporaryTransaction(userMail);
-            log.info("Deleted all temporary transactions for user: {}", userMail.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to delete temporary transactions for user: {} — continuing with remaining collections", userMail.getEmail(), e);
-        }
-
-        try {
-            userChargeService.deleteByEmail(userMail.getEmail());
-            log.info("Deleted all recorded charges for user: {}", userMail.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to delete recorded charges for user: {} — continuing with remaining collections", userMail.getEmail(), e);
-        }
-
-        try {
-            chargeAccountService.deleteByEmail(userMail.getEmail());
-            log.info("Deleted all charge accounts for user: {}", userMail.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to delete charge accounts for user: {}", userMail.getEmail(), e);
-        }
-
-        return "User: " + userMail.getEmail() + ", records and transactions deleted successfully";
     }
 
     public List<AssetResponse> getAssets(UserMail userMail, HoldingType holdingType) {
