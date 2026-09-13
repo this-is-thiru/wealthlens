@@ -23,7 +23,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.mongodb.MongoDBContainer;
 
 @Tag("integration")
 @Isolated
@@ -56,9 +56,18 @@ public abstract class AbstractIntegrationTest {
             // class happened to run first. A test needing a rate card writes one.
             "charge_catalogue");
 
+    /**
+     * A single-node replica set, because this application's multi-document writes need one.
+     *
+     * <p><b>{@code withReplicaSet()} is not optional.</b> The superseded
+     * {@code org.testcontainers.containers.MongoDBContainer} always initialised a replica set;
+     * {@code org.testcontainers.mongodb.MongoDBContainer} does so only when asked. Dropping it
+     * would leave {@code app.mongodb.transactions-enabled=true} pointed at a standalone server, and
+     * every {@code @Transactional} write spanning two collections would fail.
+     */
     static final MongoDBContainer mongoDBContainer;
     static {
-        mongoDBContainer = new MongoDBContainer("mongo:7.0");
+        mongoDBContainer = new MongoDBContainer("mongo:8.0").withReplicaSet();
         mongoDBContainer.start();
     }
 
