@@ -1,7 +1,10 @@
 # Charges engine — backlog
 
 Things found after the twelve chunks closed, while wiring charges into the transaction and asset
-responses. Each is real, none is blocking, and each was deliberately not done.
+responses. Each is real, and each was deliberately not done at the time.
+
+**CE-1 and CE-2 are closed.** CE-3, CE-4 and CE-5 remain open, and all three are latent by
+deployment or scope rather than by defect.
 
 Numbered `CE-n` so as not to collide with the trade ledger's `B-n`
 ([`../trade-ledger/backlog.md`](../trade-ledger/backlog.md)) or this module's `D-n` defects and
@@ -11,16 +14,15 @@ Format follows the trade ledger's: what it is, why it matters, what done looks l
 
 ---
 
-## CE-1 — A rate card can execute arbitrary code
+## CE-1 — A rate card could execute arbitrary code ✅ CLOSED
 
-**Severity: highest item in this file.** Everything else here is correctness or tidiness.
+**Closed 2026-09-13.** Both evaluators now run expressions in a read-only context that cannot
+resolve a type, a bean or a constructor.
 
-**What.** `ChargeFormulaEvaluator` evaluates rate-card formulas and eligibility predicates with
-Spring's `StandardEvaluationContext`, which is the unrestricted one. `ChargeScheduleValidator`
-checks only the `#variable` names an expression references, against a fixed vocabulary — so type
-references, constructors and bean lookups pass unexamined, because they contain no `#`.
-
-Verified against the real evaluator rather than reasoned about:
+**What it was.** `ChargeFormulaEvaluator` evaluated rate-card formulas and eligibility predicates
+with SpEL's unrestricted `StandardEvaluationContext`, and `ChargeScheduleValidator` checked only the
+`#variable` names an expression references. An expression containing no `#` was therefore never
+examined at all. Verified against the real evaluator:
 
 ```
 expression: T(java.lang.System).getProperty('java.version').length()
@@ -31,30 +33,32 @@ evaluate()            → 2
 T(java.lang.Runtime).getRuntime().availableProcessors() → 8
 ```
 
-`getRuntime()` resolving means `.exec(...)` is one method call away.
+`getRuntime()` resolving put `.exec(...)` one method call away, inside the JVM holding the Mongo
+credentials and the JWT signing key. Writing such an expression needed `SUPER_USER` on
+`POST /charge-schedules` or direct database access — not an open door, but a silent escalation from
+*"may edit rate cards"* to *"may run code"*, and rate-card editing is exactly the permission you
+would delegate to a finance or operations person.
 
-**Why it matters.** Writing the expression needs `SUPER_USER` on `POST /charge-schedules`, or direct
-Mongo write access — so this is not an open door from the internet. What it is, is a silent
-privilege escalation: *"may edit rate cards"* becomes *"may run code in the JVM"*. Rate-card editing
-is precisely the permission you would want to hand to a finance or operations person, and ADR-26's
-model of shipping rate changes as new generations means cards get written fairly often.
+**The second instance, found while fixing the first.** `taxplanning/engine/FormulaEvaluator` had the
+identical hole, reachable through `PUT /tax-planning/admin/allowances/{code}`, whose request body
+carries `limitFormula`. It also exposed an `evaluate(String, EvaluationContext)` overload that let a
+caller supply the context outright — no callers, and removed.
 
-The blast radius is also wider than the engine: the expression evaluates inside the application's
-own JVM, with its Mongo credentials and its JWT signing key in reach.
+**The fix.** `SafeExpressions` in `shared/util/expression` holds the floor for both:
+`SimpleEvaluationContext.forReadOnlyDataBinding()` is the guarantee, and a construct check refuses
+type references, constructors and bean references when a card is *written* rather than when a trade
+resolves to it. Two layers on purpose — the pattern check can be evaded, which is acceptable
+because it is not the thing standing in the way.
 
-**Done looks like.** `SimpleEvaluationContext.forReadOnlyDataBinding()` in place of
-`StandardEvaluationContext`, an explicit rejection of `T(`, `new ` and `@` in
-`ChargeScheduleValidator` so a hostile card is refused when written rather than when a trade is
-priced, and a regression test pinning the probe above as *rejected*.
+**Why the guard is shared when the two evaluators are not.** They keep separate vocabularies and
+separate return contracts, as before. The safety floor is the one part that must not be duplicated,
+because a second copy of a security control is how one of them gets missed — which is precisely what
+had happened.
 
-Compatibility was checked before pausing and looks clear. The only two expressions in the shipped
-seed data are `#equityOriented == true` and `#holdingDays < 7`. The evaluator's own test suite uses
-arithmetic, comparison, `and`, and `#charges['CODE']` map indexing — all of which
-`SimpleEvaluationContext` supports. What still needs confirming is whether any test relies on method
-invocation, which `forReadOnlyDataBinding()` disallows.
-
-**Why not now.** Interrupted mid-change; nothing is committed. It wants its own commit and a run of
-`-Pmutation` scoped to the engine, since `ChargeFormulaEvaluator` is inside the mutation gate.
+**Compatibility.** The two shipped expressions (`#equityOriented == true`, `#holdingDays < 7`) and
+all 17 pre-existing evaluator tests pass unchanged; arithmetic, comparison, the ternary and
+`#charges['CODE']` map indexing are unaffected by the restricted context. Mutation score for
+`brokercharges.engine.*` is 257/258 (99%), the survivor being the known equivalent mutant.
 
 ---
 
