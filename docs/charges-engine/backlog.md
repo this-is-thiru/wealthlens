@@ -141,24 +141,30 @@ path that re-reads rather than failing the caller.
 
 ---
 
-## CE-5 — "Clear all records" is not an account wipe
+## CE-5 — "Clear all records" is not an account wipe — partially addressed
 
-**What.** `PortfolioService.clearAllRecordsForCustomer` now clears all seven collections the
-`portfolio`, `corporate` and `brokercharges` modules own. It does not clear
-`InsuranceEntity`, `SalaryProfileEntity` or `TaxComputationEntity`, all three of which carry an
-`email` and are unambiguously the same user's data.
+**Updated 2026-09-13.** The wipe now lives in its own service and reports what it could not delete.
+The cross-module half is still open.
 
-**Why it matters.** The endpoint is `POST /portfolio/user/{email}/clear/all` and answers "records
-and transactions deleted successfully", which reads as a full wipe and is not one. If this is ever
-the mechanism behind a deletion request, the gap is a compliance problem rather than an untidiness.
+**Done.** `UserRecordsErasureService` owns the whole operation, lifted out of `PortfolioService`
+where it grew. The list of collections a wipe is responsible for is a fact about a user's records,
+not about the portfolio, and burying it among the trade paths is how the two charges collections
+came to be missed when the engine added them. One class, one list, one place to add to.
 
-**Done looks like.** A decision on what the endpoint means. If it is "clear my portfolio", the name
-and the message should say so. If it is "delete my account", the wipe has to reach `insurance` and
-`taxplanning` — which `portfolio` may not depend on, so it goes through a Modulith event rather
-than a call, and the modules own their own erasure.
+It also no longer lies. Each failure used to be caught, logged, and answered with "records and
+transactions deleted successfully" regardless — telling a user their data was gone while it was
+still there. The service returns an `ErasureReport`, and the endpoint names the collections it
+could not clear.
 
-**Why not now.** It is a scope question, not a defect, and answering it wrongly deletes more than
-someone asked for. Recorded in the method's javadoc as well, so the omission reads as a decision.
+**Still open: the modules `portfolio` may not depend on.** `InsuranceEntity`,
+`SalaryProfileEntity` and `TaxComputationEntity` all carry this user's email and are untouched.
+Reaching them needs an application event rather than a call, with each module owning its own
+erasure — `insurance` has no repository at all today, and neither salary repository has a delete,
+so it is real work rather than wiring. The `auth` credential is deliberately excluded on a
+different ground: this clears a user's records, it does not close their account.
+
+**Done looks like.** A decision on what the endpoint means, then either the name says "portfolio"
+or an event reaches every module holding user data.
 
 ---
 
