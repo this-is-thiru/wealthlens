@@ -1,64 +1,73 @@
 package com.thiru.wealthlens.shared.util.parser;
 
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
-import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
-import com.thiru.wealthlens.shared.util.money.TMoney;
+import com.thiru.wealthlens.portfolio.dto.charges.AssetCharges;
+import com.thiru.wealthlens.portfolio.dto.charges.ChargeNote;
 import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import lombok.extern.log4j.Log4j2;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @Log4j2
 public class ExcelBuilder {
 
+    /**
+     * The portfolio sheet, column by column, in order.
+     *
+     * <p>This list <b>is</b> the published format. A user builds formulas against these columns, so
+     * changing it changes someone else's spreadsheet — which is why it is written down in one place
+     * and asserted by {@code ExcelBuilderTest} rather than emerging from whatever fields a DTO
+     * happens to have.
+     *
+     * <p>The computed charges sit beside the user-entered ones rather than replacing them. They are
+     * different figures — one is what the broker was believed to have charged, the other what the
+     * engine worked out — and Phase B exists precisely so the two can be compared.
+     */
+    private static final List<ExcelColumn<AssetResponse>> PORTFOLIO_COLUMNS = List.of(
+            ExcelColumn.text(ExcelHeaders.EMAIL, AssetResponse::getEmail),
+            ExcelColumn.text(ExcelHeaders.STOCK_NAME, AssetResponse::getStockName),
+            ExcelColumn.text(ExcelHeaders.STOCK_CODE, AssetResponse::getStockCode),
+            ExcelColumn.quantity(ExcelHeaders.QUANTITY, AssetResponse::getQuantity),
+            ExcelColumn.quantity(ExcelHeaders.TOTAL_QUANTITY, AssetResponse::getTotalQuantity),
+            ExcelColumn.money(ExcelHeaders.PRICE, AssetResponse::getPrice),
+            ExcelColumn.money(ExcelHeaders.TOTAL_VALUE, AssetResponse::getTotalValue),
+            ExcelColumn.text(ExcelHeaders.EXCHANGE_NAME, AssetResponse::getExchangeName),
+            ExcelColumn.text(ExcelHeaders.BROKER_NAME, asset -> asset.getBrokerName().name()),
+            ExcelColumn.text(ExcelHeaders.ASSET_TYPE, asset -> asset.getAssetType().name()),
+            ExcelColumn.date(ExcelHeaders.MATURITY_DATE, AssetResponse::getMaturityDate),
+            ExcelColumn.money(ExcelHeaders.BROKER_CHARGES, AssetResponse::getBrokerCharges),
+            ExcelColumn.money(ExcelHeaders.MISC_CHARGES, AssetResponse::getMiscCharges),
+            ExcelColumn.money(ExcelHeaders.COMPUTED_BUY_CHARGES, side(AssetCharges::getBuy)),
+            ExcelColumn.money(ExcelHeaders.COMPUTED_SELL_CHARGES, side(AssetCharges::getSell)),
+            ExcelColumn.money(ExcelHeaders.TOTAL_COMPUTED_CHARGES,
+                    asset -> asset.getCharges() == null ? 0.0 : asset.getCharges().getTotal()));
+
+    /** The half-month sheet: one row per transaction date behind a holding. */
+    private static final List<ExcelColumn<TransactionQuantity>> TRANSACTION_QUANTITY_COLUMNS = List.of(
+            ExcelColumn.text(ExcelHeaders.STOCK_CODE, TransactionQuantity::stockCode),
+            ExcelColumn.text(ExcelHeaders.BROKER_NAME, TransactionQuantity::brokerName),
+            ExcelColumn.text(ExcelHeaders.TRANSACTION_DATE, TransactionQuantity::transactionDate),
+            ExcelColumn.quantity(ExcelHeaders.QUANTITY, TransactionQuantity::quantity));
+
+    /** One holding's quantity on one transaction date, flattened for the second sheet. */
+    private record TransactionQuantity(String stockCode, String brokerName, String transactionDate,
+                                       Double quantity) {
+    }
+
     public static ByteArrayInputStream downloadAssets(List<AssetResponse> userStocks, boolean isTermSpecific) {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            ExcelParser.initialiseExcelSheet(workbook, ExcelHeaders.getPortfolioHeaders(), ExcelParser.ASSETS);
-            Sheet sheet0 = workbook.getSheetAt(0);
-            // One style, reused. A style per cell exhausts the format table that XLSX caps at 64k,
-            // and a large enough portfolio would fail to write at all.
-            CellStyle dateStyle = dateStyle(workbook);
-            Sheet sheet1 = null;
+            ExcelColumn.write(workbook, ExcelParser.ASSETS, PORTFOLIO_COLUMNS, userStocks);
             if (isTermSpecific) {
-                ExcelParser.initialiseExcelSheet(workbook, ExcelHeaders.getTransactionQuantityHeaders(), ExcelParser.TRANSACTIONS);
-                sheet1 = workbook.getSheetAt(1);
-            }
-
-            int rowCount = 1;
-            int transactionRowCount = 1;
-            for (AssetResponse assetResponse : userStocks) {
-
-                Row row = sheet0.createRow(rowCount);
-                row.createCell(0).setCellValue(assetResponse.getEmail());
-                row.createCell(1).setCellValue(assetResponse.getStockName());
-                row.createCell(2).setCellValue(assetResponse.getStockCode());
-                row.createCell(3).setCellValue(getRoundedValue(assetResponse.getQuantity()));
-                row.createCell(4).setCellValue(getRoundedValue(assetResponse.getTotalQuantity()));
-                row.createCell(5).setCellValue(getRoundedValue(assetResponse.getPrice()));
-                row.createCell(6).setCellValue(getRoundedValue(assetResponse.getTotalValue()));
-                row.createCell(7).setCellValue(assetResponse.getExchangeName());
-                row.createCell(8).setCellValue(assetResponse.getBrokerName().name());
-                row.createCell(9).setCellValue(assetResponse.getAssetType().name());
-                setDateField(row.createCell(10), assetResponse.getMaturityDate(), dateStyle);
-                row.createCell(11).setCellValue(getRoundedValue(assetResponse.getBrokerCharges()));
-                row.createCell(12).setCellValue(getRoundedValue(assetResponse.getMiscCharges()));
-
-                if (isTermSpecific) {
-                    transactionRowCount = updateTransactionSheet(sheet1, transactionRowCount, assetResponse);
-                }
-                rowCount++;
+                ExcelColumn.write(workbook, ExcelParser.TRANSACTIONS, TRANSACTION_QUANTITY_COLUMNS,
+                        transactionQuantities(userStocks));
             }
 
             workbook.write(outputStream);
@@ -68,49 +77,35 @@ public class ExcelBuilder {
         }
     }
 
-    public static int updateTransactionSheet(Sheet transactionsSheet, int rowCount, AssetResponse assetResponse) {
-
-        Map<String, Double> transactionQuantities = assetResponse.getTransactionQuantities();
-        for (Map.Entry<String, Double> entry : transactionQuantities.entrySet()) {
-
-            Row row = transactionsSheet.createRow(rowCount);
-            row.createCell(0).setCellValue(assetResponse.getStockCode());
-            row.createCell(1).setCellValue(assetResponse.getBrokerName().name());
-            row.createCell(2).setCellValue(entry.getKey());
-            row.createCell(3).setCellValue(getRoundedValue(entry.getValue()));
-            rowCount++;
+    private static List<TransactionQuantity> transactionQuantities(List<AssetResponse> userStocks) {
+        List<TransactionQuantity> rows = new ArrayList<>();
+        for (AssetResponse asset : userStocks) {
+            Map<String, Double> quantities = asset.getTransactionQuantities();
+            if (quantities == null) {
+                continue;
+            }
+            quantities.forEach((date, quantity) -> rows.add(new TransactionQuantity(
+                    asset.getStockCode(), asset.getBrokerName().name(), date, quantity)));
         }
-        return rowCount;
-    }
-
-    private static CellStyle dateStyle(XSSFWorkbook workbook) {
-        CellStyle dateStyle = workbook.createCellStyle();
-        CreationHelper createHelper = workbook.getCreationHelper();
-        dateStyle.setDataFormat(createHelper.createDataFormat().getFormat(TCollectionUtil.DATE_FORMAT));
-        return dateStyle;
-    }
-
-    private static void setDateField(Cell cell, LocalDate date, CellStyle dateStyle) {
-        cell.setCellStyle(dateStyle);
-        if (date != null) {
-            cell.setCellValue(date);
-        }
+        return rows;
     }
 
     /**
-     * Rounds the way the rest of the application rounds.
+     * One side of a holding's computed charges, as a figure rather than an absence.
      *
-     * <p>This was {@code Math.round(v * 100) / 100}, a fourth implementation of paise rounding
-     * beside {@link TMoney}. The two disagree: {@code Math.round} rounds a half toward positive
-     * infinity, so a negative half goes the other way, and the {@code * 100} multiply carries
-     * representation error that {@code BigDecimal.valueOf} does not. An exported figure is
-     * reconciled against the figure on screen, so the two must round identically or they will
-     * differ by a paisa and no one will be able to say which is right.
-     *
-     * <p>Null is written as zero rather than refused: {@code quantity} is boxed on the response and
-     * a blank export cell is a worse answer than a zero for a holding that has none left.
+     * <p>The response distinguishes "never priced" from "charged nothing" by leaving the note null,
+     * which matters to an API caller deciding what to display. A spreadsheet column cannot carry
+     * that distinction, and a blank cell in a money column reads as data loss, so both become zero
+     * here.
      */
-    private static double getRoundedValue(Double value) {
-        return value == null ? 0.0 : TMoney.scale(value);
+    private static Function<AssetResponse, Double> side(Function<AssetCharges, ChargeNote> sideOf) {
+        return asset -> {
+            AssetCharges charges = asset.getCharges();
+            if (charges == null) {
+                return 0.0;
+            }
+            ChargeNote note = sideOf.apply(charges);
+            return note == null ? 0.0 : note.getTotal();
+        };
     }
 }

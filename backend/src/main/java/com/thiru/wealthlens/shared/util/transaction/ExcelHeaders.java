@@ -22,19 +22,13 @@ public class ExcelHeaders {
     public static final String MISC_CHARGES = "MISC CHARGES";
     public static final String COMMENTS = "COMMENTS";
 
+    /** What the charges engine worked out, as distinct from what the user entered. */
+    public static final String COMPUTED_BUY_CHARGES = "COMPUTED BUY CHARGES";
+    public static final String COMPUTED_SELL_CHARGES = "COMPUTED SELL CHARGES";
+    public static final String TOTAL_COMPUTED_CHARGES = "TOTAL COMPUTED CHARGES";
+
     public static String[] getTransactionHeaders() {
         return new String[]{EMAIL, STOCK_CODE, STOCK_NAME, EXCHANGE_NAME, BROKER_NAME, ASSET_TYPE, MATURITY_DATE, PRICE,
                 QUANTITY, TRANSACTION_TYPE, TRANSACTION_DATE, BROKER_CHARGES, MISC_CHARGES, COMMENTS};
-    }
-
-    public static String[] getPortfolioHeaders() {
-        return new String[]{ExcelHeaders.EMAIL, ExcelHeaders.STOCK_NAME, ExcelHeaders.STOCK_CODE,
-                ExcelHeaders.QUANTITY, ExcelHeaders.TOTAL_QUANTITY, ExcelHeaders.PRICE, ExcelHeaders.TOTAL_VALUE,
-                ExcelHeaders.EXCHANGE_NAME, ExcelHeaders.BROKER_NAME, ExcelHeaders.ASSET_TYPE,
-                ExcelHeaders.MATURITY_DATE, ExcelHeaders.BROKER_CHARGES, ExcelHeaders.MISC_CHARGES};
-    }
-
-    public static String[] getTransactionQuantityHeaders() {
-        return new String[]{ExcelHeaders.STOCK_CODE, ExcelHeaders.BROKER_NAME, "TRANSACTION DATE", ExcelHeaders.QUANTITY};
     }
 }
