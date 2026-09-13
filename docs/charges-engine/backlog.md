@@ -58,53 +58,35 @@ invocation, which `forReadOnlyDataBinding()` disallows.
 
 ---
 
-## CE-2 — Two Excel export frameworks, and only one knows about charges
+## CE-2 — Two Excel export frameworks ✅ CLOSED
 
-**Updated 2026-09-13.** The original entry called the second framework's column selection "the
-capability worth keeping." That was written without running it. **It does not work**, and the four
-defects it carried are now fixed — but the duplication itself remains, which is what this item is
-now about.
+**Closed 2026-09-13.** One framework. `ExcelBuilder` and `portfolio/service/export/{writer,processor}/**`
+are deleted; everything goes through `ExcelColumn` → `ExcelSheet` → `ExcelWorkbooks`, with every
+column declared once in `PortfolioExportColumns`.
 
-**What.** The application has two independent Excel export mechanisms, both writing
-`AssetResponse`, reached by two endpoints:
+**What it was.** Two independent mechanisms, ~110 and ~660 lines, both writing `AssetResponse`, both
+separating a column's heading from its value — and both therefore capable of producing a spreadsheet
+whose headings did not describe the data beneath them. Both did. Neither had a test.
 
-| Endpoint | Mechanism | Shape |
-|---|---|---|
-| `GET /portfolio/user/{email}/assets/holding/{type}/excel` | `shared/util/parser/ExcelBuilder` | `List<ExcelColumn<T>>` — header paired with extractor |
-| `POST /portfolio/user/{email}/stocks/download` | `portfolio/service/export/**` | `AbstractExcelWorkbookWriter<T>` — declared order, header map, extractor map, plus caller-selected columns |
+The selective export took `selectedColumns` from the request body, built its header row from every
+declared column and its data at indices numbered from the caller's selection: asking for two of
+thirteen put the stock code under EMAIL. An unrecognised column name failed as a 500. The breakdown
+sheet declared `BROKER NAME` twice and wrote the transaction date into the second one. And three of
+the four faults fixed in `ExcelBuilder` were still present in its twin a day later — a `CellStyle`
+per cell (218 for 200 rows, against a 64k limit), a bare `RuntimeException`, and a type switch whose
+default threw `IllegalArgumentException`, surfacing a programming error as a 400.
 
-**What was wrong, and is now fixed.** `selectedColumns` arrives from the request body, so all of
-this was caller-reachable. Asking for `["stockCode", "price"]` produced:
+**Why the duplication was the actual defect.** Every one of those was fixable in place, and the
+first round of fixes went into one copy only, because nothing connected them. Two mechanisms for one
+job is not a tidiness problem; it is the mechanism by which a fix fails to arrive.
 
-```
-HEADERS(13): [EMAIL, STOCK CODE, STOCK NAME, ASSET TYPE, ...]
-DATA:        0=INFY   1=1500.0
-```
+**What closing it changed.** `field` names — the API surface in `selectedColumns` — are preserved
+exactly. The computed charge columns now exist in **both** downloads rather than one. The
+`/stocks/download` default column order changed to the canonical list, since one column set cannot
+keep two orders; a caller passing explicit `selectedColumns` is unaffected, as the order follows
+the request. Recorded here because it is a change to a published format.
 
-`headers()` walked `orderedColumns()` — always all thirteen — while the data was written at indices
-numbered from the caller's selection. The stock code landed under EMAIL. Alongside it: an
-unrecognised column name reached a null index and failed as a 500; the transactions sheet declared
-`BROKER NAME` twice and wrote the transaction date into the second one; and three of the four faults
-fixed in `ExcelBuilder` a day earlier were still present here verbatim — a `CellStyle` per cell
-(measured at 218 styles for 200 rows), a bare `RuntimeException`, and a type switch whose default
-threw `IllegalArgumentException`, reporting a programming error to the caller as a 400.
-
-All fixed, with the first tests this framework has ever had.
-
-**What remains: the duplication.** Two mechanisms solving one problem is how the above happened —
-`ExcelBuilder` was repaired and its twin was not, because nothing connected them. The computed
-charge columns are in `ExcelBuilder` only, so two downloads of the same holdings still disagree
-about what data a holding has.
-
-**Done looks like.** One framework. Column selection is now the *better*-specified of the two
-behaviours and should survive, but as a `filter` over `List<ExcelColumn<T>>` rather than as a second
-index map — on that shape, headers and values cannot diverge because they are the same list. The
-`export/**` writers and processors go, and `EntityExportController` points at the survivor. Charge
-columns then exist once, in both downloads.
-
-**Why not now.** The defects were the urgent half and are done. The consolidation touches two
-controllers and eleven classes; it now has tests underneath it, which it did not before, so it is a
-safe refactor rather than a risky one — just not a small one.
+**Coverage.** 15 tests where there were 6, and the framework that had none now has all of them.
 
 ---
 
