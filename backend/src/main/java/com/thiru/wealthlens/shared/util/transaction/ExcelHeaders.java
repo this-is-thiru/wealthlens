@@ -31,7 +31,7 @@ public class ExcelHeaders {
         return new String[]{ExcelHeaders.EMAIL, ExcelHeaders.STOCK_NAME, ExcelHeaders.STOCK_CODE,
                 ExcelHeaders.QUANTITY, ExcelHeaders.TOTAL_QUANTITY, ExcelHeaders.PRICE, ExcelHeaders.TOTAL_VALUE,
                 ExcelHeaders.EXCHANGE_NAME, ExcelHeaders.BROKER_NAME, ExcelHeaders.ASSET_TYPE,
-                ExcelHeaders.MATURITY_DATE, ExcelHeaders.BROKER_CHARGES, ExcelHeaders.MISC_CHARGES, "HIII"};
+                ExcelHeaders.MATURITY_DATE, ExcelHeaders.BROKER_CHARGES, ExcelHeaders.MISC_CHARGES};
     }
 
     public static String[] getTransactionQuantityHeaders() {
