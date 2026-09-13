@@ -1,11 +1,13 @@
 package com.thiru.wealthlens.shared.util;
 
 import static com.thiru.wealthlens.testsupport.MoneyAssert.assertMoney;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
+import com.thiru.wealthlens.portfolio.dto.charges.AssetCharges;
+import com.thiru.wealthlens.portfolio.dto.charges.ChargeNote;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.shared.util.parser.ExcelBuilder;
@@ -38,7 +40,8 @@ class ExcelBuilderTest {
     private static final List<String> PORTFOLIO_COLUMNS = List.of(
             "EMAIL", "STOCK NAME", "STOCK CODE", "QUANTITY", "TOTAL QUANTITY", "PRICE",
             "TOTAL VALUE", "EXCHANGE NAME", "BROKER NAME", "ASSET TYPE", "MATURITY DATE",
-            "BROKER CHARGES", "MISC CHARGES");
+            "BROKER CHARGES", "MISC CHARGES",
+            "COMPUTED BUY CHARGES", "COMPUTED SELL CHARGES", "TOTAL COMPUTED CHARGES");
 
     @Test
     @DisplayName("portfolio export: the columns are exactly the published set, in order")
@@ -116,6 +119,55 @@ class ExcelBuilderTest {
         try (XSSFWorkbook workbook = new XSSFWorkbook(stream)) {
             return workbook.getSheetAt(index);
         }
+    }
+
+    /**
+     * The charges the engine computed reach the spreadsheet, not just the screen. Kept beside the
+     * user-entered BROKER CHARGES rather than replacing it: the two are different figures, and a
+     * user reconciling a contract note needs to see both.
+     */
+    @Test
+    @DisplayName("portfolio export: writes the computed charges beside the entered ones")
+    void downloadAssets_whenChargesWereComputed_writesThem() throws IOException {
+        // Given
+        AssetResponse asset = asset(10, 1500, 23.60, 1.50);
+        asset.setCharges(charges(20.00, 30.00));
+
+        // When
+        Row row = sheet(ExcelBuilder.downloadAssets(List.of(asset), false), 0).getRow(1);
+
+        // Then
+        assertMoney(23.60, row.getCell(11).getNumericCellValue());
+        assertMoney(20.00, row.getCell(13).getNumericCellValue());
+        assertMoney(30.00, row.getCell(14).getNumericCellValue());
+        assertMoney(50.00, row.getCell(15).getNumericCellValue());
+    }
+
+    /** A holding the engine never priced exports as zero, not as a hole in the sheet. */
+    @Test
+    @DisplayName("portfolio export: an unpriced holding exports zeroes, not blanks")
+    void downloadAssets_whenNeverPriced_writesZeroes() throws IOException {
+        // Given
+        AssetResponse asset = asset(10, 1500, 23.60, 1.50);
+
+        // When
+        Row row = sheet(ExcelBuilder.downloadAssets(List.of(asset), false), 0).getRow(1);
+
+        // Then
+        assertMoney(0.0, row.getCell(13).getNumericCellValue());
+        assertMoney(0.0, row.getCell(15).getNumericCellValue());
+    }
+
+    private static AssetCharges charges(double buy, double sell) {
+        ChargeNote buyNote = new ChargeNote();
+        buyNote.setTotal(buy);
+        ChargeNote sellNote = new ChargeNote();
+        sellNote.setTotal(sell);
+        AssetCharges charges = new AssetCharges();
+        charges.setBuy(buyNote);
+        charges.setSell(sellNote);
+        charges.setTotal(buy + sell);
+        return charges;
     }
 
     private static AssetResponse asset(double quantity, double price, double brokerCharges, double miscCharges) {
