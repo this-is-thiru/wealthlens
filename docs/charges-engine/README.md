@@ -239,7 +239,7 @@ Read in this order:
 | 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return | 460 |
 | 8 | **ac2-rate-verification.md** | The AC-2 evidence: every shipped rate against the broker's page, what was wrong, and what closing it changed | 180 |
 | 9 | **phase-b-reconciliation-findings.md** | The Phase B exit artifact: the backfill and reconciliation run against 319 real transactions, what it proved, and why the deltas could not mean what the gate assumed | 143 |
-| 10 | **[`backlog.md`](backlog.md)** | Found after the twelve chunks closed, while wiring charges into the responses. **CE-1 is a security item — a rate card can execute arbitrary code — and is the highest-priority thing in this folder** | 176 |
+| 10 | **[`backlog.md`](backlog.md)** | Found after the twelve chunks closed, while wiring charges into the responses. CE-1 (SpEL sandboxing, both evaluators) and CE-2 (two export frameworks) are closed; CE-3 to CE-5 remain open and are latent by deployment or scope | 190 |
 | — | **[`../trade-ledger/implementation-checklist.md`](../trade-ledger/implementation-checklist.md)** | **Active work.** Making the realised-trade record tax-correct: holding-period rules, charge deductibility, the trade-outcome rework, trade idempotency. Continues on this branch | 190 |
 | — | **[`../epics/priced-portfolio.md`](../epics/priced-portfolio.md)** | **Not this branch.** The epic that makes a *real* portfolio fully priced — instrument identity and historical rate coverage. Read it to understand what the engine still cannot do, and why that is data rather than code | 138 |
 

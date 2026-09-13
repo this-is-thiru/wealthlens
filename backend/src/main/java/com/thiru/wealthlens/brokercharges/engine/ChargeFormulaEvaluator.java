@@ -3,6 +3,7 @@ package com.thiru.wealthlens.brokercharges.engine;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeContext;
 import com.thiru.wealthlens.brokercharges.dto.enums.AmountBasis;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.shared.util.expression.SafeExpressions;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -12,7 +13,7 @@ import java.util.regex.Pattern;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.expression.spel.support.SimpleEvaluationContext;
 import org.springframework.stereotype.Component;
 
 /**
@@ -120,6 +121,9 @@ public class ChargeFormulaEvaluator {
     }
 
     private Expression parse(String expression) {
+        // Before parsing, not after: a type reference parses perfectly well, and the point is to
+        // refuse it when the card is written rather than when a trade resolves to it.
+        SafeExpressions.reject(expression);
         try {
             return parser.parseExpression(expression);
         } catch (RuntimeException e) {
@@ -128,8 +132,15 @@ public class ChargeFormulaEvaluator {
         }
     }
 
-    private StandardEvaluationContext evaluationContext(ChargeContext context, ChargeAccumulator accumulator) {
-        StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
+    /**
+     * The variables a rate card may read, and nothing else.
+     *
+     * <p>Built on {@code SimpleEvaluationContext} rather than {@code StandardEvaluationContext}:
+     * with no type locator, bean resolver or constructor resolver, a stored expression cannot reach
+     * {@code T(java.lang.Runtime)} however it is spelled. See {@link SafeExpressions}.
+     */
+    private SimpleEvaluationContext evaluationContext(ChargeContext context, ChargeAccumulator accumulator) {
+        SimpleEvaluationContext evaluationContext = SimpleEvaluationContext.forReadOnlyDataBinding().build();
 
         evaluationContext.setVariable("quantity", context.quantity());
         evaluationContext.setVariable("price", context.price());
