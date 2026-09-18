@@ -61,11 +61,12 @@ public class AssetRequest implements AssetEntityProtoType, TransactionEntityProt
     private TradeSegment segment = TradeSegment.DELIVERY;
 
     /**
-     * @deprecated the charges engine computes this. Still accepted and still stored so existing
-     *     clients keep working, but once {@code app.charges.authoritative} is on it is no longer
-     *     read: the computed total becomes the cost basis (AC-10). Removed in a later release.
+     * What the client says the broker charged.
+     *
+     * <p>Accepted and stored. Where {@code app.charges.authoritative} is on and the engine priced
+     * the trade, the computed total is what becomes the cost basis (AC-10) — but this figure is
+     * still recorded, and it is the only one a trade the engine could not price has.
      */
-    @Deprecated(since = "Chunk 10a")
     private double brokerCharges;
     private double miscCharges;
     private String comment;
