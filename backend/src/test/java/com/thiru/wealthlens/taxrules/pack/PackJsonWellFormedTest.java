@@ -2,8 +2,6 @@ package com.thiru.wealthlens.taxrules.pack;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +15,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * The real TY 2026-27 pack, checked as data.
@@ -29,7 +29,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class PackJsonWellFormedTest {
 
     private static final String ROOT = "rulepacks/2026-27";
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
     private static String read(String path) {
         try (InputStream in = PackJsonWellFormedTest.class.getClassLoader()
@@ -42,11 +42,7 @@ class PackJsonWellFormedTest {
     }
 
     private static JsonNode json(String path) {
-        try {
-            return MAPPER.readTree(read(path));
-        } catch (IOException e) {
-            throw new AssertionError(path + " is not valid JSON", e);
-        }
+        return MAPPER.readTree(read(path));
     }
 
     @Nested
@@ -82,7 +78,7 @@ class PackJsonWellFormedTest {
         void allFourLayersAreVersioned() {
             JsonNode layers = json("manifest.json").get("layers");
 
-            assertThat(layers.fieldNames()).toIterable()
+            assertThat(layers.propertyNames())
                     .containsExactlyInAnyOrder("law", "exec", "forms", "content");
         }
 
