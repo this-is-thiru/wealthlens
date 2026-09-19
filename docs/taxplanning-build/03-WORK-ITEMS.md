@@ -247,12 +247,20 @@ and replaced every `Verify: compiles` in this file with a real command.
 > Verified by: `03-WORK-ITEMS.md:240` assigned `RegimeApplicability` to `W-024`;
 > `grep -c` over this file found **0** mentions of each of the six.
 
+> **Erratum (W-026, 2026-09-19):** D-014's sweep, three items earlier, **collapsed six `Produces`
+> lists to `{...}`** while rewriting their `Verify` columns — `W-025`, `W-026`, `W-036`, `W-037`,
+> `W-039` and `W-043`. `00-START-HERE.md` §6 verifies an item against exactly that list, so an
+> abbreviated one removes the check it exists for. The lists are restored above from the pre-sweep
+> text, with `TaxTreatment` added to `W-025`'s, since the union decision put it there.
+> My error, in an edit whose purpose was to make verification stricter.
+> Verified by: `git show f2a7db4^:docs/taxplanning-build/03-WORK-ITEMS.md`.
+
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
 | **W-023** | **MERGED with W-024.** `taxrules/temporal/{RuleVersion,AmendmentRef,Provision,Presence,TemporalContext,MissingTemporalCoordinateException,NoRuleVersionException}.java`, `taxrules/pack/{RuleRow,RegimeApplicability}.java`, `.../pack/RuleRowTest.java` | `DR 18` V4, V8 · `DR 05` M1.2 · `DR 10` E3.3 | `-Dtest=RuleRowTest` — `versionAt` on a hit, a gap, both boundaries and a `PendingNotification`; `changesWithin` true and false |
 | **W-024** | **RETIRED** — merged into `W-023` by D-014 | — | — |
-| **W-025** | `taxrules/component/{...}.java` + `.../component/ComponentLifecycleTest.java` | `DR 10` E4, `DR 18` V6 | `-Dtest=ComponentLifecycleTest` — a withdrawn component is rejected, not silently zero (`D-NOSILENT`); each `DeprecationPolicy` branch |
-| **W-026** | `taxrules/regime/{...}.java` + `.../regime/RegimeLifecycleTest.java` | `DR 17` L2, L3 | `-Dtest=RegimeLifecycleTest` — entry closed but in force (ss.201/204 grandfathering); withdrawal once then permanently barred; the s.202(4)(a)(iv) revival carve-out |
+| **W-025** | `taxrules/component/{ComponentDefinition,ComponentLifecycle,DeprecationPolicy,CashNature,ComponentKind,TaxTreatment}.java` + `.../component/ComponentLifecycleTest.java` | `DR 10` E4, `DR 18` V6 | `-Dtest=ComponentLifecycleTest` — a withdrawn component is rejected, not silently zero (`D-NOSILENT`); each `DeprecationPolicy` branch |
+| **W-026** | `taxrules/regime/{RegimeSpec,RegimeLifecycle,ElectionProtocol,BindingSpec,AfterWithdrawal,ContinuationPolicy,InvalidationPolicy}.java` + `.../regime/RegimeLifecycleTest.java` | `DR 17` L2, L3 | `-Dtest=RegimeLifecycleTest` — entry closed but in force (ss.201/204 grandfathering); withdrawal once then permanently barred; the s.202(4)(a)(iv) revival carve-out |
 | **W-027** | `taxrules/pack/{RulePack,RulePackLayer,RulePackRef}.java` + `.../pack/RulePackLayerTest.java` | `DR 23` A2 — **four layers, separate versions** | `-Dtest=RulePackLayerTest` — the cache key covers `law`+`exec` and **not** `forms`/`content`; each layer versions independently |
 | **W-028** | `taxrules/pack/{RulePackProvider,ClasspathRulePackProvider}.java` + `.../pack/ClasspathRulePackProviderTest.java` + a **minimal fixture pack** under `src/test/resources/rulepacks-fixture/` | `DR 10` E3.5, `DR 23` A2 | `-Dtest=ClasspathRulePackProviderTest` |
 | **W-029** | `taxrules/validate/PackValidator.java` — invariants I1–I7 — + `.../validate/PackValidatorTest.java` | TS T5 | `-Dtest=PackValidatorTest` — one violating and one clean case **per invariant**; build the rows in code, no files needed |
@@ -285,14 +293,14 @@ test nodes to run.
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
 | **W-035** | `taxengine/pipeline/{NodeValue,MoneyValue,TaxByBasis}.java` + `.../pipeline/NodeValueTest.java` | `DR 15` B2, B4 | `-Dtest=NodeValueTest` — `NodeValue` is closed; `TaxByBasis` keeps slab and special-rate tax apart |
-| **W-036** | `taxengine/trace/{...}.java` + `.../trace/TraceLineTest.java` | `DR 23` A8 — **two separate records** | `-Dtest=TraceLineTest` — a trace line carries its rule id and provenance; an annotation is not a notice |
-| **W-037** | `taxengine/input/{...}.java` + `.../input/EngineInputsTest.java` | `DR 23` A3 — **verbatim** | `-Dtest=EngineInputsTest` — every collection is defensively copied; the record is complete enough that the engine fetches nothing |
+| **W-036** | `taxengine/trace/{TraceLine,TraceAnnotation,Notice,StepKind,Severity}.java` + `.../trace/TraceLineTest.java` | `DR 23` A8 — **two separate records** | `-Dtest=TraceLineTest` — a trace line carries its rule id and provenance; an annotation is not a notice |
+| **W-037** | `taxengine/input/{EngineInputs,TaxpayerFacts,FamilySnapshot,LedgerSnapshot,RegimeElectionSnapshot,FilingFacts}.java` + `.../input/EngineInputsTest.java` | `DR 23` A3 — **verbatim** | `-Dtest=EngineInputsTest` — every collection is defensively copied; the record is complete enough that the engine fetches nothing |
 | **W-038** | `taxengine/input/InputsFingerprint.java` + `.../input/InputsFingerprintTest.java` | `DR 15` F6 + `DR 23` A3 | `-Dtest=InputsFingerprintTest` — equal inputs ⇒ equal fingerprint; **any** field change ⇒ different; field **order** irrelevant |
-| **W-039** | `taxengine/pipeline/{...}.java` + `.../pipeline/NodeRegistryTest.java` | `DR 15` B2 | `-Dtest=NodeRegistryTest` — two nodes producing the same `NodeId` is an error; a node's `requires`/`produces` are non-empty and disjoint |
+| **W-039** | `taxengine/pipeline/{ComputationNode,NodeContext,NodeResult,NodeRegistry}.java` + `.../pipeline/NodeRegistryTest.java` | `DR 15` B2 | `-Dtest=NodeRegistryTest` — two nodes producing the same `NodeId` is an error; a node's `requires`/`produces` are non-empty and disjoint |
 | **W-040** | `taxengine/pipeline/TopologicalSort.java` + `.../pipeline/TopologicalSortTest.java` | `DR 15` B3 | `-Dtest=TopologicalSortTest` — a cycle fails with the cycle named; order respects every edge; a missing `requires` producer fails |
 | **W-041** | **RETIRED** — merged into `W-040` by D-011 | — | — |
 | **W-042** | `taxengine/pipeline/PipelineRunner.java` + `.../pipeline/PipelineRunnerTest.java` | `DR 15` B3 — **no try/catch** | `-Dtest=PipelineRunnerTest` — uses `W-044`'s harness; `DR 08` T9-20, `DR 23` T23-6, T23-7 |
-| **W-043** | `taxengine/result/{...}.java` + `.../result/TaxComputationTest.java` | `DR 23` A6 — **the split** | `-Dtest=TaxComputationTest` — `TaxComputation` holds **no** date-dependent field, which is what makes it cacheable forever; `FilingPosition` holds them all |
+| **W-043** | `taxengine/result/{TaxComputation,FilingPosition,ComputationId,ComputationReceipt}.java` + `.../result/TaxComputationTest.java` | `DR 23` A6 — **the split** | `-Dtest=TaxComputationTest` — `TaxComputation` holds **no** date-dependent field, which is what makes it cacheable forever; `FilingPosition` holds them all |
 | **W-044** | **MOVED — do this before `W-042`.** `taxengine/test/NodeHarness.java` (test scope) + `.../test/NodeHarnessTest.java` | `DR 23` A11 | `-Dtest=NodeHarnessTest` — the harness runs one node in isolation and its stub inputs are honoured |
 | **W-045** | **RETIRED** — merged into `W-042` by D-011 | — | — |
 
