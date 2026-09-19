@@ -64,6 +64,25 @@ public record TaxYearRegistryEntry(
         RulePackRef rulePack) {}
 ```
 
+> **Erratum (W-031, 2026-09-19):** two of these four fields are stale.
+>
+> **`Regime defaultRegime` is dropped.** `Regime` as a type exists nowhere, and the comment
+> *"NEW, for both years"* is the pre-`RegimeSpec` two-regime model that `10-extensibility.md` E3
+> replaced. It could not be corrected in place either: invariant **I5 makes the default per
+> `(taxYear, PersonType)`**, which a single field cannot express. `PackValidator` already guarantees
+> exactly one default per person type, so a field here would be a second source of truth able to
+> disagree with the pack.
+>
+> **`RulePackRef rulePack` is a name collision.** Here it means *which pack*; the implemented
+> `RulePackRef` (`23-architecture-consolidation.md` A2, built in `W-027`) is *one layer's version and
+> checksum*. A2 replaced "the pack has a version" with four independently versioned layers, so the
+> entry carries `Map<RulePackLayer, RulePackRef> packLayers` — the same identity a computation
+> receipt records.
+>
+> The three-instrument requirement is unchanged and is the reason this record exists.
+> Verified by: `./mvnw test -pl backend -Dtest=TaxYearRegistryTest`;
+> `02-TECH-SPEC.md:244-281` (I5); `23-architecture-consolidation.md` A2.
+
 `YR-ACT-002` / `-003` / `-004` require **three** instruments per year, not one. The placeholder's
 `TaxYearRegistryEntity` had Act and Rules; the Finance Act is where the surcharge tables and the
 marginal-relief formulae actually live (`RATE-SUR-*`, `RATE-SUR-MR-001`), so omitting it means the
