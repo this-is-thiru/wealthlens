@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-032 — "taxplanning W-032: the 2026-27 pack, numbers verbatim and shape current"
-Last updated              : 2026-09-19 (session 2 — W-032 DONE)
+Last checkpoint           : W-032b — "taxplanning W-032b: constants from the packs, without a build plugin"
+Last updated              : 2026-09-19 (session 2 — W-032b DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-032b` — the build-time constant generator (**added by D-018**) |
+| **Next item** | `W-033` — leaf values, `Validity`, `RegimeApplicability`, `CapShape` (**split by D-019**) |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-032b | 2026-09-19 | RuleIds/ComponentCodes committed + ConstantGenerator + verification test; both DR 19 properties tested; no build plugins added; 12 tests | `./mvnw test -pl backend -Dtest=GeneratedConstantsTest`
 W-032 | 2026-09-19 | The real 2026-27 pack: manifest + 6 layer files, real checksums; RATE-SLAB-NEW-2026 and RATE-SLAB-OLD-2026; 21 tests | `./mvnw test -pl backend -Dtest=PackJsonWellFormedTest`
 W-031b | 2026-09-19 | RegimeBehaviour SPI + registry + DataDrivenRegimeBehaviour; invariant I9 enforceable both ways; guard 3 moved to W-037; 7 + 4 tests | `./mvnw test -pl backend -Dtest=RegimeBehaviourRegistryTest`
 W-031 | 2026-09-19 | TaxYearRegistry + Entry + UnsupportedTaxYearException; dropped stale `Regime defaultRegime`, fixed the `RulePackRef` collision; 10 tests | `./mvnw test -pl backend -Dtest=TaxYearRegistryTest`
@@ -182,6 +183,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-019 | 2026-09-19 | `W-033` (the pack deserialiser) is ~55 shapes and ~700 lines — 4x the §7 limit. Its stated `Verify` round-trips a fixture whose arrays are empty | **Split three ways** — `W-033` (leaves, `Validity`, `RegimeApplicability`, `CapShape`), `W-033b` (`Condition`, `RuleRow`), `W-033c` (regimes, sets, components, the assembler). **Hand-written parsing**, not Jackson annotations: E4 requires the loader to throw only `PackValidationException`, and Jackson's errors address a Java developer rather than a pack author | **approved by the developer** |
 | D-018 | 2026-09-19 | Appendix A's three ownerless types: nothing applies a mid-year change; invariant I9 is unenforceable without a behaviour registry; the `ComponentCodes`/`RuleIds` generator is a missing build step | **Three new items.** `W-031b` — `RegimeBehaviour` + registry + I9. `W-032b` — the Maven generator emitting `RuleIds`/`ComponentCodes` from the packs. `W-066b` — `TemporallyApportionedCap`, placed after `W-066` because `PRORATE_PER_SEGMENT` needs `ProrationBasis`. `RulePackDocument` stays unresolved | **approved by the developer** |
 | D-017 | 2026-09-19 | Phases 0–3 hit a missing-type stop at **every** boundary. Rather than continue item by item, audit the rest in one pass | **Appendix A** in `03-WORK-ITEMS.md`: all 157 design-declared types matched against every `Produces`. 21 were nested variants, 3 withdrawn, **62 genuinely unassigned** — now tabled against their owning item. Three have **no owner**: `TemporallyApportionedCap` (nothing applies a mid-year change), the `RegimeBehaviour` registry (invariant I9 is unenforceable without it), and the `ComponentCodes`/`RuleIds` build-time generator | **approved by the developer** |
 | D-016 | 2026-09-19 | `W-030` was assigned 12 invariants; **8 constrain types Phase 3 does not build** (ITR forms, the claim catalogue, the node registry, a working engine). I10 and I16 were already enforced | **Ship I13, I14, I15 here** and redistribute the rest to the items that build their subjects — I18→W-039, I19/I20→W-090, I21/I22→W-092, I23→W-117, I27→W-146, each with a test. Add `MidYearCombination` (V5, produced by no item) so I14 is checkable | **approved by the developer** |

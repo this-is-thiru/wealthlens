@@ -254,6 +254,31 @@ public final class ComponentCodes {
 }
 ```
 
+> **Erratum (W-032b, 2026-09-19):** the constants are **committed source**, not emitted into
+> `target/generated-sources`, by the developer's decision. Both properties in the table below still
+> hold; the mechanism differs.
+>
+> - A code removed from every pack changes what `GeneratedConstantsTest` regenerates, so the test
+>   fails; regenerating deletes the constant, and every Java reference then **fails to compile**.
+> - A typo in a pack fails that test — and tests run in the build, so it fails the **build**, not
+>   startup.
+>
+> Why: a build-time generator needs `exec-maven-plugin` and `build-helper-maven-plugin` added to the
+> **root pom every module inherits**, on every build, for one module's convenience — and a generator
+> bug then breaks `mvn` for everyone before a single test runs. Committed constants are also visible
+> in the IDE and in code review, which matters: `RuleIds.RATE_SLAB_NEW_2026` appearing in a diff is
+> how a reviewer sees a rule being consumed.
+>
+> Two details the spec does not mention and the formatter forces. The generated file must be a
+> **spotless fixed point**, or the formatter edits it and the test fails on every build: so the
+> `import` is emitted **only when a constant uses it** (spotless strips an unused import — which
+> bites today, because `exec/components.json` is still a stub and `ComponentCodes` is empty), and
+> the javadoc is **pre-wrapped** rather than left for the formatter to reflow.
+>
+> Regenerate with
+> `./mvnw test -pl backend -Dtest=GeneratedConstantsTest -Dtaxrules.regenerate=true`.
+> Verified by: `./mvnw test -pl backend -Dtest=GeneratedConstantsTest` — 12 tests.
+
 | Property | Effect |
 |---|---|
 | A code exists in data | `ComponentCodes.X` compiles |

@@ -289,6 +289,21 @@ and replaced every `Verify: compiles` in this file with a real command.
 > decision, which is what makes I14 checkable.
 > Verified by: `02-TECH-SPEC.md:244-281`; `03-WORK-ITEMS.md:440-481`.
 
+> **Erratum (W-033, 2026-09-19):** `W-033` is **split three ways** by decision **D-019** — ~55
+> distinct shapes and ~700 lines was four times the §7 limit.
+>
+> Its stated `Verify`, *"round-trips the fixture pack from W-028"*, also proves almost nothing: that
+> fixture has **empty arrays by design**, so round-tripping it exercises no shape. The three items
+> test their parsers directly against JSON snippets, including the real pack's own content, and the
+> end-to-end load stays with `W-034` where it belongs.
+>
+> Parsing is **hand-written** rather than Jackson-annotated, by the developer's decision.
+> `19-engineering-foundations.md` E4 makes *"the loader throws nothing but
+> `PackValidationException`"* a property test, and Jackson's `InvalidTypeIdException` is addressed to
+> a Java developer rather than to whoever wrote the pack. Annotating the sealed families would also
+> put Jackson on `taxrules` domain types.
+> Verified by: the shape count above; `19-engineering-foundations.md` E4, E9.
+
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
 | **W-023** | **MERGED with W-024.** `taxrules/temporal/{RuleVersion,AmendmentRef,Provision,Presence,TemporalContext,MissingTemporalCoordinateException,NoRuleVersionException}.java`, `taxrules/pack/{RuleRow,RegimeApplicability}.java`, `.../pack/RuleRowTest.java` | `DR 18` V4, V8 · `DR 05` M1.2 · `DR 10` E3.3 | `-Dtest=RuleRowTest` — `versionAt` on a hit, a gap, both boundaries and a `PendingNotification`; `changesWithin` true and false |
@@ -313,7 +328,9 @@ and replaced every `Verify: compiles` in this file with a real command.
 | **W-031b** | `taxrules/regime/{RegimeBehaviour,RegimeBehaviourRegistry,DataDrivenRegimeBehaviour}.java` + `.../regime/RegimeBehaviourRegistryTest.java`, **extend** `PackValidator` with **invariant I9** and `PackValidatorTest` | `DR 17` L5 (`:315-350`) | `-Dtest=RegimeBehaviourRegistryTest,PackValidatorTest` — a pack naming a `BehaviourId` with no registered implementation is a **load error**; a regime declaring none gets `DataDrivenRegimeBehaviour`'s defaults |
 | **W-032** | pack JSON: `rulepacks/2026-27/manifest.json` + `law/rates.json` + `exec/pipelines.json` + `law/regimes.json` + `.../pack/PackJsonWellFormedTest.java` | `DR 16` S2 step 4 — **copy the JSON verbatim** | `-Dtest=PackJsonWellFormedTest` — parses, and **every slab band lower bound ends in `0000`** (the `400001` trap) |
 | **W-032b** | the **build-time constant generator**: a Maven plugin execution reading `rulepacks/**/*.json` and emitting `taxrules/generated/{RuleIds,ComponentCodes}.java` into `target/generated-sources`, + `.gitignore` for them, + `.../generated/GeneratedConstantsTest.java` | `DR 19` E-series (`:236-264`) | `-Dtest=GeneratedConstantsTest` — `RuleIds.RATE_SLAB_NEW_2026` resolves to the pack's own id; a code removed from every pack makes its Java references **fail to compile**; a typo in a pack fails the **build**, not startup |
-| **W-033** | `TJsonMapper`-based pack deserialiser + `.../pack/RulePackDeserialiserTest.java` | `DR 19` E9 — reuse `shared/util/collection/TJsonMapper` | `-Dtest=RulePackDeserialiserTest` — round-trips the **fixture** pack from `W-028` |
+| **W-033** | `taxrules/json/{PackJson,ValueJson,ShapeJson}.java` + `.../json/PackJsonTest.java` | `DR 19` E9 — reuse `TJsonMapper` | `-Dtest=PackJsonTest` — leaf values, `Validity`, `RegimeApplicability` and all six `CapShape`s; **every** malformed input yields a `PackValidationException` naming the field |
+| **W-033b** | `taxrules/json/{ConditionJson,RuleJson}.java` + **extend** `PackJsonTest` | `DR 15` Part E · `DR 18` V4 | `-Dtest=PackJsonTest` — all 13 `Condition` variants; a `RuleRow` with versions, axis and `introducedBy` |
+| **W-033c** | `taxrules/json/{RegimeJson,RegistryJson,JsonPackAssembler}.java` + **extend** `PackJsonTest` | `DR 17` L2, L3 · `DR 10` E4 | `-Dtest=PackJsonTest` — regimes, disallowance and condition sets, components; `JsonPackAssembler` implements `W-028`'s seam |
 | **W-034** | `.../taxrules/pack/RulePackLoadTest.java` | `DR 08` T9-1…T9-7 | `-Dtest=RulePackLoadTest` — the **real** `2026-27` pack, end to end: provider → deserialiser → validator → registry |
 
 ⚠ **W-032 is the highest-risk item in Phase 3.** Every number in it is in `DR 16-getting-started.md`
