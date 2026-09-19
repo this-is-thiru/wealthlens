@@ -7,12 +7,16 @@ import com.thiru.wealthlens.taxrules.id.RegimeCode;
 import com.thiru.wealthlens.taxrules.id.RuleId;
 import com.thiru.wealthlens.taxrules.pack.ConditionSet;
 import com.thiru.wealthlens.taxrules.pack.DisallowanceSet;
+import com.thiru.wealthlens.taxrules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxrules.pack.RulePack;
 import com.thiru.wealthlens.taxrules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxrules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxrules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxrules.temporal.DateRange;
 import com.thiru.wealthlens.taxrules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxrules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxrules.temporal.Validity;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -60,6 +64,9 @@ public final class PackValidator {
         checkExactlyOneDefaultPerPersonType(pack, problems);  // I5
         checkRegimeSetReferencesResolve(pack, problems);  // I6
         checkComponentReferencesResolve(pack, problems);  // I7
+        checkYearIsCoveredWithoutGapOrOverlap(pack, problems);  // I13
+        checkMidYearChangesAreDeclared(pack, problems);          // I14
+        checkEveryVersionHasAnAmendment(pack, problems);         // I15
 
         if (!problems.isEmpty()) {
             throw new PackValidationException(
@@ -179,6 +186,119 @@ public final class PackValidator {
                                             + " would be missing from the total with no error");
                         }
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * I13 — a year-keyed rule's versions cover the tax year with no gap and no overlap.
+     *
+     * <p>A gap means the law said nothing for part of the year, which is not a state the law can be
+     * in; an overlap means two versions claim the same day and {@code versionAt} silently takes the
+     * first one listed. Both produce an answer. Neither produces the right one.
+     *
+     * <p>Only the {@code TAX_YEAR} axis is checked: a rule keyed on an acquisition or sanction date
+     * legitimately has nothing in force during a given tax year.
+     */
+    private static void checkYearIsCoveredWithoutGapOrOverlap(RulePack pack, List<String> problems) {
+        LocalDate start = pack.taxYear().startsOn();
+        LocalDate end = pack.taxYear().endsOn();
+
+        for (Map.Entry<RuleId, com.thiru.wealthlens.taxrules.pack.RuleRow> entry : pack.rules().entrySet()) {
+            if (entry.getValue().axis() != TemporalAxis.TAX_YEAR) {
+                continue;
+            }
+            List<RuleVersion> inYear = entry.getValue().versions().stream()
+                    .filter(version -> coversAnyOf(version, start, end))
+                    .toList();
+
+            if (inYear.isEmpty()) {
+                problems.add(
+                        "rule " + entry.getKey() + " has no version in force during "
+                                + pack.taxYear().label() + "; the law cannot say nothing for a year");
+                continue;
+            }
+            for (LocalDate day : List.of(start, end)) {
+                long covering = inYear.stream().filter(v -> v.validity().contains(day)).count();
+                if (covering == 0) {
+                    problems.add(
+                            "rule " + entry.getKey() + " covers no version on " + day
+                                    + "; the tax year has a gap");
+                } else if (covering > 1) {
+                    problems.add(
+                            "rule " + entry.getKey() + " has " + covering + " versions in force on "
+                                    + day + "; versionAt would silently take the first listed");
+                }
+            }
+        }
+    }
+
+    private static boolean coversAnyOf(RuleVersion version, LocalDate start, LocalDate end) {
+        return version.validity().contains(start)
+                || version.validity().contains(end)
+                || windowStartsInside(version, start, end);
+    }
+
+    private static boolean windowStartsInside(RuleVersion version, LocalDate start, LocalDate end) {
+        DateRange year = DateRange.between(start, end);
+        return switch (version.validity()) {
+            case Validity.Between between -> year.contains(between.from());
+            case Validity.Retrospective retro -> year.contains(retro.deemedEffectiveFrom());
+            case Validity.PendingNotification ignored -> false;
+        };
+    }
+
+    /**
+     * I14 — a rule that changes inside the year must say how to combine its versions.
+     *
+     * <p>{@code UNDETERMINED} is the honest default for a newly authored change, and it is refused
+     * here rather than at computation time so the pack author hears about it before a taxpayer
+     * does. Guessing produces a plausible number, only in the year the rule moved, that no golden
+     * test written before the change would catch.
+     */
+    private static void checkMidYearChangesAreDeclared(RulePack pack, List<String> problems) {
+        LocalDate start = pack.taxYear().startsOn();
+        LocalDate end = pack.taxYear().endsOn();
+
+        for (Map.Entry<RuleId, com.thiru.wealthlens.taxrules.pack.RuleRow> entry : pack.rules().entrySet()) {
+            com.thiru.wealthlens.taxrules.pack.RuleRow row = entry.getValue();
+            if (row.axis() != TemporalAxis.TAX_YEAR) {
+                continue;
+            }
+            long inYear = row.versions().stream().filter(v -> coversAnyOf(v, start, end)).count();
+
+            if (inYear > 1 && row.midYearCombination() == MidYearCombination.UNDETERMINED) {
+                problems.add(
+                        "rule " + entry.getKey() + " changes inside " + pack.taxYear().label()
+                                + " but its midYearCombination is UNDETERMINED; the pack must say"
+                                + " how the versions combine rather than let the engine guess");
+            }
+            if (row.midYearCombination() == MidYearCombination.STATUTORY) {
+                require(
+                        pack.rules().keySet(),
+                        row.midYearCombinationRule(),
+                        "rule " + entry.getKey() + " statutory combination",
+                        problems);
+            }
+        }
+    }
+
+    /**
+     * I15 — every rule version names the instrument that introduced it.
+     *
+     * <p>The ordered version list <b>is</b> the amendment history, and a version with no amendment
+     * breaks it: the trace can state a figure but not where it came from, which is the one thing a
+     * taxpayer challenging it needs.
+     */
+    private static void checkEveryVersionHasAnAmendment(RulePack pack, List<String> problems) {
+        for (Map.Entry<RuleId, com.thiru.wealthlens.taxrules.pack.RuleRow> entry : pack.rules().entrySet()) {
+            List<RuleVersion> versions = entry.getValue().versions();
+            for (int i = 0; i < versions.size(); i++) {
+                if (versions.get(i).introducedBy() == null) {
+                    problems.add(
+                            "rule " + entry.getKey() + " version " + i + " names no AmendmentRef;"
+                                    + " the trace could state its figure but not where it came from");
                 }
             }
         }

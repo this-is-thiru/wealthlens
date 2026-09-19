@@ -263,6 +263,28 @@ and replaced every `Verify: compiles` in this file with a real command.
 > revival clauses of the original `Verify` line move to `W-026b`, where `AfterWithdrawal` lives.
 > Verified by: `17-regime-lifecycle.md` L2, L3, `:105-119`; `grep -c` found 0 backlog mentions of each.
 
+> **Erratum (W-030, 2026-09-19):** `W-030` was assigned **twelve** invariants. Eight of them
+> constrain types Phase 3 does not build, and an invariant cannot be written before its subject
+> exists. Redistributed by decision **D-016** to the items that build what they constrain:
+>
+> | Invariant | Now belongs to | Why it could not live here |
+> |---|---|---|
+> | **I10** `entryWindow ⊆ inForceWindow` | **already enforced**, `RegimeLifecycle` constructor (W-026) | unconstructable, like I1 |
+> | **I16** `PendingNotification` names an interim rule in the pack | **already done**, W-029's generalised I2 | — |
+> | **I18** a non-`TAX_YEAR` rule is supplied its coordinate | **W-039** (`NodeRegistry`) | the node-to-rule mapping is engine-side |
+> | **I19, I20** ITR form applicability and uniqueness | **W-090** (`ItrFormSpec`) | no form type exists until Phase 10 |
+> | **I21, I22** `ScheduleRef`/`FromRule`/`FromNode` resolution; furnishing options | **W-092** (`ItrSchedule`) | same |
+> | **I23** every claimable rule has a catalogue entry | **W-117** (claim catalogue) | the catalogue is Phase 12 |
+> | **I27** perturbing `content`/`forms` changes no number | **W-146** | it is a property test needing a working engine |
+>
+> Each receiving item must add the invariant **and a test for it**; none is dropped. `I3` was
+> deferred to `W-039` on the same grounds by `W-029`'s erratum.
+>
+> `MidYearCombination` and `RuleRow.midYearCombination`/`midYearCombinationRule` were declared by
+> `18-temporal-versioning.md` V5 and produced by no item; added to `W-030` by the developer's
+> decision, which is what makes I14 checkable.
+> Verified by: `02-TECH-SPEC.md:244-281`; `03-WORK-ITEMS.md:440-481`.
+
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
 | **W-023** | **MERGED with W-024.** `taxrules/temporal/{RuleVersion,AmendmentRef,Provision,Presence,TemporalContext,MissingTemporalCoordinateException,NoRuleVersionException}.java`, `taxrules/pack/{RuleRow,RegimeApplicability}.java`, `.../pack/RuleRowTest.java` | `DR 18` V4, V8 · `DR 05` M1.2 · `DR 10` E3.3 | `-Dtest=RuleRowTest` — `versionAt` on a hit, a gap, both boundaries and a `PendingNotification`; `changesWithin` true and false |
@@ -282,7 +304,7 @@ and replaced every `Verify: compiles` in this file with a real command.
 > `W-029` should extend it, not redefine it.
 > Verified by: `grep -rn PackValidationException docs/` found three design uses and no `Produces`.
 
-| **W-030** | `taxrules/validate/PackValidator.java` — invariants I10, I13–I16, I18–I23, I27 — + **extend** `PackValidatorTest` | TS T5 | `-Dtest=PackValidatorTest` — same shape, one pair per invariant |
+| **W-030** | `taxrules/validate/PackValidator.java` — invariants **I13, I14, I15** + `taxrules/pack/MidYearCombination.java` — + **extend** `PackValidatorTest` | TS T5 · `DR 18` V5 | `-Dtest=PackValidatorTest` — a year with a gap; two versions on one day; `UNDETERMINED` where the rule actually changes; a version with no `AmendmentRef` |
 | **W-031** | `taxrules/registry/{TaxYearRegistry,TaxYearRegistryEntry}.java` + `.../registry/TaxYearRegistryTest.java` | `DR 05` M1.1 | `-Dtest=TaxYearRegistryTest` |
 | **W-032** | pack JSON: `rulepacks/2026-27/manifest.json` + `law/rates.json` + `exec/pipelines.json` + `law/regimes.json` + `.../pack/PackJsonWellFormedTest.java` | `DR 16` S2 step 4 — **copy the JSON verbatim** | `-Dtest=PackJsonWellFormedTest` — parses, and **every slab band lower bound ends in `0000`** (the `400001` trap) |
 | **W-033** | `TJsonMapper`-based pack deserialiser + `.../pack/RulePackDeserialiserTest.java` | `DR 19` E9 — reuse `shared/util/collection/TJsonMapper` | `-Dtest=RulePackDeserialiserTest` — round-trips the **fixture** pack from `W-028` |
@@ -306,7 +328,7 @@ test nodes to run.
 | **W-036** | `taxengine/trace/{TraceLine,TraceAnnotation,Notice,StepKind,Severity}.java` + `.../trace/TraceLineTest.java` | `DR 23` A8 — **two separate records** | `-Dtest=TraceLineTest` — a trace line carries its rule id and provenance; an annotation is not a notice |
 | **W-037** | `taxengine/input/{EngineInputs,TaxpayerFacts,FamilySnapshot,LedgerSnapshot,RegimeElectionSnapshot,FilingFacts}.java` + `.../input/EngineInputsTest.java` | `DR 23` A3 — **verbatim** | `-Dtest=EngineInputsTest` — every collection is defensively copied; the record is complete enough that the engine fetches nothing |
 | **W-038** | `taxengine/input/InputsFingerprint.java` + `.../input/InputsFingerprintTest.java` | `DR 15` F6 + `DR 23` A3 | `-Dtest=InputsFingerprintTest` — equal inputs ⇒ equal fingerprint; **any** field change ⇒ different; field **order** irrelevant |
-| **W-039** | `taxengine/pipeline/{ComputationNode,NodeContext,NodeResult,NodeRegistry}.java` + `.../pipeline/NodeRegistryTest.java` | `DR 15` B2 | `-Dtest=NodeRegistryTest` — two nodes producing the same `NodeId` is an error; a node's `requires`/`produces` are non-empty and disjoint |
+| **W-039** | `taxengine/pipeline/{ComputationNode,NodeContext,NodeResult,NodeRegistry}.java` **+ invariants I3 and I18** (moved here by D-016 — reachability and temporal-coordinate supply both need the node-to-rule mapping)  + `.../pipeline/NodeRegistryTest.java` | `DR 15` B2 | `-Dtest=NodeRegistryTest` — two nodes producing the same `NodeId` is an error; a node's `requires`/`produces` are non-empty and disjoint |
 | **W-040** | `taxengine/pipeline/TopologicalSort.java` + `.../pipeline/TopologicalSortTest.java` | `DR 15` B3 | `-Dtest=TopologicalSortTest` — a cycle fails with the cycle named; order respects every edge; a missing `requires` producer fails |
 | **W-041** | **RETIRED** — merged into `W-040` by D-011 | — | — |
 | **W-042** | `taxengine/pipeline/PipelineRunner.java` + `.../pipeline/PipelineRunnerTest.java` | `DR 15` B3 — **no try/catch** | `-Dtest=PipelineRunnerTest` — uses `W-044`'s harness; `DR 08` T9-20, `DR 23` T23-6, T23-7 |

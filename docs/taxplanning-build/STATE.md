@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-029 — "taxplanning W-029: refusing a pack that does not mean what it says"
-Last updated              : 2026-09-19 (session 2 — W-029 DONE)
+Last checkpoint           : W-030 — "taxplanning W-030: the year has no gaps, and a mid-year change must say how"
+Last updated              : 2026-09-19 (session 2 — W-030 DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-030` — invariants I10, I13–I16, I18–I23, I27 |
+| **Next item** | audit of Phases 4–14 (D-016 pattern), then `W-031` |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-030 | 2026-09-19 | I13/I14/I15 + MidYearCombination; 8 invariants redistributed by D-016; I15 caught 3 of my own fixtures; 23 tests | `./mvnw test -pl backend -Dtest=PackValidatorTest`
 W-029 | 2026-09-19 | PackValidator (I2 generalised, I5, I6, I7) + DisallowanceSet/ConditionSet; I1/I4 shown enforced elsewhere, I3 deferred with a reason; 13 tests | `./mvnw test -pl backend -Dtest=PackValidatorTest`
 W-028 | 2026-09-19 | RulePackProvider SPI + ClasspathRulePackProvider + PackAssembler seam; synthetic 2099-00 fixture + tampered 2098-99; 9 tests. TJsonMapper.readValue made public | `./mvnw test -pl backend -Dtest=ClasspathRulePackProviderTest`
 W-027 | 2026-09-19 | RulePack + RulePackLayer + RulePackRef; cache key on law+exec only (G-11 now a test); 14 tests | `./mvnw test -pl backend -Dtest=RulePackLayerTest`
@@ -178,6 +179,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-016 | 2026-09-19 | `W-030` was assigned 12 invariants; **8 constrain types Phase 3 does not build** (ITR forms, the claim catalogue, the node registry, a working engine). I10 and I16 were already enforced | **Ship I13, I14, I15 here** and redistribute the rest to the items that build their subjects — I18→W-039, I19/I20→W-090, I21/I22→W-092, I23→W-117, I27→W-146, each with a test. Add `MidYearCombination` (V5, produced by no item) so I14 is checkable | **approved by the developer** |
 | D-015 | 2026-09-19 | `W-026` at ~600 lines was twice the §7 limit, and six types it needs were produced by no item. Separately, `17-regime-lifecycle.md`'s pack JSON names the head `"PGBP"` where the code says `BUSINESS_OR_PROFESSION` | **Split three ways** — `W-026` (lifecycle, L2), `W-026b` (election, L3), `W-026c` (`RegimeSpec`, which binds them). Head name: **`BUSINESS_OR_PROFESSION`** wins, being already in code and in the rulebook's prose; the JSON is erratum'd | **approved by the developer** |
 | D-014 | 2026-09-19 | `W-023` could not compile (`RuleVersion` needs `RegimeApplicability`, assigned to the *later* `W-024`); six supporting types produced by no item; and **11 items verified with `compiles` alone**, which passes for a record whose lookup method returns the wrong version | **Merge `W-023`+`W-024`** (`W-024` RETIRED) and **sweep every `compiles`-only row** — each now names a real test and what it must prove. Rule B1 amended: *the test is not the compiler* | **approved by the developer** |
 | D-013 | 2026-09-19 | `W-021` (`Condition` + 16 records + test) estimated at ~750 lines, 2.5x the §7 limit; five supporting types produced by no item; `AgeAtLeast` cannot express its own pack example | **Split three ways** — `W-021` (person facts), `W-021b` (amounts and structure), `W-021c` (composition, closes the family). Ids suffixed, not renumbered. `AgeAtLeast` gains an `AgeSubject`. The five supporting types are assigned across the three | **approved by the developer** |

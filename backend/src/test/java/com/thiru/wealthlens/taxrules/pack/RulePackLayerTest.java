@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxrules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxrules.registry.Instrument;
 import com.thiru.wealthlens.taxrules.registry.Provenance;
 import com.thiru.wealthlens.taxrules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxrules.temporal.AmendmentRef;
 import com.thiru.wealthlens.taxrules.temporal.Provision;
 import com.thiru.wealthlens.taxrules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxrules.temporal.TemporalAxis;
@@ -87,6 +88,18 @@ class RulePackLayerTest {
         return map;
     }
 
+    /** Every rule version must name the instrument that introduced it — invariant I15. */
+    private static AmendmentRef introducedByFinanceAct() {
+        return new AmendmentRef(
+                "Finance Act, 2026 (4 of 2026), s.38",
+                "CG-DL-E-31032026-271439",
+                LocalDate.of(2026, 3, 31),
+                LocalDate.of(2026, 4, 1),
+                false,
+                URI.create("https://egazette.gov.in/WriteReadData/2026/271439.pdf"),
+                VerificationStatus.VERIFIED);
+    }
+
     private static RuleRow slabRule() {
         return new RuleRow(
                 SLAB,
@@ -98,7 +111,7 @@ class RulePackLayerTest {
                         List.of(),
                         Provision.notYetVerified("Income-tax Act, 1961"),
                         Provision.present("Income-tax Act, 2025", "s.202(1)"),
-                        null,
+                        introducedByFinanceAct(),
                         provenance())),
                 provenance());
     }

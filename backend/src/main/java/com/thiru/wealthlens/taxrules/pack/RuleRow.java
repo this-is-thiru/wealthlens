@@ -24,10 +24,24 @@ import java.util.Optional;
  * @param id stable across every version
  * @param axis which clock this rule is read against — {@code D-TEMPORALKEY}
  * @param versions ordered, non-overlapping and gap-free within the pack's year
+ * @param midYearCombination how to apply this rule in a year it changed inside — declared, never
+ *     assumed. Irrelevant in a year it did not change
+ * @param midYearCombinationRule the rule supplying the combination, required when
+ *     {@code midYearCombination} is {@link MidYearCombination#STATUTORY} and meaningless otherwise
  * @param headProvenance where the rule as a whole was sourced
  */
 public record RuleRow(
-        RuleId id, TemporalAxis axis, List<RuleVersion> versions, Provenance headProvenance) {
+        RuleId id,
+        TemporalAxis axis,
+        List<RuleVersion> versions,
+        MidYearCombination midYearCombination,
+        RuleId midYearCombinationRule,
+        Provenance headProvenance) {
+
+    /** A rule with no mid-year change authored, which is the ordinary case. */
+    public RuleRow(RuleId id, TemporalAxis axis, List<RuleVersion> versions, Provenance headProvenance) {
+        this(id, axis, versions, MidYearCombination.UNDETERMINED, null, headProvenance);
+    }
 
     public RuleRow {
         if (id == null) {
@@ -40,6 +54,22 @@ public record RuleRow(
             throw new IllegalArgumentException("Rule " + id + " has no versions");
         }
         versions = List.copyOf(versions);
+
+        if (midYearCombination == null) {
+            throw new IllegalArgumentException(
+                    "Rule " + id + " must state a MidYearCombination; UNDETERMINED is the honest"
+                            + " default, and null is not");
+        }
+        if (midYearCombination == MidYearCombination.STATUTORY && midYearCombinationRule == null) {
+            throw new IllegalArgumentException(
+                    "Rule " + id + " combines mid-year changes STATUTORY but names no rule to do it");
+        }
+        if (midYearCombination != MidYearCombination.STATUTORY && midYearCombinationRule != null) {
+            throw new IllegalArgumentException(
+                    "Rule " + id + " names combination rule " + midYearCombinationRule
+                            + " but its combination is " + midYearCombination
+                            + ", which would never consult it");
+        }
     }
 
     /**

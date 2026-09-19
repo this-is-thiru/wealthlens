@@ -23,6 +23,7 @@ import com.thiru.wealthlens.taxrules.id.TaxYearId;
 import com.thiru.wealthlens.taxrules.money.Money;
 import com.thiru.wealthlens.taxrules.pack.ConditionSet;
 import com.thiru.wealthlens.taxrules.pack.DisallowanceSet;
+import com.thiru.wealthlens.taxrules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxrules.pack.RegimeApplicability;
 import com.thiru.wealthlens.taxrules.pack.RulePack;
 import com.thiru.wealthlens.taxrules.pack.RulePackLayer;
@@ -45,6 +46,7 @@ import com.thiru.wealthlens.taxrules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxrules.registry.Instrument;
 import com.thiru.wealthlens.taxrules.registry.Provenance;
 import com.thiru.wealthlens.taxrules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxrules.temporal.AmendmentRef;
 import com.thiru.wealthlens.taxrules.temporal.DateRange;
 import com.thiru.wealthlens.taxrules.temporal.Provision;
 import com.thiru.wealthlens.taxrules.temporal.RuleVersion;
@@ -90,6 +92,18 @@ class PackValidatorTest {
                 null);
     }
 
+    /** Every rule version must name the instrument that introduced it — invariant I15. */
+    private static AmendmentRef introducedByFinanceAct() {
+        return new AmendmentRef(
+                "Finance Act, 2026 (4 of 2026), s.38",
+                "CG-DL-E-31032026-271439",
+                LocalDate.of(2026, 3, 31),
+                LocalDate.of(2026, 4, 1),
+                false,
+                URI.create("https://egazette.gov.in/WriteReadData/2026/271439.pdf"),
+                VerificationStatus.VERIFIED);
+    }
+
     private static RuleRow rule(RuleId id, CapShape cap) {
         return new RuleRow(
                 id,
@@ -101,7 +115,7 @@ class PackValidatorTest {
                         List.of(),
                         Provision.notYetVerified("Income-tax Act, 1961"),
                         Provision.present("Income-tax Act, 2025", "s.202(1)"),
-                        null,
+                        introducedByFinanceAct(),
                         provenance())),
                 provenance());
     }
@@ -275,7 +289,7 @@ class PackValidatorTest {
                                     List.of(),
                                     Provision.notYetVerified("Income-tax Act, 1961"),
                                     Provision.notYetVerified("Income-tax Act, 2025"),
-                                    null,
+                                    introducedByFinanceAct(),
                                     provenance())),
                             provenance()));
 
@@ -400,6 +414,199 @@ class PackValidatorTest {
         @Test
         void aVerifiedProvenanceNeedsNoWhatToCheck() {
             assertThat(provenance().status()).isEqualTo(VerificationStatus.VERIFIED);
+        }
+    }
+
+    @Nested
+    @DisplayName("I13 — the year is covered, with no gap and no overlap")
+    class YearCoverage {
+
+        private static RuleRow withVersions(RuleVersion... versions) {
+            return new RuleRow(SLAB, TemporalAxis.TAX_YEAR, List.of(versions), provenance());
+        }
+
+        private static RuleVersion versionFrom(LocalDate from, LocalDate to) {
+            return new RuleVersion(
+                    new Validity.Between(from, Optional.ofNullable(to)),
+                    new RegimeApplicability.AllRegimes(),
+                    new Fixed(Money.ZERO),
+                    List.of(),
+                    Provision.notYetVerified("Income-tax Act, 1961"),
+                    Provision.present("Income-tax Act, 2025", "s.202(1)"),
+                    introducedByFinanceAct(),
+                    provenance());
+        }
+
+        @Test
+        void aGapInTheYearIsRejected() {
+            // The law cannot say nothing for part of a year
+            PackBuilder pack = validPack();
+            pack.rules.put(SLAB, withVersions(versionFrom(LocalDate.of(2026, 9, 1), null)));
+
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("2026-04-01")
+                    .hasMessageContaining("the tax year has a gap");
+        }
+
+        @Test
+        void twoVersionsInForceOnTheSameDayAreRejected() {
+            // versionAt would silently take whichever was listed first
+            PackBuilder pack = validPack();
+            pack.rules.put(
+                    SLAB,
+                    new RuleRow(
+                            SLAB,
+                            TemporalAxis.TAX_YEAR,
+                            List.of(
+                                    versionFrom(LocalDate.of(2020, 4, 1), null),
+                                    versionFrom(LocalDate.of(2021, 4, 1), null)),
+                            MidYearCombination.LATEST_VERSION_GOVERNS,
+                            null,
+                            provenance()));
+
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("versions in force on")
+                    .hasMessageContaining("first listed");
+        }
+
+        @Test
+        void aRuleWithNoVersionInTheYearIsRejected() {
+            PackBuilder pack = validPack();
+            pack.rules.put(
+                    SLAB,
+                    withVersions(versionFrom(LocalDate.of(2030, 4, 1), null)));
+
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("cannot say nothing for a year");
+        }
+
+        @Test
+        void anAcquisitionDateRuleIsNotRequiredToCoverTheYear() {
+            // A rule keyed on when an asset was bought legitimately has nothing in force this year
+            PackBuilder pack = validPack();
+            pack.rules.put(
+                    new RuleId("CG-INDEX-001"),
+                    new RuleRow(
+                            new RuleId("CG-INDEX-001"),
+                            TemporalAxis.ACQUISITION_DATE,
+                            List.of(versionFrom(LocalDate.of(2001, 4, 1), LocalDate.of(2017, 3, 31))),
+                            provenance()));
+
+            assertThatCode(() -> PackValidator.validate(pack.build())).doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
+    @DisplayName("I14 — a mid-year change must say how its versions combine")
+    class MidYearChange {
+
+        private static RuleRow changingMidYear(MidYearCombination combination, RuleId combinationRule) {
+            return new RuleRow(
+                    SLAB,
+                    TemporalAxis.TAX_YEAR,
+                    List.of(
+                            new RuleVersion(
+                                    new Validity.Between(
+                                            LocalDate.of(2026, 4, 1), Optional.of(LocalDate.of(2026, 8, 31))),
+                                    new RegimeApplicability.AllRegimes(),
+                                    new Fixed(Money.ZERO),
+                                    List.of(),
+                                    Provision.notYetVerified("Income-tax Act, 1961"),
+                                    Provision.present("Income-tax Act, 2025", "s.202(1)"),
+                                    introducedByFinanceAct(),
+                                    provenance()),
+                            new RuleVersion(
+                                    Validity.Between.fromOnwards(LocalDate.of(2026, 9, 1)),
+                                    new RegimeApplicability.AllRegimes(),
+                                    new Fixed(Money.of("1")),
+                                    List.of(),
+                                    Provision.notYetVerified("Income-tax Act, 1961"),
+                                    Provision.present("Income-tax Act, 2025", "s.202(1)"),
+                                    introducedByFinanceAct(),
+                                    provenance())),
+                    combination,
+                    combinationRule,
+                    provenance());
+        }
+
+        @Test
+        void undeterminedIsRejectedWhenTheRuleActuallyChanges() {
+            // Guessing produces a plausible number, only in the year the rule moved, that no
+            // golden test written before the change would catch
+            PackBuilder pack = validPack();
+            pack.rules.put(SLAB, changingMidYear(MidYearCombination.UNDETERMINED, null));
+
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("changes inside 2026-27")
+                    .hasMessageContaining("rather than let the engine guess");
+        }
+
+        @Test
+        void aDeclaredCombinationIsAccepted() {
+            PackBuilder pack = validPack();
+            pack.rules.put(SLAB, changingMidYear(MidYearCombination.PRORATE_PER_SEGMENT, null));
+
+            assertThatCode(() -> PackValidator.validate(pack.build())).doesNotThrowAnyException();
+        }
+
+        @Test
+        void undeterminedIsFineWhenTheRuleDoesNotChange() {
+            // The honest default costs nothing until a change is actually authored
+            assertThatCode(() -> PackValidator.validate(validPack().build())).doesNotThrowAnyException();
+        }
+
+        @Test
+        void statutoryCombinationMustNameAnExistingRule() {
+            PackBuilder pack = validPack();
+            pack.rules.put(
+                    SLAB, changingMidYear(MidYearCombination.STATUTORY, new RuleId("SAL-NOWHERE-001")));
+
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("SAL-NOWHERE-001");
+        }
+
+        @Test
+        void namingACombinationRuleWithoutStatutoryIsRejectedAtConstruction() {
+            assertThatThrownBy(() ->
+                            changingMidYear(MidYearCombination.PRORATE_PER_SEGMENT, new RuleId("SAL-HRA-001")))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("would never consult it");
+        }
+    }
+
+    @Nested
+    @DisplayName("I15 — every version names the instrument that introduced it")
+    class AmendmentHistory {
+
+        @Test
+        void aVersionWithNoAmendmentIsRejected() {
+            // The ordered version list IS the amendment history
+            PackBuilder pack = validPack();
+            pack.rules.put(
+                    SLAB,
+                    new RuleRow(
+                            SLAB,
+                            TemporalAxis.TAX_YEAR,
+                            List.of(new RuleVersion(
+                                    Validity.Between.fromOnwards(LocalDate.of(2026, 4, 1)),
+                                    new RegimeApplicability.AllRegimes(),
+                                    new Fixed(Money.ZERO),
+                                    List.of(),
+                                    Provision.notYetVerified("Income-tax Act, 1961"),
+                                    Provision.present("Income-tax Act, 2025", "s.202(1)"),
+                                    null,
+                                    provenance())),
+                            provenance()));
+
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("names no AmendmentRef")
+                    .hasMessageContaining("not where it came from");
         }
     }
 }
