@@ -29,6 +29,7 @@ import com.thiru.wealthlens.taxrules.pack.RulePack;
 import com.thiru.wealthlens.taxrules.pack.RulePackLayer;
 import com.thiru.wealthlens.taxrules.pack.RulePackRef;
 import com.thiru.wealthlens.taxrules.pack.RuleRow;
+import com.thiru.wealthlens.taxrules.regime.BehaviourId;
 import com.thiru.wealthlens.taxrules.regime.BindingSpec;
 import com.thiru.wealthlens.taxrules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxrules.regime.ContinuationPolicy;
@@ -39,6 +40,8 @@ import com.thiru.wealthlens.taxrules.regime.ElectionProtocol;
 import com.thiru.wealthlens.taxrules.regime.ElectionVehicle;
 import com.thiru.wealthlens.taxrules.regime.InvalidationPolicy;
 import com.thiru.wealthlens.taxrules.regime.PipelineSpec;
+import com.thiru.wealthlens.taxrules.regime.RegimeBehaviour;
+import com.thiru.wealthlens.taxrules.regime.RegimeBehaviourRegistry;
 import com.thiru.wealthlens.taxrules.regime.RegimeLifecycle;
 import com.thiru.wealthlens.taxrules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxrules.registry.DraftOrFinal;
@@ -607,6 +610,71 @@ class PackValidatorTest {
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("names no AmendmentRef")
                     .hasMessageContaining("not where it came from");
+        }
+    }
+
+    @Nested
+    @DisplayName("I9 — behaviours resolve, in both directions")
+    class Behaviours {
+
+        static final BehaviourId NOVEL = new BehaviourId("S999_NOVEL_ELECTION");
+
+        record SyntheticBehaviour(BehaviourId id) implements RegimeBehaviour {}
+
+        private static RegimeSpec regimeNaming(BehaviourId behaviour) {
+            RegimeSpec base = regime(DEFAULT_REGIME, true, Set.of(DIS_SET), Set.of(COND_SET));
+            return new RegimeSpec(
+                    base.code(), base.displayName(), base.provision1961(), base.provision2025(),
+                    base.appliesTo(), base.rateTable(), base.disallowances(), base.eligibility(),
+                    base.election(), base.lifecycle(), base.isDefault(), base.pipeline(),
+                    Optional.ofNullable(behaviour), base.provenance());
+        }
+
+        @Test
+        void aPackNamingAnUnimplementedBehaviourIsRefused() {
+            // Its special handling would silently not run -- a plausible wrong answer for everyone
+            // in that regime, in the one place the design allows arbitrary code
+            PackBuilder pack = validPack();
+            pack.regimes.put(DEFAULT_REGIME, regimeNaming(NOVEL));
+
+            assertThatThrownBy(() ->
+                            PackValidator.validate(pack.build(), RegimeBehaviourRegistry.empty()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("S999_NOVEL_ELECTION")
+                    .hasMessageContaining("would silently not run");
+        }
+
+        @Test
+        void aRegisteredBehaviourNoPackReferencesIsRefused() {
+            // D-ONEIMPL reachability, extended to behaviours. Unlike I3 this IS checkable at load:
+            // the registry is in hand, and a behaviour is referenced by a regime directly.
+            assertThatThrownBy(() ->
+                            PackValidator.validate(
+                                    validPack().build(),
+                                    RegimeBehaviourRegistry.of(List.of(new SyntheticBehaviour(NOVEL)))))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("dead code that looks alive");
+        }
+
+        @Test
+        void aMatchedPairValidates() {
+            PackBuilder pack = validPack();
+            pack.regimes.put(DEFAULT_REGIME, regimeNaming(NOVEL));
+
+            assertThatCode(() ->
+                            PackValidator.validate(
+                                    pack.build(),
+                                    RegimeBehaviourRegistry.of(List.of(new SyntheticBehaviour(NOVEL)))))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void theShippingStateIsNeitherSide() {
+            // No pack names one, nothing is registered: both checks pass vacuously, which is
+            // exactly what L5 recommends shipping
+            assertThatCode(() ->
+                            PackValidator.validate(validPack().build(), RegimeBehaviourRegistry.empty()))
+                    .doesNotThrowAnyException();
         }
     }
 }

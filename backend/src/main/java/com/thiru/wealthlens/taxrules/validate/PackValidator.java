@@ -9,8 +9,10 @@ import com.thiru.wealthlens.taxrules.pack.ConditionSet;
 import com.thiru.wealthlens.taxrules.pack.DisallowanceSet;
 import com.thiru.wealthlens.taxrules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxrules.pack.RulePack;
+import com.thiru.wealthlens.taxrules.regime.BehaviourId;
 import com.thiru.wealthlens.taxrules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxrules.regime.DisallowanceSetId;
+import com.thiru.wealthlens.taxrules.regime.RegimeBehaviourRegistry;
 import com.thiru.wealthlens.taxrules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxrules.temporal.DateRange;
 import com.thiru.wealthlens.taxrules.temporal.RuleVersion;
@@ -55,10 +57,21 @@ public final class PackValidator {
     }
 
     /**
+     * Validates a pack against a system that registers no behaviours — the state L5 recommends.
+     *
      * @throws PackValidationException listing every violation found, not just the first
      */
     public static void validate(RulePack pack) {
+        validate(pack, RegimeBehaviourRegistry.empty());
+    }
+
+    /**
+     * @param behaviours what the running system implements, for invariant I9 and its converse
+     * @throws PackValidationException listing every violation found, not just the first
+     */
+    public static void validate(RulePack pack, RegimeBehaviourRegistry behaviours) {
         List<String> problems = new ArrayList<>();
+        checkBehavioursResolveBothWays(pack, behaviours, problems);  // I9 + D-ONEIMPL
 
         checkRuleReferencesResolve(pack, problems);       // I2, generalised
         checkExactlyOneDefaultPerPersonType(pack, problems);  // I5
@@ -187,6 +200,42 @@ public final class PackValidator {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * I9 — every {@code BehaviourId} a pack names is implemented, and every implementation is named.
+     *
+     * <p>Both directions are load errors, for different reasons. A pack naming an unimplemented
+     * behaviour would leave a regime's special handling silently not running — a plausible wrong
+     * answer for everyone in that regime, in the one place the design allows arbitrary code. An
+     * implementation no pack references is dead code that looks alive, which is the
+     * {@code D-ONEIMPL} reachability rule extended to behaviours.
+     *
+     * <p>Unlike invariant I3, this reachability check <b>is</b> possible at load: the registry is in
+     * hand, and a behaviour is referenced by a regime directly rather than through a node.
+     */
+    private static void checkBehavioursResolveBothWays(
+            RulePack pack, RegimeBehaviourRegistry behaviours, List<String> problems) {
+
+        Set<BehaviourId> referenced = new LinkedHashSet<>();
+        for (RegimeSpec regime : pack.regimes().values()) {
+            regime.behaviour().ifPresent(id -> {
+                referenced.add(id);
+                if (!behaviours.isRegistered(id)) {
+                    problems.add(
+                            "regime " + regime.code() + " names behaviour " + id
+                                    + ", which no implementation registers; its special handling"
+                                    + " would silently not run");
+                }
+            });
+        }
+        for (BehaviourId registered : behaviours.registeredIds()) {
+            if (!referenced.contains(registered)) {
+                problems.add(
+                        "behaviour " + registered + " is registered but no regime in "
+                                + pack.taxYear().label() + " references it; dead code that looks alive");
             }
         }
     }

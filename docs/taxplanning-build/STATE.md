@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-031 — "taxplanning W-031: the entry point, and two stale fields"
-Last updated              : 2026-09-19 (session 2 — W-031 DONE)
+Last checkpoint           : W-031b — "taxplanning W-031b: the escape hatch, and the two load errors that stop it rotting"
+Last updated              : 2026-09-19 (session 2 — W-031b DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-031b` — `RegimeBehaviour` registry + invariant I9 (**added by D-018**) |
+| **Next item** | `W-032` — the real 2026-27 pack JSON (**highest-risk item in Phase 3**) |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-031b | 2026-09-19 | RegimeBehaviour SPI + registry + DataDrivenRegimeBehaviour; invariant I9 enforceable both ways; guard 3 moved to W-037; 7 + 4 tests | `./mvnw test -pl backend -Dtest=RegimeBehaviourRegistryTest`
 W-031 | 2026-09-19 | TaxYearRegistry + Entry + UnsupportedTaxYearException; dropped stale `Regime defaultRegime`, fixed the `RulePackRef` collision; 10 tests | `./mvnw test -pl backend -Dtest=TaxYearRegistryTest`
 W-030 | 2026-09-19 | I13/I14/I15 + MidYearCombination; 8 invariants redistributed by D-016; I15 caught 3 of my own fixtures; 23 tests | `./mvnw test -pl backend -Dtest=PackValidatorTest`
 W-029 | 2026-09-19 | PackValidator (I2 generalised, I5, I6, I7) + DisallowanceSet/ConditionSet; I1/I4 shown enforced elsewhere, I3 deferred with a reason; 13 tests | `./mvnw test -pl backend -Dtest=PackValidatorTest`

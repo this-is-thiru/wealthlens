@@ -342,6 +342,23 @@ public interface RegimeBehaviour {
 public final class DataDrivenRegimeBehaviour implements RegimeBehaviour { /* all defaults */ }
 ```
 
+> **Erratum (W-031b, 2026-09-19):** `RegimeBehaviour` ships with **`id()` only**. Its three override
+> hooks name five types that do not exist — `Taxpayer`, `Inputs`, `EligibilityVerdict`,
+> `ElectionVerdict` and `RegimeElectionHistory` (the last is `W-082`) — so each arrives with the item
+> that builds its types. An interface whose methods name undefined types cannot be implemented, and a
+> default body that cannot compile is worse than an absent method.
+>
+> **Guard 3 moves with `adjustPipeline`.** The ArchUnit rule listing every class that overrides it is
+> assigned to `W-037`, since it cannot exist before the method does — and under ArchUnit with no
+> `archunit.properties`, a rule matching nothing **fails the build**, so writing it early would break
+> CI rather than protect anything.
+>
+> **Guards 1 and 2 are implemented now**, both as load errors in `PackValidator`: a pack naming an
+> unimplemented behaviour, and a registered behaviour no pack references. The second is reachability
+> that *is* checkable at load, unlike invariant I3, because the registry is in hand and a behaviour
+> is referenced by a regime directly rather than through a node.
+> Verified by: `./mvnw test -pl backend -Dtest=RegimeBehaviourRegistryTest,PackValidatorTest`.
+
 Three guard rails, because this is the tier that can rot:
 
 | Guard | Mechanism |
