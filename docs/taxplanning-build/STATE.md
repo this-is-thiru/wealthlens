@@ -3,10 +3,10 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-007 — "taxplanning W-007: Rate, so 30 and 0.30 are different types"
-Last updated              : 2026-09-19 (session 1 — W-007 DONE)
+Last checkpoint           : W-009 — "taxplanning W-008/W-009: identifier types and their test"
+Last updated              : 2026-09-19 (session 2 — W-009 DONE)
 Current position          : W-001
-Session count             : 1
+Session count             : 2
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-008` — Identifier types |
+| **Next item** | `W-010` — provenance types |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 1 — Foundational types |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -48,7 +48,7 @@ Legend: `·` not started · `E` explained, awaiting approval · `P` in progress 
 
 ```
 Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
-Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 ·  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
+Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 ·  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
 Phase 4    W-035 ·  W-036 ·  W-037 ·  W-038 ·  W-039 ·  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **7** / 146 · in flight **0** · blocked **0**
+Counts — done **9** / 146 · in flight **0** · blocked **0**
 
 ---
 
@@ -80,6 +80,8 @@ W-004 | 2026-09-19 | 4 engine-purity rules + the withdrawal gate (11→16 tests)
 W-005 | 2026-09-19 | Money — BigDecimal, scale 2, s.516 rounding. No test yet (W-006) | `./mvnw test -pl backend -Dtest=ArchitectureTest`
 W-006 | 2026-09-19 | MoneyTest — 17 tests incl. the 1,234.99→1,230 discriminator | `./mvnw test -pl backend -Dtest=MoneyTest`
 W-007 | 2026-09-19 | Rate + RateTest — 9 tests; cess case sourced from T2-1 | `./mvnw test -pl backend -Dtest=RateTest`
+W-008 | 2026-09-19 | 7 identifier records + shared validator; 2 spec bugs found | `./mvnw test -pl backend -Dtest=IdentifierTest`
+W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions | `./mvnw test -pl backend -Dtest=IdentifierTest`
 
 ---
 
@@ -132,8 +134,23 @@ Session 1. Decisions D-001…D-007 recorded on the design's recommendations; **D
 open** and blocks nothing before `W-032`. The plan for `W-001` is written and is **awaiting
 approval** — no code has been written.
 
-`W-007` is **DONE** and committed. **The money types are complete.** Next is `W-008` — the seven
-identifier records.
+`W-008` and `W-009` are **DONE** and committed together. Next is `W-010` — provenance types.
+
+**Two bugs found in `02-TECH-SPEC.md` T3, both corrected by erratum:**
+1. The `RuleId` pattern was `{1,3}`, which **rejects 10 real rule IDs** — every one with four
+   hyphenated segments, e.g. `RATE-SLAB-OLD-2026-A` and `SAL-ALW-NEW-SUBSET-001`. Widened to `{1,5}`.
+2. `TaxYearId.label()` did not zero-pad: the tax year beginning 2099 rendered `"2099-0"`, not
+   `"2099-00"`. The synthetic extensibility pack is TY 2099-00, so it is exercised.
+The other five patterns were checked against every real value and are correct.
+
+**`W-008` cannot satisfy its own Verify command** — it names `IdentifierTest`, which is `W-009`'s
+`Produces`. So the two were done together and are reviewed together. `IdentifierTest` is **73 tests**
+and both erratum corrections carry a regression test that provably fails against the original spec:
+the ten four-segment rule IDs, and `TaxYearId.of(2099).label()` being `"2099-00"` rather than
+`"2099-0"`.
+
+**One file outside `Produces`:** `Identifiers.java`, the shared validator. Proposed before the item
+started and approved with "do W-008"; recorded because the `Produces` list does not name it.
 
 The cess case in `RateTest` (4% of ₹10,80,000 = ₹43,200) is taken from `08-golden-tests.md` T2-1,
 so the arithmetic the surcharge golden tests will depend on at `W-057` is already pinned at the
