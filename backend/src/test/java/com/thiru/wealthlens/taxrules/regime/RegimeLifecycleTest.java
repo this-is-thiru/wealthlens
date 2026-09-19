@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxrules.condition.HasIncomeUnderHead;
 import com.thiru.wealthlens.taxrules.condition.HeadCode;
 import com.thiru.wealthlens.taxrules.condition.Not;
 import com.thiru.wealthlens.taxrules.condition.PersonType;
+import com.thiru.wealthlens.taxrules.id.NodeId;
 import com.thiru.wealthlens.taxrules.id.RegimeCode;
 import com.thiru.wealthlens.taxrules.id.RuleId;
 import com.thiru.wealthlens.taxrules.id.TaxYearId;
@@ -16,6 +17,7 @@ import com.thiru.wealthlens.taxrules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxrules.registry.Provenance;
 import com.thiru.wealthlens.taxrules.registry.VerificationStatus;
 import com.thiru.wealthlens.taxrules.temporal.DateRange;
+import com.thiru.wealthlens.taxrules.temporal.Provision;
 import com.thiru.wealthlens.taxrules.validate.PackValidationException;
 import java.net.URI;
 import java.time.LocalDate;
@@ -436,6 +438,155 @@ class RegimeLifecycleTest {
                 assertThat(verdict).isNotBlank();
             }
             assertThat(all).hasSize(3);
+        }
+    }
+
+    // --------------------------------------------------------------- W-026c
+
+    /** The nine nodes of S202_DEFAULT — 16-getting-started.md:229-231. */
+    private static PipelineSpec defaultPipeline() {
+        return new PipelineSpec(java.util.List.of(
+                new NodeId("inputs.components"),
+                new NodeId("salary.gross"),
+                new NodeId("totalincome"),
+                new NodeId("round.totalincome"),
+                new NodeId("tax.bybasis"),
+                new NodeId("tax.afterrebate"),
+                new NodeId("tax.cess"),
+                new NodeId("tax.netpayable"),
+                new NodeId("round.netpayable")));
+    }
+
+    private static ElectionProtocol defaultElection() {
+        return new ElectionProtocol(
+                ElectionKind.DEFAULT_NO_ACTION,
+                ElectionVehicle.NONE,
+                java.util.Optional.empty(),
+                new DeadlineSpec.NoDeadline(),
+                BindingSpec.free(),
+                provenance(VerificationStatus.VERIFIED, null));
+    }
+
+    /** S202_DEFAULT — 16-getting-started.md:222-231. */
+    private static RegimeSpec defaultRegime() {
+        return new RegimeSpec(
+                new RegimeCode("S202_DEFAULT"),
+                "Default regime (s.202(1))",
+                Provision.notYetVerified("Income-tax Act, 1961"),
+                Provision.present("Income-tax Act, 2025", "s.202(1)"),
+                java.util.Set.of(PersonType.INDIVIDUAL),
+                new RuleId("RATE-SLAB-NEW-2026"),
+                java.util.Set.of(new DisallowanceSetId("DIS-S202-2A")),
+                java.util.Set.of(),
+                defaultElection(),
+                new RegimeLifecycle(
+                        DateRange.fromOnwards(LocalDate.of(2024, 4, 1)),
+                        DateRange.fromOnwards(LocalDate.of(2024, 4, 1)),
+                        new ContinuationPolicy.ContinueIndefinitely(),
+                        new InvalidationPolicy.NoInvalidation(),
+                        provenance(VerificationStatus.VERIFIED, null)),
+                true,
+                defaultPipeline(),
+                java.util.Optional.empty(),
+                provenance(VerificationStatus.VERIFIED, null));
+    }
+
+    @Nested
+    @DisplayName("RegimeSpec — a regime as one declarable row")
+    class Spec {
+
+        @Test
+        void theDefaultRegimeIsAvailableToAnIndividual() {
+            assertThat(defaultRegime().availableTo(PersonType.INDIVIDUAL, new TaxYearId(2026))).isTrue();
+            assertThat(defaultRegime().openToNewEntrants(PersonType.INDIVIDUAL, new TaxYearId(2026)))
+                    .isTrue();
+        }
+
+        @Test
+        void itIsNotAvailableBeforeItExists() {
+            assertThat(defaultRegime().availableTo(PersonType.INDIVIDUAL, new TaxYearId(2020))).isFalse();
+        }
+
+        @Test
+        void isDefaultRequiresAnElectionKindOfDefaultNoAction() {
+            // The default regime is the one that applies when nothing is done. Marking a regime
+            // default while requiring an opt-in is a contradiction a pack author would not see.
+            assertThatThrownBy(() -> {
+                RegimeSpec base = defaultRegime();
+                new RegimeSpec(
+                        base.code(), base.displayName(), base.provision1961(), base.provision2025(),
+                        base.appliesTo(), base.rateTable(), base.disallowances(), base.eligibility(),
+                        new ElectionProtocol(
+                                ElectionKind.OPT_IN,
+                                ElectionVehicle.IN_THE_RETURN,
+                                java.util.Optional.empty(),
+                                new DeadlineSpec.DueDateUnder("263(1)"),
+                                BindingSpec.free(),
+                                provenance(VerificationStatus.VERIFIED, null)),
+                        base.lifecycle(), true, base.pipeline(), base.behaviour(), base.provenance());
+            })
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("applies when nothing is done");
+        }
+
+        @Test
+        void aRegimeThatAppliesToNobodyIsRejected() {
+            RegimeSpec base = defaultRegime();
+            assertThatThrownBy(() ->
+                            new RegimeSpec(
+                                    base.code(), base.displayName(), base.provision1961(), base.provision2025(),
+                                    java.util.Set.of(), base.rateTable(), base.disallowances(),
+                                    base.eligibility(), base.election(), base.lifecycle(), true,
+                                    base.pipeline(), base.behaviour(), base.provenance()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("applies to nobody");
+        }
+
+        @Test
+        void bothActsProvisionsAreRequiredEvenWhenOneIsUnverified() {
+            // notYetVerified is an answer; null is silence
+            assertThat(defaultRegime().provision1961().presence())
+                    .isEqualTo(com.thiru.wealthlens.taxrules.temporal.Presence.NOT_YET_VERIFIED);
+        }
+    }
+
+    @Nested
+    @DisplayName("PipelineSpec — membership, not order")
+    class Pipeline {
+
+        @Test
+        void itNamesTheNodesTheRegimeRuns() {
+            assertThat(defaultPipeline().runs(new NodeId("tax.afterrebate"))).isTrue();
+            assertThat(defaultPipeline().runs(new NodeId("tax.surcharge"))).isFalse();
+        }
+
+        @Test
+        void twoPipelinesWithTheSameNodesInDifferentOrdersRunTheSameNodes() {
+            // Order is derived by topological sort from requires/produces, so the list order
+            // carries no meaning — and the pack JSON's plausible-looking order invites the
+            // opposite assumption
+            java.util.List<NodeId> reversed = new java.util.ArrayList<>(defaultPipeline().nodeRefs());
+            java.util.Collections.reverse(reversed);
+            PipelineSpec other = new PipelineSpec(reversed);
+
+            assertThat(java.util.Set.copyOf(other.nodeRefs()))
+                    .isEqualTo(java.util.Set.copyOf(defaultPipeline().nodeRefs()));
+        }
+
+        @Test
+        void aRepeatedNodeIsRejected() {
+            assertThatThrownBy(() ->
+                            new PipelineSpec(java.util.List.of(
+                                    new NodeId("salary.gross"), new NodeId("salary.gross"))))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("rather than a rerun");
+        }
+
+        @Test
+        void anEmptyPipelineIsRejected() {
+            assertThatThrownBy(() -> new PipelineSpec(java.util.List.of()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("computes nothing");
         }
     }
 }

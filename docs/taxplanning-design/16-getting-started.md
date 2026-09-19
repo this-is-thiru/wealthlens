@@ -244,6 +244,27 @@ designed out at the data level, and `SlabLadder.validate()` enforces it.
 ] }
 ```
 
+> **Erratum (W-026c, 2026-09-19):** these two `election` blocks predate
+> `17-regime-lifecycle.md` L3 and carry **`"lockIn": "NONE"`** — the three-valued enum L3 explicitly
+> replaced with `BindingSpec`. A pack author copying this writes a field the loader will not
+> recognise. The election block is now:
+>
+> ```json
+> "election": { "kind": "DEFAULT_NO_ACTION", "vehicle": "NONE",
+>               "deadline": { "type": "NoDeadline" },
+>               "binding": { "bindsSubsequentYears": false, "maxWithdrawals": -1,
+>                            "afterWithdrawal": { "type": "MayReElect" },
+>                            "firstReturnOnly": false, "bindingAppliesWhen": [] } }
+> ```
+>
+> The `S202_OPTED_OUT` block's `"deadline": "s.263(1) due date"` is likewise a bare string where
+> `DeadlineSpec` is a tagged union: `{ "type": "DueDateUnder", "section": "263(1)" }`, as
+> `17-regime-lifecycle.md:161` writes it.
+>
+> Same class of staleness as the `"PGBP"` head name — a document revised in one place and copied
+> from in another.
+> Verified by: `17-regime-lifecycle.md:130-155, 161`; `./mvnw test -pl backend -Dtest=RegimeLifecycleTest`.
+
 `INFERENCE`: two regimes are in the file from day one, and neither is named in Java. Adding a third is
 a third array element.
 
