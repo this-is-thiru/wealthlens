@@ -23,11 +23,21 @@ package com.thiru.wealthlens.taxrules.condition;
  * rule id, because the id is the contract. The change is a second {@code RuleVersion} with its own
  * {@code Validity}, not a different rule guarded by a date predicate.
  *
- * <p><b>This clause grows.</b> It currently permits the four person-fact predicates that exist;
- * W-021b adds the amount and structure predicates and W-021c the composition ones, each extending
- * the clause as it is written — a sealed type does not compile while it names a type that does not.
+ * <p><b>This clause grows.</b> It currently permits the four person-fact predicates and the six
+ * amount and structure ones; W-021c adds the composition predicates, extending the clause as they
+ * are written — a sealed type does not compile while it names a type that does not.
  */
-public sealed interface Condition permits IsResident, AgeAtLeast, HasPersonType, IsCertifiedDisabled {
+public sealed interface Condition
+        permits IsResident,
+                AgeAtLeast,
+                HasPersonType,
+                IsCertifiedDisabled,
+                IncomeAtMost,
+                IncomeAtLeast,
+                HasIncomeUnderHead,
+                ComponentPresent,
+                EvidenceRecorded,
+                PaidOtherThanInCash {
 
     /** Whether this condition is met by the taxpayer the context describes. */
     boolean holds(ConditionContext ctx);

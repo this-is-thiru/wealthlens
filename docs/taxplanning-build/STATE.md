@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-021 — "taxplanning W-021: the condition algebra, and whose age it is"
-Last updated              : 2026-09-19 (session 2 — W-021 DONE)
+Last checkpoint           : W-021b — "taxplanning W-021b: the predicates that read the computation"
+Last updated              : 2026-09-19 (session 2 — W-021b DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-021b` — the amount and structure predicates — ⚠ `EvidenceType` has no stated values |
+| **Next item** | `W-021c` — `AllOf`/`AnyOf`/`Not` + closure test — **closes Phase 2** |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 2 — Cap shapes and conditions |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-021b | 2026-09-19 | HeadCode, EvidenceType + 6 amount/structure predicates; ConditionContext grows 5 facts; 32 tests | `./mvnw test -pl backend -Dtest=ConditionTest`
 W-021 | 2026-09-19 | Condition + ConditionContext + 4 person-fact predicates + PersonType/DisabilitySeverity/AgeSubject; AgeAtLeast gains a subject; 17 tests | `./mvnw test -pl backend -Dtest=ConditionTest`
 W-019 | 2026-09-19 | PerUnitPerPeriod; Money.times(int); CapShape permits all six — family closed; 17 + 4 tests | `./mvnw test -pl backend -Dtest=PerUnitPerPeriodTest`
 W-018 | 2026-09-19 | AggregateWithCeiling + AggregateOutcome; CapContext front-loaded to 3 maps; 15 tests incl. T5-1/T5-2/T5-3 | `./mvnw test -pl backend -Dtest=AggregateWithCeilingTest`

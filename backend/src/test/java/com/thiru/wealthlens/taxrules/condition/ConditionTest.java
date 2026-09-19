@@ -3,7 +3,11 @@ package com.thiru.wealthlens.taxrules.condition;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxrules.id.ComponentCode;
+import com.thiru.wealthlens.taxrules.id.NodeId;
+import com.thiru.wealthlens.taxrules.money.Money;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -183,6 +187,192 @@ class ConditionTest {
         void construction_whenPersonTypeIsMissing_isRejected() {
             assertThatThrownBy(() -> new ConditionContext(true, null, Map.of(), Map.of()))
                     .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    // ---------------------------------------------------------------- W-021b
+
+    private static final NodeId TOTAL_INCOME = new NodeId("total.income");
+    private static final ComponentCode HRA = new ComponentCode("HRA");
+
+    /** A context carrying computation facts as well as person facts. */
+    private static ConditionContext claim(
+            Map<NodeId, Money> values,
+            Set<HeadCode> heads,
+            Set<ComponentCode> components,
+            Set<EvidenceType> evidence,
+            Optional<Boolean> nonCash) {
+        return new ConditionContext(
+                true,
+                PersonType.INDIVIDUAL,
+                Map.of(AgeSubject.SELF, 40),
+                Map.of(),
+                values,
+                heads,
+                components,
+                evidence,
+                nonCash);
+    }
+
+    private static ConditionContext withIncome(String totalIncome) {
+        return claim(
+                Map.of(TOTAL_INCOME, Money.of(totalIncome)),
+                Set.of(), Set.of(), Set.of(), Optional.empty());
+    }
+
+    @Nested
+    @DisplayName("IncomeAtMost and IncomeAtLeast — inclusive at the boundary")
+    class Amounts {
+
+        @Test
+        void incomeAtMost_holdsExactlyAtTheLimit() {
+            // The rebate applies where income "does not exceed" the threshold — 12,00,000 qualifies
+            assertThat(new IncomeAtMost(TOTAL_INCOME, Money.of("1200000")).holds(withIncome("1200000")))
+                    .isTrue();
+        }
+
+        @Test
+        void incomeAtMost_doesNotHoldOneRupeeAbove() {
+            assertThat(new IncomeAtMost(TOTAL_INCOME, Money.of("1200000")).holds(withIncome("1200001")))
+                    .isFalse();
+        }
+
+        @Test
+        void incomeAtLeast_holdsExactlyAtTheThreshold() {
+            assertThat(new IncomeAtLeast(TOTAL_INCOME, Money.of("5000000")).holds(withIncome("5000000")))
+                    .isTrue();
+        }
+
+        @Test
+        void incomeAtLeast_doesNotHoldOneRupeeBelow() {
+            assertThat(new IncomeAtLeast(TOTAL_INCOME, Money.of("5000000")).holds(withIncome("4999999")))
+                    .isFalse();
+        }
+
+        @Test
+        void holds_whenTheNodeWasNeverComputed_throws() {
+            // A threshold compared against a value nobody produced is a pipeline ordering bug,
+            // not a taxpayer who earns zero
+            assertThatThrownBy(() ->
+                            new IncomeAtMost(new NodeId("never.computed"), Money.ZERO)
+                                    .holds(withIncome("100")))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("never.computed");
+        }
+    }
+
+    @Nested
+    @DisplayName("HasIncomeUnderHead — the s.202(4)(a) trap")
+    class Heads {
+
+        @Test
+        void holds_whenTheHeadIsPresent() {
+            ConditionContext ctx = claim(
+                    Map.of(),
+                    Set.of(HeadCode.SALARIES, HeadCode.BUSINESS_OR_PROFESSION),
+                    Set.of(), Set.of(), Optional.empty());
+
+            assertThat(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION).holds(ctx)).isTrue();
+        }
+
+        @Test
+        void doesNotHold_forASalariedTaxpayerWithNoBusinessIncome() {
+            // REG-OPTOUT-YEARLY-001: this is exactly why a salaried person may switch every year
+            ConditionContext ctx =
+                    claim(Map.of(), Set.of(HeadCode.SALARIES), Set.of(), Set.of(), Optional.empty());
+
+            assertThat(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION).holds(ctx)).isFalse();
+        }
+
+        @Test
+        void presenceIsTestedNotAmount() {
+            // F32's trap: ₹50,000 of freelance work is not a small amount of business income
+            // for this purpose. It is business income, and the lock-in attaches.
+            ConditionContext ctx = claim(
+                    Map.of(TOTAL_INCOME, Money.of("50000")),
+                    Set.of(HeadCode.BUSINESS_OR_PROFESSION),
+                    Set.of(), Set.of(), Optional.empty());
+
+            assertThat(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION).holds(ctx)).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("ComponentPresent")
+    class Components {
+
+        @Test
+        void holdsOnPresenceRegardlessOfAmount() {
+            ConditionContext ctx =
+                    claim(Map.of(), Set.of(), Set.of(HRA), Set.of(), Optional.empty());
+
+            assertThat(new ComponentPresent(HRA).holds(ctx)).isTrue();
+            assertThat(new ComponentPresent(new ComponentCode("LTA")).holds(ctx)).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("EvidenceRecorded — absence is an answer, not a gap")
+    class Evidence {
+
+        @Test
+        void holds_whenTheArtefactWasFurnished() {
+            ConditionContext ctx = claim(
+                    Map.of(), Set.of(), Set.of(),
+                    Set.of(EvidenceType.INSTITUTION_REPORT_80G), Optional.empty());
+
+            assertThat(new EvidenceRecorded(EvidenceType.INSTITUTION_REPORT_80G).holds(ctx)).isTrue();
+        }
+
+        @Test
+        void doesNotHold_whenNothingWasFurnished() {
+            // s.133(6): an 80G claim is allowed on the institution's report, not on a receipt —
+            // so "no report" is the answer, not missing information
+            ConditionContext ctx =
+                    claim(Map.of(), Set.of(), Set.of(), Set.of(), Optional.empty());
+
+            assertThat(new EvidenceRecorded(EvidenceType.INSTITUTION_REPORT_80G).holds(ctx)).isFalse();
+        }
+
+        @Test
+        void aReceiptForOneClaimIsNotEvidenceForAnother() {
+            ConditionContext ctx = claim(
+                    Map.of(), Set.of(), Set.of(),
+                    Set.of(EvidenceType.LANDLORD_PAN), Optional.empty());
+
+            assertThat(new EvidenceRecorded(EvidenceType.LENDER_PAN).holds(ctx)).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("PaidOtherThanInCash — s.126(9), s.133(5)")
+    class PaymentMode {
+
+        @Test
+        void holds_whenPaidByAnyNonCashMode() {
+            ConditionContext ctx =
+                    claim(Map.of(), Set.of(), Set.of(), Set.of(), Optional.of(true));
+
+            assertThat(new PaidOtherThanInCash().holds(ctx)).isTrue();
+        }
+
+        @Test
+        void doesNotHold_whenPaidInCash() {
+            ConditionContext ctx =
+                    claim(Map.of(), Set.of(), Set.of(), Set.of(), Optional.of(false));
+
+            assertThat(new PaidOtherThanInCash().holds(ctx)).isFalse();
+        }
+
+        @Test
+        void holds_whenNoPaymentModeWasRecorded_throws() {
+            // Assuming either answer silently allows or denies a deduction
+            ConditionContext ctx =
+                    claim(Map.of(), Set.of(), Set.of(), Set.of(), Optional.empty());
+
+            assertThatThrownBy(() -> new PaidOtherThanInCash().holds(ctx))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("s.126(9)");
         }
     }
 }
