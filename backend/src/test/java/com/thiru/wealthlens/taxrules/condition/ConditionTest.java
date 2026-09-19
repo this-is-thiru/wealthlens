@@ -375,4 +375,231 @@ class ConditionTest {
                     .hasMessageContaining("s.126(9)");
         }
     }
+
+    // ---------------------------------------------------------------- W-021c
+
+    @Nested
+    @DisplayName("AllOf, AnyOf, Not")
+    class Composition {
+
+        @Test
+        void anyOf_isTheShapeDED80D007IsIn() {
+            // 15-review-findings.md:533 — either the taxpayer or the insured person is 60 or over.
+            // Taxpayer 45, insured parent 70.
+            ConditionContext ctx = new ConditionContext(
+                    true,
+                    PersonType.INDIVIDUAL,
+                    Map.of(AgeSubject.SELF, 45, AgeSubject.INSURED_PERSON, 70),
+                    Map.of());
+
+            Condition rule = AnyOf.of(
+                    new AgeAtLeast(60, AgeSubject.SELF),
+                    new AgeAtLeast(60, AgeSubject.INSURED_PERSON));
+
+            assertThat(rule.holds(ctx)).isTrue();
+        }
+
+        @Test
+        void anyOf_doesNotHold_whenNoLimbDoes() {
+            ConditionContext ctx = new ConditionContext(
+                    true,
+                    PersonType.INDIVIDUAL,
+                    Map.of(AgeSubject.SELF, 45, AgeSubject.INSURED_PERSON, 50),
+                    Map.of());
+
+            assertThat(AnyOf.of(
+                                    new AgeAtLeast(60, AgeSubject.SELF),
+                                    new AgeAtLeast(60, AgeSubject.INSURED_PERSON))
+                            .holds(ctx))
+                    .isFalse();
+        }
+
+        @Test
+        void allOf_requiresEveryLimb() {
+            ConditionContext ctx = resident(65);
+
+            assertThat(AllOf.of(new IsResident(), new AgeAtLeast(60, AgeSubject.SELF)).holds(ctx))
+                    .isTrue();
+            assertThat(AllOf.of(new IsResident(), new AgeAtLeast(80, AgeSubject.SELF)).holds(ctx))
+                    .isFalse();
+        }
+
+        @Test
+        void not_negatesTheAnswer() {
+            assertThat(new Not(new IsResident()).holds(nonResident(40))).isTrue();
+            assertThat(new Not(new IsResident()).holds(resident(40))).isFalse();
+        }
+
+        @Test
+        void nesting_composesToArbitraryDepth() {
+            // resident AND (60+ OR certified disabled) — the shape DED-80U-001 needs
+            ConditionContext ctx = new ConditionContext(
+                    true,
+                    PersonType.INDIVIDUAL,
+                    Map.of(AgeSubject.SELF, 45),
+                    Map.of(AgeSubject.SELF, DisabilitySeverity.SEVERE_DISABILITY));
+
+            Condition rule = AllOf.of(
+                    new IsResident(),
+                    AnyOf.of(
+                            new AgeAtLeast(60, AgeSubject.SELF),
+                            new IsCertifiedDisabled(DisabilitySeverity.DISABILITY)));
+
+            assertThat(rule.holds(ctx)).isTrue();
+            assertThat(new Not(rule).holds(ctx)).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("short-circuiting — a settled condition does not demand more facts")
+    class ShortCircuit {
+
+        /** Taxpayer is 65; the insured person's age was never supplied. */
+        private static ConditionContext taxpayerSixtyFiveOnly() {
+            return ConditionContext.residentIndividualAged(65);
+        }
+
+        @Test
+        void anyOf_stopsAtTheFirstLimbThatHolds() {
+            // Evaluating every limb would throw for INSURED_PERSON, blocking a valid claim to
+            // collect a fact that cannot change the outcome
+            Condition rule = AnyOf.of(
+                    new AgeAtLeast(60, AgeSubject.SELF),
+                    new AgeAtLeast(60, AgeSubject.INSURED_PERSON));
+
+            assertThat(rule.holds(taxpayerSixtyFiveOnly())).isTrue();
+        }
+
+        @Test
+        void anyOf_withTheLimbsReversed_throwsOnTheMissingFact() {
+            // The honest cost of short-circuiting: with facts missing, order decides.
+            // Rules should list their cheapest and most certain limbs first.
+            Condition rule = AnyOf.of(
+                    new AgeAtLeast(60, AgeSubject.INSURED_PERSON),
+                    new AgeAtLeast(60, AgeSubject.SELF));
+
+            assertThatThrownBy(() -> rule.holds(taxpayerSixtyFiveOnly()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("INSURED_PERSON");
+        }
+
+        @Test
+        void allOf_stopsAtTheFirstLimbThatFails() {
+            Condition rule = AllOf.of(
+                    new IsResident(), new AgeAtLeast(60, AgeSubject.INSURED_PERSON));
+
+            // Not resident, so the missing insured-person age is never asked for
+            assertThat(rule.holds(nonResident(65))).isFalse();
+        }
+
+        @Test
+        void not_propagatesTheFailureRatherThanInvertingIt() {
+            // Turning a missing fact into true would allow a deduction because nobody knew
+            assertThatThrownBy(() ->
+                            new Not(new AgeAtLeast(60, AgeSubject.INSURED_PERSON))
+                                    .holds(taxpayerSixtyFiveOnly()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("explaining a refusal")
+    class Explanation {
+
+        @Test
+        void allOf_namesTheLimbThatFailed() {
+            AllOf rule = AllOf.of(new IsResident(), new AgeAtLeast(60, AgeSubject.SELF));
+
+            assertThat(rule.firstFailing(nonResident(65)))
+                    .get()
+                    .extracting(Condition::describe)
+                    .isEqualTo("the assessee is resident");
+        }
+
+        @Test
+        void describe_readsAsProse() {
+            assertThat(AllOf.of(new IsResident(), new AgeAtLeast(60, AgeSubject.SELF)).describe())
+                    .isEqualTo("the assessee is resident and you are 60 or over");
+            assertThat(new Not(new IsResident()).describe())
+                    .isEqualTo("not (the assessee is resident)");
+        }
+    }
+
+    @Nested
+    @DisplayName("empty composites are rejected")
+    class EmptyComposites {
+
+        @Test
+        void allOf_empty_wouldAllowEveryTaxpayer() {
+            assertThatThrownBy(() -> new AllOf(java.util.List.of()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("allow every taxpayer");
+        }
+
+        @Test
+        void anyOf_empty_wouldDenyEveryTaxpayer() {
+            assertThatThrownBy(() -> new AnyOf(java.util.List.of()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("deny every taxpayer");
+        }
+
+        @Test
+        void not_requiresACondition() {
+            assertThatThrownBy(() -> new Not(null)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("the algebra is closed")
+    class SealedFamily {
+
+        /**
+         * An exhaustive switch with no {@code default} over all thirteen predicates. This does not
+         * merely pass — it <b>compiles</b>, and that is the assertion. A fourteenth {@code Condition}
+         * breaks this line, which is the whole reason the interface is sealed.
+         *
+         * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
+         * V-2, because a rule whose limit changes mid-year keeps one rule id — the id is the
+         * contract — and the change is a second RuleVersion, not a date-guarded twin.
+         */
+        @Test
+        void everyConditionIsAccountedFor() {
+            java.util.List<Condition> all = java.util.List.of(
+                    new IsResident(),
+                    new AgeAtLeast(60, AgeSubject.SELF),
+                    new HasPersonType(Set.of(PersonType.INDIVIDUAL)),
+                    new IsCertifiedDisabled(DisabilitySeverity.DISABILITY),
+                    new IncomeAtMost(TOTAL_INCOME, Money.ZERO),
+                    new IncomeAtLeast(TOTAL_INCOME, Money.ZERO),
+                    new HasIncomeUnderHead(HeadCode.SALARIES),
+                    new ComponentPresent(HRA),
+                    new EvidenceRecorded(EvidenceType.LANDLORD_PAN),
+                    new PaidOtherThanInCash(),
+                    AllOf.of(new IsResident()),
+                    AnyOf.of(new IsResident()),
+                    new Not(new IsResident()));
+
+            for (Condition condition : all) {
+                String group = switch (condition) {
+                    case IsResident ignored -> "person";
+                    case AgeAtLeast ignored -> "person";
+                    case HasPersonType ignored -> "person";
+                    case IsCertifiedDisabled ignored -> "person";
+                    case IncomeAtMost ignored -> "amount";
+                    case IncomeAtLeast ignored -> "amount";
+                    case HasIncomeUnderHead ignored -> "structure";
+                    case ComponentPresent ignored -> "structure";
+                    case EvidenceRecorded ignored -> "structure";
+                    case PaidOtherThanInCash ignored -> "structure";
+                    case AllOf ignored -> "composition";
+                    case AnyOf ignored -> "composition";
+                    case Not ignored -> "composition";
+                };
+                assertThat(group).isNotBlank();
+            }
+
+            // Part E's list, after the W-021 erratum: 13, not the 16 the backlog claimed
+            assertThat(all).hasSize(13);
+        }
+    }
 }

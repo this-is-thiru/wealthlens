@@ -23,9 +23,10 @@ package com.thiru.wealthlens.taxrules.condition;
  * rule id, because the id is the contract. The change is a second {@code RuleVersion} with its own
  * {@code Validity}, not a different rule guarded by a date predicate.
  *
- * <p><b>This clause grows.</b> It currently permits the four person-fact predicates and the six
- * amount and structure ones; W-021c adds the composition predicates, extending the clause as they
- * are written — a sealed type does not compile while it names a type that does not.
+ * <p><b>The clause is complete.</b> All thirteen predicates of {@code 15-review-findings.md} Part E
+ * exist — four person facts, two amounts, four structure, three composition — so the algebra is
+ * closed as designed: a switch over a condition that misses a case does not compile. A fourteenth
+ * predicate is a new class and a new permit, never an edit to an existing one.
  */
 public sealed interface Condition
         permits IsResident,
@@ -37,7 +38,10 @@ public sealed interface Condition
                 HasIncomeUnderHead,
                 ComponentPresent,
                 EvidenceRecorded,
-                PaidOtherThanInCash {
+                PaidOtherThanInCash,
+                AllOf,
+                AnyOf,
+                Not {
 
     /** Whether this condition is met by the taxpayer the context describes. */
     boolean holds(ConditionContext ctx);

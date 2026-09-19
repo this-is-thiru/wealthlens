@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-021b — "taxplanning W-021b: the predicates that read the computation"
-Last updated              : 2026-09-19 (session 2 — W-021b DONE)
+Last checkpoint           : W-021c — "taxplanning W-021c: composition, and the algebra closes"
+Last updated              : 2026-09-19 (session 2 — W-021c DONE, Phase 2 complete)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,9 +34,9 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-021c` — `AllOf`/`AnyOf`/`Not` + closure test — **closes Phase 2** |
+| **Next item** | `W-023` — `RuleVersion`, `AmendmentRef` |
 | **Status** | `NOT_STARTED` |
-| **Phase** | 2 — Cap shapes and conditions |
+| **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
 ---
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-021c | 2026-09-19 | AllOf/AnyOf/Not; short-circuit semantics; Condition permits all 13 — algebra closed; 47 tests. **Phase 2 complete** | `./mvnw test -pl backend -Dtest=ConditionTest`
 W-021b | 2026-09-19 | HeadCode, EvidenceType + 6 amount/structure predicates; ConditionContext grows 5 facts; 32 tests | `./mvnw test -pl backend -Dtest=ConditionTest`
 W-021 | 2026-09-19 | Condition + ConditionContext + 4 person-fact predicates + PersonType/DisabilitySeverity/AgeSubject; AgeAtLeast gains a subject; 17 tests | `./mvnw test -pl backend -Dtest=ConditionTest`
 W-019 | 2026-09-19 | PerUnitPerPeriod; Money.times(int); CapShape permits all six — family closed; 17 + 4 tests | `./mvnw test -pl backend -Dtest=PerUnitPerPeriodTest`
