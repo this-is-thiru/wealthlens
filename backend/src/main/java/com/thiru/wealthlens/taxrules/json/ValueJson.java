@@ -23,41 +23,45 @@ public final class ValueJson {
 
     /** Where a rule row was read from. */
     public static Provenance provenance(JsonNode node, String path) {
-        return new Provenance(
-                PackJson.uri(node, "sourceUrl", path),
-                PackJson.text(node, "sourceDescription", path),
-                PackJson.enumValue(node, "draftOrFinal", path, DraftOrFinal.class),
-                PackJson.date(node, "accessedOn", path),
-                PackJson.enumValue(node, "status", path, VerificationStatus.class),
-                PackJson.optionalText(node, "whatToCheck", path).orElse(null));
+        return PackJson.construct(path, () ->
+        new Provenance(
+                        PackJson.uri(node, "sourceUrl", path),
+                        PackJson.text(node, "sourceDescription", path),
+                        PackJson.enumValue(node, "draftOrFinal", path, DraftOrFinal.class),
+                        PackJson.date(node, "accessedOn", path),
+                        PackJson.enumValue(node, "status", path, VerificationStatus.class),
+                        PackJson.optionalText(node, "whatToCheck", path).orElse(null)));
     }
 
     /** Where a rule lives in one Act. */
     public static Provision provision(JsonNode node, String path) {
         Presence presence = PackJson.enumValue(node, "presence", path, Presence.class);
         String instrument = PackJson.text(node, "instrument", path);
-        return switch (presence) {
-            case PRESENT -> Provision.present(instrument, PackJson.text(node, "reference", path));
-            case ABSENT_IN_THIS_ACT -> Provision.absent(instrument);
-            case NOT_YET_VERIFIED -> Provision.notYetVerified(instrument);
-        };
+        return PackJson.construct(path, () ->
+        switch (presence) {
+                    case PRESENT -> Provision.present(instrument, PackJson.text(node, "reference", path));
+                    case ABSENT_IN_THIS_ACT -> Provision.absent(instrument);
+                    case NOT_YET_VERIFIED -> Provision.notYetVerified(instrument);
+                });
     }
 
     /** The instrument that introduced a rule version. */
     public static AmendmentRef amendment(JsonNode node, String path) {
-        return new AmendmentRef(
-                PackJson.text(node, "instrumentCitation", path),
-                PackJson.text(node, "gazetteRef", path),
-                PackJson.date(node, "notifiedOn", path),
-                PackJson.date(node, "effectiveFrom", path),
-                PackJson.bool(node, "retrospective", path),
-                PackJson.uri(node, "sourceUrl", path),
-                PackJson.enumValue(node, "status", path, VerificationStatus.class));
+        return PackJson.construct(path, () ->
+        new AmendmentRef(
+                        PackJson.text(node, "instrumentCitation", path),
+                        PackJson.text(node, "gazetteRef", path),
+                        PackJson.date(node, "notifiedOn", path),
+                        PackJson.date(node, "effectiveFrom", path),
+                        PackJson.bool(node, "retrospective", path),
+                        PackJson.uri(node, "sourceUrl", path),
+                        PackJson.enumValue(node, "status", path, VerificationStatus.class)));
     }
 
     /** A window, open-ended where {@code to} is absent. */
     public static DateRange dateRange(JsonNode node, String path) {
-        return new DateRange(
-                PackJson.date(node, "from", path), PackJson.optionalDate(node, "to", path));
+        return PackJson.construct(path, () ->
+        new DateRange(
+                        PackJson.date(node, "from", path), PackJson.optionalDate(node, "to", path)));
     }
 }

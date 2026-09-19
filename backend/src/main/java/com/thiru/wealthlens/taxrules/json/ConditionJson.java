@@ -60,31 +60,32 @@ public final class ConditionJson {
     /** One condition, of any variant. */
     public static Condition condition(JsonNode node, String path) {
         String tag = PackJson.tag(node, path, TAGS);
-        return switch (tag) {
-            case "IsResident" -> new IsResident();
-            case "PaidOtherThanInCash" -> new PaidOtherThanInCash();
-            case "AgeAtLeast" -> new AgeAtLeast(
-                    PackJson.integer(node, "years", path),
-                    PackJson.enumValue(node, "subject", path, AgeSubject.class));
-            case "HasPersonType" -> new HasPersonType(personTypes(node, path));
-            case "IsCertifiedDisabled" -> new IsCertifiedDisabled(
-                    PackJson.enumValue(node, "minimum", path, DisabilitySeverity.class));
-            case "IncomeAtMost" -> new IncomeAtMost(
-                    new NodeId(PackJson.text(node, "node", path)), money(node, "limit", path));
-            case "IncomeAtLeast" -> new IncomeAtLeast(
-                    new NodeId(PackJson.text(node, "node", path)), money(node, "threshold", path));
-            case "HasIncomeUnderHead" -> new HasIncomeUnderHead(
-                    PackJson.enumValue(node, "head", path, HeadCode.class));
-            case "ComponentPresent" -> new ComponentPresent(
-                    new ComponentCode(PackJson.text(node, "code", path)));
-            case "EvidenceRecorded" -> new EvidenceRecorded(
-                    PackJson.enumValue(node, "evidenceType", path, EvidenceType.class));
-            case "AllOf" -> new AllOf(limbs(node, "all", path));
-            case "AnyOf" -> new AnyOf(limbs(node, "any", path));
-            case "Not" -> new Not(
-                    condition(PackJson.object(node, "condition", path), path + ".condition"));
-            default -> throw new PackValidationException(path + " has unhandled type \"" + tag + "\"");
-        };
+        return PackJson.construct(path, () ->
+        switch (tag) {
+                    case "IsResident" -> new IsResident();
+                    case "PaidOtherThanInCash" -> new PaidOtherThanInCash();
+                    case "AgeAtLeast" -> new AgeAtLeast(
+                            PackJson.integer(node, "years", path),
+                            PackJson.enumValue(node, "subject", path, AgeSubject.class));
+                    case "HasPersonType" -> new HasPersonType(personTypes(node, path));
+                    case "IsCertifiedDisabled" -> new IsCertifiedDisabled(
+                            PackJson.enumValue(node, "minimum", path, DisabilitySeverity.class));
+                    case "IncomeAtMost" -> new IncomeAtMost(
+                            new NodeId(PackJson.text(node, "node", path)), money(node, "limit", path));
+                    case "IncomeAtLeast" -> new IncomeAtLeast(
+                            new NodeId(PackJson.text(node, "node", path)), money(node, "threshold", path));
+                    case "HasIncomeUnderHead" -> new HasIncomeUnderHead(
+                            PackJson.enumValue(node, "head", path, HeadCode.class));
+                    case "ComponentPresent" -> new ComponentPresent(
+                            new ComponentCode(PackJson.text(node, "code", path)));
+                    case "EvidenceRecorded" -> new EvidenceRecorded(
+                            PackJson.enumValue(node, "evidenceType", path, EvidenceType.class));
+                    case "AllOf" -> new AllOf(limbs(node, "all", path));
+                    case "AnyOf" -> new AnyOf(limbs(node, "any", path));
+                    case "Not" -> new Not(
+                            condition(PackJson.object(node, "condition", path), path + ".condition"));
+                    default -> throw new PackValidationException(path + " has unhandled type \"" + tag + "\"");
+                });
     }
 
     /** A list of conditions, absent meaning none. */

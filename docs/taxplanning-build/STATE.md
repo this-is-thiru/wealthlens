@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-034 — "taxplanning W-034: the whole chain, and a property that does not hold"
-Last updated              : 2026-09-19 (session 2 — W-034 DONE, Phase 3 complete)
+Last checkpoint           : W-034b — "taxplanning W-034b: every rejected pack says where to look"
+Last updated              : 2026-09-19 (session 2 — W-034b DONE, Phase 3 complete)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,9 +34,9 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-034b` — make E4's property hold (**added by D-020**) |
+| **Next item** | `W-035` — `NodeValue`, `MoneyValue`, `TaxByBasis` |
 | **Status** | `NOT_STARTED` |
-| **Phase** | 3 — Rule pack loading |
+| **Phase** | 4 — The DAG runner |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
 ---
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-034b | 2026-09-19 | PackJson.construct + 19 wrap sites; E4's property holds and is a 5-mutation property test; found SlabLadder's own pack error had no path | `./mvnw test -pl backend -Dtest=PackJsonTest,RulePackLoadTest`
 W-034 | 2026-09-19 | RulePackLoadTest — T9-1..T9-5, T9-7 end to end + 4 broken fixture packs; found E4's property broken (→ W-034b); 12 tests. **Phase 3 complete** | `./mvnw test -pl backend -Dtest=RulePackLoadTest`
 W-033c | 2026-09-19 | RegimeJson, RegistryJson, JsonPackAssembler; the shipped pack assembles and computes T2-1; removed the empty DIS-S202-2A that W-029's invariant refused; 47 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
 W-033b | 2026-09-19 | ConditionJson (13 variants) + RuleJson; EvidenceRecorded reads `evidenceType` (discriminator collision); 36 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`

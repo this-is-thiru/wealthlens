@@ -49,14 +49,15 @@ public final class RuleJson {
                 .map(RuleId::new)
                 .orElse(null);
 
-        return new RuleRow(
-                id,
-                PackJson.enumValue(node, "axis", where, TemporalAxis.class),
-                PackJson.array(node, "versions", where, e -> version(e.node(), e.path())),
-                combination,
-                combinationRule,
-                ValueJson.provenance(
-                        PackJson.object(node, "headProvenance", where), where + ".headProvenance"));
+        return PackJson.construct(where, () ->
+        new RuleRow(
+                        id,
+                        PackJson.enumValue(node, "axis", where, TemporalAxis.class),
+                        PackJson.array(node, "versions", where, e -> version(e.node(), e.path())),
+                        combination,
+                        combinationRule,
+                        ValueJson.provenance(
+                                PackJson.object(node, "headProvenance", where), where + ".headProvenance")));
     }
 
     /** One version of a rule. */
@@ -64,19 +65,20 @@ public final class RuleJson {
         Provenance provenance =
                 ValueJson.provenance(PackJson.object(node, "provenance", path), path + ".provenance");
 
-        return new RuleVersion(
-                ShapeJson.validity(
-                        PackJson.object(node, "validity", path), path + ".validity", provenance),
-                ShapeJson.regimes(PackJson.object(node, "regimes", path), path + ".regimes"),
-                capOrNull(node, path),
-                ConditionJson.conditions(node, "conditions", path),
-                ValueJson.provision(
-                        PackJson.object(node, "provision1961", path), path + ".provision1961"),
-                ValueJson.provision(
-                        PackJson.object(node, "provision2025", path), path + ".provision2025"),
-                ValueJson.amendment(
-                        PackJson.object(node, "introducedBy", path), path + ".introducedBy"),
-                provenance);
+        return PackJson.construct(path, () ->
+        new RuleVersion(
+                        ShapeJson.validity(
+                                PackJson.object(node, "validity", path), path + ".validity", provenance),
+                        ShapeJson.regimes(PackJson.object(node, "regimes", path), path + ".regimes"),
+                        capOrNull(node, path),
+                        ConditionJson.conditions(node, "conditions", path),
+                        ValueJson.provision(
+                                PackJson.object(node, "provision1961", path), path + ".provision1961"),
+                        ValueJson.provision(
+                                PackJson.object(node, "provision2025", path), path + ".provision2025"),
+                        ValueJson.amendment(
+                                PackJson.object(node, "introducedBy", path), path + ".introducedBy"),
+                        provenance));
     }
 
     /**

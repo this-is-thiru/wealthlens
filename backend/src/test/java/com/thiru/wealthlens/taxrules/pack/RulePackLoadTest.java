@@ -185,10 +185,14 @@ class RulePackLoadTest {
     class BlankWhatToCheck {
 
         @Test
-        void loadFails() {
-            // Enforced by Provenance's own constructor, reached here through the parser
+        void loadFailsAsAPackErrorNamingTheRow() {
+            // Enforced by Provenance's own constructor, but surfaced as a pack error carrying the
+            // path: E4 requires the loader to throw nothing else, and a pack author needs the row.
             assertThatThrownBy(() -> load("rulepacks-broken", new TaxYearId(2091)))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("law/rates.json")
+                    .hasMessageContaining("RATE-SLAB-NEW-2026")
+                    .hasMessageContaining("whatToCheck");
         }
     }
 

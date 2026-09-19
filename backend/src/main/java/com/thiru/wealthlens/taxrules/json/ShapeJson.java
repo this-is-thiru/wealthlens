@@ -42,19 +42,20 @@ public final class ShapeJson {
     /** When a rule version was in force. */
     public static Validity validity(JsonNode node, String path, Provenance provenance) {
         String tag = PackJson.tag(node, path, "Between", "Retrospective", "PendingNotification");
-        return switch (tag) {
-            case "Between" -> new Validity.Between(
-                    PackJson.date(node, "from", path), PackJson.optionalDate(node, "to", path));
-            case "Retrospective" -> new Validity.Retrospective(
-                    PackJson.date(node, "deemedEffectiveFrom", path),
-                    PackJson.optionalDate(node, "to", path),
-                    PackJson.date(node, "actuallyEnactedOn", path));
-            case "PendingNotification" -> new Validity.PendingNotification(
-                    new RuleId(PackJson.text(node, "interimRule", path)),
-                    PackJson.text(node, "interimDescription", path),
-                    provenance);
-            default -> throw unreachable(tag, path);
-        };
+        return PackJson.construct(path, () ->
+        switch (tag) {
+                    case "Between" -> new Validity.Between(
+                            PackJson.date(node, "from", path), PackJson.optionalDate(node, "to", path));
+                    case "Retrospective" -> new Validity.Retrospective(
+                            PackJson.date(node, "deemedEffectiveFrom", path),
+                            PackJson.optionalDate(node, "to", path),
+                            PackJson.date(node, "actuallyEnactedOn", path));
+                    case "PendingNotification" -> new Validity.PendingNotification(
+                            new RuleId(PackJson.text(node, "interimRule", path)),
+                            PackJson.text(node, "interimDescription", path),
+                            provenance);
+                    default -> throw unreachable(tag, path);
+                });
     }
 
     // ------------------------------------------------------- RegimeApplicability
@@ -62,12 +63,13 @@ public final class ShapeJson {
     /** Which regimes a rule version applies in. */
     public static RegimeApplicability regimes(JsonNode node, String path) {
         String tag = PackJson.tag(node, path, "AllRegimes", "OnlyIn", "ExceptIn");
-        return switch (tag) {
-            case "AllRegimes" -> new RegimeApplicability.AllRegimes();
-            case "OnlyIn" -> new RegimeApplicability.OnlyIn(regimeCodes(node, path));
-            case "ExceptIn" -> new RegimeApplicability.ExceptIn(regimeCodes(node, path));
-            default -> throw unreachable(tag, path);
-        };
+        return PackJson.construct(path, () ->
+        switch (tag) {
+                    case "AllRegimes" -> new RegimeApplicability.AllRegimes();
+                    case "OnlyIn" -> new RegimeApplicability.OnlyIn(regimeCodes(node, path));
+                    case "ExceptIn" -> new RegimeApplicability.ExceptIn(regimeCodes(node, path));
+                    default -> throw unreachable(tag, path);
+                });
     }
 
     private static Set<RegimeCode> regimeCodes(JsonNode node, String path) {
@@ -89,16 +91,17 @@ public final class ShapeJson {
                 "LeastOf",
                 "AggregateWithCeiling",
                 "PerUnitPerPeriod");
-        return switch (tag) {
-            case "Fixed" -> new Fixed(money(node, "amount", path));
-            case "PercentOfBase" -> new PercentOfBase(
-                    rate(node, "percent", path), new BaseId(PackJson.text(node, "base", path)));
-            case "SlabLadder" -> slabLadder(node, path);
-            case "LeastOf" -> leastOf(node, path);
-            case "AggregateWithCeiling" -> aggregate(node, path);
-            case "PerUnitPerPeriod" -> perUnitPerPeriod(node, path);
-            default -> throw unreachable(tag, path);
-        };
+        return PackJson.construct(path, () ->
+        switch (tag) {
+                    case "Fixed" -> new Fixed(money(node, "amount", path));
+                    case "PercentOfBase" -> new PercentOfBase(
+                            rate(node, "percent", path), new BaseId(PackJson.text(node, "base", path)));
+                    case "SlabLadder" -> slabLadder(node, path);
+                    case "LeastOf" -> leastOf(node, path);
+                    case "AggregateWithCeiling" -> aggregate(node, path);
+                    case "PerUnitPerPeriod" -> perUnitPerPeriod(node, path);
+                    default -> throw unreachable(tag, path);
+                });
     }
 
     private static SlabLadder slabLadder(JsonNode node, String path) {

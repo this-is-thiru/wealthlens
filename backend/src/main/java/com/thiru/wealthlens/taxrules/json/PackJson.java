@@ -28,6 +28,40 @@ public final class PackJson {
     private PackJson() {
     }
 
+    /**
+     * Builds a domain object, turning its own rejection into a pack error that names the path.
+     *
+     * <p>{@code 19-engineering-foundations.md} E4 makes it a property that the loader throws nothing
+     * but {@link PackValidationException}. Domain constructors throw {@code IllegalArgumentException}
+     * — correct for a Java type, and wrong at this boundary: a pack author who leaves
+     * {@code whatToCheck} blank should be told <em>which row</em>, not handed an exception addressed
+     * to whoever wrote {@code Provenance}.
+     *
+     * <p>A {@link PackValidationException} whose message already starts with this path passes through
+     * untouched, because a nested reader located the failure more precisely than this caller can.
+     * One that does not is still prefixed: a domain type may throw a pack error itself — as
+     * {@code SlabLadder.validate()} does — and then it knows the defect but not where it lives.
+     * The cause is always chained, so a genuine bug in a reader stays diagnosable instead of
+     * reading as a pack defect.
+     *
+     * @param path where in the pack this object lives
+     * @param domainConstructor builds it, and validates itself
+     */
+    public static <T> T construct(String path, java.util.function.Supplier<T> domainConstructor) {
+        try {
+            return domainConstructor.get();
+        } catch (PackValidationException pack) {
+            // A nested reader has already located the failure; its path is more precise than this
+            // caller's. But a domain type may throw this itself -- SlabLadder.validate() is a
+            // load-time guard -- and then it knows the defect and not where the defect lives.
+            throw pack.getMessage() != null && pack.getMessage().startsWith(path)
+                    ? pack
+                    : new PackValidationException(path + ": " + pack.getMessage(), pack);
+        } catch (IllegalArgumentException | IllegalStateException rejected) {
+            throw new PackValidationException(path + ": " + rejected.getMessage(), rejected);
+        }
+    }
+
     /** A required object field. */
     public static JsonNode object(JsonNode parent, String field, String path) {
         JsonNode node = required(parent, field, path);

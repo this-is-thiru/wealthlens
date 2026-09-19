@@ -57,24 +57,25 @@ public final class RegimeJson {
         RegimeCode code = new RegimeCode(PackJson.text(node, "code", path));
         String where = path + " (" + code + ")";
 
-        return new RegimeSpec(
-                code,
-                PackJson.text(node, "displayName", where),
-                ValueJson.provision(
-                        PackJson.object(node, "provision1961", where), where + ".provision1961"),
-                ValueJson.provision(
-                        PackJson.object(node, "provision2025", where), where + ".provision2025"),
-                personTypes(node, where),
-                new RuleId(PackJson.text(node, "rateTable", where)),
-                ids(node, "disallowances", where, DisallowanceSetId::new),
-                ids(node, "eligibility", where, ConditionSetId::new),
-                election(PackJson.object(node, "election", where), where + ".election"),
-                lifecycle(PackJson.object(node, "lifecycle", where), where + ".lifecycle"),
-                PackJson.bool(node, "isDefault", where),
-                pipeline(PackJson.object(node, "pipeline", where), where + ".pipeline"),
-                PackJson.optionalText(node, "behaviour", where).map(BehaviourId::new),
-                ValueJson.provenance(
-                        PackJson.object(node, "provenance", where), where + ".provenance"));
+        return PackJson.construct(where, () ->
+        new RegimeSpec(
+                        code,
+                        PackJson.text(node, "displayName", where),
+                        ValueJson.provision(
+                                PackJson.object(node, "provision1961", where), where + ".provision1961"),
+                        ValueJson.provision(
+                                PackJson.object(node, "provision2025", where), where + ".provision2025"),
+                        personTypes(node, where),
+                        new RuleId(PackJson.text(node, "rateTable", where)),
+                        ids(node, "disallowances", where, DisallowanceSetId::new),
+                        ids(node, "eligibility", where, ConditionSetId::new),
+                        election(PackJson.object(node, "election", where), where + ".election"),
+                        lifecycle(PackJson.object(node, "lifecycle", where), where + ".lifecycle"),
+                        PackJson.bool(node, "isDefault", where),
+                        pipeline(PackJson.object(node, "pipeline", where), where + ".pipeline"),
+                        PackJson.optionalText(node, "behaviour", where).map(BehaviourId::new),
+                        ValueJson.provenance(
+                                PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
     private static Set<PersonType> personTypes(JsonNode node, String path) {
@@ -110,17 +111,18 @@ public final class RegimeJson {
     // ------------------------------------------------------------- election
 
     static ElectionProtocol election(JsonNode node, String path) {
-        return new ElectionProtocol(
-                PackJson.enumValue(node, "kind", path, ElectionKind.class),
-                PackJson.enumValue(node, "vehicle", path, ElectionVehicle.class),
-                PackJson.optionalObject(node, "form", path)
-                        .map(form -> new FormRef(
-                                PackJson.text(form, "number", path + ".form"),
-                                PackJson.text(form, "displayName", path + ".form"))),
-                deadline(PackJson.object(node, "deadline", path), path + ".deadline"),
-                binding(PackJson.object(node, "binding", path), path + ".binding"),
-                ValueJson.provenance(
-                        PackJson.object(node, "provenance", path), path + ".provenance"));
+        return PackJson.construct(path, () ->
+        new ElectionProtocol(
+                        PackJson.enumValue(node, "kind", path, ElectionKind.class),
+                        PackJson.enumValue(node, "vehicle", path, ElectionVehicle.class),
+                        PackJson.optionalObject(node, "form", path)
+                                .map(form -> new FormRef(
+                                        PackJson.text(form, "number", path + ".form"),
+                                        PackJson.text(form, "displayName", path + ".form"))),
+                        deadline(PackJson.object(node, "deadline", path), path + ".deadline"),
+                        binding(PackJson.object(node, "binding", path), path + ".binding"),
+                        ValueJson.provenance(
+                                PackJson.object(node, "provenance", path), path + ".provenance")));
     }
 
     static DeadlineSpec deadline(JsonNode node, String path) {
@@ -135,42 +137,45 @@ public final class RegimeJson {
     }
 
     static BindingSpec binding(JsonNode node, String path) {
-        return new BindingSpec(
-                PackJson.bool(node, "bindsSubsequentYears", path),
-                PackJson.integer(node, "maxWithdrawals", path),
-                afterWithdrawal(
-                        PackJson.object(node, "afterWithdrawal", path), path + ".afterWithdrawal"),
-                PackJson.bool(node, "firstReturnOnly", path),
-                ConditionJson.conditions(node, "bindingAppliesWhen", path));
+        return PackJson.construct(path, () ->
+        new BindingSpec(
+                        PackJson.bool(node, "bindsSubsequentYears", path),
+                        PackJson.integer(node, "maxWithdrawals", path),
+                        afterWithdrawal(
+                                PackJson.object(node, "afterWithdrawal", path), path + ".afterWithdrawal"),
+                        PackJson.bool(node, "firstReturnOnly", path),
+                        ConditionJson.conditions(node, "bindingAppliesWhen", path)));
     }
 
     static AfterWithdrawal afterWithdrawal(JsonNode node, String path) {
         String tag = PackJson.tag(node, path, "MayReElect", "PermanentlyIneligible", "IneligibleUnless");
-        return switch (tag) {
-            case "MayReElect" -> new AfterWithdrawal.MayReElect();
-            case "PermanentlyIneligible" -> new AfterWithdrawal.PermanentlyIneligible();
-            case "IneligibleUnless" -> new AfterWithdrawal.IneligibleUnless(
-                    ConditionJson.condition(
-                            PackJson.object(node, "revival", path), path + ".revival"),
-                    new ElectionRoute(PackJson.text(node, "thenUse", path)));
-            default -> throw unhandled(tag, path);
-        };
+        return PackJson.construct(path, () ->
+        switch (tag) {
+                    case "MayReElect" -> new AfterWithdrawal.MayReElect();
+                    case "PermanentlyIneligible" -> new AfterWithdrawal.PermanentlyIneligible();
+                    case "IneligibleUnless" -> new AfterWithdrawal.IneligibleUnless(
+                            ConditionJson.condition(
+                                    PackJson.object(node, "revival", path), path + ".revival"),
+                            new ElectionRoute(PackJson.text(node, "thenUse", path)));
+                    default -> throw unhandled(tag, path);
+                });
     }
 
     // ------------------------------------------------------------ lifecycle
 
     static RegimeLifecycle lifecycle(JsonNode node, String path) {
-        return new RegimeLifecycle(
-                ValueJson.dateRange(
-                        PackJson.object(node, "entryWindow", path), path + ".entryWindow"),
-                ValueJson.dateRange(
-                        PackJson.object(node, "inForceWindow", path), path + ".inForceWindow"),
-                continuation(PackJson.object(node, "onSunset", path), path + ".onSunset"),
-                invalidation(
-                        PackJson.object(node, "onConditionFailure", path),
-                        path + ".onConditionFailure"),
-                ValueJson.provenance(
-                        PackJson.object(node, "provenance", path), path + ".provenance"));
+        return PackJson.construct(path, () ->
+        new RegimeLifecycle(
+                        ValueJson.dateRange(
+                                PackJson.object(node, "entryWindow", path), path + ".entryWindow"),
+                        ValueJson.dateRange(
+                                PackJson.object(node, "inForceWindow", path), path + ".inForceWindow"),
+                        continuation(PackJson.object(node, "onSunset", path), path + ".onSunset"),
+                        invalidation(
+                                PackJson.object(node, "onConditionFailure", path),
+                                path + ".onConditionFailure"),
+                        ValueJson.provenance(
+                                PackJson.object(node, "provenance", path), path + ".provenance")));
     }
 
     static ContinuationPolicy continuation(JsonNode node, String path) {

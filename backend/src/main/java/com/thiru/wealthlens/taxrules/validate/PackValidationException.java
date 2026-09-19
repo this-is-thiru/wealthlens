@@ -18,4 +18,12 @@ public class PackValidationException extends RuntimeException {
     public PackValidationException(String message) {
         super(message);
     }
+
+    /**
+     * @param cause the domain constructor's own rejection, chained so that a genuine bug in a
+     *     reader stays diagnosable rather than reading as a pack defect
+     */
+    public PackValidationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

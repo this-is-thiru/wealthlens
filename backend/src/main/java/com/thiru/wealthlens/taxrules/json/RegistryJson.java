@@ -48,27 +48,29 @@ public final class RegistryJson {
         ComponentCode code = new ComponentCode(PackJson.text(node, "code", path));
         String where = path + " (" + code + ")";
 
-        return new ComponentDefinition(
-                code,
-                PackJson.text(node, "displayName", where),
-                PackJson.enumValue(node, "head", where, HeadCode.class),
-                PackJson.enumValue(node, "kind", where, ComponentKind.class),
-                PackJson.enumValue(node, "cashNature", where, CashNature.class),
-                PackJson.enumValue(node, "treatment", where, TaxTreatment.class),
-                ruleIds(node, "feedsInto", where),
-                ruleIds(node, "salaryBaseFor", where),
-                node.get("informationalOnly") != null && PackJson.bool(node, "informationalOnly", where),
-                lifecycle(PackJson.object(node, "lifecycle", where), where + ".lifecycle"),
-                ValueJson.provenance(
-                        PackJson.object(node, "provenance", where), where + ".provenance"));
+        return PackJson.construct(where, () ->
+        new ComponentDefinition(
+                        code,
+                        PackJson.text(node, "displayName", where),
+                        PackJson.enumValue(node, "head", where, HeadCode.class),
+                        PackJson.enumValue(node, "kind", where, ComponentKind.class),
+                        PackJson.enumValue(node, "cashNature", where, CashNature.class),
+                        PackJson.enumValue(node, "treatment", where, TaxTreatment.class),
+                        ruleIds(node, "feedsInto", where),
+                        ruleIds(node, "salaryBaseFor", where),
+                        node.get("informationalOnly") != null && PackJson.bool(node, "informationalOnly", where),
+                        lifecycle(PackJson.object(node, "lifecycle", where), where + ".lifecycle"),
+                        ValueJson.provenance(
+                                PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
     static ComponentLifecycle lifecycle(JsonNode node, String path) {
-        return new ComponentLifecycle(
-                ValueJson.dateRange(PackJson.object(node, "validity", path), path + ".validity"),
-                PackJson.optionalText(node, "supersededBy", path).map(ComponentCode::new),
-                deprecation(
-                        PackJson.object(node, "onWithdrawal", path), path + ".onWithdrawal"));
+        return PackJson.construct(path, () ->
+        new ComponentLifecycle(
+                        ValueJson.dateRange(PackJson.object(node, "validity", path), path + ".validity"),
+                        PackJson.optionalText(node, "supersededBy", path).map(ComponentCode::new),
+                        deprecation(
+                                PackJson.object(node, "onWithdrawal", path), path + ".onWithdrawal")));
     }
 
     static DeprecationPolicy deprecation(JsonNode node, String path) {
@@ -104,13 +106,14 @@ public final class RegistryJson {
         DisallowanceSetId id = new DisallowanceSetId(PackJson.text(node, "id", path));
         String where = path + " (" + id + ")";
 
-        return new DisallowanceSet(
-                id,
-                PackJson.text(node, "displayName", where),
-                ruleIds(node, "disallowedRules", where),
-                new RuleId(PackJson.text(node, "basis", where)),
-                ValueJson.provenance(
-                        PackJson.object(node, "provenance", where), where + ".provenance"));
+        return PackJson.construct(where, () ->
+        new DisallowanceSet(
+                        id,
+                        PackJson.text(node, "displayName", where),
+                        ruleIds(node, "disallowedRules", where),
+                        new RuleId(PackJson.text(node, "basis", where)),
+                        ValueJson.provenance(
+                                PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
     /** Shared condition sets — the s.205(2) pattern. */
@@ -129,13 +132,14 @@ public final class RegistryJson {
         ConditionSetId id = new ConditionSetId(PackJson.text(node, "id", path));
         String where = path + " (" + id + ")";
 
-        return new ConditionSet(
-                id,
-                PackJson.text(node, "displayName", where),
-                ConditionJson.conditions(node, "conditions", where),
-                new RuleId(PackJson.text(node, "basis", where)),
-                ValueJson.provenance(
-                        PackJson.object(node, "provenance", where), where + ".provenance"));
+        return PackJson.construct(where, () ->
+        new ConditionSet(
+                        id,
+                        PackJson.text(node, "displayName", where),
+                        ConditionJson.conditions(node, "conditions", where),
+                        new RuleId(PackJson.text(node, "basis", where)),
+                        ValueJson.provenance(
+                                PackJson.object(node, "provenance", where), where + ".provenance")));
     }
 
     private static Set<RuleId> ruleIds(JsonNode node, String field, String path) {

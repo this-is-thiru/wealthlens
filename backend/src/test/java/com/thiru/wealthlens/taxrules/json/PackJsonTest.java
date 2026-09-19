@@ -144,8 +144,10 @@ class PackJsonTest {
                             { "sourceUrl": "https://egazette.gov.in/x.pdf",
                               "sourceDescription": "somewhere", "draftOrFinal": "FINAL",
                               "accessedOn": "2026-09-18", "status": "NEEDS_VERIFICATION" }"""),
-                            "p"))
-                    .isInstanceOf(IllegalArgumentException.class);
+                            "law/rates.json rules[0].provenance"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageStartingWith("law/rates.json rules[0].provenance:")
+                    .hasCauseInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -175,8 +177,9 @@ class PackJsonTest {
                               "notifiedOn": "2026-03-31", "effectiveFrom": "2026-04-01",
                               "retrospective": true,
                               "sourceUrl": "https://egazette.gov.in/x.pdf", "status": "VERIFIED" }"""),
-                            "p"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                            "law/rates.json rules[0].versions[0].introducedBy"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageStartingWith("law/rates.json rules[0].versions[0].introducedBy:")
                     .hasMessageContaining("must agree");
         }
     }
@@ -242,8 +245,11 @@ class PackJsonTest {
         @Test
         void anEmptyOnlyInIsRejectedByTheTypeItself() {
             assertThatThrownBy(() ->
-                            ShapeJson.regimes(json("{\"type\": \"OnlyIn\", \"regimes\": []}"), "r"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                            ShapeJson.regimes(
+                                    json("{\"type\": \"OnlyIn\", \"regimes\": []}"),
+                                    "law/rates.json rules[0].versions[0].regimes"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageStartingWith("law/rates.json rules[0].versions[0].regimes:")
                     .hasMessageContaining("applies nowhere");
         }
     }
@@ -788,6 +794,100 @@ class PackJsonTest {
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("law/regimes.json")
                     .hasMessageContaining("the provider read");
+        }
+    }
+
+    // -------------------------------------------------------------- W-034b
+
+    @Nested
+    @DisplayName("E4 — the loader throws nothing but PackValidationException")
+    class LoaderThrowsOnlyPackErrors {
+
+        private static String realRates() {
+            try (var in = PackJsonTest.class.getClassLoader()
+                    .getResourceAsStream("rulepacks/2026-27/law/rates.json")) {
+                return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                throw new AssertionError("could not read the real rates file", e);
+            }
+        }
+
+        /**
+         * Mutations of the shipped pack, each tripping a different <em>domain constructor</em>
+         * rather than a field-level check — which is the class of failure that used to escape as
+         * IllegalArgumentException.
+         */
+        static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> mutations() {
+            return java.util.stream.Stream.of(
+                    org.junit.jupiter.params.provider.Arguments.of(
+                            "Provenance: blank whatToCheck",
+                            // Targeted at a provenance block: AmendmentRef also has a `status`
+                            // and no `whatToCheck`, so matching on status alone hits the wrong object
+                            (java.util.function.UnaryOperator<String>) s -> s.replaceFirst(
+                                    "\"accessedOn\": \"2026-09-18\",\\s*\"status\": \"VERIFIED\"",
+                                    "\"accessedOn\": \"2026-09-18\", \"status\": \"NEEDS_VERIFICATION\","
+                                            + " \"whatToCheck\": \"  \"")),
+                    org.junit.jupiter.params.provider.Arguments.of(
+                            "AmendmentRef: flag contradicts its dates",
+                            (java.util.function.UnaryOperator<String>) s ->
+                                    s.replaceFirst("\"retrospective\": false", "\"retrospective\": true")),
+                    org.junit.jupiter.params.provider.Arguments.of(
+                            "RegimeApplicability.OnlyIn: empty set",
+                            (java.util.function.UnaryOperator<String>) s -> s.replaceFirst(
+                                    "\"regimes\": \\[\"S202_DEFAULT\"\\]", "\"regimes\": []")),
+                    org.junit.jupiter.params.provider.Arguments.of(
+                            "SlabLadder: a band that starts where none ended",
+                            (java.util.function.UnaryOperator<String>) s ->
+                                    s.replaceFirst("\"lowerExclusive\": \"800000\"", "\"lowerExclusive\": \"900000\"")),
+                    org.junit.jupiter.params.provider.Arguments.of(
+                            "RuleRow: a combination rule with a non-STATUTORY combination",
+                            (java.util.function.UnaryOperator<String>) s -> s.replaceFirst(
+                                    "\"midYearCombination\": \"LATEST_VERSION_GOVERNS\"",
+                                    "\"midYearCombination\": \"LATEST_VERSION_GOVERNS\","
+                                            + " \"midYearCombinationRule\": \"SAL-HRA-001\"")));
+        }
+
+        @org.junit.jupiter.params.ParameterizedTest(name = "{0}")
+        @org.junit.jupiter.params.provider.MethodSource("mutations")
+        void everyDomainRejectionBecomesAPackErrorCarryingAPath(
+                String description, java.util.function.UnaryOperator<String> mutate) {
+
+            String broken = mutate.apply(realRates());
+            assertThat(broken).as("the mutation changed something").isNotEqualTo(realRates());
+
+            assertThatThrownBy(() -> RuleJson.rules(json(broken), "law/rates.json"))
+                    .as(description)
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("law/rates.json");
+        }
+
+        @Test
+        void theShippedPackStillParses() {
+            // So a mutation test that passed because everything fails would be caught
+            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(2);
+        }
+
+        @Test
+        void aNestedReadersPreciseMessageIsNotOverwritten() {
+            // A PackValidationException passes through construct() untouched: the inner path is
+            // more precise than the outer one, and replacing it would lose the field name.
+            assertThatThrownBy(() ->
+                            ValueJson.provenance(json("{}"), "law/rates.json rules[0].provenance"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessage("law/rates.json rules[0].provenance.sourceUrl is required and is absent");
+        }
+
+        @Test
+        void theCauseIsChainedSoARealBugStaysDiagnosable() {
+            assertThatThrownBy(() -> ValueJson.amendment(
+                            json("""
+                            { "instrumentCitation": "Finance Act, 2026",
+                              "gazetteRef": "CG-DL-E-31032026-271439",
+                              "notifiedOn": "2026-03-31", "effectiveFrom": "2026-04-01",
+                              "retrospective": true,
+                              "sourceUrl": "https://egazette.gov.in/x.pdf", "status": "VERIFIED" }"""),
+                            "p"))
+                    .hasCauseInstanceOf(IllegalArgumentException.class);
         }
     }
 }
