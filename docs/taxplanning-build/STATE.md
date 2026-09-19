@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-013` — `CapShape` sealed interface |
+| **Next item** | `W-013` — `CapShape`, `CapResult`, `CapContext`, `Fixed`, `PercentOfBase` + `CapShapeTest` (**rescoped by D-011**) |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 2 — Cap shapes and conditions |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -112,6 +112,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-011 | 2026-09-19 | The backlog splits implementation from its test: an item's `Verify` names a test that a **later** item produces. Three pairs occurred in Phase 1 alone. Fix or work around? | **Fix — restructure `03-WORK-ITEMS.md`.** Every item now carries its own test (**rule B1**). Merged `W-014→013`, `W-016→015`, `W-020→013/015/017/018/019`, `W-022→021`, `W-041→040`, `W-045→042`, `W-047→046`; Phase 3's six shared users of `RulePackLoadTest` each got their own test; `W-044` moved before `W-042`. **Ids are not renumbered** — `W-001`…`W-012` are referenced by commit subjects — so seven ids are marked RETIRED. 146 ids, 140 live. This supersedes D-009's errata-only restriction for this one change | **approved by the developer** |
 | D-010 | 2026-09-19 | How are `Money` values asserted, given `MoneyAssert` is `double`-based? | **AssertJ `isEqualTo` on `Money` directly.** Record equality compares scale as well as value, so it catches a scale slip too. `MoneyAssert` exists to stop bare `assertEquals(double, double)`; that hazard does not exist for an exact type, and routing through it would discard the exactness and assert with a tolerance | **decided by the developer** |
 | D-009 | 2026-09-19 | May `03-WORK-ITEMS.md` carry errata, as the design now can? | **Yes**, on the same terms — append only, proof required, original never edited | **decided by the developer** |
 | D-008 | 2026-09-19 | May the design be corrected when building proves it wrong? | **Yes — errata only.** Append a marked block below the wrong text; never edit or delete the original; proof required. R7 relaxed, `00-START-HERE.md` §10 | **decided by the developer** |
@@ -184,6 +185,23 @@ wrong implementation using `setScale(0, HALF_UP)` yields 1,240, so the test does
 Found in `W-006`: the work item cited **T9-14** for the rounding case, which is actually
 *"portfolio read-model unavailable → 503"*. The right source is **T13-14** in `13-edge-cases.md`.
 Errata are now permitted in `03-WORK-ITEMS.md` too (**D-009**) and the correction is recorded there.
+
+**D-011 restructured the backlog (2026-09-19).** Read `03-WORK-ITEMS.md`'s header before picking an
+item. Three things changed:
+
+1. **Rule B1** — an item's `Verify` may only name a test the item itself produces, or one from an
+   item already done. This is now checkable.
+2. **Seven ids are RETIRED** (`W-014`, `W-016`, `W-020`, `W-022`, `W-041`, `W-045`, `W-047`). They
+   are no work. Do not treat a retired id as skipped — read its line, then move on.
+3. **`W-013` was not buildable as written.** It declared `sealed interface CapShape permits` six
+   types that `W-014`–`W-019` created, and a sealed type does not compile until every permitted type
+   exists (JLS 8.1.1.2). Each cap-shape item now adds its own type to the `permits` clause, so it
+   **modifies `CapShape.java`** — that modification is in its `Produces`, and is not a §8 blocker.
+4. **`W-044` (`NodeHarness`) now comes before `W-042` (`PipelineRunner`)** — a runner cannot be
+   tested without test nodes to run. This is the one place the backlog order changed.
+
+Phases 6–14 were deliberately **not** restructured: they have no `Verify` column and test through
+golden-suite milestones. The standing fallback for those is in the note above Phase 6.
 
 `MoneyAssert` cannot assert this `Money` — it is `double`-based with a half-paisa tolerance
 (**D-010**). Tests use AssertJ `isEqualTo` on `Money` directly, which compares scale as well as

@@ -8,6 +8,16 @@ wait for review.** See `00-START-HERE.md` §1.
 
 Statuses live in `STATE.md`, **not here**. This file is read-only once written.
 
+**On tests — rule B1.** *Every item carries its own test.* An item's `Verify` command may only
+name a test that the item itself `Produces`, or one produced by an item **already done**. An item
+whose `Verify` names a *later* item's test is malformed: it either ships untested code or cannot be
+verified at all. Restructured on 2026-09-19 by decision **D-011** — see the note at the end of
+Phase 1.
+
+**On retired ids.** Some ids below are **RETIRED** — merged into a neighbour. They are left in place,
+not renumbered, because `W-001`…`W-012` are already referenced by commit subjects. A retired id is
+no work. **146 ids, 140 live items.**
+
 **On dependencies.** This backlog deliberately encodes **none**. The ordering *is* the dependency
 graph: assume every item depends on every item before it. So there is no such thing as "the next
 independent item" — when something is `BLOCKED`, **stop and ask** (rule R6). Do not look for
@@ -101,60 +111,85 @@ something else to do.
 - **Do** `Between` containment incl. both boundaries · `Retrospective` keeps both dates and `contains` uses the deemed date · `PendingNotification.contains` is **always false**.
 - **Verify** `./mvnw test -pl backend -Dtest=ValidityTest`
 
+> **Erratum (D-011, 2026-09-19):** `W-005`/`W-006`, `W-008`/`W-009` and `W-011`/`W-012` are each a
+> single piece of work split across two ids — the first item's `Verify` names the second item's test.
+> All three were **executed as pairs** and committed together; the ids stand because their commit
+> subjects reference them. Every later occurrence of this shape is merged below.
+> Verified by: `git log --oneline --grep='^taxplanning W-'` shows `W-011/W-012` in one commit.
+
 ---
 
-## Phase 2 — Cap shapes and conditions (10 items)
+## Phase 2 — Cap shapes and conditions (10 ids, 6 live)
 
-### W-013 — `CapShape` sealed interface + `CapResult`, `CapContext`
-- [ ] **Produces** `taxrules/cap/{CapShape,CapResult,CapContext}.java`
+⚠ **Why this phase was restructured.** `W-013` as originally written declared
+`sealed interface CapShape permits Fixed, PercentOfBase, LeastOf, AggregateWithCeiling, SlabLadder,
+PerUnitPerPeriod` while `W-014`–`W-019` created those six types. **A sealed type does not compile
+until every type in its `permits` clause exists** (JLS 8.1.1.2), so the backlog as written left the
+build red from `W-013` to `W-019` and gave `W-013` no `Verify` at all. Each item below now grows the
+`permits` clause by the one type it adds, and carries the test for that type.
+
+### W-013 — `CapShape`, `CapResult`, `CapContext`, `Fixed`, `PercentOfBase`
+- [ ] **Produces** `taxrules/cap/{CapShape,CapResult,CapContext,Fixed,PercentOfBase}.java`, `.../taxrules/cap/CapShapeTest.java`
 - **Spec** `DR 05-domain-model.md` M1.3
-- **Do** `sealed interface CapShape permits Fixed, PercentOfBase, LeastOf, AggregateWithCeiling, SlabLadder, PerUnitPerPeriod`. `CapResult(Money value, String limitedBy)`.
-
-### W-014 — `Fixed` and `PercentOfBase`
-- [ ] **Produces** `taxrules/cap/{Fixed,PercentOfBase}.java`
+- **Do** `sealed interface CapShape permits Fixed, PercentOfBase` — **the two that exist**; later items extend the clause. `CapResult(Money value, String limitedBy)`. Test both shapes, and `DR 08-golden-tests.md` **T5-1**.
 - **Verify** `./mvnw test -pl backend -Dtest=CapShapeTest`
+- **Done when** the sealed family compiles closed over exactly the types that exist.
+
+### W-014 — RETIRED
+- Merged into **W-013** by D-011: `Fixed`/`PercentOfBase` verified with `CapShapeTest`, which was `W-020`'s output. No work.
 
 ### W-015 — `SlabLadder` with band-continuity validation
-- [ ] **Produces** `taxrules/cap/SlabLadder.java`
+- [ ] **Produces** `taxrules/cap/SlabLadder.java`, `.../taxrules/cap/SlabLadderTest.java`, and **modify** `taxrules/cap/CapShape.java` (add `SlabLadder` to `permits`)
 - **Spec** `DR 16-getting-started.md` S2 step 3 — **copy the implementation** · `DR 01-rulebook.md` `RATE-SLAB-BAND-002`
 - ⚠ The arithmetic lower bound **is** `lowerExclusive`. A band written `400001` must fail `validate()`.
-- **Verify** `./mvnw test -pl backend -Dtest=SlabLadderTest`
-
-### W-016 — `SlabLadderTest`
-- [ ] **Produces** `.../taxrules/cap/SlabLadderTest.java`
 - **Do** the TY 2026-27 default ladder from `DR 01-rulebook.md` `RATE-SLAB-NEW-2026`: assert tax at ₹4,00,000 = ₹0; ₹8,00,000 = ₹20,000; ₹12,00,000 = ₹60,000; ₹16,00,000 = ₹1,20,000; ₹20,00,000 = ₹2,00,000; ₹24,00,000 = ₹3,00,000; ₹50,00,000 = ₹10,80,000. Assert a `400001` band fails `validate()`. Assert `Σ` per-band `==` whole.
 - ⚠ **Every number above is in `DR 01-rulebook.md` R3 and `DR 08-golden-tests.md` T2-1. Copy, do not compute.**
 - **Verify** `./mvnw test -pl backend -Dtest=SlabLadderTest`
 
+### W-016 — RETIRED
+- Merged into **W-015** by D-011. No work.
+
 ### W-017 — `LeastOf` with named limbs
-- [ ] **Produces** `taxrules/cap/LeastOf.java`
+- [ ] **Produces** `taxrules/cap/LeastOf.java`, `.../taxrules/cap/LeastOfTest.java`, and **modify** `CapShape.java` (`permits`)
 - ⚠ `CapResult.limitedBy` must name the **winning limb**. `DR 06-algorithms.md` G1.3 depends on it.
+- **Do** test that each limb can win, and that `limitedBy` names it. Test the tie case explicitly — state which limb wins and why.
+- **Verify** `./mvnw test -pl backend -Dtest=LeastOfTest`
 
 ### W-018 — `AggregateWithCeiling`
-- [ ] **Produces** `taxrules/cap/AggregateWithCeiling.java`
+- [ ] **Produces** `taxrules/cap/AggregateWithCeiling.java`, `.../taxrules/cap/AggregateWithCeilingTest.java`, and **modify** `CapShape.java` (`permits`)
 - **Spec** `DR 06-algorithms.md` G2.1
 - ⚠ **Sub-cap first, then the ceiling.** Getting this order wrong is ₹60,000 too generous (`DR 08` T5-3).
+- **Do** `DR 08-golden-tests.md` **T5-3 verbatim** — correct ₹90,000, wrong ₹1,50,000. Assert the *correct* value; the wrong one belongs in a comment, never as an expectation.
+- **Verify** `./mvnw test -pl backend -Dtest=AggregateWithCeilingTest`
 
 ### W-019 — `PerUnitPerPeriod`
-- [ ] **Produces** `taxrules/cap/PerUnitPerPeriod.java`
+- [ ] **Produces** `taxrules/cap/PerUnitPerPeriod.java`, `.../taxrules/cap/PerUnitPerPeriodTest.java`, and **modify** `CapShape.java` (`permits`)
 - **Spec** `DR 15-review-findings.md` C3 — it computes its own annual equivalent; **no caller divides**.
+- **Do** the CEA case from `DR 01-rulebook.md` rule 280(2): ₹3,000/month, hostel ₹9,000/month, per child, capped at the number of children the rule allows. Assert a part-year period does not silently annualise.
+- **Verify** `./mvnw test -pl backend -Dtest=PerUnitPerPeriodTest`
+- **Done when** `CapShape`'s `permits` clause names all six shapes and the family is closed.
 
-### W-020 — `CapShapeTest`
-- [ ] **Produces** `.../taxrules/cap/CapShapeTest.java`
-- **Do** `DR 08-golden-tests.md` **T5-3** verbatim (sub-cap ordering: correct ₹90,000, wrong ₹1,50,000) and **T5-1**.
+### W-020 — RETIRED
+- Merged into **W-013** (T5-1), **W-015**, **W-017**, **W-018** (T5-3) and **W-019** by D-011. The single shared `CapShapeTest` was what made five items unverifiable. No work.
 
-### W-021 — `Condition` sealed algebra
-- [ ] **Produces** `taxrules/condition/Condition.java` + the 16 records
+### W-021 — `Condition` sealed algebra + `ConditionTest`
+- [ ] **Produces** `taxrules/condition/Condition.java` + the 16 records, `.../taxrules/condition/ConditionTest.java`
 - **Spec** `DR 15-review-findings.md` Part E — **the list verbatim, minus `EffectiveBetween`**
 - ⚠ `EffectiveBetween` was **withdrawn** by `DR 18` V-2. Do not add it.
-
-### W-022 — `ConditionTest`
-- [ ] **Produces** `.../taxrules/condition/ConditionTest.java`
 - **Do** one positive and one negative case per record; `AllOf`/`AnyOf`/`Not` composition.
+- **Verify** `./mvnw test -pl backend -Dtest=ConditionTest`
+- ⚠ **Sizing (§7):** 17 types plus a test is likely over 300 lines. Raise the estimate and a proposed split in the EXPLAIN — do not split it yourself.
+
+### W-022 — RETIRED
+- Merged into **W-021** by D-011. No work.
 
 ---
 
 ## Phase 3 — Rule pack loading (12 items)
+
+⚠ **Restructured by D-011.** Six items (`W-028`–`W-033`) originally verified with `W-034`'s
+`RulePackLoadTest`. Each now carries its own test. `W-034` remains, but only for what it can
+uniquely prove: the **real** `2026-27` pack loading end to end.
 
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
@@ -163,13 +198,13 @@ something else to do.
 | **W-025** | `taxrules/component/{ComponentDefinition,ComponentLifecycle,DeprecationPolicy,CashNature,ComponentKind}.java` | `DR 10` E4, `DR 18` V6 | compiles |
 | **W-026** | `taxrules/regime/{RegimeSpec,RegimeLifecycle,ElectionProtocol,BindingSpec,AfterWithdrawal,ContinuationPolicy,InvalidationPolicy}.java` | `DR 17` L2, L3 | compiles |
 | **W-027** | `taxrules/pack/{RulePack,RulePackLayer,RulePackRef}.java` | `DR 23` A2 — **four layers, separate versions** | compiles |
-| **W-028** | `taxrules/pack/{RulePackProvider,ClasspathRulePackProvider}.java` | `DR 10` E3.5, `DR 23` A2 | `W-034` |
-| **W-029** | `taxrules/validate/PackValidator.java` — invariants I1–I7 | TS T5 | `W-034` |
-| **W-030** | `taxrules/validate/PackValidator.java` — invariants I10, I13–I16, I18–I23, I27 | TS T5 | `W-034` |
-| **W-031** | `taxrules/registry/{TaxYearRegistry,TaxYearRegistryEntry}.java` | `DR 05` M1.1 | `W-034` |
-| **W-032** | pack JSON: `rulepacks/2026-27/manifest.json` + `law/rates.json` + `exec/pipelines.json` + `law/regimes.json` | `DR 16` S2 step 4 — **copy the JSON verbatim** | `W-034` |
-| **W-033** | `TJsonMapper`-based pack deserialiser | `DR 19` E9 — reuse `shared/util/collection/TJsonMapper` | `W-034` |
-| **W-034** | `.../taxrules/pack/RulePackLoadTest.java` | `DR 08` T9-1…T9-7 | `-Dtest=RulePackLoadTest` |
+| **W-028** | `taxrules/pack/{RulePackProvider,ClasspathRulePackProvider}.java` + `.../pack/ClasspathRulePackProviderTest.java` + a **minimal fixture pack** under `src/test/resources/rulepacks-fixture/` | `DR 10` E3.5, `DR 23` A2 | `-Dtest=ClasspathRulePackProviderTest` |
+| **W-029** | `taxrules/validate/PackValidator.java` — invariants I1–I7 — + `.../validate/PackValidatorTest.java` | TS T5 | `-Dtest=PackValidatorTest` — one violating and one clean case **per invariant**; build the rows in code, no files needed |
+| **W-030** | `taxrules/validate/PackValidator.java` — invariants I10, I13–I16, I18–I23, I27 — + **extend** `PackValidatorTest` | TS T5 | `-Dtest=PackValidatorTest` — same shape, one pair per invariant |
+| **W-031** | `taxrules/registry/{TaxYearRegistry,TaxYearRegistryEntry}.java` + `.../registry/TaxYearRegistryTest.java` | `DR 05` M1.1 | `-Dtest=TaxYearRegistryTest` |
+| **W-032** | pack JSON: `rulepacks/2026-27/manifest.json` + `law/rates.json` + `exec/pipelines.json` + `law/regimes.json` + `.../pack/PackJsonWellFormedTest.java` | `DR 16` S2 step 4 — **copy the JSON verbatim** | `-Dtest=PackJsonWellFormedTest` — parses, and **every slab band lower bound ends in `0000`** (the `400001` trap) |
+| **W-033** | `TJsonMapper`-based pack deserialiser + `.../pack/RulePackDeserialiserTest.java` | `DR 19` E9 — reuse `shared/util/collection/TJsonMapper` | `-Dtest=RulePackDeserialiserTest` — round-trips the **fixture** pack from `W-028` |
+| **W-034** | `.../taxrules/pack/RulePackLoadTest.java` | `DR 08` T9-1…T9-7 | `-Dtest=RulePackLoadTest` — the **real** `2026-27` pack, end to end: provider → deserialiser → validator → registry |
 
 ⚠ **W-032 is the highest-risk item in Phase 3.** Every number in it is in `DR 16-getting-started.md`
 S2 step 4 and `DR 01-rulebook.md` R3/R4. Copy character by character. Bands are `400000`, **not**
@@ -177,33 +212,38 @@ S2 step 4 and `DR 01-rulebook.md` R3/R4. Copy character by character. Bands are 
 
 ---
 
-## Phase 4 — The DAG runner (10 items)
+## Phase 4 — The DAG runner (10 ids, 8 live)
+
+⚠ **Restructured by D-011.** `W-038`, `W-042` and `W-044` verified with `W-045`; `W-040` with
+`W-041`. `W-044`'s `NodeHarness` moves **before** `W-042`, because a runner cannot be tested without
+test nodes to run.
 
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
 | **W-035** | `taxengine/pipeline/{NodeId,NodeValue,MoneyValue,TaxByBasis}.java` | `DR 15` B2, B4 | compiles |
 | **W-036** | `taxengine/trace/{TraceLine,TraceAnnotation,Notice,StepKind,Severity}.java` | `DR 23` A8 — **two separate records** | compiles |
 | **W-037** | `taxengine/input/{EngineInputs,TaxpayerFacts,FamilySnapshot,LedgerSnapshot,RegimeElectionSnapshot,FilingFacts}.java` | `DR 23` A3 — **verbatim** | compiles |
-| **W-038** | `taxengine/input/InputsFingerprint.java` | `DR 15` F6 + `DR 23` A3 | `W-045` |
+| **W-038** | `taxengine/input/InputsFingerprint.java` + `.../input/InputsFingerprintTest.java` | `DR 15` F6 + `DR 23` A3 | `-Dtest=InputsFingerprintTest` — equal inputs ⇒ equal fingerprint; **any** field change ⇒ different; field **order** irrelevant |
 | **W-039** | `taxengine/pipeline/{ComputationNode,NodeContext,NodeResult,NodeRegistry}.java` | `DR 15` B2 | compiles |
-| **W-040** | `taxengine/pipeline/TopologicalSort.java` | `DR 15` B3 | `-Dtest=TopologicalSortTest` |
-| **W-041** | `.../pipeline/TopologicalSortTest.java` | — cycle fails; order respects edges | same |
-| **W-042** | `taxengine/pipeline/PipelineRunner.java` | `DR 15` B3 — **no try/catch** | `W-045` |
+| **W-040** | `taxengine/pipeline/TopologicalSort.java` + `.../pipeline/TopologicalSortTest.java` | `DR 15` B3 | `-Dtest=TopologicalSortTest` — a cycle fails with the cycle named; order respects every edge; a missing `requires` producer fails |
+| **W-041** | **RETIRED** — merged into `W-040` by D-011 | — | — |
+| **W-042** | `taxengine/pipeline/PipelineRunner.java` + `.../pipeline/PipelineRunnerTest.java` | `DR 15` B3 — **no try/catch** | `-Dtest=PipelineRunnerTest` — uses `W-044`'s harness; `DR 08` T9-20, `DR 23` T23-6, T23-7 |
 | **W-043** | `taxengine/result/{TaxComputation,FilingPosition,ComputationId,ComputationReceipt}.java` | `DR 23` A6 — **the split** | compiles |
-| **W-044** | `taxengine/test/NodeHarness.java` (test scope) | `DR 23` A11 | `W-045` |
-| **W-045** | `.../pipeline/PipelineRunnerTest.java` | `DR 08` T9-20, `DR 23` T23-6, T23-7 | `-Dtest=PipelineRunnerTest` |
+| **W-044** | **MOVED — do this before `W-042`.** `taxengine/test/NodeHarness.java` (test scope) + `.../test/NodeHarnessTest.java` | `DR 23` A11 | `-Dtest=NodeHarnessTest` — the harness runs one node in isolation and its stub inputs are honoured |
+| **W-045** | **RETIRED** — merged into `W-042` by D-011 | — | — |
 
 ---
 
-## Phase 5 — Tax nodes: the walking skeleton (8 items)
+## Phase 5 — Tax nodes: the walking skeleton (8 ids, 7 live)
 
-### W-046 — `TaxByBasisNode`
-- [ ] **Produces** `taxengine/node/TaxByBasisNode.java`
+### W-046 — `TaxByBasisNode` + `TaxByBasisNodeTest`
+- [ ] **Produces** `taxengine/node/TaxByBasisNode.java`, `.../node/TaxByBasisNodeTest.java`
 - **Spec** `DR 16-getting-started.md` S2 step 5 — **copy it**
+- **Do** `DR 23` A11's harness example, using `W-044`'s `NodeHarness`: TI ₹12,00,000 → `TaxByBasis(60000, {})`.
 - **Verify** `./mvnw test -pl backend -Dtest=TaxByBasisNodeTest`
 
-### W-047 — `TaxByBasisNodeTest` using `NodeHarness`
-- [ ] **Do** `DR 23` A11's harness example: TI ₹12,00,000 → `TaxByBasis(60000, {})`.
+### W-047 — RETIRED
+- Merged into **W-046** by D-011. No work.
 
 ### W-048 — `ReliefShape` sealed family
 - [ ] **Produces** `taxrules/relief/{ReliefShape,FlatWithCeiling,ExcessOverThreshold,ThresholdLadderCeiling,NoRelief}.java`
@@ -229,6 +269,21 @@ S2 step 4 and `DR 01-rulebook.md` R3/R4. Copy character by character. Bands are 
 - ⚠ **Copy the expected values. Do not compute them.** If one fails, the code is wrong (rule R3).
 - **Verify** `./mvnw test -pl backend -Dtest=T1SlabAndRebateTest`
 - **This is the first real milestone: a correct calculator for slab tax and rebate.**
+
+---
+
+## A note on Phases 6–14
+
+D-011 merged every item whose `Verify` named a **later** item's test. Phases 6–14 have a different
+shape and were **not** restructured: their tables carry no `Verify` column at all, and their testing
+is organised as **golden-suite milestones** (`W-053` T1, `W-057` T2, `W-070` T3 …) that deliberately
+span several implementation items. That is a design choice, not the defect rule B1 describes.
+
+But it leaves those implementation items with **no stated `Verify`**, so `00-START-HERE.md` §6's
+first checkbox has nothing to point at. Until each is expanded at its EXPLAIN stage, the standing
+rule for a Phase 6–14 item with no `Verify` line is: **`./mvnw test -pl backend -Punit`, and name in
+the report which golden milestone will actually prove the item.** Raise it as a `BLOCKED` ambiguity
+if that is not enough for the item in hand.
 
 ---
 
