@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-001 — "taxplanning W-001: create the four module skeletons"
-Last updated              : 2026-09-19 (session 1 — W-001 DONE)
+Last checkpoint           : W-002 — "taxplanning W-002: amend the money ArchUnit rule"
+Last updated              : 2026-09-19 (session 1 — W-002 DONE)
 Current position          : W-001
 Session count             : 1
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-002` — Amend the money ArchUnit rule |
+| **Next item** | `W-003` — Scratch directory for rule packs |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 0 — Make the build accept the design |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -47,7 +47,7 @@ Legend: `·` not started · `E` explained, awaiting approval · `P` in progress 
 `R` awaiting review · `D` done · `B` blocked
 
 ```
-Phase 0    W-001 D  W-002 ·  W-003 ·
+Phase 0    W-001 D  W-002 D  W-003 ·
 Phase 1    W-004 ·  W-005 ·  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **1** / 146 · in flight **0** · blocked **0**
+Counts — done **2** / 146 · in flight **0** · blocked **0**
 
 ---
 
@@ -74,6 +74,7 @@ Counts — done **1** / 146 · in flight **0** · blocked **0**
      Format:  W-0nn | YYYY-MM-DD | <one-line summary> | <verify command that passed> -->
 
 W-001 | 2026-09-19 | Four modulith modules declared, all Type.CLOSED; taxplanning OPEN→CLOSED | `./mvnw test -pl backend -Dtest=WealthLensModulithTest`
+W-002 | 2026-09-19 | Money ArchUnit rule amended for ..taxengine.money..; 2 guards added (9→11 rules) | `./mvnw test -pl backend -Dtest=ArchitectureTest`
 
 ---
 
@@ -123,8 +124,22 @@ Session 1. Decisions D-001…D-007 recorded on the design's recommendations; **D
 open** and blocks nothing before `W-032`. The plan for `W-001` is written and is **awaiting
 approval** — no code has been written.
 
-`W-001` is **DONE** and committed. Next item is `W-002` — amend the money ArchUnit rule. It has not
-been started; run prompt **P2** for it.
+`W-002` is **DONE** and committed. Next is `W-003` — create the rule-pack resource directory. Not
+started; run prompt **P2**.
+
+Found while planning `W-002`: the existing `money_rounding_lives_in_one_place` carries a clause the
+design did not quote — `.and().haveSimpleNameNotEndingWith("ChargeRounding")`, an exemption for the
+charges engine's configurable per-rule policy. Preserved. `19-engineering-foundations.md` E1 quotes
+the rule without it; anyone reading E1 alone would drop it and break the charges build.
+
+**Open tension for the reviewer.** R7 makes `docs/taxplanning-design/` read-only, so a genuine error
+in the design (E1's incomplete quote) cannot be corrected there. Either the design gets an erratum,
+or `STATE.md` is accepted as the erratum log. Recorded here under the second reading; a human
+decision either way.
+
+Both `W-002` guards pass **vacuously** today: `taxengine_does_not_use_TMoney` first bites at `W-005`
+(`Money`), `only_the_adapter_converts` at `W-087` (`MoneyBridge`). Neither has been proven to fail on
+violation — proving it needs a deliberate violation outside the item's `Produces`.
 
 Learned in this session:
 - `taxplanning` moving `OPEN` → `CLOSED` was the risk in `W-001`; `modulith verify()` passes, so

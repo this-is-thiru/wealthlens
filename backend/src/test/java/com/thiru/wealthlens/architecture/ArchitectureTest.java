@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.architecture;
 
+import static com.tngtech.archunit.core.domain.JavaCall.Predicates.target;
+import static com.tngtech.archunit.core.domain.properties.HasName.Predicates.name;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -102,7 +104,46 @@ class ArchitectureTest {
     static final ArchRule money_rounding_lives_in_one_place =
             noClasses()
                     .that().resideOutsideOfPackage("..shared.util.money..")
+                    .and().resideOutsideOfPackage("..taxengine.money..")
                     .and().haveSimpleNameNotEndingWith("ChargeRounding")
                     .should().callMethod(java.math.BigDecimal.class, "setScale", int.class, java.math.RoundingMode.class)
-                    .because("TL-8: paise rounding belongs to TMoney; a second copy is how two roundings diverge");
+                    .because("TL-8: paise rounding belongs to TMoney; a second copy is how two roundings diverge."
+                            + " taxengine.money is the second permitted home, not a third copy: TL-8 section 7 names"
+                            + " 'anything filed on someone else's behalf' as the trigger for exact decimal storage,"
+                            + " and taxplanning ships ITR-ready figures. Its rounding likewise lives in one package.");
+
+    /**
+     * The two money representations may never meet outside one named seam.
+     *
+     * <p>{@code TMoney} is canonicalised {@code double} (TL-8 Option B); {@code taxengine} is exact
+     * decimal (TL-8 section 7). Both are correct for their own module and mixing them silently
+     * discards the guarantee of whichever one loses. Conversion happens in {@code MoneyBridge},
+     * inbound only, and nowhere else.
+     *
+     * <p>Vacuous until the engine has types — which is the point: the guard is in place before the
+     * first {@code Money} is written, not after.
+     */
+    @ArchTest
+    static final ArchRule taxengine_does_not_use_TMoney =
+            noClasses()
+                    .that().resideInAPackage("..taxengine..")
+                    .should().accessClassesThat().haveFullyQualifiedName("com.thiru.wealthlens.shared.util.money.TMoney")
+                    .because("taxengine is exact-decimal; TMoney is canonicalised double."
+                            + " Conversion belongs to MoneyBridge in taxplanning.portfolio, and to nothing else");
+
+    /**
+     * Only the portfolio adapter converts a canonicalised {@code double} into an exact {@code Money}.
+     *
+     * <p>Matched by method name rather than by {@code MoneyBridge.class}: the class does not exist
+     * yet, and a rule that cannot be written until the thing it guards exists is a rule that arrives
+     * after the mistake. Expressed as {@code noClasses} so the input set is every class outside the
+     * adapter package — ArchUnit 1.3 fails a rule whose {@code that()} matches nothing, and no class
+     * calls this method today.
+     */
+    @ArchTest
+    static final ArchRule only_the_adapter_converts =
+            noClasses()
+                    .that().resideOutsideOfPackage("..taxplanning.portfolio..")
+                    .should().callMethodWhere(target(name("fromTMoney")))
+                    .because("one seam, named and testable, rather than a conversion scattered per call site");
 }
