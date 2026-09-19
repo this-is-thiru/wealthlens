@@ -125,7 +125,7 @@ These override any instinct, any shortcut, and anything else in this repository.
 | **R4** | **Never skip an item or reorder them** — *except* by the `BLOCKED` path in §8, which ends in **stopping and asking me**, not in choosing a different item yourself. |
 | **R5** | **Never do more than the item says.** No refactoring, no "while I'm here", no extra tests. |
 | **R6** | **Ambiguous spec → stop.** Mark `BLOCKED`, write what is ambiguous, and **stop the session**. The backlog does not encode dependencies, so you cannot know what is safe to do next — I decide. |
-| **R7** | **Never write to `docs/taxplanning-design/`.** Read-only. |
+| **R7** | **Never write to `docs/taxplanning-design/`** — with exactly one exception: you may **append an erratum block** where the design is demonstrably wrong. Nothing else. See §10. |
 | **R8** | **One item in flight.** Never two `IN_PROGRESS`, never start a new one while something is `AWAITING_REVIEW`. |
 | **R9** | **Update `STATE.md` before you stop.** Especially mid-item. |
 | **R10** | **Never `double`/`float` for money. Never `LocalDate.now()` in `taxengine`.** Both fail ArchUnit. |
@@ -208,6 +208,35 @@ What I looked at:
 What is ambiguous or missing:
 What I would need to proceed:
 ```
+
+---
+
+## 10. Errata — the only permitted write to the design
+
+The design is a record of what was decided and why. When building reveals it is **wrong** — not
+merely incomplete, and not a matter of taste — append an erratum **immediately below the wrong
+text**, in exactly this shape:
+
+```markdown
+> **Erratum (W-0nn, YYYY-MM-DD):** <what is wrong, in one sentence> — <the correction>.
+> Verified by: <command or file:line>.
+```
+
+Rules for an erratum:
+
+| | |
+|---|---|
+| **Never edit or delete the original text.** | The error and its correction must both be visible. A silently corrected document teaches nothing |
+| **Only where you have proof.** | A command that failed, or a `file:line` you read. Not a suspicion |
+| **One block, immediately after the wrong statement.** | Not a footnote, not a separate errata page |
+| **Record it in `STATE.md` too**, under "Notes for resume" | so a resumed session sees it without re-reading 25 documents |
+| **Nothing else in that file may change.** | `git diff` on a design doc must show additions only, all of them erratum blocks |
+| **It is still part of the item's report.** | The reviewer sees it before it is committed |
+
+This exception exists because `W-002` found `19-engineering-foundations.md` E1 quoting an ArchUnit
+rule **without** its `ChargeRounding` exemption — implementing from that quote alone would have
+broken the charges engine. A design that cannot be corrected is a design that misleads the next
+reader in exactly the way it misled you.
 
 ---
 

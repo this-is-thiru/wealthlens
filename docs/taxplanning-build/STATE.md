@@ -102,6 +102,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-008 | 2026-09-19 | May the design be corrected when building proves it wrong? | **Yes — errata only.** Append a marked block below the wrong text; never edit or delete the original; proof required. R7 relaxed, `00-START-HERE.md` §10 | **decided by the developer** |
 | D-007 | 2026-09-19 | Q7 — `SAL-ALW-NEW-SUBSET-001` per section or per r.280(3)? | **Per the section**, flagged visibly. A rule cannot override its parent section | provisional — on recommendation |
 
 ⚠ **D-003 is the only one that changes what `W-001` writes.** D-006 must be answered before `W-032`
@@ -132,10 +133,8 @@ design did not quote — `.and().haveSimpleNameNotEndingWith("ChargeRounding")`,
 charges engine's configurable per-rule policy. Preserved. `19-engineering-foundations.md` E1 quotes
 the rule without it; anyone reading E1 alone would drop it and break the charges build.
 
-**Open tension for the reviewer.** R7 makes `docs/taxplanning-design/` read-only, so a genuine error
-in the design (E1's incomplete quote) cannot be corrected there. Either the design gets an erratum,
-or `STATE.md` is accepted as the erratum log. Recorded here under the second reading; a human
-decision either way.
+**Resolved (D-008).** Errata are now permitted in the design — append only, proof required, original
+never edited. `19-engineering-foundations.md` E1 carries the first one.
 
 Both `W-002` guards pass **vacuously** today: `taxengine_does_not_use_TMoney` first bites at `W-005`
 (`Money`), `only_the_adapter_converts` at `W-087` (`MoneyBridge`). Neither has been proven to fail on

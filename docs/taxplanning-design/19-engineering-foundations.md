@@ -23,6 +23,13 @@ static final ArchRule money_rounding_lives_in_one_place =
                        + "a second copy is how two roundings diverge");
 ```
 
+> **Erratum (W-002, 2026-09-19):** this quote omits a clause the real rule carries —
+> `.and().haveSimpleNameNotEndingWith("ChargeRounding")`, an exemption for the charges engine's
+> configurable per-rule policy, documented there as *"a different thing from canonicalising a stored
+> amount"*. Implementing from this quote alone would drop the exemption and break the charges build.
+> The amendment below must **preserve** it.
+> Verified by: `backend/src/test/java/com/thiru/wealthlens/architecture/ArchitectureTest.java:102-108`.
+
 `FACT` (`backend/src/main/java/com/thiru/wealthlens/shared/util/money/TMoney.java:25-36`): the
 codebase's canonical money type is a **static utility over `double`** — *"Canonical rupee amounts held
 as `double` … The problem this solves is not precision — it is canonicalisation."*
