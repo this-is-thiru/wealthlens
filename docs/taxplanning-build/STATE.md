@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | audit of Phases 4–14 (D-016 pattern), then `W-031` |
+| **Next item** | `W-031` — `TaxYearRegistry` |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -179,6 +179,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-017 | 2026-09-19 | Phases 0–3 hit a missing-type stop at **every** boundary. Rather than continue item by item, audit the rest in one pass | **Appendix A** in `03-WORK-ITEMS.md`: all 157 design-declared types matched against every `Produces`. 21 were nested variants, 3 withdrawn, **62 genuinely unassigned** — now tabled against their owning item. Three have **no owner**: `TemporallyApportionedCap` (nothing applies a mid-year change), the `RegimeBehaviour` registry (invariant I9 is unenforceable without it), and the `ComponentCodes`/`RuleIds` build-time generator | **approved by the developer** |
 | D-016 | 2026-09-19 | `W-030` was assigned 12 invariants; **8 constrain types Phase 3 does not build** (ITR forms, the claim catalogue, the node registry, a working engine). I10 and I16 were already enforced | **Ship I13, I14, I15 here** and redistribute the rest to the items that build their subjects — I18→W-039, I19/I20→W-090, I21/I22→W-092, I23→W-117, I27→W-146, each with a test. Add `MidYearCombination` (V5, produced by no item) so I14 is checkable | **approved by the developer** |
 | D-015 | 2026-09-19 | `W-026` at ~600 lines was twice the §7 limit, and six types it needs were produced by no item. Separately, `17-regime-lifecycle.md`'s pack JSON names the head `"PGBP"` where the code says `BUSINESS_OR_PROFESSION` | **Split three ways** — `W-026` (lifecycle, L2), `W-026b` (election, L3), `W-026c` (`RegimeSpec`, which binds them). Head name: **`BUSINESS_OR_PROFESSION`** wins, being already in code and in the rulebook's prose; the JSON is erratum'd | **approved by the developer** |
 | D-014 | 2026-09-19 | `W-023` could not compile (`RuleVersion` needs `RegimeApplicability`, assigned to the *later* `W-024`); six supporting types produced by no item; and **11 items verified with `compiles` alone**, which passes for a record whose lookup method returns the wrong version | **Merge `W-023`+`W-024`** (`W-024` RETIRED) and **sweep every `compiles`-only row** — each now names a real test and what it must prove. Rule B1 amended: *the test is not the compiler* | **approved by the developer** |

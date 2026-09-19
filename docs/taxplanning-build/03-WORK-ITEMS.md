@@ -17,6 +17,10 @@ whose `Verify` names a *later* item's test is malformed: it either ships unteste
 verified at all. Restructured on 2026-09-19 by decision **D-011** — see the note at the end of
 Phase 1.
 
+**On the type audit.** Phases 4–14 were audited in one pass (**Appendix A**, decision D-017). When
+you reach any item listed there, **its `Produces` is Appendix A's row plus the phase table's** — and
+three items in it have no owner at all.
+
 **On retired ids.** Some ids below are **RETIRED** — merged into a neighbour. They are left in place,
 not renumbered, because `W-001`…`W-012` are already referenced by commit subjects. A retired id is
 no work. **146 ids, 140 live items.**
@@ -549,6 +553,81 @@ if that is not enough for the item in hand.
 production source. If it does not, the Open/Closed claim has failed.
 
 ---
+
+
+---
+
+## Appendix A — Type audit of Phases 4–14 (D-017, 2026-09-19)
+
+Phases 0–3 hit the same defect at **every** boundary: an item needed a type that no item produced
+(`BaseId`, `PackValidationException`, five `Condition` types, six temporal types, `DisallowanceSet`,
+`MidYearCombination`), or was assigned work whose subject did not exist yet (D-016's eight
+invariants). Each was found mid-item, costing a stop.
+
+So the remaining phases were audited in one pass instead: **every type the design declares, matched
+against every item's `Produces`.** Method:
+
+```
+design declares 157 types · backlog produces 139 · already built 428
+→ 86 declared, unproduced, unbuilt
+   21 are nested variants of families already built (Between, MigrateTo, …) — not gaps
+    3 are withdrawn (RegimeProvider, ElectionMechanics, IncomeHead as SPI)
+   24 are named in backlog prose but in no `Produces` list
+   38 appear nowhere in the backlog at all
+```
+
+**Rule A1 — when you reach an item below, its `Produces` is the row here, not just the one in the
+phase table.** Nothing in this appendix is new work; it is work that was already implied and never
+written down. Where a type's owning item is `—`, it has **no home yet**: stop and ask.
+
+| Types | Owning item | Note |
+|---|---|---|
+| `TemporallyApportionedCap` | **`W-042`** | V5's mid-year `apply`. `W-030` made the *data* checkable; nothing yet *applies* it |
+| `Computation` | `W-043` | `05-domain-model.md`'s name for what A6 split into `TaxComputation` + `FilingPosition` — confirm it is the same thing before building both |
+| `CompletedMonths`, `CalendarMonths`, `Days` | `W-066` | the three `ProrationBasis` variants; the phase table names only the family |
+| `Election`, `ElectionResolver`, `ElectionState`, `ElectionEvent`, `RegimeElectionHistory` | `W-082` | L3's second half — per-taxpayer election state, append-only |
+| `CapitalGainsSummary`, `CapitalGainsBucket` | `W-085` | named in prose only |
+| `MoneyBridge` | `W-087` | named in prose only |
+| `ItrFormSpec`, `ItrFormSelector` | `W-090`, `W-091` | **+ invariants I19, I20** (D-016) |
+| `ItrSchedule`, `FieldSource`, `FromRule`, `FromNode`, `FromComponents`, `FromProfile`, `ManualEntry`, `SumOf`, `ScheduleField` | `W-092` | `FieldSource` is a sealed family of six; the table names the parent. **+ I21, I22** |
+| `TaxpayerProfile`, `Pan` | `W-096` | named in prose only |
+| `FamilyMember` | `W-097` | named in prose only |
+| `Employer`, `Landlord`, `Lender`, `BankAccount` | `W-098` | named in prose only |
+| `DraftUpcaster` | `W-100` | V6's second half; consumes `DeprecationPolicy`, built in `W-025` |
+| `TaxError` | `W-105` | named in prose only |
+| `Scenario`, `ScenarioDiff` | `W-109` | compare-regimes returns a diff, not two numbers |
+| `InterestAndFeeNode` | `W-112` | named in prose only |
+| `ClaimCatalogueEntry`, `ClaimStep`, `Counterparty` | `W-117`, `W-118` | **+ invariant I23** (D-016) |
+| `Materiality` | `W-121` | materiality banding |
+| `DocumentParser` | `W-125` | named in prose only |
+| `SalaryStructureImporter` | `W-133` | the Excel import, F28 |
+| `TaxJob` | `W-137` | named in prose only |
+| `PackDiff`, `Finding`, `ValueChanged`, `RuleAdded`, `RuleRemoved`, `ProvisionRenumbered`, `SuspiciousCopy`, `CarriedForwardUnverified` | `W-139` | `Finding` is a sealed family of six; the table names neither |
+| `BoundaryCaseGenerator` | `W-140` | named in prose only |
+| `Fixtures`, `Pack2026` | `W-145` | the persona fixtures and the pack they read |
+| `IncrementalRunner` | `W-084` | named in prose only |
+| `T1SlabAndRebateBoundaryTest` | `W-053` | `W-053` names `T1SlabAndRebateTest`; `16-getting-started.md` also declares a boundary variant |
+| `RegimeBehaviour`, `DataDrivenRegimeBehaviour` | **—** | L5's escape hatch. `BehaviourId` (built, `W-026c`) carries invariant I9 — *a behaviour id with no registered implementation is a load error* — which **cannot be checked until a registry exists**. No item builds one |
+| `ComponentCodes`, `RuleIds` | **—** | `19-engineering-foundations.md` E-series: **build-time generated** constants giving compile-safety over pack data. No item generates them, and no item sets up the generator |
+| `RulePackDocument` | **—** | `19-engineering-foundations.md`. Purpose unclear from one declaration — resolve before Phase 11 |
+
+### Three findings that are not just missing rows
+
+1. **`TemporallyApportionedCap` has no owner and is load-bearing.** `W-030` made a mid-year change
+   *declarable* and *validated*; nothing in the backlog *applies* one. Without it, a rule that
+   changes inside the year passes validation and is then evaluated by `versionAt` as though it never
+   changed — a silent wrong answer in exactly the case the whole temporal design exists for. Assigned
+   to `W-042` above; it may deserve its own item.
+
+2. **Invariant I9 is unenforceable as the backlog stands.** It requires every `BehaviourId` to
+   resolve to a registered implementation, and no item builds a registry. Either L5's escape hatch
+   gets an item, or I9 should be struck — but it must not stay as an invariant nobody can check.
+
+3. **`ComponentCodes` / `RuleIds` are a missing build step, not a missing class.** `DR 19` resolves
+   the data-versus-compile-safety tension by *generating* constants from the pack at build time. No
+   item creates the generator, so the resolution is currently unimplemented and the tension is
+   unresolved.
+
 
 ## Milestones
 
