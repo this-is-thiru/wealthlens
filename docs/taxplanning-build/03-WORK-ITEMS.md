@@ -332,6 +332,18 @@ and replaced every `Verify: compiles` in this file with a real command.
 | **W-033b** | `taxrules/json/{ConditionJson,RuleJson}.java` + **extend** `PackJsonTest` | `DR 15` Part E · `DR 18` V4 | `-Dtest=PackJsonTest` — all 13 `Condition` variants; a `RuleRow` with versions, axis and `introducedBy` |
 | **W-033c** | `taxrules/json/{RegimeJson,RegistryJson,JsonPackAssembler}.java` + **extend** `PackJsonTest` | `DR 17` L2, L3 · `DR 10` E4 | `-Dtest=PackJsonTest` — regimes, disallowance and condition sets, components; `JsonPackAssembler` implements `W-028`'s seam |
 | **W-034** | `.../taxrules/pack/RulePackLoadTest.java` | `DR 08` T9-1…T9-7 | `-Dtest=RulePackLoadTest` — the **real** `2026-27` pack, end to end: provider → deserialiser → validator → registry |
+| **W-034b** | **modify** `taxrules/json/{PackJson,ValueJson,ShapeJson,ConditionJson,RuleJson,RegimeJson,RegistryJson}.java`, **modify** `RulePackLoadTest` | `DR 19` E4 | `-Dtest=PackJsonTest,RulePackLoadTest` — **every** malformed pack yields a `PackValidationException` carrying the path, including one rejected by a domain constructor. Added after `W-034` found T9-4 throwing `IllegalArgumentException` |
+
+> **Erratum (W-034, 2026-09-19):** `W-034` found that `19-engineering-foundations.md` E4's property
+> — *"the loader throws nothing but `PackValidationException`"* — **does not hold**. T9-4 surfaces as
+> `IllegalArgumentException`, thrown by `Provenance`'s compact constructor: correct for a Java type,
+> wrong at the loader boundary, and the same is true of every other domain-constructor rejection
+> reached through parsing. A pack author gets a Java-flavoured error with no file, no path and no
+> rule id, where every other defect names `law/rates.json rules[0] (RATE-SLAB-NEW-2026)…`.
+>
+> That is the exact argument `W-033` made for hand-writing the parser, so it is a defect rather than
+> a preference. Fixed by **`W-034b`** (decision **D-020**), added above.
+> Verified by: `RulePackLoadTest.T9-4` asserted `IllegalArgumentException` until `W-034b`.
 
 ⚠ **W-032 is the highest-risk item in Phase 3.** Every number in it is in `DR 16-getting-started.md`
 S2 step 4 and `DR 01-rulebook.md` R3/R4. Copy character by character. Bands are `400000`, **not**

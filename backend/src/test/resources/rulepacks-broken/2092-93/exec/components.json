@@ -1,0 +1,4 @@
+{
+  "_note": "The component registry. Empty until W-059 authors it; every ComponentCode a rule references must appear here (invariant I7), and no rule in this pack references one yet.",
+  "components": []
+}

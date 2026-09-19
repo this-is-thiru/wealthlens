@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-033c — "taxplanning W-033c: the whole pack assembles, and two of my items disagreed"
-Last updated              : 2026-09-19 (session 2 — W-033c DONE)
+Last checkpoint           : W-034 — "taxplanning W-034: the whole chain, and a property that does not hold"
+Last updated              : 2026-09-19 (session 2 — W-034 DONE, Phase 3 complete)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-034` — the end-to-end load test (**closes Phase 3**) |
+| **Next item** | `W-034b` — make E4's property hold (**added by D-020**) |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-034 | 2026-09-19 | RulePackLoadTest — T9-1..T9-5, T9-7 end to end + 4 broken fixture packs; found E4's property broken (→ W-034b); 12 tests. **Phase 3 complete** | `./mvnw test -pl backend -Dtest=RulePackLoadTest`
 W-033c | 2026-09-19 | RegimeJson, RegistryJson, JsonPackAssembler; the shipped pack assembles and computes T2-1; removed the empty DIS-S202-2A that W-029's invariant refused; 47 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
 W-033b | 2026-09-19 | ConditionJson (13 variants) + RuleJson; EvidenceRecorded reads `evidenceType` (discriminator collision); 36 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
 W-033 | 2026-09-19 | PackJson/ValueJson/ShapeJson — leaves, Validity, RegimeApplicability, all 6 CapShapes; real ladder parses and computes T2-1; Jackson 2/3 split fixed; 24 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
@@ -186,6 +187,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-020 | 2026-09-19 | `W-034` found E4's property broken: a pack rejected by a **domain constructor** (blank `whatToCheck`, a contradictory `AmendmentRef`, an empty `OnlyIn`) surfaces as `IllegalArgumentException` with no path, not `PackValidationException`. That is the very thing hand-written parsing was chosen for | **`W-034b`** — wrap domain construction in the readers and rethrow with the path. Its own item because the fix touches `W-033`'s `Produces` | **approved by the developer** |
 | D-019 | 2026-09-19 | `W-033` (the pack deserialiser) is ~55 shapes and ~700 lines — 4x the §7 limit. Its stated `Verify` round-trips a fixture whose arrays are empty | **Split three ways** — `W-033` (leaves, `Validity`, `RegimeApplicability`, `CapShape`), `W-033b` (`Condition`, `RuleRow`), `W-033c` (regimes, sets, components, the assembler). **Hand-written parsing**, not Jackson annotations: E4 requires the loader to throw only `PackValidationException`, and Jackson's errors address a Java developer rather than a pack author | **approved by the developer** |
 | D-018 | 2026-09-19 | Appendix A's three ownerless types: nothing applies a mid-year change; invariant I9 is unenforceable without a behaviour registry; the `ComponentCodes`/`RuleIds` generator is a missing build step | **Three new items.** `W-031b` — `RegimeBehaviour` + registry + I9. `W-032b` — the Maven generator emitting `RuleIds`/`ComponentCodes` from the packs. `W-066b` — `TemporallyApportionedCap`, placed after `W-066` because `PRORATE_PER_SEGMENT` needs `ProrationBasis`. `RulePackDocument` stays unresolved | **approved by the developer** |
 | D-017 | 2026-09-19 | Phases 0–3 hit a missing-type stop at **every** boundary. Rather than continue item by item, audit the rest in one pass | **Appendix A** in `03-WORK-ITEMS.md`: all 157 design-declared types matched against every `Produces`. 21 were nested variants, 3 withdrawn, **62 genuinely unassigned** — now tabled against their owning item. Three have **no owner**: `TemporallyApportionedCap` (nothing applies a mid-year change), the `RegimeBehaviour` registry (invariant I9 is unenforceable without it), and the `ComponentCodes`/`RuleIds` build-time generator | **approved by the developer** |
