@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-010 — "taxplanning W-010: provenance, and the three governing instruments"
-Last updated              : 2026-09-19 (session 2 — W-010 DONE)
+Last checkpoint           : W-012 — "taxplanning W-011/W-012: validity, date ranges and the temporal axis"
+Last updated              : 2026-09-19 (session 2 — W-012 DONE, Phase 1 complete)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,9 +34,9 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-011` + `W-012` — validity and the temporal axis |
+| **Next item** | `W-013` — `CapShape` sealed interface |
 | **Status** | `NOT_STARTED` |
-| **Phase** | 1 — Foundational types |
+| **Phase** | 2 — Cap shapes and conditions |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
 ---
@@ -48,7 +48,7 @@ Legend: `·` not started · `E` explained, awaiting approval · `P` in progress 
 
 ```
 Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
-Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 ·  W-012 ·  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
+Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
 Phase 4    W-035 ·  W-036 ·  W-037 ·  W-038 ·  W-039 ·  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **10** / 146 · in flight **0** · blocked **0**
+Counts — done **12** / 146 · in flight **0** · blocked **0**
 
 ---
 
@@ -83,6 +83,8 @@ W-007 | 2026-09-19 | Rate + RateTest — 9 tests; cess case sourced from T2-1 | 
 W-008 | 2026-09-19 | 7 identifier records + shared validator; 2 spec bugs found | `./mvnw test -pl backend -Dtest=IdentifierTest`
 W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions | `./mvnw test -pl backend -Dtest=IdentifierTest`
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
+W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
 
 ---
 
@@ -135,10 +137,13 @@ Session 1. Decisions D-001…D-007 recorded on the design's recommendations; **D
 open** and blocks nothing before `W-032`. The plan for `W-001` is written and is **awaiting
 approval** — no code has been written.
 
-`W-010` is **DONE** and committed. Next is `W-011` + `W-012`, which close Phase 1.
+`W-011` + `W-012` are implemented and verified; **awaiting review**. 16 tests. Approving them
+**closes Phase 1**.
 
-`W-011` names `ValidityTest` as its own Verify command and that test is `W-012`'s `Produces` — the
-same coupling as `W-008`/`W-009`, so they are being done and reviewed together.
+`W-011` names `ValidityTest` as its own Verify and that test is `W-012`'s `Produces` — the same
+coupling as `W-008`/`W-009`. **That is now three pairs where an item cannot verify itself**
+(`W-008`/`W-009`, `W-011`/`W-012`, and `W-005`/`W-006` where the type shipped untested). A systematic
+backlog issue rather than three accidents: implementation and its test should be one item.
 
 **Third spec conflict found, erratum applied to the design.** `05-domain-model.md` M1.2 makes
 `Instrument.assentedOn` mandatory, but the pack manifest in `16-getting-started.md` §S2 omits it for
