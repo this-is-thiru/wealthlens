@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-003 — "taxplanning W-003: create the rule-pack resource directory"
-Last updated              : 2026-09-19 (session 1 — W-003 DONE, Phase 0 complete)
+Last checkpoint           : W-004 — "taxplanning W-004: the engine purity ArchUnit rules"
+Last updated              : 2026-09-19 (session 1 — W-004 DONE)
 Current position          : W-001
 Session count             : 1
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-004` — The engine ArchUnit rules |
+| **Next item** | `W-005` — `Money` |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 1 — Foundational types |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -48,7 +48,7 @@ Legend: `·` not started · `E` explained, awaiting approval · `P` in progress 
 
 ```
 Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
-Phase 1    W-004 ·  W-005 ·  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
+Phase 1    W-004 D  W-005 ·  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
 Phase 4    W-035 ·  W-036 ·  W-037 ·  W-038 ·  W-039 ·  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **3** / 146 · in flight **0** · blocked **0**
+Counts — done **4** / 146 · in flight **0** · blocked **0**
 
 ---
 
@@ -76,6 +76,7 @@ Counts — done **3** / 146 · in flight **0** · blocked **0**
 W-001 | 2026-09-19 | Four modulith modules declared, all Type.CLOSED; taxplanning OPEN→CLOSED | `./mvnw test -pl backend -Dtest=WealthLensModulithTest`
 W-002 | 2026-09-19 | Money ArchUnit rule amended for ..taxengine.money..; 2 guards added (9→11 rules) | `./mvnw test -pl backend -Dtest=ArchitectureTest`
 W-003 | 2026-09-19 | rulepacks resource directory created — Phase 0 complete | `test -d backend/src/main/resources/rulepacks`
+W-004 | 2026-09-19 | 4 engine-purity rules + the withdrawal gate (11→16 tests) | `./mvnw test -pl backend -Dtest=ArchitectureTest`
 
 ---
 
@@ -126,8 +127,18 @@ Session 1. Decisions D-001…D-007 recorded on the design's recommendations; **D
 open** and blocks nothing before `W-032`. The plan for `W-001` is written and is **awaiting
 approval** — no code has been written.
 
-**Phase 0 is complete.** The build now accepts the design, which is all Phase 0 was for.
-Next is `W-004` — the engine ArchUnit rules. Not started.
+`W-004` is **DONE** and committed. Next is `W-005` — `Money`.
+
+Learned in `W-004`:
+- A plain `@Test` **does** run inside an `@AnalyzeClasses` class (16 tests = 15 `@ArchTest` + 1).
+  The plan's main risk is resolved; no separate test class was needed.
+- The withdrawal gate **caught a real violation on its first run — itself**. Its own javadoc names
+  the withdrawn abstraction in order to forbid it. Exempted by filename, the same shape as
+  `ChargeRounding`'s exemption from the money rule. Unlike `W-002`'s guards, this one is **proven
+  to bite**.
+- TS T10 words the `BigDecimal` rule as a *field* rule; `taxengine` has no fields, and ArchUnit 1.3
+  fails a rule that checks nothing. Written as a dependency rule instead — non-empty input set, and
+  strictly stronger (catches parameters, returns and locals too).
 
 **Protocol deviation, recorded.** The developer said "do W-003" rather than approving a plan, so
 stage 2's stop point was collapsed for this item only. The review gate at stage 5 was kept. R12 is
