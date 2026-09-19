@@ -3,16 +3,22 @@
 **Read this first, write it last, every session.**
 
 ```
-Commit at last checkpoint : 7aecba8
+Last checkpoint           : W-001 — "taxplanning W-001: create the four module skeletons"
 Last updated              : 2026-09-19 (session 1 — W-001 DONE)
 Current position          : W-001
 Session count             : 1
 ```
 
-**"Commit at last checkpoint"** is updated by prompt **P4-approved**, step 3, after every accepted
-item is committed. Prompt **P1** compares `git rev-parse --short HEAD` against it: a match means the
-tree is exactly where this protocol left it; a mismatch means someone worked outside the protocol and
-the session must stop until that is explained.
+**"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
+a hash. A commit cannot contain its own hash, so storing one here is self-referential and was found
+to be unworkable in session 1.
+
+Prompt **P1** compares this line against `git log --oneline -1`:
+- the subject **matches** → the tree is exactly where the protocol left it. Proceed.
+- the subject **differs** → work happened outside the protocol. Stop, report `git log --oneline -5`,
+  and wait.
+
+This survives amends, rebases and cherry-picks, which a hash does not.
 
 ---
 
