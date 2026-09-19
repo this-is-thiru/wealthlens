@@ -50,6 +50,27 @@ class MoneyTest {
     class Arithmetic {
 
         @Test
+        void times_whenWholeMultiple_isExact() {
+            // ₹3,000 per month for 24 child-months — PerUnitPerPeriod's annual equivalent
+            assertThat(Money.of("3000").times(24)).isEqualTo(Money.of("72000"));
+        }
+
+        @Test
+        void times_byZero_isZero() {
+            assertThat(Money.of("3000").times(0)).isEqualTo(Money.ZERO);
+        }
+
+        @Test
+        void times_preservesPaise() {
+            assertThat(Money.of("0.05").times(3)).isEqualTo(Money.of("0.15"));
+        }
+
+        @Test
+        void times_byANegative_negates() {
+            assertThat(Money.of("3000").times(-2)).isEqualTo(Money.of("-6000"));
+        }
+
+        @Test
         void plus_whenAddingPaise_isExact() {
             assertThat(Money.of("0.10").plus(Money.of("0.20"))).isEqualTo(Money.of("0.30"));
         }

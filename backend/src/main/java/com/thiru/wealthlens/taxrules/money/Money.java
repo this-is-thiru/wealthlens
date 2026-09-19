@@ -58,6 +58,20 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
         return ofExact(amountInRupees.subtract(other.amountInRupees));
     }
 
+    /**
+     * An exact whole multiple — {@code ₹3,000 × 24 months} and the like.
+     *
+     * <p>Exact by construction, so unlike {@link Rate#of} there is nothing to round: an integer
+     * multiple of a two-decimal amount is a two-decimal amount. It takes an {@code int} rather than
+     * a {@code Money} or a {@code BigDecimal} precisely so that it cannot be used to scale by a
+     * fraction, which is what {@link Rate} is for.
+     *
+     * @param multiplier a count — children, months, journeys — never a rate
+     */
+    public Money times(int multiplier) {
+        return ofExact(amountInRupees.multiply(BigDecimal.valueOf(multiplier)));
+    }
+
     /** Clamps a negative amount to zero. Named for what it does, not for what it guards against. */
     public Money floorAtZero() {
         return amountInRupees.signum() < 0 ? ZERO : this;

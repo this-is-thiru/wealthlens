@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-018 — "taxplanning W-018: sub-cap first, then the ceiling"
-Last updated              : 2026-09-19 (session 2 — W-018 DONE)
+Last checkpoint           : W-019 — "taxplanning W-019: per unit per period, and the family closes"
+Last updated              : 2026-09-19 (session 2 — W-019 DONE, Phase 2 cap shapes complete)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-019` — `PerUnitPerPeriod` + test (closes the sealed family) |
+| **Next item** | `W-021` — `Condition` sealed algebra (16 records) + `ConditionTest` — **sizing risk flagged** |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 2 — Cap shapes and conditions |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-019 | 2026-09-19 | PerUnitPerPeriod; Money.times(int); CapShape permits all six — family closed; 17 + 4 tests | `./mvnw test -pl backend -Dtest=PerUnitPerPeriodTest`
 W-018 | 2026-09-19 | AggregateWithCeiling + AggregateOutcome; CapContext front-loaded to 3 maps; 15 tests incl. T5-1/T5-2/T5-3 | `./mvnw test -pl backend -Dtest=AggregateWithCeilingTest`
 W-017 | 2026-09-19 | LeastOf + Limb; first-declared wins on tie; no flooring; 12 tests incl. the HRA worked example | `./mvnw test -pl backend -Dtest=LeastOfTest`
 W-015 | 2026-09-19 | SlabLadder + Band + validate() (4 checks), PackValidationException; 20 tests; all 7 rulebook figures | `./mvnw test -pl backend -Dtest=SlabLadderTest`
