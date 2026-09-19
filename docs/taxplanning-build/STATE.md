@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-031b — "taxplanning W-031b: the escape hatch, and the two load errors that stop it rotting"
-Last updated              : 2026-09-19 (session 2 — W-031b DONE)
+Last checkpoint           : W-032 — "taxplanning W-032: the 2026-27 pack, numbers verbatim and shape current"
+Last updated              : 2026-09-19 (session 2 — W-032 DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-032` — the real 2026-27 pack JSON (**highest-risk item in Phase 3**) |
+| **Next item** | `W-032b` — the build-time constant generator (**added by D-018**) |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-032 | 2026-09-19 | The real 2026-27 pack: manifest + 6 layer files, real checksums; RATE-SLAB-NEW-2026 and RATE-SLAB-OLD-2026; 21 tests | `./mvnw test -pl backend -Dtest=PackJsonWellFormedTest`
 W-031b | 2026-09-19 | RegimeBehaviour SPI + registry + DataDrivenRegimeBehaviour; invariant I9 enforceable both ways; guard 3 moved to W-037; 7 + 4 tests | `./mvnw test -pl backend -Dtest=RegimeBehaviourRegistryTest`
 W-031 | 2026-09-19 | TaxYearRegistry + Entry + UnsupportedTaxYearException; dropped stale `Regime defaultRegime`, fixed the `RulePackRef` collision; 10 tests | `./mvnw test -pl backend -Dtest=TaxYearRegistryTest`
 W-030 | 2026-09-19 | I13/I14/I15 + MidYearCombination; 8 invariants redistributed by D-016; I15 caught 3 of my own fixtures; 23 tests | `./mvnw test -pl backend -Dtest=PackValidatorTest`

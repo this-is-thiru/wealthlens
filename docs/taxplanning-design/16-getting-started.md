@@ -147,6 +147,30 @@ public record SlabLadder(List<Band> bands) implements CapShape {
 
 `backend/src/main/resources/rulepacks/2026-27/manifest.json`:
 
+> **Erratum (W-032, 2026-09-19):** **the JSON in this step cannot be copied verbatim.** Its numbers
+> are correct and were copied character for character; its *envelope* predates four later revisions,
+> and a pack in this shape fails to load against the validator built in `W-029`/`W-030`.
+>
+> | This step writes | Superseded by | What happens if copied |
+> |---|---|---|
+> | `"packVersion": "2026-27.1"`, `schemaVersion` | **A2** — four independently versioned layers | the provider reads `layers`; there are none |
+> | files flat at `rulepacks/2026-27/rates.json` | **A2** — `law/`, `exec/`, `forms/`, `content/` | the provider looks in `law/` and finds nothing |
+> | a rule as one flat object with `cap`, `regimes`, `conditions` | **V4** — a `RuleRow` is an id plus an ordered `List<RuleVersion>` | no version carries a `Validity`; **I13 fails** |
+> | no `introducedBy` on any rule | **I15** | every rule fails: *"names no AmendmentRef"* |
+> | no `axis`, no `midYearCombination` | V4, V5 | `RuleRow` will not construct |
+> | `"election": {… "lockIn": "NONE"}`, `"deadline": "s.263(1) due date"` | **L3** | already erratum'd below |
+>
+> The authored pack is at `backend/src/main/resources/rulepacks/2026-27/`, in the current shape,
+> with every figure from here and from `01-rulebook.md` R3 unchanged.
+>
+> Three further departures, each recorded in the files themselves:
+> **`REBATE-NEW-001` is omitted** — it needs `FlatWithCeiling`, a `ReliefShape` that `W-048` builds;
+> **`RATE-SLAB-OLD-2026` is authored** from `01-rulebook.md:115-120`, because `S202_OPTED_OUT`
+> references a rate table this step never defines and a dangling reference fails **I2**;
+> **`appliesTo` is `["INDIVIDUAL"]`** rather than five person types, because `INDIVIDUAL` is the only
+> `PersonType` the design attests and decision D1 scopes the product to individuals.
+> Verified by: `./mvnw test -pl backend -Dtest=PackJsonWellFormedTest` — 21 tests.
+
 ```json
 {
   "taxYear": "2026-27",
