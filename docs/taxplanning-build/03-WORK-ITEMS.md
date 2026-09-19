@@ -23,7 +23,7 @@ three items in it have no owner at all.
 
 **On retired ids.** Some ids below are **RETIRED** — merged into a neighbour. They are left in place,
 not renumbered, because `W-001`…`W-012` are already referenced by commit subjects. A retired id is
-no work. **146 ids, 140 live items.**
+no work. **146 base ids, 143 live items** (suffixed ids added by D-013, D-015, D-018 are counted).
 
 **On dependencies.** This backlog deliberately encodes **none**. The ordering *is* the dependency
 graph: assume every item depends on every item before it. So there is no such thing as "the next
@@ -310,7 +310,9 @@ and replaced every `Verify: compiles` in this file with a real command.
 
 | **W-030** | `taxrules/validate/PackValidator.java` — invariants **I13, I14, I15** + `taxrules/pack/MidYearCombination.java` — + **extend** `PackValidatorTest` | TS T5 · `DR 18` V5 | `-Dtest=PackValidatorTest` — a year with a gap; two versions on one day; `UNDETERMINED` where the rule actually changes; a version with no `AmendmentRef` |
 | **W-031** | `taxrules/registry/{TaxYearRegistry,TaxYearRegistryEntry}.java` + `.../registry/TaxYearRegistryTest.java` | `DR 05` M1.1 | `-Dtest=TaxYearRegistryTest` |
+| **W-031b** | `taxrules/regime/{RegimeBehaviour,RegimeBehaviourRegistry,DataDrivenRegimeBehaviour}.java` + `.../regime/RegimeBehaviourRegistryTest.java`, **extend** `PackValidator` with **invariant I9** and `PackValidatorTest` | `DR 17` L5 (`:315-350`) | `-Dtest=RegimeBehaviourRegistryTest,PackValidatorTest` — a pack naming a `BehaviourId` with no registered implementation is a **load error**; a regime declaring none gets `DataDrivenRegimeBehaviour`'s defaults |
 | **W-032** | pack JSON: `rulepacks/2026-27/manifest.json` + `law/rates.json` + `exec/pipelines.json` + `law/regimes.json` + `.../pack/PackJsonWellFormedTest.java` | `DR 16` S2 step 4 — **copy the JSON verbatim** | `-Dtest=PackJsonWellFormedTest` — parses, and **every slab band lower bound ends in `0000`** (the `400001` trap) |
+| **W-032b** | the **build-time constant generator**: a Maven plugin execution reading `rulepacks/**/*.json` and emitting `taxrules/generated/{RuleIds,ComponentCodes}.java` into `target/generated-sources`, + `.gitignore` for them, + `.../generated/GeneratedConstantsTest.java` | `DR 19` E-series (`:236-264`) | `-Dtest=GeneratedConstantsTest` — `RuleIds.RATE_SLAB_NEW_2026` resolves to the pack's own id; a code removed from every pack makes its Java references **fail to compile**; a typo in a pack fails the **build**, not startup |
 | **W-033** | `TJsonMapper`-based pack deserialiser + `.../pack/RulePackDeserialiserTest.java` | `DR 19` E9 — reuse `shared/util/collection/TJsonMapper` | `-Dtest=RulePackDeserialiserTest` — round-trips the **fixture** pack from `W-028` |
 | **W-034** | `.../taxrules/pack/RulePackLoadTest.java` | `DR 08` T9-1…T9-7 | `-Dtest=RulePackLoadTest` — the **real** `2026-27` pack, end to end: provider → deserialiser → validator → registry |
 
@@ -419,6 +421,7 @@ if that is not enough for the item in hand.
 | W-064 | `salary.json` law rows | `DR 01` R7, R8 | |
 | W-065 | `SalaryIncomeNode` | | |
 | W-066 | `ProrationBasis` family | `DR 15` C3 | named basis per rule; **no caller divides** |
+| W-066b | `taxengine/temporal/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../temporal/TemporallyApportionedCapTest.java` | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
 | W-067 | `ExemptionNode` — HRA | `DR 06` G1.3 | **per period**; metro % per period; `limitedBy` names the limb |
 | W-068 | `ExemptionNode` — LTA | `DR 01` R10 | **calendar** blocks; four independent caps |
 | W-069 | `ExemptionNode` — allowances | `DR 01` R11 | ⚠ `SAL-ALW-NEW-SUBSET-001` is **STATUS UNCLEAR** — seed from the **section**, flag visibly |
@@ -582,7 +585,7 @@ written down. Where a type's owning item is `—`, it has **no home yet**: stop 
 
 | Types | Owning item | Note |
 |---|---|---|
-| `TemporallyApportionedCap` | **`W-042`** | V5's mid-year `apply`. `W-030` made the *data* checkable; nothing yet *applies* it |
+| `TemporallyApportionedCap` | **`W-066b`** | V5's mid-year `apply`. `W-030` made the *data* checkable; nothing yet *applies* it |
 | `Computation` | `W-043` | `05-domain-model.md`'s name for what A6 split into `TaxComputation` + `FilingPosition` — confirm it is the same thing before building both |
 | `CompletedMonths`, `CalendarMonths`, `Days` | `W-066` | the three `ProrationBasis` variants; the phase table names only the family |
 | `Election`, `ElectionResolver`, `ElectionState`, `ElectionEvent`, `RegimeElectionHistory` | `W-082` | L3's second half — per-taxpayer election state, append-only |
@@ -607,9 +610,16 @@ written down. Where a type's owning item is `—`, it has **no home yet**: stop 
 | `Fixtures`, `Pack2026` | `W-145` | the persona fixtures and the pack they read |
 | `IncrementalRunner` | `W-084` | named in prose only |
 | `T1SlabAndRebateBoundaryTest` | `W-053` | `W-053` names `T1SlabAndRebateTest`; `16-getting-started.md` also declares a boundary variant |
-| `RegimeBehaviour`, `DataDrivenRegimeBehaviour` | **—** | L5's escape hatch. `BehaviourId` (built, `W-026c`) carries invariant I9 — *a behaviour id with no registered implementation is a load error* — which **cannot be checked until a registry exists**. No item builds one |
-| `ComponentCodes`, `RuleIds` | **—** | `19-engineering-foundations.md` E-series: **build-time generated** constants giving compile-safety over pack data. No item generates them, and no item sets up the generator |
+| `RegimeBehaviour`, `DataDrivenRegimeBehaviour` | **`W-031b`** | L5's escape hatch. `BehaviourId` (built, `W-026c`) carries invariant I9 — *a behaviour id with no registered implementation is a load error* — which **cannot be checked until a registry exists**. No item builds one |
+| `ComponentCodes`, `RuleIds` | **`W-032b`** | `19-engineering-foundations.md` E-series: **build-time generated** constants giving compile-safety over pack data. No item generates them, and no item sets up the generator |
 | `RulePackDocument` | **—** | `19-engineering-foundations.md`. Purpose unclear from one declaration — resolve before Phase 11 |
+
+> **Erratum (D-018, 2026-09-19):** the three ownerless entries below were given items —
+> **`W-031b`** (the `RegimeBehaviour` registry, making invariant I9 enforceable), **`W-032b`** (the
+> build-time constant generator) and **`W-066b`** (applying a mid-year change). `W-066b` sits after
+> `W-066` rather than at `W-042`, because `PRORATE_PER_SEGMENT` needs the `ProrationBasis` family
+> that `W-066` builds. `RulePackDocument` remains unresolved and is still a stop-and-ask.
+> **143 live items.**
 
 ### Three findings that are not just missing rows
 
