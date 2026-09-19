@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-025 — "taxplanning W-025: components as a registry, not an enum"
-Last updated              : 2026-09-19 (session 2 — W-025 DONE)
+Last checkpoint           : W-026 — "taxplanning W-026: two windows, because entry and application are not the same"
+Last updated              : 2026-09-19 (session 2 — W-026 DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-026` — regime lifecycle (7 types — **sizing risk**) |
+| **Next item** | `W-026b` — the election protocol (L3) |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-026 | 2026-09-19 | RegimeLifecycle (two windows) + ContinuationPolicy + InvalidationPolicy; 13 tests. Also restored 6 Produces lists D-014 had collapsed | `./mvnw test -pl backend -Dtest=RegimeLifecycleTest`
 W-025 | 2026-09-19 | Component registry: ComponentDefinition (union of E4.1 + V6 + informationalOnly), lifecycle, DeprecationPolicy, 3 enums; 15 tests | `./mvnw test -pl backend -Dtest=ComponentLifecycleTest`
 W-023 | 2026-09-19 | Temporal core: RuleVersion, RuleRow, AmendmentRef, Provision/Presence, TemporalContext, 2 exceptions, RegimeApplicability; 18 tests. Merged W-024; swept 11 `compiles` rows | `./mvnw test -pl backend -Dtest=RuleRowTest`
 W-021c | 2026-09-19 | AllOf/AnyOf/Not; short-circuit semantics; Condition permits all 13 — algebra closed; 47 tests. **Phase 2 complete** | `./mvnw test -pl backend -Dtest=ConditionTest`
@@ -172,6 +173,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-015 | 2026-09-19 | `W-026` at ~600 lines was twice the §7 limit, and six types it needs were produced by no item. Separately, `17-regime-lifecycle.md`'s pack JSON names the head `"PGBP"` where the code says `BUSINESS_OR_PROFESSION` | **Split three ways** — `W-026` (lifecycle, L2), `W-026b` (election, L3), `W-026c` (`RegimeSpec`, which binds them). Head name: **`BUSINESS_OR_PROFESSION`** wins, being already in code and in the rulebook's prose; the JSON is erratum'd | **approved by the developer** |
 | D-014 | 2026-09-19 | `W-023` could not compile (`RuleVersion` needs `RegimeApplicability`, assigned to the *later* `W-024`); six supporting types produced by no item; and **11 items verified with `compiles` alone**, which passes for a record whose lookup method returns the wrong version | **Merge `W-023`+`W-024`** (`W-024` RETIRED) and **sweep every `compiles`-only row** — each now names a real test and what it must prove. Rule B1 amended: *the test is not the compiler* | **approved by the developer** |
 | D-013 | 2026-09-19 | `W-021` (`Condition` + 16 records + test) estimated at ~750 lines, 2.5x the §7 limit; five supporting types produced by no item; `AgeAtLeast` cannot express its own pack example | **Split three ways** — `W-021` (person facts), `W-021b` (amounts and structure), `W-021c` (composition, closes the family). Ids suffixed, not renumbered. `AgeAtLeast` gains an `AgeSubject`. The five supporting types are assigned across the three | **approved by the developer** |
 | D-012 | 2026-09-19 | `taxrules` cannot see `Money`, which T2 places in `taxengine.money`, but T1 draws the arrow `taxengine -> taxrules`. Where does `Money` live? | **`taxrules.money`** — option (A) of B-001. A rule pack holds rupee figures by its nature, so `taxrules` needs the type; `taxengine` already allows `taxrules`, so T1's arrow is unchanged. Moved `Money`, `Rate`, `MoneyTest`, `RateTest`; renamed `taxengine_uses_money_not_bigdecimal` to `tax_modules_use_money_not_bigdecimal` and widened it to all three tax modules; errata in TS T3/T10, PRD, WORK-ITEMS W-002/W-004/W-005, DR 19 E1 | **approved by the developer** |

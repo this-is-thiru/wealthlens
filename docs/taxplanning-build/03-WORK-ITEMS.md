@@ -255,12 +255,22 @@ and replaced every `Verify: compiles` in this file with a real command.
 > My error, in an edit whose purpose was to make verification stricter.
 > Verified by: `git show f2a7db4^:docs/taxplanning-build/03-WORK-ITEMS.md`.
 
+> **Erratum (W-026, 2026-09-19):** `W-026` is **split three ways** by decision **D-015** — at ~600
+> lines with tests it was twice the §7 limit, and six types it needs (`ElectionKind`,
+> `ElectionVehicle`, `FormRef`, `DeadlineSpec`, `ElectionRoute`, plus `RegimeSpec`'s own id types)
+> were produced by no item. The split follows the design's own seams: L2 is the lifecycle, L3 is the
+> election, and `RegimeSpec` binds them and cannot be written before both. The withdrawal and
+> revival clauses of the original `Verify` line move to `W-026b`, where `AfterWithdrawal` lives.
+> Verified by: `17-regime-lifecycle.md` L2, L3, `:105-119`; `grep -c` found 0 backlog mentions of each.
+
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
 | **W-023** | **MERGED with W-024.** `taxrules/temporal/{RuleVersion,AmendmentRef,Provision,Presence,TemporalContext,MissingTemporalCoordinateException,NoRuleVersionException}.java`, `taxrules/pack/{RuleRow,RegimeApplicability}.java`, `.../pack/RuleRowTest.java` | `DR 18` V4, V8 · `DR 05` M1.2 · `DR 10` E3.3 | `-Dtest=RuleRowTest` — `versionAt` on a hit, a gap, both boundaries and a `PendingNotification`; `changesWithin` true and false |
 | **W-024** | **RETIRED** — merged into `W-023` by D-014 | — | — |
 | **W-025** | `taxrules/component/{ComponentDefinition,ComponentLifecycle,DeprecationPolicy,CashNature,ComponentKind,TaxTreatment}.java` + `.../component/ComponentLifecycleTest.java` | `DR 10` E4, `DR 18` V6 | `-Dtest=ComponentLifecycleTest` — a withdrawn component is rejected, not silently zero (`D-NOSILENT`); each `DeprecationPolicy` branch |
-| **W-026** | `taxrules/regime/{RegimeSpec,RegimeLifecycle,ElectionProtocol,BindingSpec,AfterWithdrawal,ContinuationPolicy,InvalidationPolicy}.java` + `.../regime/RegimeLifecycleTest.java` | `DR 17` L2, L3 | `-Dtest=RegimeLifecycleTest` — entry closed but in force (ss.201/204 grandfathering); withdrawal once then permanently barred; the s.202(4)(a)(iv) revival carve-out |
+| **W-026** | `taxrules/regime/{RegimeLifecycle,ContinuationPolicy,InvalidationPolicy}.java` + `.../regime/RegimeLifecycleTest.java` | `DR 17` L2 | `-Dtest=RegimeLifecycleTest` — entry closed but still in force (ss.201/204 grandfathering); `entryWindow` outside `inForceWindow` rejected; each `ContinuationPolicy` and `InvalidationPolicy` branch |
+| **W-026b** | `taxrules/regime/{ElectionProtocol,BindingSpec,AfterWithdrawal,ElectionKind,ElectionVehicle,FormRef,DeadlineSpec,ElectionRoute}.java`, **extend** `RegimeLifecycleTest` | `DR 17` L3 | `-Dtest=RegimeLifecycleTest` — withdrawal once then permanently barred; the **s.202(4)(a)(iv) revival carve-out**; `bindingAppliesWhen` makes one regime bind a person with business income and not one without |
+| **W-026c** | `taxrules/regime/RegimeSpec.java` + the id types it needs (`DisallowanceSetId`, `ConditionSetId`, `BehaviourId`, `PipelineSpec`), **extend** `RegimeLifecycleTest` | `DR 17` `:105-119` | `-Dtest=RegimeLifecycleTest` — a regime binds its lifecycle and election together; `isDefault` is per `(taxYear, PersonType)` (invariant I11) |
 | **W-027** | `taxrules/pack/{RulePack,RulePackLayer,RulePackRef}.java` + `.../pack/RulePackLayerTest.java` | `DR 23` A2 — **four layers, separate versions** | `-Dtest=RulePackLayerTest` — the cache key covers `law`+`exec` and **not** `forms`/`content`; each layer versions independently |
 | **W-028** | `taxrules/pack/{RulePackProvider,ClasspathRulePackProvider}.java` + `.../pack/ClasspathRulePackProviderTest.java` + a **minimal fixture pack** under `src/test/resources/rulepacks-fixture/` | `DR 10` E3.5, `DR 23` A2 | `-Dtest=ClasspathRulePackProviderTest` |
 | **W-029** | `taxrules/validate/PackValidator.java` — invariants I1–I7 — + `.../validate/PackValidatorTest.java` | TS T5 | `-Dtest=PackValidatorTest` — one violating and one clean case **per invariant**; build the rows in code, no files needed |

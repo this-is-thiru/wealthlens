@@ -173,6 +173,19 @@ The s.202(4) case, entirely in data:
     "provenance": { "sourceDescription": "s.202(4)(a)(ii)-(iv) and (4)(b)", "status": "VERIFIED" } } }
 ```
 
+> **Erratum (W-026, 2026-09-19):** this JSON names the head **`"PGBP"`**, but the implemented
+> `HeadCode` constant is **`BUSINESS_OR_PROFESSION`** — the name `01-rulebook.md:67` uses in prose
+> and the one already in code (`taxrules/condition/HeadCode.java`). Two names for one head is the
+> two-vocabularies defect O-7 describes and `ComputationStep` demonstrated once already, so the pack
+> format uses `BUSINESS_OR_PROFESSION`. `"PGBP"` appears in this document only.
+>
+> The same block's `bindingAppliesWhen` is the load-bearing idea and is unaffected: one `RegimeSpec`
+> serves both s.202(4)(a) and s.202(4)(b), because the same regime locks in a person **with**
+> business income and leaves a free annual choice to a person without — which is what the section
+> says, and what the previous enum forced into a footnote.
+> Verified by: `backend/src/main/java/com/thiru/wealthlens/taxrules/condition/HeadCode.java`;
+> `01-rulebook.md:67`.
+
 `INFERENCE`: `bindingAppliesWhen` is what makes one `RegimeSpec` serve both s.202(4)(a) and
 s.202(4)(b). The **same regime** has lock-in for a person with business income and a free annual
 choice for a person without — which is exactly what the section says, and which the previous enum
