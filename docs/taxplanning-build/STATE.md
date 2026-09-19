@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-026c — "taxplanning W-026c: a regime as one declarable row"
-Last updated              : 2026-09-19 (session 2 — W-026c DONE, regime work complete)
+Last checkpoint           : W-027 — "taxplanning W-027: four layers, because they change for different reasons"
+Last updated              : 2026-09-19 (session 2 — W-027 DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-027` — the four-layer rule pack |
+| **Next item** | `W-028` — the pack provider + a fixture pack |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-027 | 2026-09-19 | RulePack + RulePackLayer + RulePackRef; cache key on law+exec only (G-11 now a test); 14 tests | `./mvnw test -pl backend -Dtest=RulePackLayerTest`
 W-026c | 2026-09-19 | RegimeSpec + PipelineSpec + 3 id types; isDefault implies DEFAULT_NO_ACTION; 35 tests. Regime work complete | `./mvnw test -pl backend -Dtest=RegimeLifecycleTest`
 W-026b | 2026-09-19 | ElectionProtocol, BindingSpec, AfterWithdrawal + 5 vocabulary types; rule 136 enforced at construction; 26 tests | `./mvnw test -pl backend -Dtest=RegimeLifecycleTest`
 W-026 | 2026-09-19 | RegimeLifecycle (two windows) + ContinuationPolicy + InvalidationPolicy; 13 tests. Also restored 6 Produces lists D-014 had collapsed | `./mvnw test -pl backend -Dtest=RegimeLifecycleTest`

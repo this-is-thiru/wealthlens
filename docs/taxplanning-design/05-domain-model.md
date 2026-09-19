@@ -93,7 +93,19 @@ public record RuleId(String value) {}     // "SAL-HRA-001" — matches ^[A-Z]{2,
 > Rules 2026 commenced partly on 1 April 2026 and partly on 17 September 2026). The row also declares a
 > **`TemporalAxis`**: `FACT (S2, s.197(3))` keys on an asset's **acquisition date**, not on the tax year.
 
-```java
+```j
+> **Erratum (W-027, 2026-09-19):** a **single** `packVersion` *"bumped on any change"* plus one
+> `checksum` is superseded by `23-architecture-consolidation.md` A2, which versions the pack's four
+> layers separately: `Map<RulePackLayer, RulePackRef> layers`.
+>
+> This is not tidying. With one version, correcting a typo in the claim catalogue bumps the pack and
+> invalidates **every cached computation** — which is precisely the cost A2 exists to remove (G-11).
+> The compute cache keys on `law` and `exec` only, so seven editorial revisions cost nothing, and
+> `forms/` keeps its own version because CBDT notifies ITR forms on a different date from the Finance
+> Act and revised them again mid-year (G.S.R. 822(E) substituted Forms 169 and 171 in September).
+> Verified by: `23-architecture-consolidation.md` A2;
+> `./mvnw test -pl backend -Dtest=RulePackLayerTest` — `sevenEditorialRevisionsInvalidateNothing`.
+ava
 public record RuleRow(
         RuleId id,
         Provision provision1961,          // may be ABSENT — SAL-ENTMT-001 has no 2025-Act counterpart
