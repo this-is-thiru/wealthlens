@@ -252,6 +252,29 @@ The compute cache keys on **`law` + `exec` only**.
 | I5 | exactly one `isDefault` regime per `(taxYear, PersonType)` among **applicable** regimes |
 | I6 | every regime's disallowance/condition set ids resolve |
 | I7 | every `ComponentCode` a rule references exists in `components.json` |
+
+> **Erratum (W-029, 2026-09-19):** three of I1–I7 are not checked by `PackValidator`, each for a
+> different reason.
+>
+> - **I1** is enforced by `Provenance`'s compact constructor (`W-010`). A row with
+>   `status != VERIFIED` and a blank `whatToCheck` cannot be *constructed*, so a validator branch
+>   would be unreachable. Asserted as a property of `Provenance` instead.
+> - **I4** is enforced by `ClasspathRulePackProvider` (`W-028`), which hashes the bytes it read.
+>   Re-hashing in the validator would mean two implementations to keep in step.
+> - **I3** is **not yet checkable and is deferred.** Reachability means "evaluated by some node",
+>   and the node-to-rule mapping is `ComputationNode.rules()` — engine-side, `W-039`. A pack-only
+>   version would have to count a rule as reachable because a component mentions it, which passes
+>   exactly the dead rule O-19 describes. It needs its own item once the node registry exists.
+>
+> **I2 is implemented more strongly than worded.** T5 says "every `RuleId` a pipeline references",
+> but a `PipelineSpec` holds `NodeId`s. The implemented check is *every `RuleId` referenced anywhere
+> in the pack resolves* — rate tables, `feedsInto`, `salaryBaseFor`, policy bases, and a
+> `PendingNotification`'s interim rule.
+>
+> **I6 became checkable in this item.** `DisallowanceSet` and `ConditionSet` — the things
+> `DisallowanceSetId` and `ConditionSetId` name — were modelled by no type and no work item, and
+> `RulePack` had no field for them. Added by the developer's decision.
+> Verified by: `./mvnw test -pl backend -Dtest=PackValidatorTest`.
 | I8 | a cross-year ledger entry is consumed by at most one `ACTED_ON` draft per year |
 | I9 | every `BehaviourId` resolves to a registered implementation |
 | I10 | `entryWindow ⊆ inForceWindow` for every regime |

@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-028 — "taxplanning W-028: sourcing a pack, and refusing one that was edited in place"
-Last updated              : 2026-09-19 (session 2 — W-028 DONE)
+Last checkpoint           : W-029 — "taxplanning W-029: refusing a pack that does not mean what it says"
+Last updated              : 2026-09-19 (session 2 — W-029 DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-029` — `PackValidator`, invariants I1–I7 |
+| **Next item** | `W-030` — invariants I10, I13–I16, I18–I23, I27 |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-029 | 2026-09-19 | PackValidator (I2 generalised, I5, I6, I7) + DisallowanceSet/ConditionSet; I1/I4 shown enforced elsewhere, I3 deferred with a reason; 13 tests | `./mvnw test -pl backend -Dtest=PackValidatorTest`
 W-028 | 2026-09-19 | RulePackProvider SPI + ClasspathRulePackProvider + PackAssembler seam; synthetic 2099-00 fixture + tampered 2098-99; 9 tests. TJsonMapper.readValue made public | `./mvnw test -pl backend -Dtest=ClasspathRulePackProviderTest`
 W-027 | 2026-09-19 | RulePack + RulePackLayer + RulePackRef; cache key on law+exec only (G-11 now a test); 14 tests | `./mvnw test -pl backend -Dtest=RulePackLayerTest`
 W-026c | 2026-09-19 | RegimeSpec + PipelineSpec + 3 id types; isDefault implies DEFAULT_NO_ACTION; 35 tests. Regime work complete | `./mvnw test -pl backend -Dtest=RegimeLifecycleTest`

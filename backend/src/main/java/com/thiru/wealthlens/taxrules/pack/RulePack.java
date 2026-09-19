@@ -5,6 +5,8 @@ import com.thiru.wealthlens.taxrules.id.ComponentCode;
 import com.thiru.wealthlens.taxrules.id.RegimeCode;
 import com.thiru.wealthlens.taxrules.id.RuleId;
 import com.thiru.wealthlens.taxrules.id.TaxYearId;
+import com.thiru.wealthlens.taxrules.regime.ConditionSetId;
+import com.thiru.wealthlens.taxrules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxrules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxrules.registry.GoverningInstruments;
 import java.util.EnumMap;
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
  * @param rules by id
  * @param components the component registry
  * @param regimes by code
+ * @param disallowanceSets shared disallowance lists, by id — the s.205(1) pattern
+ * @param conditionSets shared eligibility lists, by id — the s.205(2) pattern
  */
 public record RulePack(
         TaxYearId taxYear,
@@ -34,7 +38,9 @@ public record RulePack(
         GoverningInstruments instruments,
         Map<RuleId, RuleRow> rules,
         Map<ComponentCode, ComponentDefinition> components,
-        Map<RegimeCode, RegimeSpec> regimes) {
+        Map<RegimeCode, RegimeSpec> regimes,
+        Map<DisallowanceSetId, DisallowanceSet> disallowanceSets,
+        Map<ConditionSetId, ConditionSet> conditionSets) {
 
     public RulePack {
         if (taxYear == null) {
@@ -65,6 +71,8 @@ public record RulePack(
         rules = rules == null ? Map.of() : Map.copyOf(rules);
         components = components == null ? Map.of() : Map.copyOf(components);
         regimes = regimes == null ? Map.of() : Map.copyOf(regimes);
+        disallowanceSets = disallowanceSets == null ? Map.of() : Map.copyOf(disallowanceSets);
+        conditionSets = conditionSets == null ? Map.of() : Map.copyOf(conditionSets);
 
         if (rules.isEmpty()) {
             throw new IllegalArgumentException(taxYear + " has no rules; it would compute nothing");

@@ -110,6 +110,8 @@ class RulePackLayerTest {
                 instruments(),
                 Map.of(SLAB, slabRule()),
                 Map.of(),
+                Map.of(),
+                Map.of(),
                 Map.of());
     }
 
@@ -230,6 +232,8 @@ class RulePackLayerTest {
                                     instruments(),
                                     Map.of(new RuleId("SAL-HRA-001"), slabRule()),
                                     Map.of(),
+                                    Map.of(),
+                                    Map.of(),
                                     Map.of()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("calls itself");
@@ -242,6 +246,8 @@ class RulePackLayerTest {
                                     new TaxYearId(2026),
                                     layers("3", "1", "2", "1"),
                                     instruments(),
+                                    Map.of(),
+                                    Map.of(),
                                     Map.of(),
                                     Map.of(),
                                     Map.of()))
