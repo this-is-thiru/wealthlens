@@ -59,10 +59,17 @@ something else to do.
 - [ ] **Produces** modify `ArchitectureTest.java`
 - **Spec** TS T10 rows 4–8 and 11 · `DR 23` A3, A6
 - **Do** add: `taxengine` depends on no `..repository..` / `org.springframework.data..` / `..taxplanning..`; no `LocalDate.now` / `Instant.now` / `Clock`; no `catch (Exception|RuntimeException)`; no `BigDecimal` field outside `..taxengine.money..`. Add a test that asserts the string `ComputationStep` appears nowhere under `backend/src`.
+
+> **Erratum (W-013, 2026-09-19):** the `BigDecimal` exemption is `..taxrules.money..`, and the
+> rule now covers `taxengine`, `taxrules` and `taxdocs`. See `STATE.md` **B-001**.
 - **Verify** `./mvnw test -pl backend -Dtest=ArchitectureTest`
 
 ### W-005 — `Money`
 - [ ] **Produces** `taxengine/money/Money.java`
+
+> **Erratum (W-013, 2026-09-19):** produced at `taxrules/money/Money.java`. Moved after the
+> modulith test rejected `taxrules -> taxengine`; see `STATE.md` **B-001**. `W-006`'s
+> `MoneyTest` and `W-007`'s `Rate`/`RateTest` moved with it.
 - **Spec** **TS T3 — copy it verbatim**
 - **Verify** `./mvnw test -pl backend -Dtest=ArchitectureTest` (compiles, rule passes)
 
@@ -132,6 +139,14 @@ build red from `W-013` to `W-019` and gave `W-013` no `Verify` at all. Each item
 - [ ] **Produces** `taxrules/cap/{CapShape,CapResult,CapContext,Fixed,PercentOfBase}.java`, `.../taxrules/cap/CapShapeTest.java`
 - **Spec** `DR 05-domain-model.md` M1.3
 - **Do** `sealed interface CapShape permits Fixed, PercentOfBase` — **the two that exist**; later items extend the clause. `CapResult(Money value, String limitedBy)`. Test both shapes, and `DR 08-golden-tests.md` **T5-1**.
+
+> **Erratum (W-013, 2026-09-19):** **T5-1 does not belong to this item.** `08-golden-tests.md:456`
+> T5-1 is the 80C aggregate with the NPS sub-cap — an `AggregateWithCeiling` case, which is
+> **W-018**. This item tests `Fixed` with `SAL-STDDED-001` (₹75,000, `01-rulebook.md:373`) and
+> `PercentOfBase` with `HP-DED-30-001` (30% of ₹5,22,000 = ₹1,56,600, `01-rulebook.md:866,897`).
+> This item also produces **`taxrules/id/BaseId.java`**, added to its scope by the developer:
+> `05-domain-model.md:156` gives `PercentOfBase` a base *identifier*, and no item defined one.
+> Verified by: `docs/taxplanning-design/08-golden-tests.md:456`.
 - **Verify** `./mvnw test -pl backend -Dtest=CapShapeTest`
 - **Done when** the sealed family compiles closed over exactly the types that exist.
 

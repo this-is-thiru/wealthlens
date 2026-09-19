@@ -110,11 +110,11 @@ class ArchitectureTest {
     static final ArchRule money_rounding_lives_in_one_place =
             noClasses()
                     .that().resideOutsideOfPackage("..shared.util.money..")
-                    .and().resideOutsideOfPackage("..taxengine.money..")
+                    .and().resideOutsideOfPackage("..taxrules.money..")
                     .and().haveSimpleNameNotEndingWith("ChargeRounding")
                     .should().callMethod(java.math.BigDecimal.class, "setScale", int.class, java.math.RoundingMode.class)
                     .because("TL-8: paise rounding belongs to TMoney; a second copy is how two roundings diverge."
-                            + " taxengine.money is the second permitted home, not a third copy: TL-8 section 7 names"
+                            + " taxrules.money is the second permitted home, not a third copy: TL-8 section 7 names"
                             + " 'anything filed on someone else's behalf' as the trigger for exact decimal storage,"
                             + " and taxplanning ships ITR-ready figures. Its rounding likewise lives in one package.");
 
@@ -213,12 +213,16 @@ class ArchitectureTest {
      * a {@code BigDecimal} parameter, return type or local, not only a field.
      */
     @ArchTest
-    static final ArchRule taxengine_uses_money_not_bigdecimal =
+    static final ArchRule tax_modules_use_money_not_bigdecimal =
             noClasses()
-                    .that().resideInAPackage("..taxengine..")
-                    .and().resideOutsideOfPackage("..taxengine.money..")
+                    .that().resideInAnyPackage("..taxengine..", "..taxrules..", "..taxdocs..")
+                    .and().resideOutsideOfPackage("..taxrules.money..")
                     .should().dependOnClassesThat().haveFullyQualifiedName("java.math.BigDecimal")
-                    .because("D-MONEY: money is Money, rates are Rate, and nothing else is either");
+                    .because("D-MONEY: money is Money, rates are Rate, and nothing else is either."
+                            + " Money lives in taxrules.money rather than taxengine.money because a rule"
+                            + " pack holds rupee figures -- slab band bounds, the 80C ceiling, the standard"
+                            + " deduction -- so taxrules needs the type by its nature, and taxrules may not"
+                            + " depend on taxengine (modulith T1). Discovered by W-013; see STATE.md B-001.");
 
     /**
      * {@code ComputationStep} was withdrawn in favour of the DAG's {@code ComputationNode}.

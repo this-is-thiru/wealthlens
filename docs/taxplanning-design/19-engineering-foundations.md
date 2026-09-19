@@ -76,6 +76,15 @@ static final ArchRule money_rounding_lives_in_one_place =
                        + "its rounding likewise lives in exactly one package.");
 ```
 
+> **Erratum (W-013, 2026-09-19):** `Money` and `Rate` do **not** live in `taxengine.money` —
+> they live in **`taxrules.money`**. `taxrules` may not depend on `taxengine` (T1), and a rule
+> pack holds rupee figures by its nature — slab band bounds, the 80C ceiling, the standard
+> deduction — so a cap shape in `taxrules.cap` cannot express a limit without them. Decided as
+> option (A) of `STATE.md` **B-001**.
+> Verified by: `./mvnw test -pl backend -Dtest=WealthLensModulithTest` failed with
+> *"Module 'taxrules' depends on module 'taxengine' via …CapResult -> …taxengine.money.Money"*
+> before the move, and passes after it.
+
 Plus **three new rules**, because two money representations in one codebase is a hazard that must be
 made structural rather than remembered:
 
@@ -553,6 +562,9 @@ the rule rather than living in an email.
 |---|---|
 | **PR 0** (new, before PR 1) | amend `ArchitectureTest`'s money rule with its justification, and add the three new money rules (E1). **This is the first commit** — it is the one that would otherwise break |
 | PR 1 | `Money` under `..taxengine.money..`; `Rate`; `MoneyBridge` stub |
+
+> **Erratum (W-013, 2026-09-19):** `..taxrules.money..` — see the erratum in E1 above and
+> `STATE.md` **B-001**.
 | PR 2 | **+** the pack Maven plugin: validate, link, generate constants (E3) |
 | **PR 2b** (new) | JSON Schema generation + the CLI goals (E2) |
 | PR 3 | **+** test-data builders (E4.5) |

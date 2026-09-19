@@ -20,6 +20,9 @@ Design rationale lives in `docs/taxplanning-design/`; this file is the **contrac
 | **Workspace** | Exactly one per (person, tax year). Holds drafts and cross-year ledgers | — |
 | **Component** | One line of pay or payment, identified by a `ComponentCode` | "field", "head" |
 | **`Money`** | `BigDecimal`-backed, scale 2, in `..taxengine.money..` | `double`, `TMoney`, `long` |
+
+> **Erratum (W-013, 2026-09-19):** `..taxrules.money..`, not `..taxengine.money..`. See
+> `STATE.md` **B-001**.
 | **`Rate`** | A statutory percentage. `Rate.percent("30")` | `BigDecimal`, `double` |
 
 ---

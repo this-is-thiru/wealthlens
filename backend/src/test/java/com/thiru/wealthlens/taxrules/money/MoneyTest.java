@@ -1,4 +1,4 @@
-package com.thiru.wealthlens.taxengine.money;
+package com.thiru.wealthlens.taxrules.money;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

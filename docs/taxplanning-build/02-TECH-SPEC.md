@@ -76,6 +76,15 @@ Copy these exactly. Do not add methods not listed without a work item saying so.
 
 ### `Money` — `taxengine/money/Money.java`
 
+> **Erratum (W-013, 2026-09-19):** `Money` and `Rate` do **not** live in `taxengine.money` —
+> they live in **`taxrules.money`**. `taxrules` may not depend on `taxengine` (T1), and a rule
+> pack holds rupee figures by its nature — slab band bounds, the 80C ceiling, the standard
+> deduction — so a cap shape in `taxrules.cap` cannot express a limit without them. Decided as
+> option (A) of `STATE.md` **B-001**.
+> Verified by: `./mvnw test -pl backend -Dtest=WealthLensModulithTest` failed with
+> *"Module 'taxrules' depends on module 'taxengine' via …CapResult -> …taxengine.money.Money"*
+> before the move, and passes after it.
+
 ```java
 package com.thiru.wealthlens.taxengine.money;
 
@@ -134,6 +143,9 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
 ```
 
 ### `Rate` — `taxengine/money/Rate.java`
+
+> **Erratum (W-013, 2026-09-19):** as for `Money` above — the package is
+> `com.thiru.wealthlens.taxrules.money`, not `taxengine.money`. See `STATE.md` **B-001**.
 
 ```java
 package com.thiru.wealthlens.taxengine.money;
@@ -405,6 +417,12 @@ public enum TaxError {                     //  http  retryable  class
 | Rule | Item |
 |---|---|
 | amend `money_rounding_lives_in_one_place` to also permit `..taxengine.money..` | W-002 |
+
+> **Erratum (W-013, 2026-09-19):** the permitted package is `..taxrules.money..`. The same row's
+> companion rule was also renamed `taxengine_uses_money_not_bigdecimal` →
+> **`tax_modules_use_money_not_bigdecimal`**, and widened to `taxengine`, `taxrules` **and**
+> `taxdocs`, since the type it protects now sits in `taxrules`.
+> Verified by: `backend/src/test/java/com/thiru/wealthlens/architecture/ArchitectureTest.java:216`.
 | `taxengine` must not access `TMoney` | W-002 |
 | only `..taxplanning.portfolio..` may call `MoneyBridge.fromTMoney` | W-002 |
 | `taxengine` must not depend on `..repository..`, `org.springframework.data..`, `..taxplanning..` | W-004 |
