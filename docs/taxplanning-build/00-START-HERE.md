@@ -211,11 +211,11 @@ What I would need to proceed:
 
 ---
 
-## 10. Errata — the only permitted write to the design
+## 10. Errata — the only permitted write to the design *or the backlog*
 
-The design is a record of what was decided and why. When building reveals it is **wrong** — not
-merely incomplete, and not a matter of taste — append an erratum **immediately below the wrong
-text**, in exactly this shape:
+The design is a record of what was decided and why, and `03-WORK-ITEMS.md` is a record of what was
+planned. When building reveals either is **wrong** — not merely incomplete, and not a matter of
+taste — append an erratum **immediately below the wrong text**, in exactly this shape:
 
 ```markdown
 > **Erratum (W-0nn, YYYY-MM-DD):** <what is wrong, in one sentence> — <the correction>.
@@ -236,7 +236,8 @@ Rules for an erratum:
 This exception exists because `W-002` found `19-engineering-foundations.md` E1 quoting an ArchUnit
 rule **without** its `ChargeRounding` exemption — implementing from that quote alone would have
 broken the charges engine. A design that cannot be corrected is a design that misleads the next
-reader in exactly the way it misled you.
+reader in exactly the way it misled you. Extended to `03-WORK-ITEMS.md` by decision **D-009**, after
+`W-006` found a work item citing the wrong test.
 
 ---
 

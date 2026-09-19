@@ -63,6 +63,12 @@ something else to do.
 - **Verify** `./mvnw test -pl backend -Dtest=MoneyTest`
 - ⚠ Expected values come from `DR 01-rulebook.md` `RATE-ROUND-002`. **Do not derive them from your code.**
 
+> **Erratum (W-006, 2026-09-19):** the Spec line cites `DR 08-golden-tests.md` **T9-14**, which is
+> *"`portfolio` read-model is unavailable → 503"* and has nothing to do with rounding. The rounding
+> case is **T13-14** in `13-edge-cases.md`: *"Refund of ₹1,234.99 — paise ignored → 1,234 → last
+> figure 4 → ₹1,230."*
+> Verified by: `docs/taxplanning-design/08-golden-tests.md:851` and `13-edge-cases.md:514`.
+
 ### W-007 — `Rate` and `RateTest`
 - [ ] **Produces** `taxengine/money/Rate.java`, `.../RateTest.java`
 - **Spec** TS T3 verbatim
