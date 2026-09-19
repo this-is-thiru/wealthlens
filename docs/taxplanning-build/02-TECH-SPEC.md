@@ -180,6 +180,29 @@ public record TaxYearId(int startYear) {
 }
 ```
 
+> **Erratum (W-008, 2026-09-19) — two corrections to the block above. Copy from here, not from it.**
+>
+> **1. `RuleId` was `{1,3}`, which rejects 10 real rule IDs.** Every ID with four hyphenated segments
+> fails it: `RATE-SLAB-OLD-2025-A/B/C`, `RATE-SLAB-OLD-2026-A/B`, `SAL-ALW-TRANSPORT-DIS-2026`,
+> `SAL-ALW-DUTY-LIST-2026`, `SAL-ALW-NEW-SUBSET-001`, `DED-80C-NPS-CAP-001`, `SAL-DEF-80C-NPS-001`.
+> Four is the observed maximum across **309** rule IDs in the design; `{1,5}` leaves one segment of
+> headroom without weakening a check that exists to catch case and separator errors, not segment
+> counts.
+>
+> **2. `label()` did not zero-pad the ending year.** `2100 % 100` is `0`, so the tax year beginning
+> in 2099 rendered as `"2099-0"`. The synthetic pack that proves the architecture's extensibility is
+> **TY 2099-00**, so this boundary is exercised, not hypothetical.
+>
+> ```java
+> private static final Pattern PATTERN = Pattern.compile("^[A-Z]{2,8}(-[A-Z0-9]{1,12}){1,5}$");
+>
+> public String label() { return "%d-%02d".formatted(startYear, (startYear + 1) % 100); }
+> ```
+>
+> Verified by: a scan of all 309 rule IDs under `docs/taxplanning-design/`, and of every real
+> `NodeId`, `ComponentCode`, `RegimeCode`, `ItrFormCode` and `ScheduleCode` value — **the other five
+> patterns are correct.**
+
 ---
 
 ## T4 — The four pack layers
