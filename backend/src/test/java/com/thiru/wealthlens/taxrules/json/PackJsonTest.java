@@ -368,7 +368,7 @@ class PackJsonTest {
     @DisplayName("Condition — all thirteen")
     class Conditions {
 
-        private static com.thiru.wealthlens.taxrules.condition.ConditionContext taxpayer() {
+        static com.thiru.wealthlens.taxrules.condition.ConditionContext taxpayer() {
             return new com.thiru.wealthlens.taxrules.condition.ConditionContext(
                     true,
                     com.thiru.wealthlens.taxrules.condition.PersonType.INDIVIDUAL,
@@ -575,6 +575,219 @@ class PackJsonTest {
             assertThatThrownBy(() -> RuleJson.rules(json(badRate), "law/rates.json"))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("RATE-SLAB-NEW-2026");
+        }
+    }
+
+    // -------------------------------------------------------------- W-033c
+
+    @Nested
+    @DisplayName("regimes — the real law/regimes.json")
+    class Regimes {
+
+        private static String realRegimes() {
+            try (var in = PackJsonTest.class.getClassLoader()
+                    .getResourceAsStream("rulepacks/2026-27/law/regimes.json")) {
+                return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                throw new AssertionError("could not read the real regimes file", e);
+            }
+        }
+
+        @Test
+        void bothRegimesParseFromTheShippedPack() {
+            var regimes = RegimeJson.regimes(json(realRegimes()), "law/regimes.json");
+
+            assertThat(regimes.keySet())
+                    .extracting(RegimeCode::value)
+                    .containsExactlyInAnyOrder("S202_DEFAULT", "S202_OPTED_OUT");
+        }
+
+        @Test
+        void theDefaultRegimeNeedsNoActionAndHasNoDeadline() {
+            var regimes = RegimeJson.regimes(json(realRegimes()), "law/regimes.json");
+            var def = regimes.get(new RegimeCode("S202_DEFAULT"));
+
+            assertThat(def.isDefault()).isTrue();
+            assertThat(def.election().kind())
+                    .isEqualTo(com.thiru.wealthlens.taxrules.regime.ElectionKind.DEFAULT_NO_ACTION);
+            assertThat(def.election().deadline())
+                    .isInstanceOf(com.thiru.wealthlens.taxrules.regime.DeadlineSpec.NoDeadline.class);
+            assertThat(def.election().form()).isEmpty();
+        }
+
+        @Test
+        void theOptOutCarriesTheSTwoZeroTwoFourBindingAndItsRevival() {
+            var regimes = RegimeJson.regimes(json(realRegimes()), "law/regimes.json");
+            var optedOut = regimes.get(new RegimeCode("S202_OPTED_OUT"));
+            var binding = optedOut.election().binding();
+
+            assertThat(binding.maxWithdrawals()).isEqualTo(1);
+            assertThat(binding.bindsSubsequentYears()).isTrue();
+            assertThat(binding.afterWithdrawal())
+                    .isInstanceOf(
+                            com.thiru.wealthlens.taxrules.regime.AfterWithdrawal.IneligibleUnless.class);
+
+            // The binding applies to a person WITH business income and not to a salaried one
+            assertThat(binding.appliesTo(Conditions.taxpayer())).isFalse();
+        }
+
+        @Test
+        void bothRegimesAreGrandfatherableAndInForce() {
+            var regimes = RegimeJson.regimes(json(realRegimes()), "law/regimes.json");
+
+            regimes.values().forEach(regime -> {
+                assertThat(regime.lifecycle().applicable(new com.thiru.wealthlens.taxrules.id.TaxYearId(2026)))
+                        .isTrue();
+                assertThat(regime.lifecycle().onSunset())
+                        .isInstanceOf(
+                                com.thiru.wealthlens.taxrules.regime.ContinuationPolicy.ContinueIndefinitely.class);
+            });
+        }
+
+        @Test
+        void theStaleLockInFieldFailsWithTheCurrentTags() {
+            // A pack copied from 16-getting-started.md's pre-L3 example
+            assertThatThrownBy(() ->
+                            RegimeJson.binding(json("{\"lockIn\": \"NONE\"}"), "election.binding"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("bindsSubsequentYears is required and is absent");
+        }
+
+        @Test
+        void aBareStringDeadlineFailsWithTheCurrentTags() {
+            assertThatThrownBy(() ->
+                            RegimeJson.deadline(json("{\"type\": \"s.263(1) due date\"}"), "d"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("DueDateUnder")
+                    .hasMessageContaining("NoDeadline");
+        }
+
+        @Test
+        void theShippedPackDeclaresNoDisallowanceSetYet() {
+            // W-029 refuses a DisallowanceSet that forbids nothing, and none of the s.202(2)(a)
+            // rules are authored — so the pack declares no set and no regime references one.
+            // Referencing an empty set, or a set that does not exist, both fail; saying nothing
+            // is the only truthful option until the rules land.
+            assertThat(RegistryJson.disallowanceSets(json(realRegimes()), "law/regimes.json")).isEmpty();
+        }
+
+        @Test
+        void aDisallowanceSetIsReadWithItsBasisWhenOneExists() {
+            var sets = RegistryJson.disallowanceSets(
+                    json("""
+                    { "disallowanceSets": [
+                      { "id": "DIS-S202-2A", "displayName": "Disallowed under s.202(2)(a)",
+                        "basis": "REG-NEW-DISALLOW-001",
+                        "disallowedRules": ["SAL-HRA-005"],
+                        "provenance": {
+                          "sourceUrl": "https://egazette.gov.in/x.pdf",
+                          "sourceDescription": "s.202(2)(a)", "draftOrFinal": "FINAL",
+                          "accessedOn": "2026-09-18", "status": "VERIFIED" } } ] }"""),
+                    "law/regimes.json");
+
+            assertThat(sets.values().iterator().next().basis().value())
+                    .isEqualTo("REG-NEW-DISALLOW-001");
+            assertThat(sets.values().iterator().next()
+                            .disallows(new com.thiru.wealthlens.taxrules.id.RuleId("SAL-HRA-005")))
+                    .isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("JsonPackAssembler — the whole pack")
+    class Assembly {
+
+        private static String resource(String path) {
+            try (var in = PackJsonTest.class.getClassLoader()
+                    .getResourceAsStream("rulepacks/2026-27/" + path)) {
+                return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                throw new AssertionError("could not read " + path, e);
+            }
+        }
+
+        private static com.thiru.wealthlens.taxrules.registry.GoverningInstruments instruments() {
+            var act = com.thiru.wealthlens.taxrules.registry.Instrument.assented(
+                    "Income-tax Act, 2025 (30 of 2025)",
+                    LocalDate.of(2025, 8, 21),
+                    LocalDate.of(2026, 4, 1),
+                    "CG-DL-E-22082025-265620",
+                    java.net.URI.create("https://egazette.gov.in/WriteReadData/2025/265620.pdf"),
+                    VerificationStatus.VERIFIED);
+            var rules = com.thiru.wealthlens.taxrules.registry.Instrument.notified(
+                    "Income-tax Rules, 2026",
+                    LocalDate.of(2026, 4, 1),
+                    "CG-DL-E-20032026-271092",
+                    java.net.URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
+                    VerificationStatus.VERIFIED);
+            return new com.thiru.wealthlens.taxrules.registry.GoverningInstruments(act, act, rules);
+        }
+
+        private static java.util.Map<
+                        com.thiru.wealthlens.taxrules.pack.RulePackLayer,
+                        com.thiru.wealthlens.taxrules.pack.RulePackRef>
+                layers() {
+            var map = new java.util.EnumMap<
+                    com.thiru.wealthlens.taxrules.pack.RulePackLayer,
+                    com.thiru.wealthlens.taxrules.pack.RulePackRef>(
+                    com.thiru.wealthlens.taxrules.pack.RulePackLayer.class);
+            for (var layer : com.thiru.wealthlens.taxrules.pack.RulePackLayer.values()) {
+                String name = layer.name().toLowerCase(java.util.Locale.ROOT);
+                map.put(
+                        layer,
+                        new com.thiru.wealthlens.taxrules.pack.RulePackRef(
+                                layer, "2026-27." + name + ".1", "sha256:" + "a".repeat(64)));
+            }
+            return map;
+        }
+
+        @Test
+        void theShippedPackAssemblesWhole() {
+            var pack = new JsonPackAssembler(instruments())
+                    .assemble(
+                            new com.thiru.wealthlens.taxrules.id.TaxYearId(2026),
+                            layers(),
+                            Map.of(
+                                    "law/rates.json", resource("law/rates.json"),
+                                    "law/regimes.json", resource("law/regimes.json"),
+                                    "exec/components.json", resource("exec/components.json")));
+
+            assertThat(pack.rules()).hasSize(2);
+            assertThat(pack.regimes()).hasSize(2);
+            assertThat(pack.disallowanceSets()).isEmpty();
+            assertThat(pack.components()).isEmpty();
+        }
+
+        @Test
+        void theAssembledPackComputesTheRulebookFigure() {
+            // The full chain: JSON on disk to a tax figure. RATE-SLAB-NEW-2026 on ₹50,00,000.
+            var pack = new JsonPackAssembler(instruments())
+                    .assemble(
+                            new com.thiru.wealthlens.taxrules.id.TaxYearId(2026),
+                            layers(),
+                            Map.of(
+                                    "law/rates.json", resource("law/rates.json"),
+                                    "law/regimes.json", resource("law/regimes.json"),
+                                    "exec/components.json", resource("exec/components.json")));
+
+            var slab = pack.rule(new com.thiru.wealthlens.taxrules.id.RuleId("RATE-SLAB-NEW-2026"));
+            var cap = slab.versions().getFirst().cap();
+            var ctx = CapContext.of(new BaseId("ROUNDED_TOTAL_INCOME"), Money.of("5000000"));
+
+            assertThat(cap.apply(ctx).value()).isEqualTo(Money.of("1080000"));
+        }
+
+        @Test
+        void aMissingLayerFileNamesWhatWasRead() {
+            assertThatThrownBy(() ->
+                            new JsonPackAssembler(instruments())
+                                    .assemble(
+                                            new com.thiru.wealthlens.taxrules.id.TaxYearId(2026),
+                                            layers(),
+                                            Map.of("law/rates.json", resource("law/rates.json"))))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("law/regimes.json")
+                    .hasMessageContaining("the provider read");
         }
     }
 }

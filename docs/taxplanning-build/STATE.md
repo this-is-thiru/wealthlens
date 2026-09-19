@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-033b — "taxplanning W-033b: thirteen predicates, and a field name that meant two things"
-Last updated              : 2026-09-19 (session 2 — W-033b DONE)
+Last checkpoint           : W-033c — "taxplanning W-033c: the whole pack assembles, and two of my items disagreed"
+Last updated              : 2026-09-19 (session 2 — W-033c DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-033c` — regimes, sets, components, `JsonPackAssembler` |
+| **Next item** | `W-034` — the end-to-end load test (**closes Phase 3**) |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-033c | 2026-09-19 | RegimeJson, RegistryJson, JsonPackAssembler; the shipped pack assembles and computes T2-1; removed the empty DIS-S202-2A that W-029's invariant refused; 47 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
 W-033b | 2026-09-19 | ConditionJson (13 variants) + RuleJson; EvidenceRecorded reads `evidenceType` (discriminator collision); 36 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
 W-033 | 2026-09-19 | PackJson/ValueJson/ShapeJson — leaves, Validity, RegimeApplicability, all 6 CapShapes; real ladder parses and computes T2-1; Jackson 2/3 split fixed; 24 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
 W-032b | 2026-09-19 | RuleIds/ComponentCodes committed + ConstantGenerator + verification test; both DR 19 properties tested; no build plugins added; 12 tests | `./mvnw test -pl backend -Dtest=GeneratedConstantsTest`

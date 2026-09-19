@@ -4,7 +4,7 @@
   "layers": {
     "law": {
       "version": "2026-27.law.1",
-      "checksum": "sha256:538f7fe073a9334b06204ee9c1f1f1bbfd93eebdcbfe9c032fef130ed4190557"
+      "checksum": "sha256:1d9f26ea376e3082965bc6660f5fb3ac3b4b803c3fe127eb25933e6121716efa"
     },
     "exec": {
       "version": "2026-27.exec.1",
