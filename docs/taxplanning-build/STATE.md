@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-033 — "taxplanning W-033: parsing, with the pack author as the reader"
-Last updated              : 2026-09-19 (session 2 — W-033 DONE)
+Last checkpoint           : W-033b — "taxplanning W-033b: thirteen predicates, and a field name that meant two things"
+Last updated              : 2026-09-19 (session 2 — W-033b DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-033b` — the 13 `Condition` variants + `RuleRow` |
+| **Next item** | `W-033c` — regimes, sets, components, `JsonPackAssembler` |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-033b | 2026-09-19 | ConditionJson (13 variants) + RuleJson; EvidenceRecorded reads `evidenceType` (discriminator collision); 36 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
 W-033 | 2026-09-19 | PackJson/ValueJson/ShapeJson — leaves, Validity, RegimeApplicability, all 6 CapShapes; real ladder parses and computes T2-1; Jackson 2/3 split fixed; 24 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
 W-032b | 2026-09-19 | RuleIds/ComponentCodes committed + ConstantGenerator + verification test; both DR 19 properties tested; no build plugins added; 12 tests | `./mvnw test -pl backend -Dtest=GeneratedConstantsTest`
 W-032 | 2026-09-19 | The real 2026-27 pack: manifest + 6 layer files, real checksums; RATE-SLAB-NEW-2026 and RATE-SLAB-OLD-2026; 21 tests | `./mvnw test -pl backend -Dtest=PackJsonWellFormedTest`

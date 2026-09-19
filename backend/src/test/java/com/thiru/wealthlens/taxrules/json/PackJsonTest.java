@@ -361,4 +361,220 @@ class PackJsonTest {
                     .hasMessageContaining("as the statute states it");
         }
     }
+
+    // -------------------------------------------------------------- W-033b
+
+    @Nested
+    @DisplayName("Condition — all thirteen")
+    class Conditions {
+
+        private static com.thiru.wealthlens.taxrules.condition.ConditionContext taxpayer() {
+            return new com.thiru.wealthlens.taxrules.condition.ConditionContext(
+                    true,
+                    com.thiru.wealthlens.taxrules.condition.PersonType.INDIVIDUAL,
+                    Map.of(
+                            com.thiru.wealthlens.taxrules.condition.AgeSubject.SELF, 45,
+                            com.thiru.wealthlens.taxrules.condition.AgeSubject.INSURED_PERSON, 70),
+                    Map.of(
+                            com.thiru.wealthlens.taxrules.condition.AgeSubject.SELF,
+                            com.thiru.wealthlens.taxrules.condition.DisabilitySeverity.SEVERE_DISABILITY),
+                    Map.of(new com.thiru.wealthlens.taxrules.id.NodeId("round.totalincome"), Money.of("1200000")),
+                    java.util.Set.of(com.thiru.wealthlens.taxrules.condition.HeadCode.SALARIES),
+                    java.util.Set.of(new ComponentCode("HRA")),
+                    java.util.Set.of(com.thiru.wealthlens.taxrules.condition.EvidenceType.LANDLORD_PAN),
+                    java.util.Optional.of(true));
+        }
+
+        private static boolean holds(String raw) {
+            return ConditionJson.condition(json(raw), "c").holds(taxpayer());
+        }
+
+        @Test
+        void everyVariantParsesAndEvaluates() {
+            assertThat(holds("{\"type\": \"IsResident\"}")).isTrue();
+            assertThat(holds("{\"type\": \"PaidOtherThanInCash\"}")).isTrue();
+            assertThat(holds("{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"SELF\"}")).isFalse();
+            assertThat(holds("{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"INSURED_PERSON\"}"))
+                    .isTrue();
+            assertThat(holds("{\"type\": \"HasPersonType\", \"types\": [\"INDIVIDUAL\"]}")).isTrue();
+            assertThat(holds("{\"type\": \"IsCertifiedDisabled\", \"minimum\": \"DISABILITY\"}")).isTrue();
+            assertThat(holds(
+                            "{\"type\": \"IncomeAtMost\", \"node\": \"round.totalincome\", \"limit\": \"1200000\"}"))
+                    .isTrue();
+            assertThat(holds(
+                            "{\"type\": \"IncomeAtLeast\", \"node\": \"round.totalincome\", \"threshold\": \"5000000\"}"))
+                    .isFalse();
+            assertThat(holds("{\"type\": \"HasIncomeUnderHead\", \"head\": \"SALARIES\"}")).isTrue();
+            assertThat(holds("{\"type\": \"HasIncomeUnderHead\", \"head\": \"BUSINESS_OR_PROFESSION\"}"))
+                    .isFalse();
+            assertThat(holds("{\"type\": \"ComponentPresent\", \"code\": \"HRA\"}")).isTrue();
+            assertThat(holds("{\"type\": \"EvidenceRecorded\", \"evidenceType\": \"LANDLORD_PAN\"}")).isTrue();
+            assertThat(holds("{\"type\": \"Not\", \"condition\": {\"type\": \"IsResident\"}}")).isFalse();
+            assertThat(holds(
+                            "{\"type\": \"AllOf\", \"all\": [{\"type\": \"IsResident\"}, {\"type\": \"ComponentPresent\", \"code\": \"HRA\"}]}"))
+                    .isTrue();
+            assertThat(holds(
+                            "{\"type\": \"AnyOf\", \"any\": [{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"SELF\"}, {\"type\": \"IsResident\"}]}"))
+                    .isTrue();
+        }
+
+        @Test
+        void evidenceRecordedIsReadFromEvidenceTypeNotType() {
+            // Its record component is called `type`, which is also the discriminator. Naming both
+            // `type` would make the object mean two things at once.
+            assertThatThrownBy(() ->
+                            ConditionJson.condition(
+                                    json("{\"type\": \"EvidenceRecorded\"}"), "c"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("c.evidenceType is required and is absent");
+        }
+
+        @Test
+        void theSOneTwoZeroTwoFourRevivalConditionParses() {
+            // From law/regimes.json: Not(HasIncomeUnderHead(BUSINESS_OR_PROFESSION))
+            var revival = ConditionJson.condition(
+                    json("""
+                    { "type": "Not", "condition":
+                      { "type": "HasIncomeUnderHead", "head": "BUSINESS_OR_PROFESSION" } }"""),
+                    "c");
+
+            assertThat(revival.holds(taxpayer())).isTrue();
+            assertThat(revival.describe()).contains("BUSINESS_OR_PROFESSION");
+        }
+
+        @Test
+        void anUnknownPersonTypeListsTheKnownOnes() {
+            assertThatThrownBy(() ->
+                            ConditionJson.condition(
+                                    json("{\"type\": \"HasPersonType\", \"types\": [\"HUF\"]}"), "c"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("\"HUF\"")
+                    .hasMessageContaining("INDIVIDUAL");
+        }
+
+        @Test
+        void anUnknownTagListsAllThirteen() {
+            assertThatThrownBy(() -> ConditionJson.condition(json("{\"type\": \"IsRich\"}"), "c"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("IsResident")
+                    .hasMessageContaining("PaidOtherThanInCash")
+                    .hasMessageContaining("IsRich");
+        }
+    }
+
+    @Nested
+    @DisplayName("RuleRow — the real law/rates.json")
+    class Rules {
+
+        private static final String REAL_RULE = """
+                { "rules": [
+                  { "ruleId": "RATE-SLAB-NEW-2026",
+                    "axis": "TAX_YEAR",
+                    "midYearCombination": "LATEST_VERSION_GOVERNS",
+                    "versions": [
+                      { "validity": { "type": "Between", "from": "2026-04-01" },
+                        "regimes": { "type": "OnlyIn", "regimes": ["S202_DEFAULT"] },
+                        "provision1961": { "instrument": "Income-tax Act, 1961", "reference": "s.115BAC(1A)(iii)", "presence": "PRESENT" },
+                        "provision2025": { "instrument": "Income-tax Act, 2025", "reference": "s.202(1) Table", "presence": "PRESENT" },
+                        "cap": { "type": "Fixed", "amount": "0" },
+                        "conditions": [],
+                        "introducedBy": {
+                          "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.202(1)",
+                          "gazetteRef": "CG-DL-E-22082025-265620",
+                          "notifiedOn": "2025-08-21", "effectiveFrom": "2026-04-01",
+                          "retrospective": false,
+                          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+                          "status": "VERIFIED" },
+                        "provenance": {
+                          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+                          "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
+                          "draftOrFinal": "FINAL", "accessedOn": "2026-09-18", "status": "VERIFIED" } } ],
+                    "headProvenance": {
+                      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+                      "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
+                      "draftOrFinal": "FINAL", "accessedOn": "2026-09-18", "status": "VERIFIED" } } ] }""";
+
+        @Test
+        void aRuleIsReadWithItsAxisVersionsAndAmendment() {
+            var rules = RuleJson.rules(json(REAL_RULE), "law/rates.json");
+            var slab = rules.get(new com.thiru.wealthlens.taxrules.id.RuleId("RATE-SLAB-NEW-2026"));
+
+            assertThat(slab.axis())
+                    .isEqualTo(com.thiru.wealthlens.taxrules.temporal.TemporalAxis.TAX_YEAR);
+            assertThat(slab.versions()).hasSize(1);
+            assertThat(slab.versions().getFirst().introducedBy().gazetteRef())
+                    .isEqualTo("CG-DL-E-22082025-265620");
+            assertThat(slab.midYearCombination())
+                    .isEqualTo(com.thiru.wealthlens.taxrules.pack.MidYearCombination.LATEST_VERSION_GOVERNS);
+        }
+
+        @Test
+        void aRuleDefinedTwiceIsRejected() {
+            String twice = REAL_RULE.replace("\"rules\": [", "\"rules\": [")
+                    .replaceFirst("\\] \\}$", "] }");
+            var doubled = json(REAL_RULE.substring(0, REAL_RULE.lastIndexOf("] }"))
+                    + ", " + REAL_RULE.substring(REAL_RULE.indexOf("{ \"ruleId\""),
+                            REAL_RULE.lastIndexOf("] }")) + "] }");
+
+            assertThatThrownBy(() -> RuleJson.rules(doubled, "law/rates.json"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("twice")
+                    .hasMessageContaining("silently win");
+        }
+
+        @Test
+        void aVersionMissingItsAmendmentSaysSo() {
+            // Invariant I15, reached at parse time rather than at validation
+            String stripped = REAL_RULE.replaceAll(
+                    "(?s)\"introducedBy\": \\{.*?\\},\\n", "");
+
+            assertThatThrownBy(() -> RuleJson.rules(json(stripped), "law/rates.json"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("introducedBy is required and is absent");
+        }
+
+        @Test
+        void aRuleWithNeitherACapNorAConditionIsRejected() {
+            String empty = REAL_RULE
+                    .replace("\"cap\": { \"type\": \"Fixed\", \"amount\": \"0\" },\n", "");
+
+            assertThatThrownBy(() -> RuleJson.rules(json(empty), "law/rates.json"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("would load, evaluate, and mean nothing");
+        }
+
+        @Test
+        void aRuleMayHaveConditionsAndNoCap() {
+            // SAL-HRA-002's "the accommodation is not owned by the assessee" limits nothing by itself
+            String conditionOnly = REAL_RULE
+                    .replace("\"cap\": { \"type\": \"Fixed\", \"amount\": \"0\" },\n", "")
+                    .replace("\"conditions\": []", "\"conditions\": [{ \"type\": \"IsResident\" }]");
+
+            var rules = RuleJson.rules(json(conditionOnly), "law/rates.json");
+
+            assertThat(rules).hasSize(1);
+            assertThat(rules.values().iterator().next().versions().getFirst().conditions()).hasSize(1);
+        }
+
+        @Test
+        void anUnknownAxisListsTheSix() {
+            String badAxis = REAL_RULE.replace("\"axis\": \"TAX_YEAR\"", "\"axis\": \"CALENDAR_YEAR\"");
+
+            assertThatThrownBy(() -> RuleJson.rules(json(badAxis), "law/rates.json"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("ACQUISITION_DATE")
+                    .hasMessageContaining("CALENDAR_YEAR");
+        }
+
+        @Test
+        void theFailurePathNamesTheRule() {
+            // "law/rates.json rules[0] (RATE-SLAB-NEW-2026).versions[0]..." — a pack with forty
+            // rules needs the id, not just the index
+            String badRate = REAL_RULE.replace("\"amount\": \"0\"", "\"amount\": \"nought\"");
+
+            assertThatThrownBy(() -> RuleJson.rules(json(badRate), "law/rates.json"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("RATE-SLAB-NEW-2026");
+        }
+    }
 }
