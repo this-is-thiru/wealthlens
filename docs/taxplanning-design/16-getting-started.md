@@ -129,6 +129,20 @@ public record SlabLadder(List<Band> bands) implements CapShape {
 }
 ```
 
+> **Erratum (W-015, 2026-09-19):** two corrections to this reference implementation.
+>
+> 1. **`ctx.base()` takes an argument.** `CapContext` holds `Map<BaseId, Money>` and
+>    `base(BaseId)` resolves a declared base, so `SlabLadder` carries a `BaseId` like
+>    `PercentOfBase` does. Decided in `STATE.md` **D-012**'s sibling call on `CapContext` — a
+>    single implicit base cannot express `LeastOf`, whose limbs each read a different one.
+> 2. **`validate()` here checks only gaps and overlaps between adjacent bands.** Three more ways
+>    to write a malformed ladder pass it silently, each of them untaxing real income: a first band
+>    that does not start at zero, a closed top band, and an open band that is not last (every band
+>    above it is unreachable). All four are checked in
+>    `taxrules/cap/SlabLadder.java`'s `validate()`.
+>
+> Verified by: `./mvnw test -pl backend -Dtest=SlabLadderTest` — 20 tests, six of them validation.
+
 ### 4. The first rule pack — real content
 
 `backend/src/main/resources/rulepacks/2026-27/manifest.json`:

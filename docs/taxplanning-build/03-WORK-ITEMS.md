@@ -215,6 +215,14 @@ uniquely prove: the **real** `2026-27` pack loading end to end.
 | **W-027** | `taxrules/pack/{RulePack,RulePackLayer,RulePackRef}.java` | `DR 23` A2 — **four layers, separate versions** | compiles |
 | **W-028** | `taxrules/pack/{RulePackProvider,ClasspathRulePackProvider}.java` + `.../pack/ClasspathRulePackProviderTest.java` + a **minimal fixture pack** under `src/test/resources/rulepacks-fixture/` | `DR 10` E3.5, `DR 23` A2 | `-Dtest=ClasspathRulePackProviderTest` |
 | **W-029** | `taxrules/validate/PackValidator.java` — invariants I1–I7 — + `.../validate/PackValidatorTest.java` | TS T5 | `-Dtest=PackValidatorTest` — one violating and one clean case **per invariant**; build the rows in code, no files needed |
+
+> **Erratum (W-015, 2026-09-19):** `PackValidationException` — which `02-TECH-SPEC.md:244` names as
+> the failure type for **every** T5 invariant, and which `19-engineering-foundations.md:343` makes a
+> property test subject — was produced by **no item**. `W-015` needed it for `SlabLadder.validate()`
+> and created it at `taxrules/validate/PackValidationException.java`, by the developer's decision.
+> `W-029` should extend it, not redefine it.
+> Verified by: `grep -rn PackValidationException docs/` found three design uses and no `Produces`.
+
 | **W-030** | `taxrules/validate/PackValidator.java` — invariants I10, I13–I16, I18–I23, I27 — + **extend** `PackValidatorTest` | TS T5 | `-Dtest=PackValidatorTest` — same shape, one pair per invariant |
 | **W-031** | `taxrules/registry/{TaxYearRegistry,TaxYearRegistryEntry}.java` + `.../registry/TaxYearRegistryTest.java` | `DR 05` M1.1 | `-Dtest=TaxYearRegistryTest` |
 | **W-032** | pack JSON: `rulepacks/2026-27/manifest.json` + `law/rates.json` + `exec/pipelines.json` + `law/regimes.json` + `.../pack/PackJsonWellFormedTest.java` | `DR 16` S2 step 4 — **copy the JSON verbatim** | `-Dtest=PackJsonWellFormedTest` — parses, and **every slab band lower bound ends in `0000`** (the `400001` trap) |
