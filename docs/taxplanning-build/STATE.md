@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-005 — "taxplanning W-005: Money, an exact rupee amount"
-Last updated              : 2026-09-19 (session 1 — W-005 DONE)
+Last checkpoint           : W-006 — "taxplanning W-006: MoneyTest, pinning section 516 rounding"
+Last updated              : 2026-09-19 (session 1 — W-006 DONE)
 Current position          : W-001
 Session count             : 1
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-006` — `MoneyTest` |
+| **Next item** | `W-007` — `Rate` and `RateTest` |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 1 — Foundational types |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -48,7 +48,7 @@ Legend: `·` not started · `E` explained, awaiting approval · `P` in progress 
 
 ```
 Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
-Phase 1    W-004 D  W-005 D  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
+Phase 1    W-004 D  W-005 D  W-006 D  W-007 ·  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
 Phase 4    W-035 ·  W-036 ·  W-037 ·  W-038 ·  W-039 ·  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **5** / 146 · in flight **0** · blocked **0**
+Counts — done **6** / 146 · in flight **0** · blocked **0**
 
 ---
 
@@ -78,6 +78,7 @@ W-002 | 2026-09-19 | Money ArchUnit rule amended for ..taxengine.money..; 2 guar
 W-003 | 2026-09-19 | rulepacks resource directory created — Phase 0 complete | `test -d backend/src/main/resources/rulepacks`
 W-004 | 2026-09-19 | 4 engine-purity rules + the withdrawal gate (11→16 tests) | `./mvnw test -pl backend -Dtest=ArchitectureTest`
 W-005 | 2026-09-19 | Money — BigDecimal, scale 2, s.516 rounding. No test yet (W-006) | `./mvnw test -pl backend -Dtest=ArchitectureTest`
+W-006 | 2026-09-19 | MoneyTest — 17 tests incl. the 1,234.99→1,230 discriminator | `./mvnw test -pl backend -Dtest=MoneyTest`
 
 ---
 
@@ -105,6 +106,8 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-010 | 2026-09-19 | How are `Money` values asserted, given `MoneyAssert` is `double`-based? | **AssertJ `isEqualTo` on `Money` directly.** Record equality compares scale as well as value, so it catches a scale slip too. `MoneyAssert` exists to stop bare `assertEquals(double, double)`; that hazard does not exist for an exact type, and routing through it would discard the exactness and assert with a tolerance | **decided by the developer** |
+| D-009 | 2026-09-19 | May `03-WORK-ITEMS.md` carry errata, as the design now can? | **Yes**, on the same terms — append only, proof required, original never edited | **decided by the developer** |
 | D-008 | 2026-09-19 | May the design be corrected when building proves it wrong? | **Yes — errata only.** Append a marked block below the wrong text; never edit or delete the original; proof required. R7 relaxed, `00-START-HERE.md` §10 | **decided by the developer** |
 | D-007 | 2026-09-19 | Q7 — `SAL-ALW-NEW-SUBSET-001` per section or per r.280(3)? | **Per the section**, flagged visibly. A rule cannot override its parent section | provisional — on recommendation |
 
@@ -128,12 +131,18 @@ Session 1. Decisions D-001…D-007 recorded on the design's recommendations; **D
 open** and blocks nothing before `W-032`. The plan for `W-001` is written and is **awaiting
 approval** — no code has been written.
 
-`W-005` is **DONE** and committed. Next is `W-006` — `MoneyTest`.
+`W-006` is **DONE** and committed. Next is `W-007` — `Rate` and `RateTest`.
 
-⚠ **`W-006` is the first item with hand-derived expected values**, and therefore the first real test
-of rule R3. The s.516 cases are the ones to get right: 1,234.99 → **1,230**, because the section
-ignores paise *before* rounding the whole rupees. If a test fails, the code is wrong — do not adjust
-the expectation.
+`Money` is now fully specified and tested. The discriminating assertion is `1234.99 → 1230`: a
+wrong implementation using `setScale(0, HALF_UP)` yields 1,240, so the test does bite.
+
+Found in `W-006`: the work item cited **T9-14** for the rounding case, which is actually
+*"portfolio read-model unavailable → 503"*. The right source is **T13-14** in `13-edge-cases.md`.
+Errata are now permitted in `03-WORK-ITEMS.md` too (**D-009**) and the correction is recorded there.
+
+`MoneyAssert` cannot assert this `Money` — it is `double`-based with a half-paisa tolerance
+(**D-010**). Tests use AssertJ `isEqualTo` on `Money` directly, which compares scale as well as
+value and so catches a scale slip too.
 
 `Money` has **no test yet** — that is `W-006`, and it is where the first hand-derived expected values
 appear (the s.516 rounding cases). Until then its behaviour is unverified; only that it compiles and
