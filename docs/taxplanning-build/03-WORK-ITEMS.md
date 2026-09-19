@@ -8,7 +8,10 @@ wait for review.** See `00-START-HERE.md` §1.
 
 Statuses live in `STATE.md`, **not here**. This file is read-only once written.
 
-**On tests — rule B1.** *Every item carries its own test.* An item's `Verify` command may only
+**On tests — rule B1.** *Every item carries its own test, and the test is not the compiler.*
+`Verify: compiles` was swept out by **D-014**: it satisfied the letter of this rule and defeated its
+purpose, since a record with a lookup method compiles perfectly while returning the wrong version.
+An item that genuinely has nothing to assert beyond compilation should say **why** in one line. An item's `Verify` command may only
 name a test that the item itself `Produces`, or one produced by an item **already done**. An item
 whose `Verify` names a *later* item's test is malformed: it either ships untested code or cannot be
 verified at all. Restructured on 2026-09-19 by decision **D-011** — see the note at the end of
@@ -230,17 +233,27 @@ build red from `W-013` to `W-019` and gave `W-013` no `Verify` at all. Each item
 
 ## Phase 3 — Rule pack loading (12 items)
 
-⚠ **Restructured by D-011.** Six items (`W-028`–`W-033`) originally verified with `W-034`'s
-`RulePackLoadTest`. Each now carries its own test. `W-034` remains, but only for what it can
-uniquely prove: the **real** `2026-27` pack loading end to end.
+⚠ **Restructured by D-011,** then again by **D-014**. Six items (`W-028`–`W-033`) originally
+verified with `W-034`'s `RulePackLoadTest`; each now carries its own test, and `W-034` keeps only
+what it uniquely proves — the **real** `2026-27` pack, end to end. D-014 then merged `W-023`/`W-024`
+and replaced every `Verify: compiles` in this file with a real command.
+
+> **Erratum (W-023, 2026-09-19):** `W-023` as written could not compile. `RuleVersion`'s third field
+> is `RegimeApplicability`, which was **`W-024`'s** output — the dependency ran backwards through
+> the ordering this backlog relies on. Six further types were produced by **no item**: `Provision`
+> and `Presence` (`05-domain-model.md:108-109`, two fields of `RuleVersion`), `TemporalContext`,
+> `MissingTemporalCoordinateException` and `NoRuleVersionException` (`18-temporal-versioning.md` V4).
+> All are now in the merged `W-023`.
+> Verified by: `03-WORK-ITEMS.md:240` assigned `RegimeApplicability` to `W-024`;
+> `grep -c` over this file found **0** mentions of each of the six.
 
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
-| **W-023** | `taxrules/temporal/{RuleVersion,AmendmentRef}.java` | `DR 18` V4 | compiles |
-| **W-024** | `taxrules/pack/{RuleRow,RegimeApplicability}.java` | `DR 18` V4, `DR 10` E3.3 | compiles |
-| **W-025** | `taxrules/component/{ComponentDefinition,ComponentLifecycle,DeprecationPolicy,CashNature,ComponentKind}.java` | `DR 10` E4, `DR 18` V6 | compiles |
-| **W-026** | `taxrules/regime/{RegimeSpec,RegimeLifecycle,ElectionProtocol,BindingSpec,AfterWithdrawal,ContinuationPolicy,InvalidationPolicy}.java` | `DR 17` L2, L3 | compiles |
-| **W-027** | `taxrules/pack/{RulePack,RulePackLayer,RulePackRef}.java` | `DR 23` A2 — **four layers, separate versions** | compiles |
+| **W-023** | **MERGED with W-024.** `taxrules/temporal/{RuleVersion,AmendmentRef,Provision,Presence,TemporalContext,MissingTemporalCoordinateException,NoRuleVersionException}.java`, `taxrules/pack/{RuleRow,RegimeApplicability}.java`, `.../pack/RuleRowTest.java` | `DR 18` V4, V8 · `DR 05` M1.2 · `DR 10` E3.3 | `-Dtest=RuleRowTest` — `versionAt` on a hit, a gap, both boundaries and a `PendingNotification`; `changesWithin` true and false |
+| **W-024** | **RETIRED** — merged into `W-023` by D-014 | — | — |
+| **W-025** | `taxrules/component/{...}.java` + `.../component/ComponentLifecycleTest.java` | `DR 10` E4, `DR 18` V6 | `-Dtest=ComponentLifecycleTest` — a withdrawn component is rejected, not silently zero (`D-NOSILENT`); each `DeprecationPolicy` branch |
+| **W-026** | `taxrules/regime/{...}.java` + `.../regime/RegimeLifecycleTest.java` | `DR 17` L2, L3 | `-Dtest=RegimeLifecycleTest` — entry closed but in force (ss.201/204 grandfathering); withdrawal once then permanently barred; the s.202(4)(a)(iv) revival carve-out |
+| **W-027** | `taxrules/pack/{RulePack,RulePackLayer,RulePackRef}.java` + `.../pack/RulePackLayerTest.java` | `DR 23` A2 — **four layers, separate versions** | `-Dtest=RulePackLayerTest` — the cache key covers `law`+`exec` and **not** `forms`/`content`; each layer versions independently |
 | **W-028** | `taxrules/pack/{RulePackProvider,ClasspathRulePackProvider}.java` + `.../pack/ClasspathRulePackProviderTest.java` + a **minimal fixture pack** under `src/test/resources/rulepacks-fixture/` | `DR 10` E3.5, `DR 23` A2 | `-Dtest=ClasspathRulePackProviderTest` |
 | **W-029** | `taxrules/validate/PackValidator.java` — invariants I1–I7 — + `.../validate/PackValidatorTest.java` | TS T5 | `-Dtest=PackValidatorTest` — one violating and one clean case **per invariant**; build the rows in code, no files needed |
 
@@ -271,15 +284,15 @@ test nodes to run.
 
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
-| **W-035** | `taxengine/pipeline/{NodeId,NodeValue,MoneyValue,TaxByBasis}.java` | `DR 15` B2, B4 | compiles |
-| **W-036** | `taxengine/trace/{TraceLine,TraceAnnotation,Notice,StepKind,Severity}.java` | `DR 23` A8 — **two separate records** | compiles |
-| **W-037** | `taxengine/input/{EngineInputs,TaxpayerFacts,FamilySnapshot,LedgerSnapshot,RegimeElectionSnapshot,FilingFacts}.java` | `DR 23` A3 — **verbatim** | compiles |
+| **W-035** | `taxengine/pipeline/{NodeValue,MoneyValue,TaxByBasis}.java` + `.../pipeline/NodeValueTest.java` | `DR 15` B2, B4 | `-Dtest=NodeValueTest` — `NodeValue` is closed; `TaxByBasis` keeps slab and special-rate tax apart |
+| **W-036** | `taxengine/trace/{...}.java` + `.../trace/TraceLineTest.java` | `DR 23` A8 — **two separate records** | `-Dtest=TraceLineTest` — a trace line carries its rule id and provenance; an annotation is not a notice |
+| **W-037** | `taxengine/input/{...}.java` + `.../input/EngineInputsTest.java` | `DR 23` A3 — **verbatim** | `-Dtest=EngineInputsTest` — every collection is defensively copied; the record is complete enough that the engine fetches nothing |
 | **W-038** | `taxengine/input/InputsFingerprint.java` + `.../input/InputsFingerprintTest.java` | `DR 15` F6 + `DR 23` A3 | `-Dtest=InputsFingerprintTest` — equal inputs ⇒ equal fingerprint; **any** field change ⇒ different; field **order** irrelevant |
-| **W-039** | `taxengine/pipeline/{ComputationNode,NodeContext,NodeResult,NodeRegistry}.java` | `DR 15` B2 | compiles |
+| **W-039** | `taxengine/pipeline/{...}.java` + `.../pipeline/NodeRegistryTest.java` | `DR 15` B2 | `-Dtest=NodeRegistryTest` — two nodes producing the same `NodeId` is an error; a node's `requires`/`produces` are non-empty and disjoint |
 | **W-040** | `taxengine/pipeline/TopologicalSort.java` + `.../pipeline/TopologicalSortTest.java` | `DR 15` B3 | `-Dtest=TopologicalSortTest` — a cycle fails with the cycle named; order respects every edge; a missing `requires` producer fails |
 | **W-041** | **RETIRED** — merged into `W-040` by D-011 | — | — |
 | **W-042** | `taxengine/pipeline/PipelineRunner.java` + `.../pipeline/PipelineRunnerTest.java` | `DR 15` B3 — **no try/catch** | `-Dtest=PipelineRunnerTest` — uses `W-044`'s harness; `DR 08` T9-20, `DR 23` T23-6, T23-7 |
-| **W-043** | `taxengine/result/{TaxComputation,FilingPosition,ComputationId,ComputationReceipt}.java` | `DR 23` A6 — **the split** | compiles |
+| **W-043** | `taxengine/result/{...}.java` + `.../result/TaxComputationTest.java` | `DR 23` A6 — **the split** | `-Dtest=TaxComputationTest` — `TaxComputation` holds **no** date-dependent field, which is what makes it cacheable forever; `FilingPosition` holds them all |
 | **W-044** | **MOVED — do this before `W-042`.** `taxengine/test/NodeHarness.java` (test scope) + `.../test/NodeHarnessTest.java` | `DR 23` A11 | `-Dtest=NodeHarnessTest` — the harness runs one node in isolation and its stub inputs are honoured |
 | **W-045** | **RETIRED** — merged into `W-042` by D-011 | — | — |
 

@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-021c — "taxplanning W-021c: composition, and the algebra closes"
-Last updated              : 2026-09-19 (session 2 — W-021c DONE, Phase 2 complete)
+Last checkpoint           : W-023 — "taxplanning W-023: the temporal core, and which clock a rule is read against"
+Last updated              : 2026-09-19 (session 2 — W-023 DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-023` — `RuleVersion`, `AmendmentRef` |
+| **Next item** | `W-025` — component definitions and lifecycle |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-023 | 2026-09-19 | Temporal core: RuleVersion, RuleRow, AmendmentRef, Provision/Presence, TemporalContext, 2 exceptions, RegimeApplicability; 18 tests. Merged W-024; swept 11 `compiles` rows | `./mvnw test -pl backend -Dtest=RuleRowTest`
 W-021c | 2026-09-19 | AllOf/AnyOf/Not; short-circuit semantics; Condition permits all 13 — algebra closed; 47 tests. **Phase 2 complete** | `./mvnw test -pl backend -Dtest=ConditionTest`
 W-021b | 2026-09-19 | HeadCode, EvidenceType + 6 amount/structure predicates; ConditionContext grows 5 facts; 32 tests | `./mvnw test -pl backend -Dtest=ConditionTest`
 W-021 | 2026-09-19 | Condition + ConditionContext + 4 person-fact predicates + PersonType/DisabilitySeverity/AgeSubject; AgeAtLeast gains a subject; 17 tests | `./mvnw test -pl backend -Dtest=ConditionTest`
@@ -170,6 +171,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-014 | 2026-09-19 | `W-023` could not compile (`RuleVersion` needs `RegimeApplicability`, assigned to the *later* `W-024`); six supporting types produced by no item; and **11 items verified with `compiles` alone**, which passes for a record whose lookup method returns the wrong version | **Merge `W-023`+`W-024`** (`W-024` RETIRED) and **sweep every `compiles`-only row** — each now names a real test and what it must prove. Rule B1 amended: *the test is not the compiler* | **approved by the developer** |
 | D-013 | 2026-09-19 | `W-021` (`Condition` + 16 records + test) estimated at ~750 lines, 2.5x the §7 limit; five supporting types produced by no item; `AgeAtLeast` cannot express its own pack example | **Split three ways** — `W-021` (person facts), `W-021b` (amounts and structure), `W-021c` (composition, closes the family). Ids suffixed, not renumbered. `AgeAtLeast` gains an `AgeSubject`. The five supporting types are assigned across the three | **approved by the developer** |
 | D-012 | 2026-09-19 | `taxrules` cannot see `Money`, which T2 places in `taxengine.money`, but T1 draws the arrow `taxengine -> taxrules`. Where does `Money` live? | **`taxrules.money`** — option (A) of B-001. A rule pack holds rupee figures by its nature, so `taxrules` needs the type; `taxengine` already allows `taxrules`, so T1's arrow is unchanged. Moved `Money`, `Rate`, `MoneyTest`, `RateTest`; renamed `taxengine_uses_money_not_bigdecimal` to `tax_modules_use_money_not_bigdecimal` and widened it to all three tax modules; errata in TS T3/T10, PRD, WORK-ITEMS W-002/W-004/W-005, DR 19 E1 | **approved by the developer** |
 | D-011 | 2026-09-19 | The backlog splits implementation from its test: an item's `Verify` names a test that a **later** item produces. Three pairs occurred in Phase 1 alone. Fix or work around? | **Fix — restructure `03-WORK-ITEMS.md`.** Every item now carries its own test (**rule B1**). Merged `W-014→013`, `W-016→015`, `W-020→013/015/017/018/019`, `W-022→021`, `W-041→040`, `W-045→042`, `W-047→046`; Phase 3's six shared users of `RulePackLoadTest` each got their own test; `W-044` moved before `W-042`. **Ids are not renumbered** — `W-001`…`W-012` are referenced by commit subjects — so seven ids are marked RETIRED. 146 ids, 140 live. This supersedes D-009's errata-only restriction for this one change | **approved by the developer** |
