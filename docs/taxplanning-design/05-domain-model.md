@@ -159,6 +159,33 @@ public sealed interface CapShape
 | `SlabLadder` | `List<Band(lowerExclusive, upperInclusive, rate)>` | `RATE-SLAB-*`, `RATE-SUR-*` |
 | `PerUnitPerPeriod` | `Money amount`, `Unit unit`, `Period period`, `int maxUnits` | `SAL-ALW-CEA-2026` (₹3,000 / month / child, max 2), `SAL-ALW-HOSTEL-2026`, `PERQ-CAR-2026` (per calendar month), `DED-80GG-001` limb (b) (₹5,000/month) |
 
+> **Erratum (W-013, 2026-09-19):** this table has a gap, and it is not the one first reported.
+>
+> `SAL-STDDED-001`/`-002` **are** `Fixed` — ₹75,000 and ₹50,000 as the statute states them
+> (`01-rulebook.md:373-374`). The "whichever is less" in their text is carried by a **third rule**,
+> `SAL-STDDED-003` (`:375`, VERIFIED): *"capped at the salary itself, so it cannot create or enlarge
+> a loss under the head."*
+>
+> The defect is that **`SAL-STDDED-003` appears in no row of this table**, so a VERIFIED cap has no
+> shape. `D-NOFORMULA` says every cap in R1–R24 is one of these six, so it cannot be applied as a
+> loose `min()` in step 11 without breaking that rule. It is a **`LeastOf`** with two named limbs:
+>
+> | limb | shape | names itself as |
+> |---|---|---|
+> | (a) | `Fixed` — the regime's amount, `SAL-STDDED-001` or `-002` | `"statutory amount"` |
+> | (b) | the salary under the head, as a base | `"salary"` |
+>
+> Limb (b) binding is what tells a part-year joiner that their deduction was cut by their salary and
+> not by the statute — the same reason `LeastOf` names its winning limb at all.
+>
+> `06-algorithms.md:61` step 11 already lists all three rules together with *"capped at salary"*, so
+> the algorithm expects this; only the shape assignment was missing. `06-algorithms.md:508` cites
+> `-003` for something different — the Form 16 multi-employer double-count check (`G5.3`) — which is
+> a reconciliation use, not the computation.
+>
+> Verified by: `01-rulebook.md:373-375`; `06-algorithms.md:61`; this table's `Fixed` and `LeastOf`
+> rows name neither `-003` nor any salary cap.
+
 `LeastOf` returning a **named winning limb** is what makes `A4.4`'s third sentence possible — *"paying
 more rent would help; increasing HRA alone would not"* falls out of knowing limb (b) bound, not (c).
 
