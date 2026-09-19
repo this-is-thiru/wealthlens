@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-023 — "taxplanning W-023: the temporal core, and which clock a rule is read against"
-Last updated              : 2026-09-19 (session 2 — W-023 DONE)
+Last checkpoint           : W-025 — "taxplanning W-025: components as a registry, not an enum"
+Last updated              : 2026-09-19 (session 2 — W-025 DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-025` — component definitions and lifecycle |
+| **Next item** | `W-026` — regime lifecycle (7 types — **sizing risk**) |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-025 | 2026-09-19 | Component registry: ComponentDefinition (union of E4.1 + V6 + informationalOnly), lifecycle, DeprecationPolicy, 3 enums; 15 tests | `./mvnw test -pl backend -Dtest=ComponentLifecycleTest`
 W-023 | 2026-09-19 | Temporal core: RuleVersion, RuleRow, AmendmentRef, Provision/Presence, TemporalContext, 2 exceptions, RegimeApplicability; 18 tests. Merged W-024; swept 11 `compiles` rows | `./mvnw test -pl backend -Dtest=RuleRowTest`
 W-021c | 2026-09-19 | AllOf/AnyOf/Not; short-circuit semantics; Condition permits all 13 — algebra closed; 47 tests. **Phase 2 complete** | `./mvnw test -pl backend -Dtest=ConditionTest`
 W-021b | 2026-09-19 | HeadCode, EvidenceType + 6 amount/structure predicates; ConditionContext grows 5 facts; 32 tests | `./mvnw test -pl backend -Dtest=ConditionTest`

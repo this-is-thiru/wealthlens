@@ -286,6 +286,20 @@ public sealed interface DeprecationPolicy {
 }
 ```
 
+> **Erratum (W-025, 2026-09-19):** this field list **abbreviates** `10-extensibility.md` E4.1 rather
+> than superseding it. It correctly adds `lifecycle`, but silently omits two fields E4.1 declares:
+>
+> - **`TaxTreatment treatment`** — `TAXABLE | DEFERRED | DEDUCTIBLE`, per `05-domain-model.md:252-282`.
+> - **`Set<RuleId> salaryBaseFor`** — which salary definitions include this component.
+>   `SAL-HRA-004`'s *"basic + DA if the terms of employment so provide"* is exactly such a set, and
+>   `W-062` would have nowhere to read it from.
+>
+> `ComponentDefinition` is implemented as the **union** of both lists, by the developer's decision.
+> A third field is added that neither list carries: **`boolean informationalOnly`**, which
+> `10-extensibility.md:267` requires by name — every component must feed at least one rule *"or be
+> explicitly marked `informationalOnly`"* — and which was declared nowhere.
+> Verified by: `10-extensibility.md:244-256, 267`; `./mvnw test -pl backend -Dtest=ComponentLifecycleTest`.
+
 This closes the loop `14-operational-design.md` O12 opened on draft schema evolution:
 
 ```java
