@@ -187,13 +187,41 @@ build red from `W-013` to `W-019` and gave `W-013` no `Verify` at all. Each item
 ### W-020 — RETIRED
 - Merged into **W-013** (T5-1), **W-015**, **W-017**, **W-018** (T5-3) and **W-019** by D-011. The single shared `CapShapeTest` was what made five items unverifiable. No work.
 
-### W-021 — `Condition` sealed algebra + `ConditionTest`
-- [ ] **Produces** `taxrules/condition/Condition.java` + the 16 records, `.../taxrules/condition/ConditionTest.java`
-- **Spec** `DR 15-review-findings.md` Part E — **the list verbatim, minus `EffectiveBetween`**
-- ⚠ `EffectiveBetween` was **withdrawn** by `DR 18` V-2. Do not add it.
-- **Do** one positive and one negative case per record; `AllOf`/`AnyOf`/`Not` composition.
+### W-021 — `Condition`, `ConditionContext`, and the person-fact predicates
+- [ ] **Produces** `taxrules/condition/{Condition,ConditionContext,PersonType,DisabilitySeverity,AgeSubject}.java` + `IsResident`, `AgeAtLeast`, `HasPersonType`, `IsCertifiedDisabled`, and `.../condition/ConditionTest.java`
+- **Spec** `DR 15-review-findings.md` Part E — the person-facts group, **verbatim except `AgeAtLeast`** (see the erratum below)
+- **Do** `sealed interface Condition permits` **the four that exist**; later items extend the clause, as `CapShape` does. One positive and one negative case per record.
 - **Verify** `./mvnw test -pl backend -Dtest=ConditionTest`
-- ⚠ **Sizing (§7):** 17 types plus a test is likely over 300 lines. Raise the estimate and a proposed split in the EXPLAIN — do not split it yourself.
+
+### W-021b — the amount and structure predicates
+- [ ] **Produces** `taxrules/condition/{HeadCode,EvidenceType}.java` + `IncomeAtMost`, `IncomeAtLeast`, `HasIncomeUnderHead`, `ComponentPresent`, `EvidenceRecorded`, `PaidOtherThanInCash`, **modify** `Condition.java` (`permits`), **extend** `ConditionTest`
+- **Spec** `DR 15-review-findings.md` Part E — the amounts and structure groups
+- ⚠ `EvidenceType` has **no values stated anywhere in the design**. Source them from `DR 12-claim-integrity.md` C3.2 or mark `BLOCKED` — do not invent them.
+- **Verify** `./mvnw test -pl backend -Dtest=ConditionTest`
+
+### W-021c — composition, and closing the family
+- [ ] **Produces** `taxrules/condition/{AllOf,AnyOf,Not}.java`, **modify** `Condition.java` (`permits`), **extend** `ConditionTest`
+- **Do** `AllOf`/`AnyOf`/`Not` composition, including nesting. Close with an **exhaustive switch with no `default`**, as `PerUnitPerPeriodTest` does for `CapShape`.
+- ⚠ `EffectiveBetween` was **withdrawn** by `DR 18` V-2. Do not add it.
+- **Verify** `./mvnw test -pl backend -Dtest=ConditionTest`
+
+> **Erratum (W-021, 2026-09-19):** three corrections to the item this replaced.
+>
+> 1. **There are 13 records, not 16.** A sweep of every `implements Condition` across all 25 design
+>    documents finds 4 person facts, 2 amounts, 4 structure and 3 composition — 13 — plus the
+>    commented-out `EffectiveBetween`, which would make 14. No source states 16.
+> 2. **`AgeAtLeast` needs a `subject`.** Part E declares `record AgeAtLeast(int years)`, but the pack
+>    JSON five lines below it reads `{"type":"AgeAtLeast","years":60,"subject":"SELF"}` and
+>    `"subject":"INSURED_PERSON"`, and `19-engineering-foundations.md:199` writes
+>    `anyOf(ageAtLeast(60, SELF), ageAtLeast(60, INSURED_PERSON))`. Without the field both limbs of
+>    that `AnyOf` are identical and `DED-80D-007` collapses. Added as `AgeSubject`.
+> 3. **Five supporting types were produced by no item** — `ConditionContext`, `PersonType`,
+>    `DisabilitySeverity`, `HeadCode`, `EvidenceType`. Assigned above.
+>
+> The item was also **split three ways by decision D-013**: at ~750 lines it was 2.5x the §7 sizing
+> limit. Ids are suffixed rather than renumbered.
+> Verified by: `grep -rh "record .*implements Condition" docs/taxplanning-design/`;
+> `15-review-findings.md:533-534`; `19-engineering-foundations.md:199`.
 
 ### W-022 — RETIRED
 - Merged into **W-021** by D-011. No work.

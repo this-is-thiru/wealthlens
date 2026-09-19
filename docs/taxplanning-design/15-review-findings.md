@@ -524,6 +524,18 @@ public sealed interface Condition {
 }
 ```
 
+> **Erratum (W-021, 2026-09-19):** `AgeAtLeast` as declared cannot express the rule this section's
+> own pack example uses. The JSON below reads `{"type":"AgeAtLeast","years":60,"subject":"SELF"}`
+> and `"subject":"INSURED_PERSON"`, and `19-engineering-foundations.md:199` writes
+> `anyOf(ageAtLeast(60, SELF), ageAtLeast(60, INSURED_PERSON))` — but the record carries only
+> `years`, so both limbs of that `AnyOf` are the same predicate and `DED-80D-007` collapses to a
+> single test of the taxpayer's own age. Corrected to `AgeAtLeast(int years, AgeSubject subject)`.
+>
+> This list also holds **13** records, not the 16 the backlog claimed (14 counting the withdrawn
+> `EffectiveBetween`).
+> Verified by: `15-review-findings.md:533-534`; `19-engineering-foundations.md:199`;
+> `grep -rh "record .*implements Condition" docs/taxplanning-design/`.
+
 In a pack:
 
 ```json
