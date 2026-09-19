@@ -35,7 +35,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 | | |
 |---|---|
 | **Next item** | `W-013` — `CapShape`, `CapResult`, `CapContext`, `Fixed`, `PercentOfBase` + `CapShapeTest` (**rescoped by D-011**) |
-| **Status** | `NOT_STARTED` |
+| **Status** | `BLOCKED` — see **B-001**. Plan approved, code written, **reverted** under R13 |
 | **Phase** | 2 — Cap shapes and conditions |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
@@ -89,6 +89,56 @@ W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw te
 ---
 
 ## Blockers
+
+### B-001  (W-013)  — 2026-09-19  — OPEN
+
+**What I needed:** `CapShape.apply` to return a `CapResult` carrying a `Money`, and `PercentOfBase`
+to hold a `Rate`. Both are `02-TECH-SPEC.md` T3 types living in `..taxengine.money..`; the cap
+shapes are T2 types living in `..taxrules.cap..`.
+
+**What I looked at:** `02-TECH-SPEC.md` T1 and T2; `05-domain-model.md` M1.3;
+`16-getting-started.md:103` (`SlabLadder.Band(Money lowerExclusive, ...)`).
+
+**What is ambiguous or missing — a contradiction, not a gap.** T1 declares
+
+    taxrules   -> {"shared"}
+    taxengine  -> {"shared", "taxrules"}
+
+so the dependency runs **taxengine → taxrules**. But T2 puts `Money` in `taxengine.money` and the
+cap shapes in `taxrules.cap`, and a cap shape cannot express a rupee limit without `Money`. That
+requires **taxrules → taxengine**, the opposite arrow. The two cannot both hold.
+
+Proof, after writing the item exactly as planned:
+
+    $ ./mvnw test -pl backend -Dtest=WealthLensModulithTest
+    - Module 'taxrules' depends on module 'taxengine' via
+      com.thiru.wealthlens.taxrules.cap.CapResult -> com.thiru.wealthlens.taxengine.money.Money.
+      Allowed targets: shared.       (and 3 more)
+
+This is not specific to `CapResult`. **Every** rule pack holds rupee figures — slab band bounds,
+the 80C ceiling, the standard deduction — so `taxrules` needs a money type by its nature, and
+`16-getting-started.md:103` already writes `Band(Money lowerExclusive, ...)` inside a `taxrules`
+type. The placement of `Money` in `taxengine`, not the cap work, is what is wrong.
+
+**What I would need to proceed:** a decision on where `Money` and `Rate` live. Both options move
+files that `W-005` and `W-007` produced and are already committed DONE, which is outside W-013's
+`Produces` — hence this blocker rather than an erratum.
+
+- **(A) move to `taxrules.money`** *(recommended)* — `taxengine` already allows `taxrules`, so the
+  arrow stays as T1 draws it. Costs: move 2 production + 2 test files; amend `W-002`'s ArchUnit rule
+  from `..taxengine.money..` to `..taxrules.money..`; errata in TS T2, T3, T10 and `DR 19` E1.
+- **(B) move to `shared`** — needs no dependency change at all, since both modules already allow
+  `shared`. But `shared` holds the `double`-based `TMoney`, and two money types in one package is
+  the same two-vocabularies failure that `02-lessons.md` L1 describes and `ComputationStep` already
+  demonstrated once. `shared` also depends on `portfolio`, which would put a pure value type in a
+  module that reaches the domain centre.
+- **(C) add `taxengine` to `taxrules`** — a cycle; Spring Modulith rejects it. Not viable.
+- **(D) move the cap shapes into `taxengine`** — contradicts T2 and the rules-are-data split that
+  the whole four-module design rests on.
+
+The reverted code is complete and passes nothing but compilation; it is kept at
+`scratchpad/w013-reverted/` and can be replayed into whichever package you choose.
+
 
 <!-- Use the exact shape from 00-START-HERE.md §8. Never delete a blocker; mark it RESOLVED. -->
 
