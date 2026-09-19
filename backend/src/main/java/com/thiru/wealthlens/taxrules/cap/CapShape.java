@@ -12,13 +12,13 @@ package com.thiru.wealthlens.taxrules.cap;
  * <p>The family is sealed so the compiler can prove that set is closed. A switch over a cap shape
  * that misses a case does not compile, which is the property that makes adding the sixth shape safe.
  *
- * <p><b>This clause grows.</b> It currently permits the four shapes that exist. Each remaining shape
+ * <p><b>This clause grows.</b> It currently permits the five shapes that exist. Each remaining shape
  * adds itself here as it is written, because a sealed type does not compile while it names a type
  * that does not yet exist. The full set, from {@code 05-domain-model.md} M1.3, is {@code Fixed},
  * {@code PercentOfBase}, {@code LeastOf}, {@code AggregateWithCeiling}, {@code SlabLadder} and
  * {@code PerUnitPerPeriod}.
  */
-public sealed interface CapShape permits Fixed, PercentOfBase, SlabLadder, LeastOf {
+public sealed interface CapShape permits Fixed, PercentOfBase, SlabLadder, LeastOf, AggregateWithCeiling {
 
     /** Applies the cap to the amounts this rule declares it reads. */
     CapResult apply(CapContext ctx);

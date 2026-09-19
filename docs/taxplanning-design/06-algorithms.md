@@ -189,6 +189,19 @@ evaluate(agg, ctx):
 
 **The order matters and is not interchangeable.** Sub-cap first, then aggregate.
 
+> **Erratum (W-018, 2026-09-19):** this pseudocode emits one residue, `total − allowed`, but both
+> golden cases that consume a residue use a **different** one: `raw − capped`, what a contributor's
+> own sub-cap excluded. T5-1's ₹50,000 is `1,50,000 − 1,00,000` and T5-3's ₹1,10,000 is
+> `1,50,000 − 40,000`, and in T5-3 the ceiling does not bind at all, so `total − allowed` is zero
+> there. The two coincide only when exactly one contributor exists and the ceiling binds.
+>
+> `AggregateOutcome` therefore exposes both, named apart: `subCapResidue` per contributor
+> (`raw − capped`, which s.124(3) spends) and `headroom` (`ceiling − allowed`, which A3 reports).
+> T5-2 needs a third figure this pseudocode does not emit at all — `aggregate`, the sum before the
+> ceiling — because that case's whole point is that the deduction is identical and the reported
+> aggregate differs by ₹1,20,000.
+> Verified by: `08-golden-tests.md:472-474, 490, 499-501`; `./mvnw test -pl backend -Dtest=AggregateWithCeilingTest`.
+
 ### G2.2 `DED-80C-001` — the s.123 ceiling
 
 ```
