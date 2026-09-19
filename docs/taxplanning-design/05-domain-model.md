@@ -47,6 +47,16 @@ public record Instrument(
         URI sourceUrl,
         VerificationStatus status) {}
 
+> **Erratum (W-010, 2026-09-19):** `assentedOn` cannot be mandatory. Subordinate legislation is
+> **notified, not assented** — the Income-tax Rules 2026 have a gazette reference (G.S.R. 198(E),
+> 20-03-2026) and a commencement date, but no assent date. The pack manifest in
+> `16-getting-started.md` §S2 step 4 already omits it for the `rules` instrument, so this record and
+> that JSON disagree. Corrected to `Optional<LocalDate> assentedOn`, with two factory methods —
+> `Instrument.assented(...)` for an Act and `Instrument.notified(...)` for Rules — so the call site
+> states which kind it is rather than passing a null.
+> Verified by: `docs/taxplanning-design/16-getting-started.md` §S2, the `rules` block of
+> `manifest.json`, which has `inForceFrom` and `gazetteRef` and no `assentedOn`.
+
 public record TaxYearRegistryEntry(
         TaxYearId taxYear,
         GoverningInstruments instruments,
