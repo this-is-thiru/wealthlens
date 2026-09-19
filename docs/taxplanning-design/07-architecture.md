@@ -197,6 +197,20 @@ public interface RulePackProvider {
 }
 ```
 
+> **Erratum (W-028, 2026-09-19):** `validate(RulePack)` is **not** on this SPI, by the developer's
+> decision. Validation lives in `taxrules/validate/PackValidator` (`W-029`, `W-030`), which owns
+> invariants I1–I27. Two homes for one responsibility is how two providers come to disagree about
+> what a valid pack is, and a provider's job is to source packs, not to judge them.
+> `ValidationReport` is named only here and produced by no work item, which reads like the same
+> conclusion reached and not written down.
+>
+> The interface as implemented is `availableYears()` and `load(year)`. A third method,
+> **`PackAssembler`**, is a separate seam rather than a provider method: the provider finds files,
+> reads the manifest and verifies that the bytes hash to what the manifest declares; the assembler
+> knows the schema and nothing about where bytes came from. That split is what lets a future signed
+> remote provider reuse the whole schema, and lets the schema be tested without a filesystem.
+> Verified by: `./mvnw test -pl backend -Dtest=ClasspathRulePackProviderTest`.
+
 One implementation at launch: `ClasspathRulePackProvider`. `D-IMMUTABLE` — no Mongo-backed provider,
 no admin write path (O-16). The SPI exists so a future provider (a signed remote pack, say) is a new
 class.

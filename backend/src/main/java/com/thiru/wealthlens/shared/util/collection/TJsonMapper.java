@@ -71,7 +71,14 @@ public class TJsonMapper {
         return JSON_MAPPER.readValue(content, listType);
     }
 
-    private static <T> T readValue(String content, Class<T> targetClass) {
+    /**
+     * Reads a JSON <em>object</em> into a type — the counterpart of {@link #readAsList}.
+     *
+     * <p>Made public for the tax rule-pack loader, which parses {@code manifest.json} and must use
+     * this mapper rather than configuring a second one: two mappers eventually disagree about the
+     * same JSON.
+     */
+    public static <T> T readValue(String content, Class<T> targetClass) {
         if (StringUtils.isEmpty(content)) {
             return null;
         }

@@ -1,0 +1,21 @@
+{
+  "taxYear": "2098-99",
+  "layers": {
+    "law": {
+      "version": "2098-99.law.3",
+      "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "exec": {
+      "version": "2098-99.exec.1",
+      "checksum": "sha256:e606e9835ff8ce543729a8b6f299eadb8299db894ea91307b69006e59856e68c"
+    },
+    "forms": {
+      "version": "2098-99.forms.2",
+      "checksum": "sha256:9f9cb40eb7cca430ce836dd629b415e5b353bb44211a732b07ad7b0eee818c4c"
+    },
+    "content": {
+      "version": "2098-99.content.7",
+      "checksum": "sha256:e58608c453bb669e8afe646e658dd80884155e4439afa5870e6fc8e831a89673"
+    }
+  }
+}
