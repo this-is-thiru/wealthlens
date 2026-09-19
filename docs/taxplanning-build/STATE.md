@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-026 — "taxplanning W-026: two windows, because entry and application are not the same"
-Last updated              : 2026-09-19 (session 2 — W-026 DONE)
+Last checkpoint           : W-026b — "taxplanning W-026b: the option rides on the return"
+Last updated              : 2026-09-19 (session 2 — W-026b DONE)
 Current position          : W-001
 Session count             : 2
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-026b` — the election protocol (L3) |
+| **Next item** | `W-026c` — `RegimeSpec`, binding lifecycle and election together |
 | **Status** | `NOT_STARTED` |
 | **Phase** | 3 — Rule pack loading |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-026b | 2026-09-19 | ElectionProtocol, BindingSpec, AfterWithdrawal + 5 vocabulary types; rule 136 enforced at construction; 26 tests | `./mvnw test -pl backend -Dtest=RegimeLifecycleTest`
 W-026 | 2026-09-19 | RegimeLifecycle (two windows) + ContinuationPolicy + InvalidationPolicy; 13 tests. Also restored 6 Produces lists D-014 had collapsed | `./mvnw test -pl backend -Dtest=RegimeLifecycleTest`
 W-025 | 2026-09-19 | Component registry: ComponentDefinition (union of E4.1 + V6 + informationalOnly), lifecycle, DeprecationPolicy, 3 enums; 15 tests | `./mvnw test -pl backend -Dtest=ComponentLifecycleTest`
 W-023 | 2026-09-19 | Temporal core: RuleVersion, RuleRow, AmendmentRef, Provision/Presence, TemporalContext, 2 exceptions, RegimeApplicability; 18 tests. Merged W-024; swept 11 `compiles` rows | `./mvnw test -pl backend -Dtest=RuleRowTest`

@@ -3,6 +3,12 @@ package com.thiru.wealthlens.taxrules.regime;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxrules.condition.AgeSubject;
+import com.thiru.wealthlens.taxrules.condition.ConditionContext;
+import com.thiru.wealthlens.taxrules.condition.HasIncomeUnderHead;
+import com.thiru.wealthlens.taxrules.condition.HeadCode;
+import com.thiru.wealthlens.taxrules.condition.Not;
+import com.thiru.wealthlens.taxrules.condition.PersonType;
 import com.thiru.wealthlens.taxrules.id.RegimeCode;
 import com.thiru.wealthlens.taxrules.id.RuleId;
 import com.thiru.wealthlens.taxrules.id.TaxYearId;
@@ -217,6 +223,217 @@ class RegimeLifecycleTest {
                     case InvalidationPolicy.NoInvalidation ignored -> "none";
                 };
                 assertThat(scope).isNotBlank();
+            }
+            assertThat(all).hasSize(3);
+        }
+    }
+
+    // --------------------------------------------------------------- W-026b
+
+    private static Provenance provenance(VerificationStatus status, String whatToCheck) {
+        return new Provenance(
+                URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
+                "Income-tax Rules 2026, rule 136 + Table Sl. 4",
+                DraftOrFinal.FINAL,
+                LocalDate.of(2026, 9, 19),
+                status,
+                whatToCheck);
+    }
+
+    private static ConditionContext taxpayerWith(HeadCode... heads) {
+        return new ConditionContext(
+                true,
+                PersonType.INDIVIDUAL,
+                java.util.Map.of(AgeSubject.SELF, 40),
+                java.util.Map.of(),
+                java.util.Map.of(),
+                java.util.Set.of(heads),
+                java.util.Set.of(),
+                java.util.Set.of(),
+                java.util.Optional.empty());
+    }
+
+    /**
+     * s.202(4): binds subsequent years, one withdrawal, then ineligible unless business income
+     * ceases — but only for a person who has business income at all.
+     */
+    private static BindingSpec s202Binding() {
+        return new BindingSpec(
+                true,
+                1,
+                new AfterWithdrawal.IneligibleUnless(
+                        new Not(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION)),
+                        new ElectionRoute("S202_4_B")),
+                false,
+                java.util.List.of(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION)));
+    }
+
+    @Nested
+    @DisplayName("rule 136 — the option rides on the return, TY 2026-27")
+    class Vehicle {
+
+        /** REG-OPTOUT-FORM-001 — 01-rulebook.md:66, VERIFIED (S4, rule 136 + Table Sl. 4). */
+        @Test
+        void theOptOutIsMadeInTheReturnWithNoSeparateForm() {
+            ElectionProtocol protocol = new ElectionProtocol(
+                    ElectionKind.OPT_OUT,
+                    ElectionVehicle.IN_THE_RETURN,
+                    java.util.Optional.empty(),
+                    new DeadlineSpec.DueDateUnder("263(1)"),
+                    s202Binding(),
+                    provenance(VerificationStatus.VERIFIED, null));
+
+            assertThat(protocol.form()).isEmpty();
+            assertThat(protocol.deadline()).isEqualTo(new DeadlineSpec.DueDateUnder("263(1)"));
+        }
+
+        @Test
+        void namingAFormAlongsideTheReturnIsRejected() {
+            // Sends the taxpayer looking for something rule 136 says does not exist
+            assertThatThrownBy(() ->
+                            new ElectionProtocol(
+                                    ElectionKind.OPT_OUT,
+                                    ElectionVehicle.IN_THE_RETURN,
+                                    java.util.Optional.of(new FormRef("10-IEA", "Regime option")),
+                                    new DeadlineSpec.DueDateUnder("263(1)"),
+                                    s202Binding(),
+                                    provenance(VerificationStatus.VERIFIED, null)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("does not exist");
+        }
+
+        @Test
+        void prescribingAFormWithoutNamingItIsRejected() {
+            assertThatThrownBy(() ->
+                            new ElectionProtocol(
+                                    ElectionKind.OPT_OUT,
+                                    ElectionVehicle.PRESCRIBED_FORM,
+                                    java.util.Optional.empty(),
+                                    new DeadlineSpec.DueDateUnder("263(1)"),
+                                    s202Binding(),
+                                    provenance(VerificationStatus.VERIFIED, null)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("and not what");
+        }
+
+        @Test
+        void theTY2025Form10IEAProtocolIsCarriedAsNeedsVerification() {
+            // 01-rulebook.md:1236 marks Form 10-IEA unverified; the pack must say so rather than
+            // presenting it with the same confidence as rule 136
+            ElectionProtocol protocol = new ElectionProtocol(
+                    ElectionKind.OPT_OUT,
+                    ElectionVehicle.PRESCRIBED_FORM,
+                    java.util.Optional.of(new FormRef("10-IEA", "Option under s.115BAC(6)")),
+                    new DeadlineSpec.DueDateUnder("139(1)"),
+                    s202Binding(),
+                    provenance(
+                            VerificationStatus.NEEDS_VERIFICATION,
+                            "open the Income-tax Rules 1962 for the TY 2025-26 option form"));
+
+            assertThat(protocol.provenance().status()).isEqualTo(VerificationStatus.NEEDS_VERIFICATION);
+            assertThat(protocol.form()).map(FormRef::number).contains("10-IEA");
+        }
+
+        @Test
+        void theDefaultRegimeNeedsNoVehicleAndNoDeadline() {
+            ElectionProtocol protocol = new ElectionProtocol(
+                    ElectionKind.DEFAULT_NO_ACTION,
+                    ElectionVehicle.NONE,
+                    java.util.Optional.empty(),
+                    new DeadlineSpec.NoDeadline(),
+                    BindingSpec.free(),
+                    provenance(VerificationStatus.VERIFIED, null));
+
+            assertThat(protocol.kind()).isEqualTo(ElectionKind.DEFAULT_NO_ACTION);
+            assertThat(protocol.binding().isUnlimitedWithdrawals()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("bindingAppliesWhen — one regime, two sections")
+    class Binding {
+
+        @Test
+        void aPersonWithBusinessIncomeIsBound() {
+            // s.202(4)(a)
+            assertThat(s202Binding().appliesTo(taxpayerWith(HeadCode.BUSINESS_OR_PROFESSION))).isTrue();
+        }
+
+        @Test
+        void aSalariedPersonIsNotBoundByTheSameRegime() {
+            // s.202(4)(b) — REG-OPTOUT-YEARLY-001: a free choice every year.
+            // The previous design modelled lock-in as an enum on the regime, which made these
+            // look like two regimes rather than one section with two limbs.
+            assertThat(s202Binding().appliesTo(taxpayerWith(HeadCode.SALARIES))).isFalse();
+        }
+
+        @Test
+        void anEmptyBindingAppliesToEveryone() {
+            assertThat(BindingSpec.free().appliesTo(taxpayerWith(HeadCode.SALARIES))).isTrue();
+        }
+
+        @Test
+        void withdrawalCountsAreNamedRatherThanCompared() {
+            assertThat(s202Binding().isIrrevocable()).isFalse();
+            assertThat(s202Binding().isUnlimitedWithdrawals()).isFalse();
+            assertThat(new BindingSpec(true, 0, new AfterWithdrawal.PermanentlyIneligible(), false, null)
+                            .isIrrevocable())
+                    .isTrue();
+        }
+
+        @Test
+        void aWithdrawalCountBelowMinusOneIsRejected() {
+            assertThatThrownBy(() ->
+                            new BindingSpec(true, -2, new AfterWithdrawal.MayReElect(), false, null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("-1 (unlimited)");
+        }
+    }
+
+    @Nested
+    @DisplayName("AfterWithdrawal — s.202(4)(a)(iv), the revival edge")
+    class Withdrawal {
+
+        @Test
+        void permanentIneligibilityIsNotAlwaysPermanent() {
+            // "never eligible" EXCEPT "where such person ceases to have any income from business
+            // or profession". As a boolean, that taxpayer is told they are barred for life from a
+            // regime they are entitled to.
+            AfterWithdrawal.IneligibleUnless carveOut =
+                    (AfterWithdrawal.IneligibleUnless) s202Binding().afterWithdrawal();
+
+            assertThat(carveOut.revival().holds(taxpayerWith(HeadCode.BUSINESS_OR_PROFESSION))).isFalse();
+            assertThat(carveOut.revival().holds(taxpayerWith(HeadCode.SALARIES))).isTrue();
+            assertThat(carveOut.thenUse()).isEqualTo(new ElectionRoute("S202_4_B"));
+        }
+
+        @Test
+        void aRevivalWithNoConditionOrNoRouteIsRejected() {
+            assertThatThrownBy(() ->
+                            new AfterWithdrawal.IneligibleUnless(null, new ElectionRoute("S202_4_B")))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("wearing a different name");
+            assertThatThrownBy(() ->
+                            new AfterWithdrawal.IneligibleUnless(
+                                    new Not(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION)), null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("how to act on it");
+        }
+
+        @Test
+        void everyBranchIsAccountedFor() {
+            java.util.List<AfterWithdrawal> all = java.util.List.of(
+                    new AfterWithdrawal.MayReElect(),
+                    new AfterWithdrawal.PermanentlyIneligible(),
+                    s202Binding().afterWithdrawal());
+
+            for (AfterWithdrawal outcome : all) {
+                String verdict = switch (outcome) {
+                    case AfterWithdrawal.MayReElect ignored -> "open";
+                    case AfterWithdrawal.PermanentlyIneligible ignored -> "barred";
+                    case AfterWithdrawal.IneligibleUnless ignored -> "barred, with an escape";
+                };
+                assertThat(verdict).isNotBlank();
             }
             assertThat(all).hasSize(3);
         }
