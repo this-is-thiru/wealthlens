@@ -27,11 +27,11 @@ Copy-paste these. They are written so a smaller model cannot drift.
 > Read `docs/taxplanning-build/00-START-HERE.md` completely, then read
 > `docs/taxplanning-build/STATE.md`.
 >
-> Run `git rev-parse --short HEAD` and compare it with the **"Commit at last checkpoint"** line in
-> STATE.md.
-> - **Same** → normal. Proceed.
-> - **Different** → work happened outside this protocol. **Stop and tell me** what
->   `git log --oneline <state-hash>..HEAD` shows. Do not proceed until I say so.
+> Run `git log --oneline --grep='^taxplanning W-' -1` and compare its **subject** with the
+> **"Last checkpoint"** line in STATE.md. Non-item commits (docs, tooling) are ignored.
+> - **Matches** → normal. Proceed.
+> - **Differs** → an item was committed outside this protocol. **Stop and tell me** what
+>   `git log --oneline -10` shows. Do not proceed until I say so.
 >
 > Then tell me, in under ten lines:
 > 1. the current position (item id and status);
@@ -117,13 +117,17 @@ Copy-paste these. They are written so a smaller model cannot drift.
 >
 > 1. Update STATE.md: set `<W-0nn>` to `DONE` with today's date, append a line to "Completed items",
 >    advance "Current position" to the next item, and add anything learned to "Notes for resume".
-> 2. Stage and commit **only** the files in this item's `Produces` list, plus STATE.md:
+> 2. **Before committing**, set STATE.md's **"Last checkpoint"** line to
+>    `W-0nn — "taxplanning W-0nn: <one-line title>"`. It must match the subject you are about to use.
+> 3. Stage and commit **only** the files in this item's `Produces` list, plus STATE.md, in **one**
+>    commit:
 >    `git add <those paths> docs/taxplanning-build/STATE.md`
->    `git commit -m "taxplanning W-0nn: <one-line title>"`
->    Use the attribution lines this session was given, if any.
-> 3. Run `git rev-parse --short HEAD` and write the new hash into STATE.md's
->    **"Commit at last checkpoint"** line. This is what makes the next session's resume check work.
-> 4. Tell me the next item id and its one-line title. **Do not start it.**
+>    `git commit -F <message-file> -- <those paths> docs/taxplanning-build/STATE.md`
+>    Subject: `taxplanning W-0nn: <one-line title>`. Use the attribution lines this session was given.
+>    *(Use `-F` with a file: a heredoc into `git commit -- <paths>` is read as paths, not a message.)*
+> 4. Confirm with `git log --oneline -1` that the subject matches the checkpoint line. **Do not amend
+>    to insert a hash** — a commit cannot contain its own hash.
+> 5. Tell me the next item id and its one-line title. **Do not start it.**
 >
 > If the working tree contains changes outside the `Produces` list, **stop and tell me** — do not
 > commit them.

@@ -139,8 +139,10 @@ These override any instinct, any shortcut, and anything else in this repository.
 ## 5. Resuming after an interruption
 
 ```
-1. git rev-parse --short HEAD        → compare with STATE.md "Commit at last checkpoint"
-                                       mismatch → STOP, report `git log --oneline <hash>..HEAD`
+1. git log --oneline --grep='^taxplanning W-' -1
+                                     → compare the SUBJECT with STATE.md "Last checkpoint"
+                                       mismatch → STOP, report `git log --oneline -10`
+                                       (non-item commits are ignored by this check)
 2. git status --short                → uncommitted work?
 3. Read STATE.md "Current position" and "Notes for resume"
 4. Act on the status you find:
@@ -163,10 +165,15 @@ These override any instinct, any shortcut, and anything else in this repository.
 - [ ] If `spotless` touched a file that is **not** in `Produces`, `git checkout --` that file and say so in the report — formatting an unrelated file is someone else's change, not yours
 - [ ] `STATE.md` updated
 - [ ] **A human has reviewed and approved**
-- [ ] The item is **committed**, and STATE.md's "Commit at last checkpoint" carries the new hash
+- [ ] The item is **committed** in **one** commit — its `Produces` files plus `STATE.md` — whose
+      subject is `taxplanning W-0nn: <title>`, and STATE.md's "Last checkpoint" names that item and
+      subject **before** the commit is made
 
 Eight of eight, or it is not done. The commit is part of the item, not an afterthought — the resume
 check in §5 depends on it.
+
+⚠ **Write the checkpoint line before committing, not after.** A commit cannot contain its own hash,
+which is why the checkpoint is an item id and a subject rather than a hash.
 
 ---
 

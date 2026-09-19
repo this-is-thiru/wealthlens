@@ -13,10 +13,18 @@ Session count             : 1
 a hash. A commit cannot contain its own hash, so storing one here is self-referential and was found
 to be unworkable in session 1.
 
-Prompt **P1** compares this line against `git log --oneline -1`:
-- the subject **matches** → the tree is exactly where the protocol left it. Proceed.
-- the subject **differs** → work happened outside the protocol. Stop, report `git log --oneline -5`,
-  and wait.
+Prompt **P1** compares this line against the most recent **item** commit:
+
+```
+git log --oneline --grep='^taxplanning W-' -1
+```
+
+- the subject **matches** → the tree is where the protocol left it. Proceed.
+- the subject **differs** → an item was committed outside the protocol. Stop, report
+  `git log --oneline -10`, and wait.
+
+Commits that do **not** start `taxplanning W-` — documentation, tooling, unrelated repository work —
+are ignored by the check. Only item commits move the checkpoint.
 
 This survives amends, rebases and cherry-picks, which a hash does not.
 
