@@ -89,6 +89,17 @@ public record NodeResult(NodeValue value, List<TraceLine> trace) {}
 makes an undeclared dependency a test failure rather than an ordering bug, which is what a hand-kept
 list can never give you.
 
+> **Erratum (W-039, 2026-09-21):** this property is right and **B3's runner cannot deliver it**. B3
+> builds one context for the whole run — `var ctx = new NodeContext(pack, regime, inputs)` — and
+> passes the same instance to every node, so it cannot know which node is asking and cannot make
+> the check at all. **Correction: a context is created per node**, carrying that node's
+> `requires()` and `rules()`, over a value store shared across the run —
+> `NodeContext.forRun(...)` once, `ctx.forNode(node)` per node. The same scoping applies to
+> `rule(RuleId)`: a node may not evaluate a rule it did not declare, or the rule would look
+> unreachable to **I3** while being applied.
+> Verified by: `./mvnw test -pl backend -Dtest=NodeRegistryTest` —
+> `aNodeMayNotReadWhatItDidNotDeclare`, `aNodeMayNotEvaluateARuleItDidNotDeclare`.
+
 ## B3 — The runner
 
 ```java

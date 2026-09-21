@@ -304,6 +304,22 @@ The compute cache keys on **`law` + `exec` only**.
 | I16 | `PendingNotification` names an `interimRule` present in the same pack |
 | I17 | every `ComponentCode` a draft references resolves in the target pack, or has a `DeprecationPolicy` |
 | I18 | a non-`TAX_YEAR` axis rule is supplied its coordinate by every node that evaluates it |
+
+> **Erratum (W-039, 2026-09-21):** **I18 is already enforced, and needs no checker of its own.**
+> `TemporalContext.on(axis)` throws `MissingTemporalCoordinateException` for any non-`TAX_YEAR`
+> axis with no coordinate, and `RuleRow.versionAt(t)` calls it on **every** rule lookup — so a node
+> evaluating such a rule without supplying the coordinate gets an exception rather than a plausible
+> wrong figure. Asserted as a property instead, the same shape `W-029` used for **I1** (enforced by
+> `Provenance`'s constructor, so a validator branch would be unreachable). A separate static check
+> would need nodes to declare which axes they supply — machinery nothing else wants, duplicating a
+> guarantee already in place.
+>
+> **I3 is implemented but deliberately not yet wired to the shipped pack.**
+> `NodeRegistry.rulesNotEvaluatedByAnyNode` is the check `W-029`'s erratum deferred here. There are
+> **zero** `ComputationNode` implementations until Phases 5-9, so running it against the real
+> 2026-27 pack today reports every rule unreachable. It is proven against fixtures now and enabled
+> at the item that first ships a real pipeline (decision **D-029**).
+> Verified by: `./mvnw test -pl backend -Dtest=NodeRegistryTest` — 22 tests.
 | I19 | at least one ITR form is applicable per `(PersonType, ReturnKind)` |
 | I20 | no two ITR forms simultaneously eligible |
 | I21 | every `ScheduleRef`, `FromRule`, `FromNode` resolves |
