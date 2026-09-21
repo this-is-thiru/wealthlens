@@ -516,6 +516,24 @@ if that is not enough for the item in hand.
 | W-083 | `HouseElectionNode` | `DR 13` R-6 | which two houses is a **choice**, and optimisable |
 | W-084 | `IncrementalRunner` | `DR 15` B5 | memo only where the graph proves nothing upstream moved |
 | W-085 | `CapitalGainsSummary`, `CapitalGainsBucket`, `RateBasisHint` | `DR 13` R-10, `DR 15` F5 | gross buckets; **no tax amounts** |
+
+> **Erratum (W-037b, 2026-09-21):** `RateBasisHint` **moves to `W-037b`**, which declares it in
+> `taxrules.component`. `W-037b`'s `CapitalGainsInput` is typed in it and cannot wait for Phase 9;
+> declaring a second copy inside `taxengine` would be the two-vocabularies failure of
+> `02-lessons.md` L1. `taxrules` is its right home regardless — `DR 13` R-10 puts "the rate basis"
+> on the tax side of the `portfolio` boundary, and `taxrules` is visible to `taxengine`,
+> `taxdocs` and `taxplanning` alike. **`W-085` keeps `CapitalGainsSummary` and
+> `CapitalGainsBucket`** (the `portfolio`-side read-model) and drops `RateBasisHint`.
+>
+> Note also that `W-085`'s `CapitalGainsBucket` carries `CapitalGainsType`, which lives in
+> `com.thiru.wealthlens.portfolio.dto.enums` — fine for a `portfolio` read-model, and **not**
+> reachable from `taxengine`. `W-037b`'s projection therefore carries a `Term` (s.108(2)) and a
+> `RateBasisHint` and no classification: by the time a bucket reaches the engine, `taxplanning` has
+> already decided whether the class counts as capital gains, and `UNCLASSIFIED` is a blocking error
+> upstream (`X1.3`). This is the same module-placement trap as **B-003**, fourth occurrence.
+> Verified by: `find backend/src/main/java -name CapitalGainsType.java`
+> → `portfolio/dto/enums/CapitalGainsType.java`; `13-edge-cases.md:254`;
+> `./mvnw test -pl backend -Dtest=RegimeElectionSnapshotTest` — 20/20.
 | W-086 | `portfolio` published read-model | `DR 07` X1.3 | modulith test must pass with the new dependency |
 | W-087 | `MoneyBridge` | `DR 19` E1 | `toTMoney` **throws** — one-way seam |
 | W-088 | `CapitalGainsNode` | `DR 13` R-10 | `UNCLASSIFIED` → 409; `SPECULATIVE` excluded |
