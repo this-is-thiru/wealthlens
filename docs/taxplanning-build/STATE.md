@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-039 — "taxplanning W-039: the node, and what it is allowed to read"
-Last updated              : 2026-09-21 (session 3 — W-039 done; build GREEN, 1342 tests)
+Last checkpoint           : W-040 — "taxplanning W-040: the order comes from the edges"
+Last updated              : 2026-09-21 (session 3 — W-040 done; build GREEN, 1359 tests)
 Current position          : W-037
 Session count             : 3
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-040` — `TopologicalSort` (a cycle fails with the cycle named) |
+| **Next item** | `W-044` — `NodeHarness` (test scope). **Not `W-042`** — D-011 moved `W-044` earlier, because a runner cannot be tested without test nodes to run |
 | **Status** | `READY` — nothing in flight, nothing blocked |
 | **Phase** | 4 — The DAG runner |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -51,7 +51,7 @@ Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
 Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
-Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
+Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **19** / 148 · in flight **0** · blocked **0**
+Counts — done **20** / 148 · in flight **0** · blocked **0**
 
 ---
 
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-040 | 2026-09-21 | TopologicalSort — canonical order (ties on NodeId, D-030), cycle named as a path, missing producer named; found my own arrow direction contradicted B3's mermaid and fixed the code not the test; 17 tests | `./mvnw test -pl backend -Dtest=TopologicalSortTest`
 W-039 | 2026-09-21 | ComputationNode/NodeContext/NodeResult/NodeRegistry + **I3 built (inert, D-029)** and **I18 shown already enforced**; per-node context scoping fixes B3's unimplementable sketch; rule() scoped too; 22 tests. 2 errata | `./mvnw test -pl backend -Dtest=NodeRegistryTest`
 W-038 | 2026-09-21 | InputsFingerprint — structural walk of EngineInputs by reflection, **property proven by probe**; F6's hand-written list wrong 4 ways (erratum); pack stays out per G-11 (**D-028**); 26 tests incl. a 14-case perturbation suite | `./mvnw test -pl backend -Dtest=InputsFingerprintTest`
 W-037c | 2026-09-21 | EngineInputs (10 components) + RegimeBehaviour.adjustPipeline + **L5 guard 3, proven to bite** + 8 tests; no inputs parameter per **D-027** (it would be a module cycle); component-location test makes B-003 a regression guard. **D-025 split closed** | `./mvnw test -pl backend -Dtest=EngineInputsTest,ArchitectureTest`
@@ -346,6 +347,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-030 | 2026-09-21 | `W-040` — T9's error catalogue has **no** entry for a pipeline cycle and `TaxError`/`TaxEngineException` do not exist (`W-105`). And a graph admits many valid topological orders; the Verify does not say which | **`IllegalArgumentException`, naming the cycle** — it matches what `NodeRegistry` already throws, and a cycle is a defect in what node *classes* declare, not in pack data or user data (B3's "fails at load" is inconsistent with its own code, which sorts per run). `W-105` may reclassify it into the sealed hierarchy. **The order is canonical**, ties broken on `NodeId`: `TraceLine.sequence` comes from it, the trace *is* the result, so a varying order would make identical inputs produce differing traces — golden tests failing for no reason, scenario diffs reporting changes nobody made | **decided by the developer** |
 | D-029 | 2026-09-21 | `W-039` — B2 promises `NodeContext.get` throws on an undeclared read, but B3 builds **one** context for the whole run and passes it to every node, so it cannot know who is asking and cannot make the check. Separately, I3 needs node-to-rule mappings and there are **zero** `ComputationNode` implementations until Phases 5-9 | **Per-node context**: `forRun(...)` once, `ctx.forNode(node)` per node over a shared value store; scoping applies to `rule(RuleId)` too. **I3 (a)**: ship the checker, prove it against fixtures, do **not** wire it to the shipped pack yet — it would report every rule unreachable; the item that first ships a real pipeline enables it. **I18**: already enforced by `TemporalContext.on` / `RuleRow.versionAt`, asserted as a property (the I1 shape), no checker added | **decided by the developer** |
 | D-028 | 2026-09-21 | `W-038` — F6 writes the fingerprint as a six-argument hand-written list; A3 says it is "a hash of `EngineInputs` — one object". F6 also lists a `RulePackRef`. Which, and does the pack go in? | **`of(EngineInputs)`, one argument, walked structurally by reflection**; F6's list is wrong four ways and is erratum'd. **The pack stays out** — `RulePack.computationCacheKey()` (`W-027`) already covers it readably and excludes editorial layers, so folding it into an opaque digest would undo G-11; the full key is the two composed. `List` order is significant, `Set`/`Map` order is not: sorting a list could make two different inputs collide (a wrong cache hit), while preserving order can only cause a needless miss | **decided by the developer** |
 | D-027 | 2026-09-21 | `W-037c` — L5's `adjustPipeline(PipelineSpec, Inputs)` needs `taxrules` → `taxengine`, and `taxengine` → `taxrules` already exists, so it is a **cycle**, not merely a disallowed edge. Modulith rejects cycles outright (established by B-001 option C) | **(A) ship `adjustPipeline(PipelineSpec declared)` — no inputs parameter.** Follows the precedent `W-031b` set on this same interface: hooks arrive with the items that build their types. L5 recommends shipping **zero** behaviours beyond the default, so the parameter is speculative until a real tier-3 behaviour says what it needs; adding it then is one line on an interface with one implementation. Guard 3 lists overriders and is unaffected by the signature. Also: guard 3 is a plain `@Test`, not an `@ArchTest` — expected overriders is zero and an ArchUnit rule matching nothing fails the build | **decided by the developer** |
@@ -405,6 +407,11 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 name before `W-032`; `W-032` shipped without it, so it is now overdue rather than pending.
 
 ## Notes for resume
+
+**Arrow direction is now fixed by convention: `->` means "feeds into".** `W-040`'s cycle message
+draws the path that way to match B3's mermaid (`C[components] --> GS[salary.gross]`). The first
+implementation walked the *waits-for* edges, which is the same cycle drawn backwards and reads as a
+contradiction beside the diagrams. Anything else that renders the graph should follow.
 
 **⚠ Two things `W-039` left for a later item to switch on.** (1) **I3 is built but not wired** —
 `NodeRegistry.rulesNotEvaluatedByAnyNode` works and is fixture-tested, but running it against the
