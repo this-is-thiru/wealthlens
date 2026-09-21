@@ -4,7 +4,7 @@
 
 ```
 Last checkpoint           : W-036 — "taxplanning W-036: the computation, and everything said about it"
-Last updated              : 2026-09-21 (session 3 — W-036 done; build GREEN, 1244 tests)
+Last updated              : 2026-09-21 (session 3 — B-003 resolved by D-024; W-037 awaiting a plan)
 Current position          : W-037
 Session count             : 3
 ```
@@ -34,8 +34,8 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-037` — not started. **Read the type-audit note below first** |
-| **Status** | `READY` — nothing in flight, nothing blocked |
+| **Next item** | `W-037` — B-003 resolved by **D-024** (option A). Needs an EXPLAIN before any code (R12) |
+| **Status** | `NOT_STARTED` — no plan written, no code written |
 | **Phase** | 4 — The DAG runner |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
@@ -135,6 +135,83 @@ properly as `taxplanning W-035:` and the checkpoint has advanced off `W-034b`.
 ---
 
 ## Blockers
+
+### B-003  (W-037)  — 2026-09-21  — **RESOLVED 2026-09-21**: option (A), `taxengine` owns its input projections (**D-024**)
+
+**No code was written.** The stop is at stage 2, which is where `00-START-HERE.md` §7 and R6 want it.
+
+**What I needed:** to build `EngineInputs` **verbatim** from `DR 23` A3, as `W-037`'s Spec column
+requires.
+
+**What I looked at:** `DR 23` A3 in full; `11-filing-drafts.md` F4 and F4.1; `14-operational-design.md:282`;
+`17-regime-lifecycle.md:213`; `09-build-plan.md:99`; `00-SUMMARY.md` R5; `03-WORK-ITEMS.md` rows
+`W-038`, `W-082`, `W-085`, `W-099` and Appendix A; `ArchitectureTest.taxengine_fetches_nothing`;
+`taxengine/package-info.java`. A per-type existence grep over all ten `EngineInputs` components.
+
+**What is wrong — A3 fails its own rule.** Three of the ten components name types that live, or will
+live, in modules `taxengine` may not depend on:
+
+| Component | Type | Owner | Module | `taxengine` may depend on it? |
+|---|---|---|---|---|
+| `entered` | `DraftInputs` | `W-099` (Phase 11) | `taxplanning` | **No** — forbidden twice over |
+| `capitalGains` | `CapitalGainsSummary` | `W-085` (Phase 9) | `portfolio` (a published read-model) | **No** — not in T1's list |
+| `elections` | `ElectionState` (inside `RegimeElectionSnapshot`) | `W-082` (Phase 9) | undecided | sequencing only, no conflict |
+
+`taxengine` declares `allowedDependencies = {"shared", "taxrules"}`, and `ArchitectureTest`'s
+`taxengine_fetches_nothing` — **green in the build since `W-004`** — forbids any `..taxengine..`
+class from depending on `..taxplanning..`, *"because everything the engine may read arrives in
+EngineInputs"*. A3 proposes that very rule, three code blocks below the record that violates it.
+
+A3 also **contains its own answer**: its javadoc says `EngineInputs` is *"Assembled by taxplanning
+from persistence; consumed by taxengine"* and *"This is deliberately **NOT** `DraftInputs`"* — then
+names `DraftInputs` as a component, re-importing the thing it just said it was not.
+
+**Why this cannot be deferred the way `W-036`'s gap was.** `W-038`, the **very next item**, builds
+`InputsFingerprint` over this record, and A3's own INFERENCE is that the fingerprint works *because*
+`EngineInputs` is one complete object — *"a field added to `EngineInputs` is in the key
+automatically, which is the only way that invariant survives."* `W-038`'s Verify demands **any**
+field change produce a different fingerprint. Ship `EngineInputs` without capital gains and the
+cache key silently omits them: two computations differing only in capital gains collide. That is a
+wrong number served from cache, the same class of defect as R-5.
+
+**What I would need to proceed — a decision between three options.**
+
+- **(A) `taxengine` owns input projections; `taxplanning` maps into them.** `EngineInputs` holds
+  `EnteredFacts` and a `taxengine`-owned capital-gains input, both declared here; `taxplanning`
+  converts `DraftInputs` and `portfolio`'s read-model at assembly. Faithful to A3's *javadoc* and to
+  D-PURE, and it keeps `EngineInputs` complete, so `W-038` is sound. Cost: two extra types in this
+  item, and a mapping layer owed at `W-099`/`W-085`. My recommendation.
+- **(B) Widen `taxengine`'s `allowedDependencies` to `portfolio` and `taxplanning`.** Faithful to
+  A3's *code*. It deletes D-PURE, fails `taxengine_fetches_nothing`, and makes the engine's
+  reproducibility guarantee unenforceable. Recorded for completeness; I would argue against it.
+- **(C) Build `EngineInputs` partial now, complete it at `W-085`/`W-099`.** Cheapest today. But it
+  puts `W-038`'s fingerprint on a knowingly incomplete key for ~48 items, and a stale cache key is
+  invisible until it serves a wrong number.
+
+All three edit things outside `W-037`'s `Produces` — (A) adds types to it, (B) edits `W-001`'s
+`package-info.java`, (C) changes `W-038`'s contract — which is why this stopped rather than
+choosing itself.
+
+**Also owed by this item, and unaffected by the above:** L5 guard 3, moved here by `W-031b` —
+`RegimeBehaviour.adjustPipeline` plus the ArchUnit rule listing every overriding class against a
+reviewed file. It needs `EngineInputs` to exist first, so it is downstream of this decision.
+
+**Resolution (2026-09-21, D-024): option (A), as recommended.** `taxengine` declares its own input
+projections; `taxplanning` maps into them at assembly. This is what A3's javadoc already says
+(*"assembled by taxplanning from persistence; consumed by taxengine"*) and what its component list
+contradicted. `EngineInputs` stays **complete**, which is the property `W-038`'s fingerprint rests
+on. No module declaration changes; `taxengine_fetches_nothing` keeps biting.
+
+**Debts this creates, to be honoured by the items named — record them, they are easy to lose:**
+
+| Owed at | What |
+|---|---|
+| `W-085` | map `portfolio`'s published `CapitalGainsSummary` read-model → `taxengine`'s capital-gains input projection |
+| `W-099` | map `DraftInputs` → `EnteredFacts`; this is the boundary A3's javadoc describes |
+| `W-082` | `ElectionState` must be visible to `taxengine` — place it in `taxrules` (regime vocabulary, and `RegimeElectionSnapshot` needs it) rather than `taxplanning` |
+
+A3 needs an erratum recording that its `EngineInputs` cannot compile in `taxengine` as written. It
+is **not yet written** — it belongs in `W-037`'s report, with the built code as its proof.
 
 ### B-002  (W-035)  — 2026-09-19  — **RESOLVED 2026-09-21**: option (B), `taxrules` is `Type.OPEN` (**D-022**)
 
@@ -264,6 +341,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-024 | 2026-09-21 | B-003 — `DR 23` A3's `EngineInputs` holds `DraftInputs` (`taxplanning`) and `CapitalGainsSummary` (`portfolio`), neither of which `taxengine` may depend on. A3 proposes, three blocks later, the very ArchUnit rule its record breaks. Projections, widened dependencies, or a partial record? | **(A) `taxengine` owns its input projections**; `taxplanning` maps `DraftInputs` and `portfolio`'s read-model into them at assembly. Faithful to A3's javadoc, keeps D-PURE enforceable, and keeps `EngineInputs` complete — which is what `W-038`'s fingerprint depends on. (B) would delete D-PURE; (C) would put the cache key on a knowingly incomplete input for ~48 items. Debts recorded against `W-082`/`W-085`/`W-099` | **decided by the developer** |
 | D-023 | 2026-09-21 | `W-036` — `TraceAnnotation` (DR 23 A8) names `ExplanationRef`, `ClaimCatalogueRef` and `PricedAlternative`, which the design declares nowhere and no item produces. Ship a reduced record, or declare the three types now? | **(i) ship `TraceAnnotation(int sequence, List<Notice> notices)`**; the other three components arrive with the items owning their types (rule B2). Needs nothing outside `Produces`; declaring them now would mean inventing `PricedAlternative`'s money fields (R1/R5). Also: **omit M5.1's `label`** from `TraceLine`, taking A8's omission as deliberate — pack text is resolved from `rule()` at render time, so re-wording must not invalidate a cached computation. Two errata on A8 | **decided by the developer** |
 | D-022 | 2026-09-21 | B-002 — T1 declares all four tax modules `CLOSED` *and* has them depend on each other's types, but every shared type lives in a sub-package and a `CLOSED` module exposes only its root. T1 as written is unsatisfiable. `@NamedInterface` on ~12 packages, or `taxrules` `OPEN`? | **(B) `taxrules` is `Type.OPEN`**; `taxengine`, `taxdocs`, `taxplanning` stay `CLOSED`. It is the shared vocabulary and has no internals to hide; the three modules that do have internals keep the boundary, so T1's actual objective is untouched. (A) declares the same visible surface twelve times over. Erratum on TS T1 | **decided by the developer** |
 | D-021 | 2026-09-19 | Appendix A matched types the design **declares**, so it was blind to types named only in a `permits` clause — the category that *fails to compile*. `W-035` hit it: `NodeValue` permits six, five declared nowhere | **Appendix B** — re-audited: 29 types in `permits` clauses, 19 never declared, 14 with no owner, now tabled. **Rule B2**: a `permits` clause lists only what exists. Flagged `UndeterminedApportionmentException` (needed by `W-066b`, reached before its owner `W-105`) and `MissingRulePackException` (T9-1, currently a plain `PackValidationException`) | **approved by the developer** |
@@ -317,6 +395,15 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 name before `W-032`; `W-032` shipped without it, so it is now overdue rather than pending.
 
 ## Notes for resume
+
+**The `W-037` grep pass was run, and it found B-003.** The recommendation logged after `W-036` —
+grep A3's component types before starting — was carried out and is what caught this at the plan
+stage instead of mid-code. The blind-spot category below is *not* what bit here: Appendix A had
+already tabled `CapitalGainsSummary` and `ElectionState`. What bit was **module placement** — a
+component type that exists, has an owner, and lives where the consuming module may not look. That is
+a fourth thing no audit has checked, and it is cheap to check: for each component type of a design
+record, which module owns it, and does the holder's module allow that dependency? `DR 23` A6
+(`W-043`) is the next record of this shape.
 
 **A third type-audit blind spot, found by `W-036`.** Appendix A covered types the design
 **declares**; Appendix B (D-021) covered types named in a **`permits` clause**. Neither covers a
