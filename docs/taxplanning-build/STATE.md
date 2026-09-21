@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-036 — "taxplanning W-036: the computation, and everything said about it"
-Last updated              : 2026-09-21 (session 3 — B-003 resolved by D-024; W-037 awaiting a plan)
+Last checkpoint           : W-037 — "taxplanning W-037: what the engine may know about a person"
+Last updated              : 2026-09-21 (session 3 — W-037 done; build GREEN, 1265 tests)
 Current position          : W-037
 Session count             : 3
 ```
@@ -34,8 +34,8 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-037` — B-003 resolved by **D-024** (option A). Needs an EXPLAIN before any code (R12) |
-| **Status** | `NOT_STARTED` — no plan written, no code written |
+| **Next item** | `W-037b` — not started. **Not `W-038`** — the split (**D-025**) runs `W-037` → `W-037b` → `W-037c` first |
+| **Status** | `READY` — nothing in flight, nothing blocked |
 | **Phase** | 4 — The DAG runner |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
@@ -51,7 +51,7 @@ Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
 Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
-Phase 4    W-035 D  W-036 D  W-037 ·  W-038 ·  W-039 ·  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
+Phase 4    W-035 D  W-036 D  W-037 D  W-037b ·  W-037c ·  W-038 ·  W-039 ·  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **14** / 146 · in flight **0** · blocked **0**
+Counts — done **15** / 148 · in flight **0** · blocked **0**
 
 ---
 
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-037 | 2026-09-21 | TaxpayerFacts/FamilySnapshot/LedgerSnapshot + 21 tests; first slice of the D-025 split, projections per D-024, **date of birth not a derived age**; 4 types nested to hold Produces; found the enum-constant audit gap | `./mvnw test -pl backend -Dtest=TaxpayerFactsTest`
 W-036 | 2026-09-21 | TraceLine/TraceAnnotation/Notice/StepKind/Severity + 19 tests; A8's two-layer split, `TraceAnnotation` reduced and `label` omitted per **D-023**; found the third type-audit blind spot; 2 errata on A8 | `./mvnw test -pl backend -Dtest=TraceLineTest`
 W-035 | 2026-09-21 | NodeValue/MoneyValue/TaxByBasis/SpecialRateId + 12 tests. Supersedes the blocked row below: B-002 resolved by **D-022** (`taxrules` → `Type.OPEN`), T1 erratum written | `./mvnw test -pl backend -Dtest=NodeValueTest` and `-Punit` (1225/1225)
 W-035 | 2026-09-19 | **NOT DONE — BLOCKED on B-002.** NodeValue/MoneyValue/TaxByBasis/SpecialRateId + 12 tests written and green; the modulith test fails. Committed as WIP, not as an item | `./mvnw test -pl backend -Dtest=NodeValueTest` passes; `-Punit` does not
@@ -341,6 +342,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-025 | 2026-09-21 | `W-037` under D-024 is 8 records + an enum + a defensive-copy test across all of them — 900-1,100 lines against §7's ~300, before L5 guard 3. And `EngineInputs` cannot compile until its ten components exist, so the spine cannot come first. Separately: does the projection carry date of birth or a derived age? | **Split three ways** — `W-037` (`TaxpayerFacts`, `FamilySnapshot`, `LedgerSnapshot`), `W-037b` (`FilingFacts`, `RegimeElectionSnapshot`, `ElectionState`, `EnteredFacts`, `CapitalGainsInput`), `W-037c` (`EngineInputs` + L5 guard 3). Ids suffixed, not renumbered. **Date of birth, not an age** — F2's senior test is "at any time during the previous year", which an age cannot answer; the collapse to `ConditionContext`'s `int` happens downstream where that rule is applied. Also accepted: no PAN in the engine, no `fingerprint()` until `W-038`, `ElectionState` moves from `W-082` to `W-037b` | **decided by the developer** |
 | D-024 | 2026-09-21 | B-003 — `DR 23` A3's `EngineInputs` holds `DraftInputs` (`taxplanning`) and `CapitalGainsSummary` (`portfolio`), neither of which `taxengine` may depend on. A3 proposes, three blocks later, the very ArchUnit rule its record breaks. Projections, widened dependencies, or a partial record? | **(A) `taxengine` owns its input projections**; `taxplanning` maps `DraftInputs` and `portfolio`'s read-model into them at assembly. Faithful to A3's javadoc, keeps D-PURE enforceable, and keeps `EngineInputs` complete — which is what `W-038`'s fingerprint depends on. (B) would delete D-PURE; (C) would put the cache key on a knowingly incomplete input for ~48 items. Debts recorded against `W-082`/`W-085`/`W-099` | **decided by the developer** |
 | D-023 | 2026-09-21 | `W-036` — `TraceAnnotation` (DR 23 A8) names `ExplanationRef`, `ClaimCatalogueRef` and `PricedAlternative`, which the design declares nowhere and no item produces. Ship a reduced record, or declare the three types now? | **(i) ship `TraceAnnotation(int sequence, List<Notice> notices)`**; the other three components arrive with the items owning their types (rule B2). Needs nothing outside `Produces`; declaring them now would mean inventing `PricedAlternative`'s money fields (R1/R5). Also: **omit M5.1's `label`** from `TraceLine`, taking A8's omission as deliberate — pack text is resolved from `rule()` at render time, so re-wording must not invalidate a cached computation. Two errata on A8 | **decided by the developer** |
 | D-022 | 2026-09-21 | B-002 — T1 declares all four tax modules `CLOSED` *and* has them depend on each other's types, but every shared type lives in a sub-package and a `CLOSED` module exposes only its root. T1 as written is unsatisfiable. `@NamedInterface` on ~12 packages, or `taxrules` `OPEN`? | **(B) `taxrules` is `Type.OPEN`**; `taxengine`, `taxdocs`, `taxplanning` stay `CLOSED`. It is the shared vocabulary and has no internals to hide; the three modules that do have internals keep the boundary, so T1's actual objective is untouched. (A) declares the same visible surface twelve times over. Erratum on TS T1 | **decided by the developer** |
@@ -395,6 +397,14 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 name before `W-032`; `W-032` shipped without it, so it is now overdue rather than pending.
 
 ## Notes for resume
+
+**A fifth audit category, found while building `W-037`: enum constants.** The test was written
+against `PersonType.HUF` and `DisabilitySeverity.SEVERE`; neither exists. `PersonType` has **one**
+constant (`INDIVIDUAL`) and `DisabilitySeverity` has `DISABILITY` / `SEVERE_DISABILITY`, because
+`W-021` applied rule B2 and built only what the packs use. The design's prose names many more
+person types. **Read the enum before writing against it** — a constant is exactly as likely to be
+aspirational as a type is. Caught by the compiler in seconds, so it is a nuisance rather than a
+hazard, but it is the same root cause as B-003 and Appendix B.
 
 **The `W-037` grep pass was run, and it found B-003.** The recommendation logged after `W-036` —
 grep A3's component types before starting — was carried out and is what caught this at the plan

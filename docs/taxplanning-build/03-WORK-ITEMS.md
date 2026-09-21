@@ -373,6 +373,36 @@ test nodes to run.
 | **W-044** | **MOVED — do this before `W-042`.** `taxengine/test/NodeHarness.java` (test scope) + `.../test/NodeHarnessTest.java` | `DR 23` A11 | `-Dtest=NodeHarnessTest` — the harness runs one node in isolation and its stub inputs are honoured |
 | **W-045** | **RETIRED** — merged into `W-042` by D-011 | — | — |
 
+> **Erratum (W-037, 2026-09-21):** `W-037` is **split three ways** by decision **D-025**, and its
+> `Produces` is amended by **D-024**. Two things were wrong with the row above.
+>
+> *It could not be built as written.* `DR 23` A3's `EngineInputs` holds `DraftInputs`
+> (`taxplanning`, `W-099`) and `CapitalGainsSummary` (`portfolio`, `W-085`) — neither visible to
+> `taxengine`, and the first forbidden by `ArchitectureTest.taxengine_fetches_nothing`, which A3
+> itself recommends three code blocks later. **B-003**, resolved by **D-024**: `taxengine` declares
+> its own input projections (`EnteredFacts`, `CapitalGainsInput`) and `taxplanning` maps into them.
+>
+> *It was mis-sized.* Eight records, one enum and a test exercising defensive copying across all of
+> them is 900–1,100 lines against §7's ~300 — before L5 guard 3, which `W-031b` moved here. And
+> `EngineInputs` cannot compile until its ten component types exist, so the spine must come **last**.
+>
+> | Item | Produces | Verify |
+> |---|---|---|
+> | **W-037** | `taxengine/input/{TaxpayerFacts,FamilySnapshot,LedgerSnapshot}.java` + `.../input/TaxpayerFactsTest.java` | `-Dtest=TaxpayerFactsTest` — every collection defensively copied; the projection carries **date of birth, not a derived age** (D-025) |
+> | **W-037b** | `taxengine/input/{FilingFacts,RegimeElectionSnapshot,EnteredFacts,CapitalGainsInput}.java` + `taxrules/regime/ElectionState.java` + `.../input/RegimeElectionSnapshotTest.java` | `-Dtest=RegimeElectionSnapshotTest` — `stateOf` defaults to `NEVER_ELECTED`; every collection defensively copied |
+> | **W-037c** | `taxengine/input/EngineInputs.java` + `.../input/EngineInputsTest.java` **+ L5 guard 3** | `-Dtest=EngineInputsTest` — the record is complete enough that the engine fetches nothing; plus the `adjustPipeline` override rule |
+>
+> Ids are suffixed, not renumbered, as D-013, D-015 and D-019 did. `ElectionState` moves from
+> `W-082`'s `Produces` to `W-037b`'s — `RegimeElectionSnapshot` cannot compile without it and the
+> engine must be able to see it, so it lands in `taxrules.regime` beside `ElectionProtocol`,
+> `ElectionKind`, `ElectionVehicle` and `ElectionRoute`. **`W-082`'s row is reduced accordingly.**
+> Two further amendments, both recommendations accepted: `TaxpayerFacts` carries **no PAN** (A3 says
+> "PAN, DOB, residence", but `Pan` is `W-096`'s, no rule computes on a PAN, and O1.1 wants it masked),
+> and `EngineInputs` ships **without `fingerprint()`**, which `W-038` adds with the type it owns.
+> Verified by: `find backend/src/main/java -name 'DraftInputs.java' -o -name 'CapitalGainsSummary.java'`
+> → both absent; `ArchitectureTest.java:165-170`; `03-WORK-ITEMS.md:516` (`DraftInputs` → `W-099`),
+> `:488` (`CapitalGainsSummary` → `W-085`), `:633` (`ElectionState` → `W-082`).
+
 ---
 
 ## Phase 5 — Tax nodes: the walking skeleton (8 ids, 7 live)
