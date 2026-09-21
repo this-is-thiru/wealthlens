@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-040 — "taxplanning W-040: the order comes from the edges"
-Last updated              : 2026-09-21 (session 3 — W-040 done; build GREEN, 1359 tests)
+Last checkpoint           : W-044 — "taxplanning W-044: a node, run on its own"
+Last updated              : 2026-09-21 (session 3 — W-044 done; build GREEN, 1372 tests)
 Current position          : W-037
 Session count             : 3
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-044` — `NodeHarness` (test scope). **Not `W-042`** — D-011 moved `W-044` earlier, because a runner cannot be tested without test nodes to run |
+| **Next item** | `W-042` — `PipelineRunner` (**no try/catch** — D-NOSILENT). Uses `W-044`'s harness; `DR 08` T9-20, `DR 23` T23-6, T23-7 |
 | **Status** | `READY` — nothing in flight, nothing blocked |
 | **Phase** | 4 — The DAG runner |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -51,7 +51,7 @@ Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
 Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
-Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
+Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 ·  W-042 ·  W-043 ·  W-044 D  W-045 ·
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **20** / 148 · in flight **0** · blocked **0**
+Counts — done **21** / 148 · in flight **0** · blocked **0**
 
 ---
 
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-044 | 2026-09-21 | NodeHarness (test scope) + 13 tests; runs a node with no pipeline against the **real shipped pack**; refuses both a missing stub and an unused one; owns `plainTaxpayer()`, the one EngineInputs fixture; T23-6 inherited from W-039's scoped context | `./mvnw test -pl backend -Dtest=NodeHarnessTest`
 W-040 | 2026-09-21 | TopologicalSort — canonical order (ties on NodeId, D-030), cycle named as a path, missing producer named; found my own arrow direction contradicted B3's mermaid and fixed the code not the test; 17 tests | `./mvnw test -pl backend -Dtest=TopologicalSortTest`
 W-039 | 2026-09-21 | ComputationNode/NodeContext/NodeResult/NodeRegistry + **I3 built (inert, D-029)** and **I18 shown already enforced**; per-node context scoping fixes B3's unimplementable sketch; rule() scoped too; 22 tests. 2 errata | `./mvnw test -pl backend -Dtest=NodeRegistryTest`
 W-038 | 2026-09-21 | InputsFingerprint — structural walk of EngineInputs by reflection, **property proven by probe**; F6's hand-written list wrong 4 ways (erratum); pack stays out per G-11 (**D-028**); 26 tests incl. a 14-case perturbation suite | `./mvnw test -pl backend -Dtest=InputsFingerprintTest`
@@ -407,6 +408,13 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 name before `W-032`; `W-032` shipped without it, so it is now overdue rather than pending.
 
 ## Notes for resume
+
+**`NodeHarness.plainTaxpayer()` is now the one `EngineInputs` fixture.** Before it, that
+ten-component fixture had been rebuilt privately inside `NodeRegistryTest` and
+`InputsFingerprintTest`. Every node test and `W-042` should take it from the harness rather than
+build a fourth copy; tests that care about the taxpayer call `.inputs(...)`. **`NodeRegistryTest`
+and `InputsFingerprintTest` still hold their own copies** — not touched, being outside `W-044`'s
+`Produces`, and worth folding in whenever something else edits them.
 
 **Arrow direction is now fixed by convention: `->` means "feeds into".** `W-040`'s cycle message
 draws the path that way to match B3's mermaid (`C[components] --> GS[salary.gross]`). The first
