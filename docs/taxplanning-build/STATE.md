@@ -4,9 +4,9 @@
 
 ```
 Last checkpoint           : W-043 — "taxplanning W-043: the half that never moves"
-Last updated              : 2026-09-21 (session 3 — W-043 done, **Phase 4 COMPLETE**; build GREEN, 1410 tests)
+Last updated              : 2026-09-21 (session 3 END — Phase 4 COMPLETE, build GREEN, 1410 tests, nothing in flight)
 Current position          : W-037
-Session count             : 3
+Session count             : 3  (session 4 resumes at W-046)
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
@@ -445,25 +445,112 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 
 ## ▶ How to resume — do these in order
 
+**Session 3 ended cleanly.** Nothing is in flight, nothing is blocked, the build is green, and the
+tree is clean. This is an ordinary item start, not a recovery.
+
 1. **Confirm where you are.**
    ```
-   git log --oneline --grep='^taxplanning W-' -1     # expect: taxplanning W-035: what a node produces...
+   git log --oneline --grep='^taxplanning W-' -1     # expect: taxplanning W-043: the half that never moves
    git status --short                                # expect: clean
+   ./mvnw test -pl backend -Punit                    # expect: 1410 passing, 0 errors, ~9 s
    ```
-   If the first command does not print `W-035`, stop and report `git log --oneline -15`.
+   If the first command does not print `W-043`, stop and report `git log --oneline -15`.
 
-2. **Confirm the build is green** — it is, and it should stay that way:
-   ```
-   ./mvnw test -pl backend -Punit                    # expect: 1225 passing, 0 errors, ~8 s
-   ```
+2. **Answer the three questions below before writing `W-046`'s plan.** All three land in Phase 5,
+   and two of them get harder with every item. They are ordered by when they bite.
 
-3. **Start `W-036`** at stage 1. Nothing is in flight and nothing is blocked — this is an ordinary
-   item start, the first since Phase 4 opened.
+3. **Then start `W-046`** at stage 1 (READ). It is `TaxByBasisNode` — the first *real* node, and its
+   `Do` is A11's harness example: total income ₹12,00,000 → `TaxByBasis(60000, {})`, run through
+   `W-044`'s `NodeHarness`.
 
-**Still open, blocking nothing yet:** **D-006** (who signs off a rule-pack change) needed a human
-name before `W-032`; `W-032` shipped without it, so it is now overdue rather than pending.
+---
+
+### ⚠ Three things Phase 5 forces, which Phase 4 could defer
+
+**Q1 — `NodeId` anchors. Open since `W-039`; six items now. This one bites immediately.**
+`W-046` must name the slot it produces and the slot it reads. There is no `NodeIds` class.
+`DR 15` B2 declares thirteen well-known anchors as constants on `NodeId` (`GROSS_SALARY`, `GTI`,
+`TOTAL_INCOME`, `TAX_BY_BASIS`, `NET_PAYABLE`, …) — but `NodeId` is `W-008`'s, `RuleIds` and
+`ComponentCodes` are `W-032b`'s **generated** pair, and B2's own comment says *"the full set is
+declared in the pack, not here; these are the well-known anchors"*. Three candidate homes, no
+decision. `NodeHarnessTest` and `PipelineRunnerTest` already hard-code `new NodeId("totalincome")`
+and friends, and **every Phase 5 node will copy whatever `W-046` does**. Decide before `W-046`, not
+after.
+
+**Q2 — invariant I3 is built and switched off, and Phase 5 is its trigger.**
+`NodeRegistry.rulesNotEvaluatedByAnyNode` works and is fixture-tested, but it is wired to nothing:
+with zero `ComputationNode` implementations it would report every rule in the shipped pack
+unreachable. **D-029 says the item that first ships a real pipeline enables it.** That is Phase 5.
+If nobody does it, the dead-rule check that `O-19` exists for never runs, and nothing will fail to
+remind anyone.
+
+**Q3 — nothing owns the projection from `PipelineRunner.Result` to `TaxComputation`.**
+`W-042` produces the `Result`; `W-043` produces the target types; **no backlog item joins them.**
+Something must say *which slot is `totalIncome`* and *which is `taxByBasis`* — which is Q1 again,
+one level up. Likely needs a new item in Phase 5, probably after `W-046`.
+
+---
+
+### Also open, blocking nothing today
+
+| | |
+|---|---|
+| **D-006** | Who signs off a rule-pack change. Needed *before* `W-032`; `W-032` shipped the real 2026-27 pack anyway, so this is **overdue**, not pending |
+| **Duplicate-`Produces` sweep** | `W-043` found `ComputationReceipt` owned by **two** items. No audit checks for this. One pass over the backlog table closes it for good |
+| **Three `EngineInputs` fixtures** | `NodeHarness.plainTaxpayer()` is the intended home. `NodeRegistryTest` and `InputsFingerprintTest` predate it and keep private copies (left alone under R5). Fold in whenever something next edits either |
+| **RNOR** | `TaxpayerFacts` carries three residence states; the built `ConditionContext` has `boolean resident`. RNOR maps cleanly to neither. Lands on whoever assembles the first `ConditionContext` |
+| **`ElectionState` richness** | `WITHDRAWN` vs `PERMANENTLY_INELIGIBLE` is readable but nothing sets it; the protocol that decides is `W-082`'s |
 
 ## Notes for resume
+
+## Session 3 — what happened (2026-09-21)
+
+**Opened** on a red build with `W-035` blocked on B-002. **Closed** with Phase 4 complete, the build
+green at 1410 tests in ~9 s (NFR N12 budgets 20 s), nothing in flight and nothing blocked.
+
+**Eleven items committed**, all reviewed and approved individually: `W-035`, `W-036`, `W-037`,
+`W-037b`, `W-037c`, `W-038`, `W-039`, `W-040`, `W-044`, `W-042`, `W-043`. Test count 1225 → 1410.
+
+**Three blockers, all resolved:** B-002 (`taxrules` `CLOSED` → `OPEN`), B-003 (A3's `EngineInputs`
+holding types `taxengine` may not see), B-004 (`W-039` and `W-040` contradicting each other).
+
+**Eleven decisions, D-022 … D-032**, each recorded in the table above with its reasoning.
+
+**Nine errata**, all additions-only: TS T1, TS T5, DR 23 A3/A6/A8/B3, DR 15 F6, and two on
+`03-WORK-ITEMS.md` (the `W-037` split, the `W-085` and `W-107` type moves).
+
+### The pattern worth carrying forward
+
+**The design hand-lists things, and the lists are stale.** Five separate times this session a
+design document named a type, a component or a constant that does not exist or cannot be referenced
+from where it is written. The two checks that caught every one of them are cheap and belong in
+**stage 1 of every item**:
+
+```
+# 1. does each type the spec names exist, and where?
+for t in <types the spec names>; do find backend/src/main/java -name "$t.java"; done
+# 2. for each that exists: which module owns it, and may the holder depend on that module?
+```
+
+The audit categories now number **five**, and only the first two have been swept:
+Appendix A (types the design *declares*, no owner) · Appendix B (types in a `permits` clause) ·
+types named only as a **record component** in a code block (`W-036`) · a component type whose
+**module the holder cannot see** (B-003, four occurrences) · a type owned by **two** items
+(`W-043`).
+
+**And two defects were mine, not the design's.** `W-040`'s cycle arrows pointed backwards;
+`W-039`'s non-empty `requires()` made every graph unbuildable. Both had passing tests. Both were
+constraints added in the same item that invented the concept they constrained — **a guard is only
+proven by something independent passing through it**, and one written alongside its only user
+proves nothing. `W-039`'s rule was green for two items before `W-042` showed it was unsatisfiable.
+
+**Three guards are now proven to bite** rather than assumed to: the withdrawal gate (`W-004`), L5
+guard 3 (`W-039`, proven by injecting an override), and `W-038`'s structural fingerprint (proven by
+adding a field to a nested record and watching it reach the cache key). Still unproven and noted
+since `W-002`: `taxengine_does_not_use_TMoney` and `only_the_adapter_converts` — the latter first
+bites at `W-087` (`MoneyBridge`), which is the natural place to prove it.
+
+---
 
 **A fourth audit gap, found by `W-043`: a type owned by TWO items.** `ComputationReceipt` was in
 the `Produces` of both `W-043` and `W-107`. Appendix A checks for types with **no** owner and
