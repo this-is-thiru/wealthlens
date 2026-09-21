@@ -262,4 +262,61 @@ class ArchitectureTest {
             }
         }
     }
+
+    /**
+     * L5 guard 3 — {@code adjustPipeline} overrides are listed, and the list is reviewed.
+     *
+     * <p>{@code 17-regime-lifecycle.md} L5 makes tier-3 {@code RegimeBehaviour} the tier that can
+     * rot. A regime that rewrites the assembled pipeline is the easiest way to make the computation
+     * stop matching the rulebook, and it is invisible in review unless something points at it.
+     * Overriding is allowed; doing so <b>invisibly</b> is not — so this lists every overrider and
+     * fails until the list below is updated deliberately.
+     *
+     * <p>Written as a plain {@code @Test} rather than an {@code @ArchTest} on purpose. The expected
+     * number of overriders is <b>zero</b>, and under ArchUnit with no {@code archunit.properties} a
+     * rule matching nothing fails the build — so an {@code @ArchTest} here would break CI on day one
+     * instead of guarding anything. {@code W-031b}'s erratum on L5 says exactly this. The shape is
+     * the withdrawn-abstraction gate above.
+     *
+     * <p>L5's own recommendation is to ship with zero implementations beyond
+     * {@code DataDrivenRegimeBehaviour}. An entry appearing here is the signal to ask whether the
+     * {@code Condition} algebra is missing a predicate instead.
+     */
+    @Test
+    void adjustPipeline_overrides_are_listed_and_reviewed() throws IOException {
+        // Empty on purpose: no regime needs tier-3 behaviour today (L5's RECOMMENDATION).
+        // Adding a name here is a deliberate act, which is the whole point of the guard.
+        List<String> reviewed = List.of();
+
+        String hook = "adjustPipeline";
+        Path root = Path.of("src/main/java");
+        try (Stream<Path> paths = Files.walk(root)) {
+            List<String> overriders = paths
+                    .filter(Files::isRegularFile)
+                    .filter(f -> f.toString().endsWith(".java"))
+                    // The interface that declares the hook is not an override of it.
+                    .filter(f -> !f.endsWith("RegimeBehaviour.java"))
+                    .filter(f -> {
+                        try {
+                            return Files.readString(f).contains(hook);
+                        } catch (IOException e) {
+                            throw new IllegalStateException("could not read " + f, e);
+                        }
+                    })
+                    .map(f -> f.getFileName().toString().replace(".java", ""))
+                    .sorted()
+                    .toList();
+
+            if (!overriders.equals(reviewed)) {
+                throw new AssertionError(
+                        "RegimeBehaviour.adjustPipeline rewrites the assembled pipeline, so every"
+                                + " override is a review trigger (17-regime-lifecycle.md L5, guard 3)."
+                                + " Reviewed: " + reviewed + ", found: " + overriders
+                                + ". If this override is intended, add it to the reviewed list in this"
+                                + " test -- and first ask whether the Condition algebra is missing a"
+                                + " predicate, which would serve every regime rather than one.");
+            }
+        }
+    }
+
 }
