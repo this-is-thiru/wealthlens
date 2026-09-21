@@ -334,6 +334,30 @@ public record TraceAnnotation(
 public record Computation(..., List<TraceLine> trace, List<TraceAnnotation> annotations) {}
 ```
 
+> **Erratum (W-036, 2026-09-21):** `TraceAnnotation` names three types that this design **declares
+> nowhere** — `ExplanationRef`, `ClaimCatalogueRef` and `PricedAlternative` occur in the block above
+> and in no other line of `docs/taxplanning-design/` or `docs/taxplanning-build/`, and are in no
+> item's `Produces`. `W-036` therefore ships `TraceAnnotation(int sequence, List<Notice> notices)`;
+> the other three components arrive with the items that own their types, the way `CapShape` and
+> `NodeValue` grew (**rule B2**). A8's stated objective — the computation separated from everything
+> said about it — is met in full by the two records. Note this is a **third** audit blind spot:
+> Appendix A covered types the design declares, Appendix B types named in a `permits` clause, and a
+> type named only as a **record component in a code block** falls between them. Unlike a sealed
+> variant, a record component added later changes every construction site.
+> Verified by: `grep -rc 'ExplanationRef\|ClaimCatalogueRef\|PricedAlternative' docs/taxplanning-design/ docs/taxplanning-build/`
+> → `23-architecture-consolidation.md:3`, every other file `0`.
+
+> **Erratum (W-036, 2026-09-21):** A8 drops M5.1's `String label` from `TraceLine` and does not move
+> it to `TraceAnnotation`, which reads as an elision against `06-algorithms.md` G7.1 (which makes
+> "self-describing" a property resting on `label` + `provenance`), G7.2's rendered label column, and
+> `16-getting-started.md:313` (`TraceLine.of(row.id(), row.displayName(), StepKind.TAX, ...)`).
+> **Taken as deliberate and implemented that way**: pack display text is resolved from `rule()` at
+> render time, so re-wording a label must not invalidate a cached `TaxComputation` — the same
+> argument A8 makes for moving annotations out. `W-036`'s Verify names rule id and provenance, not
+> label. Recorded because four sections still show the field.
+> Verified by: `backend/src/main/java/com/thiru/wealthlens/taxengine/trace/TraceLine.java`;
+> `./mvnw test -pl backend -Dtest=TraceLineTest` — 19/19.
+
 | | |
 |---|---|
 | **A6 and A2 both get easier** | annotations are derived from `content/`, so they change without touching the cached `TaxComputation` |
