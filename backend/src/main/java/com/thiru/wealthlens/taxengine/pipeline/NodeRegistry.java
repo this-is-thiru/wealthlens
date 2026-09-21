@@ -20,8 +20,10 @@ import java.util.TreeSet;
  * <ul>
  *   <li><b>two nodes producing the same slot</b> — the graph would be ambiguous and which value
  *       survived would depend on iteration order;
- *   <li><b>a node requiring nothing</b> — everything the engine reads arrives through a slot, so a
- *       node with no edges is reading something it did not declare;
+ *   <li><b>a node whose {@code requires()} is null</b> — the order is derived from that set, so it
+ *       must exist, though it may be empty: a <b>source</b> node reads {@code EngineInputs} through
+ *       {@code ctx.inputs()} rather than an upstream slot, and every acyclic graph needs one
+ *       (decision <b>D-031</b>, blocker <b>B-004</b>);
  *   <li><b>a node requiring what it produces</b> — a self-edge, which no topological order exists
  *       for.
  * </ul>
@@ -62,11 +64,10 @@ public final class NodeRegistry {
             throw new IllegalArgumentException(
                     node.getClass().getSimpleName() + " must name the slot it produces");
         }
-        if (node.requires() == null || node.requires().isEmpty()) {
+        if (node.requires() == null) {
             throw new IllegalArgumentException(
-                    "Node " + node.produces() + " requires nothing. Everything the engine reads"
-                            + " arrives through a slot, so a node with no edges is reading"
-                            + " something it did not declare -- and nothing orders it");
+                    "Node " + node.produces() + " must state what it requires, even if nothing;"
+                            + " the evaluation order is derived from that set");
         }
         if (node.rules() == null) {
             throw new IllegalArgumentException(

@@ -367,6 +367,25 @@ test nodes to run.
 | **W-038** | `taxengine/input/InputsFingerprint.java` + `.../input/InputsFingerprintTest.java` | `DR 15` F6 + `DR 23` A3 | `-Dtest=InputsFingerprintTest` — equal inputs ⇒ equal fingerprint; **any** field change ⇒ different; field **order** irrelevant |
 | **W-039** | `taxengine/pipeline/{ComputationNode,NodeContext,NodeResult,NodeRegistry}.java` **+ invariants I3 and I18** (moved here by D-016 — reachability and temporal-coordinate supply both need the node-to-rule mapping)  + `.../pipeline/NodeRegistryTest.java` | `DR 15` B2 | `-Dtest=NodeRegistryTest` — two nodes producing the same `NodeId` is an error; a node's `requires`/`produces` are non-empty and disjoint |
 | **W-040** | `taxengine/pipeline/TopologicalSort.java` + `.../pipeline/TopologicalSortTest.java` | `DR 15` B3 | `-Dtest=TopologicalSortTest` — a cycle fails with the cycle named; order respects every edge; a missing `requires` producer fails |
+
+> **Erratum (W-042, 2026-09-21):** `W-039`'s Verify says *"a node's `requires`/`produces` are
+> **non-empty** and disjoint"*, and **the non-empty half makes every graph unbuildable**.
+> `W-040`'s `TopologicalSort` rejects a required slot with no producer, so every acyclic graph must
+> contain a node that requires nothing — its own tests rely on that
+> (`orderOf(List.of(node(COMPONENTS)))`). `W-039` forbade exactly such a node. A graph with a source
+> is refused by the registry, one without a source by the sort; no graph satisfies both. **`W-042`
+> is the first item to pass a graph through both**, which is why it went unnoticed — the same
+> vacuous-until-first-used shape as **B-003**.
+>
+> **Correction (blocker B-004, decision D-031): `requires()` must be non-null and may be empty.**
+> A **source** node reads `EngineInputs` through `ctx.inputs()` rather than an upstream slot;
+> `EngineInputs` is declared, passed in and covered by the fingerprint, so a source declares its
+> input by being given it. The premise behind the original rule — *"everything the engine reads
+> arrives through a slot"* — was wrong: there are two sources of data and only one of them is an
+> edge. Nothing is lost: reading an **undeclared** slot is still refused by `NodeContext.get`, at
+> the moment it happens, which is the stronger check.
+> Verified by: `./mvnw test -pl backend -Dtest=NodeRegistryTest,TopologicalSortTest` — 40 tests;
+> `NodeRegistryTest.aSourceNodeMayRequireNothing` replaces `aNodeRequiringNothingIsRejected`.
 | **W-041** | **RETIRED** — merged into `W-040` by D-011 | — | — |
 | **W-042** | `taxengine/pipeline/PipelineRunner.java` + `.../pipeline/PipelineRunnerTest.java` | `DR 15` B3 — **no try/catch** | `-Dtest=PipelineRunnerTest` — uses `W-044`'s harness; `DR 08` T9-20, `DR 23` T23-6, T23-7 |
 | **W-043** | `taxengine/result/{TaxComputation,FilingPosition,ComputationId,ComputationReceipt}.java` + `.../result/TaxComputationTest.java` | `DR 23` A6 — **the split** | `-Dtest=TaxComputationTest` — `TaxComputation` holds **no** date-dependent field, which is what makes it cacheable forever; `FilingPosition` holds them all |

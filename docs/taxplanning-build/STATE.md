@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-044 — "taxplanning W-044: a node, run on its own"
-Last updated              : 2026-09-21 (session 3 — W-044 done; build GREEN, 1372 tests)
+Last checkpoint           : W-042 — "taxplanning W-042: the runner, which catches nothing"
+Last updated              : 2026-09-21 (session 3 — W-042 done, B-004 resolved by D-031; build GREEN, 1389 tests)
 Current position          : W-037
 Session count             : 3
 ```
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-042` — `PipelineRunner` (**no try/catch** — D-NOSILENT). Uses `W-044`'s harness; `DR 08` T9-20, `DR 23` T23-6, T23-7 |
+| **Next item** | `W-043` — `TaxComputation`/`FilingPosition` (`DR 23` A6, **the split**). It projects from `PipelineRunner.Result` |
 | **Status** | `READY` — nothing in flight, nothing blocked |
 | **Phase** | 4 — The DAG runner |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -51,7 +51,7 @@ Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
 Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
-Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 ·  W-042 ·  W-043 ·  W-044 D  W-045 ·
+Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 ·  W-042 D  W-043 ·  W-044 D  W-045 ·
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **21** / 148 · in flight **0** · blocked **0**
+Counts — done **22** / 148 · in flight **0** · blocked **0**
 
 ---
 
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-042 | 2026-09-21 | PipelineRunner + nested Result + 16 tests; **found and fixed B-004** (two committed items contradicted each other — no graph could pass both W-039 and W-040); runner renumbers the trace; no try/catch, asserted on the source; T9-20 | `./mvnw test -pl backend -Dtest=PipelineRunnerTest`
 W-044 | 2026-09-21 | NodeHarness (test scope) + 13 tests; runs a node with no pipeline against the **real shipped pack**; refuses both a missing stub and an unused one; owns `plainTaxpayer()`, the one EngineInputs fixture; T23-6 inherited from W-039's scoped context | `./mvnw test -pl backend -Dtest=NodeHarnessTest`
 W-040 | 2026-09-21 | TopologicalSort — canonical order (ties on NodeId, D-030), cycle named as a path, missing producer named; found my own arrow direction contradicted B3's mermaid and fixed the code not the test; 17 tests | `./mvnw test -pl backend -Dtest=TopologicalSortTest`
 W-039 | 2026-09-21 | ComputationNode/NodeContext/NodeResult/NodeRegistry + **I3 built (inert, D-029)** and **I18 shown already enforced**; per-node context scoping fixes B3's unimplementable sketch; rule() scoped too; 22 tests. 2 errata | `./mvnw test -pl backend -Dtest=NodeRegistryTest`
@@ -142,6 +143,58 @@ properly as `taxplanning W-035:` and the checkpoint has advanced off `W-034b`.
 ---
 
 ## Blockers
+
+### B-004  (W-042)  — 2026-09-21  — **RESOLVED 2026-09-21**: option (A), a node may require nothing (**D-031**)
+
+**What I needed:** to run any graph at all through `PipelineRunner`.
+
+**What I looked at:** `NodeRegistry.validate()` (`W-039`); `TopologicalSort.of()` (`W-040`);
+`NodeRegistryTest.aNodeRequiringNothingIsRejected`; `TopologicalSortTest` lines 45, 84, 170, 213;
+`DR 15` B2/B3; `DR 23` A11.
+
+**What is wrong — two committed items contradict each other, and no graph satisfies both.**
+
+| | |
+|---|---|
+| `W-040` **requires** a source | `TopologicalSort` rejects a required slot with no producer. Every acyclic graph must therefore contain at least one node that requires nothing. Its own tests rely on this: `orderOf(List.of(node(COMPONENTS)))` passes with empty `requires()` |
+| `W-039` **forbids** a source | `NodeRegistry.of` throws on empty `requires()`. Its own test asserts it: `aNodeRequiringNothingIsRejected` |
+
+Together: a graph with a source is refused by the registry; a graph without one is refused by the
+sort. **`W-042` is the first item that passes a graph through both**, which is why it surfaced only
+now — the same vacuous-until-first-used shape as **B-003**, where `taxengine` had no classes for 34
+items.
+
+`W-039`'s stated reason was *"everything the engine reads arrives through a slot, so a node with no
+edges is reading something it did not declare."* That premise is wrong: there are **two** legitimate
+sources of data, upstream slots **and** `EngineInputs` (reachable as `ctx.inputs()`, covered by the
+fingerprint), and only the first is an edge. A source node reads the second.
+
+**What I would need to proceed — a decision.**
+
+- **(A) Relax `NodeRegistry`: a node may require nothing.** *Recommended.* One condition removed,
+  one test inverted. The check it gives up is already made, and made more strongly, by
+  `NodeContext.get`, which throws on reading any undeclared slot at the moment it happens — so the
+  registry rule is redundant with a runtime guarantee, not the only line of defence.
+- **(B) Input-backed slots.** The runner pre-seeds slots from `EngineInputs` and nodes require
+  those. Closer to A11, which writes `ctx.get(NodeId.FILING_FACTS, FilingFacts.class)`. But it needs
+  `TopologicalSort` to know which ids are seeded (a signature change to `W-040`), it needs the
+  **`NodeId` anchors** decision that has now been open for four items, and `FilingFacts` is not a
+  `NodeValue` — the sealed family permits only `MoneyValue` and `TaxByBasis`, so A11's line does not
+  type-check either. Three unresolved things at once.
+- **(C) (A) now, (B) when a real node needs an input slot.** Unblocks today and keeps (B) a
+  deliberate design decision rather than one taken under pressure from a blocked item.
+
+Either (A) or (B) edits `W-039`'s or `W-040`'s `Produces`, which is why this stopped.
+
+**Resolution (2026-09-21, D-031): option (A), as recommended.** `NodeRegistry` now requires
+`requires()` to be non-null and permits it to be empty. `NodeRegistryTest.aNodeRequiringNothingIsRejected`
+is replaced by `aSourceNodeMayRequireNothing`, plus `aNullRequiresIsStillRejected`. Erratum written
+on `W-039`'s Verify column in `03-WORK-ITEMS.md`, which is where the "non-empty" wording came from.
+The first `PipelineRunnerTest` was deleted and rewritten on a valid graph. Build green, 1389 tests.
+
+Nothing was lost by relaxing it: reading an **undeclared** slot is still refused by
+`NodeContext.get`, at the moment it happens, and `PipelineRunnerTest.aNodeReachingForAnUndeclaredSlotFailsThroughTheRunnerToo`
+shows that guarantee survives assembly.
 
 ### B-003  (W-037)  — 2026-09-21  — **RESOLVED 2026-09-21**: option (A), `taxengine` owns its input projections (**D-024**)
 
@@ -348,6 +401,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-031 | 2026-09-21 | B-004 — `W-039`'s `NodeRegistry` rejects an empty `requires()`, `W-040`'s `TopologicalSort` rejects a required slot with no producer. Every acyclic graph needs a source, so **no graph satisfied both**. Both were committed and green; `W-042` is the first item to pass a graph through both | **(A) a node may require nothing.** A source reads `EngineInputs` via `ctx.inputs()` — declared, passed in, fingerprinted — so the original premise ("everything the engine reads arrives through a slot") was wrong: there are two sources of data and only one is an edge. The check given up is redundant with `NodeContext.get`, which refuses an undeclared read at the moment it happens and is the stronger guarantee. Erratum on `W-039`'s Verify | **decided by the developer** |
 | D-030 | 2026-09-21 | `W-040` — T9's error catalogue has **no** entry for a pipeline cycle and `TaxError`/`TaxEngineException` do not exist (`W-105`). And a graph admits many valid topological orders; the Verify does not say which | **`IllegalArgumentException`, naming the cycle** — it matches what `NodeRegistry` already throws, and a cycle is a defect in what node *classes* declare, not in pack data or user data (B3's "fails at load" is inconsistent with its own code, which sorts per run). `W-105` may reclassify it into the sealed hierarchy. **The order is canonical**, ties broken on `NodeId`: `TraceLine.sequence` comes from it, the trace *is* the result, so a varying order would make identical inputs produce differing traces — golden tests failing for no reason, scenario diffs reporting changes nobody made | **decided by the developer** |
 | D-029 | 2026-09-21 | `W-039` — B2 promises `NodeContext.get` throws on an undeclared read, but B3 builds **one** context for the whole run and passes it to every node, so it cannot know who is asking and cannot make the check. Separately, I3 needs node-to-rule mappings and there are **zero** `ComputationNode` implementations until Phases 5-9 | **Per-node context**: `forRun(...)` once, `ctx.forNode(node)` per node over a shared value store; scoping applies to `rule(RuleId)` too. **I3 (a)**: ship the checker, prove it against fixtures, do **not** wire it to the shipped pack yet — it would report every rule unreachable; the item that first ships a real pipeline enables it. **I18**: already enforced by `TemporalContext.on` / `RuleRow.versionAt`, asserted as a property (the I1 shape), no checker added | **decided by the developer** |
 | D-028 | 2026-09-21 | `W-038` — F6 writes the fingerprint as a six-argument hand-written list; A3 says it is "a hash of `EngineInputs` — one object". F6 also lists a `RulePackRef`. Which, and does the pack go in? | **`of(EngineInputs)`, one argument, walked structurally by reflection**; F6's list is wrong four ways and is erratum'd. **The pack stays out** — `RulePack.computationCacheKey()` (`W-027`) already covers it readably and excludes editorial layers, so folding it into an opaque digest would undo G-11; the full key is the two composed. `List` order is significant, `Set`/`Map` order is not: sorting a list could make two different inputs collide (a wrong cache hit), while preserving order can only cause a needless miss | **decided by the developer** |
@@ -408,6 +462,13 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 name before `W-032`; `W-032` shipped without it, so it is now overdue rather than pending.
 
 ## Notes for resume
+
+**Two of my own guards have now turned out to be wrong rather than protective** — `W-039`'s
+non-empty `requires()` (B-004) and `W-040`'s cycle-arrow direction. Both were constraints that
+looked obviously right in isolation, written before anything existed to disagree with them. The
+shape to watch for: **a rule added in the same item that invents the concept it constrains, with no
+second user yet.** `W-039`'s rule had passing tests and was still unsatisfiable. A guard is only
+proven by something independent passing through it.
 
 **`NodeHarness.plainTaxpayer()` is now the one `EngineInputs` fixture.** Before it, that
 ten-component fixture had been rebuilt privately inside `NodeRegistryTest` and

@@ -128,14 +128,27 @@ class NodeRegistryTest {
     }
 
     @Nested
-    @DisplayName("requires and produces are non-empty and disjoint")
+    @DisplayName("requires and produces are disjoint, and a source may require nothing")
     class Edges {
 
         @Test
-        void aNodeRequiringNothingIsRejected() {
-            assertThatThrownBy(() -> NodeRegistry.of(List.of(node(GROSS, Set.of()))))
+        void aSourceNodeMayRequireNothing() {
+            // B-004, D-031. Every acyclic graph needs a source, and TopologicalSort rejects a
+            // required slot with no producer -- so forbidding an empty requires() made every graph
+            // unbuildable. A source reads EngineInputs through ctx.inputs(), which is declared and
+            // fingerprinted; only an upstream slot is an edge. Reading an UNdeclared slot is still
+            // refused, by NodeContext.get, which is the stronger check and the one that matters.
+            NodeRegistry registry = NodeRegistry.of(List.of(node(GROSS, Set.of())));
+
+            assertThat(registry.registered()).containsExactly(GROSS);
+        }
+
+        @Test
+        void aNullRequiresIsStillRejected() {
+            assertThatThrownBy(() -> NodeRegistry.of(List.of(
+                            new StubNode(GROSS, null, Set.of()))))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("requires nothing");
+                    .hasMessageContaining("must state what it requires");
         }
 
         @Test
