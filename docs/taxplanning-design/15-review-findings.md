@@ -692,6 +692,29 @@ the cross-year ledgers and family facts. A user who corrects a child's date of b
 served the pre-correction result from cache. The fix is to derive the key from everything the pipeline
 can read — and the DAG makes that checkable, because `requires()` enumerates exactly that.
 
+> **Erratum (W-038, 2026-09-21):** **F6's `of(...)` is wrong in four ways, and the fourth is that it
+> does not compile** — its body hashes `.and(electionHistory)`, which is not one of its parameters.
+> The list also **omits the taxpayer's own facts**, including the date of birth whose correction the
+> INFERENCE above cites as the motivating bug (it fixes `family` and forgets `taxpayer`); omits
+> `TemporalContext`, `FilingFacts` and `taxYear`; and names `DraftInputs` and
+> `CapitalGainsSummary`, which `taxengine` may not depend on (**B-003**). A hand-maintained list
+> that failed to stay complete *inside the paragraph arguing for completeness* is the case for not
+> maintaining one.
+>
+> **Correction: `InputsFingerprint.of(EngineInputs)` — one argument, walked structurally** by
+> reflection over record components, all the way down, per `DR 23` A3: *"a field added to
+> `EngineInputs` is in the key automatically, which is the only way that invariant survives."*
+> Demonstrated rather than asserted: adding a component to the nested `EnteredFacts` and touching
+> nothing else changed the canonical form to `entered=T:EnteredFacts{probeField=V:String:probe}`.
+>
+> **`RulePackRef` is deliberately not included.** F6 predates the pack layering.
+> `RulePack.computationCacheKey()` (`W-027`) already covers the pack side — tax year plus the `LAW`
+> and `EXEC` refs, readable so a miss is diagnosable, and excluding editorial layers so catalogue
+> revisions invalidate nothing (**G-11**). The full key is that composed with this fingerprint;
+> folding the pack in here would duplicate half of it inside an opaque digest and undo G-11.
+> Verified by: `./mvnw test -pl backend -Dtest=InputsFingerprintTest` — 26 tests, including a
+> 14-case perturbation suite over every `EngineInputs` component.
+
 ---
 
 # Part G — `Rate`, and the money types (D-11)
