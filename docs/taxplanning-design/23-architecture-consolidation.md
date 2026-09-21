@@ -251,6 +251,25 @@ public record FilingPosition(
         Money netPayable) {}               // the core, plus filing effects
 ```
 
+> **Erratum (W-043, 2026-09-21):** two corrections to the records above.
+>
+> **1. `TaxComputation.lawAndExec` cannot be a single `RulePackRef`.** A6's own comment says
+> *"content/forms deliberately excluded"*, which is plural: the layers that affect a computation are
+> `LAW` **and** `EXEC`, and `RulePack.computationCacheKey()` (`W-027`) joins both. One ref cannot
+> hold two layers. Corrected to `Map<RulePackLayer, RulePackRef>`, and the constructor refuses a
+> layer whose `affectsComputation()` is false — admitting an editorial layer would silently undo
+> G-11, invalidating every cached figure on a wording change.
+>
+> **2. Three of `FilingPosition`'s six components name types that do not exist**, so it ships with
+> the other three (decision **D-032**, the shape D-026 used for `EnteredFacts`).
+> `InterestBreakdown` belongs to `W-112` (Phase 12, via Appendix B); **`ItrSelection` and
+> `CalendarEntry` are named here and nowhere else in the design or the backlog** — no item produces
+> either. Each arrives with the item that owns its type. What ships is enough to carry A6's point:
+> `asOf` is the date-dependent field, and `TaxComputation` has none — asserted structurally against
+> every JDK date type, not by inspection.
+> Verified by: `./mvnw test -pl backend -Dtest=TaxComputationTest` — 21 tests;
+> `grep -rc 'ItrSelection\|CalendarEntry' docs/` → this file only.
+
 | | |
 |---|---|
 | **Cache key for `TaxComputation`** | `EngineInputs.fingerprint()` + `law` + `exec` version. **No date.** Cached indefinitely |

@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-042 — "taxplanning W-042: the runner, which catches nothing"
-Last updated              : 2026-09-21 (session 3 — W-042 done, B-004 resolved by D-031; build GREEN, 1389 tests)
+Last checkpoint           : W-043 — "taxplanning W-043: the half that never moves"
+Last updated              : 2026-09-21 (session 3 — W-043 done, **Phase 4 COMPLETE**; build GREEN, 1410 tests)
 Current position          : W-037
 Session count             : 3
 ```
@@ -34,9 +34,9 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-043` — `TaxComputation`/`FilingPosition` (`DR 23` A6, **the split**). It projects from `PipelineRunner.Result` |
+| **Next item** | `W-046` — Phase 5 opens. **Next milestone is `W-053`**: a correct slab-and-rebate calculator, no database |
 | **Status** | `READY` — nothing in flight, nothing blocked |
-| **Phase** | 4 — The DAG runner |
+| **Phase** | 5 — the first real nodes |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
 ---
@@ -51,7 +51,7 @@ Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
 Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
-Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 ·  W-042 D  W-043 ·  W-044 D  W-045 ·
+Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **22** / 148 · in flight **0** · blocked **0**
+Counts — done **23** / 148 · in flight **0** · blocked **0**
 
 ---
 
@@ -85,6 +85,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-043 | 2026-09-21 | TaxComputation/FilingPosition/ComputationId/ComputationReceipt + 21 tests; A6's lawAndExec corrected to a Map (one ref cannot hold two layers); FilingPosition ships 3 of 6 per **D-032**; found ComputationReceipt owned by two items. **Phase 4 complete** | `./mvnw test -pl backend -Dtest=TaxComputationTest`
 W-042 | 2026-09-21 | PipelineRunner + nested Result + 16 tests; **found and fixed B-004** (two committed items contradicted each other — no graph could pass both W-039 and W-040); runner renumbers the trace; no try/catch, asserted on the source; T9-20 | `./mvnw test -pl backend -Dtest=PipelineRunnerTest`
 W-044 | 2026-09-21 | NodeHarness (test scope) + 13 tests; runs a node with no pipeline against the **real shipped pack**; refuses both a missing stub and an unused one; owns `plainTaxpayer()`, the one EngineInputs fixture; T23-6 inherited from W-039's scoped context | `./mvnw test -pl backend -Dtest=NodeHarnessTest`
 W-040 | 2026-09-21 | TopologicalSort — canonical order (ties on NodeId, D-030), cycle named as a path, missing producer named; found my own arrow direction contradicted B3's mermaid and fixed the code not the test; 17 tests | `./mvnw test -pl backend -Dtest=TopologicalSortTest`
@@ -401,6 +402,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-032 | 2026-09-21 | `W-043` — three of `FilingPosition`'s six components name types that do not exist (`ItrSelection` and `CalendarEntry` are in A6 and **nowhere else**; `InterestBreakdown` is `W-112`'s). And `ComputationReceipt` is listed in the `Produces` of **both** `W-043` and `W-107` | **Ship `FilingPosition` with the three components that exist**, the rest arriving with their owners (the D-026 shape). Unlike `EnteredFacts` there is no fingerprint pressure, so this is a plain "grow it later"; `asOf` alone carries A6's point. **`W-043` builds `ComputationReceipt`** (it needs only types available there, and splitting it from `ComputationId` would strand that type for 64 items); `W-107` keeps E6's API-side resolution. Two errata | **decided by the developer** |
 | D-031 | 2026-09-21 | B-004 — `W-039`'s `NodeRegistry` rejects an empty `requires()`, `W-040`'s `TopologicalSort` rejects a required slot with no producer. Every acyclic graph needs a source, so **no graph satisfied both**. Both were committed and green; `W-042` is the first item to pass a graph through both | **(A) a node may require nothing.** A source reads `EngineInputs` via `ctx.inputs()` — declared, passed in, fingerprinted — so the original premise ("everything the engine reads arrives through a slot") was wrong: there are two sources of data and only one is an edge. The check given up is redundant with `NodeContext.get`, which refuses an undeclared read at the moment it happens and is the stronger guarantee. Erratum on `W-039`'s Verify | **decided by the developer** |
 | D-030 | 2026-09-21 | `W-040` — T9's error catalogue has **no** entry for a pipeline cycle and `TaxError`/`TaxEngineException` do not exist (`W-105`). And a graph admits many valid topological orders; the Verify does not say which | **`IllegalArgumentException`, naming the cycle** — it matches what `NodeRegistry` already throws, and a cycle is a defect in what node *classes* declare, not in pack data or user data (B3's "fails at load" is inconsistent with its own code, which sorts per run). `W-105` may reclassify it into the sealed hierarchy. **The order is canonical**, ties broken on `NodeId`: `TraceLine.sequence` comes from it, the trace *is* the result, so a varying order would make identical inputs produce differing traces — golden tests failing for no reason, scenario diffs reporting changes nobody made | **decided by the developer** |
 | D-029 | 2026-09-21 | `W-039` — B2 promises `NodeContext.get` throws on an undeclared read, but B3 builds **one** context for the whole run and passes it to every node, so it cannot know who is asking and cannot make the check. Separately, I3 needs node-to-rule mappings and there are **zero** `ComputationNode` implementations until Phases 5-9 | **Per-node context**: `forRun(...)` once, `ctx.forNode(node)` per node over a shared value store; scoping applies to `rule(RuleId)` too. **I3 (a)**: ship the checker, prove it against fixtures, do **not** wire it to the shipped pack yet — it would report every rule unreachable; the item that first ships a real pipeline enables it. **I18**: already enforced by `TemporalContext.on` / `RuleRow.versionAt`, asserted as a property (the I1 shape), no checker added | **decided by the developer** |
@@ -462,6 +464,13 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 name before `W-032`; `W-032` shipped without it, so it is now overdue rather than pending.
 
 ## Notes for resume
+
+**A fourth audit gap, found by `W-043`: a type owned by TWO items.** `ComputationReceipt` was in
+the `Produces` of both `W-043` and `W-107`. Appendix A checks for types with **no** owner and
+Appendix B for types named in a `permits` clause; **neither checks for a type owned twice**, and
+nothing would have caught it until `W-107` found the class already written, 64 items later. Nobody
+has swept the backlog for duplicate `Produces` entries — it is one pass over the table and would
+close the gap for good.
 
 **Two of my own guards have now turned out to be wrong rather than protective** — `W-039`'s
 non-empty `requires()` (B-004) and `W-040`'s cycle-arrow direction. Both were constraints that

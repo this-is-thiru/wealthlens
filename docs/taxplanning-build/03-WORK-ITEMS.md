@@ -589,6 +589,19 @@ if that is not enough for the item in hand.
 | W-105 | `TaxError`, `TaxEngineException` sealed hierarchy | TS T9, `DR 23` A7 |
 | W-106 | `ControllerAdviser` extension — exhaustive switch | `DR 23` A7 |
 | W-107 | `ComputationReceipt` | `DR 19` E6 |
+
+> **Erratum (W-043, 2026-09-21):** **`ComputationReceipt` was produced by two items** — this row and
+> `W-043`'s. A6 never mentions it; `W-043`'s `Produces` lists it; this row lists it too. Neither
+> Appendix A nor B checks for a type owned **twice**, so it would have surfaced at `W-107` as "this
+> already exists", 64 items after the fact.
+>
+> **`W-043` builds the type**, since `ComputationReceipt.of(ComputationId, TaxYearId)` needs only
+> types available there, and splitting it from `ComputationId` would leave that type alone for 64
+> items. **`W-107` keeps the API-side work E6 actually describes**: resolving a receipt server-side
+> to pack version and checksum, inputs fingerprint, regime, portfolio `asOf`, draft revision and the
+> full trace.
+> Verified by: `grep -n ComputationReceipt docs/taxplanning-build/03-WORK-ITEMS.md` → two producing
+> rows; `./mvnw test -pl backend -Dtest=TaxComputationTest` — 21 tests.
 | W-108 | draft endpoints | TS T8 |
 | W-109 | compute + compare-regimes endpoints | TS T8 |
 | W-110 | optimistic locking, `If-Match`, 409 merge body | `DR 11` F5 |
