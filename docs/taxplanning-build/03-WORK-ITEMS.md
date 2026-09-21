@@ -17,7 +17,9 @@ whose `Verify` names a *later* item's test is malformed: it either ships unteste
 verified at all. Restructured on 2026-09-19 by decision **D-011** — see the note at the end of
 Phase 1.
 
-**On the type audit.** Phases 4–14 were audited in one pass (**Appendix A**, decision D-017). When
+**On the type audit.** Phases 4–14 were audited in one pass (**Appendix A**, decision D-017), and
+again for types named in a `permits` clause but never declared (**Appendix B**, D-021) — see **rule
+B2** there: a `permits` clause lists only what exists. When
 you reach any item listed there, **its `Produces` is Appendix A's row plus the phase table's** — and
 three items in it have no owner at all.
 
@@ -359,7 +361,7 @@ test nodes to run.
 
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
-| **W-035** | `taxengine/pipeline/{NodeValue,MoneyValue,TaxByBasis}.java` + `.../pipeline/NodeValueTest.java` | `DR 15` B2, B4 | `-Dtest=NodeValueTest` — `NodeValue` is closed; `TaxByBasis` keeps slab and special-rate tax apart |
+| **W-035** | `taxengine/pipeline/{NodeValue,MoneyValue,TaxByBasis,SpecialRateId}.java` + `.../pipeline/NodeValueTest.java` | `DR 15` B2, B4 | `-Dtest=NodeValueTest` — `NodeValue` is closed over what exists; `TaxByBasis` keeps slab and special-rate tax apart |
 | **W-036** | `taxengine/trace/{TraceLine,TraceAnnotation,Notice,StepKind,Severity}.java` + `.../trace/TraceLineTest.java` | `DR 23` A8 — **two separate records** | `-Dtest=TraceLineTest` — a trace line carries its rule id and provenance; an annotation is not a notice |
 | **W-037** | `taxengine/input/{EngineInputs,TaxpayerFacts,FamilySnapshot,LedgerSnapshot,RegimeElectionSnapshot,FilingFacts}.java` + `.../input/EngineInputsTest.java` | `DR 23` A3 — **verbatim** | `-Dtest=EngineInputsTest` — every collection is defensively copied; the record is complete enough that the engine fetches nothing. **+ L5 guard 3** (moved here by `W-031b`): once `EngineInputs` exists, add `RegimeBehaviour.adjustPipeline` and the ArchUnit rule that **lists every class overriding it** against a reviewed file — overriding is allowed, doing so invisibly is not |
 | **W-038** | `taxengine/input/InputsFingerprint.java` + `.../input/InputsFingerprintTest.java` | `DR 15` F6 + `DR 23` A3 | `-Dtest=InputsFingerprintTest` — equal inputs ⇒ equal fingerprint; **any** field change ⇒ different; field **order** irrelevant |
@@ -591,6 +593,17 @@ production source. If it does not, the Open/Closed claim has failed.
 
 ## Appendix A — Type audit of Phases 4–14 (D-017, 2026-09-19)
 
+> **Erratum (W-035, 2026-09-19):** **this audit had a blind spot, and `W-035` fell into it.** It
+> matched types the design *declares* — `record X(`, `class X`, `interface X` — and is therefore
+> blind to types the design only ever *names*, inside a `permits` clause. That is the more dangerous
+> category: a sealed type naming a class that exists nowhere **does not compile**, which is exactly
+> what killed the original `W-013`.
+>
+> Re-run with the wider net: **29 types appear in a `permits` clause; 19 are never declared; 14 of
+> those are in no `Produces` either.** Appendix B tables them.
+> Verified by: `NodeValue permits MoneyValue, TaxByBasis, HeadResult, ComponentSet, ElectionOutcome,
+> InterestBreakdown` — `15-review-findings.md:154`; five of the six are declared nowhere.
+
 Phases 0–3 hit the same defect at **every** boundary: an item needed a type that no item produced
 (`BaseId`, `PackValidationException`, five `Condition` types, six temporal types, `DisallowanceSet`,
 `MidYearCombination`), or was assigned work whose subject did not exist yet (D-016's eight
@@ -667,6 +680,34 @@ written down. Where a type's owning item is `—`, it has **no home yet**: stop 
    item creates the generator, so the resolution is currently unimplemented and the tension is
    unresolved.
 
+
+
+---
+
+## Appendix B — Types named in a `permits` clause and declared nowhere (D-021, 2026-09-19)
+
+Appendix A found types the design **declares** and no item produces. This is the complementary set:
+types the design **names in a sealed `permits` clause** and never declares at all. A sealed type
+naming a class that does not exist **fails to compile**, so every row here is a build break waiting
+for whoever writes that family.
+
+**Rule B2 — a `permits` clause lists only what exists.** Each family grows one variant at a time, as
+`CapShape`, `Condition` and `NodeValue` already do. Copying a design `permits` clause verbatim is a
+build break, not a head start.
+
+| Types | Family | Owning item |
+|---|---|---|
+| `HeadResult`, `ComponentSet`, `ElectionOutcome`, `InterestBreakdown` | `NodeValue` (`DR 15` B4) | the node that produces each — `HeadResult` at `W-065`, `ComponentSet` at `W-060`, `ElectionOutcome` at `W-082`, `InterestBreakdown` at `W-112` |
+| `RegimeElection`, `HouseElection`, `ChildElection`, `SetOffOrderElection`, `AggregateAllocationElection` | `Election` (`DR 15` C2) | **`W-082`** — the phase table names only the family |
+| `OccupationPeriods` | `ProrationBasis`-adjacent (`DR 15` C3) | **`W-066`** |
+| `MissingRulePackException`, `UnknownComponentCodeException`, `StatutoryOvershootException`, `NoApplicableItrFormException`, `UndeterminedApportionmentException`, `BlockingDataQualityException` | the `TaxEngineException` hierarchy (`DR 23` A7) | **`W-105`** — which names `TaxError` and `TaxEngineException` and none of the six |
+
+Two of that last group are already reachable and have no thrower:
+**`UndeterminedApportionmentException`** is what `W-066b`'s `TemporallyApportionedCap` must throw on
+`UNDETERMINED` — `W-030` made that state declarable and validated, and nothing yet raises it — and
+**`MissingRulePackException`** is golden case **T9-1**, which `W-034` currently satisfies with a
+plain `PackValidationException`. Both belong with `W-105`'s hierarchy; note the ordering, since
+`W-066b` is reached first.
 
 ## Milestones
 

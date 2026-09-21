@@ -3,10 +3,10 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-034b — "taxplanning W-034b: every rejected pack says where to look"
-Last updated              : 2026-09-19 (session 2 — W-034b DONE, Phase 3 complete)
-Current position          : W-001
-Session count             : 2
+Last checkpoint           : W-035 — "taxplanning W-035: what a node produces, and the split the rebate depends on"
+Last updated              : 2026-09-21 (session 3 — B-002 decided (D-022) and closed; build GREEN; W-035 done)
+Current position          : W-036
+Session count             : 3
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
@@ -34,8 +34,8 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-035` — `NodeValue`, `MoneyValue`, `TaxByBasis` |
-| **Status** | `NOT_STARTED` |
+| **Next item** | `W-036` — not started |
+| **Status** | `READY` — nothing in flight, nothing blocked |
 | **Phase** | 4 — The DAG runner |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
@@ -48,10 +48,10 @@ Legend: `·` not started · `E` explained, awaiting approval · `P` in progress 
 
 ```
 Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
-Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE  W-006 ·  W-007 ·  W-008 ·  W-009 ·  W-010 ·  W-011 ·  W-012 ·
+Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
-Phase 4    W-035 ·  W-036 ·  W-037 ·  W-038 ·  W-039 ·  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
+Phase 4    W-035 D  W-036 ·  W-037 ·  W-038 ·  W-039 ·  W-040 ·  W-041 ·  W-042 ·  W-043 ·  W-044 ·  W-045 ·
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -64,7 +64,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **12** / 146 · in flight **0** · blocked **0**
+Counts — done **13** / 146 · in flight **0** · blocked **0**
 
 ---
 
@@ -85,6 +85,8 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-035 | 2026-09-21 | NodeValue/MoneyValue/TaxByBasis/SpecialRateId + 12 tests. Supersedes the blocked row below: B-002 resolved by **D-022** (`taxrules` → `Type.OPEN`), T1 erratum written | `./mvnw test -pl backend -Dtest=NodeValueTest` and `-Punit` (1225/1225)
+W-035 | 2026-09-19 | **NOT DONE — BLOCKED on B-002.** NodeValue/MoneyValue/TaxByBasis/SpecialRateId + 12 tests written and green; the modulith test fails. Committed as WIP, not as an item | `./mvnw test -pl backend -Dtest=NodeValueTest` passes; `-Punit` does not
 W-034b | 2026-09-19 | PackJson.construct + 19 wrap sites; E4's property holds and is a 5-mutation property test; found SlabLadder's own pack error had no path | `./mvnw test -pl backend -Dtest=PackJsonTest,RulePackLoadTest`
 W-034 | 2026-09-19 | RulePackLoadTest — T9-1..T9-5, T9-7 end to end + 4 broken fixture packs; found E4's property broken (→ W-034b); 12 tests. **Phase 3 complete** | `./mvnw test -pl backend -Dtest=RulePackLoadTest`
 W-033c | 2026-09-19 | RegimeJson, RegistryJson, JsonPackAssembler; the shipped pack assembles and computes T2-1; removed the empty DIS-S202-2A that W-029's invariant refused; 47 tests | `./mvnw test -pl backend -Dtest=PackJsonTest`
@@ -114,7 +116,80 @@ W-013 | 2026-09-19 | CapShape (permits 2 of 6), CapResult, CapContext, Fixed, Pe
 
 ---
 
+## ✅ READ FIRST — the build is GREEN
+
+```
+$ ./mvnw test -pl backend -Punit
+Tests run: 1225, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS   (8.0 s — NFR N12 budgets 20 s)
+```
+
+**B-002 is closed** (decision **D-022**, session 3): `taxrules` is now `Type.OPEN`;
+`taxengine`, `taxdocs` and `taxplanning` remain `CLOSED`. One line in one `package-info.java`.
+`02-TECH-SPEC.md` T1 carries the erratum recording why it could not be satisfied as written.
+
+`W-035`'s code was carried in a `wip(taxplanning)` commit across the block. It is now committed
+properly as `taxplanning W-035:` and the checkpoint has advanced off `W-034b`.
+
+---
+
 ## Blockers
+
+### B-002  (W-035)  — 2026-09-19  — **RESOLVED 2026-09-21**: option (B), `taxrules` is `Type.OPEN` (**D-022**)
+
+**What I needed:** `NodeValue`, `MoneyValue` and `TaxByBasis` in `taxengine.pipeline` to use `Money`,
+which lives in `taxrules.money`.
+
+**What I looked at:** `02-TECH-SPEC.md` T1; `backend/src/main/java/com/thiru/wealthlens/taxengine/package-info.java`;
+a grep for `NamedInterface` across `backend/src/main/java` — **zero occurrences**.
+
+**What is wrong.** `taxengine` declares `allowedDependencies = {"shared", "taxrules"}`, exactly as
+T1 specifies, and it still fails:
+
+```
+Module 'taxengine' depends on module 'taxrules' via
+  com.thiru.wealthlens.taxengine.pipeline.MoneyValue -> com.thiru.wealthlens.taxrules.money.Money.
+  Allowed targets: shared, taxrules.
+```
+
+The dependency is allowed; the **package** is not. `taxrules` is `Type.CLOSED`, so only its root
+package is visible to other modules, and `Money` lives in the internal `taxrules.money`.
+
+T1 declares all four tax modules `CLOSED` **and** has them depend on each other's types — but every
+shared type lives in a sub-package. Spring Modulith permits that only through `@NamedInterface`,
+which T1 never mentions and nothing in this repository uses. **T1 as written cannot be satisfied.**
+It was invisible until now because `taxengine` had no classes; `W-035` is its first.
+
+**What I would need to proceed — a decision between two options.**
+
+- **(A) `@NamedInterface` on every `taxrules` package that forms its API.** Faithful to T1's
+  `CLOSED`. But `taxrules` exists to be read by `taxengine`, so this means annotating roughly ten
+  packages — `money`, `id`, `cap`, `condition`, `temporal`, `pack`, `regime`, `component`,
+  `registry`, `validate` — and writing `"taxrules :: money"`-style entries in three modules.
+- **(B) `taxrules` becomes `Type.OPEN`; `taxengine`, `taxdocs` and `taxplanning` stay `CLOSED`.**
+  One line. It states the actual design: `taxrules` is the shared vocabulary and its types are
+  deliberately public. T1's reason for `CLOSED` — stopping `taxplanning` reaching into engine
+  internals — is untouched, because the three modules that have internals keep it.
+
+**My recommendation was (B)**, with an erratum on T1. (A) produces the same visible surface with
+more ceremony, and ten "expose this too" annotations tend to become nine plus one forgotten.
+
+Either option edits `package-info.java` files produced by `W-001`, outside `W-035`'s `Produces`,
+which is why this stopped rather than deciding itself.
+
+**Resolution (2026-09-21, D-022): option (B), as recommended.** The developer chose it after the
+cost of (A) was measured rather than estimated: `taxrules` has **twelve** sub-packages, not ten
+(`cap` `component` `condition` `generated` `id` `json` `money` `pack` `regime` `registry`
+`temporal` `validate`, 107 files). (A) is worse than the blocker recorded, because Spring Modulith's
+`allowedDependencies = "taxrules"` grants only the **unnamed** root interface — so (A) is ~12
+`@NamedInterface` annotations **plus** a per-package dependency list in each of `taxengine`,
+`taxdocs` and `taxplanning`, and it forces a judgment now on whether `json`, `generated` and
+`validate` are public API, a question no item has yet needed to answer.
+
+Changed: `taxrules/package-info.java` only — `Type.CLOSED` → `Type.OPEN`, with a javadoc paragraph
+naming D-022 and stating why the other three modules stay `CLOSED`. No consumer changed; all three
+still read `allowedDependencies = {"shared", "taxrules", ...}` exactly as T1 draws them.
+Verified by `./mvnw test -pl backend -Punit` — 1225/1225, 0 errors.
 
 ### B-001  (W-013)  — 2026-09-19  — **RESOLVED**: option (A), `Money`/`Rate` moved to `taxrules.money` (**D-012**)
 
@@ -188,6 +263,8 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-022 | 2026-09-21 | B-002 — T1 declares all four tax modules `CLOSED` *and* has them depend on each other's types, but every shared type lives in a sub-package and a `CLOSED` module exposes only its root. T1 as written is unsatisfiable. `@NamedInterface` on ~12 packages, or `taxrules` `OPEN`? | **(B) `taxrules` is `Type.OPEN`**; `taxengine`, `taxdocs`, `taxplanning` stay `CLOSED`. It is the shared vocabulary and has no internals to hide; the three modules that do have internals keep the boundary, so T1's actual objective is untouched. (A) declares the same visible surface twelve times over. Erratum on TS T1 | **decided by the developer** |
+| D-021 | 2026-09-19 | Appendix A matched types the design **declares**, so it was blind to types named only in a `permits` clause — the category that *fails to compile*. `W-035` hit it: `NodeValue` permits six, five declared nowhere | **Appendix B** — re-audited: 29 types in `permits` clauses, 19 never declared, 14 with no owner, now tabled. **Rule B2**: a `permits` clause lists only what exists. Flagged `UndeterminedApportionmentException` (needed by `W-066b`, reached before its owner `W-105`) and `MissingRulePackException` (T9-1, currently a plain `PackValidationException`) | **approved by the developer** |
 | D-020 | 2026-09-19 | `W-034` found E4's property broken: a pack rejected by a **domain constructor** (blank `whatToCheck`, a contradictory `AmendmentRef`, an empty `OnlyIn`) surfaces as `IllegalArgumentException` with no path, not `PackValidationException`. That is the very thing hand-written parsing was chosen for | **`W-034b`** — wrap domain construction in the readers and rethrow with the path. Its own item because the fix touches `W-033`'s `Produces` | **approved by the developer** |
 | D-019 | 2026-09-19 | `W-033` (the pack deserialiser) is ~55 shapes and ~700 lines — 4x the §7 limit. Its stated `Verify` round-trips a fixture whose arrays are empty | **Split three ways** — `W-033` (leaves, `Validity`, `RegimeApplicability`, `CapShape`), `W-033b` (`Condition`, `RuleRow`), `W-033c` (regimes, sets, components, the assembler). **Hand-written parsing**, not Jackson annotations: E4 requires the loader to throw only `PackValidationException`, and Jackson's errors address a Java developer rather than a pack author | **approved by the developer** |
 | D-018 | 2026-09-19 | Appendix A's three ownerless types: nothing applies a mid-year change; invariant I9 is unenforceable without a behaviour registry; the `ComponentCodes`/`RuleIds` generator is a missing build step | **Three new items.** `W-031b` — `RegimeBehaviour` + registry + I9. `W-032b` — the Maven generator emitting `RuleIds`/`ComponentCodes` from the packs. `W-066b` — `TemporallyApportionedCap`, placed after `W-066` because `PRORATE_PER_SEGMENT` needs `ProrationBasis`. `RulePackDocument` stays unresolved | **approved by the developer** |
@@ -217,7 +294,49 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 
 ---
 
+## ▶ How to resume — do these in order
+
+1. **Confirm where you are.**
+   ```
+   git log --oneline --grep='^taxplanning W-' -1     # expect: taxplanning W-035: what a node produces...
+   git status --short                                # expect: clean
+   ```
+   If the first command does not print `W-035`, stop and report `git log --oneline -15`.
+
+2. **Confirm the build is green** — it is, and it should stay that way:
+   ```
+   ./mvnw test -pl backend -Punit                    # expect: 1225 passing, 0 errors, ~8 s
+   ```
+
+3. **Start `W-036`** at stage 1. Nothing is in flight and nothing is blocked — this is an ordinary
+   item start, the first since Phase 4 opened.
+
+**Still open, blocking nothing yet:** **D-006** (who signs off a rule-pack change) needed a human
+name before `W-032`; `W-032` shipped without it, so it is now overdue rather than pending.
+
 ## Notes for resume
+
+**Session 3 (2026-09-21).** Opened on a red build and a blocked item, as session 2 left it. Did not
+write new code: confirmed the checkpoint and reproduced the failure exactly (1225 run, 1 error,
+`WealthLensModulithTest`, the three `MoneyValue`/`NodeValue`/`TaxByBasis` violations), measured both
+of B-002's options, put the decision to the developer, and applied **D-022**. Build green, `W-035`
+committed as an item, checkpoint advanced off `W-034b`.
+
+**Erratum written this session (§10 requires it be recorded here):** `02-TECH-SPEC.md` **T1** — "All
+four are `@ApplicationModule(type = Type.CLOSED, ...)`" is unsatisfiable, because T1 also has the
+modules depend on each other's types and every shared type lives in a sub-package. `git diff` on
+that file is 18 insertions, 0 deletions.
+
+**The lesson B-002 carries forward.** T1's defect was invisible for 34 items because `taxengine`
+had no classes — a module with no code satisfies any dependency rule. Phase 4 is the first code in
+`taxengine`, and `taxdocs` and `taxplanning` are still empty. **Expect the same class of stop when
+each of them gets its first class** (`taxdocs` at Phase 11, `taxplanning` at Phase 7). Both are
+`CLOSED` and both are depended on by nothing yet, so the direction that bit here — a consumer
+reaching a sub-package — is the one to check first.
+
+Fixed two stale lines in this file while here, both bookkeeping only: the Phase 1 status row carried
+a duplicated `W-006 · … W-012 ·` tail after its `← COMPLETE` marker, and the counts line read
+`blocked **0**` while B-002 was open.
 
 Session 1. Decisions D-001…D-007 recorded on the design's recommendations; **D-006 (Q6) is still
 open** and blocks nothing before `W-032`. The plan for `W-001` is written and is **awaiting

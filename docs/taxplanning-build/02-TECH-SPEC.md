@@ -17,6 +17,24 @@ Do not invent a name that is not in this file. If something you need is missing,
 
 All four are `@ApplicationModule(type = Type.CLOSED, ...)`.
 
+> **Erratum (W-035, 2026-09-21):** **T1 as written cannot be satisfied** — it declares all four
+> modules `CLOSED` *and* has them depend on each other's types, but every shared type lives in a
+> sub-package, and a `CLOSED` module exposes only its root package. `taxengine` declared
+> `allowedDependencies = {"shared", "taxrules"}` exactly as this table specifies and still failed:
+> `Module 'taxengine' depends on module 'taxrules' via ...pipeline.MoneyValue -> ...taxrules.money.Money.`
+> The dependency was allowed; the *package* was not. Spring Modulith permits that only through
+> `@NamedInterface`, which T1 never mentions and nothing in this repository uses. **Correction:
+> `taxrules` is `Type.OPEN`; `taxengine`, `taxdocs` and `taxplanning` remain `CLOSED`** (decision
+> **D-022**, blocker **B-002**). `taxrules` is the shared vocabulary of the domain and has no
+> internals to hide; the three modules that do have internals keep `CLOSED`, so T1's actual
+> objective — the engine cannot reach a repository, `taxplanning` cannot reach engine internals —
+> is unchanged. The alternative, `@NamedInterface` on all twelve `taxrules` sub-packages plus a
+> per-package dependency list in all three consumers, yields the same visible surface declared
+> twelve times over. This was invisible until now because `taxengine` had no classes; `W-035` is
+> its first.
+> Verified by: `./mvnw test -pl backend -Punit` — 1225 tests, 0 failures, 0 errors (was
+> `Errors: 1`, `WealthLensModulithTest`); `backend/src/main/java/com/thiru/wealthlens/taxrules/package-info.java`.
+
 ---
 
 ## T2 — Package map
