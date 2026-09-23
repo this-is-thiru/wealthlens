@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045c — audit Phases 5–6 (types, modules, enum constants); slices→phases; legacy deletion items (docs only)
+Item            : W-045c1 — delete legacy dead code (FbpOptimizer, ItrFormAdvisor, HrLetterContentBuilder, ParsedCtcDto, MarginalReliefCalculator+test, empty _review dir)
 Stage           : NOT_STARTED
-Plan            : — (plans/W-045c.md once written)
+Plan            : — (plans/W-045c1.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ W-045c row + Phase 5–6 rows; write plans/W-045c.md; STOP for approval
-Last verify     : ./mvnw test -pl backend -Punit → 1414 pass, 0 fail, 0 Checkstyle violations (W-045b3)
-Waiting on      : nothing. OQ-1..OQ-4 open (OQ-5 decided: D-049); Appendix C part 2 owners proposed, not accepted
+Next step       : READ the W-045c1 row + 03-WORK-ITEMS Appendix E; write plans/W-045c1.md; STOP for approval
+Last verify     : ./mvnw test -pl backend -Punit → 1414 pass, 0 fail, 0 Checkstyle violations (W-045c)
+Waiting on      : nothing for W-045c1. Owner questions OQ-1..OQ-4 open (00-BRIEF.md §12); OQ-3 gates the L2 deletion; OQ-4 is needed at W-045d
 Files touched   : —
-Last item commit: taxplanning W-045b3: delete the swallow-failures ArchUnit rule — Checkstyle IllegalCatch already enforces it
-Updated         : 2026-09-23, session 4
+Last item commit: taxplanning W-045c: audit Phases 5–6, map slices to phases, schedule legacy deletions in compiling order
+Updated         : 2026-09-24, end of session 4
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

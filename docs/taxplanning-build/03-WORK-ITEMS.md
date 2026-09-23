@@ -429,7 +429,7 @@ test nodes to run.
 
 ---
 
-## Phase 4b — Foundation corrections from the brief (17 items, all before `W-046`)
+## Phase 4b — Foundation corrections from the brief (18 items, all before `W-046`)
 
 Added 2026-09-23 by decision **D-043**, which records the owner's instruction to *"collect every
 prerequisite and keep them properly"*. The source is `docs/taxplanning-design/00-BRIEF.md`
@@ -452,7 +452,8 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 | **W-045b2** | *Added by **D-048**.* **Two modules instead of four.** Move `taxrules.*` → `taxengine.rules.*` (111 main + 24 test files, package moves only — no behaviour change); delete the empty `taxdocs` module (its future code goes to `taxplanning.documents`); delete the `TaxRules` and `TaxDocs` markers; `taxengine` `allowedDependencies = {"shared"}`, `taxplanning` drops `taxrules` and `taxdocs`; the generator's output package; every `..taxrules..` pattern in `ArchitectureTest`; **new ArchUnit rule:** `..taxengine.rules..` depends on no other `taxengine` package (keeps the vocabulary-before-runner direction the module boundary used to give). **At EXPLAIN, decide how the closed `taxengine` exposes its public sub-packages** (`input`, `result`, `trace`, `rules.*`) to `taxplanning` — a closed module shows only its root (B-002), and `W-103` would otherwise fail exactly as `W-035` did; options and their exact Spring Modulith syntax are to be taken from the Spring Modulith documentation, not assumed | **D-048**; `00-BRIEF.md`; TS T1, T2 | `./mvnw test -pl backend -Punit` — 1414+ green, 0 Checkstyle violations; `WealthLensModulithTest` shows **two** tax modules; the new direction rule **proven to bite** (a `rules` class importing `pipeline` fails); a probe class in `taxplanning` importing `EngineInputs` **compiles and passes the modulith test** |
 | **W-045b3** | *Added by **D-049**.* Delete `ArchitectureTest.taxengine_does_not_swallow_failures`: it forbids *depending on* `Exception`/`RuntimeException`, so it also forbids **defining** an exception (it would reject `W-105`'s `TaxEngineException`); its intent — no catch-all — is enforced repo-wide by Checkstyle `IllegalCatch` (`W-045a`) | OQ-5; D-049 | `IllegalCatch` proven on `taxengine` main code (a `catch (RuntimeException)` probe in `taxengine.pipeline` fails Checkstyle); `./mvnw test -pl backend -Punit` green |
 | **W-045c** | *Docs only.* **Appendix D** — for `W-046`…`W-058`: every type each item names, whether it exists (`find`), its module, and whether the consumer may see that module; every enum constant it names and whether it exists. **Appendix E** — `09-build-plan.md`'s slices mapped to phases, and the placeholder deletion schedule (B2) written as items placed after the milestone that replaces each part | STATE "audit categories 3–5"; `09` B1, B2 | each row carries the command that established it; no Phase 5–6 item names a type that is absent, unowned, or invisible to its consumer without an owner recorded |
-| **W-045d** | Rule IDs **and regime codes** renamed to concepts (**D-035**, **D-046 B4**). **At EXPLAIN:** a table proposing each new name *quoted from the Acts' own wording* with its source — the owner chooses (**OQ-4**); no name is invented. Then: the 15 rows and the regime codes in the shipped pack; `taxrules/generated/RuleIds.java` regenerated; every test referencing an old ID; an erratum on `01-rulebook.md` carrying the **old → new mapping for every year- or regime-suffixed ID in the rulebook**, e.g. `RATE-SLAB-NEW-2025` + `RATE-SLAB-NEW-2026` → **one** concept-named rule with one version spanning both years (the rulebook states the bands are identical) + a new `RuleIdNamingTest` | `00-BRIEF.md` §5.2, §10 | `-Dtest=RuleIdNamingTest,GeneratedConstantsTest,RulePackLoadTest` — no `RuleId` or regime code in any pack matches `-(19\|20)\d\d\b`, `-(OLD\|NEW)\b` or a section number (`S\d{3}`); every old ID in the mapping resolves to exactly one new ID |
+| **W-045c1** | *Added by D-050.* Delete the legacy dead code (Appendix E, group L1): `engine/FbpOptimizer`, `engine/ItrFormAdvisor`, `recommendation/HrLetterContentBuilder`, `parsing/ParsedCtcDto`, `engine/MarginalReliefCalculator` + its test, the empty `test/…/taxplanning/_review` directory | `09` B2; Appendix E | nothing imports them (grep, `W-045c`); `./mvnw test -pl backend -Punit` green |
+| **W-045d** | Rule IDs **and regime codes** renamed to concepts (**D-035**, **D-046 B4**). **At EXPLAIN:** a table proposing each new name *quoted from the Acts' own wording* with its source — the owner chooses (**OQ-4**); no name is invented. Then: the **2** rule rows and the 2 regime codes in the shipped pack *("15 rows" corrected by `W-045c`)*; `taxrules/generated/RuleIds.java` regenerated; every test referencing an old ID; an erratum on `01-rulebook.md` carrying the **old → new mapping for every year- or regime-suffixed ID in the rulebook**, e.g. `RATE-SLAB-NEW-2025` + `RATE-SLAB-NEW-2026` → **one** concept-named rule with one version spanning both years (the rulebook states the bands are identical) + a new `RuleIdNamingTest` | `00-BRIEF.md` §5.2, §10 | `-Dtest=RuleIdNamingTest,GeneratedConstantsTest,RulePackLoadTest` — no `RuleId` or regime code in any pack matches `-(19\|20)\d\d\b`, `-(OLD\|NEW)\b` or a section number (`S\d{3}`); every old ID in the mapping resolves to exactly one new ID |
 | **W-045e** | The three status axes (**D-036**): `taxrules/registry/{LegalStatus,VerificationLevel,PublicationStatus}.java`; `Provenance`/`RuleVersion` carry all three; `VerificationStatus` and `DraftOrFinal` withdrawn and added to the withdrawal gate; pack JSON and readers migrated + `RuleStatusTest` | `00-BRIEF.md` §5.3 | `-Dtest=RuleStatusTest,RulePackLoadTest,ArchitectureTest` — a non-`PUBLISHED` version never enters a pack; `UNVERIFIED` still requires `whatToCheck` (I1); `PENDING_NOTIFICATION` requires its interim rule. ⚠ **Size risk:** `Provenance` is referenced widely — estimate at EXPLAIN, propose a split if over ~300 lines |
 | **W-045f** | The timeline (**D-034**), **laid out by layer** (`00-BRIEF.md` §5.1): `rulepacks/timeline/law/{rules,regimes}/`, `timeline/exec/{pipelines,components}/`, `timeline/forms/itr/`, `timeline/content/` — one file per identity, migrated from `rulepacks/2026-27/`, each file's layer given by its directory; `taxrules/timeline/{Timeline,TimelineReader}.java` + `TimelineReaderTest` | `00-BRIEF.md` §5.1 | `-Dtest=TimelineReaderTest` — every file parses with a path in its error; each identity appears in exactly one file; one rule's versions never overlap in validity; a file outside the four layer directories is refused |
 | **W-045g** | The rule-pack compiler (**D-034**): `taxrules/timeline/RulePackCompiler.java`; `rulepacks/2026-27.lock.json` (version ids + per-layer checksums); `ClasspathRulePackProvider` compiles from the timeline and verifies the lock; `rulepacks/2026-27/` removed + `RulePackCompilerTest` | `00-BRIEF.md` §5.1; `W-027`, `W-028` | `-Dtest=RulePackCompilerTest,RulePackLoadTest,NodeHarnessTest` — the compiled 2026-27 rule pack equals today's in canonical form, layer by layer; only `PUBLISHED` versions enter it; a timeline edit without a lock update **fails startup naming the rule**; the synthetic TY 2099-00 still loads with no Java change (T9-21) |
@@ -480,7 +481,7 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 ## Phase 5 — Tax nodes: the walking skeleton (8 ids, 7 live)
 
 ### W-046 — `TaxByBasisNode` + `TaxByBasisNodeTest`
-- [ ] **Produces** `taxengine/node/TaxByBasisNode.java`, `.../node/TaxByBasisNodeTest.java`
+- [ ] **Produces** `taxengine/node/TaxByBasisNode.java`, `.../node/TaxByBasisNodeTest.java`; `law/` rows `RATE-SLAB-AGE-001`, `RATE-SLAB-AGE-002` (old-regime age bands, VERIFIED) *(added by `W-045c`, D-050)*
 - **Spec** `DR 16-getting-started.md` S2 step 5 — **copy it**
 - **Do** `DR 23` A11's harness example, using `W-044`'s `NodeHarness`: TI ₹12,00,000 → `TaxByBasis(60000, {})`.
 - **Verify** `./mvnw test -pl backend -Dtest=TaxByBasisNodeTest`
@@ -489,22 +490,30 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 - Merged into **W-046** by D-011. No work.
 
 ### W-048 — `ReliefShape` sealed family
-- [ ] **Produces** `taxrules/relief/{ReliefShape,FlatWithCeiling,ExcessOverThreshold,ThresholdLadderCeiling,NoRelief}.java`
-- **Spec** `DR 15` Part E
+- [ ] **Produces** `taxrules/relief/{ReliefShape,FlatWithCeiling,ExcessOverThreshold,ThresholdLadderCeiling,NoRelief,ReliefResult,ReliefContext}.java` *(`ReliefResult`, `ReliefContext` added by `W-045c`, D-050)*
+- **Spec** `DR 10` E5 (`10-extensibility.md:305`) · `DR 06` G3 *(corrected by `W-045c`: this row cited `DR 15` Part E, which is `Condition`)*
 
 ### W-049 — `RebateNode`
-- [ ] **Spec** `DR 06-algorithms.md` G3.1 · `DR 13` R-5
-- ⚠ **The rebate reads `TaxByBasis.atSlabRates` ONLY.** Using the total produces a nil tax bill on a ₹12,00,000 income that is mostly capital gains (`DR 08` T13-1). This is the single most dangerous line in the engine.
+- [ ] **Produces** `taxengine/node/RebateNode.java` + `.../node/RebateNodeTest.java`; `law/` rows `REBATE-NEW-001`, `REBATE-NEW-MR-001` (both VERIFIED) and `REBATE-OLD-001` (`UNVERIFIED` + `whatToCheck` until `W-045n` sources it) *(added by `W-045c`)*
+- **Spec** `DR 06-algorithms.md` G3.1 · `DR 13` R-5
+- **Verify** `./mvnw test -pl backend -Dtest=RebateNodeTest` — reproduces `DR 08` **T1-N1** (at the ceiling), **T1-N3** (inside the relief band), **T1-O2** (the H-3 test: no relief in the other regime, with a stated reason — property P5), and `DR 13` **T13-1** (the rebate reads `atSlabRates` only); expected values copied from `DR 08`, never computed
+- ⚠ **The rebate reads `TaxByBasis.atSlabRates` ONLY.** Using the total produces a nil tax bill on a ₹12,00,000 income that is mostly capital gains (`DR 13` T13-1 — corrected by `W-045c`; the row cited `DR 08`). This is the single most dangerous line in the engine.
 - ⚠ The relief branch exists **only** in the default regime.
 
 ### W-050 — `RoundTotalIncomeNode` and `RoundNetPayableNode`
-- [ ] **Spec** `DR 01-rulebook.md` `RATE-ROUND-002`, `RATE-ROUND-003`
+- [ ] **Produces** `taxengine/node/{RoundTotalIncomeNode,RoundNetPayableNode}.java` + `.../node/RoundingNodesTest.java`; `law/` rows `RATE-ROUND-002`, `RATE-ROUND-003` (both VERIFIED) *(added by `W-045c`)*
+- **Spec** `DR 01-rulebook.md` `RATE-ROUND-002`, `RATE-ROUND-003`
+- **Verify** `./mvnw test -pl backend -Dtest=RoundingNodesTest` — each node emits one `StepKind.ROUNDING` line using `Money.roundToNearestTenPerSection516`, on the rulebook's worked examples; a full-pipeline run has **exactly two** `ROUNDING` lines (PRD F2.4)
 - ⚠ Exactly **two** rounding points in the whole pipeline.
 
 ### W-051 — `CessNode`
-- [ ] **Spec** `DR 01-rulebook.md` `RATE-CESS-001` · `REBATE-ORDER-001` — cess is on **post-rebate** tax plus surcharge.
+- [ ] **Produces** `taxengine/node/CessNode.java` + `.../node/CessNodeTest.java`; `law/` row `RATE-CESS-001` (VERIFIED) *(added by `W-045c`)*
+- **Spec** `DR 01-rulebook.md` `RATE-CESS-001` · `REBATE-ORDER-001` — cess is on **post-rebate** tax plus surcharge.
+- **Verify** `./mvnw test -pl backend -Dtest=CessNodeTest` — reproduces the cess line of `DR 08` **T2-1**; cess is computed on post-rebate tax plus surcharge, never before the rebate
 
 ### W-052 — `NetPayableNode`
+- [ ] **Produces** `taxengine/node/NetPayableNode.java` + `.../node/NetPayableNodeTest.java` *(added by `W-045c`)*. In Phase 5 it **requires `tax.cess` only**; the `credits` edge is added by the Phase 9 item that builds `CreditsNode` (D-050)
+- **Verify** `./mvnw test -pl backend -Dtest=NetPayableNodeTest` — reproduces the final figures of `DR 08` **T1-N1** and **T1-N3**; see Appendix D on the `credits` edge
 
 ### W-052b — from the runner's result to a `TaxComputation` *(added by D-043)*
 - [ ] **Produces** `taxengine/result/ComputationProjector.java` + `.../result/ComputationProjectorTest.java`
@@ -555,7 +564,7 @@ if that is not enough for the item in hand.
 |---|---|---|---|
 | **W-054** | `law/rates.json` surcharge ladders for all four (year × regime) | `DR 01` R5 | entry is **₹50,00,000**; the default regime has **no 37% band** |
 | **W-055** | **uses** `ThresholdLadderCeiling` (created by `W-048` with the relief family): the surcharge-relief parameterisations and their tests | `DR 06` G3.2 | `W = U + V`, one implementation, four parameterisations |
-| **W-056** | `taxengine/node/SurchargeNode.java` | `DR 06` G3.2 | **two buckets** — `RATE-SUR-SPLIT-001` caps the special slice at 15% |
+| **W-056** | `taxengine/node/SurchargeNode.java` + **modifies** `SlabLadder` (adds a band lookup; the relief threshold is the band's lower bound — `DR 06` G3.2; D-050) | `DR 06` G3.2 | **two buckets** — `RATE-SUR-SPLIT-001` caps the special slice at 15% |
 | **W-057** | **T2 golden tests** | `DR 08` T2-1 … T2-6 | copy expected values |
 | **W-058** | metamorphic property tests | `DR 19` E4.1 | `moreIncomeNeverMeansLessTax` would have caught H-1 unaided |
 
@@ -919,6 +928,81 @@ owners only — nothing here is assigned until the owner accepts it; until then 
 | `scenario/` — `Scenario`, `ScenarioDiff`, `DiffLine` | types | `W-109` | `compare-regimes` needs the diff (PRD F3.3) |
 | F41 section-explorer surface (endpoint / page) | feature | a new item after `W-118` | the catalogue type is `W-045k`; the surface is product work |
 | PR-5 HUF persona fixture, and **every HUF item** | fixture, phase | a new **HUF phase** after the individual milestones | **no HUF item exists in the backlog yet** — the brief names HUF "built second" |
+
+## Appendix D — Audit of Phases 5–6 (`W-045c`, 2026-09-23)
+
+Every type, rule row and enum constant that `W-046`…`W-058` name, or that the design sections they
+cite name, checked against the source tree and the shipped rule pack. Commands: `find backend/src
+-name <Type>.java`; `grep -n` on the cited sections; a JSON read of `rulepacks/2026-27/`. **The shipped
+pack holds 2 rule rows** (`RATE-SLAB-NEW-2026`, `RATE-SLAB-OLD-2026`) — the "15" stated earlier in
+session 4 counted `"status": "VERIFIED"` occurrences, not rows (corrected in the brief, TS T4 and
+`W-045d`).
+
+### Per item
+
+| Item | Named | Exists? | Visible to its user? | Finding |
+|---|---|---|---|---|
+| `W-046` | `TaxByBasisNode`, `NodeHarness`, `TaxByBasis`, `Money`, `NodeId`, `RuleIds`, `TraceLine` (`DR 23` A11) | node: created here; `NodeHarness` ✅ test scope; others ✅ | ✅ all inside `taxengine` | old-regime **age-band rows** `RATE-SLAB-AGE-001/002` (VERIFIED) are not in the pack and no item authors them — needed by `W-053`'s T1-A1 cases. **Proposed:** add to `W-046`'s Produces |
+| `W-048` | `ReliefShape` family (`DR 10` E5) | ✗ created here | ✅ | Spec citation **corrected** (was `DR 15` Part E). **Proposed:** add `ReliefResult` and `ReliefContext` to Produces — named only in E5's `apply` signature, owned by no item (session-3 audit category 3). The pack's own note (`law/rates.json` `_pending`) assigns `REBATE-NEW-001` here; `W-049` now owns that row — the note must be updated by `W-049` |
+| `W-049` | `RebateNode`, `TaxByBasis.atSlabRates` ✅, `FlatWithCeiling`/`ExcessOverThreshold` (`W-048`) | node ✗ created here | ✅ | **Produces/Verify added** (were missing). `REBATE-OLD-001` is `NEEDS VERIFICATION` — authored `UNVERIFIED` until `W-045n`. `DR 13` T13-1 here is the node-level check; `W-089` keeps the end-to-end test |
+| `W-050` | `RoundTotalIncomeNode`, `RoundNetPayableNode`, `Money.roundToNearestTenPerSection516` ✅, `StepKind.ROUNDING` ✅ | nodes ✗ created here | ✅ | **Produces/Verify added** |
+| `W-051` | `CessNode`, `RATE-CESS-001` (VERIFIED, not in pack) | ✗ created here | ✅ | **Produces/Verify added**; row authored here |
+| `W-052` | `NetPayableNode` | ✗ created here | ✅ | **Produces/Verify added.** TS T6 has it require `credits`, whose producer (`CreditsNode`) arrives in Phase 9 — `TopologicalSort` rejects a required slot with no producer. **Proposed:** in Phase 5 it requires `tax.cess` only; the `credits` edge is added by the Phase 9 item that builds `CreditsNode` |
+| `W-052b` | `ComputationProjector`, `PipelineRunner.Result` ✅, `TaxComputation` ✅ (`totalIncome`, `taxByBasis`, `netPayableBeforeFilingEffects`), `NodeIds` (`W-045i`) | projector ✗ created here | ✅ | none — depends on `W-045i` |
+| `W-052c` | `RulePackCompiler` (`W-045g`), `TaxYearRegistry` ✅ | — | ✅ | none |
+| `W-053` | `GoldenCaseRunner`, `T1SlabAndRebateTest`, `NodeRegistry.rulesNotEvaluatedByAnyNode` ✅ | test types ✗ created here | ✅ | golden path embeds `S202_DEFAULT` — follows `W-045d`'s rename (OQ-4) |
+| `W-054` | surcharge ladders as `SlabLadder` bands (`DR 05` M1.3 table) | `SlabLadder` ✅ | ✅ | none |
+| `W-055` | `ThresholdLadderCeiling` | via `W-048` | ✅ | none (row already says *uses*) |
+| `W-056` | `SurchargeNode`; `DR 06` G3.2 calls `ladder.bandFor(income)` and `band.marginalReliefThreshold` | `bandFor` ✗, `marginalReliefThreshold` ✗ (`SlabLadder` has `apply`, `shapeName`, `validate` only; `Band` has no threshold) | ✅ | **Proposed:** `W-056` **modifies** `SlabLadder` (adds a band lookup); the threshold is the band's lower bound, as G3.2's own comment says — no new field |
+| `W-057` | T2 cases, `GoldenCaseRunner` (`W-053`) | ✅ after `W-053` | ✅ | none |
+| `W-058` | metamorphic properties (`DR 19` E4.1) | ✗ created here | ✅ | none |
+
+### Cross-cutting
+
+- **No Phase 5 item authored the law its nodes evaluate** (R1's root cause): the rebate, cess and
+  rounding rows are now in `W-049`–`W-051`'s Produces; the age-band rows are the one proposal left
+  (`W-046`).
+- Every consumer here is inside `taxengine`, so no named interface is needed in Phases 5–6.
+- `Severity.SEVERE` appeared in a search but is `DisabilitySeverity.SEVERE` in a STATE history note —
+  not a reference. Recorded so nobody repeats the search and reports it.
+
+**All four proposed corrections accepted and applied (D-050):** `W-046` age-band rows; `W-048`
+`ReliefResult`/`ReliefContext`; `W-052` `credits` edge deferred to Phase 9; `W-056` modifies `SlabLadder`.
+
+## Appendix E — Slices ↔ phases, and the legacy deletions (`W-045c`, 2026-09-23)
+
+### Slices (`09-build-plan.md` B1) mapped to the backlog
+
+| Slice | Scope | Phases / items | Done when |
+|---|---|---|---|
+| 0 | verify the unverified | `W-045n` (Phase 5 rules), standing rule 3 per phase | per phase |
+| 1 | registry, packs, component codes | Phases 1–3 (`W-004`…`W-034b`) ✅ | ✅ |
+| 2 | engine: pipeline, slabs, rebate, surcharge, cess, rounding | Phases 4–6 | `W-053` (T1), `W-058` (T2) |
+| 3 | salary head **+ minimal persistence and API** | Phase 7 (salary) · Phase 11 (persistence, API) | salary at Phase 7; "end to end through the API" only at `W-109` — the slice spans two phases |
+| 4 | exemptions: HRA, LTA, allowances | Phase 7 (`W-067`…`W-069`) | T3 at `W-070` |
+| 5 | perquisites, employer contributions | Phase 8 | — |
+| 6 | Chapter VIII | Phase 8 | `W-080` |
+| 7 | house property, other sources, set-off | Phase 9 | — |
+| 8 | capital-gains feed | Phase 9 | `W-089` |
+| 9 | regime comparison, ITR suggestion, PDF | Phase 10 (ITR) · `W-109` (compare) · `W-123` (PDF) | `W-123` |
+| 10 | Form 16 / Form No. 130 ingestion | Phase 13 | `W-132` |
+| 11+ | the Next tier | **not in the backlog** | — |
+
+### Legacy deletions, in an order that compiles
+
+`09` B2's order deletes the policy classes "after Slice 1" and the engines "after Slice 2" — but the
+engines (`AbstractTaxEngine`, `OldRegimeTaxEngine`, `NewRegimeTaxEngine`, `TaxEngine`), `PerquisiteValuationService`,
+`TaxComputationService` and `RestructuringEngine` all import the policy types, and the legacy compute
+endpoint is live. Grouped by what imports what (checked with `grep` on `import …taxplanning.*`):
+
+| Group | Delete | Imported by anything kept? | Earliest |
+|---|---|---|---|
+| **L1 — dead code** | `engine/FbpOptimizer`, `engine/ItrFormAdvisor`, `recommendation/HrLetterContentBuilder`, `parsing/ParsedCtcDto` (no importer at all); `engine/MarginalReliefCalculator` + its test (imported only by its test); the empty `test/…/taxplanning/_review` directory | no | **any time** |
+| **L2 — the compute path, together** | policy entities, repositories, `PolicySeederService`, `PolicyService`, `AllowanceResolutionService`, `ResolvedAllowance`, the five `data/tax-policies/*.json`; `FormulaEvaluator`, `SafeExpressions`; the engines and `TaxEngineFactory`; `HraExemptionCalculator`, `PerquisiteValuationService`; `salary/**`; `service/TaxComputationService`; `recommendation/**` (incl. `RestructuringEngine`, `RegimeAdvisor`); `document/**` and the Thymeleaf template; both controllers; the legacy enums (keep `RegimeType` if still referenced); their tests and `TaxPlanningControllerIntegrationTest`; the `/tax-planning/public/**` entry in `AuthConfig`; legacy collections in `cleanDatabase()` | each imports the others — so **one** group | **path A:** after `W-109` (replacement compute endpoint) · **path B:** now, if **OQ-3** is answered "disable" |
+
+**Proposed items** (ids suffixed onto what they follow; not added until the owner accepts them):
+`W-045c1` = L1 — **added (D-050)**. L2: `W-109b` under path A, or `W-045m` becomes L2 under path B —
+**waits on OQ-3**.
 
 ## Appendix F — Owed later, and where each lands (D-043, 2026-09-23)
 

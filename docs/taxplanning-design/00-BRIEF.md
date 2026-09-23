@@ -160,7 +160,7 @@ The word **snapshot is not used** for rule packs: in this codebase it already na
 projection taken at compute time (`FamilySnapshot`, `LedgerSnapshot`, `RegimeElectionSnapshot`).
 
 What is kept from the current design: immutability, checksums, reproducibility, the pack as the
-unit a computation pins (`W-027`). What goes: copying, and the drift it permits. Only 15 rule rows
+unit a computation pins (`W-027`). What goes: copying, and the drift it permits. Only 2 rule rows
 exist today, so the change is cheap **now** and gets more expensive with every row.
 
 ### 5.2 Rule identity names a concept (D-035)
@@ -553,3 +553,4 @@ Current truth above; history here (D-046 B1 applies the same rule to this brief)
 | 2026-09-23 | open questions `O-n` → **`OQ-n`**; principles `B-n` → **`BP-n`** | `W-045b` — they collided with the placeholder observations `O-1`…`O-36` and with blockers / backlog rules (ID glossary, START-HERE §11) |
 | 2026-09-23 | OQ-5 added | `W-045b2` found the swallow rule forbids defining exceptions |
 | 2026-09-23 | OQ-5 decided: rule deleted | D-049 |
+| 2026-09-23 | §5.1: the shipped pack holds **2** rule rows, not 15 | `W-045c` — the earlier figure counted `VERIFIED` markers |

@@ -350,7 +350,8 @@ Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-d
 | `C1`–`C6` | claim-integrity sections | `12-claim-integrity.md` | `15` C1–C5; `22` C1–C9; review C1–C5 |
 | `R-1`–`R-15`; `T13-n` | reframed decisions; edge cases | `13-edge-cases.md` | rulebook `R1`… |
 | `O1`–`O5` | operational-design sections | `14-operational-design.md` | `02` `O-1`… |
-| `B1`–`B5`, `C1`–`C5`, `F1`–`F6` | review-findings parts | `15-review-findings.md` | many — always `DR 15` |
+| `Part A`–`Part I` (top level) | review-findings parts — e.g. Part E is *`Condition`, resolved* | `15-review-findings.md` | cite as `DR 15 Part E` |
+| `B1`–`B5`, `C1`–`C5`, `F1`–`F6` | sections inside those parts | `15-review-findings.md` | many — always `DR 15` |
 | `S1`, `S2` | getting-started sections | `16-getting-started.md` | rulebook sources |
 | `L1`–`L5` | regime-lifecycle sections | `17-regime-lifecycle.md` | `02` L1, L2 |
 | `V1`–`V8`, `V-n` | temporal-versioning sections and cases | `18-temporal-versioning.md` | — |
