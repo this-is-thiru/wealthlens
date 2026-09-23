@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045a — "taxplanning W-045a: enforce the engineering standards in the build — Checkstyle gate, naming rules, commit hook"
+Last checkpoint           : W-045b — "taxplanning W-045b: correct the build docs' bookkeeping — status board, ID glossary, ownership sweep"
 Last updated              : 2026-09-23 (session 4 — brief written, D-033…D-040 decided; build GREEN, 1410 tests)
-Current position          : W-045b — after applying the D-046 review fixes (C1–C4, then the PRD/TECH-SPEC rewrite)
+Current position          : W-045b2 — two tax modules (D-048)
 Session count             : 4
 ```
 
@@ -34,8 +34,8 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-045a` — Phase 4b opens: 15 prerequisite items from the brief (D-043), then `W-046`. **Next milestone is `W-053`**: a correct slab-and-rebate calculator, **both tax years**, no database |
-| **Status** | `READY` — nothing in flight, nothing blocked. Three owner questions open (O-1…O-3 below); only `W-045m` depends on one of them |
+| **Next item** | `W-045b2` — two tax modules (D-048); Phase 4b has 16 prerequisite items from the brief (D-043), then `W-046`. **Next milestone is `W-053`**: a correct slab-and-rebate calculator, **both tax years**, no database |
+| **Status** | `READY` — nothing in flight, nothing blocked. Three owner questions open (OQ-1…OQ-3 below); only `W-045m` depends on one of them |
 | **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
@@ -49,10 +49,10 @@ Legend: `·` not started · `E` explained, awaiting approval · `P` in progress 
 ```
 Phase 0    W-001 D  W-002 D  W-003 D   ← COMPLETE
 Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 D  W-012 D   ← COMPLETE
-Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
-Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
+Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
+Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b ·  W-045b2 ·  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 ·  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **23** / 148 · in flight **0** · blocked **0**
+Counts — done **51** / 168 live · in flight **0** · blocked **0**  ← computed by script; 168 = 146 base ids − 8 retired + 30 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045b | 2026-09-23 | Status board and counts corrected (51/168); START-HERE §11 ID glossary (~35 families, citation rule); R7 note; Appendix C ownership sweep — 37 multi-owner types classified, 3 created-twice rows fixed (W-055, W-112, W-067–069); Appendix C part 2 lists the unowned with **proposed** owners (not accepted — still UNOWNED); `O-n`→`OQ-n`, `B-n`→`BP-n` | six scripted checks; `./mvnw test -pl backend -Punit` 1414/1414
 W-045a | 2026-09-23 | Strict Checkstyle 10.26 failing the build (main + test), shrink-only baseline (99 entries, `CheckstyleBaselineTest`), FileLength 1500 by the owner; ArchUnit: no generic suffixes, unique simple names (DateRange, ExcelParser grandfathered); spotless:check on validate; commit-gate hook; 7 tax-module violations fixed; placeholder `taxengine/TaxEngine` deleted; all gates proven to bite | `./mvnw test -pl backend -Punit` — 1414/1414, 0 Checkstyle violations
 W-043 | 2026-09-21 | TaxComputation/FilingPosition/ComputationId/ComputationReceipt + 21 tests; A6's lawAndExec corrected to a Map (one ref cannot hold two layers); FilingPosition ships 3 of 6 per **D-032**; found ComputationReceipt owned by two items. **Phase 4 complete** | `./mvnw test -pl backend -Dtest=TaxComputationTest`
 W-042 | 2026-09-21 | PipelineRunner + nested Result + 16 tests; **found and fixed B-004** (two committed items contradicted each other — no graph could pass both W-039 and W-040); runner renumbers the trace; no try/catch, asserted on the source; T9-20 | `./mvnw test -pl backend -Dtest=PipelineRunnerTest`
@@ -384,7 +385,7 @@ The reverted code is complete and passes nothing but compilation; it is kept at
 
 <!-- Use the exact shape from 00-START-HERE.md §8. Never delete a blocker; mark it RESOLVED. -->
 
-*(none)*
+No open blockers — B-001 … B-004 above are all resolved.
 
 ---
 
@@ -405,13 +406,13 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
 | D-048 | 2026-09-23 | Are four tax modules necessary? (A module here is a Spring Modulith package boundary inside one JAR — not a service) | **Two modules** — `taxengine` (rules vocabulary + computation, pure, closed) and `taxplanning` (all I/O: persistence, API, documents, jobs, legacy). **Supersedes D-002.** Evidence: B-001, B-002, B-003 and D-027 were caused by the module boundaries, not tax logic; `taxrules/package-info.java:5` claims "this module computes nothing" while `SlabLadder.apply`/`LeastOf.apply` compute; purity is enforced by package-based ArchUnit rules either way; `taxdocs` is empty. Item `W-045b2`. Found while writing it: a closed `taxengine` hides its sub-packages from `taxplanning`, so `W-103` would have repeated B-002 under either design — the item's plan must settle exposure | owner: "agree" |
-| D-047 | 2026-09-23 | Applying review C1–C4 found a fifth mistake of mine (C5): the brief's examples `RATE-SLAB-S202-1` and `S202_DEFAULT` put a section number in the identity, contradicting D-035 and D-046 B4 | **Applied C1–C5** to `00-BRIEF.md` and Phase 4b: timeline by layer; "rule pack" / `RulePackCompiler` / `PackDiff` / `<taxYear>.lock.json` ("snapshot" already names input projections); `coverage.json` in `content/`; tax-year-length axis; section-numbered examples removed. **Concept names are not invented** — `W-045d` proposes them quoted from the Acts, the owner chooses (**O-4**). Brief gains a Changes section; Phase 4b rows edited in place (no item had started), prior text in git `72c089b` | owner: "sure" |
+| D-047 | 2026-09-23 | Applying review C1–C4 found a fifth mistake of mine (C5): the brief's examples `RATE-SLAB-S202-1` and `S202_DEFAULT` put a section number in the identity, contradicting D-035 and D-046 B4 | **Applied C1–C5** to `00-BRIEF.md` and Phase 4b: timeline by layer; "rule pack" / `RulePackCompiler` / `PackDiff` / `<taxYear>.lock.json` ("snapshot" already names input projections); `coverage.json` in `content/`; tax-year-length axis; section-numbered examples removed. **Concept names are not invented** — `W-045d` proposes them quoted from the Acts, the owner chooses (**OQ-4**). Brief gains a Changes section; Phase 4b rows edited in place (no item had started), prior text in git `72c089b` | owner: "sure" |
 | D-046 | 2026-09-23 | PRD + tech-spec review (`reviews/2026-09-23-prd-techspec-review.md`), B1–B6 | Owner: *"agreeing with you"* — all six recommendations accepted. **B1** rewrite `01-PRD.md` and `02-TECH-SPEC.md` as the current truth (history → changelog section + git); the 25 design docs keep errata. **B2** one account owns several assessee profiles (`tax_profiles`: unique `{pan}`, index `{email}`). **B3** API follows the repo convention with a distinct resource, `/tax/user/{email}/…`, until the legacy `/tax-planning` is deleted. **B4** regime codes name the concept, provisions per Act as data (as D-035). **B5** `tax_employers` scoped per account: unique `{profile_id, tan}`. **B6** refusals are 400 / `USER`: `UNSUPPORTED_ASSESSEE_TYPE`, `UNSUPPORTED_CASE`. Also accepted: fixes A1–A7 and my corrections C1–C4 | **decided by the developer** |
 | D-045 | 2026-09-23 | The owner wants engineering principles applied strictly to every line of code, in any module — naming, no hallucination, no slop — configured, not remembered | **Two layers.** (1) Written: an "Engineering standards" section in `CLAUDE.md` (truth, scope, naming, design, tests), loaded by every session. (2) Enforced: item **`W-045a`** — strict Checkstyle failing the build with a shrink-only legacy baseline, ArchUnit naming rules, `spotless:check` on `validate`, and a commit-blocking Claude Code hook. Measured first: 96 main-code violations (7 in the new tax modules), 24 real test-name violations after matching the documented convention, 10 generic suffixes, 2 duplicate class names | **decided by the developer** |
 | D-044 | 2026-09-23 | Sessions may end at any moment (rate limits). The only resume point was the item commit plus an 800-line STATE.md, and an approved plan existed only in the chat | **`CHECKPOINT.md`** (~20 lines, overwritten, updated at every stage change and plan step, before reporting); **`plans/W-0nn.md`** holding the plan, the owner's approval and a ticked step list; **no WIP commits** — the item stays one commit; **P1-quick** resume prompt. `00-START-HERE.md` §5b | **decided by the developer** |
 | D-043 | 2026-09-23 | The brief changes the rule format and the input model; the owner asked to "collect every prerequisite and keep them properly" | **Phase 4b** in `03-WORK-ITEMS.md` — 14 items (`W-045b`…`W-045o`) before `W-046`, in dependency order; `W-052b` and `W-052c` before `W-053`; `W-053` amended (both years, I3 switched on as a shrink-only ratchet); **Appendix F** for what is owed later with where each lands; four **standing rules** for every later item (coverage, catalogue, both years, concept IDs). Answers STATE Q1 (`W-045i`), Q2 (`W-053`), Q3 (`W-052b`) | **decided by the developer** |
 | D-042 | 2026-09-23 | People need every section explained — what it is, the ways to qualify, the process, what disqualifies — not only the engine's rules | **The section catalogue** (`00-BRIEF.md` §6.3): one entry per section across both Acts, in `content/`; routes with their own conditions; disqualifiers typed by when they bite (`NOT_ELIGIBLE`, `CONDITION_FAILED`, `PROCESS_MISSED`, `THIRD_PARTY_MISSING`, `LATER_REVERSAL`), each linked to the rule or `Condition` that enforces it; numbers only as placeholders rendered from rules; extends `DR 22`'s per-rule claim catalogue rather than duplicating it. Enables feature **F41**, a section explorer annotated from the person's own computation | **decided by the developer** |
-| D-041 | 2026-09-23 | O-4 — build TY 2025-26, or 2026-27 only (D-001)? | **Both years**, for consistency with `portfolio`. **Supersedes D-001.** 2025-26 is added as versions on the timeline, verified per phase where it is used (`W-045n`, `W-052c`, standing rule 3) | **decided by the developer** |
+| D-041 | 2026-09-23 | OQ-4 (old) — build TY 2025-26, or 2026-27 only (D-001)? | **Both years**, for consistency with `portfolio`. **Supersedes D-001.** 2025-26 is added as versions on the timeline, verified per phase where it is used (`W-045n`, `W-052c`, standing rule 3) | **decided by the developer** |
 | D-040 | 2026-09-23 | Naming: commit subjects since `W-013` stopped naming what changed; bare cross-document IDs collide (`T1`, `B2`, `F4`, `D-17` vs `D-017`); rule IDs embed the year and "old/new" | **Standards in `00-BRIEF.md` §10**: item commits `taxplanning W-0nn: <verb> <types> — <why>`; cross-document references prefixed by document (`TS-T1`, `GT-T1`, `DR15-B2`); rule IDs name the concept | **decided by the developer** |
 | D-039 | 2026-09-23 | `TaxpayerFacts` is an individual's facts with `Set<PersonType>`, and `PersonType` has one value. HUF is the named second type | **A sealed `Assessee` family** — `Individual`, `Huf`, later others — each with only its own facts; one type per assessee. Replaces `TaxpayerFacts` before any node reads it (`00-BRIEF.md` §8). Per-type rule differences are sourced in the rulebook before code reads them | **decided by the developer** |
 | D-038 | 2026-09-23 | "Think of all cases" — ~100 sections, 30–40 in the new regime — how is completeness known? | **A section coverage register** (`law/coverage.json`) classifying every section of both Acts as `MODELLED` / `PLANNED` / `NOT_COMPUTATIONAL` / `OUT_OF_SCOPE`; CI fails on an unclassified section. Seeded from the 105 sections `01-rulebook.md` cites. Plus the case-axis matrix (`00-BRIEF.md` §7) | **decided by the developer** |
@@ -478,7 +479,7 @@ build is green and the last item is still `W-043`.
 2. **Read `00-BRIEF.md`**, then `03-WORK-ITEMS.md` Phase 4b and Appendix F.
 
 3. **Start `W-045b`** at stage 1 (READ). Phase 4b runs `W-045b` → `W-045o` in order, then `W-046`.
-   `W-045m` waits on the owner's answer to **O-3**; if it is not yet answered when reached, ask.
+   `W-045m` waits on the owner's answer to **OQ-3**; if it is not yet answered when reached, ask.
 
 ---
 
@@ -512,10 +513,10 @@ one level up. Likely needs a new item in Phase 5, probably after `W-046`.
 
 | | Question | Recommendation | Blocks |
 |---|---|---|---|
-| **O-1** | Who checks a changed rule before it goes live? (= **D-006**) | the owner approves each change now; a CA reviews a sample before outside users rely on it | nothing before the first post-launch rule change |
-| **O-2** | When should a web screen for editing rules arrive? | after `W-111` | nothing now |
-| **O-3** | The old compute endpoint returns known-wrong tax — warn, disable, or leave? | warn now, remove when replaced | `W-045m` only |
-| **O-4** | Concept names for rule IDs and regime codes | `W-045d` proposes each, quoted from the Acts with its source | `W-045d` |
+| **OQ-1** | Who checks a changed rule before it goes live? (= **D-006**) | the owner approves each change now; a CA reviews a sample before outside users rely on it | nothing before the first post-launch rule change |
+| **OQ-2** | When should a web screen for editing rules arrive? | after `W-111` | nothing now |
+| **OQ-3** | The old compute endpoint returns known-wrong tax — warn, disable, or leave? | warn now, remove when replaced | `W-045m` only |
+| **OQ-4** | Concept names for rule IDs and regime codes | `W-045d` proposes each, quoted from the Acts with its source | `W-045d` |
 
 Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` amendment, `W-052b`).
 

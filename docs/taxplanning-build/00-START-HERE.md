@@ -139,6 +139,10 @@ These override any instinct, any shortcut, and anything else in this repository.
 | **R13** | **If the approved plan turns out to be wrong while coding, stop.** Revert what you wrote, set the item back to `EXPLAINED`, write a revised plan saying what you found, and wait for approval again. Never improvise past an approved plan. |
 | **R14** | **Approval must be explicit.** Only a message that names the item and says *approved* (or *changes requested*) counts. Silence, "ok", "looks good", or a new unrelated instruction are **not** approval — ask. |
 
+> **R7 amended (D-046 B1, 2026-09-23):** `docs/taxplanning-design/00-BRIEF.md` is the one design
+> document edited **in place**, with its own Changes log — like `01-PRD.md` and `02-TECH-SPEC.md`. The
+> other design documents remain errata-only.
+
 ---
 
 ## 5. Resuming after an interruption
@@ -275,4 +279,94 @@ reader in exactly the way it misled you. Extended to `03-WORK-ITEMS.md` by decis
 | `02-TECH-SPEC.md` | every type, package, collection, endpoint, invariant | when an item cites a type |
 | `03-WORK-ITEMS.md` | the ordered backlog with checkboxes | every session |
 | `04-PROMPTS.md` | copy-paste prompts for each stage | every session |
-| `STATE.md` | **the only mutable file** | first and last thing, every session |
+| `STATE.md` | decisions, blockers, status board, history | when the checkpoint points there |
+| `CHECKPOINT.md` | **the resume point** — ~20 lines, overwritten | first and last thing, every session (§5b) |
+| `plans/W-0nn.md` | an item's plan, approval and ticked steps | while that item is in flight |
+| `reviews/` | dated reviews of the build documents | when a decision cites one |
+
+---
+
+## 11. ID glossary — what every identifier means, and how to cite it
+
+Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-design/` and
+`docs/taxplanning-build/`. **Many letters mean different things in different documents** — `T1`,
+`I8`, `R1`, `F4`, `A1`, `C1`, `E4`, `P1` each have two or three meanings. So:
+
+> **Citation rule.** Inside its own document an ID may stand alone. **From any other document, prefix
+> it**: design documents as `DR nn` (e.g. `DR 23 A3`, `DR 08 T1-N1`, `DR 13 R-5`); the build documents
+> as `PRD`, `TS`, `WI` (work items), `STATE`, `BRIEF`. A bare collision-prone ID in a new line of text
+> is a defect.
+
+### Build documents (`docs/taxplanning-build/`)
+
+| ID | Means | Home | Cite as |
+|---|---|---|---|
+| `W-0nn`, `W-0nnx` | work item; suffixed ids are splits/insertions, never renumbered | `03-WORK-ITEMS.md` | `W-045b` |
+| `B-00n` | a blocker | `STATE.md` | `B-002` |
+| `D-0nn` | a build decision (three digits) | `STATE.md` | `D-046` |
+| `B1`, `B2` | backlog rules (B1: an item carries its own test; B2: a `permits` clause lists only what exists) | `03-WORK-ITEMS.md` | `WI rule B2` |
+| `R1`–`R14` | the absolute rules | this file §4 | `START-HERE R7` |
+| `P0`–`P11`, `P1-quick` | prompts | `04-PROMPTS.md` | `prompt P11` |
+| `F1`–`F41` | product features; `F2.9` = a criterion | `01-PRD.md` | `PRD F2.9` |
+| `N1`–`N12` | non-functional requirements | `01-PRD.md` | `PRD N12` |
+| `P1`–`P5` | the five properties | `01-PRD.md` §6 | `PRD P3` |
+| `PR-1`–`PR-5` | personas | `01-PRD.md` | `PR-5` |
+| `T1`–`T12` | tech-spec sections | `02-TECH-SPEC.md` | `TS T5` |
+| `I1`–`I32` | invariants | `02-TECH-SPEC.md` T5 | `TS I8` |
+| `A1`–`A7`, `B1`–`B6`, `C1`–`C5` (in a review) | review findings / decisions | `reviews/<date>-…md` | `review 2026-09-23 B4` |
+| `Q1`–`Q3` | session-3 questions (answered by D-043) | `STATE.md` | `STATE Q2` |
+
+### The brief (`docs/taxplanning-design/00-BRIEF.md`)
+
+| ID | Means | Cite as |
+|---|---|---|
+| `BP-1`–`BP-9` | the brief's principles | `BRIEF BP-5` |
+| `M-01`–`M-28` | managers | `BRIEF M-08` |
+| `OQ-1`–`OQ-4` | the owner's open questions | `OQ-4` |
+| `SC-1`–`SC-5` | section-catalogue invariants | `BRIEF SC-3` |
+
+### Design documents (`docs/taxplanning-design/`) — cite with `DR nn`
+
+| ID | Means | Home | ⚠ Collides with |
+|---|---|---|---|
+| `D1`–`D7` | the design's scope decisions | `00-SUMMARY.md` | `D-0nn` build decisions |
+| `D-WORD` (`D-PURE`, `D-NOSILENT`, `D-TEMPORALKEY` …) | design rules | `02-lessons.md` and later | — |
+| `D-1`–`D-18` | defects found by the third pass | `15-review-findings.md` | `D-001`… (`D-17` ≠ `D-017`) |
+| `S1`–`S11` | sources (the documents that were opened) | `01-rulebook.md` | `16-getting-started.md` S1, S2 sections |
+| `R1`–`R24` | rulebook groups | `01-rulebook.md` | START-HERE `R1`–`R14` |
+| `H-1`–`H-16` | hypotheses about the placeholder | `01-rulebook.md` R24 | — |
+| `O-1`–`O-36` | observations of the placeholder's mistakes | `02-lessons.md` (from the context pack) | `14-operational-design.md` `O1`–`O5` sections |
+| `L1`, `L2` | lessons sections | `02-lessons.md` | `17-regime-lifecycle.md` `L1`–`L5` |
+| `K-n` | ideas kept from the placeholder | `02-lessons.md` | — |
+| `A1`–`A4` | advisory sections | `03-advisory.md` | `23` `A1`–`A12` |
+| `P1`, `P2`; `JTBD-n` | product-spec sections; jobs to be done | `04-product-spec.md` | PRD `P1`–`P5`, prompts |
+| `M1`–`M7` | domain-model sections | `05-domain-model.md` | BRIEF `M-01`… |
+| `G1`–`G7` | algorithms sections | `06-algorithms.md` | `23` `G-1`–`G-12` |
+| `X1`–`X5` | architecture sections | `07-architecture.md` | — |
+| `T1`–`T23`, `Tn-m` (`T1-N1`) | golden suites and cases | `08-golden-tests.md` | TS `T1`–`T12` |
+| `B1`, `B2` | build-plan sections | `09-build-plan.md` | WI rules B1/B2; `15` B1–B5 |
+| `E1`–`E8` | extensibility sections | `10-extensibility.md` | `19` `E1`–`E10` |
+| `F1`–`F10` | filing-drafts sections | `11-filing-drafts.md` | PRD `F1`–`F41`; `15` F1–F6; `20` F29… |
+| `C1`–`C6` | claim-integrity sections | `12-claim-integrity.md` | `15` C1–C5; `22` C1–C9; review C1–C5 |
+| `R-1`–`R-15`; `T13-n` | reframed decisions; edge cases | `13-edge-cases.md` | rulebook `R1`… |
+| `O1`–`O5` | operational-design sections | `14-operational-design.md` | `02` `O-1`… |
+| `B1`–`B5`, `C1`–`C5`, `F1`–`F6` | review-findings parts | `15-review-findings.md` | many — always `DR 15` |
+| `S1`, `S2` | getting-started sections | `16-getting-started.md` | rulebook sources |
+| `L1`–`L5` | regime-lifecycle sections | `17-regime-lifecycle.md` | `02` L1, L2 |
+| `V1`–`V8`, `V-n` | temporal-versioning sections and cases | `18-temporal-versioning.md` | — |
+| `E1`–`E10`, `TL-n` | engineering-foundations sections; trade-ledger references | `19-engineering-foundations.md` | `10` E1–E8 |
+| `F29`–`F40` | product-gap features (now PRD features) | `20-product-gaps.md` | same numbers in the PRD — same meaning |
+| `I1`–`I8` | ITR-forms sections | `21-itr-forms.md` | TS invariants `I1`–`I32` |
+| `C1`–`C9` | claim-catalogue sections | `22-claim-catalogue.md` | see C above |
+| `A1`–`A12`, `G-1`–`G-12`, `T23-n` | consolidation sections, defects, tests | `23-architecture-consolidation.md` | `03` A1–A4; `06` G1–G7 |
+
+### Identifiers that are values, not references
+
+| Shape | Means | Rule |
+|---|---|---|
+| `SAL-HRA-001`, `RATE-SLAB-…` | a `RuleId` | names a concept — no year, no "old/new", no section (D-035, OQ-4) |
+| `S202_DEFAULT` | a `RegimeCode` | to be renamed to a concept at `W-045d` (D-046 B4) |
+| `ITR-1` … `ITR-UN` | an `ItrFormCode` | the form's official code |
+| `salary.gross` | a `NodeId` | lower-case, dot-separated |
+| `TXC-2026-…` | a computation receipt | `PRD N9` |
+

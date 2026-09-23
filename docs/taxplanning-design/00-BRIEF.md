@@ -109,15 +109,15 @@ would make adding either one an edit to the other.
 
 | # | Principle | Enforced by |
 |---|---|---|
-| **B-1** | **Correct before complete.** Expected values in tests are derived by hand from the statute, never by running the code | golden suites (`08-golden-tests.md`), rule R3 |
-| **B-2** | **Law is data; arithmetic is code.** A new year, Budget change, allowance, deduction, regime or form is a data change. A new *kind* of arithmetic is a new manager | §6; `23` A5 |
-| **B-3** | **Nothing silent.** A rule that cannot be evaluated fails the computation. An unavailable relief produces a line with a reason, never an absent line or a zero | ArchUnit (no `catch (Exception`), `P5` |
-| **B-4** | **Every number explains itself.** The trace is the result; each line names its rule IDs, version and source | `TraceLine` |
-| **B-5** | **Reproducible forever.** A computation pins the exact rule pack it used; identical inputs + rule pack ⇒ byte-identical output | fingerprint (`W-038`), the pack's lock checksum |
-| **B-6** | **The engine is pure.** It reads no clock, fetches nothing, and depends on no persistence | ArchUnit `taxengine_fetches_nothing` |
-| **B-7** | **Every case is accounted for.** Every section of the law is classified — modelled, deliberately not modelled, or not yet — and CI fails on an unclassified one | §7, the coverage register |
-| **B-8** | **Status is visible.** An unverified rule is usable only with its status shown to the user | §5.3 |
-| **B-9** | **Extensible by the same path every time.** One decision ladder (§6.1) decides whether a change is data, a variant, or a new manager | review |
+| **BP-1** | **Correct before complete.** Expected values in tests are derived by hand from the statute, never by running the code | golden suites (`08-golden-tests.md`), rule R3 |
+| **BP-2** | **Law is data; arithmetic is code.** A new year, Budget change, allowance, deduction, regime or form is a data change. A new *kind* of arithmetic is a new manager | §6; `23` A5 |
+| **BP-3** | **Nothing silent.** A rule that cannot be evaluated fails the computation. An unavailable relief produces a line with a reason, never an absent line or a zero | ArchUnit (no `catch (Exception`), `P5` |
+| **BP-4** | **Every number explains itself.** The trace is the result; each line names its rule IDs, version and source | `TraceLine` |
+| **BP-5** | **Reproducible forever.** A computation pins the exact rule pack it used; identical inputs + rule pack ⇒ byte-identical output | fingerprint (`W-038`), the pack's lock checksum |
+| **BP-6** | **The engine is pure.** It reads no clock, fetches nothing, and depends on no persistence | ArchUnit `taxengine_fetches_nothing` |
+| **BP-7** | **Every case is accounted for.** Every section of the law is classified — modelled, deliberately not modelled, or not yet — and CI fails on an unclassified one | §7, the coverage register |
+| **BP-8** | **Status is visible.** An unverified rule is usable only with its status shown to the user | §5.3 |
+| **BP-9** | **Extensible by the same path every time.** One decision ladder (§6.1) decides whether a change is data, a variant, or a new manager | review |
 
 ---
 
@@ -177,7 +177,7 @@ The year lives in the **version**. The section lives in the **provision** (`prov
 (D-046 B4): one regime continuing from the 1961 Act into the 2025 Act is one identity.
 
 **The concept names themselves are not invented here.** `W-045d` proposes them from the Acts' own
-wording, each with its source, and the owner chooses (open question **O-4**, §12).
+wording, each with its source, and the owner chooses (open question **OQ-4**, §12).
 
 ### 5.3 Three statuses, not one (D-036)
 
@@ -186,7 +186,7 @@ One `status` field is currently asked to mean three different things. They are s
 | Axis | Values | Who sets it | What it gates |
 |---|---|---|---|
 | **Legal status** — what the law says about this version | `BILL` · `ENACTED` · `NOTIFIED` · `PENDING_NOTIFICATION` · `IN_FORCE` · `WITHDRAWN` · `STRUCK_DOWN` | the rule author, from the source | which versions apply on a date |
-| **Verification** — how sure we are we transcribed it right | `UNVERIFIED` · `SOURCE_CHECKED` (read against the gazette) · `PROFESSIONALLY_REVIEWED` (a CA signed it) | a reviewer | what the user is told (B-8) |
+| **Verification** — how sure we are we transcribed it right | `UNVERIFIED` · `SOURCE_CHECKED` (read against the gazette) · `PROFESSIONALLY_REVIEWED` (a CA signed it) | a reviewer | what the user is told (BP-8) |
 | **Publication** — where the version is in our workflow | `DRAFT` · `IN_REVIEW` · `PUBLISHED` · `SUPERSEDED` | the publish workflow | **only `PUBLISHED` versions enter a rule pack** |
 
 A `DRAFT` version of a Budget proposal can power a clearly labelled "if the Finance Bill passes"
@@ -505,9 +505,9 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 
 | What | Standard | Example |
 |---|---|---|
-| Rule ID | the concept; no year, no "old/new", no section number | shape: `RATE-SLAB-<concept>`, `DED-<concept>`, `SAL-HRA-<concept>` — the concepts chosen at `W-045d` (O-4) |
+| Rule ID | the concept; no year, no "old/new", no section number | shape: `RATE-SLAB-<concept>`, `DED-<concept>`, `SAL-HRA-<concept>` — the concepts chosen at `W-045d` (OQ-4) |
 | Version | carries the dates, the provision and the statuses | `validity: 2026-04-01 →` |
-| Regime code | the concept, like a rule ID (D-046 B4); the provision is data, per Act | chosen at `W-045d` (O-4) |
+| Regime code | the concept, like a rule ID (D-046 B4); the provision is data, per Act | chosen at `W-045d` (OQ-4) |
 | Compiled per-year law | **rule pack** — never "snapshot", which names input projections | `RulePackCompiler`, `PackDiff`, `rulepacks/2026-27.lock.json` |
 | Item commit | `taxplanning W-0nn: <verb> <types> — <why, briefly>` | `taxplanning W-043: add TaxComputation, FilingPosition, ComputationReceipt` |
 | Cross-document references | prefixed by document, because bare IDs collide (`T1`, `B2`, `F4`, `D-17`/`D-017` each mean two or more things) | `TS-T1`, `GT-T1`, `DR15-B2`, `PRD-F4` |
@@ -531,11 +531,11 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 
 | # | Question, plainly | Recommendation | Needed by |
 |---|---|---|---|
-| O-1 | When a rule changes (a Budget raises a limit), **who checks the new number before it goes live?** The publish gate (§5.4) has a "reviewer approves" step and nobody is named. (D-006) | **You approve every change now** (verification level `SOURCE_CHECKED`); **a CA reviews a sample** of golden cases before anyone outside the family relies on it (`PROFESSIONALLY_REVIEWED`) | before the first rule change after launch |
-| O-2 | Rules are edited **as files in the code** and go live with a deployment. A **web screen** could let a non-developer edit them instead. **When do you want that screen?** | **Not now.** After persistence and the API exist (milestone `W-111`); files + review are enough until then | before a non-developer edits a rule |
-| O-3 | The **old** tax-planning feature is still live and returns numbers known to be wrong — e.g. at ₹60 L income (new regime) it charges no surcharge, understating tax by roughly ₹1.4 lakh. **Turn it off, warn on it, or leave it?** | **Warn now** (a visible "known errors — being replaced" flag on the response), **remove it** when the replacement passes its golden tests (`09-build-plan.md` B2) | now |
-| ~~O-4 (old)~~ | ~~TY 2025-26?~~ | **Decided (D-041): build both years**, matching `portfolio` | — |
-| **O-4** | The **concept names** for rule IDs and regime codes (e.g. the two slab regimes), replacing year- and section-based names | `W-045d` proposes each name **quoted from the Acts' own wording**, with its source; you choose | `W-045d` |
+| OQ-1 | When a rule changes (a Budget raises a limit), **who checks the new number before it goes live?** The publish gate (§5.4) has a "reviewer approves" step and nobody is named. (D-006) | **You approve every change now** (verification level `SOURCE_CHECKED`); **a CA reviews a sample** of golden cases before anyone outside the family relies on it (`PROFESSIONALLY_REVIEWED`) | before the first rule change after launch |
+| OQ-2 | Rules are edited **as files in the code** and go live with a deployment. A **web screen** could let a non-developer edit them instead. **When do you want that screen?** | **Not now.** After persistence and the API exist (milestone `W-111`); files + review are enough until then | before a non-developer edits a rule |
+| OQ-3 | The **old** tax-planning feature is still live and returns numbers known to be wrong — e.g. at ₹60 L income (new regime) it charges no surcharge, understating tax by roughly ₹1.4 lakh. **Turn it off, warn on it, or leave it?** | **Warn now** (a visible "known errors — being replaced" flag on the response), **remove it** when the replacement passes its golden tests (`09-build-plan.md` B2) | now |
+| ~~OQ-4 (old)~~ | ~~TY 2025-26?~~ | **Decided (D-041): build both years**, matching `portfolio` | — |
+| **OQ-4** | The **concept names** for rule IDs and regime codes (e.g. the two slab regimes), replacing year- and section-based names | `W-045d` proposes each name **quoted from the Acts' own wording**, with its source; you choose | `W-045d` |
 
 ---
 
@@ -548,4 +548,5 @@ Current truth above; history here (D-046 B1 applies the same rule to this brief)
 | 2026-09-23 | §5.1 timeline laid out **by layer**; `coverage.json` placed in `content/` | review C1, C3 — the layer is what the cache key and P3 depend on |
 | 2026-09-23 | "snapshot" replaced by **rule pack** / `RulePackCompiler` / `PackDiff` / `<taxYear>.lock.json` | review C2 — one word per concept; "snapshot" already names input projections |
 | 2026-09-23 | case axis **tax-year length** added | review C4 — `YR-MODEL-003` |
-| 2026-09-23 | section-numbered examples (`RATE-SLAB-S202-1`, `S202_DEFAULT`) removed; names deferred to `W-045d` as O-4 | review C5 — they contradicted D-035 and D-046 B4 |
+| 2026-09-23 | section-numbered examples (`RATE-SLAB-S202-1`, `S202_DEFAULT`) removed; names deferred to `W-045d` as OQ-4 | review C5 — they contradicted D-035 and D-046 B4 |
+| 2026-09-23 | open questions `O-n` → **`OQ-n`**; principles `B-n` → **`BP-n`** | `W-045b` — they collided with the placeholder observations `O-1`…`O-36` and with blockers / backlog rules (ID glossary, START-HERE §11) |

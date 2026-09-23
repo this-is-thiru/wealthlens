@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045b — bookkeeping, ID glossary, duplicate-owner sweep (docs only)
+Item            : W-045b2 — two tax modules (taxrules → taxengine.rules; taxdocs removed), D-048
 Stage           : NOT_STARTED
-Plan            : — (docs/taxplanning-build/plans/W-045b.md once written)
+Plan            : — (plans/W-045b2.md once written)
 Approved        : —
 Steps done      : —
-Next step       : write plans/W-045b.md, then STOP for approval. Note for its plan: the review found UNOWNED invariants (I8, I12, I17, I24–I26), tests T23-1/T23-4/T23-8, endpoints /tax-years, itr-suggestion, itr-export — W-045b's duplicate-owner sweep should also table these; and R7 in 00-START-HERE must name 00-BRIEF.md as edited in place (D-046 B1)
-Last verify     : ./mvnw test -pl backend -Punit → 1414 pass, 0 fail, 0 Checkstyle violations (W-045a)
-Waiting on      : nothing. O-1..O-4 open. After W-045b comes W-045b2 (two modules, D-048)
+Next step       : READ: Spring Modulith docs on exposing a CLOSED module's sub-packages (named interfaces); then write plans/W-045b2.md and STOP
+Last verify     : ./mvnw test -pl backend -Punit → 1414 pass, 0 fail, 0 Checkstyle violations (W-045b)
+Waiting on      : nothing. OQ-1..OQ-4 open; Appendix C part 2 owners proposed, not accepted
 Files touched   : —
-Last item commit: taxplanning W-045a: enforce the engineering standards in the build — Checkstyle gate, naming rules, commit hook
+Last item commit: taxplanning W-045b: correct the build docs' bookkeeping — status board, ID glossary, ownership sweep
 Updated         : 2026-09-23, session 4
 ```
 

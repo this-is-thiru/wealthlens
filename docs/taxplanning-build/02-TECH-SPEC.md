@@ -155,7 +155,7 @@ The source is the reference. These are the contracts a change must keep.
 
 **Naming of identity values** (D-035, D-046 B4): a `RuleId` or `RegimeCode` names the **concept** —
 no year, no "old/new", no section number. The year lives in the version, the section in the
-provision. The concrete names are chosen at `W-045d` (open question **O-4**).
+provision. The concrete names are chosen at `W-045d` (open question **OQ-4**).
 
 ---
 
@@ -330,7 +330,7 @@ All `snake_case`; `@MongoId`; entities implement `AuditableEntity`. **Every one 
 
 **No collection holds rules, slabs, limits or perquisite values** — the law lives in rule packs.
 The one planned exception is the rule-authoring store behind the publish gate (`00-BRIEF.md` §5.4,
-open question O-2), which writes **versions** and never bypasses the gate.
+open question OQ-2), which writes **versions** and never bypasses the gate.
 
 ---
 
@@ -466,3 +466,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-23 | **Rewritten as current truth**: status marks; T2 regenerated from the source; T3 contracts instead of verbatim code; T4 built vs target (timeline by layer, rule pack not snapshot); T5 one table with "where enforced", 32 rows, 6 marked UNOWNED; T6 requires as full `NodeId`s, value types marked; T7 profiles per account and employers per account; T8 base `/tax/user/{email}` and **every item citation corrected** (18 of 18 were wrong); T9 two refusal codes; T10 built vs planned, citations corrected; T12 Money assertion contradiction resolved | D-046, review `reviews/2026-09-23-prd-techspec-review.md` |
 | 2026-09-23 | `PackDiff` built by `W-045h`; `W-139` reuses it (it had been owned twice) | this rewrite |
 | 2026-09-23 | T1: planned move to two modules | D-048 |
+| 2026-09-23 | open questions `O-n` → `OQ-n` | `W-045b`, ID glossary (START-HERE §11) |
