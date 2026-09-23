@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-23 (session 4). **Asked for by the owner:** *"crystal clear for the agents … if it
 really needs discussion we can discuss."* **Decided 2026-09-23 (D-046):** the owner accepted every recommendation — B1–B6 as recommended, A1–A7,
-C1–C4. **Not yet applied**; application follows the commit of `W-045a` (rule R8), in the order at the end.
+C1–C4. **Applied 2026-09-23:** C1–C5 (D-047); A1–A7 and B1–B6 by rewriting `01-PRD.md` and `02-TECH-SPEC.md` as current truth — every item citation re-checked (0 wrong).
 
 Every finding carries its evidence. Three groups:
 

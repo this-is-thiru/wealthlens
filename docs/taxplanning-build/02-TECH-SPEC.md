@@ -1,391 +1,307 @@
 # 02 — Technical Specification
 
-The reference. When a work item names a type, package, collection or endpoint, **it is defined here**.
-Do not invent a name that is not in this file. If something you need is missing, mark the item
-`BLOCKED` — do not create it.
+**The current truth** about every type, package, file, collection, endpoint and invariant the
+tax-planning build uses (decision **D-046 B1**: rewritten 2026-09-23; history is in **Changes** at
+the end and in git). Read `docs/taxplanning-design/00-BRIEF.md` first.
+
+**How to read the status marks** — every row says which of these it is:
+
+| Mark | Meaning |
+|---|---|
+| ✅ `W-nnn` | **built**, by that item; the source file is the reference, not this document |
+| ○ `W-nnn` | **planned**, owned by that item in `03-WORK-ITEMS.md` |
+| ⚠ UNOWNED | **no item owns it yet** — a gap; do not build it inside another item, raise it |
+
+**Rules for an agent.** A name used in code must appear here or in the code already. If something you
+need is missing, or this document and the code disagree, **stop** (`00-START-HERE.md` §8, prompt
+P11) — do not change either side. For a built type, **read the source**; nothing here is to be
+copied verbatim.
 
 ---
 
 ## T1 — Modules
 
-| Module | Package | `allowedDependencies` | May it touch a database? | May it read a clock? |
-|---|---|---|---|---|
-| `taxrules` | `com.thiru.wealthlens.taxrules` | `{"shared"}` | no | no |
-| `taxengine` | `com.thiru.wealthlens.taxengine` | `{"shared", "taxrules"}` | **no** | **no** |
-| `taxdocs` | `com.thiru.wealthlens.taxdocs` | `{"shared", "taxrules", "taxengine"}` | no | yes |
-| `taxplanning` | `com.thiru.wealthlens.taxplanning` | `{"shared", "auth", "taxrules", "taxengine", "taxdocs", "portfolio"}` | yes | yes |
+| Module | Package | `Type` | `allowedDependencies` | Database? | Clock? |
+|---|---|---|---|---|---|
+| `taxrules` | `com.thiru.wealthlens.taxrules` | **OPEN** | `{"shared"}` | no | no |
+| `taxengine` | `com.thiru.wealthlens.taxengine` | CLOSED | `{"shared", "taxrules"}` | **no** | **no** |
+| `taxdocs` | `com.thiru.wealthlens.taxdocs` | CLOSED | `{"shared", "taxrules", "taxengine"}` | no | yes |
+| `taxplanning` | `com.thiru.wealthlens.taxplanning` | CLOSED | `{"shared", "auth", "taxrules", "taxengine", "taxdocs", "portfolio"}` | yes | yes |
 
-All four are `@ApplicationModule(type = Type.CLOSED, ...)`.
+`taxrules` is `OPEN` because it is the shared vocabulary: its types all live in sub-packages, and a
+`CLOSED` module exposes only its root (D-022, B-002). The three modules with internals stay `CLOSED`,
+so "the engine cannot reach a repository" is enforced, not conventional. Verified by
+`WealthLensModulithTest`.
 
-> **Erratum (W-035, 2026-09-21):** **T1 as written cannot be satisfied** — it declares all four
-> modules `CLOSED` *and* has them depend on each other's types, but every shared type lives in a
-> sub-package, and a `CLOSED` module exposes only its root package. `taxengine` declared
-> `allowedDependencies = {"shared", "taxrules"}` exactly as this table specifies and still failed:
-> `Module 'taxengine' depends on module 'taxrules' via ...pipeline.MoneyValue -> ...taxrules.money.Money.`
-> The dependency was allowed; the *package* was not. Spring Modulith permits that only through
-> `@NamedInterface`, which T1 never mentions and nothing in this repository uses. **Correction:
-> `taxrules` is `Type.OPEN`; `taxengine`, `taxdocs` and `taxplanning` remain `CLOSED`** (decision
-> **D-022**, blocker **B-002**). `taxrules` is the shared vocabulary of the domain and has no
-> internals to hide; the three modules that do have internals keep `CLOSED`, so T1's actual
-> objective — the engine cannot reach a repository, `taxplanning` cannot reach engine internals —
-> is unchanged. The alternative, `@NamedInterface` on all twelve `taxrules` sub-packages plus a
-> per-package dependency list in all three consumers, yields the same visible surface declared
-> twelve times over. This was invisible until now because `taxengine` had no classes; `W-035` is
-> its first.
-> Verified by: `./mvnw test -pl backend -Punit` — 1225 tests, 0 failures, 0 errors (was
-> `Errors: 1`, `WealthLensModulithTest`); `backend/src/main/java/com/thiru/wealthlens/taxrules/package-info.java`.
+**Two traps, both hit repeatedly.** (1) A type a module needs must live in a module it may depend
+on — before writing a record that holds another module's type, check both (B-003, four times).
+(2) A module with no classes satisfies any rule, so a boundary is untested until its first class.
+
+`taxplanning` also contains the **legacy** module (56 classes, `/tax-planning/**`) until it is
+deleted per `09-build-plan.md` B2 (items via `W-045c`, Appendix E).
 
 ---
 
 ## T2 — Package map
 
-```
-taxrules/
-  pack/        RulePack RulePackLayer RulePackRef RulePackProvider ClasspathRulePackProvider
-  id/          RuleId NodeId ComponentCode RegimeCode ItrFormCode ScheduleCode
-  cap/         CapShape Fixed PercentOfBase LeastOf AggregateWithCeiling SlabLadder PerUnitPerPeriod
-  relief/      ReliefShape FlatWithCeiling ExcessOverThreshold ThresholdLadderCeiling NoRelief
-  condition/   Condition (+ 16 records)
-  temporal/    TemporalAxis TemporalContext Validity RuleVersion AmendmentRef DateRange
-  regime/      RegimeSpec RegimeLifecycle ElectionProtocol BindingSpec AfterWithdrawal
-               ContinuationPolicy InvalidationPolicy RegimeApplicability
-  component/   ComponentDefinition ComponentLifecycle DeprecationPolicy CashNature ComponentKind
-  filing/      ItrFormSpec ItrSchedule ScheduleField FieldSource FurnishingOption ReturnKind
-  catalogue/   ClaimCatalogueEntry ClaimStep ClaimChannel Counterparty Materiality
-  registry/    TaxYearRegistry TaxYearRegistryEntry GoverningInstruments Instrument Provenance
-  validate/    PackValidator PackLinter PackDiff Finding  (+ invariants I1..I29)
+### `taxrules` — ✅ built
 
-taxengine/
-  money/       Money Rate            ← the ONLY package that may call BigDecimal.setScale
-  input/       EngineInputs TaxpayerFacts FamilySnapshot LedgerSnapshot
-               RegimeElectionSnapshot CapitalGainsSummary FilingFacts InputsFingerprint
-  pipeline/    ComputationNode NodeContext NodeResult NodeValue PipelineRunner
-               TopologicalSort IncrementalRunner NodeRegistry
-  node/        one class per node — see T6
-  trace/       TraceLine TraceAnnotation Notice StepKind Severity
-  result/      TaxComputation FilingPosition ComputationId ComputationReceipt
-  election/    Election ElectionResolver ElectionOutcome
-  proration/   ProrationBasis CompletedMonths CalendarMonths Days OccupationPeriods
-  interest/    InterestAndFeeNode InterestBreakdown SimpleInterest TieredFee
-  itr/         ItrFormSelector ItrSelection FormVerdict ScheduleMapper
-  error/       TaxEngineException (sealed) + 8 subclasses, TaxError
-
-taxdocs/
-  ingest/      IngestedDocument ParseAttempt ExtractedField DocumentConfirmation
-  parser/      DocumentParser Form130Parser Form16Parser
-  reconcile/   ReconciliationReport ReconciliationLine
-
-taxplanning/
-  profile/     TaxpayerProfile Pan FamilyMember Employer Landlord Lender BankAccount
-  workspace/   TaxYearWorkspace FilingDraft DraftRevision DraftInputs EntryProvenance
-  scenario/    Scenario ScenarioDiff DiffLine
-  assemble/    EngineInputsAssembler          ← the ONLY place EngineInputs is built
-  portfolio/   MoneyBridge CapitalGainsAdapter
-  projection/  ForecastProjection CalendarProjection CompletenessProjection TimelineProjection
-  controller/  ...Controller (DTOs only)
-  job/         TaxJob + 6 implementations, JobLease
-```
-
----
-
-## T3 — Foundational types, verbatim
-
-Copy these exactly. Do not add methods not listed without a work item saying so.
-
-### `Money` — `taxengine/money/Money.java`
-
-> **Erratum (W-013, 2026-09-19):** `Money` and `Rate` do **not** live in `taxengine.money` —
-> they live in **`taxrules.money`**. `taxrules` may not depend on `taxengine` (T1), and a rule
-> pack holds rupee figures by its nature — slab band bounds, the 80C ceiling, the standard
-> deduction — so a cap shape in `taxrules.cap` cannot express a limit without them. Decided as
-> option (A) of `STATE.md` **B-001**.
-> Verified by: `./mvnw test -pl backend -Dtest=WealthLensModulithTest` failed with
-> *"Module 'taxrules' depends on module 'taxengine' via …CapResult -> …taxengine.money.Money"*
-> before the move, and passes after it.
-
-```java
-package com.thiru.wealthlens.taxengine.money;
-
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
-
-/**
- * An exact rupee amount. TL-8 §7 trigger: figures filed on someone else's behalf need exact
- * decimal storage. This is the ONLY package permitted to call BigDecimal.setScale — see
- * ArchitectureTest.money_rounding_lives_in_one_place.
- */
-public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
-
-    public static final int SCALE = 2;
-    public static final MathContext CALC = new MathContext(12, RoundingMode.HALF_UP);
-    public static final Money ZERO = of("0");
-    public static final Money TEN  = of("10");
-
-    public Money {
-        if (amountInRupees == null) throw new IllegalArgumentException("Money may not be null");
-        amountInRupees = amountInRupees.setScale(SCALE, RoundingMode.HALF_UP);
-    }
-
-    public static Money of(String rupees)        { return new Money(new BigDecimal(rupees)); }
-    public static Money ofExact(BigDecimal raw)  { return new Money(raw); }
-
-    public Money plus(Money o)  { return ofExact(amountInRupees.add(o.amountInRupees)); }
-    public Money minus(Money o) { return ofExact(amountInRupees.subtract(o.amountInRupees)); }
-    public Money floorAtZero()  { return amountInRupees.signum() < 0 ? ZERO : this; }
-
-    public boolean isLessThan(Money o)        { return compareTo(o) < 0; }
-    public boolean isLessThanOrEqual(Money o) { return compareTo(o) <= 0; }
-    public boolean isGreaterThan(Money o)     { return compareTo(o) > 0; }
-
-    public static Money min(Money a, Money b) { return a.isLessThan(b) ? a : b; }
-    public static Money max(Money a, Money b) { return a.isLessThan(b) ? b : a; }
-
-    /**
-     * Section 516 of the Income-tax Act 2025: ignore paise, then round to the nearest multiple
-     * of ten — up if the last figure is five or more, down if less. Applied to the magnitude,
-     * sign restored (13-edge-cases.md R-9, rule ROUND-NEG-001, STATUS UNCLEAR).
-     */
-    public Money roundToNearestTenPerSection516() {
-        BigDecimal whole = amountInRupees.abs().setScale(0, RoundingMode.DOWN);
-        BigDecimal rem   = whole.remainder(BigDecimal.TEN);
-        BigDecimal out   = rem.compareTo(BigDecimal.valueOf(5)) >= 0
-                ? whole.subtract(rem).add(BigDecimal.TEN)
-                : whole.subtract(rem);
-        return new Money(amountInRupees.signum() < 0 ? out.negate() : out);
-    }
-
-    @Override public int compareTo(Money o) { return amountInRupees.compareTo(o.amountInRupees); }
-    @Override public String toString() { return amountInRupees.toPlainString(); }
-}
-```
-
-### `Rate` — `taxengine/money/Rate.java`
-
-> **Erratum (W-013, 2026-09-19):** as for `Money` above — the package is
-> `com.thiru.wealthlens.taxrules.money`, not `taxengine.money`. See `STATE.md` **B-001**.
-
-```java
-package com.thiru.wealthlens.taxengine.money;
-
-import java.math.BigDecimal;
-
-/** A statutory rate. "30" and "0.30" must never be the same type. */
-public record Rate(BigDecimal fraction) implements Comparable<Rate> {
-
-    public static final Rate ZERO = percent("0");
-
-    public static Rate percent(String p) {
-        return new Rate(new BigDecimal(p).divide(BigDecimal.valueOf(100), Money.CALC));
-    }
-
-    /** Applies the rate; rounds to the money scale ONCE, at the boundary. */
-    public Money of(Money base) {
-        return Money.ofExact(base.amountInRupees().multiply(fraction, Money.CALC));
-    }
-
-    public String asPercentLabel() {
-        return fraction.multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString() + "%";
-    }
-
-    @Override public int compareTo(Rate o) { return fraction.compareTo(o.fraction); }
-}
-```
-
-### Identifier types — `taxrules/id/`
-
-```java
-public record RuleId(String value) {          // ^[A-Z]{2,8}(-[A-Z0-9]{1,12}){1,3}$
-    public RuleId { requirePattern(value, "^[A-Z]{2,8}(-[A-Z0-9]{1,12}){1,3}$", "RuleId"); }
-}
-public record NodeId(String value) {          // ^[a-z][a-z0-9.]{2,63}$
-public record ComponentCode(String value) {   // ^[A-Z][A-Z0-9_]{1,63}$
-public record RegimeCode(String value) {      // ^[A-Z][A-Z0-9_]{1,31}$
-public record ItrFormCode(String value) {     // ^[A-Z0-9-]{3,16}$
-public record ScheduleCode(String value) {    // ^[A-Z0-9-]{3,16}$
-public record TaxYearId(int startYear) {
-    public String label() { return startYear + "-" + ((startYear + 1) % 100); }
-    public java.time.LocalDate startsOn() { return java.time.LocalDate.of(startYear, 4, 1); }
-    public java.time.LocalDate endsOn()   { return java.time.LocalDate.of(startYear + 1, 3, 31); }
-}
-```
-
-> **Erratum (W-008, 2026-09-19) — two corrections to the block above. Copy from here, not from it.**
->
-> **1. `RuleId` was `{1,3}`, which rejects 10 real rule IDs.** Every ID with four hyphenated segments
-> fails it: `RATE-SLAB-OLD-2025-A/B/C`, `RATE-SLAB-OLD-2026-A/B`, `SAL-ALW-TRANSPORT-DIS-2026`,
-> `SAL-ALW-DUTY-LIST-2026`, `SAL-ALW-NEW-SUBSET-001`, `DED-80C-NPS-CAP-001`, `SAL-DEF-80C-NPS-001`.
-> Four is the observed maximum across **309** rule IDs in the design; `{1,5}` leaves one segment of
-> headroom without weakening a check that exists to catch case and separator errors, not segment
-> counts.
->
-> **2. `label()` did not zero-pad the ending year.** `2100 % 100` is `0`, so the tax year beginning
-> in 2099 rendered as `"2099-0"`. The synthetic pack that proves the architecture's extensibility is
-> **TY 2099-00**, so this boundary is exercised, not hypothetical.
->
-> ```java
-> private static final Pattern PATTERN = Pattern.compile("^[A-Z]{2,8}(-[A-Z0-9]{1,12}){1,5}$");
->
-> public String label() { return "%d-%02d".formatted(startYear, (startYear + 1) % 100); }
-> ```
->
-> Verified by: a scan of all 309 rule IDs under `docs/taxplanning-design/`, and of every real
-> `NodeId`, `ComponentCode`, `RegimeCode`, `ItrFormCode` and `ScheduleCode` value — **the other five
-> patterns are correct.**
-
----
-
-## T4 — The four pack layers
-
-```
-backend/src/main/resources/rulepacks/<taxYear>/
-  manifest.json                     versions + checksums, one per layer
-  law/      rates.json salary.json perquisites.json retirement.json deductions.json
-            houseproperty.json othersources.json setoff.json tds.json filing.json
-            regimes.json disallowances.json conditions.json
-  exec/     pipelines.json components.json axes.json
-  forms/    itr-forms.json itr-schedules.json
-  content/  claim-catalogue.json explanations.json
-```
-
-| Layer | May change a computed number? |
+| Package | Types |
 |---|---|
-| `law/` | **yes — the only one** |
-| `exec/` | yes, by selecting which law applies |
-| `forms/` | **no** |
-| `content/` | **no — property-tested (P3)** |
+| `money/` | `Money` `Rate` — the **only** package that may call `BigDecimal.setScale` in the tax modules |
+| `id/` | `RuleId` `NodeId` `ComponentCode` `RegimeCode` `ItrFormCode` `ScheduleCode` `TaxYearId` `BaseId` `Identifiers` |
+| `cap/` | `CapShape` (sealed) `Fixed` `PercentOfBase` `LeastOf` `AggregateWithCeiling` `SlabLadder` `PerUnitPerPeriod` `CapResult` `CapContext` `AggregateOutcome` |
+| `condition/` | `Condition` (sealed, **13** predicates: `IsResident` `AgeAtLeast` `HasPersonType` `IsCertifiedDisabled` `IncomeAtMost` `IncomeAtLeast` `HasIncomeUnderHead` `ComponentPresent` `EvidenceRecorded` `PaidOtherThanInCash` `AllOf` `AnyOf` `Not`) `ConditionContext` `PersonType` `AgeSubject` `DisabilitySeverity` `EvidenceType` `HeadCode` |
+| `temporal/` | `TemporalAxis` `TemporalContext` `Validity` `RuleVersion` `AmendmentRef` `DateRange` `Provision` `Presence` `MissingTemporalCoordinateException` `NoRuleVersionException` |
+| `pack/` | `RulePack` `RulePackLayer` `RulePackRef` `RuleRow` `RulePackProvider` `ClasspathRulePackProvider` `PackAssembler` `RegimeApplicability` `MidYearCombination` `DisallowanceSet` `ConditionSet` |
+| `regime/` | `RegimeSpec` `RegimeLifecycle` `ContinuationPolicy` `InvalidationPolicy` `ElectionProtocol` `ElectionKind` `ElectionVehicle` `ElectionRoute` `ElectionState` `BindingSpec` `AfterWithdrawal` `DeadlineSpec` `FormRef` `PipelineSpec` `BehaviourId` `DisallowanceSetId` `ConditionSetId` `RegimeBehaviour` `RegimeBehaviourRegistry` `DataDrivenRegimeBehaviour` |
+| `component/` | `ComponentDefinition` `ComponentLifecycle` `DeprecationPolicy` `CashNature` `ComponentKind` `TaxTreatment` `RateBasisHint` |
+| `registry/` | `TaxYearRegistry` `TaxYearRegistryEntry` `UnsupportedTaxYearException` `GoverningInstruments` `Instrument` `Provenance` `VerificationStatus` `DraftOrFinal` |
+| `validate/` | `PackValidator` `PackValidationException` |
+| `json/` | `PackJson` `ValueJson` `ShapeJson` `ConditionJson` `RuleJson` `RegimeJson` `RegistryJson` `JsonPackAssembler` — hand-written parsing (D-019) |
+| `generated/` | `RuleIds` `ComponentCodes` — generated from the packs, committed, verified (`W-032b`) |
+| (root) | `TaxRules` — module marker |
 
-The compute cache keys on **`law` + `exec` only**.
+### `taxrules` — planned
+
+| Package | Types | Item |
+|---|---|---|
+| `registry/` | `LegalStatus` `VerificationLevel` `PublicationStatus` — **replace** `VerificationStatus` and `DraftOrFinal` | ○ `W-045e` |
+| `timeline/` | `Timeline` `TimelineReader` · `RulePackCompiler` | ○ `W-045f` · ○ `W-045g` |
+| `validate/` | `PackDiff` (**`W-139` reuses it** for the cross-year diff) · `PackLinter` `Finding` | ○ `W-045h` · ○ `W-139` |
+| `generated/` | `NodeIds` | ○ `W-045i` |
+| `coverage/` | `CoverageRegister` `SectionRef` `Coverage` | ○ `W-045j` |
+| `catalogue/` | `SectionCatalogueEntry` `Route` `Disqualifier` `DisqualifierKind` · `ClaimCatalogueEntry` `ClaimStep` `ClaimChannel` `Counterparty` `Materiality` | ○ `W-045k` · ○ `W-117` |
+| `relief/` | `ReliefShape` (sealed) `FlatWithCeiling` `ExcessOverThreshold` `ThresholdLadderCeiling` `NoRelief` | ○ `W-048`, `W-055` |
+| `filing/` | `ItrFormSpec` `ItrSchedule` `ScheduleField` `FieldSource` `FurnishingOption` `ReturnKind` | ○ `W-090`, `W-092` |
+
+### `taxengine` — ✅ built
+
+| Package | Types |
+|---|---|
+| `input/` | `EngineInputs` (10 components: `taxYear` `regime` `temporal` `entered` `taxpayer` `family` `ledgers` `elections` `capitalGains` `filing`) `TaxpayerFacts` `FamilySnapshot` `LedgerSnapshot` `RegimeElectionSnapshot` `FilingFacts` `EnteredFacts` `CapitalGainsInput` `InputsFingerprint` |
+| `pipeline/` | `ComputationNode` `NodeContext` `NodeResult` `NodeRegistry` `NodeValue` (sealed: **`MoneyValue`, `TaxByBasis` only**) `SpecialRateId` `TopologicalSort` `PipelineRunner` |
+| `trace/` | `TraceLine` `TraceAnnotation` `Notice` `StepKind` `Severity` |
+| `result/` | `TaxComputation` `FilingPosition` `ComputationId` `ComputationReceipt` |
+
+### `taxengine` — planned
+
+| Package | Types | Item |
+|---|---|---|
+| `input/` | `Assessee` (sealed) `Individual` `Huf` — **replace** `TaxpayerFacts`; `PersonType` gains `HUF` | ○ `W-045l` |
+| `result/` | `ComputationProjector` | ○ `W-052b` |
+| `node/` | one class per node — T6 | ○ Phases 5–9 |
+| `election/` | `Election` `ElectionResolver` `ElectionOutcome` | ○ Phase 9 |
+| `proration/` | `ProrationBasis` `CompletedMonths` `CalendarMonths` `Days` `OccupationPeriods` | ○ `W-066` |
+| `interest/` | `InterestAndFeeNode` `InterestBreakdown` `SimpleInterest` `TieredFee` | ○ `W-112` |
+| `itr/` | `ItrFormSelector` `ItrSelection` `FormVerdict` `ScheduleMapper` | ○ `W-091`, `W-093` |
+| `error/` | `TaxEngineException` (sealed) `TaxError` | ○ `W-105` |
+
+### `taxdocs` — only the module marker `TaxDocs` is built
+
+`ingest/` `IngestedDocument` `ParseAttempt` `ExtractedField` `DocumentConfirmation` (○ `W-124`) ·
+`parser/` `DocumentParser` `Form130Parser` `Form16Parser` (○ `W-125`–`W-127`) · `reconcile/`
+`ReconciliationReport` `ReconciliationLine` (○ `W-130`).
+
+### `taxplanning` (new code) — planned
+
+`profile/` `TaxpayerProfile` `Pan` `FamilyMember` `Employer` `Landlord` `Lender` `BankAccount`
+(○ `W-096`–`W-098`) · `workspace/` `TaxYearWorkspace` `FilingDraft` `DraftRevision` `DraftInputs`
+`EntryProvenance` (○ `W-099`, `W-100`) · `assemble/` `EngineInputsAssembler` — the **only** place
+`EngineInputs` is built (○ `W-103`) · `portfolio/` `MoneyBridge` `CapitalGainsAdapter` (○ Phase 9) ·
+`projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`)
+· `scenario/` `Scenario` `ScenarioDiff` `DiffLine` (⚠ UNOWNED) · `controller/` DTOs only · `job/`
+`TaxJob` + 6 jobs, `JobLease` (○ `W-137`).
+
+**Name collisions to avoid** (the new `ArchitectureTest.simple_class_names_are_unique` enforces
+it): the legacy module already has `TaxComputationService`, `TaxComputationEntity`, `TaxEngine`,
+`RegimeAdvisor`, `ItrFormAdvisor`. A new class may not reuse a simple name that exists anywhere in
+`backend/src/main/java`.
 
 ---
 
-## T5 — Pack invariants (checked at load; `PackValidationException` on failure)
+## T3 — Foundational contracts
 
-| | Invariant |
+The source is the reference. These are the contracts a change must keep.
+
+### `Money` — ✅ `taxrules/money/Money.java` (`W-005`, `W-006`)
+
+- `record Money(BigDecimal amountInRupees)`; construction sets **scale 2, `HALF_UP`**; `null` rejected.
+- Arithmetic: `plus`, `minus`, `times(int)`, `floorAtZero`, `min`, `max`, comparisons.
+- `roundToNearestTenPerSection516()`: ignore paise, round to the nearest ₹10 (up at 5), on the
+  magnitude with the sign restored — `1234.99 → 1230` (`RATE-ROUND-002`, `13-edge-cases.md` T13-14).
+- Asserted with AssertJ `isEqualTo` on `Money` (D-010) — record equality also catches a scale slip.
+
+### `Rate` — ✅ `taxrules/money/Rate.java` (`W-007`)
+
+- `record Rate(BigDecimal fraction)`; `Rate.percent("30")` stores `0.30`. "30" and "0.30" are
+  different types by design.
+- `of(Money)` rounds to the money scale **once**, at the boundary.
+
+### Identifiers — ✅ `taxrules/id/` (`W-008`, `W-009`)
+
+| Type | Pattern (from the source) |
 |---|---|
-| I1 | `status != VERIFIED` ⟹ `whatToCheck` non-blank |
-| I2 | every `RuleId` a pipeline references exists |
-| I3 | every `RuleId` in the pack is reachable from some pipeline |
-| I4 | each layer's checksum matches its content |
-| I5 | exactly one `isDefault` regime per `(taxYear, PersonType)` among **applicable** regimes |
-| I6 | every regime's disallowance/condition set ids resolve |
-| I7 | every `ComponentCode` a rule references exists in `components.json` |
+| `RuleId` | `^[A-Z]{2,8}(-[A-Z0-9]{1,12}){1,5}$` |
+| `NodeId` | `^[a-z][a-z0-9.]{2,63}$` |
+| `ComponentCode`, `BaseId` | `^[A-Z][A-Z0-9_]{1,63}$` |
+| `RegimeCode` | `^[A-Z][A-Z0-9_]{1,31}$` |
+| `ItrFormCode`, `ScheduleCode` | `^[A-Z0-9-]{3,16}$` |
+| `TaxYearId(int startYear)` | `label()` = `"%d-%02d"` (TY 2099 → `"2099-00"`); `startsOn()` 1 April; `endsOn()` 31 March |
 
-> **Erratum (W-029, 2026-09-19):** three of I1–I7 are not checked by `PackValidator`, each for a
-> different reason.
->
-> - **I1** is enforced by `Provenance`'s compact constructor (`W-010`). A row with
->   `status != VERIFIED` and a blank `whatToCheck` cannot be *constructed*, so a validator branch
->   would be unreachable. Asserted as a property of `Provenance` instead.
-> - **I4** is enforced by `ClasspathRulePackProvider` (`W-028`), which hashes the bytes it read.
->   Re-hashing in the validator would mean two implementations to keep in step.
-> - **I3** is **not yet checkable and is deferred.** Reachability means "evaluated by some node",
->   and the node-to-rule mapping is `ComputationNode.rules()` — engine-side, `W-039`. A pack-only
->   version would have to count a rule as reachable because a component mentions it, which passes
->   exactly the dead rule O-19 describes. It needs its own item once the node registry exists.
->
-> **I2 is implemented more strongly than worded.** T5 says "every `RuleId` a pipeline references",
-> but a `PipelineSpec` holds `NodeId`s. The implemented check is *every `RuleId` referenced anywhere
-> in the pack resolves* — rate tables, `feedsInto`, `salaryBaseFor`, policy bases, and a
-> `PendingNotification`'s interim rule.
->
-> **I6 became checkable in this item.** `DisallowanceSet` and `ConditionSet` — the things
-> `DisallowanceSetId` and `ConditionSetId` name — were modelled by no type and no work item, and
-> `RulePack` had no field for them. Added by the developer's decision.
-> Verified by: `./mvnw test -pl backend -Dtest=PackValidatorTest`.
-| I8 | a cross-year ledger entry is consumed by at most one `ACTED_ON` draft per year |
-| I9 | every `BehaviourId` resolves to a registered implementation |
-| I10 | `entryWindow ⊆ inForceWindow` for every regime |
-| I11 | exactly one `isDefault` per `(taxYear, PersonType)` among regimes **applicable in that year** (strengthens I5) |
-| I12 | a `MigrateTo` successor exists and is applicable in the year its predecessor lapses |
-| I13 | a rule's versions cover the tax year with no gap and no overlap (`TAX_YEAR` axis) |
-| I14 | >1 version overlapping the year ⟹ `midYearCombination != UNDETERMINED` |
-| I15 | every `RuleVersion` carries an `AmendmentRef` |
-| I16 | `PendingNotification` names an `interimRule` present in the same pack |
-| I17 | every `ComponentCode` a draft references resolves in the target pack, or has a `DeprecationPolicy` |
-| I18 | a non-`TAX_YEAR` axis rule is supplied its coordinate by every node that evaluates it |
+**Naming of identity values** (D-035, D-046 B4): a `RuleId` or `RegimeCode` names the **concept** —
+no year, no "old/new", no section number. The year lives in the version, the section in the
+provision. The concrete names are chosen at `W-045d` (open question **O-4**).
 
-> **Erratum (W-039, 2026-09-21):** **I18 is already enforced, and needs no checker of its own.**
-> `TemporalContext.on(axis)` throws `MissingTemporalCoordinateException` for any non-`TAX_YEAR`
-> axis with no coordinate, and `RuleRow.versionAt(t)` calls it on **every** rule lookup — so a node
-> evaluating such a rule without supplying the coordinate gets an exception rather than a plausible
-> wrong figure. Asserted as a property instead, the same shape `W-029` used for **I1** (enforced by
-> `Provenance`'s constructor, so a validator branch would be unreachable). A separate static check
-> would need nodes to declare which axes they supply — machinery nothing else wants, duplicating a
-> guarantee already in place.
->
-> **I3 is implemented but deliberately not yet wired to the shipped pack.**
-> `NodeRegistry.rulesNotEvaluatedByAnyNode` is the check `W-029`'s erratum deferred here. There are
-> **zero** `ComputationNode` implementations until Phases 5-9, so running it against the real
-> 2026-27 pack today reports every rule unreachable. It is proven against fixtures now and enabled
-> at the item that first ships a real pipeline (decision **D-029**).
-> Verified by: `./mvnw test -pl backend -Dtest=NodeRegistryTest` — 22 tests.
-| I19 | at least one ITR form is applicable per `(PersonType, ReturnKind)` |
-| I20 | no two ITR forms simultaneously eligible |
-| I21 | every `ScheduleRef`, `FromRule`, `FromNode` resolves |
-| I22 | every ITR form has at least one `FurnishingOption` whose conditions can be satisfied |
-| I23 | every claimable rule has a catalogue entry |
-| I24 | a catalogue entry's `channel` matches its rule's Chapter VIII Part; **Part C rules carry the s.122(5) late-return warning** |
-| I25 | every `EvidenceRequirement` names what closes it |
-| I26 | every `ClaimStep` with a deadline resolves against the tax calendar |
-| I27 | perturbing `content/` and `forms/` changes no computed number |
-| I28 | no occurrence of `ComputationStep` anywhere in docs or source |
-| I29 | every `TaxEngineException` declares a `TaxError`; the advice switch is exhaustive over the sealed hierarchy |
-| I30 | `taxengine` depends on no repository, no Spring Data, no `taxplanning` type, and calls no clock |
-| I31 | every node's `requires()` is satisfied by a node's `produces()` or an `EngineInputs` field |
-| I32 | `EngineInputs.fingerprint()` covers every field (reflection test) |
+---
 
-**All 30 are listed.** I1–I27 and I31–I32 are checked at pack load (`PackValidator`); I28, I29, I30
-are build-time gates (ArchUnit and a CI `grep`). An item that says "implement the invariants" means
-**these**, and nothing beyond them.
+## T4 — Rule packs
+
+A **rule pack** is the immutable, checksummed law for one tax year. It is the only word for that
+thing (not "snapshot", which names input projections such as `LedgerSnapshot`).
+
+### Layers
+
+| Layer | May change a computed number? | In the cache key? |
+|---|---|---|
+| `law/` | **yes — the only one that states law** | yes |
+| `exec/` | yes, by selecting which law applies | yes |
+| `forms/` | **no** | no |
+| `content/` | **no** — property P3, invariant I27 | no |
+
+### Today — ✅ built (`W-027`, `W-028`, `W-032`)
+
+```
+backend/src/main/resources/rulepacks/2026-27/
+  manifest.json                 layer versions + checksums
+  law/      rates.json regimes.json
+  exec/     pipelines.json components.json
+  forms/    itr-forms.json
+  content/  explanations.json
+```
+
+15 rule rows, all `VERIFIED`; TY 2026-27 only.
+
+### Target — ○ `W-045f`, `W-045g` (D-034)
+
+```
+backend/src/main/resources/rulepacks/
+  timeline/
+    law/rules/<RuleId>.json            one file per rule; versions inside (unchanged law = one version spanning years)
+    law/regimes/<RegimeCode>.json      one file per regime; lifetime inside
+    exec/pipelines/  exec/components/<ComponentCode>.json
+    forms/itr/<ItrFormCode>.json
+    content/sections/<SectionKey>.json the section catalogue (W-045k)
+    content/coverage.json              the coverage register (W-045j)
+  2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums
+```
+
+`RulePackCompiler` builds a year's rule pack from every **`PUBLISHED`** version whose validity touches
+that year and verifies it against the lock; a mismatch **fails startup** naming the rule. Packs are
+compiled at startup only, never on a request path.
+
+---
+
+## T5 — Invariants
+
+One table. **Where** says what enforces it; a check that lives in a constructor or the provider has
+no validator branch, because it would be unreachable.
+
+| # | Invariant | Where enforced | Status |
+|---|---|---|---|
+| I1 | `status != VERIFIED` ⟹ non-blank `whatToCheck` | `Provenance` constructor | ✅ `W-010` |
+| I2 | every `RuleId` referenced anywhere in the pack resolves (rate tables, `feedsInto`, `salaryBaseFor`, bases, interim rules) | `PackValidator` | ✅ `W-029` |
+| I3 | every rule in the pack is evaluated by some node | `NodeRegistry.rulesNotEvaluatedByAnyNode` | ✅ built `W-039`; **switched on at `W-053`** as a shrink-only ratchet |
+| I4 | each layer's checksum matches its content | `ClasspathRulePackProvider` | ✅ `W-028` |
+| I5 | exactly one `isDefault` regime per `(taxYear, PersonType)` among regimes **applicable that year** (I11 is the same check) | `PackValidator` | ✅ `W-029` |
+| I6 | every regime's disallowance/condition set id resolves | `PackValidator` | ✅ `W-029` |
+| I7 | every `ComponentCode` a rule references exists | `PackValidator` | ✅ `W-029` |
+| I8 | a cross-year ledger entry is consumed by at most one `ACTED_ON` draft per year | persistence (runtime) | ⚠ UNOWNED |
+| I9 | every `BehaviourId` resolves to a registered implementation, and a registered one is referenced | `RegimeBehaviourRegistry` | ✅ `W-031b` |
+| I10 | `entryWindow ⊆ inForceWindow` | `RegimeLifecycle` constructor | ✅ `W-026` |
+| I11 | = I5 | — | ✅ `W-029` |
+| I12 | a `MigrateTo` successor exists and is applicable when its predecessor lapses | pack load | ⚠ UNOWNED |
+| I13 | a rule's versions cover the tax year with no gap and no overlap (`TAX_YEAR` axis) | `PackValidator` | ✅ `W-030` |
+| I14 | more than one version in a year ⟹ `midYearCombination != UNDETERMINED` | `PackValidator` | ✅ `W-030` |
+| I15 | every `RuleVersion` carries an `AmendmentRef` | `PackValidator` | ✅ `W-030` |
+| I16 | a `PendingNotification` names an interim rule in the same pack | `PackValidator` (part of I2) | ✅ `W-029` |
+| I17 | every `ComponentCode` a draft references resolves in the target pack, or has a `DeprecationPolicy` | draft upcasting (runtime) | ⚠ UNOWNED |
+| I18 | a non-`TAX_YEAR` rule is always supplied its coordinate | `TemporalContext.on` / `RuleRow.versionAt` throw | ✅ `W-023`, asserted `W-039` |
+| I19 | at least one ITR form applies per `(PersonType, ReturnKind)` | pack load | ○ `W-090` |
+| I20 | no two ITR forms simultaneously eligible | pack load | ○ `W-090` |
+| I21 | every `ScheduleRef`, `FromRule`, `FromNode` resolves | pack load | ○ `W-092` |
+| I22 | every ITR form has a satisfiable `FurnishingOption` | pack load | ○ `W-092` |
+| I23 | every claimable rule has a catalogue entry | pack load | ○ `W-117` |
+| I24 | a catalogue entry's channel matches its rule's Chapter VIII Part; Part C carries the s.122(5) late-return warning | pack load | ⚠ UNOWNED |
+| I25 | every `EvidenceRequirement` names what closes it | pack load | ⚠ UNOWNED |
+| I26 | every `ClaimStep` with a deadline resolves against the tax calendar | pack load | ⚠ UNOWNED |
+| I27 | perturbing `content/` and `forms/` changes no computed number | property test | ○ `W-146` |
+| I28 | no occurrence of `ComputationStep` under `backend/src` | `ArchitectureTest` | ✅ `W-004` |
+| I29 | every `TaxEngineException` declares a `TaxError`; the advice switch is exhaustive | build (sealed switch) | ○ `W-105`, `W-106` |
+| I30 | `taxengine` depends on no repository, Spring Data or `taxplanning` type, and reads no clock | `ArchitectureTest` | ✅ `W-004` |
+| I31 | every node's `requires()` is produced by another node; a node may require nothing and read `EngineInputs` (D-031) | `TopologicalSort` | ✅ `W-040`, `W-042` |
+| I32 | the inputs fingerprint covers every field of `EngineInputs`, structurally | `InputsFingerprint` (reflection) | ✅ `W-038` |
+
+Section-catalogue invariants **SC-1…SC-5** are in `00-BRIEF.md` §6.3 (○ `W-045k`); coverage-register
+checks in §7.1 (○ `W-045j`).
 
 ---
 
 ## T6 — Node catalogue
 
-Order is **derived** from `requires()`/`produces()`. This table is documentation.
+Order is **derived** from `requires()`/`produces()` (canonical: ties broken on `NodeId`, D-030); this
+table is documentation. **`EngineInputs.x`** in *Requires* is data read through `ctx.inputs()` — not a
+slot and not a `NodeId` (a node may require no slot at all, D-031). Every other entry is a `NodeId`.
 
-| `NodeId` | Class | requires | produces |
-|---|---|---|---|
-| `inputs.components` | `ComponentPartitionNode` | — | `ComponentSet` |
-| `salary.perquisites` | `PerquisiteNode` | components | `MoneyValue` |
-| `employer.contrib.charges` | `EmployerContributionNode` | components | `MoneyValue` |
-| `salary.gross` | `GrossSalaryNode` | components, perquisites, charges | `MoneyValue` |
-| `salary.base` | `SalaryBaseNode` | components | `SalaryBases` |
-| `salary.exemptions` | `ExemptionNode` | gross, base | `MoneyValue` |
-| `salary.retirement` | `RetirementNode` | components, ledgers | `MoneyValue` |
-| `salary.deductions` | `SalaryDeductionNode` | gross | `MoneyValue` |
-| `salary.income` | `SalaryIncomeNode` | gross, exemptions, retirement, deductions | `MoneyValue` |
-| `elections.houses` | `HouseElectionNode` | properties | `ElectionOutcome` |
-| `houseproperty.income` | `HousePropertyNode` | properties, elections.houses | `HeadResult` |
-| `othersources.income` | `OtherSourcesNode` | othersources | `HeadResult` |
-| `capitalgains.income` | `CapitalGainsNode` | portfolio snapshot | `HeadResult` |
-| `setoff` | `SetOffNode` | all heads, ledgers | `HeadMap` |
-| `gti` | `GrossTotalIncomeNode` | setoff | `MoneyValue` |
-| `chapterviii` | `ChapterEightNode` | gti, components, family | `MoneyValue` |
-| `totalincome` | `TotalIncomeNode` | gti, chapterviii | `MoneyValue` |
-| `round.totalincome` | `RoundTotalIncomeNode` | totalincome | `MoneyValue` |
-| `tax.bybasis` | `TaxByBasisNode` | round.totalincome, rate hints | **`TaxByBasis`** |
-| `tax.afterrebate` | `RebateNode` | tax.bybasis | `TaxByBasis` |
-| `tax.surcharge` | `SurchargeNode` | tax.afterrebate, round.totalincome | `MoneyValue` |
-| `tax.cess` | `CessNode` | tax.afterrebate, tax.surcharge | `MoneyValue` |
-| `credits` | `CreditsNode` | tds, advance tax | `MoneyValue` |
-| `tax.netpayable` | `NetPayableNode` | cess, credits | `MoneyValue` |
-| `interest.and.fees` | `InterestAndFeeNode` | netpayable, totalincome, filing facts | `InterestBreakdown` |
-| `round.netpayable` | `RoundNetPayableNode` | netpayable, interest | `MoneyValue` |
+| `NodeId` (produces) | Class | Requires | Value type | Status |
+|---|---|---|---|---|
+| `inputs.components` | `ComponentPartitionNode` | `EngineInputs.entered` | `ComponentSet` ⚠ | ○ `W-060` |
+| `salary.perquisites` | `PerquisiteNode` | `inputs.components` | `MoneyValue` | ○ Phase 8 |
+| `employer.contrib.charges` | `EmployerContributionNode` | `inputs.components` | `MoneyValue` | ○ Phase 8 |
+| `salary.gross` | `GrossSalaryNode` | `inputs.components`, `salary.perquisites`, `employer.contrib.charges` | `MoneyValue` | ○ `W-061` |
+| `salary.base` | `SalaryBaseNode` | `inputs.components` | `SalaryBases` ⚠ | ○ `W-062` |
+| `salary.exemptions` | `ExemptionNode` | `salary.gross`, `salary.base` | `MoneyValue` | ○ Phase 7 |
+| `salary.retirement` | `RetirementNode` | `inputs.components`, `EngineInputs.ledgers` | `MoneyValue` | ○ Phase 7 |
+| `salary.deductions` | `SalaryDeductionNode` | `salary.gross` | `MoneyValue` | ○ `W-063` |
+| `salary.income` | `SalaryIncomeNode` | `salary.gross`, `salary.exemptions`, `salary.retirement`, `salary.deductions` | `MoneyValue` | ○ `W-065` |
+| `elections.houses` | `HouseElectionNode` | `EngineInputs.entered` | `ElectionOutcome` ⚠ | ○ Phase 9 |
+| `houseproperty.income` | `HousePropertyNode` | `EngineInputs.entered`, `elections.houses` | `HeadResult` ⚠ | ○ Phase 9 |
+| `othersources.income` | `OtherSourcesNode` | `EngineInputs.entered` | `HeadResult` ⚠ | ○ Phase 9 |
+| `capitalgains.income` | `CapitalGainsNode` | `EngineInputs.capitalGains` | `HeadResult` ⚠ | ○ Phase 9 |
+| `setoff` | `SetOffNode` | every head node, `EngineInputs.ledgers` | `HeadMap` ⚠ | ○ Phase 9 |
+| `gti` | `GrossTotalIncomeNode` | `setoff` | `MoneyValue` | ○ Phase 9 |
+| `chapterviii` | `ChapterEightNode` | `gti`, `inputs.components`, `EngineInputs.family` | `MoneyValue` | ○ Phase 8 |
+| `totalincome` | `TotalIncomeNode` | `gti`, `chapterviii` | `MoneyValue` | ○ |
+| `round.totalincome` | `RoundTotalIncomeNode` | `totalincome` | `MoneyValue` | ○ `W-050` |
+| `tax.bybasis` | `TaxByBasisNode` | `round.totalincome` | `TaxByBasis` | ○ `W-046` |
+| `tax.afterrebate` | `RebateNode` | `tax.bybasis` | `TaxByBasis` | ○ `W-049` |
+| `tax.surcharge` | `SurchargeNode` | `tax.afterrebate`, `round.totalincome` | `MoneyValue` | ○ `W-056` |
+| `tax.cess` | `CessNode` | `tax.afterrebate`, `tax.surcharge` | `MoneyValue` | ○ `W-051` |
+| `credits` | `CreditsNode` | `EngineInputs` (TDS and advance-tax credits; exact components fixed by the owning item) | `MoneyValue` | ○ Phase 9 |
+| `tax.netpayable` | `NetPayableNode` | `tax.cess`, `credits` | `MoneyValue` | ○ `W-052` |
+| `interest.and.fees` | `InterestAndFeeNode` | `tax.netpayable`, `totalincome`, `EngineInputs.filing` | `InterestBreakdown` ⚠ | ○ `W-112` |
+| `round.netpayable` | `RoundNetPayableNode` | `tax.netpayable`, `interest.and.fees` | `MoneyValue` | ○ `W-050` |
+
+⚠ **Value types that do not exist yet.** `NodeValue` permits only `MoneyValue` and `TaxByBasis`. Each
+⚠ type must be added to the `permits` clause **by the item that first produces it** (rule B2) — the
+item checks this at its EXPLAIN stage (`W-045c` audits Phases 5–6).
+
+The shipped 2026-27 pipeline (`exec/pipelines.json`) today names: `inputs.components`, `salary.gross`,
+`totalincome`, `round.totalincome`, `tax.bybasis`, `tax.afterrebate`, `tax.cess`, `tax.netpayable`,
+`round.netpayable`.
 
 ---
 
-## T7 — MongoDB collections
+## T7 — MongoDB collections — ○ Phase 11 (`W-096`…`W-102`)
 
 All `snake_case`; `@MongoId`; entities implement `AuditableEntity`. **Every one is added to
-`AbstractIntegrationTest.cleanDatabase()`. None is added to `SEEDED_REFERENCE_COLLECTIONS`.**
+`AbstractIntegrationTest.cleanDatabase()`** (`W-102`); none to `SEEDED_REFERENCE_COLLECTIONS`.
 
 | Collection | Key | Indexes |
 |---|---|---|
-| `tax_profiles` | `profile_id` | unique `{email}`; unique `{pan}` |
+| `tax_profiles` | `profile_id` | `{email}` (an account owns **several** profiles — self, HUF, family: **D-046 B2**); unique `{pan}` |
 | `tax_family_members` | `family_member_id` | `{profile_id}` |
-| `tax_employers` | `employer_id` | unique `{tan}` |
+| `tax_employers` | `employer_id` | unique `{profile_id, tan}` (per account, not shared: **D-046 B5**) |
 | `tax_landlords` | `landlord_id` | `{profile_id}` |
 | `tax_lenders` | `lender_id` | `{profile_id}` |
 | `tax_bank_accounts` | `bank_account_id` | `{profile_id}` |
@@ -408,43 +324,50 @@ All `snake_case`; `@MongoId`; entities implement `AuditableEntity`. **Every one 
 | `tax_job_leases` | `job_type` | unique, TTL |
 | `tax_job_failures` | `failure_id` | `{job_type, failed_at desc}` |
 
-**Deliberately absent:** any collection holding rules, slabs, allowance limits or perquisite values.
+**No collection holds rules, slabs, limits or perquisite values** — the law lives in rule packs.
+The one planned exception is the rule-authoring store behind the publish gate (`00-BRIEF.md` §5.4,
+open question O-2), which writes **versions** and never bypasses the gate.
 
 ---
 
-## T8 — API
+## T8 — API — ○ Phase 11–13
 
-Base `/api/v1/tax-planning`. Wrapped in `ApiResponse<T>` except under the `integration-test` profile.
+Base: **`/tax/user/{email}`** — the repository convention `/{resource}/user/{email}`, with a resource
+distinct from the legacy `/tax-planning` until that is deleted (**D-046 B3**). Wrapped in
+`ApiResponse<T>` except under the `integration-test` profile.
 
-| Method | Path | Item |
+| Method | Path (under the base) | Item |
 |---|---|---|
-| `GET` | `/tax-years` | W-095 |
-| `GET` | `/user/{email}/workspaces/{taxYear}` | W-096 |
-| `POST` | `/user/{email}/workspaces/{taxYear}/drafts` | W-097 |
-| `GET`/`PATCH` | `/user/{email}/drafts/{draftId}` | W-098 |
-| `POST` | `/user/{email}/drafts/{draftId}/fork` · `/status` · `/primary` | W-099 |
-| `GET` | `/user/{email}/drafts/{draftId}/revisions[/{n}]` | W-100 |
-| `POST` | `/user/{email}/drafts/{draftId}/compute` | W-101 |
-| `POST` | `/user/{email}/drafts/{draftId}/compare-regimes` | W-102 |
-| `GET` | `/user/{email}/drafts/{draftId}/forecast` | W-110 |
-| `GET` | `/user/{email}/drafts/{draftId}/calendar` | W-111 |
-| `GET` | `/user/{email}/drafts/{draftId}/completeness` | W-112 |
-| `GET` | `/user/{email}/drafts/{draftId}/itr-suggestion` | W-090 |
-| `GET` | `/user/{email}/drafts/{draftId}/itr-export` | W-092 |
-| `GET` | `/user/{email}/drafts/{draftId}/claim-playbook/{ruleId}` | W-115 |
-| `POST` | `/user/{email}/documents` · `GET .../parse` · `POST .../confirm` | W-128…W-130 |
-| `GET` | `/user/{email}/computations/{computationId}[/report.pdf]` | W-105, W-120 |
+| `GET` | `/tax-years` | ⚠ UNOWNED |
+| `GET` | `/workspaces/{taxYear}` | ○ `W-108` |
+| `POST` | `/workspaces/{taxYear}/drafts` | ○ `W-108` |
+| `GET` / `PATCH` | `/drafts/{draftId}` | ○ `W-108`; `If-Match` ○ `W-110` |
+| `POST` | `/drafts/{draftId}/fork` · `/status` · `/primary` | ○ `W-108` |
+| `GET` | `/drafts/{draftId}/revisions[/{n}]` | ○ `W-108` (model `W-100`) |
+| `POST` | `/drafts/{draftId}/compute` | ○ `W-109` |
+| `POST` | `/drafts/{draftId}/compare-regimes` | ○ `W-109` |
+| `GET` | `/drafts/{draftId}/forecast` | ○ `W-113` |
+| `GET` | `/drafts/{draftId}/calendar` | ○ `W-114` |
+| `GET` | `/drafts/{draftId}/completeness` | ○ `W-115` |
+| `GET` | `/drafts/{draftId}/itr-suggestion` | ⚠ UNOWNED endpoint (selector ○ `W-091`) |
+| `GET` | `/drafts/{draftId}/itr-export` | ⚠ UNOWNED endpoint (mapper ○ `W-093`) |
+| `GET` | `/drafts/{draftId}/claim-playbook/{ruleId}` | ○ `W-118` |
+| `POST` / `GET` / `POST` | `/documents` · `/documents/{id}/parse` · `/documents/{id}/confirm` | ○ `W-131` |
+| `GET` | `/computations/{computationId}` | ○ `W-107` |
+| `GET` | `/computations/{computationId}/report.pdf` | ○ `W-123` |
 
-Query parameters: `?view=summary|full|debug` (default `summary`); `ETag` = `inputsFingerprint` +
-`lawVersion` + `execVersion`; `If-Match` required on `PATCH`.
+`?view=summary|full|debug` (default `summary`). `ETag` = inputs fingerprint + the rule pack's
+`law` and `exec` versions. `If-Match` required on `PATCH`.
 
 ---
 
-## T9 — Error catalogue
+## T9 — Error catalogue — ○ `W-105`
 
 ```java
 public enum TaxError {                     //  http  retryable  class
     UNSUPPORTED_TAX_YEAR                  (400, false, USER),
+    UNSUPPORTED_ASSESSEE_TYPE             (400, false, USER),   // D-046 B6
+    UNSUPPORTED_CASE                      (400, false, USER),   // D-046 B6 — a combination not yet supported, named
     UNKNOWN_COMPONENT_CODE                (400, false, USER),
     COMPONENT_WITHDRAWN_NEEDS_CORRECTION  (409, false, USER),
     INCOMPLETE_INPUTS_FOR_RULE            (400, false, USER),
@@ -465,54 +388,76 @@ public enum TaxError {                     //  http  retryable  class
 }
 ```
 
-`PACK` and `ENGINE` page an operator. `USER` never does.
+`PACK` and `ENGINE` page an operator; `USER` never does. Until `W-105`: pack problems throw
+`PackValidationException`; a pipeline cycle, a missing producer or a duplicate producer throws
+`IllegalArgumentException` naming the nodes (D-030).
 
 ---
 
-## T10 — ArchUnit rules to add
+## T10 — Build-enforced rules
 
-| Rule | Item |
-|---|---|
-| amend `money_rounding_lives_in_one_place` to also permit `..taxengine.money..` | W-002 |
-
-> **Erratum (W-013, 2026-09-19):** the permitted package is `..taxrules.money..`. The same row's
-> companion rule was also renamed `taxengine_uses_money_not_bigdecimal` →
-> **`tax_modules_use_money_not_bigdecimal`**, and widened to `taxengine`, `taxrules` **and**
-> `taxdocs`, since the type it protects now sits in `taxrules`.
-> Verified by: `backend/src/test/java/com/thiru/wealthlens/architecture/ArchitectureTest.java:216`.
-| `taxengine` must not access `TMoney` | W-002 |
-| only `..taxplanning.portfolio..` may call `MoneyBridge.fromTMoney` | W-002 |
-| `taxengine` must not depend on `..repository..`, `org.springframework.data..`, `..taxplanning..` | W-004 |
-| `taxengine` must not call `LocalDate.now`, `Instant.now`, or use `Clock` | W-004 |
-| no class in `taxengine` catches `Exception` or `RuntimeException` | W-004 |
-| no `BigDecimal` field or parameter in `taxengine` outside `money/` | W-004 |
-| every `ComputationNode` implementation is referenced by some pack node set | W-044 |
-| every `@RequestBody` parameter carries `@Valid` | W-094 |
-| no controller returns an `@Document`-annotated type | W-094 |
-| CI `grep` gate: no occurrence of `ComputationStep` | W-004 |
+| Rule | Enforced by | Status |
+|---|---|---|
+| `BigDecimal.setScale` only in `..shared.util.money..` and `..taxrules.money..` (plus `ChargeRounding`) | `ArchitectureTest.money_rounding_lives_in_one_place` | ✅ `W-002`, `W-013` |
+| tax modules use `Money`, not `BigDecimal`, outside `money/` | `tax_modules_use_money_not_bigdecimal` | ✅ `W-004`, `W-013` |
+| `taxengine` does not use `TMoney` | `taxengine_does_not_use_TMoney` | ✅ `W-002` |
+| only `..taxplanning.portfolio..` calls `MoneyBridge.fromTMoney` | `only_the_adapter_converts` | ✅ `W-002` (first bites at the bridge, Phase 9) |
+| `taxengine` fetches nothing: no repository, Spring Data or `taxplanning` | `taxengine_fetches_nothing` | ✅ `W-004` |
+| `taxengine` reads no clock | `taxengine_has_no_clock` | ✅ `W-004` |
+| `taxengine` catches no `Exception`/`RuntimeException` | `taxengine_does_not_swallow_failures`; repo-wide `IllegalCatch` | ✅ `W-004`, `W-045a` |
+| no `ComputationStep` anywhere | `ArchitectureTest` (plain test) | ✅ `W-004` |
+| overriding `RegimeBehaviour.adjustPipeline` is listed against a reviewed file | `ArchitectureTest` (plain test, L5 guard 3) | ✅ `W-037c` |
+| no generic class suffixes; unique simple class names | `classes_have_no_generic_suffix`, `simple_class_names_are_unique` | ✅ `W-045a` |
+| Checkstyle rule set; legacy baseline only shrinks | `checkstyle.xml`, `CheckstyleBaselineTest` | ✅ `W-045a` |
+| formatting | `spotless:check` on `validate` | ✅ `W-045a` |
+| every `ComputationNode` implementation is referenced by some pack pipeline | `ArchitectureTest` | ○ `W-053` (with I3) |
+| every `@RequestBody` carries `@Valid`; no controller returns an `@Document` type | `ArchitectureTest` | ○ `W-095` |
 
 ---
 
 ## T11 — Build and test commands
 
 ```bash
-./mvnw test -pl backend -Punit                      # the fast tier — run for EVERY item
-./mvnw test -pl backend -Dtest=ClassName            # one class
-./mvnw test -pl backend -Dtest=ClassName#method     # one method
-./mvnw test -pl backend -Pintegration               # Testcontainers; Docker required
-./mvnw spotless:apply                               # before every report
-./mvnw clean install -pl backend -am -DskipTests     # compile only
+./mvnw test -pl backend -Punit                  # the fast tier — every item; Checkstyle + spotless:check run in validate
+./mvnw test -pl backend -Dtest=ClassName        # one class
+./mvnw test -pl backend -Dtest=ClassName#method # one method
+./mvnw test -pl backend -Pintegration           # Testcontainers; Docker required
+./mvnw spotless:apply                           # fixes formatting; the build refuses unformatted code
+./mvnw clean install -pl backend -am -DskipTests
 ```
+
+A Claude Code session cannot `git commit` unless the unit tier passes (`.claude/hooks/pre-commit-gate.sh`).
 
 ---
 
-## T12 — Conventions inherited from this repository
+## T12 — Conventions
 
-- `@RequiredArgsConstructor` for DI; injected fields `private final`. No hand-written constructors.
+`CLAUDE.md` "Engineering standards" applies to every line. In addition:
+
+- `@RequiredArgsConstructor` for DI; injected fields `private final`. No hand-written constructors
+  on Spring beans (records and value types have compact constructors).
 - Services: `@Service @Log4j2 @Transactional @RequiredArgsConstructor`.
 - Entities: `@Data @AllArgsConstructor @NoArgsConstructor @Document @Field`, `snake_case` names.
 - DTOs: `@Data @NoArgsConstructor @ToString`; no `@Builder` on request DTOs.
 - Tests: `@ExtendWith(MockitoExtension.class)`, `// Given` `// When` `// Then`,
   `methodName_whenCondition_expectedResult`.
-- Money assertions use `MoneyAssert`, never bare `assertEquals`.
+- Money assertions: **`Money` with AssertJ `isEqualTo`** (D-010); legacy `double` money with
+  `MoneyAssert`; never a bare `assertEquals` on money.
 - 4-space indent, K&R braces, no star imports.
+
+---
+
+## Changes
+
+This document was append-only with errata until 2026-09-23; D-046 B1 replaced that with current
+truth plus this log. Earlier text is in git (last errata version: commit `db8a6b9`).
+
+| Date | Change | Source |
+|---|---|---|
+| 2026-09-19 | T3 `RuleId` pattern `{1,3}` → `{1,5}`; `TaxYearId.label()` zero-padded | `W-008` erratum |
+| 2026-09-19 | `Money`/`Rate` moved `taxengine.money` → `taxrules.money`; money rules renamed and widened | B-001, D-012 |
+| 2026-09-19 | T5: I1, I4 enforced outside the validator; I2 strengthened; I6 made checkable | `W-029` erratum |
+| 2026-09-21 | T1: `taxrules` is `OPEN` | B-002, D-022 |
+| 2026-09-21 | T5: I18 already enforced; I3 built, wired at the first real pipeline | `W-039` erratum, D-029 |
+| 2026-09-23 | **Rewritten as current truth**: status marks; T2 regenerated from the source; T3 contracts instead of verbatim code; T4 built vs target (timeline by layer, rule pack not snapshot); T5 one table with "where enforced", 32 rows, 6 marked UNOWNED; T6 requires as full `NodeId`s, value types marked; T7 profiles per account and employers per account; T8 base `/tax/user/{email}` and **every item citation corrected** (18 of 18 were wrong); T9 two refusal codes; T10 built vs planned, citations corrected; T12 Money assertion contradiction resolved | D-046, review `reviews/2026-09-23-prd-techspec-review.md` |
+| 2026-09-23 | `PackDiff` built by `W-045h`; `W-139` reuses it (it had been owned twice) | this rewrite |

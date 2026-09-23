@@ -4,12 +4,12 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (between items) — D-046 B1: rewrite 01-PRD.md and 02-TECH-SPEC.md as current truth
+Item            : W-045b — bookkeeping, ID glossary, duplicate-owner sweep (docs only)
 Stage           : NOT_STARTED
-Plan            : reviews/2026-09-23-prd-techspec-review.md — A1–A7 + B2–B6 folded into the rewrite
-Approved        : D-046 — "agreeing with you"; C1–C5 done (D-047)
+Plan            : — (docs/taxplanning-build/plans/W-045b.md once written)
+Approved        : —
 Steps done      : —
-Next step       : rewrite 02-TECH-SPEC.md first (T1–T12 current truth; errata → Changes section), then 01-PRD.md
+Next step       : write plans/W-045b.md, then STOP for approval. Note for its plan: the review found UNOWNED invariants (I8, I12, I17, I24–I26), tests T23-1/T23-4/T23-8, endpoints /tax-years, itr-suggestion, itr-export — W-045b's duplicate-owner sweep should also table these
 Last verify     : ./mvnw test -pl backend -Punit → 1414 pass, 0 fail, 0 Checkstyle violations (W-045a)
 Waiting on      : nothing. O-1..O-4 open (00-BRIEF.md §12)
 Files touched   : —

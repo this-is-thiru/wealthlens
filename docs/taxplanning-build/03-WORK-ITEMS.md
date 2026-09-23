@@ -458,7 +458,7 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 | **W-045n** | *Research, no code.* TY 2025-26 sources for the **Phase 5 rules only** — slabs (both regimes, all age bands), rebate (`REBATE-OLD-001` is `NEEDS VERIFICATION`: open the 1961 Act s.87A base text), cess, rounding. Errata upgrading each row that is confirmed | **D-041**; `09` Slice 0 | every Phase 5 rule has a 2025-26 row at `SOURCE_CHECKED` or an explicit `UNVERIFIED` with `whatToCheck`; STATE's "Rules used that are not fully verified" lists the remainder |
 | **W-045o** | *Research, no code.* `coverage.json` completed to **every section of both Acts**, from their tables of contents; each classified | **D-038** | the register's section count equals each Act's; no entry is unclassified; the build reports the count by classification |
 
-> **Changed 2026-09-23 (D-047), before any Phase 4b item started:** `W-045d` also renames regime codes, with concept names sourced from the Acts and chosen by the owner (O-4); `W-045f` lays the timeline out by layer; `W-045g`/`W-045h`/`W-052c` say **rule pack**, `RulePackCompiler`, `PackDiff` and `<taxYear>.lock.json` instead of "snapshot"; `coverage.json` moves to the content layer. Source: `reviews/2026-09-23-prd-techspec-review.md` C1–C5. Edited in place because no item had started; the prior wording is in git (`72c089b`).
+> **Changed 2026-09-23 (D-047), before any Phase 4b item started:** `W-045d` also renames regime codes, with concept names sourced from the Acts and chosen by the owner (O-4); `W-045f` lays the timeline out by layer; `W-045g`/`W-045h`/`W-052c` say **rule pack**, `RulePackCompiler`, `PackDiff` and `<taxYear>.lock.json` instead of "snapshot"; `coverage.json` moves to the content layer; `W-139` reuses `W-045h`'s `PackDiff` instead of owning a second one. Source: `reviews/2026-09-23-prd-techspec-review.md` C1–C5. Edited in place because no item had started; the prior wording is in git (`72c089b`).
 
 **Standing rules from here on (D-043)** — every later item that models a section must also:
 
@@ -719,7 +719,7 @@ if that is not enough for the item in hand.
 | W-136 | retention derived from pack carry-forward periods | `DR 14` O5 |
 | W-137 | `TaxJob` + `JobLease` + 6 jobs | `DR 19` E8 |
 | W-138 | staleness sweep | `DR 13` R-8 |
-| W-139 | pack linter + cross-year diff | `DR 15` C4 |
+| W-139 | pack linter + cross-year diff — **the diff reuses `PackDiff` from `W-045h`**; this item adds the linter and the cross-year report on top | `DR 15` C4 |
 | W-140 | boundary-case generator | `DR 15` C5 |
 | W-141 | independent Python oracle + `expected.csv` | `DR 19` E4.2 |
 | W-142 | trace snapshot tests | `DR 19` E4.3 |

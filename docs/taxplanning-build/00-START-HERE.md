@@ -233,6 +233,11 @@ What I would need to proceed:
 
 ## 10. Errata — the only permitted write to the design *or the backlog*
 
+> **Amendment (D-046 B1, 2026-09-23):** `01-PRD.md` and `02-TECH-SPEC.md` are **no longer
+> append-only**. They state the current truth and are edited in place; every change is logged in
+> their **Changes** section, and the prior text stays in git. The errata rule below still governs
+> the 25 design documents and `03-WORK-ITEMS.md`.
+
 The design is a record of what was decided and why, and `03-WORK-ITEMS.md` is a record of what was
 planned. When building reveals either is **wrong** — not merely incomplete, and not a matter of
 taste — append an erratum **immediately below the wrong text**, in exactly this shape:
