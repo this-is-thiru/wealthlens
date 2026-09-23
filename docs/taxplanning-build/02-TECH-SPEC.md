@@ -21,6 +21,10 @@ copied verbatim.
 
 ## T1 — Modules
 
+> **Planned change — ○ `W-045b2` (D-048):** `taxrules` becomes `taxengine.rules`, `taxdocs` is removed
+> (document code goes to `taxplanning.documents`), leaving **two** tax modules. The table below is the
+> state *today*; this section is rewritten when `W-045b2` lands.
+
 | Module | Package | `Type` | `allowedDependencies` | Database? | Clock? |
 |---|---|---|---|---|---|
 | `taxrules` | `com.thiru.wealthlens.taxrules` | **OPEN** | `{"shared"}` | no | no |
@@ -461,3 +465,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-21 | T5: I18 already enforced; I3 built, wired at the first real pipeline | `W-039` erratum, D-029 |
 | 2026-09-23 | **Rewritten as current truth**: status marks; T2 regenerated from the source; T3 contracts instead of verbatim code; T4 built vs target (timeline by layer, rule pack not snapshot); T5 one table with "where enforced", 32 rows, 6 marked UNOWNED; T6 requires as full `NodeId`s, value types marked; T7 profiles per account and employers per account; T8 base `/tax/user/{email}` and **every item citation corrected** (18 of 18 were wrong); T9 two refusal codes; T10 built vs planned, citations corrected; T12 Money assertion contradiction resolved | D-046, review `reviews/2026-09-23-prd-techspec-review.md` |
 | 2026-09-23 | `PackDiff` built by `W-045h`; `W-139` reuses it (it had been owned twice) | this rewrite |
+| 2026-09-23 | T1: planned move to two modules | D-048 |

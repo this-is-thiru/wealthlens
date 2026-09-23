@@ -9,9 +9,9 @@ Stage           : NOT_STARTED
 Plan            : — (docs/taxplanning-build/plans/W-045b.md once written)
 Approved        : —
 Steps done      : —
-Next step       : write plans/W-045b.md, then STOP for approval. Note for its plan: the review found UNOWNED invariants (I8, I12, I17, I24–I26), tests T23-1/T23-4/T23-8, endpoints /tax-years, itr-suggestion, itr-export — W-045b's duplicate-owner sweep should also table these
+Next step       : write plans/W-045b.md, then STOP for approval. Note for its plan: the review found UNOWNED invariants (I8, I12, I17, I24–I26), tests T23-1/T23-4/T23-8, endpoints /tax-years, itr-suggestion, itr-export — W-045b's duplicate-owner sweep should also table these; and R7 in 00-START-HERE must name 00-BRIEF.md as edited in place (D-046 B1)
 Last verify     : ./mvnw test -pl backend -Punit → 1414 pass, 0 fail, 0 Checkstyle violations (W-045a)
-Waiting on      : nothing. O-1..O-4 open (00-BRIEF.md §12)
+Waiting on      : nothing. O-1..O-4 open. After W-045b comes W-045b2 (two modules, D-048)
 Files touched   : —
 Last item commit: taxplanning W-045a: enforce the engineering standards in the build — Checkstyle gate, naming rules, commit hook
 Updated         : 2026-09-23, session 4
