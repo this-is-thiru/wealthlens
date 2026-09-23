@@ -160,11 +160,11 @@ class ArchitectureTest {
     static final ArchRule money_rounding_lives_in_one_place =
             noClasses()
                     .that().resideOutsideOfPackage("..shared.util.money..")
-                    .and().resideOutsideOfPackage("..taxrules.money..")
+                    .and().resideOutsideOfPackage("..taxengine.rules.money..")
                     .and().haveSimpleNameNotEndingWith("ChargeRounding")
                     .should().callMethod(java.math.BigDecimal.class, "setScale", int.class, java.math.RoundingMode.class)
                     .because("TL-8: paise rounding belongs to TMoney; a second copy is how two roundings diverge."
-                            + " taxrules.money is the second permitted home, not a third copy: TL-8 section 7 names"
+                            + " taxengine.rules.money is the second permitted home, not a third copy: TL-8 section 7 names"
                             + " 'anything filed on someone else's behalf' as the trigger for exact decimal storage,"
                             + " and taxplanning ships ITR-ready figures. Its rounding likewise lives in one package.");
 
@@ -251,6 +251,10 @@ class ArchitectureTest {
     static final ArchRule taxengine_does_not_swallow_failures =
             noClasses()
                     .that().resideInAPackage("..taxengine..")
+                    // Scope unchanged by D-048: this rule covered the runner, not the former taxrules
+                    // module. It forbids *depending on* the types, which also forbids defining an
+                    // exception — see STATE.md for the open question before W-105.
+                    .and().resideOutsideOfPackage("..taxengine.rules..")
                     .should().dependOnClassesThat().haveFullyQualifiedName("java.lang.Exception")
                     .orShould().dependOnClassesThat().haveFullyQualifiedName("java.lang.RuntimeException")
                     .because("a swallowed failure becomes a silent zero; the engine throws TaxEngineException");
@@ -265,14 +269,32 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule tax_modules_use_money_not_bigdecimal =
             noClasses()
-                    .that().resideInAnyPackage("..taxengine..", "..taxrules..", "..taxdocs..")
-                    .and().resideOutsideOfPackage("..taxrules.money..")
+                    .that().resideInAPackage("..taxengine..")
+                    .and().resideOutsideOfPackage("..taxengine.rules.money..")
                     .should().dependOnClassesThat().haveFullyQualifiedName("java.math.BigDecimal")
                     .because("D-MONEY: money is Money, rates are Rate, and nothing else is either."
-                            + " Money lives in taxrules.money rather than taxengine.money because a rule"
-                            + " pack holds rupee figures -- slab band bounds, the 80C ceiling, the standard"
-                            + " deduction -- so taxrules needs the type by its nature, and taxrules may not"
-                            + " depend on taxengine (modulith T1). Discovered by W-013; see STATE.md B-001.");
+                            + " Money lives in taxengine.rules.money because a rule pack holds rupee figures --"
+                            + " slab band bounds, the 80C ceiling, the standard deduction -- so the rules"
+                            + " vocabulary needs it by its nature (B-001, W-013; package since D-048).");
+
+    /**
+     * The rules vocabulary never reaches into the engine that runs it.
+     *
+     * <p>Until decision D-048 {@code taxrules} was a module of its own and Spring Modulith enforced this
+     * direction. Folding it into {@code taxengine} kept every other reason for the split and lost only
+     * that check, so it is restated here: a cap shape or a pack type that imported a node, the pipeline
+     * or a result would make the law depend on how it happens to be evaluated.
+     */
+    @ArchTest
+    static final ArchRule rules_do_not_depend_on_the_runner =
+            noClasses()
+                    .that().resideInAPackage("..taxengine.rules..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "..taxengine.input..", "..taxengine.pipeline..",
+                            "..taxengine.trace..", "..taxengine.result..")
+                    .because("D-048: the law is data plus the arithmetic of single rules; ordering, carrying"
+                            + " values and tracing belong to the runner, which may read the rules and never"
+                            + " the reverse.");
 
     /**
      * {@code ComputationStep} was withdrawn in favour of the DAG's {@code ComputationNode}.

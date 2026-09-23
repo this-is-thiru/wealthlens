@@ -2,12 +2,12 @@ package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.InputsFingerprint;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
+import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
-import com.thiru.wealthlens.taxrules.id.NodeId;
-import com.thiru.wealthlens.taxrules.pack.RulePack;
-import com.thiru.wealthlens.taxrules.pack.RulePackLayer;
-import com.thiru.wealthlens.taxrules.pack.RulePackRef;
-import com.thiru.wealthlens.taxrules.regime.RegimeSpec;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;

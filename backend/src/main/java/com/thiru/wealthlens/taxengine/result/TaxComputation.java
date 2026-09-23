@@ -2,12 +2,12 @@ package com.thiru.wealthlens.taxengine.result;
 
 import com.thiru.wealthlens.taxengine.input.InputsFingerprint;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
-import com.thiru.wealthlens.taxrules.id.RegimeCode;
-import com.thiru.wealthlens.taxrules.id.TaxYearId;
-import com.thiru.wealthlens.taxrules.money.Money;
-import com.thiru.wealthlens.taxrules.pack.RulePackLayer;
-import com.thiru.wealthlens.taxrules.pack.RulePackRef;
 import java.util.List;
 import java.util.Map;
 
@@ -99,7 +99,7 @@ public record TaxComputation(
     }
 
     /** Every figure is addressable by rule id — {@code M5.1}. */
-    public List<TraceLine> linesFor(com.thiru.wealthlens.taxrules.id.RuleId rule) {
+    public List<TraceLine> linesFor(com.thiru.wealthlens.taxengine.rules.id.RuleId rule) {
         return trace.stream().filter(line -> line.rule().equals(rule)).toList();
     }
 }

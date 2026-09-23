@@ -105,10 +105,10 @@
     <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]NewRegimeTaxEngineTest\.java$"/>
     <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]OldRegimeTaxEngineTest\.java$"/>
     <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]PerquisiteValuationServiceTest\.java$"/>
-    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxrules[\\/]condition[\\/]ConditionTest\.java$"/>
-    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxrules[\\/]json[\\/]PackJsonTest\.java$"/>
-    <suppress checks="IllegalCatch" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxrules[\\/]json[\\/]PackJsonTest\.java$"/>
-    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxrules[\\/]regime[\\/]RegimeBehaviourRegistryTest\.java$"/>
+    <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]rules[\\/]condition[\\/]ConditionTest\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]rules[\\/]json[\\/]PackJsonTest\.java$"/>
+    <suppress checks="IllegalCatch" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]rules[\\/]json[\\/]PackJsonTest\.java$"/>
+    <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxengine[\\/]rules[\\/]regime[\\/]RegimeBehaviourRegistryTest\.java$"/>
     <suppress checks="AvoidStarImport" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]util[\\/]calculator[\\/]XirrCalculatorTest\.java$"/>
     <!-- BASELINE END -->
 </suppressions>

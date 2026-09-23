@@ -1,8 +1,8 @@
 package com.thiru.wealthlens.taxengine.input;
 
-import com.thiru.wealthlens.taxrules.id.RegimeCode;
-import com.thiru.wealthlens.taxrules.id.TaxYearId;
-import com.thiru.wealthlens.taxrules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 
 /**
  * The complete input to a computation.

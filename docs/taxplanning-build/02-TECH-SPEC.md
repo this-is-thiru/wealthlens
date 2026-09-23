@@ -21,39 +21,39 @@ copied verbatim.
 
 ## T1 — Modules
 
-> **Planned change — ○ `W-045b2` (D-048):** `taxrules` becomes `taxengine.rules`, `taxdocs` is removed
-> (document code goes to `taxplanning.documents`), leaving **two** tax modules. The table below is the
-> state *today*; this section is rewritten when `W-045b2` lands.
+| Module | Package | `Type` | `allowedDependencies` | Named interfaces (what other modules may see) | Database? | Clock? |
+|---|---|---|---|---|---|---|
+| `taxengine` | `com.thiru.wealthlens.taxengine` | CLOSED | `{"shared"}` | `input`, `result`, `money` (`rules.money`), `id` (`rules.id`) | **no** | **no** |
+| `taxplanning` | `com.thiru.wealthlens.taxplanning` | CLOSED | `{"shared", "auth", "taxengine :: *", "portfolio"}` | — | yes | yes |
 
-| Module | Package | `Type` | `allowedDependencies` | Database? | Clock? |
-|---|---|---|---|---|---|
-| `taxrules` | `com.thiru.wealthlens.taxrules` | **OPEN** | `{"shared"}` | no | no |
-| `taxengine` | `com.thiru.wealthlens.taxengine` | CLOSED | `{"shared", "taxrules"}` | **no** | **no** |
-| `taxdocs` | `com.thiru.wealthlens.taxdocs` | CLOSED | `{"shared", "taxrules", "taxengine"}` | no | yes |
-| `taxplanning` | `com.thiru.wealthlens.taxplanning` | CLOSED | `{"shared", "auth", "taxrules", "taxengine", "taxdocs", "portfolio"}` | yes | yes |
+Two modules since `W-045b2` (**D-048**; D-022/B-002 no longer apply — `taxrules` is now the package
+`taxengine.rules`, and the empty `taxdocs` is gone; document code will live in `taxplanning.documents`).
+A module here is a package boundary inside one JAR, verified by `WealthLensModulithTest` — not a service.
 
-`taxrules` is `OPEN` because it is the shared vocabulary: its types all live in sub-packages, and a
-`CLOSED` module exposes only its root (D-022, B-002). The three modules with internals stay `CLOSED`,
-so "the engine cannot reach a repository" is enforced, not conventional. Verified by
-`WealthLensModulithTest`.
+**Named interfaces.** A closed module shows other modules only the sub-packages it declares with
+`@NamedInterface` on their `package-info.java`; `"taxengine :: *"` admits all declared ones (not the
+base package). **An item that first needs another `taxengine` package from `taxplanning` adds that
+package's named interface** — one line. Proven by the `W-045b2` probes: `input`/`result` visible;
+`pipeline.NodeContext` refused; `Money`/`TaxYearId` were **not** carried by `@NamedInterface`'s
+`propagate` and needed their own (`money`, `id`).
 
-**Two traps, both hit repeatedly.** (1) A type a module needs must live in a module it may depend
-on — before writing a record that holds another module's type, check both (B-003, four times).
-(2) A module with no classes satisfies any rule, so a boundary is untested until its first class.
+**Inside `taxengine`**, `rules` (the vocabulary and single-rule arithmetic) may not depend on
+`input`, `pipeline`, `trace` or `result` (`ArchitectureTest.rules_do_not_depend_on_the_runner`).
 
-`taxplanning` also contains the **legacy** module (56 classes, `/tax-planning/**`) until it is
-deleted per `09-build-plan.md` B2 (items via `W-045c`, Appendix E).
+**The trap that remains:** before writing a record that holds another module's type, check the
+holder's module may see it (B-003, four times). `taxplanning` also contains the **legacy** module
+(56 classes, `/tax-planning/**`) until it is deleted per `09-build-plan.md` B2.
 
 ---
 
 ## T2 — Package map
 
-### `taxrules` — ✅ built
+### `taxengine.rules` — ✅ built (the former `taxrules` module, D-048)
 
 | Package | Types |
 |---|---|
-| `money/` | `Money` `Rate` — the **only** package that may call `BigDecimal.setScale` in the tax modules |
-| `id/` | `RuleId` `NodeId` `ComponentCode` `RegimeCode` `ItrFormCode` `ScheduleCode` `TaxYearId` `BaseId` `Identifiers` |
+| `money/` | `Money` `Rate` — the **only** package that may call `BigDecimal.setScale` in the tax modules · named interface `money` |
+| `id/` | `RuleId` `NodeId` `ComponentCode` `RegimeCode` `ItrFormCode` `ScheduleCode` `TaxYearId` `BaseId` `Identifiers` · named interface `id` |
 | `cap/` | `CapShape` (sealed) `Fixed` `PercentOfBase` `LeastOf` `AggregateWithCeiling` `SlabLadder` `PerUnitPerPeriod` `CapResult` `CapContext` `AggregateOutcome` |
 | `condition/` | `Condition` (sealed, **13** predicates: `IsResident` `AgeAtLeast` `HasPersonType` `IsCertifiedDisabled` `IncomeAtMost` `IncomeAtLeast` `HasIncomeUnderHead` `ComponentPresent` `EvidenceRecorded` `PaidOtherThanInCash` `AllOf` `AnyOf` `Not`) `ConditionContext` `PersonType` `AgeSubject` `DisabilitySeverity` `EvidenceType` `HeadCode` |
 | `temporal/` | `TemporalAxis` `TemporalContext` `Validity` `RuleVersion` `AmendmentRef` `DateRange` `Provision` `Presence` `MissingTemporalCoordinateException` `NoRuleVersionException` |
@@ -64,9 +64,8 @@ deleted per `09-build-plan.md` B2 (items via `W-045c`, Appendix E).
 | `validate/` | `PackValidator` `PackValidationException` |
 | `json/` | `PackJson` `ValueJson` `ShapeJson` `ConditionJson` `RuleJson` `RegimeJson` `RegistryJson` `JsonPackAssembler` — hand-written parsing (D-019) |
 | `generated/` | `RuleIds` `ComponentCodes` — generated from the packs, committed, verified (`W-032b`) |
-| (root) | `TaxRules` — module marker |
 
-### `taxrules` — planned
+### `taxengine.rules` — planned
 
 | Package | Types | Item |
 |---|---|---|
@@ -83,10 +82,10 @@ deleted per `09-build-plan.md` B2 (items via `W-045c`, Appendix E).
 
 | Package | Types |
 |---|---|
-| `input/` | `EngineInputs` (10 components: `taxYear` `regime` `temporal` `entered` `taxpayer` `family` `ledgers` `elections` `capitalGains` `filing`) `TaxpayerFacts` `FamilySnapshot` `LedgerSnapshot` `RegimeElectionSnapshot` `FilingFacts` `EnteredFacts` `CapitalGainsInput` `InputsFingerprint` |
+| `input/` (named interface `input`) | `EngineInputs` (10 components: `taxYear` `regime` `temporal` `entered` `taxpayer` `family` `ledgers` `elections` `capitalGains` `filing`) `TaxpayerFacts` `FamilySnapshot` `LedgerSnapshot` `RegimeElectionSnapshot` `FilingFacts` `EnteredFacts` `CapitalGainsInput` `InputsFingerprint` |
 | `pipeline/` | `ComputationNode` `NodeContext` `NodeResult` `NodeRegistry` `NodeValue` (sealed: **`MoneyValue`, `TaxByBasis` only**) `SpecialRateId` `TopologicalSort` `PipelineRunner` |
 | `trace/` | `TraceLine` `TraceAnnotation` `Notice` `StepKind` `Severity` |
-| `result/` | `TaxComputation` `FilingPosition` `ComputationId` `ComputationReceipt` |
+| `result/` (named interface `result`) | `TaxComputation` `FilingPosition` `ComputationId` `ComputationReceipt` |
 
 ### `taxengine` — planned
 
@@ -101,7 +100,7 @@ deleted per `09-build-plan.md` B2 (items via `W-045c`, Appendix E).
 | `itr/` | `ItrFormSelector` `ItrSelection` `FormVerdict` `ScheduleMapper` | ○ `W-091`, `W-093` |
 | `error/` | `TaxEngineException` (sealed) `TaxError` | ○ `W-105` |
 
-### `taxdocs` — only the module marker `TaxDocs` is built
+### `taxplanning.documents` — planned (the former `taxdocs` module, removed by D-048)
 
 `ingest/` `IngestedDocument` `ParseAttempt` `ExtractedField` `DocumentConfirmation` (○ `W-124`) ·
 `parser/` `DocumentParser` `Form130Parser` `Form16Parser` (○ `W-125`–`W-127`) · `reconcile/`
@@ -128,7 +127,7 @@ it): the legacy module already has `TaxComputationService`, `TaxComputationEntit
 
 The source is the reference. These are the contracts a change must keep.
 
-### `Money` — ✅ `taxrules/money/Money.java` (`W-005`, `W-006`)
+### `Money` — ✅ `taxengine/rules/money/Money.java` (`W-005`, `W-006`)
 
 - `record Money(BigDecimal amountInRupees)`; construction sets **scale 2, `HALF_UP`**; `null` rejected.
 - Arithmetic: `plus`, `minus`, `times(int)`, `floorAtZero`, `min`, `max`, comparisons.
@@ -136,13 +135,13 @@ The source is the reference. These are the contracts a change must keep.
   magnitude with the sign restored — `1234.99 → 1230` (`RATE-ROUND-002`, `13-edge-cases.md` T13-14).
 - Asserted with AssertJ `isEqualTo` on `Money` (D-010) — record equality also catches a scale slip.
 
-### `Rate` — ✅ `taxrules/money/Rate.java` (`W-007`)
+### `Rate` — ✅ `taxengine/rules/money/Rate.java` (`W-007`)
 
 - `record Rate(BigDecimal fraction)`; `Rate.percent("30")` stores `0.30`. "30" and "0.30" are
   different types by design.
 - `of(Money)` rounds to the money scale **once**, at the boundary.
 
-### Identifiers — ✅ `taxrules/id/` (`W-008`, `W-009`)
+### Identifiers — ✅ `taxengine/rules/id/` (`W-008`, `W-009`)
 
 | Type | Pattern (from the source) |
 |---|---|
@@ -402,13 +401,14 @@ public enum TaxError {                     //  http  retryable  class
 
 | Rule | Enforced by | Status |
 |---|---|---|
-| `BigDecimal.setScale` only in `..shared.util.money..` and `..taxrules.money..` (plus `ChargeRounding`) | `ArchitectureTest.money_rounding_lives_in_one_place` | ✅ `W-002`, `W-013` |
+| `BigDecimal.setScale` only in `..shared.util.money..` and `..taxengine.rules.money..` (plus `ChargeRounding`) | `ArchitectureTest.money_rounding_lives_in_one_place` | ✅ `W-002`, `W-013` |
 | tax modules use `Money`, not `BigDecimal`, outside `money/` | `tax_modules_use_money_not_bigdecimal` | ✅ `W-004`, `W-013` |
 | `taxengine` does not use `TMoney` | `taxengine_does_not_use_TMoney` | ✅ `W-002` |
 | only `..taxplanning.portfolio..` calls `MoneyBridge.fromTMoney` | `only_the_adapter_converts` | ✅ `W-002` (first bites at the bridge, Phase 9) |
 | `taxengine` fetches nothing: no repository, Spring Data or `taxplanning` | `taxengine_fetches_nothing` | ✅ `W-004` |
 | `taxengine` reads no clock | `taxengine_has_no_clock` | ✅ `W-004` |
-| `taxengine` catches no `Exception`/`RuntimeException` | `taxengine_does_not_swallow_failures`; repo-wide `IllegalCatch` | ✅ `W-004`, `W-045a` |
+| `taxengine` catches no `Exception`/`RuntimeException` | repo-wide Checkstyle `IllegalCatch`; `taxengine_does_not_swallow_failures` (runner packages only — see ⚠) | ✅ `W-004`, `W-045a` |
+| `taxengine.rules` does not depend on `input`, `pipeline`, `trace`, `result` | `rules_do_not_depend_on_the_runner` | ✅ `W-045b2` |
 | no `ComputationStep` anywhere | `ArchitectureTest` (plain test) | ✅ `W-004` |
 | overriding `RegimeBehaviour.adjustPipeline` is listed against a reviewed file | `ArchitectureTest` (plain test, L5 guard 3) | ✅ `W-037c` |
 | no generic class suffixes; unique simple class names | `classes_have_no_generic_suffix`, `simple_class_names_are_unique` | ✅ `W-045a` |
@@ -416,6 +416,12 @@ public enum TaxError {                     //  http  retryable  class
 | formatting | `spotless:check` on `validate` | ✅ `W-045a` |
 | every `ComputationNode` implementation is referenced by some pack pipeline | `ArchitectureTest` | ○ `W-053` (with I3) |
 | every `@RequestBody` carries `@Valid`; no controller returns an `@Document` type | `ArchitectureTest` | ○ `W-095` |
+
+⚠ **`taxengine_does_not_swallow_failures` is miswritten.** It forbids *depending on* `Exception` /
+`RuntimeException`, which also forbids **defining** an exception — so it excludes `taxengine.rules`
+(which has four exception types) to keep its pre-D-048 scope, and it will reject `W-105`'s
+`TaxEngineException`. What it means — *no catch* — is already enforced repo-wide by Checkstyle
+`IllegalCatch`. Open question for the owner in `STATE.md`; must be settled before `W-105`.
 
 ---
 
@@ -467,3 +473,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-23 | `PackDiff` built by `W-045h`; `W-139` reuses it (it had been owned twice) | this rewrite |
 | 2026-09-23 | T1: planned move to two modules | D-048 |
 | 2026-09-23 | open questions `O-n` → `OQ-n` | `W-045b`, ID glossary (START-HERE §11) |
+| 2026-09-23 | T1, T2 for two modules and named interfaces; T10 direction rule and the ⚠ on the swallow rule | `W-045b2`, D-048 |

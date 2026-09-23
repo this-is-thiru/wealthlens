@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxengine.input;
 
-import com.thiru.wealthlens.taxrules.id.TaxYearId;
-import com.thiru.wealthlens.taxrules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.Map;
 import java.util.Optional;
 

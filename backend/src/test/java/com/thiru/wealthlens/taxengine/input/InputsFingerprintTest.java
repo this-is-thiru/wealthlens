@@ -10,13 +10,13 @@ import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Member;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
 import com.thiru.wealthlens.taxengine.input.TaxpayerFacts.ResidentialStatus;
-import com.thiru.wealthlens.taxrules.component.RateBasisHint;
-import com.thiru.wealthlens.taxrules.condition.DisabilitySeverity;
-import com.thiru.wealthlens.taxrules.condition.PersonType;
-import com.thiru.wealthlens.taxrules.id.RegimeCode;
-import com.thiru.wealthlens.taxrules.id.TaxYearId;
-import com.thiru.wealthlens.taxrules.regime.ElectionState;
-import com.thiru.wealthlens.taxrules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.rules.component.RateBasisHint;
+import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.regime.ElectionState;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import java.lang.reflect.RecordComponent;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -160,8 +160,8 @@ class InputsFingerprintTest {
                                     0,
                                     false,
                                     Optional.empty(),
-                                    com.thiru.wealthlens.taxrules.money.Money.of("100000"),
-                                    com.thiru.wealthlens.taxrules.money.Money.ZERO,
+                                    com.thiru.wealthlens.taxengine.rules.money.Money.of("100000"),
+                                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
                                     0,
                                     Map.of(),
                                     Optional.empty())))),
@@ -174,7 +174,7 @@ class InputsFingerprintTest {
                             "capitalGains.buckets",
                             mutate(in -> copy(in, r -> r.capitalGains = new CapitalGainsInput(
                                     List.of(new Bucket(
-                                            com.thiru.wealthlens.taxrules.money.Money.of("50000"),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("50000"),
                                             Term.LONG_TERM,
                                             RateBasisHint.SPECIAL_RATE_LISTED_EQUITY,
                                             Optional.empty())),
@@ -192,7 +192,7 @@ class InputsFingerprintTest {
                                     List.of(new BroughtForwardLoss(
                                             TaxYearId.of(2024),
                                             Term.SHORT_TERM,
-                                            com.thiru.wealthlens.taxrules.money.Money.of("1000"))),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("1000"))),
                                     PF_AS_OF,
                                     "pf-run-1")))),
                     Arguments.of(
@@ -202,7 +202,7 @@ class InputsFingerprintTest {
                                     Optional.empty(),
                                     List.of(new Payment(
                                             LocalDate.of(2026, 3, 15),
-                                            com.thiru.wealthlens.taxrules.money.Money.of(
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of(
                                                     "25000"))))))),
                     Arguments.of(
                             "filing.furnishedOn",

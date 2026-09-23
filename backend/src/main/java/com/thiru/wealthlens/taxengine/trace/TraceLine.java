@@ -1,9 +1,9 @@
 package com.thiru.wealthlens.taxengine.trace;
 
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
-import com.thiru.wealthlens.taxrules.id.NodeId;
-import com.thiru.wealthlens.taxrules.id.RuleId;
-import com.thiru.wealthlens.taxrules.registry.Provenance;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import java.util.Optional;
 
 /**

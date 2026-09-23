@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxengine.trace;
 
-import com.thiru.wealthlens.taxrules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import java.util.List;
 
 /**

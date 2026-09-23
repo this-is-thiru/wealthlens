@@ -7,11 +7,11 @@ import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BroughtForwardLoss
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
-import com.thiru.wealthlens.taxrules.component.RateBasisHint;
-import com.thiru.wealthlens.taxrules.id.RegimeCode;
-import com.thiru.wealthlens.taxrules.id.TaxYearId;
-import com.thiru.wealthlens.taxrules.money.Money;
-import com.thiru.wealthlens.taxrules.regime.ElectionState;
+import com.thiru.wealthlens.taxengine.rules.component.RateBasisHint;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.regime.ElectionState;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxengine.input;
 
-import com.thiru.wealthlens.taxrules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;

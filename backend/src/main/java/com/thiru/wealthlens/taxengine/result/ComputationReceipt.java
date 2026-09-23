@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxengine.result;
 
-import com.thiru.wealthlens.taxrules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import java.util.Locale;
 import java.util.regex.Pattern;
 

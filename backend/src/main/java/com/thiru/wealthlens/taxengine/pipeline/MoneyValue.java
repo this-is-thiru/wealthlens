@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
-import com.thiru.wealthlens.taxrules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 
 /**
  * A node whose output is one amount — gross salary, total income, cess.

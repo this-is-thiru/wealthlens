@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045b — "taxplanning W-045b: correct the build docs' bookkeeping — status board, ID glossary, ownership sweep"
+Last checkpoint           : W-045b2 — "taxplanning W-045b2: fold taxrules into taxengine and drop taxdocs — two modules, named interfaces"
 Last updated              : 2026-09-23 (session 4 — brief written, D-033…D-040 decided; build GREEN, 1410 tests)
-Current position          : W-045b2 — two tax modules (D-048)
+Current position          : W-045c — audit Phases 5–6; slices→phases; legacy deletion items (docs only)
 Session count             : 4
 ```
 
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-045b2` — two tax modules (D-048); Phase 4b has 16 prerequisite items from the brief (D-043), then `W-046`. **Next milestone is `W-053`**: a correct slab-and-rebate calculator, **both tax years**, no database |
+| **Next item** | `W-045c` — Phase 4b audit (docs only); Phase 4b has 16 prerequisite items from the brief (D-043), then `W-046`. **Next milestone is `W-053`**: a correct slab-and-rebate calculator, **both tax years**, no database |
 | **Status** | `READY` — nothing in flight, nothing blocked. Three owner questions open (OQ-1…OQ-3 below); only `W-045m` depends on one of them |
 | **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b D  W-045b2 ·  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **51** / 168 live · in flight **0** · blocked **0**  ← computed by script; 168 = 146 base ids − 8 retired + 30 suffixed
+Counts — done **52** / 168 live · in flight **0** · blocked **0**  ← computed by script; 168 = 146 base ids − 8 retired + 30 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045b2 | 2026-09-23 | Two tax modules (D-048): `taxrules` → `taxengine.rules` (134 files, `git mv`), `taxdocs` removed; `taxengine` CLOSED with named interfaces `input`, `result`, `money`, `id` (`propagate` did not carry `Money`/`TaxYearId` — probe); `taxplanning` → `taxengine :: *`; `rules_do_not_depend_on_the_runner`; swallow rule kept at prior scope, found miswritten (**OQ-5**, before W-105) | 6 probes; `./mvnw test -pl backend -Punit` 1415/1415
 W-045b | 2026-09-23 | Status board and counts corrected (51/168); START-HERE §11 ID glossary (~35 families, citation rule); R7 note; Appendix C ownership sweep — 37 multi-owner types classified, 3 created-twice rows fixed (W-055, W-112, W-067–069); Appendix C part 2 lists the unowned with **proposed** owners (not accepted — still UNOWNED); `O-n`→`OQ-n`, `B-n`→`BP-n` | six scripted checks; `./mvnw test -pl backend -Punit` 1414/1414
 W-045a | 2026-09-23 | Strict Checkstyle 10.26 failing the build (main + test), shrink-only baseline (99 entries, `CheckstyleBaselineTest`), FileLength 1500 by the owner; ArchUnit: no generic suffixes, unique simple names (DateRange, ExcelParser grandfathered); spotless:check on validate; commit-gate hook; 7 tax-module violations fixed; placeholder `taxengine/TaxEngine` deleted; all gates proven to bite | `./mvnw test -pl backend -Punit` — 1414/1414, 0 Checkstyle violations
 W-043 | 2026-09-21 | TaxComputation/FilingPosition/ComputationId/ComputationReceipt + 21 tests; A6's lawAndExec corrected to a Map (one ref cannot hold two layers); FilingPosition ships 3 of 6 per **D-032**; found ComputationReceipt owned by two items. **Phase 4 complete** | `./mvnw test -pl backend -Dtest=TaxComputationTest`
@@ -517,6 +518,7 @@ one level up. Likely needs a new item in Phase 5, probably after `W-046`.
 | **OQ-2** | When should a web screen for editing rules arrive? | after `W-111` | nothing now |
 | **OQ-3** | The old compute endpoint returns known-wrong tax — warn, disable, or leave? | warn now, remove when replaced | `W-045m` only |
 | **OQ-4** | Concept names for rule IDs and regime codes | `W-045d` proposes each, quoted from the Acts with its source | `W-045d` |
+| **OQ-5** | `ArchitectureTest.taxengine_does_not_swallow_failures` forbids *depending on* `Exception`/`RuntimeException`, so it also forbids *defining* an exception; its intent (no catch-all) is already enforced repo-wide by Checkstyle `IllegalCatch` | **delete it** (redundant), or rewrite it to target `catch` clauses only | before `W-105` (`TaxEngineException` would fail it) |
 
 Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` amendment, `W-052b`).
 

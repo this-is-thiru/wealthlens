@@ -7,6 +7,6 @@
  */
 @org.springframework.modulith.ApplicationModule(
     type = org.springframework.modulith.ApplicationModule.Type.CLOSED,
-    allowedDependencies = {"shared", "auth", "taxrules", "taxengine", "taxdocs", "portfolio"}
+    allowedDependencies = {"shared", "auth", "taxengine :: *", "portfolio"}
 )
 package com.thiru.wealthlens.taxplanning;

@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
-import com.thiru.wealthlens.taxrules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;

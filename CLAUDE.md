@@ -110,10 +110,11 @@ Modules live under `com.thiru.wealthlens.<module>`, each with a `package-info.ja
 | `corporate` | `shared`, `portfolio` |
 | `brokercharges` | `shared`, `portfolio`, `corporate` |
 | `helper` | `shared`, `portfolio` |
-| `taxplanning` | `shared`, `auth` |
+| `taxplanning` | `shared`, `auth`, `taxengine :: *`, `portfolio` — **CLOSED** |
+| `taxengine` | `shared` — **CLOSED**; exposes only its named interfaces `input`, `result`, `money`, `id` |
 | `insurance`, `finance` | `shared` |
 
-`portfolio` is the domain center; `shared` depends *back* on `portfolio` because generic tools (XirrCalculator, ExcelBuilder, MongoConfig converters) reference portfolio types. All modules are `OPEN`, so internal sub-packages are still visible — that is a migration affordance from the old flat layout, not a design goal.
+`portfolio` is the domain center; `shared` depends *back* on `portfolio` because generic tools (XirrCalculator, ExcelBuilder, MongoConfig converters) reference portfolio types. The original eight modules are `OPEN`, so their internal sub-packages are still visible — a migration affordance from the old flat layout, not a design goal. The two tax modules are `CLOSED` (D-048): other modules see only a closed module's declared **named interfaces** (`@NamedInterface` on a sub-package's `package-info.java`; consumers write `"taxengine :: *"`). The rules vocabulary lives at `taxengine.rules` and may not depend on the rest of `taxengine` (`ArchitectureTest.rules_do_not_depend_on_the_runner`). Tax-planning design and build docs: `docs/taxplanning-design/00-BRIEF.md`, `docs/taxplanning-build/`.
 
 Within every module: `controller/` (no business logic) → `service/` (`@Transactional`) → `repository/` (Spring Data MongoDB) → `entity/` + `dto/`.
 

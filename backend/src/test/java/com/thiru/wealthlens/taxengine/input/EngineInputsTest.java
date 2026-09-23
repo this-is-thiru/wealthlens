@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.TaxpayerFacts.ResidentialStatus;
-import com.thiru.wealthlens.taxrules.condition.PersonType;
-import com.thiru.wealthlens.taxrules.id.RegimeCode;
-import com.thiru.wealthlens.taxrules.id.TaxYearId;
-import com.thiru.wealthlens.taxrules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import java.lang.reflect.RecordComponent;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -127,7 +127,7 @@ class EngineInputsTest {
 
                 assertThat(packageName)
                         .as(
-                                "EngineInputs.%s is a %s. taxengine may depend only on taxrules,"
+                                "EngineInputs.%s is a %s. taxengine may depend only on itself,"
                                         + " shared and the JDK — see B-003 and D-024: a component"
                                         + " from taxplanning or portfolio makes the engine impure"
                                         + " and cannot compile under the module rules",
@@ -136,7 +136,6 @@ class EngineInputsTest {
                         .satisfiesAnyOf(
                                 p -> assertThat(p)
                                         .startsWith("com.thiru.wealthlens.taxengine"),
-                                p -> assertThat(p).startsWith("com.thiru.wealthlens.taxrules"),
                                 p -> assertThat(p).startsWith("com.thiru.wealthlens.shared"),
                                 p -> assertThat(p).startsWith("java."));
             }

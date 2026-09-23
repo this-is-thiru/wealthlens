@@ -3,9 +3,9 @@ package com.thiru.wealthlens.taxengine.pipeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.thiru.wealthlens.taxrules.id.NodeId;
-import com.thiru.wealthlens.taxrules.id.RuleId;
-import com.thiru.wealthlens.taxrules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxengine.input;
 
-import com.thiru.wealthlens.taxrules.id.RegimeCode;
-import com.thiru.wealthlens.taxrules.regime.ElectionState;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.regime.ElectionState;
 import java.util.Map;
 
 /**

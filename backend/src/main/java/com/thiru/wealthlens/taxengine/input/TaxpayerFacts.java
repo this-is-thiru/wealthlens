@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxengine.input;
 
-import com.thiru.wealthlens.taxrules.condition.DisabilitySeverity;
-import com.thiru.wealthlens.taxrules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;

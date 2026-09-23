@@ -5,12 +5,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
-import com.thiru.wealthlens.taxrules.id.NodeId;
-import com.thiru.wealthlens.taxrules.id.RuleId;
-import com.thiru.wealthlens.taxrules.money.Money;
-import com.thiru.wealthlens.taxrules.registry.DraftOrFinal;
-import com.thiru.wealthlens.taxrules.registry.Provenance;
-import com.thiru.wealthlens.taxrules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
+import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;

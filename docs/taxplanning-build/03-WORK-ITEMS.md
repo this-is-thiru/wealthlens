@@ -23,6 +23,11 @@ B2** there: a `permits` clause lists only what exists. When
 you reach any item listed there, **its `Produces` is Appendix A's row plus the phase table's** — and
 three items in it have no owner at all.
 
+**On package names (D-048, `W-045b2`).** `taxrules/…` in any row below means **`taxengine/rules/…`**, and
+`taxdocs/…` means **`taxplanning/documents/…`**. The rows keep their original paths as history; the
+code and `02-TECH-SPEC.md` T2 have the current ones. An item that needs a `taxengine` package from
+`taxplanning` adds that package's `@NamedInterface` (TS T1).
+
 **On retired ids.** Some ids below are **RETIRED** — merged into a neighbour. They are left in place,
 not renumbered, because `W-001`…`W-012` are already referenced by commit subjects. A retired id is
 no work. **146 base ids, 143 live items** (suffixed ids added by D-013, D-015, D-018 are counted).

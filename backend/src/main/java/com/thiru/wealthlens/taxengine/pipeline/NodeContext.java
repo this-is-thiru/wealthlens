@@ -1,11 +1,11 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
-import com.thiru.wealthlens.taxrules.id.NodeId;
-import com.thiru.wealthlens.taxrules.id.RuleId;
-import com.thiru.wealthlens.taxrules.pack.RulePack;
-import com.thiru.wealthlens.taxrules.pack.RuleRow;
-import com.thiru.wealthlens.taxrules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
