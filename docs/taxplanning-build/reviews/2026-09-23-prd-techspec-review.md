@@ -105,6 +105,10 @@ axes (brief §7.2) have no PRD home; T9's error catalogue has **no code for the 
 
 ---
 
+| **C5** | The brief's examples `RATE-SLAB-S202-1` and `S202_DEFAULT` put a **section number** in the identity — contradicting D-035 and B4 (found while applying C1–C4) | brief §5.2, §10 | examples removed; concept names proposed at `W-045d` from the Acts' wording, owner chooses (O-4) |
+
+**C1–C5 applied 2026-09-23 (D-047).**
+
 ## Order of application (after `W-045a` is committed)
 
 1. **C1–C4** — correct my own Phase 4b rows and the brief (they are uncommitted-era work, cheapest now).

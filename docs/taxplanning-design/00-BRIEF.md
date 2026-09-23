@@ -10,7 +10,7 @@ of it; where one disagrees with this brief, **this brief wins** and the other do
 | Owner | the product owner (repository owner) |
 | Supersedes | the scope statements in `00-SUMMARY.md` (D1, D7), `04-product-spec.md` P1, `01-PRD.md` §2 and §7 — those stay in place for history; each carries an amendment pointing here |
 | Why it exists | the original brief (`docs/prompts/taxplanning-design.md`) is **empty in git** (0 lines, commit `15d36e8`). Twenty-five design documents cite "the brief" for their central requirement, and nothing on disk records it. This file is that record |
-| Decisions it records | D-033 … D-043 (`docs/taxplanning-build/STATE.md`) |
+| Decisions it records | D-033 … D-047 (`docs/taxplanning-build/STATE.md`) |
 
 ---
 
@@ -113,7 +113,7 @@ would make adding either one an edit to the other.
 | **B-2** | **Law is data; arithmetic is code.** A new year, Budget change, allowance, deduction, regime or form is a data change. A new *kind* of arithmetic is a new manager | §6; `23` A5 |
 | **B-3** | **Nothing silent.** A rule that cannot be evaluated fails the computation. An unavailable relief produces a line with a reason, never an absent line or a zero | ArchUnit (no `catch (Exception`), `P5` |
 | **B-4** | **Every number explains itself.** The trace is the result; each line names its rule IDs, version and source | `TraceLine` |
-| **B-5** | **Reproducible forever.** A computation pins the exact rule snapshot it used; identical inputs + snapshot ⇒ byte-identical output | fingerprint (`W-038`), snapshot checksum |
+| **B-5** | **Reproducible forever.** A computation pins the exact rule pack it used; identical inputs + rule pack ⇒ byte-identical output | fingerprint (`W-038`), the pack's lock checksum |
 | **B-6** | **The engine is pure.** It reads no clock, fetches nothing, and depends on no persistence | ArchUnit `taxengine_fetches_nothing` |
 | **B-7** | **Every case is accounted for.** Every section of the law is classified — modelled, deliberately not modelled, or not yet — and CI fails on an unclassified one | §7, the coverage register |
 | **B-8** | **Status is visible.** An unverified rule is usable only with its status shown to the user | §5.3 |
@@ -129,24 +129,35 @@ Today a new year is created by `cp -r rulepacks/2026-27 rulepacks/2027-28` (`07-
 X4.1). A regime that lives ten years is then ten copies, free to drift; a rule that changes once
 in ten years is re-typed nine times.
 
-**Decision D-034:** the law is authored **once**, as a timeline:
+**Decision D-034:** the law is authored **once**, as a timeline — one file per identity, grouped
+by **layer**, because the layer decides whether a file may change a computed number (TS T4; the
+cache key covers `law` + `exec` only; property P3 proves `forms` and `content` cannot):
 
 ```
-law/
-  rules/RATE-SLAB-S202-1.json        ← one file per rule identity
-      versions: [ v(2024-04-01 → 2025-03-31), v(2025-04-01 → 2026-03-31), v(2026-04-01 → …) ]
-  regimes/S202_DEFAULT.json          ← one file per regime, lifetime inside it
-  forms/ITR-1.json …                 ← one file per form, versions inside it
+rulepacks/
+  timeline/
+    law/rules/<RuleId>.json            ← one file per rule identity; its versions inside
+        versions: [ v(2024-04-01 → 2025-03-31), v(2025-04-01 → …) ]   ← unchanged law = one version spanning years
+    law/regimes/<RegimeCode>.json      ← one file per regime; lifetime inside it
+    exec/pipelines/…  exec/components/<ComponentCode>.json
+    forms/itr/<ItrFormCode>.json       ← one file per form; versions inside it
+    content/sections/<SectionKey>.json ← the section catalogue (§6.3)
+    content/coverage.json              ← the coverage register (§7.1) — content, so it can change no number
+  2026-27.lock.json                    ← the compiled rule pack's identity: version ids + per-layer checksums
 ```
 
-and each tax year's **pack** is **compiled** from it — a frozen, checksummed snapshot of every
-version whose validity touches that year:
+and each tax year's **rule pack** is **compiled** from it — frozen and checksummed, holding every
+`PUBLISHED` version whose validity touches that year. "Rule pack" stays the one word for that
+compiled, per-year artefact (TS T2, `W-027`); the timeline is its source:
 
 ```
-timeline  ──compile(taxYear, asOf)──►  snapshot 2026-27 v3  (immutable, checksummed)
-                                              ▲
-                              every computation pins this, forever
+timeline  ──RulePackCompiler(taxYear)──►  rule pack 2026-27  (immutable; checked against 2026-27.lock.json)
+                                                   ▲
+                                   every computation pins this, forever
 ```
+
+The word **snapshot is not used** for rule packs: in this codebase it already names an input
+projection taken at compute time (`FamilySnapshot`, `LedgerSnapshot`, `RegimeElectionSnapshot`).
 
 What is kept from the current design: immutability, checksums, reproducibility, the pack as the
 unit a computation pins (`W-027`). What goes: copying, and the drift it permits. Only 15 rule rows
@@ -158,11 +169,15 @@ A `RuleId` names **what the rule is**, never the year it applies to and never "o
 
 | Today | Problem | Becomes |
 |---|---|---|
-| `RATE-SLAB-NEW-2026` | the year is in the ID, so next year's change needs a new ID instead of a new version; "NEW" breaks the glossary (`01-PRD.md` §1) | `RATE-SLAB-S202-1` (the s.202(1) table) |
-| `RATE-SLAB-OLD-2026` | same | `RATE-SLAB-GENERAL` (the general slab table), versions per year and per age band |
+| `RATE-SLAB-NEW-2026` + `RATE-SLAB-NEW-2025` | the year is in the ID, so an unchanged law needs a new ID every year (the rulebook says these two are *identical*); "NEW" breaks the glossary (`01-PRD.md` §1) | **one** rule, named for its concept, with one version spanning both years |
+| `RATE-SLAB-OLD-2026` | same | one rule, named for its concept, versions per year and per age band |
 
 The year lives in the **version**. The section lives in the **provision** (`provision1961`,
-`provision2025`). Neither belongs in the identity.
+`provision2025`). Neither belongs in the identity — and the same holds for **regime codes**
+(D-046 B4): one regime continuing from the 1961 Act into the 2025 Act is one identity.
+
+**The concept names themselves are not invented here.** `W-045d` proposes them from the Acts' own
+wording, each with its source, and the owner chooses (open question **O-4**, §12).
 
 ### 5.3 Three statuses, not one (D-036)
 
@@ -172,7 +187,7 @@ One `status` field is currently asked to mean three different things. They are s
 |---|---|---|---|
 | **Legal status** — what the law says about this version | `BILL` · `ENACTED` · `NOTIFIED` · `PENDING_NOTIFICATION` · `IN_FORCE` · `WITHDRAWN` · `STRUCK_DOWN` | the rule author, from the source | which versions apply on a date |
 | **Verification** — how sure we are we transcribed it right | `UNVERIFIED` · `SOURCE_CHECKED` (read against the gazette) · `PROFESSIONALLY_REVIEWED` (a CA signed it) | a reviewer | what the user is told (B-8) |
-| **Publication** — where the version is in our workflow | `DRAFT` · `IN_REVIEW` · `PUBLISHED` · `SUPERSEDED` | the publish workflow | **only `PUBLISHED` versions enter a snapshot** |
+| **Publication** — where the version is in our workflow | `DRAFT` · `IN_REVIEW` · `PUBLISHED` · `SUPERSEDED` | the publish workflow | **only `PUBLISHED` versions enter a rule pack** |
 
 A `DRAFT` version of a Budget proposal can power a clearly labelled "if the Finance Bill passes"
 preview without ever touching a real computation.
@@ -185,10 +200,10 @@ design. The mechanism:
 ```
 author a version (DRAFT)
    → validate  (shape, invariants, linter — 15 C4)
-   → diff      (what numbers change, for which golden cases)
-   → golden suite runs against the candidate snapshot
+   → diff      (PackDiff: what numbers change, for which golden cases)
+   → golden suite runs against the candidate rule pack
    → reviewer approves (IN_REVIEW → PUBLISHED)          ← the sign-off D-006 asks for
-   → new snapshot compiled; old snapshot kept forever
+   → new rule pack compiled and locked; every earlier rule pack kept forever
 ```
 
 **Where versions are authored is a `RuleSource` behind the existing `RulePackProvider` SPI.**
@@ -238,7 +253,7 @@ cites them (rule R2); the coverage register (§7) completes the mapping.
 
 | # | Manager | Handles | Sections (as cited) | Code | Status |
 |---|---|---|---|---|---|
-| M-01 | Tax-year resolver | tax year, Act in force, snapshot selection | s.3(1) | `TaxYearRegistry` | ✅ |
+| M-01 | Tax-year resolver | tax year, Act in force, rule-pack selection | s.3(1) | `TaxYearRegistry` | ✅ |
 | M-02 | Residence resolver | resident / RNOR / non-resident from facts | — (to source) | — | ○ later |
 | M-03 | Assessee profile | per-type facts (§8) | — | `TaxpayerFacts` → `Assessee` family | ○ **now** |
 
@@ -384,7 +399,7 @@ come from the trace, never from the catalogue text.
 
 ### 7.1 The section coverage register
 
-A data file, `law/coverage.json`, lists **every section of both Acts**. `01-rulebook.md` cites
+A data file, `timeline/content/coverage.json`, lists **every section of both Acts**. `01-rulebook.md` cites
 **105 distinct sections** today; the register covers the whole Act. Each section carries exactly
 one classification:
 
@@ -396,7 +411,7 @@ one classification:
 | `OUT_OF_SCOPE` | deliberately excluded | a reason and who decided |
 
 **CI fails** on an unclassified section, on a `MODELLED` section whose rules are not in any
-published snapshot, and on a rule citing a section the register does not know. This is how "~100
+published rule pack, and on a rule citing a section the register does not know. This is how "~100
 sections, 30–40 in the new regime, maybe more" becomes a number the build reports rather than a
 number anyone has to remember.
 
@@ -411,6 +426,7 @@ it supports; an unsupported combination is a **refusal with a reason**, never a 
 | Residence | resident, RNOR, non-resident |
 | Age band (individuals) | below 60, 60–80, 80 and above — **tested on date of birth**, since "at any time during the year" is not an age |
 | Tax year × Act | 2025-26 (1961 Act), 2026-27 (2025 Act), … |
+| Tax-year length | a full year (1 April – 31 March); a **short first year** for a newly set-up business or newly arising source (`YR-MODEL-003`) — `TaxYearId` today assumes the full year |
 | Regime | every regime in force and open to the assessee that year |
 | Income heads present | salary, house property, business/profession, capital gains, other sources — any combination |
 | Special-rate income | none, some, most (the rebate trap, `13` R-5) |
@@ -489,9 +505,10 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 
 | What | Standard | Example |
 |---|---|---|
-| Rule ID | the concept; no year, no "old/new", no section number | `RATE-SLAB-S202-1`, `DED-INVEST-AGG`, `SAL-HRA-EXEMPT` |
+| Rule ID | the concept; no year, no "old/new", no section number | shape: `RATE-SLAB-<concept>`, `DED-<concept>`, `SAL-HRA-<concept>` — the concepts chosen at `W-045d` (O-4) |
 | Version | carries the dates, the provision and the statuses | `validity: 2026-04-01 →` |
-| Regime code | the provision it comes from | `S202_DEFAULT` |
+| Regime code | the concept, like a rule ID (D-046 B4); the provision is data, per Act | chosen at `W-045d` (O-4) |
+| Compiled per-year law | **rule pack** — never "snapshot", which names input projections | `RulePackCompiler`, `PackDiff`, `rulepacks/2026-27.lock.json` |
 | Item commit | `taxplanning W-0nn: <verb> <types> — <why, briefly>` | `taxplanning W-043: add TaxComputation, FilingPosition, ComputationReceipt` |
 | Cross-document references | prefixed by document, because bare IDs collide (`T1`, `B2`, `F4`, `D-17`/`D-017` each mean two or more things) | `TS-T1`, `GT-T1`, `DR15-B2`, `PRD-F4` |
 | Build decisions | `D-0nn` in `STATE.md` only; design rules keep `D-WORD`; review-finding defects are cited as `DR15-D-n` | `D-034`, `D-PURE`, `DR15-D-17` |
@@ -517,4 +534,18 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 | O-1 | When a rule changes (a Budget raises a limit), **who checks the new number before it goes live?** The publish gate (§5.4) has a "reviewer approves" step and nobody is named. (D-006) | **You approve every change now** (verification level `SOURCE_CHECKED`); **a CA reviews a sample** of golden cases before anyone outside the family relies on it (`PROFESSIONALLY_REVIEWED`) | before the first rule change after launch |
 | O-2 | Rules are edited **as files in the code** and go live with a deployment. A **web screen** could let a non-developer edit them instead. **When do you want that screen?** | **Not now.** After persistence and the API exist (milestone `W-111`); files + review are enough until then | before a non-developer edits a rule |
 | O-3 | The **old** tax-planning feature is still live and returns numbers known to be wrong — e.g. at ₹60 L income (new regime) it charges no surcharge, understating tax by roughly ₹1.4 lakh. **Turn it off, warn on it, or leave it?** | **Warn now** (a visible "known errors — being replaced" flag on the response), **remove it** when the replacement passes its golden tests (`09-build-plan.md` B2) | now |
-| ~~O-4~~ | ~~TY 2025-26?~~ | **Decided (D-041): build both years**, matching `portfolio` | — |
+| ~~O-4 (old)~~ | ~~TY 2025-26?~~ | **Decided (D-041): build both years**, matching `portfolio` | — |
+| **O-4** | The **concept names** for rule IDs and regime codes (e.g. the two slab regimes), replacing year- and section-based names | `W-045d` proposes each name **quoted from the Acts' own wording**, with its source; you choose | `W-045d` |
+
+---
+
+## Changes
+
+Current truth above; history here (D-046 B1 applies the same rule to this brief).
+
+| Date | Change | Why |
+|---|---|---|
+| 2026-09-23 | §5.1 timeline laid out **by layer**; `coverage.json` placed in `content/` | review C1, C3 — the layer is what the cache key and P3 depend on |
+| 2026-09-23 | "snapshot" replaced by **rule pack** / `RulePackCompiler` / `PackDiff` / `<taxYear>.lock.json` | review C2 — one word per concept; "snapshot" already names input projections |
+| 2026-09-23 | case axis **tax-year length** added | review C4 — `YR-MODEL-003` |
+| 2026-09-23 | section-numbered examples (`RATE-SLAB-S202-1`, `S202_DEFAULT`) removed; names deferred to `W-045d` as O-4 | review C5 — they contradicted D-035 and D-046 B4 |
