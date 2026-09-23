@@ -10,10 +10,10 @@ Plan            : — (plans/W-045c.md once written)
 Approved        : —
 Steps done      : —
 Next step       : READ W-045c row + Phase 5–6 rows; write plans/W-045c.md; STOP for approval
-Last verify     : ./mvnw test -pl backend -Punit → 1415 pass, 0 fail, 0 Checkstyle violations (W-045b2)
-Waiting on      : nothing. OQ-1..OQ-5 open (OQ-5 before W-105); Appendix C part 2 owners proposed, not accepted
+Last verify     : ./mvnw test -pl backend -Punit → 1414 pass, 0 fail, 0 Checkstyle violations (W-045b3)
+Waiting on      : nothing. OQ-1..OQ-4 open (OQ-5 decided: D-049); Appendix C part 2 owners proposed, not accepted
 Files touched   : —
-Last item commit: taxplanning W-045b2: fold taxrules into taxengine and drop taxdocs — two modules, named interfaces
+Last item commit: taxplanning W-045b3: delete the swallow-failures ArchUnit rule — Checkstyle IllegalCatch already enforces it
 Updated         : 2026-09-23, session 4
 ```
 

@@ -535,7 +535,7 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 | OQ-2 | Rules are edited **as files in the code** and go live with a deployment. A **web screen** could let a non-developer edit them instead. **When do you want that screen?** | **Not now.** After persistence and the API exist (milestone `W-111`); files + review are enough until then | before a non-developer edits a rule |
 | OQ-3 | The **old** tax-planning feature is still live and returns numbers known to be wrong — e.g. at ₹60 L income (new regime) it charges no surcharge, understating tax by roughly ₹1.4 lakh. **Turn it off, warn on it, or leave it?** | **Warn now** (a visible "known errors — being replaced" flag on the response), **remove it** when the replacement passes its golden tests (`09-build-plan.md` B2) | now |
 | ~~OQ-4 (old)~~ | ~~TY 2025-26?~~ | **Decided (D-041): build both years**, matching `portfolio` | — |
-| **OQ-5** | A build rule (`taxengine_does_not_swallow_failures`) forbids defining exceptions, not just catching them | delete it — Checkstyle `IllegalCatch` already enforces the intent — or narrow it to `catch` clauses | before `W-105` |
+| ~~OQ-5~~ | ~~the swallow-failures rule~~ | **Decided (D-049): deleted** — Checkstyle `IllegalCatch` enforces the intent | — |
 | **OQ-4** | The **concept names** for rule IDs and regime codes (e.g. the two slab regimes), replacing year- and section-based names | `W-045d` proposes each name **quoted from the Acts' own wording**, with its source; you choose | `W-045d` |
 
 ---
@@ -552,3 +552,4 @@ Current truth above; history here (D-046 B1 applies the same rule to this brief)
 | 2026-09-23 | section-numbered examples (`RATE-SLAB-S202-1`, `S202_DEFAULT`) removed; names deferred to `W-045d` as OQ-4 | review C5 — they contradicted D-035 and D-046 B4 |
 | 2026-09-23 | open questions `O-n` → **`OQ-n`**; principles `B-n` → **`BP-n`** | `W-045b` — they collided with the placeholder observations `O-1`…`O-36` and with blockers / backlog rules (ID glossary, START-HERE §11) |
 | 2026-09-23 | OQ-5 added | `W-045b2` found the swallow rule forbids defining exceptions |
+| 2026-09-23 | OQ-5 decided: rule deleted | D-049 |

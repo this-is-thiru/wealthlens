@@ -407,7 +407,7 @@ public enum TaxError {                     //  http  retryable  class
 | only `..taxplanning.portfolio..` calls `MoneyBridge.fromTMoney` | `only_the_adapter_converts` | ✅ `W-002` (first bites at the bridge, Phase 9) |
 | `taxengine` fetches nothing: no repository, Spring Data or `taxplanning` | `taxengine_fetches_nothing` | ✅ `W-004` |
 | `taxengine` reads no clock | `taxengine_has_no_clock` | ✅ `W-004` |
-| `taxengine` catches no `Exception`/`RuntimeException` | repo-wide Checkstyle `IllegalCatch`; `taxengine_does_not_swallow_failures` (runner packages only — see ⚠) | ✅ `W-004`, `W-045a` |
+| nothing catches `Exception`/`RuntimeException`/`Throwable` (the engine included) | Checkstyle `IllegalCatch`, repo-wide | ✅ `W-045a`; the earlier ArchUnit rule was deleted by `W-045b3` (D-049) |
 | `taxengine.rules` does not depend on `input`, `pipeline`, `trace`, `result` | `rules_do_not_depend_on_the_runner` | ✅ `W-045b2` |
 | no `ComputationStep` anywhere | `ArchitectureTest` (plain test) | ✅ `W-004` |
 | overriding `RegimeBehaviour.adjustPipeline` is listed against a reviewed file | `ArchitectureTest` (plain test, L5 guard 3) | ✅ `W-037c` |
@@ -416,12 +416,6 @@ public enum TaxError {                     //  http  retryable  class
 | formatting | `spotless:check` on `validate` | ✅ `W-045a` |
 | every `ComputationNode` implementation is referenced by some pack pipeline | `ArchitectureTest` | ○ `W-053` (with I3) |
 | every `@RequestBody` carries `@Valid`; no controller returns an `@Document` type | `ArchitectureTest` | ○ `W-095` |
-
-⚠ **`taxengine_does_not_swallow_failures` is miswritten.** It forbids *depending on* `Exception` /
-`RuntimeException`, which also forbids **defining** an exception — so it excludes `taxengine.rules`
-(which has four exception types) to keep its pre-D-048 scope, and it will reject `W-105`'s
-`TaxEngineException`. What it means — *no catch* — is already enforced repo-wide by Checkstyle
-`IllegalCatch`. Open question for the owner in `STATE.md`; must be settled before `W-105`.
 
 ---
 
@@ -474,3 +468,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-23 | T1: planned move to two modules | D-048 |
 | 2026-09-23 | open questions `O-n` → `OQ-n` | `W-045b`, ID glossary (START-HERE §11) |
 | 2026-09-23 | T1, T2 for two modules and named interfaces; T10 direction rule and the ⚠ on the swallow rule | `W-045b2`, D-048 |
+| 2026-09-23 | T10: swallow rule deleted; `IllegalCatch` is the one enforcement | `W-045b3`, D-049 |

@@ -236,30 +236,6 @@ class ArchitectureTest {
                             + " time-dependent and audits irreproducible");
 
     /**
-     * The engine never swallows a failure.
-     *
-     * <p>ArchUnit cannot see a {@code catch} block, so this forbids the dependency instead: a class
-     * that neither catches, declares nor constructs a raw {@code Exception} cannot swallow one. The
-     * engine throws its own sealed {@code TaxEngineException} hierarchy, so raw {@code Exception}
-     * has no legitimate use here.
-     *
-     * <p>The failure this prevents is the one the placeholder actually had: a rule that could not be
-     * evaluated, caught, and silently replaced with zero — so a deduction vanished and the user
-     * filed on the result.
-     */
-    @ArchTest
-    static final ArchRule taxengine_does_not_swallow_failures =
-            noClasses()
-                    .that().resideInAPackage("..taxengine..")
-                    // Scope unchanged by D-048: this rule covered the runner, not the former taxrules
-                    // module. It forbids *depending on* the types, which also forbids defining an
-                    // exception — see STATE.md for the open question before W-105.
-                    .and().resideOutsideOfPackage("..taxengine.rules..")
-                    .should().dependOnClassesThat().haveFullyQualifiedName("java.lang.Exception")
-                    .orShould().dependOnClassesThat().haveFullyQualifiedName("java.lang.RuntimeException")
-                    .because("a swallowed failure becomes a silent zero; the engine throws TaxEngineException");
-
-    /**
      * Money is {@code Money}, and rates are {@code Rate}.
      *
      * <p>Expressed as a dependency rule rather than a field rule because {@code taxengine} has no

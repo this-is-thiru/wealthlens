@@ -3,7 +3,7 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045b2 — "taxplanning W-045b2: fold taxrules into taxengine and drop taxdocs — two modules, named interfaces"
+Last checkpoint           : W-045b3 — "taxplanning W-045b3: delete the swallow-failures ArchUnit rule — Checkstyle IllegalCatch already enforces it"
 Last updated              : 2026-09-23 (session 4 — brief written, D-033…D-040 decided; build GREEN, 1410 tests)
 Current position          : W-045c — audit Phases 5–6; slices→phases; legacy deletion items (docs only)
 Session count             : 4
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **52** / 168 live · in flight **0** · blocked **0**  ← computed by script; 168 = 146 base ids − 8 retired + 30 suffixed
+Counts — done **53** / 169 live · in flight **0** · blocked **0**  ← computed by script; 169 = 146 base ids − 8 retired + 31 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045b3 | 2026-09-23 | Deleted `taxengine_does_not_swallow_failures` (D-049, OQ-5 closed); `IllegalCatch` proven on `taxengine` main code | probe + `./mvnw test -pl backend -Punit` 1414/1414
 W-045b2 | 2026-09-23 | Two tax modules (D-048): `taxrules` → `taxengine.rules` (134 files, `git mv`), `taxdocs` removed; `taxengine` CLOSED with named interfaces `input`, `result`, `money`, `id` (`propagate` did not carry `Money`/`TaxYearId` — probe); `taxplanning` → `taxengine :: *`; `rules_do_not_depend_on_the_runner`; swallow rule kept at prior scope, found miswritten (**OQ-5**, before W-105) | 6 probes; `./mvnw test -pl backend -Punit` 1415/1415
 W-045b | 2026-09-23 | Status board and counts corrected (51/168); START-HERE §11 ID glossary (~35 families, citation rule); R7 note; Appendix C ownership sweep — 37 multi-owner types classified, 3 created-twice rows fixed (W-055, W-112, W-067–069); Appendix C part 2 lists the unowned with **proposed** owners (not accepted — still UNOWNED); `O-n`→`OQ-n`, `B-n`→`BP-n` | six scripted checks; `./mvnw test -pl backend -Punit` 1414/1414
 W-045a | 2026-09-23 | Strict Checkstyle 10.26 failing the build (main + test), shrink-only baseline (99 entries, `CheckstyleBaselineTest`), FileLength 1500 by the owner; ArchUnit: no generic suffixes, unique simple names (DateRange, ExcelParser grandfathered); spotless:check on validate; commit-gate hook; 7 tax-module violations fixed; placeholder `taxengine/TaxEngine` deleted; all gates proven to bite | `./mvnw test -pl backend -Punit` — 1414/1414, 0 Checkstyle violations
@@ -406,6 +407,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-049 | 2026-09-23 | OQ-5 — `taxengine_does_not_swallow_failures` forbids defining exceptions, not only catching them | **Delete it.** Checkstyle `IllegalCatch` (repo-wide since `W-045a`) enforces the intent, proven on `taxengine` main code by a probe. Item `W-045b3` | owner: "sure" |
 | D-048 | 2026-09-23 | Are four tax modules necessary? (A module here is a Spring Modulith package boundary inside one JAR — not a service) | **Two modules** — `taxengine` (rules vocabulary + computation, pure, closed) and `taxplanning` (all I/O: persistence, API, documents, jobs, legacy). **Supersedes D-002.** Evidence: B-001, B-002, B-003 and D-027 were caused by the module boundaries, not tax logic; `taxrules/package-info.java:5` claims "this module computes nothing" while `SlabLadder.apply`/`LeastOf.apply` compute; purity is enforced by package-based ArchUnit rules either way; `taxdocs` is empty. Item `W-045b2`. Found while writing it: a closed `taxengine` hides its sub-packages from `taxplanning`, so `W-103` would have repeated B-002 under either design — the item's plan must settle exposure | owner: "agree" |
 | D-047 | 2026-09-23 | Applying review C1–C4 found a fifth mistake of mine (C5): the brief's examples `RATE-SLAB-S202-1` and `S202_DEFAULT` put a section number in the identity, contradicting D-035 and D-046 B4 | **Applied C1–C5** to `00-BRIEF.md` and Phase 4b: timeline by layer; "rule pack" / `RulePackCompiler` / `PackDiff` / `<taxYear>.lock.json` ("snapshot" already names input projections); `coverage.json` in `content/`; tax-year-length axis; section-numbered examples removed. **Concept names are not invented** — `W-045d` proposes them quoted from the Acts, the owner chooses (**OQ-4**). Brief gains a Changes section; Phase 4b rows edited in place (no item had started), prior text in git `72c089b` | owner: "sure" |
 | D-046 | 2026-09-23 | PRD + tech-spec review (`reviews/2026-09-23-prd-techspec-review.md`), B1–B6 | Owner: *"agreeing with you"* — all six recommendations accepted. **B1** rewrite `01-PRD.md` and `02-TECH-SPEC.md` as the current truth (history → changelog section + git); the 25 design docs keep errata. **B2** one account owns several assessee profiles (`tax_profiles`: unique `{pan}`, index `{email}`). **B3** API follows the repo convention with a distinct resource, `/tax/user/{email}/…`, until the legacy `/tax-planning` is deleted. **B4** regime codes name the concept, provisions per Act as data (as D-035). **B5** `tax_employers` scoped per account: unique `{profile_id, tan}`. **B6** refusals are 400 / `USER`: `UNSUPPORTED_ASSESSEE_TYPE`, `UNSUPPORTED_CASE`. Also accepted: fixes A1–A7 and my corrections C1–C4 | **decided by the developer** |
@@ -518,7 +520,6 @@ one level up. Likely needs a new item in Phase 5, probably after `W-046`.
 | **OQ-2** | When should a web screen for editing rules arrive? | after `W-111` | nothing now |
 | **OQ-3** | The old compute endpoint returns known-wrong tax — warn, disable, or leave? | warn now, remove when replaced | `W-045m` only |
 | **OQ-4** | Concept names for rule IDs and regime codes | `W-045d` proposes each, quoted from the Acts with its source | `W-045d` |
-| **OQ-5** | `ArchitectureTest.taxengine_does_not_swallow_failures` forbids *depending on* `Exception`/`RuntimeException`, so it also forbids *defining* an exception; its intent (no catch-all) is already enforced repo-wide by Checkstyle `IllegalCatch` | **delete it** (redundant), or rewrite it to target `catch` clauses only | before `W-105` (`TaxEngineException` would fail it) |
 
 Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` amendment, `W-052b`).
 
