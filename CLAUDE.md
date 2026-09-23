@@ -8,6 +8,49 @@ WealthLens — a Spring Boot 4 + Spring Modulith portfolio tracker for the India
 
 Java 25, Maven multi-module (`backend`, `test-report`), Lombok, Log4j2, Spring Security + JWT, Apache POI (Excel), Flying Saucer + iTextPDF (PDF), Thymeleaf.
 
+## Engineering standards — apply to every line, in every module
+
+These are not per-feature. They apply to any change in this repository, by anyone, and they
+override convenience. Where the build enforces one, the enforcing check is named.
+
+### 1. Truth — never state what you have not checked
+
+- **Every name you use must already exist.** Before referencing a type, method, constant, enum value, config key, endpoint, file or library API, find it (`grep`/`find`/read the file). Before inventing one, confirm nothing equivalent exists. Enum constants are as likely to be imagined as types.
+- **Every claim carries its evidence.** A code claim cites `path:line` you actually read. "Tests pass" means you ran them and can paste the output. A number, rate, date, legal section or form reference is copied from a cited source, never recalled.
+- **Unknown is an answer.** If a fact cannot be verified, say so and stop; do not fill the gap with something plausible. A plausible wrong answer is the most expensive defect in this codebase.
+- **Report what happened, not what was intended.** Failed, skipped and partial work is reported as such, with the output.
+
+### 2. Scope — no slop
+
+- **Do what was asked, and nothing else.** No drive-by refactors, no extra features, no "while I'm here". Anything else worth doing is written down as a proposal, not done.
+- **No speculative code.** No interface with one implementation unless it is a decided seam; no parameter, field, flag, overload or config option without a current caller; no generality for a case that does not exist yet.
+- **No dead weight.** No unused imports, methods, fields or classes; no commented-out code; no `TODO`/`FIXME` without a tracked id (e.g. `TODO(W-061)`).
+- **Comments say *why*, never *what*.** Delete any comment that restates the code. Javadoc on public types states the contract and the reason the type exists.
+- **Nothing silent.** No `catch (Exception|RuntimeException)`, no swallowed exception, no default returned in place of a failure, no `null` passed across a boundary to mean "absent" (use `Optional` at boundaries, empty collections inside).
+
+### 3. Naming
+
+- **A name states the domain concept, not the mechanism.** Classes are nouns (`SlabLadder`, `ComputationReceipt`); methods are verbs or questions (`apply`, `isResident`); booleans read as predicates (`is`/`has`/`can`/`should`).
+- **Banned as class-name suffixes in new code:** `Helper`, `Util`/`Utils` (outside `shared/util`'s existing `T`-prefixed classes), `Manager`, `Impl`, `Data`, `Info`, `Processor`, `Common`, `Misc`. If the only name you can find is generic, the responsibility is not yet understood.
+- **One word per concept, repo-wide.** Before naming something, search for the existing word and reuse it; never introduce a synonym. Two classes with the same simple name in different modules are a defect.
+- **No abbreviations** except established domain terms (PAN, HRA, TDS, ITR, NPS, DA, LTCG). Units and scale in names where a number is ambiguous (`ratePercent`, `amountRupees`).
+- **Tests:** `methodName_whenCondition_expectedResult`, with `// Given` `// When` `// Then`.
+- **Commits:** `<scope>: <imperative verb> <what> — <why>`; the subject says what changed, never a slogan.
+
+### 4. Design
+
+- Small units: a method fits on a screen (~40 lines), a class has one reason to change, more than ~5 parameters means a missing type.
+- Immutable by default: records for values, `private final` fields, defensive copies of collections.
+- Fail fast and loudly at the boundary; validate once, on the way in.
+- Dependencies point one way; a new cross-module import needs the `allowedDependencies` change and a reason.
+- Money in the tax modules is `Money`, never `double`/`float`/`long`; nowhere may money be compared with a bare `assertEquals`.
+
+### 5. Tests
+
+- Expected values are derived **independently of the code** (from the source, by hand, shown) — never by running the implementation and copying its output.
+- A test must be able to fail: a new guard or rule is proven by a deliberate violation, then reverted.
+- Every behaviour change has a test that fails without it. Never weaken or delete an assertion to make a build pass.
+
 ## Commands
 
 ```bash

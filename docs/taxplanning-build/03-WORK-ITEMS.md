@@ -424,7 +424,7 @@ test nodes to run.
 
 ---
 
-## Phase 4b — Foundation corrections from the brief (14 items, all before `W-046`)
+## Phase 4b — Foundation corrections from the brief (15 items, all before `W-046`)
 
 Added 2026-09-23 by decision **D-043**, which records the owner's instruction to *"collect every
 prerequisite and keep them properly"*. The source is `docs/taxplanning-design/00-BRIEF.md`
@@ -442,6 +442,7 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 
 | Item | Produces | Spec | Verify |
 |---|---|---|---|
+| **W-045a** | *Repo-wide, added by **D-045**.* The engineering standards made enforceable: Checkstyle 10.x with the strict rule set, **failing the build**, tests included, test names in the `methodName_whenCondition_expectedResult` form; a **baseline** suppressions file holding today's legacy violations that may **only shrink** (a test enforces it); two ArchUnit naming rules (no generic class suffixes, no duplicate simple class names) with the existing cases listed as exceptions; `spotless:check` bound to `validate`; a Claude Code hook that blocks `git commit` unless the unit tier and Checkstyle pass; the **7** violations in `taxrules`/`taxengine` fixed | `CLAUDE.md` "Engineering standards"; measurements in `plans/W-045a.md` | `./mvnw test -pl backend -Punit` with Checkstyle failing on violation — green; each new rule **proven to bite** by a deliberate violation, then reverted; the hook refuses a commit when a test is broken |
 | **W-045b** | *Docs only.* `STATE.md` bookkeeping (status board Phases 2–3 and 4b, the counts line, the misplaced `*(none)*` under Blockers, the duplicated "fourth audit gap" paragraph); an **ID glossary** amendment in `00-START-HERE.md` (every ID scheme, its document prefix, and the collisions it resolves); **Appendix C** here — every type named in more than one `Produces` | `00-BRIEF.md` §10; STATE "duplicate-`Produces` sweep" | the counts line equals the number of completed rows; Appendix C lists each duplicated type with the item that keeps it; `git diff` touches docs only |
 | **W-045c** | *Docs only.* **Appendix D** — for `W-046`…`W-058`: every type each item names, whether it exists (`find`), its module, and whether the consumer may see that module; every enum constant it names and whether it exists. **Appendix E** — `09-build-plan.md`'s slices mapped to phases, and the placeholder deletion schedule (B2) written as items placed after the milestone that replaces each part | STATE "audit categories 3–5"; `09` B1, B2 | each row carries the command that established it; no Phase 5–6 item names a type that is absent, unowned, or invisible to its consumer without an owner recorded |
 | **W-045d** | Rule IDs renamed to concepts (**D-035**): the 15 rows in the shipped pack; `taxrules/generated/RuleIds.java` regenerated; every test referencing an old ID; an erratum on `01-rulebook.md` carrying the **old → new mapping for every year- or regime-suffixed ID in the rulebook**, e.g. `RATE-SLAB-NEW-2025` + `RATE-SLAB-NEW-2026` → `RATE-SLAB-S202-1` (one rule, the rulebook states the bands are identical) + a new `RuleIdNamingTest` | `00-BRIEF.md` §5.2, §10 | `-Dtest=RuleIdNamingTest,GeneratedConstantsTest,RulePackLoadTest` — no `RuleId` in any pack matches `-(19\|20)\d\d\b` or `-(OLD\|NEW)\b`; every old ID in the mapping resolves to exactly one new ID |

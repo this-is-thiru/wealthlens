@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045b — bookkeeping, ID glossary, duplicate-owner sweep (docs only)
-Stage           : NOT_STARTED            (NOT_STARTED | EXPLAINED | IN_PROGRESS | AWAITING_REVIEW | BLOCKED)
-Plan            : —                      (docs/taxplanning-build/plans/<item>.md once written)
+Item            : W-045a — engineering standards enforced by the build (repo-wide, D-045)
+Stage           : EXPLAINED              (NOT_STARTED | EXPLAINED | IN_PROGRESS | AWAITING_REVIEW | BLOCKED)
+Plan            : docs/taxplanning-build/plans/W-045a.md
 Approved        : —                      (owner's exact words + date, or —)
 Steps done      : —
-Next step       : write the W-045b plan to plans/W-045b.md, then STOP for approval
-Files touched   : —                      (uncommitted; they survive on disk between sessions)
+Next step       : ask the owner to approve plans/W-045a.md (or the W-045a/W-045a2 split); then step 1
 Last verify     : ./mvnw test -pl backend -Punit → 1410 pass, 0 fail (2026-09-23)
-Waiting on      : owner — O-1, O-2, O-3 (00-BRIEF.md §12); only W-045m needs O-3
+Waiting on      : owner — approval of W-045a's plan; O-1, O-2, O-3 (00-BRIEF.md §12)
+Files touched   : —
 Last item commit: taxplanning W-043: the half that never moves
 Updated         : 2026-09-23, session 4
 ```
