@@ -61,6 +61,17 @@ public record RegimeSpec(
         Provenance provenance) {
 
     public RegimeSpec {
+        requireIdentity(code, displayName, provision1961, provision2025);
+        requireDeclarations(code, rateTable, election, lifecycle, pipeline, provenance);
+        appliesTo = appliesTo == null ? Set.of() : Set.copyOf(appliesTo);
+        disallowances = disallowances == null ? Set.of() : Set.copyOf(disallowances);
+        eligibility = eligibility == null ? Set.of() : Set.copyOf(eligibility);
+        behaviour = behaviour == null ? Optional.empty() : behaviour;
+        requireConsistent(code, appliesTo, isDefault, election);
+    }
+
+    private static void requireIdentity(
+            RegimeCode code, String displayName, Provision provision1961, Provision provision2025) {
         if (code == null) {
             throw new IllegalArgumentException("A regime must have a code");
         }
@@ -72,6 +83,15 @@ public record RegimeSpec(
                     code + " must state its place in both Acts; use Provision.absent or"
                             + " Provision.notYetVerified rather than leaving one out");
         }
+    }
+
+    private static void requireDeclarations(
+            RegimeCode code,
+            RuleId rateTable,
+            ElectionProtocol election,
+            RegimeLifecycle lifecycle,
+            PipelineSpec pipeline,
+            Provenance provenance) {
         if (rateTable == null) {
             throw new IllegalArgumentException(code + " must name its rate table");
         }
@@ -82,11 +102,10 @@ public record RegimeSpec(
         if (provenance == null) {
             throw new IllegalArgumentException(code + " must say where it was read from");
         }
-        appliesTo = appliesTo == null ? Set.of() : Set.copyOf(appliesTo);
-        disallowances = disallowances == null ? Set.of() : Set.copyOf(disallowances);
-        eligibility = eligibility == null ? Set.of() : Set.copyOf(eligibility);
-        behaviour = behaviour == null ? Optional.empty() : behaviour;
+    }
 
+    private static void requireConsistent(
+            RegimeCode code, Set<PersonType> appliesTo, boolean isDefault, ElectionProtocol election) {
         if (appliesTo.isEmpty()) {
             throw new IllegalArgumentException(
                     code + " applies to nobody; a regime no assessee may use is a pack mistake");

@@ -80,7 +80,7 @@ override convenience. Where the build enforces one, the enforcing check is named
 ./mvnw clean test verify
 # → test-report/target/consolidated-test-report.html
 
-# Format (spotless is configured but NOT bound to a phase — run it explicitly)
+# Format — spotless:check runs in `validate` and fails an unformatted build; apply fixes it
 ./mvnw spotless:apply
 ```
 
@@ -92,7 +92,8 @@ override convenience. Where the build enforces one, the enforcing check is named
 - **Coverage** is measured by JaCoCo (`backend/target/site/jacoco/`). The `check` gate is scoped to `com.thiru.wealthlens.brokercharges.engine*` at 90% line / 85% branch, so it enforces only where intended rather than failing globally.
 - **Money is never asserted with a bare `assertEquals`.** Use `com.thiru.wealthlens.testsupport.MoneyAssert` — exact double comparison on rupee amounts is a latent failure.
 - **`ArchitectureTest`** encodes the conventions below as ArchUnit rules (no field injection, controllers do not reach repositories, snake_case `@Field` names, no console printing). Introducing a violation fails the build.
-- Checkstyle runs at `validate` but is advisory (`failOnViolation=false`); it only enforces `AvoidStarImport`.
+- **Checkstyle fails the build** (10.x, `validate`, main and test sources) with the rule set in `checkstyle.xml` — the enforced half of "Engineering standards". Code that predates it is listed in `checkstyle-suppressions.xml` between the `BASELINE` markers; that list may only shrink (`CheckstyleBaselineTest`). Fix a violation rather than suppressing it. `ArchitectureTest` adds the naming rules (no generic class suffixes, no duplicate simple class names).
+- **Claude Code sessions cannot commit a red tree:** `.claude/hooks/pre-commit-gate.sh` runs the unit tier before any `git commit` and blocks it on failure.
 - Third-party versions not managed by the Spring Boot parent live in the root `pom.xml` `<dependencyManagement>`; module poms declare deps without versions.
 
 ## Architecture

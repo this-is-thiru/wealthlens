@@ -99,17 +99,11 @@ public record TraceLine(
         return new TraceLine(sequence, node, rule, kind, in, out, Optional.empty(), provenance);
     }
 
-    /** A step whose output was held down by a cap or a competing limb. */
-    public static TraceLine limited(
-            int sequence,
-            NodeId node,
-            RuleId rule,
-            StepKind kind,
-            NodeValue in,
-            NodeValue out,
-            String limitedBy,
-            Provenance provenance) {
-        return new TraceLine(
-                sequence, node, rule, kind, in, out, Optional.of(limitedBy), provenance);
+    /**
+     * This line, recording what held its output down — a {@code LeastOf} limb name or the cap that
+     * bound. A copy; the record is immutable.
+     */
+    public TraceLine withLimitedBy(String bound) {
+        return new TraceLine(sequence, node, rule, kind, in, out, Optional.of(bound), provenance);
     }
 }

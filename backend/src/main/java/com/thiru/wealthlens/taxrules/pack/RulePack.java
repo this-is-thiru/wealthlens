@@ -46,6 +46,22 @@ public record RulePack(
         if (taxYear == null) {
             throw new IllegalArgumentException("A rule pack must name its tax year");
         }
+        layers = everyLayerVersioned(taxYear, layers);
+
+        if (instruments == null) {
+            throw new IllegalArgumentException(taxYear + " must name its governing instruments");
+        }
+        rules = rules == null ? Map.of() : Map.copyOf(rules);
+        components = components == null ? Map.of() : Map.copyOf(components);
+        regimes = regimes == null ? Map.of() : Map.copyOf(regimes);
+        disallowanceSets = disallowanceSets == null ? Map.of() : Map.copyOf(disallowanceSets);
+        conditionSets = conditionSets == null ? Map.of() : Map.copyOf(conditionSets);
+
+        requireRulesFiledUnderTheirOwnIds(taxYear, rules);
+    }
+
+    private static Map<RulePackLayer, RulePackRef> everyLayerVersioned(
+            TaxYearId taxYear, Map<RulePackLayer, RulePackRef> layers) {
         if (layers == null) {
             throw new IllegalArgumentException("A rule pack must carry its layer versions");
         }
@@ -63,17 +79,10 @@ public record RulePack(
                         "Layer " + layer + " maps to a ref describing " + ref.layer());
             }
         }
-        layers = Map.copyOf(copied);
+        return Map.copyOf(copied);
+    }
 
-        if (instruments == null) {
-            throw new IllegalArgumentException(taxYear + " must name its governing instruments");
-        }
-        rules = rules == null ? Map.of() : Map.copyOf(rules);
-        components = components == null ? Map.of() : Map.copyOf(components);
-        regimes = regimes == null ? Map.of() : Map.copyOf(regimes);
-        disallowanceSets = disallowanceSets == null ? Map.of() : Map.copyOf(disallowanceSets);
-        conditionSets = conditionSets == null ? Map.of() : Map.copyOf(conditionSets);
-
+    private static void requireRulesFiledUnderTheirOwnIds(TaxYearId taxYear, Map<RuleId, RuleRow> rules) {
         if (rules.isEmpty()) {
             throw new IllegalArgumentException(taxYear + " has no rules; it would compute nothing");
         }

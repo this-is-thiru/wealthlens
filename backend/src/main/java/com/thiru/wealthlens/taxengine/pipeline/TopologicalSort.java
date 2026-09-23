@@ -46,19 +46,7 @@ public final class TopologicalSort {
         if (nodes == null) {
             throw new IllegalArgumentException("Cannot order a null collection of nodes");
         }
-
-        Map<NodeId, ComputationNode> byProduces = new TreeMap<>(Comparator.comparing(NodeId::value));
-        for (ComputationNode node : nodes) {
-            if (node == null) {
-                throw new IllegalArgumentException("Cannot order a null node");
-            }
-            ComputationNode clash = byProduces.put(node.produces(), node);
-            if (clash != null) {
-                throw new IllegalArgumentException(
-                        "Two nodes produce " + node.produces()
-                                + "; a slot has one writer, or the order is ambiguous");
-            }
-        }
+        Map<NodeId, ComputationNode> byProduces = indexByProduces(nodes);
 
         Map<NodeId, Set<NodeId>> waitingFor = new LinkedHashMap<>();
         Map<NodeId, Set<NodeId>> unblocks = new LinkedHashMap<>();
@@ -81,7 +69,38 @@ public final class TopologicalSort {
             waitingFor.put(node.produces(), edges);
         }
 
-        // Kahn's algorithm. The ready set is kept sorted, so ties resolve the same way every run.
+        List<ComputationNode> ordered = kahnOrder(byProduces, waitingFor, unblocks);
+        if (ordered.size() != byProduces.size()) {
+            throw new IllegalArgumentException(cycleMessage(waitingFor, unblocks, ordered.size()));
+        }
+        return List.copyOf(ordered);
+    }
+
+    /** Each node keyed by the slot it produces; a slot has exactly one writer. */
+    private static Map<NodeId, ComputationNode> indexByProduces(Collection<ComputationNode> nodes) {
+        Map<NodeId, ComputationNode> byProduces = new TreeMap<>(Comparator.comparing(NodeId::value));
+        for (ComputationNode node : nodes) {
+            if (node == null) {
+                throw new IllegalArgumentException("Cannot order a null node");
+            }
+            ComputationNode clash = byProduces.put(node.produces(), node);
+            if (clash != null) {
+                throw new IllegalArgumentException(
+                        "Two nodes produce " + node.produces()
+                                + "; a slot has one writer, or the order is ambiguous");
+            }
+        }
+        return byProduces;
+    }
+
+    /**
+     * Kahn's algorithm. The ready set is kept sorted, so ties resolve the same way every run.
+     * Consumes {@code waitingFor}: whatever is left in it afterwards is stuck in a cycle.
+     */
+    private static List<ComputationNode> kahnOrder(
+            Map<NodeId, ComputationNode> byProduces,
+            Map<NodeId, Set<NodeId>> waitingFor,
+            Map<NodeId, Set<NodeId>> unblocks) {
         Deque<NodeId> ready = new ArrayDeque<>();
         waitingFor.entrySet().stream()
                 .filter(entry -> entry.getValue().isEmpty())
@@ -105,11 +124,7 @@ public final class TopologicalSort {
             freed.sort(Comparator.comparing(NodeId::value));
             freed.forEach(ready::add);
         }
-
-        if (ordered.size() != byProduces.size()) {
-            throw new IllegalArgumentException(cycleMessage(waitingFor, unblocks, ordered.size()));
-        }
-        return List.copyOf(ordered);
+        return ordered;
     }
 
     /**

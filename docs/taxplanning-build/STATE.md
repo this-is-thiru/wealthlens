@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-043 — "taxplanning W-043: the half that never moves"
+Last checkpoint           : W-045a — "taxplanning W-045a: enforce the engineering standards in the build — Checkstyle gate, naming rules, commit hook"
 Last updated              : 2026-09-23 (session 4 — brief written, D-033…D-040 decided; build GREEN, 1410 tests)
-Current position          : W-045a — Phase 4b (the brief's prerequisites) precedes W-046
+Current position          : W-045b — after applying the D-046 review fixes (C1–C4, then the PRD/TECH-SPEC rewrite)
 Session count             : 4
 ```
 
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a ·  W-045b ·  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b ·  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045a | 2026-09-23 | Strict Checkstyle 10.26 failing the build (main + test), shrink-only baseline (99 entries, `CheckstyleBaselineTest`), FileLength 1500 by the owner; ArchUnit: no generic suffixes, unique simple names (DateRange, ExcelParser grandfathered); spotless:check on validate; commit-gate hook; 7 tax-module violations fixed; placeholder `taxengine/TaxEngine` deleted; all gates proven to bite | `./mvnw test -pl backend -Punit` — 1414/1414, 0 Checkstyle violations
 W-043 | 2026-09-21 | TaxComputation/FilingPosition/ComputationId/ComputationReceipt + 21 tests; A6's lawAndExec corrected to a Map (one ref cannot hold two layers); FilingPosition ships 3 of 6 per **D-032**; found ComputationReceipt owned by two items. **Phase 4 complete** | `./mvnw test -pl backend -Dtest=TaxComputationTest`
 W-042 | 2026-09-21 | PipelineRunner + nested Result + 16 tests; **found and fixed B-004** (two committed items contradicted each other — no graph could pass both W-039 and W-040); runner renumbers the trace; no try/catch, asserted on the source; T9-20 | `./mvnw test -pl backend -Dtest=PipelineRunnerTest`
 W-044 | 2026-09-21 | NodeHarness (test scope) + 13 tests; runs a node with no pipeline against the **real shipped pack**; refuses both a missing stub and an unused one; owns `plainTaxpayer()`, the one EngineInputs fixture; T23-6 inherited from W-039's scoped context | `./mvnw test -pl backend -Dtest=NodeHarnessTest`
@@ -403,6 +404,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-046 | 2026-09-23 | PRD + tech-spec review (`reviews/2026-09-23-prd-techspec-review.md`), B1–B6 | Owner: *"agreeing with you"* — all six recommendations accepted. **B1** rewrite `01-PRD.md` and `02-TECH-SPEC.md` as the current truth (history → changelog section + git); the 25 design docs keep errata. **B2** one account owns several assessee profiles (`tax_profiles`: unique `{pan}`, index `{email}`). **B3** API follows the repo convention with a distinct resource, `/tax/user/{email}/…`, until the legacy `/tax-planning` is deleted. **B4** regime codes name the concept, provisions per Act as data (as D-035). **B5** `tax_employers` scoped per account: unique `{profile_id, tan}`. **B6** refusals are 400 / `USER`: `UNSUPPORTED_ASSESSEE_TYPE`, `UNSUPPORTED_CASE`. Also accepted: fixes A1–A7 and my corrections C1–C4 | **decided by the developer** |
 | D-045 | 2026-09-23 | The owner wants engineering principles applied strictly to every line of code, in any module — naming, no hallucination, no slop — configured, not remembered | **Two layers.** (1) Written: an "Engineering standards" section in `CLAUDE.md` (truth, scope, naming, design, tests), loaded by every session. (2) Enforced: item **`W-045a`** — strict Checkstyle failing the build with a shrink-only legacy baseline, ArchUnit naming rules, `spotless:check` on `validate`, and a commit-blocking Claude Code hook. Measured first: 96 main-code violations (7 in the new tax modules), 24 real test-name violations after matching the documented convention, 10 generic suffixes, 2 duplicate class names | **decided by the developer** |
 | D-044 | 2026-09-23 | Sessions may end at any moment (rate limits). The only resume point was the item commit plus an 800-line STATE.md, and an approved plan existed only in the chat | **`CHECKPOINT.md`** (~20 lines, overwritten, updated at every stage change and plan step, before reporting); **`plans/W-0nn.md`** holding the plan, the owner's approval and a ticked step list; **no WIP commits** — the item stays one commit; **P1-quick** resume prompt. `00-START-HERE.md` §5b | **decided by the developer** |
 | D-043 | 2026-09-23 | The brief changes the rule format and the input model; the owner asked to "collect every prerequisite and keep them properly" | **Phase 4b** in `03-WORK-ITEMS.md` — 14 items (`W-045b`…`W-045o`) before `W-046`, in dependency order; `W-052b` and `W-052c` before `W-053`; `W-053` amended (both years, I3 switched on as a shrink-only ratchet); **Appendix F** for what is owed later with where each lands; four **standing rules** for every later item (coverage, catalogue, both years, concept IDs). Answers STATE Q1 (`W-045i`), Q2 (`W-053`), Q3 (`W-052b`) | **decided by the developer** |

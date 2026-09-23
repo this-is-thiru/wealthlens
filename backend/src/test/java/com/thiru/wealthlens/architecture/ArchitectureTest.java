@@ -6,7 +6,11 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -15,6 +19,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +37,48 @@ import org.junit.jupiter.api.Test;
         packages = "com.thiru.wealthlens",
         importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
+
+    private static final Set<String> GENERIC_NAMES_BEFORE_W045A = Set.of(
+            "AuthHelper", "FileHelper", "ParserUtil", "DoubleUtil",
+            "ChargeRecordingGatewayImpl", "UserDetailsServiceImpl", "UserDetailsImpl",
+            "AssetRequestParserImpl");
+
+    private static final DescribedPredicate<JavaClass> GRANDFATHERED_GENERIC_NAMES =
+            DescribedPredicate.describe(
+                    "named before W-045a " + GENERIC_NAMES_BEFORE_W045A,
+                    javaClass -> GENERIC_NAMES_BEFORE_W045A.contains(javaClass.getSimpleName()));
+
+    private static final DescribedPredicate<JavaClass> SHARED_T_PREFIXED_UTILITIES =
+            DescribedPredicate.describe(
+                    "a T-prefixed utility in shared.util (CLAUDE.md, Conventions)",
+                    javaClass -> javaClass.getPackageName().startsWith("com.thiru.wealthlens.shared.util")
+                            && javaClass.getSimpleName().startsWith("T"));
+
+    /** Duplicate simple names that predate W-045a. Owed: 03-WORK-ITEMS.md Appendix F. May only shrink. */
+    private static final Set<String> DUPLICATE_NAMES_BEFORE_W045A = Set.of("DateRange", "ExcelParser");
+
+
+    /**
+     * CLAUDE.md "Engineering standards" §3: a generic suffix means the responsibility is not yet
+     * understood. The classes listed predate the rule (D-045, W-045a); the list may only shrink.
+     */
+    @ArchTest
+    static final ArchRule classes_have_no_generic_suffix =
+            noClasses()
+                    .that().areNotAnonymousClasses()
+                    .and(DescribedPredicate.not(GRANDFATHERED_GENERIC_NAMES))
+                    .and(DescribedPredicate.not(SHARED_T_PREFIXED_UTILITIES))
+                    .should().haveSimpleNameEndingWith("Helper")
+                    .orShould().haveSimpleNameEndingWith("Util")
+                    .orShould().haveSimpleNameEndingWith("Utils")
+                    .orShould().haveSimpleNameEndingWith("Manager")
+                    .orShould().haveSimpleNameEndingWith("Impl")
+                    .orShould().haveSimpleNameEndingWith("Data")
+                    .orShould().haveSimpleNameEndingWith("Info")
+                    .orShould().haveSimpleNameEndingWith("Processor")
+                    .orShould().haveSimpleNameEndingWith("Common")
+                    .orShould().haveSimpleNameEndingWith("Misc")
+                    .because("CLAUDE.md §3: a class name states the domain concept, not a generic role");
 
     @ArchTest
     static final ArchRule no_field_injection =
@@ -319,4 +369,33 @@ class ArchitectureTest {
         }
     }
 
+
+    /**
+     * CLAUDE.md "Engineering standards" §3: one word per concept. Two top-level classes sharing a
+     * simple name in different modules make every import a guess (D-045, W-045a).
+     */
+    @Test
+    void simple_class_names_are_unique() {
+        Map<String, List<String>> byName = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("com.thiru.wealthlens")
+                .stream()
+                .filter(javaClass -> javaClass.isTopLevelClass())
+                .filter(javaClass -> !javaClass.getSimpleName().equals("package-info"))
+                .collect(Collectors.groupingBy(
+                        JavaClass::getSimpleName,
+                        TreeMap::new,
+                        Collectors.mapping(JavaClass::getName, Collectors.toList())));
+
+        Map<String, List<String>> duplicates = new TreeMap<>();
+        byName.forEach((name, classes) -> {
+            if (classes.size() > 1 && !DUPLICATE_NAMES_BEFORE_W045A.contains(name)) {
+                duplicates.put(name, classes);
+            }
+        });
+
+        assertThat(duplicates)
+                .as("top-level classes sharing a simple name — rename one to the concept it states")
+                .isEmpty();
+    }
 }

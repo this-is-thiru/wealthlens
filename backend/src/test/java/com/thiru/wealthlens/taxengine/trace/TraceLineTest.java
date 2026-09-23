@@ -44,15 +44,15 @@ class TraceLineTest {
     }
 
     private static TraceLine hraLine() {
-        return TraceLine.limited(
-                7,
-                NODE,
-                HRA,
-                StepKind.EXEMPTION,
-                rupees("600000"),
-                rupees("228000"),
-                "rent less 10% of salary",
-                verified());
+        return TraceLine.of(
+                        7,
+                        NODE,
+                        HRA,
+                        StepKind.EXEMPTION,
+                        rupees("600000"),
+                        rupees("228000"),
+                        verified())
+                .withLimitedBy("rent less 10% of salary");
     }
 
     @Nested

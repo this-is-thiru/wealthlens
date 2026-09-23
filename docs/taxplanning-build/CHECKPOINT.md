@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045a — engineering standards enforced by the build (repo-wide, D-045)
-Stage           : EXPLAINED              (NOT_STARTED | EXPLAINED | IN_PROGRESS | AWAITING_REVIEW | BLOCKED)
-Plan            : docs/taxplanning-build/plans/W-045a.md
-Approved        : —                      (owner's exact words + date, or —)
+Item            : — (between items) — apply the D-046 review fixes before W-045b
+Stage           : NOT_STARTED
+Plan            : docs/taxplanning-build/reviews/2026-09-23-prd-techspec-review.md ("Order of application")
+Approved        : D-046 — "agreeing with you" (2026-09-23)
 Steps done      : —
-Next step       : ask the owner to approve plans/W-045a.md (or the W-045a/W-045a2 split); then step 1
-Last verify     : ./mvnw test -pl backend -Punit → 1410 pass, 0 fail (2026-09-23)
-Waiting on      : owner — approval of W-045a's plan; O-1, O-2, O-3 (00-BRIEF.md §12)
+Next step       : C1–C4 (timeline by layer; "rule pack" not "snapshot"; coverage.json layer; short-tax-year axis) in 00-BRIEF.md + 03-WORK-ITEMS.md Phase 4b
+Last verify     : ./mvnw test -pl backend -Punit → 1414 pass, 0 fail, 0 Checkstyle violations (W-045a)
+Waiting on      : nothing. O-1..O-3 open (00-BRIEF.md §12)
 Files touched   : —
-Last item commit: taxplanning W-043: the half that never moves
+Last item commit: taxplanning W-045a: enforce the engineering standards in the build — Checkstyle gate, naming rules, commit hook
 Updated         : 2026-09-23, session 4
 ```
 

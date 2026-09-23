@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxrules.pack.RulePackRef;
 import com.thiru.wealthlens.taxrules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxrules.validate.PackValidationException;
 import java.util.Map;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -72,7 +73,7 @@ public final class JsonPackAssembler implements PackAssembler {
         }
         try {
             return MAPPER.readTree(body);
-        } catch (RuntimeException e) {
+        } catch (JacksonException e) {
             throw new PackValidationException(file + " is not valid JSON: " + e.getMessage());
         }
     }

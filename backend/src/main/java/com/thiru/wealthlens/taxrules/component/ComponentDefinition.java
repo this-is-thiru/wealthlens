@@ -58,17 +58,7 @@ public record ComponentDefinition(
         Provenance provenance) {
 
     public ComponentDefinition {
-        if (code == null) {
-            throw new IllegalArgumentException("A component definition must have a code");
-        }
-        if (displayName == null || displayName.isBlank()) {
-            throw new IllegalArgumentException(code + " must have a display name");
-        }
-        if (head == null || kind == null || cashNature == null || treatment == null) {
-            throw new IllegalArgumentException(
-                    code + " must declare its head, kind, cash nature and treatment; each is read"
-                            + " rather than branched on, so none may be absent");
-        }
+        requireDescribed(code, displayName, head, kind, cashNature, treatment);
         if (lifecycle == null) {
             throw new IllegalArgumentException(code + " must declare a lifecycle");
         }
@@ -82,6 +72,26 @@ public record ComponentDefinition(
             throw new IllegalArgumentException(
                     code + " feeds no rule and is not marked informationalOnly; a code nobody"
                             + " consumes is a figure the user enters and the computation ignores");
+        }
+    }
+
+    private static void requireDescribed(
+            ComponentCode code,
+            String displayName,
+            HeadCode head,
+            ComponentKind kind,
+            CashNature cashNature,
+            TaxTreatment treatment) {
+        if (code == null) {
+            throw new IllegalArgumentException("A component definition must have a code");
+        }
+        if (displayName == null || displayName.isBlank()) {
+            throw new IllegalArgumentException(code + " must have a display name");
+        }
+        if (head == null || kind == null || cashNature == null || treatment == null) {
+            throw new IllegalArgumentException(
+                    code + " must declare its head, kind, cash nature and treatment; each is read"
+                            + " rather than branched on, so none may be absent");
         }
     }
 
