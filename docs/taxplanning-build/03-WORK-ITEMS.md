@@ -424,6 +424,49 @@ test nodes to run.
 
 ---
 
+## Phase 4b — Foundation corrections from the brief (14 items, all before `W-046`)
+
+Added 2026-09-23 by decision **D-043**, which records the owner's instruction to *"collect every
+prerequisite and keep them properly"*. The source is `docs/taxplanning-design/00-BRIEF.md`
+(D-033 … D-042). Ids are suffixed onto the retired `W-045`, not renumbered, as D-013, D-015 and
+D-019 did.
+
+**Why these come before `W-046`.** They change two things every node depends on: the **rule-row
+format** (identity, statuses, where rows live) and the **input model** (`TaxpayerFacts` →
+`Assessee`). Today there are zero real nodes. After Phase 5 there are seven, each written against
+whatever shape exists then.
+
+**Order is dependency order.** Docs first (they are cheap and inform everything after them), then
+the rule format from the inside out (identity → status → storage → compile → diff), then what sits
+on it (node ids, coverage, catalogue), then the input model, then the two items that face outward.
+
+| Item | Produces | Spec | Verify |
+|---|---|---|---|
+| **W-045b** | *Docs only.* `STATE.md` bookkeeping (status board Phases 2–3 and 4b, the counts line, the misplaced `*(none)*` under Blockers, the duplicated "fourth audit gap" paragraph); an **ID glossary** amendment in `00-START-HERE.md` (every ID scheme, its document prefix, and the collisions it resolves); **Appendix C** here — every type named in more than one `Produces` | `00-BRIEF.md` §10; STATE "duplicate-`Produces` sweep" | the counts line equals the number of completed rows; Appendix C lists each duplicated type with the item that keeps it; `git diff` touches docs only |
+| **W-045c** | *Docs only.* **Appendix D** — for `W-046`…`W-058`: every type each item names, whether it exists (`find`), its module, and whether the consumer may see that module; every enum constant it names and whether it exists. **Appendix E** — `09-build-plan.md`'s slices mapped to phases, and the placeholder deletion schedule (B2) written as items placed after the milestone that replaces each part | STATE "audit categories 3–5"; `09` B1, B2 | each row carries the command that established it; no Phase 5–6 item names a type that is absent, unowned, or invisible to its consumer without an owner recorded |
+| **W-045d** | Rule IDs renamed to concepts (**D-035**): the 15 rows in the shipped pack; `taxrules/generated/RuleIds.java` regenerated; every test referencing an old ID; an erratum on `01-rulebook.md` carrying the **old → new mapping for every year- or regime-suffixed ID in the rulebook**, e.g. `RATE-SLAB-NEW-2025` + `RATE-SLAB-NEW-2026` → `RATE-SLAB-S202-1` (one rule, the rulebook states the bands are identical) + a new `RuleIdNamingTest` | `00-BRIEF.md` §5.2, §10 | `-Dtest=RuleIdNamingTest,GeneratedConstantsTest,RulePackLoadTest` — no `RuleId` in any pack matches `-(19\|20)\d\d\b` or `-(OLD\|NEW)\b`; every old ID in the mapping resolves to exactly one new ID |
+| **W-045e** | The three status axes (**D-036**): `taxrules/registry/{LegalStatus,VerificationLevel,PublicationStatus}.java`; `Provenance`/`RuleVersion` carry all three; `VerificationStatus` and `DraftOrFinal` withdrawn and added to the withdrawal gate; pack JSON and readers migrated + `RuleStatusTest` | `00-BRIEF.md` §5.3 | `-Dtest=RuleStatusTest,RulePackLoadTest,ArchitectureTest` — a non-`PUBLISHED` version never enters a pack; `UNVERIFIED` still requires `whatToCheck` (I1); `PENDING_NOTIFICATION` requires its interim rule. ⚠ **Size risk:** `Provenance` is referenced widely — estimate at EXPLAIN, propose a split if over ~300 lines |
+| **W-045f** | The timeline (**D-034**): `rulepacks/timeline/{rules,regimes,forms,components,pipelines}/*.json` — one file per identity, migrated from `rulepacks/2026-27/`; `taxrules/timeline/{Timeline,TimelineReader}.java` + `TimelineReaderTest` | `00-BRIEF.md` §5.1 | `-Dtest=TimelineReaderTest` — every file parses with a path in its error; each identity appears in exactly one file; one rule's versions never overlap in validity |
+| **W-045g** | The snapshot compiler (**D-034**): `taxrules/timeline/SnapshotCompiler.java`; `rulepacks/snapshots/2026-27.lock.json` (version ids + checksum); `ClasspathRulePackProvider` compiles from the timeline and verifies the lock; `rulepacks/2026-27/` removed + `SnapshotCompilerTest` | `00-BRIEF.md` §5.1; `W-027`, `W-028` | `-Dtest=SnapshotCompilerTest,RulePackLoadTest,NodeHarnessTest` — the compiled 2026-27 pack equals today's in canonical form; a timeline edit without a lock update **fails startup naming the rule**; the synthetic TY 2099-00 still loads with no Java change (T9-21) |
+| **W-045h** | The publish diff (**D-037**, the gate's first half): `taxrules/timeline/SnapshotDiff.java` + `SnapshotDiffTest` | `00-BRIEF.md` §5.4 | `-Dtest=SnapshotDiffTest` — lists every changed version and every changed value between two snapshots; identical snapshots give an empty diff. Golden re-run = the build; approval = PR review by the person named in **O-1** |
+| **W-045i** | `NodeIds` generated from the timeline's pipelines (STATE **Q1**): `taxrules/generated/NodeIds.java`; `ConstantGenerator` extended; `GeneratedConstantsTest` extended; the hard-coded real-slot ids in `NodeHarnessTest` and `PipelineRunnerTest` switched to constants | `DR 15` B2; `W-032b` | `-Dtest=GeneratedConstantsTest,NodeHarnessTest,PipelineRunnerTest` — every pipeline node ref has a constant; a stale `NodeIds.java` fails; the `components` / `inputs.components` drift is gone |
+| **W-045j** | The coverage register (**D-038**): `rulepacks/timeline/coverage.json` seeded with the **105 sections** `01-rulebook.md` cites, each classified; `taxrules/coverage/{CoverageRegister,SectionRef,Coverage}.java` + `CoverageRegisterTest` | `00-BRIEF.md` §7.1 | `-Dtest=CoverageRegisterTest` — a rule citing an unregistered section fails; a `MODELLED` section with no published rule fails; every entry has exactly one classification |
+| **W-045k** | The section catalogue (**D-042**): `taxrules/catalogue/{SectionCatalogueEntry,Route,Disqualifier,DisqualifierKind}.java`; `rulepacks/timeline/content/sections/` with **three worked entries** — the investments deduction (s.80C / s.123), HRA, and the default regime (s.202) + `SectionCatalogueTest` | `00-BRIEF.md` §6.3; `DR 22` C4, C5 | `-Dtest=SectionCatalogueTest` — SC-2, SC-3 and SC-4 hold on every entry; SC-1 runs as a **ratchet** (the list of catalogued sections may only grow) until the register is complete. ⚠ **Size risk:** estimate at EXPLAIN |
+| **W-045l** | The assessee family (**D-039**): `taxengine/input/{Assessee,Individual,Huf}.java` replacing `TaxpayerFacts`; `PersonType` gains `HUF` (**the existing word is kept** — `23` A5); `EngineInputs`, `NodeHarness.plainTaxpayer()`, and the private fixtures in `NodeRegistryTest` and `InputsFingerprintTest` folded into the harness + `AssesseeTest` | `00-BRIEF.md` §8 | `-Dtest=AssesseeTest,EngineInputsTest,InputsFingerprintTest,NodeHarnessTest,WealthLensModulithTest` — one type per assessee; `Huf` has no date of birth; the fingerprint separates an individual from an HUF with otherwise equal facts. `Huf` carries **only residence** until the HUF build adds karta and members (rule B2) |
+| **W-045m** | Warning on the old compute endpoint (**O-3**): the response of `POST /tax-planning/user/{email}/profile/{profileId}/compute` carries a visible known-errors notice + a test in `TaxPlanningControllerIntegrationTest` | `00-BRIEF.md` §12 O-3; `09` B2 | the integration test asserts the notice. **Do only if O-3 is answered "warn" or "disable"; if answered "leave", this id is RETIRED by that decision** |
+| **W-045n** | *Research, no code.* TY 2025-26 sources for the **Phase 5 rules only** — slabs (both regimes, all age bands), rebate (`REBATE-OLD-001` is `NEEDS VERIFICATION`: open the 1961 Act s.87A base text), cess, rounding. Errata upgrading each row that is confirmed | **D-041**; `09` Slice 0 | every Phase 5 rule has a 2025-26 row at `SOURCE_CHECKED` or an explicit `UNVERIFIED` with `whatToCheck`; STATE's "Rules used that are not fully verified" lists the remainder |
+| **W-045o** | *Research, no code.* `coverage.json` completed to **every section of both Acts**, from their tables of contents; each classified | **D-038** | the register's section count equals each Act's; no entry is unclassified; the build reports the count by classification |
+
+**Standing rules from here on (D-043)** — every later item that models a section must also:
+
+1. mark the section `MODELLED` in `coverage.json` (`W-045j`);
+2. write or extend its **section catalogue** entry (`W-045k`);
+3. author **both tax years** as versions on the timeline (**D-041**) — verifying the 2025-26 row
+   first, or recording it as `UNVERIFIED` with `whatToCheck`;
+4. name every new rule by **concept** (**D-035**) and cite the other document by prefix (**D-040**).
+
+---
+
 ## Phase 5 — Tax nodes: the walking skeleton (8 ids, 7 live)
 
 ### W-046 — `TaxByBasisNode` + `TaxByBasisNodeTest`
@@ -453,12 +496,31 @@ test nodes to run.
 
 ### W-052 — `NetPayableNode`
 
+### W-052b — from the runner's result to a `TaxComputation` *(added by D-043)*
+- [ ] **Produces** `taxengine/result/ComputationProjector.java` + `.../result/ComputationProjectorTest.java`
+- **Spec** STATE **Q3** — `W-042` produces `PipelineRunner.Result`, `W-043` produces `TaxComputation`, and no item joins them
+- **Do** read the anchor slots (`NodeIds.TOTAL_INCOME`, `NodeIds.TAX_BY_BASIS`, `NodeIds.NET_PAYABLE`, …) into `TaxComputation`; a missing anchor fails with its name.
+- **Verify** `./mvnw test -pl backend -Dtest=ComputationProjectorTest`
+
+### W-052c — TY 2025-26 on the timeline for the Phase 5 rules *(added by D-043)*
+- [ ] **Produces** 2025-26 versions of the Phase 5 rules in `rulepacks/timeline/`; `rulepacks/snapshots/2025-26.lock.json`; a `TaxYearRegistry` entry for 2025-26 + `TaxYear2025SnapshotTest`
+- **Spec** **D-041**; the sources confirmed by `W-045n`
+- **Do** add versions, not rules — where the rulebook says a value is unchanged (`RATE-SLAB-NEW-2025` is *"identical"* to 2026), **one version spans both years**.
+- **Verify** `./mvnw test -pl backend -Dtest=TaxYear2025SnapshotTest,SnapshotCompilerTest` — both years compile, both locks hold, and a 2025-26 computation cites the 1961-Act provision
+
 ### W-053 — **T1 golden tests**
 - [ ] **Produces** `backend/src/test/resources/taxplanning/golden/2026-27/S202_DEFAULT/T1-*.json` and `.../taxplanning/golden/GoldenCaseRunner.java`, `T1SlabAndRebateTest.java`
 - **Spec** `DR 08-golden-tests.md` **T1-N1 … T1-A1f — every case, every expected value**
 - ⚠ **Copy the expected values. Do not compute them.** If one fails, the code is wrong (rule R3).
 - **Verify** `./mvnw test -pl backend -Dtest=T1SlabAndRebateTest`
 - **This is the first real milestone: a correct calculator for slab tax and rebate.**
+
+> **Amendment (D-043, 2026-09-23):** two additions. (1) **Both tax years** (D-041): the T1 cases for
+> TY 2025-26 run too, against `W-052c`'s snapshot; a case whose 2025-26 rule is still `UNVERIFIED`
+> runs and is reported as `PROVISIONAL`, never skipped. (2) **Invariant I3 is switched on here**
+> (STATE **Q2**, D-029): `NodeRegistry.rulesNotEvaluatedByAnyNode` runs against both real snapshots,
+> with a checked-in list of rules not yet implemented that **may only shrink** — a rule that leaves
+> the list may never return to it.
 
 ---
 
@@ -788,6 +850,22 @@ Two of that last group are already reachable and have no thrower:
 **`MissingRulePackException`** is golden case **T9-1**, which `W-034` currently satisfies with a
 plain `PackValidationException`. Both belong with `W-105`'s hierarchy; note the ordering, since
 `W-066b` is reached first.
+
+## Appendix F — Owed later, and where each lands (D-043, 2026-09-23)
+
+Prerequisites that are real but not needed before `W-046`. Each names the item it must precede, so
+none depends on anyone remembering it.
+
+| Owed | Must land before | Why then |
+|---|---|---|
+| Per-phase TY 2025-26 verification (the other ~40 `NEEDS VERIFICATION` rulebook rows; 9 `PROVISIONAL` golden cases) | the first item of each phase that uses them — standing rule 3 above | verify where it is used, not all at once |
+| The placeholder deletions | as placed by `W-045c` Appendix E | nothing is deleted until its replacement passes golden tests (`09` B2) |
+| HUF sourcing — each per-type difference in `00-BRIEF.md` §8 as a rulebook row | the first HUF item | rule R1: no per-type number in code without a source |
+| `Huf` karta and members | the first rule that reads them | rule B2 |
+| Capital gains on assets outside `portfolio` (manager **M-08**'s gap) | `W-089` (capital-gains milestone) | a user who sells a flat otherwise gets a silently incomplete computation |
+| Section catalogue entries for every modelled section | each item that models a section — standing rule 2 | SC-1 ratchet |
+| The rule-authoring admin screen (**O-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
+| Professional review of golden cases (**O-1**, `VerificationLevel.PROFESSIONALLY_REVIEWED`) | before anyone outside the owner's family relies on a figure | the gate needs a named reviewer |
 
 ## Milestones
 

@@ -43,6 +43,17 @@ Copy-paste these. They are written so a smaller model cannot drift.
 
 ---
 
+## P1-quick — Resume after an interruption *(added by D-044)*
+
+> Resume taxplanning: read `docs/taxplanning-build/CHECKPOINT.md`, run its resume check, and if it
+> matches, do its **Next step** only. If a plan file is named, read it and continue at the first
+> unticked step. Update `CHECKPOINT.md` before you report to me.
+
+Use this after a rate limit or a closed session. Use the full **P1** at the start of a new week or
+when the checkpoint check fails.
+
+---
+
 ## P2 — Explain an item *(stage 2 — the first stop point)*
 
 > Take work item **`<W-0nn>`** from `docs/taxplanning-build/03-WORK-ITEMS.md`.

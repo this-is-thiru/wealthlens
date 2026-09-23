@@ -4,9 +4,9 @@
 
 ```
 Last checkpoint           : W-043 — "taxplanning W-043: the half that never moves"
-Last updated              : 2026-09-21 (session 3 END — Phase 4 COMPLETE, build GREEN, 1410 tests, nothing in flight)
-Current position          : W-037
-Session count             : 3  (session 4 resumes at W-046)
+Last updated              : 2026-09-23 (session 4 — brief written, D-033…D-040 decided; build GREEN, 1410 tests)
+Current position          : W-045b — Phase 4b (the brief's prerequisites) precedes W-046
+Session count             : 4
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
@@ -34,9 +34,9 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-046` — Phase 5 opens. **Next milestone is `W-053`**: a correct slab-and-rebate calculator, no database |
-| **Status** | `READY` — nothing in flight, nothing blocked |
-| **Phase** | 5 — the first real nodes |
+| **Next item** | `W-045b` — Phase 4b opens: 14 prerequisite items from the brief (D-043), then `W-046`. **Next milestone is `W-053`**: a correct slab-and-rebate calculator, **both tax years**, no database |
+| **Status** | `READY` — nothing in flight, nothing blocked. Three owner questions open (O-1…O-3 below); only `W-045m` depends on one of them |
+| **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
 
 ---
@@ -52,7 +52,8 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 ·  W-014 ·  W-015 ·  W-016 ·  W-017 ·  W-018 ·  W-019 ·  W-020 ·  W-021 ·  W-022 ·
 Phase 3    W-023 ·  W-024 ·  W-025 ·  W-026 ·  W-027 ·  W-028 ·  W-029 ·  W-030 ·  W-031 ·  W-032 ·  W-033 ·  W-034 ·
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-053 ·
+Phase 4b   W-045b ·  W-045c ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
@@ -402,6 +403,18 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-044 | 2026-09-23 | Sessions may end at any moment (rate limits). The only resume point was the item commit plus an 800-line STATE.md, and an approved plan existed only in the chat | **`CHECKPOINT.md`** (~20 lines, overwritten, updated at every stage change and plan step, before reporting); **`plans/W-0nn.md`** holding the plan, the owner's approval and a ticked step list; **no WIP commits** — the item stays one commit; **P1-quick** resume prompt. `00-START-HERE.md` §5b | **decided by the developer** |
+| D-043 | 2026-09-23 | The brief changes the rule format and the input model; the owner asked to "collect every prerequisite and keep them properly" | **Phase 4b** in `03-WORK-ITEMS.md` — 14 items (`W-045b`…`W-045o`) before `W-046`, in dependency order; `W-052b` and `W-052c` before `W-053`; `W-053` amended (both years, I3 switched on as a shrink-only ratchet); **Appendix F** for what is owed later with where each lands; four **standing rules** for every later item (coverage, catalogue, both years, concept IDs). Answers STATE Q1 (`W-045i`), Q2 (`W-053`), Q3 (`W-052b`) | **decided by the developer** |
+| D-042 | 2026-09-23 | People need every section explained — what it is, the ways to qualify, the process, what disqualifies — not only the engine's rules | **The section catalogue** (`00-BRIEF.md` §6.3): one entry per section across both Acts, in `content/`; routes with their own conditions; disqualifiers typed by when they bite (`NOT_ELIGIBLE`, `CONDITION_FAILED`, `PROCESS_MISSED`, `THIRD_PARTY_MISSING`, `LATER_REVERSAL`), each linked to the rule or `Condition` that enforces it; numbers only as placeholders rendered from rules; extends `DR 22`'s per-rule claim catalogue rather than duplicating it. Enables feature **F41**, a section explorer annotated from the person's own computation | **decided by the developer** |
+| D-041 | 2026-09-23 | O-4 — build TY 2025-26, or 2026-27 only (D-001)? | **Both years**, for consistency with `portfolio`. **Supersedes D-001.** 2025-26 is added as versions on the timeline, verified per phase where it is used (`W-045n`, `W-052c`, standing rule 3) | **decided by the developer** |
+| D-040 | 2026-09-23 | Naming: commit subjects since `W-013` stopped naming what changed; bare cross-document IDs collide (`T1`, `B2`, `F4`, `D-17` vs `D-017`); rule IDs embed the year and "old/new" | **Standards in `00-BRIEF.md` §10**: item commits `taxplanning W-0nn: <verb> <types> — <why>`; cross-document references prefixed by document (`TS-T1`, `GT-T1`, `DR15-B2`); rule IDs name the concept | **decided by the developer** |
+| D-039 | 2026-09-23 | `TaxpayerFacts` is an individual's facts with `Set<PersonType>`, and `PersonType` has one value. HUF is the named second type | **A sealed `Assessee` family** — `Individual`, `Huf`, later others — each with only its own facts; one type per assessee. Replaces `TaxpayerFacts` before any node reads it (`00-BRIEF.md` §8). Per-type rule differences are sourced in the rulebook before code reads them | **decided by the developer** |
+| D-038 | 2026-09-23 | "Think of all cases" — ~100 sections, 30–40 in the new regime — how is completeness known? | **A section coverage register** (`law/coverage.json`) classifying every section of both Acts as `MODELLED` / `PLANNED` / `NOT_COMPUTATIONAL` / `OUT_OF_SCOPE`; CI fails on an unclassified section. Seeded from the 105 sections `01-rulebook.md` cites. Plus the case-axis matrix (`00-BRIEF.md` §7) | **decided by the developer** |
+| D-037 | 2026-09-23 | Rules must be updatable over time, with managers for new kinds of rule. Runtime-editable or release-only? | **Configurable and maintainable through a publish gate** — validate, diff, golden suite, reviewer approval — before a version is `PUBLISHED`. Authored as repository files first; an admin console later behind the `RulePackProvider` SPI running the **same** gate. A new kind of rule is a new **manager** (existing construct names kept in code); 28 managers catalogued in `00-BRIEF.md` §6.2 | **decided by the developer** |
+| D-036 | 2026-09-23 | One `status` field carries legal status, verification and publication at once | **Three axes**: legal (`BILL`…`IN_FORCE`…`STRUCK_DOWN`), verification (`UNVERIFIED` / `SOURCE_CHECKED` / `PROFESSIONALLY_REVIEWED`), publication (`DRAFT` / `IN_REVIEW` / `PUBLISHED` / `SUPERSEDED`). Only `PUBLISHED` enters a snapshot | **decided by the developer** |
+| D-035 | 2026-09-23 | The shipped pack names rules `RATE-SLAB-NEW-2026` / `RATE-SLAB-OLD-2026` — the year and "old/new" in the identity, defeating versioning and the glossary | **Rule IDs name the concept**; the year lives in the version, the section in the provision. Rename the 15 existing rows (and `RuleIds`) before more are written | **decided by the developer** |
+| D-034 | 2026-09-23 | A regime spans many years, but a new year is `cp -r` of the whole pack (`07` X4.1) — N copies of one regime, free to drift | **One timeline, frozen per year**: each rule, regime and form authored once with its versions; each year's pack is **compiled** from the timeline into an immutable, checksummed snapshot that computations pin | **decided by the developer** |
+| D-033 | 2026-09-23 | Who is this for? The original brief is empty in git; PRD scope says individual, salaried, resident, no business income | **Any assessee and every ITR form — designed for all, built for individuals first, HUF second.** Written down as `docs/taxplanning-design/00-BRIEF.md`, which supersedes older scope statements; amendments added to `01-PRD.md` §2/§7 and `00-START-HERE.md`. Also agreed: forms are eligibility + shared schedules (not subclasses), and forms are an axis independent of regimes | **decided by the developer** |
 | D-032 | 2026-09-21 | `W-043` — three of `FilingPosition`'s six components name types that do not exist (`ItrSelection` and `CalendarEntry` are in A6 and **nowhere else**; `InterestBreakdown` is `W-112`'s). And `ComputationReceipt` is listed in the `Produces` of **both** `W-043` and `W-107` | **Ship `FilingPosition` with the three components that exist**, the rest arriving with their owners (the D-026 shape). Unlike `EnteredFacts` there is no fingerprint pressure, so this is a plain "grow it later"; `asOf` alone carries A6's point. **`W-043` builds `ComputationReceipt`** (it needs only types available there, and splitting it from `ComputationId` would strand that type for 64 items); `W-107` keeps E6's API-side resolution. Two errata | **decided by the developer** |
 | D-031 | 2026-09-21 | B-004 — `W-039`'s `NodeRegistry` rejects an empty `requires()`, `W-040`'s `TopologicalSort` rejects a required slot with no producer. Every acyclic graph needs a source, so **no graph satisfied both**. Both were committed and green; `W-042` is the first item to pass a graph through both | **(A) a node may require nothing.** A source reads `EngineInputs` via `ctx.inputs()` — declared, passed in, fingerprinted — so the original premise ("everything the engine reads arrives through a slot") was wrong: there are two sources of data and only one is an edge. The check given up is redundant with `NodeContext.get`, which refuses an undeclared read at the moment it happens and is the stronger guarantee. Erratum on `W-039`'s Verify | **decided by the developer** |
 | D-030 | 2026-09-21 | `W-040` — T9's error catalogue has **no** entry for a pipeline cycle and `TaxError`/`TaxEngineException` do not exist (`W-105`). And a graph admits many valid topological orders; the Verify does not say which | **`IllegalArgumentException`, naming the cycle** — it matches what `NodeRegistry` already throws, and a cycle is a defect in what node *classes* declare, not in pack data or user data (B3's "fails at load" is inconsistent with its own code, which sorts per run). `W-105` may reclassify it into the sealed hierarchy. **The order is canonical**, ties broken on `NodeId`: `TraceLine.sequence` comes from it, the trace *is* the result, so a varying order would make identical inputs produce differing traces — golden tests failing for no reason, scenario diffs reporting changes nobody made | **decided by the developer** |
@@ -445,8 +458,9 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 
 ## ▶ How to resume — do these in order
 
-**Session 3 ended cleanly.** Nothing is in flight, nothing is blocked, the build is green, and the
-tree is clean. This is an ordinary item start, not a recovery.
+**Session 4 changed direction, not code.** The owner stated the founding brief; it is written at
+`docs/taxplanning-design/00-BRIEF.md` and **must be read first**. No Java changed in session 4; the
+build is green and the last item is still `W-043`.
 
 1. **Confirm where you are.**
    ```
@@ -456,12 +470,10 @@ tree is clean. This is an ordinary item start, not a recovery.
    ```
    If the first command does not print `W-043`, stop and report `git log --oneline -15`.
 
-2. **Answer the three questions below before writing `W-046`'s plan.** All three land in Phase 5,
-   and two of them get harder with every item. They are ordered by when they bite.
+2. **Read `00-BRIEF.md`**, then `03-WORK-ITEMS.md` Phase 4b and Appendix F.
 
-3. **Then start `W-046`** at stage 1 (READ). It is `TaxByBasisNode` — the first *real* node, and its
-   `Do` is A11's harness example: total income ₹12,00,000 → `TaxByBasis(60000, {})`, run through
-   `W-044`'s `NodeHarness`.
+3. **Start `W-045b`** at stage 1 (READ). Phase 4b runs `W-045b` → `W-045o` in order, then `W-046`.
+   `W-045m` waits on the owner's answer to **O-3**; if it is not yet answered when reached, ask.
 
 ---
 
@@ -490,6 +502,16 @@ Something must say *which slot is `totalIncome`* and *which is `taxByBasis`* —
 one level up. Likely needs a new item in Phase 5, probably after `W-046`.
 
 ---
+
+### Owner questions open since session 4 (`00-BRIEF.md` §12)
+
+| | Question | Recommendation | Blocks |
+|---|---|---|---|
+| **O-1** | Who checks a changed rule before it goes live? (= **D-006**) | the owner approves each change now; a CA reviews a sample before outside users rely on it | nothing before the first post-launch rule change |
+| **O-2** | When should a web screen for editing rules arrive? | after `W-111` | nothing now |
+| **O-3** | The old compute endpoint returns known-wrong tax — warn, disable, or leave? | warn now, remove when replaced | `W-045m` only |
+
+Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` amendment, `W-052b`).
 
 ### Also open, blocking nothing today
 

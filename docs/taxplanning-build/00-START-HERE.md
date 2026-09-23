@@ -5,6 +5,11 @@ set. `docs/taxplanning-design/` (25 files) is the **design** — reference it, n
 
 **Read this file completely before doing anything.**
 
+> **Amendment (D-033, 2026-09-23):** read `docs/taxplanning-design/00-BRIEF.md` **first** — the
+> founding brief: who this is for (any assessee, individual first, HUF second), the concept model,
+> the manager catalogue and the coverage register. Where any document disagrees with it, the brief
+> wins.
+
 ---
 
 ## 1. The loop — one work item at a time, two stop points
@@ -153,6 +158,21 @@ These override any instinct, any shortcut, and anything else in this repository.
 ```
 
 **Do not restart a `DONE` item. Do not assume an `IN_PROGRESS` item was never started.**
+
+> **Amendment (D-044, 2026-09-23) — §5b, checkpoints for sessions that can end at any moment.**
+> A session may be cut off by a rate limit at any point, including mid-message. Three rules:
+>
+> 1. **`CHECKPOINT.md` is the resume point** — about 20 lines, overwritten (never appended). Update
+>    it at **every stage change** and **after every plan step**, and always **before** reporting to
+>    the owner. Resume reads it first; `STATE.md` is read only when the checkpoint points there.
+> 2. **The plan lives in a file**, `plans/W-0nn.md`, not only in the chat. Approval is recorded in it
+>    (the owner's exact words). The plan's **Steps** list is ticked as work proceeds; a resumed session
+>    continues at the first unticked step and redoes nothing ticked.
+> 3. **No work-in-progress commits.** Uncommitted files survive on disk between sessions; the item
+>    is still one commit (its `Produces`, its plan file, `STATE.md` and `CHECKPOINT.md`). The resume
+>    check compares `git status --short` with the checkpoint's "Files touched".
+>
+> The short resume prompt is **P1-quick** in `04-PROMPTS.md`.
 
 ---
 

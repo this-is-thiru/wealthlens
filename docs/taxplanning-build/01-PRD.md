@@ -37,6 +37,14 @@ ingestion; monthly TDS projection; JSON API, PDF, ITR suggestion with schedule-r
 **Out:** e-filing; business income computation; NRI; multi-client advisor workspaces; AIS/26AS import;
 investment product recommendations; runtime-editable tax rules.
 
+> **Amendment (D-033, 2026-09-23):** this scope is the **built-first** scope, not the boundary of the
+> design. The product serves **any assessee** — individual first, **HUF second**, then firms,
+> companies and the rest — and **every ITR form and return kind**. "Out" above means *not built
+> yet*; no type may be narrowed so that a designed-for case becomes a schema change. Rules stay
+> immutable per snapshot but are **maintainable over time** through a gated publish workflow, which
+> replaces "runtime-editable tax rules" as an exclusion. See `docs/taxplanning-design/00-BRIEF.md`
+> §2 and §9.
+
 ---
 
 ## 3. Personas
@@ -281,3 +289,9 @@ F19 retirement events · F20 arrears relief · F21 advisor access · F22 NRI · 
 E-filing · business income computation · NRI and DTAA · advisor workspaces · AIS/26AS import ·
 investment product recommendations · peer benchmarking ("people like you claim ₹X") · household or
 spouse planning · runtime-editable rules · a formula DSL for rule limits.
+
+> **Amendment (D-033, 2026-09-23):** "do not stub" no longer applies to business income, NRI,
+> household/clubbing or rule maintenance — those are **designed for, built later**
+> (`00-BRIEF.md` §9). "Runtime-editable rules" is replaced by rule versions published through the
+> gate in `00-BRIEF.md` §5.4; edits that skip the gate remain excluded. A formula DSL remains
+> excluded.
