@@ -6,24 +6,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
-import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
-import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
-import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
-import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
-import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,14 +20,14 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * A year's rule pack compiled from the timeline (D-034, D-054): equal to the pack it replaces, pinned
- * by its lock, and holding only published versions that touch the year.
+ * A year's rule pack compiled from the timeline (D-034, D-054): pinned by its lock, and holding only
+ * published versions that touch the year. That the compiled 2026-27 pack equalled the per-year copy it
+ * replaced was proved before the copy was removed ({@code W-045g}, {@code W-045g3}).
  */
 class RulePackCompilerTest {
 
     private static final TaxYearId TY_2026 = new TaxYearId(2026);
     private static final Path TIMELINE = Path.of("src/main/resources/rulepacks/timeline");
-    private static final Path TODAY = Path.of("src/main/resources/rulepacks/2026-27");
     private static final Path LOCK = Path.of("src/main/resources/rulepacks/2026-27.lock.json");
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
     private static final String SLAB = "RATE-SLAB-NEW-TAX-REGIME";
@@ -48,42 +35,6 @@ class RulePackCompilerTest {
 
     @TempDir
     Path copy;
-
-    @Test
-    void compile_whenThe2026TimelineIsCompiled_equalsTodaysPackLayerByLayer() {
-        // When
-        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(TIMELINE), TY_2026);
-
-        // Then — every layer file, canonically, with identities in id order (D-054 B1)
-        for (RulePackLayer layer : RulePackLayer.values()) {
-            for (String file : layer.files()) {
-                assertThat(compiled.files().get(file))
-                        .as(file)
-                        .isEqualTo(RulePackCompiler.render(identitiesInOrder(tree(TODAY.resolve(file)))));
-            }
-        }
-    }
-
-    @Test
-    void compile_whenAssembled_givesTheSameRulePackAsTodaysFiles() throws IOException {
-        // Given — today's files assembled directly; the provider itself now compiles the timeline
-        Map<String, String> todaysFiles = new HashMap<>();
-        for (RulePackLayer layer : RulePackLayer.values()) {
-            layer.files().forEach(file -> todaysFiles.put(file, text(TODAY.resolve(file))));
-        }
-        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(TIMELINE), TY_2026);
-        RulePack today = new JsonPackAssembler(instruments()).assemble(TY_2026, lock().layers(), todaysFiles);
-
-        // When
-        RulePack fromTimeline = new JsonPackAssembler(instruments()).assemble(TY_2026, lock().layers(), compiled.files());
-
-        // Then
-        assertThat(fromTimeline.rules()).isEqualTo(today.rules());
-        assertThat(fromTimeline.regimes()).isEqualTo(today.regimes());
-        assertThat(fromTimeline.components()).isEqualTo(today.components());
-        assertThat(fromTimeline.disallowanceSets()).isEqualTo(today.disallowanceSets());
-        assertThat(fromTimeline.conditionSets()).isEqualTo(today.conditionSets());
-    }
 
     @Test
     void verify_whenTheTimelineMatchesTheLock_passes() throws IOException {
@@ -202,42 +153,6 @@ class RulePackCompilerTest {
         throw new AssertionError(SLAB + " is not in the compiled pack");
     }
 
-    /** Today's files list identities in authoring order; the compiler lists them by id. */
-    private static JsonNode identitiesInOrder(JsonNode file) {
-        Map<String, String> arraysAndKeys = Map.of("rules", "ruleId", "regimes", "code", "nodes", "nodeId");
-        ObjectNode ordered = (ObjectNode) file.deepCopy();
-        arraysAndKeys.forEach((array, key) -> {
-            if (ordered.has(array)) {
-                List<JsonNode> elements = new ArrayList<>();
-                ordered.path(array).forEach(elements::add);
-                elements.sort(Comparator.comparing(element -> element.path(key).asString()));
-                ArrayNode sorted = MAPPER.createArrayNode();
-                elements.forEach(sorted::add);
-                ordered.set(array, sorted);
-            }
-        });
-        return ordered;
-    }
-
-    private static GoverningInstruments instruments() {
-        Instrument act = Instrument.assented(
-                "Income-tax Act, 2025 (30 of 2025)",
-                LocalDate.of(2025, 8, 21),
-                LocalDate.of(2026, 4, 1),
-                "CG-DL-E-22082025-265620",
-                URI.create("https://egazette.gov.in/WriteReadData/2025/265620.pdf"),
-                VerificationLevel.SOURCE_CHECKED);
-        return new GoverningInstruments(
-                act,
-                act,
-                Instrument.notified(
-                        "Income-tax Rules, 2026",
-                        LocalDate.of(2026, 4, 1),
-                        "CG-DL-E-20032026-271092",
-                        URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
-                        VerificationLevel.SOURCE_CHECKED));
-    }
-
     private Path timelineCopy() throws IOException {
         try (Stream<Path> files = Files.walk(TIMELINE)) {
             for (Path source : files.filter(Files::isRegularFile).toList()) {
@@ -252,14 +167,6 @@ class RulePackCompilerTest {
     private static JsonNode tree(Path file) {
         try {
             return MAPPER.readTree(Files.readString(file));
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not read " + file, e);
-        }
-    }
-
-    private static String text(Path file) {
-        try {
-            return Files.readString(file);
         } catch (IOException e) {
             throw new UncheckedIOException("Could not read " + file, e);
         }

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045g3 — remove the per-year copy rulepacks/2026-27/ (D-055)
+Item            : W-045h — the publish diff, PackDiff (D-037)
 Stage           : NOT_STARTED
-Plan            : — (plans/W-045g3.md once written)
+Plan            : — (plans/W-045h.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-045g3 row and the W-045g2 erratum; write plans/W-045g3.md; STOP for approval. (W-045d2 may be taken instead if the owner says so)
-Last verify     : ./mvnw test -pl backend -Punit → 1447 pass, 0 fail, 0 Checkstyle violations (W-045g2)
-Waiting on      : nothing for W-045g3; D-054 startup wiring UNOWNED. OQ-1..OQ-3 open
+Next step       : READ the W-045h row and only the sections it names; write plans/W-045h.md; STOP for approval. (W-045d2 may be taken instead if the owner says so)
+Last verify     : ./mvnw clean test -pl backend -Punit → 1438 pass, 0 fail, 0 Checkstyle violations (W-045g3)
+Waiting on      : nothing for W-045h; D-054 startup wiring UNOWNED. OQ-1..OQ-3 open
 Files touched   : —
-Last item commit: taxplanning W-045g2: load every year from the timeline, refused unless it matches its lock — per-year test packs migrated (D-055)
+Last item commit: taxplanning W-045g3: remove the per-year copy rulepacks/2026-27/ — the timeline and its lock are the only source (D-056)
 Updated         : 2026-09-24, session 5
 ```
 

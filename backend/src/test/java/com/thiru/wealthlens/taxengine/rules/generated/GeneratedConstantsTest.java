@@ -124,9 +124,9 @@ class GeneratedConstantsTest {
         }
 
         @Test
-        void itReadsEveryPackDirectory() {
-            assertThat(ConstantGenerator.packDirectories())
-                    .anyMatch(path -> path.getFileName().toString().equals("2026-27"));
+        void itReadsTheRuleIdsFromTheTimeline() {
+            assertThat(ConstantGenerator.ruleIds())
+                    .containsExactly("RATE-SLAB-FIRST-SCHEDULE", "RATE-SLAB-NEW-TAX-REGIME");
         }
     }
 

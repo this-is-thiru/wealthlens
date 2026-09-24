@@ -2,17 +2,13 @@ package com.thiru.wealthlens.taxengine.rules.id;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
+import com.thiru.wealthlens.taxengine.rules.timeline.Timeline;
+import com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -24,13 +20,12 @@ import org.junit.jupiter.api.Test;
  * the statute's word, not a relative label. Regime codes separate words with {@code _} and rule ids
  * with {@code -}; both are checked with {@code -}, so one rule covers both.
  *
- * <p>Only the shipped packs are read. {@code rulepacks-broken/} is broken on purpose for other tests,
- * and {@code rulepacks-fixture/} carries no rules or regimes.
+ * <p>Only the shipped timeline is read — every year is compiled from it. {@code rulepacks-broken/} is
+ * broken on purpose for other tests, and {@code rulepacks-fixture/} carries no rules or regimes.
  */
 class RuleIdNamingTest {
 
-    private static final Path PACK_ROOT = Path.of("src/main/resources/rulepacks");
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final Path TIMELINE = Path.of("src/main/resources/rulepacks/timeline");
 
     private static final String STATUTORY_NEW = "NEW-TAX-REGIME";
     private static final Pattern YEAR = Pattern.compile("-(19|20)\\d\\d\\b");
@@ -38,14 +33,12 @@ class RuleIdNamingTest {
     private static final Pattern SECTION = Pattern.compile("S\\d{3}");
 
     @Test
-    void shippedPacks_whenEveryRuleIdAndRegimeCodeIsRead_noneNamesAYearOldNewOrSection() {
+    void shippedTimeline_whenEveryRuleIdAndRegimeCodeIsRead_noneNamesAYearOldNewOrSection() {
         // Given
-        List<Path> packs = packDirectories();
+        Timeline timeline = TimelineReader.read(TIMELINE);
         List<String> identities = new ArrayList<>();
-        for (Path pack : packs) {
-            identities.addAll(fieldValues(pack.resolve("law/rates.json"), "rules", "ruleId"));
-            identities.addAll(fieldValues(pack.resolve("law/regimes.json"), "regimes", "code"));
-        }
+        timeline.rules().keySet().forEach(id -> identities.add(id.value()));
+        timeline.regimes().keySet().forEach(code -> identities.add(code.value()));
 
         // When
         List<String> violations = identities.stream()
@@ -53,7 +46,6 @@ class RuleIdNamingTest {
                 .toList();
 
         // Then
-        assertThat(packs).as("pack directories under %s", PACK_ROOT).isNotEmpty();
         assertThat(identities).as("identities read").isNotEmpty();
         assertThat(violations).isEmpty();
     }
@@ -98,27 +90,5 @@ class RuleIdNamingTest {
             return Optional.of(identity + " carries a section number");
         }
         return Optional.empty();
-    }
-
-    private static List<Path> packDirectories() {
-        try (Stream<Path> years = Files.list(PACK_ROOT)) {
-            return years.filter(Files::isDirectory).sorted().toList();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not list " + PACK_ROOT.toAbsolutePath(), e);
-        }
-    }
-
-    private static List<String> fieldValues(Path file, String arrayField, String idField) {
-        if (!Files.exists(file)) {
-            return List.of();
-        }
-        try {
-            JsonNode array = MAPPER.readTree(Files.readString(file)).path(arrayField);
-            List<String> values = new ArrayList<>();
-            array.forEach(element -> values.add(element.path(idField).asText()));
-            return values;
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not read " + file, e);
-        }
     }
 }

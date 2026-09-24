@@ -4,9 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
-import com.thiru.wealthlens.taxengine.rules.json.RegimeJson;
-import com.thiru.wealthlens.taxengine.rules.json.RuleJson;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -30,7 +29,6 @@ import tools.jackson.databind.node.ObjectNode;
 class TimelineReaderTest {
 
     private static final Path REAL = Path.of("src/main/resources/rulepacks/timeline");
-    private static final Path PACK_2026 = Path.of("src/main/resources/rulepacks/2026-27");
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
     private static final String SLAB_FILE = "law/rules/RATE-SLAB-NEW-TAX-REGIME.json";
 
@@ -38,20 +36,20 @@ class TimelineReaderTest {
     Path copy;
 
     @Test
-    void read_whenTheShippedTimelineIsRead_holdsExactlyThe2026PackLaw() {
-        // Given — while both exist, the timeline and the 2026-27 pack must hold the same law (D-053)
-        JsonNode rates = tree(PACK_2026.resolve("law/rates.json"));
-        JsonNode regimes = tree(PACK_2026.resolve("law/regimes.json"));
-
+    void read_whenTheShippedTimelineIsRead_holdsExactlyItsRulesRegimesAndNodes() {
         // When
         Timeline timeline = TimelineReader.read(REAL);
 
-        // Then
-        assertThat(timeline.rules()).isEqualTo(RuleJson.rules(rates, "law/rates.json"));
-        assertThat(timeline.regimes()).isEqualTo(RegimeJson.regimes(regimes, "law/regimes.json"));
-        assertThat(timeline.pipelineNodes()).hasSize(tree(PACK_2026.resolve("exec/pipelines.json"))
-                .path("nodes").size())
-                .containsKey(new NodeId("tax.netpayable"));
+        // Then — listed by hand; the lock, not this test, guards the values inside them
+        assertThat(timeline.rules().keySet())
+                .containsExactlyInAnyOrder(new RuleId("RATE-SLAB-NEW-TAX-REGIME"), new RuleId("RATE-SLAB-FIRST-SCHEDULE"));
+        assertThat(timeline.regimes().keySet())
+                .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
+        assertThat(timeline.pipelineNodes().keySet())
+                .extracting(NodeId::value)
+                .containsExactlyInAnyOrder(
+                        "inputs.components", "salary.gross", "totalincome", "round.totalincome", "tax.bybasis",
+                        "tax.afterrebate", "tax.cess", "tax.netpayable", "round.netpayable");
     }
 
     @Test

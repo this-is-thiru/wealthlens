@@ -1,106 +1,92 @@
 package com.thiru.wealthlens.taxengine.rules.pack;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.timeline.RulePackCompiler;
+import com.thiru.wealthlens.taxengine.rules.timeline.RulePackLock;
+import com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The real TY 2026-27 pack, checked as data.
+ * The real law — the timeline's rule and regime files, and the 2026-27 lock — checked as data.
  *
  * <p>This is the highest-risk file set in the phase: every figure in it was transcribed by hand from
  * a gazette PDF, and a transcription error here is a wrong tax bill that no downstream test would
- * attribute to the pack. So the checks are about the figures and the shape, not about the loader —
- * {@code W-034} exercises the loader end to end.
+ * attribute to the data. So the checks are about the figures and the shape, not about the loader —
+ * {@code RulePackLoadTest} exercises the loader end to end.
  */
 class PackJsonWellFormedTest {
 
-    private static final String ROOT = "rulepacks/2026-27";
+    private static final Path RULEPACKS = Path.of("src/main/resources/rulepacks");
+    private static final Path TIMELINE = RULEPACKS.resolve("timeline");
+    private static final Path LOCK = RULEPACKS.resolve("2026-27.lock.json");
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
-    private static String read(String path) {
-        try (InputStream in = PackJsonWellFormedTest.class.getClassLoader()
-                .getResourceAsStream(ROOT + "/" + path)) {
-            assertThat(in).as("%s is on the classpath", path).isNotNull();
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+    private static String read(Path file) {
+        try {
+            return Files.readString(file);
         } catch (IOException e) {
-            throw new IllegalStateException("Could not read " + path, e);
+            throw new UncheckedIOException("Could not read " + file, e);
         }
     }
 
-    private static JsonNode json(String path) {
-        return MAPPER.readTree(read(path));
-    }
-
-    @Nested
-    @DisplayName("every file parses")
-    class WellFormed {
-
-        @ParameterizedTest(name = "{0}")
-        @ValueSource(strings = {
-            "manifest.json",
-            "law/rates.json",
-            "law/regimes.json",
-            "exec/pipelines.json",
-            "exec/components.json",
-            "forms/itr-forms.json",
-            "content/explanations.json"
-        })
-        void parses(String path) {
-            assertThat(json(path)).isNotNull();
+    private static List<JsonNode> filesIn(String directory) {
+        try (Stream<Path> files = Files.list(TIMELINE.resolve(directory))) {
+            return files.sorted().map(file -> MAPPER.readTree(read(file))).toList();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not list " + directory, e);
         }
     }
 
-    @Nested
-    @DisplayName("the manifest declares four layers, and the checksums are real")
-    class Manifest {
+    private static List<JsonNode> rules() {
+        return filesIn("law/rules");
+    }
 
-        private static final Map<String, List<String>> LAYER_FILES = Map.of(
-                "law", List.of("law/rates.json", "law/regimes.json"),
-                "exec", List.of("exec/pipelines.json", "exec/components.json"),
-                "forms", List.of("forms/itr-forms.json"),
-                "content", List.of("content/explanations.json"));
+    private static List<JsonNode> regimes() {
+        return filesIn("law/regimes");
+    }
+
+    private static JsonNode lock() {
+        return MAPPER.readTree(read(LOCK));
+    }
+
+    @Nested
+    @DisplayName("the lock declares four layers, and pins what the timeline compiles to")
+    class Lock {
 
         @Test
         void allFourLayersAreVersioned() {
-            JsonNode layers = json("manifest.json").get("layers");
-
-            assertThat(layers.propertyNames())
+            assertThat(lock().get("layers").propertyNames())
                     .containsExactlyInAnyOrder("law", "exec", "forms", "content");
         }
 
         @Test
-        void eachLayersChecksumMatchesItsBytes() {
-            // Written by hashing the files, not typed as plausible hex — otherwise this test
+        void theLockMatchesTheCompiledTimeline() {
+            // Written by compiling the timeline, not typed as plausible hex — otherwise this test
             // would prove only that a string was copied correctly
-            JsonNode layers = json("manifest.json").get("layers");
+            TaxYearId year = new TaxYearId(2026);
+            RulePackLock lock = RulePackLock.read(year, read(LOCK), LOCK.toString());
 
-            LAYER_FILES.forEach((layer, files) -> {
-                String body = files.stream().map(PackJsonWellFormedTest::read)
-                        .reduce("", String::concat);
-                assertThat(layers.get(layer).get("checksum").asText())
-                        .as("%s checksum", layer)
-                        .isEqualTo("sha256:" + sha256(body));
-            });
+            assertThatCode(() -> lock.verify(RulePackCompiler.compile(TimelineReader.read(TIMELINE), year)))
+                    .doesNotThrowAnyException();
         }
 
         @Test
         void theThreeGoverningInstrumentsArePresent() {
             // YR-ACT-002/-003/-004. The Finance Act is where RATE-SUR-* lives.
-            JsonNode instruments = json("manifest.json").get("instruments");
+            JsonNode instruments = lock().get("instruments");
 
             assertThat(instruments.get("act").get("citation").asText())
                     .isEqualTo("Income-tax Act, 2025 (30 of 2025)");
@@ -113,17 +99,7 @@ class PackJsonWellFormedTest {
         @Test
         void theRulesInstrumentHasNoAssentDate() {
             // Subordinate legislation is notified, not assented
-            assertThat(json("manifest.json").get("instruments").get("rules").has("assentedOn"))
-                    .isFalse();
-        }
-
-        private static String sha256(String content) {
-            try {
-                return HexFormat.of().formatHex(
-                        MessageDigest.getInstance("SHA-256").digest(content.getBytes(StandardCharsets.UTF_8)));
-            } catch (NoSuchAlgorithmException e) {
-                throw new IllegalStateException(e);
-            }
+            assertThat(lock().get("instruments").get("rules").has("assentedOn")).isFalse();
         }
     }
 
@@ -136,7 +112,7 @@ class PackJsonWellFormedTest {
             // The statute writes "From ₹400001 to ₹800000"; the arithmetic lower bound is 400000.
             // Storing lower + 1 loses one rupee of taxable width per band. This is H-5's first limb,
             // and the check is deliberately blunt: no bound may end in anything but four zeros.
-            for (JsonNode rule : json("law/rates.json").get("rules")) {
+            for (JsonNode rule : rules()) {
                 for (JsonNode version : rule.get("versions")) {
                     JsonNode bands = version.get("cap").get("bands");
                     if (bands == null) {
@@ -163,7 +139,7 @@ class PackJsonWellFormedTest {
 
         @Test
         void bandsAreContiguousWithNoGapAndNoOverlap() {
-            for (JsonNode rule : json("law/rates.json").get("rules")) {
+            for (JsonNode rule : rules()) {
                 for (JsonNode version : rule.get("versions")) {
                     JsonNode bands = version.get("cap").get("bands");
                     if (bands == null) {
@@ -191,7 +167,7 @@ class PackJsonWellFormedTest {
     class Figures {
 
         private static JsonNode bandsOf(String ruleId) {
-            for (JsonNode rule : json("law/rates.json").get("rules")) {
+            for (JsonNode rule : rules()) {
                 if (ruleId.equals(rule.get("ruleId").asText())) {
                     return rule.get("versions").get(0).get("cap").get("bands");
                 }
@@ -226,7 +202,7 @@ class PackJsonWellFormedTest {
         @Test
         void everyRuleVersionNamesTheInstrumentThatIntroducedIt() {
             // Invariant I15, checked in the data as well as in the loader
-            for (JsonNode rule : json("law/rates.json").get("rules")) {
+            for (JsonNode rule : rules()) {
                 for (JsonNode version : rule.get("versions")) {
                     assertThat(version.get("introducedBy"))
                             .as("%s introducedBy", rule.get("ruleId").asText())
@@ -238,7 +214,7 @@ class PackJsonWellFormedTest {
         @Test
         void everyProvenanceThatIsNotVerifiedSaysWhatToCheck() {
             // Invariant I1, in the data
-            for (JsonNode node : json("law/rates.json").findValues("provenance")) {
+            for (JsonNode node : rules().stream().flatMap(rule -> rule.findValues("provenance").stream()).toList()) {
                 if ("UNVERIFIED".equals(node.get("verificationLevel").asText())) {
                     assertThat(node.has("whatToCheck")).isTrue();
                 }
@@ -254,7 +230,7 @@ class PackJsonWellFormedTest {
         void exactlyOneRegimeIsDefault() {
             // Invariant I5, in the data
             long defaults = 0;
-            for (JsonNode regime : json("law/regimes.json").get("regimes")) {
+            for (JsonNode regime : regimes()) {
                 if (regime.get("isDefault").asBoolean()) {
                     defaults++;
                 }
@@ -266,9 +242,9 @@ class PackJsonWellFormedTest {
         void everyRateTableReferencedExists() {
             // Invariant I2, in the data
             java.util.Set<String> ruleIds = new java.util.HashSet<>();
-            json("law/rates.json").get("rules").forEach(r -> ruleIds.add(r.get("ruleId").asText()));
+            rules().forEach(r -> ruleIds.add(r.get("ruleId").asText()));
 
-            for (JsonNode regime : json("law/regimes.json").get("regimes")) {
+            for (JsonNode regime : regimes()) {
                 assertThat(ruleIds)
                         .as("%s rate table", regime.get("code").asText())
                         .contains(regime.get("rateTable").asText());
@@ -278,7 +254,7 @@ class PackJsonWellFormedTest {
         @Test
         void theOptOutRidesOnTheReturnWithNoForm() {
             // Rule 136, VERIFIED. Naming a form would send the taxpayer after one that does not exist.
-            for (JsonNode regime : json("law/regimes.json").get("regimes")) {
+            for (JsonNode regime : regimes()) {
                 if ("FIRST_SCHEDULE_RATES".equals(regime.get("code").asText())) {
                     JsonNode election = regime.get("election");
                     assertThat(election.get("vehicle").asText()).isEqualTo("IN_THE_RETURN");
@@ -290,7 +266,7 @@ class PackJsonWellFormedTest {
 
         @Test
         void theDefaultRegimeRequiresNoAction() {
-            for (JsonNode regime : json("law/regimes.json").get("regimes")) {
+            for (JsonNode regime : regimes()) {
                 if (regime.get("isDefault").asBoolean()) {
                     assertThat(regime.get("election").get("kind").asText())
                             .isEqualTo("DEFAULT_NO_ACTION");

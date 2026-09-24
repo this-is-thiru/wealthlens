@@ -70,7 +70,6 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 
 | Package | Types | Item |
 |---|---|---|
-| — | `rulepacks/2026-27/` removed; the last readers of it moved to the timeline and lock | ○ `W-045g3` |
 | — | wiring a provider into the application at startup; loading the timeline from the JAR | ⚠ **UNOWNED** (D-054) |
 | `validate/` | `PackDiff` (**`W-139` reuses it** for the cross-year diff) · `PackLinter` `Finding` | ○ `W-045h` · ○ `W-139` |
 | `generated/` | `NodeIds` | ○ `W-045i` |
@@ -173,18 +172,10 @@ thing (not "snapshot", which names input projections such as `LedgerSnapshot`).
 | `forms/` | **no** | no |
 | `content/` | **no** — property P3, invariant I27 | no |
 
-### The per-year copy — still on disk, no longer loaded (`W-027`, `W-028`, `W-032`; removed by `W-045g3`)
+### The per-year copy — removed (`W-045g3`)
 
-```
-backend/src/main/resources/rulepacks/2026-27/
-  manifest.json                 layer versions + checksums
-  law/      rates.json regimes.json
-  exec/     pipelines.json components.json
-  forms/    itr-forms.json
-  content/  explanations.json
-```
-
-**2 rule rows** (`RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE`), both `IN_FORCE` · `SOURCE_CHECKED` · `PUBLISHED`; 2 regimes (`NEW_TAX_REGIME`, `FIRST_SCHEDULE_RATES`); TY 2026-27 only.
+Until `W-045g3` each year was a copied directory (`rulepacks/2026-27/`: `manifest.json` + the layer
+files). It is gone; the timeline and `<year>.lock.json` are the only source (D-034, D-055).
 
 ### Timeline — ✅ `W-045f` (read, not yet compiled) · compile ○ `W-045g` (D-034)
 
@@ -481,3 +472,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-24 | T2: `Timeline`, `TimelineReader` built; T4: the timeline holds 2 rules, 2 regimes, 9 nodes, equal to the 2026-27 pack until `W-045g` | `W-045f`, D-053 |
 | 2026-09-24 | T2: `RulePackCompiler`, `CompiledPack`, `RulePackLock` built; `RulePackLayer.files()`, `RulePackRef.checksumOf` shared by loader and compiler; T4: `2026-27.lock.json`, layers law.4/exec.2/forms.2/content.2; provider move → `W-045g2`; startup wiring UNOWNED | `W-045g`, D-054 |
 | 2026-09-24 | T2: `ClasspathRulePackProvider` moved to `timeline/`, serves years compiled from the timeline and checked against the lock; I4 is the lock check; T4: the per-year copy is no longer loaded, removal → `W-045g3` | `W-045g2`, D-055 |
+| 2026-09-24 | T4: `rulepacks/2026-27/` removed; its last readers (generator, naming test, data checks, loader-format tests) read the timeline or the compiled pack | `W-045g3`, D-056 |

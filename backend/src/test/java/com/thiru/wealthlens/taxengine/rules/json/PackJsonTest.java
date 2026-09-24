@@ -590,12 +590,7 @@ class PackJsonTest {
     class Regimes {
 
         private static String realRegimes() {
-            try (var in = PackJsonTest.class.getClassLoader()
-                    .getResourceAsStream("rulepacks/2026-27/law/regimes.json")) {
-                return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-            } catch (Exception e) {
-                throw new AssertionError("could not read the real regimes file", e);
-            }
+            return compiled2026("law/regimes.json");
         }
 
         @Test
@@ -703,12 +698,7 @@ class PackJsonTest {
     class Assembly {
 
         private static String resource(String path) {
-            try (var in = PackJsonTest.class.getClassLoader()
-                    .getResourceAsStream("rulepacks/2026-27/" + path)) {
-                return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-            } catch (Exception e) {
-                throw new AssertionError("could not read " + path, e);
-            }
+            return compiled2026(path);
         }
 
         private static com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments instruments() {
@@ -803,12 +793,7 @@ class PackJsonTest {
     class LoaderThrowsOnlyPackErrors {
 
         private static String realRates() {
-            try (var in = PackJsonTest.class.getClassLoader()
-                    .getResourceAsStream("rulepacks/2026-27/law/rates.json")) {
-                return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-            } catch (Exception e) {
-                throw new AssertionError("could not read the real rates file", e);
-            }
+            return compiled2026("law/rates.json");
         }
 
         /**
@@ -820,30 +805,30 @@ class PackJsonTest {
             return java.util.stream.Stream.of(
                     org.junit.jupiter.params.provider.Arguments.of(
                             "Provenance: blank whatToCheck",
-                            // Targeted at a provenance block: AmendmentRef also has a `verificationLevel`
-                            // and no `whatToCheck`, so matching on status alone hits the wrong object
+                            // Targeted at a provenance block, the only object with accessedOn: AmendmentRef
+                            // also has a `verificationLevel` and no `whatToCheck`. [^}]* keeps the match
+                            // inside that one object, whose keys the canonical form sorts
                             (java.util.function.UnaryOperator<String>) s -> s.replaceFirst(
-                                    "\"accessedOn\": \"2026-09-18\",\\s*\"verificationLevel\": \"SOURCE_CHECKED\"",
-                                    "\"accessedOn\": \"2026-09-18\", \"verificationLevel\": \"UNVERIFIED\","
-                                            + " \"whatToCheck\": \"  \"")),
+                                    "(\"accessedOn\":\"2026-09-18\",[^}]*\"verificationLevel\":)\"SOURCE_CHECKED\"",
+                                    "$1\"UNVERIFIED\",\"whatToCheck\":\"  \"")),
                     org.junit.jupiter.params.provider.Arguments.of(
                             "AmendmentRef: flag contradicts its dates",
                             (java.util.function.UnaryOperator<String>) s ->
-                                    s.replaceFirst("\"retrospective\": false", "\"retrospective\": true")),
+                                    s.replaceFirst("\"retrospective\":false", "\"retrospective\":true")),
                     org.junit.jupiter.params.provider.Arguments.of(
                             "RegimeApplicability.OnlyIn: empty set",
                             (java.util.function.UnaryOperator<String>) s -> s.replaceFirst(
-                                    "\"regimes\": \\[\"NEW_TAX_REGIME\"\\]", "\"regimes\": []")),
+                                    "\"regimes\":\\[\"NEW_TAX_REGIME\"\\]", "\"regimes\":[]")),
                     org.junit.jupiter.params.provider.Arguments.of(
                             "SlabLadder: a band that starts where none ended",
                             (java.util.function.UnaryOperator<String>) s ->
-                                    s.replaceFirst("\"lowerExclusive\": \"800000\"", "\"lowerExclusive\": \"900000\"")),
+                                    s.replaceFirst("\"lowerExclusive\":\"800000\"", "\"lowerExclusive\":\"900000\"")),
                     org.junit.jupiter.params.provider.Arguments.of(
                             "RuleRow: a combination rule with a non-STATUTORY combination",
                             (java.util.function.UnaryOperator<String>) s -> s.replaceFirst(
-                                    "\"midYearCombination\": \"LATEST_VERSION_GOVERNS\"",
-                                    "\"midYearCombination\": \"LATEST_VERSION_GOVERNS\","
-                                            + " \"midYearCombinationRule\": \"SAL-HRA-001\"")));
+                                    "\"midYearCombination\":\"LATEST_VERSION_GOVERNS\"",
+                                    "\"midYearCombination\":\"LATEST_VERSION_GOVERNS\","
+                                            + "\"midYearCombinationRule\":\"SAL-HRA-001\"")));
         }
 
         @org.junit.jupiter.params.ParameterizedTest(name = "{0}")
@@ -888,5 +873,18 @@ class PackJsonTest {
                             "p"))
                     .hasCauseInstanceOf(IllegalArgumentException.class);
         }
+    }
+
+    /**
+     * A file of the real 2026-27 pack as the loader receives it: compiled from the timeline, in
+     * canonical form (D-056).
+     */
+    private static String compiled2026(String file) {
+        return com.thiru.wealthlens.taxengine.rules.timeline.RulePackCompiler.compile(
+                        com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader.read(
+                                java.nio.file.Path.of("src/main/resources/rulepacks/timeline")),
+                        new com.thiru.wealthlens.taxengine.rules.id.TaxYearId(2026))
+                .files()
+                .get(file);
     }
 }

@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.generated;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -11,7 +12,7 @@ import java.util.TreeSet;
 import java.util.stream.Stream;
 
 /**
- * Reads every rule pack and produces the text of {@code RuleIds} and {@code ComponentCodes}.
+ * Reads the timeline and produces the text of {@code RuleIds} and {@code ComponentCodes}.
  *
  * <p>Lives in test scope because nothing at runtime needs it: the constants it writes are committed
  * source, and {@link GeneratedConstantsTest} is what keeps them honest. That is a deliberate
@@ -23,50 +24,37 @@ import java.util.stream.Stream;
 final class ConstantGenerator {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    static final Path PACK_ROOT = Path.of("src/main/resources/rulepacks");
+    static final Path TIMELINE = Path.of("src/main/resources/rulepacks/timeline");
     static final Path OUTPUT_DIR =
             Path.of("src/main/java/com/thiru/wealthlens/taxengine/rules/generated");
 
     private ConstantGenerator() {
     }
 
-    /** Every rule id across every pack, sorted, deduplicated. */
+    /** Every rule id in the timeline, sorted. */
     static TreeSet<String> ruleIds() {
-        return collect("law/rates.json", "rules", "ruleId");
+        TreeSet<String> ids = new TreeSet<>();
+        TimelineReader.read(TIMELINE).rules().keySet().forEach(id -> ids.add(id.value()));
+        return ids;
     }
 
-    /** Every component code across every pack, sorted, deduplicated. */
+    /**
+     * Every component code in the timeline, sorted. Read from the files, because the timeline reader
+     * has no component directory until the first component is authored ({@code W-059}).
+     */
     static TreeSet<String> componentCodes() {
-        return collect("exec/components.json", "components", "code");
-    }
-
-    private static TreeSet<String> collect(String file, String arrayField, String idField) {
-        TreeSet<String> found = new TreeSet<>();
-        for (Path pack : packDirectories()) {
-            Path source = pack.resolve(file);
-            if (!Files.exists(source)) {
-                continue;
-            }
-            JsonNode array = read(source).get(arrayField);
-            if (array == null) {
-                continue;
-            }
-            for (JsonNode element : array) {
-                JsonNode id = element.get(idField);
-                if (id != null && !id.isNull()) {
-                    found.add(id.asText());
-                }
-            }
+        TreeSet<String> codes = new TreeSet<>();
+        Path components = TIMELINE.resolve("exec/components");
+        if (!Files.isDirectory(components)) {
+            return codes;
         }
-        return found;
-    }
-
-    static TreeSet<Path> packDirectories() {
-        try (Stream<Path> years = Files.list(PACK_ROOT)) {
-            return years.filter(Files::isDirectory).collect(TreeSet::new, TreeSet::add, TreeSet::addAll);
+        try (Stream<Path> files = Files.list(components)) {
+            files.filter(file -> file.toString().endsWith(".json"))
+                    .forEach(file -> codes.add(read(file).get("code").asText()));
         } catch (IOException e) {
-            throw new UncheckedIOException("Could not list " + PACK_ROOT.toAbsolutePath(), e);
+            throw new UncheckedIOException("Could not list " + components.toAbsolutePath(), e);
         }
+        return codes;
     }
 
     private static JsonNode read(Path path) {
