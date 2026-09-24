@@ -1,0 +1,19 @@
+{
+  "_note": "The coverage register (D-038, D-059): each section of the two Income-tax Acts with exactly one classification. Seeded with the sections this timeline's rules and regimes cite; W-045o completes it to every section of both Acts, including those 01-rulebook.md cites. Content: it changes no number, and no year's pack is compiled from it.",
+  "sections": [
+    {
+      "act": "INCOME_TAX_ACT_2025",
+      "section": "202",
+      "classification": "MODELLED",
+      "rules": ["RATE-SLAB-NEW-TAX-REGIME"],
+      "manager": "SlabLadder"
+    },
+    {
+      "act": "INCOME_TAX_ACT_1961",
+      "section": "115BAC",
+      "classification": "MODELLED",
+      "rules": ["RATE-SLAB-NEW-TAX-REGIME"],
+      "manager": "SlabLadder"
+    }
+  ]
+}

@@ -6,6 +6,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * The law authored once, across every year (D-034): the source each tax year's rule pack is compiled
@@ -18,13 +20,17 @@ import java.util.Map;
  * @param regimeSources each regime's file verbatim, for the same reason
  * @param pipelineNodes the exec node catalogue, each node's file verbatim. Nothing reads its fields
  *     yet; the item that generates node ids from it gives it a type (D-053)
+ * @param coverage the coverage register ({@code content/coverage.json}) verbatim, where the timeline
+ *     has one. It describes the whole timeline rather than a year, so no year's pack is compiled from it
+ *     (D-059)
  */
 public record Timeline(
         Map<RuleId, RuleRow> rules,
         Map<RegimeCode, RegimeSpec> regimes,
         Map<RuleId, String> ruleSources,
         Map<RegimeCode, String> regimeSources,
-        Map<NodeId, String> pipelineNodes) {
+        Map<NodeId, String> pipelineNodes,
+        Optional<String> coverage) {
 
     public Timeline {
         rules = Map.copyOf(rules);
@@ -32,5 +38,6 @@ public record Timeline(
         ruleSources = Map.copyOf(ruleSources);
         regimeSources = Map.copyOf(regimeSources);
         pipelineNodes = Map.copyOf(pipelineNodes);
+        coverage = Objects.requireNonNull(coverage, "coverage: Optional.empty() where the timeline has none");
     }
 }

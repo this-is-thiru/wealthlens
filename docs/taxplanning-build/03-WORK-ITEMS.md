@@ -514,6 +514,14 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > a regime's rate table, disallowances or lifecycle is not yet listed. That gap is `W-139`'s.
 > Verified by: `PackDiff` reads only the compiled `law/rates.json`.
 
+> **Erratum (W-045j, 2026-09-24):** the `W-045j` row's "seeded with the **105 sections**
+> `01-rulebook.md` cites" does not hold. `grep -oE "\bs\.[0-9]+[A-Z]*"` finds **116** distinct
+> citations, and they mix 1961-Act, 2025-Act and Finance Act sections, which reuse numbers for
+> different law. A true count needs a row-by-row reading (D-059). `W-045j` built the register and its
+> checks, seeded with the **2** sections the timeline cites. **Seeding the rulebook's sections moves to
+> `W-045o`**, which already covers every section of both Acts.
+> Verified by: that `grep`; `content/coverage.json`; `CoverageRegisterTest`.
+
 **Standing rules from here on (D-043)** — every later item that models a section must also:
 
 1. mark the section `MODELLED` in `coverage.json` (`W-045j`);

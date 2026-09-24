@@ -43,6 +43,8 @@ public final class TimelineReader {
     private static final String REGIMES = "law/regimes";
     private static final String PIPELINES = "exec/pipelines";
     private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, PIPELINES);
+    /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
+    private static final String COVERAGE = "content/coverage.json";
 
     private TimelineReader() {
     }
@@ -53,13 +55,20 @@ public final class TimelineReader {
         Map<RuleId, String> ruleSources = new HashMap<>();
         Map<RegimeCode, String> regimeSources = new HashMap<>();
         Map<NodeId, String> pipelineNodes = new HashMap<>();
+        Optional<String> coverage = Optional.empty();
         for (Path file : files(root)) {
             String path = root.relativize(file).toString().replace(file.getFileSystem().getSeparator(), "/");
+            if (COVERAGE.equals(path)) {
+                String content = contentOf(file);
+                parse(content, path);
+                coverage = Optional.of(content);
+                continue;
+            }
             String directory = path.contains("/") ? path.substring(0, path.lastIndexOf('/')) : "";
             if (!KNOWN_DIRECTORIES.contains(directory) || !path.endsWith(".json")) {
                 throw new PackValidationException(
                         path + ": not a timeline file; a timeline holds only .json files under "
-                                + KNOWN_DIRECTORIES);
+                                + KNOWN_DIRECTORIES + ", and " + COVERAGE);
             }
             String content = contentOf(file);
             JsonNode node = parse(content, path);
@@ -85,7 +94,7 @@ public final class TimelineReader {
                 }
             }
         }
-        return new Timeline(rules, regimes, ruleSources, regimeSources, pipelineNodes);
+        return new Timeline(rules, regimes, ruleSources, regimeSources, pipelineNodes, coverage);
     }
 
     private static void requireNamedFor(String path, String stem, String identity) {
