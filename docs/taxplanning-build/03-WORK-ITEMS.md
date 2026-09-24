@@ -507,6 +507,13 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > year — it now has a real wrong-year lock (`2097-98.lock.json` declaring 2099-00).
 > Verified by: `git grep T9-21` (no test); the 2098-99 manifest's `taxYear` was `2098-99`.
 
+> **Erratum (W-045h, 2026-09-24):** what `W-139` inherits from `PackDiff` (D-057). It lives at
+> `taxengine/rules/timeline/PackDiff.java`, not `validate/`. Its findings are `RuleAdded`,
+> `RuleRemoved`, `VersionAdded`, `VersionRemoved` and `ValueChanged` (no `Magnitude`). `W-139` adds the
+> three lint findings and the magnitude its 10× lint needs, and **regimes are not diffed**: a change to
+> a regime's rate table, disallowances or lifecycle is not yet listed. That gap is `W-139`'s.
+> Verified by: `PackDiff` reads only the compiled `law/rates.json`.
+
 **Standing rules from here on (D-043)** — every later item that models a section must also:
 
 1. mark the section `MODELLED` in `coverage.json` (`W-045j`);

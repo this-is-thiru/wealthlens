@@ -64,14 +64,14 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `validate/` | `PackValidator` `PackValidationException` |
 | `json/` | `PackJson` `ValueJson` `ShapeJson` `ConditionJson` `RuleJson` `RegimeJson` `RegistryJson` `JsonPackAssembler` — hand-written parsing (D-019) |
 | `generated/` | `RuleIds` `ComponentCodes` — generated from the packs, committed, verified (`W-032b`) |
-| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, misnamed, or with overlapping versions (D-053) · `RulePackCompiler` `CompiledPack` `RulePackLock` — compiles a year from the timeline (PUBLISHED versions overlapping it + PUBLISHED pending ones; regimes in force in it) in canonical JSON, and checks it against `<year>.lock.json` per rule and per layer (D-054) · `ClasspathRulePackProvider` — serves each year compiled from `<root>/timeline/` and refused unless it matches `<root>/<year>.lock.json`; refuses a timeline inside a JAR (D-055) |
+| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, misnamed, or with overlapping versions (D-053) · `RulePackCompiler` `CompiledPack` `RulePackLock` — compiles a year from the timeline (PUBLISHED versions overlapping it + PUBLISHED pending ones; regimes in force in it) in canonical JSON, and checks it against `<year>.lock.json` per rule and per layer (D-054) · `ClasspathRulePackProvider` — serves each year compiled from `<root>/timeline/` and refused unless it matches `<root>/<year>.lock.json`; refuses a timeline inside a JAR (D-055) · `PackDiff` — the publish diff between two compiled packs: rules and versions added or removed, every value changed, by path (D-057) |
 
 ### `taxengine.rules` — planned
 
 | Package | Types | Item |
 |---|---|---|
 | — | wiring a provider into the application at startup; loading the timeline from the JAR | ⚠ **UNOWNED** (D-054) |
-| `validate/` | `PackDiff` (**`W-139` reuses it** for the cross-year diff) · `PackLinter` `Finding` | ○ `W-045h` · ○ `W-139` |
+| `validate/` | `PackLinter` and the lint findings (`ProvisionRenumbered` `CarriedForwardUnverified` `SuspiciousCopy`, a `Magnitude` on `ValueChanged`), reusing `timeline.PackDiff` for the cross-year diff; regimes are not yet diffed | ○ `W-139` |
 | `generated/` | `NodeIds` | ○ `W-045i` |
 | `coverage/` | `CoverageRegister` `SectionRef` `Coverage` | ○ `W-045j` |
 | `catalogue/` | `SectionCatalogueEntry` `Route` `Disqualifier` `DisqualifierKind` · `ClaimCatalogueEntry` `ClaimStep` `ClaimChannel` `Counterparty` `Materiality` | ○ `W-045k` · ○ `W-117` |
@@ -473,3 +473,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-24 | T2: `RulePackCompiler`, `CompiledPack`, `RulePackLock` built; `RulePackLayer.files()`, `RulePackRef.checksumOf` shared by loader and compiler; T4: `2026-27.lock.json`, layers law.4/exec.2/forms.2/content.2; provider move → `W-045g2`; startup wiring UNOWNED | `W-045g`, D-054 |
 | 2026-09-24 | T2: `ClasspathRulePackProvider` moved to `timeline/`, serves years compiled from the timeline and checked against the lock; I4 is the lock check; T4: the per-year copy is no longer loaded, removal → `W-045g3` | `W-045g2`, D-055 |
 | 2026-09-24 | T4: `rulepacks/2026-27/` removed; its last readers (generator, naming test, data checks, loader-format tests) read the timeline or the compiled pack | `W-045g3`, D-056 |
+| 2026-09-24 | T2: `PackDiff` built in `timeline/` (not `validate/` — `timeline` already imports `validate`); `W-139` keeps the linter and lint findings | `W-045h`, D-057 |
