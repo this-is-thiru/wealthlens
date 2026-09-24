@@ -1,0 +1,52 @@
+{
+  "_note": "The compiled 2026-27 rule pack's identity (D-034, D-054): what RulePackCompiler must produce from timeline/. Update only after review, with a version bump. Checksums are over canonical JSON (keys sorted, no whitespace, _ fields dropped).",
+  "taxYear": "2026-27",
+  "layers": {
+    "law": {
+      "version": "2026-27.law.4",
+      "checksum": "sha256:c18d4d3608d16aab147c2ffc38978b99fe6792c1390e6c73cefc51459a72bfa6"
+    },
+    "exec": {
+      "version": "2026-27.exec.2",
+      "checksum": "sha256:9656c99704ee4e69b765d02fdcf7bf3e863d5fc27f6625b6f6a73e44cc22cebd"
+    },
+    "forms": {
+      "version": "2026-27.forms.2",
+      "checksum": "sha256:e4e3ee30d84e7eeed400f6e535452cd5b84670da1c1fe776cc0e1da74b552f82"
+    },
+    "content": {
+      "version": "2026-27.content.2",
+      "checksum": "sha256:29f8a32de376a5eea0ad7856021db0adab80f58637603811c7041b03c7a0b44e"
+    }
+  },
+  "rules": {
+    "RATE-SLAB-FIRST-SCHEDULE": "sha256:5025b10dcb48c3f3609ba6cd4694411295ef33164ee4b9d2958374e7f172973e",
+    "RATE-SLAB-NEW-TAX-REGIME": "sha256:56358a25be545d6766915b4bc4128a3b62e3fed05c49953c48975530dc06c229"
+  },
+  "instruments": {
+    "act": {
+      "citation": "Income-tax Act, 2025 (30 of 2025)",
+      "assentedOn": "2025-08-21",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-22082025-265620",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    },
+    "financeAct": {
+      "citation": "Finance Act, 2026 (4 of 2026)",
+      "assentedOn": "2026-03-30",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-31032026-271439",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    },
+    "rules": {
+      "citation": "Income-tax Rules, 2026 (G.S.R. 198(E), 20-03-2026)",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-20032026-271092",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+      "verificationLevel": "SOURCE_CHECKED",
+      "note": "amendment chain to G.S.R. 656(E) of 24-07-2026 not traced"
+    }
+  }
+}

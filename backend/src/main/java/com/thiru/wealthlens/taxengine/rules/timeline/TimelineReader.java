@@ -50,6 +50,8 @@ public final class TimelineReader {
     public static Timeline read(Path root) {
         Map<RuleId, RuleRow> rules = new HashMap<>();
         Map<RegimeCode, RegimeSpec> regimes = new HashMap<>();
+        Map<RuleId, String> ruleSources = new HashMap<>();
+        Map<RegimeCode, String> regimeSources = new HashMap<>();
         Map<NodeId, String> pipelineNodes = new HashMap<>();
         for (Path file : files(root)) {
             String path = root.relativize(file).toString().replace(file.getFileSystem().getSeparator(), "/");
@@ -68,11 +70,13 @@ public final class TimelineReader {
                     requireNamedFor(path, stem, row.id().value());
                     requireNoOverlap(path, row);
                     rules.put(row.id(), row);
+                    ruleSources.put(row.id(), content);
                 }
                 case REGIMES -> {
                     RegimeSpec regime = RegimeJson.regime(node, path);
                     requireNamedFor(path, stem, regime.code().value());
                     regimes.put(regime.code(), regime);
+                    regimeSources.put(regime.code(), content);
                 }
                 case PIPELINES -> {
                     NodeId id = PackJson.construct(path, () -> new NodeId(PackJson.text(node, "nodeId", path)));
@@ -81,7 +85,7 @@ public final class TimelineReader {
                 }
             }
         }
-        return new Timeline(rules, regimes, pipelineNodes);
+        return new Timeline(rules, regimes, ruleSources, regimeSources, pipelineNodes);
     }
 
     private static void requireNamedFor(String path, String stem, String identity) {

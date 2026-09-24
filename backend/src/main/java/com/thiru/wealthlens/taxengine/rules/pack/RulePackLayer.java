@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.pack;
 
+import java.util.List;
+
 /**
  * The four parts of a rule pack, separated by change rate and authority.
  *
@@ -25,14 +27,14 @@ public enum RulePackLayer {
      *
      * <p><b>The only layer that may change a number.</b> Authored by whoever read the gazette.
      */
-    LAW(true),
+    LAW(true, "law/rates.json", "law/regimes.json"),
 
     /**
      * Pipelines, node sets, temporal-axis bindings, mid-year combination rules.
      *
      * <p>May change a number, but only by selecting which law applies. Authored by engineers.
      */
-    EXEC(true),
+    EXEC(true, "exec/pipelines.json", "exec/components.json"),
 
     /**
      * ITR form specifications, schedules and field mappings.
@@ -40,15 +42,27 @@ public enum RulePackLayer {
      * <p>Presentation of computed values, so it changes no number. Versioned apart from {@code law}
      * because form notifications follow their own cadence.
      */
-    FORMS(false),
+    FORMS(false, "forms/itr-forms.json"),
 
     /** Display names, explanations, claim steps, counterparties, common mistakes. Changes no number. */
-    CONTENT(false);
+    CONTENT(false, "content/explanations.json");
 
     private final boolean affectsComputation;
+    private final List<String> files;
 
-    RulePackLayer(boolean affectsComputation) {
+    RulePackLayer(boolean affectsComputation, String... files) {
         this.affectsComputation = affectsComputation;
+        this.files = List.of(files);
+    }
+
+    /**
+     * The files this layer is stored in, relative to a pack root, in checksum order.
+     *
+     * <p>One list, read both by the provider that verifies a pack and by the compiler that writes one,
+     * so the two cannot disagree about what a layer is.
+     */
+    public List<String> files() {
+        return files;
     }
 
     /**

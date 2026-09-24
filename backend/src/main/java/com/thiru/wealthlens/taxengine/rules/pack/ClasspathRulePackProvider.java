@@ -6,12 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.EnumMap;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -29,17 +25,6 @@ import java.util.TreeSet;
  * row looks like.
  */
 public final class ClasspathRulePackProvider implements RulePackProvider {
-
-    /** The files each layer is expected to contain, relative to the pack root. */
-    private static final Map<RulePackLayer, List<String>> LAYER_FILES = Map.of(
-            RulePackLayer.LAW,
-            List.of("law/rates.json", "law/regimes.json"),
-            RulePackLayer.EXEC,
-            List.of("exec/pipelines.json", "exec/components.json"),
-            RulePackLayer.FORMS,
-            List.of("forms/itr-forms.json"),
-            RulePackLayer.CONTENT,
-            List.of("content/explanations.json"));
 
     private final String root;
     private final Set<TaxYearId> years;
@@ -88,7 +73,7 @@ public final class ClasspathRulePackProvider implements RulePackProvider {
         for (Map.Entry<RulePackLayer, RulePackRef> entry : declared.entrySet()) {
             RulePackLayer layer = entry.getKey();
             StringBuilder canonical = new StringBuilder();
-            for (String file : LAYER_FILES.get(layer)) {
+            for (String file : layer.files()) {
                 String body = read(packRoot + "/" + file, year);
                 contents.put(file, body);
                 canonical.append(body);
@@ -124,7 +109,7 @@ public final class ClasspathRulePackProvider implements RulePackProvider {
     }
 
     private void verifyChecksum(TaxYearId year, RulePackRef ref, String canonicalContent) {
-        String actual = "sha256:" + sha256(canonicalContent);
+        String actual = RulePackRef.checksumOf(canonicalContent);
         if (!actual.equals(ref.checksum())) {
             throw new PackValidationException(
                     year + " layer " + ref.layer() + " version " + ref.version()
@@ -135,14 +120,6 @@ public final class ClasspathRulePackProvider implements RulePackProvider {
         }
     }
 
-    private static String sha256(String content) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(content.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 is required by the platform", e);
-        }
-    }
 
     private String read(String resourcePath, TaxYearId year) {
         try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath)) {

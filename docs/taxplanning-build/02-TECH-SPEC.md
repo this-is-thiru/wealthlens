@@ -64,13 +64,14 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `validate/` | `PackValidator` `PackValidationException` |
 | `json/` | `PackJson` `ValueJson` `ShapeJson` `ConditionJson` `RuleJson` `RegimeJson` `RegistryJson` `JsonPackAssembler` — hand-written parsing (D-019) |
 | `generated/` | `RuleIds` `ComponentCodes` — generated from the packs, committed, verified (`W-032b`) |
-| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, misnamed, or with overlapping versions (D-053) |
+| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, misnamed, or with overlapping versions (D-053) · `RulePackCompiler` `CompiledPack` `RulePackLock` — compiles a year from the timeline (PUBLISHED versions overlapping it + PUBLISHED pending ones; regimes in force in it) in canonical JSON, and checks it against `<year>.lock.json` per rule and per layer (D-054) |
 
 ### `taxengine.rules` — planned
 
 | Package | Types | Item |
 |---|---|---|
-| `timeline/` | `RulePackCompiler`; runtime loading of the timeline from the JAR | ○ `W-045g` |
+| `pack/` | `ClasspathRulePackProvider` serves packs compiled from the timeline and lock | ○ `W-045g2` |
+| — | wiring a provider into the application at startup; loading the timeline from the JAR | ⚠ **UNOWNED** (D-054) |
 | `validate/` | `PackDiff` (**`W-139` reuses it** for the cross-year diff) · `PackLinter` `Finding` | ○ `W-045h` · ○ `W-139` |
 | `generated/` | `NodeIds` | ○ `W-045i` |
 | `coverage/` | `CoverageRegister` `SectionRef` `Coverage` | ○ `W-045j` |
@@ -200,9 +201,12 @@ backend/src/main/resources/rulepacks/
   2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums
 ```
 
-`RulePackCompiler` builds a year's rule pack from every **`PUBLISHED`** version whose validity touches
-that year and verifies it against the lock; a mismatch **fails startup** naming the rule. Packs are
-compiled at startup only, never on a request path.
+`RulePackCompiler` (✅ `W-045g`) builds a year's rule pack from every **`PUBLISHED`** version whose
+validity touches that year, plus `PUBLISHED` pending-notification versions, and `RulePackLock.verify`
+refuses a mismatch naming each rule that moved. Checksums are over canonical JSON — keys sorted, no
+whitespace, `_` note fields dropped (D-054). `2026-27.lock.json` exists; the provider does not read it
+yet (`W-045g2`), and nothing yet loads a pack at startup (UNOWNED). Packs are to be compiled at
+startup only, never on a request path.
 
 ---
 
@@ -475,3 +479,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-24 | T4: the pack's rule IDs and regime codes renamed to concepts; law layer `2026-27.law.2` | `W-045d`, D-051 |
 | 2026-09-24 | T2: `LegalStatus`, `VerificationLevel`, `PublicationStatus` built, replacing `VerificationStatus` and `DraftOrFinal`; T4: pack rows carry the three axes, law layer `2026-27.law.3` | `W-045e`, D-036, D-052 |
 | 2026-09-24 | T2: `Timeline`, `TimelineReader` built; T4: the timeline holds 2 rules, 2 regimes, 9 nodes, equal to the 2026-27 pack until `W-045g` | `W-045f`, D-053 |
+| 2026-09-24 | T2: `RulePackCompiler`, `CompiledPack`, `RulePackLock` built; `RulePackLayer.files()`, `RulePackRef.checksumOf` shared by loader and compiler; T4: `2026-27.lock.json`, layers law.4/exec.2/forms.2/content.2; provider move → `W-045g2`; startup wiring UNOWNED | `W-045g`, D-054 |

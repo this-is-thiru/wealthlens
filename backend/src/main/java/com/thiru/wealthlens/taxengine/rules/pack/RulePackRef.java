@@ -1,12 +1,16 @@
 package com.thiru.wealthlens.taxengine.rules.pack;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.regex.Pattern;
 
 /**
  * One layer of a pack, as the manifest records it: a version and the checksum it should hash to.
  *
- * <p>The checksum is carried rather than computed here. A pack declares what it ought to be, and the
- * loader verifies that the bytes agree — so a layer edited without a version bump fails to load
+ * <p>A ref carries a declared checksum; it does not check its own. A pack declares what it ought to
+ * be, and the loader verifies that the bytes agree — so a layer edited without a version bump fails to load
  * instead of being served as if it were the version it claims.
  *
  * @param layer which layer this describes
@@ -35,6 +39,19 @@ public record RulePackRef(RulePackLayer layer, String version, String checksum) 
                     "Version \"" + version + "\" does not name layer " + layer
                             + "; expected something containing \"" + expectedInfix + "\", so that a"
                             + " version quoted in a support ticket says which layer it belongs to");
+        }
+    }
+
+    /**
+     * The checksum of some content, in the one format a ref accepts. Shared by the loader that verifies
+     * a layer and the compiler that writes one, so the two cannot hash differently.
+     */
+    public static String checksumOf(String content) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return "sha256:" + HexFormat.of().formatHex(digest.digest(content.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is required by the platform", e);
         }
     }
 
