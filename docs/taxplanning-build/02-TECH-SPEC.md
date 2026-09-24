@@ -118,7 +118,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 
 **Name collisions to avoid** (the new `ArchitectureTest.simple_class_names_are_unique` enforces
 it): the legacy module already has `TaxComputationService`, `TaxComputationEntity`, `TaxEngine`,
-`RegimeAdvisor`, `ItrFormAdvisor`. A new class may not reuse a simple name that exists anywhere in
+`RegimeAdvisor`. A new class may not reuse a simple name that exists anywhere in
 `backend/src/main/java`.
 
 ---
@@ -470,3 +470,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-23 | T1, T2 for two modules and named interfaces; T10 direction rule and the ⚠ on the swallow rule | `W-045b2`, D-048 |
 | 2026-09-23 | T10: swallow rule deleted; `IllegalCatch` is the one enforcement | `W-045b3`, D-049 |
 | 2026-09-23 | T4: the shipped pack holds 2 rule rows, not 15 (the earlier figure counted `VERIFIED` markers) | `W-045c` |
+| 2026-09-24 | Name collisions: `ItrFormAdvisor` removed from the legacy list — the class is deleted | `W-045c1` |

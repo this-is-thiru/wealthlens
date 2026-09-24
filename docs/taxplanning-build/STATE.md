@@ -3,10 +3,10 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045c — "taxplanning W-045c: audit Phases 5–6, map slices to phases, schedule legacy deletions in compiling order"
-Last updated              : 2026-09-24 (session 4 END — W-045a…W-045c done; build GREEN, 1414 tests)
-Current position          : W-045c1 — delete legacy dead code (then W-045d)
-Session count             : 4
+Last checkpoint           : W-045c1 — "taxplanning W-045c1: delete legacy dead code — nothing imports it (Appendix E, L1)"
+Last updated              : 2026-09-24 (session 5 — W-045c1 done; build GREEN, 1407 tests)
+Current position          : W-045d — rule-ID/regime rename (needs OQ-4 names)
+Session count             : 5
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-045c1` — delete legacy dead code; then `W-045d` (rule-ID/regime rename — needs OQ-4 names) |
+| **Next item** | `W-045d` (rule-ID/regime rename — needs OQ-4 names) |
 | **Status** | `READY` — nothing in flight, nothing blocked. Three owner questions open (OQ-1…OQ-3 below); only `W-045m` depends on one of them |
 | **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 ·  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **54** / 170 live · in flight **0** · blocked **0**  ← computed by script; 170 = 146 base ids − 8 retired + 32 suffixed
+Counts — done **55** / 170 live · in flight **0** · blocked **0**  ← computed by script; 170 = 146 base ids − 8 retired + 32 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045c1 | 2026-09-24 | Deleted L1 legacy dead code: `FbpOptimizer`, `ItrFormAdvisor`, `HrLetterContentBuilder`, `ParsedCtcDto` (package `parsing/` gone), `MarginalReliefCalculator` + its 7-test class, empty `_review/` dir; TS:121 name-collision list drops `ItrFormAdvisor` (Changes row) | `./mvnw test -pl backend -Punit` 1407/1407
 W-045c | 2026-09-23 | Appendix D (Phase 5–6 audit), Appendix E (slices→phases; legacy deletions in compiling order); W-048 spec fixed; W-049–W-052 Produces/Verify + law rows; pack is **2** rule rows not 15 (my error, corrected); T13-1 citation fixed; 4 corrections + W-045c1 accepted (D-050) | six checks; unit 1414/1414
 W-045b3 | 2026-09-23 | Deleted `taxengine_does_not_swallow_failures` (D-049, OQ-5 closed); `IllegalCatch` proven on `taxengine` main code | probe + `./mvnw test -pl backend -Punit` 1414/1414
 W-045b2 | 2026-09-23 | Two tax modules (D-048): `taxrules` → `taxengine.rules` (134 files, `git mv`), `taxdocs` removed; `taxengine` CLOSED with named interfaces `input`, `result`, `money`, `id` (`propagate` did not carry `Money`/`TaxYearId` — probe); `taxplanning` → `taxengine :: *`; `rules_do_not_depend_on_the_runner`; swallow rule kept at prior scope, found miswritten (**OQ-5**, before W-105) | 6 probes; `./mvnw test -pl backend -Punit` 1415/1415
