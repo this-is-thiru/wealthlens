@@ -1,0 +1,23 @@
+{
+  "_brokenOnPurpose": "A law checksum the timeline does not compile to: a lock edited, or a timeline edited, without review.",
+  "taxYear": "2098-99",
+  "layers": {
+    "law": {
+      "version": "2098-99.law.3",
+      "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "exec": {
+      "version": "2098-99.exec.1",
+      "checksum": "sha256:7b4b18546f3837e9b11e1e94757cd016ffa444690f417014d5cad133ddd6a42b"
+    },
+    "forms": {
+      "version": "2098-99.forms.2",
+      "checksum": "sha256:e4e3ee30d84e7eeed400f6e535452cd5b84670da1c1fe776cc0e1da74b552f82"
+    },
+    "content": {
+      "version": "2098-99.content.7",
+      "checksum": "sha256:29f8a32de376a5eea0ad7856021db0adab80f58637603811c7041b03c7a0b44e"
+    }
+  },
+  "rules": {}
+}

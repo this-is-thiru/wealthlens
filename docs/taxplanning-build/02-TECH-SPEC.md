@@ -57,20 +57,20 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `cap/` | `CapShape` (sealed) `Fixed` `PercentOfBase` `LeastOf` `AggregateWithCeiling` `SlabLadder` `PerUnitPerPeriod` `CapResult` `CapContext` `AggregateOutcome` |
 | `condition/` | `Condition` (sealed, **13** predicates: `IsResident` `AgeAtLeast` `HasPersonType` `IsCertifiedDisabled` `IncomeAtMost` `IncomeAtLeast` `HasIncomeUnderHead` `ComponentPresent` `EvidenceRecorded` `PaidOtherThanInCash` `AllOf` `AnyOf` `Not`) `ConditionContext` `PersonType` `AgeSubject` `DisabilitySeverity` `EvidenceType` `HeadCode` |
 | `temporal/` | `TemporalAxis` `TemporalContext` `Validity` `RuleVersion` `AmendmentRef` `DateRange` `Provision` `Presence` `MissingTemporalCoordinateException` `NoRuleVersionException` |
-| `pack/` | `RulePack` `RulePackLayer` `RulePackRef` `RuleRow` `RulePackProvider` `ClasspathRulePackProvider` `PackAssembler` `RegimeApplicability` `MidYearCombination` `DisallowanceSet` `ConditionSet` |
+| `pack/` | `RulePack` `RulePackLayer` `RulePackRef` `RuleRow` `RulePackProvider` `PackAssembler` `RegimeApplicability` `MidYearCombination` `DisallowanceSet` `ConditionSet` |
 | `regime/` | `RegimeSpec` `RegimeLifecycle` `ContinuationPolicy` `InvalidationPolicy` `ElectionProtocol` `ElectionKind` `ElectionVehicle` `ElectionRoute` `ElectionState` `BindingSpec` `AfterWithdrawal` `DeadlineSpec` `FormRef` `PipelineSpec` `BehaviourId` `DisallowanceSetId` `ConditionSetId` `RegimeBehaviour` `RegimeBehaviourRegistry` `DataDrivenRegimeBehaviour` |
 | `component/` | `ComponentDefinition` `ComponentLifecycle` `DeprecationPolicy` `CashNature` `ComponentKind` `TaxTreatment` `RateBasisHint` |
 | `registry/` | `TaxYearRegistry` `TaxYearRegistryEntry` `UnsupportedTaxYearException` `GoverningInstruments` `Instrument` `Provenance` `LegalStatus` `VerificationLevel` `PublicationStatus` — the three status axes (D-036); only `PUBLISHED` versions enter a pack |
 | `validate/` | `PackValidator` `PackValidationException` |
 | `json/` | `PackJson` `ValueJson` `ShapeJson` `ConditionJson` `RuleJson` `RegimeJson` `RegistryJson` `JsonPackAssembler` — hand-written parsing (D-019) |
 | `generated/` | `RuleIds` `ComponentCodes` — generated from the packs, committed, verified (`W-032b`) |
-| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, misnamed, or with overlapping versions (D-053) · `RulePackCompiler` `CompiledPack` `RulePackLock` — compiles a year from the timeline (PUBLISHED versions overlapping it + PUBLISHED pending ones; regimes in force in it) in canonical JSON, and checks it against `<year>.lock.json` per rule and per layer (D-054) |
+| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, misnamed, or with overlapping versions (D-053) · `RulePackCompiler` `CompiledPack` `RulePackLock` — compiles a year from the timeline (PUBLISHED versions overlapping it + PUBLISHED pending ones; regimes in force in it) in canonical JSON, and checks it against `<year>.lock.json` per rule and per layer (D-054) · `ClasspathRulePackProvider` — serves each year compiled from `<root>/timeline/` and refused unless it matches `<root>/<year>.lock.json`; refuses a timeline inside a JAR (D-055) |
 
 ### `taxengine.rules` — planned
 
 | Package | Types | Item |
 |---|---|---|
-| `pack/` | `ClasspathRulePackProvider` serves packs compiled from the timeline and lock | ○ `W-045g2` |
+| — | `rulepacks/2026-27/` removed; the last readers of it moved to the timeline and lock | ○ `W-045g3` |
 | — | wiring a provider into the application at startup; loading the timeline from the JAR | ⚠ **UNOWNED** (D-054) |
 | `validate/` | `PackDiff` (**`W-139` reuses it** for the cross-year diff) · `PackLinter` `Finding` | ○ `W-045h` · ○ `W-139` |
 | `generated/` | `NodeIds` | ○ `W-045i` |
@@ -173,7 +173,7 @@ thing (not "snapshot", which names input projections such as `LedgerSnapshot`).
 | `forms/` | **no** | no |
 | `content/` | **no** — property P3, invariant I27 | no |
 
-### Today — ✅ built (`W-027`, `W-028`, `W-032`)
+### The per-year copy — still on disk, no longer loaded (`W-027`, `W-028`, `W-032`; removed by `W-045g3`)
 
 ```
 backend/src/main/resources/rulepacks/2026-27/
@@ -204,8 +204,8 @@ backend/src/main/resources/rulepacks/
 `RulePackCompiler` (✅ `W-045g`) builds a year's rule pack from every **`PUBLISHED`** version whose
 validity touches that year, plus `PUBLISHED` pending-notification versions, and `RulePackLock.verify`
 refuses a mismatch naming each rule that moved. Checksums are over canonical JSON — keys sorted, no
-whitespace, `_` note fields dropped (D-054). `2026-27.lock.json` exists; the provider does not read it
-yet (`W-045g2`), and nothing yet loads a pack at startup (UNOWNED). Packs are to be compiled at
+whitespace, `_` note fields dropped (D-054). `ClasspathRulePackProvider` loads every year this way (✅ `W-045g2`);
+nothing yet loads a pack at startup (UNOWNED). Packs are to be compiled at
 startup only, never on a request path.
 
 ---
@@ -220,7 +220,7 @@ no validator branch, because it would be unreachable.
 | I1 | `status != VERIFIED` ⟹ non-blank `whatToCheck` | `Provenance` constructor | ✅ `W-010` |
 | I2 | every `RuleId` referenced anywhere in the pack resolves (rate tables, `feedsInto`, `salaryBaseFor`, bases, interim rules) | `PackValidator` | ✅ `W-029` |
 | I3 | every rule in the pack is evaluated by some node | `NodeRegistry.rulesNotEvaluatedByAnyNode` | ✅ built `W-039`; **switched on at `W-053`** as a shrink-only ratchet |
-| I4 | each layer's checksum matches its content | `ClasspathRulePackProvider` | ✅ `W-028` |
+| I4 | each layer's checksum matches its content — now: the compiled year matches its lock, per rule and per layer | `RulePackLock.verify`, called by `ClasspathRulePackProvider` | ✅ `W-028`, `W-045g2` |
 | I5 | exactly one `isDefault` regime per `(taxYear, PersonType)` among regimes **applicable that year** (I11 is the same check) | `PackValidator` | ✅ `W-029` |
 | I6 | every regime's disallowance/condition set id resolves | `PackValidator` | ✅ `W-029` |
 | I7 | every `ComponentCode` a rule references exists | `PackValidator` | ✅ `W-029` |
@@ -480,3 +480,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-24 | T2: `LegalStatus`, `VerificationLevel`, `PublicationStatus` built, replacing `VerificationStatus` and `DraftOrFinal`; T4: pack rows carry the three axes, law layer `2026-27.law.3` | `W-045e`, D-036, D-052 |
 | 2026-09-24 | T2: `Timeline`, `TimelineReader` built; T4: the timeline holds 2 rules, 2 regimes, 9 nodes, equal to the 2026-27 pack until `W-045g` | `W-045f`, D-053 |
 | 2026-09-24 | T2: `RulePackCompiler`, `CompiledPack`, `RulePackLock` built; `RulePackLayer.files()`, `RulePackRef.checksumOf` shared by loader and compiler; T4: `2026-27.lock.json`, layers law.4/exec.2/forms.2/content.2; provider move → `W-045g2`; startup wiring UNOWNED | `W-045g`, D-054 |
+| 2026-09-24 | T2: `ClasspathRulePackProvider` moved to `timeline/`, serves years compiled from the timeline and checked against the lock; I4 is the lock check; T4: the per-year copy is no longer loaded, removal → `W-045g3` | `W-045g2`, D-055 |

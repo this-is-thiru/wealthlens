@@ -1,0 +1,26 @@
+{
+  "_brokenOnPurpose": "The real 2026-27 lock, relabelled: it pins the band rate the timeline no longer has.",
+  "taxYear": "2094-95",
+  "layers": {
+    "law": {
+      "version": "2094-95.law.1",
+      "checksum": "sha256:c18d4d3608d16aab147c2ffc38978b99fe6792c1390e6c73cefc51459a72bfa6"
+    },
+    "exec": {
+      "version": "2094-95.exec.1",
+      "checksum": "sha256:9656c99704ee4e69b765d02fdcf7bf3e863d5fc27f6625b6f6a73e44cc22cebd"
+    },
+    "forms": {
+      "version": "2094-95.forms.1",
+      "checksum": "sha256:e4e3ee30d84e7eeed400f6e535452cd5b84670da1c1fe776cc0e1da74b552f82"
+    },
+    "content": {
+      "version": "2094-95.content.1",
+      "checksum": "sha256:29f8a32de376a5eea0ad7856021db0adab80f58637603811c7041b03c7a0b44e"
+    }
+  },
+  "rules": {
+    "RATE-SLAB-FIRST-SCHEDULE": "sha256:5025b10dcb48c3f3609ba6cd4694411295ef33164ee4b9d2958374e7f172973e",
+    "RATE-SLAB-NEW-TAX-REGIME": "sha256:56358a25be545d6766915b4bc4128a3b62e3fed05c49953c48975530dc06c229"
+  }
+}

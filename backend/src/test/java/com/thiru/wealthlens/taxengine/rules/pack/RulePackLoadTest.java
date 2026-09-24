@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.registry.TaxYearRegistry;
 import com.thiru.wealthlens.taxengine.rules.registry.TaxYearRegistryEntry;
 import com.thiru.wealthlens.taxengine.rules.registry.UnsupportedTaxYearException;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
+import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidator;
 import java.net.URI;
@@ -28,14 +29,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * The whole chain: classpath → manifest → checksums → assembler → validator.
+ * The whole chain: classpath → lock → timeline → compiler → lock check → assembler → validator.
  *
  * <p>{@code 08-golden-tests.md} T9-1 … T9-7. Six of the seven are here; **T9-6** (a rule no pipeline
  * reaches, invariant I3) is deferred to {@code W-039} by decision D-016, because reachability means
  * "evaluated by some node" and that mapping lives in the engine.
  *
- * <p>Each broken pack under {@code rulepacks-broken/} is a copy of the real one differing in exactly
- * one way, so the defect <em>is</em> the diff. The years are synthetic — 2090-91 onward — so they can
+ * <p>Each root under {@code rulepacks-broken/} is the real timeline and lock differing in exactly one
+ * way, so the defect <em>is</em> the diff. The years are synthetic — 2090-91 onward — so they can
  * never collide with a pack anyone means to ship.
  */
 class RulePackLoadTest {
@@ -99,7 +100,7 @@ class RulePackLoadTest {
 
             assertThat(pack.computationCacheKey())
                     .startsWith("2026-27|")
-                    .contains("law=2026-27.law.3")
+                    .contains("law=2026-27.law.4")
                     .doesNotContain("content=");
         }
 
@@ -134,7 +135,7 @@ class RulePackLoadTest {
         }
 
         @Test
-        void aDeclaredYearWithNoFilesOnDiskFailsAtTheManifest() {
+        void aDeclaredYearWithNoLockFailsNamingTheLock() {
             assertThatThrownBy(() ->
                             new ClasspathRulePackProvider(
                                             "rulepacks",
@@ -142,7 +143,7 @@ class RulePackLoadTest {
                                             new JsonPackAssembler(instruments()))
                                     .load(new TaxYearId(2035)))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("rulepacks/2035-36/manifest.json")
+                    .hasMessageContaining("rulepacks/2035-36.lock.json")
                     .hasMessageContaining("not on the classpath");
         }
     }
@@ -166,17 +167,25 @@ class RulePackLoadTest {
     }
 
     @Nested
-    @DisplayName("T9-3 — a layer's checksum does not match its bytes")
+    @DisplayName("T9-3 — a layer's checksum does not match what the timeline compiles to")
     class ChecksumMismatch {
 
         @Test
         void loadFailsNamingThePackAndBothChecksums() {
-            assertThatThrownBy(() -> load("rulepacks-broken", new TaxYearId(2090)))
+            assertThatThrownBy(() -> load("rulepacks-broken/checksum-mismatch", new TaxYearId(2090)))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("LAW")
-                    .hasMessageContaining("sha256:" + "0".repeat(64))
-                    .hasMessageContaining("content hashes to sha256:")
-                    .hasMessageContaining("without a version bump");
+                    .hasMessageContaining("LAW layer")
+                    .hasMessageContaining("lock says sha256:" + "0".repeat(64))
+                    .hasMessageContaining("timeline compiles to sha256:")
+                    .hasMessageContaining("with a version bump");
+        }
+
+        @Test
+        void aTimelineEditWithoutALockUpdateFailsTheLoadNamingTheRule() {
+            assertThatThrownBy(() -> load("rulepacks-broken/rule-edited-without-lock", new TaxYearId(2094)))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("RATE-SLAB-NEW-TAX-REGIME changed")
+                    .hasMessageNotContaining("RATE-SLAB-FIRST-SCHEDULE changed");
         }
     }
 
@@ -188,9 +197,10 @@ class RulePackLoadTest {
         void loadFailsAsAPackErrorNamingTheRow() {
             // Enforced by Provenance's own constructor, but surfaced as a pack error carrying the
             // path: E4 requires the loader to throw nothing else, and a pack author needs the row.
-            assertThatThrownBy(() -> load("rulepacks-broken", new TaxYearId(2091)))
+            // Refused when the timeline is read, so the error names the timeline file
+            assertThatThrownBy(() -> load("rulepacks-broken/unverified-without-what-to-check", new TaxYearId(2091)))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("law/rates.json")
+                    .hasMessageContaining("law/rules/RATE-SLAB-NEW-TAX-REGIME.json")
                     .hasMessageContaining("RATE-SLAB-NEW-TAX-REGIME")
                     .hasMessageContaining("whatToCheck");
         }
@@ -204,7 +214,7 @@ class RulePackLoadTest {
         void loadSucceedsButValidationFails() {
             // The distinction matters: parsing cannot see across files, so a dangling reference is
             // structurally fine and semantically wrong. The validator is what catches it.
-            RulePack pack = load("rulepacks-broken", new TaxYearId(2092));
+            RulePack pack = load("rulepacks-broken/dangling-rate-table", new TaxYearId(2092));
 
             assertThatThrownBy(() -> PackValidator.validate(pack))
                     .isInstanceOf(PackValidationException.class)
@@ -219,7 +229,7 @@ class RulePackLoadTest {
 
         @Test
         void loadFailsAtParseTimeNamingTheRule() {
-            assertThatThrownBy(() -> load("rulepacks-broken", new TaxYearId(2093)))
+            assertThatThrownBy(() -> load("rulepacks-broken/lower-bound-400001", new TaxYearId(2093)))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("RATE-SLAB-BAND-002")
                     .hasMessageContaining("400001");

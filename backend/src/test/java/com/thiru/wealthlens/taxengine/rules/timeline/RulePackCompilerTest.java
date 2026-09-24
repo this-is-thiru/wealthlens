@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
-import com.thiru.wealthlens.taxengine.rules.pack.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
@@ -22,9 +21,9 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -66,14 +65,17 @@ class RulePackCompilerTest {
     }
 
     @Test
-    void compile_whenAssembled_givesTheSameRulePackAsTodaysFiles() {
-        // Given
-        RulePack today = new ClasspathRulePackProvider("rulepacks", Set.of(TY_2026), new JsonPackAssembler(instruments()))
-                .load(TY_2026);
+    void compile_whenAssembled_givesTheSameRulePackAsTodaysFiles() throws IOException {
+        // Given — today's files assembled directly; the provider itself now compiles the timeline
+        Map<String, String> todaysFiles = new HashMap<>();
+        for (RulePackLayer layer : RulePackLayer.values()) {
+            layer.files().forEach(file -> todaysFiles.put(file, text(TODAY.resolve(file))));
+        }
+        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(TIMELINE), TY_2026);
+        RulePack today = new JsonPackAssembler(instruments()).assemble(TY_2026, lock().layers(), todaysFiles);
 
         // When
-        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(TIMELINE), TY_2026);
-        RulePack fromTimeline = new JsonPackAssembler(instruments()).assemble(TY_2026, today.layers(), compiled.files());
+        RulePack fromTimeline = new JsonPackAssembler(instruments()).assemble(TY_2026, lock().layers(), compiled.files());
 
         // Then
         assertThat(fromTimeline.rules()).isEqualTo(today.rules());
@@ -250,6 +252,14 @@ class RulePackCompilerTest {
     private static JsonNode tree(Path file) {
         try {
             return MAPPER.readTree(Files.readString(file));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not read " + file, e);
+        }
+    }
+
+    private static String text(Path file) {
+        try {
+            return Files.readString(file);
         } catch (IOException e) {
             throw new UncheckedIOException("Could not read " + file, e);
         }
