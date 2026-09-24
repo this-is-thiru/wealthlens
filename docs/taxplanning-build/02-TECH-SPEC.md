@@ -64,12 +64,13 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `validate/` | `PackValidator` `PackValidationException` |
 | `json/` | `PackJson` `ValueJson` `ShapeJson` `ConditionJson` `RuleJson` `RegimeJson` `RegistryJson` `JsonPackAssembler` — hand-written parsing (D-019) |
 | `generated/` | `RuleIds` `ComponentCodes` — generated from the packs, committed, verified (`W-032b`) |
+| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, misnamed, or with overlapping versions (D-053) |
 
 ### `taxengine.rules` — planned
 
 | Package | Types | Item |
 |---|---|---|
-| `timeline/` | `Timeline` `TimelineReader` · `RulePackCompiler` | ○ `W-045f` · ○ `W-045g` |
+| `timeline/` | `RulePackCompiler`; runtime loading of the timeline from the JAR | ○ `W-045g` |
 | `validate/` | `PackDiff` (**`W-139` reuses it** for the cross-year diff) · `PackLinter` `Finding` | ○ `W-045h` · ○ `W-139` |
 | `generated/` | `NodeIds` | ○ `W-045i` |
 | `coverage/` | `CoverageRegister` `SectionRef` `Coverage` | ○ `W-045j` |
@@ -184,14 +185,15 @@ backend/src/main/resources/rulepacks/2026-27/
 
 **2 rule rows** (`RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE`), both `IN_FORCE` · `SOURCE_CHECKED` · `PUBLISHED`; 2 regimes (`NEW_TAX_REGIME`, `FIRST_SCHEDULE_RATES`); TY 2026-27 only.
 
-### Target — ○ `W-045f`, `W-045g` (D-034)
+### Timeline — ✅ `W-045f` (read, not yet compiled) · compile ○ `W-045g` (D-034)
 
 ```
 backend/src/main/resources/rulepacks/
   timeline/
-    law/rules/<RuleId>.json            one file per rule; versions inside (unchanged law = one version spanning years)
-    law/regimes/<RegimeCode>.json      one file per regime; lifetime inside
-    exec/pipelines/  exec/components/<ComponentCode>.json
+    law/rules/<RuleId>.json            ✅ one file per rule; versions inside (unchanged law = one version spanning years)
+    law/regimes/<RegimeCode>.json      ✅ one file per regime; lifetime inside
+    exec/pipelines/<NodeId>.json       ✅ one file per node, verbatim (D-053)
+    exec/components/<ComponentCode>.json   with the first component (W-059)
     forms/itr/<ItrFormCode>.json
     content/sections/<SectionKey>.json the section catalogue (W-045k)
     content/coverage.json              the coverage register (W-045j)
@@ -472,3 +474,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-24 | Name collisions: `ItrFormAdvisor` removed from the legacy list — the class is deleted | `W-045c1` |
 | 2026-09-24 | T4: the pack's rule IDs and regime codes renamed to concepts; law layer `2026-27.law.2` | `W-045d`, D-051 |
 | 2026-09-24 | T2: `LegalStatus`, `VerificationLevel`, `PublicationStatus` built, replacing `VerificationStatus` and `DraftOrFinal`; T4: pack rows carry the three axes, law layer `2026-27.law.3` | `W-045e`, D-036, D-052 |
+| 2026-09-24 | T2: `Timeline`, `TimelineReader` built; T4: the timeline holds 2 rules, 2 regimes, 9 nodes, equal to the 2026-27 pack until `W-045g` | `W-045f`, D-053 |

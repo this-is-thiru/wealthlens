@@ -7,7 +7,6 @@ import com.thiru.wealthlens.taxengine.rules.temporal.NoRuleVersionException;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
-import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -96,30 +95,10 @@ public record RuleRow(
     public boolean changesWithin(TemporalContext t) {
         DateRange year = DateRange.between(t.taxYearStart(), t.taxYearEnd());
         return versions.stream()
-                        .map(version -> windowOf(version.validity()))
+                        .map(version -> version.validity().window())
                         .flatMap(Optional::stream)
                         .filter(window -> window.overlaps(year))
                         .count()
                 > 1;
-    }
-
-    /**
-     * The window a validity occupies, where it occupies one.
-     *
-     * <p>An exhaustive switch over a sealed family rather than a method on {@code Validity}, because
-     * {@code Validity} is another item's type and this is the only caller. {@code 18-temporal-versioning.md}
-     * V4 does put an {@code overlaps} method there, and if a second caller appears this belongs on the
-     * variants instead — a fourth {@code Validity} would then break one line rather than several.
-     *
-     * <p>{@code PendingNotification} has no window on purpose: it is never in force, so it can never
-     * be one of the two versions that make a rule change mid-year.
-     */
-    private static Optional<DateRange> windowOf(Validity validity) {
-        return switch (validity) {
-            case Validity.Between between -> Optional.of(new DateRange(between.from(), between.to()));
-            case Validity.Retrospective retro ->
-                    Optional.of(new DateRange(retro.deemedEffectiveFrom(), retro.to()));
-            case Validity.PendingNotification ignored -> Optional.empty();
-        };
     }
 }

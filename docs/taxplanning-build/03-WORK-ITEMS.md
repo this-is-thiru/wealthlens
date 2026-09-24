@@ -484,6 +484,12 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > change which version `RuleRow.versionAt` selects; only `Validity` does.
 > Verified by: `RuleRow.versionAt` filters on `validity().contains` alone.
 
+> **Erratum (W-045f, 2026-09-24):** two things `W-045g` inherits (D-053). (1) `TimelineReader` reads
+> a filesystem `Path`; loading the timeline from the JAR at runtime is `W-045g`'s. (2)
+> `RuleIdNamingTest` and `ConstantGenerator` (which generates `RuleIds`) list `rulepacks/<year>/`
+> directories; once `W-045g` removes `2026-27/` they read nothing and must read the timeline instead.
+> Verified by: `RuleIdNamingTest.packDirectories`, `ConstantGenerator.packDirectories`.
+
 **Standing rules from here on (D-043)** — every later item that models a section must also:
 
 1. mark the section `MODELLED` in `coverage.json` (`W-045j`);

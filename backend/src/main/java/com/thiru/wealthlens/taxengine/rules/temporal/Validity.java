@@ -17,6 +17,14 @@ public sealed interface Validity {
 
     boolean contains(LocalDate date);
 
+    /**
+     * The dates this version occupies, where it occupies any.
+     *
+     * <p>{@code PendingNotification} has none on purpose: it is never in force, so it can neither
+     * overlap another version nor be one of two that make a rule change mid-year.
+     */
+    Optional<DateRange> window();
+
     /** The ordinary case: in force from a date, until another or indefinitely. */
     record Between(LocalDate from, Optional<LocalDate> to) implements Validity {
 
@@ -34,6 +42,11 @@ public sealed interface Validity {
         @Override
         public boolean contains(LocalDate date) {
             return !date.isBefore(from) && to.map(end -> !date.isAfter(end)).orElse(true);
+        }
+
+        @Override
+        public Optional<DateRange> window() {
+            return Optional.of(new DateRange(from, to));
         }
     }
 
@@ -65,14 +78,19 @@ public sealed interface Validity {
             return !date.isBefore(deemedEffectiveFrom)
                     && to.map(end -> !date.isAfter(end)).orElse(true);
         }
+
+        @Override
+        public Optional<DateRange> window() {
+            return Optional.of(new DateRange(deemedEffectiveFrom, to));
+        }
     }
 
     /**
      * In the statute, not yet in force, awaiting a notification that has not been made — with a
      * stated interim position that applies meanwhile.
      *
-     * <p>Neither VERIFIED nor NEEDS_VERIFICATION describes this. The rule is certain and the date is
-     * absent. Schedule III entry 38A is the live case: the narrower rule applies from a date to be
+     * <p>No verification level describes this: the rule is certain and the date is absent. Its legal
+     * status is {@code PENDING_NOTIFICATION}, which must agree with this validity (D-052). Schedule III entry 38A is the live case: the narrower rule applies from a date to be
      * notified, and pending that notification the whole of the disability pension is exempt.
      *
      * <p>{@link #contains} is always false. The rule never applies; the interim rule does.
@@ -96,6 +114,11 @@ public sealed interface Validity {
         @Override
         public boolean contains(LocalDate date) {
             return false;
+        }
+
+        @Override
+        public Optional<DateRange> window() {
+            return Optional.empty();
         }
     }
 }
