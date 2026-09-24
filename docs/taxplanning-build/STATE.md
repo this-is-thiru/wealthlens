@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045h — "taxplanning W-045h: add PackDiff — list every rule, version and value a change moves, for the publish gate (D-057)"
-Last updated              : 2026-09-24 (session 5 — W-045c1, W-045d, W-045e, W-045f, W-045g, W-045g2, W-045g3, W-045h done; build GREEN, 1445 tests)
-Current position          : W-045i — NodeIds generated from the timeline
+Last checkpoint           : W-045i — "taxplanning W-045i: generate NodeIds from the timeline's node catalogue — answers STATE Q1 (D-058)"
+Last updated              : 2026-09-24 (session 5 — W-045c1, W-045d, W-045e, W-045f, W-045g, W-045g2, W-045g3, W-045h, W-045i done; build GREEN, 1447 tests)
+Current position          : W-045j — the coverage register
 Session count             : 5
 ```
 
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-045i` — `NodeIds` generated from the timeline's pipelines. Startup wiring is UNOWNED (D-054). `W-045d2` any time |
+| **Next item** | `W-045j` — the coverage register (D-038). Startup wiring is UNOWNED (D-054). `W-045d2` any time |
 | **Status** | `READY` — nothing in flight, nothing blocked. Three owner questions open (OQ-1…OQ-3 below; OQ-4 decided by D-051); only `W-045m` depends on one of them |
 | **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **62** / 173 live · in flight **0** · blocked **0**  ← computed by script; 173 = 146 base ids − 8 retired + 35 suffixed
+Counts — done **63** / 173 live · in flight **0** · blocked **0**  ← computed by script; 173 = 146 base ids − 8 retired + 35 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045i | 2026-09-24 | `NodeIds` generated from the timeline's node catalogue (D-058, STATE Q1 answered): 9 constants; stale file fails the build; every regime `nodeRef` must have a constant (a check nothing made before); `PipelineRunnerTest` `components` → `INPUTS_COMPONENTS` (drift gone), real slots in `NodeHarnessTest` switched | 43/43 + 2 bite probes; clean unit 1447/1447
 W-045h | 2026-09-24 | `PackDiff` (D-057) in `timeline/`: between two compiled packs — `RuleAdded`/`RuleRemoved`/`VersionAdded`/`VersionRemoved`/`ValueChanged` by path; a version keyed by start date; notes ignored; regimes not diffed (→ `W-139`, erratum) | `-Dtest=PackDiffTest` 7/7 + 2 bite probes; unit 1445/1445
 W-045g3 | 2026-09-24 | Per-year copy removed (D-056): `rulepacks/2026-27/` deleted; `ConstantGenerator`, `RuleIdNamingTest` read the timeline; drift guard → hand-listed identities; 2 equality tests retired; `PackJsonWellFormedTest` → timeline files + lock; `PackJsonTest` → compiled 2026-27 files, mutation regexes for canonical JSON | 6 test classes green; 2 bite probes; clean unit 1438/1438 (−2 retired, −7 parse cases)
 W-045g2 | 2026-09-24 | Provider loads from timeline + lock (D-055): `ClasspathRulePackProvider` moved to `timeline/` (no package cycle), reads `<year>.lock.json`, compiles, verifies, assembles; JAR timeline refused naming the gap; fixture → one-node timeline + 3 locks (incl. a real wrong-year case); broken packs → 5 roots, one defect each (new: rule edited without lock); 42 per-year files removed; split → `W-045g3` | 59/59 + lock.verify probe (4 fail); unit 1447/1447
@@ -416,6 +417,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-058 | 2026-09-24 | `W-045i` (STATE Q1): where node-id constants live | **Generated** `NodeIds` from the timeline's node catalogue, beside `RuleIds`; mechanical names (`TOTALINCOME`, `TAX_BYBASIS`); every regime `nodeRef` must have one; no catalogue type until something reads `produces`; only the two named tests switch | owner: "approved, go with your recommendations throughout" |
 | D-057 | 2026-09-24 | `W-045h`: shape and scope of `PackDiff` | `PackDiff(from, to, findings)` per `DR 15` C4, in `timeline/` (not `validate/` — cycle); diffs compiled canonical JSON; findings `RuleAdded`/`RuleRemoved`/`VersionAdded`/`VersionRemoved`/`ValueChanged` (a version keyed by its start date); `Magnitude` and the three lint findings are `W-139`'s; regimes not diffed yet — recorded on `W-139` | owner: "approved, go with your recommendations throughout" |
 | D-056 | 2026-09-24 | `W-045g3`: what replaces the per-year copy for its last readers | `PackJsonTest` parses the **compiled** 2026-27 files (the loader's real input), mutation regexes rewritten for canonical JSON; the timeline==copy and compiled==copy tests are retired (proof stands in `W-045g`, `4e11ab9`); `ComponentCodes` is generated from `timeline/exec/components/` | owner: "approved, go with your recommendations throughout" |
 | D-055 | 2026-09-24 | `W-045g2` is again two items; how the provider and test roots move | **Split:** `W-045g2` = provider compiles from timeline + lock, six test roots migrated, a real wrong-year test; new `W-045g3` = remove `rulepacks/2026-27/` and move `RuleIdNamingTest`, `ConstantGenerator`, `TimelineReaderTest`, `RulePackCompilerTest` equality, `PackJsonTest`, `PackJsonWellFormedTest` off it. `ClasspathRulePackProvider` moves to `timeline` (no package cycle); a timeline inside a JAR is refused naming the UNOWNED gap; one broken root per defect; the fixture gets one synthetic node | owner: "approved, go with your recommendations throughout" |
@@ -505,7 +507,8 @@ build is green and the last item is still `W-043`.
 
 ### ⚠ Three things Phase 5 forces, which Phase 4 could defer
 
-**Q1 — `NodeId` anchors. Open since `W-039`; six items now. This one bites immediately.**
+**Q1 — `NodeId` anchors.** ✅ **Answered by `W-045i` (D-058):** `NodeIds` is generated from the timeline's node catalogue, beside `RuleIds`; every regime `nodeRef` must have a constant. *(Original question kept below.)*
+
 `W-046` must name the slot it produces and the slot it reads. There is no `NodeIds` class.
 `DR 15` B2 declares thirteen well-known anchors as constants on `NodeId` (`GROSS_SALARY`, `GTI`,
 `TOTAL_INCOME`, `TAX_BY_BASIS`, `NET_PAYABLE`, …) — but `NodeId` is `W-008`'s, `RuleIds` and

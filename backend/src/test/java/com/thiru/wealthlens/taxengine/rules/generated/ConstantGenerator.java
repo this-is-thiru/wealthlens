@@ -12,7 +12,8 @@ import java.util.TreeSet;
 import java.util.stream.Stream;
 
 /**
- * Reads the timeline and produces the text of {@code RuleIds} and {@code ComponentCodes}.
+ * Reads the timeline and produces the text of {@code RuleIds}, {@code ComponentCodes} and
+ * {@code NodeIds}.
  *
  * <p>Lives in test scope because nothing at runtime needs it: the constants it writes are committed
  * source, and {@link GeneratedConstantsTest} is what keeps them honest. That is a deliberate
@@ -36,6 +37,21 @@ final class ConstantGenerator {
         TreeSet<String> ids = new TreeSet<>();
         TimelineReader.read(TIMELINE).rules().keySet().forEach(id -> ids.add(id.value()));
         return ids;
+    }
+
+    /** Every node in the timeline's pipeline catalogue, sorted. */
+    static TreeSet<String> nodeIds() {
+        TreeSet<String> ids = new TreeSet<>();
+        TimelineReader.read(TIMELINE).pipelineNodes().keySet().forEach(id -> ids.add(id.value()));
+        return ids;
+    }
+
+    /** Every node a regime's pipeline names, across the timeline, sorted. */
+    static TreeSet<String> regimeNodeRefs() {
+        TreeSet<String> refs = new TreeSet<>();
+        TimelineReader.read(TIMELINE).regimes().values()
+                .forEach(regime -> regime.pipeline().nodeRefs().forEach(ref -> refs.add(ref.value())));
+        return refs;
     }
 
     /**

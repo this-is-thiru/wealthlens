@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
+import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -34,9 +35,10 @@ import org.junit.jupiter.api.Test;
  */
 class NodeHarnessTest {
 
-    private static final NodeId TOTAL_INCOME = new NodeId("totalincome");
+    private static final NodeId TOTAL_INCOME = NodeIds.TOTALINCOME;
+    // Not a slot of the shipped pipeline, so not a constant
     private static final NodeId GTI = new NodeId("gti");
-    private static final NodeId TAX = new NodeId("tax.bybasis");
+    private static final NodeId TAX = NodeIds.TAX_BYBASIS;
     private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
 
     private static RulePack pack() {

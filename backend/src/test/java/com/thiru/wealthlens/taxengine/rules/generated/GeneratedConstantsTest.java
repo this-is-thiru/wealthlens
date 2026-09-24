@@ -57,6 +57,17 @@ class GeneratedConstantsTest {
                 ConstantGenerator.componentCodes());
     }
 
+    private static Target nodeIds() {
+        return new Target(
+                "NodeIds",
+                "NodeId",
+                java.util.List.of(
+                        "Every node in the timeline's pipeline catalogue. A node referenced from Java",
+                        "is referenced by constant, so a slot renamed in the timeline breaks its callers",
+                        "at compile time rather than as an empty value at run time."),
+                ConstantGenerator.nodeIds());
+    }
+
     private static void check(Target target) {
         Path file = ConstantGenerator.OUTPUT_DIR.resolve(target.className() + ".java");
         String expected = ConstantGenerator.render(
@@ -103,6 +114,18 @@ class GeneratedConstantsTest {
         @Test
         void componentCodesIsCurrent() {
             check(componentCodes());
+        }
+
+        @Test
+        void nodeIdsIsCurrent() {
+            check(nodeIds());
+        }
+
+        @Test
+        void everyNodeARegimeRunsHasAConstant() {
+            // The assembler never reads the node catalogue, so this is the one check that a
+            // regime's pipeline names only nodes the catalogue declares
+            assertThat(ConstantGenerator.nodeIds()).containsAll(ConstantGenerator.regimeNodeRefs());
         }
     }
 

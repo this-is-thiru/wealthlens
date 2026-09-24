@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.pipeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -36,8 +37,9 @@ import org.junit.jupiter.api.Test;
  */
 class PipelineRunnerTest {
 
-    private static final NodeId COMPONENTS = new NodeId("components");
-    private static final NodeId GROSS = new NodeId("salary.gross");
+    private static final NodeId COMPONENTS = NodeIds.INPUTS_COMPONENTS;
+    private static final NodeId GROSS = NodeIds.SALARY_GROSS;
+    // Not a slot of the shipped pipeline, so not a constant
     private static final NodeId SALARY = new NodeId("salary.income");
     private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
 
