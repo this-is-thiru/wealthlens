@@ -338,7 +338,7 @@ class NodeRegistryTest {
             NodeContext ctx = run();
 
             assertThat(ctx.pack()).isNotNull();
-            assertThat(ctx.regime().code()).isEqualTo(new RegimeCode("S202_DEFAULT"));
+            assertThat(ctx.regime().code()).isEqualTo(new RegimeCode("NEW_TAX_REGIME"));
             assertThat(ctx.inputs().taxYear()).isEqualTo(TaxYearId.of(2026));
         }
     }
@@ -415,7 +415,7 @@ class NodeRegistryTest {
 
     private static RegimeSpec regime() {
         return new RegimeSpec(
-                new RegimeCode("S202_DEFAULT"),
+                new RegimeCode("NEW_TAX_REGIME"),
                 "Default regime",
                 Provision.notYetVerified("Income-tax Act, 1961"),
                 Provision.present("Income-tax Act, 2025", "s.202(1)"),
@@ -446,7 +446,7 @@ class NodeRegistryTest {
         TaxYearId year = TaxYearId.of(2026);
         return new EngineInputs(
                 year,
-                new RegimeCode("S202_DEFAULT"),
+                new RegimeCode("NEW_TAX_REGIME"),
                 TemporalContext.forTaxYear(year, LocalDate.of(2026, 9, 21)),
                 EnteredFacts.none(),
                 new TaxpayerFacts(

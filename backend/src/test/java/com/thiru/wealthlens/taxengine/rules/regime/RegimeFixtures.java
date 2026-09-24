@@ -33,12 +33,12 @@ final class RegimeFixtures {
 
     static RegimeSpec regimeWithBehaviour(BehaviourId behaviour) {
         return new RegimeSpec(
-                new RegimeCode("S202_DEFAULT"),
-                "Default regime (s.202(1))",
+                new RegimeCode("NEW_TAX_REGIME"),
+                "New tax regime for individuals, Hindu undivided family and others (s.202(1))",
                 Provision.notYetVerified("Income-tax Act, 1961"),
                 Provision.present("Income-tax Act, 2025", "s.202(1)"),
                 Set.of(PersonType.INDIVIDUAL),
-                new RuleId("RATE-SLAB-NEW-2026"),
+                new RuleId("RATE-SLAB-NEW-TAX-REGIME"),
                 Set.of(),
                 Set.of(),
                 new ElectionProtocol(

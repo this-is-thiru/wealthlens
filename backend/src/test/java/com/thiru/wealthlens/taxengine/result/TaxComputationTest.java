@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 class TaxComputationTest {
 
     private static final TaxYearId TY = TaxYearId.of(2026);
-    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-2026");
+    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
     private static final RuleId STD = new RuleId("SAL-STDDED-001");
 
     /** Every date-and-time type the JDK offers, so the structural check cannot be fooled. */
@@ -94,7 +94,7 @@ class TaxComputationTest {
         return new TaxComputation(
                 ComputationId.fresh(),
                 TY,
-                new RegimeCode("S202_DEFAULT"),
+                new RegimeCode("NEW_TAX_REGIME"),
                 lawAndExec(),
                 InputsFingerprint.of(NodeHarness.plainTaxpayer()),
                 List.of(line(SLAB), line(STD)),
@@ -159,7 +159,7 @@ class TaxComputationTest {
             assertThatThrownBy(() -> new TaxComputation(
                             ComputationId.fresh(),
                             TY,
-                            new RegimeCode("S202_DEFAULT"),
+                            new RegimeCode("NEW_TAX_REGIME"),
                             withContent,
                             InputsFingerprint.of(NodeHarness.plainTaxpayer()),
                             List.of(),
@@ -175,7 +175,7 @@ class TaxComputationTest {
             assertThatThrownBy(() -> new TaxComputation(
                             ComputationId.fresh(),
                             TY,
-                            new RegimeCode("S202_DEFAULT"),
+                            new RegimeCode("NEW_TAX_REGIME"),
                             Map.of(),
                             InputsFingerprint.of(NodeHarness.plainTaxpayer()),
                             List.of(),
@@ -202,7 +202,7 @@ class TaxComputationTest {
             TaxComputation computation = new TaxComputation(
                     ComputationId.fresh(),
                     TY,
-                    new RegimeCode("S202_DEFAULT"),
+                    new RegimeCode("NEW_TAX_REGIME"),
                     lawAndExec(),
                     InputsFingerprint.of(NodeHarness.plainTaxpayer()),
                     mutable,

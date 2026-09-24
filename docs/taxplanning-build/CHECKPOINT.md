@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045d — rule-ID/regime rename (needs OQ-4 concept names from the owner)
+Item            : W-045e — the three status axes (D-036)
 Stage           : NOT_STARTED
-Plan            : — (plans/W-045d.md once written)
+Plan            : — (plans/W-045e.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-045d row in 03-WORK-ITEMS and the sections it names; check OQ-4 (00-BRIEF.md §12) — if unanswered, ask the owner for the names; write plans/W-045d.md; STOP for approval
-Last verify     : ./mvnw test -pl backend -Punit → 1407 pass, 0 fail, BUILD SUCCESS (W-045c1)
-Waiting on      : OQ-4 names for W-045d. OQ-1..OQ-3 also open; OQ-3 gates the L2 deletion
+Next step       : READ the W-045e row in 03-WORK-ITEMS and only the sections it names; write plans/W-045e.md; STOP for approval. (W-045d2, docs only, may be taken instead if the owner says so)
+Last verify     : ./mvnw test -pl backend -Punit → 1412 pass, 0 fail, 0 Checkstyle violations (W-045d)
+Waiting on      : nothing. OQ-1..OQ-3 open (OQ-3 gates L2 deletion); OQ-4 decided (D-051)
 Files touched   : —
-Last item commit: taxplanning W-045c1: delete legacy dead code — nothing imports it (Appendix E, L1)
+Last item commit: taxplanning W-045d: rename rule IDs and regime codes to concepts from the Acts — OQ-4 (D-051)
 Updated         : 2026-09-24, session 5
 ```
 

@@ -366,7 +366,7 @@ Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-d
 | Shape | Means | Rule |
 |---|---|---|
 | `SAL-HRA-001`, `RATE-SLAB-…` | a `RuleId` | names a concept — no year, no "old/new", no section (D-035, OQ-4) |
-| `S202_DEFAULT` | a `RegimeCode` | to be renamed to a concept at `W-045d` (D-046 B4) |
+| `NEW_TAX_REGIME` | a `RegimeCode` | the default regime, named from the 2025 Act's s.202 heading (D-051); was `S202_DEFAULT` until `W-045d` |
 | `ITR-1` … `ITR-UN` | an `ItrFormCode` | the form's official code |
 | `salary.gross` | a `NodeId` | lower-case, dot-separated |
 | `TXC-2026-…` | a computation receipt | `PRD N9` |

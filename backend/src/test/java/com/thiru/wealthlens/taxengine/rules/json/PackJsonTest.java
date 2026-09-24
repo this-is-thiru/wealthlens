@@ -231,11 +231,11 @@ class PackJsonTest {
             RegimeCode future = new RegimeCode("S999_FUTURE");
 
             assertThat(ShapeJson.regimes(
-                                    json("{\"type\": \"OnlyIn\", \"regimes\": [\"S202_DEFAULT\"]}"), "r")
+                                    json("{\"type\": \"OnlyIn\", \"regimes\": [\"NEW_TAX_REGIME\"]}"), "r")
                             .appliesIn(future))
                     .isFalse();
             assertThat(ShapeJson.regimes(
-                                    json("{\"type\": \"ExceptIn\", \"regimes\": [\"S202_DEFAULT\"]}"), "r")
+                                    json("{\"type\": \"ExceptIn\", \"regimes\": [\"NEW_TAX_REGIME\"]}"), "r")
                             .appliesIn(future))
                     .isTrue();
             assertThat(ShapeJson.regimes(json("{\"type\": \"AllRegimes\"}"), "r").appliesIn(future))
@@ -474,12 +474,12 @@ class PackJsonTest {
 
         private static final String REAL_RULE = """
                 { "rules": [
-                  { "ruleId": "RATE-SLAB-NEW-2026",
+                  { "ruleId": "RATE-SLAB-NEW-TAX-REGIME",
                     "axis": "TAX_YEAR",
                     "midYearCombination": "LATEST_VERSION_GOVERNS",
                     "versions": [
                       { "validity": { "type": "Between", "from": "2026-04-01" },
-                        "regimes": { "type": "OnlyIn", "regimes": ["S202_DEFAULT"] },
+                        "regimes": { "type": "OnlyIn", "regimes": ["NEW_TAX_REGIME"] },
                         "provision1961": { "instrument": "Income-tax Act, 1961", "reference": "s.115BAC(1A)(iii)", "presence": "PRESENT" },
                         "provision2025": { "instrument": "Income-tax Act, 2025", "reference": "s.202(1) Table", "presence": "PRESENT" },
                         "cap": { "type": "Fixed", "amount": "0" },
@@ -503,7 +503,7 @@ class PackJsonTest {
         @Test
         void aRuleIsReadWithItsAxisVersionsAndAmendment() {
             var rules = RuleJson.rules(json(REAL_RULE), "law/rates.json");
-            var slab = rules.get(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-2026"));
+            var slab = rules.get(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-TAX-REGIME"));
 
             assertThat(slab.axis())
                     .isEqualTo(com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis.TAX_YEAR);
@@ -574,13 +574,13 @@ class PackJsonTest {
 
         @Test
         void theFailurePathNamesTheRule() {
-            // "law/rates.json rules[0] (RATE-SLAB-NEW-2026).versions[0]..." — a pack with forty
+            // "law/rates.json rules[0] (RATE-SLAB-NEW-TAX-REGIME).versions[0]..." — a pack with forty
             // rules needs the id, not just the index
             String badRate = REAL_RULE.replace("\"amount\": \"0\"", "\"amount\": \"nought\"");
 
             assertThatThrownBy(() -> RuleJson.rules(json(badRate), "law/rates.json"))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("RATE-SLAB-NEW-2026");
+                    .hasMessageContaining("RATE-SLAB-NEW-TAX-REGIME");
         }
     }
 
@@ -605,13 +605,13 @@ class PackJsonTest {
 
             assertThat(regimes.keySet())
                     .extracting(RegimeCode::value)
-                    .containsExactlyInAnyOrder("S202_DEFAULT", "S202_OPTED_OUT");
+                    .containsExactlyInAnyOrder("NEW_TAX_REGIME", "FIRST_SCHEDULE_RATES");
         }
 
         @Test
         void theDefaultRegimeNeedsNoActionAndHasNoDeadline() {
             var regimes = RegimeJson.regimes(json(realRegimes()), "law/regimes.json");
-            var def = regimes.get(new RegimeCode("S202_DEFAULT"));
+            var def = regimes.get(new RegimeCode("NEW_TAX_REGIME"));
 
             assertThat(def.isDefault()).isTrue();
             assertThat(def.election().kind())
@@ -624,7 +624,7 @@ class PackJsonTest {
         @Test
         void theOptOutCarriesTheSTwoZeroTwoFourBindingAndItsRevival() {
             var regimes = RegimeJson.regimes(json(realRegimes()), "law/regimes.json");
-            var optedOut = regimes.get(new RegimeCode("S202_OPTED_OUT"));
+            var optedOut = regimes.get(new RegimeCode("FIRST_SCHEDULE_RATES"));
             var binding = optedOut.election().binding();
 
             assertThat(binding.maxWithdrawals()).isEqualTo(1);
@@ -766,7 +766,7 @@ class PackJsonTest {
 
         @Test
         void theAssembledPackComputesTheRulebookFigure() {
-            // The full chain: JSON on disk to a tax figure. RATE-SLAB-NEW-2026 on ₹50,00,000.
+            // The full chain: JSON on disk to a tax figure. RATE-SLAB-NEW-TAX-REGIME on ₹50,00,000.
             var pack = new JsonPackAssembler(instruments())
                     .assemble(
                             new com.thiru.wealthlens.taxengine.rules.id.TaxYearId(2026),
@@ -776,7 +776,7 @@ class PackJsonTest {
                                     "law/regimes.json", resource("law/regimes.json"),
                                     "exec/components.json", resource("exec/components.json")));
 
-            var slab = pack.rule(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-2026"));
+            var slab = pack.rule(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-TAX-REGIME"));
             var cap = slab.versions().getFirst().cap();
             var ctx = CapContext.of(new BaseId("ROUNDED_TOTAL_INCOME"), Money.of("5000000"));
 
@@ -834,7 +834,7 @@ class PackJsonTest {
                     org.junit.jupiter.params.provider.Arguments.of(
                             "RegimeApplicability.OnlyIn: empty set",
                             (java.util.function.UnaryOperator<String>) s -> s.replaceFirst(
-                                    "\"regimes\": \\[\"S202_DEFAULT\"\\]", "\"regimes\": []")),
+                                    "\"regimes\": \\[\"NEW_TAX_REGIME\"\\]", "\"regimes\": []")),
                     org.junit.jupiter.params.provider.Arguments.of(
                             "SlabLadder: a band that starts where none ended",
                             (java.util.function.UnaryOperator<String>) s ->

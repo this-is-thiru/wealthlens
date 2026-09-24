@@ -443,7 +443,7 @@ class RegimeLifecycleTest {
 
     // --------------------------------------------------------------- W-026c
 
-    /** The nine nodes of S202_DEFAULT — 16-getting-started.md:229-231. */
+    /** The nine nodes of NEW_TAX_REGIME — 16-getting-started.md:229-231. */
     private static PipelineSpec defaultPipeline() {
         return new PipelineSpec(java.util.List.of(
                 new NodeId("inputs.components"),
@@ -467,15 +467,15 @@ class RegimeLifecycleTest {
                 provenance(VerificationStatus.VERIFIED, null));
     }
 
-    /** S202_DEFAULT — 16-getting-started.md:222-231. */
+    /** NEW_TAX_REGIME — 16-getting-started.md:222-231. */
     private static RegimeSpec defaultRegime() {
         return new RegimeSpec(
-                new RegimeCode("S202_DEFAULT"),
-                "Default regime (s.202(1))",
+                new RegimeCode("NEW_TAX_REGIME"),
+                "New tax regime for individuals, Hindu undivided family and others (s.202(1))",
                 Provision.notYetVerified("Income-tax Act, 1961"),
                 Provision.present("Income-tax Act, 2025", "s.202(1)"),
                 java.util.Set.of(PersonType.INDIVIDUAL),
-                new RuleId("RATE-SLAB-NEW-2026"),
+                new RuleId("RATE-SLAB-NEW-TAX-REGIME"),
                 java.util.Set.of(new DisallowanceSetId("DIS-S202-2A")),
                 java.util.Set.of(),
                 defaultElection(),

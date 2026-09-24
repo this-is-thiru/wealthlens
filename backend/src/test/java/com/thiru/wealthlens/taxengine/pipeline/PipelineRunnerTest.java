@@ -39,7 +39,7 @@ class PipelineRunnerTest {
     private static final NodeId COMPONENTS = new NodeId("components");
     private static final NodeId GROSS = new NodeId("salary.gross");
     private static final NodeId SALARY = new NodeId("salary.income");
-    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-2026");
+    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
 
     private static RulePack pack() {
         Instrument act = Instrument.assented(

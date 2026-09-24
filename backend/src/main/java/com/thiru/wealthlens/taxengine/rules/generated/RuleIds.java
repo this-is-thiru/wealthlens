@@ -15,8 +15,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
-    public static final RuleId RATE_SLAB_NEW_2026 = new RuleId("RATE-SLAB-NEW-2026");
-    public static final RuleId RATE_SLAB_OLD_2026 = new RuleId("RATE-SLAB-OLD-2026");
+    public static final RuleId RATE_SLAB_FIRST_SCHEDULE = new RuleId("RATE-SLAB-FIRST-SCHEDULE");
+    public static final RuleId RATE_SLAB_NEW_TAX_REGIME = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
 
     private RuleIds() {
     }

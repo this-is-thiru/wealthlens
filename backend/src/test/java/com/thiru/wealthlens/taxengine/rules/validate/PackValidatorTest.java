@@ -76,11 +76,11 @@ import org.junit.jupiter.api.Test;
 class PackValidatorTest {
 
     private static final TaxYearId TY = new TaxYearId(2026);
-    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-2026");
+    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
     private static final RuleId DISALLOW = new RuleId("REG-NEW-DISALLOW-001");
     private static final RuleId ELIG = new RuleId("REG-ELIG-001");
     private static final RuleId HRA = new RuleId("SAL-HRA-001");
-    private static final RegimeCode DEFAULT_REGIME = new RegimeCode("S202_DEFAULT");
+    private static final RegimeCode DEFAULT_REGIME = new RegimeCode("NEW_TAX_REGIME");
     private static final DisallowanceSetId DIS_SET = new DisallowanceSetId("DIS-S202-2A");
     private static final ConditionSetId COND_SET = new ConditionSetId("ELIG-S205-2");
     private static final ComponentCode EMPLOYEE_PF = new ComponentCode("EMPLOYEE_PF");
@@ -233,7 +233,7 @@ class PackValidatorTest {
 
             assertThatThrownBy(() -> PackValidator.validate(pack.build()))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("rate table names rule RATE-SLAB-NEW-2026");
+                    .hasMessageContaining("rate table names rule RATE-SLAB-NEW-TAX-REGIME");
         }
 
         @Test
@@ -390,7 +390,7 @@ class PackValidatorTest {
             assertThatThrownBy(() -> PackValidator.validate(pack.build()))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("unresolved reference(s)")
-                    .hasMessageContaining("RATE-SLAB-NEW-2026")
+                    .hasMessageContaining("RATE-SLAB-NEW-TAX-REGIME")
                     .hasMessageContaining("DIS-S202-2A")
                     .hasMessageContaining("ELIG-S205-2");
         }

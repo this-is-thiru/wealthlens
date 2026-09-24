@@ -4,7 +4,7 @@
   "layers": {
     "law": {
       "version": "2092-93.law.1",
-      "checksum": "sha256:a4c8883ba73715b30fe4b2fc1fd0b1f43b36cec717b7f74524b06c4006cb308e"
+      "checksum": "sha256:e48093dbc4411019b8fcda7fbfd63ca9c36c12a64438150d7dafd7f8b2f95145"
     },
     "exec": {
       "version": "2092-93.exec.1",
@@ -45,5 +45,5 @@
       "note": "amendment chain to G.S.R. 656(E) of 24-07-2026 not traced"
     }
   },
-  "_brokenOnPurpose": "T9-5: S202_DEFAULT's rateTable names RATE-SLAB-NEW-2026, which is no longer defined (I2)."
+  "_brokenOnPurpose": "T9-5: NEW_TAX_REGIME's rateTable names RATE-SLAB-NEW-TAX-REGIME, which is no longer defined (I2)."
 }

@@ -183,7 +183,7 @@ backend/src/main/resources/rulepacks/2026-27/
   content/  explanations.json
 ```
 
-**2 rule rows** (`RATE-SLAB-NEW-2026`, `RATE-SLAB-OLD-2026`), both `VERIFIED`; 2 regimes; TY 2026-27 only.
+**2 rule rows** (`RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE`), both `VERIFIED`; 2 regimes (`NEW_TAX_REGIME`, `FIRST_SCHEDULE_RATES`); TY 2026-27 only.
 
 ### Target — ○ `W-045f`, `W-045g` (D-034)
 
@@ -471,3 +471,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-23 | T10: swallow rule deleted; `IllegalCatch` is the one enforcement | `W-045b3`, D-049 |
 | 2026-09-23 | T4: the shipped pack holds 2 rule rows, not 15 (the earlier figure counted `VERIFIED` markers) | `W-045c` |
 | 2026-09-24 | Name collisions: `ItrFormAdvisor` removed from the legacy list — the class is deleted | `W-045c1` |
+| 2026-09-24 | T4: the pack's rule IDs and regime codes renamed to concepts; law layer `2026-27.law.2` | `W-045d`, D-051 |

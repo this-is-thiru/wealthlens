@@ -28,8 +28,8 @@ import java.util.Set;
  *       different node set rather than an {@code if} inside a node ({@code D-REGIMESTEP}).
  * </ul>
  *
- * @param code the stable identifier, e.g. {@code S202_DEFAULT}
- * @param displayName what a user sees, e.g. "Default regime (s.202(1))"
+ * @param code the stable identifier, e.g. {@code NEW_TAX_REGIME}
+ * @param displayName what a user sees, e.g. "New tax regime for individuals, Hindu undivided family and others (s.202(1))"
  * @param provision1961 where this regime lives in the Income-tax Act 1961
  * @param provision2025 where it lives in the Income-tax Act 2025
  * @param appliesTo which kinds of assessee may use it

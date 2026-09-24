@@ -42,7 +42,7 @@ import java.util.TreeSet;
  *
  * <pre>{@code
  * var result = NodeHarness.with(pack)
- *         .regime(new RegimeCode("S202_DEFAULT"))
+ *         .regime(new RegimeCode("NEW_TAX_REGIME"))
  *         .given(new NodeId("totalincome"), Money.of("1200000"))
  *         .run(new TaxByBasisNode());
  * }</pre>
@@ -176,7 +176,7 @@ public final class NodeHarness {
         TaxYearId year = TaxYearId.of(2026);
         return new EngineInputs(
                 year,
-                new RegimeCode("S202_DEFAULT"),
+                new RegimeCode("NEW_TAX_REGIME"),
                 TemporalContext.forTaxYear(year, LocalDate.of(2026, 9, 21)),
                 EnteredFacts.none(),
                 new TaxpayerFacts(

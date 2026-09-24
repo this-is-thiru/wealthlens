@@ -202,7 +202,7 @@ class PackJsonWellFormedTest {
         @Test
         void theNewRegimeLadderIsSevenBandsAtNilFiveTenFifteenTwentyTwentyFiveThirty() {
             // 01-rulebook.md:82-92, VERIFIED (S2, s.202(1) Table)
-            JsonNode bands = bandsOf("RATE-SLAB-NEW-2026");
+            JsonNode bands = bandsOf("RATE-SLAB-NEW-TAX-REGIME");
 
             assertThat(bands).hasSize(7);
             assertThat(bands).extracting(b -> b.get("rate").asText())
@@ -214,7 +214,7 @@ class PackJsonWellFormedTest {
         @Test
         void theOldRegimeLadderIsFourBandsAtNilFiveTwentyThirty() {
             // 01-rulebook.md:104,115-120 — under 60. VERIFIED (S3, First Schedule Part I-B Para A)
-            JsonNode bands = bandsOf("RATE-SLAB-OLD-2026");
+            JsonNode bands = bandsOf("RATE-SLAB-FIRST-SCHEDULE");
 
             assertThat(bands).hasSize(4);
             assertThat(bands).extracting(b -> b.get("rate").asText())
@@ -279,7 +279,7 @@ class PackJsonWellFormedTest {
         void theOptOutRidesOnTheReturnWithNoForm() {
             // Rule 136, VERIFIED. Naming a form would send the taxpayer after one that does not exist.
             for (JsonNode regime : json("law/regimes.json").get("regimes")) {
-                if ("S202_OPTED_OUT".equals(regime.get("code").asText())) {
+                if ("FIRST_SCHEDULE_RATES".equals(regime.get("code").asText())) {
                     JsonNode election = regime.get("election");
                     assertThat(election.get("vehicle").asText()).isEqualTo("IN_THE_RETURN");
                     assertThat(election.has("form")).isFalse();

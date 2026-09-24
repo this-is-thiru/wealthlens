@@ -16,8 +16,9 @@ public record RuleId(String value) {
     /**
      * A head of two to eight capitals, then one to five hyphenated segments.
      *
-     * <p>Five, not three: {@code SAL-ALW-TRANSPORT-DIS-2026} and {@code RATE-SLAB-OLD-2026-A} are
-     * real rule IDs with four segments. See the erratum at {@code 02-TECH-SPEC.md} T3.
+     * <p>Five, not three: concept names quoted from the Acts run long — {@code
+     * RATE-SLAB-NEW-TAX-REGIME} has four segments and {@code RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79}
+     * five (D-051). See the erratum at {@code 02-TECH-SPEC.md} T3.
      */
     private static final Pattern PATTERN = Pattern.compile("^[A-Z]{2,8}(-[A-Z0-9]{1,12}){1,5}$");
 

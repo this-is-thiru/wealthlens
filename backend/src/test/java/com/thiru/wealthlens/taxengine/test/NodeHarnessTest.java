@@ -37,7 +37,7 @@ class NodeHarnessTest {
     private static final NodeId TOTAL_INCOME = new NodeId("totalincome");
     private static final NodeId GTI = new NodeId("gti");
     private static final NodeId TAX = new NodeId("tax.bybasis");
-    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-2026");
+    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
 
     private static RulePack pack() {
         return new ClasspathRulePackProvider(

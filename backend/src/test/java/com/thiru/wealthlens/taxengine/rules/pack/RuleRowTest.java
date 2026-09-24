@@ -284,9 +284,9 @@ class RuleRowTest {
     class Applicability {
 
         private static final com.thiru.wealthlens.taxengine.rules.id.RegimeCode DEFAULT_REGIME =
-                new com.thiru.wealthlens.taxengine.rules.id.RegimeCode("S202_DEFAULT");
+                new com.thiru.wealthlens.taxengine.rules.id.RegimeCode("NEW_TAX_REGIME");
         private static final com.thiru.wealthlens.taxengine.rules.id.RegimeCode OPTED_OUT =
-                new com.thiru.wealthlens.taxengine.rules.id.RegimeCode("S202_OPTED_OUT");
+                new com.thiru.wealthlens.taxengine.rules.id.RegimeCode("FIRST_SCHEDULE_RATES");
         private static final com.thiru.wealthlens.taxengine.rules.id.RegimeCode FUTURE =
                 new com.thiru.wealthlens.taxengine.rules.id.RegimeCode("S999_FUTURE");
 

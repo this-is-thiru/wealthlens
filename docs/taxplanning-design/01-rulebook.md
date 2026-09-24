@@ -119,6 +119,25 @@ Identical to `RATE-SLAB-OLD-2025` in every band and every rate, restated in the 
 
 **Status: VERIFIED** (S3, First Schedule Part I, B, Paragraph A, items (I), (II), (III)).
 
+> **Erratum (W-045d, 2026-09-24):** the R3 rule IDs put the year and "OLD"/"NEW" in the identity,
+> which D-035 forbids — they are renamed to concepts chosen by the owner from the Acts' wording
+> (D-051). The year lives in the version; one rule spans every year its bands are unchanged:
+>
+> | Old ID | New ID | Wording it is taken from |
+> |---|---|---|
+> | `RATE-SLAB-NEW-2025` | `RATE-SLAB-NEW-TAX-REGIME` | S2 s.202 heading: "New tax regime for individuals, Hindu undivided family and others." |
+> | `RATE-SLAB-NEW-2026` | `RATE-SLAB-NEW-TAX-REGIME` | same |
+> | `RATE-SLAB-OLD-2025` | `RATE-SLAB-FIRST-SCHEDULE` | S3 First Schedule Part I, Paragraph A — "Rates of income-tax" |
+> | `RATE-SLAB-OLD-2025-A` | `RATE-SLAB-FIRST-SCHEDULE` | Para A item (I) |
+> | `RATE-SLAB-OLD-2025-B` | `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79` | item (II): "of the age of sixty years or more but less than eighty years" |
+> | `RATE-SLAB-OLD-2025-C` | `RATE-SLAB-FIRST-SCHEDULE-AGE-80` | item (III): "of the age of eighty years or more" |
+> | `RATE-SLAB-OLD-2026` | `RATE-SLAB-FIRST-SCHEDULE` | Part I-B Paragraph A |
+>
+> The regime codes follow the same decision: default regime `NEW_TAX_REGIME`, opted-out
+> `FIRST_SCHEDULE_RATES`. The other year- or regime-suffixed IDs in this rulebook are mapped by
+> `W-045d2`. Verified by: S2 p.226 (s.202 marginal heading), S3 p.84–85 (Part I-B Paragraph A),
+> read 2026-09-24; `RuleIdNamingTest`.
+
 ### Notes that the code must honour
 
 - `RATE-SLAB-BAND-001` — **FACT (S2 s.202(1); S3 Part I-A/I-B)**: statutory bands are written as

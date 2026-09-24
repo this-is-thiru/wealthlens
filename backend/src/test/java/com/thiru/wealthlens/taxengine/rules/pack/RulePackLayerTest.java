@@ -36,7 +36,7 @@ class RulePackLayerTest {
 
     private static final String SHA_A = "sha256:" + "a".repeat(64);
     private static final String SHA_B = "sha256:" + "b".repeat(64);
-    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-2026");
+    private static final RuleId SLAB = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
 
     private static Provenance provenance() {
         return new Provenance(

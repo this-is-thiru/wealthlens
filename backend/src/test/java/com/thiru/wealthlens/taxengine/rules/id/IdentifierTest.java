@@ -35,7 +35,7 @@ class IdentifierTest {
 
         @ParameterizedTest
         @ValueSource(strings = {
-                "SAL-HRA-001", "RATE-SLAB-NEW-2026", "REBATE-NEW-MR-001",
+                "SAL-HRA-001", "RATE-SLAB-NEW-TAX-REGIME", "REBATE-NEW-MR-001",
                 "DED-80D-007", "PF-AGGCAP-001", "HP-CAP-SELFOCC-003"})
         void constructor_whenIdIsWellFormed_isAccepted(String id) {
             assertThat(new RuleId(id).value()).isEqualTo(id);
@@ -110,7 +110,7 @@ class IdentifierTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"S202_DEFAULT", "S202_OPTED_OUT", "S200", "S204", "SYN_FLAT"})
+        @ValueSource(strings = {"NEW_TAX_REGIME", "FIRST_SCHEDULE_RATES", "S200", "S204", "SYN_FLAT"})
         void regimeCode_whenWellFormed_isAccepted(String code) {
             assertThat(new RegimeCode(code).value()).isEqualTo(code);
         }

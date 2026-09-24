@@ -29,7 +29,7 @@ class EngineInputsTest {
     private static EngineInputs complete() {
         return new EngineInputs(
                 TY,
-                new RegimeCode("S202_DEFAULT"),
+                new RegimeCode("NEW_TAX_REGIME"),
                 TemporalContext.forTaxYear(TY, AS_OF),
                 EnteredFacts.none(),
                 new TaxpayerFacts(
@@ -67,7 +67,7 @@ class EngineInputsTest {
         void aMissingComponentIsRejectedAndSaysWhy() {
             assertThatThrownBy(() -> new EngineInputs(
                             TY,
-                            new RegimeCode("S202_DEFAULT"),
+                            new RegimeCode("NEW_TAX_REGIME"),
                             TemporalContext.forTaxYear(TY, AS_OF),
                             null,
                             complete().taxpayer(),
@@ -159,7 +159,7 @@ class EngineInputsTest {
             // wise compute different years from one object, and nothing would say so.
             assertThatThrownBy(() -> new EngineInputs(
                             TY,
-                            new RegimeCode("S202_DEFAULT"),
+                            new RegimeCode("NEW_TAX_REGIME"),
                             TemporalContext.forTaxYear(TaxYearId.of(2025), AS_OF),
                             EnteredFacts.none(),
                             complete().taxpayer(),

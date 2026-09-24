@@ -176,8 +176,12 @@ The year lives in the **version**. The section lives in the **provision** (`prov
 `provision2025`). Neither belongs in the identity — and the same holds for **regime codes**
 (D-046 B4): one regime continuing from the 1961 Act into the 2025 Act is one identity.
 
-**The concept names themselves are not invented here.** `W-045d` proposes them from the Acts' own
-wording, each with its source, and the owner chooses (open question **OQ-4**, §12).
+**The concept names are taken from the Acts' wording and chosen by the owner (D-051, OQ-4 closed).**
+The 2025 Act heads s.202 "New tax regime for individuals, Hindu undivided family and others." — so
+"new" in `NEW_TAX_REGIME` / `RATE-SLAB-NEW-TAX-REGIME` is the **statute's word**, not a relative
+label, and is the one place it is allowed. The opted-out regime has no name in either Act; it is
+`FIRST_SCHEDULE_RATES` / `RATE-SLAB-FIRST-SCHEDULE`, after where its rates are. The rulebook's old →
+new mapping is an erratum under `01-rulebook.md` R3 (`W-045d`) and `W-045d2`.
 
 ### 5.3 Three statuses, not one (D-036)
 
@@ -505,9 +509,9 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 
 | What | Standard | Example |
 |---|---|---|
-| Rule ID | the concept; no year, no "old/new", no section number | shape: `RATE-SLAB-<concept>`, `DED-<concept>`, `SAL-HRA-<concept>` — the concepts chosen at `W-045d` (OQ-4) |
+| Rule ID | the concept; no year, no "old/new" (except the statutory "New tax regime"), no section number — enforced by `RuleIdNamingTest` | `RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE` (D-051) |
 | Version | carries the dates, the provision and the statuses | `validity: 2026-04-01 →` |
-| Regime code | the concept, like a rule ID (D-046 B4); the provision is data, per Act | chosen at `W-045d` (OQ-4) |
+| Regime code | the concept, like a rule ID (D-046 B4); the provision is data, per Act | `NEW_TAX_REGIME`, `FIRST_SCHEDULE_RATES` (D-051) |
 | Compiled per-year law | **rule pack** — never "snapshot", which names input projections | `RulePackCompiler`, `PackDiff`, `rulepacks/2026-27.lock.json` |
 | Item commit | `taxplanning W-0nn: <verb> <types> — <why, briefly>` | `taxplanning W-043: add TaxComputation, FilingPosition, ComputationReceipt` |
 | Cross-document references | prefixed by document, because bare IDs collide (`T1`, `B2`, `F4`, `D-17`/`D-017` each mean two or more things) | `TS-T1`, `GT-T1`, `DR15-B2`, `PRD-F4` |
@@ -536,7 +540,7 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 | OQ-3 | The **old** tax-planning feature is still live and returns numbers known to be wrong — e.g. at ₹60 L income (new regime) it charges no surcharge, understating tax by roughly ₹1.4 lakh. **Turn it off, warn on it, or leave it?** | **Warn now** (a visible "known errors — being replaced" flag on the response), **remove it** when the replacement passes its golden tests (`09-build-plan.md` B2) | now |
 | ~~OQ-4 (old)~~ | ~~TY 2025-26?~~ | **Decided (D-041): build both years**, matching `portfolio` | — |
 | ~~OQ-5~~ | ~~the swallow-failures rule~~ | **Decided (D-049): deleted** — Checkstyle `IllegalCatch` enforces the intent | — |
-| **OQ-4** | The **concept names** for rule IDs and regime codes (e.g. the two slab regimes), replacing year- and section-based names | `W-045d` proposes each name **quoted from the Acts' own wording**, with its source; you choose | `W-045d` |
+| ~~OQ-4~~ | ~~concept names for rule IDs and regime codes~~ | **Decided (D-051):** `NEW_TAX_REGIME` / `FIRST_SCHEDULE_RATES`; `RATE-SLAB-NEW-TAX-REGIME` / `RATE-SLAB-FIRST-SCHEDULE`; the remaining rulebook IDs at `W-045d2` | — |
 
 ---
 
@@ -554,3 +558,4 @@ Current truth above; history here (D-046 B1 applies the same rule to this brief)
 | 2026-09-23 | OQ-5 added | `W-045b2` found the swallow rule forbids defining exceptions |
 | 2026-09-23 | OQ-5 decided: rule deleted | D-049 |
 | 2026-09-23 | §5.1: the shipped pack holds **2** rule rows, not 15 | `W-045c` — the earlier figure counted `VERIFIED` markers |
+| 2026-09-24 | §5.2, §10: concept names chosen; OQ-4 decided | `W-045d`, D-051 — the 2025 Act's s.202 heading is "New tax regime" (S2 p.226) |

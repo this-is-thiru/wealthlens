@@ -113,7 +113,7 @@ class GeneratedConstantsTest {
         @Test
         void itFindsTheRulesInTheRealPack() {
             assertThat(ConstantGenerator.ruleIds())
-                    .contains("RATE-SLAB-NEW-2026", "RATE-SLAB-OLD-2026");
+                    .contains("RATE-SLAB-NEW-TAX-REGIME", "RATE-SLAB-FIRST-SCHEDULE");
         }
 
         @Test
@@ -174,14 +174,14 @@ class GeneratedConstantsTest {
         void aCodeRemovedFromEveryPackLosesItsConstant() {
             // Which is what makes every Java reference to it fail to compile — the strongest
             // deprecation signal available. Simulated by rendering with the value absent.
-            TreeSet<String> withRule = new TreeSet<>(java.util.Set.of("RATE-SLAB-NEW-2026"));
+            TreeSet<String> withRule = new TreeSet<>(java.util.Set.of("RATE-SLAB-NEW-TAX-REGIME"));
             String before = ConstantGenerator.render(
                     "RuleIds", "RuleId", java.util.List.of("purpose"), withRule);
             String after = ConstantGenerator.render(
                     "RuleIds", "RuleId", java.util.List.of("purpose"), new TreeSet<>());
 
-            assertThat(before).contains("RATE_SLAB_NEW_2026");
-            assertThat(after).doesNotContain("RATE_SLAB_NEW_2026");
+            assertThat(before).contains("RATE_SLAB_NEW_TAX_REGIME");
+            assertThat(after).doesNotContain("RATE_SLAB_NEW_TAX_REGIME");
         }
 
         @Test
@@ -193,9 +193,9 @@ class GeneratedConstantsTest {
                     "RuleIds",
                     "RuleId",
                     java.util.List.of("purpose"),
-                    new TreeSet<>(java.util.Set.of("RATE-SLAB-NEW-2062")));
+                    new TreeSet<>(java.util.Set.of("RATE-SLAB-NEW-TAX-REGMIE")));
 
-            assertThat(typo).contains("RATE_SLAB_NEW_2062").doesNotContain("RATE_SLAB_NEW_2026");
+            assertThat(typo).contains("RATE_SLAB_NEW_TAX_REGMIE").doesNotContain("RATE_SLAB_NEW_TAX_REGIME");
         }
 
         @Test

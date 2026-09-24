@@ -46,7 +46,7 @@ class InputsFingerprintTest {
     private static EngineInputs baseline() {
         return new EngineInputs(
                 TY,
-                new RegimeCode("S202_DEFAULT"),
+                new RegimeCode("NEW_TAX_REGIME"),
                 TemporalContext.forTaxYear(TY, AS_OF),
                 EnteredFacts.none(),
                 new TaxpayerFacts(
@@ -168,7 +168,7 @@ class InputsFingerprintTest {
                     Arguments.of(
                             "elections.stateByRegime",
                             mutate(in -> copy(in, r -> r.elections = new RegimeElectionSnapshot(
-                                    Map.of(new RegimeCode("S202_DEFAULT"), ElectionState.IN_EFFECT),
+                                    Map.of(new RegimeCode("NEW_TAX_REGIME"), ElectionState.IN_EFFECT),
                                     Map.of())))),
                     Arguments.of(
                             "capitalGains.buckets",

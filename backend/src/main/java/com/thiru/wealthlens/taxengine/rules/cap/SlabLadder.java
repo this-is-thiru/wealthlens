@@ -11,7 +11,7 @@ import java.util.Optional;
  * A progressive rate table: the slab ladder, and the surcharge ladders that share its shape.
  *
  * <p>Each band taxes only the slice of income that falls inside it, so the ladder is a sum over
- * bands rather than a rate applied to the whole. {@code RATE-SLAB-NEW-2026} at &#8377;8,00,000 is
+ * bands rather than a rate applied to the whole. {@code RATE-SLAB-NEW-TAX-REGIME} at &#8377;8,00,000 is
  * &#8377;20,000 — five per cent of the second band's four lakh — not five per cent of eight lakh.
  *
  * <h2>The one-rupee trap</h2>

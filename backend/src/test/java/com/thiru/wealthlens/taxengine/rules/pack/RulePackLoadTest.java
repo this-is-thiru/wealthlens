@@ -87,7 +87,7 @@ class RulePackLoadTest {
             // Classpath bytes to a tax figure, with nothing stubbed. T2-1: ₹50,00,000 → ₹10,80,000
             RulePack pack = load("rulepacks", TY_2026);
 
-            var slab = pack.rule(new RuleId("RATE-SLAB-NEW-2026")).versions().getFirst().cap();
+            var slab = pack.rule(new RuleId("RATE-SLAB-NEW-TAX-REGIME")).versions().getFirst().cap();
             var ctx = CapContext.of(new BaseId("ROUNDED_TOTAL_INCOME"), Money.of("5000000"));
 
             assertThat(slab.apply(ctx).value()).isEqualTo(Money.of("1080000"));
@@ -99,7 +99,7 @@ class RulePackLoadTest {
 
             assertThat(pack.computationCacheKey())
                     .startsWith("2026-27|")
-                    .contains("law=2026-27.law.1")
+                    .contains("law=2026-27.law.2")
                     .doesNotContain("content=");
         }
 
@@ -191,7 +191,7 @@ class RulePackLoadTest {
             assertThatThrownBy(() -> load("rulepacks-broken", new TaxYearId(2091)))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("law/rates.json")
-                    .hasMessageContaining("RATE-SLAB-NEW-2026")
+                    .hasMessageContaining("RATE-SLAB-NEW-TAX-REGIME")
                     .hasMessageContaining("whatToCheck");
         }
     }
@@ -208,7 +208,7 @@ class RulePackLoadTest {
 
             assertThatThrownBy(() -> PackValidator.validate(pack))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("RATE-SLAB-NEW-2026")
+                    .hasMessageContaining("RATE-SLAB-NEW-TAX-REGIME")
                     .hasMessageContaining("which the pack does not define");
         }
     }

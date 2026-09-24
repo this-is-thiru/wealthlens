@@ -29,7 +29,7 @@ class SlabLadderTest {
     private static final BaseId TOTAL_INCOME = new BaseId("TOTAL_INCOME");
 
     /**
-     * {@code RATE-SLAB-NEW-2026} — 01-rulebook.md:82-92, VERIFIED (S2, s.202(1) Table).
+     * {@code RATE-SLAB-NEW-TAX-REGIME} — 01-rulebook.md:82-92, VERIFIED (S2, s.202(1) Table).
      *
      * <p>Six bands of ₹4,00,000 at Nil/5/10/15/20/25%, then 30% above ₹24,00,000.
      */
