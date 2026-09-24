@@ -16,7 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -48,13 +48,13 @@ class PipelineRunnerTest {
                 LocalDate.of(2026, 4, 1),
                 "CG-DL-E-21082025-000000",
                 URI.create("https://egazette.gov.in/WriteReadData/2025/000000.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
         Instrument rules = Instrument.notified(
                 "Income-tax Rules, 2026",
                 LocalDate.of(2026, 4, 1),
                 "CG-DL-E-20032026-271092",
                 URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
         return new ClasspathRulePackProvider(
                         "rulepacks",
                         Set.of(TaxYearId.of(2026)),

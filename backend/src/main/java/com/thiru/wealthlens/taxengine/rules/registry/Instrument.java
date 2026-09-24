@@ -20,7 +20,7 @@ public record Instrument(
         LocalDate inForceFrom,
         String gazetteRef,
         URI sourceUrl,
-        VerificationStatus status) {
+        VerificationLevel verificationLevel) {
 
     public Instrument {
         if (citation == null || citation.isBlank()) {
@@ -35,13 +35,13 @@ public record Instrument(
 
     /** An Act, which has an assent date. */
     public static Instrument assented(String citation, LocalDate assentedOn, LocalDate inForceFrom,
-            String gazetteRef, URI sourceUrl, VerificationStatus status) {
-        return new Instrument(citation, Optional.of(assentedOn), inForceFrom, gazetteRef, sourceUrl, status);
+            String gazetteRef, URI sourceUrl, VerificationLevel verificationLevel) {
+        return new Instrument(citation, Optional.of(assentedOn), inForceFrom, gazetteRef, sourceUrl, verificationLevel);
     }
 
     /** Subordinate legislation, which is notified rather than assented. */
     public static Instrument notified(String citation, LocalDate inForceFrom,
-            String gazetteRef, URI sourceUrl, VerificationStatus status) {
-        return new Instrument(citation, Optional.empty(), inForceFrom, gazetteRef, sourceUrl, status);
+            String gazetteRef, URI sourceUrl, VerificationLevel verificationLevel) {
+        return new Instrument(citation, Optional.empty(), inForceFrom, gazetteRef, sourceUrl, verificationLevel);
     }
 }

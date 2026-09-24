@@ -28,7 +28,7 @@ class TaxYearRegistryTest {
                 LocalDate.of(2026, 4, 1),
                 "CG-DL-E-22082025-265620",
                 URI.create("https://egazette.gov.in/WriteReadData/2025/265620.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
     }
 
     private static Instrument financeAct2026() {
@@ -38,7 +38,7 @@ class TaxYearRegistryTest {
                 LocalDate.of(2026, 4, 1),
                 "CG-DL-E-31032026-271439",
                 URI.create("https://egazette.gov.in/WriteReadData/2026/271439.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
     }
 
     private static Instrument rules2026() {
@@ -47,7 +47,7 @@ class TaxYearRegistryTest {
                 LocalDate.of(2026, 4, 1),
                 "CG-DL-E-20032026-271092",
                 URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
     }
 
     private static Map<RulePackLayer, RulePackRef> layers(String year) {

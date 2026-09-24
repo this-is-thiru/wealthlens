@@ -9,6 +9,8 @@ import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
+import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,6 +60,7 @@ public record RulePack(
         conditionSets = conditionSets == null ? Map.of() : Map.copyOf(conditionSets);
 
         requireRulesFiledUnderTheirOwnIds(taxYear, rules);
+        requireOnlyPublishedVersions(taxYear, rules);
     }
 
     private static Map<RulePackLayer, RulePackRef> everyLayerVersioned(
@@ -80,6 +83,23 @@ public record RulePack(
             }
         }
         return Map.copyOf(copied);
+    }
+
+    /**
+     * Only {@code PUBLISHED} versions enter a pack (D-036). A pack is compiled output, so any other
+     * status here means the pack was built wrong; it is refused rather than filtered, because
+     * filtering belongs to the compiler (D-052).
+     */
+    private static void requireOnlyPublishedVersions(TaxYearId taxYear, Map<RuleId, RuleRow> rules) {
+        for (RuleRow row : rules.values()) {
+            for (RuleVersion version : row.versions()) {
+                if (version.publicationStatus() != PublicationStatus.PUBLISHED) {
+                    throw new IllegalArgumentException(
+                            taxYear + " rule " + row.id() + " holds a " + version.publicationStatus()
+                                    + " version; only PUBLISHED versions may enter a rule pack");
+                }
+            }
+        }
     }
 
     private static void requireRulesFiledUnderTheirOwnIds(TaxYearId taxYear, Map<RuleId, RuleRow> rules) {

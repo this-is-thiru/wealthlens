@@ -1,6 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.temporal;
 
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import java.net.URI;
 import java.time.LocalDate;
 
@@ -23,7 +23,7 @@ import java.time.LocalDate;
  * @param effectiveFrom when the change takes effect — earlier than {@code notifiedOn} if retrospective
  * @param retrospective whether it takes effect before it was notified
  * @param sourceUrl where it was read
- * @param status whether this reference was verified against the source
+ * @param verificationLevel how far this reference was confirmed against the source
  */
 public record AmendmentRef(
         String instrumentCitation,
@@ -32,7 +32,7 @@ public record AmendmentRef(
         LocalDate effectiveFrom,
         boolean retrospective,
         URI sourceUrl,
-        VerificationStatus status) {
+        VerificationLevel verificationLevel) {
 
     public AmendmentRef {
         if (instrumentCitation == null || instrumentCitation.isBlank()) {
@@ -42,8 +42,8 @@ public record AmendmentRef(
             throw new IllegalArgumentException(
                     instrumentCitation + " must state both when it was notified and when it takes effect");
         }
-        if (status == null) {
-            throw new IllegalArgumentException(instrumentCitation + " must state a VerificationStatus");
+        if (verificationLevel == null) {
+            throw new IllegalArgumentException(instrumentCitation + " must state a VerificationLevel");
         }
         if (retrospective != effectiveFrom.isBefore(notifiedOn)) {
             throw new IllegalArgumentException(

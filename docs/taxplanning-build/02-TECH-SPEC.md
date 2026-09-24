@@ -60,7 +60,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `pack/` | `RulePack` `RulePackLayer` `RulePackRef` `RuleRow` `RulePackProvider` `ClasspathRulePackProvider` `PackAssembler` `RegimeApplicability` `MidYearCombination` `DisallowanceSet` `ConditionSet` |
 | `regime/` | `RegimeSpec` `RegimeLifecycle` `ContinuationPolicy` `InvalidationPolicy` `ElectionProtocol` `ElectionKind` `ElectionVehicle` `ElectionRoute` `ElectionState` `BindingSpec` `AfterWithdrawal` `DeadlineSpec` `FormRef` `PipelineSpec` `BehaviourId` `DisallowanceSetId` `ConditionSetId` `RegimeBehaviour` `RegimeBehaviourRegistry` `DataDrivenRegimeBehaviour` |
 | `component/` | `ComponentDefinition` `ComponentLifecycle` `DeprecationPolicy` `CashNature` `ComponentKind` `TaxTreatment` `RateBasisHint` |
-| `registry/` | `TaxYearRegistry` `TaxYearRegistryEntry` `UnsupportedTaxYearException` `GoverningInstruments` `Instrument` `Provenance` `VerificationStatus` `DraftOrFinal` |
+| `registry/` | `TaxYearRegistry` `TaxYearRegistryEntry` `UnsupportedTaxYearException` `GoverningInstruments` `Instrument` `Provenance` `LegalStatus` `VerificationLevel` `PublicationStatus` — the three status axes (D-036); only `PUBLISHED` versions enter a pack |
 | `validate/` | `PackValidator` `PackValidationException` |
 | `json/` | `PackJson` `ValueJson` `ShapeJson` `ConditionJson` `RuleJson` `RegimeJson` `RegistryJson` `JsonPackAssembler` — hand-written parsing (D-019) |
 | `generated/` | `RuleIds` `ComponentCodes` — generated from the packs, committed, verified (`W-032b`) |
@@ -69,7 +69,6 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 
 | Package | Types | Item |
 |---|---|---|
-| `registry/` | `LegalStatus` `VerificationLevel` `PublicationStatus` — **replace** `VerificationStatus` and `DraftOrFinal` | ○ `W-045e` |
 | `timeline/` | `Timeline` `TimelineReader` · `RulePackCompiler` | ○ `W-045f` · ○ `W-045g` |
 | `validate/` | `PackDiff` (**`W-139` reuses it** for the cross-year diff) · `PackLinter` `Finding` | ○ `W-045h` · ○ `W-139` |
 | `generated/` | `NodeIds` | ○ `W-045i` |
@@ -183,7 +182,7 @@ backend/src/main/resources/rulepacks/2026-27/
   content/  explanations.json
 ```
 
-**2 rule rows** (`RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE`), both `VERIFIED`; 2 regimes (`NEW_TAX_REGIME`, `FIRST_SCHEDULE_RATES`); TY 2026-27 only.
+**2 rule rows** (`RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE`), both `IN_FORCE` · `SOURCE_CHECKED` · `PUBLISHED`; 2 regimes (`NEW_TAX_REGIME`, `FIRST_SCHEDULE_RATES`); TY 2026-27 only.
 
 ### Target — ○ `W-045f`, `W-045g` (D-034)
 
@@ -472,3 +471,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-23 | T4: the shipped pack holds 2 rule rows, not 15 (the earlier figure counted `VERIFIED` markers) | `W-045c` |
 | 2026-09-24 | Name collisions: `ItrFormAdvisor` removed from the legacy list — the class is deleted | `W-045c1` |
 | 2026-09-24 | T4: the pack's rule IDs and regime codes renamed to concepts; law layer `2026-27.law.2` | `W-045d`, D-051 |
+| 2026-09-24 | T2: `LegalStatus`, `VerificationLevel`, `PublicationStatus` built, replacing `VerificationStatus` and `DraftOrFinal`; T4: pack rows carry the three axes, law layer `2026-27.law.3` | `W-045e`, D-036, D-052 |

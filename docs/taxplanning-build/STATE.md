@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045d — "taxplanning W-045d: rename rule IDs and regime codes to concepts from the Acts — OQ-4 (D-051)"
-Last updated              : 2026-09-24 (session 5 — W-045c1, W-045d done; build GREEN, 1412 tests)
-Current position          : W-045e — the three status axes (D-036)
+Last checkpoint           : W-045e — "taxplanning W-045e: split the rule status into legal, verification and publication axes — only PUBLISHED enters a pack (D-036)"
+Last updated              : 2026-09-24 (session 5 — W-045c1, W-045d, W-045e done; build GREEN, 1428 tests)
+Current position          : W-045f — the timeline, laid out by layer
 Session count             : 5
 ```
 
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-045e` — the three status axes (D-036); `W-045d2` (docs-only rulebook ID mapping) can be taken any time |
+| **Next item** | `W-045f` — the timeline, laid out by layer; `W-045d2` (docs-only rulebook ID mapping) can be taken any time |
 | **Status** | `READY` — nothing in flight, nothing blocked. Three owner questions open (OQ-1…OQ-3 below; OQ-4 decided by D-051); only `W-045m` depends on one of them |
 | **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e ·  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f ·  W-045g ·  W-045h ·  W-045i ·  W-045j ·  W-045k ·  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **56** / 171 live · in flight **0** · blocked **0**  ← computed by script; 171 = 146 base ids − 8 retired + 33 suffixed
+Counts — done **57** / 171 live · in flight **0** · blocked **0**  ← computed by script; 171 = 146 base ids − 8 retired + 33 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045e | 2026-09-24 | Three status axes (D-036, D-052): `LegalStatus`/`PublicationStatus` on `RuleVersion`, `VerificationLevel` on `Provenance`/`Instrument`/`AmendmentRef`; `VerificationStatus`, `DraftOrFinal` deleted and gated; `RulePack` refuses non-`PUBLISHED`; PENDING_NOTIFICATION ⇔ `Validity.PendingNotification`; packs migrated, law `2026-27.law.3`; `W-045n` erratum (date meaning of WITHDRAWN/STRUCK_DOWN) | `-Dtest=RuleStatusTest,RulePackLoadTest,ArchitectureTest` 47/47; unit 1428/1428
 W-045d | 2026-09-24 | OQ-4 (D-051): `S202_DEFAULT`→`NEW_TAX_REGIME`, `S202_OPTED_OUT`→`FIRST_SCHEDULE_RATES`, `RATE-SLAB-NEW-2026`→`RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-OLD-2026`→`RATE-SLAB-FIRST-SCHEDULE` (the 2025 Act heads s.202 "New tax regime", S2 p.226); law layer `2026-27.law.2`; broken packs re-checksummed; `RuleIdNamingTest`; rulebook R3 erratum (7 IDs); `W-045d2` split out (51 IDs + `S202_4_B`) | `-Dtest=RuleIdNamingTest,GeneratedConstantsTest,RulePackLoadTest` 29/29; unit 1412/1412
 W-045c1 | 2026-09-24 | Deleted L1 legacy dead code: `FbpOptimizer`, `ItrFormAdvisor`, `HrLetterContentBuilder`, `ParsedCtcDto` (package `parsing/` gone), `MarginalReliefCalculator` + its 7-test class, empty `_review/` dir; TS:121 name-collision list drops `ItrFormAdvisor` (Changes row) | `./mvnw test -pl backend -Punit` 1407/1407
 W-045c | 2026-09-23 | Appendix D (Phase 5–6 audit), Appendix E (slices→phases; legacy deletions in compiling order); W-048 spec fixed; W-049–W-052 Produces/Verify + law rows; pack is **2** rule rows not 15 (my error, corrected); T13-1 citation fixed; 4 corrections + W-045c1 accepted (D-050) | six checks; unit 1414/1414
@@ -410,6 +411,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-052 | 2026-09-24 | `W-045e`: five questions on the three status axes | Pending notification stated by both `Validity.PendingNotification` and `LegalStatus.PENDING_NOTIFICATION`, required to agree; a non-`PUBLISHED` version in a pack is **refused**, not filtered (filtering is `W-045g`); legal status does not yet gate `versionAt` — the date meaning of `WITHDRAWN`/`STRUCK_DOWN` is to be sourced by `W-045n`; `SUPERSEDED` = a transcription replaced by a correction, not an older law; no split | owner: "approved, go with your recommendations throughout" |
 | D-051 | 2026-09-24 | OQ-4: concept names for rule IDs and regime codes. The 2025 Act itself heads Part C and s.202 "New tax regime" (S2 p.224, p.226); the opted-out regime has no name in either Act | Default regime `NEW_TAX_REGIME`; opted-out `FIRST_SCHEDULE_RATES` (where its rates are — FA 2026 First Schedule Part I-B Para A); slab rules `RATE-SLAB-NEW-TAX-REGIME`, `RATE-SLAB-FIRST-SCHEDULE` (+ `-AGE-60TO79`, `-AGE-80` in the mapping); "NEW" allowed only in the statutory phrase; **OQ-4 closed**. `W-045d` split: new `W-045d2` maps the other 51 rulebook IDs + `S202_4_B`. Brief and PRD amended in place | owner: "approved, go with your recommendations throughout" |
 | D-050 | 2026-09-23 | `W-045c` findings: four row corrections and a dead-code deletion item | **All accepted** ("approved all of these"): `W-046` authors age-band rows; `W-048` adds `ReliefResult`/`ReliefContext`; `W-052` requires only `tax.cess` in Phase 5; `W-056` modifies `SlabLadder`; new item **`W-045c1`** deletes legacy dead code. L2 (the legacy compute path) still waits on OQ-3 | owner |
 | D-049 | 2026-09-23 | OQ-5 — `taxengine_does_not_swallow_failures` forbids defining exceptions, not only catching them | **Delete it.** Checkstyle `IllegalCatch` (repo-wide since `W-045a`) enforces the intent, proven on `taxengine` main code by a probe. Item `W-045b3` | owner: "sure" |
@@ -540,7 +542,7 @@ Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` a
 
 ## Notes for resume
 
-**Errata written in session 5 (§10 requires them recorded here):** `01-rulebook.md` R3 — old → new rule-ID mapping for the 7 slab IDs (`W-045d`); `03-WORK-ITEMS.md` — `W-045d`'s Verify regex allows the statutory "NEW-TAX-REGIME", and its mapping covers R3 only (rest → `W-045d2`).
+**Errata written in session 5 (§10 requires them recorded here):** `03-WORK-ITEMS.md` — `W-045n` also sources the date meaning of `WITHDRAWN`/`STRUCK_DOWN` (`W-045e`, D-052); `01-rulebook.md` R3 — old → new rule-ID mapping for the 7 slab IDs (`W-045d`); `03-WORK-ITEMS.md` — `W-045d`'s Verify regex allows the statutory "NEW-TAX-REGIME", and its mapping covers R3 only (rest → `W-045d2`).
 
 ## Session 3 — what happened (2026-09-21)
 

@@ -4,9 +4,8 @@ import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import java.net.URI;
@@ -25,9 +24,8 @@ final class RegimeFixtures {
         return new Provenance(
                 URI.create("https://egazette.gov.in/WriteReadData/2025/000000.pdf"),
                 "Income-tax Act 2025",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 9, 19),
-                VerificationStatus.VERIFIED,
+                VerificationLevel.SOURCE_CHECKED,
                 null);
     }
 

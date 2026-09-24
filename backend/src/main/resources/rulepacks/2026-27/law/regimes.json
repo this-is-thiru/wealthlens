@@ -28,9 +28,8 @@
         "provenance": {
           "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
           "sourceDescription": "s.202(1) — the default applies unless the option is exercised",
-          "draftOrFinal": "FINAL",
           "accessedOn": "2026-09-18",
-          "status": "VERIFIED"
+          "verificationLevel": "SOURCE_CHECKED"
         }
       },
       "lifecycle": {
@@ -41,9 +40,8 @@
         "provenance": {
           "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
           "sourceDescription": "s.202(1) — no entry window and no sunset stated",
-          "draftOrFinal": "FINAL",
           "accessedOn": "2026-09-18",
-          "status": "VERIFIED"
+          "verificationLevel": "SOURCE_CHECKED"
         }
       },
       "pipeline": {
@@ -54,9 +52,8 @@
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
         "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1)",
-        "draftOrFinal": "FINAL",
         "accessedOn": "2026-09-18",
-        "status": "VERIFIED"
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {
@@ -87,9 +84,8 @@
         "provenance": {
           "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
           "sourceDescription": "Income-tax Rules 2026, r.136 + Table Sl. 4 — the option is in the return, with no separate form",
-          "draftOrFinal": "FINAL",
           "accessedOn": "2026-09-18",
-          "status": "VERIFIED"
+          "verificationLevel": "SOURCE_CHECKED"
         }
       },
       "lifecycle": {
@@ -100,9 +96,8 @@
         "provenance": {
           "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
           "sourceDescription": "s.202(4) — no entry window and no sunset stated",
-          "draftOrFinal": "FINAL",
           "accessedOn": "2026-09-18",
-          "status": "VERIFIED"
+          "verificationLevel": "SOURCE_CHECKED"
         }
       },
       "pipeline": {
@@ -113,9 +108,8 @@
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
         "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(4)",
-        "draftOrFinal": "FINAL",
         "accessedOn": "2026-09-18",
-        "status": "VERIFIED"
+        "verificationLevel": "SOURCE_CHECKED"
       }
     }
   ]

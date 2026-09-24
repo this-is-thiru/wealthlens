@@ -30,6 +30,6 @@ public record GoverningInstruments(Instrument act, Instrument financeAct, Instru
 
     /** Whether any governing instrument is itself unverified, which the user should be told. */
     public boolean anyUnverified() {
-        return all().stream().anyMatch(i -> i.status() != VerificationStatus.VERIFIED);
+        return all().stream().anyMatch(i -> i.verificationLevel() == VerificationLevel.UNVERIFIED);
     }
 }

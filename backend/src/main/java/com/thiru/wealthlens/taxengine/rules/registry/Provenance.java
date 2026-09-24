@@ -6,22 +6,22 @@ import java.time.LocalDate;
 /**
  * Where a rule's value came from, and how far it has been confirmed.
  *
- * <p>Every rule row carries one. It is not documentation: the status reaches the user at the point
+ * <p>Every rule row carries one. It is not documentation: the verification level reaches the user at the point
  * the figure is used, and the whole set is the queue that says which verification work is worth
  * doing next.
  *
  * @param sourceUrl the document actually opened, not a search result or a summary
  * @param sourceDescription enough to find the passage again, e.g. "Gazette CG-DL-E-20032026-271092,
  *     rule 279(1)(c) Table"
- * @param whatToCheck what a verifier should open and what to look for; required unless the status is
- *     {@link VerificationStatus#VERIFIED}
+ * @param verificationLevel how far the reading has been confirmed
+ * @param whatToCheck what a verifier should open and what to look for; required when the level is
+ *     {@link VerificationLevel#UNVERIFIED}
  */
 public record Provenance(
         URI sourceUrl,
         String sourceDescription,
-        DraftOrFinal draftOrFinal,
         LocalDate accessedOn,
-        VerificationStatus status,
+        VerificationLevel verificationLevel,
         String whatToCheck) {
 
     /**
@@ -32,12 +32,12 @@ public record Provenance(
      * will ever settle.
      */
     public Provenance {
-        if (status == null) {
-            throw new IllegalArgumentException("Provenance.status may not be null");
+        if (verificationLevel == null) {
+            throw new IllegalArgumentException("Provenance.verificationLevel may not be null");
         }
-        if (status != VerificationStatus.VERIFIED && isBlank(whatToCheck)) {
+        if (verificationLevel == VerificationLevel.UNVERIFIED && isBlank(whatToCheck)) {
             throw new IllegalArgumentException(
-                    "Provenance with status " + status + " must say whatToCheck, but it was "
+                    "Provenance at " + verificationLevel + " must say whatToCheck, but it was "
                             + (whatToCheck == null ? "null" : "blank")
                             + " (invariant I1, sourceDescription=\"" + sourceDescription + "\")");
         }
@@ -49,6 +49,6 @@ public record Provenance(
 
     /** Whether a figure derived from this rule must be flagged where the user sees it. */
     public boolean requiresUserVisibleFlag() {
-        return status != VerificationStatus.VERIFIED;
+        return verificationLevel == VerificationLevel.UNVERIFIED;
     }
 }

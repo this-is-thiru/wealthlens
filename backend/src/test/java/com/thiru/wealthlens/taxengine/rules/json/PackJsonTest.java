@@ -13,9 +13,8 @@ import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.Presence;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
@@ -48,9 +47,8 @@ class PackJsonTest {
         return new Provenance(
                 java.net.URI.create("https://egazette.gov.in/x.pdf"),
                 "somewhere",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 9, 19),
-                VerificationStatus.VERIFIED,
+                VerificationLevel.SOURCE_CHECKED,
                 null);
     }
 
@@ -93,9 +91,9 @@ class PackJsonTest {
         void anUnknownEnumValueListsTheValidOnes() {
             assertThatThrownBy(() ->
                             PackJson.enumValue(
-                                    json("{\"status\": \"PROBABLY\"}"), "status", "p", VerificationStatus.class))
+                                    json("{\"verificationLevel\": \"PROBABLY\"}"), "verificationLevel", "p", VerificationLevel.class))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("VERIFIED")
+                    .hasMessageContaining("SOURCE_CHECKED")
                     .hasMessageContaining("PROBABLY");
         }
 
@@ -128,10 +126,10 @@ class PackJsonTest {
                     json("""
                     { "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
                       "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
-                      "draftOrFinal": "FINAL", "accessedOn": "2026-09-18", "status": "VERIFIED" }"""),
+                      "accessedOn": "2026-09-18", "verificationLevel": "SOURCE_CHECKED" }"""),
                     "p");
 
-            assertThat(read.status()).isEqualTo(VerificationStatus.VERIFIED);
+            assertThat(read.verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
             assertThat(read.sourceDescription()).contains("s.202(1) Table");
         }
 
@@ -142,8 +140,8 @@ class PackJsonTest {
             assertThatThrownBy(() -> ValueJson.provenance(
                             json("""
                             { "sourceUrl": "https://egazette.gov.in/x.pdf",
-                              "sourceDescription": "somewhere", "draftOrFinal": "FINAL",
-                              "accessedOn": "2026-09-18", "status": "NEEDS_VERIFICATION" }"""),
+                              "sourceDescription": "somewhere",
+                              "accessedOn": "2026-09-18", "verificationLevel": "UNVERIFIED" }"""),
                             "law/rates.json rules[0].provenance"))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageStartingWith("law/rates.json rules[0].provenance:")
@@ -176,7 +174,7 @@ class PackJsonTest {
                               "gazetteRef": "CG-DL-E-31032026-271439",
                               "notifiedOn": "2026-03-31", "effectiveFrom": "2026-04-01",
                               "retrospective": true,
-                              "sourceUrl": "https://egazette.gov.in/x.pdf", "status": "VERIFIED" }"""),
+                              "sourceUrl": "https://egazette.gov.in/x.pdf", "verificationLevel": "SOURCE_CHECKED" }"""),
                             "law/rates.json rules[0].versions[0].introducedBy"))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageStartingWith("law/rates.json rules[0].versions[0].introducedBy:")
@@ -490,15 +488,16 @@ class PackJsonTest {
                           "notifiedOn": "2025-08-21", "effectiveFrom": "2026-04-01",
                           "retrospective": false,
                           "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-                          "status": "VERIFIED" },
+                          "verificationLevel": "SOURCE_CHECKED" },
+                        "legalStatus": "IN_FORCE", "publicationStatus": "PUBLISHED",
                         "provenance": {
                           "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
                           "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
-                          "draftOrFinal": "FINAL", "accessedOn": "2026-09-18", "status": "VERIFIED" } } ],
+                          "accessedOn": "2026-09-18", "verificationLevel": "SOURCE_CHECKED" } } ],
                     "headProvenance": {
                       "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
                       "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
-                      "draftOrFinal": "FINAL", "accessedOn": "2026-09-18", "status": "VERIFIED" } } ] }""";
+                      "accessedOn": "2026-09-18", "verificationLevel": "SOURCE_CHECKED" } } ] }""";
 
         @Test
         void aRuleIsReadWithItsAxisVersionsAndAmendment() {
@@ -687,8 +686,8 @@ class PackJsonTest {
                         "disallowedRules": ["SAL-HRA-005"],
                         "provenance": {
                           "sourceUrl": "https://egazette.gov.in/x.pdf",
-                          "sourceDescription": "s.202(2)(a)", "draftOrFinal": "FINAL",
-                          "accessedOn": "2026-09-18", "status": "VERIFIED" } } ] }"""),
+                          "sourceDescription": "s.202(2)(a)",
+                          "accessedOn": "2026-09-18", "verificationLevel": "SOURCE_CHECKED" } } ] }"""),
                     "law/regimes.json");
 
             assertThat(sets.values().iterator().next().basis().value())
@@ -719,13 +718,13 @@ class PackJsonTest {
                     LocalDate.of(2026, 4, 1),
                     "CG-DL-E-22082025-265620",
                     java.net.URI.create("https://egazette.gov.in/WriteReadData/2025/265620.pdf"),
-                    VerificationStatus.VERIFIED);
+                    VerificationLevel.SOURCE_CHECKED);
             var rules = com.thiru.wealthlens.taxengine.rules.registry.Instrument.notified(
                     "Income-tax Rules, 2026",
                     LocalDate.of(2026, 4, 1),
                     "CG-DL-E-20032026-271092",
                     java.net.URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
-                    VerificationStatus.VERIFIED);
+                    VerificationLevel.SOURCE_CHECKED);
             return new com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments(act, act, rules);
         }
 
@@ -821,11 +820,11 @@ class PackJsonTest {
             return java.util.stream.Stream.of(
                     org.junit.jupiter.params.provider.Arguments.of(
                             "Provenance: blank whatToCheck",
-                            // Targeted at a provenance block: AmendmentRef also has a `status`
+                            // Targeted at a provenance block: AmendmentRef also has a `verificationLevel`
                             // and no `whatToCheck`, so matching on status alone hits the wrong object
                             (java.util.function.UnaryOperator<String>) s -> s.replaceFirst(
-                                    "\"accessedOn\": \"2026-09-18\",\\s*\"status\": \"VERIFIED\"",
-                                    "\"accessedOn\": \"2026-09-18\", \"status\": \"NEEDS_VERIFICATION\","
+                                    "\"accessedOn\": \"2026-09-18\",\\s*\"verificationLevel\": \"SOURCE_CHECKED\"",
+                                    "\"accessedOn\": \"2026-09-18\", \"verificationLevel\": \"UNVERIFIED\","
                                             + " \"whatToCheck\": \"  \"")),
                     org.junit.jupiter.params.provider.Arguments.of(
                             "AmendmentRef: flag contradicts its dates",
@@ -885,7 +884,7 @@ class PackJsonTest {
                               "gazetteRef": "CG-DL-E-31032026-271439",
                               "notifiedOn": "2026-03-31", "effectiveFrom": "2026-04-01",
                               "retrospective": true,
-                              "sourceUrl": "https://egazette.gov.in/x.pdf", "status": "VERIFIED" }"""),
+                              "sourceUrl": "https://egazette.gov.in/x.pdf", "verificationLevel": "SOURCE_CHECKED" }"""),
                             "p"))
                     .hasCauseInstanceOf(IllegalArgumentException.class);
         }

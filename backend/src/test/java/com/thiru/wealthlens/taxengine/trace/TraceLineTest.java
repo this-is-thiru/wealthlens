@@ -8,9 +8,8 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -33,9 +32,8 @@ class TraceLineTest {
         return new Provenance(
                 URI.create("https://example.invalid/act"),
                 "Income-tax Act 2025, s.19",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 4, 1),
-                VerificationStatus.VERIFIED,
+                VerificationLevel.SOURCE_CHECKED,
                 null);
     }
 
@@ -70,7 +68,7 @@ class TraceLineTest {
         void theProvenanceTravelsWithTheFigure() {
             Provenance provenance = hraLine().provenance();
 
-            assertThat(provenance.status()).isEqualTo(VerificationStatus.VERIFIED);
+            assertThat(provenance.verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
             assertThat(provenance.sourceDescription()).isEqualTo("Income-tax Act 2025, s.19");
         }
 

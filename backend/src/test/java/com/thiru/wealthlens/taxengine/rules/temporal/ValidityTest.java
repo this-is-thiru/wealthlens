@@ -5,9 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -95,9 +94,8 @@ class ValidityTest {
         private static final Provenance BASIS = new Provenance(
                 URI.create("https://egazette.gov.in/WriteReadData/2026/271439.pdf"),
                 "Finance Act 2026 s.123, Schedule III Note 12",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 9, 18),
-                VerificationStatus.VERIFIED,
+                VerificationLevel.SOURCE_CHECKED,
                 null);
 
         /**

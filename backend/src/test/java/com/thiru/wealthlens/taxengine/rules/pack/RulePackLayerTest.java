@@ -7,11 +7,12 @@ import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
+import com.thiru.wealthlens.taxengine.rules.registry.LegalStatus;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.AmendmentRef;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -42,9 +43,8 @@ class RulePackLayerTest {
         return new Provenance(
                 URI.create("https://egazette.gov.in/WriteReadData/2025/000000.pdf"),
                 "Income-tax Act 2025, s.202(1) Table",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 9, 19),
-                VerificationStatus.VERIFIED,
+                VerificationLevel.SOURCE_CHECKED,
                 null);
     }
 
@@ -55,7 +55,7 @@ class RulePackLayerTest {
                 LocalDate.of(2026, 4, 1),
                 "CG-DL-E-21082025-000000",
                 URI.create("https://egazette.gov.in/WriteReadData/2025/000000.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
     }
 
     private static GoverningInstruments instruments() {
@@ -67,13 +67,13 @@ class RulePackLayerTest {
                         LocalDate.of(2026, 4, 1),
                         "CG-DL-E-31032026-271439",
                         URI.create("https://egazette.gov.in/WriteReadData/2026/271439.pdf"),
-                        VerificationStatus.VERIFIED),
+                        VerificationLevel.SOURCE_CHECKED),
                 Instrument.notified(
                         "Income-tax Rules, 2026",
                         LocalDate.of(2026, 4, 1),
                         "CG-DL-E-20032026-271092",
                         URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
-                        VerificationStatus.VERIFIED));
+                        VerificationLevel.SOURCE_CHECKED));
     }
 
     private static Map<RulePackLayer, RulePackRef> layers(
@@ -97,7 +97,7 @@ class RulePackLayerTest {
                 LocalDate.of(2026, 4, 1),
                 false,
                 URI.create("https://egazette.gov.in/WriteReadData/2026/271439.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
     }
 
     private static RuleRow slabRule() {
@@ -112,6 +112,8 @@ class RulePackLayerTest {
                         Provision.notYetVerified("Income-tax Act, 1961"),
                         Provision.present("Income-tax Act, 2025", "s.202(1)"),
                         introducedByFinanceAct(),
+                        LegalStatus.IN_FORCE,
+                        PublicationStatus.PUBLISHED,
                         provenance())),
                 provenance());
     }

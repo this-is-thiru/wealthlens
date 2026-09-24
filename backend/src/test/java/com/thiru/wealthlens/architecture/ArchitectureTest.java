@@ -273,7 +273,9 @@ class ArchitectureTest {
                             + " the reverse.");
 
     /**
-     * {@code ComputationStep} was withdrawn in favour of the DAG's {@code ComputationNode}.
+     * Names withdrawn in favour of another abstraction: {@code ComputationStep} for the DAG's
+     * {@code ComputationNode}; {@code VerificationStatus} and {@code DraftOrFinal} for the three
+     * status axes (D-036, {@code W-045e}).
      *
      * <p>Not an ArchUnit rule: ArchUnit reads bytecode, and this is a name that must not appear in
      * source at all. It is a gate because the withdrawal was already missed once — the name survived
@@ -282,9 +284,10 @@ class ArchitectureTest {
      */
     @Test
     void withdrawn_abstraction_names_do_not_appear_in_source() throws IOException {
-        // Split so this test does not match itself.
-        // Split so the literal does not match this file's own body.
-        String withdrawn = "Computation" + "Step";
+        Map<String, String> withdrawn = Map.of(
+                "ComputationStep", "ComputationNode (23-architecture-consolidation.md A4)",
+                "VerificationStatus", "VerificationLevel (D-036)",
+                "DraftOrFinal", "LegalStatus on the rule version (D-036)");
         Path root = Path.of("src");
         try (Stream<Path> paths = Files.walk(root)) {
             List<String> offenders = paths
@@ -296,7 +299,8 @@ class ArchitectureTest {
                     .filter(f -> !f.endsWith("ArchitectureTest.java"))
                     .filter(f -> {
                         try {
-                            return Files.readString(f).contains(withdrawn);
+                            String source = Files.readString(f);
+                            return withdrawn.keySet().stream().anyMatch(source::contains);
                         } catch (IOException e) {
                             throw new IllegalStateException("could not read " + f, e);
                         }
@@ -305,8 +309,7 @@ class ArchitectureTest {
                     .toList();
             if (!offenders.isEmpty()) {
                 throw new AssertionError(
-                        withdrawn + " was withdrawn in favour of ComputationNode (23-architecture-consolidation.md A4),"
-                                + " but still appears in: " + offenders);
+                        "Withdrawn names (name → replacement: " + withdrawn + ") still appear in: " + offenders);
             }
         }
     }

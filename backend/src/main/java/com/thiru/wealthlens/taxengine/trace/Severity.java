@@ -23,7 +23,7 @@ public enum Severity {
      * The rule behind this line is not fully verified.
      *
      * <p>Distinct from the other three because its subject is the <i>rule</i> rather than the
-     * taxpayer's situation: it is what a pack's {@code VerificationStatus} becomes when it reaches
+     * taxpayer's situation: it is what an {@code UNVERIFIED} {@code VerificationLevel} becomes when it reaches
      * a reader. A figure computed from an unverified rule is still computed and still shown — it is
      * labelled, not withheld.
      */

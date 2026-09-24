@@ -478,6 +478,12 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > out to `W-045d2` (§7 sizing: 58 names, each needing its own source and the owner's choice).
 > Verified by: `RuleIdNamingTest`; `grep -oE` count over `01-rulebook.md` (58 distinct IDs).
 
+> **Erratum (W-045e, 2026-09-24):** `W-045n` gains one question, decided in **D-052**: from the
+> sources, what `LegalStatus.WITHDRAWN` and `STRUCK_DOWN` mean for **dates**, i.e. whether a version
+> so marked stops applying from a date or never applied. Until that is sourced, legal status does not
+> change which version `RuleRow.versionAt` selects; only `Validity` does.
+> Verified by: `RuleRow.versionAt` filters on `validity().contains` alone.
+
 **Standing rules from here on (D-043)** — every later item that models a section must also:
 
 1. mark the section `MODELLED` in `coverage.json` (`W-045j`);

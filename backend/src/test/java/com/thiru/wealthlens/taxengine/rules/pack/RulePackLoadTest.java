@@ -16,7 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
 import com.thiru.wealthlens.taxengine.rules.registry.TaxYearRegistry;
 import com.thiru.wealthlens.taxengine.rules.registry.TaxYearRegistryEntry;
 import com.thiru.wealthlens.taxengine.rules.registry.UnsupportedTaxYearException;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidator;
 import java.net.URI;
@@ -49,7 +49,7 @@ class RulePackLoadTest {
                 LocalDate.of(2026, 4, 1),
                 "CG-DL-E-22082025-265620",
                 URI.create("https://egazette.gov.in/WriteReadData/2025/265620.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
     }
 
     private static GoverningInstruments instruments() {
@@ -61,7 +61,7 @@ class RulePackLoadTest {
                         LocalDate.of(2026, 4, 1),
                         "CG-DL-E-20032026-271092",
                         URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
-                        VerificationStatus.VERIFIED));
+                        VerificationLevel.SOURCE_CHECKED));
     }
 
     private static RulePack load(String root, TaxYearId year) {
@@ -99,7 +99,7 @@ class RulePackLoadTest {
 
             assertThat(pack.computationCacheKey())
                     .startsWith("2026-27|")
-                    .contains("law=2026-27.law.2")
+                    .contains("law=2026-27.law.3")
                     .doesNotContain("content=");
         }
 

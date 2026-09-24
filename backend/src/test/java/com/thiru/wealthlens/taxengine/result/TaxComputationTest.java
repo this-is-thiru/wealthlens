@@ -13,9 +13,8 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -60,9 +59,8 @@ class TaxComputationTest {
         return new Provenance(
                 URI.create("https://egazette.gov.in/WriteReadData/2025/000000.pdf"),
                 "Income-tax Act 2025",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 9, 19),
-                VerificationStatus.VERIFIED,
+                VerificationLevel.SOURCE_CHECKED,
                 null);
     }
 

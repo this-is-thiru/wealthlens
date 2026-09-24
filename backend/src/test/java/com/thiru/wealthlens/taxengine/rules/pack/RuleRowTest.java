@@ -7,9 +7,10 @@ import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
+import com.thiru.wealthlens.taxengine.rules.registry.LegalStatus;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.AmendmentRef;
 import com.thiru.wealthlens.taxengine.rules.temporal.MissingTemporalCoordinateException;
 import com.thiru.wealthlens.taxengine.rules.temporal.NoRuleVersionException;
@@ -41,9 +42,8 @@ class RuleRowTest {
         return new Provenance(
                 URI.create("https://egazette.gov.in/WriteReadData/2025/000000.pdf"),
                 "Income-tax Act 2025, s.19(1) Table Sl. 2(a)",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 9, 19),
-                VerificationStatus.VERIFIED,
+                VerificationLevel.SOURCE_CHECKED,
                 null);
     }
 
@@ -55,7 +55,7 @@ class RuleRowTest {
                 effectiveFrom,
                 effectiveFrom.isBefore(notifiedOn),
                 URI.create("https://egazette.gov.in/WriteReadData/2026/271439.pdf"),
-                VerificationStatus.VERIFIED);
+                VerificationLevel.SOURCE_CHECKED);
     }
 
     private static RuleVersion version(Validity validity, String amount) {
@@ -67,6 +67,11 @@ class RuleRowTest {
                 Provision.present("Income-tax Act, 1961", "s.16(ia)"),
                 Provision.present("Income-tax Act, 2025", "s.19(1) Table Sl. 2(a)"),
                 amendment(LocalDate.of(2026, 4, 1), LocalDate.of(2026, 3, 31)),
+                // A pending validity must be stated as pending in the legal status too (D-052)
+                validity instanceof Validity.PendingNotification
+                        ? LegalStatus.PENDING_NOTIFICATION
+                        : LegalStatus.IN_FORCE,
+                PublicationStatus.PUBLISHED,
                 provenance());
     }
 
@@ -258,6 +263,8 @@ class RuleRowTest {
                                     null,
                                     Provision.present("Income-tax Act, 2025", "s.19"),
                                     amendment(LocalDate.of(2026, 4, 1), LocalDate.of(2026, 3, 31)),
+                                    LegalStatus.IN_FORCE,
+                                    PublicationStatus.PUBLISHED,
                                     provenance()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("both Acts");
@@ -273,7 +280,7 @@ class RuleRowTest {
                                     LocalDate.of(2026, 4, 1),
                                     true,
                                     URI.create("https://egazette.gov.in/x.pdf"),
-                                    VerificationStatus.VERIFIED))
+                                    VerificationLevel.SOURCE_CHECKED))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("must agree");
         }

@@ -239,7 +239,7 @@ class PackJsonWellFormedTest {
         void everyProvenanceThatIsNotVerifiedSaysWhatToCheck() {
             // Invariant I1, in the data
             for (JsonNode node : json("law/rates.json").findValues("provenance")) {
-                if (!"VERIFIED".equals(node.get("status").asText())) {
+                if ("UNVERIFIED".equals(node.get("verificationLevel").asText())) {
                     assertThat(node.has("whatToCheck")).isTrue();
                 }
             }

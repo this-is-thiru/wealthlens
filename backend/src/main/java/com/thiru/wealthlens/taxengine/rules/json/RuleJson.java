@@ -3,7 +3,9 @@ package com.thiru.wealthlens.taxengine.rules.json;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.registry.LegalStatus;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
+import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
@@ -78,6 +80,8 @@ public final class RuleJson {
                                 PackJson.object(node, "provision2025", path), path + ".provision2025"),
                         ValueJson.amendment(
                                 PackJson.object(node, "introducedBy", path), path + ".introducedBy"),
+                        PackJson.enumValue(node, "legalStatus", path, LegalStatus.class),
+                        PackJson.enumValue(node, "publicationStatus", path, PublicationStatus.class),
                         provenance));
     }
 

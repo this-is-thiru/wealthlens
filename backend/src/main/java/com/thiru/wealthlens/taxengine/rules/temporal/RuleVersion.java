@@ -3,7 +3,9 @@ package com.thiru.wealthlens.taxengine.rules.temporal;
 import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
+import com.thiru.wealthlens.taxengine.rules.registry.LegalStatus;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
+import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
 import java.util.List;
 
 /**
@@ -24,6 +26,9 @@ import java.util.List;
  * @param provision1961 where it lives in the Income-tax Act 1961
  * @param provision2025 where it lives in the Income-tax Act 2025
  * @param introducedBy the instrument that brought this version into being
+ * @param legalStatus what the law says about this version; {@link LegalStatus#PENDING_NOTIFICATION}
+ *     exactly when {@code validity} is a {@link Validity.PendingNotification}, which names the interim rule
+ * @param publicationStatus where the version is in our workflow; only {@code PUBLISHED} enters a pack
  * @param provenance the source this version was read from
  */
 public record RuleVersion(
@@ -34,6 +39,8 @@ public record RuleVersion(
         Provision provision1961,
         Provision provision2025,
         AmendmentRef introducedBy,
+        LegalStatus legalStatus,
+        PublicationStatus publicationStatus,
         Provenance provenance) {
 
     public RuleVersion {
@@ -51,6 +58,30 @@ public record RuleVersion(
         if (provenance == null) {
             throw new IllegalArgumentException("A rule version must say where it was read from");
         }
+        if (legalStatus == null || publicationStatus == null) {
+            throw new IllegalArgumentException(
+                    "A rule version must state its legal status and its publication status");
+        }
+        requirePendingNotificationStatedTwiceAlike(validity, legalStatus);
         conditions = conditions == null ? List.of() : List.copyOf(conditions);
+    }
+
+    /**
+     * Pending notification is said twice — by the validity, which names the interim rule, and by the
+     * legal status — so the two may not disagree (D-052).
+     */
+    private static void requirePendingNotificationStatedTwiceAlike(Validity validity, LegalStatus legalStatus) {
+        boolean pendingValidity = validity instanceof Validity.PendingNotification;
+        boolean pendingStatus = legalStatus == LegalStatus.PENDING_NOTIFICATION;
+        if (pendingStatus && !pendingValidity) {
+            throw new IllegalArgumentException(
+                    "A PENDING_NOTIFICATION version must have a PendingNotification validity naming its"
+                            + " interim rule, but has " + validity);
+        }
+        if (pendingValidity && !pendingStatus) {
+            throw new IllegalArgumentException(
+                    "A version with a PendingNotification validity must have legal status"
+                            + " PENDING_NOTIFICATION, but has " + legalStatus);
+        }
     }
 }

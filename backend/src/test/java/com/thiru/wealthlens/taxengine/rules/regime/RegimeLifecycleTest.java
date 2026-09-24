@@ -13,9 +13,8 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
@@ -38,9 +37,8 @@ class RegimeLifecycleTest {
         return new Provenance(
                 URI.create("https://egazette.gov.in/WriteReadData/2025/000000.pdf"),
                 "Income-tax Act 2025, s.201(2)",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 9, 19),
-                VerificationStatus.VERIFIED,
+                VerificationLevel.SOURCE_CHECKED,
                 null);
     }
 
@@ -232,11 +230,10 @@ class RegimeLifecycleTest {
 
     // --------------------------------------------------------------- W-026b
 
-    private static Provenance provenance(VerificationStatus status, String whatToCheck) {
+    private static Provenance provenance(VerificationLevel status, String whatToCheck) {
         return new Provenance(
                 URI.create("https://egazette.gov.in/WriteReadData/2026/271092.pdf"),
                 "Income-tax Rules 2026, rule 136 + Table Sl. 4",
-                DraftOrFinal.FINAL,
                 LocalDate.of(2026, 9, 19),
                 status,
                 whatToCheck);
@@ -283,7 +280,7 @@ class RegimeLifecycleTest {
                     java.util.Optional.empty(),
                     new DeadlineSpec.DueDateUnder("263(1)"),
                     s202Binding(),
-                    provenance(VerificationStatus.VERIFIED, null));
+                    provenance(VerificationLevel.SOURCE_CHECKED, null));
 
             assertThat(protocol.form()).isEmpty();
             assertThat(protocol.deadline()).isEqualTo(new DeadlineSpec.DueDateUnder("263(1)"));
@@ -299,7 +296,7 @@ class RegimeLifecycleTest {
                                     java.util.Optional.of(new FormRef("10-IEA", "Regime option")),
                                     new DeadlineSpec.DueDateUnder("263(1)"),
                                     s202Binding(),
-                                    provenance(VerificationStatus.VERIFIED, null)))
+                                    provenance(VerificationLevel.SOURCE_CHECKED, null)))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("does not exist");
         }
@@ -313,7 +310,7 @@ class RegimeLifecycleTest {
                                     java.util.Optional.empty(),
                                     new DeadlineSpec.DueDateUnder("263(1)"),
                                     s202Binding(),
-                                    provenance(VerificationStatus.VERIFIED, null)))
+                                    provenance(VerificationLevel.SOURCE_CHECKED, null)))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("and not what");
         }
@@ -329,10 +326,10 @@ class RegimeLifecycleTest {
                     new DeadlineSpec.DueDateUnder("139(1)"),
                     s202Binding(),
                     provenance(
-                            VerificationStatus.NEEDS_VERIFICATION,
+                            VerificationLevel.UNVERIFIED,
                             "open the Income-tax Rules 1962 for the TY 2025-26 option form"));
 
-            assertThat(protocol.provenance().status()).isEqualTo(VerificationStatus.NEEDS_VERIFICATION);
+            assertThat(protocol.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
             assertThat(protocol.form()).map(FormRef::number).contains("10-IEA");
         }
 
@@ -344,7 +341,7 @@ class RegimeLifecycleTest {
                     java.util.Optional.empty(),
                     new DeadlineSpec.NoDeadline(),
                     BindingSpec.free(),
-                    provenance(VerificationStatus.VERIFIED, null));
+                    provenance(VerificationLevel.SOURCE_CHECKED, null));
 
             assertThat(protocol.kind()).isEqualTo(ElectionKind.DEFAULT_NO_ACTION);
             assertThat(protocol.binding().isUnlimitedWithdrawals()).isTrue();
@@ -464,7 +461,7 @@ class RegimeLifecycleTest {
                 java.util.Optional.empty(),
                 new DeadlineSpec.NoDeadline(),
                 BindingSpec.free(),
-                provenance(VerificationStatus.VERIFIED, null));
+                provenance(VerificationLevel.SOURCE_CHECKED, null));
     }
 
     /** NEW_TAX_REGIME — 16-getting-started.md:222-231. */
@@ -484,11 +481,11 @@ class RegimeLifecycleTest {
                         DateRange.fromOnwards(LocalDate.of(2024, 4, 1)),
                         new ContinuationPolicy.ContinueIndefinitely(),
                         new InvalidationPolicy.NoInvalidation(),
-                        provenance(VerificationStatus.VERIFIED, null)),
+                        provenance(VerificationLevel.SOURCE_CHECKED, null)),
                 true,
                 defaultPipeline(),
                 java.util.Optional.empty(),
-                provenance(VerificationStatus.VERIFIED, null));
+                provenance(VerificationLevel.SOURCE_CHECKED, null));
     }
 
     @Nested
@@ -522,7 +519,7 @@ class RegimeLifecycleTest {
                                 java.util.Optional.empty(),
                                 new DeadlineSpec.DueDateUnder("263(1)"),
                                 BindingSpec.free(),
-                                provenance(VerificationStatus.VERIFIED, null)),
+                                provenance(VerificationLevel.SOURCE_CHECKED, null)),
                         base.lifecycle(), true, base.pipeline(), base.behaviour(), base.provenance());
             })
                     .isInstanceOf(IllegalArgumentException.class)

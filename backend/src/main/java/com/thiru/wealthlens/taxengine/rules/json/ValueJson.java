@@ -1,8 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
-import com.thiru.wealthlens.taxengine.rules.registry.DraftOrFinal;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
-import com.thiru.wealthlens.taxengine.rules.registry.VerificationStatus;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.AmendmentRef;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.Presence;
@@ -27,9 +26,8 @@ public final class ValueJson {
         new Provenance(
                         PackJson.uri(node, "sourceUrl", path),
                         PackJson.text(node, "sourceDescription", path),
-                        PackJson.enumValue(node, "draftOrFinal", path, DraftOrFinal.class),
                         PackJson.date(node, "accessedOn", path),
-                        PackJson.enumValue(node, "status", path, VerificationStatus.class),
+                        PackJson.enumValue(node, "verificationLevel", path, VerificationLevel.class),
                         PackJson.optionalText(node, "whatToCheck", path).orElse(null)));
     }
 
@@ -55,7 +53,7 @@ public final class ValueJson {
                         PackJson.date(node, "effectiveFrom", path),
                         PackJson.bool(node, "retrospective", path),
                         PackJson.uri(node, "sourceUrl", path),
-                        PackJson.enumValue(node, "status", path, VerificationStatus.class)));
+                        PackJson.enumValue(node, "verificationLevel", path, VerificationLevel.class)));
     }
 
     /** A window, open-ended where {@code to} is absent. */

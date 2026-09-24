@@ -33,23 +33,23 @@
             "effectiveFrom": "2026-04-01",
             "retrospective": false,
             "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-            "status": "VERIFIED"
+            "verificationLevel": "SOURCE_CHECKED"
           },
+          "legalStatus": "IN_FORCE",
+          "publicationStatus": "PUBLISHED",
           "provenance": {
             "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
             "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
-            "draftOrFinal": "FINAL",
             "accessedOn": "2026-09-18",
-            "status": "VERIFIED"
+            "verificationLevel": "SOURCE_CHECKED"
           }
         }
       ],
       "headProvenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
         "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
-        "draftOrFinal": "FINAL",
         "accessedOn": "2026-09-18",
-        "status": "VERIFIED"
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {
@@ -81,23 +81,23 @@
             "effectiveFrom": "2026-04-01",
             "retrospective": false,
             "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
-            "status": "VERIFIED"
+            "verificationLevel": "SOURCE_CHECKED"
           },
+          "legalStatus": "IN_FORCE",
+          "publicationStatus": "PUBLISHED",
           "provenance": {
             "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
             "sourceDescription": "Gazette CG-DL-E-31032026-271439, First Schedule Part I, B, Paragraph A",
-            "draftOrFinal": "FINAL",
             "accessedOn": "2026-09-18",
-            "status": "VERIFIED"
+            "verificationLevel": "SOURCE_CHECKED"
           }
         }
       ],
       "headProvenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
         "sourceDescription": "Gazette CG-DL-E-31032026-271439, First Schedule Part I, B, Paragraph A",
-        "draftOrFinal": "FINAL",
         "accessedOn": "2026-09-18",
-        "status": "VERIFIED"
+        "verificationLevel": "SOURCE_CHECKED"
       }
     }
   ]

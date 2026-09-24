@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.2",
-      "checksum": "sha256:1a05adc11a03274e975d11f7cc38ac01dec189f3e8a4c4ab25f00918cadb9911"
+      "version": "2026-27.law.3",
+      "checksum": "sha256:5bee7c1e44f092783a9fe89d7c92488f5609006c7a8b392fec50464d3220ce12"
     },
     "exec": {
       "version": "2026-27.exec.1",
@@ -26,7 +26,7 @@
       "inForceFrom": "2026-04-01",
       "gazetteRef": "CG-DL-E-22082025-265620",
       "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-      "status": "VERIFIED"
+      "verificationLevel": "SOURCE_CHECKED"
     },
     "financeAct": {
       "citation": "Finance Act, 2026 (4 of 2026)",
@@ -34,14 +34,14 @@
       "inForceFrom": "2026-04-01",
       "gazetteRef": "CG-DL-E-31032026-271439",
       "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
-      "status": "VERIFIED"
+      "verificationLevel": "SOURCE_CHECKED"
     },
     "rules": {
       "citation": "Income-tax Rules, 2026 (G.S.R. 198(E), 20-03-2026)",
       "inForceFrom": "2026-04-01",
       "gazetteRef": "CG-DL-E-20032026-271092",
       "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-      "status": "VERIFIED",
+      "verificationLevel": "SOURCE_CHECKED",
       "note": "amendment chain to G.S.R. 656(E) of 24-07-2026 not traced"
     }
   }
