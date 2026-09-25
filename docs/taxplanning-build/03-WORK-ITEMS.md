@@ -683,6 +683,20 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 - **Do** read the anchor slots (`NodeIds.TOTAL_INCOME`, `NodeIds.TAX_BY_BASIS`, `NodeIds.NET_PAYABLE`, …) into `TaxComputation`; a missing anchor fails with its name.
 - **Verify** `./mvnw test -pl backend -Dtest=ComputationProjectorTest`
 
+> **Erratum (W-052b, 2026-09-25, D-081):**
+> - **The constants.** `NodeIds.TOTAL_INCOME`, `TAX_BY_BASIS` and `NET_PAYABLE` don't exist; the
+>   generated constants are named for the timeline's slots.
+> - **The anchors:**
+>   - `totalIncome` ← **`round.totalincome`**: s.516, "shall be deemed to be the total income";
+>   - `taxByBasis` ← **`tax.bybasis`**: before rebate, as the field's javadoc says;
+>   - `netPayableBeforeFilingEffects` ← **`tax.netpayable`**, unrounded: `round.netpayable` follows
+>     `interest.and.fees`, which is date-dependent (`DR 23` A6), and rounding here would be a third
+>     rounding point.
+> - **The signature** is `project(Result, EngineInputs, ComputationId)`. The year and regime come from
+>   the inputs, which must match the run's fingerprint.
+>
+> Verified by: `NodeIds`; `TaxComputation` javadoc; `DR 15` B3 graph; S2 s.516.
+
 ### W-052c — TY 2025-26 on the timeline for the Phase 5 rules *(added by D-043)*
 - [ ] **Produces** 2025-26 versions of the Phase 5 rules in `rulepacks/timeline/law/`; `rulepacks/2025-26.lock.json`; a `TaxYearRegistry` entry for 2025-26 + `TaxYear2025RulePackTest`
 - **Spec** **D-041**; the sources confirmed by `W-045n`
@@ -702,6 +716,12 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > (STATE **Q2**, D-029): `NodeRegistry.rulesNotEvaluatedByAnyNode` runs against both real rule packs,
 > with a checked-in list of rules not yet implemented that **may only shrink** — a rule that leaves
 > the list may never return to it.
+
+> **Erratum (W-052b, 2026-09-25, D-081):** `DR 08`'s "Expected" figures are **rounded**, so `W-053`
+> compares them against the run's **`round.netpayable`** value, not against
+> `TaxComputation.netPayableBeforeFilingEffects`, which is `tax.netpayable` unrounded (T1-N3: the
+> expected ₹52,000 equals both only because 52,000 is already a multiple of ten; T1-N2 expects ₹10, where
+> the unrounded figure is ₹10.40).
 
 > **Erratum (W-050, 2026-09-25, D-076):** `W-053`'s Verify also asserts that a pipeline run's trace
 > has **exactly two** `StepKind.ROUNDING` lines, citing `RATE-ROUND-TOTAL-INCOME` and

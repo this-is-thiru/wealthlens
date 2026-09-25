@@ -87,14 +87,14 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `input/` (named interface `input`) | `EngineInputs` (10 components: `taxYear` `regime` `temporal` `entered` `assessee` `family` `ledgers` `elections` `capitalGains` `filing`) `Assessee` (sealed: `Individual` `Huf`; nests `ResidentialStatus`) `FamilySnapshot` `LedgerSnapshot` `RegimeElectionSnapshot` `FilingFacts` `EnteredFacts` `CapitalGainsInput` `InputsFingerprint` |
 | `pipeline/` | `ComputationNode` `NodeContext` `NodeResult` `NodeRegistry` `NodeValue` (sealed: **`MoneyValue`, `TaxByBasis` only**) `SpecialRateId` `TopologicalSort` `PipelineRunner` |
 | `trace/` | `TraceLine` `TraceAnnotation` `Notice` `StepKind` `Severity` |
-| `result/` (named interface `result`) | `TaxComputation` `FilingPosition` `ComputationId` `ComputationReceipt` |
+| `result/` (named interface `result`) | `TaxComputation` `FilingPosition` `ComputationId` `ComputationReceipt` `ComputationProjector` (a run → `TaxComputation`: `round.totalincome`, `tax.bybasis`, `tax.netpayable`, D-081) |
 
 ### `taxengine` — planned
 
 | Package | Types | Item |
 |---|---|---|
 | `input/` | `Assessee` (sealed) `Individual` `Huf` — **replace** `TaxpayerFacts`; `PersonType` gains `HUF` | ✅ `W-045l` (D-062) |
-| `result/` | `ComputationProjector` | ○ `W-052b` |
+| `result/` | `ComputationProjector` | ✅ `W-052b` (D-081) |
 | `node/` | one class per node — T6 | ◐ `TaxByBasisNode` (`W-046`), `RebateNode` (`W-049`), `RoundTotalIncomeNode`, `RoundNetPayableNode` (`W-050`), `CessNode` (`W-051`), `NetPayableNode` (`W-052`); the rest Phases 5–9 |
 | `election/` | `Election` `ElectionResolver` `ElectionOutcome` | ○ Phase 9 |
 | `proration/` | `ProrationBasis` `CompletedMonths` `CalendarMonths` `Days` `OccupationPeriods` | ○ `W-066` |
@@ -502,3 +502,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2/T4/T6: `node/RoundTotalIncomeNode`, `RoundNetPayableNode` (sharing `RoundingStep`) built; rows `RATE-ROUND-TOTAL-INCOME`, `RATE-ROUND-PAYABLE` (TY 2026-27, `rounding {toNearest: 10}`); lock → `2026-27.law.8`; `round.netpayable` requires `tax.netpayable` only; 2025 s.516 and 1961 ss.288A/288B `MODELLED` (manager `RuleRounding`), catalogue `SEC-ROUNDING-OFF-TOTAL-INCOME`, `-AMOUNT-PAYABLE` | `W-050`, D-076 |
 | 2026-09-25 | T2/T4/T6: `node/CessNode` built — 4% of the whole post-rebate tax via row `RATE-HEALTH-EDUCATION-CESS` (`PercentOfBase`, FA 2026 s.3(15) / s.2(6), TY 2026-27); requires `tax.afterrebate` only until `W-056` adds `tax.surcharge`; lock → `2026-27.law.9` | `W-051`, D-079 |
 | 2026-09-25 | T2/T6: `node/NetPayableNode` built — tax after rebate (whole) + cess, `NodeResult.untraced`; requires `tax.afterrebate`, `tax.cess`. No pack change | `W-052`, D-080 |
+| 2026-09-25 | T2: `result/ComputationProjector` built — `project(Result, EngineInputs, ComputationId)`; anchors `round.totalincome`, `tax.bybasis`, `tax.netpayable` (unrounded); inputs must match the run's fingerprint | `W-052b`, D-081 |

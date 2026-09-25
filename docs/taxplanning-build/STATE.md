@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-052 — "taxplanning W-052: add NetPayableNode — the whole tax after rebate plus the cess, untraced as a sum of traced figures (D-080)"
-Last updated              : 2026-09-25 (session 7 — W-049 … W-052 done; build GREEN, 1585 tests)
-Current position          : W-052b — runner result → TaxComputation (not started)
+Last checkpoint           : W-052b — "taxplanning W-052b: add ComputationProjector — a run becomes a TaxComputation from round.totalincome, tax.bybasis and tax.netpayable (D-081)"
+Last updated              : 2026-09-25 (session 7 — W-049 … W-052b done; build GREEN, 1592 tests)
+Current position          : W-052c — TY 2025-26 on the timeline for the Phase 5 rules (not started)
 Session count             : 7
 ```
 
@@ -53,7 +53,7 @@ Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
-Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b ·  W-052c ·  W-053 ·
+Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **84** / 181 live · in flight **0** · blocked **0**  ← computed by script; 181 = 146 base ids − 8 retired + 43 suffixed
+Counts — done **85** / 181 live · in flight **0** · blocked **0**  ← computed by script; 181 = 146 base ids − 8 retired + 43 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-052b | 2026-09-25 | ComputationProjector (D-081): `result/ComputationProjector.project(Result, EngineInputs, ComputationId)`; `totalIncome` ← `round.totalincome` (s.516), `taxByBasis` ← `tax.bybasis` (before rebate), `netPayableBeforeFilingEffects` ← `tax.netpayable` (unrounded; round.netpayable follows date-dependent interest); inputs must match the run's fingerprint; missing / wrong-kind anchors refused naming the slot. STATE Q3 answered; W-053 erratum (compare against round.netpayable) | `ComputationProjectorTest` 7/7 + bite probe; clean unit 1592/1592
 W-052 | 2026-09-25 | NetPayableNode (D-080): requires `tax.afterrebate` + `tax.cess` (not cess only), value = whole post-rebate tax + cess, `NodeResult.untraced` (no rule states a sum; shown as round.netpayable's `in`); W-056 adds surcharge, Phase 9 credits. No pack change. Copied from DR 08 totals: T1-N1 0; T1-N3 52,000; T1-N2 10.40; T1-N4 73,403.20 / 73,412.04; T1-O2 13,002.08; T2-1 11,23,200. By hand: 1,04,000 with special-rate tax | `NetPayableNodeTest` 11/11 + 2 bite probes; clean unit 1585/1585
 W-051 | 2026-09-25 | CessNode (D-079): row `RATE-HEALTH-EDUCATION-CESS` (`PercentOfBase` 4% of `INCOME_TAX_AND_SURCHARGE`; FA 2026 s.3(15) / s.2(6); TY 2026-27; AllRegimes); `CessNode` requires `tax.afterrebate` only (W-056 adds `tax.surcharge`), charges the whole post-rebate tax, one `TAX` line, refuses a non-percentage row; lock → `2026-27.law.9`; `RuleIds` regenerated; the order is tested structurally (build note B1). Copied from DR 08: T2-1 43,200; T1-N1 0; T1-N2 0.40; T1-N3 2,000; T1-N4 2,823.20 / 2,823.54; T1-O2 500.08. By hand: 4% × (0 + 1,00,000 special) = 4,000 | `CessNodeTest` 12/12 + Verify 124/124 + 2 bite probes; clean unit 1574/1574
 W-050 | 2026-09-25 | Rounding nodes (D-076): rows `RATE-ROUND-TOTAL-INCOME` (1961 s.288A; 2025 s.516) and `RATE-ROUND-PAYABLE` (1961 s.288B; 2025 s.516), TY 2026-27, `rounding {toNearest: 10}`; `RoundTotalIncomeNode` (reads `totalincome`), `RoundNetPayableNode` (reads `tax.netpayable` only; W-112 adds interest) via shared `RoundingStep` — one `ROUNDING` line each, ₹10 only; lock → `2026-27.law.8`; `RuleIds` regenerated; s.516, ss.288A/288B `MODELLED` (manager `RuleRounding`), catalogue `SEC-ROUNDING-OFF-TOTAL-INCOME`/`-AMOUNT-PAYABLE` (build notes B1–B4). Copied from DR 08/13: 10.40→10; 73,403.20→73,400; 73,412.04→73,410; 13,002.08→13,000; 12,90,837.60 and 12,90,843.84→12,90,840; −1,234.99→−1,230. By hand from s.516: 12,00,004.60→12,00,000; 12,00,005→12,00,010 | `RoundingNodesTest` 14/14 + Verify 112/112 + 2 bite probes; clean unit 1562/1562
@@ -438,6 +439,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-081 | 2026-09-25 | `W-052b`: which slots are the computation's anchors | `ComputationProjector.project(Result, EngineInputs, ComputationId)`: `totalIncome` ← `round.totalincome` (s.516 "deemed to be the total income"); `taxByBasis` ← `tax.bybasis` (before rebate, per its javadoc); `netPayableBeforeFilingEffects` ← `tax.netpayable` unrounded (`round.netpayable` follows date-dependent interest; no third rounding point). Year and regime from the inputs, which must match the run's fingerprint; the caller passes the id. Missing anchor, wrong value type or fingerprint mismatch → `IllegalArgumentException` naming it. `W-053` compares DR 08's rounded figures against `round.netpayable` (erratum) | owner: "approved — C1–C3 as recommended" |
 | D-080 | 2026-09-25 | `W-052`: what the net payable reads and whether it is traced | `NetPayableNode` requires `tax.afterrebate` and `tax.cess` (not `tax.cess` only: since W-051 the cess slot is the cess alone); value = the whole post-rebate tax + cess; `W-056` adds the surcharge, the Phase 9 credits item subtracts credits under its own rule. **Untraced** (`NodeResult.untraced`): no rule exists for a sum (`DR 15` "—"), a sum-only row can't load, and the figure is `round.netpayable`'s ROUNDING `in`. No pack change | owner: "approved — C1–C3 as recommended" |
 | D-079 | 2026-09-25 | `W-051`: the cess row and what the node reads | Row `RATE-HEALTH-EDUCATION-CESS` (was `RATE-CESS-001`): `PercentOfBase` 4% of `INCOME_TAX_AND_SURCHARGE`, FA 2026 s.3(15) (2025 side) / s.2(6) (1961 side), TY 2026-27, AllRegimes. `CessNode` requires `tax.afterrebate` only and charges the whole post-rebate tax (slab + special); `W-056` adds `tax.surcharge` (erratum). One `TAX` line; a non-`PercentOfBase` row refused. The cess is in the Finance Act, so no Act section is modelled and no catalogue entry is owed | owner: "approved — C1–C3 as recommended" |
 | D-078 | 2026-09-25 | `W-050a`: how a rule version carries a rounding | `rules/rounding/RuleRounding(Money toNearest)` — positive whole rupees; not limited to ₹10 (the node refuses others, D-076); `RuleVersion.rounding` is `Optional` after `relief`; at most one of cap, relief, rounding (constructor refusal); JSON `rounding: {toNearest}` untagged; a rule needs a cap, a relief, a rounding or conditions; 12 sites pass `Optional.empty()`, the `TaxByBasisNodeTest` copy `v.rounding()` | owner: "approved — C1–C5 as recommended" |
@@ -571,7 +573,7 @@ unreachable. **D-029 says the item that first ships a real pipeline enables it.*
 If nobody does it, the dead-rule check that `O-19` exists for never runs, and nothing will fail to
 remind anyone.
 
-**Q3 — nothing owns the projection from `PipelineRunner.Result` to `TaxComputation`.**
+**Q3 — nothing owns the projection from `PipelineRunner.Result` to `TaxComputation`.** *(Answered by `W-052b`, D-081: `round.totalincome`, `tax.bybasis`, `tax.netpayable`.)*
 `W-042` produces the `Result`; `W-043` produces the target types; **no backlog item joins them.**
 Something must say *which slot is `totalIncome`* and *which is `taxByBasis`* — which is Q1 again,
 one level up. Likely needs a new item in Phase 5, probably after `W-046`.
