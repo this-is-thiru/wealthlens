@@ -3,7 +3,7 @@
   "layers": {
     "law": {
       "version": "2092-93.law.1",
-      "checksum": "sha256:8c3ca3c798fdd40ceba7f2502842ada7bf82ceb321be97c6ed537c257cc8f61f"
+      "checksum": "sha256:b95816c5545c5374ffca85798b44464562821c890eb0cad9e61624886b37d227"
     },
     "exec": {
       "version": "2092-93.exec.1",

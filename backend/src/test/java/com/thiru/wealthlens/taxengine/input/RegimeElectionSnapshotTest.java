@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 class RegimeElectionSnapshotTest {
 
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
-    private static final RegimeCode OLD = new RegimeCode("S202_OPT_OUT");
+    private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final Instant AS_OF = Instant.parse("2026-09-21T00:00:00Z");
     private static final LocalDate DUE = LocalDate.of(2026, 7, 31);
 

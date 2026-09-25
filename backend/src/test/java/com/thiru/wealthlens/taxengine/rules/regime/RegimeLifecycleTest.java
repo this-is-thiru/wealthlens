@@ -157,7 +157,7 @@ class RegimeLifecycleTest {
         void theOtherTwoMustCiteTheRuleThatEndsTheRegime() {
             // "Your regime ended and you moved" is a statement about the law a user may challenge
             assertThat(new ContinuationPolicy.FallToDefault(S201).citedRule()).contains(S201);
-            assertThat(new ContinuationPolicy.MigrateTo(new RegimeCode("S204_SUCCESSOR"), S201).citedRule())
+            assertThat(new ContinuationPolicy.MigrateTo(new RegimeCode("SUCCESSOR_REGIME"), S201).citedRule())
                     .contains(S201);
 
             assertThatThrownBy(() -> new ContinuationPolicy.FallToDefault(null))
@@ -170,7 +170,7 @@ class RegimeLifecycleTest {
         void everyBranchIsAccountedFor() {
             java.util.List<ContinuationPolicy> all = java.util.List.of(
                     new ContinuationPolicy.FallToDefault(S201),
-                    new ContinuationPolicy.MigrateTo(new RegimeCode("S204_SUCCESSOR"), S201),
+                    new ContinuationPolicy.MigrateTo(new RegimeCode("SUCCESSOR_REGIME"), S201),
                     new ContinuationPolicy.ContinueIndefinitely());
 
             for (ContinuationPolicy policy : all) {
@@ -262,7 +262,7 @@ class RegimeLifecycleTest {
                 1,
                 new AfterWithdrawal.IneligibleUnless(
                         new Not(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION)),
-                        new ElectionRoute("S202_4_B")),
+                        new ElectionRoute("NO_BUSINESS_OR_PROFESSION")),
                 false,
                 java.util.List.of(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION)));
     }
@@ -403,13 +403,13 @@ class RegimeLifecycleTest {
 
             assertThat(carveOut.revival().holds(taxpayerWith(HeadCode.BUSINESS_OR_PROFESSION))).isFalse();
             assertThat(carveOut.revival().holds(taxpayerWith(HeadCode.SALARIES))).isTrue();
-            assertThat(carveOut.thenUse()).isEqualTo(new ElectionRoute("S202_4_B"));
+            assertThat(carveOut.thenUse()).isEqualTo(new ElectionRoute("NO_BUSINESS_OR_PROFESSION"));
         }
 
         @Test
         void aRevivalWithNoConditionOrNoRouteIsRejected() {
             assertThatThrownBy(() ->
-                            new AfterWithdrawal.IneligibleUnless(null, new ElectionRoute("S202_4_B")))
+                            new AfterWithdrawal.IneligibleUnless(null, new ElectionRoute("NO_BUSINESS_OR_PROFESSION")))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("wearing a different name");
             assertThatThrownBy(() ->

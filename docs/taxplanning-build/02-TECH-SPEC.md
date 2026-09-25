@@ -484,3 +484,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2: `Coverage.Deferred` + `ScopeTier`; `CoverageRegister` checks the register against each Act's section list and counts by classification. T4: `content/acts/` read by `TimelineReader`; the 2025 Act's 536 sections registered | `W-045o`, D-066 |
 | 2026-09-25 | T2: `SectionRef` accepts hyphenated sections; Act lists may mark sections `omitted`. T4: `content/acts/INCOME_TAX_ACT_1961.json`; every in-force 1961 section registered | `W-045o2`, D-067 |
 | 2026-09-25 | T4: the 2025-Act list reflects FA 2026 (354A inserted; 443, 447 omitted); the parse tool applies an amendments table | `W-045o3`, D-068 |
+| 2026-09-25 | T4: the opted-out regime's reopening route is `NO_BUSINESS_OR_PROFESSION` (was `S202_4_B`); `2026-27.lock.json` law layer regenerated and bumped to `2026-27.law.5`; `RuleIdNamingTest` also refuses OLD/NEW fused with REGIME | `W-045d3`, D-070 |

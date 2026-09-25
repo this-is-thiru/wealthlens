@@ -322,7 +322,7 @@ class PackValidatorTest {
         @Test
         void twoDefaultsAreRejected() {
             PackBuilder pack = validPack();
-            RegimeCode second = new RegimeCode("S202_ALSO_DEFAULT");
+            RegimeCode second = new RegimeCode("ALSO_DEFAULT");
             pack.regimes.put(second, regime(second, true, Set.of(), Set.of()));
 
             assertThatThrownBy(() -> PackValidator.validate(pack.build()))
@@ -660,7 +660,7 @@ class PackValidatorTest {
     @DisplayName("I9 — behaviours resolve, in both directions")
     class Behaviours {
 
-        static final BehaviourId NOVEL = new BehaviourId("S999_NOVEL_ELECTION");
+        static final BehaviourId NOVEL = new BehaviourId("NOVEL_ELECTION");
 
         record SyntheticBehaviour(BehaviourId id) implements RegimeBehaviour {}
 
@@ -683,7 +683,7 @@ class PackValidatorTest {
             assertThatThrownBy(() ->
                             PackValidator.validate(pack.build(), RegimeBehaviourRegistry.empty()))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("S999_NOVEL_ELECTION")
+                    .hasMessageContaining("NOVEL_ELECTION")
                     .hasMessageContaining("would silently not run");
         }
 

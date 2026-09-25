@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * (invariant I9), not a silently ignored field. A regime whose special behaviour quietly did not
  * run would compute a plausible wrong answer for every taxpayer in it.
  *
- * @param value e.g. {@code "S202_SPECIAL_SETOFF"}
+ * @param value e.g. {@code "SPECIAL_SETOFF"}
  */
 public record BehaviourId(String value) {
 

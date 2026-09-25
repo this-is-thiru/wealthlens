@@ -29,7 +29,8 @@ class RuleIdNamingTest {
 
     private static final String STATUTORY_NEW = "NEW-TAX-REGIME";
     private static final Pattern YEAR = Pattern.compile("-(19|20)\\d\\d\\b");
-    private static final Pattern OLD_OR_NEW = Pattern.compile("(^|-)(OLD|NEW)(-|$)");
+    /** OLD or NEW as a word, or fused with REGIME (DED-NEWREGIME-001, D-069) — never a word that merely starts with it. */
+    private static final Pattern OLD_OR_NEW = Pattern.compile("(^|-)(OLD|NEW)(REGIME)?(-|$)");
     private static final Pattern SECTION = Pattern.compile("S\\d{3}");
 
     @Test
@@ -62,6 +63,15 @@ class RuleIdNamingTest {
         assertThat(violation("RATE-SLAB-OLD")).isPresent();
         assertThat(violation("NEW_REGIME")).isPresent();
         assertThat(violation("REBATE-NEW-001")).isPresent();
+    }
+
+    @Test
+    void violation_whenOldOrNewIsFusedWithRegime_isReported() {
+        // When / Then — DED-NEWREGIME-001 slipped past the word pattern (D-069); a concept word that
+        // only starts with NEW still passes
+        assertThat(violation("DED-NEWREGIME-001")).isPresent();
+        assertThat(violation("OLDREGIME")).isPresent();
+        assertThat(violation("OS-NEWSPAPER-SUBSCRIPTION")).isEmpty();
     }
 
     @Test

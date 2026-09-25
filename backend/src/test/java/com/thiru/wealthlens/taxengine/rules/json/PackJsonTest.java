@@ -226,7 +226,7 @@ class PackJsonTest {
 
         @Test
         void onlyInAndExceptInDisagreeAboutARegimeThatDoesNotExistYet() {
-            RegimeCode future = new RegimeCode("S999_FUTURE");
+            RegimeCode future = new RegimeCode("FUTURE_REGIME");
 
             assertThat(ShapeJson.regimes(
                                     json("{\"type\": \"OnlyIn\", \"regimes\": [\"NEW_TAX_REGIME\"]}"), "r")

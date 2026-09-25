@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * <p>{@link AfterWithdrawal.IneligibleUnless} names the route that reopens when a revival condition
  * later holds — the s.202(4)(a)(iv) carve-out.
  *
- * @param value e.g. {@code "S202_4_B"}
+ * @param value e.g. {@code "NO_BUSINESS_OR_PROFESSION"}
  */
 public record ElectionRoute(String value) {
 
@@ -22,7 +22,7 @@ public record ElectionRoute(String value) {
         if (value == null || !PATTERN.matcher(value).matches()) {
             throw new IllegalArgumentException(
                     "An ElectionRoute must be upper-case with underscores, 2-64 characters,"
-                            + " e.g. S202_4_B, but was \"" + value + "\"");
+                            + " e.g. NO_BUSINESS_OR_PROFESSION, but was \"" + value + "\"");
         }
     }
 

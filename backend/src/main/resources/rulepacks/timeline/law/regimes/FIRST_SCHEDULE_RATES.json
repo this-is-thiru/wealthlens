@@ -37,7 +37,7 @@
             "head": "BUSINESS_OR_PROFESSION"
           }
         },
-        "thenUse": "S202_4_B"
+        "thenUse": "NO_BUSINESS_OR_PROFESSION"
       },
       "firstReturnOnly": false,
       "bindingAppliesWhen": [

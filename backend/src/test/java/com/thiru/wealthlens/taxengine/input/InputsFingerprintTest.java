@@ -103,7 +103,7 @@ class InputsFingerprintTest {
                     Arguments.of("taxYear", mutate(in -> withTaxYear(in, TaxYearId.of(2025)))),
                     Arguments.of(
                             "regime",
-                            mutate(in -> copy(in, r -> r.regime = new RegimeCode("S202_OPT_OUT")))),
+                            mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
                     Arguments.of(
                             "temporal.asOfDate",
                             mutate(in -> copy(in, r -> r.temporal =

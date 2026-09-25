@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
  */
 class RegimeBehaviourRegistryTest {
 
-    static final BehaviourId NOVEL = new BehaviourId("S999_NOVEL_ELECTION");
+    static final BehaviourId NOVEL = new BehaviourId("NOVEL_ELECTION");
 
     /** A behaviour that exists only for this test. */
     record SyntheticBehaviour(BehaviourId id) implements RegimeBehaviour {}

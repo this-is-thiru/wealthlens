@@ -295,7 +295,7 @@ class RuleRowTest {
         private static final com.thiru.wealthlens.taxengine.rules.id.RegimeCode OPTED_OUT =
                 new com.thiru.wealthlens.taxengine.rules.id.RegimeCode("FIRST_SCHEDULE_RATES");
         private static final com.thiru.wealthlens.taxengine.rules.id.RegimeCode FUTURE =
-                new com.thiru.wealthlens.taxengine.rules.id.RegimeCode("S999_FUTURE");
+                new com.thiru.wealthlens.taxengine.rules.id.RegimeCode("FUTURE_REGIME");
 
         @Test
         void allRegimes_includesARegimeThatDoesNotExistYet() {
