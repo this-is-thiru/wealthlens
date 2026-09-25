@@ -782,6 +782,24 @@ if that is not enough for the item in hand.
 | **W-057** | **T2 golden tests** | `DR 08` T2-1 … T2-6 | copy expected values |
 | **W-058** | metamorphic property tests | `DR 19` E4.1 | `moreIncomeNeverMeansLessTax` would have caught H-1 unaided |
 
+> **Erratum (W-054, 2026-09-25, D-084):**
+> - **W-054's rows.** They are **two per regime**, each a `SlabLadder` whose bands are the Act's clauses:
+>   - `RATE-SUR-FIRST-SCHEDULE` / `RATE-SUR-NEW-TAX-REGIME` on total income: 10% above 50L, 15% above
+>     1Cr, clauses (iv)/(v) "not covered → 15%" continuing;
+>   - `RATE-SUR-FIRST-SCHEDULE-EXCLUDING` / `RATE-SUR-NEW-TAX-REGIME-EXCLUDING` on total income
+>     *excluding* dividends and the special gains: 25% above 2Cr, and 37% above 5Cr in the first
+>     schedule only.
+>
+>   Each is one version spanning TY 2025-26 and 2026-27 (FA 2026 states all four tables). `rates.json`
+>   is gone (the timeline, `W-045f`).
+> - **W-056** takes the **greater** of the two rows' rates for the band the income falls in. The
+>   clauses compose exactly that way. It keeps `RATE-SUR-SPLIT-001` (the 15% limit on that part).
+> - **I3.** The Phase 6 rows join `T1SlabAndRebateTest.NOT_YET_EVALUATED` as an owner-approved exception
+>   to D-043's "may only shrink", and `W-056`'s Verify asserts the set is **empty** again.
+>
+> Verified by: FA 2026 s.2(4)(b) Table Sl. 10 (p.7), Part I-A Para F Table 1 Sl. 1 (pp.82–83), s.3(4)(b)
+> Table Sl. 10 (pp.13–14), Part I-B Para F Table 1 Sl. 1 (pp.86–87).
+
 ---
 
 ## Phase 7 — Salary head (12 items)

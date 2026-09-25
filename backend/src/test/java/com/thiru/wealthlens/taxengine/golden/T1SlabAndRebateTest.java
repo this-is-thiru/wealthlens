@@ -34,8 +34,15 @@ class T1SlabAndRebateTest {
     /**
      * Rules in a shipped pack that no node evaluates yet (invariant I3, D-043). It may only shrink: a rule
      * joins the pack with the node that evaluates it, and an entry here is a visible, reviewed exception.
+     *
+     * <p>The surcharge rows are one (D-084): Phase 6 authors its data before its node, and {@code W-056}
+     * evaluates them and empties this set again.
      */
-    private static final Set<RuleId> NOT_YET_EVALUATED = Set.of();
+    private static final Set<RuleId> NOT_YET_EVALUATED = Set.of(
+            RuleIds.RATE_SUR_FIRST_SCHEDULE,
+            RuleIds.RATE_SUR_FIRST_SCHEDULE_EXCLUDING,
+            RuleIds.RATE_SUR_NEW_TAX_REGIME,
+            RuleIds.RATE_SUR_NEW_TAX_REGIME_EXCLUDING);
 
     private static final GoldenCaseRunner RUNNER = new GoldenCaseRunner();
 

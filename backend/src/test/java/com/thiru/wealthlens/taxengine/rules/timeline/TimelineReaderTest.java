@@ -52,7 +52,11 @@ class TimelineReaderTest {
                         new RuleId("REBATE-RESIDENT-INDIVIDUAL"),
                         new RuleId("RATE-ROUND-TOTAL-INCOME"),
                         new RuleId("RATE-ROUND-PAYABLE"),
-                        new RuleId("RATE-HEALTH-EDUCATION-CESS"));
+                        new RuleId("RATE-HEALTH-EDUCATION-CESS"),
+                        new RuleId("RATE-SUR-FIRST-SCHEDULE"),
+                        new RuleId("RATE-SUR-FIRST-SCHEDULE-EXCLUDING"),
+                        new RuleId("RATE-SUR-NEW-TAX-REGIME"),
+                        new RuleId("RATE-SUR-NEW-TAX-REGIME-EXCLUDING"));
         assertThat(timeline.regimes().keySet())
                 .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
         assertThat(timeline.pipelineNodes().keySet())

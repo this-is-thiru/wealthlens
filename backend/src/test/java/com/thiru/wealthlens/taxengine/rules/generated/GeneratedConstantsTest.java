@@ -157,6 +157,10 @@ class GeneratedConstantsTest {
                             "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
                             "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
                             "RATE-SLAB-NEW-TAX-REGIME",
+                            "RATE-SUR-FIRST-SCHEDULE",
+                            "RATE-SUR-FIRST-SCHEDULE-EXCLUDING",
+                            "RATE-SUR-NEW-TAX-REGIME",
+                            "RATE-SUR-NEW-TAX-REGIME-EXCLUDING",
                             "REBATE-NEW-TAX-REGIME",
                             "REBATE-NEW-TAX-REGIME-EXCESS",
                             "REBATE-RESIDENT-INDIVIDUAL");

@@ -339,6 +339,13 @@ are to 2025-Act ss.**196, 197, 198** in place of 1961-Act ss.111A, 112, 112A.
 
 **Status: VERIFIED** (S3, s.3(4)(b) Table Sl. No. 10).
 
+> **Erratum (W-054, 2026-09-25):** each table above becomes **two** pack rows, because the Act tests two
+> incomes. `RATE-SUR-FIRST-SCHEDULE` / `RATE-SUR-NEW-TAX-REGIME` hold the clauses on total income
+> *including* dividends and the special gains (10%, 15%, and the "not covered → 15%" clause).
+> `RATE-SUR-FIRST-SCHEDULE-EXCLUDING` / `RATE-SUR-NEW-TAX-REGIME-EXCLUDING` hold the clauses on total
+> income *excluding* them (25%; 37% in the first schedule only). The rate is the greater of the two (D-084).
+> Verified by: FA 2026 pp.7, 13–14, 82–83, 86–87 (re-read).
+
 ### `RATE-SUR-MR-001` — Surcharge marginal relief
 
 `FACT (S3)`: the formula is stated four times, identically in shape:
