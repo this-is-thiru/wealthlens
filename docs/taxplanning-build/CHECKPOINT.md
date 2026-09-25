@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-050 — RoundTotalIncomeNode and RoundNetPayableNode
+Item            : W-050a — a rounding on a rule row (D-076); W-050 PAUSED after its step 1 (plans/W-050.md, approved D-076)
 Stage           : NOT_STARTED
-Plan            : — (plans/W-050.md once written)
+Plan            : — (plans/W-050a.md once written)
 Approved        : —
-Steps done      : —
-Next step       : READ the W-050 section of 03-WORK-ITEMS.md and only the sections it names; write plans/W-050.md; STOP for approval. Known: its rows RATE-ROUND-002/-003 need concept names per the W-045d2 mapping; a new rule means a lock bump (law.8) and RuleIds regen; exactly two ROUNDING lines per pipeline
-Last verify     : ./mvnw clean test -pl backend -Punit → 1536 pass, 0 fail, 0 Checkstyle violations (W-049)
-Waiting on      : nothing for W-050; owner to itemise the backlog gaps (STATE); D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Steps done      : — (W-050: 1)
+Next step       : READ the W-050a row of 03-WORK-ITEMS.md (and plans/W-050.md A1, D-076); write plans/W-050a.md on the W-049a pattern (RuleRounding(Money toNearest), RuleVersion.rounding after relief, ShapeJson.rounding, RuleJson must-carry rule, 13 sites); STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 1536 pass, 0 fail, 0 Checkstyle violations (W-049b)
+Waiting on      : nothing for W-050a; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
 Files touched   : —
-Last item commit: taxplanning W-049: add RebateNode and the three s.156 rebate rows — each in its own regime, s.156(2) held to slab-rate tax (D-074)
+Last item commit: taxplanning W-049b: mark the rebate sections MODELLED and catalogue the rebate — W-049's missed standing rules 1–2 (D-077)
 Updated         : 2026-09-25, session 7
 ```
 

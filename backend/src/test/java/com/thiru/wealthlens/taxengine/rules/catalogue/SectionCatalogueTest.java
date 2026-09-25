@@ -43,7 +43,9 @@ class SectionCatalogueTest {
             new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "202"),
             new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "80C"),
             new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "123"),
-            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "10"));
+            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "10"),
+            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "87A"),
+            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "156"));
 
     @TempDir
     Path copy;

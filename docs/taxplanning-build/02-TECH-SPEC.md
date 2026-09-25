@@ -188,7 +188,7 @@ backend/src/main/resources/rulepacks/
     exec/pipelines/<NodeId>.json       ✅ one file per node, verbatim (D-053)
     exec/components/<ComponentCode>.json   with the first component (W-059)
     forms/itr/<ItrFormCode>.json
-    content/sections/<SectionKey>.json ✅ the section catalogue: default regime (W-045k), investments deduction and HRA (W-045k2); not compiled into year packs
+    content/sections/<SectionKey>.json ✅ the section catalogue: default regime (W-045k), investments deduction and HRA (W-045k2), the rebate (W-049b); not compiled into year packs
     content/acts/<Act>.json            ✅ each Act's section list, parsed from its gazette (2025 Act as amended by FA 2026: 537 numbers, 535 in force, W-045o/W-045o3; 1961 Act: 951 numbers, 820 in force for AY 2026-27, W-045o2); not compiled into year packs
     content/coverage.json              ✅ the coverage register (W-045j; the timeline's 2 cited sections `MODELLED`, + 3 `PLANNED` the catalogue cites, W-045k2; W-045o completes it); not compiled into year packs
   2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums
@@ -496,3 +496,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2: `relief/` built — the relief family (`DR 10` E5); rule-row attachment and JSON move to `W-049` | `W-048`, D-073 |
 | 2026-09-25 | T2/T4: `RuleRelief`; `RuleVersion.relief` (never beside a cap); the rule-row `relief` block, `limitedToSlabRateTax` required; a rule needs a cap, relief or conditions. No pack or lock change | `W-049a`, D-075 |
 | 2026-09-25 | T2/T4/T6: `node/RebateNode` built — each s.156 rebate from its own row, only in its row's regime, computed on the whole tax, s.156(2) held to `atSlabRates`, off the slab tax; one `RELIEF` line per applicable row with its reason in `limitedBy`. Rows `REBATE-NEW-TAX-REGIME`, `-EXCESS`, `REBATE-RESIDENT-INDIVIDUAL` (TY 2026-27); lock → `2026-27.law.7`; `tax.afterrebate` also requires `round.totalincome` | `W-049`, D-074 |
+| 2026-09-25 | T4: `content/coverage.json` — 2025 s.156 and 1961 s.87A `MODELLED` by the three rebate rules (manager `ReliefShape`); `content/sections/SEC-REBATE-FOR-CERTAIN-INDIVIDUALS.json`. No lock change | `W-049b`, D-077 |

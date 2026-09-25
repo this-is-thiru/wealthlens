@@ -427,6 +427,20 @@ capital gains in from `portfolio`, so this is live for the primary user, not the
 > Schedule", which places it on the 1961 side. The 4% rate stands, now `SOURCE_CHECKED` for both years.
 > Verified by: S3 (egazette 2026/271439) p.9 (s.2(6)), p.2 (s.2(1)); `plans/W-045n.md` Findings Q2.
 
+> **Erratum (W-050, 2026-09-25):** `RATE-ROUND-001` is **sourced**. 1961 s.288A: *"The amount of
+> total income computed in accordance with the foregoing provisions of this Act shall be rounded off to
+> the nearest multiple of ten rupees and for this purpose any part of a rupee consisting of paise shall
+> be ignored and thereafter if such amount is not a multiple of ten, then, if the last figure in that
+> amount is five or more, the amount shall be increased to the next higher amount which is a multiple
+> of ten and if the last figure is less than five, the amount shall be reduced to the next lower amount
+> which is a multiple of ten"*. s.288B applies the same words to *"Any amount payable, and the amount of
+> refund due"*. The method is the same as s.516's. No amending Act from F(No.2)A 2019 to FA 2026 (nor
+> TLA 2019/2021, TOLA 2020) amends either section; the adaptation Orders and the Jan Vishwas Act, 2023
+> were not read. `SOURCE_CHECKED` for TY 2025-26. The IDs become `RATE-ROUND-TOTAL-INCOME` (ss.288A,
+> 516) and `RATE-ROUND-PAYABLE` (ss.288B, 516); `RATE-ROUND-003` is a design rule, not a row (D-076).
+> Verified by: https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf p.822
+> (current to Act 7 of 2019); the `W-045o2` amending-Act chain.
+
 ### **H-5 second limb verdict: CONFIRMED.** There is a statutory ₹10 rounding and it is mandatory.
 
 `RATE-ROUND-003` — **RECOMMENDATION**: round in exactly **two** places and nowhere else —

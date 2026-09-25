@@ -612,11 +612,36 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > well as `tax.bybasis`. The relief wiring moves to `W-049a`.
 > Verified by: S2 s.156(1)–(3); `02-TECH-SPEC.md` node table.
 
+### W-049b — the rebate's coverage and catalogue entry *(added by D-076: `W-049` missed standing rules 1–2)*
+- [ ] **Produces** `content/coverage.json`: 2025 s.156 and 1961 s.87A → `MODELLED` with `REBATE-NEW-TAX-REGIME`, `REBATE-NEW-TAX-REGIME-EXCESS`, `REBATE-RESIDENT-INDIVIDUAL`; a `content/sections/SEC-…` entry for the rebate. No lock change: `content/coverage.json` and `content/sections/` are not compiled into the year pack (`RulePackCompiler` writes only `content/explanations.json`)
+- **Spec** D-043 standing rules 1–2; `W-045j` (coverage), `W-045k` (catalogue, SC-1…SC-4); D-074
+- **Verify** `./mvnw test -pl backend -Dtest=CoverageRegisterTest,SectionCatalogueTest,RulePackLoadTest` — no number changes; the lock is untouched
+
+### W-050a — a rounding on a rule row *(added by D-076, split from `W-050`)*
+- [ ] **Produces** `taxengine/rules/rounding/RuleRounding.java` (`Money toNearest`); `RuleVersion` gains `Optional<RuleRounding> rounding` after `relief`, never beside a cap or a relief; `ShapeJson` reads a `rounding` block; `RuleJson` requires a cap, a relief, a rounding or conditions; the 13 `new RuleVersion(` sites updated + tests
+- **Spec** D-075 (the pattern), D-076
+- **Verify** `./mvnw test -pl backend -Dtest=RuleJsonRoundingTest,PackJsonTest,RulePackLoadTest` — the block round-trips; rounding beside a cap or relief is refused; the shipped pack loads unchanged
+
 ### W-050 — `RoundTotalIncomeNode` and `RoundNetPayableNode`
 - [ ] **Produces** `taxengine/node/{RoundTotalIncomeNode,RoundNetPayableNode}.java` + `.../node/RoundingNodesTest.java`; `law/` rows `RATE-ROUND-002`, `RATE-ROUND-003` (both VERIFIED) *(added by `W-045c`)*
 - **Spec** `DR 01-rulebook.md` `RATE-ROUND-002`, `RATE-ROUND-003`
 - **Verify** `./mvnw test -pl backend -Dtest=RoundingNodesTest` — each node emits one `StepKind.ROUNDING` line using `Money.roundToNearestTenPerSection516`, on the rulebook's worked examples; a full-pipeline run has **exactly two** `ROUNDING` lines (PRD F2.4)
 - ⚠ Exactly **two** rounding points in the whole pipeline.
+
+> **Erratum (W-050, 2026-09-25, D-076):**
+> - **The rows.** `RATE-ROUND-003` is the rulebook's RECOMMENDATION, not law, so it gets no row. The
+>   rows are **`RATE-ROUND-TOTAL-INCOME`** (1961 s.288A; 2025 s.516) and **`RATE-ROUND-PAYABLE`** (1961
+>   s.288B; 2025 s.516), each carrying `rounding: {toNearest: "10"}` (`W-050a`), TY 2026-27. The 2025-26
+>   versions come with `W-052c`.
+> - **The pipeline check** ("a full-pipeline run has exactly two `ROUNDING` lines") moves to `W-053`.
+>   No pipeline reaches `round.netpayable` before `W-052`. Here each node emits exactly one.
+> - **Requires.** `round.netpayable` requires `tax.netpayable` only. `W-112` adds `interest.and.fees`
+>   when it builds that node.
+> - **Standing rules 1–2.** 2025 s.516 and 1961 ss.288A/288B → `MODELLED`, plus a catalogue entry for
+>   s.516.
+>
+> Verified by: rulebook R6 (`RATE-ROUND-003` "RECOMMENDATION"); `NodeIds` (no `interest.and.fees`);
+> `coverage.json` (all three `PLANNED` for `W-050`).
 
 ### W-051 — `CessNode`
 - [ ] **Produces** `taxengine/node/CessNode.java` + `.../node/CessNodeTest.java`; `law/` row `RATE-CESS-001` (VERIFIED) *(added by `W-045c`)*
@@ -652,6 +677,11 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > (STATE **Q2**, D-029): `NodeRegistry.rulesNotEvaluatedByAnyNode` runs against both real rule packs,
 > with a checked-in list of rules not yet implemented that **may only shrink** — a rule that leaves
 > the list may never return to it.
+
+> **Erratum (W-050, 2026-09-25, D-076):** `W-053`'s Verify also asserts that a pipeline run's trace
+> has **exactly two** `StepKind.ROUNDING` lines, citing `RATE-ROUND-TOTAL-INCOME` and
+> `RATE-ROUND-PAYABLE` (PRD F2.4, `DR 08` T9-16). The check was `W-050`'s, but no pipeline reaches
+> `round.netpayable` before `W-052`.
 
 ---
 
