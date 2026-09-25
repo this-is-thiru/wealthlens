@@ -1,6 +1,5 @@
 {
   "_pendingDisallowanceSets": "DIS-S202-2A (basis REG-NEW-DISALLOW-001, s.202(2)(a)) is NOT declared yet, and NEW_TAX_REGIME does not reference it. A DisallowanceSet that forbids nothing is refused, because in a finished pack a regime referencing one would be unaffected. It becomes real when the rules it forbids are authored: Schedule III Sl. Nos. 5, 6, 7, 8, 11, 17; Sl. 12, 13 other than as prescribed; s.19(1) Table Sl. 1; s.22(1)(b) for s.21(6); ss.33(8), 48, 49, 45(3)(a)/(b)/(c), 46, 47(1)(a); and the whole of Chapter VIII except ss.124(1), 124(2), 125(2) and 146.",
-  "_pendingRules": "REBATE-NEW-001 (s.156(2)(a), FlatWithCeiling 60000 / ceiling 1200000) is omitted until W-048 builds the ReliefShape family. It is VERIFIED and must be added there.",
   "code": "NEW_TAX_REGIME",
   "displayName": "New tax regime for individuals, Hindu undivided family and others (s.202(1))",
   "appliesTo": [

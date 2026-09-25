@@ -46,7 +46,10 @@ class TimelineReaderTest {
                         new RuleId("RATE-SLAB-NEW-TAX-REGIME"),
                         new RuleId("RATE-SLAB-FIRST-SCHEDULE"),
                         new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79"),
-                        new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-80"));
+                        new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-80"),
+                        new RuleId("REBATE-NEW-TAX-REGIME"),
+                        new RuleId("REBATE-NEW-TAX-REGIME-EXCESS"),
+                        new RuleId("REBATE-RESIDENT-INDIVIDUAL"));
         assertThat(timeline.regimes().keySet())
                 .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
         assertThat(timeline.pipelineNodes().keySet())

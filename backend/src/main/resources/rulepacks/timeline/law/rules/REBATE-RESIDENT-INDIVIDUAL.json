@@ -1,0 +1,70 @@
+{
+  "ruleId": "REBATE-RESIDENT-INDIVIDUAL",
+  "_note": "S2 s.156(1): \"An assesse, being an individual resident in India, shall be entitled to a deduction of 100% of income-tax payable or ₹ 12500, whichever is less … if such total income does not exceed ₹ 500000\". s.156(3) limits only sub-section (2), so this rebate is not limited to slab-rate tax; how it meets special-rate tax is W-089's (D-074). Not amended by FA 2026. 1961 counterpart: s.87A. TY 2025-26 version arrives with W-052c.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "FIRST_SCHEDULE_RATES"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.87A",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.156(1)",
+        "presence": "PRESENT"
+      },
+      "relief": {
+        "type": "FlatWithCeiling",
+        "maximum": "12500",
+        "incomeCeiling": "500000",
+        "limitedToSlabRateTax": false
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "HasPersonType",
+          "types": [
+            "INDIVIDUAL"
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.156",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.156(1)",
+        "accessedOn": "2026-09-25",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.156(1)",
+    "accessedOn": "2026-09-25",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -114,7 +114,7 @@ class PackJsonWellFormedTest {
             // and the check is deliberately blunt: no bound may end in anything but four zeros.
             for (JsonNode rule : rules()) {
                 for (JsonNode version : rule.get("versions")) {
-                    JsonNode bands = version.get("cap").get("bands");
+                    JsonNode bands = version.path("cap").get("bands");
                     if (bands == null) {
                         continue;
                     }
@@ -141,7 +141,7 @@ class PackJsonWellFormedTest {
         void bandsAreContiguousWithNoGapAndNoOverlap() {
             for (JsonNode rule : rules()) {
                 for (JsonNode version : rule.get("versions")) {
-                    JsonNode bands = version.get("cap").get("bands");
+                    JsonNode bands = version.path("cap").get("bands");
                     if (bands == null) {
                         continue;
                     }

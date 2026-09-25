@@ -153,7 +153,10 @@ class GeneratedConstantsTest {
                             "RATE-SLAB-FIRST-SCHEDULE",
                             "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
                             "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
-                            "RATE-SLAB-NEW-TAX-REGIME");
+                            "RATE-SLAB-NEW-TAX-REGIME",
+                            "REBATE-NEW-TAX-REGIME",
+                            "REBATE-NEW-TAX-REGIME-EXCESS",
+                            "REBATE-RESIDENT-INDIVIDUAL");
         }
     }
 

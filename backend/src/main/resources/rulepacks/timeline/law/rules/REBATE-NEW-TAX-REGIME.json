@@ -1,0 +1,70 @@
+{
+  "ruleId": "REBATE-NEW-TAX-REGIME",
+  "_note": "S2 s.156(2)(a): \"Where the total income of a resident individual assessee for any tax year is chargeable to tax under section 202(1) … (a) the income does not exceed twelve lakh rupees, 100% of the income-tax payable or ₹ 60000, whichever is less\". Limited by s.156(3): \"shall not exceed income-tax payable as per the rates provided in section 202(1)\". Not amended by FA 2026. 1961 counterpart: s.87A first proviso (a), as amended by FA 2025 s.20. TY 2025-26 version arrives with W-052c.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.87A first proviso (a)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.156(2)(a)",
+        "presence": "PRESENT"
+      },
+      "relief": {
+        "type": "FlatWithCeiling",
+        "maximum": "60000",
+        "incomeCeiling": "1200000",
+        "limitedToSlabRateTax": true
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "HasPersonType",
+          "types": [
+            "INDIVIDUAL"
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.156",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.156(2)(a) and (3)",
+        "accessedOn": "2026-09-25",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.156(2)(a) and (3)",
+    "accessedOn": "2026-09-25",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -19,6 +19,9 @@ public final class RuleIds {
     public static final RuleId RATE_SLAB_FIRST_SCHEDULE_AGE_60TO79 = new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79");
     public static final RuleId RATE_SLAB_FIRST_SCHEDULE_AGE_80 = new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-80");
     public static final RuleId RATE_SLAB_NEW_TAX_REGIME = new RuleId("RATE-SLAB-NEW-TAX-REGIME");
+    public static final RuleId REBATE_NEW_TAX_REGIME = new RuleId("REBATE-NEW-TAX-REGIME");
+    public static final RuleId REBATE_NEW_TAX_REGIME_EXCESS = new RuleId("REBATE-NEW-TAX-REGIME-EXCESS");
+    public static final RuleId REBATE_RESIDENT_INDIVIDUAL = new RuleId("REBATE-RESIDENT-INDIVIDUAL");
 
     private RuleIds() {
     }

@@ -94,7 +94,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 |---|---|---|
 | `input/` | `Assessee` (sealed) `Individual` `Huf` — **replace** `TaxpayerFacts`; `PersonType` gains `HUF` | ✅ `W-045l` (D-062) |
 | `result/` | `ComputationProjector` | ○ `W-052b` |
-| `node/` | one class per node — T6 | ◐ `TaxByBasisNode` (`W-046`); the rest Phases 5–9 |
+| `node/` | one class per node — T6 | ◐ `TaxByBasisNode` (`W-046`), `RebateNode` (`W-049`); the rest Phases 5–9 |
 | `election/` | `Election` `ElectionResolver` `ElectionOutcome` | ○ Phase 9 |
 | `proration/` | `ProrationBasis` `CompletedMonths` `CalendarMonths` `Days` `OccupationPeriods` | ○ `W-066` |
 | `interest/` | `InterestAndFeeNode` `InterestBreakdown` `SimpleInterest` `TieredFee` | ○ `W-112` |
@@ -280,7 +280,7 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `totalincome` | `TotalIncomeNode` | `gti`, `chapterviii` | `MoneyValue` | ○ |
 | `round.totalincome` | `RoundTotalIncomeNode` | `totalincome` | `MoneyValue` | ○ `W-050` |
 | `tax.bybasis` | `TaxByBasisNode` | `round.totalincome` | `TaxByBasis` | ✅ `W-046`, `W-046b` — the regime's `rateTable`, replaced by the one conditional ladder whose conditions hold (First Schedule 60–79 / 80+; two holding is refused); conditions read `NodeContext.conditions()` (D-072) |
-| `tax.afterrebate` | `RebateNode` | `tax.bybasis` | `TaxByBasis` | ○ `W-049` |
+| `tax.afterrebate` | `RebateNode` | `tax.bybasis`, `round.totalincome` | `TaxByBasis` | ✅ `W-049` |
 | `tax.surcharge` | `SurchargeNode` | `tax.afterrebate`, `round.totalincome` | `MoneyValue` | ○ `W-056` |
 | `tax.cess` | `CessNode` | `tax.afterrebate`, `tax.surcharge` | `MoneyValue` | ○ `W-051` |
 | `credits` | `CreditsNode` | `EngineInputs` (TDS and advance-tax credits; exact components fixed by the owning item) | `MoneyValue` | ○ Phase 9 |
@@ -495,3 +495,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T4/T6: `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79`, `-AGE-80` authored (TY 2026-27); lock → `2026-27.law.6`; `NodeContext.conditions()` builds a `ConditionContext` from `EngineInputs` (RNOR resident, age at the tax year's end); `TaxByBasisNode` selects the ladder | `W-046b`, D-072 |
 | 2026-09-25 | T2: `relief/` built — the relief family (`DR 10` E5); rule-row attachment and JSON move to `W-049` | `W-048`, D-073 |
 | 2026-09-25 | T2/T4: `RuleRelief`; `RuleVersion.relief` (never beside a cap); the rule-row `relief` block, `limitedToSlabRateTax` required; a rule needs a cap, relief or conditions. No pack or lock change | `W-049a`, D-075 |
+| 2026-09-25 | T2/T4/T6: `node/RebateNode` built — each s.156 rebate from its own row, only in its row's regime, computed on the whole tax, s.156(2) held to `atSlabRates`, off the slab tax; one `RELIEF` line per applicable row with its reason in `limitedBy`. Rows `REBATE-NEW-TAX-REGIME`, `-EXCESS`, `REBATE-RESIDENT-INDIVIDUAL` (TY 2026-27); lock → `2026-27.law.7`; `tax.afterrebate` also requires `round.totalincome` | `W-049`, D-074 |
