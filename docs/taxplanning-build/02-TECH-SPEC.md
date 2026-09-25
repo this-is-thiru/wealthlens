@@ -56,6 +56,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `id/` | `RuleId` `NodeId` `ComponentCode` `RegimeCode` `ItrFormCode` `ScheduleCode` `TaxYearId` `BaseId` `Identifiers` · named interface `id` |
 | `cap/` | `CapShape` (sealed) `Fixed` `PercentOfBase` `LeastOf` `AggregateWithCeiling` `SlabLadder` `PerUnitPerPeriod` `CapResult` `CapContext` `AggregateOutcome` |
 | `relief/` | `ReliefShape` (sealed: `FlatWithCeiling`, `ExcessOverThreshold`, `ThresholdLadderCeiling`, `NoRelief`) `ReliefResult` `ReliefContext` `UnrelievedTax` — each relief formula once, applied to (income, tax before relief, optional re-entry for U); result = amount to take off + reason (D-073). `RuleRelief` (shape + `limitedToSlabRateTax`) is what a rule version carries (D-075) |
+| `rounding/` | `RuleRounding` — the step a rule version rounds an amount to, a positive whole number of rupees; stated as data, applied by the rounding nodes (D-078) |
 | `condition/` | `Condition` (sealed, **13** predicates: `IsResident` `AgeAtLeast` `HasPersonType` `IsCertifiedDisabled` `IncomeAtMost` `IncomeAtLeast` `HasIncomeUnderHead` `ComponentPresent` `EvidenceRecorded` `PaidOtherThanInCash` `AllOf` `AnyOf` `Not`) `ConditionContext` `PersonType` `AgeSubject` `DisabilitySeverity` `EvidenceType` `HeadCode` |
 | `temporal/` | `TemporalAxis` `TemporalContext` `Validity` `RuleVersion` `AmendmentRef` `DateRange` `Provision` `Presence` `MissingTemporalCoordinateException` `NoRuleVersionException` |
 | `pack/` | `RulePack` `RulePackLayer` `RulePackRef` `RuleRow` `RulePackProvider` `PackAssembler` `RegimeApplicability` `MidYearCombination` `DisallowanceSet` `ConditionSet` |
@@ -131,7 +132,7 @@ The source is the reference. These are the contracts a change must keep.
 ### `Money` — ✅ `taxengine/rules/money/Money.java` (`W-005`, `W-006`)
 
 - `record Money(BigDecimal amountInRupees)`; construction sets **scale 2, `HALF_UP`**; `null` rejected.
-- Arithmetic: `plus`, `minus`, `times(int)`, `floorAtZero`, `min`, `max`, comparisons.
+- Arithmetic: `plus`, `minus`, `times(int)`, `floorAtZero`, `min`, `max`, comparisons; `isWholeRupees` (no paise — `W-050a`).
 - `roundToNearestTenPerSection516()`: ignore paise, round to the nearest ₹10 (up at 5), on the
   magnitude with the sign restored — `1234.99 → 1230` (`RATE-ROUND-002`, `13-edge-cases.md` T13-14).
 - Asserted with AssertJ `isEqualTo` on `Money` (D-010) — record equality also catches a scale slip.
@@ -201,10 +202,10 @@ whitespace, `_` note fields dropped (D-054). `ClasspathRulePackProvider` loads e
 nothing yet loads a pack at startup (UNOWNED). Packs are to be compiled at
 startup only, never on a request path.
 
-A rule version carries a `cap`, a `relief`, or `conditions` — at least one, and never both a cap and a
-relief (the `RuleVersion` constructor refuses it). `relief` is tagged like a cap — `FlatWithCeiling
+A rule version carries a `cap`, a `relief`, a `rounding` or `conditions` — at least one, and at most one of
+cap, relief and rounding (the `RuleVersion` constructor refuses two). `relief` is tagged like a cap — `FlatWithCeiling
 {maximum, incomeCeiling}`, `ExcessOverThreshold {threshold}`, `ThresholdLadderCeiling {thresholds}`,
-`NoRelief {}` — and always states `limitedToSlabRateTax` (s.156(3)); absent is refused (`W-049a`, D-075).
+`NoRelief {}` — and always states `limitedToSlabRateTax` (s.156(3)); absent is refused (`W-049a`, D-075). `rounding` is untagged, `{toNearest: "10"}` (`W-050a`, D-078).
 
 ---
 
@@ -497,3 +498,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2/T4: `RuleRelief`; `RuleVersion.relief` (never beside a cap); the rule-row `relief` block, `limitedToSlabRateTax` required; a rule needs a cap, relief or conditions. No pack or lock change | `W-049a`, D-075 |
 | 2026-09-25 | T2/T4/T6: `node/RebateNode` built — each s.156 rebate from its own row, only in its row's regime, computed on the whole tax, s.156(2) held to `atSlabRates`, off the slab tax; one `RELIEF` line per applicable row with its reason in `limitedBy`. Rows `REBATE-NEW-TAX-REGIME`, `-EXCESS`, `REBATE-RESIDENT-INDIVIDUAL` (TY 2026-27); lock → `2026-27.law.7`; `tax.afterrebate` also requires `round.totalincome` | `W-049`, D-074 |
 | 2026-09-25 | T4: `content/coverage.json` — 2025 s.156 and 1961 s.87A `MODELLED` by the three rebate rules (manager `ReliefShape`); `content/sections/SEC-REBATE-FOR-CERTAIN-INDIVIDUALS.json`. No lock change | `W-049b`, D-077 |
+| 2026-09-25 | T2/T4: `rounding/RuleRounding`; `RuleVersion.rounding` (at most one of cap, relief, rounding); the untagged rule-row `rounding` block; a rule needs a cap, relief, rounding or conditions; T3: `Money.isWholeRupees`. No pack or lock change | `W-050a`, D-078 |

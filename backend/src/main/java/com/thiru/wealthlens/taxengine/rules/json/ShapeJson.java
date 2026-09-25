@@ -21,6 +21,7 @@ import com.thiru.wealthlens.taxengine.rules.relief.NoRelief;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefShape;
 import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
 import com.thiru.wealthlens.taxengine.rules.relief.ThresholdLadderCeiling;
+import com.thiru.wealthlens.taxengine.rules.rounding.RuleRounding;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
@@ -32,8 +33,8 @@ import java.util.stream.Collectors;
 import tools.jackson.databind.JsonNode;
 
 /**
- * The sealed families a rule version is made of: when it applies, where, what it limits, and what
- * relief it grants.
+ * The sealed families a rule version is made of: when it applies, where, what it limits, what relief
+ * it grants, and what it rounds to.
  *
  * <p>Each family is a tagged union keyed on {@code "type"}, and an unrecognised tag fails with the
  * permitted tags listed — because the reader of that message is a pack author choosing between
@@ -177,6 +178,17 @@ public final class ShapeJson {
             };
             return new RuleRelief(shape, limitedToSlabRateTax);
         });
+    }
+
+    // ---------------------------------------------------------------- RuleRounding
+
+    /**
+     * The step an amount is rounded to. Untagged: rounding is one kind, not a family, so a
+     * {@code type} would be a choice with a single option (D-078).
+     */
+    public static RuleRounding rounding(JsonNode node, String path) {
+        Money toNearest = money(node, "toNearest", path);
+        return PackJson.construct(path, () -> new RuleRounding(toNearest));
     }
 
     // ---------------------------------------------------------------- money

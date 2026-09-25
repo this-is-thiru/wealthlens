@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-049b — "taxplanning W-049b: mark the rebate sections MODELLED and catalogue the rebate — W-049's missed standing rules 1–2 (D-077)"
-Last updated              : 2026-09-25 (session 7 — W-049, W-049b done; W-050 approved and paused; build GREEN, 1536 tests)
-Current position          : W-050a — a rounding on a rule row (plan next); W-050 approved (D-076), paused at step 1
+Last checkpoint           : W-050a — "taxplanning W-050a: carry a rounding on a rule version — the step as data, at most one of cap, relief and rounding (D-078)"
+Last updated              : 2026-09-25 (session 7 — W-049, W-049b, W-050a done; W-050 resumes at step 2; build GREEN, 1548 tests)
+Current position          : W-050 — rounding nodes (approved D-076), resume at step 2
 Session count             : 7
 ```
 
@@ -53,7 +53,7 @@ Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
-Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a ·  W-050 P  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
+Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 P  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **80** / 181 live · in flight **1** · blocked **0**  ← computed by script; 181 = 146 base ids − 8 retired + 43 suffixed
+Counts — done **81** / 181 live · in flight **1** · blocked **0**  ← computed by script; 181 = 146 base ids − 8 retired + 43 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-050a | 2026-09-25 | A rounding on a rule row (D-078): `rules/rounding/RuleRounding(Money toNearest)` (positive whole rupees; other steps than ₹10 left to the node); `RuleVersion.rounding` `Optional` after `relief`, at most one of cap/relief/rounding; untagged `rounding: {toNearest}` read by `ShapeJson`; a rule needs a cap, relief, rounding or conditions; 13 sites; `Money.isWholeRupees` (build note B1, ArchitectureTest's no-BigDecimal rule). No pack or lock change | `RuleJsonRoundingTest` 10/10 + Verify 88/88 + bite probe; clean unit 1548/1548
 W-049b | 2026-09-25 | W-049's missed standing rules 1–2 (D-077): `coverage.json` 2025 s.156 and 1961 s.87A → `MODELLED` by `REBATE-NEW-TAX-REGIME`, `-EXCESS`, `REBATE-RESIDENT-INDIVIDUAL`, manager `ReliefShape`; `content/sections/SEC-REBATE-FOR-CERTAIN-INDIVIDUALS.json` (3 routes, 3 disqualifiers, no figures); `CATALOGUED` ratchet + s.87A, s.156. No number or lock change (content/ coverage and sections are not compiled). Also commits W-050's step 1 (D-076, rows W-049b/W-050a, errata on W-050/W-053/RATE-ROUND-001) | Verify 49/49 + bite probe (SC-1 names both); clean unit 1536/1536
 W-049 | 2026-09-25 | RebateNode (D-074): rows `REBATE-NEW-TAX-REGIME` (FlatWithCeiling 60,000/12L, limited), `-EXCESS` (ExcessOverThreshold 12L, limited), `REBATE-RESIDENT-INDIVIDUAL` (FlatWithCeiling 12,500/5L, FIRST_SCHEDULE_RATES) — S2 s.156(1)–(3), TY 2026-27, conditions resident + individual (build note B1); each rebate on the whole tax, s.156(2) held to `atSlabRates`, off the slab tax; one `RELIEF` line per row applicable in the regime, reason in `limitedBy` (B2); unlimited rebate + special-rate tax refused when positive (→ W-089, B4); lock → `2026-27.law.7`; `RuleIds` regenerated; `_pendingRules` note dropped. Copied from DR 08/13: T1-N1 0; T1-N2 10.00; T1-N3 50,000; T1-N4 70,580.00 / 70,588.50; T1-O1 0; T1-O2 12,502 (one nil line); T13-1 nil rebate | `RebateNodeTest` 12/12 + Verify 118/118 + 2 bite probes; clean unit 1536/1536
 W-049a | 2026-09-25 | A relief on a rule row (D-075): `rules/relief/RuleRelief(shape, limitedToSlabRateTax)`; `RuleVersion.relief` (`Optional`, after `cap`; cap + relief refused in the constructor); `ShapeJson.relief` reads the four tagged shapes, `limitedToSlabRateTax` required; a rule needs a cap, relief or conditions; 13 construction sites updated (12 `Optional.empty()`, one copy passes `v.relief()`). No pack, lock or `RuleIds` change | `RuleJsonReliefTest` 10/10 + Verify 78/78 + bite probe; clean unit 1524/1524
@@ -434,6 +435,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-078 | 2026-09-25 | `W-050a`: how a rule version carries a rounding | `rules/rounding/RuleRounding(Money toNearest)` — positive whole rupees; not limited to ₹10 (the node refuses others, D-076); `RuleVersion.rounding` is `Optional` after `relief`; at most one of cap, relief, rounding (constructor refusal); JSON `rounding: {toNearest}` untagged; a rule needs a cap, a relief, a rounding or conditions; 12 sites pass `Optional.empty()`, the `TaxByBasisNodeTest` copy `v.rounding()` | owner: "approved — C1–C5 as recommended" |
 | D-077 | 2026-09-25 | `W-049b`: the rebate's coverage and catalogue entry | 2025 s.156 and 1961 s.87A → `MODELLED` by `REBATE-NEW-TAX-REGIME`, `-EXCESS`, `REBATE-RESIDENT-INDIVIDUAL`, manager `ReliefShape` (BRIEF §6.2 M-16); one entry `SEC-REBATE-FOR-CERTAIN-INDIVIDUALS` (S2 s.156 heading) with three routes and three disqualifiers, text as drafted in `plans/W-049b.md`; the `CATALOGUED` ratchet gains both sections. No lock change (`content/` coverage and sections are not compiled) | owner: "approved — B1–B3 as recommended" |
 | D-076 | 2026-09-25 | `W-050`: rounding as data, its rows, and the split | A rule row states its rounding as `rounding: {toNearest: "10"}` → `RuleRounding`, an `Optional` on `RuleVersion` after `relief` that never sits beside a cap or a relief; the node applies `Money.roundToNearestTenPerSection516` and refuses any other multiple. Rows `RATE-ROUND-TOTAL-INCOME` (ss.288A/516) and `RATE-ROUND-PAYABLE` (ss.288B/516), TY 2026-27; no row for `RATE-ROUND-003` (a design rule). `round.netpayable` requires `tax.netpayable` only (`W-112` adds `interest.and.fees`); the two-`ROUNDING`-line check → `W-053`. Refunds: the magnitude is rounded and the sign restored (`ROUND-NEG-001`, STATUS UNCLEAR, unchanged). 1961 ss.288A/288B are SOURCE_CHECKED for TY 2025-26. **Split:** `W-049b` (W-049's missed standing rules 1–2: s.156/s.87A `MODELLED` + a rebate catalogue entry), then `W-050a` (the wiring), then `W-050`. A guard for PLANNED-after-done is recorded, not built | owner: "approved — A1–A6 as recommended" |
 | D-075 | 2026-09-25 | `W-049a`: how a rule version carries a relief | `rules/relief/RuleRelief(ReliefShape, boolean limitedToSlabRateTax)`; `RuleVersion.relief` is `Optional<RuleRelief>` after `cap`; JSON `relief` block tagged like a cap (`FlatWithCeiling`, `ExcessOverThreshold`, `ThresholdLadderCeiling`, `NoRelief`) with `limitedToSlabRateTax` **required**; a rule needs a cap, a relief or conditions; cap + relief refused in the `RuleVersion` constructor; the 13 construction sites pass `Optional.empty()` | owner: "approved" |

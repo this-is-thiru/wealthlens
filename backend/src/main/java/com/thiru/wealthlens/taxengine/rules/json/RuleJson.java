@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.registry.LegalStatus;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
 import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
+import com.thiru.wealthlens.taxengine.rules.rounding.RuleRounding;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
@@ -76,6 +77,7 @@ public final class RuleJson {
                         ShapeJson.regimes(PackJson.object(node, "regimes", path), path + ".regimes"),
                         capOrNull(node, path),
                         relief(node, path),
+                        rounding(node, path),
                         ConditionJson.conditions(node, "conditions", path),
                         ValueJson.provision(
                                 PackJson.object(node, "provision1961", path), path + ".provision1961"),
@@ -92,19 +94,21 @@ public final class RuleJson {
      * The cap, which may legitimately be absent.
      *
      * <p>A rule can state a condition and no amount — {@code SAL-HRA-002}'s "the accommodation is not
-     * owned by the assessee" limits nothing by itself — or grant a relief and limit nothing. A rule
-     * with no cap, relief or condition is a different matter, and is refused: it would load,
-     * evaluate, and mean nothing.
+     * owned by the assessee" limits nothing by itself — or grant a relief or state a rounding and limit
+     * nothing. A rule with no cap, relief, rounding or condition is a different matter, and is refused:
+     * it would load, evaluate, and mean nothing.
      */
     private static com.thiru.wealthlens.taxengine.rules.cap.CapShape capOrNull(JsonNode node, String path) {
         var cap = PackJson.optionalObject(node, "cap", path);
         if (cap.isEmpty()) {
             List<com.thiru.wealthlens.taxengine.rules.condition.Condition> conditions =
                     ConditionJson.conditions(node, "conditions", path);
-            if (conditions.isEmpty() && PackJson.optionalObject(node, "relief", path).isEmpty()) {
+            if (conditions.isEmpty()
+                    && PackJson.optionalObject(node, "relief", path).isEmpty()
+                    && PackJson.optionalObject(node, "rounding", path).isEmpty()) {
                 throw new PackValidationException(
-                        path + " has no cap, relief or conditions; it would load, evaluate, and mean"
-                                + " nothing");
+                        path + " has no cap, relief, rounding or conditions; it would load, evaluate, and"
+                                + " mean nothing");
             }
             return null;
         }
@@ -114,5 +118,10 @@ public final class RuleJson {
     private static Optional<RuleRelief> relief(JsonNode node, String path) {
         return PackJson.optionalObject(node, "relief", path)
                 .map(relief -> ShapeJson.relief(relief, path + ".relief"));
+    }
+
+    private static Optional<RuleRounding> rounding(JsonNode node, String path) {
+        return PackJson.optionalObject(node, "rounding", path)
+                .map(rounding -> ShapeJson.rounding(rounding, path + ".rounding"));
     }
 }

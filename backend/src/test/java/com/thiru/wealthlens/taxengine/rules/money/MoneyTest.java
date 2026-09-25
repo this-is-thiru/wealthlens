@@ -96,6 +96,20 @@ class MoneyTest {
         }
 
         @Test
+        void isWholeRupees_whenNoPaise_isTrue() {
+            // When / Then
+            assertThat(Money.of("10").isWholeRupees()).isTrue();
+            assertThat(Money.of("10.00").isWholeRupees()).isTrue();
+        }
+
+        @Test
+        void isWholeRupees_whenPaise_isFalse() {
+            // When / Then
+            assertThat(Money.of("10.50").isWholeRupees()).isFalse();
+            assertThat(Money.of("0.01").isWholeRupees()).isFalse();
+        }
+
+        @Test
         void minAndMax_whenGivenTwoAmounts_pickCorrectly() {
             Money small = Money.of("10");
             Money large = Money.of("20");

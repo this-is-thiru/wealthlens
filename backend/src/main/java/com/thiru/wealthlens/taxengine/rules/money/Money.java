@@ -89,6 +89,11 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
         return compareTo(other) > 0;
     }
 
+    /** Whether the amount has no paise — a rounding step is stated in whole rupees (D-078). */
+    public boolean isWholeRupees() {
+        return amountInRupees.remainder(BigDecimal.ONE).signum() == 0;
+    }
+
     public static Money min(Money left, Money right) {
         return left.isLessThan(right) ? left : right;
     }

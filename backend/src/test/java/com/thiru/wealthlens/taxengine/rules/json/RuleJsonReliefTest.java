@@ -180,6 +180,6 @@ class RuleJsonReliefTest {
         // When / Then
         assertThatThrownBy(() -> versionWith(nothing))
                 .isInstanceOf(PackValidationException.class)
-                .hasMessageContaining("has no cap, relief or conditions");
+                .hasMessageContaining("has no cap, relief, rounding or conditions");
     }
 }

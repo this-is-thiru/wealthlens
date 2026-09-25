@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-050a — a rounding on a rule row (D-076); W-050 PAUSED after its step 1 (plans/W-050.md, approved D-076)
-Stage           : NOT_STARTED
-Plan            : — (plans/W-050a.md once written)
-Approved        : —
-Steps done      : — (W-050: 1)
-Next step       : READ the W-050a row of 03-WORK-ITEMS.md (and plans/W-050.md A1, D-076); write plans/W-050a.md on the W-049a pattern (RuleRounding(Money toNearest), RuleVersion.rounding after relief, ShapeJson.rounding, RuleJson must-carry rule, 13 sites); STOP for approval
-Last verify     : ./mvnw clean test -pl backend -Punit → 1536 pass, 0 fail, 0 Checkstyle violations (W-049b)
-Waiting on      : nothing for W-050a; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Item            : W-050 — RoundTotalIncomeNode and RoundNetPayableNode (D-076); W-049b and W-050a landed
+Stage           : BUILD
+Plan            : plans/W-050.md
+Approved        : 2026-09-25 — "approved — A1–A6 as recommended" (D-076)
+Steps done      : 1, 1b
+Next step       : step 2 of plans/W-050.md — RoundingNodesTest (fails); then step 3's rows (RATE-ROUND-TOTAL-INCOME, RATE-ROUND-PAYABLE, rounding {toNearest "10"}), lock → law.8 + RuleIds, nodes (refuse toNearest ≠ 10), coverage s.516/288A/288B MODELLED + catalogue entry; the RuleRounding wiring in step 3 is already done by W-050a
+Last verify     : ./mvnw clean test -pl backend -Punit → 1548 pass, 0 fail, 0 Checkstyle violations (W-050a)
+Waiting on      : nothing; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
 Files touched   : —
-Last item commit: taxplanning W-049b: mark the rebate sections MODELLED and catalogue the rebate — W-049's missed standing rules 1–2 (D-077)
+Last item commit: taxplanning W-050a: carry a rounding on a rule version — the step as data, at most one of cap, relief and rounding (D-078)
 Updated         : 2026-09-25, session 7
 ```
 

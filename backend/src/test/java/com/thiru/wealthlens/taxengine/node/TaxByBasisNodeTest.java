@@ -244,7 +244,7 @@ class TaxByBasisNodeTest {
         RulePack pack = pack();
         RuleRow eighty = pack.rule(RuleIds.RATE_SLAB_FIRST_SCHEDULE_AGE_80);
         RuleVersion v = eighty.versions().getFirst();
-        RuleVersion overlapping = new RuleVersion(v.validity(), v.regimes(), v.cap(), v.relief(),
+        RuleVersion overlapping = new RuleVersion(v.validity(), v.regimes(), v.cap(), v.relief(), v.rounding(),
                 List.of(new IsResident(), new AgeAtLeast(60, AgeSubject.SELF)), v.provision1961(), v.provision2025(),
                 v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance());
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());

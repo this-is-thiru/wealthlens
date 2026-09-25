@@ -70,6 +70,7 @@ class RuleStatusTest {
                 new RegimeApplicability.AllRegimes(),
                 new Fixed(Money.of("60000")),
                 Optional.empty(),
+                Optional.empty(),
                 List.of(),
                 Provision.present("Income-tax Act, 1961", "s.115BAC(1A)(iii)"),
                 Provision.present("Income-tax Act, 2025", "s.202(1) Table"),
