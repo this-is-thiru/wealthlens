@@ -42,7 +42,11 @@ class TimelineReaderTest {
 
         // Then — listed by hand; the lock, not this test, guards the values inside them
         assertThat(timeline.rules().keySet())
-                .containsExactlyInAnyOrder(new RuleId("RATE-SLAB-NEW-TAX-REGIME"), new RuleId("RATE-SLAB-FIRST-SCHEDULE"));
+                .containsExactlyInAnyOrder(
+                        new RuleId("RATE-SLAB-NEW-TAX-REGIME"),
+                        new RuleId("RATE-SLAB-FIRST-SCHEDULE"),
+                        new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79"),
+                        new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-80"));
         assertThat(timeline.regimes().keySet())
                 .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
         assertThat(timeline.pipelineNodes().keySet())

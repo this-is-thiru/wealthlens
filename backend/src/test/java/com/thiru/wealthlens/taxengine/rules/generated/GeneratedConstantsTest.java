@@ -149,7 +149,11 @@ class GeneratedConstantsTest {
         @Test
         void itReadsTheRuleIdsFromTheTimeline() {
             assertThat(ConstantGenerator.ruleIds())
-                    .containsExactly("RATE-SLAB-FIRST-SCHEDULE", "RATE-SLAB-NEW-TAX-REGIME");
+                    .containsExactly(
+                            "RATE-SLAB-FIRST-SCHEDULE",
+                            "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
+                            "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
+                            "RATE-SLAB-NEW-TAX-REGIME");
         }
     }
 

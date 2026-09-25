@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-046b — the old-regime age ladders and ladder selection (D-071)
+Item            : W-048 — the ReliefShape sealed family
 Stage           : NOT_STARTED
-Plan            : — (plans/W-046b.md once written)
+Plan            : — (plans/W-048.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-046b section of 03-WORK-ITEMS.md and only the sections it names (01-rulebook.md R3 RATE-SLAB-AGE-001/002; D-071 B1–B3); write plans/W-046b.md; STOP for approval. Source B2 (age "at any time during the tax year") and B3 (RNOR as resident) from the Act before proposing them; ladders from FA 2026 First Schedule Part I-B Para A (II)/(III) p.85 and Part I-A for TY 2025-26
-Last verify     : ./mvnw clean test -pl backend -Punit → 1495 pass, 0 fail, 0 Checkstyle violations (W-046)
-Waiting on      : nothing for W-046b; owner to itemise the backlog gaps (STATE); D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Next step       : READ the W-048 section of 03-WORK-ITEMS.md and only the sections it names; write plans/W-048.md; STOP for approval. Note: the row says `taxrules/relief/…` — the package is `taxengine/rules/…` (as for coverage/, catalogue/); ReliefResult and ReliefContext were added by D-050
+Last verify     : ./mvnw clean test -pl backend -Punit → 1503 pass, 0 fail, 0 Checkstyle violations (W-046b)
+Waiting on      : nothing for W-048; owner to itemise the backlog gaps (STATE); D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
 Files touched   : —
-Last item commit: taxplanning W-046: add TaxByBasisNode — tax at slab rates from the regime's own rate table, one traced line (D-071)
+Last item commit: taxplanning W-046b: add the First Schedule age ladders and select one by the pack's conditions — lock to 2026-27.law.6 (D-072)
 Updated         : 2026-09-25, session 6
 ```
 

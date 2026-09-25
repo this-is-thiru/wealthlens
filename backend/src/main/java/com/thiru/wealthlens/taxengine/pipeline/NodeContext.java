@@ -1,11 +1,18 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
+import com.thiru.wealthlens.taxengine.input.Assessee;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.Individual;
+import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
+import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
+import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import java.time.Period;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -147,6 +154,29 @@ public final class NodeContext {
                             + " being applied");
         }
         return pack.rule(id);
+    }
+
+    /**
+     * What a rule's conditions are tested against, drawn from the inputs (D-072).
+     *
+     * <p>Residence collapses to the boolean the conditions read here, at the point of use, as
+     * {@code Assessee.ResidentialStatus} says it should: a person "not ordinarily resident" is a
+     * resident, because the Act scopes such a person inside "a person, who is a resident" (S2
+     * s.5(1)(c)). An individual's age is the completed years on the last day of the tax year —
+     * the highest age reached in it — which is what "at any time during the tax year" asks
+     * (S2 s.2(100)). An {@code Huf} has no age, so a condition that needs one fails loudly.
+     */
+    public ConditionContext conditions() {
+        Assessee assessee = inputs.assessee();
+        Map<AgeSubject, Integer> ages = new EnumMap<>(AgeSubject.class);
+        Map<AgeSubject, DisabilitySeverity> disabilities = new EnumMap<>(AgeSubject.class);
+        if (assessee instanceof Individual individual) {
+            ages.put(AgeSubject.SELF,
+                    Period.between(individual.dateOfBirth(), inputs.temporal().taxYearEnd()).getYears());
+            individual.disability().ifPresent(severity -> disabilities.put(AgeSubject.SELF, severity));
+        }
+        boolean resident = assessee.residence() != Assessee.ResidentialStatus.NON_RESIDENT;
+        return new ConditionContext(resident, assessee.type(), ages, disabilities);
     }
 
     public RulePack pack() {

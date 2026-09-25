@@ -273,7 +273,7 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `chapterviii` | `ChapterEightNode` | `gti`, `inputs.components`, `EngineInputs.family` | `MoneyValue` | ○ Phase 8 |
 | `totalincome` | `TotalIncomeNode` | `gti`, `chapterviii` | `MoneyValue` | ○ |
 | `round.totalincome` | `RoundTotalIncomeNode` | `totalincome` | `MoneyValue` | ○ `W-050` |
-| `tax.bybasis` | `TaxByBasisNode` | `round.totalincome` | `TaxByBasis` | ✅ `W-046` — the regime's `rateTable` ladder, no age selection yet (`W-046b`) |
+| `tax.bybasis` | `TaxByBasisNode` | `round.totalincome` | `TaxByBasis` | ✅ `W-046`, `W-046b` — the regime's `rateTable`, replaced by the one conditional ladder whose conditions hold (First Schedule 60–79 / 80+; two holding is refused); conditions read `NodeContext.conditions()` (D-072) |
 | `tax.afterrebate` | `RebateNode` | `tax.bybasis` | `TaxByBasis` | ○ `W-049` |
 | `tax.surcharge` | `SurchargeNode` | `tax.afterrebate`, `round.totalincome` | `MoneyValue` | ○ `W-056` |
 | `tax.cess` | `CessNode` | `tax.afterrebate`, `tax.surcharge` | `MoneyValue` | ○ `W-051` |
@@ -486,3 +486,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T4: the 2025-Act list reflects FA 2026 (354A inserted; 443, 447 omitted); the parse tool applies an amendments table | `W-045o3`, D-068 |
 | 2026-09-25 | T4: the opted-out regime's reopening route is `NO_BUSINESS_OR_PROFESSION` (was `S202_4_B`); `2026-27.lock.json` law layer regenerated and bumped to `2026-27.law.5`; `RuleIdNamingTest` also refuses OLD/NEW fused with REGIME | `W-045d3`, D-070 |
 | 2026-09-25 | T2/T6: `node/TaxByBasisNode` built — tax at slab rates from `regime.rateTable()`, one `TAX` trace line with the in-force version's provenance; age-band ladder selection split to `W-046b` | `W-046`, D-071 |
+| 2026-09-25 | T4/T6: `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79`, `-AGE-80` authored (TY 2026-27); lock → `2026-27.law.6`; `NodeContext.conditions()` builds a `ConditionContext` from `EngineInputs` (RNOR resident, age at the tax year's end); `TaxByBasisNode` selects the ladder | `W-046b`, D-072 |
