@@ -1,9 +1,50 @@
 {
   "ruleId": "RATE-ROUND-TOTAL-INCOME",
-  "_note": "S2 s.516: \"The amount of total income computed or any amount payable or refundable under this Act, shall be rounded off to the nearest multiple of ₹10 ignoring any part of a rupee consisting of paise and thereafter if such amount is not a multiple of ten, then— (a) such amount shall be increased to the next higher amount which is a multiple of ten, if the last figure in that amount is five or more; or (b) such amount shall be reduced to the next lower amount which is a multiple of ten, if the last figure is less than five\". Not amended by FA 2026. Applied by Money.roundToNearestTenPerSection516; the node refuses any other step (D-076). This row: the total income (1961 counterpart s.288A, unamended to FA 2026, SOURCE_CHECKED for TY 2025-26 — W-050, D-076). TY 2025-26 version arrives with W-052c.",
+  "_note": "S2 s.516: \"The amount of total income computed or any amount payable or refundable under this Act, shall be rounded off to the nearest multiple of ₹10 ignoring any part of a rupee consisting of paise and thereafter if such amount is not a multiple of ten, then— (a) such amount shall be increased to the next higher amount which is a multiple of ten, if the last figure in that amount is five or more; or (b) such amount shall be reduced to the next lower amount which is a multiple of ten, if the last figure is less than five\". Not amended by FA 2026. Applied by Money.roundToNearestTenPerSection516; the node refuses any other step (D-076). This row: the total income (1961 counterpart s.288A, unamended to FA 2026, SOURCE_CHECKED for TY 2025-26 — W-050, D-076). TY 2025-26 (W-052c, D-082): 1961 s.288A — the same method as s.516. introducedBy names the 1961 Act (assent and commencement read, p.30 and s.1(3)); the section's insertion and substitution are in its citation from the footnotes, whose Acts' own dates were not read. Unamended from F(No.2)A 2019 to FA 2026 (W-045o2 chain).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.288A",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.516",
+        "presence": "PRESENT"
+      },
+      "rounding": {
+        "toNearest": "10"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.288A — ins. by Act 13 of 1966, s.34 (w.e.f. 1-4-1966); words subs. by Act 19 of 1968, s.30 (w.e.f. 1-4-1969)",
+        "gazetteRef": "not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.288A and footnotes 2–3, p.822",
+        "accessedOn": "2026-09-25",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
     {
       "validity": {
         "type": "Between",

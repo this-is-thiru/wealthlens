@@ -1,9 +1,65 @@
 {
   "ruleId": "REBATE-NEW-TAX-REGIME-EXCESS",
-  "_note": "S2 s.156(2)(b): \"the total income exceeds twelve lakh rupees and the income-tax payable on such total income exceeds the amount by which the total income is in excess of twelve lakh rupees, an amount equal to the amount by which the income-tax payable on such total income is in excess of the amount by which the total income exceeds twelve lakh rupees\". Limited by s.156(3). Not amended by FA 2026. 1961 counterpart: s.87A first proviso (b), as amended by FA 2025 s.20. TY 2025-26 version arrives with W-052c.",
+  "_note": "S2 s.156(2)(b): \"the total income exceeds twelve lakh rupees and the income-tax payable on such total income exceeds the amount by which the total income is in excess of twelve lakh rupees, an amount equal to the amount by which the income-tax payable on such total income is in excess of the amount by which the total income exceeds twelve lakh rupees\". Limited by s.156(3). Not amended by FA 2026. 1961 counterpart: s.87A first proviso (b), as amended by FA 2025 s.20. TY 2025-26 (W-052c, D-082): FA 2025 s.20, w.e.f. 1st April, 2026, amends 1961 s.87A's first proviso (b) to \"twelve hundred thousand rupees\" / \"sixty thousand rupees\" and inserts the second proviso: \"the deduction under the first proviso, shall not exceed the amount of income-tax payable as per the rates provided in sub-section (1A) of section 115BAC\" — the same figures and limit. AY 2026-27 = TY 2025-26.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.87A first proviso (b)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.156(2)(b)",
+        "presence": "PRESENT"
+      },
+      "relief": {
+        "type": "ExcessOverThreshold",
+        "threshold": "1200000",
+        "limitedToSlabRateTax": true
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "HasPersonType",
+          "types": [
+            "INDIVIDUAL"
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2025 (7 of 2025), s.20",
+        "gazetteRef": "CG-DL-E-29032025-262125",
+        "notifiedOn": "2025-03-29",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
+        "sourceDescription": "Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.20 (1961 s.87A first proviso (b), second proviso), p.23",
+        "accessedOn": "2026-09-25",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
     {
       "validity": {
         "type": "Between",

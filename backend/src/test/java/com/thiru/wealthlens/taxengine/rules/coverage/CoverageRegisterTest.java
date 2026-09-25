@@ -67,7 +67,7 @@ class CoverageRegisterTest {
     void verify_whenAModelledRuleHasNoPublishedVersion_isRefused() {
         // Given
         Path root = edited(SLAB_FILE, rule ->
-                ((ObjectNode) rule.path("versions").get(0)).put("publicationStatus", "DRAFT"));
+                rule.path("versions").forEach(version -> ((ObjectNode) version).put("publicationStatus", "DRAFT")));
         Timeline timeline = TimelineReader.read(root);
 
         // When / Then

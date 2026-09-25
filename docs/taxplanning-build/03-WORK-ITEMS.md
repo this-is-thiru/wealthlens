@@ -703,6 +703,25 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 - **Do** add versions, not rules — where the rulebook says a value is unchanged (`RATE-SLAB-NEW-2025` is *"identical"* to 2026), **one version spans both years**.
 - **Verify** `./mvnw test -pl backend -Dtest=TaxYear2025RulePackTest,RulePackCompilerTest` — both years compile, both locks hold, and a 2025-26 computation cites the 1961-Act provision
 
+> **Erratum (W-052c, 2026-09-25, D-082):** *"one version spans both years"* applies only where **one
+> instrument** governs both years: the three First Schedule ladders (FA 2026 Part I-A / I-B) and the cess
+> (FA 2026 s.2(6) / s.3(15)). The six rules whose 2025-26 law comes from a different instrument get their
+> own 2025-26 version, even with the same figures:
+> - the new-regime slab (FA 2025 s.25);
+> - the two new-regime rebates (FA 2025 s.20);
+> - the ₹12,500 rebate (1961 s.87A; FA 2019 s.8);
+> - the two roundings (1961 ss.288A/288B).
+>
+> A version names one `introducedBy`. The "registry entry" is the 2025-26 lock's `instruments` block (no
+> production registry exists, D-054). Regime election data per year → **`W-052d`**.
+> Verified by: `RuleVersion` (one `introducedBy`, one provenance); FA 2025 pp.23–25; FA 2026 pp.9, 80.
+
+### W-052d — regime election data per tax year *(added by D-082)*
+- [ ] **Produces** per-year election data for `NEW_TAX_REGIME` and `FIRST_SCHEDULE_RATES`: TY 2025-26 under the 1961 Act (s.115BAC(6), the option with the return / Form 10-IEA, deadline s.139(1)) beside TY 2026-27's 2025-Act data (s.202, s.263(1)); the shape (versions on a regime, or an election rule per year) is this item's EXPLAIN decision
+- **Spec** D-041, D-082 (finding 3 of `plans/W-052c.md`); 1961 s.115BAC(6), to be read
+- **Due** before anything reads an election (Phase 9 `ElectionResolver`)
+- **Verify** the 2025-26 pack's regimes cite the 1961 Act's election provisions; the 2026-27 pack is unchanged
+
 ### W-053 — **T1 golden tests**
 - [ ] **Produces** `backend/src/test/resources/taxplanning/golden/2026-27/S202_DEFAULT/T1-*.json` and `.../taxplanning/golden/GoldenCaseRunner.java`, `T1SlabAndRebateTest.java`
 - **Spec** `DR 08-golden-tests.md` **T1-N1 … T1-A1f — every case, every expected value**

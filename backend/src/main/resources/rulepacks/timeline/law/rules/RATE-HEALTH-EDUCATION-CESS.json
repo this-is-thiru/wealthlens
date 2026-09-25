@@ -1,13 +1,13 @@
 {
   "ruleId": "RATE-HEALTH-EDUCATION-CESS",
-  "_note": "FA 2026 s.3(15): \"The amount of income-tax as specified in sub-sections (1) to (5) and as increased by the applicable surcharge ... shall be further increased by an additional surcharge ... to be called the 'Health and Education Cess on income-tax', calculated at the rate of 4% of such income-tax and surcharge\". 1961-side counterpart for AY 2026-27: FA 2026 s.2(6), same words (\"four per cent.\"). Charged on the tax after rebate (REBATE-ORDER-001). Until W-056 builds the surcharge, CessNode's base is the post-rebate tax alone, correct wherever the surcharge is nil (D-079); W-056 adds the surcharge. TY 2025-26 version arrives with W-052c.",
+  "_note": "FA 2026 s.3(15): \"The amount of income-tax as specified in sub-sections (1) to (5) and as increased by the applicable surcharge ... shall be further increased by an additional surcharge ... to be called the 'Health and Education Cess on income-tax', calculated at the rate of 4% of such income-tax and surcharge\". 1961-side counterpart for AY 2026-27: FA 2026 s.2(6), same words (\"four per cent.\"). Charged on the tax after rebate (REBATE-ORDER-001). Until W-056 builds the surcharge, CessNode's base is the post-rebate tax alone, correct wherever the surcharge is nil (D-079); W-056 adds the surcharge. Spans TY 2025-26 (W-052c, D-082): FA 2026 s.2(6), p.9, the 1961-side charge for AY 2026-27, \"four per cent. of such income-tax and surcharge\".",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
     {
       "validity": {
         "type": "Between",
-        "from": "2026-04-01"
+        "from": "2025-04-01"
       },
       "regimes": {
         "type": "AllRegimes"
@@ -29,7 +29,7 @@
       },
       "conditions": [],
       "introducedBy": {
-        "instrumentCitation": "Finance Act, 2026 (4 of 2026), s.3(15)",
+        "instrumentCitation": "Finance Act, 2026 (4 of 2026), ss.2(6), 3(15)",
         "gazetteRef": "CG-DL-E-31032026-271439",
         "notifiedOn": "2026-03-31",
         "effectiveFrom": "2026-04-01",

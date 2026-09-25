@@ -33,6 +33,12 @@ class RulePackCompilerTest {
     private static final String SLAB = "RATE-SLAB-NEW-TAX-REGIME";
     private static final String SLAB_FILE = "law/rules/" + SLAB + ".json";
 
+    /** The rule's last version — the one in force in 2026-27, since TY 2025-26 has its own before it. */
+    private static JsonNode inForceIn2026(ObjectNode rule) {
+        JsonNode versions = rule.path("versions");
+        return versions.get(versions.size() - 1);
+    }
+
     @TempDir
     Path copy;
 
@@ -50,7 +56,7 @@ class RulePackCompilerTest {
         // Given — one band's rate changed in the timeline, the lock untouched
         Path root = timelineCopy();
         ObjectNode rule = (ObjectNode) tree(root.resolve(SLAB_FILE));
-        ObjectNode band = (ObjectNode) rule.path("versions").get(0).path("cap").path("bands").get(1);
+        ObjectNode band = (ObjectNode) inForceIn2026(rule).path("cap").path("bands").get(1);
         band.put("rate", "6");
         write(root.resolve(SLAB_FILE), rule);
         CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(root), TY_2026);
@@ -67,7 +73,7 @@ class RulePackCompilerTest {
         // Given
         Path root = timelineCopy();
         ObjectNode rule = (ObjectNode) tree(root.resolve(SLAB_FILE));
-        ((ObjectNode) rule.path("versions").get(0)).put("publicationStatus", "DRAFT");
+        ((ObjectNode) inForceIn2026(rule)).put("publicationStatus", "DRAFT");
         write(root.resolve(SLAB_FILE), rule);
 
         // When

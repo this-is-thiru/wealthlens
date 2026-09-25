@@ -35,6 +35,12 @@ class PackDiffTest {
     @TempDir
     Path copy;
 
+    /** The rule's last version — the one in force in 2026-27, since TY 2025-26 has its own before it. */
+    private static JsonNode inForceIn2026(JsonNode rule) {
+        JsonNode versions = rule.path("versions");
+        return versions.get(versions.size() - 1);
+    }
+
     @Test
     void between_whenThePacksAreIdentical_findsNothing() {
         // When
@@ -47,7 +53,7 @@ class PackDiffTest {
     @Test
     void between_whenOneBandRateChanges_findsExactlyThatValue() throws IOException {
         // Given
-        Path edited = editedCopy(rule -> ((ObjectNode) rule.path("versions").get(0).path("cap").path("bands").get(1))
+        Path edited = editedCopy(rule -> ((ObjectNode) inForceIn2026(rule).path("cap").path("bands").get(1))
                 .put("rate", "6"));
 
         // When
@@ -94,7 +100,7 @@ class PackDiffTest {
     @Test
     void between_whenAVersionIsClosed_findsItsEndDateNotARemovalAndAnAddition() throws IOException {
         // Given
-        Path edited = editedCopy(rule -> ((ObjectNode) rule.path("versions").get(0).path("validity"))
+        Path edited = editedCopy(rule -> ((ObjectNode) inForceIn2026(rule).path("validity"))
                 .put("to", "2027-03-31"));
 
         // When

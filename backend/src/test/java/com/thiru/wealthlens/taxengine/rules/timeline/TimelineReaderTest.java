@@ -147,12 +147,12 @@ class TimelineReaderTest {
 
     @Test
     void read_whenVersionsLeaveAGap_isAccepted() throws IOException {
-        // Given — in force 2024-25, lapsed for 2025-26, back from 2026-27: a gap, not an overlap
+        // Given — in force 2023-24, lapsed for 2024-25, back from 2025-26: a gap, not an overlap
         Path root = realCopy();
         ObjectNode rule = (ObjectNode) tree(root.resolve(SLAB_FILE));
         ArrayNode versions = (ArrayNode) rule.path("versions");
         ObjectNode earlier = (ObjectNode) versions.get(0).deepCopy();
-        ((ObjectNode) earlier.path("validity")).put("from", "2024-04-01").put("to", "2025-03-31");
+        ((ObjectNode) earlier.path("validity")).put("from", "2023-04-01").put("to", "2024-03-31");
         versions.insert(0, earlier);
         write(root.resolve(SLAB_FILE), rule);
 
@@ -160,7 +160,7 @@ class TimelineReaderTest {
         Timeline timeline = TimelineReader.read(root);
 
         // Then
-        assertThat(timeline.rules().get(new RuleId("RATE-SLAB-NEW-TAX-REGIME")).versions()).hasSize(2);
+        assertThat(timeline.rules().get(new RuleId("RATE-SLAB-NEW-TAX-REGIME")).versions()).hasSize(3);
     }
 
     @Test

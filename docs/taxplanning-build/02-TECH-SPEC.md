@@ -192,7 +192,7 @@ backend/src/main/resources/rulepacks/
     content/sections/<SectionKey>.json ✅ the section catalogue: default regime (W-045k), investments deduction and HRA (W-045k2), the rebate (W-049b), the two roundings (W-050); not compiled into year packs
     content/acts/<Act>.json            ✅ each Act's section list, parsed from its gazette (2025 Act as amended by FA 2026: 537 numbers, 535 in force, W-045o/W-045o3; 1961 Act: 951 numbers, 820 in force for AY 2026-27, W-045o2); not compiled into year packs
     content/coverage.json              ✅ the coverage register (W-045j; the timeline's 2 cited sections `MODELLED`, + 3 `PLANNED` the catalogue cites, W-045k2; W-045o completes it); not compiled into year packs
-  2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums
+  2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums + the year's instruments (2025-26: W-052c)
 ```
 
 `RulePackCompiler` (✅ `W-045g`) builds a year's rule pack from every **`PUBLISHED`** version whose
@@ -503,3 +503,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2/T4/T6: `node/CessNode` built — 4% of the whole post-rebate tax via row `RATE-HEALTH-EDUCATION-CESS` (`PercentOfBase`, FA 2026 s.3(15) / s.2(6), TY 2026-27); requires `tax.afterrebate` only until `W-056` adds `tax.surcharge`; lock → `2026-27.law.9` | `W-051`, D-079 |
 | 2026-09-25 | T2/T6: `node/NetPayableNode` built — tax after rebate (whole) + cess, `NodeResult.untraced`; requires `tax.afterrebate`, `tax.cess`. No pack change | `W-052`, D-080 |
 | 2026-09-25 | T2: `result/ComputationProjector` built — `project(Result, EngineInputs, ComputationId)`; anchors `round.totalincome`, `tax.bybasis`, `tax.netpayable` (unrounded); inputs must match the run's fingerprint | `W-052b`, D-081 |
+| 2026-09-25 | T4: TY 2025-26 on the timeline — per-year versions for the new-regime slab, the three rebates and the two roundings (their 1961-side instruments), spanning versions for the three First Schedule ladders and the cess (FA 2026 governs both years; ladders' `provision1961` corrected to FA 2026 Part I-A); `2025-26.lock.json` (law.1, instruments: 1961 Act, FA 2026, 1962 Rules UNVERIFIED); `2026-27.lock.json` → `law.10` | `W-052c`, D-082 |
