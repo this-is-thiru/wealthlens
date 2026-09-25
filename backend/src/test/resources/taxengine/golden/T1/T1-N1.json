@@ -1,0 +1,14 @@
+{
+  "id": "T1-N1",
+  "source": "DR 08 T1-N1 — New regime, at the rebate ceiling. TI ₹12,00,000",
+  "_source": "**Expected: ₹0.** Status `VERIFIED`.",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "1200000",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "0"
+  }
+}

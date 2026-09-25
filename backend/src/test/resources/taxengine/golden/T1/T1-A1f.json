@@ -1,0 +1,15 @@
+{
+  "id": "T1-A1f",
+  "source": "DR 08 T1-A1 — Old regime, age variants at the basic exemption",
+  "_source": "| T1-A1f | 82 | **NEW** | ₹13,00,000 | 60,000 + 1,00,000×15% = 75,000; excess 1,00,000; 75,000 > 1,00,000? **no** → rebate 0; cess 3,000 | **₹78,000** |",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "1300000",
+  "ageAtYearEnd": 82,
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "78000"
+  }
+}

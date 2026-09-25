@@ -736,6 +736,14 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > with a checked-in list of rules not yet implemented that **may only shrink** — a rule that leaves
 > the list may never return to it.
 
+> **Erratum (W-053, 2026-09-25, D-083):**
+> - **Paths.** The cases are `src/test/resources/taxengine/golden/T1/<id>.json`, one per case, each naming
+>   both tax years (`DR 08` gives the same figure for both). The runner and test are in the test package
+>   `taxengine/golden/`, because they need `pipeline` and `node`, which the CLOSED `taxengine` doesn't
+>   expose to `taxplanning` (D-048). `S202_DEFAULT` was renamed `NEW_TAX_REGIME` (D-051).
+> - **Entry.** A run enters at `totalincome` through a test source node, on the shipped pipeline less
+>   `inputs.components` and `salary.gross` (not built before Phases 7–9).
+
 > **Erratum (W-052b, 2026-09-25, D-081):** `DR 08`'s "Expected" figures are **rounded**, so `W-053`
 > compares them against the run's **`round.netpayable`** value, not against
 > `TaxComputation.netPayableBeforeFilingEffects`, which is `tax.netpayable` unrounded (T1-N3: the

@@ -1,0 +1,133 @@
+package com.thiru.wealthlens.taxengine.golden;
+
+import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.Individual;
+import com.thiru.wealthlens.taxengine.node.CessNode;
+import com.thiru.wealthlens.taxengine.node.NetPayableNode;
+import com.thiru.wealthlens.taxengine.node.RebateNode;
+import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
+import com.thiru.wealthlens.taxengine.node.RoundTotalIncomeNode;
+import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
+import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
+import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
+import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
+import com.thiru.wealthlens.taxengine.result.ComputationId;
+import com.thiru.wealthlens.taxengine.result.ComputationProjector;
+import com.thiru.wealthlens.taxengine.result.TaxComputation;
+import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.regime.PipelineSpec;
+import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
+import com.thiru.wealthlens.taxengine.test.LockedInstruments;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Runs a golden case through the real engine: the shipped pack and the shipped regime pipeline, entered at
+ * total income, then projected into a {@link TaxComputation} (D-083).
+ *
+ * <p>The pipeline is the regime's own, kept to the nodes this registry holds and in the shipped order. The
+ * nodes before {@code totalincome} are not built yet; {@link #droppedFromShippedPipeline} names what was
+ * left out, so a test can hold that to exactly those.
+ */
+final class GoldenCaseRunner {
+
+    /** Every Phase 5 node, the real ones. */
+    private static final List<ComputationNode> PHASE_5 = List.of(
+            new RoundTotalIncomeNode(),
+            new TaxByBasisNode(),
+            new RebateNode(),
+            new CessNode(),
+            new NetPayableNode(),
+            new RoundNetPayableNode());
+
+    /** Fixed, so two runs of one case project to computations that may differ in nothing (T23-4). */
+    private static final ComputationId ID = new ComputationId("00000000-0000-4000-8000-0000000000a1");
+
+    private static final Set<TaxYearId> SHIPPED_YEARS = Set.of(TaxYearId.of(2025), TaxYearId.of(2026));
+
+    private final Map<TaxYearId, RulePack> packs = new ConcurrentHashMap<>();
+
+    /**
+     * One run.
+     *
+     * @param provisional whether any line cites an {@code UNVERIFIED} rule version — reported, never skipped
+     */
+    record Run(PipelineRunner.Result result, TaxComputation computation, boolean provisional) {
+    }
+
+    Run run(GoldenCase golden, TaxYearId year) {
+        RulePack pack = pack(year);
+        NodeRegistry registry = registryWith(new GivenTotalIncome(golden.totalIncome()));
+        RegimeSpec entered = enteredAtTotalIncome(pack.regimes().get(golden.regime()), registry);
+        EngineInputs inputs = inputs(golden, year);
+        PipelineRunner.Result result = PipelineRunner.run(registry, pack, entered, inputs);
+        boolean provisional = result.trace().stream()
+                .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
+        return new Run(result, ComputationProjector.project(result, inputs, ID), provisional);
+    }
+
+    RulePack pack(TaxYearId year) {
+        return packs.computeIfAbsent(year, y -> new ClasspathRulePackProvider(
+                        "rulepacks", SHIPPED_YEARS, new JsonPackAssembler(LockedInstruments.of(y)))
+                .load(y));
+    }
+
+    NodeRegistry registry() {
+        return registryWith(new GivenTotalIncome(Money.ZERO));
+    }
+
+    /** The nodes every shipped regime's pipeline names that this registry lacks — the same for all. */
+    List<NodeId> droppedFromShippedPipeline() {
+        Set<NodeId> registered = registry().registered();
+        Set<List<NodeId>> dropped = new LinkedHashSet<>();
+        SHIPPED_YEARS.forEach(year -> pack(year).regimes().values().forEach(regime -> dropped.add(
+                regime.pipeline().nodeRefs().stream().filter(node -> !registered.contains(node)).toList())));
+        if (dropped.size() != 1) {
+            throw new IllegalStateException("Shipped pipelines differ in what a T1 run leaves out: " + dropped);
+        }
+        return dropped.iterator().next();
+    }
+
+    private static NodeRegistry registryWith(GivenTotalIncome totalIncome) {
+        List<ComputationNode> nodes = new ArrayList<>(PHASE_5);
+        nodes.add(totalIncome);
+        return NodeRegistry.of(nodes);
+    }
+
+    private static RegimeSpec enteredAtTotalIncome(RegimeSpec shipped, NodeRegistry registry) {
+        List<NodeId> kept = shipped.pipeline().nodeRefs().stream()
+                .filter(registry.registered()::contains)
+                .toList();
+        return new RegimeSpec(shipped.code(), shipped.displayName(), shipped.provision1961(),
+                shipped.provision2025(), shipped.appliesTo(), shipped.rateTable(), shipped.disallowances(),
+                shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
+                new PipelineSpec(kept), shipped.behaviour(), shipped.provenance());
+    }
+
+    private static EngineInputs inputs(GoldenCase golden, TaxYearId year) {
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        Individual harness = (Individual) plain.assessee();
+        // Six months short of a birthday, so the completed age at the year's end is exactly the case's
+        Individual person = golden.ageAtYearEnd()
+                .map(age -> new Individual(year.endsOn().minusYears(age).minusMonths(6), harness.residence(),
+                        Optional.empty(), Optional.empty()))
+                .orElse(harness);
+        return new EngineInputs(year, golden.regime(),
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                plain.entered(), person, plain.family(), plain.ledgers(), plain.elections(),
+                plain.capitalGains(), plain.filing());
+    }
+}

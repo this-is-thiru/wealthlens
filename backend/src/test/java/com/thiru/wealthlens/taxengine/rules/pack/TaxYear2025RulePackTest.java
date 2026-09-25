@@ -17,7 +17,6 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
-import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.Presence;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
@@ -25,18 +24,13 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidator;
+import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * TY 2025-26 — the 1961 Act, AY 2026-27 — on the timeline for the Phase 5 rules (D-041, D-082). The
@@ -51,31 +45,8 @@ class TaxYear2025RulePackTest {
     private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final String ACT_2025_URL = "https://egazette.gov.in/WriteReadData/2025/265620.pdf";
 
-    private static JsonNode lockInstruments() {
-        try (InputStream in = TaxYear2025RulePackTest.class.getResourceAsStream("/rulepacks/2025-26.lock.json")) {
-            if (in == null) {
-                throw new IllegalStateException("rulepacks/2025-26.lock.json is not on the classpath");
-            }
-            return JsonMapper.builder().build().readTree(in).get("instruments");
-        } catch (IOException e) {
-            throw new IllegalStateException("rulepacks/2025-26.lock.json could not be read", e);
-        }
-    }
-
-    private static Instrument instrument(JsonNode node) {
-        return new Instrument(
-                node.get("citation").asString(),
-                node.has("assentedOn") ? Optional.of(LocalDate.parse(node.get("assentedOn").asString())) : Optional.empty(),
-                LocalDate.parse(node.get("inForceFrom").asString()),
-                node.get("gazetteRef").asString(),
-                URI.create(node.get("sourceUrl").asString()),
-                VerificationLevel.valueOf(node.get("verificationLevel").asString()));
-    }
-
     private static GoverningInstruments instruments() {
-        JsonNode lock = lockInstruments();
-        return new GoverningInstruments(
-                instrument(lock.get("act")), instrument(lock.get("financeAct")), instrument(lock.get("rules")));
+        return LockedInstruments.of(TY_2025);
     }
 
     private static RulePack pack() {
@@ -105,7 +76,7 @@ class TaxYear2025RulePackTest {
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
         assertThat(pack.rules()).hasSize(10);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.1");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.2");
     }
 
     @Test

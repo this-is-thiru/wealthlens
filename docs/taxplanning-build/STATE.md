@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-052c — "taxplanning W-052c: put TY 2025-26 on the timeline for the Phase 5 rules — per-year versions where the instrument differs, a 2025-26 lock (D-082)"
-Last updated              : 2026-09-25 (session 7 — W-049 … W-052c done; build GREEN, 1615 tests)
-Current position          : W-053 — T1 golden tests (not started)
+Last checkpoint           : W-053 — "taxplanning W-053: add the T1 golden tests — every DR 08 T1 case end to end in both years; the First Schedule pipeline gains its rebate step (D-083)"
+Last updated              : 2026-09-25 (session 7 — W-049 … W-053 done: the T1 milestone; build GREEN, 1704 tests)
+Current position          : W-054 — surcharge ladders (Phase 6; not started)
 Session count             : 7
 ```
 
@@ -53,7 +53,7 @@ Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
-Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 ·
+Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **86** / 182 live · in flight **0** · blocked **0**  ← computed by script; 182 = 146 base ids − 8 retired + 44 suffixed
+Counts — done **87** / 182 live · in flight **0** · blocked **0**  ← computed by script; 182 = 146 base ids − 8 retired + 44 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-053 | 2026-09-25 | **T1 golden tests — the first milestone** (D-083): 14 DR 08 T1 cases (`test/resources/taxengine/golden/T1/*.json`, both years) run end to end from `totalincome` (test source node `GivenTotalIncome`) through the shipped pipeline (less the two unbuilt input nodes, guarded) and `ComputationProjector`; round.netpayable = DR 08 Expected in all 28 runs; exactly two ROUNDING lines; T23-4 (canonical forms equal) and T23-8 (T1-O2) pass; I3 empty for both packs; `test/LockedInstruments`. **B1 law-data fix:** FIRST_SCHEDULE_RATES pipeline lacked `tax.afterrebate` since W-045f — added; locks 2025-26 law.2, 2026-27 law.11 | `T1SlabAndRebateTest` 89/89 + 2 bite probes; clean unit 1704/1704
 W-052c | 2026-09-25 | TY 2025-26 on the timeline (D-082): per-year 2025-26 versions for RATE-SLAB-NEW-TAX-REGIME (FA 2025 s.25), REBATE-NEW-TAX-REGIME/-EXCESS (FA 2025 s.20), REBATE-RESIDENT-INDIVIDUAL (1961 s.87A / FA 2019 s.8), RATE-ROUND-TOTAL-INCOME/-PAYABLE (1961 ss.288A/288B); spanning versions from 2025-04-01 for the three First Schedule ladders (provision1961 corrected to FA 2026 Part I-A) and the cess (FA 2026 s.2(6)); `2025-26.lock.json` (law.1; instruments 1961 Act, FA 2026, 1962 Rules UNVERIFIED); `2026-27.lock.json` → law.10; W-052d row (regime elections per year). Build notes B1–B6. DR 08 T1 reproduced for 2025-26: T1-N1 0; T1-N3 50,000; T1-O2 12,502; cess 2,000; 10.40→10 | `TaxYear2025RulePackTest` 23/23 + data bite probe (lock re-pinned); clean unit 1615/1615
 W-052b | 2026-09-25 | ComputationProjector (D-081): `result/ComputationProjector.project(Result, EngineInputs, ComputationId)`; `totalIncome` ← `round.totalincome` (s.516), `taxByBasis` ← `tax.bybasis` (before rebate), `netPayableBeforeFilingEffects` ← `tax.netpayable` (unrounded; round.netpayable follows date-dependent interest); inputs must match the run's fingerprint; missing / wrong-kind anchors refused naming the slot. STATE Q3 answered; W-053 erratum (compare against round.netpayable) | `ComputationProjectorTest` 7/7 + bite probe; clean unit 1592/1592
 W-052 | 2026-09-25 | NetPayableNode (D-080): requires `tax.afterrebate` + `tax.cess` (not cess only), value = whole post-rebate tax + cess, `NodeResult.untraced` (no rule states a sum; shown as round.netpayable's `in`); W-056 adds surcharge, Phase 9 credits. No pack change. Copied from DR 08 totals: T1-N1 0; T1-N3 52,000; T1-N2 10.40; T1-N4 73,403.20 / 73,412.04; T1-O2 13,002.08; T2-1 11,23,200. By hand: 1,04,000 with special-rate tax | `NetPayableNodeTest` 11/11 + 2 bite probes; clean unit 1585/1585
@@ -440,6 +441,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-083 | 2026-09-25 | `W-053`: how the T1 golden cases run | Enter at `totalincome` through a test source node (`GivenTotalIncome`) on the shipped regime pipeline, keeping only registered nodes in shipped order, with a guard that exactly `inputs.components` and `salary.gross` are dropped; runner and test in test `taxengine/golden/`; one JSON per case naming both years, `expected.payable` copied from DR 08 and compared with `round.netpayable`; each run asserts exactly two ROUNDING lines and marks `PROVISIONAL` on any UNVERIFIED line (asserted, never skipped); T23-4 via canonical form of two projections; T23-8 on T1-O2; I3 against an empty shrink-only `NOT_YET_EVALUATED` set for both packs; instruments read from each lock by `test/LockedInstruments` | owner: "approved — C1–C6 as recommended" |
 | D-082 | 2026-09-25 | `W-052c`: how TY 2025-26 joins the timeline | Per-year versions where the governing instrument differs (new slab FA 2025 s.25; two new-regime rebates FA 2025 s.20; ₹12,500 rebate 1961 s.87A/FA 2019 s.8; two roundings 1961 ss.288A/288B), spanning versions where one instrument governs both (three ladders FA 2026 Part I-A/I-B; cess FA 2026 s.2(6)/s.3(15)); validity is the tax year, `effectiveFrom` as the instrument states it (AY noted); 2025-26 lock instruments: 1961 Act SOURCE_CHECKED (gazette ref not read), FA 2026, 1962 Rules UNVERIFIED; `2026-27.lock` → `law.10`; regime election data per year → new `W-052d` | owner: "approved — C1–C5 as recommended" |
 | D-081 | 2026-09-25 | `W-052b`: which slots are the computation's anchors | `ComputationProjector.project(Result, EngineInputs, ComputationId)`: `totalIncome` ← `round.totalincome` (s.516 "deemed to be the total income"); `taxByBasis` ← `tax.bybasis` (before rebate, per its javadoc); `netPayableBeforeFilingEffects` ← `tax.netpayable` unrounded (`round.netpayable` follows date-dependent interest; no third rounding point). Year and regime from the inputs, which must match the run's fingerprint; the caller passes the id. Missing anchor, wrong value type or fingerprint mismatch → `IllegalArgumentException` naming it. `W-053` compares DR 08's rounded figures against `round.netpayable` (erratum) | owner: "approved — C1–C3 as recommended" |
 | D-080 | 2026-09-25 | `W-052`: what the net payable reads and whether it is traced | `NetPayableNode` requires `tax.afterrebate` and `tax.cess` (not `tax.cess` only: since W-051 the cess slot is the cess alone); value = the whole post-rebate tax + cess; `W-056` adds the surcharge, the Phase 9 credits item subtracts credits under its own rule. **Untraced** (`NodeResult.untraced`): no rule exists for a sum (`DR 15` "—"), a sum-only row can't load, and the figure is `round.netpayable`'s ROUNDING `in`. No pack change | owner: "approved — C1–C3 as recommended" |

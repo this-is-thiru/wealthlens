@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.10",
-      "checksum": "sha256:028b1e059d8842c193a16d3d2cf3ce75e6585d6344311ce62ce8cafba07fa7c5"
+      "version": "2026-27.law.11",
+      "checksum": "sha256:92fa057163f91b01e7058e5a78ac0a19a8b3c579c7946fe71115364f8242dfe3"
     },
     "exec": {
       "version": "2026-27.exec.2",
