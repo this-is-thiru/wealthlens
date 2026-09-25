@@ -427,6 +427,13 @@ capital gains in from `portfolio`, so this is live for the primary user, not the
 > Schedule", which places it on the 1961 side. The 4% rate stands, now `SOURCE_CHECKED` for both years.
 > Verified by: S3 (egazette 2026/271439) p.9 (s.2(6)), p.2 (s.2(1)); `plans/W-045n.md` Findings Q2.
 
+> **Erratum (W-051, 2026-09-25):** `RATE-CESS-001`'s pack ID is **`RATE-HEALTH-EDUCATION-CESS`**, the
+> concept from the statute's own name, "Health and Education Cess on income-tax" (D-079). s.3(15) re-read:
+> *"The amount of income-tax as specified in sub-sections (1) to (5) and as increased by the applicable
+> surcharge … shall be further increased by an additional surcharge … to be called the "Health and
+> Education Cess on income-tax", calculated at the rate of 4% of such income-tax and surcharge"*.
+> Verified by: S3 p.29 (s.3(15)).
+
 > **Erratum (W-050, 2026-09-25):** `RATE-ROUND-001` is **sourced**. 1961 s.288A: *"The amount of
 > total income computed in accordance with the foregoing provisions of this Act shall be rounded off to
 > the nearest multiple of ten rupees and for this purpose any part of a rupee consisting of paise shall

@@ -648,6 +648,18 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 - **Spec** `DR 01-rulebook.md` `RATE-CESS-001` · `REBATE-ORDER-001` — cess is on **post-rebate** tax plus surcharge.
 - **Verify** `./mvnw test -pl backend -Dtest=CessNodeTest` — reproduces the cess line of `DR 08` **T2-1**; cess is computed on post-rebate tax plus surcharge, never before the rebate
 
+> **Erratum (W-051, 2026-09-25, D-079):**
+> - **The row** is `RATE-HEALTH-EDUCATION-CESS` (was `RATE-CESS-001`): `PercentOfBase` 4% of base
+>   `INCOME_TAX_AND_SURCHARGE`, FA 2026 s.3(15) / s.2(6), TY 2026-27. The TY 2025-26 version comes with
+>   `W-052c`.
+> - **Requires.** `CessNode` requires **`tax.afterrebate` only**: no `tax.surcharge` node exists before
+>   `W-056`. **`W-056` adds `tax.surcharge`** to `CessNode`'s requires and its base (tax plus
+>   surcharge), per `RATE-CESS-001` and s.3(15).
+> - **Why it is safe until then.** Every `DR 08` T1 case has a nil surcharge, and `W-053` runs T1 only.
+>
+> Verified by: `NodeIds` (no `tax.surcharge`); `DR 08` T2-1 ("TI does not EXCEED 50,00,000 → no
+> surcharge"); FA 2026 s.3(15) p.29.
+
 ### W-052 — `NetPayableNode`
 - [ ] **Produces** `taxengine/node/NetPayableNode.java` + `.../node/NetPayableNodeTest.java` *(added by `W-045c`)*. In Phase 5 it **requires `tax.cess` only**; the `credits` edge is added by the Phase 9 item that builds `CreditsNode` (D-050)
 - **Verify** `./mvnw test -pl backend -Dtest=NetPayableNodeTest` — reproduces the final figures of `DR 08` **T1-N1** and **T1-N3**; see Appendix D on the `credits` edge

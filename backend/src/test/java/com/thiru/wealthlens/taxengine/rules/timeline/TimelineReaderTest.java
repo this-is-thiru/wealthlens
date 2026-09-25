@@ -51,7 +51,8 @@ class TimelineReaderTest {
                         new RuleId("REBATE-NEW-TAX-REGIME-EXCESS"),
                         new RuleId("REBATE-RESIDENT-INDIVIDUAL"),
                         new RuleId("RATE-ROUND-TOTAL-INCOME"),
-                        new RuleId("RATE-ROUND-PAYABLE"));
+                        new RuleId("RATE-ROUND-PAYABLE"),
+                        new RuleId("RATE-HEALTH-EDUCATION-CESS"));
         assertThat(timeline.regimes().keySet())
                 .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
         assertThat(timeline.pipelineNodes().keySet())

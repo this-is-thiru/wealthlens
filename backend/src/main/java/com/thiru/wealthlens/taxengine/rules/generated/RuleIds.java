@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId RATE_HEALTH_EDUCATION_CESS = new RuleId("RATE-HEALTH-EDUCATION-CESS");
     public static final RuleId RATE_ROUND_PAYABLE = new RuleId("RATE-ROUND-PAYABLE");
     public static final RuleId RATE_ROUND_TOTAL_INCOME = new RuleId("RATE-ROUND-TOTAL-INCOME");
     public static final RuleId RATE_SLAB_FIRST_SCHEDULE = new RuleId("RATE-SLAB-FIRST-SCHEDULE");
