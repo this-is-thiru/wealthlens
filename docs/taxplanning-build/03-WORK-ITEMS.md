@@ -469,6 +469,7 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 | **W-045m** | Warning on the old compute endpoint (**OQ-3**): the response of `POST /tax-planning/user/{email}/profile/{profileId}/compute` carries a visible known-errors notice + a test in `TaxPlanningControllerIntegrationTest` | `00-BRIEF.md` §12 OQ-3; `09` B2 | the integration test asserts the notice. **Do only if OQ-3 is answered "warn" or "disable"; if answered "leave", this id is RETIRED by that decision** |
 | **W-045n** | *Research, no code.* TY 2025-26 sources for the **Phase 5 rules only** — slabs (both regimes, all age bands), rebate (`REBATE-OLD-001` is `NEEDS VERIFICATION`: open the 1961 Act s.87A base text), cess, rounding. Errata upgrading each row that is confirmed | **D-041**; `09` Slice 0 | every Phase 5 rule has a 2025-26 row at `SOURCE_CHECKED` or an explicit `UNVERIFIED` with `whatToCheck`; STATE's "Rules used that are not fully verified" lists the remainder |
 | **W-045o** | *Research, no code.* `coverage.json` completed to **every section of both Acts**, from their tables of contents; each classified | **D-038** | the register's section count equals each Act's; no entry is unclassified; the build reports the count by classification |
+| **W-045o2** | *Added by D-066 (split from `W-045o`).* The coverage register completed to every section of the **Income-tax Act, 1961 as in force for AY 2026-27**: the section list reconstructed from the thc.nic.in copy (current to about 2019) plus every section inserted or omitted by the amending Acts since (Finance Acts 2019 (No. 2)–2025, Taxation Laws (Amendment) Acts, TOLA 2020), each with its source; omitted sections not registered; classified by an owner-approved chapter table | **D-038**, D-066 | the 1961 Act's registered count equals the reconstructed list's; the list is continuous; no entry is unclassified; the build reports the count by classification |
 
 > **Changed 2026-09-23 (D-047), before any Phase 4b item started:** `W-045d` also renames regime codes, with concept names sourced from the Acts and chosen by the owner (OQ-4); `W-045f` lays the timeline out by layer; `W-045g`/`W-045h`/`W-052c` say **rule pack**, `RulePackCompiler`, `PackDiff` and `<taxYear>.lock.json` instead of "snapshot"; `coverage.json` moves to the content layer; `W-139` reuses `W-045h`'s `PackDiff` instead of owning a second one. Source: `reviews/2026-09-23-prd-techspec-review.md` C1–C5. Edited in place because no item had started; the prior wording is in git (`72c089b`).
 
@@ -529,6 +530,14 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > and the rulebook quotes Schedule XV only in part. `W-045k` built the catalogue, its checks and the
 > **default-regime** entry; **the 80C and HRA entries move to the new `W-045k2`** (D-060).
 > Verified by: `ls rulepacks/timeline/law/rules/`; `01-rulebook.md` `SAL-HRA-001`, `DED-80C-ITEMS-001`.
+
+> **Erratum (W-045o, 2026-09-25):** the `W-045o` row cannot be "research, no code" — its Verify
+> ("the build reports the count by classification", "the section count equals each Act's") needs a
+> count in code; and brief §7.1's four classifications leave no place for what D-033 designs for but
+> builds later. `W-045o` covers the **2025 Act** and adds the classification `DEFERRED` (D-066); the
+> **1961 Act moves to the new `W-045o2`**, since no copy of it as in force for AY 2026-27 was
+> reachable (India Code 403/504, Income Tax Department 403; thc.nic.in's copy is current to ~2019).
+> Verified by: `plans/W-045o.md` (source probes); `Coverage.Planned` requires a backlog item.
 
 **Standing rules from here on (D-043)** — every later item that models a section must also:
 

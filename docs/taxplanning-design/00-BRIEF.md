@@ -420,6 +420,13 @@ one classification:
 | `NOT_COMPUTATIONAL` | procedure: assessment, appeals, search, prosecution | nothing more |
 | `OUT_OF_SCOPE` | deliberately excluded | a reason and who decided |
 
+> **Erratum (W-045o, 2026-09-25):** the four classifications leave no place for what §9 designs for
+> but has not scheduled — `PLANNED` needs a backlog item and `OUT_OF_SCOPE` means *excluded* — so a
+> fifth is added: **`DEFERRED`**, carrying a scope tier (`BUILT_FIRST` = in the first scope but not
+> yet itemised, a backlog gap; `BUILT_SECOND`; `BUILT_LATER`) and the modelled assessee types it is
+> known to affect (empty where not yet determined, or where it reaches only types not modelled yet) (D-066).
+> Verified by: `Coverage.Deferred`; `CoverageRegisterTest`; `plans/W-045o.md` finding 2.
+
 **CI fails** on an unclassified section, on a `MODELLED` section whose rules are not in any
 published rule pack, and on a rule citing a section the register does not know. This is how "~100
 sections, 30–40 in the new regime, maybe more" becomes a number the build reports rather than a

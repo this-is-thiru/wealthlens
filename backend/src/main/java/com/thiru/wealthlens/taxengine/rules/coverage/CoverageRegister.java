@@ -8,11 +8,16 @@ import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import com.thiru.wealthlens.taxengine.rules.timeline.Timeline;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -30,12 +35,25 @@ public record CoverageRegister(Map<SectionRef, Coverage> sections) {
     private static final String PATH = "content/coverage.json";
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
-    /** The four words a register entry may use, one per {@link Coverage} kind. */
+    private static final String ACTS = "content/acts/";
+
+    /** The five words a register entry may use, one per {@link Coverage} kind. */
     private enum Classification {
         MODELLED,
         PLANNED,
+        DEFERRED,
         NOT_COMPUTATIONAL,
-        OUT_OF_SCOPE
+        OUT_OF_SCOPE;
+
+        static Classification of(Coverage coverage) {
+            return switch (coverage) {
+                case Coverage.Modelled m -> MODELLED;
+                case Coverage.Planned p -> PLANNED;
+                case Coverage.Deferred d -> DEFERRED;
+                case Coverage.NotComputational n -> NOT_COMPUTATIONAL;
+                case Coverage.OutOfScope o -> OUT_OF_SCOPE;
+            };
+        }
     }
 
     public CoverageRegister {
@@ -76,13 +94,29 @@ public record CoverageRegister(Map<SectionRef, Coverage> sections) {
             case PLANNED -> new Coverage.Planned(
                     Set.copyOf(PackJson.array(node, "assesseeTypes", path, e -> PersonType.valueOf(e.node().asString()))),
                     PackJson.optionalText(node, "backlogItem", path).orElse(""));
+            case DEFERRED -> new Coverage.Deferred(
+                    PackJson.enumValue(node, "tier", path, Coverage.ScopeTier.class),
+                    Set.copyOf(PackJson.arrayOrEmpty(node, "assesseeTypes", path, e -> PersonType.valueOf(e.node().asString()))));
             case NOT_COMPUTATIONAL -> new Coverage.NotComputational();
             case OUT_OF_SCOPE -> new Coverage.OutOfScope(
                     PackJson.text(node, "reason", path), PackJson.text(node, "decidedBy", path));
         });
     }
 
-    /** Refuses the timeline, listing every section it cites that is unregistered or falsely modelled. */
+    /** How many sections of each Act carry each classification — the number the build reports (D-038). */
+    public Map<SectionRef.Act, Map<String, Long>> countsByClassification() {
+        Map<SectionRef.Act, Map<String, Long>> counts = new EnumMap<>(SectionRef.Act.class);
+        sections.forEach((section, coverage) -> counts
+                .computeIfAbsent(section.act(), act -> new TreeMap<>())
+                .merge(Classification.of(coverage).name(), 1L, Long::sum));
+        return counts;
+    }
+
+    /**
+     * Refuses the timeline, listing every section it cites that is unregistered or falsely modelled,
+     * and, for each Act whose section list the timeline carries, every section the register misses or
+     * invents.
+     */
     public void verify(Timeline timeline) {
         TreeSet<String> problems = new TreeSet<>();
         timeline.rules().values().forEach(row -> row.versions().forEach(version -> {
@@ -98,8 +132,42 @@ public record CoverageRegister(Map<SectionRef, Coverage> sections) {
                 modelled.rules().forEach(rule -> requirePublished(section, rule, timeline, problems));
             }
         });
+        timeline.acts().forEach((code, content) -> requireEveryActSection(code, content, problems));
         if (!problems.isEmpty()) {
             throw new PackValidationException(PATH + ": " + problems.stream().collect(Collectors.joining("; ")));
+        }
+    }
+
+    /** The register lists exactly the Act's sections; the Act's list itself must run without a gap. */
+    private void requireEveryActSection(String code, String content, Set<String> problems) {
+        String path = ACTS + code + ".json";
+        SectionRef.Act act = PackJson.construct(path, () -> SectionRef.Act.valueOf(code));
+        JsonNode root;
+        try {
+            root = MAPPER.readTree(content);
+        } catch (JacksonException e) {
+            throw new PackValidationException(path + ": not well-formed JSON — " + e.getOriginalMessage(), e);
+        }
+        Set<SectionRef> inAct = new HashSet<>(PackJson.array(root, "sections", path,
+                e -> PackJson.construct(e.path(), () -> new SectionRef(act, PackJson.text(e.node(), "section", e.path())))));
+        requireContinuous(path, inAct, problems);
+        inAct.stream().filter(section -> !sections.containsKey(section))
+                .forEach(section -> problems.add(section + " is a section of the Act and not in the register"));
+        sections.keySet().stream().filter(section -> section.act() == act && !inAct.contains(section))
+                .forEach(section -> problems.add(section + " is in the register and not a section of the Act"));
+    }
+
+    /** Plain-numbered sections run 1 to the highest without a gap; a gap is a bad list, not a short Act. */
+    private static void requireContinuous(String path, Set<SectionRef> inAct, Set<String> problems) {
+        Set<Integer> numbers = inAct.stream()
+                .map(SectionRef::section)
+                .filter(section -> section.chars().allMatch(Character::isDigit))
+                .map(Integer::valueOf)
+                .collect(Collectors.toSet());
+        int highest = numbers.stream().mapToInt(Integer::intValue).max().orElse(0);
+        List<Integer> missing = IntStream.rangeClosed(1, highest).filter(n -> !numbers.contains(n)).boxed().toList();
+        if (!missing.isEmpty()) {
+            problems.add(path + " is not continuous: no section " + missing);
         }
     }
 

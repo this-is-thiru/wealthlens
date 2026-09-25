@@ -12,8 +12,10 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.JsonNode;
@@ -22,15 +24,17 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * The coverage register (D-038, D-059) — the build's answer to "which sections do we model". This is
+ * The coverage register (D-038, D-059, D-066) — the build's answer to "which sections do we model". This is
  * the CI gate of {@code 00-BRIEF.md} §7.1, run against the shipped timeline.
  */
+@Log4j2
 class CoverageRegisterTest {
 
     private static final Path TIMELINE = Path.of("src/main/resources/rulepacks/timeline");
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
     private static final String SLAB_FILE = "law/rules/RATE-SLAB-NEW-TAX-REGIME.json";
     private static final String COVERAGE = "content/coverage.json";
+    private static final String ACT_2025 = "content/acts/INCOME_TAX_ACT_2025.json";
 
     @TempDir
     Path copy;
@@ -76,7 +80,8 @@ class CoverageRegisterTest {
     void verify_whenAModelledEntryNamesARuleTheTimelineLacks_isRefused() {
         // Given
         Path root = edited(COVERAGE, register ->
-                ((ArrayNode) register.path("sections").get(0).path("rules")).add("RATE-SLAB-GHOST"));
+                ((ArrayNode) entry((ArrayNode) register.path("sections"), "INCOME_TAX_ACT_2025", "202").path("rules"))
+                        .add("RATE-SLAB-GHOST"));
         Timeline timeline = TimelineReader.read(root);
 
         // When / Then
@@ -143,6 +148,100 @@ class CoverageRegisterTest {
                 .isEmpty();
         assertThat(SectionRef.citedBy(Provision.present("Finance Act, 2026", "s.3(1)"))).isEmpty();
         assertThat(SectionRef.citedBy(Provision.absent("Income-tax Act, 2025"))).isEmpty();
+    }
+
+    @Test
+    void countsByClassification_whenTheShippedRegisterIsRead_coverEverySectionOfEachListedAct() {
+        // Given
+        Timeline timeline = TimelineReader.read(TIMELINE);
+        int sectionsIn2025Act = MAPPER.readTree(timeline.acts().get("INCOME_TAX_ACT_2025")).path("sections").size();
+
+        // When
+        Map<SectionRef.Act, Map<String, Long>> counts = CoverageRegister.of(timeline).countsByClassification();
+        log.info("Coverage register, sections by classification: {}", counts);
+
+        // Then — every section of the Act is classified, once
+        assertThat(counts.get(SectionRef.Act.INCOME_TAX_ACT_2025).values().stream().mapToLong(Long::longValue).sum())
+                .isEqualTo(sectionsIn2025Act);
+    }
+
+    @Test
+    void verify_whenASectionOfTheActIsNotInTheRegister_isRefusedNamingIt() {
+        // Given
+        Path root = edited(COVERAGE, register -> removeSection((ArrayNode) register.path("sections"), "431"));
+        Timeline timeline = TimelineReader.read(root);
+
+        // When / Then
+        assertThatThrownBy(() -> CoverageRegister.of(timeline).verify(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("Income-tax Act, 2025 s.431")
+                .hasMessageContaining("not in the register");
+    }
+
+    @Test
+    void verify_whenTheRegisterListsASectionTheActDoesNotHave_isRefused() {
+        // Given
+        Path root = edited(COVERAGE, register -> ((ArrayNode) register.path("sections")).add(MAPPER.createObjectNode()
+                .put("act", "INCOME_TAX_ACT_2025")
+                .put("section", "999")
+                .put("classification", "NOT_COMPUTATIONAL")));
+        Timeline timeline = TimelineReader.read(root);
+
+        // When / Then
+        assertThatThrownBy(() -> CoverageRegister.of(timeline).verify(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("Income-tax Act, 2025 s.999")
+                .hasMessageContaining("not a section of the Act");
+    }
+
+    @Test
+    void verify_whenTheActsSectionListSkipsANumber_isRefused() {
+        // Given — a list with a gap is a bad parse, not an Act with a missing section
+        Path root = edited(ACT_2025, act -> removeSection((ArrayNode) act.path("sections"), "250"));
+        Timeline timeline = TimelineReader.read(root);
+
+        // When / Then
+        assertThatThrownBy(() -> CoverageRegister.of(timeline).verify(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining(ACT_2025)
+                .hasMessageContaining("not continuous")
+                .hasMessageContaining("250");
+    }
+
+    @Test
+    void of_whenADeferredEntryNamesNoScopeTier_isRefused() {
+        // Given
+        Path root = edited(COVERAGE, register -> ((ArrayNode) register.path("sections")).add(MAPPER.createObjectNode()
+                .put("act", "INCOME_TAX_ACT_1961")
+                .put("section", "44AD")
+                .put("classification", "DEFERRED")
+                .set("assesseeTypes", MAPPER.createArrayNode().add("INDIVIDUAL"))));
+        Timeline timeline = TimelineReader.read(root);
+
+        // When / Then
+        assertThatThrownBy(() -> CoverageRegister.of(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("tier");
+    }
+
+    private static JsonNode entry(ArrayNode sections, String act, String section) {
+        for (JsonNode entry : sections) {
+            if (act.equals(entry.path("act").asString()) && section.equals(entry.path("section").asString())) {
+                return entry;
+            }
+        }
+        throw new IllegalStateException("no " + act + " s." + section + " in the register");
+    }
+
+    private static void removeSection(ArrayNode sections, String section) {
+        for (int i = 0; i < sections.size(); i++) {
+            if (section.equals(sections.get(i).path("section").asString())
+                    && !"INCOME_TAX_ACT_1961".equals(sections.get(i).path("act").asString())) {
+                sections.remove(i);
+                return;
+            }
+        }
+        throw new IllegalStateException("no section " + section + " to remove");
     }
 
     /** A copy of the shipped timeline with one file edited. */

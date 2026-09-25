@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * How one section is covered — exactly one of four classifications, each carrying what
- * {@code 00-BRIEF.md} §7.1 requires of it (D-038).
+ * How one section is covered — exactly one of five classifications, each carrying what
+ * {@code 00-BRIEF.md} §7.1 requires of it (D-038, D-066).
  */
 public sealed interface Coverage {
 
@@ -38,6 +38,34 @@ public sealed interface Coverage {
             }
             assesseeTypes = Set.copyOf(assesseeTypes);
         }
+    }
+
+    /**
+     * Designed for but not scheduled: in the product's scope (D-033), with no backlog item yet. Not
+     * {@link OutOfScope}, which is a deliberate exclusion; not {@link Planned}, which names its item.
+     *
+     * @param assesseeTypes the modelled types known to be affected; empty where that is not yet
+     *     determined, or the section reaches only types {@link PersonType} does not have yet (companies,
+     *     firms, co-operatives)
+     */
+    record Deferred(ScopeTier tier, Set<PersonType> assesseeTypes) implements Coverage {
+
+        public Deferred {
+            if (tier == null) {
+                throw new IllegalArgumentException("A DEFERRED section must name its scope tier");
+            }
+            assesseeTypes = Set.copyOf(assesseeTypes);
+        }
+    }
+
+    /**
+     * When D-033 builds a deferred section. {@code BUILT_FIRST} is in the first scope with no backlog
+     * item yet — a gap for the owner to itemise, not a postponement.
+     */
+    enum ScopeTier {
+        BUILT_FIRST,
+        BUILT_SECOND,
+        BUILT_LATER
     }
 
     /** Procedure — assessment, appeals, search, prosecution — which computes nothing. */
