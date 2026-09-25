@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045o2 — "taxplanning W-045o2: register every in-force section of the Income-tax Act 1961 — rebuilt from the 2019 arrangement and every amending Act since (D-067)"
-Last updated              : 2026-09-25 (session 6 — W-045k … W-045o2 done; build GREEN, 1488 tests)
-Current position          : W-045o3 — apply FA 2026 to the 2025-Act section list
+Last checkpoint           : W-045o3 — "taxplanning W-045o3: apply the Finance Act 2026 to the 2025-Act section list — 354A inserted, 443 and 447 omitted (D-068)"
+Last updated              : 2026-09-25 (session 6 — W-045k … W-045o3 done; build GREEN, 1488 tests)
+Current position          : W-045d2 — the last open Phase 4b item (rule-ID mapping, docs only)
 Session count             : 6
 ```
 
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-045o3` — apply the Finance Act, 2026 to the 2025-Act section list (D-067). The 2025-Act backlog gaps (STATE) await the owner. Startup wiring is UNOWNED (D-054). `W-045d2` any time |
+| **Next item** | `W-045d2` — the old → new mapping for the remaining rulebook IDs (docs only, D-051); the last Phase 4b item before `W-046` (D-043). The 2025-Act backlog gaps (STATE) await the owner. Startup wiring is UNOWNED (D-054). `W-045d2` any time |
 | **Status** | `READY` — nothing in flight, nothing blocked. Two owner questions open (OQ-1, OQ-2 below; OQ-3 decided by D-063, OQ-4 by D-051); nothing depends on them |
 | **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **71** / 176 live · in flight **0** · blocked **0**  ← computed by script; 176 = 146 base ids − 8 retired + 38 suffixed
+Counts — done **72** / 176 live · in flight **0** · blocked **0**  ← computed by script; 176 = 146 base ids − 8 retired + 38 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045o3 | 2026-09-25 | FA 2026 applied to the 2025-Act list (D-068): s.354A inserted (FA 2026 s.81), ss.443, 447 omitted (ss.100, 102), all in force 1-4-2026 (s.1(2)(a)); other whole-section changes are same-number substitutions; 354A → DEFERRED/BUILT_LATER; 2025 in force 535; `parse_act_2025.py` gains `AMENDMENTS`. Found, not applied: the Income-tax (Amendment) Ordinance, 2026 (Schedule IV only) and the Taxation and Other Laws (Amendment) Bill, 2026 (unread, enactment unconfirmed) | `CoverageRegisterTest` 16/16 + bite probe; clean unit 1488/1488
 W-045o2 | 2026-09-25 | Coverage register completed for the 1961 Act as in force for AY 2026-27 (D-067): 951 numbers (131 omitted, 820 in force, 52 chapters) from the thc.nic.in arrangement (to Act 7 of 2019) + a chain of 67 insertions (1 unsourced: 245-OA) and 11 omissions (4 unsourced: 76, 77, 186, 269S), each other one read in the amending Act (`tools/build_act_1961.py`); 5 entries UNSOURCED (R1); classified by the owner-approved table — 101 PLANNED, 1 MODELLED, 363 NOT_COMPUTATIONAL, 355 DEFERRED (22 BUILT_FIRST); `SectionRef` takes hyphenated numbers; Act lists carry `omitted`. Found: FA 2026 amends the 2025 Act → `W-045o3` | `CoverageRegisterTest` 16/16 + bite probe; clean unit 1488/1488
 W-045o | 2026-09-25 | Coverage register completed for the 2025 Act (D-038, D-066): 536 sections parsed from S2 (`tools/parse_act_2025.py` → `content/acts/INCOME_TAX_ACT_2025.json`, continuous 1–536, 23 chapters); classified by the owner-approved chapter table — 83 PLANNED, 1 MODELLED, 237 NOT_COMPUTATIONAL, 215 DEFERRED (18 BUILT_FIRST backlog gaps, 1 BUILT_SECOND, 196 BUILT_LATER); `Coverage.Deferred`; register checked against the Act list; counts logged. 1961 Act → `W-045o2` | `CoverageRegisterTest` 14/14 + 2 bite probes; clean unit 1486/1486
 W-045n | 2026-09-25 | TY 2025-26 sources for the Phase 5 rules (research; D-065): Q1 `REBATE-OLD-001` figures sourced (FA 2019 s.8 + every Finance Act to 2025, only provisos amended); Q2 `RATE-CESS-001` 1961 side corrected to FA 2026 s.2(6); Q3 1961 ss.288A/288B and Q4 D-052 not reached (403/504, a scanned PDF) → UNVERIFIED with whatToCheck; per-rule table for `W-052c` in `plans/W-045n.md` Findings | rulebook diff additions only (2 errata); no code
@@ -425,6 +426,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-068 | 2026-09-25 | `W-045o3`: how the 2025-Act list reflects the Finance Act, 2026 | FA 2026 (s.1(2)(a): in force 1-4-2026) inserts s.354A (s.81) and omits ss.443, 447 (ss.100, 102); its other whole-section changes are same-number substitutions. The list gains 354A and keeps 443/447 marked `omitted` with source (no code); `tools/parse_act_2025.py` applies an `AMENDMENTS` table after the parse; 354A → `DEFERRED`/`BUILT_LATER`; other amending instruments are searched for and reported, not applied without approval | owner: "approved — A1–A4 as recommended" |
 | D-067 | 2026-09-25 | `W-045o2`: how the 1961 Act's sections are listed and registered | The Act list carries **every** section number of the arrangement plus later insertions, omitted ones marked `"omitted": true` with date and source, so it stays continuous; the register must equal the list minus the omitted. Base: thc.nic.in copy, current to Act 7 of 2019; every amending Act since found by a logged search and read for insertions/omissions and their effective dates (in force for AY 2026-27). One item, two stops (the list and chain; the chapter table). Existing 1961 rows kept; a 2025 classification is reused only where the rulebook states the mapping | owner: "approved — A1a, A2a, A3 as recommended" |
 | D-066 | 2026-09-25 | `W-045o`: how the coverage register is completed to every section of both Acts | **Split:** `W-045o` = the 2025 Act (sections parsed from S2 into `content/acts/income-tax-act-2025.sections.json`, continuity-checked); new `W-045o2` = the 1961 Act as in force for AY 2026-27, reconstructed from the thc.nic.in copy (current to ~2019) plus every section inserted/omitted by amending Acts since. A fifth classification **`DEFERRED`** (designed for, not scheduled; D-033 tier `BUILT_SECOND`/`BUILT_LATER`) — brief §7.1 erratum. Classification by a **chapter table the owner approves** before it is applied, with per-section exceptions stated. Omitted 1961 sections not registered. One JSON entry per line. Counts in code (the row's "no code" cannot meet its own Verify) | owner: "approved — A, B1a, B2–B5 as recommended" |
 | D-065 | 2026-09-25 | `W-045n`: how TY 2025-26 sources for the Phase 5 rules are researched and recorded | Only Q1 (`REBATE-OLD-001` main limb, 1961 s.87A), Q2 (`RATE-CESS-001` 1961-side sub-section), Q3 (`RATE-ROUND-001`, 1961 ss.288A/288B) and Q4 (D-052: the date meaning of `WITHDRAWN`/`STRUCK_DOWN`) are open; the rest are VERIFIED for 2025-26 in the rulebook. Upgrade only on a primary source quoted with URL and page; otherwise `UNVERIFIED` + `whatToCheck`. Results: rulebook errata, the plan's Findings table (for `W-052c`), STATE's unverified list. No code, timeline or lock change. Public government documents fetched with WebFetch/WebSearch | owner: "approved — C1, C2 as recommended" |

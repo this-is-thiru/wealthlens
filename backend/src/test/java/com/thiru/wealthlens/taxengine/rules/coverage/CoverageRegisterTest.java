@@ -155,7 +155,6 @@ class CoverageRegisterTest {
     void countsByClassification_whenTheShippedRegisterIsRead_coverEverySectionOfEachListedAct() {
         // Given
         Timeline timeline = TimelineReader.read(TIMELINE);
-        int sectionsIn2025Act = MAPPER.readTree(timeline.acts().get("INCOME_TAX_ACT_2025")).path("sections").size();
 
         // When
         Map<SectionRef.Act, Map<String, Long>> counts = CoverageRegister.of(timeline).countsByClassification();
@@ -163,7 +162,7 @@ class CoverageRegisterTest {
 
         // Then — every section of each Act in force is classified, once
         assertThat(counts.get(SectionRef.Act.INCOME_TAX_ACT_2025).values().stream().mapToLong(Long::longValue).sum())
-                .isEqualTo(sectionsIn2025Act);
+                .isEqualTo(inForce(timeline.acts().get("INCOME_TAX_ACT_2025")));
         assertThat(counts.get(SectionRef.Act.INCOME_TAX_ACT_1961).values().stream().mapToLong(Long::longValue).sum())
                 .isEqualTo(inForce(timeline.acts().get("INCOME_TAX_ACT_1961")));
     }

@@ -188,7 +188,7 @@ backend/src/main/resources/rulepacks/
     exec/components/<ComponentCode>.json   with the first component (W-059)
     forms/itr/<ItrFormCode>.json
     content/sections/<SectionKey>.json ✅ the section catalogue: default regime (W-045k), investments deduction and HRA (W-045k2); not compiled into year packs
-    content/acts/<Act>.json            ✅ each Act's section list, parsed from its gazette (2025 Act: 536, W-045o; 1961 Act: 951 numbers, 820 in force for AY 2026-27, W-045o2); not compiled into year packs
+    content/acts/<Act>.json            ✅ each Act's section list, parsed from its gazette (2025 Act as amended by FA 2026: 537 numbers, 535 in force, W-045o/W-045o3; 1961 Act: 951 numbers, 820 in force for AY 2026-27, W-045o2); not compiled into year packs
     content/coverage.json              ✅ the coverage register (W-045j; the timeline's 2 cited sections `MODELLED`, + 3 `PLANNED` the catalogue cites, W-045k2; W-045o completes it); not compiled into year packs
   2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums
 ```
@@ -483,3 +483,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | the old compute endpoint's response gains a top-level `knownErrors` notice (`KnownErrorsComputation`, body otherwise unchanged); removed with the endpoint (`09` B2) | `W-045m`, D-063, D-064 |
 | 2026-09-25 | T2: `Coverage.Deferred` + `ScopeTier`; `CoverageRegister` checks the register against each Act's section list and counts by classification. T4: `content/acts/` read by `TimelineReader`; the 2025 Act's 536 sections registered | `W-045o`, D-066 |
 | 2026-09-25 | T2: `SectionRef` accepts hyphenated sections; Act lists may mark sections `omitted`. T4: `content/acts/INCOME_TAX_ACT_1961.json`; every in-force 1961 section registered | `W-045o2`, D-067 |
+| 2026-09-25 | T4: the 2025-Act list reflects FA 2026 (354A inserted; 443, 447 omitted); the parse tool applies an amendments table | `W-045o3`, D-068 |

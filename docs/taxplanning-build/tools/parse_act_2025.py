@@ -1,4 +1,4 @@
-"""Parse the Income-tax Act, 2025 gazette into its section list (W-045o, D-066).
+"""Parse the Income-tax Act, 2025 gazette into its section list (W-045o, D-066), amended (W-045o3, D-068).
 
 Usage: python3 parse_act_2025.py <path to egazette 2025/265620.pdf> <output .json>
 Needs: pypdf. Output: rulepacks/timeline/content/acts/INCOME_TAX_ACT_2025.json.
@@ -20,6 +20,13 @@ PINNED = {
     173: (201, '173 For the purposes of this section and sections 161, 162, 163, 165, 171 and 172,'
                ' unless the context otherwise requires,—'),
 }
+# Changes to the section list since enactment, each read in the amending instrument (D-068). The Act
+# stays continuous: an omitted section keeps its entry, marked omitted.
+AMENDMENTS = [
+    ('354A', 'inserted', 'Finance Act, 2026 (4 of 2026) s.81, p.55; in force 1-4-2026 (s.1(2)(a))'),
+    ('443', 'omitted', 'Finance Act, 2026 (4 of 2026) s.100, p.60; in force 1-4-2026 (s.1(2)(a))'),
+    ('447', 'omitted', 'Finance Act, 2026 (4 of 2026) s.102, p.61; in force 1-4-2026 (s.1(2)(a))'),
+]
 CANDIDATE = re.compile(r'(?<![\d.(A-Za-z])(\d{1,3})\s*\.\s*(\(\s*1\s*\)|[A-Z“"])')
 CHAPTER = re.compile(r'\s*CHAPTER\s+([IVXLC]+)\s*$')
 PART = re.compile(r'\s*([A-Z])\s*\.\s*[—–-]{1,2}\s*(\S.*?)\s*$')
@@ -75,8 +82,22 @@ def main(pdf, out_path):
         part = [p for p in parts if (chapter[0], chapter[1]) <= (p[0], p[1]) <= (page, li)]
         sections.append({'section': str(n), 'page': page, 'chapter': chapter[2],
                          'part': part[-1][2] if part else None, 'firstWords': quote[:80]})
+    apply_amendments(sections)
     json.dump(sections, open(out_path, 'w'), ensure_ascii=False, indent=1)
     print(f'{len(sections)} sections, continuous 1–{last}')
+
+
+def apply_amendments(sections):
+    """An inserted section follows the section it is numbered after, in that section's chapter and part."""
+    for section, kind, source in AMENDMENTS:
+        if kind == 'omitted':
+            entry = next(e for e in sections if e['section'] == section)
+            entry['omitted'], entry['source'] = True, source
+        else:
+            base = re.match(r'\d+', section).group(0)
+            at = next(i for i, e in enumerate(sections) if e['section'] == base)
+            sections.insert(at + 1, {'section': section, 'page': None, 'chapter': sections[at]['chapter'],
+                                     'part': sections[at]['part'], 'firstWords': None, 'source': source})
 
 
 if __name__ == '__main__':
