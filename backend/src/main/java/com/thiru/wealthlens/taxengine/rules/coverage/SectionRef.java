@@ -12,12 +12,13 @@ import java.util.regex.Pattern;
  * section numbers for different law ({@code s.10}, {@code s.16}, {@code s.19}), so a number alone
  * names nothing (D-059).
  *
- * @param section the number with any letters, e.g. {@code "115BAC"}
+ * @param section the number with any letters, as the Act writes it, e.g. {@code "115BAC"}, {@code "194-O"}
  */
 public record SectionRef(Act act, String section) {
 
-    private static final Pattern CITATION = Pattern.compile("^s\\.([0-9]+[A-Z]*)");
-    private static final Pattern SECTION = Pattern.compile("^[0-9]+[A-Z]*$");
+    /** A number, then letters, optionally after a hyphen: the Act writes 194-O so it cannot read as 1940, and 115V-I. */
+    private static final Pattern CITATION = Pattern.compile("^s\\.([0-9]+[A-Z]*(?:-[A-Z]+)?)");
+    private static final Pattern SECTION = Pattern.compile("^[0-9]+[A-Z]*(?:-[A-Z]+)?$");
 
     /** The two Acts whose sections the register lists. */
     public enum Act {
@@ -42,7 +43,7 @@ public record SectionRef(Act act, String section) {
         }
         if (section == null || !SECTION.matcher(section).matches()) {
             throw new IllegalArgumentException(
-                    "A section is a number with optional capital letters, e.g. 115BAC, but was \"" + section + "\"");
+                    "A section is a number with optional capital letters, e.g. 115BAC or 194-O, but was \"" + section + "\"");
         }
     }
 

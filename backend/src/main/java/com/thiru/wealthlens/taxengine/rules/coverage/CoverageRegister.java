@@ -10,7 +10,6 @@ import com.thiru.wealthlens.taxengine.rules.timeline.Timeline;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -138,23 +137,40 @@ public record CoverageRegister(Map<SectionRef, Coverage> sections) {
         }
     }
 
-    /** The register lists exactly the Act's sections; the Act's list itself must run without a gap. */
+    /**
+     * The register lists exactly the Act's sections in force: every listed section not marked
+     * {@code omitted}, and none that is (D-067). The list itself must run without a gap, omitted
+     * numbers included, so a gap is a bad list rather than an omitted section.
+     */
     private void requireEveryActSection(String code, String content, Set<String> problems) {
         String path = ACTS + code + ".json";
         SectionRef.Act act = PackJson.construct(path, () -> SectionRef.Act.valueOf(code));
+        Map<SectionRef, Boolean> omittedBySection = actSections(path, act, content);
+        requireContinuous(path, omittedBySection.keySet(), problems);
+        omittedBySection.forEach((section, omitted) -> {
+            if (omitted && sections.containsKey(section)) {
+                problems.add(section + " is omitted from the Act and must not be in the register");
+            } else if (!omitted && !sections.containsKey(section)) {
+                problems.add(section + " is a section of the Act and not in the register");
+            }
+        });
+        sections.keySet().stream().filter(section -> section.act() == act && !omittedBySection.containsKey(section))
+                .forEach(section -> problems.add(section + " is in the register and not a section of the Act"));
+    }
+
+    private static Map<SectionRef, Boolean> actSections(String path, SectionRef.Act act, String content) {
         JsonNode root;
         try {
             root = MAPPER.readTree(content);
         } catch (JacksonException e) {
             throw new PackValidationException(path + ": not well-formed JSON — " + e.getOriginalMessage(), e);
         }
-        Set<SectionRef> inAct = new HashSet<>(PackJson.array(root, "sections", path,
-                e -> PackJson.construct(e.path(), () -> new SectionRef(act, PackJson.text(e.node(), "section", e.path())))));
-        requireContinuous(path, inAct, problems);
-        inAct.stream().filter(section -> !sections.containsKey(section))
-                .forEach(section -> problems.add(section + " is a section of the Act and not in the register"));
-        sections.keySet().stream().filter(section -> section.act() == act && !inAct.contains(section))
-                .forEach(section -> problems.add(section + " is in the register and not a section of the Act"));
+        Map<SectionRef, Boolean> omittedBySection = new HashMap<>();
+        PackJson.array(root, "sections", path, e -> Map.entry(
+                        PackJson.construct(e.path(), () -> new SectionRef(act, PackJson.text(e.node(), "section", e.path()))),
+                        e.node().path("omitted").asBoolean(false)))
+                .forEach(entry -> omittedBySection.put(entry.getKey(), entry.getValue()));
+        return omittedBySection;
     }
 
     /** Plain-numbered sections run 1 to the highest without a gap; a gap is a bad list, not a short Act. */

@@ -35,6 +35,7 @@ class CoverageRegisterTest {
     private static final String SLAB_FILE = "law/rules/RATE-SLAB-NEW-TAX-REGIME.json";
     private static final String COVERAGE = "content/coverage.json";
     private static final String ACT_2025 = "content/acts/INCOME_TAX_ACT_2025.json";
+    private static final String ACT_1961 = "content/acts/INCOME_TAX_ACT_1961.json";
 
     @TempDir
     Path copy;
@@ -160,9 +161,41 @@ class CoverageRegisterTest {
         Map<SectionRef.Act, Map<String, Long>> counts = CoverageRegister.of(timeline).countsByClassification();
         log.info("Coverage register, sections by classification: {}", counts);
 
-        // Then — every section of the Act is classified, once
+        // Then — every section of each Act in force is classified, once
         assertThat(counts.get(SectionRef.Act.INCOME_TAX_ACT_2025).values().stream().mapToLong(Long::longValue).sum())
                 .isEqualTo(sectionsIn2025Act);
+        assertThat(counts.get(SectionRef.Act.INCOME_TAX_ACT_1961).values().stream().mapToLong(Long::longValue).sum())
+                .isEqualTo(inForce(timeline.acts().get("INCOME_TAX_ACT_1961")));
+    }
+
+    @Test
+    void verify_whenARegisteredSectionIsOmittedFromTheAct_isRefusedNamingIt() {
+        // Given — 80C marked omitted in the Act's list while the register still classifies it
+        Path root = edited(ACT_1961, act -> ((ObjectNode) entry((ArrayNode) act.path("sections"), null, "80C"))
+                .put("omitted", true));
+        Timeline timeline = TimelineReader.read(root);
+
+        // When / Then
+        assertThatThrownBy(() -> CoverageRegister.of(timeline).verify(timeline))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("Income-tax Act, 1961 s.80C")
+                .hasMessageContaining("omitted");
+    }
+
+    @Test
+    void citedBy_whenASectionNumberCarriesAHyphen_keepsIt() {
+        // When / Then — the Act writes 194-O so it cannot be read as 1940
+        assertThat(SectionRef.citedBy(Provision.present("Income-tax Act, 1961", "s.194-O(1)")))
+                .contains(new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "194-O"));
+    }
+
+    private static long inForce(String actContent) {
+        JsonNode sections = MAPPER.readTree(actContent).path("sections");
+        long count = 0;
+        for (JsonNode section : sections) {
+            count += section.path("omitted").asBoolean(false) ? 0 : 1;
+        }
+        return count;
     }
 
     @Test
@@ -226,7 +259,8 @@ class CoverageRegisterTest {
 
     private static JsonNode entry(ArrayNode sections, String act, String section) {
         for (JsonNode entry : sections) {
-            if (act.equals(entry.path("act").asString()) && section.equals(entry.path("section").asString())) {
+            if ((act == null || act.equals(entry.path("act").asString()))
+                    && section.equals(entry.path("section").asString())) {
                 return entry;
             }
         }
