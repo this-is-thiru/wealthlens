@@ -55,7 +55,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `money/` | `Money` `Rate` — the **only** package that may call `BigDecimal.setScale` in the tax modules · named interface `money` |
 | `id/` | `RuleId` `NodeId` `ComponentCode` `RegimeCode` `ItrFormCode` `ScheduleCode` `TaxYearId` `BaseId` `Identifiers` · named interface `id` |
 | `cap/` | `CapShape` (sealed) `Fixed` `PercentOfBase` `LeastOf` `AggregateWithCeiling` `SlabLadder` `PerUnitPerPeriod` `CapResult` `CapContext` `AggregateOutcome` |
-| `relief/` | `ReliefShape` (sealed: `FlatWithCeiling`, `ExcessOverThreshold`, `ThresholdLadderCeiling`, `NoRelief`) `ReliefResult` `ReliefContext` `UnrelievedTax` — each relief formula once, applied to (income, tax before relief, optional re-entry for U); result = amount to take off + reason (D-073). Not yet attached to rule rows (`W-049`) |
+| `relief/` | `ReliefShape` (sealed: `FlatWithCeiling`, `ExcessOverThreshold`, `ThresholdLadderCeiling`, `NoRelief`) `ReliefResult` `ReliefContext` `UnrelievedTax` — each relief formula once, applied to (income, tax before relief, optional re-entry for U); result = amount to take off + reason (D-073). `RuleRelief` (shape + `limitedToSlabRateTax`) is what a rule version carries (D-075) |
 | `condition/` | `Condition` (sealed, **13** predicates: `IsResident` `AgeAtLeast` `HasPersonType` `IsCertifiedDisabled` `IncomeAtMost` `IncomeAtLeast` `HasIncomeUnderHead` `ComponentPresent` `EvidenceRecorded` `PaidOtherThanInCash` `AllOf` `AnyOf` `Not`) `ConditionContext` `PersonType` `AgeSubject` `DisabilitySeverity` `EvidenceType` `HeadCode` |
 | `temporal/` | `TemporalAxis` `TemporalContext` `Validity` `RuleVersion` `AmendmentRef` `DateRange` `Provision` `Presence` `MissingTemporalCoordinateException` `NoRuleVersionException` |
 | `pack/` | `RulePack` `RulePackLayer` `RulePackRef` `RuleRow` `RulePackProvider` `PackAssembler` `RegimeApplicability` `MidYearCombination` `DisallowanceSet` `ConditionSet` |
@@ -200,6 +200,11 @@ refuses a mismatch naming each rule that moved. Checksums are over canonical JSO
 whitespace, `_` note fields dropped (D-054). `ClasspathRulePackProvider` loads every year this way (✅ `W-045g2`);
 nothing yet loads a pack at startup (UNOWNED). Packs are to be compiled at
 startup only, never on a request path.
+
+A rule version carries a `cap`, a `relief`, or `conditions` — at least one, and never both a cap and a
+relief (the `RuleVersion` constructor refuses it). `relief` is tagged like a cap — `FlatWithCeiling
+{maximum, incomeCeiling}`, `ExcessOverThreshold {threshold}`, `ThresholdLadderCeiling {thresholds}`,
+`NoRelief {}` — and always states `limitedToSlabRateTax` (s.156(3)); absent is refused (`W-049a`, D-075).
 
 ---
 
@@ -489,3 +494,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2/T6: `node/TaxByBasisNode` built — tax at slab rates from `regime.rateTable()`, one `TAX` trace line with the in-force version's provenance; age-band ladder selection split to `W-046b` | `W-046`, D-071 |
 | 2026-09-25 | T4/T6: `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79`, `-AGE-80` authored (TY 2026-27); lock → `2026-27.law.6`; `NodeContext.conditions()` builds a `ConditionContext` from `EngineInputs` (RNOR resident, age at the tax year's end); `TaxByBasisNode` selects the ladder | `W-046b`, D-072 |
 | 2026-09-25 | T2: `relief/` built — the relief family (`DR 10` E5); rule-row attachment and JSON move to `W-049` | `W-048`, D-073 |
+| 2026-09-25 | T2/T4: `RuleRelief`; `RuleVersion.relief` (never beside a cap); the rule-row `relief` block, `limitedToSlabRateTax` required; a rule needs a cap, relief or conditions. No pack or lock change | `W-049a`, D-075 |

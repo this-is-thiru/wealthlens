@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-049 — RebateNode (+ RuleVersion carries a ReliefShape; ShapeJson reads it, per the W-048 erratum)
-Stage           : NOT_STARTED
-Plan            : — (plans/W-049.md once written)
-Approved        : —
-Steps done      : —
-Next step       : READ the W-049 section of 03-WORK-ITEMS.md (incl. the W-048 erratum above it) and only the sections it names; write plans/W-049.md; STOP for approval. Known: REBATE-* concept names from the W-045d2 mapping (REBATE-RESIDENT-INDIVIDUAL, REBATE-NEW-TAX-REGIME, -EXCESS, -LIMIT); REBATE-OLD-001 figures SOURCE_CHECKED with residual (W-045n); NEW_TAX_REGIME.json `_pendingRules` note to update; lock bump expected
-Last verify     : ./mvnw clean test -pl backend -Punit → 1514 pass, 0 fail, 0 Checkstyle violations (W-048)
-Waiting on      : nothing for W-049; owner to itemise the backlog gaps (STATE); D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
-Files touched   : —
-Last item commit: taxplanning W-048: add the ReliefShape family — each relief formula once, amount to take off plus reason (D-073)
-Updated         : 2026-09-25, session 6
+Item            : W-049 — RebateNode + the three s.156 rebate rows (plan approved, D-074)
+Stage           : BUILD
+Plan            : plans/W-049.md
+Approved        : 2026-09-25 — "approved — A1–A4 as recommended" (D-074)
+Steps done      : 1, 2 (W-049a built and committed, D-075)
+Next step       : step 3 of plans/W-049.md — RebateNodeTest (fails); rows; lock → 2026-27.law.7 + RuleIds; RebateNode
+Last verify     : ./mvnw clean test -pl backend -Punit → 1524 pass, 0 fail, 0 Checkstyle violations (W-049a)
+Waiting on      : nothing; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Files touched   : none
+Last item commit: taxplanning W-049a: carry a relief on a rule version — read like a cap, its slab-rate limit always stated (D-075)
+Updated         : 2026-09-25, session 6 (ended at the session limit, tree clean)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

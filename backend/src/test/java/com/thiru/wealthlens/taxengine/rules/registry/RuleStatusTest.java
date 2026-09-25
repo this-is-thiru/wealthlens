@@ -24,6 +24,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -68,6 +69,7 @@ class RuleStatusTest {
                 validity,
                 new RegimeApplicability.AllRegimes(),
                 new Fixed(Money.of("60000")),
+                Optional.empty(),
                 List.of(),
                 Provision.present("Income-tax Act, 1961", "s.115BAC(1A)(iii)"),
                 Provision.present("Income-tax Act, 2025", "s.202(1) Table"),

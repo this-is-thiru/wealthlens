@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -108,6 +109,7 @@ class RulePackLayerTest {
                         Validity.Between.fromOnwards(LocalDate.of(2026, 4, 1)),
                         new RegimeApplicability.AllRegimes(),
                         new Fixed(Money.ZERO),
+                        Optional.empty(),
                         List.of(),
                         Provision.notYetVerified("Income-tax Act, 1961"),
                         Provision.present("Income-tax Act, 2025", "s.202(1)"),

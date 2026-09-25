@@ -6,7 +6,9 @@ import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.thiru.wealthlens.taxengine.rules.registry.LegalStatus;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
+import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * What a rule said during one window of time.
@@ -22,6 +24,8 @@ import java.util.List;
  * @param validity when this version was in force
  * @param regimes which regimes it applies in
  * @param cap the limit it imposes; may be null where the rule states a condition and no amount
+ * @param relief the relief it grants; never beside a cap, because a rule either limits an amount or
+ *     takes one off the tax, and one that did both would leave its reader to guess the order
  * @param conditions what must hold for it to apply; empty where it always does
  * @param provision1961 where it lives in the Income-tax Act 1961
  * @param provision2025 where it lives in the Income-tax Act 2025
@@ -35,6 +39,7 @@ public record RuleVersion(
         Validity validity,
         RegimeApplicability regimes,
         CapShape cap,
+        Optional<RuleRelief> relief,
         List<Condition> conditions,
         Provision provision1961,
         Provision provision2025,
@@ -61,6 +66,14 @@ public record RuleVersion(
         if (legalStatus == null || publicationStatus == null) {
             throw new IllegalArgumentException(
                     "A rule version must state its legal status and its publication status");
+        }
+        if (relief == null) {
+            throw new IllegalArgumentException("A rule version's relief is Optional.empty() when it grants none");
+        }
+        if (cap != null && relief.isPresent()) {
+            throw new IllegalArgumentException(
+                    "A rule version has both a cap and a relief; a rule limits an amount or grants a relief,"
+                            + " not both");
         }
         requirePendingNotificationStatedTwiceAlike(validity, legalStatus);
         conditions = conditions == null ? List.of() : List.copyOf(conditions);

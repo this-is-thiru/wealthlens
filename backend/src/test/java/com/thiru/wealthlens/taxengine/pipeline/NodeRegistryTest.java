@@ -390,6 +390,7 @@ class NodeRegistryTest {
                         Validity.Between.fromOnwards(LocalDate.of(2026, 4, 1)),
                         new RegimeApplicability.AllRegimes(),
                         new Fixed(Money.ZERO),
+                        Optional.empty(),
                         List.of(),
                         Provision.notYetVerified("Income-tax Act, 1961"),
                         Provision.present("Income-tax Act, 2025", "s.202(1)"),

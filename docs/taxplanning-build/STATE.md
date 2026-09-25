@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-048 — "taxplanning W-048: add the ReliefShape family — each relief formula once, amount to take off plus reason (D-073)"
-Last updated              : 2026-09-25 (session 6 — Phase 4b complete; W-046, W-046b, W-048 done; build GREEN, 1514 tests)
-Current position          : W-049 — RebateNode (+ relief wiring to rule rows)
+Last checkpoint           : W-049a — "taxplanning W-049a: carry a relief on a rule version — read like a cap, its slab-rate limit always stated (D-075)"
+Last updated              : 2026-09-25 (session 6 — Phase 4b complete; W-046, W-046b, W-048, W-049a done; build GREEN, 1524 tests)
+Current position          : W-049 — RebateNode (approved D-074), resume at its step 3
 Session count             : 6
 ```
 
@@ -53,7 +53,7 @@ Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
-Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
+Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 P  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **77** / 178 live · in flight **0** · blocked **0**  ← computed by script; 178 = 146 base ids − 8 retired + 40 suffixed
+Counts — done **78** / 179 live · in flight **1** · blocked **0**  ← computed by script; 179 = 146 base ids − 8 retired + 41 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-049a | 2026-09-25 | A relief on a rule row (D-075): `rules/relief/RuleRelief(shape, limitedToSlabRateTax)`; `RuleVersion.relief` (`Optional`, after `cap`; cap + relief refused in the constructor); `ShapeJson.relief` reads the four tagged shapes, `limitedToSlabRateTax` required; a rule needs a cap, relief or conditions; 13 construction sites updated (12 `Optional.empty()`, one copy passes `v.relief()`). No pack, lock or `RuleIds` change | `RuleJsonReliefTest` 10/10 + Verify 78/78 + bite probe; clean unit 1524/1524
 W-048 | 2026-09-25 | Relief family (D-073): `rules/relief/{ReliefShape,FlatWithCeiling,ExcessOverThreshold,ThresholdLadderCeiling,NoRelief,ReliefResult,ReliefContext,UnrelievedTax}`; amount to take off + reason; U supplied by the caller, refused when absent; wiring to rule rows + JSON → `W-049` (erratum). Hand-derived: 60,000 at 12L; 0 at 12,00,001; 12,000 at 4.9L; MR 51,500 at 12.1L; 0 at 13L; surcharge relief 1,07,933 (constructed) | `ReliefShapeTest` 11/11 + bite probe; clean unit 1514/1514
 W-046b | 2026-09-25 | Old-regime age ladders (D-072): `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79` / `-AGE-80` (FA 2026 First Sched. Part I-B Para A (II)/(III), p.85; conditions resident + age as data; TY 2026-27); `TaxByBasisNode` picks the one conditional ladder that holds, else `rateTable`, refusing two; `NodeContext.conditions()` (RNOR resident per S2 s.5(1)(c); age at `taxYearEnd()` per s.2(100)); lock → `2026-27.law.6`; `RuleIds` regenerated. Hand-derived at ₹10L: resident 65 → 1,10,000; 85 → 1,00,000; non-resident 65 → 1,12,500; RNOR 65 → 1,10,000; turns 60 in Nov → 1,10,000; born 1 April → 1,12,500 (flagged); new regime 65 at 12L → 60,000 | node + load + constants 41/41 + 2 bite probes; clean unit 1503/1503
 W-046 | 2026-09-25 | `TaxByBasisNode` (D-071): `produces tax.bybasis`, `requires round.totalincome`, rules the two shipped ladders; applies `regime.rateTable()`'s in-force `SlabLadder`; `TaxByBasis.atSlabRatesOnly`; one `TAX` line with the version's provenance; no rounding (RATE-ROUND-003). Hand-derived: new regime 12L → 60,000; 4L → 0; 24,00,001 → 3,00,000.30; First Schedule 10L → 1,12,500. Age ladders + selection → `W-046b` | `TaxByBasisNodeTest` 6/6 + bite probe; clean unit 1495/1495
@@ -431,6 +432,8 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-075 | 2026-09-25 | `W-049a`: how a rule version carries a relief | `rules/relief/RuleRelief(ReliefShape, boolean limitedToSlabRateTax)`; `RuleVersion.relief` is `Optional<RuleRelief>` after `cap`; JSON `relief` block tagged like a cap (`FlatWithCeiling`, `ExcessOverThreshold`, `ThresholdLadderCeiling`, `NoRelief`) with `limitedToSlabRateTax` **required**; a rule needs a cap, a relief or conditions; cap + relief refused in the `RuleVersion` constructor; the 13 construction sites pass `Optional.empty()` | owner: "approved" |
+| D-074 | 2026-09-25 | `W-049`: the s.156(3) limit, the node, and the relief wiring | A relief row may say `limitedToSlabRateTax` — set on the two s.156(2) rows (s.156(3)); the node computes each rebate on the total tax (G3.1) and caps a limited one at `atSlabRates`; a rebate not so limited (s.156(1)) meeting special-rate tax is **refused** as unsourced (→ `W-089`). Node requires `tax.bybasis` + `round.totalincome`; one `RELIEF` line per applicable row, zeros included. Rows `REBATE-NEW-TAX-REGIME`, `-EXCESS`, `REBATE-RESIDENT-INDIVIDUAL` (TY 2026-27). **Split:** new `W-049a` (relief on `RuleVersion` via `RuleRelief`, JSON reader, 13 call sites) before `W-049` | owner: "approved — A1–A4 as recommended" |
 | D-073 | 2026-09-25 | `W-048`: the shape of the relief family | `taxengine/rules/relief/`: `ReliefShape.apply(ReliefContext) → ReliefResult(amount, reason)`, the amount always one to take off, never negative; `ReliefContext(totalIncome, taxBeforeRelief, Optional<UnrelievedTax>)` — the function exists for `ThresholdLadderCeiling`'s U (G3.2), refused when absent; `FlatWithCeiling(maximum, incomeCeiling)`, `ExcessOverThreshold(threshold)`, `ThresholdLadderCeiling(thresholds)`, `NoRelief`; composing reliefs (MR-002, CAP-001) is the node's. Attaching a relief to a `RuleVersion` and reading it from JSON moves to `W-049` (erratum) | owner: "approved — A1–A4 as recommended" |
 | D-072 | 2026-09-25 | `W-046b`: selecting an age ladder, and filling the `ConditionContext` | `TaxByBasisNode` declares the two age ladders; for the regime, exactly one declared non-`rateTable` ladder whose in-force version applies and whose non-empty conditions all hold replaces `rateTable`; none → `rateTable`; two → refused. `NodeContext.conditions()` builds the context from `EngineInputs`: RNOR counts as resident (S2 s.5(1)(c)); age = completed years at `taxYearEnd()` for "at any time during the tax year" (S2 s.2(100); FA 2026 First Schedule); the 1-April-birthday edge by calendar reckoning, flagged for OQ-1. Ladders `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79` / `-AGE-80`, conditions as data, TY 2026-27 now (2025-26 with `W-052c`); lock → `2026-27.law.6` | owner: "approved — C1–C5 as recommended" |
 | D-071 | 2026-09-25 | `W-046`: the node, and the age-band rows D-050 added to it | **Split:** `W-046` = `TaxByBasisNode` over `regime.rateTable()` (both ladders already in the pack; no pack/lock change); new **`W-046b`** (before `W-053`) = the age ladders `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79` / `-AGE-80` (not "`RATE-SLAB-AGE-001/002`", which are rulebook statements: resident-only + age at any time during the year; no age variants in the new regime), ladder selection (B1: a conditional ladder that holds replaces `rateTable`; two holding is an error), a `ConditionContext` from `EngineInputs` (B2 age on the last day of the tax year; B3 RNOR as resident — each to be sourced), the lock bump | owner: "approved — A as recommended" |

@@ -6,12 +6,14 @@ import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.registry.LegalStatus;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
+import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -73,6 +75,7 @@ public final class RuleJson {
                                 PackJson.object(node, "validity", path), path + ".validity", provenance),
                         ShapeJson.regimes(PackJson.object(node, "regimes", path), path + ".regimes"),
                         capOrNull(node, path),
+                        relief(node, path),
                         ConditionJson.conditions(node, "conditions", path),
                         ValueJson.provision(
                                 PackJson.object(node, "provision1961", path), path + ".provision1961"),
@@ -89,21 +92,27 @@ public final class RuleJson {
      * The cap, which may legitimately be absent.
      *
      * <p>A rule can state a condition and no amount — {@code SAL-HRA-002}'s "the accommodation is not
-     * owned by the assessee" limits nothing by itself. A rule with neither a cap nor a condition is
-     * a different matter, and is refused: it would load, evaluate, and mean nothing.
+     * owned by the assessee" limits nothing by itself — or grant a relief and limit nothing. A rule
+     * with no cap, relief or condition is a different matter, and is refused: it would load,
+     * evaluate, and mean nothing.
      */
     private static com.thiru.wealthlens.taxengine.rules.cap.CapShape capOrNull(JsonNode node, String path) {
         var cap = PackJson.optionalObject(node, "cap", path);
         if (cap.isEmpty()) {
             List<com.thiru.wealthlens.taxengine.rules.condition.Condition> conditions =
                     ConditionJson.conditions(node, "conditions", path);
-            if (conditions.isEmpty()) {
+            if (conditions.isEmpty() && PackJson.optionalObject(node, "relief", path).isEmpty()) {
                 throw new PackValidationException(
-                        path + " has neither a cap nor any conditions; it would load, evaluate, and"
-                                + " mean nothing");
+                        path + " has no cap, relief or conditions; it would load, evaluate, and mean"
+                                + " nothing");
             }
             return null;
         }
         return ShapeJson.cap(cap.get(), path + ".cap");
+    }
+
+    private static Optional<RuleRelief> relief(JsonNode node, String path) {
+        return PackJson.optionalObject(node, "relief", path)
+                .map(relief -> ShapeJson.relief(relief, path + ".relief"));
     }
 }

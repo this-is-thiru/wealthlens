@@ -15,6 +15,12 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
+import com.thiru.wealthlens.taxengine.rules.relief.ExcessOverThreshold;
+import com.thiru.wealthlens.taxengine.rules.relief.FlatWithCeiling;
+import com.thiru.wealthlens.taxengine.rules.relief.NoRelief;
+import com.thiru.wealthlens.taxengine.rules.relief.ReliefShape;
+import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
+import com.thiru.wealthlens.taxengine.rules.relief.ThresholdLadderCeiling;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
@@ -26,7 +32,8 @@ import java.util.stream.Collectors;
 import tools.jackson.databind.JsonNode;
 
 /**
- * The sealed families a rule version is made of: when it applies, where, and what it limits.
+ * The sealed families a rule version is made of: when it applies, where, what it limits, and what
+ * relief it grants.
  *
  * <p>Each family is a tagged union keyed on {@code "type"}, and an unrecognised tag fails with the
  * permitted tags listed — because the reader of that message is a pack author choosing between
@@ -148,6 +155,30 @@ public final class ShapeJson {
                 new BaseId(PackJson.text(node, "period", path)));
     }
 
+    // ---------------------------------------------------------------- ReliefShape
+
+    /**
+     * A relief, with its limit to slab-rate tax. The limit has no default: absent is refused, so a
+     * rebate's limit is always stated in the pack (D-075).
+     */
+    public static RuleRelief relief(JsonNode node, String path) {
+        String tag = PackJson.tag(
+                node, path, "FlatWithCeiling", "ExcessOverThreshold", "ThresholdLadderCeiling", "NoRelief");
+        boolean limitedToSlabRateTax = PackJson.bool(node, "limitedToSlabRateTax", path);
+        return PackJson.construct(path, () -> {
+            ReliefShape shape = switch (tag) {
+                case "FlatWithCeiling" -> new FlatWithCeiling(
+                        money(node, "maximum", path), money(node, "incomeCeiling", path));
+                case "ExcessOverThreshold" -> new ExcessOverThreshold(money(node, "threshold", path));
+                case "ThresholdLadderCeiling" -> new ThresholdLadderCeiling(PackJson.array(
+                        node, "thresholds", path, e -> moneyElement(e.node(), e.path())));
+                case "NoRelief" -> new NoRelief();
+                default -> throw unreachable(tag, path);
+            };
+            return new RuleRelief(shape, limitedToSlabRateTax);
+        });
+    }
+
     // ---------------------------------------------------------------- money
 
     private static Money money(JsonNode parent, String field, String path) {
@@ -157,6 +188,16 @@ public final class ShapeJson {
         } catch (NumberFormatException e) {
             throw new PackValidationException(
                     path + "." + field + " must be a rupee amount as a string, but was \"" + raw + "\"");
+        }
+    }
+
+    private static Money moneyElement(JsonNode element, String path) {
+        String raw = element.asString();
+        try {
+            return Money.of(raw);
+        } catch (NumberFormatException e) {
+            throw new PackValidationException(
+                    path + " must be a rupee amount as a string, but was \"" + raw + "\"");
         }
     }
 

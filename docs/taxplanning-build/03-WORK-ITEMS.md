@@ -593,12 +593,24 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 > carries a `ReliefShape`; `ShapeJson` reads it"** (D-073).
 > Verified by: `RuleVersion` holds one `CapShape cap`; `ShapeJson.cap` reads caps only.
 
+### W-049a — a relief on a rule row *(added by D-074, split from `W-049`)*
+- [ ] **Produces** `taxengine/rules/relief/RuleRelief.java` (`ReliefShape` + `limitedToSlabRateTax`); `RuleVersion` gains `Optional<RuleRelief> relief`; `ShapeJson` reads a `relief` block; `RuleJson` requires a cap, a relief or conditions, and refuses both a cap and a relief; the 13 `new RuleVersion(` sites updated + tests
+- **Spec** `DR 10` E5; D-073, D-074
+- **Verify** `./mvnw test -pl backend -Dtest=RuleJsonReliefTest,PackJsonTest,RulePackLoadTest` — each relief shape round-trips from JSON; a cap and a relief together is refused naming the rule; the shipped pack still loads unchanged (no row carries a relief yet)
+
 ### W-049 — `RebateNode`
 - [ ] **Produces** `taxengine/node/RebateNode.java` + `.../node/RebateNodeTest.java`; `law/` rows `REBATE-NEW-001`, `REBATE-NEW-MR-001` (both VERIFIED) and `REBATE-OLD-001` (`UNVERIFIED` + `whatToCheck` until `W-045n` sources it) *(added by `W-045c`)*
 - **Spec** `DR 06-algorithms.md` G3.1 · `DR 13` R-5
 - **Verify** `./mvnw test -pl backend -Dtest=RebateNodeTest` — reproduces `DR 08` **T1-N1** (at the ceiling), **T1-N3** (inside the relief band), **T1-O2** (the H-3 test: no relief in the other regime, with a stated reason — property P5), and `DR 13` **T13-1** (the rebate reads `atSlabRates` only); expected values copied from `DR 08`, never computed
 - ⚠ **The rebate reads `TaxByBasis.atSlabRates` ONLY.** Using the total produces a nil tax bill on a ₹12,00,000 income that is mostly capital gains (`DR 13` T13-1 — corrected by `W-045c`; the row cited `DR 08`). This is the single most dangerous line in the engine.
 - ⚠ The relief branch exists **only** in the default regime.
+
+> **Erratum (W-049, 2026-09-25):** the ⚠ *"The rebate reads `TaxByBasis.atSlabRates` ONLY"* is too strong —
+> s.156(2)(b) is on *"the income-tax payable on such total income"*, and s.156(3) **caps** a s.156(2) deduction
+> at slab-rate tax (`DR 06` G3.1, `DR 13` R-5); s.156(1) has no such cap. The rebate is computed on the tax and
+> the s.156(2) rows are capped at `atSlabRates` (D-074). And `tax.afterrebate` requires `round.totalincome` as
+> well as `tax.bybasis`. The relief wiring moves to `W-049a`.
+> Verified by: S2 s.156(1)–(3); `02-TECH-SPEC.md` node table.
 
 ### W-050 — `RoundTotalIncomeNode` and `RoundNetPayableNode`
 - [ ] **Produces** `taxengine/node/{RoundTotalIncomeNode,RoundNetPayableNode}.java` + `.../node/RoundingNodesTest.java`; `law/` rows `RATE-ROUND-002`, `RATE-ROUND-003` (both VERIFIED) *(added by `W-045c`)*
