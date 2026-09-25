@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045l — the assessee family (D-039)
-Stage           : NOT_STARTED
-Plan            : — (plans/W-045l.md once written)
+Item            : W-045m — warning on the old compute endpoint (OQ-3)
+Stage           : NOT_STARTED — waits on the owner's answer to OQ-3
+Plan            : — (plans/W-045m.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-045l row and only the sections it names; write plans/W-045l.md; STOP for approval. (W-045d2 may be taken instead if the owner says so)
-Last verify     : ./mvnw clean test -pl backend -Punit → 1476 pass, 0 fail, 0 Checkstyle violations (W-045k2)
-Waiting on      : nothing for W-045l; D-054 startup wiring UNOWNED. OQ-1..OQ-3 open
+Next step       : ASK the owner OQ-3 (old compute endpoint returns known-wrong tax: warn, disable, or leave? recommended: warn now, remove when replaced — STATE "Owner questions"). "leave" retires W-045m; otherwise read the row and write plans/W-045m.md, STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 1481 pass, 0 fail, 0 Checkstyle violations (W-045l)
+Waiting on      : owner answer to OQ-3; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
 Files touched   : —
-Last item commit: taxplanning W-045k2: add the investments-deduction and HRA catalogue entries — every link NotModelled until W-076 and W-067 (D-061)
+Last item commit: taxplanning W-045l: replace TaxpayerFacts with the assessee family — Individual and Huf; I5 counts only the person types a pack serves (D-062)
 Updated         : 2026-09-25, session 6
 ```
 

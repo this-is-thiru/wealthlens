@@ -16,7 +16,7 @@ import java.util.Optional;
  * <h2>Dated instalments, not a total</h2>
  *
  * <p>A3 says "advance tax paid". A single total is <b>lossy</b>, for the same reason a derived age
- * is lossy in {@link TaxpayerFacts}: two of the rules turn on <i>when</i> the money was paid.
+ * is lossy in {@link Individual}: two of the rules turn on <i>when</i> the money was paid.
  * {@code ADV-MAR31-001} ({@code 01-rulebook.md:1159}) treats any amount paid on or before 31 March
  * as advance tax for that year, and s.425 charges deferment by instalment. So the payments are
  * carried with their dates and the total is derived — a subtraction the engine can always do, from

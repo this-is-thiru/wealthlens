@@ -127,12 +127,21 @@ class PackValidatorTest {
 
     private static RegimeSpec regime(
             RegimeCode code, boolean isDefault, Set<DisallowanceSetId> dis, Set<ConditionSetId> elig) {
+        return regime(code, isDefault, dis, elig, Set.of(PersonType.INDIVIDUAL));
+    }
+
+    private static RegimeSpec regime(
+            RegimeCode code,
+            boolean isDefault,
+            Set<DisallowanceSetId> dis,
+            Set<ConditionSetId> elig,
+            Set<PersonType> appliesTo) {
         return new RegimeSpec(
                 code,
                 "Regime " + code,
                 Provision.notYetVerified("Income-tax Act, 1961"),
                 Provision.present("Income-tax Act, 2025", "s.202(1)"),
-                Set.of(PersonType.INDIVIDUAL),
+                appliesTo,
                 SLAB,
                 dis,
                 elig,
@@ -330,6 +339,29 @@ class PackValidatorTest {
             assertThatThrownBy(() -> PackValidator.validate(pack.build()))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("no default regime");
+        }
+
+        @Test
+        void validate_whenNoRegimeServesAPersonType_needsNoDefaultForIt() {
+            // Given — HUF exists, and the pack's only regime serves individuals (D-062)
+            RulePack pack = validPack().build();
+
+            // When / Then
+            assertThat(PersonType.values()).contains(PersonType.HUF);
+            assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
+        }
+
+        @Test
+        void validate_whenARegimeServesHufsAndNoneIsTheirDefault_isRejectedNamingHuf() {
+            // Given — HUFs may opt into a regime, so a HUF that elects nothing must have one too
+            PackBuilder pack = validPack();
+            RegimeCode option = new RegimeCode("HUF_OPTION");
+            pack.regimes.put(option, regime(option, false, Set.of(), Set.of(), Set.of(PersonType.HUF)));
+
+            // When / Then
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("HUF has no default regime");
         }
     }
 

@@ -3,20 +3,20 @@ package com.thiru.wealthlens.taxengine.input;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BroughtForwardLoss;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Member;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
-import com.thiru.wealthlens.taxengine.input.TaxpayerFacts.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.component.RateBasisHint;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
-import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.regime.ElectionState;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.lang.reflect.RecordComponent;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
@@ -43,30 +42,20 @@ class InputsFingerprintTest {
     private static final LocalDate AS_OF = LocalDate.of(2026, 9, 21);
     private static final Instant PF_AS_OF = Instant.parse("2026-09-01T00:00:00Z");
 
+    /** The harness's plain taxpayer, with the one family member the family perturbations change. */
     private static EngineInputs baseline() {
-        return new EngineInputs(
-                TY,
-                new RegimeCode("NEW_TAX_REGIME"),
-                TemporalContext.forTaxYear(TY, AS_OF),
-                EnteredFacts.none(),
-                new TaxpayerFacts(
-                        LocalDate.of(1980, 5, 5),
-                        ResidentialStatus.RESIDENT,
-                        Set.of(PersonType.INDIVIDUAL),
-                        Optional.empty(),
-                        Optional.empty()),
-                new FamilySnapshot(List.of(new Member(
-                        Relationship.CHILD,
-                        LocalDate.of(2010, 4, 4),
-                        true,
-                        Optional.empty(),
-                        Optional.empty(),
-                        false,
-                        false))),
-                LedgerSnapshot.empty(),
-                RegimeElectionSnapshot.none(),
-                CapitalGainsInput.none(PF_AS_OF, "pf-run-1"),
-                FilingFacts.notYetFurnished(LocalDate.of(2026, 7, 31)));
+        return copy(NodeHarness.plainTaxpayer(), r -> r.family = new FamilySnapshot(List.of(new Member(
+                Relationship.CHILD,
+                LocalDate.of(2010, 4, 4),
+                true,
+                Optional.empty(),
+                Optional.empty(),
+                false,
+                false))));
+    }
+
+    private static LocalDate baselineDateOfBirth() {
+        return ((Individual) NodeHarness.plainTaxpayer().assessee()).dateOfBirth();
     }
 
     private static String hashOf(EngineInputs inputs) {
@@ -120,29 +109,26 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.temporal =
                                     TemporalContext.forTaxYear(TY, AS_OF.plusDays(1))))),
                     Arguments.of(
-                            "taxpayer.dateOfBirth",
-                            mutate(in -> copy(in, r -> r.taxpayer = new TaxpayerFacts(
-                                    LocalDate.of(1981, 5, 5),
+                            "assessee.dateOfBirth",
+                            mutate(in -> copy(in, r -> r.assessee = new Individual(
+                                    baselineDateOfBirth().minusYears(1),
                                     ResidentialStatus.RESIDENT,
-                                    Set.of(PersonType.INDIVIDUAL),
                                     Optional.empty(),
                                     Optional.empty())))),
                     Arguments.of(
-                            "taxpayer.residentialStatus",
-                            mutate(in -> copy(in, r -> r.taxpayer = new TaxpayerFacts(
-                                    LocalDate.of(1980, 5, 5),
-                                    ResidentialStatus.RNOR,
-                                    Set.of(PersonType.INDIVIDUAL),
-                                    Optional.empty(),
-                                    Optional.empty())))),
+                            "assessee.residence",
+                            mutate(in -> copy(in, r -> r.assessee = new Individual(
+                                    baselineDateOfBirth(), ResidentialStatus.RNOR, Optional.empty(), Optional.empty())))),
                     Arguments.of(
-                            "taxpayer.disability",
-                            mutate(in -> copy(in, r -> r.taxpayer = new TaxpayerFacts(
-                                    LocalDate.of(1980, 5, 5),
+                            "assessee.disability",
+                            mutate(in -> copy(in, r -> r.assessee = new Individual(
+                                    baselineDateOfBirth(),
                                     ResidentialStatus.RESIDENT,
-                                    Set.of(PersonType.INDIVIDUAL),
                                     Optional.of(DisabilitySeverity.SEVERE_DISABILITY),
                                     Optional.empty())))),
+                    Arguments.of(
+                            "assessee.type — an HUF with the same residence",
+                            mutate(in -> copy(in, r -> r.assessee = new Huf(ResidentialStatus.RESIDENT)))),
                     Arguments.of(
                             "family.members[0].dateOfBirth",
                             mutate(in -> copy(in, r -> r.family = new FamilySnapshot(List.of(
@@ -329,7 +315,7 @@ class InputsFingerprintTest {
         RegimeCode regime;
         TemporalContext temporal;
         EnteredFacts entered;
-        TaxpayerFacts taxpayer;
+        Assessee assessee;
         FamilySnapshot family;
         LedgerSnapshot ledgers;
         RegimeElectionSnapshot elections;
@@ -343,7 +329,7 @@ class InputsFingerprintTest {
         draft.regime = in.regime();
         draft.temporal = in.temporal();
         draft.entered = in.entered();
-        draft.taxpayer = in.taxpayer();
+        draft.assessee = in.assessee();
         draft.family = in.family();
         draft.ledgers = in.ledgers();
         draft.elections = in.elections();
@@ -355,7 +341,7 @@ class InputsFingerprintTest {
                 draft.regime,
                 draft.temporal,
                 draft.entered,
-                draft.taxpayer,
+                draft.assessee,
                 draft.family,
                 draft.ledgers,
                 draft.elections,

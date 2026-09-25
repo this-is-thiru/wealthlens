@@ -1,19 +1,19 @@
 package com.thiru.wealthlens.taxengine.test;
 
+import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
 import com.thiru.wealthlens.taxengine.input.FilingFacts;
+import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.input.RegimeElectionSnapshot;
-import com.thiru.wealthlens.taxengine.input.TaxpayerFacts;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
-import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -166,7 +166,7 @@ public final class NodeHarness {
     }
 
     /**
-     * The default input set: a resident individual with nothing remarkable about them.
+     * The default input set: a resident {@link Individual} with nothing remarkable about them.
      *
      * <p>Chosen so that a node test which does not care about the taxpayer says nothing about one.
      * Everything here is the empty or neutral value of its type, so a test that depends on any of
@@ -179,12 +179,8 @@ public final class NodeHarness {
                 new RegimeCode("NEW_TAX_REGIME"),
                 TemporalContext.forTaxYear(year, LocalDate.of(2026, 9, 21)),
                 EnteredFacts.none(),
-                new TaxpayerFacts(
-                        LocalDate.of(1985, 6, 15),
-                        TaxpayerFacts.ResidentialStatus.RESIDENT,
-                        Set.of(PersonType.INDIVIDUAL),
-                        Optional.empty(),
-                        Optional.empty()),
+                new Individual(
+                        LocalDate.of(1985, 6, 15), ResidentialStatus.RESIDENT, Optional.empty(), Optional.empty()),
                 FamilySnapshot.none(),
                 LedgerSnapshot.empty(),
                 RegimeElectionSnapshot.none(),

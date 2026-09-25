@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.pipeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -87,7 +88,7 @@ class PipelineRunnerTest {
         @Override
         public NodeResult evaluate(NodeContext ctx) {
             // The taxpayer's own date of birth is an input, not a slot. This is what a source is.
-            int year = ctx.inputs().taxpayer().dateOfBirth().getYear();
+            int year = ((Individual) ctx.inputs().assessee()).dateOfBirth().getYear();
             return NodeResult.untraced(MoneyValue.of(Money.of(String.valueOf(year))));
         }
     }

@@ -129,14 +129,22 @@ public final class PackValidator {
     }
 
     /**
-     * I5 — exactly one default regime per person type, among regimes applicable that year.
+     * I5 — exactly one default regime per person type the pack serves, among regimes applicable
+     * that year.
      *
      * <p>Counted over <b>applicable</b> regimes only, because a lapsed regime that was once the
      * default must not make a live year look ambiguous. Two defaults means the engine picks one
      * arbitrarily; none means a taxpayer who elects nothing has no regime at all.
+     *
+     * <p>Only person types some regime in the pack names are counted (D-062): a pack that serves
+     * no HUF owes an HUF no default, and one that names HUFs anywhere does. Named by any regime,
+     * not only an applicable one, so a year whose regimes have all lapsed is still refused. Handed
+     * an assessee type its pack does not serve, regime selection must refuse rather than pick.
      */
     private static void checkExactlyOneDefaultPerPersonType(RulePack pack, List<String> problems) {
-        for (PersonType personType : PersonType.values()) {
+        Set<PersonType> served = new TreeSet<>();
+        pack.regimes().values().forEach(regime -> served.addAll(regime.appliesTo()));
+        for (PersonType personType : served) {
             Set<RegimeCode> defaults = new LinkedHashSet<>();
             for (RegimeSpec regime : pack.regimes().values()) {
                 if (regime.isDefault()
@@ -150,7 +158,7 @@ public final class PackValidator {
                         personType + " has " + defaults.size() + " default regimes ("
                                 + new TreeSet<>(defaults.stream().map(RegimeCode::value).toList())
                                 + "); the engine would pick one arbitrarily");
-            } else if (defaults.isEmpty() && !pack.regimes().isEmpty()) {
+            } else if (defaults.isEmpty()) {
                 problems.add(
                         personType + " has no default regime; a taxpayer who elects nothing would"
                                 + " have no regime at all");

@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045k2 — "taxplanning W-045k2: add the investments-deduction and HRA catalogue entries — every link NotModelled until W-076 and W-067 (D-061)"
-Last updated              : 2026-09-25 (session 6 — W-045k, W-045k2 done; build GREEN, 1476 tests)
-Current position          : W-045l — the assessee family
+Last checkpoint           : W-045l — "taxplanning W-045l: replace TaxpayerFacts with the assessee family — Individual and Huf; I5 counts only the person types a pack serves (D-062)"
+Last updated              : 2026-09-25 (session 6 — W-045k, W-045k2, W-045l done; build GREEN, 1481 tests)
+Current position          : W-045m — warning on the old compute endpoint (waits on OQ-3)
 Session count             : 6
 ```
 
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-045l` — the assessee family (D-039). Startup wiring is UNOWNED (D-054). `W-045d2` any time |
+| **Next item** | `W-045m` — needs the owner's answer to **OQ-3** first (warn / disable / leave). Startup wiring is UNOWNED (D-054). `W-045d2` any time |
 | **Status** | `READY` — nothing in flight, nothing blocked. Three owner questions open (OQ-1…OQ-3 below; OQ-4 decided by D-051); only `W-045m` depends on one of them |
 | **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l ·  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m ·  W-045n ·  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **66** / 174 live · in flight **0** · blocked **0**  ← computed by script; 174 = 146 base ids − 8 retired + 36 suffixed
+Counts — done **67** / 174 live · in flight **0** · blocked **0**  ← computed by script; 174 = 146 base ids − 8 retired + 36 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045l | 2026-09-25 | Assessee family (D-039, D-062): `input/{Assessee,Individual,Huf}` replace `TaxpayerFacts` (deleted; `TaxpayerFactsTest` → `AssesseeTest`, family/ledger tests kept); `PersonType.HUF`; `EngineInputs.assessee`; I5 counts only person types the pack's regimes name (no regime serves HUFs — s.202's heading is all the rulebook sources); fixtures folded into `NodeHarness.plainTaxpayer()` | Verify 6 classes green + I5 bite probe (8 fail with the old loop); clean unit 1481/1481
 W-045k2 | 2026-09-25 | 80C and HRA catalogue entries (D-061): `SEC-INVESTMENT-DEDUCTION` (1961 s.80C / 2025 s.123; 23 routes from `DED-80C-ITEMS-001` + an "other Schedule XV items" route, C1a) and `SEC-HOUSE-RENT-ALLOWANCE` (1961 s.10(13A) / 2025 Sch. III Sl. 11); every link `NotModelled` (rules come with `W-076`/`W-067`); no tenure, cap or count in text (C2a); `coverage.json` + 3 `PLANNED` rows; ratchet 2 → 5 sections; no Java change | `SectionCatalogueTest` 20/20 + 2 bite probes; clean unit 1476/1476
 W-045k | 2026-09-25 | Section catalogue (D-042, D-060): `catalogue/{SectionCatalogue,SectionCatalogueEntry,Route,Disqualifier,DisqualifierKind,EnforcedBy}`; `content/sections/SEC-DEFAULT-TAX-REGIME.json` (s.202 / s.115BAC; routes link both slab rules, disqualifiers link `HasIncomeUnderHead` or say `NotModelled`); `TimelineReader` carries `content/sections/` verbatim, no lock change; SC-1 full for `MODELLED` + `PLANNED` ratchet, SC-2 text scan, SC-3 rules resolve, SC-4 derived fields refused; split — 80C/HRA entries → `W-045k2` | `SectionCatalogueTest` 20/20 + 10 bite probes; clean unit 1476/1476
 W-045j | 2026-09-24 | Coverage register (D-038, D-059): `coverage/{SectionRef,Coverage,CoverageRegister}`; `content/coverage.json` with the 2 sections the timeline cites (2025 s.202, 1961 s.115BAC, `MODELLED`); `verify` refuses unregistered citations and unpublished `MODELLED` rules; not compiled into year packs; "105 sections" found to be 116 mixed-Act citations → seeding moved to `W-045o` (erratum) | `CoverageRegisterTest` 9/9 + 2 bite probes; clean unit 1456/1456
@@ -420,6 +421,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-062 | 2026-09-25 | `W-045l`: `PersonType.HUF` makes I5 (exactly one default per person type) refuse every pack, since no regime applies to an HUF | **I5 counts only the person types some applicable regime applies to** — a pack serving no HUF passes; one with a regime open to HUFs and no HUF default is refused. The rulebook sources only s.202's heading for HUFs, so no pack is widened (that would compute on unverified law). The code that later selects a regime by person type must refuse an assessee type the year's pack does not serve. `ResidentialStatus` nests in `Assessee`; `EngineInputs.taxpayer` → `assessee`; `type()` derived per record; `TaxpayerFacts`' checks and javadoc move to `Individual`/`Assessee`; fixtures folded into `NodeHarness.plainTaxpayer()` | owner: "approved — A1, B1–B5 as recommended" |
 | D-061 | 2026-09-25 | `W-045k2`: how the 80C and HRA entries handle what the rulebook does not source | The 80C route list's gap is a route of its own ("Other Schedule XV items not listed here", `NotModelled` with the reason), not a new field; text names an instrument, never its tenure, cap or count — every figure waits for its rule and a placeholder; 1961 s.10 is registered `PLANNED` (→ `W-067`) now, and whether s.10 is registered by clause is `W-045o`'s; the 1961 provisions `s.80C` and `s.10(13A)` are `PRESENT` on the rulebook's 1961 columns. No `LATER_REVERSAL` is written: the rulebook sources none | owner: "approved — C1a, C2a, C3, C4 as recommended" |
 | D-060 | 2026-09-25 | `W-045k`: size, and what the section catalogue checks | **Split:** `W-045k` = `catalogue/` types (`SectionCatalogueEntry`, `Route`, `Disqualifier`, `DisqualifierKind`, `EnforcedBy`), `SectionCatalogue` read + checks, `Timeline`/`TimelineReader` carry `content/sections/*.json` verbatim (no lock change), and the **one** entry whose references can resolve (the default regime, s.202 / s.115BAC); new `W-045k2` = the 80C and HRA entries + their `PLANNED` register rows. Entry fields: key, provisions (`Provision`, since HRA's 2025 home is Sch. III, not a section), plainName, summary, routes, disqualifiers — `process` to `W-117`, the rest later. References must resolve in the timeline (rule) or name a `Condition` record; otherwise `NOT_MODELLED` + reason. SC-1 full for `MODELLED`, a ratchet for `PLANNED`; SC-2 a text scan; SC-4 by refusing authored `availability`/`history` | owner: "approved — split as A, B1–B6 as recommended" |
 | D-059 | 2026-09-24 | `W-045j`: the "105 sections" are not one Act's (grep gives 116, mixing 1961-Act, 2025-Act and Finance Act sections) | The register, its three checks and `Coverage` types are built now, seeded with only the sections the shipped timeline cites (2025 s.202, 1961 s.115BAC, both `MODELLED`); the rulebook's sections move to `W-045o`. A citation = a `PRESENT` provision of either Income-tax Act whose reference starts `s.<n>`; rules and regimes both cite; the register is not compiled into year packs (no lock change); `CoverageRegister.verify(Timeline)` in `coverage/`, run by `CoverageRegisterTest` | owner: "approved" |
@@ -560,6 +562,8 @@ Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` a
 | **`ElectionState` richness** | `WITHDRAWN` vs `PERMANENTLY_INELIGIBLE` is readable but nothing sets it; the protocol that decides is `W-082`'s |
 
 ## Notes for resume
+
+**Carry forward (W-045l, D-062):** I19 ("at least one ITR form per `(PersonType, ReturnKind)`", `W-090`) meets the same `HUF` problem I5 did — state it per person type the pack serves. Regime selection by person type (not yet built) must refuse an assessee type the year's pack does not serve.
 
 **Errata written in session 6:** `03-WORK-ITEMS.md` — `W-045k`'s three entries: 80C and HRA move to new `W-045k2` (no rules yet; HRA not a 2025-Act section; Schedule XV quoted in part) (`W-045k`, D-060); `00-BRIEF.md` §6.3 — the example `plainName` types ₹ against SC-2, and provisions are `Provision`s not sections (`W-045k`, D-060).
 

@@ -3,14 +3,6 @@ package com.thiru.wealthlens.taxengine.pipeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
-import com.thiru.wealthlens.taxengine.input.EngineInputs;
-import com.thiru.wealthlens.taxengine.input.EnteredFacts;
-import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
-import com.thiru.wealthlens.taxengine.input.FilingFacts;
-import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
-import com.thiru.wealthlens.taxengine.input.RegimeElectionSnapshot;
-import com.thiru.wealthlens.taxengine.input.TaxpayerFacts;
 import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
@@ -49,8 +41,8 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.net.URI;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
@@ -243,7 +235,7 @@ class NodeRegistryTest {
     class Scoping {
 
         private static NodeContext run() {
-            return NodeContext.forRun(pack(), regime(), inputs());
+            return NodeContext.forRun(pack(), regime(), NodeHarness.plainTaxpayer());
         }
 
         @Test
@@ -443,25 +435,4 @@ class NodeRegistryTest {
                 Optional.empty(),
                 provenance());
     }
-
-    private static EngineInputs inputs() {
-        TaxYearId year = TaxYearId.of(2026);
-        return new EngineInputs(
-                year,
-                new RegimeCode("NEW_TAX_REGIME"),
-                TemporalContext.forTaxYear(year, LocalDate.of(2026, 9, 21)),
-                EnteredFacts.none(),
-                new TaxpayerFacts(
-                        LocalDate.of(1980, 5, 5),
-                        TaxpayerFacts.ResidentialStatus.RESIDENT,
-                        Set.of(PersonType.INDIVIDUAL),
-                        Optional.empty(),
-                        Optional.empty()),
-                FamilySnapshot.none(),
-                LedgerSnapshot.empty(),
-                RegimeElectionSnapshot.none(),
-                CapitalGainsInput.none(Instant.parse("2026-09-01T00:00:00Z"), "pf-run-1"),
-                FilingFacts.notYetFurnished(LocalDate.of(2026, 7, 31)));
-    }
-
 }

@@ -82,7 +82,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 
 | Package | Types |
 |---|---|
-| `input/` (named interface `input`) | `EngineInputs` (10 components: `taxYear` `regime` `temporal` `entered` `taxpayer` `family` `ledgers` `elections` `capitalGains` `filing`) `TaxpayerFacts` `FamilySnapshot` `LedgerSnapshot` `RegimeElectionSnapshot` `FilingFacts` `EnteredFacts` `CapitalGainsInput` `InputsFingerprint` |
+| `input/` (named interface `input`) | `EngineInputs` (10 components: `taxYear` `regime` `temporal` `entered` `assessee` `family` `ledgers` `elections` `capitalGains` `filing`) `Assessee` (sealed: `Individual` `Huf`; nests `ResidentialStatus`) `FamilySnapshot` `LedgerSnapshot` `RegimeElectionSnapshot` `FilingFacts` `EnteredFacts` `CapitalGainsInput` `InputsFingerprint` |
 | `pipeline/` | `ComputationNode` `NodeContext` `NodeResult` `NodeRegistry` `NodeValue` (sealed: **`MoneyValue`, `TaxByBasis` only**) `SpecialRateId` `TopologicalSort` `PipelineRunner` |
 | `trace/` | `TraceLine` `TraceAnnotation` `Notice` `StepKind` `Severity` |
 | `result/` (named interface `result`) | `TaxComputation` `FilingPosition` `ComputationId` `ComputationReceipt` |
@@ -91,7 +91,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 
 | Package | Types | Item |
 |---|---|---|
-| `input/` | `Assessee` (sealed) `Individual` `Huf` — **replace** `TaxpayerFacts`; `PersonType` gains `HUF` | ○ `W-045l` |
+| `input/` | `Assessee` (sealed) `Individual` `Huf` — **replace** `TaxpayerFacts`; `PersonType` gains `HUF` | ✅ `W-045l` (D-062) |
 | `result/` | `ComputationProjector` | ○ `W-052b` |
 | `node/` | one class per node — T6 | ○ Phases 5–9 |
 | `election/` | `Election` `ElectionResolver` `ElectionOutcome` | ○ Phase 9 |
@@ -212,7 +212,7 @@ no validator branch, because it would be unreachable.
 | I2 | every `RuleId` referenced anywhere in the pack resolves (rate tables, `feedsInto`, `salaryBaseFor`, bases, interim rules) | `PackValidator` | ✅ `W-029` |
 | I3 | every rule in the pack is evaluated by some node | `NodeRegistry.rulesNotEvaluatedByAnyNode` | ✅ built `W-039`; **switched on at `W-053`** as a shrink-only ratchet |
 | I4 | each layer's checksum matches its content — now: the compiled year matches its lock, per rule and per layer | `RulePackLock.verify`, called by `ClasspathRulePackProvider` | ✅ `W-028`, `W-045g2` |
-| I5 | exactly one `isDefault` regime per `(taxYear, PersonType)` among regimes **applicable that year** (I11 is the same check) | `PackValidator` | ✅ `W-029` |
+| I5 | exactly one `isDefault` regime per `(taxYear, PersonType)` among regimes **applicable that year**, for every `PersonType` **some regime in the pack applies to** — a pack serving no HUF owes HUFs no default (D-062; I11 is the same check) | `PackValidator` | ✅ `W-029` |
 | I6 | every regime's disallowance/condition set id resolves | `PackValidator` | ✅ `W-029` |
 | I7 | every `ComponentCode` a rule references exists | `PackValidator` | ✅ `W-029` |
 | I8 | a cross-year ledger entry is consumed by at most one `ACTED_ON` draft per year | persistence (runtime) | ⚠ UNOWNED |
@@ -478,3 +478,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-24 | T2: `coverage/` built; T4: `content/coverage.json` read by `TimelineReader`, not compiled into year packs (lock unchanged) | `W-045j`, D-059 |
 | 2026-09-25 | T2: `catalogue/` built; T4: `content/sections/*.json` read by `TimelineReader`, not compiled into year packs (lock unchanged) | `W-045k`, D-060 |
 | 2026-09-25 | T4: two catalogue entries (investments deduction, HRA) and three `PLANNED` register rows (2025 s.123, 1961 s.80C, 1961 s.10) | `W-045k2`, D-061 |
+| 2026-09-25 | T2: `input/` — `Assessee`/`Individual`/`Huf` replace `TaxpayerFacts`, `EngineInputs.taxpayer` → `assessee`, `PersonType.HUF`; I5/I11 count only the person types the pack's regimes serve | `W-045l`, D-062 |

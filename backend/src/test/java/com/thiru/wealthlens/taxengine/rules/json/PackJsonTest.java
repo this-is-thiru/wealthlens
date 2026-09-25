@@ -450,10 +450,11 @@ class PackJsonTest {
         void anUnknownPersonTypeListsTheKnownOnes() {
             assertThatThrownBy(() ->
                             ConditionJson.condition(
-                                    json("{\"type\": \"HasPersonType\", \"types\": [\"HUF\"]}"), "c"))
+                                    json("{\"type\": \"HasPersonType\", \"types\": [\"FIRM\"]}"), "c"))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("\"HUF\"")
-                    .hasMessageContaining("INDIVIDUAL");
+                    .hasMessageContaining("\"FIRM\"")
+                    .hasMessageContaining("INDIVIDUAL")
+                    .hasMessageContaining("HUF");
         }
 
         @Test

@@ -3,39 +3,35 @@ package com.thiru.wealthlens.taxengine.input;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Member;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
-import com.thiru.wealthlens.taxengine.input.TaxpayerFacts.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import java.lang.reflect.RecordComponent;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * The facts the engine is given about a person, and the history behind them.
+ * The facts the engine is given about an assessee, and the history behind them. Formerly
+ * {@code TaxpayerFactsTest}; the assessee family replaced {@code TaxpayerFacts} (D-039, D-062).
  */
-class TaxpayerFactsTest {
+class AssesseeTest {
 
     private static final LocalDate DOB = LocalDate.of(1966, 11, 20);
 
-    private static TaxpayerFacts individual() {
-        return new TaxpayerFacts(
-                DOB,
-                ResidentialStatus.RESIDENT,
-                Set.of(PersonType.INDIVIDUAL),
-                Optional.empty(),
-                Optional.empty());
+    private static Individual individual() {
+        return new Individual(DOB, ResidentialStatus.RESIDENT, Optional.empty(), Optional.empty());
     }
 
     private static Member child(LocalDate dateOfBirth) {
@@ -50,24 +46,50 @@ class TaxpayerFactsTest {
     }
 
     @Nested
-    @DisplayName("TaxpayerFacts — a projection, carrying dates rather than derived facts")
-    class Taxpayer {
+    @DisplayName("Assessee — one record per type, each carrying only the facts that type has (D-039)")
+    class Assessees {
 
         @Test
-        void theDateOfBirthIsCarriedRatherThanAnAge() {
-            // D-025. F2's senior-citizen test is "at any time during the previous year", which an
-            // age cannot answer: someone turning 60 in November is a senior citizen for that whole
-            // year, and an age taken at any single instant says otherwise for half of it.
-            assertThat(individual().dateOfBirth()).isEqualTo(DOB);
-            assertThat(TaxpayerFacts.class.getRecordComponents())
-                    .extracting(java.lang.reflect.RecordComponent::getName)
-                    .doesNotContain("age");
+        void permittedSubclasses_whenTheFamilyIsListed_areExactlyTheTypesBuilt() {
+            // When
+            List<String> members = Arrays.stream(Assessee.class.getPermittedSubclasses())
+                    .map(Class::getSimpleName)
+                    .toList();
+
+            // Then — Firm, Company and the rest join as they are built
+            assertThat(members).containsExactlyInAnyOrder("Individual", "Huf");
         }
 
         @Test
-        void residenceHasThreeStatesRatherThanTwo() {
-            // ConditionContext collapses these to boolean resident, which is lossy: RNOR is
-            // resident for some provisions and not others. The projection keeps what was known.
+        void type_whenAsked_isFixedByTheRecordRatherThanStored() {
+            // When / Then — a person has one type; the old Set<PersonType> was a modelling error
+            assertThat(individual().type()).isEqualTo(PersonType.INDIVIDUAL);
+            assertThat(new Huf(ResidentialStatus.RESIDENT).type()).isEqualTo(PersonType.HUF);
+        }
+
+        @Test
+        void recordComponents_whenTheAssesseeIsAnHuf_carryOnlyResidence() {
+            // When / Then — an HUF has no date of birth and no disability; karta and members
+            // arrive with the first rule that reads them (brief rule B2)
+            assertThat(Huf.class.getRecordComponents())
+                    .extracting(RecordComponent::getName)
+                    .containsExactly("residence");
+        }
+
+        @Test
+        void recordComponents_whenTheAssesseeIsAnIndividual_carryADateOfBirthAndNoPanOrAge() {
+            // When / Then — D-025: a date of birth, because F2's senior-citizen test is "at any
+            // time during the previous year", which an age cannot answer. No PAN: no rule
+            // computes on one and O1.1 wants it masked wherever it is logged.
+            assertThat(Individual.class.getRecordComponents())
+                    .extracting(RecordComponent::getName)
+                    .containsExactly("dateOfBirth", "residence", "disability", "dateOfDeath");
+        }
+
+        @Test
+        void residentialStatus_whenListed_hasThreeStatesRatherThanTwo() {
+            // When / Then — ConditionContext collapses these to boolean resident, which is lossy:
+            // RNOR is resident for some provisions and not others. The projection keeps what was known.
             assertThat(ResidentialStatus.values())
                     .containsExactly(
                             ResidentialStatus.RESIDENT,
@@ -76,80 +98,49 @@ class TaxpayerFactsTest {
         }
 
         @Test
-        void thePersonTypeSetIsDefensivelyCopied() {
-            Set<PersonType> mutable = new HashSet<>();
-            mutable.add(PersonType.INDIVIDUAL);
-            TaxpayerFacts facts = new TaxpayerFacts(
-                    DOB, ResidentialStatus.RESIDENT, mutable, Optional.empty(), Optional.empty());
+        void disability_whenCertified_isTheSeverityAndNotTheCertificate() {
+            // Given — DED-80U-001 and DED-80DD-001 read the severity; nothing reads the certificate
+            Individual individual = new Individual(
+                    DOB, ResidentialStatus.RESIDENT, Optional.of(DisabilitySeverity.SEVERE_DISABILITY), Optional.empty());
 
-            // PersonType has one constant today (rule B2 — the family lists only what exists), so
-            // the mutation that proves the copy is a removal rather than an addition.
-            mutable.clear();
-
-            assertThat(facts.personTypes()).containsExactly(PersonType.INDIVIDUAL);
+            // When / Then
+            assertThat(individual.disability()).contains(DisabilitySeverity.SEVERE_DISABILITY);
         }
 
         @Test
-        void anEmptyPersonTypeSetIsRejectedBecauseItMakesEveryRegimeInapplicable() {
-            assertThatThrownBy(() -> new TaxpayerFacts(
-                            DOB,
-                            ResidentialStatus.RESIDENT,
-                            Set.of(),
-                            Optional.empty(),
-                            Optional.empty()))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("regime eligibility");
-        }
-
-        @Test
-        void carriesTheCertifiedSeverityAndNotTheCertificate() {
-            // DED-80U-001 and DED-80DD-001 read the severity; nothing reads the certificate.
-            TaxpayerFacts facts = new TaxpayerFacts(
-                    DOB,
-                    ResidentialStatus.RESIDENT,
-                    Set.of(PersonType.INDIVIDUAL),
-                    Optional.of(DisabilitySeverity.SEVERE_DISABILITY),
-                    Optional.empty());
-
-            assertThat(facts.disability()).contains(DisabilitySeverity.SEVERE_DISABILITY);
-        }
-
-        @Test
-        void theEngineIsGivenNoPan() {
-            // A3 says "PAN, DOB, residence". No rule computes on a PAN and O1.1 wants it masked
-            // wherever it is logged, so it does not enter the engine at all.
-            assertThat(TaxpayerFacts.class.getRecordComponents())
-                    .extracting(java.lang.reflect.RecordComponent::getName)
-                    .containsExactly(
-                            "dateOfBirth",
-                            "residentialStatus",
-                            "personTypes",
-                            "disability",
-                            "dateOfDeath");
-        }
-
-        @Test
-        void aDeathBeforeBirthIsRejected() {
-            assertThatThrownBy(() -> new TaxpayerFacts(
-                            DOB,
-                            ResidentialStatus.RESIDENT,
-                            Set.of(PersonType.INDIVIDUAL),
-                            Optional.empty(),
-                            Optional.of(DOB.minusDays(1))))
+        void individual_whenDeathPrecedesBirth_isRejected() {
+            // When / Then
+            assertThatThrownBy(() -> new Individual(
+                            DOB, ResidentialStatus.RESIDENT, Optional.empty(), Optional.of(DOB.minusDays(1))))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("precedes");
         }
 
         @Test
-        void aNullOptionalIsRejectedRatherThanTreatedAsAbsent() {
-            assertThatThrownBy(() -> new TaxpayerFacts(
-                            DOB,
-                            ResidentialStatus.RESIDENT,
-                            Set.of(PersonType.INDIVIDUAL),
-                            null,
-                            Optional.empty()))
+        void individual_whenAnOptionalIsNull_isRejectedRatherThanTreatedAsAbsent() {
+            // When / Then
+            assertThatThrownBy(() -> new Individual(DOB, ResidentialStatus.RESIDENT, null, Optional.empty()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Optional.empty()");
+        }
+
+        @Test
+        void individual_whenNoDateOfBirth_isRejected() {
+            // When / Then
+            assertThatThrownBy(() -> new Individual(null, ResidentialStatus.RESIDENT, Optional.empty(), Optional.empty()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("date of birth");
+        }
+
+        @Test
+        void constructors_whenNoResidence_areRejected() {
+            // When / Then
+            assertThatThrownBy(() -> new Individual(DOB, null, Optional.empty(), Optional.empty()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("residential status");
+            assertThatThrownBy(() -> new Huf(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("residential status");
         }
     }
 

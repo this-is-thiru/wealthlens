@@ -3,17 +3,14 @@ package com.thiru.wealthlens.taxengine.input;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.thiru.wealthlens.taxengine.input.TaxpayerFacts.ResidentialStatus;
-import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.lang.reflect.RecordComponent;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -32,12 +29,7 @@ class EngineInputsTest {
                 new RegimeCode("NEW_TAX_REGIME"),
                 TemporalContext.forTaxYear(TY, AS_OF),
                 EnteredFacts.none(),
-                new TaxpayerFacts(
-                        LocalDate.of(1980, 5, 5),
-                        ResidentialStatus.RESIDENT,
-                        Set.of(PersonType.INDIVIDUAL),
-                        Optional.empty(),
-                        Optional.empty()),
+                NodeHarness.plainTaxpayer().assessee(),
                 FamilySnapshot.none(),
                 LedgerSnapshot.empty(),
                 RegimeElectionSnapshot.none(),
@@ -70,7 +62,7 @@ class EngineInputsTest {
                             new RegimeCode("NEW_TAX_REGIME"),
                             TemporalContext.forTaxYear(TY, AS_OF),
                             null,
-                            complete().taxpayer(),
+                            complete().assessee(),
                             FamilySnapshot.none(),
                             LedgerSnapshot.empty(),
                             RegimeElectionSnapshot.none(),
@@ -83,6 +75,7 @@ class EngineInputsTest {
 
         @Test
         void theTenComponentsAreA3sList() {
+            // A3 names the fifth "taxpayer"; D-062 renamed it "assessee", the family it now holds.
             assertThat(EngineInputs.class.getRecordComponents())
                     .extracting(RecordComponent::getName)
                     .containsExactly(
@@ -90,7 +83,7 @@ class EngineInputsTest {
                             "regime",
                             "temporal",
                             "entered",
-                            "taxpayer",
+                            "assessee",
                             "family",
                             "ledgers",
                             "elections",
@@ -162,7 +155,7 @@ class EngineInputsTest {
                             new RegimeCode("NEW_TAX_REGIME"),
                             TemporalContext.forTaxYear(TaxYearId.of(2025), AS_OF),
                             EnteredFacts.none(),
-                            complete().taxpayer(),
+                            complete().assessee(),
                             FamilySnapshot.none(),
                             LedgerSnapshot.empty(),
                             RegimeElectionSnapshot.none(),

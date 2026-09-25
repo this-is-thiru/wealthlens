@@ -17,7 +17,7 @@ import java.util.Optional;
  * there were no persons.
  *
  * <p>A projection of {@code taxplanning}'s {@code FamilyMember} ({@code W-097}), for the reasons in
- * {@link TaxpayerFacts} — decision <b>D-024</b>.
+ * {@link Assessee} — decision <b>D-024</b>.
  *
  * @param members may be empty; never null. Order is not significant to any rule, but it is
  *     preserved, because a report that lists dependants in a different order each run looks broken
@@ -36,7 +36,7 @@ public record FamilySnapshot(List<Member> members) {
      * @param relationship self/family versus parents are separate ceilings under
      *     {@code DED-80D-001} and {@code -002}
      * @param dateOfBirth drives the senior substitution in {@code DED-80D-007}; a date and not an
-     *     age, for the reason given in {@link TaxpayerFacts}
+     *     age, for the reason given in {@link Individual}
      * @param dependant {@code DED-80DD-001}'s "dependant wholly or mainly"
      * @param disability {@code DED-80DD-001} reads the severity — the ₹75,000 / ₹1,25,000 split
      * @param dateOfDeath {@code SAL-LTA-CHILD-001}'s "surviving children"

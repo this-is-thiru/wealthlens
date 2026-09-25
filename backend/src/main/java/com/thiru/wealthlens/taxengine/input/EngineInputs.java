@@ -47,7 +47,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
  * @param temporal the temporal coordinates, {@code asOf} included explicitly — the engine reads no
  *     clock, so the instant of evaluation is an input like any other
  * @param entered what the taxpayer entered
- * @param taxpayer who they are
+ * @param assessee who is being assessed — one record per assessee type (D-039)
  * @param family the people whose facts per-person rules read
  * @param ledgers the cross-year state a single year cannot hold
  * @param elections where they stand with each regime — passed in, never fetched
@@ -59,7 +59,7 @@ public record EngineInputs(
         RegimeCode regime,
         TemporalContext temporal,
         EnteredFacts entered,
-        TaxpayerFacts taxpayer,
+        Assessee assessee,
         FamilySnapshot family,
         LedgerSnapshot ledgers,
         RegimeElectionSnapshot elections,
@@ -71,7 +71,7 @@ public record EngineInputs(
         requirePresent(regime, "regime");
         requirePresent(temporal, "temporal");
         requirePresent(entered, "entered");
-        requirePresent(taxpayer, "taxpayer");
+        requirePresent(assessee, "assessee");
         requirePresent(family, "family");
         requirePresent(ledgers, "ledgers");
         requirePresent(elections, "elections");
