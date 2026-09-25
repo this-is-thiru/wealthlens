@@ -1,0 +1,277 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-061). Content: it changes no number. No figure, rate, date, tenure, cap or count is typed in text (SC-2, D-061 C2a); each waits for its rule and a placeholder.",
+  "_sources": "provisions: 01-rulebook.md DED-MAP-001 (s.80C -> s.123 + Schedule XV), DED-80C-001 (s.123). summary: DED-80C-001, DED-MAP-021 and H-7 (one ceiling; employee PF inside it, Schedule XV para 1(f)), DED-80C-NPS-CAP-001 (NPS inner cap, para 1(y)), DED-NEWREGIME-001. routes[0..22]: DED-80C-ITEMS-001, in its order (Schedule XV para 1(a)-(z)); para refs the rulebook gives: routes[0] 1(a), routes[5] 1(f), routes[6] 1(g), routes[13] 1(q), routes[14] para 3, routes[20] 1(x), routes[21] 1(y). routes[14] 'principal ... not its interest': DR 22 C5 DED-80C-001 (steps; common mistakes). routes[23]: D-061 C1a — DED-80C-ITEMS-001 says 'among others'. disqualifiers[0]: DED-NEWREGIME-001 (s.202(2)(a)(xii)). disqualifiers[1]: DED-80C-ITEMS-001 (tuition), DR 22 C5 (development fees). No LATER_REVERSAL: the rulebook sources none (D-061).",
+  "key": "SEC-INVESTMENT-DEDUCTION",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80C",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.123",
+    "presence": "PRESENT"
+  },
+  "plainName": "Investments and payments deduction",
+  "summary": "One ceiling covers many different payments and investments, including the provident fund contribution already deducted from your salary, so the room you have left is often smaller than you expect. Your own pension contribution counts within its own inner cap first. The deduction is not available in the default regime.",
+  "routes": [
+    {
+      "name": "Life insurance premium",
+      "description": "A premium on life insurance on your own life, your spouse's or a child's.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Deferred annuity",
+      "description": "A contract for a deferred annuity.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Government deferred annuity deducted from salary",
+      "description": "A sum deducted from a Government employee's salary for a deferred annuity, up to the cap the Schedule sets.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Provident fund under the Provident Funds Act",
+      "description": "A contribution to a provident fund to which the Provident Funds Act applies.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Notified provident fund",
+      "description": "A contribution to a notified provident fund in the name of yourself, your spouse or a child.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Your contribution to a recognised provident fund",
+      "description": "The employee contribution already deducted from your salary counts here, and uses part of the ceiling before you invest anything.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Approved superannuation fund",
+      "description": "Your contribution as an employee to an approved superannuation fund.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Notified savings schemes",
+      "description": "A subscription to a notified security or deposit scheme.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "National Savings Certificates",
+      "description": "A subscription to National Savings Certificates.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Unit-linked insurance plan",
+      "description": "A contribution to a unit-linked insurance plan.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Mutual fund pension plan",
+      "description": "A contribution to a mutual fund's pension plan.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Life Insurance Corporation annuity plan",
+      "description": "A contribution to an annuity plan of the Life Insurance Corporation.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Notified infrastructure and city-development instruments",
+      "description": "A subscription to notified infrastructure or city-development instruments.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Children's tuition fees",
+      "description": "Tuition fees paid to an Indian institution for the full-time education of your children, up to the number of children the Schedule allows. Development fees and donations do not count.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Buying or building a home",
+      "description": "Payments for the purchase or construction of a residential house, including the principal of a housing loan but not its interest, subject to the conditions the Schedule sets.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Tax-saving term deposit with a scheduled bank",
+      "description": "A term deposit with a scheduled bank for the term the Schedule sets.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "NABARD bonds",
+      "description": "A subscription to bonds of the National Bank for Agriculture and Rural Development.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Senior Citizens' Savings Scheme",
+      "description": "A deposit under the Senior Citizens' Savings Scheme.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Post Office time deposit",
+      "description": "A Post Office time deposit for the term the Schedule sets.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Tier-II pension account of a Central Government employee",
+      "description": "A Central Government employee's contribution to a Tier-II National Pension System account, subject to the lock-in the Schedule sets.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Annuity plan for a pension",
+      "description": "A contribution to an annuity plan for a pension.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Your own National Pension System contribution",
+      "description": "Your own contribution to the National Pension System counts here, within its own inner cap, which applies before the overall ceiling.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Approved equity, debenture and mutual fund issues",
+      "description": "A subscription to approved equity, debenture or mutual fund issues.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        }
+      ]
+    },
+    {
+      "name": "Other Schedule XV items not listed here",
+      "description": "Schedule XV lists more ways to qualify than this entry shows yet.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "The rulebook quotes Schedule XV only in part; every clause of its first paragraph remains to be read."
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Not available in the default regime.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "The default regime's disallowances are not declared yet; they arrive with the rules they forbid."
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Tuition fees do not count when they are not for full-time education at an Indian institution, when they are development fees or donations, or beyond the number of children the Schedule allows.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+      }
+    }
+  ]
+}

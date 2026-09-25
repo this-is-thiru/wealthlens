@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045k2 — the 80C and HRA section-catalogue entries (D-060)
+Item            : W-045l — the assessee family (D-039)
 Stage           : NOT_STARTED
-Plan            : — (plans/W-045k2.md once written)
+Plan            : — (plans/W-045l.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-045k2 row and only the sections it names; write plans/W-045k2.md; STOP for approval. Routes only as the rulebook quotes them. (W-045d2 may be taken instead if the owner says so)
-Last verify     : ./mvnw clean test -pl backend -Punit → 1476 pass, 0 fail, BUILD SUCCESS (W-045k)
-Waiting on      : nothing for W-045k2; D-054 startup wiring UNOWNED. OQ-1..OQ-3 open
+Next step       : READ the W-045l row and only the sections it names; write plans/W-045l.md; STOP for approval. (W-045d2 may be taken instead if the owner says so)
+Last verify     : ./mvnw clean test -pl backend -Punit → 1476 pass, 0 fail, 0 Checkstyle violations (W-045k2)
+Waiting on      : nothing for W-045l; D-054 startup wiring UNOWNED. OQ-1..OQ-3 open
 Files touched   : —
-Last item commit: taxplanning W-045k: add the section catalogue and its checks — the default-regime entry; 80C and HRA split to W-045k2 (D-060)
+Last item commit: taxplanning W-045k2: add the investments-deduction and HRA catalogue entries — every link NotModelled until W-076 and W-067 (D-061)
 Updated         : 2026-09-25, session 6
 ```
 

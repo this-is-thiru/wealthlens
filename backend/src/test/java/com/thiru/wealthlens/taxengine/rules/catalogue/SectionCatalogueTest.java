@@ -40,7 +40,10 @@ class SectionCatalogueTest {
      */
     private static final Set<SectionRef> CATALOGUED = Set.of(
             new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "115BAC"),
-            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "202"));
+            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "202"),
+            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "80C"),
+            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "123"),
+            new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "10"));
 
     @TempDir
     Path copy;
@@ -77,7 +80,8 @@ class SectionCatalogueTest {
         Set<SectionRef> catalogued = SectionCatalogue.of(TimelineReader.read(root)).catalogued();
 
         // Then — the ratchet assertion above would fail on this catalogue
-        assertThat(catalogued).doesNotContainAnyElementsOf(CATALOGUED);
+        assertThat(catalogued.containsAll(CATALOGUED)).isFalse();
+        assertThat(catalogued).doesNotContain(new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "202"));
     }
 
     @Test
