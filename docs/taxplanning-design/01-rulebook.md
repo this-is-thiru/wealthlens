@@ -166,6 +166,17 @@ Identical to `RATE-SLAB-OLD-2025` in every band and every rate, restated in the 
 | `REBATE-NEW-MR-002` | The deduction under `REBATE-NEW-MR-001` **shall not exceed the income-tax payable at the new-regime rates**. | s.87A second proviso (inserted by FA 2025 s.20(b)) | **s.156(3)** | NEW | applies | applies | VERIFIED both years (S2 s.156(3); S7 FA 2025 s.20(b)) |
 | `REBATE-CAP-001` | The deduction under s.156 shall not exceed income-tax computed before allowing it. | s.87A | **s.155(2)** | BOTH | applies | applies | VERIFIED (S2, s.155(2)) |
 
+> **Erratum (W-045n, 2026-09-25):** `REBATE-OLD-001`'s TY 2025-26 figures, marked NEEDS VERIFICATION,
+> are confirmed from sources — the ₹12,500 / ₹5,00,000 of the 1961 Act s.87A main limb were set by
+> the Finance Act, 2019 s.8 (w.e.f. 1-4-2020), and no Finance Act since changed the main limb: the
+> Finance Act, 2023 s.44 and the Finance Act, 2025 s.20 amend only the proviso, and the Finance
+> (No. 2) Act 2019, Finance Acts 2020, 2021, 2022, 2024 and Finance (No. 2) Act 2024 do not amend
+> s.87A. The two figures are `SOURCE_CHECKED` for TY 2025-26; the main limb's wording ("resident",
+> "individual", "whichever is less") was not read in the base text, and non-Finance amending Acts
+> were not searched — that residual is the version's `whatToCheck`.
+> Verified by: FA 2019 s.8 (p.9, gstcouncil.gov.in copy); FA 2023 s.44 (egazette 2023/244830, p.32);
+> FA 2025 s.20 (egazette 2025/262125, p.23); the others searched in full — `plans/W-045n.md` Findings Q1.
+
 ### **H-3 verdict: CONFIRMED — applying rebate marginal relief in the old regime is wrong.**
 
 `FACT (S2, s.156)`: s.156 has two sub-sections. Sub-section (1) is the ₹12,500/₹5,00,000 rebate and
@@ -346,6 +357,13 @@ capital gains in from `portfolio`, so this is live for the primary user, not the
 | `RATE-CESS-002` | Cess applies to the tax computed under s.3(1)–(5) (assessment) *and* separately to the TDS/advance-tax amounts under s.3(6)–(14), with carve-outs in s.3(17) for resident payees. | — | FA 2026 s.3(15)–(17) | — | — | VERIFIED (S3, s.3(15)–(17)) |
 | `RATE-ROUND-001` | Under the 1961 Act, total income is rounded to the nearest ₹10 (s.288A) and tax payable/refundable to the nearest ₹10 (s.288B). | ss.288A, 288B — *not opened* | — | — | — | NEEDS VERIFICATION — open 1961 Act ss.288A, 288B |
 | `RATE-ROUND-002` | Under the 2025 Act **one section covers both**: *"The amount of total income computed **or any amount payable or refundable** under this Act, shall be rounded off to the nearest multiple of ₹10, ignoring any part of a rupee consisting of paise"*, rounding **up** if the last figure is 5 or more and **down** if less. | — | **s.516** | — | applies | VERIFIED (S2, s.516) |
+
+> **Erratum (W-045n, 2026-09-25):** `RATE-CESS-001`'s 1961-Act provision "FA 2026 s.2(11)/(12)" is
+> wrong — the Health and Education Cess on the income-tax charged for AY 2026-27 under the 1961 Act
+> is **FA 2026 s.2(6)**, "at the rate of four per cent. of such income-tax and surcharge"; its
+> sub-section (7) applies "for the purposes of this section and Parts I-A and IV-A of the First
+> Schedule", which places it on the 1961 side. The 4% rate stands, now `SOURCE_CHECKED` for both years.
+> Verified by: S3 (egazette 2026/271439) p.9 (s.2(6)), p.2 (s.2(1)); `plans/W-045n.md` Findings Q2.
 
 ### **H-5 second limb verdict: CONFIRMED.** There is a statutory ₹10 rounding and it is mandatory.
 

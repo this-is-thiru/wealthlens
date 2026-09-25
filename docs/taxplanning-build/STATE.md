@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-045m — "taxplanning W-045m: add a known-errors notice to the old compute response — body shape kept, removed with the endpoint (D-063, D-064)"
-Last updated              : 2026-09-25 (session 6 — W-045k, W-045k2, W-045l, W-045m done; build GREEN, 1481 unit tests)
-Current position          : W-045n — TY 2025-26 sources for the Phase 5 rules (research, no code)
+Last checkpoint           : W-045n — "taxplanning W-045n: source TY 2025-26 for the Phase 5 rules — old-regime rebate figures confirmed, 1961-side cess corrected to FA 2026 s.2(6) (D-065)"
+Last updated              : 2026-09-25 (session 6 — W-045k, W-045k2, W-045l, W-045m, W-045n done; build GREEN, 1481 unit tests)
+Current position          : W-045o — coverage register completed to every section of both Acts (research)
 Session count             : 6
 ```
 
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-045n` — TY 2025-26 sources for the Phase 5 rules (research, no code). Startup wiring is UNOWNED (D-054). `W-045d2` any time |
+| **Next item** | `W-045o` — `coverage.json` completed to every section of both Acts (research, no code). Startup wiring is UNOWNED (D-054). `W-045d2` any time |
 | **Status** | `READY` — nothing in flight, nothing blocked. Two owner questions open (OQ-1, OQ-2 below; OQ-3 decided by D-063, OQ-4 by D-051); nothing depends on them |
 | **Phase** | 4b — foundation corrections from `docs/taxplanning-design/00-BRIEF.md` |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -52,7 +52,7 @@ Phase 1    W-004 D  W-005 D  W-006 D  W-007 D  W-008 D  W-009 D  W-010 D  W-011 
 Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-020 —  W-021 D  W-021b D  W-021c D  W-022 —   ← COMPLETE
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
-Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n ·  W-045o ·   ← added by D-043
+Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 ·  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o ·   ← added by D-043
 Phase 5    W-046 ·  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **68** / 174 live · in flight **0** · blocked **0**  ← computed by script; 174 = 146 base ids − 8 retired + 36 suffixed
+Counts — done **69** / 174 live · in flight **0** · blocked **0**  ← computed by script; 174 = 146 base ids − 8 retired + 36 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-045n | 2026-09-25 | TY 2025-26 sources for the Phase 5 rules (research; D-065): Q1 `REBATE-OLD-001` figures sourced (FA 2019 s.8 + every Finance Act to 2025, only provisos amended); Q2 `RATE-CESS-001` 1961 side corrected to FA 2026 s.2(6); Q3 1961 ss.288A/288B and Q4 D-052 not reached (403/504, a scanned PDF) → UNVERIFIED with whatToCheck; per-rule table for `W-052c` in `plans/W-045n.md` Findings | rulebook diff additions only (2 errata); no code
 W-045m | 2026-09-25 | Known-errors notice on the old compute endpoint (OQ-3 → D-063 warn; D-064): `taxplanning/salary/dto/KnownErrorsComputation` (`@JsonUnwrapped` computation + `knownErrors`), returned by `TaxPlanningController.computeTax`; response shape otherwise unchanged. The PDF report endpoint is not warned (proposal below) | `TaxPlanningControllerIntegrationTest` 14/14 + bite probe (bare entity → `knownErrors` null); unit 1481/1481
 W-045l | 2026-09-25 | Assessee family (D-039, D-062): `input/{Assessee,Individual,Huf}` replace `TaxpayerFacts` (deleted; `TaxpayerFactsTest` → `AssesseeTest`, family/ledger tests kept); `PersonType.HUF`; `EngineInputs.assessee`; I5 counts only person types the pack's regimes name (no regime serves HUFs — s.202's heading is all the rulebook sources); fixtures folded into `NodeHarness.plainTaxpayer()` | Verify 6 classes green + I5 bite probe (8 fail with the old loop); clean unit 1481/1481
 W-045k2 | 2026-09-25 | 80C and HRA catalogue entries (D-061): `SEC-INVESTMENT-DEDUCTION` (1961 s.80C / 2025 s.123; 23 routes from `DED-80C-ITEMS-001` + an "other Schedule XV items" route, C1a) and `SEC-HOUSE-RENT-ALLOWANCE` (1961 s.10(13A) / 2025 Sch. III Sl. 11); every link `NotModelled` (rules come with `W-076`/`W-067`); no tenure, cap or count in text (C2a); `coverage.json` + 3 `PLANNED` rows; ratchet 2 → 5 sections; no Java change | `SectionCatalogueTest` 20/20 + 2 bite probes; clean unit 1476/1476
@@ -422,6 +423,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-065 | 2026-09-25 | `W-045n`: how TY 2025-26 sources for the Phase 5 rules are researched and recorded | Only Q1 (`REBATE-OLD-001` main limb, 1961 s.87A), Q2 (`RATE-CESS-001` 1961-side sub-section), Q3 (`RATE-ROUND-001`, 1961 ss.288A/288B) and Q4 (D-052: the date meaning of `WITHDRAWN`/`STRUCK_DOWN`) are open; the rest are VERIFIED for 2025-26 in the rulebook. Upgrade only on a primary source quoted with URL and page; otherwise `UNVERIFIED` + `whatToCheck`. Results: rulebook errata, the plan's Findings table (for `W-052c`), STATE's unverified list. No code, timeline or lock change. Public government documents fetched with WebFetch/WebSearch | owner: "approved — C1, C2 as recommended" |
 | D-064 | 2026-09-25 | `W-045m`: how the known-errors notice reaches the old compute response | A new `taxplanning/salary/dto/KnownErrorsComputation` (`@JsonUnwrapped` computation + `knownErrors`): the body keeps its shape and gains one top-level field; not a header (invisible, and `Warning` is obsolete), not a wrapper (breaks clients). The PDF report endpoint prints the same figures and is **not** warned by this item — a follow-up proposal. The notice goes with the endpoint (`09` B2, after Slice 9) | owner: "approved — A1, B1 as recommended" |
 | D-063 | 2026-09-25 | OQ-3 — the old compute endpoint returns known-wrong tax: warn, disable, or leave? | **Warn now** (a visible "known errors — being replaced" notice on the response), remove it when the replacement passes its golden tests (`09-build-plan.md` B2). `W-045m` builds it | owner: "warn — as recommended" |
 | D-062 | 2026-09-25 | `W-045l`: `PersonType.HUF` makes I5 (exactly one default per person type) refuse every pack, since no regime applies to an HUF | **I5 counts only the person types some applicable regime applies to** — a pack serving no HUF passes; one with a regime open to HUFs and no HUF default is refused. The rulebook sources only s.202's heading for HUFs, so no pack is widened (that would compute on unverified law). The code that later selects a regime by person type must refuse an assessee type the year's pack does not serve. `ResidentialStatus` nests in `Assessee`; `EngineInputs.taxpayer` → `assessee`; `type()` derived per record; `TaxpayerFacts`' checks and javadoc move to `Individual`/`Assessee`; fixtures folded into `NodeHarness.plainTaxpayer()` | owner: "approved — A1, B1–B5 as recommended" |
@@ -491,7 +493,9 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 <!-- Append whenever a completed item relies on a NEEDS VERIFICATION or STATUS UNCLEAR rule.
      Format:  <RuleId> | <status> | <item that used it> | <what to check> -->
 
-*(none yet)*
+`RATE-ROUND-001` (TY 2025-26, 1961 ss.288A/288B, ₹10) | UNVERIFIED | `W-045n` → for `W-050`/`W-052c` | read ss.288A and 288B base text as in force for AY 2026-27 — India Code `a1961-43.pdf` (504 from here) or the Income Tax Department's section pages (403 from here)
+`REBATE-OLD-001` (TY 2025-26) | figures SOURCE_CHECKED, wording not | `W-045n` → for `W-049`/`W-052c` | read the 1961 s.87A main limb in the base text ("resident", "individual", "whichever is less"); search non-Finance amending Acts for s.87A
+D-052 (`LegalStatus.WITHDRAWN`/`STRUCK_DOWN` and dates) | UNVERIFIED | `W-045n` | read General Clauses Act 1897 s.6 (thc.nic.in copy is a scan); put `STRUCK_DOWN`'s date meaning to the reviewer named in OQ-1 — until then legal status does not change `RuleRow.versionAt`
 
 ---
 
@@ -570,7 +574,7 @@ Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` a
 
 **Carry forward (W-045l, D-062):** I19 ("at least one ITR form per `(PersonType, ReturnKind)`", `W-090`) meets the same `HUF` problem I5 did — state it per person type the pack serves. Regime selection by person type (not yet built) must refuse an assessee type the year's pack does not serve.
 
-**Errata written in session 6:** `03-WORK-ITEMS.md` — `W-045k`'s three entries: 80C and HRA move to new `W-045k2` (no rules yet; HRA not a 2025-Act section; Schedule XV quoted in part) (`W-045k`, D-060); `00-BRIEF.md` §6.3 — the example `plainName` types ₹ against SC-2, and provisions are `Provision`s not sections (`W-045k`, D-060).
+**Errata written in session 6:** `01-rulebook.md` R4 — `REBATE-OLD-001` TY 2025-26 figures confirmed (`W-045n`); `01-rulebook.md` R6 — `RATE-CESS-001` 1961 side is FA 2026 s.2(6), not s.2(11)/(12) (`W-045n`); `03-WORK-ITEMS.md` — `W-045k`'s three entries: 80C and HRA move to new `W-045k2` (no rules yet; HRA not a 2025-Act section; Schedule XV quoted in part) (`W-045k`, D-060); `00-BRIEF.md` §6.3 — the example `plainName` types ₹ against SC-2, and provisions are `Provision`s not sections (`W-045k`, D-060).
 
 **Errata written in session 5 (§10 requires them recorded here):** `03-WORK-ITEMS.md` — `W-045j`'s "105 sections" is 116 mixed-Act citations; rulebook seeding → `W-045o` (`W-045j`, D-059); `03-WORK-ITEMS.md` — `W-139` inherits `PackDiff` in `timeline/`, adds lint findings + `Magnitude`, owns the regime-diff gap (`W-045h`, D-057); `03-WORK-ITEMS.md` — `W-045g2` split, `W-045g3` added; T9-21 is not a test; the old wrong-year test passed on a checksum (`W-045g2`, D-055); `03-WORK-ITEMS.md` — `W-045g` split, `W-045g2` added, startup wiring + JAR loading UNOWNED (`W-045g`, D-054); `03-WORK-ITEMS.md` — `W-045g` inherits runtime timeline loading and the `RuleIdNamingTest`/`ConstantGenerator` move (`W-045f`, D-053); `03-WORK-ITEMS.md` — `W-045n` also sources the date meaning of `WITHDRAWN`/`STRUCK_DOWN` (`W-045e`, D-052); `01-rulebook.md` R3 — old → new rule-ID mapping for the 7 slab IDs (`W-045d`); `03-WORK-ITEMS.md` — `W-045d`'s Verify regex allows the statutory "NEW-TAX-REGIME", and its mapping covers R3 only (rest → `W-045d2`).
 
