@@ -23,6 +23,9 @@ import java.util.Optional;
  * @param coverage the coverage register ({@code content/coverage.json}) verbatim, where the timeline
  *     has one. It describes the whole timeline rather than a year, so no year's pack is compiled from it
  *     (D-059)
+ * @param sections the section catalogue ({@code content/sections/}), each entry's file verbatim by its
+ *     key. Like the register it describes the whole timeline, so no year's pack is compiled from it
+ *     (D-060)
  */
 public record Timeline(
         Map<RuleId, RuleRow> rules,
@@ -30,7 +33,8 @@ public record Timeline(
         Map<RuleId, String> ruleSources,
         Map<RegimeCode, String> regimeSources,
         Map<NodeId, String> pipelineNodes,
-        Optional<String> coverage) {
+        Optional<String> coverage,
+        Map<String, String> sections) {
 
     public Timeline {
         rules = Map.copyOf(rules);
@@ -39,5 +43,6 @@ public record Timeline(
         regimeSources = Map.copyOf(regimeSources);
         pipelineNodes = Map.copyOf(pipelineNodes);
         coverage = Objects.requireNonNull(coverage, "coverage: Optional.empty() where the timeline has none");
+        sections = Map.copyOf(sections);
     }
 }

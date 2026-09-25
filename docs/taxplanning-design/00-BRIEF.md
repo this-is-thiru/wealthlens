@@ -357,6 +357,12 @@ SectionCatalogueEntry
   statuses            legal · verification · publication            ← §5.3, per entry
 ```
 
+> **Erratum (W-045k, 2026-09-25):** the example `plainName` "(the ₹1.5 lakh bucket)" types a rupee
+> figure, which SC-2 below forbids; `provisions` is not always a section in both Acts (HRA is
+> Sch. III Table Sl. 11 in the 2025 Act) — a figure in a name comes only from a placeholder, and an
+> entry's provisions are `Provision`s, not sections (D-060).
+> Verified by: `SectionCatalogueTest.verify_whenTextTypesAFigureRateOrDate_isRefusedNamingTheField`; `01-rulebook.md` `SAL-HRA-001`.
+
 **Routes — the different ways to achieve it.** Many sections can be satisfied in several ways,
 each with its own conditions. Each route carries a name, a plain description, **its own
 conditions** (as rule or `Condition` references), any lock-in or holding period, the evidence it

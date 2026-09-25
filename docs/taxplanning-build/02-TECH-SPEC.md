@@ -65,7 +65,8 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 | `json/` | `PackJson` `ValueJson` `ShapeJson` `ConditionJson` `RuleJson` `RegimeJson` `RegistryJson` `JsonPackAssembler` — hand-written parsing (D-019) |
 | `generated/` | `RuleIds` `ComponentCodes` `NodeIds` — generated from the timeline, committed, verified (`W-032b`, `W-045i`); every regime `nodeRef` must have a `NodeIds` constant (D-058) |
 | `coverage/` | `CoverageRegister` `SectionRef` `Coverage` — the register of the Acts' sections, one classification each; `verify(Timeline)` refuses an unregistered citation and a `MODELLED` section with no published rule; run by `CoverageRegisterTest` (D-059) |
-| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, misnamed, or with overlapping versions (D-053) · `RulePackCompiler` `CompiledPack` `RulePackLock` — compiles a year from the timeline (PUBLISHED versions overlapping it + PUBLISHED pending ones; regimes in force in it) in canonical JSON, and checks it against `<year>.lock.json` per rule and per layer (D-054) · `ClasspathRulePackProvider` — serves each year compiled from `<root>/timeline/` and refused unless it matches `<root>/<year>.lock.json`; refuses a timeline inside a JAR (D-055) · `PackDiff` — the publish diff between two compiled packs: rules and versions added or removed, every value changed, by path (D-057) |
+| `catalogue/` | `SectionCatalogue` `SectionCatalogueEntry` `Route` `Disqualifier` `DisqualifierKind` `EnforcedBy` — the section catalogue, one plain-language entry per section, provisions as `Provision`s in both Acts; routes and disqualifiers link a rule (`ByRule`), a `Condition` record (`ByCondition`) or say `NotModelled` with a reason; `of(Timeline)` refuses authored `availability`/`history` (SC-4); `verify(Timeline, CoverageRegister)` checks SC-1 (every `MODELLED` section catalogued), SC-2 (no typed figure, rate, date or section number in text; `{{RuleId.field}}` only), SC-3 (every named rule in the timeline); the `PLANNED` half of SC-1 is a ratchet in `SectionCatalogueTest` (D-060) |
+| `timeline/` | `Timeline` `TimelineReader` — the law authored once, one file per identity (D-034); reads a filesystem `Path`, refuses any file outside `law/rules`, `law/regimes`, `exec/pipelines`, `content/sections` (+ `content/coverage.json`), misnamed, or with overlapping versions (D-053) · `RulePackCompiler` `CompiledPack` `RulePackLock` — compiles a year from the timeline (PUBLISHED versions overlapping it + PUBLISHED pending ones; regimes in force in it) in canonical JSON, and checks it against `<year>.lock.json` per rule and per layer (D-054) · `ClasspathRulePackProvider` — serves each year compiled from `<root>/timeline/` and refused unless it matches `<root>/<year>.lock.json`; refuses a timeline inside a JAR (D-055) · `PackDiff` — the publish diff between two compiled packs: rules and versions added or removed, every value changed, by path (D-057) |
 
 ### `taxengine.rules` — planned
 
@@ -186,7 +187,7 @@ backend/src/main/resources/rulepacks/
     exec/pipelines/<NodeId>.json       ✅ one file per node, verbatim (D-053)
     exec/components/<ComponentCode>.json   with the first component (W-059)
     forms/itr/<ItrFormCode>.json
-    content/sections/<SectionKey>.json the section catalogue (W-045k)
+    content/sections/<SectionKey>.json ✅ the section catalogue (W-045k; the default-regime entry, W-045k2 adds 80C and HRA); not compiled into year packs
     content/coverage.json              ✅ the coverage register (W-045j; seeded with the timeline's 2 cited sections, W-045o completes it); not compiled into year packs
   2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums
 ```
@@ -240,7 +241,7 @@ no validator branch, because it would be unreachable.
 | I31 | every node's `requires()` is produced by another node; a node may require nothing and read `EngineInputs` (D-031) | `TopologicalSort` | ✅ `W-040`, `W-042` |
 | I32 | the inputs fingerprint covers every field of `EngineInputs`, structurally | `InputsFingerprint` (reflection) | ✅ `W-038` |
 
-Section-catalogue invariants **SC-1…SC-5** are in `00-BRIEF.md` §6.3 (○ `W-045k`); coverage-register
+Section-catalogue invariants **SC-1…SC-5** are in `00-BRIEF.md` §6.3 (✅ SC-1…SC-4 `W-045k`, `SectionCatalogue.verify` + `SectionCatalogueTest`; SC-5 is T23-1); coverage-register
 checks in §7.1 (✅ `W-045j`, `CoverageRegister.verify`).
 
 ---
@@ -475,3 +476,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-24 | T2: `PackDiff` built in `timeline/` (not `validate/` — `timeline` already imports `validate`); `W-139` keeps the linter and lint findings | `W-045h`, D-057 |
 | 2026-09-24 | T2: `NodeIds` generated from the timeline's node catalogue; the generated trio reads the timeline | `W-045i`, D-058 |
 | 2026-09-24 | T2: `coverage/` built; T4: `content/coverage.json` read by `TimelineReader`, not compiled into year packs (lock unchanged) | `W-045j`, D-059 |
+| 2026-09-25 | T2: `catalogue/` built; T4: `content/sections/*.json` read by `TimelineReader`, not compiled into year packs (lock unchanged) | `W-045k`, D-060 |

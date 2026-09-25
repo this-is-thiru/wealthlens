@@ -30,8 +30,8 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Refuses the whole timeline, naming the file, rather than skip anything: a file in a directory
  * this reader does not know is content that would silently never reach a rule pack. Directories are
- * added with their first content and its reader (D-053) — {@code exec/components}, {@code forms/} and
- * {@code content/} have none yet.
+ * added with their first content and its reader (D-053) — {@code exec/components} and {@code forms/}
+ * have none yet; {@code content/} has the coverage register and the section catalogue.
  *
  * <p>Each file is named for the identity it holds, which is also what keeps one identity in one file:
  * a second file claiming it has a different name, and is refused for it.
@@ -42,7 +42,9 @@ public final class TimelineReader {
     private static final String RULES = "law/rules";
     private static final String REGIMES = "law/regimes";
     private static final String PIPELINES = "exec/pipelines";
-    private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, PIPELINES);
+    /** The section catalogue, carried verbatim for its own reader (D-060). */
+    private static final String SECTIONS = "content/sections";
+    private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, PIPELINES, SECTIONS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
 
@@ -56,6 +58,7 @@ public final class TimelineReader {
         Map<RegimeCode, String> regimeSources = new HashMap<>();
         Map<NodeId, String> pipelineNodes = new HashMap<>();
         Optional<String> coverage = Optional.empty();
+        Map<String, String> sections = new HashMap<>();
         for (Path file : files(root)) {
             String path = root.relativize(file).toString().replace(file.getFileSystem().getSeparator(), "/");
             if (COVERAGE.equals(path)) {
@@ -92,9 +95,14 @@ public final class TimelineReader {
                     requireNamedFor(path, stem, id.value());
                     pipelineNodes.put(id, content);
                 }
+                case SECTIONS -> {
+                    String key = PackJson.text(node, "key", path);
+                    requireNamedFor(path, stem, key);
+                    sections.put(key, content);
+                }
             }
         }
-        return new Timeline(rules, regimes, ruleSources, regimeSources, pipelineNodes, coverage);
+        return new Timeline(rules, regimes, ruleSources, regimeSources, pipelineNodes, coverage, sections);
     }
 
     private static void requireNamedFor(String path, String stem, String identity) {
