@@ -654,7 +654,8 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 >   `W-052c`.
 > - **Requires.** `CessNode` requires **`tax.afterrebate` only**: no `tax.surcharge` node exists before
 >   `W-056`. **`W-056` adds `tax.surcharge`** to `CessNode`'s requires and its base (tax plus
->   surcharge), per `RATE-CESS-001` and s.3(15).
+>   surcharge), per `RATE-CESS-001` and s.3(15). It also adds it to `NetPayableNode`'s sum (`W-052`,
+>   D-080).
 > - **Why it is safe until then.** Every `DR 08` T1 case has a nil surcharge, and `W-053` runs T1 only.
 >
 > Verified by: `NodeIds` (no `tax.surcharge`); `DR 08` T2-1 ("TI does not EXCEED 50,00,000 → no
@@ -663,6 +664,18 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 ### W-052 — `NetPayableNode`
 - [ ] **Produces** `taxengine/node/NetPayableNode.java` + `.../node/NetPayableNodeTest.java` *(added by `W-045c`)*. In Phase 5 it **requires `tax.cess` only**; the `credits` edge is added by the Phase 9 item that builds `CreditsNode` (D-050)
 - **Verify** `./mvnw test -pl backend -Dtest=NetPayableNodeTest` — reproduces the final figures of `DR 08` **T1-N1** and **T1-N3**; see Appendix D on the `credits` edge
+
+> **Erratum (W-052, 2026-09-25, D-080):**
+> - **Requires.** It requires **`tax.afterrebate` and `tax.cess`**, not `tax.cess` only. Since `W-051`,
+>   `tax.cess` is the cess amount alone, so the tax after rebate must be read too.
+> - **The value** is the whole post-rebate tax plus the cess. `W-056` adds `tax.surcharge`; the Phase 9
+>   `CreditsNode` item adds `credits` (subtracted, and traced under its own rule).
+> - **Untraced.** The node emits **no trace line** (`NodeResult.untraced`): the design lists no rule for
+>   `tax.netpayable` (`DR 15` B-table "—"), a row stating only a sum can't load (D-075/D-078), and the
+>   figure appears as `round.netpayable`'s `ROUNDING` line `in`.
+>
+> Verified by: `CessNode` (value = the cess); `DR 15` B-table; rulebook `REBATE-ORDER-001` ("an
+> arithmetic sum of already-computed rows").
 
 ### W-052b — from the runner's result to a `TaxComputation` *(added by D-043)*
 - [ ] **Produces** `taxengine/result/ComputationProjector.java` + `.../result/ComputationProjectorTest.java`

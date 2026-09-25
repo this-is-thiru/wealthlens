@@ -95,7 +95,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 |---|---|---|
 | `input/` | `Assessee` (sealed) `Individual` `Huf` — **replace** `TaxpayerFacts`; `PersonType` gains `HUF` | ✅ `W-045l` (D-062) |
 | `result/` | `ComputationProjector` | ○ `W-052b` |
-| `node/` | one class per node — T6 | ◐ `TaxByBasisNode` (`W-046`), `RebateNode` (`W-049`), `RoundTotalIncomeNode`, `RoundNetPayableNode` (`W-050`), `CessNode` (`W-051`); the rest Phases 5–9 |
+| `node/` | one class per node — T6 | ◐ `TaxByBasisNode` (`W-046`), `RebateNode` (`W-049`), `RoundTotalIncomeNode`, `RoundNetPayableNode` (`W-050`), `CessNode` (`W-051`), `NetPayableNode` (`W-052`); the rest Phases 5–9 |
 | `election/` | `Election` `ElectionResolver` `ElectionOutcome` | ○ Phase 9 |
 | `proration/` | `ProrationBasis` `CompletedMonths` `CalendarMonths` `Days` `OccupationPeriods` | ○ `W-066` |
 | `interest/` | `InterestAndFeeNode` `InterestBreakdown` `SimpleInterest` `TieredFee` | ○ `W-112` |
@@ -285,7 +285,7 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `tax.surcharge` | `SurchargeNode` | `tax.afterrebate`, `round.totalincome` | `MoneyValue` | ○ `W-056` |
 | `tax.cess` | `CessNode` | `tax.afterrebate` (`tax.surcharge` added by `W-056`, D-079) | `MoneyValue` | ✅ `W-051` — `RATE-HEALTH-EDUCATION-CESS`, 4% of the whole post-rebate tax, one `TAX` line |
 | `credits` | `CreditsNode` | `EngineInputs` (TDS and advance-tax credits; exact components fixed by the owning item) | `MoneyValue` | ○ Phase 9 |
-| `tax.netpayable` | `NetPayableNode` | `tax.cess`, `credits` | `MoneyValue` | ○ `W-052` |
+| `tax.netpayable` | `NetPayableNode` | `tax.afterrebate`, `tax.cess` (`tax.surcharge` by `W-056`; `credits` by the Phase 9 item, D-080) | `MoneyValue` | ✅ `W-052` — whole post-rebate tax + cess; untraced (no rule states a sum) |
 | `interest.and.fees` | `InterestAndFeeNode` | `tax.netpayable`, `totalincome`, `EngineInputs.filing` | `InterestBreakdown` ⚠ | ○ `W-112` |
 | `round.netpayable` | `RoundNetPayableNode` | `tax.netpayable` (`interest.and.fees` added by `W-112`, D-076) | `MoneyValue` | ✅ `W-050` — s.516 via `RATE-ROUND-PAYABLE`; a refund keeps its sign (`ROUND-NEG-001`) |
 
@@ -501,3 +501,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2/T4: `rounding/RuleRounding`; `RuleVersion.rounding` (at most one of cap, relief, rounding); the untagged rule-row `rounding` block; a rule needs a cap, relief, rounding or conditions; T3: `Money.isWholeRupees`. No pack or lock change | `W-050a`, D-078 |
 | 2026-09-25 | T2/T4/T6: `node/RoundTotalIncomeNode`, `RoundNetPayableNode` (sharing `RoundingStep`) built; rows `RATE-ROUND-TOTAL-INCOME`, `RATE-ROUND-PAYABLE` (TY 2026-27, `rounding {toNearest: 10}`); lock → `2026-27.law.8`; `round.netpayable` requires `tax.netpayable` only; 2025 s.516 and 1961 ss.288A/288B `MODELLED` (manager `RuleRounding`), catalogue `SEC-ROUNDING-OFF-TOTAL-INCOME`, `-AMOUNT-PAYABLE` | `W-050`, D-076 |
 | 2026-09-25 | T2/T4/T6: `node/CessNode` built — 4% of the whole post-rebate tax via row `RATE-HEALTH-EDUCATION-CESS` (`PercentOfBase`, FA 2026 s.3(15) / s.2(6), TY 2026-27); requires `tax.afterrebate` only until `W-056` adds `tax.surcharge`; lock → `2026-27.law.9` | `W-051`, D-079 |
+| 2026-09-25 | T2/T6: `node/NetPayableNode` built — tax after rebate (whole) + cess, `NodeResult.untraced`; requires `tax.afterrebate`, `tax.cess`. No pack change | `W-052`, D-080 |
