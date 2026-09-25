@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.7",
-      "checksum": "sha256:5ce4ce045aaf9a636faa7316ca4207dc186350611545f23aee3373e743ce6bba"
+      "version": "2026-27.law.8",
+      "checksum": "sha256:54f978c906ee9674910420a3417250b8d1f483ae2829f48013f46972d34aafd9"
     },
     "exec": {
       "version": "2026-27.exec.2",
@@ -20,6 +20,8 @@
     }
   },
   "rules": {
+    "RATE-ROUND-PAYABLE": "sha256:6e4f12089cee93e85c495291deea38aeb85e7958dd507b7a9f5ce7c021146d52",
+    "RATE-ROUND-TOTAL-INCOME": "sha256:616c41c94b7c08e82d7efe3301fbc36ac1c88641289ae37fd6a38557dd58c4f7",
     "RATE-SLAB-FIRST-SCHEDULE": "sha256:5025b10dcb48c3f3609ba6cd4694411295ef33164ee4b9d2958374e7f172973e",
     "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79": "sha256:b4690187aadf0223e29aa9c03cec6c13eb6220db8909164a05f07500a2b9daa6",
     "RATE-SLAB-FIRST-SCHEDULE-AGE-80": "sha256:335e64c789c5b80ebf251bc20c31d0fc9041e45afa1d53e8ffa29fb0d562464c",

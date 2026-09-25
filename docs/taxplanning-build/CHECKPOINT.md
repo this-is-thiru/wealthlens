@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-050 — RoundTotalIncomeNode and RoundNetPayableNode (D-076); W-049b and W-050a landed
-Stage           : BUILD
-Plan            : plans/W-050.md
-Approved        : 2026-09-25 — "approved — A1–A6 as recommended" (D-076)
-Steps done      : 1, 1b
-Next step       : step 2 of plans/W-050.md — RoundingNodesTest (fails); then step 3's rows (RATE-ROUND-TOTAL-INCOME, RATE-ROUND-PAYABLE, rounding {toNearest "10"}), lock → law.8 + RuleIds, nodes (refuse toNearest ≠ 10), coverage s.516/288A/288B MODELLED + catalogue entry; the RuleRounding wiring in step 3 is already done by W-050a
-Last verify     : ./mvnw clean test -pl backend -Punit → 1548 pass, 0 fail, 0 Checkstyle violations (W-050a)
-Waiting on      : nothing; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Item            : W-051 — CessNode
+Stage           : NOT_STARTED
+Plan            : — (plans/W-051.md once written)
+Approved        : —
+Steps done      : —
+Next step       : READ the W-051 section of 03-WORK-ITEMS.md and only the sections it names (rulebook RATE-CESS-001 + its W-045n erratum: FA 2026 s.2(6) 1961 side, s.3(15)–(16) 2025 side; REBATE-ORDER-001; DR 08 T2-1); write plans/W-051.md with the D-043 standing-rules line (coverage, catalogue, both years, concept IDs); STOP for approval. Known: CessNode requires tax.afterrebate and tax.surcharge, but no surcharge node exists until W-056; a new rule means lock → law.9
+Last verify     : ./mvnw clean test -pl backend -Punit → 1562 pass, 0 fail, 0 Checkstyle violations (W-050)
+Waiting on      : nothing for W-051; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
 Files touched   : —
-Last item commit: taxplanning W-050a: carry a rounding on a rule version — the step as data, at most one of cap, relief and rounding (D-078)
+Last item commit: taxplanning W-050: add the two s.516 rounding nodes and rows — total income and amount payable, one ROUNDING line each (D-076)
 Updated         : 2026-09-25, session 7
 ```
 

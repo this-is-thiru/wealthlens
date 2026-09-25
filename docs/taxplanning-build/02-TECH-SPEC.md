@@ -95,7 +95,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 |---|---|---|
 | `input/` | `Assessee` (sealed) `Individual` `Huf` — **replace** `TaxpayerFacts`; `PersonType` gains `HUF` | ✅ `W-045l` (D-062) |
 | `result/` | `ComputationProjector` | ○ `W-052b` |
-| `node/` | one class per node — T6 | ◐ `TaxByBasisNode` (`W-046`), `RebateNode` (`W-049`); the rest Phases 5–9 |
+| `node/` | one class per node — T6 | ◐ `TaxByBasisNode` (`W-046`), `RebateNode` (`W-049`), `RoundTotalIncomeNode`, `RoundNetPayableNode` (`W-050`); the rest Phases 5–9 |
 | `election/` | `Election` `ElectionResolver` `ElectionOutcome` | ○ Phase 9 |
 | `proration/` | `ProrationBasis` `CompletedMonths` `CalendarMonths` `Days` `OccupationPeriods` | ○ `W-066` |
 | `interest/` | `InterestAndFeeNode` `InterestBreakdown` `SimpleInterest` `TieredFee` | ○ `W-112` |
@@ -189,7 +189,7 @@ backend/src/main/resources/rulepacks/
     exec/pipelines/<NodeId>.json       ✅ one file per node, verbatim (D-053)
     exec/components/<ComponentCode>.json   with the first component (W-059)
     forms/itr/<ItrFormCode>.json
-    content/sections/<SectionKey>.json ✅ the section catalogue: default regime (W-045k), investments deduction and HRA (W-045k2), the rebate (W-049b); not compiled into year packs
+    content/sections/<SectionKey>.json ✅ the section catalogue: default regime (W-045k), investments deduction and HRA (W-045k2), the rebate (W-049b), the two roundings (W-050); not compiled into year packs
     content/acts/<Act>.json            ✅ each Act's section list, parsed from its gazette (2025 Act as amended by FA 2026: 537 numbers, 535 in force, W-045o/W-045o3; 1961 Act: 951 numbers, 820 in force for AY 2026-27, W-045o2); not compiled into year packs
     content/coverage.json              ✅ the coverage register (W-045j; the timeline's 2 cited sections `MODELLED`, + 3 `PLANNED` the catalogue cites, W-045k2; W-045o completes it); not compiled into year packs
   2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums
@@ -279,7 +279,7 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `gti` | `GrossTotalIncomeNode` | `setoff` | `MoneyValue` | ○ Phase 9 |
 | `chapterviii` | `ChapterEightNode` | `gti`, `inputs.components`, `EngineInputs.family` | `MoneyValue` | ○ Phase 8 |
 | `totalincome` | `TotalIncomeNode` | `gti`, `chapterviii` | `MoneyValue` | ○ |
-| `round.totalincome` | `RoundTotalIncomeNode` | `totalincome` | `MoneyValue` | ○ `W-050` |
+| `round.totalincome` | `RoundTotalIncomeNode` | `totalincome` | `MoneyValue` | ✅ `W-050` — s.516 via `RATE-ROUND-TOTAL-INCOME`, one `ROUNDING` line |
 | `tax.bybasis` | `TaxByBasisNode` | `round.totalincome` | `TaxByBasis` | ✅ `W-046`, `W-046b` — the regime's `rateTable`, replaced by the one conditional ladder whose conditions hold (First Schedule 60–79 / 80+; two holding is refused); conditions read `NodeContext.conditions()` (D-072) |
 | `tax.afterrebate` | `RebateNode` | `tax.bybasis`, `round.totalincome` | `TaxByBasis` | ✅ `W-049` |
 | `tax.surcharge` | `SurchargeNode` | `tax.afterrebate`, `round.totalincome` | `MoneyValue` | ○ `W-056` |
@@ -287,7 +287,7 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `credits` | `CreditsNode` | `EngineInputs` (TDS and advance-tax credits; exact components fixed by the owning item) | `MoneyValue` | ○ Phase 9 |
 | `tax.netpayable` | `NetPayableNode` | `tax.cess`, `credits` | `MoneyValue` | ○ `W-052` |
 | `interest.and.fees` | `InterestAndFeeNode` | `tax.netpayable`, `totalincome`, `EngineInputs.filing` | `InterestBreakdown` ⚠ | ○ `W-112` |
-| `round.netpayable` | `RoundNetPayableNode` | `tax.netpayable`, `interest.and.fees` | `MoneyValue` | ○ `W-050` |
+| `round.netpayable` | `RoundNetPayableNode` | `tax.netpayable` (`interest.and.fees` added by `W-112`, D-076) | `MoneyValue` | ✅ `W-050` — s.516 via `RATE-ROUND-PAYABLE`; a refund keeps its sign (`ROUND-NEG-001`) |
 
 ⚠ **Value types that do not exist yet.** `NodeValue` permits only `MoneyValue` and `TaxByBasis`. Each
 ⚠ type must be added to the `permits` clause **by the item that first produces it** (rule B2) — the
@@ -499,3 +499,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2/T4/T6: `node/RebateNode` built — each s.156 rebate from its own row, only in its row's regime, computed on the whole tax, s.156(2) held to `atSlabRates`, off the slab tax; one `RELIEF` line per applicable row with its reason in `limitedBy`. Rows `REBATE-NEW-TAX-REGIME`, `-EXCESS`, `REBATE-RESIDENT-INDIVIDUAL` (TY 2026-27); lock → `2026-27.law.7`; `tax.afterrebate` also requires `round.totalincome` | `W-049`, D-074 |
 | 2026-09-25 | T4: `content/coverage.json` — 2025 s.156 and 1961 s.87A `MODELLED` by the three rebate rules (manager `ReliefShape`); `content/sections/SEC-REBATE-FOR-CERTAIN-INDIVIDUALS.json`. No lock change | `W-049b`, D-077 |
 | 2026-09-25 | T2/T4: `rounding/RuleRounding`; `RuleVersion.rounding` (at most one of cap, relief, rounding); the untagged rule-row `rounding` block; a rule needs a cap, relief, rounding or conditions; T3: `Money.isWholeRupees`. No pack or lock change | `W-050a`, D-078 |
+| 2026-09-25 | T2/T4/T6: `node/RoundTotalIncomeNode`, `RoundNetPayableNode` (sharing `RoundingStep`) built; rows `RATE-ROUND-TOTAL-INCOME`, `RATE-ROUND-PAYABLE` (TY 2026-27, `rounding {toNearest: 10}`); lock → `2026-27.law.8`; `round.netpayable` requires `tax.netpayable` only; 2025 s.516 and 1961 ss.288A/288B `MODELLED` (manager `RuleRounding`), catalogue `SEC-ROUNDING-OFF-TOTAL-INCOME`, `-AMOUNT-PAYABLE` | `W-050`, D-076 |

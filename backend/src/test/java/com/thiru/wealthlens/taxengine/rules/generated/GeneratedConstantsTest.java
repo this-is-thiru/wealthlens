@@ -150,6 +150,8 @@ class GeneratedConstantsTest {
         void itReadsTheRuleIdsFromTheTimeline() {
             assertThat(ConstantGenerator.ruleIds())
                     .containsExactly(
+                            "RATE-ROUND-PAYABLE",
+                            "RATE-ROUND-TOTAL-INCOME",
                             "RATE-SLAB-FIRST-SCHEDULE",
                             "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
                             "RATE-SLAB-FIRST-SCHEDULE-AGE-80",
