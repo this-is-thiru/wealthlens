@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-046b — "taxplanning W-046b: add the First Schedule age ladders and select one by the pack's conditions — lock to 2026-27.law.6 (D-072)"
-Last updated              : 2026-09-25 (session 6 — Phase 4b complete; W-046, W-046b done; build GREEN, 1503 tests)
-Current position          : W-048 — the ReliefShape family
+Last checkpoint           : W-048 — "taxplanning W-048: add the ReliefShape family — each relief formula once, amount to take off plus reason (D-073)"
+Last updated              : 2026-09-25 (session 6 — Phase 4b complete; W-046, W-046b, W-048 done; build GREEN, 1514 tests)
+Current position          : W-049 — RebateNode (+ relief wiring to rule rows)
 Session count             : 6
 ```
 
@@ -34,7 +34,7 @@ This survives amends, rebases and cherry-picks, which a hash does not.
 
 | | |
 |---|---|
-| **Next item** | `W-048` — the `ReliefShape` sealed family (Phase 5). The 2025-Act backlog gaps (STATE) await the owner. Startup wiring is UNOWNED (D-054). `W-045d2` any time |
+| **Next item** | `W-049` — `RebateNode`, with a relief attached to rule rows and read from JSON (D-073). The 2025-Act backlog gaps (STATE) await the owner. Startup wiring is UNOWNED (D-054). `W-045d2` any time |
 | **Status** | `READY` — nothing in flight, nothing blocked. Two owner questions open (OQ-1, OQ-2 below; OQ-3 decided by D-063, OQ-4 by D-051); nothing depends on them |
 | **Phase** | 5 — tax nodes: the walking skeleton (Phase 4b complete) |
 | **Next milestone** | `W-053` — a correct slab-and-rebate calculator, no database |
@@ -53,7 +53,7 @@ Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
-Phase 5    W-046 D  W-046b D  W-047 ·  W-048 ·  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
+Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049 ·  W-050 ·  W-051 ·  W-052 ·  W-052b ·  W-052c ·  W-053 ·
 Phase 6    W-054 ·  W-055 ·  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **76** / 178 live · in flight **0** · blocked **0**  ← computed by script; 178 = 146 base ids − 8 retired + 40 suffixed
+Counts — done **77** / 178 live · in flight **0** · blocked **0**  ← computed by script; 178 = 146 base ids − 8 retired + 40 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-048 | 2026-09-25 | Relief family (D-073): `rules/relief/{ReliefShape,FlatWithCeiling,ExcessOverThreshold,ThresholdLadderCeiling,NoRelief,ReliefResult,ReliefContext,UnrelievedTax}`; amount to take off + reason; U supplied by the caller, refused when absent; wiring to rule rows + JSON → `W-049` (erratum). Hand-derived: 60,000 at 12L; 0 at 12,00,001; 12,000 at 4.9L; MR 51,500 at 12.1L; 0 at 13L; surcharge relief 1,07,933 (constructed) | `ReliefShapeTest` 11/11 + bite probe; clean unit 1514/1514
 W-046b | 2026-09-25 | Old-regime age ladders (D-072): `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79` / `-AGE-80` (FA 2026 First Sched. Part I-B Para A (II)/(III), p.85; conditions resident + age as data; TY 2026-27); `TaxByBasisNode` picks the one conditional ladder that holds, else `rateTable`, refusing two; `NodeContext.conditions()` (RNOR resident per S2 s.5(1)(c); age at `taxYearEnd()` per s.2(100)); lock → `2026-27.law.6`; `RuleIds` regenerated. Hand-derived at ₹10L: resident 65 → 1,10,000; 85 → 1,00,000; non-resident 65 → 1,12,500; RNOR 65 → 1,10,000; turns 60 in Nov → 1,10,000; born 1 April → 1,12,500 (flagged); new regime 65 at 12L → 60,000 | node + load + constants 41/41 + 2 bite probes; clean unit 1503/1503
 W-046 | 2026-09-25 | `TaxByBasisNode` (D-071): `produces tax.bybasis`, `requires round.totalincome`, rules the two shipped ladders; applies `regime.rateTable()`'s in-force `SlabLadder`; `TaxByBasis.atSlabRatesOnly`; one `TAX` line with the version's provenance; no rounding (RATE-ROUND-003). Hand-derived: new regime 12L → 60,000; 4L → 0; 24,00,001 → 3,00,000.30; First Schedule 10L → 1,12,500. Age ladders + selection → `W-046b` | `TaxByBasisNodeTest` 6/6 + bite probe; clean unit 1495/1495
 W-045d3 | 2026-09-25 | Code half of the naming (D-070): `ElectionRoute` `S202_4_B` → `NO_BUSINESS_OR_PROFESSION` in the shipped regime file, 5 broken roots, javadoc, tests; example/test codes renamed (`SPECIAL_SETOFF`, `FIRST_SCHEDULE_RATES`, `ALSO_DEFAULT`, `SUCCESSOR_REGIME`, `FUTURE_REGIME`, `NOVEL_ELECTION`); `RuleIdNamingTest` refuses OLD/NEW fused with REGIME; shipped lock law checksum regenerated → `2026-27.law.5`; `dangling-rate-table` and `rule-edited-without-lock` locks follow (each root still fails for its one defect); `git grep -E 'S[0-9]{3}_' -- backend` = only the deliberate `S202_DEFAULT` | 13 classes 254/254 + 2 bite probes; clean unit 1489/1489
@@ -430,6 +431,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-073 | 2026-09-25 | `W-048`: the shape of the relief family | `taxengine/rules/relief/`: `ReliefShape.apply(ReliefContext) → ReliefResult(amount, reason)`, the amount always one to take off, never negative; `ReliefContext(totalIncome, taxBeforeRelief, Optional<UnrelievedTax>)` — the function exists for `ThresholdLadderCeiling`'s U (G3.2), refused when absent; `FlatWithCeiling(maximum, incomeCeiling)`, `ExcessOverThreshold(threshold)`, `ThresholdLadderCeiling(thresholds)`, `NoRelief`; composing reliefs (MR-002, CAP-001) is the node's. Attaching a relief to a `RuleVersion` and reading it from JSON moves to `W-049` (erratum) | owner: "approved — A1–A4 as recommended" |
 | D-072 | 2026-09-25 | `W-046b`: selecting an age ladder, and filling the `ConditionContext` | `TaxByBasisNode` declares the two age ladders; for the regime, exactly one declared non-`rateTable` ladder whose in-force version applies and whose non-empty conditions all hold replaces `rateTable`; none → `rateTable`; two → refused. `NodeContext.conditions()` builds the context from `EngineInputs`: RNOR counts as resident (S2 s.5(1)(c)); age = completed years at `taxYearEnd()` for "at any time during the tax year" (S2 s.2(100); FA 2026 First Schedule); the 1-April-birthday edge by calendar reckoning, flagged for OQ-1. Ladders `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79` / `-AGE-80`, conditions as data, TY 2026-27 now (2025-26 with `W-052c`); lock → `2026-27.law.6` | owner: "approved — C1–C5 as recommended" |
 | D-071 | 2026-09-25 | `W-046`: the node, and the age-band rows D-050 added to it | **Split:** `W-046` = `TaxByBasisNode` over `regime.rateTable()` (both ladders already in the pack; no pack/lock change); new **`W-046b`** (before `W-053`) = the age ladders `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79` / `-AGE-80` (not "`RATE-SLAB-AGE-001/002`", which are rulebook statements: resident-only + age at any time during the year; no age variants in the new regime), ladder selection (B1: a conditional ladder that holds replaces `rateTable`; two holding is an error), a `ConditionContext` from `EngineInputs` (B2 age on the last day of the tax year; B3 RNOR as resident — each to be sourced), the lock bump | owner: "approved — A as recommended" |
 | D-070 | 2026-09-25 | `W-045d3`: the code half of the naming | `ElectionRoute` `S202_4_B` → **`NO_BUSINESS_OR_PROFESSION`** (S2 s.202(4)(b): *"a person not having income from business or profession"*); example/test codes renamed to concepts (`SPECIAL_SETOFF`, `FIRST_SCHEDULE_RATES`, `ALSO_DEFAULT`, `SUCCESSOR_REGIME`, `FUTURE_REGIME`, `NOVEL_ELECTION`); `RuleIdNamingTest`'s deliberate `S202_DEFAULT` kept; its OLD/NEW pattern widened to `(^|-)(OLD|NEW)(REGIME)?(-|$)`; shipped lock regenerated and bumped to `2026-27.law.5`; the two broken roots that reach the lock check get compiler-regenerated locks, the other three unchanged — each root still fails for its one defect | owner: "approved — B1–B4 as recommended" |

@@ -586,6 +586,13 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 - [ ] **Produces** `taxrules/relief/{ReliefShape,FlatWithCeiling,ExcessOverThreshold,ThresholdLadderCeiling,NoRelief,ReliefResult,ReliefContext}.java` *(`ReliefResult`, `ReliefContext` added by `W-045c`, D-050)*
 - **Spec** `DR 10` E5 (`10-extensibility.md:305`) · `DR 06` G3 *(corrected by `W-045c`: this row cited `DR 15` Part E, which is `Condition`)*
 
+> **Erratum (W-048, 2026-09-25):** the `W-048` row has no Verify and names the package `taxrules/relief/`
+> — it is `taxengine/rules/relief/` (beside `rules/cap/`), verified by `./mvnw test -pl backend
+> -Dtest=ReliefShapeTest`; the family adds `UnrelievedTax` (D-073). And no item attached a relief to a rule
+> row: `W-049` authors the first relief row (`REBATE-NEW-001`), so its Produces gains **"`RuleVersion`
+> carries a `ReliefShape`; `ShapeJson` reads it"** (D-073).
+> Verified by: `RuleVersion` holds one `CapShape cap`; `ShapeJson.cap` reads caps only.
+
 ### W-049 — `RebateNode`
 - [ ] **Produces** `taxengine/node/RebateNode.java` + `.../node/RebateNodeTest.java`; `law/` rows `REBATE-NEW-001`, `REBATE-NEW-MR-001` (both VERIFIED) and `REBATE-OLD-001` (`UNVERIFIED` + `whatToCheck` until `W-045n` sources it) *(added by `W-045c`)*
 - **Spec** `DR 06-algorithms.md` G3.1 · `DR 13` R-5
