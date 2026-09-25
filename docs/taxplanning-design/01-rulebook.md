@@ -137,6 +137,68 @@ Identical to `RATE-SLAB-OLD-2025` in every band and every rate, restated in the 
 > `FIRST_SCHEDULE_RATES`. The other year- or regime-suffixed IDs in this rulebook are mapped by
 > `W-045d2`. Verified by: S2 p.226 (s.202 marginal heading), S3 p.84–85 (Part I-B Paragraph A),
 > read 2026-09-24; `RuleIdNamingTest`.
+> **Erratum (W-045d2, 2026-09-25):** every other rulebook ID that carries a year, "OLD"/"NEW" or a
+> section number breaks D-035 — each maps to one concept name, taken from its own provision and chosen by
+> the owner (D-069). A year pair becomes one ID with a version per year. The old IDs below stay in the
+> rows above as written; read them through this table.
+>
+> | Old ID | New ID | Provision it is named from |
+> |---|---|---|
+> | `REG-NEW-DISALLOW-001` | `REG-NEW-TAX-REGIME-NO-EXEMPTION` | Income-tax Act, 2025 (S2) s.202(2)(a), p.227 |
+> | `REG-NEW-DISALLOW-002` | `REG-NEW-TAX-REGIME-NO-SETOFF` | Income-tax Act, 2025 (S2) s.202(2)(b), (3), p.227 |
+> | `REG-NEW-DISALLOW-003` | `REG-NEW-TAX-REGIME-OTHER-LAW` | Income-tax Act, 2025 (S2) s.202(2)(c), p.228 |
+> | `SAL-LTA-NEW-001` | `SAL-LTA-NEW-TAX-REGIME` | Income-tax Act, 2025 (S2) s.202(2)(a)(i) |
+> | `SAL-ALW-NEW-001` | `SAL-ALW-NEW-TAX-REGIME` | Income-tax Act, 2025 (S2) s.202(2)(a)(ii) |
+> | `HP-NEW-001` | `HP-NEW-TAX-REGIME-INTEREST` | Income-tax Act, 2025 (S2) s.202(2)(a)(v); s.22(1)(b) |
+> | `HP-NEW-002` | `HP-NEW-TAX-REGIME-LOSS` | Income-tax Act, 2025 (S2) s.202(2)(b)(ii), (3) |
+> | `SETOFF-NEW-001` | `SETOFF-NEW-TAX-REGIME` | Income-tax Act, 2025 (S2) s.202(2)(b), (3) |
+> | `SETOFF-NEW-002` | `SETOFF-NEW-TAX-REGIME-HP-LOSS` | Income-tax Act, 2025 (S2) s.202(3) |
+> | `DED-NEWREGIME-001` | `DED-NEW-TAX-REGIME` | Income-tax Act, 2025 (S2) s.202(2)(a)(xii) |
+> | `REBATE-OLD-001` | `REBATE-RESIDENT-INDIVIDUAL` | Income-tax Act, 2025 (S2) s.156(1) |
+> | `REBATE-NEW-001` | `REBATE-NEW-TAX-REGIME` | Income-tax Act, 2025 (S2) s.156(2)(a) |
+> | `REBATE-NEW-MR-001` | `REBATE-NEW-TAX-REGIME-EXCESS` | Income-tax Act, 2025 (S2) s.156(2)(b) |
+> | `REBATE-NEW-MR-002` | `REBATE-NEW-TAX-REGIME-LIMIT` | Income-tax Act, 2025 (S2) s.156(3) |
+> | `RATE-SUR-OLD-2025` | `RATE-SUR-FIRST-SCHEDULE` | Finance Act, 2026 (S3) s.2(1); First Schedule Part I-A |
+> | `RATE-SUR-OLD-2026` | `RATE-SUR-FIRST-SCHEDULE` | Finance Act, 2026 (S3) s.3(1); First Schedule Part I-B |
+> | `RATE-SUR-NEW-2025` | `RATE-SUR-NEW-TAX-REGIME` | Finance Act, 2026 (S3) s.2(4)(b) Table Sl. 10 |
+> | `RATE-SUR-NEW-2026` | `RATE-SUR-NEW-TAX-REGIME` | Finance Act, 2026 (S3) s.3(4)(b) Table Sl. 10 |
+> | `SAL-HRA-METRO-2025` | `SAL-HRA-LOCATION` | Income-tax Rules, 2026 (S4) r.279(1)(c) Table |
+> | `SAL-HRA-METRO-2026` | `SAL-HRA-LOCATION` | Income-tax Rules, 2026 (S4) r.279(1)(c) Table |
+> | `SAL-ALW-DUTY-LIST-2026` | `SAL-ALW-DUTY-LIST` | Income-tax Rules, 2026 (S4) r.280(1) |
+> | `SAL-ALW-NEW-SUBSET-001` | `SAL-ALW-OPTION-SUBSET` | Income-tax Rules, 2026 (S4) r.280(3) |
+> | `SAL-ALW-LIMITS-2025` | `SAL-ALW-LIMITS` | Income-tax Rules, 2026 (S4) r.280(2) |
+> | `SAL-ALW-LIMITS-2026` | `SAL-ALW-LIMITS` | Income-tax Rules, 2026 (S4) r.280(2) |
+> | `SAL-ALW-TRANSPORTSYS-2026` | `SAL-ALW-TRANSPORT-SYSTEM` | Income-tax Rules, 2026 (S4) r.280(2) Table Sl. 6 |
+> | `SAL-ALW-CEA-2026` | `SAL-ALW-CHILDREN-EDUCATION` | Income-tax Rules, 2026 (S4) r.280(2) Table Sl. 7 |
+> | `SAL-ALW-HOSTEL-2026` | `SAL-ALW-HOSTEL` | Income-tax Rules, 2026 (S4) r.280(2) Table Sl. 8 |
+> | `SAL-ALW-TRANSPORT-DIS-2026` | `SAL-ALW-TRANSPORT-HANDICAP` | Income-tax Rules, 2026 (S4) r.280(2) Table Sl. 10 |
+> | `SAL-ALW-ARMED-2026` | `SAL-ALW-ARMED-FORCES` | Income-tax Rules, 2026 (S4) r.280(2) Table Sl. 9, 11, 13–15 |
+> | `PERQ-CAR-2025` | `PERQ-MOTOR-CAR` | Income-tax Rules, 2026 (S4) r.15(3)(a) Table II |
+> | `PERQ-CAR-2026` | `PERQ-MOTOR-CAR` | Income-tax Rules, 2026 (S4) r.15(3)(a) Table II |
+> | `PERQ-OTHER-2026` | `PERQ-OTHER-BENEFITS` | Income-tax Rules, 2026 (S4) r.15(5)(a) Table IV |
+> | `PERQ-MEAL-2026` | `PERQ-FOOD-BEVERAGES` | Income-tax Rules, 2026 (S4) r.15 Table IV |
+> | `PERQ-GIFT-2026` | `PERQ-GIFT` | Income-tax Rules, 2026 (S4) r.15 Table IV |
+> | `PERQ-CREDITCARD-2026` | `PERQ-CREDIT-CARD` | Income-tax Rules, 2026 (S4) r.15 Table IV Sl. 5 |
+> | `PERQ-CLUB-2026` | `PERQ-CLUB` | Income-tax Rules, 2026 (S4) r.15 Table IV |
+> | `PERQ-MOVABLE-2026` | `PERQ-MOVABLE-ASSET` | Income-tax Rules, 2026 (S4) r.15 Table IV |
+> | `PERQ-SERVANT-2026` | `PERQ-SERVICES` | Income-tax Rules, 2026 (S4) r.15 Table III Sl. 1 |
+> | `PERQ-UTIL-2026` | `PERQ-GAS-ELECTRICITY-WATER` | Income-tax Rules, 2026 (S4) r.15 Table III Sl. 2 |
+> | `PERQ-EDU-2026` | `PERQ-EDUCATION` | Income-tax Rules, 2026 (S4) r.15 Table III Sl. 3 |
+> | `PERQ-ACCOM-2026` | `PERQ-ACCOM` | Income-tax Rules, 2026 (S4) r.15(1) Table I |
+> | `PERQ-ACCOM-LEASE-2026` | `PERQ-ACCOM-LEASE` | Income-tax Rules, 2026 (S4) r.15 Table I (2)(b) |
+> | `PERQ-ACCOM-HOTEL-2026` | `PERQ-ACCOM-HOTEL` | Income-tax Rules, 2026 (S4) r.15 Table I (3) |
+> | `PERQ-ACCOM-CAP-2026` | `PERQ-ACCOM-CONTINUED` | Income-tax Rules, 2026 (S4) r.15(1)(d) |
+> | `PERQ-ACCOM-FURN-2026` | `PERQ-ACCOM-FURNISHED` | Income-tax Rules, 2026 (S4) r.15 Table I column D |
+> | `PERQ-ACCOM-TRANSFER-2026` | `PERQ-ACCOM-TRANSFER` | Income-tax Rules, 2026 (S4) r.15(1) |
+> | `PERQ-ACCOM-SITE-2026` | `PERQ-ACCOM-SITE` | Income-tax Rules, 2026 (S4) r.15(1) |
+> | `PERQ-ACCOM-OWNED-2026` | `PERQ-ACCOM-OWNED` | Income-tax Rules, 2026 (S4) r.15 Table I (2)(a) |
+> | `PERQ-LOAN-2026` | `PERQ-LOAN` | Income-tax Rules, 2026 (S4) r.15(5)(a) Table IV Sl. 1 |
+> | `PERQ-PHONE-2026` | `PERQ-TELEPHONE` | Income-tax Rules, 2026 (S4) r.15 Table IV |
+> | `OS-DIV-DED-2025` | `OS-DIVIDEND-DEDUCTION` | Income-tax Act, 2025 (S2) s.93(2)(b) as enacted |
+> | `OS-DIV-DED-2026` | `OS-DIVIDEND-DEDUCTION` | Income-tax Act, 2025 (S2) s.93(2) as substituted by Finance Act, 2026 (S3) s.44(b) |
+>
+> Verified by: `docs/taxplanning-build/tools/check_rule_id_mapping.py` (every old ID exactly once; every new ID
+> passes `RuleIdNamingTest`); the provisions' wording is quoted per row in `docs/taxplanning-build/plans/W-045d2.md`.
 
 ### Notes that the code must honour
 

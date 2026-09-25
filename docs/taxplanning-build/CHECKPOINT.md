@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-045d2 — old → new mapping for the remaining rulebook IDs (docs only; D-051)
+Item            : W-045d3 — the code half of the rule-ID and regime-value naming (D-069)
 Stage           : NOT_STARTED
-Plan            : — (plans/W-045d2.md once written)
+Plan            : — (plans/W-045d3.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-045d2 row and only the sections it names; write plans/W-045d2.md; STOP for approval. Names are the owner's to choose, each quoted from its own provision (OQ-4 / D-051) — propose, never invent
-Last verify     : ./mvnw clean test -pl backend -Punit → 1488 pass, 0 fail, 0 Checkstyle violations (W-045o3)
-Waiting on      : nothing for W-045d2; owner to itemise the backlog gaps (STATE); D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Next step       : READ the W-045d3 row and only the sections it names; write plans/W-045d3.md; STOP for approval. Known: `git grep -lE 'S[0-9]{3}_' -- backend` = 16 files; the shipped FIRST_SCHEDULE_RATES.json change needs its lock; keep RuleIdNamingTest's deliberate S202_DEFAULT; the replacement for ElectionRoute S202_4_B needs a name from s.202(4)(b)'s own words (owner chooses)
+Last verify     : ./mvnw clean test -pl backend -Punit → 1488 pass, 0 fail (W-045d2); check_rule_id_mapping.py 52/52
+Waiting on      : nothing for W-045d3; owner to itemise the backlog gaps (STATE); D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
 Files touched   : —
-Last item commit: taxplanning W-045o3: apply the Finance Act 2026 to the 2025-Act section list — 354A inserted, 443 and 447 omitted (D-068)
+Last item commit: taxplanning W-045d2: map the remaining 52 rulebook IDs to concept names — each from its own provision, checked by script (D-069)
 Updated         : 2026-09-25, session 6
 ```
 
