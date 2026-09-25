@@ -93,7 +93,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 |---|---|---|
 | `input/` | `Assessee` (sealed) `Individual` `Huf` — **replace** `TaxpayerFacts`; `PersonType` gains `HUF` | ✅ `W-045l` (D-062) |
 | `result/` | `ComputationProjector` | ○ `W-052b` |
-| `node/` | one class per node — T6 | ○ Phases 5–9 |
+| `node/` | one class per node — T6 | ◐ `TaxByBasisNode` (`W-046`); the rest Phases 5–9 |
 | `election/` | `Election` `ElectionResolver` `ElectionOutcome` | ○ Phase 9 |
 | `proration/` | `ProrationBasis` `CompletedMonths` `CalendarMonths` `Days` `OccupationPeriods` | ○ `W-066` |
 | `interest/` | `InterestAndFeeNode` `InterestBreakdown` `SimpleInterest` `TieredFee` | ○ `W-112` |
@@ -273,7 +273,7 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `chapterviii` | `ChapterEightNode` | `gti`, `inputs.components`, `EngineInputs.family` | `MoneyValue` | ○ Phase 8 |
 | `totalincome` | `TotalIncomeNode` | `gti`, `chapterviii` | `MoneyValue` | ○ |
 | `round.totalincome` | `RoundTotalIncomeNode` | `totalincome` | `MoneyValue` | ○ `W-050` |
-| `tax.bybasis` | `TaxByBasisNode` | `round.totalincome` | `TaxByBasis` | ○ `W-046` |
+| `tax.bybasis` | `TaxByBasisNode` | `round.totalincome` | `TaxByBasis` | ✅ `W-046` — the regime's `rateTable` ladder, no age selection yet (`W-046b`) |
 | `tax.afterrebate` | `RebateNode` | `tax.bybasis` | `TaxByBasis` | ○ `W-049` |
 | `tax.surcharge` | `SurchargeNode` | `tax.afterrebate`, `round.totalincome` | `MoneyValue` | ○ `W-056` |
 | `tax.cess` | `CessNode` | `tax.afterrebate`, `tax.surcharge` | `MoneyValue` | ○ `W-051` |
@@ -485,3 +485,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2: `SectionRef` accepts hyphenated sections; Act lists may mark sections `omitted`. T4: `content/acts/INCOME_TAX_ACT_1961.json`; every in-force 1961 section registered | `W-045o2`, D-067 |
 | 2026-09-25 | T4: the 2025-Act list reflects FA 2026 (354A inserted; 443, 447 omitted); the parse tool applies an amendments table | `W-045o3`, D-068 |
 | 2026-09-25 | T4: the opted-out regime's reopening route is `NO_BUSINESS_OR_PROFESSION` (was `S202_4_B`); `2026-27.lock.json` law layer regenerated and bumped to `2026-27.law.5`; `RuleIdNamingTest` also refuses OLD/NEW fused with REGIME | `W-045d3`, D-070 |
+| 2026-09-25 | T2/T6: `node/TaxByBasisNode` built — tax at slab rates from `regime.rateTable()`, one `TAX` trace line with the in-force version's provenance; age-band ladder selection split to `W-046b` | `W-046`, D-071 |

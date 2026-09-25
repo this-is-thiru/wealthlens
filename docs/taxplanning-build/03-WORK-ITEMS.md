@@ -566,6 +566,19 @@ on it (node ids, coverage, catalogue), then the input model, then the two items 
 - **Do** `DR 23` A11's harness example, using `W-044`'s `NodeHarness`: TI ₹12,00,000 → `TaxByBasis(60000, {})`.
 - **Verify** `./mvnw test -pl backend -Dtest=TaxByBasisNodeTest`
 
+> **Erratum (W-046, 2026-09-25):** the Produces line's *"`law/` rows `RATE-SLAB-AGE-001`, `RATE-SLAB-AGE-002`
+> (old-regime age bands)"* names two rulebook **statements** (R3: the senior exemption is for residents,
+> age tested at any time during the year; the new regime has no age variants), not ladders. The ladders
+> are `RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79` and `-AGE-80` (R3 rename, `W-045d`). They, and the ladder
+> selection and `ConditionContext` they need, move to the new `W-046b` (D-071).
+> Verified by: `01-rulebook.md:213-217`; FA 2026 First Schedule Part I-B Para A (II)/(III), p.85.
+
+### W-046b — the old-regime age ladders and ladder selection *(added by D-071)*
+- [ ] **Produces** `law/rules/RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79.json`, `…-AGE-80.json` (TY 2026-27 from FA 2026 First Schedule Part I-B Para A (II)/(III); TY 2025-26 from Part I-A) with their conditions (resident; age); the lock bumped; `RuleIds` regenerated; `TaxByBasisNode` selects the ladder; a `ConditionContext` built from `EngineInputs` + `TaxByBasisNodeTest` cases
+- **Spec** `01-rulebook.md` R3 (`RATE-SLAB-AGE-001`/`-002`); D-071 B1–B3
+- **Do** decide and source, at EXPLAIN: B1 (a conditional ladder that holds replaces `rateTable`; two holding is an error), B2 (age = completed years on the last day of the tax year, for "at any time during the tax year"), B3 (RNOR counts as resident)
+- **Verify** `./mvnw test -pl backend -Dtest=TaxByBasisNodeTest,RulePackLoadTest,GeneratedConstantsTest` — a resident aged 60 at any time in the year gets the 60–79 ladder; a non-resident of 65 does not; the new regime ignores age (AGE-002)
+
 ### W-047 — RETIRED
 - Merged into **W-046** by D-011. No work.
 
