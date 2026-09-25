@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxplanning.policy.entity.PerquisitePolicyEntity;
 import com.thiru.wealthlens.taxplanning.policy.entity.TaxSlabPolicyEntity;
 import com.thiru.wealthlens.taxplanning.policy.service.PolicyService;
 import com.thiru.wealthlens.taxplanning.recommendation.RestructuringResult;
+import com.thiru.wealthlens.taxplanning.salary.dto.KnownErrorsComputation;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileRequest;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileResponse;
 import com.thiru.wealthlens.taxplanning.salary.entity.SalaryProfileEntity;
@@ -74,8 +75,8 @@ public class TaxPlanningController {
     // ========== Tax Computation ==========
 
     @PostMapping("/user/{email}/profile/{profileId}/compute")
-    public ResponseEntity<TaxComputationEntity> computeTax(@PathVariable String email, @PathVariable String profileId) {
-        return ResponseEntity.ok(taxComputationService.compute(email, profileId));
+    public ResponseEntity<KnownErrorsComputation> computeTax(@PathVariable String email, @PathVariable String profileId) {
+        return ResponseEntity.ok(KnownErrorsComputation.of(taxComputationService.compute(email, profileId)));
     }
 
     // ========== Restructuring ==========

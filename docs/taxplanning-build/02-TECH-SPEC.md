@@ -479,3 +479,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-09-25 | T2: `catalogue/` built; T4: `content/sections/*.json` read by `TimelineReader`, not compiled into year packs (lock unchanged) | `W-045k`, D-060 |
 | 2026-09-25 | T4: two catalogue entries (investments deduction, HRA) and three `PLANNED` register rows (2025 s.123, 1961 s.80C, 1961 s.10) | `W-045k2`, D-061 |
 | 2026-09-25 | T2: `input/` — `Assessee`/`Individual`/`Huf` replace `TaxpayerFacts`, `EngineInputs.taxpayer` → `assessee`, `PersonType.HUF`; I5/I11 count only the person types the pack's regimes serve | `W-045l`, D-062 |
+| 2026-09-25 | the old compute endpoint's response gains a top-level `knownErrors` notice (`KnownErrorsComputation`, body otherwise unchanged); removed with the endpoint (`09` B2) | `W-045m`, D-063, D-064 |

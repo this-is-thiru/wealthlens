@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxplanning.enums.EmployerType;
 import com.thiru.wealthlens.taxplanning.enums.ProfileType;
 import com.thiru.wealthlens.taxplanning.enums.RegimeType;
 import com.thiru.wealthlens.taxplanning.policy.entity.TaxSlabPolicyEntity;
+import com.thiru.wealthlens.taxplanning.salary.dto.KnownErrorsComputation;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryComponentDto;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileRequest;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileResponse;
@@ -275,6 +276,9 @@ public class TaxPlanningControllerIntegrationTest extends AbstractIntegrationTes
         assertNotNull(computeResp.getBody().get("newRegimeResult"));
         assertNotNull(computeResp.getBody().get("oldRegimeResult"));
         assertNotNull(computeResp.getBody().get("recommendedRegime"));
+        // D-063: the figures are known to be wrong, and the response says so beside them
+        assertEquals(KnownErrorsComputation.NOTICE, computeResp.getBody().get("knownErrors"));
+        assertTrue(((String) computeResp.getBody().get("knownErrors")).startsWith("Known errors:"));
         String recommendedRegime = (String) computeResp.getBody().get("recommendedRegime");
         assertTrue(recommendedRegime.equals("NEW_REGIME") || recommendedRegime.equals("OLD_REGIME"),
                 "recommendedRegime should be NEW_REGIME or OLD_REGIME but was: " + recommendedRegime);
