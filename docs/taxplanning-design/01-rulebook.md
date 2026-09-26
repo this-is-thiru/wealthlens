@@ -367,6 +367,18 @@ W = U + V
 
 **Status: VERIFIED** (S3: Part I-A Para F Table 2; s.2(5) Table; Part I-B Para F Table 2; s.3(5) Table Sl. 6).
 
+> **Erratum (W-055, 2026-09-26):** the TY 2025-26 new-regime row is s.2(5) Table **Sl. 6** (persons at
+> s.2(4) Table Sl. Nos. 10 and 11), as in s.3(5). The four statements become two pack rows, since each
+> regime's two years are identical, named by the Act's words ("the total amount beyond which … shall
+> not exceed"):
+>
+> | Concept | Pack row | Thresholds |
+> |---|---|---|
+> | `RATE-SUR-MR-001` (first schedule) | `RATE-SUR-FIRST-SCHEDULE-CEILING` | 50L, 1Cr, 2Cr, 5Cr |
+> | `RATE-SUR-MR-001` (new regime) | `RATE-SUR-NEW-TAX-REGIME-CEILING` | 50L, 1Cr, 2Cr |
+>
+> Verified by: FA 2026 pp.8–9, 15, 84, 88 (re-read).
+
 ### **H-1 verdict: CONFIRMED on both limbs.**
 
 - **Bands seeded at ₹5 Cr+ only:** wrong for **every** combination. The **entry** threshold is

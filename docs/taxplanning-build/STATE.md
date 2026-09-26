@@ -3,10 +3,10 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-054 — "taxplanning W-054: add the surcharge rows for both regimes and years — two ladders per regime, as the Act tests two incomes (D-084)"
-Last updated              : 2026-09-25 (session 7 — W-049 … W-054 done; build GREEN, 1712 tests)
-Current position          : W-055 — surcharge marginal-relief parameterisations (not started)
-Session count             : 7
+Last checkpoint           : W-055 — "taxplanning W-055: add the surcharge marginal-relief rows for both regimes — the Act's Table 2 thresholds, restated (D-085)"
+Last updated              : 2026-09-26 (session 8 — W-055 done; build GREEN, 1724 tests)
+Current position          : W-056 — SurchargeNode (not started)
+Session count             : 8
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
@@ -54,7 +54,7 @@ Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
-Phase 6    W-054 D  W-055 ·  W-056 ·  W-057 ·  W-058 ·
+Phase 6    W-054 D  W-055 D  W-056 ·  W-057 ·  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **88** / 182 live · in flight **0** · blocked **0**  ← computed by script; 182 = 146 base ids − 8 retired + 44 suffixed
+Counts — done **89** / 182 live · in flight **0** · blocked **0**  ← computed by script; 182 = 146 base ids − 8 retired + 44 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-055 | 2026-09-26 | Surcharge marginal-relief rows (D-085): `RATE-SUR-FIRST-SCHEDULE-CEILING` (ThresholdLadderCeiling 50L/1Cr/2Cr/5Cr) and `RATE-SUR-NEW-TAX-REGIME-CEILING` (50L/1Cr/2Cr, no 5Cr), relief-only, limitedToSlabRateTax false, one version spanning both years (FA 2026 Part I-A/I-B Para F Table 2 Sl. 1; s.2(5)/s.3(5) Table Sl. 6); thresholds restated, W-056 reads them from these rows; drift guard against the ladders; locks 2025-26 law.4, 2026-27 law.13; RuleIds; NOT_YET_EVALUATED holds six until W-056 | `SurchargeReliefTest` 12/12 + 2 bite probes; Verify set 224/224; clean unit 1724/1724
 W-054 | 2026-09-25 | Surcharge rows (D-084): `RATE-SUR-NEW-TAX-REGIME` / `RATE-SUR-FIRST-SCHEDULE` on total income (10% >50L, 15% >1Cr, the "not covered → 15%" clause continuing) and `…-EXCLUDING` on total income excluding dividends and the special gains (25% >2Cr; 37% >5Cr first schedule only), SlabLadder data, one version spanning both years (FA 2026 s.2(4)(b)/s.3(4)(b) Table Sl. 10; Part I-A/I-B Para F Table 1 Sl. 1); locks 2025-26 law.3, 2026-27 law.12; RuleIds; NOT_YET_EVALUATED holds the four until W-056 (owner-approved I3 exception) | `SurchargeLadderTest` 8/8 + bite probe; clean unit 1712/1712
 W-053 | 2026-09-25 | **T1 golden tests — the first milestone** (D-083): 14 DR 08 T1 cases (`test/resources/taxengine/golden/T1/*.json`, both years) run end to end from `totalincome` (test source node `GivenTotalIncome`) through the shipped pipeline (less the two unbuilt input nodes, guarded) and `ComputationProjector`; round.netpayable = DR 08 Expected in all 28 runs; exactly two ROUNDING lines; T23-4 (canonical forms equal) and T23-8 (T1-O2) pass; I3 empty for both packs; `test/LockedInstruments`. **B1 law-data fix:** FIRST_SCHEDULE_RATES pipeline lacked `tax.afterrebate` since W-045f — added; locks 2025-26 law.2, 2026-27 law.11 | `T1SlabAndRebateTest` 89/89 + 2 bite probes; clean unit 1704/1704
 W-052c | 2026-09-25 | TY 2025-26 on the timeline (D-082): per-year 2025-26 versions for RATE-SLAB-NEW-TAX-REGIME (FA 2025 s.25), REBATE-NEW-TAX-REGIME/-EXCESS (FA 2025 s.20), REBATE-RESIDENT-INDIVIDUAL (1961 s.87A / FA 2019 s.8), RATE-ROUND-TOTAL-INCOME/-PAYABLE (1961 ss.288A/288B); spanning versions from 2025-04-01 for the three First Schedule ladders (provision1961 corrected to FA 2026 Part I-A) and the cess (FA 2026 s.2(6)); `2025-26.lock.json` (law.1; instruments 1961 Act, FA 2026, 1962 Rules UNVERIFIED); `2026-27.lock.json` → law.10; W-052d row (regime elections per year). Build notes B1–B6. DR 08 T1 reproduced for 2025-26: T1-N1 0; T1-N3 50,000; T1-O2 12,502; cess 2,000; 10.40→10 | `TaxYear2025RulePackTest` 23/23 + data bite probe (lock re-pinned); clean unit 1615/1615
@@ -442,6 +443,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-085 | 2026-09-26 | `W-055`: where the surcharge marginal-relief thresholds live | Two relief-only rows, one spanning version each (FA 2026, both years): `RATE-SUR-FIRST-SCHEDULE-CEILING` (`ThresholdLadderCeiling` 50L/1Cr/2Cr/5Cr) and `RATE-SUR-NEW-TAX-REGIME-CEILING` (50L/1Cr/2Cr, no 5Cr), `limitedToSlabRateTax` false; they **restate** Table 2 column C, and `W-056` reads the thresholds from them rather than from band lower bounds (supersedes D-050 on that point), because Table 2 tests total income while 2Cr/5Cr sit on the excluding ladder (D-084). A drift guard ties each row to its two ladders' non-zero lower bounds. Both rows join `NOT_YET_EVALUATED` under D-084. Locks 2025-26 law.4, 2026-27 law.13 | owner: "approved" |
 | D-084 | 2026-09-25 | `W-054`: the shape of the surcharge rows | Two `SlabLadder` rows per regime, one spanning version each (FA 2026, both years): `RATE-SUR-FIRST-SCHEDULE` / `RATE-SUR-NEW-TAX-REGIME` on total income (0 / 10% >50L / 15% >1Cr open) and `…-EXCLUDING` on total income excluding dividends and the special gains, base `TOTAL_INCOME_EXCLUDING_DIVIDENDS_AND_GAINS` (25% >2Cr; 37% >5Cr first schedule only); `W-056` takes the greater rate and keeps `RATE-SUR-SPLIT-001`. I3: an owner-approved exception to D-043's "may only shrink" — the Phase 6 rows join `NOT_YET_EVALUATED` until `W-056`, whose Verify empties it. Locks 2025-26 law.3, 2026-27 law.12 | owner: "approved — C1–C4 as recommended" |
 | D-083 | 2026-09-25 | `W-053`: how the T1 golden cases run | Enter at `totalincome` through a test source node (`GivenTotalIncome`) on the shipped regime pipeline, keeping only registered nodes in shipped order, with a guard that exactly `inputs.components` and `salary.gross` are dropped; runner and test in test `taxengine/golden/`; one JSON per case naming both years, `expected.payable` copied from DR 08 and compared with `round.netpayable`; each run asserts exactly two ROUNDING lines and marks `PROVISIONAL` on any UNVERIFIED line (asserted, never skipped); T23-4 via canonical form of two projections; T23-8 on T1-O2; I3 against an empty shrink-only `NOT_YET_EVALUATED` set for both packs; instruments read from each lock by `test/LockedInstruments` | owner: "approved — C1–C6 as recommended" |
 | D-082 | 2026-09-25 | `W-052c`: how TY 2025-26 joins the timeline | Per-year versions where the governing instrument differs (new slab FA 2025 s.25; two new-regime rebates FA 2025 s.20; ₹12,500 rebate 1961 s.87A/FA 2019 s.8; two roundings 1961 ss.288A/288B), spanning versions where one instrument governs both (three ladders FA 2026 Part I-A/I-B; cess FA 2026 s.2(6)/s.3(15)); validity is the tax year, `effectiveFrom` as the instrument states it (AY noted); 2025-26 lock instruments: 1961 Act SOURCE_CHECKED (gazette ref not read), FA 2026, 1962 Rules UNVERIFIED; `2026-27.lock` → `law.10`; regime election data per year → new `W-052d` | owner: "approved — C1–C5 as recommended" |

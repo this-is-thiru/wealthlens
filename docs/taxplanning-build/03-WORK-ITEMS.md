@@ -800,6 +800,21 @@ if that is not enough for the item in hand.
 > Verified by: FA 2026 s.2(4)(b) Table Sl. 10 (p.7), Part I-A Para F Table 1 Sl. 1 (pp.82–83), s.3(4)(b)
 > Table Sl. 10 (pp.13–14), Part I-B Para F Table 1 Sl. 1 (pp.86–87).
 
+> **Erratum (W-055, 2026-09-26, D-085):**
+> - **W-055's rows.** The four statements of `W = U + V` are two parameterisations, because the two
+>   years' tables are identical: `RATE-SUR-FIRST-SCHEDULE-CEILING` (thresholds 50L, 1Cr, 2Cr, 5Cr) and
+>   `RATE-SUR-NEW-TAX-REGIME-CEILING` (50L, 1Cr, 2Cr — no 5Cr). Each is a relief-only `ThresholdLadderCeiling`
+>   row with `limitedToSlabRateTax: false`, one version spanning TY 2025-26 and 2026-27. They join
+>   `NOT_YET_EVALUATED` under D-084.
+> - **W-056** reads the relief thresholds **from these rows**, not from the ladders' band lower bounds.
+>   Table 2 tests total income against every threshold, while 2Cr and 5Cr sit on the `-EXCLUDING`
+>   ladder; the numbers coincide, the bases do not. `W-056` still adds the band lookup for the rate.
+>   `SurchargeReliefTest` guards the coincidence: each row's thresholds equal its two ladders' non-zero
+>   band lower bounds.
+>
+> Verified by: FA 2026 s.2(5) Table Sl. 6 (pp.8–9), Part I-A Para F Table 2 Sl. 1 (p.84), s.3(5) Table
+> Sl. 6 (p.15), Part I-B Para F Table 2 Sl. 1 (p.88).
+
 ---
 
 ## Phase 7 — Salary head (12 items)

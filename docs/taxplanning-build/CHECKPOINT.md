@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-055 — surcharge marginal-relief parameterisations
+Item            : W-056 — SurchargeNode (+ SlabLadder band lookup)
 Stage           : NOT_STARTED
-Plan            : — (plans/W-055.md once written)
+Plan            : — (plans/W-056.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-055 row (Phase 6 table + D-084 erratum: uses ThresholdLadderCeiling from W-048; W = U + V, one implementation, four parameterisations) and DR 06 G3.2, rulebook RATE-SUR-MR-001 (FA 2026 Part I-A/I-B Para F Table 2; s.2(5); s.3(5) Table Sl. 6) — read those tables; write plans/W-055.md with the D-043 standing-rules line; STOP for approval. Known: the rows carry a relief (W-049a) with no node until W-056 → join NOT_YET_EVALUATED (D-084); thresholds are the ladders' band lower bounds per D-050 — decide whether the relief rows restate them or W-056 derives them
-Last verify     : ./mvnw clean test -pl backend -Punit → 1712 pass, 0 fail, 0 Checkstyle violations (W-054)
-Waiting on      : nothing for W-055; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Next step       : READ the W-056 row + D-084 and D-085 errata (greater of the two ladders' rates; RATE-SUR-SPLIT-001 two buckets; relief thresholds from the -CEILING rows; Verify empties NOT_YET_EVALUATED) and DR 06 G3.2; write plans/W-056.md with the D-043 standing-rules line; STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 1724 pass, 0 fail, 0 Checkstyle violations (W-055)
+Waiting on      : nothing for W-056; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
 Files touched   : —
-Last item commit: taxplanning W-054: add the surcharge rows for both regimes and years — two ladders per regime, as the Act tests two incomes (D-084)
-Updated         : 2026-09-25, session 7
+Last item commit: taxplanning W-055: add the surcharge marginal-relief rows for both regimes — the Act's Table 2 thresholds, restated (D-085)
+Updated         : 2026-09-26, session 8
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
