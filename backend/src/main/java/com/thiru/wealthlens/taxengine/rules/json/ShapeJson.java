@@ -7,6 +7,9 @@ import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.cap.PerUnitPerPeriod;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -186,6 +189,18 @@ public final class ShapeJson {
      * The step an amount is rounded to. Untagged: rounding is one kind, not a family, so a
      * {@code type} would be a choice with a single option (D-078).
      */
+    /** A rule's definition (D-091): what it says an amount is. */
+    public static RuleDefinition definition(JsonNode node, String path) {
+        String tag = PackJson.tag(node, path, "HeadTotal");
+        return switch (tag) {
+            case "HeadTotal" -> {
+                HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
+                yield PackJson.construct(path, () -> new HeadTotal(head));
+            }
+            default -> throw unreachable(tag, path);
+        };
+    }
+
     public static RuleRounding rounding(JsonNode node, String path) {
         Money toNearest = money(node, "toNearest", path);
         return PackJson.construct(path, () -> new RuleRounding(toNearest));

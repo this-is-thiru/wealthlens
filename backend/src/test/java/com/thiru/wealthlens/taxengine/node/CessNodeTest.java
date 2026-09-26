@@ -186,7 +186,7 @@ class CessNodeTest {
         RuleRow row = pack.rule(RuleIds.RATE_HEALTH_EDUCATION_CESS);
         RuleVersion v = row.versions().getFirst();
         RuleVersion fixed = new RuleVersion(v.validity(), v.regimes(), new Fixed(Money.of("100")), v.relief(),
-                v.rounding(), v.conditions(), v.provision1961(), v.provision2025(), v.introducedBy(),
+                v.rounding(), v.definition(), v.conditions(), v.provision1961(), v.provision2025(), v.introducedBy(),
                 v.legalStatus(), v.publicationStatus(), v.provenance());
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
         rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(fixed),

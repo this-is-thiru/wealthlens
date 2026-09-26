@@ -175,7 +175,7 @@ class RoundingNodesTest {
         RuleRow row = pack.rule(RuleIds.RATE_ROUND_TOTAL_INCOME);
         RuleVersion v = row.versions().getFirst();
         RuleVersion toHundred = new RuleVersion(v.validity(), v.regimes(), v.cap(), v.relief(),
-                Optional.of(new RuleRounding(Money.of("100"))), v.conditions(), v.provision1961(),
+                Optional.of(new RuleRounding(Money.of("100"))), v.definition(), v.conditions(), v.provision1961(),
                 v.provision2025(), v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance());
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
         rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(toHundred),

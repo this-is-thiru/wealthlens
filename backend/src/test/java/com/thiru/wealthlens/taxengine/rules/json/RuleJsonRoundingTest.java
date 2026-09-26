@@ -131,6 +131,6 @@ class RuleJsonRoundingTest {
         assertThatThrownBy(() -> versionWith("""
                         "conditions": []"""))
                 .isInstanceOf(PackValidationException.class)
-                .hasMessageContaining("has no cap, relief, rounding or conditions");
+                .hasMessageContaining("has no cap, relief, rounding, definition or conditions");
     }
 }

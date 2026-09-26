@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -78,6 +79,7 @@ public final class RuleJson {
                         capOrNull(node, path),
                         relief(node, path),
                         rounding(node, path),
+                        definition(node, path),
                         ConditionJson.conditions(node, "conditions", path),
                         ValueJson.provision(
                                 PackJson.object(node, "provision1961", path), path + ".provision1961"),
@@ -94,9 +96,9 @@ public final class RuleJson {
      * The cap, which may legitimately be absent.
      *
      * <p>A rule can state a condition and no amount — {@code SAL-HRA-002}'s "the accommodation is not
-     * owned by the assessee" limits nothing by itself — or grant a relief or state a rounding and limit
-     * nothing. A rule with no cap, relief, rounding or condition is a different matter, and is refused:
-     * it would load, evaluate, and mean nothing.
+     * owned by the assessee" limits nothing by itself — or grant a relief, state a rounding or define an
+     * amount and limit nothing. A rule with no cap, relief, rounding, definition or condition is a different
+     * matter, and is refused: it would load, evaluate, and mean nothing.
      */
     private static com.thiru.wealthlens.taxengine.rules.cap.CapShape capOrNull(JsonNode node, String path) {
         var cap = PackJson.optionalObject(node, "cap", path);
@@ -105,10 +107,11 @@ public final class RuleJson {
                     ConditionJson.conditions(node, "conditions", path);
             if (conditions.isEmpty()
                     && PackJson.optionalObject(node, "relief", path).isEmpty()
-                    && PackJson.optionalObject(node, "rounding", path).isEmpty()) {
+                    && PackJson.optionalObject(node, "rounding", path).isEmpty()
+                    && PackJson.optionalObject(node, "definition", path).isEmpty()) {
                 throw new PackValidationException(
-                        path + " has no cap, relief, rounding or conditions; it would load, evaluate, and"
-                                + " mean nothing");
+                        path + " has no cap, relief, rounding, definition or conditions; it would load,"
+                                + " evaluate, and mean nothing");
             }
             return null;
         }
@@ -118,6 +121,11 @@ public final class RuleJson {
     private static Optional<RuleRelief> relief(JsonNode node, String path) {
         return PackJson.optionalObject(node, "relief", path)
                 .map(relief -> ShapeJson.relief(relief, path + ".relief"));
+    }
+
+    private static Optional<RuleDefinition> definition(JsonNode node, String path) {
+        return PackJson.optionalObject(node, "definition", path)
+                .map(definition -> ShapeJson.definition(definition, path + ".definition"));
     }
 
     private static Optional<RuleRounding> rounding(JsonNode node, String path) {
