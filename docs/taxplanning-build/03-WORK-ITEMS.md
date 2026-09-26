@@ -778,6 +778,7 @@ if that is not enough for the item in hand.
 |---|---|---|---|
 | **W-054** | `law/rates.json` surcharge ladders for all four (year × regime) | `DR 01` R5 | entry is **₹50,00,000**; the default regime has **no 37% band** |
 | **W-055** | **uses** `ThresholdLadderCeiling` (created by `W-048` with the relief family): the surcharge-relief parameterisations and their tests | `DR 06` G3.2 | `W = U + V`, one implementation, four parameterisations |
+| **W-056a** | `NodeContext.recomputed(target, pinned, value)` + the runner supplying it; `NodeHarness` stub *(added by D-086)* | `DR 06` G3.2 ("re-entering the tax computation at exactly the threshold") | re-runs only the nodes between `pinned` and `target`, in a fresh store; declared slots only |
 | **W-056** | `taxengine/node/SurchargeNode.java` + **modifies** `SlabLadder` (adds a band lookup; the relief threshold is the band's lower bound — `DR 06` G3.2; D-050) | `DR 06` G3.2 | **two buckets** — `RATE-SUR-SPLIT-001` caps the special slice at 15% |
 | **W-057** | **T2 golden tests** | `DR 08` T2-1 … T2-6 | copy expected values |
 | **W-058** | metamorphic property tests | `DR 19` E4.1 | `moreIncomeNeverMeansLessTax` would have caught H-1 unaided |
@@ -814,6 +815,19 @@ if that is not enough for the item in hand.
 >
 > Verified by: FA 2026 s.2(5) Table Sl. 6 (pp.8–9), Part I-A Para F Table 2 Sl. 1 (p.84), s.3(5) Table
 > Sl. 6 (p.15), Part I-B Para F Table 2 Sl. 1 (p.88).
+
+> **Erratum (W-056, 2026-09-26, D-086):**
+> - **U is priced by re-entry**, the new `W-056a`: `SurchargeNode` asks for `tax.afterrebate` recomputed at
+>   the threshold and adds the unrelieved surcharge on it, so the rebate and the age ladders bear on U with
+>   nothing duplicated.
+> - **The two buckets move to `W-088`.** Neither input exists yet: no node carries dividend income
+>   (`W-079`) or special-rate tax (`W-088`). `W-056` takes the excluding income as the total income, which
+>   is exact while the graph carries neither, and **refuses** (naming `W-088`) if `tax.afterrebate` carries
+>   special-rate tax. `RATE-SUR-SPLIT-001` and `DR 08` T2-6 are `W-088`'s.
+> - **The graph:** `tax.surcharge` after `tax.afterrebate` in both regimes; `CessNode`'s base becomes tax
+>   after rebate plus surcharge (FA 2026 s.3(15)); `NetPayableNode` adds it. `NOT_YET_EVALUATED` is deleted.
+>
+> Verified by: `DR 06` G3.2; rulebook `REBATE-ORDER-001`, `RATE-SUR-SPLIT-001`; `DR 08` T2-6 (`PROVISIONAL`).
 
 ---
 
@@ -884,6 +898,12 @@ if that is not enough for the item in hand.
 | W-086 | `portfolio` published read-model | `DR 07` X1.3 | modulith test must pass with the new dependency |
 | W-087 | `MoneyBridge` | `DR 19` E1 | `toTMoney` **throws** — one-way seam |
 | W-088 | `CapitalGainsNode` | `DR 13` R-10 | `UNCLASSIFIED` → 409; `SPECULATIVE` excluded |
+
+> **Erratum (W-056, 2026-09-26, D-086):** `W-088` also takes the surcharge split: `RATE-SUR-SPLIT-001` (the
+> 15% limit on the tax attributable to dividends and the special gains, as pack rows), feeding the special
+> gains into the `-EXCLUDING` ladders' income, lifting `SurchargeNode`'s refusal of special-rate tax, and
+> `DR 08` T2-6.
+
 | W-089 | **T13-1 test** — rebate with special-rate income | `DR 13` R-5 | **the most dangerous interaction in the design** |
 
 ---
@@ -1265,6 +1285,8 @@ none depends on anyone remembering it.
 | Capital gains on assets outside `portfolio` (manager **M-08**'s gap) | `W-089` (capital-gains milestone) | a user who sells a flat otherwise gets a silently incomplete computation |
 | Section catalogue entries for every modelled section | each item that models a section — standing rule 2 | SC-1 ratchet |
 | The rule-authoring admin screen (**OQ-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
+| Dividend income in the surcharge's **excluding** income and in the 15%-limited part (`RATE-SUR-SPLIT-001`), D-086 | `W-079` (`OtherSourcesNode`) | dividends are slab-taxed, so nothing else would take them out of the 25%/37% test |
+| The surcharge split, special gains in the excluding income, T2-6 (D-086) | `W-088` | `SurchargeNode` refuses special-rate tax until then |
 | Professional review of golden cases (**OQ-1**, `VerificationLevel.PROFESSIONALLY_REVIEWED`) | before anyone outside the owner's family relies on a figure | the gate needs a named reviewer |
 
 ## Milestones

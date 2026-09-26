@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.node.NetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RebateNode;
 import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RoundTotalIncomeNode;
+import com.thiru.wealthlens.taxengine.node.SurchargeNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
@@ -44,11 +45,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 final class GoldenCaseRunner {
 
-    /** Every Phase 5 node, the real ones. */
-    private static final List<ComputationNode> PHASE_5 = List.of(
+    /** Every node built so far, the real ones. */
+    private static final List<ComputationNode> BUILT = List.of(
             new RoundTotalIncomeNode(),
             new TaxByBasisNode(),
             new RebateNode(),
+            new SurchargeNode(),
             new CessNode(),
             new NetPayableNode(),
             new RoundNetPayableNode());
@@ -102,7 +104,7 @@ final class GoldenCaseRunner {
     }
 
     private static NodeRegistry registryWith(GivenTotalIncome totalIncome) {
-        List<ComputationNode> nodes = new ArrayList<>(PHASE_5);
+        List<ComputationNode> nodes = new ArrayList<>(BUILT);
         nodes.add(totalIncome);
         return NodeRegistry.of(nodes);
     }

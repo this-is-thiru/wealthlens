@@ -3,12 +3,12 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.4",
-      "checksum": "sha256:b564529e3c512439dd29a1b2aac1f8d0b467e0a37fc481636b3dad40fe70225a"
+      "version": "2025-26.law.5",
+      "checksum": "sha256:93f2d997a60bfe7c127a96edd3c11a12fdbd5aef9c29f4b572c8081c7ae3ad27"
     },
     "exec": {
-      "version": "2025-26.exec.1",
-      "checksum": "sha256:9656c99704ee4e69b765d02fdcf7bf3e863d5fc27f6625b6f6a73e44cc22cebd"
+      "version": "2025-26.exec.2",
+      "checksum": "sha256:e73f66580cb4989ca84fdc961710c6981c81845ac822b2be7bc4a85afbccd9a8"
     },
     "forms": {
       "version": "2025-26.forms.1",

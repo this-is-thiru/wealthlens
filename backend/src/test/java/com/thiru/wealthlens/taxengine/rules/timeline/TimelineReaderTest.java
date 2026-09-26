@@ -65,7 +65,7 @@ class TimelineReaderTest {
                 .extracting(NodeId::value)
                 .containsExactlyInAnyOrder(
                         "inputs.components", "salary.gross", "totalincome", "round.totalincome", "tax.bybasis",
-                        "tax.afterrebate", "tax.cess", "tax.netpayable", "round.netpayable");
+                        "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
     }
 
     @Test

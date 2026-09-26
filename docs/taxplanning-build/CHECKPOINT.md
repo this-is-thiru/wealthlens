@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-056 — SurchargeNode (+ SlabLadder band lookup)
-Stage           : IMPLEMENT — plan approved (D-086); W-056a committed
-Plan            : plans/W-056.md
-Approved        : "approved — proceed as recommended" — 2026-09-26 (D-086)
-Steps done      : 1, 2 (W-056a)
-Next step       : step 3 — SlabLadder.bandFor(Money) → Optional<Band> (lowerExclusive < income ≤ upperInclusive) + SlabLadderTest
-Last verify     : ./mvnw clean test -pl backend -Punit → 1741 pass, 0 fail, 0 Checkstyle violations (W-056a)
-Waiting on      : nothing; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
-Files touched   : plans/W-056.md, 03-WORK-ITEMS.md (W-056's; the W-056a row there lands with W-056's commit)
-Last item commit: taxplanning W-056a: add NodeContext.recomputed — a node recomputes a slot at another value by re-running the nodes between (D-086)
+Item            : W-057 — T2 golden tests
+Stage           : NOT_STARTED
+Plan            : — (plans/W-057.md once written)
+Approved        : —
+Steps done      : —
+Next step       : READ the W-057 row ("copy expected values"), DR 08 T2-1…T2-5 (T2-6 moved to W-088, D-086), W-053's T1 golden set-up (GoldenCase JSON, GoldenCaseRunner, T1SlabAndRebateTest); write plans/W-057.md with the D-043 standing-rules line; STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 1778 pass, 0 fail, 0 Checkstyle violations (W-056)
+Waiting on      : nothing for W-057; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Files touched   : —
+Last item commit: taxplanning W-056: add SurchargeNode — the greater ladder rate on the tax after rebate, less W = U + V priced by recomputation (D-086)
 Updated         : 2026-09-26, session 8
 ```
 

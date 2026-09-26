@@ -31,22 +31,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 @Log4j2
 class T1SlabAndRebateTest {
 
-    /**
-     * Rules in a shipped pack that no node evaluates yet (invariant I3, D-043). It may only shrink: a rule
-     * joins the pack with the node that evaluates it, and an entry here is a visible, reviewed exception.
-     *
-     * <p>The surcharge rows and their relief rows are one (D-084, D-085): Phase 6 authors its data before
-     * its node, and {@code W-056}
-     * evaluates them and empties this set again.
-     */
-    private static final Set<RuleId> NOT_YET_EVALUATED = Set.of(
-            RuleIds.RATE_SUR_FIRST_SCHEDULE,
-            RuleIds.RATE_SUR_FIRST_SCHEDULE_CEILING,
-            RuleIds.RATE_SUR_FIRST_SCHEDULE_EXCLUDING,
-            RuleIds.RATE_SUR_NEW_TAX_REGIME,
-            RuleIds.RATE_SUR_NEW_TAX_REGIME_CEILING,
-            RuleIds.RATE_SUR_NEW_TAX_REGIME_EXCLUDING);
-
     private static final GoldenCaseRunner RUNNER = new GoldenCaseRunner();
 
     static Stream<Arguments> everyCaseInEveryYear() {
@@ -94,7 +78,8 @@ class T1SlabAndRebateTest {
     @ParameterizedTest(name = "{0}")
     @ValueSource(ints = {2025, 2026})
     void run_whenT1O2IsComputed_explainsTheUnavailableRebateAndHasNoMarginalRelief(int year) {
-        // Given — T23-8, property P5; DR 08 T1-O2: "REBATE-OLD-001: TI > 5,00,000 → unavailable"
+        // Given — T23-8, property P5; DR 08 T1-O2: "REBATE-OLD-001: TI > 5,00,000 → unavailable". The
+        // surcharge ceiling explains its nil too (D-086); there is no rebate marginal relief in this regime
         GoldenCase t1o2 = GoldenCase.load("taxengine/golden/T1/T1-O2.json");
 
         // When
@@ -103,8 +88,9 @@ class T1SlabAndRebateTest {
                 .toList();
 
         // Then
-        assertThat(reliefs).singleElement().satisfies(line -> {
-            assertThat(line.rule()).isEqualTo(RuleIds.REBATE_RESIDENT_INDIVIDUAL);
+        assertThat(reliefs).extracting(TraceLine::rule)
+                .containsExactly(RuleIds.REBATE_RESIDENT_INDIVIDUAL, RuleIds.RATE_SUR_FIRST_SCHEDULE_CEILING);
+        assertThat(reliefs).allSatisfy(line -> {
             assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
             assertThat(line.limitedBy()).isPresent();
         });
@@ -112,15 +98,15 @@ class T1SlabAndRebateTest {
 
     @ParameterizedTest(name = "{0}")
     @ValueSource(ints = {2025, 2026})
-    void registry_whenCheckedAgainstTheShippedPack_evaluatesEveryRuleNotListedAsPending(int year) {
-        // Given — invariant I3 (D-043)
+    void registry_whenCheckedAgainstTheShippedPack_evaluatesEveryRule(int year) {
+        // Given — invariant I3 (D-043), with no exception left: W-056 evaluates the Phase 6 rows (D-086)
         RulePack pack = RUNNER.pack(TaxYearId.of(year));
 
         // When
         Set<RuleId> unevaluated = RUNNER.registry().rulesNotEvaluatedByAnyNode(pack.rules().keySet());
 
         // Then
-        assertThat(NOT_YET_EVALUATED).containsAll(unevaluated);
+        assertThat(unevaluated).isEmpty();
     }
 
     @Test

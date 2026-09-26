@@ -12,14 +12,13 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.Set;
 
 /**
- * The amount payable before filing effects: the whole tax after rebate plus the cess (D-080) — the figure
- * {@code round.netpayable} rounds.
+ * The amount payable before filing effects: the whole tax after rebate plus the surcharge and the cess
+ * (D-080, D-086) — the figure {@code round.netpayable} rounds.
  *
  * <p>No rule states it; it is "an arithmetic sum of already-computed rows" ({@code REBATE-ORDER-001}),
  * each of which has its own line. So the node emits none, and the sum shows as the rounding line's input.
  *
- * <p>{@code W-056} adds the surcharge to the sum, and the Phase 9 credits item subtracts credits under
- * its own rule.
+ * <p>The Phase 9 credits item subtracts credits under its own rule.
  */
 public final class NetPayableNode implements ComputationNode {
 
@@ -30,7 +29,7 @@ public final class NetPayableNode implements ComputationNode {
 
     @Override
     public Set<NodeId> requires() {
-        return Set.of(NodeIds.TAX_AFTERREBATE, NodeIds.TAX_CESS);
+        return Set.of(NodeIds.TAX_AFTERREBATE, NodeIds.TAX_SURCHARGE, NodeIds.TAX_CESS);
     }
 
     @Override
@@ -41,7 +40,8 @@ public final class NetPayableNode implements ComputationNode {
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         Money tax = ctx.get(NodeIds.TAX_AFTERREBATE, TaxByBasis.class).asMoney();
+        Money surcharge = ctx.get(NodeIds.TAX_SURCHARGE, MoneyValue.class).amount();
         Money cess = ctx.get(NodeIds.TAX_CESS, MoneyValue.class).amount();
-        return NodeResult.untraced(MoneyValue.of(tax.plus(cess)));
+        return NodeResult.untraced(MoneyValue.of(tax.plus(surcharge).plus(cess)));
     }
 }

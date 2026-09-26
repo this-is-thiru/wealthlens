@@ -58,12 +58,17 @@ class NetPayableNodeTest {
         return new GoverningInstruments(act, act, rules);
     }
 
-    private static NodeResult run(TaxByBasis afterRebate, String cess) {
+    private static NodeResult run(TaxByBasis afterRebate, String surcharge, String cess) {
         return NodeHarness.with(pack())
                 .regime(NEW_TAX_REGIME)
                 .given(NodeIds.TAX_AFTERREBATE, afterRebate)
+                .given(NodeIds.TAX_SURCHARGE, Money.of(surcharge))
                 .given(NodeIds.TAX_CESS, Money.of(cess))
                 .run(new NetPayableNode());
+    }
+
+    private static NodeResult run(TaxByBasis afterRebate, String cess) {
+        return run(afterRebate, "0", cess);
     }
 
     @ParameterizedTest(name = "{0}: {1} + cess {2} → {3}")
@@ -92,6 +97,24 @@ class NetPayableNodeTest {
         assertThat(result.value()).as(golden).isEqualTo(MoneyValue.of(Money.of(netPayable)));
     }
 
+    @ParameterizedTest(name = "{0}: {1} + surcharge {2} + cess {3} → {4}")
+    @CsvSource({
+        // DR 08 T2-2: "total = 11,23,210.40"
+        "T2-2, 1080003, 7.00, 43200.40, 1123210.40",
+        // DR 08 T2-4 old: "total = 1,92,56,250"
+        "T2-4, 14812500, 3703125, 740625, 19256250",
+        // DR 08 T2-5: "total = 1,92,56,260.40"
+        "T2-5, 14812503, 3703132.00, 740625.40, 19256260.40"
+    })
+    void evaluate_whenASurchargeIsDue_addsItWithTheTaxAndTheCess(
+            String golden, String afterRebate, String surcharge, String cess, String netPayable) {
+        // When
+        NodeResult result = run(TaxByBasis.atSlabRatesOnly(Money.of(afterRebate)), surcharge, cess);
+
+        // Then
+        assertThat(result.value()).as(golden).isEqualTo(MoneyValue.of(Money.of(netPayable)));
+    }
+
     @Test
     void evaluate_whenTaxIsPartlyAtSpecialRates_addsTheWholeIncomeTax() {
         // Given — by hand: (0 + 1,00,000 special) + 4,000 cess = 1,04,000
@@ -115,10 +138,10 @@ class NetPayableNodeTest {
     }
 
     @Test
-    void requires_isTheTaxAfterRebateAndTheCess() {
+    void requires_isTheTaxAfterRebateTheSurchargeAndTheCess() {
         // When / Then
         assertThat(new NetPayableNode().requires())
-                .containsExactlyInAnyOrder(NodeIds.TAX_AFTERREBATE, NodeIds.TAX_CESS);
+                .containsExactlyInAnyOrder(NodeIds.TAX_AFTERREBATE, NodeIds.TAX_SURCHARGE, NodeIds.TAX_CESS);
     }
 
     @Test

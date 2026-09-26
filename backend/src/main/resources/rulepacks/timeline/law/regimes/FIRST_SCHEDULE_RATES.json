@@ -82,6 +82,7 @@
       "round.totalincome",
       "tax.bybasis",
       "tax.afterrebate",
+      "tax.surcharge",
       "tax.cess",
       "tax.netpayable",
       "round.netpayable"

@@ -67,11 +67,16 @@ class CessNodeTest {
         return new GoverningInstruments(act, act, rules);
     }
 
-    private static NodeResult run(RulePack pack, TaxByBasis afterRebate) {
+    private static NodeResult run(RulePack pack, TaxByBasis afterRebate, String surcharge) {
         return NodeHarness.with(pack)
                 .regime(NEW_TAX_REGIME)
                 .given(NodeIds.TAX_AFTERREBATE, afterRebate)
+                .given(NodeIds.TAX_SURCHARGE, Money.of(surcharge))
                 .run(new CessNode());
+    }
+
+    private static NodeResult run(RulePack pack, TaxByBasis afterRebate) {
+        return run(pack, afterRebate, "0");
     }
 
     private static NodeResult run(TaxByBasis afterRebate) {
@@ -106,6 +111,24 @@ class CessNodeTest {
         assertThat(result.value()).as(golden).isEqualTo(MoneyValue.of(Money.of(cess)));
     }
 
+    @ParameterizedTest(name = "{0}: {1} + surcharge {2} → cess {3}")
+    @CsvSource({
+        // DR 08 T2-2: "tax + surcharge after relief = 10,80,010", "cess 4% × 10,80,010 = 43,200.40"
+        "T2-2, 1080003, 7.00, 43200.40",
+        // DR 08 T2-4 old: "cess 4% × 1,85,15,625 = 7,40,625"
+        "T2-4, 14812500, 3703125, 740625",
+        // DR 08 T2-5: "tax + surcharge after relief = 1,85,15,635", "cess 4% = 7,40,625.40"
+        "T2-5, 14812503, 3703132.00, 740625.40"
+    })
+    void evaluate_whenASurchargeIsDue_chargesFourPercentOfTaxAndSurcharge(
+            String golden, String afterRebate, String surcharge, String cess) {
+        // When — FA 2026 s.3(15): "such income-tax and surcharge"
+        NodeResult result = run(pack(), slab(afterRebate), surcharge);
+
+        // Then
+        assertThat(result.value()).as(golden).isEqualTo(MoneyValue.of(Money.of(cess)));
+    }
+
     @Test
     void evaluate_whenT1N2_chargesTheCessOnTheTaxAfterRebate() {
         // Given — DR 08 T1-N2: "tax after rebate = 10.00", "cess 4% × 10 = 0.40"; charged before the
@@ -120,12 +143,13 @@ class CessNodeTest {
     @Test
     void requires_isTheTaxAfterRebateNeverTheTaxBeforeIt() {
         // Given — REBATE-ORDER-001: "slab tax → less rebate → plus surcharge → plus cess". The node can
-        // read only what it declares, so declaring the post-rebate tax alone is what keeps the order
+        // read only what it declares, so declaring the post-rebate tax and the surcharge, and never
+        // tax.bybasis, is what keeps the order
         // When
         Set<NodeId> requires = new CessNode().requires();
 
         // Then
-        assertThat(requires).containsExactly(NodeIds.TAX_AFTERREBATE);
+        assertThat(requires).containsExactlyInAnyOrder(NodeIds.TAX_AFTERREBATE, NodeIds.TAX_SURCHARGE);
     }
 
     @Test

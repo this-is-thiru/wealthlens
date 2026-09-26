@@ -76,7 +76,7 @@ class TaxYear2025RulePackTest {
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
         assertThat(pack.rules()).hasSize(16);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.4");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.5");
     }
 
     @Test
@@ -169,12 +169,13 @@ class TaxYear2025RulePackTest {
 
     @Test
     void evaluate_whenTheTaxYearIs2025_chargesTheCessAndRoundsThePayable() {
-        // Given — DR 08 T1-N3 "cess 4% = 2,000"; T1-N2 "RATE-ROUND-002: ignore paise → 10"
+        // Given — DR 08 T1-N3 "cess 4% = 2,000" (no surcharge below 50L); T1-N2 "RATE-ROUND-002: ignore paise → 10"
         RulePack pack = pack();
 
         // When
         var cess = NodeHarness.with(pack).regime(NEW_TAX_REGIME).inputs(inputs2025(NEW_TAX_REGIME))
                 .given(NodeIds.TAX_AFTERREBATE, TaxByBasis.atSlabRatesOnly(Money.of("50000")))
+                .given(NodeIds.TAX_SURCHARGE, Money.ZERO)
                 .run(new CessNode());
         var rounded = NodeHarness.with(pack).regime(NEW_TAX_REGIME).inputs(inputs2025(NEW_TAX_REGIME))
                 .given(NodeIds.TAX_NETPAYABLE, Money.of("10.40"))

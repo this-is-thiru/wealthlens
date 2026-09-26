@@ -23,6 +23,7 @@ public final class NodeIds {
     public static final NodeId TAX_BYBASIS = new NodeId("tax.bybasis");
     public static final NodeId TAX_CESS = new NodeId("tax.cess");
     public static final NodeId TAX_NETPAYABLE = new NodeId("tax.netpayable");
+    public static final NodeId TAX_SURCHARGE = new NodeId("tax.surcharge");
     public static final NodeId TOTALINCOME = new NodeId("totalincome");
 
     private NodeIds() {

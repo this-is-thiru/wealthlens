@@ -79,6 +79,19 @@ public record SlabLadder(List<Band> bands, BaseId base) implements CapShape {
         return new CapResult(tax, shapeName());
     }
 
+    /**
+     * The band an income falls in: above its lower bound and not above its ceiling. The surcharge reads
+     * this, because a surcharge band's rate applies to the whole tax rather than to a slice — and an income
+     * of exactly a threshold "does not exceed" it, so stays in the band below (D-086). Empty for an income
+     * of nil or less, which no band holds.
+     */
+    public Optional<Band> bandFor(Money income) {
+        return bands.stream()
+                .filter(band -> income.isGreaterThan(band.lowerExclusive()))
+                .filter(band -> band.upperInclusive().map(income::isLessThanOrEqual).orElse(true))
+                .findFirst();
+    }
+
     @Override
     public String shapeName() {
         return "slab";

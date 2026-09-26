@@ -200,6 +200,39 @@ class SlabLadderTest {
     }
 
     @Nested
+    @DisplayName("the band an income falls in")
+    class BandLookup {
+
+        /**
+         * A surcharge ladder, typed from FA 2026 Part I-B Para F Table 1 Sl. 1 clauses (i), (ii), (v)
+         * (D-084): "exceeds Rs. 50,00,000 but does not exceed Rs. 1,00,00,000, at the rate of 10 per
+         * cent.", then 15%.
+         */
+        private SlabLadder surcharge() {
+            return new SlabLadder(
+                    List.of(band("0", "5000000", "0"), band("5000000", "10000000", "10"), openBand("10000000", "15")),
+                    TOTAL_INCOME);
+        }
+
+        private Optional<Rate> rateAt(String income) {
+            return surcharge().bandFor(Money.of(income)).map(SlabLadder.Band::rate);
+        }
+
+        @ParameterizedTest(name = "{0} → {1}%")
+        @CsvSource({"1, 0", "5000000, 0", "5000010, 10", "10000000, 10", "10000010, 15", "500000000, 15"})
+        void bandFor_whenIncomeIsAtOrJustAboveAThreshold_takesTheBandItDoesNotExceed(String income, String percent) {
+            // Then — at exactly a threshold the income "does not exceed" it, so the lower band holds
+            assertThat(rateAt(income)).contains(Rate.percent(percent));
+        }
+
+        @Test
+        void bandFor_whenIncomeIsNil_isInNoBand() {
+            // Then — every band's lower bound is exclusive, so nothing holds zero
+            assertThat(rateAt("0")).isEmpty();
+        }
+    }
+
+    @Nested
     @DisplayName("construction")
     class Construction {
 
