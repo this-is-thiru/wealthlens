@@ -265,11 +265,11 @@ class RegimeElectionSnapshotTest {
     class Entered {
 
         @Test
-        void isDeclaredSoThatTheFingerprintCanSeeItLater() {
+        void none_whenNothingIsEntered_holdsNoEmployment() {
             // B-003's lesson: an ABSENT component is invisible to the cache key, a thin one is
-            // not. There are no fields yet because nothing on the income side is built.
-            assertThat(EnteredFacts.class.getRecordComponents()).isEmpty();
-            assertThat(EnteredFacts.none()).isEqualTo(new EnteredFacts());
+            // not. The employments are its first field (D-090); "none" is an empty list, never null.
+            assertThat(EnteredFacts.none().employments()).isEmpty();
+            assertThat(EnteredFacts.none()).isEqualTo(new EnteredFacts(java.util.List.of()));
         }
     }
 }

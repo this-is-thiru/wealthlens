@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-059 — "taxplanning W-059: add the component registry to the timeline — each component arrives with the first rule that reads it (D-089)"
-Last updated              : 2026-09-26 (session 8 — W-055 … W-059 done; build GREEN, 1855 tests)
-Current position          : W-060 — ComponentPartitionNode (not started)
+Last checkpoint           : W-060 — "taxplanning W-060: add the component partition and the first entered income — an unknown code stops the run (D-090)"
+Last updated              : 2026-09-26 (session 8 — W-055 … W-060 done; build GREEN, 1863 tests)
+Current position          : W-061 — GrossSalaryNode (not started)
 Session count             : 8
 ```
 
@@ -55,7 +55,7 @@ Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-04
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
-Phase 7    W-059 D  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
+Phase 7    W-059 D  W-060 D  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **94** / 183 live · in flight **0** · blocked **0**  ← computed by script; 183 = 146 base ids − 8 retired + 45 suffixed
+Counts — done **95** / 183 live · in flight **0** · blocked **0**  ← computed by script; 183 = 146 base ids − 8 retired + 45 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-060 | 2026-09-26 | Component partition and the first entered income (D-090): `EnteredFacts(List<Employment>)`, `Employment(List<SalaryComponent>)`, `SalaryComponent(code, annualAmount)`; `ComponentSet` NodeValue (lines by head, unsummed); `ComponentPartitionNode` (`inputs.components`) refuses a code not live in the year's registry (`D-CLOSEDSUM`); not yet in the golden runner. Three tripwire tests (fingerprint, election snapshot, NodeValue switch) updated as designed | `ComponentPartitionNodeTest` 7/7 + bite probe; Verify set 75/75; clean unit 1863/1863
 W-059 | 2026-09-26 | Component registry on the timeline (D-089): `exec/components/<CODE>.json` read by `TimelineReader` (named for its code, via `RegistryJson.component`), held on `Timeline`, emitted into a year's `exec/components.json` when live (`ComponentLifecycle.isLiveIn`); no component ships — each arrives with the first rule that reads it (W-063, W-064, Phase 8, W-079, W-088). Reader split into a `Contents` accumulator (method length); `ComponentCodes` generator reads through the reader | reader/compiler/load/generated 48/48 (5 new) + bite probe; clean unit 1855/1855
 W-058 | 2026-09-26 | Metamorphic properties (D-088), `golden/EngineMetamorphicTest`: a deterministic sweep (₹10,000 to ₹1Cr, ₹50,000 to ₹6Cr; both regimes, both years; First Schedule ages 65/82 to ₹1Cr) checks payable never falls, extra income never costs more than 1.04× itself (except the First Schedule rebate step across ₹5,00,000, H-3), and TAX − RELIEF lines = `tax.netpayable`. Errata: the property that catches H-1 is bounded marginal cost, not monotonicity (W-058 row, DR 19 E4.1); three DR 19 properties placed in Appendix F. 8.67 s in the parallel tier, accepted by the owner — **Phase 6 complete** | `EngineMetamorphicTest` 24/24 + 4 bite probes; clean unit 1850/1850
 W-057 | 2026-09-26 | **T2 golden tests — the second milestone** (D-087): 7 DR 08 cases (`test/resources/taxengine/golden/T2/`: T2-1, T2-2, T2-3a/b, T2-4a/b, T2-5), both years, through W-053's runner — payable, two roundings, determinism, plus DR 08's continuity (T2-3), no-37% (T2-4b) and +₹10 (T2-5) assertions; no main-code change. T2-6 is W-088's by erratum | `T2SurchargeTest` 48/48 + 2 bite probes (predictions corrected in plan); clean unit 1826/1826
@@ -448,6 +449,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-090 | 2026-09-26 | `W-060`: the first entered income, and the partition | **C1a:** `EnteredFacts(List<Employment>)`, `Employment(List<SalaryComponent>)`, `SalaryComponent(ComponentCode, Money annualAmount)` — `DR 05` M3.2's names, only the fields with a caller; later items add theirs. **C2:** `ComponentSet` (new `NodeValue`): entered lines grouped by registry `HeadCode`, unsummed, with their employment. **C3:** a code not in the year's registry throws, naming code, employment and year (`D-CLOSEDSUM`). **C4:** the fingerprint's empty-`EnteredFacts` tripwire becomes a perturbation. **C5:** not registered in `GoldenCaseRunner` until `salary.gross` | owner: "approved — proceed as recommended" |
 | D-089 | 2026-09-26 | `W-059`: the component registry before any rule consumes a component | **C1a:** W-059 builds the plumbing only — `exec/components/<CODE>.json`, the reader, the compiler emitting a year's live components — proven on a fixture, no shipped component. Each component arrives with the first rule that reads it (`W-063` PROFESSIONAL_TAX, `W-064` cash salary, Phase 8, `W-079`, `W-088`), both years, `cashNature` sourced; the reachability invariant stays whole. **C3:** "`DR 15` F-part" recorded as unresolved | owner: "approved — proceed as recommended" |
 | D-088 | 2026-09-26 | `W-058`: which properties, and how they are checked | **C1a:** no jqwik — a deterministic sweep (₹10,000 steps to ₹1Cr, ₹50,000 to ₹6Cr; both regimes, both years; First Schedule ages 65/82 to ₹1Cr). **C2:** monotone payable; bounded marginal cost ≤ 1.04 × ΔI except the First Schedule step across ₹5,00,000 (H-3); the trace reconciles (TAX − RELIEF = `tax.netpayable`). The other three `DR 19` E4.1 properties go to `W-076`, `W-060`/`W-061`, `W-066b` (Appendix F). **C4:** errata — the property that catches H-1 is bounded marginal cost, not monotonicity (`W-058` row, `DR 19` E4.1) | owner: "approved — proceed as recommended" |
 | D-087 | 2026-09-26 | `W-057`: how the T2 milestone is shaped | **C1:** a new `golden/T2SurchargeTest` beside `T1SlabAndRebateTest`, reusing `GoldenCase`/`GoldenCaseRunner` unchanged; seven case files (T2-3a/b, T2-4a/b split), both years; DR 08's own assertions copied (T2-3 continuity, T2-4 no 37% band, T2-5 = T2-4a + ₹10). **C2:** T2-6 is `W-088`'s by erratum (D-086), never a skipped test | owner: "approved" |

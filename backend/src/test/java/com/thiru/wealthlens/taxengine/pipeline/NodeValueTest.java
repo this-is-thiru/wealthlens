@@ -132,16 +132,18 @@ class NodeValueTest {
         @Test
         void everyNodeValueIsAccountedFor() {
             java.util.List<NodeValue> all = java.util.List.of(
-                    MoneyValue.of(Money.of("1")), TaxByBasis.atSlabRatesOnly(Money.of("1")));
+                    MoneyValue.of(Money.of("1")), TaxByBasis.atSlabRatesOnly(Money.of("1")),
+                    new ComponentSet(java.util.Map.of()));
 
             for (NodeValue value : all) {
                 String kind = switch (value) {
                     case MoneyValue ignored -> "amount";
                     case TaxByBasis ignored -> "tax by basis";
+                    case ComponentSet ignored -> "components by head";
                 };
                 assertThat(kind).isNotBlank();
             }
-            assertThat(all).hasSize(2);
+            assertThat(all).hasSize(3);
         }
     }
 

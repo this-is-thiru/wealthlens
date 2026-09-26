@@ -1,9 +1,11 @@
 package com.thiru.wealthlens.taxengine.input;
 
+import java.util.List;
+
 /**
  * What the taxpayer entered, as the engine will read it.
  *
- * <h2>A declared seam, and today it is empty</h2>
+ * <h2>A declared seam, filled one income item at a time</h2>
  *
  * <p>Decision <b>D-026</b>, and this needs stating plainly rather than being discovered later.
  * {@code DR 23} A3 gives {@code EngineInputs} a {@code DraftInputs entered} component.
@@ -28,14 +30,23 @@ package com.thiru.wealthlens.taxengine.input;
  * added to {@code EngineInputs} is in the key automatically, which is the only way that invariant
  * survives"</i> — so every field added here enters the key without anyone remembering to add it.
  *
- * <p>So: no components yet, and that is the honest statement of what the engine can currently read
- * from what a user typed. It contributes nothing to the fingerprint today because there is nothing
- * to contribute, not because something was forgotten.
+ * <p>The first field arrived with the component partition (D-090): the employments, each with its
+ * pay lines. Every later income item adds the field it reads, and the fingerprint sees it unasked.
+ *
+ * @param employments each employment in the tax year, in the order entered
  */
-public record EnteredFacts() {
+public record EnteredFacts(List<Employment> employments) {
 
-    /** The only value this type can currently take. */
+    public EnteredFacts {
+        if (employments == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.employments may not be null; pass an empty list where there are none");
+        }
+        employments = List.copyOf(employments);
+    }
+
+    /** Nothing entered. */
     public static EnteredFacts none() {
-        return new EnteredFacts();
+        return new EnteredFacts(List.of());
     }
 }

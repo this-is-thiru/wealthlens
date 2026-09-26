@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
 import com.thiru.wealthlens.taxengine.rules.component.RateBasisHint;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.regime.ElectionState;
@@ -101,6 +102,11 @@ class InputsFingerprintTest {
         static Stream<Arguments> perturbations() {
             return Stream.of(
                     Arguments.of("taxYear", mutate(in -> withTaxYear(in, TaxYearId.of(2025)))),
+                    Arguments.of(
+                            "entered.employments",
+                            mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
+                                    new SalaryComponent(new ComponentCode("BASIC"),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))))))))),
                     Arguments.of(
                             "regime",
                             mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
@@ -216,19 +222,15 @@ class InputsFingerprintTest {
                     .toList();
             List<String> components = List.of(EngineInputs.class.getRecordComponents()).stream()
                     .map(RecordComponent::getName)
-                    .filter(name -> !name.equals("entered"))
                     .toList();
 
             assertThat(perturbed).containsAll(components);
         }
 
         @Test
-        void enteredFactsIsTheOneComponentThatCannotBePerturbedYet() {
-            // It has no fields (D-026). It is in the canonical form, so the moment the income side
-            // gives it one, that field is in the key with nobody remembering to add it.
-            assertThat(EnteredFacts.class.getRecordComponents()).isEmpty();
-            assertThat(InputsFingerprint.canonicalFormOf(baseline()))
-                    .contains("entered=T:EnteredFacts{}");
+        void enteredFacts_whenEmpty_isStillInTheCanonicalForm() {
+            // D-026: declared and thin rather than absent, so an empty entry is a value in the key too
+            assertThat(InputsFingerprint.canonicalFormOf(baseline())).contains("entered=T:EnteredFacts{");
         }
     }
 
