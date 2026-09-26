@@ -140,9 +140,9 @@ class GeneratedConstantsTest {
         }
 
         @Test
-        void componentCodesIsEmptyUntilW059AuthorsThem() {
-            // exec/components.json is a stub. An empty final class is odd and honest, and this
-            // test is what makes it fill in the moment the components are authored.
+        void componentCodesIsEmptyUntilTheFirstRuleReadingAComponentArrives() {
+            // A component arrives with the first rule that reads it (D-089). An empty final class is
+            // odd and honest, and this test is what makes it fill in the moment one is authored.
             assertThat(ConstantGenerator.componentCodes()).isEmpty();
         }
 

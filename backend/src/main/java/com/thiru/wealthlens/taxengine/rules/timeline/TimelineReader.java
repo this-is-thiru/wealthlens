@@ -1,10 +1,13 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
+import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.json.PackJson;
 import com.thiru.wealthlens.taxengine.rules.json.RegimeJson;
+import com.thiru.wealthlens.taxengine.rules.json.RegistryJson;
 import com.thiru.wealthlens.taxengine.rules.json.RuleJson;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
@@ -30,9 +33,10 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Refuses the whole timeline, naming the file, rather than skip anything: a file in a directory
  * this reader does not know is content that would silently never reach a rule pack. Directories are
- * added with their first content and its reader (D-053) — {@code exec/components} and {@code forms/}
- * have none yet; {@code content/} has the coverage register, the section catalogue and the Acts'
- * section lists.
+ * added with their first content and its reader (D-053) — {@code forms/} has none yet;
+ * {@code exec/components} is read ahead of its first content, because each component arrives with the
+ * first rule that reads it (D-089); {@code content/} has the coverage register, the section catalogue and
+ * the Acts' section lists.
  *
  * <p>Each file is named for the identity it holds, which is also what keeps one identity in one file:
  * a second file claiming it has a different name, and is refused for it.
@@ -43,11 +47,13 @@ public final class TimelineReader {
     private static final String RULES = "law/rules";
     private static final String REGIMES = "law/regimes";
     private static final String PIPELINES = "exec/pipelines";
+    /** The pay components, one per file (D-089). */
+    private static final String COMPONENTS = "exec/components";
     /** The section catalogue, carried verbatim for its own reader (D-060). */
     private static final String SECTIONS = "content/sections";
     /** Each Act's section list, carried verbatim for the coverage register (D-066). */
     private static final String ACTS = "content/acts";
-    private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, PIPELINES, SECTIONS, ACTS);
+    private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, PIPELINES, COMPONENTS, SECTIONS, ACTS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
 
@@ -55,20 +61,13 @@ public final class TimelineReader {
     }
 
     public static Timeline read(Path root) {
-        Map<RuleId, RuleRow> rules = new HashMap<>();
-        Map<RegimeCode, RegimeSpec> regimes = new HashMap<>();
-        Map<RuleId, String> ruleSources = new HashMap<>();
-        Map<RegimeCode, String> regimeSources = new HashMap<>();
-        Map<NodeId, String> pipelineNodes = new HashMap<>();
-        Optional<String> coverage = Optional.empty();
-        Map<String, String> sections = new HashMap<>();
-        Map<String, String> acts = new HashMap<>();
+        Contents contents = new Contents();
         for (Path file : files(root)) {
             String path = root.relativize(file).toString().replace(file.getFileSystem().getSeparator(), "/");
             if (COVERAGE.equals(path)) {
                 String content = contentOf(file);
                 parse(content, path);
-                coverage = Optional.of(content);
+                contents.coverage(content);
                 continue;
             }
             String directory = path.contains("/") ? path.substring(0, path.lastIndexOf('/')) : "";
@@ -78,8 +77,31 @@ public final class TimelineReader {
                                 + KNOWN_DIRECTORIES + ", and " + COVERAGE);
             }
             String content = contentOf(file);
-            JsonNode node = parse(content, path);
             String stem = file.getFileName().toString().replaceFirst("\\.json$", "");
+            contents.add(directory, path, stem, parse(content, path), content);
+        }
+        return contents.timeline();
+    }
+
+    /** What the files hold, gathered by directory as they are read, then frozen into a {@link Timeline}. */
+    private static final class Contents {
+
+        private final Map<RuleId, RuleRow> rules = new HashMap<>();
+        private final Map<RegimeCode, RegimeSpec> regimes = new HashMap<>();
+        private final Map<RuleId, String> ruleSources = new HashMap<>();
+        private final Map<RegimeCode, String> regimeSources = new HashMap<>();
+        private final Map<ComponentCode, ComponentDefinition> components = new HashMap<>();
+        private final Map<ComponentCode, String> componentSources = new HashMap<>();
+        private final Map<NodeId, String> pipelineNodes = new HashMap<>();
+        private final Map<String, String> sections = new HashMap<>();
+        private final Map<String, String> acts = new HashMap<>();
+        private Optional<String> coverage = Optional.empty();
+
+        void coverage(String content) {
+            coverage = Optional.of(content);
+        }
+
+        void add(String directory, String path, String stem, JsonNode node, String content) {
             switch (directory) {
                 case RULES -> {
                     RuleRow row = RuleJson.rule(node, path);
@@ -99,6 +121,12 @@ public final class TimelineReader {
                     requireNamedFor(path, stem, id.value());
                     pipelineNodes.put(id, content);
                 }
+                case COMPONENTS -> {
+                    ComponentDefinition component = RegistryJson.component(node, path);
+                    requireNamedFor(path, stem, component.code().value());
+                    components.put(component.code(), component);
+                    componentSources.put(component.code(), content);
+                }
                 case SECTIONS -> {
                     String key = PackJson.text(node, "key", path);
                     requireNamedFor(path, stem, key);
@@ -109,9 +137,14 @@ public final class TimelineReader {
                     requireNamedFor(path, stem, act);
                     acts.put(act, content);
                 }
+                default -> throw new IllegalStateException(directory + " is a known directory with no reader");
             }
         }
-        return new Timeline(rules, regimes, ruleSources, regimeSources, pipelineNodes, coverage, sections, acts);
+
+        Timeline timeline() {
+            return new Timeline(rules, regimes, ruleSources, regimeSources, components, componentSources,
+                    pipelineNodes, coverage, sections, acts);
+        }
     }
 
     private static void requireNamedFor(String path, String stem, String identity) {

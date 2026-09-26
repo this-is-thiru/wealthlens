@@ -4,13 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.RegistryJson;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -126,6 +131,37 @@ class RulePackCompilerTest {
         // Then
         assertThat(compiled.path("versions")).hasSize(2);
         assertThat(compiled.path("versions").get(1).path("legalStatus").asString()).isEqualTo("PENDING_NOTIFICATION");
+    }
+
+    @Test
+    void compile_whenAComponentIsLiveInTheYear_emitsItAsTheRegistryReadsIt() throws IOException {
+        // Given
+        Path root = timelineCopy();
+        ComponentFiles.write(root, "FIXTURE_PAY", ComponentFiles.component("FIXTURE_PAY", "2025-04-01", Optional.empty()));
+
+        // When
+        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(root), TY_2026);
+
+        // Then — the file the assembler reads holds it, in the shape RegistryJson loads
+        Map<ComponentCode, ComponentDefinition> registry = RegistryJson.components(
+                tree(compiled.files().get("exec/components.json")), "exec/components.json");
+        assertThat(registry).containsOnlyKeys(new ComponentCode("FIXTURE_PAY"));
+    }
+
+    @Test
+    void compile_whenAComponentIsWithdrawnBeforeTheYear_leavesItOutOfThatYearOnly() throws IOException {
+        // Given — live for TY 2025-26 only
+        Path root = timelineCopy();
+        ComponentFiles.write(root, "FIXTURE_PAY", ComponentFiles.component("FIXTURE_PAY", "2025-04-01", Optional.of("2026-03-31")));
+        Timeline timeline = TimelineReader.read(root);
+
+        // When
+        String in2026 = RulePackCompiler.compile(timeline, TY_2026).files().get("exec/components.json");
+        String in2025 = RulePackCompiler.compile(timeline, new TaxYearId(2025)).files().get("exec/components.json");
+
+        // Then
+        assertThat(in2026).doesNotContain("FIXTURE_PAY");
+        assertThat(in2025).contains("FIXTURE_PAY");
     }
 
     @Test

@@ -1,15 +1,9 @@
 package com.thiru.wealthlens.taxengine.rules.generated;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.TreeSet;
-import java.util.stream.Stream;
 
 /**
  * Reads the timeline and produces the text of {@code RuleIds}, {@code ComponentCodes} and
@@ -24,7 +18,6 @@ import java.util.stream.Stream;
  */
 final class ConstantGenerator {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     static final Path TIMELINE = Path.of("src/main/resources/rulepacks/timeline");
     static final Path OUTPUT_DIR =
             Path.of("src/main/java/com/thiru/wealthlens/taxengine/rules/generated");
@@ -54,31 +47,11 @@ final class ConstantGenerator {
         return refs;
     }
 
-    /**
-     * Every component code in the timeline, sorted. Read from the files, because the timeline reader
-     * has no component directory until the first component is authored ({@code W-059}).
-     */
+    /** Every component code in the timeline, sorted (D-089). */
     static TreeSet<String> componentCodes() {
         TreeSet<String> codes = new TreeSet<>();
-        Path components = TIMELINE.resolve("exec/components");
-        if (!Files.isDirectory(components)) {
-            return codes;
-        }
-        try (Stream<Path> files = Files.list(components)) {
-            files.filter(file -> file.toString().endsWith(".json"))
-                    .forEach(file -> codes.add(read(file).get("code").asText()));
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not list " + components.toAbsolutePath(), e);
-        }
+        TimelineReader.read(TIMELINE).components().keySet().forEach(code -> codes.add(code.value()));
         return codes;
-    }
-
-    private static JsonNode read(Path path) {
-        try {
-            return MAPPER.readTree(Files.readString(path));
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not read " + path, e);
-        }
     }
 
     /**

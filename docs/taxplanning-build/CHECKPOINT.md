@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-059 — components.json for both years (Phase 7 opens)
+Item            : W-060 — ComponentPartitionNode
 Stage           : NOT_STARTED
-Plan            : — (plans/W-059.md once written)
+Plan            : — (plans/W-060.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-059 row (DR 10 E4, DR 15 F-part; "every code has cashNature") and any erratum on it; check what the pack already holds for components (the lock's components layer, ComponentCode, existing timeline files) before proposing any; write plans/W-059.md with the D-043 standing-rules line; STOP for approval
-Last verify     : ./mvnw clean test -pl backend -Punit → 1850 pass, 0 fail, 0 Checkstyle violations (W-058)
-Waiting on      : nothing for W-059; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Next step       : READ the W-060 row (DR 06 G1.1 step 1; "unknown code = error, never a silent addend") and the D-089 erratum (no component ships until its first consuming rule); read EnteredFacts (what components the inputs carry — none yet?), the inputs.components pipeline node, ComponentSet if it exists; decide whether W-060 has anything to partition before W-064 — write plans/W-060.md with the D-043 standing-rules line; STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 1855 pass, 0 fail, 0 Checkstyle violations (W-059)
+Waiting on      : nothing for W-060; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
 Files touched   : —
-Last item commit: taxplanning W-058: add the engine's metamorphic properties — bounded marginal cost is what catches a missing relief (D-088)
+Last item commit: taxplanning W-059: add the component registry to the timeline — each component arrives with the first rule that reads it (D-089)
 Updated         : 2026-09-26, session 8
 ```
 

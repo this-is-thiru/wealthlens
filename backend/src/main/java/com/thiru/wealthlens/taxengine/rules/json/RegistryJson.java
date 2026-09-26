@@ -44,7 +44,8 @@ public final class RegistryJson {
         return byCode;
     }
 
-    static ComponentDefinition component(JsonNode node, String path) {
+    /** One component, from its own file on the timeline or an entry of a year's registry (D-089). */
+    public static ComponentDefinition component(JsonNode node, String path) {
         ComponentCode code = new ComponentCode(PackJson.text(node, "code", path));
         String where = path + " (" + code + ")";
 

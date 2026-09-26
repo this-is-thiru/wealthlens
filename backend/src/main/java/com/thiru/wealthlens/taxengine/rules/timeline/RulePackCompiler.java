@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -58,6 +59,12 @@ public final class RulePackCompiler {
                 regimes.add(MAPPER.readTree(timeline.regimeSources().get(code)));
             }
         }
+        ArrayNode components = MAPPER.createArrayNode();
+        for (ComponentCode code : sorted(timeline.components().keySet(), ComponentCode::value)) {
+            if (timeline.components().get(code).lifecycle().isLiveIn(taxYear)) {
+                components.add(canonical(MAPPER.readTree(timeline.componentSources().get(code))));
+            }
+        }
         ArrayNode nodes = MAPPER.createArrayNode();
         sorted(timeline.pipelineNodes().keySet(), NodeId::value)
                 .forEach(id -> nodes.add(MAPPER.readTree(timeline.pipelineNodes().get(id))));
@@ -71,7 +78,7 @@ public final class RulePackCompiler {
         files.put("exec/pipelines.json", render(object()
                 .<ObjectNode>set("nodes", nodes)
                 .set("axes", object().set("bindings", MAPPER.createArrayNode()))));
-        files.put("exec/components.json", render(object().set("components", MAPPER.createArrayNode())));
+        files.put("exec/components.json", render(object().set("components", components)));
         files.put("forms/itr-forms.json", render(object().set("forms", MAPPER.createArrayNode())));
         files.put("content/explanations.json", render(object().set("explanations", MAPPER.createArrayNode())));
         return new CompiledPack(taxYear, files, ruleChecksums);

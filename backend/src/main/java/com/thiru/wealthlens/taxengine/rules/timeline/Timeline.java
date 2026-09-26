@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
+import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -18,6 +20,8 @@ import java.util.Optional;
  * @param ruleSources each rule's file verbatim — what a year's pack is compiled from, since the parsed
  *     row cannot be written back
  * @param regimeSources each regime's file verbatim, for the same reason
+ * @param components every pay component, by code (D-089) — each arrives with the first rule that reads it
+ * @param componentSources each component's file verbatim, for the reason {@code ruleSources} is kept
  * @param pipelineNodes the exec node catalogue, each node's file verbatim. Nothing reads its fields
  *     yet; the item that generates node ids from it gives it a type (D-053)
  * @param coverage the coverage register ({@code content/coverage.json}) verbatim, where the timeline
@@ -34,6 +38,8 @@ public record Timeline(
         Map<RegimeCode, RegimeSpec> regimes,
         Map<RuleId, String> ruleSources,
         Map<RegimeCode, String> regimeSources,
+        Map<ComponentCode, ComponentDefinition> components,
+        Map<ComponentCode, String> componentSources,
         Map<NodeId, String> pipelineNodes,
         Optional<String> coverage,
         Map<String, String> sections,
@@ -44,6 +50,8 @@ public record Timeline(
         regimes = Map.copyOf(regimes);
         ruleSources = Map.copyOf(ruleSources);
         regimeSources = Map.copyOf(regimeSources);
+        components = Map.copyOf(components);
+        componentSources = Map.copyOf(componentSources);
         pipelineNodes = Map.copyOf(pipelineNodes);
         coverage = Objects.requireNonNull(coverage, "coverage: Optional.empty() where the timeline has none");
         sections = Map.copyOf(sections);

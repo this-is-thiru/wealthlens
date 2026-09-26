@@ -872,6 +872,23 @@ if that is not enough for the item in hand.
 | W-069 | **modifies** `ExemptionNode` — allowances | `DR 01` R11 | ⚠ `SAL-ALW-NEW-SUBSET-001` is **STATUS UNCLEAR** — seed from the **section**, flag visibly |
 | W-070 | **T3 golden tests** | `DR 08` T3-1 … T3-5 | T3-2, T3-3 are **PROVISIONAL** — report separately |
 
+> **Erratum (W-059, 2026-09-26, D-089):**
+> - **W-059 builds the registry's plumbing, not its content.** `ComponentDefinition` refuses a component
+>   that feeds no rule unless it is `informationalOnly`, and `PackValidator` requires every `feedsInto` rule
+>   to exist in the pack; no salary rule does yet. So W-059 adds `exec/components/<CODE>.json` (one file
+>   per component), its reader, and the compiler emitting the components live in a year — proven on a
+>   fixture — and ships no component.
+> - **A component arrives with the first rule that reads it.** Each item that authors a rule consuming a
+>   component also authors that component, for both years, with its `cashNature` sourced: `W-063` brings
+>   `PROFESSIONAL_TAX` with `SAL-PTAX-001`; `W-064` brings the cash-salary codes with `SAL-DEF-001` and
+>   `SAL-STDDED-*`; Phase 8's items bring the perquisites and contributions with their rules; `W-079` and
+>   `W-088` bring the other-sources and capital-gains codes. `DR 05` M2 lists the initial codes.
+> - **"`DR 15` F-part" is unresolved.** `15-review-findings.md` Part F covers entities (F1–F6), none of them
+>   components; the specs used are `DR 10` E4 and `DR 05` M2.
+>
+> Verified by: `ComponentDefinition` (constructor), `PackValidator` (`feedsInto` / `salaryBaseFor` must
+> resolve), `RulePackCompiler` (empty `exec/components.json`), `TimelineReader` Javadoc (D-053).
+
 ---
 
 ## Phase 8 — Perquisites, employer contributions, Chapter VIII (10 items)

@@ -3,6 +3,8 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.rules.component.CashNature;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -66,6 +69,39 @@ class TimelineReaderTest {
                 .containsExactlyInAnyOrder(
                         "inputs.components", "salary.gross", "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
+    }
+
+    @Test
+    void read_whenTheShippedTimelineIsRead_holdsNoComponentYet() {
+        // Then — a component arrives with the first rule that reads it (D-089); none does yet
+        assertThat(TimelineReader.read(REAL).components()).isEmpty();
+    }
+
+    @Test
+    void read_whenAComponentFileIsPresent_holdsItByItsCode() throws IOException {
+        // Given
+        Path root = realCopy();
+        ComponentFiles.write(root, "FIXTURE_PAY", ComponentFiles.component("FIXTURE_PAY", "2025-04-01", Optional.empty()));
+
+        // When
+        Timeline timeline = TimelineReader.read(root);
+
+        // Then
+        assertThat(timeline.components()).containsOnlyKeys(new ComponentCode("FIXTURE_PAY"));
+        assertThat(timeline.components().get(new ComponentCode("FIXTURE_PAY")).cashNature()).isEqualTo(CashNature.CASH);
+    }
+
+    @Test
+    void read_whenAComponentFileIsNamedForAnotherCode_isRefused() throws IOException {
+        // Given
+        Path root = realCopy();
+        ComponentFiles.write(root, "OTHER_PAY", ComponentFiles.component("FIXTURE_PAY", "2025-04-01", Optional.empty()));
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("exec/components/OTHER_PAY.json")
+                .hasMessageContaining("FIXTURE_PAY");
     }
 
     @Test
