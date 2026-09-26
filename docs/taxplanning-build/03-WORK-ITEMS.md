@@ -829,6 +829,14 @@ if that is not enough for the item in hand.
 >
 > Verified by: `DR 06` G3.2; rulebook `REBATE-ORDER-001`, `RATE-SUR-SPLIT-001`; `DR 08` T2-6 (`PROVISIONAL`).
 
+> **Erratum (W-057, 2026-09-26, D-087):** `W-057` runs `DR 08` **T2-1 … T2-5**, not T2-6. T2-6 needs
+> special-rate income and `RATE-SUR-SPLIT-001`, both `W-088`'s (D-086); it is not added as a skipped test,
+> which would read as coverage. The cases are `src/test/resources/taxengine/golden/T2/<id>.json`, with
+> T2-3 split into T2-3a/T2-3b (two incomes) and T2-4 into T2-4a/T2-4b (old/new), each in both years, run by
+> `golden/T2SurchargeTest` through `W-053`'s `GoldenCaseRunner`.
+>
+> Verified by: `DR 08` T2 (`08-golden-tests.md:159-297`) and its coverage map (`:873-875`).
+
 ---
 
 ## Phase 7 — Salary head (12 items)

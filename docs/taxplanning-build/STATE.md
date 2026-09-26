@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-056 — "taxplanning W-056: add SurchargeNode — the greater ladder rate on the tax after rebate, less W = U + V priced by recomputation (D-086)"
-Last updated              : 2026-09-26 (session 8 — W-055, W-056a, W-056 done; build GREEN, 1778 tests)
-Current position          : W-057 — T2 golden tests (not started)
+Last checkpoint           : W-057 — "taxplanning W-057: add the T2 golden tests — every DR 08 surcharge case end to end in both years (D-087)"
+Last updated              : 2026-09-26 (session 8 — W-055, W-056a, W-056, W-057 done; build GREEN, 1826 tests)
+Current position          : W-058 — metamorphic property tests (not started)
 Session count             : 8
 ```
 
@@ -54,7 +54,7 @@ Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
-Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 ·  W-058 ·
+Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 ·
 Phase 7    W-059 ·  W-060 ·  W-061 ·  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **91** / 183 live · in flight **0** · blocked **0**  ← computed by script; 183 = 146 base ids − 8 retired + 45 suffixed
+Counts — done **92** / 183 live · in flight **0** · blocked **0**  ← computed by script; 183 = 146 base ids − 8 retired + 45 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-057 | 2026-09-26 | **T2 golden tests — the second milestone** (D-087): 7 DR 08 cases (`test/resources/taxengine/golden/T2/`: T2-1, T2-2, T2-3a/b, T2-4a/b, T2-5), both years, through W-053's runner — payable, two roundings, determinism, plus DR 08's continuity (T2-3), no-37% (T2-4b) and +₹10 (T2-5) assertions; no main-code change. T2-6 is W-088's by erratum | `T2SurchargeTest` 48/48 + 2 bite probes (predictions corrected in plan); clean unit 1826/1826
 W-056 | 2026-09-26 | SurchargeNode (D-086): `tax.surcharge` after `tax.afterrebate` in both regimes — the greater of the two ladders' rates (`SlabLadder.bandFor`, exactly-a-threshold stays in the lower band) on the tax after rebate, less W = U + V from the `-CEILING` row with U recomputed (W-056a); TAX + RELIEF lines, nil explained; refuses special-rate tax until W-088 (split and T2-6 moved there, W-079 dividends, Appendix F). Cess base and net payable include it; locks 2025-26 law.5/exec.2, 2026-27 law.14/exec.3; NOT_YET_EVALUATED deleted, I3 exceptionless. T1-O2 and one 2025 cess test adapted to the new node, none weakened | `SurchargeNodeTest` 24/24 (DR 08 T2-1…T2-5, both years); Verify set 246/246; probes: exclusive-upper and no-relief bit (lower-inclusive did not, recorded); clean unit 1778/1778
 W-056a | 2026-09-26 | Pipeline re-entry (D-086): `NodeContext.recomputed(target, pinned, value)` — a slot the node declared, as it would be had another declared slot held `value`; the runner's `RunRecomputation` re-runs only the nodes between the two in a fresh store (outer values and trace untouched, no nesting, a target not depending on `pinned` refused); a context without one refuses; `NodeHarness.recomputation(...)`. Type named `Recomputation` (the runner's no-`try {` guard) | `PipelineRecomputationTest` 17/17 + bite probe; Verify set 46/46; clean unit 1741/1741
 W-055 | 2026-09-26 | Surcharge marginal-relief rows (D-085): `RATE-SUR-FIRST-SCHEDULE-CEILING` (ThresholdLadderCeiling 50L/1Cr/2Cr/5Cr) and `RATE-SUR-NEW-TAX-REGIME-CEILING` (50L/1Cr/2Cr, no 5Cr), relief-only, limitedToSlabRateTax false, one version spanning both years (FA 2026 Part I-A/I-B Para F Table 2 Sl. 1; s.2(5)/s.3(5) Table Sl. 6); thresholds restated, W-056 reads them from these rows; drift guard against the ladders; locks 2025-26 law.4, 2026-27 law.13; RuleIds; NOT_YET_EVALUATED holds six until W-056 | `SurchargeReliefTest` 12/12 + 2 bite probes; Verify set 224/224; clean unit 1724/1724
@@ -445,6 +446,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-087 | 2026-09-26 | `W-057`: how the T2 milestone is shaped | **C1:** a new `golden/T2SurchargeTest` beside `T1SlabAndRebateTest`, reusing `GoldenCase`/`GoldenCaseRunner` unchanged; seven case files (T2-3a/b, T2-4a/b split), both years; DR 08's own assertions copied (T2-3 continuity, T2-4 no 37% band, T2-5 = T2-4a + ₹10). **C2:** T2-6 is `W-088`'s by erratum (D-086), never a skipped test | owner: "approved" |
 | D-086 | 2026-09-26 | `W-056`: how U is priced, and where the surcharge split goes | **C1a:** new item `W-056a` (before `W-056`) — `NodeContext.recomputed(target, pinned, value)`, supplied by the runner re-running only the nodes between the two in a fresh store, declared slots only; U = `tax.afterrebate` recomputed at C plus the unrelieved surcharge. **C2a:** `RATE-SUR-SPLIT-001`, the excluding income's dividends/gains and T2-6 move to `W-079`/`W-088`; `SurchargeNode` takes the excluding income as total income and refuses special-rate tax. **C3–C6:** `tax.surcharge` after `tax.afterrebate`; cess base and net payable include it; trace: one TAX line (the winning ladder) + one RELIEF line (nil included); `SlabLadder.bandFor` → `Optional<Band>`; `NOT_YET_EVALUATED` deleted | owner: "approved — proceed as recommended" |
 | D-085 | 2026-09-26 | `W-055`: where the surcharge marginal-relief thresholds live | Two relief-only rows, one spanning version each (FA 2026, both years): `RATE-SUR-FIRST-SCHEDULE-CEILING` (`ThresholdLadderCeiling` 50L/1Cr/2Cr/5Cr) and `RATE-SUR-NEW-TAX-REGIME-CEILING` (50L/1Cr/2Cr, no 5Cr), `limitedToSlabRateTax` false; they **restate** Table 2 column C, and `W-056` reads the thresholds from them rather than from band lower bounds (supersedes D-050 on that point), because Table 2 tests total income while 2Cr/5Cr sit on the excluding ladder (D-084). A drift guard ties each row to its two ladders' non-zero lower bounds. Both rows join `NOT_YET_EVALUATED` under D-084. Locks 2025-26 law.4, 2026-27 law.13 | owner: "approved" |
 | D-084 | 2026-09-25 | `W-054`: the shape of the surcharge rows | Two `SlabLadder` rows per regime, one spanning version each (FA 2026, both years): `RATE-SUR-FIRST-SCHEDULE` / `RATE-SUR-NEW-TAX-REGIME` on total income (0 / 10% >50L / 15% >1Cr open) and `…-EXCLUDING` on total income excluding dividends and the special gains, base `TOTAL_INCOME_EXCLUDING_DIVIDENDS_AND_GAINS` (25% >2Cr; 37% >5Cr first schedule only); `W-056` takes the greater rate and keeps `RATE-SUR-SPLIT-001`. I3: an owner-approved exception to D-043's "may only shrink" — the Phase 6 rows join `NOT_YET_EVALUATED` until `W-056`, whose Verify empties it. Locks 2025-26 law.3, 2026-27 law.12 | owner: "approved — C1–C4 as recommended" |
