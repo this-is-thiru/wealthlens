@@ -5,15 +5,15 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-056 — SurchargeNode (+ SlabLadder band lookup)
-Stage           : NOT_STARTED
-Plan            : — (plans/W-056.md once written)
-Approved        : —
-Steps done      : —
-Next step       : READ the W-056 row + D-084 and D-085 errata (greater of the two ladders' rates; RATE-SUR-SPLIT-001 two buckets; relief thresholds from the -CEILING rows; Verify empties NOT_YET_EVALUATED) and DR 06 G3.2; write plans/W-056.md with the D-043 standing-rules line; STOP for approval
-Last verify     : ./mvnw clean test -pl backend -Punit → 1724 pass, 0 fail, 0 Checkstyle violations (W-055)
-Waiting on      : nothing for W-056; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
-Files touched   : —
-Last item commit: taxplanning W-055: add the surcharge marginal-relief rows for both regimes — the Act's Table 2 thresholds, restated (D-085)
+Stage           : IMPLEMENT — plan approved (D-086); W-056a committed
+Plan            : plans/W-056.md
+Approved        : "approved — proceed as recommended" — 2026-09-26 (D-086)
+Steps done      : 1, 2 (W-056a)
+Next step       : step 3 — SlabLadder.bandFor(Money) → Optional<Band> (lowerExclusive < income ≤ upperInclusive) + SlabLadderTest
+Last verify     : ./mvnw clean test -pl backend -Punit → 1741 pass, 0 fail, 0 Checkstyle violations (W-056a)
+Waiting on      : nothing; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Files touched   : plans/W-056.md, 03-WORK-ITEMS.md (W-056's; the W-056a row there lands with W-056's commit)
+Last item commit: taxplanning W-056a: add NodeContext.recomputed — a node recomputes a slot at another value by re-running the nodes between (D-086)
 Updated         : 2026-09-26, session 8
 ```
 

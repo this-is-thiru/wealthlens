@@ -53,19 +53,24 @@ public final class NodeContext {
     private final Set<NodeId> declaredRequires;
     private final Set<RuleId> declaredRules;
 
+    /** How this run recomputes a slot at another value; one that cannot says so when asked. */
+    private final Recomputation recomputation;
+
     private NodeContext(
             RulePack pack,
             RegimeSpec regime,
             EngineInputs inputs,
             Map<NodeId, NodeValue> computed,
             Set<NodeId> declaredRequires,
-            Set<RuleId> declaredRules) {
+            Set<RuleId> declaredRules,
+            Recomputation recomputation) {
         this.pack = pack;
         this.regime = regime;
         this.inputs = inputs;
         this.computed = computed;
         this.declaredRequires = declaredRequires;
         this.declaredRules = declaredRules;
+        this.recomputation = recomputation;
     }
 
     /**
@@ -73,12 +78,20 @@ public final class NodeContext {
      * to {@link #put} results and to derive each node's view.
      */
     public static NodeContext forRun(RulePack pack, RegimeSpec regime, EngineInputs inputs) {
-        if (pack == null || regime == null || inputs == null) {
+        return forRun(pack, regime, inputs, (target, pinned, value) -> {
+            throw new IllegalStateException("This context cannot re-enter the computation to recompute " + target
+                    + "; only a pipeline run, or a NodeHarness given .recomputation(...), can");
+        });
+    }
+
+    /** The same, able to recompute a slot at another value — the runner's, and a node test's (D-086). */
+    public static NodeContext forRun(RulePack pack, RegimeSpec regime, EngineInputs inputs, Recomputation recomputation) {
+        if (pack == null || regime == null || inputs == null || recomputation == null) {
             throw new IllegalArgumentException(
-                    "A NodeContext needs a pack, a regime and the inputs; the engine fetches none"
+                    "A NodeContext needs a pack, a regime, the inputs and a recomputation; the engine fetches none"
                             + " of them for itself");
         }
-        return new NodeContext(pack, regime, inputs, new LinkedHashMap<>(), Set.of(), Set.of());
+        return new NodeContext(pack, regime, inputs, new LinkedHashMap<>(), Set.of(), Set.of(), recomputation);
     }
 
     /** This node's view: the same values, restricted to what it declared. */
@@ -88,7 +101,7 @@ public final class NodeContext {
         }
         return new NodeContext(
                 pack, regime, inputs, computed, Set.copyOf(node.requires()),
-                Set.copyOf(node.rules()));
+                Set.copyOf(node.rules()), recomputation);
     }
 
     /** Record a node's output. The runner's call, after {@code evaluate}. */
@@ -112,13 +125,7 @@ public final class NodeContext {
      *     conditions to tolerate
      */
     public NodeValue get(NodeId node) {
-        if (!declaredRequires.contains(node)) {
-            throw new IllegalStateException(
-                    "This node did not declare " + node + " in requires(), so it may not read it."
-                            + " It declared " + declaredRequires + ". Add it to requires() -- the"
-                            + " evaluation order is derived from that set, so reading outside it"
-                            + " would work only by luck of ordering");
-        }
+        requireDeclared(node);
         NodeValue value = computed.get(node);
         if (value == null) {
             throw new IllegalStateException(
@@ -137,6 +144,33 @@ public final class NodeContext {
                             + " but this node expected a " + as.getSimpleName());
         }
         return as.cast(value);
+    }
+
+    /**
+     * A slot this node declared, as it would be had another slot it declared held {@code value} — U for
+     * surcharge marginal relief (D-086). The run is not changed: the recomputation is discarded after it
+     * answers.
+     *
+     * @throws IllegalStateException if the node did not declare both slots, or if this context cannot
+     *     re-enter
+     */
+    public NodeValue recomputed(NodeId target, NodeId pinned, NodeValue value) {
+        requireDeclared(target);
+        requireDeclared(pinned);
+        if (value == null) {
+            throw new IllegalArgumentException("Recomputing " + target + " needs a value for " + pinned);
+        }
+        return recomputation.recompute(target, pinned, value);
+    }
+
+    private void requireDeclared(NodeId node) {
+        if (!declaredRequires.contains(node)) {
+            throw new IllegalStateException(
+                    "This node did not declare " + node + " in requires(), so it may not read it."
+                            + " It declared " + declaredRequires + ". Add it to requires() -- the"
+                            + " evaluation order is derived from that set, so reading outside it"
+                            + " would work only by luck of ordering");
+        }
     }
 
     /**

@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
+import com.thiru.wealthlens.taxengine.pipeline.Recomputation;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -69,6 +70,7 @@ public final class NodeHarness {
     private final Map<NodeId, NodeValue> stubs = new LinkedHashMap<>();
     private RegimeSpec regime;
     private EngineInputs inputs;
+    private Recomputation recomputation;
 
     private NodeHarness(RulePack pack) {
         this.pack = pack;
@@ -119,6 +121,18 @@ public final class NodeHarness {
     }
 
     /**
+     * How the node's re-entry answers (D-086), for a node that recomputes a slot at another value — the
+     * test states the figures, as it states every other slot.
+     */
+    public NodeHarness recomputation(Recomputation recomputation) {
+        if (recomputation == null) {
+            throw new IllegalArgumentException("recomputation() needs a Recomputation");
+        }
+        this.recomputation = recomputation;
+        return this;
+    }
+
+    /**
      * Evaluate the node.
      *
      * @throws IllegalArgumentException if the stubs and the node's {@code requires()} disagree in
@@ -153,7 +167,10 @@ public final class NodeHarness {
                             + " about what it reads, and the test would pass for the wrong reason");
         }
 
-        NodeContext run = NodeContext.forRun(pack, regime, inputs == null ? plainTaxpayer() : inputs);
+        EngineInputs running = inputs == null ? plainTaxpayer() : inputs;
+        NodeContext run = recomputation == null
+                ? NodeContext.forRun(pack, regime, running)
+                : NodeContext.forRun(pack, regime, running, recomputation);
         stubs.forEach(run::put);
         return node.evaluate(run.forNode(node));
     }

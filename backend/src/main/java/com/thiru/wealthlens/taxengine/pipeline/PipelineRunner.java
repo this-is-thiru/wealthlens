@@ -10,9 +10,11 @@ import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Walks the graph and collects the answer.
@@ -98,9 +100,10 @@ public final class PipelineRunner {
         List<ComputationNode> ordered =
                 TopologicalSort.of(registry.resolveAll(regime.pipeline().nodeRefs()));
 
-        NodeContext context = NodeContext.forRun(pack, regime, inputs);
         List<NodeId> order = new ArrayList<>(ordered.size());
         Map<NodeId, NodeValue> values = new LinkedHashMap<>();
+        NodeContext context =
+                NodeContext.forRun(pack, regime, inputs, new RunRecomputation(ordered, pack, regime, inputs, values));
         List<TraceLine> trace = new ArrayList<>();
 
         for (ComputationNode node : ordered) {
@@ -119,6 +122,75 @@ public final class PipelineRunner {
                 trace,
                 InputsFingerprint.of(inputs),
                 computationLayersOf(pack));
+    }
+
+    /**
+     * Re-entry for one run (D-086): {@code target} as it would be had {@code pinned} been {@code value}.
+     *
+     * <p>Only the nodes that depend on {@code pinned} and that {@code target} depends on run again, in the
+     * run's order, in a store of their own: seeded with {@code pinned = value} and with the run's values
+     * for anything else they read, none of which depends on {@code pinned}. Their trace is discarded and
+     * they cannot re-enter again; the run itself is untouched.
+     *
+     * @param computed the run's values so far, read and never written
+     */
+    private record RunRecomputation(
+            List<ComputationNode> ordered,
+            RulePack pack,
+            RegimeSpec regime,
+            EngineInputs inputs,
+            Map<NodeId, NodeValue> computed)
+            implements Recomputation {
+
+        /**
+         * @throws IllegalArgumentException if {@code target} does not depend on {@code pinned} — recomputing
+         *     it would return the run's own value and pass for an answer
+         */
+        @Override
+        public NodeValue recompute(NodeId target, NodeId pinned, NodeValue value) {
+            Set<NodeId> affected = dependentsOf(pinned, ordered);
+            if (!affected.contains(target)) {
+                throw new IllegalArgumentException(target + " does not depend on " + pinned
+                        + " in this pipeline, so it cannot be recomputed at another value of it");
+            }
+            Set<NodeId> needed = ancestorsOf(target, ordered);
+            NodeContext store = NodeContext.forRun(pack, regime, inputs);
+            store.put(pinned, value);
+            NodeValue answer = value;
+            for (ComputationNode node : ordered) {
+                if (!affected.contains(node.produces()) || !needed.contains(node.produces())) {
+                    continue;
+                }
+                node.requires().stream()
+                        .filter(read -> !store.hasValueFor(read))
+                        .forEach(read -> store.put(read, computed.get(read)));
+                answer = node.evaluate(store.forNode(node)).value();
+                store.put(node.produces(), answer);
+            }
+            return answer;
+        }
+    }
+
+    /** Every slot computed, directly or through others, from {@code slot}. */
+    private static Set<NodeId> dependentsOf(NodeId slot, List<ComputationNode> ordered) {
+        Set<NodeId> dependents = new HashSet<>();
+        for (ComputationNode node : ordered) {
+            if (node.requires().stream().anyMatch(read -> read.equals(slot) || dependents.contains(read))) {
+                dependents.add(node.produces());
+            }
+        }
+        return dependents;
+    }
+
+    /** {@code slot} and every slot it is computed from. */
+    private static Set<NodeId> ancestorsOf(NodeId slot, List<ComputationNode> ordered) {
+        Set<NodeId> ancestors = new HashSet<>(Set.of(slot));
+        for (ComputationNode node : ordered.reversed()) {
+            if (ancestors.contains(node.produces())) {
+                ancestors.addAll(node.requires());
+            }
+        }
+        return ancestors;
     }
 
     /**
