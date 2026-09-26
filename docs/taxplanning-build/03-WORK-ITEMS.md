@@ -837,6 +837,21 @@ if that is not enough for the item in hand.
 >
 > Verified by: `DR 08` T2 (`08-golden-tests.md:159-297`) and its coverage map (`:873-875`).
 
+> **Erratum (W-058, 2026-09-26, D-088):**
+> - **The property that catches H-1 is bounded marginal cost, not monotonicity.** A missing marginal relief
+>   makes tax jump *up* at the threshold — ₹10 over ₹50,00,000 would cost ₹1,12,323 (`DR 08` T2-2) — so
+>   "more income never means less tax" still holds. What it breaks is: extra income ΔI never raises the
+>   payable by more than ΔI × 1.04 (each relief caps tax and surcharge at the extra income; the cess adds
+>   "four per cent. of such income-tax and surcharge", FA 2026 s.2(6)/s.3(15)). The one lawful exception is
+>   the First Schedule step across ₹5,00,000, where the rebate has no marginal relief (H-3, `DR 08` T1-O2).
+>   Monotonicity stays: it catches an over-generous or misplaced relief.
+> - **W-058 runs three properties** — monotone, bounded marginal cost, the trace reconciles (TAX − RELIEF =
+>   `tax.netpayable`) — as a deterministic sweep (no jqwik: random tries rarely land in a relief's ~₹1.6L
+>   binding zone), `golden/EngineMetamorphicTest`. The other three `DR 19` E4.1 properties need inputs the
+>   graph does not carry yet; Appendix F places them.
+>
+> Verified by: `DR 19` E4.1; `DR 08` T2-2, T2-3, T1-O2; measured this session (₹1,040 per ₹1,000 at ₹50L).
+
 ---
 
 ## Phase 7 — Salary head (12 items)
@@ -1295,6 +1310,9 @@ none depends on anyone remembering it.
 | The rule-authoring admin screen (**OQ-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
 | Dividend income in the surcharge's **excluding** income and in the 15%-limited part (`RATE-SUR-SPLIT-001`), D-086 | `W-079` (`OtherSourcesNode`) | dividends are slab-taxed, so nothing else would take them out of the 25%/37% test |
 | The surcharge split, special gains in the excluding income, T2-6 (D-086) | `W-088` | `SurchargeNode` refuses special-rate tax until then |
+| `DR 19` E4.1 `aDeductionNeverIncreasesTax` (D-088) | `W-076` (`ChapterEightNode`) | the first node that takes a deduction |
+| `DR 19` E4.1 `splittingAComponentIsNeutral` (D-088) | `W-060`/`W-061` (component partition, gross salary) | the first nodes that read components |
+| `DR 19` E4.1 `proratingAFullYearIsIdentity` (D-088) | `W-066b` (`TemporallyApportionedCap`) | the proration it tests is built there |
 | Professional review of golden cases (**OQ-1**, `VerificationLevel.PROFESSIONALLY_REVIEWED`) | before anyone outside the owner's family relies on a figure | the gate needs a named reviewer |
 
 ## Milestones

@@ -331,6 +331,16 @@ Relations that must hold for **any** input, with no oracle needed:
 for any income near a threshold — it would have caught H-1 without anyone knowing the threshold was
 ₹50,00,000.
 
+> **Erratum (W-058, 2026-09-26):** the inference above is wrong. A missing marginal relief makes tax jump
+> **up** at the threshold (₹10 over ₹50,00,000 would cost ₹1,12,323 — `DR 08` T2-2), which
+> `moreIncomeNeverMeansLessTax` allows. The property a missing relief violates is **bounded marginal
+> cost**: `payable(b) − payable(a) ≤ 1.04 × (b − a)` for `a < b`, the 1.04 being the cess on top of a relief
+> that caps tax and surcharge at the extra income — with the First Schedule rebate step across ₹5,00,000
+> as its one lawful exception (H-3). Monotonicity remains, as the guard against an over-generous relief.
+> Built as a deterministic sweep, not jqwik, because random tries rarely land in a relief's narrow binding
+> zone (D-088).
+> Verified by: `08-golden-tests.md` T2-2, T2-3, T1-O2; `plans/W-058.md` Findings 1, 2, 5.
+
 ### E4.2 — An independent oracle for the golden expectations
 
 Hand-deriving 60 cases is feasible; 600 is not, and `D-GOLDEN` forbids deriving them from the engine.
