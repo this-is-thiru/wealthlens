@@ -860,6 +860,7 @@ if that is not enough for the item in hand.
 |---|---|---|---|
 | W-059 | `components.json` for both years | `DR 10` E4, `DR 15` F-part | every code has `cashNature` |
 | W-060 | `ComponentPartitionNode` | `DR 06` G1.1 step 1 | unknown code = error, never a silent addend |
+| W-061a | `rules/definition/RuleDefinition` + `HeadTotal`: a rule row may carry a definition *(added by D-091)* | `DR 01` R7 (`SAL-DEF-001`) | a definition is none of cap, relief, rounding, condition; at most one of the four on a version |
 | W-061 | `GrossSalaryNode` | `DR 01` R7 | |
 | W-062 | `SalaryBaseNode` | `DR 01` `SAL-DEF-HRA-001` etc. | **basic + DA where the terms provide**; one function, five rules |
 | W-063 | `SalaryDeductionNode` | `DR 01` R8 | professional tax **only** in the opted-out regime |
@@ -888,6 +889,16 @@ if that is not enough for the item in hand.
 >
 > Verified by: `ComponentDefinition` (constructor), `PackValidator` (`feedsInto` / `salaryBaseFor` must
 > resolve), `RulePackCompiler` (empty `exec/components.json`), `TimelineReader` Javadoc (D-053).
+
+> **Erratum (W-061, 2026-09-26, D-091):** gross salary is grounded in a rule row. "Salary includes …"
+> (2025 Act s.16; 1961 s.17(1); `SAL-DEF-001`) is none of a cap, relief, rounding or condition, so the new
+> `W-061a` lets a rule version carry a **definition**, first `HeadTotal(head)`. `W-061` then authors the row
+> (concept id `SAL-SALARY-INCLUDES`, D-035), both years, marks 2025 Act s.16 `MODELLED` with its catalogue
+> entry, and `GrossSalaryNode` sums the partition's SALARIES lines with an INCOME line citing it. Salary
+> components (`W-064`) `feedsInto` it. Perquisites and employer-contribution charges join gross later;
+> `SAL-CHARGE-001` stays `W-065`'s.
+>
+> Verified by: `RuleJson.capOrNull` Javadoc; `CapShape` permits; `coverage.json` (2025 s.16 → `W-061`).
 
 ---
 

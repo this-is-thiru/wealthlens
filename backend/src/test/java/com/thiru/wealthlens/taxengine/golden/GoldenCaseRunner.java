@@ -3,6 +3,8 @@ package com.thiru.wealthlens.taxengine.golden;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.node.CessNode;
+import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
+import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
 import com.thiru.wealthlens.taxengine.node.NetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RebateNode;
 import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
@@ -39,14 +41,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * Runs a golden case through the real engine: the shipped pack and the shipped regime pipeline, entered at
  * total income, then projected into a {@link TaxComputation} (D-083).
  *
- * <p>The pipeline is the regime's own, kept to the nodes this registry holds and in the shipped order. The
- * nodes before {@code totalincome} are not built yet; {@link #droppedFromShippedPipeline} names what was
- * left out, so a test can hold that to exactly those.
+ * <p>The pipeline is the regime's own, kept to the nodes this registry holds and in the shipped order.
+ * {@code totalincome} is stood in for, because the heads between gross salary and it are not built yet; the
+ * partition and gross salary run on what the case enters (nothing, for T1 and T2). {@link
+ * #droppedFromShippedPipeline} names any shipped node left out, so a test can hold that to none (D-091).
  */
 final class GoldenCaseRunner {
 
     /** Every node built so far, the real ones. */
     private static final List<ComputationNode> BUILT = List.of(
+            new ComponentPartitionNode(),
+            new GrossSalaryNode(),
             new RoundTotalIncomeNode(),
             new TaxByBasisNode(),
             new RebateNode(),

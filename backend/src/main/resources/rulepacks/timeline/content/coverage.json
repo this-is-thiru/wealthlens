@@ -16,7 +16,7 @@
     {"act": "INCOME_TAX_ACT_2025", "section": "13", "classification": "PLANNED", "assesseeTypes": ["INDIVIDUAL"], "backlogItem": "W-060"},
     {"act": "INCOME_TAX_ACT_2025", "section": "14", "classification": "DEFERRED", "tier": "BUILT_LATER", "assesseeTypes": []},
     {"act": "INCOME_TAX_ACT_2025", "section": "15", "classification": "PLANNED", "assesseeTypes": ["INDIVIDUAL"], "backlogItem": "W-065"},
-    {"act": "INCOME_TAX_ACT_2025", "section": "16", "classification": "PLANNED", "assesseeTypes": ["INDIVIDUAL"], "backlogItem": "W-061"},
+    {"act": "INCOME_TAX_ACT_2025", "section": "16", "classification": "MODELLED", "rules": ["SAL-SALARY-INCLUDES"], "manager": "RuleDefinition"},
     {"act": "INCOME_TAX_ACT_2025", "section": "17", "classification": "PLANNED", "assesseeTypes": ["INDIVIDUAL"], "backlogItem": "W-072"},
     {"act": "INCOME_TAX_ACT_2025", "section": "18", "classification": "PLANNED", "assesseeTypes": ["INDIVIDUAL"], "backlogItem": "W-065"},
     {"act": "INCOME_TAX_ACT_2025", "section": "19", "classification": "PLANNED", "assesseeTypes": ["INDIVIDUAL"], "backlogItem": "W-063"},

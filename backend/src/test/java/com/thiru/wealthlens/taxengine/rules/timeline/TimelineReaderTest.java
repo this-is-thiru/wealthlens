@@ -61,7 +61,8 @@ class TimelineReaderTest {
                         new RuleId("RATE-SUR-FIRST-SCHEDULE-EXCLUDING"),
                         new RuleId("RATE-SUR-NEW-TAX-REGIME"),
                         new RuleId("RATE-SUR-NEW-TAX-REGIME-CEILING"),
-                        new RuleId("RATE-SUR-NEW-TAX-REGIME-EXCLUDING"));
+                        new RuleId("RATE-SUR-NEW-TAX-REGIME-EXCLUDING"),
+                        new RuleId("SAL-SALARY-INCLUDES"));
         assertThat(timeline.regimes().keySet())
                 .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
         assertThat(timeline.pipelineNodes().keySet())

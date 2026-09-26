@@ -165,7 +165,8 @@ class GeneratedConstantsTest {
                             "RATE-SUR-NEW-TAX-REGIME-EXCLUDING",
                             "REBATE-NEW-TAX-REGIME",
                             "REBATE-NEW-TAX-REGIME-EXCESS",
-                            "REBATE-RESIDENT-INDIVIDUAL");
+                            "REBATE-RESIDENT-INDIVIDUAL",
+                            "SAL-SALARY-INCLUDES");
         }
     }
 

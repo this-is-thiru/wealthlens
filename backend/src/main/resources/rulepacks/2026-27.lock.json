@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.14",
-      "checksum": "sha256:97464b81a3219fc8772122fdd1f758ab376a7d6a385570a670e2d53eb1e6dc1a"
+      "version": "2026-27.law.15",
+      "checksum": "sha256:58708b9bdf586b5992ed0bb676ba0ba22c2a42a36b2df281652aae5c3f271536"
     },
     "exec": {
       "version": "2026-27.exec.3",
@@ -35,7 +35,8 @@
     "RATE-SUR-NEW-TAX-REGIME-EXCLUDING": "sha256:4ca20f39d76dbc4707fc6d435cf349a64228aceb730694f72a0309f4b22b8563",
     "REBATE-NEW-TAX-REGIME": "sha256:9a0e33de06f39d1b16230fed778546b6f7ad5426a90c3511fe4c7e3a3aed510d",
     "REBATE-NEW-TAX-REGIME-EXCESS": "sha256:a104cd7be36de5d029b8b4993f30e3735aab115428a66345489e3cad19983191",
-    "REBATE-RESIDENT-INDIVIDUAL": "sha256:cff8a67c2b91bc68d33e16906f9c5b85c2a9d07ed8d1d6db07ea1f10d12dc096"
+    "REBATE-RESIDENT-INDIVIDUAL": "sha256:cff8a67c2b91bc68d33e16906f9c5b85c2a9d07ed8d1d6db07ea1f10d12dc096",
+    "SAL-SALARY-INCLUDES": "sha256:afc2d7785ed56a4fa77c349acf4f52a7a13410e03c216e854cb00dc650fad15c"
   },
   "instruments": {
     "act": {

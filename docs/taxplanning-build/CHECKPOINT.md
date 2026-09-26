@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-061 — GrossSalaryNode (+ the SAL-SALARY-INCLUDES row, s.16 MODELLED)
-Stage           : IMPLEMENT — plan approved (D-091); W-061a committed
-Plan            : plans/W-061.md
-Approved        : "approved — proceed as recommended" — 2026-09-26 (D-091)
-Steps done      : 1, 2 (W-061a)
-Next step       : step 3 — source 1961 s.17(1) for TY 2025-26 (read it, or author UNVERIFIED with whatToCheck); write law/rules/SAL-SALARY-INCLUDES.json (HeadTotal SALARIES; 2026-27 on S2 s.16); locks + RuleIds + inventory; coverage 2025 s.16 → MODELLED; catalogue entry. NB: I3 — the row needs its node in the same commit (W-061 step 4)
-Last verify     : ./mvnw clean test -pl backend -Punit → 1870 pass, 0 fail, 0 Checkstyle violations (W-061a)
-Waiting on      : nothing; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
-Files touched   : plans/W-061.md, 03-WORK-ITEMS.md (W-061's; the W-061a row there lands with W-061's commit)
-Last item commit: taxplanning W-061a: let a rule row carry a definition — what an amount is, first a head's total (D-091)
+Item            : W-062 — SalaryBaseNode
+Stage           : NOT_STARTED
+Plan            : — (plans/W-062.md once written)
+Approved        : —
+Steps done      : —
+Next step       : READ the W-062 row (DR 01 SAL-DEF-HRA-001 etc.; "basic + DA where the terms provide; one function, five rules"), rulebook R7 SAL-DEF-HRA/GRAT/NPS/80C-NPS/RPF-001 and the H-4 verdict; SalaryComponent has no daFormsPartOfRetirementBenefits field yet (D-090: added by the item that reads it — this one); which rules exist (none of SAL-DEF-HRA-* are rows; their consumers are W-067 HRA, gratuity, NPS W-076…) — so the D-084/D-089 ordering question will recur: a base with no consuming rule; write plans/W-062.md with the D-043 standing-rules line; STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 1878 pass, 0 fail, 0 Checkstyle violations (W-061)
+Waiting on      : nothing for W-062; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Files touched   : —
+Last item commit: taxplanning W-061: add gross salary — the total of the SALARIES head, as the Act's definition of salary states (D-091)
 Updated         : 2026-09-26, session 8
 ```
 

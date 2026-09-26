@@ -110,11 +110,12 @@ class T1SlabAndRebateTest {
     }
 
     @Test
-    void pipeline_whenEnteredAtTotalIncome_dropsOnlyTheNodesNotBuiltYet() {
+    void pipeline_whenEnteredAtTotalIncome_dropsNoShippedNode() {
         // When
         List<NodeId> dropped = RUNNER.droppedFromShippedPipeline();
 
-        // Then — C1: a later pipeline change cannot silently shorten the run
-        assertThat(dropped).containsExactly(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS);
+        // Then — C1: a later pipeline change cannot silently shorten the run; since W-061 every shipped
+        // node is built (D-091)
+        assertThat(dropped).isEmpty();
     }
 }

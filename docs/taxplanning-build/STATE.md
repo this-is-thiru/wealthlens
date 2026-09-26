@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-061a — "taxplanning W-061a: let a rule row carry a definition — what an amount is, first a head's total (D-091)"
-Last updated              : 2026-09-26 (session 8 — W-055 … W-061a done; build GREEN, 1870 tests)
-Current position          : W-061 — GrossSalaryNode (in progress; plan approved, D-091)
+Last checkpoint           : W-061 — "taxplanning W-061: add gross salary — the total of the SALARIES head, as the Act's definition of salary states (D-091)"
+Last updated              : 2026-09-26 (session 8 — W-055 … W-061 done; build GREEN, 1878 tests)
+Current position          : W-062 — SalaryBaseNode (not started)
 Session count             : 8
 ```
 
@@ -55,7 +55,7 @@ Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-04
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
-Phase 7    W-059 D  W-060 D  W-061a D  W-061 P  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
+Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **96** / 184 live · in flight **0** · blocked **0**  ← computed by script; 184 = 146 base ids − 8 retired + 46 suffixed
+Counts — done **97** / 184 live · in flight **0** · blocked **0**  ← computed by script; 184 = 146 base ids − 8 retired + 46 suffixed
 
 ---
 
@@ -86,6 +86,7 @@ W-009 | 2026-09-19 | IdentifierTest — 73 tests, incl. both erratum regressions
 W-010 | 2026-09-19 | Provenance, Instrument, GoverningInstruments + 2 enums; I1 enforced at construction | compiles
 W-011 | 2026-09-19 | TemporalAxis, DateRange, Validity (3 variants) | `./mvnw test -pl backend -Dtest=ValidityTest`
 W-012 | 2026-09-19 | ValidityTest — 16 tests — Phase 1 complete | `./mvnw test -pl backend -Dtest=ValidityTest`
+W-061 | 2026-09-26 | Gross salary (D-091): rule `SAL-SALARY-INCLUDES` (`HeadTotal(SALARIES)`; TY 2025-26 on 1961 s.17(1) as amended by FA 2023 s.10(i), read in the gazette; TY 2026-27 on 2025 Act s.16, FA 2026 checked for amendments); `GrossSalaryNode` (`salary.gross`, one INCOME line); 2025 s.16 `MODELLED` + catalogue `SEC-WHAT-SALARY-INCLUDES`; locks 2025-26 law.6, 2026-27 law.15; `GoldenCaseRunner` builds every shipped node | `GrossSalaryNodeTest` 8/8 + 2 bite probes; Verify set 255/255; clean unit 1878/1878
 W-061a | 2026-09-26 | A definition on a rule row (D-091): `rules/definition/RuleDefinition` (sealed) + `HeadTotal(HeadCode)`; `RuleVersion.definition` in the at-most-one-of check (cap / relief / rounding / definition); `ShapeJson.definition`; `RuleJson` counts it as content; 15 call sites; two refusal-message assertions re-worded | `RuleJsonDefinitionTest` 7/7 + bite probe; Verify set 95/95; clean unit 1870/1870
 W-060 | 2026-09-26 | Component partition and the first entered income (D-090): `EnteredFacts(List<Employment>)`, `Employment(List<SalaryComponent>)`, `SalaryComponent(code, annualAmount)`; `ComponentSet` NodeValue (lines by head, unsummed); `ComponentPartitionNode` (`inputs.components`) refuses a code not live in the year's registry (`D-CLOSEDSUM`); not yet in the golden runner. Three tripwire tests (fingerprint, election snapshot, NodeValue switch) updated as designed | `ComponentPartitionNodeTest` 7/7 + bite probe; Verify set 75/75; clean unit 1863/1863
 W-059 | 2026-09-26 | Component registry on the timeline (D-089): `exec/components/<CODE>.json` read by `TimelineReader` (named for its code, via `RegistryJson.component`), held on `Timeline`, emitted into a year's `exec/components.json` when live (`ComponentLifecycle.isLiveIn`); no component ships — each arrives with the first rule that reads it (W-063, W-064, Phase 8, W-079, W-088). Reader split into a `Contents` accumulator (method length); `ComponentCodes` generator reads through the reader | reader/compiler/load/generated 48/48 (5 new) + bite probe; clean unit 1855/1855
