@@ -1,0 +1,133 @@
+{
+  "ruleId": "RET-GRATUITY-STATUTORY",
+  "_note": "Gratuity received under the gratuity statute: deducted up to the amount that statute entitles (D-109; rulebook RET-GRAT-PGA-001). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 5 (p.41), \"Gratuity received under the Payment of Gratuity Act, 1972 (39 of 1972). — Amount received, as restricted to the amount calculated as per the provisions of section 4(2) and (3) of the said Act.\" TY 2025-26: Income-tax Act, 1961 s.10(10)(ii) (thc.nic.in p.71), \"any gratuity received under the Payment of Gratuity Act, 1972 (39 of 1972), to the extent it does not exceed an amount calculated in accordance with the provisions of sub-sections (2) and (3) of section 4 of that Act\". That Act was repealed on 21-11-2025 (Code on Social Security, 2020 s.164(1) item 6; S.O. 5319(E)); the reference is read as the Code's s.53(2)–(3) for a separation on or after that day (D-107) — the same fifteen days' wages per completed year or part over six months, monthly rate ÷ 26 × 15, but on the Code's wage, which adds back allowances above one-half of remuneration (s.2(88)). The amount is the employer's figure under the Act in force on the separation day (StatutoryEntitlement); it already includes s.4(3)'s / s.53(3)'s ceiling, which is therefore not seeded (S.O. 1420(E), 29-3-2018, not read). Every regime (s.202(2)(a); s.115BAC(2)(i)).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10)(ii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 5",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "gratuity received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "PAYMENT_RECEIVED"
+            }
+          },
+          {
+            "name": "amount under the gratuity statute",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_UNDER_STATUTE"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10), so the entry applies in every regime",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10)(ii), p.71; the labour statutes and their repeal: sources/2026-09-27-retirement-limits.md",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The reading of D-107: the Payment of Gratuity Act, 1972 was repealed on 21-11-2025 (Code on Social Security, 2020 s.164(1) item 6, in force by S.O. 5319(E), CG-DL-E-21112025-267882), and its s.4(2)–(3) is read as the Code's s.53(2)–(3) for a separation on or after that day. Check for a CBDT clarification or an amendment of the Income-tax Acts naming the Code. Also any amendment to Income-tax Act, 1961 s.10(10)(ii) in the Finance (No. 2) Act, 2019 (Act 23 of 2019), the Taxation Laws (Amendment) Act, 2019 (Act 46 of 2019) and the interim Finance Act, 2024, not yet read (every other amending Act 2020–2025 is read and none amends it)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10)(ii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 5",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "gratuity received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "PAYMENT_RECEIVED"
+            }
+          },
+          {
+            "name": "amount under the gratuity statute",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_UNDER_STATUTE"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 5",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 5, p.41, s.202(2)(a) p.227 and s.536(2)(j); Finance Act, 2026 searched in full: no amendment to s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The reading of D-107: the Payment of Gratuity Act, 1972 was repealed on 21-11-2025 (Code on Social Security, 2020 s.164(1) item 6, in force by S.O. 5319(E), CG-DL-E-21112025-267882), and its s.4(2)–(3) is read as the Code's s.53(2)–(3) for a separation on or after that day. Check for a CBDT clarification or an amendment of the Income-tax Acts naming the Code."
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 5, p.41",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

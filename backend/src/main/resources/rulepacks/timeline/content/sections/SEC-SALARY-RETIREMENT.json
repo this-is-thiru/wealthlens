@@ -1,6 +1,6 @@
 {
-  "_note": "Section catalogue entry (D-042, D-060, D-103, D-106). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: RET-*.json (1961 s.10(10), (10A), (10AA), (10B), (10C); 2025 s.19(1) Table Sl. 3–14 with s.19(2)). summary: S2 s.19(1) (p.41) \"computed after making the deductions\"; s.18(1)(a) profits in lieu of salary include compensation on termination, and no entry of s.19(1) deducts notice pay (rulebook RET-NOTICE-001). routes[0]: RET-GRATUITY-GOVERNMENT (Sl. 3, 4). routes[1]: RET-COMMUTED-PENSION-GOVERNMENT, -OTHER, -FUND (Sl. 7–9). routes[2]: RET-LEAVE-ENCASHMENT-GOVERNMENT (Sl. 13). routes[3]: RET-VOLUNTARY-RETIREMENT (Sl. 12). routes[4]: RET-RETRENCHMENT-APPROVED-SCHEME (Sl. 11). routes[5]: RET-GRATUITY-OTHER, RET-GRATUITY-AGGREGATE (Sl. 6, s.19(2)(a); S.O. 1213(E)). routes[6]: RET-LEAVE-ENCASHMENT-OTHER, RET-LEAVE-ENCASHMENT-AGGREGATE (Sl. 14, s.19(2)(f); S.O. 2276(E)) (D-106). routes[7]: Sl. 5 and 10 — the Payment of Gratuity Act / Industrial Disputes Act, repealed 21-11-2025, W-066d (OQ-9). disqualifiers[0]: s.19(2)(e)(ii)–(iii); 1961 s.10(10C) second and third provisos. Every entry applies in every regime (s.202(2)(a); s.115BAC(2)(i)).",
+  "_note": "Section catalogue entry (D-042, D-060, D-103, D-106, D-109). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: RET-*.json (1961 s.10(10), (10A), (10AA), (10B), (10C); 2025 s.19(1) Table Sl. 3–14 with s.19(2)). summary: S2 s.19(1) (p.41) \"computed after making the deductions\"; s.18(1)(a) profits in lieu of salary include compensation on termination, and no entry of s.19(1) deducts notice pay (rulebook RET-NOTICE-001). routes[0]: RET-GRATUITY-GOVERNMENT (Sl. 3, 4). routes[1]: RET-COMMUTED-PENSION-GOVERNMENT, -OTHER, -FUND (Sl. 7–9). routes[2]: RET-LEAVE-ENCASHMENT-GOVERNMENT (Sl. 13). routes[3]: RET-VOLUNTARY-RETIREMENT (Sl. 12). routes[4]: RET-RETRENCHMENT-APPROVED-SCHEME (Sl. 11). routes[5]: RET-GRATUITY-OTHER, RET-GRATUITY-AGGREGATE (Sl. 6, s.19(2)(a); S.O. 1213(E)). routes[6]: RET-LEAVE-ENCASHMENT-OTHER, RET-LEAVE-ENCASHMENT-AGGREGATE (Sl. 14, s.19(2)(f); S.O. 2276(E)) (D-106). routes[7]: RET-GRATUITY-STATUTORY (Sl. 5; 1961 s.10(10)(ii)), RET-RETRENCHMENT (Sl. 10; s.10(10B)) — the Payment of Gratuity Act / Industrial Disputes Act, repealed 21-11-2025, read as the Code on Social Security s.53 / Industrial Relations Code s.70(b) (D-107); the statutory amount the employer's figure (D-109). disqualifiers[0]: s.19(2)(e)(ii)–(iii); 1961 s.10(10C) second and third provisos. Every entry applies in every regime (s.202(2)(a); s.115BAC(2)(i)).",
   "key": "SEC-SALARY-RETIREMENT",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -103,11 +103,15 @@
     },
     {
       "name": "Gratuity under the gratuity law, and retrenchment",
-      "description": "Gratuity under the gratuity law and retrenchment compensation, whose limits come from labour laws replaced during the earlier year.",
+      "description": "Gratuity paid under the gratuity law comes off up to what that law entitles you to, and a workman's retrenchment compensation up to the least of what was received, what the labour law entitles, and a limit the government sets. Your employer states the amount the law entitles. The labour laws the tax law names were replaced during the earlier year by new codes, which are read in their place.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "Not built yet: the labour laws the tax law names were replaced, and how to read them now is an open question; its own backlog item adds them."
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-STATUTORY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-RETRENCHMENT"
         }
       ]
     }

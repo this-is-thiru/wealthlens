@@ -1,0 +1,147 @@
+{
+  "ruleId": "RET-RETRENCHMENT",
+  "_note": "A workman's compensation on retrenchment: deducted up to the least of what was received, the amount the retrenchment statute entitles, and the notified limit (D-109; rulebook RET-RETRENCH-001). Compensation under an approved scheme is RET-RETRENCHMENT-APPROVED-SCHEME. TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 10 (p.43), \"Minimum of — (a) compensation received; (b) amount calculated as per provisions of section 25F(b) of the Industrial Disputes Act, 1947 (14 of 1947); (c) such amount, not being less than ₹50000, as may be notified by the Central Government.\"; s.19(2)(c)–(d) (p.45): closure and certain transfers are retrenchment, and \"employer\" and \"workman\" take the Industrial Disputes Act's meanings. TY 2025-26: Income-tax Act, 1961 s.10(10B) (thc.nic.in p.73), the first proviso: \"(i) an amount calculated in accordance with the provisions of clause (b) of section 25F of the Industrial Disputes Act, 1947 (14 of 1947); or (ii) such amount, not being less than fifty thousand rupees, as the Central Government may, by notification … specify … whichever is less\". The Industrial Disputes Act stood repealed from 21-11-2025 (S.O. 465(E)); s.25F(b) is read as the Industrial Relations Code, 2020 s.70(b) for a retrenchment on or after that day (D-107) — \"fifteen days' average pay, or average pay of such days as may be notified by the appropriate Government\". The amount is the employer's figure under the Act in force on the separation day (StatutoryEntitlement). The notified limit, Rs 5,00,000 for retrenchment on or after 1-1-1997, is read only in the Department of Revenue's consolidation (footnote 66 to s.10(10B)); s.536(2)(j) of the 2025 Act carries it into TY 2026-27. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10B), first proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 10, with s.19(2)(c), (d)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "compensation received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "PAYMENT_RECEIVED"
+            }
+          },
+          {
+            "name": "amount under the retrenchment statute",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_UNDER_STATUTE"
+            }
+          },
+          {
+            "name": "notified limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "500000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 10969 [F. No. 200/21/97-IT(A-I)], 25-6-1999, under Income-tax Act, 1961 s.10(10B) proviso (ii): Rs. 5,00,000 where retrenchment is on or after 1-1-1997 — as printed in the Department of Revenue's consolidation of the Act, footnote 66; the Gazette copy not found; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "Gazette copy not found (DoR consolidation, footnote 66 to s.10(10B))",
+        "notifiedOn": "1999-06-25",
+        "effectiveFrom": "1997-01-01",
+        "retrospective": true,
+        "sourceUrl": "https://dor.gov.in/files/acts_files/IT%20Act%20%28English%29_0_0.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10B), first proviso, p.73; the labour statutes and their repeal: sources/2026-09-27-retirement-limits.md",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The limit, Rs 5,00,000 for retrenchment on or after 1-1-1997, is read only in the Department of Revenue's consolidation of the Act (footnote 66 to s.10(10B), p.1.53: \"Notification No. 10969 [F. No. 200/21/97-IT(A-I)], dated 25-6-1999\" — the number may be 1096 with a footnote mark); find the notification's Gazette copy. The reading of D-107: the Industrial Disputes Act, 1947 stood repealed from 21-11-2025 (S.O. 465(E), CG-DL-E-02022026-269764), and its s.25F(b) is read as the Industrial Relations Code, 2020 s.70(b) for a retrenchment on or after that day. Check for a CBDT clarification or an amendment naming the Code. Also any amendment to Income-tax Act, 1961 s.10(10B) in the Finance (No. 2) Act, 2019 (Act 23 of 2019), the Taxation Laws (Amendment) Act, 2019 (Act 46 of 2019) and the interim Finance Act, 2024, not yet read (every other amending Act 2020–2025 is read and none amends it)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10B), first proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 10, with s.19(2)(c), (d)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "compensation received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "PAYMENT_RECEIVED"
+            }
+          },
+          {
+            "name": "amount under the retrenchment statute",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_UNDER_STATUTE"
+            }
+          },
+          {
+            "name": "notified limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "500000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 10, with s.19(2)(c), (d)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 10, with s.19(2)(c), (d), pp.43, 45, s.202(2)(a) p.227 and s.536(2)(j); Finance Act, 2026 searched in full: no amendment to s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The limit, Rs 5,00,000 for retrenchment on or after 1-1-1997, is read only in the Department of Revenue's consolidation of the Act (footnote 66 to s.10(10B), p.1.53: \"Notification No. 10969 [F. No. 200/21/97-IT(A-I)], dated 25-6-1999\" — the number may be 1096 with a footnote mark); find the notification's Gazette copy. The reading of D-107: the Industrial Disputes Act, 1947 stood repealed from 21-11-2025 (S.O. 465(E), CG-DL-E-02022026-269764), and its s.25F(b) is read as the Industrial Relations Code, 2020 s.70(b) for a retrenchment on or after that day. Check for a CBDT clarification or an amendment naming the Code."
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 10, with s.19(2)(c), (d), pp.43, 45",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

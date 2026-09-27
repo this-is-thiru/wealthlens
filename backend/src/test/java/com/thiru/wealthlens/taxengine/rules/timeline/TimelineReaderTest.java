@@ -83,7 +83,9 @@ class TimelineReaderTest {
             new RuleId("RET-GRATUITY-OTHER"),
             new RuleId("RET-GRATUITY-AGGREGATE"),
             new RuleId("RET-LEAVE-ENCASHMENT-OTHER"),
-            new RuleId("RET-LEAVE-ENCASHMENT-AGGREGATE"));
+            new RuleId("RET-LEAVE-ENCASHMENT-AGGREGATE"),
+            new RuleId("RET-GRATUITY-STATUTORY"),
+            new RuleId("RET-RETRENCHMENT"));
 
     @TempDir
     Path copy;

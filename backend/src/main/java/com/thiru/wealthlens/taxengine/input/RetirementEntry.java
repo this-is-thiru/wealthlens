@@ -5,8 +5,7 @@ package com.thiru.wealthlens.taxengine.input;
  * D-103).
  *
  * <p>Which entry applies turns on the employer and the scheme the payment was made under — facts the engine cannot
- * infer from an amount, and which the employer states on Form 16 — so the taxpayer states it. Only the entries whose
- * amount the Acts fully state are here; those resting on a notification or on another Act arrive with their items.
+ * infer from an amount, and which the employer states on Form 16 — so the taxpayer states it.
  */
 public enum RetirementEntry {
 
@@ -43,5 +42,13 @@ public enum RetirementEntry {
 
     /** Leave salary at retirement for an employee who is not a Central or State Government employee — Sl. 14; 1961
      * s.10(10AA)(ii) (D-106). */
-    OTHER_LEAVE_ENCASHMENT
+    OTHER_LEAVE_ENCASHMENT,
+
+    /** Gratuity under the gratuity statute — Sl. 5; 1961 s.10(10)(ii): the Payment of Gratuity Act, read as the Code on
+     * Social Security s.53 from 21-11-2025 (D-107, D-109). */
+    STATUTORY_GRATUITY,
+
+    /** A workman's retrenchment compensation — Sl. 10; 1961 s.10(10B): the Industrial Disputes Act s.25F(b), read as
+     * the Industrial Relations Code s.70(b) from 21-11-2025 (D-107, D-109). */
+    RETRENCHMENT
 }

@@ -1,6 +1,6 @@
 {
   "code": "GRATUITY",
-  "_note": "Paid in money on retirement or termination, and salary: \"any gratuity\" (S2 s.16(c); 1961 s.17(1)(iii)); its deduction turns on the entry it falls under (RetirementEntry): RET-GRATUITY-GOVERNMENT or RET-GRATUITY-OTHER with its aggregate (D-106); the Payment of Gratuity Act with W-066d (D-103). In no salary base. CASH: paid in money (DR 05 M2).",
+  "_note": "Paid in money on retirement or termination, and salary: \"any gratuity\" (S2 s.16(c); 1961 s.17(1)(iii)); its deduction turns on the entry it falls under (RetirementEntry): RET-GRATUITY-GOVERNMENT or RET-GRATUITY-OTHER with its aggregate (D-106); RET-GRATUITY-STATUTORY under the gratuity statute (D-109). In no salary base. CASH: paid in money (DR 05 M2).",
   "displayName": "Gratuity",
   "head": "SALARIES",
   "kind": "SALARY",
@@ -10,7 +10,8 @@
     "SAL-SALARY-INCLUDES",
     "RET-GRATUITY-GOVERNMENT",
     "RET-GRATUITY-OTHER",
-    "RET-GRATUITY-AGGREGATE"
+    "RET-GRATUITY-AGGREGATE",
+    "RET-GRATUITY-STATUTORY"
   ],
   "salaryBaseFor": [],
   "lifecycle": {

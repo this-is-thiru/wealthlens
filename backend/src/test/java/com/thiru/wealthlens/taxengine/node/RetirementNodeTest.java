@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.input.MonthOfPay;
 import com.thiru.wealthlens.taxengine.input.RetirementEntry;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
 import com.thiru.wealthlens.taxengine.input.Separation;
+import com.thiru.wealthlens.taxengine.input.StatutoryEntitlement;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet.Line;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
@@ -213,14 +214,14 @@ class RetirementNodeTest {
     }
 
     @Test
-    void evaluate_whenGratuityIsPaidWithoutItsEntry_isRefusedNamingTheItemsStillToCome() {
-        // When / Then — taxing it in full would be a plausible wrong figure where Sl. 5 applies (D-106: Sl. 6 is built,
-        // Sl. 5 waits on W-066d)
+    void evaluate_whenGratuityIsPaidWithoutItsEntry_isRefusedAskingForIt() {
+        // When / Then — which Table entry applies turns on the scheme; taxing it in full would be a guess (D-109: every
+        // entry is built, so the entry is asked for rather than an item named)
         assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
                         List.of(new Paid(ComponentCodes.GRATUITY, "500000")), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("GRATUITY")
-                .hasMessageContaining("W-066d");
+                .hasMessageContaining("enter it");
     }
 
     @Test
@@ -441,5 +442,63 @@ class RetirementNodeTest {
         LeastOf leastOf = (LeastOf) pack.rule(rule).versionAt(t).cap();
         return leastOf.limbs().stream().filter(limb -> limb.name().equals(name)).findFirst().orElseThrow()
                 .shape().apply(new CapContext(Map.of())).value();
+    }
+
+    // ---------------------------------------------------------------- statutory gratuity and retrenchment (D-109)
+
+    private static RetirementPayment statutory(ComponentCode component, RetirementEntry entry, int year,
+            String amount) {
+        return RetirementPayment.statutory(component, entry,
+                new StatutoryEntitlement(LocalDate.of(year, 12, 15), Money.of(amount)));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenStatutoryGratuity_deductsUpToTheAmountTheStatuteEntitles(int year) {
+        // When — the employer's figure 11,53,846.15 (15/26 × 1,00,000 × 20); received 15,00,000, then 9,00,000
+        NodeResult above = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                List.of(statutory(ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY, year, "1153846.15")));
+        NodeResult below = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "900000")),
+                List.of(statutory(ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY, year, "1153846.15")));
+
+        // Then — the line names the separation day, which says which Act the figure answers to (D-107), and is
+        // unverified while the law names a repealed Act
+        assertThat(above.value()).isEqualTo(MoneyValue.of(Money.of("1153846.15")));
+        assertThat(below.value()).isEqualTo(MoneyValue.of(Money.of("900000")));
+        assertThat(above.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_STATUTORY);
+            assertThat(line.limitedBy()).hasValueSatisfying(why -> assertThat(why)
+                    .contains("amount under the gratuity statute").contains(year + "-12-15"));
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+        });
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenRetrenchmentAboveTheNotifiedLimit_deductsTheLimit(int year) {
+        // When — least of 8,00,000 received, the employer's 6,00,000 and 5,00,000
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.RETRENCHMENT_COMPENSATION, "800000")),
+                List.of(statutory(ComponentCodes.RETRENCHMENT_COMPENSATION, RetirementEntry.RETRENCHMENT, year,
+                        "600000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_RETRENCHMENT);
+            assertThat(line.limitedBy()).hasValueSatisfying(why -> assertThat(why).contains("notified limit"));
+        });
+    }
+
+    @Test
+    void evaluate_whenTheStatutoryRetrenchmentAmountIsLeast_deductsItInTheNewRegime() {
+        // When — least of 8,00,000, 3,00,000 and 5,00,000; s.202(2)(a) excludes no retirement entry
+        NodeResult result = run(2026, NEW_TAX_REGIME,
+                List.of(new Paid(ComponentCodes.RETRENCHMENT_COMPENSATION, "800000")),
+                List.of(statutory(ComponentCodes.RETRENCHMENT_COMPENSATION, RetirementEntry.RETRENCHMENT, 2026,
+                        "300000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("300000")));
     }
 }

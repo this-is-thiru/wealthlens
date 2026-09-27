@@ -37,9 +37,11 @@ public final class RuleIds {
     public static final RuleId RET_GRATUITY_AGGREGATE = new RuleId("RET-GRATUITY-AGGREGATE");
     public static final RuleId RET_GRATUITY_GOVERNMENT = new RuleId("RET-GRATUITY-GOVERNMENT");
     public static final RuleId RET_GRATUITY_OTHER = new RuleId("RET-GRATUITY-OTHER");
+    public static final RuleId RET_GRATUITY_STATUTORY = new RuleId("RET-GRATUITY-STATUTORY");
     public static final RuleId RET_LEAVE_ENCASHMENT_AGGREGATE = new RuleId("RET-LEAVE-ENCASHMENT-AGGREGATE");
     public static final RuleId RET_LEAVE_ENCASHMENT_GOVERNMENT = new RuleId("RET-LEAVE-ENCASHMENT-GOVERNMENT");
     public static final RuleId RET_LEAVE_ENCASHMENT_OTHER = new RuleId("RET-LEAVE-ENCASHMENT-OTHER");
+    public static final RuleId RET_RETRENCHMENT = new RuleId("RET-RETRENCHMENT");
     public static final RuleId RET_RETRENCHMENT_APPROVED_SCHEME = new RuleId("RET-RETRENCHMENT-APPROVED-SCHEME");
     public static final RuleId RET_VOLUNTARY_RETIREMENT = new RuleId("RET-VOLUNTARY-RETIREMENT");
     public static final RuleId SAL_ALW_CHILDREN_EDUCATION = new RuleId("SAL-ALW-CHILDREN-EDUCATION");

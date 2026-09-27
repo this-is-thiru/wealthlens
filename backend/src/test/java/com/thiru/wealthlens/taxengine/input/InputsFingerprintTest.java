@@ -346,6 +346,23 @@ class InputsFingerprintTest {
         }
 
         @Test
+        void enteredFacts_whenOnlyTheAmountUnderTheStatuteDiffers_movesTheHash() {
+            // Given — D-109: statutory gratuity and retrenchment read the employer's figure under the labour statute
+            EngineInputs lower = copy(baseline(), r -> r.entered = enteringStatutory("500000"));
+            EngineInputs higher = copy(baseline(), r -> r.entered = enteringStatutory("600000"));
+
+            // When / Then
+            assertThat(hashOf(higher)).isNotEqualTo(hashOf(lower));
+        }
+
+        private static EnteredFacts enteringStatutory(String amount) {
+            return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
+                    List.of(RetirementPayment.statutory(new ComponentCode("RETRENCHMENT_COMPENSATION"),
+                            RetirementEntry.RETRENCHMENT, new StatutoryEntitlement(java.time.LocalDate.of(2025, 12, 15),
+                                    com.thiru.wealthlens.taxengine.rules.money.Money.of(amount)))));
+        }
+
+        @Test
         void enteredFacts_whenEmpty_isStillInTheCanonicalForm() {
             // D-026: declared and thin rather than absent, so an empty entry is a value in the key too
             assertThat(InputsFingerprint.canonicalFormOf(baseline())).contains("entered=T:EnteredFacts{");

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-066d — retirement limits set by other Acts (D-103, D-106, D-107): Sl. 5 (Payment of Gratuity Act) and Sl. 10 whole (retrenchment)
+Item            : W-071 — perquisite values, both years (Phase 8)
 Stage           : NOT_STARTED
-Plan            : — (plans/W-066d.md once written)
+Plan            : — (plans/W-071.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-066d row, D-107 (OQ-9: read PGA s.4 / IDA s.25F(b) as CSS s.53 / IRC s.70(b)) and sources/2026-09-27-retirement-limits.md; write plans/W-066d.md; STOP for approval
-Last verify     : ./mvnw clean test -pl backend -Punit → 2153 pass, 0 fail, 0 Checkstyle violations (W-063a)
-Waiting on      : nothing for W-066d. W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2, OQ-5, OQ-6, OQ-7, OQ-8 open. Carried: TY 2025-26 goldens PROVISIONAL (F(No.2)A 2019, TLA 2019, interim FA 2024 unread; HRA/LTA rows); DIS-S202-2A, SAL-HRA-006, SAL-LTA-CHILD-001 owed; nil lines for LTA/allowances proposed (D-104); EmployerKind vs EmployerType proposed (D-105)
+Next step       : READ the W-071 row (03-WORK-ITEMS.md; DR 01 R12; "TY 2025-26 values are NEEDS VERIFICATION"), Rules 1962 r.3 (as substituted by G.S.R. 615(E), 18-8-2023, CG-DL-E-18082023-248178; r.3(7)(iii) by G.S.R. 452(E)) and Rules 2026 r.15 (Gazette 271092, from p.1540); write plans/W-071.md; STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 2166 pass, 0 fail, 0 Checkstyle violations (W-066d)
+Waiting on      : nothing for W-071. W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2, OQ-5, OQ-6, OQ-7, OQ-8 open. Carried: TY 2025-26 goldens PROVISIONAL (F(No.2)A 2019, TLA 2019, interim FA 2024 unread; HRA/LTA rows; D-107 reading); DIS-S202-2A, SAL-HRA-006, SAL-LTA-CHILD-001 owed; nil lines for LTA/allowances proposed (D-104); EmployerKind vs EmployerType proposed (D-105)
 Files touched   : —
-Last item commit: taxplanning W-063a: cite the Taxation Laws (Amendment) Act 2025 for the TY 2025-26 new-regime standard deduction — the proviso extended to s.115BAC(1A)(iii) (D-108)
+Last item commit: taxplanning W-066d: add statutory gratuity and retrenchment — the employer's figure under the labour statute, the repealed Acts read as the Codes (D-109)
 Updated         : 2026-09-27, session 9
 ```
 

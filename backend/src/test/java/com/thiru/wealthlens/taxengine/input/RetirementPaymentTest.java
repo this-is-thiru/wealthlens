@@ -41,7 +41,7 @@ class RetirementPaymentTest {
     @Test
     void construct_whenAnOtherEmployerCommutationLacksTheCommutedValue_isRefused() {
         assertThatThrownBy(() -> new RetirementPayment(COMMUTED_PENSION, RetirementEntry.OTHER_EMPLOYER_COMMUTATION,
-                        Optional.empty(), false, Optional.empty(), Optional.empty()))
+                        Optional.empty(), false, Optional.empty(), Optional.empty(), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("commuted value");
     }
@@ -49,7 +49,7 @@ class RetirementPaymentTest {
     @Test
     void construct_whenACommutedValueIsGivenForAnotherEntry_isRefusedRatherThanIgnored() {
         assertThatThrownBy(() -> new RetirementPayment(COMMUTED_PENSION, RetirementEntry.GOVERNMENT_COMMUTATION,
-                        Optional.of(Money.of("900000")), false, Optional.empty(), Optional.empty()))
+                        Optional.of(Money.of("900000")), false, Optional.empty(), Optional.empty(), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("GOVERNMENT_COMMUTATION");
     }
@@ -57,7 +57,7 @@ class RetirementPaymentTest {
     @Test
     void construct_whenArrearsReliefIsGivenOutsideVoluntaryRetirement_isRefused() {
         assertThatThrownBy(() -> new RetirementPayment(GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY,
-                        Optional.empty(), true, Optional.empty(), Optional.empty()))
+                        Optional.empty(), true, Optional.empty(), Optional.empty(), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("voluntary retirement");
     }
@@ -93,7 +93,7 @@ class RetirementPaymentTest {
     @Test
     void construct_whenOtherGratuityLacksTheSeparation_isRefused() {
         assertThatThrownBy(() -> new RetirementPayment(GRATUITY, RetirementEntry.OTHER_GRATUITY, Optional.empty(),
-                        false, Optional.empty(), Optional.empty()))
+                        false, Optional.empty(), Optional.empty(), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("separation");
     }
@@ -101,7 +101,7 @@ class RetirementPaymentTest {
     @Test
     void construct_whenOtherLeaveEncashmentLacksItsFacts_isRefused() {
         assertThatThrownBy(() -> new RetirementPayment(LEAVE_ENCASHMENT, RetirementEntry.OTHER_LEAVE_ENCASHMENT,
-                        Optional.empty(), false, Optional.empty(), Optional.empty()))
+                        Optional.empty(), false, Optional.empty(), Optional.empty(), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("leave");
     }
@@ -113,8 +113,37 @@ class RetirementPaymentTest {
 
         assertThatThrownBy(() -> new RetirementPayment(LEAVE_ENCASHMENT,
                         RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT, Optional.empty(), false, Optional.empty(),
-                        Optional.of(leave)))
+                        Optional.of(leave), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("GOVERNMENT_LEAVE_ENCASHMENT");
+    }
+
+    @Test
+    void statutoryGratuity_carriesTheEmployersFigure() {
+        // When — Sl. 5: the amount calculated under the gratuity statute (D-109)
+        StatutoryEntitlement entitlement = new StatutoryEntitlement(LocalDate.of(2025, 12, 15), Money.of("1153846.15"));
+        RetirementPayment payment = RetirementPayment.statutory(GRATUITY, RetirementEntry.STATUTORY_GRATUITY,
+                entitlement);
+
+        // Then
+        assertThat(payment.statutory()).contains(entitlement);
+    }
+
+    @Test
+    void construct_whenRetrenchmentLacksTheStatutoryFigure_isRefused() {
+        assertThatThrownBy(() -> new RetirementPayment(new ComponentCode("RETRENCHMENT_COMPENSATION"),
+                        RetirementEntry.RETRENCHMENT, Optional.empty(), false, Optional.empty(), Optional.empty(),
+                        Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("statute");
+    }
+
+    @Test
+    void construct_whenAStatutoryFigureIsGivenForAnotherEntry_isRefusedRatherThanIgnored() {
+        assertThatThrownBy(() -> new RetirementPayment(GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY,
+                        Optional.empty(), false, Optional.empty(), Optional.empty(),
+                        Optional.of(new StatutoryEntitlement(LocalDate.of(2025, 12, 15), Money.of("100000")))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("GOVERNMENT_GRATUITY");
     }
 }

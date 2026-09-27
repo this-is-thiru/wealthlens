@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.RetirementEntry;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
+import com.thiru.wealthlens.taxengine.input.StatutoryEntitlement;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
@@ -40,23 +41,25 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The retirement and termination deductions from salary (S2 s.19(1) Table Sl. 3, 4, 6–9, 11–14 with s.19(2); 1961
- * s.10(10)(i), (iii), (10A), (10AA), (10B) second proviso, (10C); {@code DR 06} G1.1 step 9; D-103, D-106).
+ * The retirement and termination deductions from salary (S2 s.19(1) Table Sl. 3–14 with s.19(2); 1961 s.10(10),
+ * (10A), (10AA), (10B), (10C); {@code DR 06} G1.1 step 9; D-103, D-106, D-109).
  *
  * <p>One DEDUCTION line per payment entered, under the entry the taxpayer says it falls under — which turns on the
  * employer and the scheme, facts no amount carries. The amount is the component's, as paid with the salary. Every
  * entry here applies in every regime (s.202(2)(a) excludes Sl. 1 only; s.115BAC(2)(i) none of s.10(10)–(10C)).
  *
  * <p>Other gratuity and other leave encashment (Sl. 6, 14) take the notified limits and the caps across employers
- * and years ({@link NotifiedRetirementLimits}; D-106). A retirement component paid without an entry is refused
- * rather than taxed in full: the entries resting on the repealed labour Acts (Sl. 5, 10) are not built yet
- * ({@code W-066d}, OQ-9), and taxing such a payment in full would be a plausible wrong figure. Notice pay feeds no retirement rule, so it is
+ * and years ({@link NotifiedRetirementLimits}; D-106). Statutory gratuity and retrenchment (Sl. 5, 10) are limited
+ * by the amount the labour statute entitles, as the employer computed it, the repealed Acts read as the Codes from
+ * 21-11-2025 (D-107, D-109); the line names the separation day, which says which Act the figure answers to. A
+ * retirement component paid without an entry is refused rather than taxed in full, which would be a guess. Notice pay feeds no retirement rule, so it is
  * salary taxed in full and needs no entry (s.18(1)(a); {@code RET-NOTICE-001}).
  */
 public final class RetirementNode implements ComputationNode {
 
     private static final Map<RetirementEntry, RuleId> RULE_FOR_ENTRY = entryRules();
     private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
+    private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
 
     private static Map<RetirementEntry, RuleId> entryRules() {
         Map<RetirementEntry, RuleId> rules = new EnumMap<>(RetirementEntry.class);
@@ -70,6 +73,8 @@ public final class RetirementNode implements ComputationNode {
         rules.put(RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT, RuleIds.RET_LEAVE_ENCASHMENT_GOVERNMENT);
         rules.put(RetirementEntry.OTHER_GRATUITY, RuleIds.RET_GRATUITY_OTHER);
         rules.put(RetirementEntry.OTHER_LEAVE_ENCASHMENT, RuleIds.RET_LEAVE_ENCASHMENT_OTHER);
+        rules.put(RetirementEntry.STATUTORY_GRATUITY, RuleIds.RET_GRATUITY_STATUTORY);
+        rules.put(RetirementEntry.RETRENCHMENT, RuleIds.RET_RETRENCHMENT);
         return Map.copyOf(rules);
     }
 
@@ -123,8 +128,7 @@ public final class RetirementNode implements ComputationNode {
                     && definition.feedsInto().stream().anyMatch(retirementRules::contains);
             if (retirement && !entered.contains(line.code())) {
                 throw new IllegalArgumentException(line.code() + " is paid but no entry says which of the Act's"
-                        + " retirement entries it falls under; enter it. Gratuity under the Payment of Gratuity Act"
-                        + " and retrenchment compensation outside an approved scheme are not built yet (W-066d)");
+                        + " retirement entries it falls under, which turns on the scheme it was paid under; enter it");
             }
         }
     }
@@ -163,6 +167,13 @@ public final class RetirementNode implements ComputationNode {
                     NotifiedRetirementLimits.context(ctx, components, payment, version, paidIn));
             return Optional.of(NotifiedRetirementLimits.capped(ctx, payment.entry(),
                     line(sequence, ruleId, received, deducted.value(), version).withLimitedBy(deducted.limitedBy())));
+        }
+        if (payment.statutory().isPresent()) {
+            StatutoryEntitlement entitlement = payment.statutory().get();
+            CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(
+                    Map.of(PAYMENT_RECEIVED, received, AMOUNT_UNDER_STATUTE, entitlement.amountUnderStatute())));
+            return Optional.of(line(sequence, ruleId, received, deducted.value(), version).withLimitedBy(
+                    deducted.limitedBy() + "; separation on " + entitlement.separatedOn()));
         }
         CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(paidIn));
         return Optional.of(line(sequence, ruleId, received, deducted.value(), version)

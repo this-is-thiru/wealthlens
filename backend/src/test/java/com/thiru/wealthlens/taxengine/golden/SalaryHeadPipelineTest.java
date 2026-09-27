@@ -11,8 +11,10 @@ import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Journey;
 import com.thiru.wealthlens.taxengine.input.JourneyMode;
 import com.thiru.wealthlens.taxengine.input.LeaveAtRetirement;
+import com.thiru.wealthlens.taxengine.input.RetirementEntry;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
+import com.thiru.wealthlens.taxengine.input.StatutoryEntitlement;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
 import com.thiru.wealthlens.taxengine.node.ExemptionNode;
@@ -339,5 +341,24 @@ class SalaryHeadPipelineTest {
         // standard deduction 75,000; income 8,25,000
         assertThat(result.valueOf(NodeIds.SALARY_RETIREMENT)).isEqualTo(MoneyValue.of(Money.of("800000")));
         assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("825000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenAWorkmanIsRetrenched_theNotifiedLimitComesOffOutsideTheNewRegime(int year) {
+        // Given — retrenchment compensation 8,00,000; the employer's figure under the statute 6,00,000 (D-109)
+        List<SalaryComponent> retrenchment =
+                List.of(new SalaryComponent(ComponentCodes.RETRENCHMENT_COMPENSATION, Money.of("800000")));
+        RetirementPayment compensation = RetirementPayment.statutory(ComponentCodes.RETRENCHMENT_COMPENSATION,
+                RetirementEntry.RETRENCHMENT, new StatutoryEntitlement(LocalDate.of(year, 12, 15), Money.of("600000")));
+
+        // When
+        PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, new Entries(List.of(), List.of(),
+                List.of(), Optional.empty(), retrenchment, List.of(compensation), EmployerKind.OTHER));
+
+        // Then — gross 17,00,000; retirement least of 8,00,000, 6,00,000, 5,00,000 = 5,00,000; deductions 2,500 +
+        // 50,000; income 17,00,000 − 5,00,000 − 52,500 = 11,47,500
+        assertThat(result.valueOf(NodeIds.SALARY_RETIREMENT)).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("1147500")));
     }
 }

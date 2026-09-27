@@ -1,6 +1,6 @@
 {
   "code": "RETRENCHMENT_COMPENSATION",
-  "_note": "Paid in money on retirement or termination, and salary: a workman's compensation on retrenchment, profits in lieu of salary (S2 s.18(1)(a)(i), s.16(f); 1961 s.17(3)(i)); RET-RETRENCHMENT-APPROVED-SCHEME now, other retrenchment with W-066d (D-103). In no salary base. CASH: paid in money (DR 05 M2).",
+  "_note": "Paid in money on retirement or termination, and salary: a workman's compensation on retrenchment, profits in lieu of salary (S2 s.18(1)(a)(i), s.16(f); 1961 s.17(3)(i)); RET-RETRENCHMENT-APPROVED-SCHEME or RET-RETRENCHMENT (D-109) (D-103). In no salary base. CASH: paid in money (DR 05 M2).",
   "displayName": "Retrenchment compensation",
   "head": "SALARIES",
   "kind": "SALARY",
@@ -8,7 +8,8 @@
   "treatment": "TAXABLE",
   "feedsInto": [
     "SAL-SALARY-INCLUDES",
-    "RET-RETRENCHMENT-APPROVED-SCHEME"
+    "RET-RETRENCHMENT-APPROVED-SCHEME",
+    "RET-RETRENCHMENT"
   ],
   "salaryBaseFor": [],
   "lifecycle": {
