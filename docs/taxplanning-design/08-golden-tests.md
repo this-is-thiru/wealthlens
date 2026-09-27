@@ -369,6 +369,13 @@ T3-4b  same as T3-1 but regime = NEW.
 **Expected: ₹1,33,000 and ₹0-with-a-reason.** T3-4b guards `D-NOSILENT`: a zero with a stated reason,
 not a missing step.
 
+> **Erratum (W-070, 2026-09-27, D-104).** **T3-4a:** the 7/12 above assumes the relevant period is measured in
+> months; S4 r.279(2)(a) ("the period during which the said accommodation was occupied") names no unit, and the
+> engine apportions by days (D-099), the one basis that splits a mid-month move exactly. Occupied 1 Apr – 31 Oct
+> 2026, 214 of 365 days: salary 13,20,000 × 214/365 = 7,73,917.81; limb (b) 2,10,000 − 77,391.78 =
+> **₹1,32,608.22**, which is the expected figure; months vs days is **OQ-8**. **T3-4b** stands as written: the
+> engine now gives the nil line with its reason (D-104 C2a).
+
 ### T3-5 — DA excluded — **the `H-4` regression test**
 
 Same as T3-1, but the implementation omits DA from the base.

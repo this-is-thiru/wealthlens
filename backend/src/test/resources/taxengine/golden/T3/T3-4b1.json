@@ -1,0 +1,30 @@
+{
+  "id": "T3-4b1",
+  "source": "DR 08 T3-4b — T3-2's facts in the new regime, TY 2025-26",
+  "_source": "**Expected: … ₹0-with-a-reason.** \"the trace MUST carry a line saying so — not an absent line\" (s.115BAC(2)(i)).",
+  "regime": "NEW_TAX_REGIME",
+  "taxYears": [
+    "2025-26"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "1200000",
+      "DEARNESS_ALLOWANCE": "120000",
+      "HRA": "600000"
+    },
+    "termsIncludeDearnessAllowance": true,
+    "tenancies": [
+      {
+        "from": "2025-04-01",
+        "to": "2026-03-31",
+        "location": "ANY_OTHER_PLACE",
+        "ownedByAssessee": false,
+        "rentPaid": "360000"
+      }
+    ]
+  },
+  "expected": {
+    "salaryExemptions": "0",
+    "limitedBy": "not in the NEW_TAX_REGIME regime"
+  }
+}

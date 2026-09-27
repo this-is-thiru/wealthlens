@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.taxengine.golden;
 
+import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
@@ -22,6 +24,7 @@ import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.result.ComputationId;
 import com.thiru.wealthlens.taxengine.result.ComputationProjector;
 import com.thiru.wealthlens.taxengine.result.TaxComputation;
+import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
@@ -94,6 +97,41 @@ final class GoldenCaseRunner {
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
         return new Run(result, ComputationProjector.project(result, inputs, ID), provisional);
+    }
+
+    /**
+     * One salary-head run.
+     *
+     * @param provisional whether any line cites an {@code UNVERIFIED} rule version — reported, never skipped
+     */
+    record SalaryRun(PipelineRunner.Result result, boolean provisional) {
+    }
+
+    /** A case stated as salary facts, run through the shipped pipeline to income under "Salaries" (D-104). */
+    SalaryRun run(SalaryGoldenCase golden, TaxYearId year) {
+        RulePack pack = pack(year);
+        NodeRegistry registry = NodeRegistry.of(BUILT);
+        RegimeSpec shipped = pack.regimes().get(golden.regime());
+        List<NodeId> refs = shipped.pipeline().nodeRefs();
+        List<NodeId> toSalaryIncome = refs.subList(0, refs.indexOf(NodeIds.SALARY_INCOME) + 1).stream()
+                .filter(registry.registered()::contains)
+                .toList();
+        RegimeSpec salaryHead = new RegimeSpec(shipped.code(), shipped.displayName(), shipped.provision1961(),
+                shipped.provision2025(), shipped.appliesTo(), shipped.rateTable(), shipped.disallowances(),
+                shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
+                new PipelineSpec(toSalaryIncome), shipped.behaviour(), shipped.provenance());
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        SalaryGoldenCase.Salary salary = golden.salary();
+        EngineInputs inputs = new EngineInputs(year, golden.regime(),
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance())),
+                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of()),
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                plain.filing());
+        PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);
+        boolean provisional = result.trace().stream()
+                .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
+        return new SalaryRun(result, provisional);
     }
 
     RulePack pack(TaxYearId year) {

@@ -158,7 +158,7 @@ class ExemptionNodeTest {
     }
 
     @Test
-    void evaluate_whenInTheNewRegime_exemptsNothingAndSaysNothing() {
+    void evaluate_whenInTheNewRegime_exemptsNothingAndSaysWhy() {
         // Given
         List<Tenancy> bengaluru =
                 List.of(new Tenancy(between("2026-04-01", "2027-03-31"), "BENGALURU", false, Money.of("360000")));
@@ -166,8 +166,22 @@ class ExemptionNodeTest {
         // When
         NodeResult result = run(2026, NEW_TAX_REGIME, List.of(oneEmployment()), bengaluru, "600000", "1320000");
 
-        // Then — s.202(2)(a)(i)
+        // Then — s.202(2)(a)(i); DR 08 T3-4b: "a zero with a stated reason, not a missing step" (D-104)
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.SAL_HOUSE_RENT_ALLOWANCE);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("600000")));
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+            assertThat(line.limitedBy()).contains("not in the NEW_TAX_REGIME regime");
+        });
+    }
+
+    @Test
+    void evaluate_whenInTheNewRegimeWithNoHomeEntered_saysNothing() {
+        // When — nothing claimed, so nothing to refuse
+        NodeResult result = run(2026, NEW_TAX_REGIME, List.of(oneEmployment()), List.of(), "600000", "1320000");
+
+        // Then
         assertThat(result.trace()).isEmpty();
     }
 

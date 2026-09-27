@@ -45,8 +45,8 @@ import java.util.Set;
  * one-tenth of salary for it, and its location's percentage of that salary — and its own line naming the limb
  * that bound. The allowance and the salary are entered for the year and apportioned to each period by days
  * (r.279(2)(a): the relevant period is the period occupied). A home the taxpayer owns, or pays no rent for, gets
- * a nil line (Sl. 11(c), (d)). Where the rule does not apply — the new regime — nothing is exempt and nothing is
- * said.
+ * a nil line (Sl. 11(c), (d)). Where the rule does not apply — the new regime — each home entered gets a nil line
+ * naming the regime, since a claim refused in silence reads as a claim forgotten ({@code DR 08} T3-4b; D-104).
  *
  * <p>With more than one employment and an exemption claimed, the node refuses: an employment carries no period yet,
  * so an annual allowance cannot be matched to the months each employer paid it, and a pro-rata guess is a plausible
@@ -104,11 +104,23 @@ public final class ExemptionNode implements ComputationNode {
         RuleRow rule = ctx.rule(RuleIds.SAL_HOUSE_RENT_ALLOWANCE);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         List<Tenancy> tenancies = ctx.inputs().entered().tenancies();
-        if (!version.regimes().appliesIn(ctx.regime().code()) || tenancies.isEmpty()) {
+        if (tenancies.isEmpty()) {
             return List.of();
         }
         Money allowanceForYear = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),
                 new HeadTotal(HeadCode.SALARIES), RuleIds.SAL_HOUSE_RENT_ALLOWANCE).total();
+        if (!version.regimes().appliesIn(ctx.regime().code())) {
+            List<TraceLine> nil = new ArrayList<>();
+            for (Tenancy tenancy : tenancies) {
+                requireWithinYear(tenancy.occupied(), t);
+                Money allowance = BY_DAYS_OCCUPIED.apportion(allowanceForYear, t.taxYear(), tenancy.occupied());
+                nil.add(TraceLine.of(nil.size() + 1, NodeIds.SALARY_EXEMPTIONS, RuleIds.SAL_HOUSE_RENT_ALLOWANCE,
+                                StepKind.EXEMPTION, MoneyValue.of(allowance), MoneyValue.of(Money.ZERO),
+                                version.provenance())
+                        .withLimitedBy("not in the " + ctx.regime().code().value() + " regime"));
+            }
+            return nil;
+        }
         Money salaryForYear = employments.isEmpty() ? Money.ZERO
                 : ctx.get(NodeIds.SALARY_BASE, SalaryBases.class).of(RuleIds.SAL_SALARY_FOR_HRA, 0);
         List<TraceLine> trace = new ArrayList<>();
