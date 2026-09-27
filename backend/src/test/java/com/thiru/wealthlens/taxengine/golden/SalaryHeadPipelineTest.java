@@ -1,0 +1,129 @@
+package com.thiru.wealthlens.taxengine.golden;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.thiru.wealthlens.taxengine.input.Employment;
+import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.SalaryComponent;
+import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
+import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
+import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
+import com.thiru.wealthlens.taxengine.node.SalaryDeductionNode;
+import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
+import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
+import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
+import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
+import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
+import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.regime.PipelineSpec;
+import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import java.time.LocalDate;
+import java.util.List;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+/**
+ * The salary head end to end on the shipped pack — its own components, no fixtures (D-094): the partition,
+ * gross salary, the salary bases and the deductions, as a salaried person's entries reach them. Each figure is
+ * added up by hand from the entries below and the statutory amounts, ₹75,000 (S2 s.19(1) Table Sl. 2(a)) and
+ * ₹50,000 (Sl. 2(b)).
+ *
+ * <p>One employment: basic 6,00,000; dearness allowance 60,000; house rent allowance 2,40,000; professional tax
+ * paid 2,500.
+ */
+class SalaryHeadPipelineTest {
+
+    private static final GoldenCaseRunner RUNNER = new GoldenCaseRunner();
+    private static final RegimeCode NEW_TAX_REGIME = new RegimeCode("NEW_TAX_REGIME");
+    private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
+    private static final NodeRegistry SALARY_HEAD = NodeRegistry.of(List.of(
+            new ComponentPartitionNode(), new GrossSalaryNode(), new SalaryBaseNode(), new SalaryDeductionNode()));
+    private static final List<RuleId> BASES = List.of(
+            RuleIds.SAL_SALARY_FOR_HRA,
+            RuleIds.SAL_SALARY_FOR_GRATUITY,
+            RuleIds.SAL_SALARY_FOR_EMPLOYER_PENSION,
+            RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION);
+
+    private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance) {
+        TaxYearId taxYear = TaxYearId.of(year);
+        RulePack pack = RUNNER.pack(taxYear);
+        RegimeSpec shipped = pack.regimes().get(regime);
+        RegimeSpec salaryHead = new RegimeSpec(shipped.code(), shipped.displayName(), shipped.provision1961(),
+                shipped.provision2025(), shipped.appliesTo(), shipped.rateTable(), shipped.disallowances(),
+                shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
+                new PipelineSpec(List.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS, NodeIds.SALARY_BASE,
+                        NodeIds.SALARY_DEDUCTIONS)),
+                shipped.behaviour(), shipped.provenance());
+        Employment employment = new Employment(List.of(
+                new SalaryComponent(ComponentCodes.BASIC, Money.of("600000")),
+                new SalaryComponent(ComponentCodes.DEARNESS_ALLOWANCE, Money.of("60000")),
+                new SalaryComponent(ComponentCodes.HRA, Money.of("240000")),
+                new SalaryComponent(ComponentCodes.PROFESSIONAL_TAX, Money.of("2500"))),
+                termsIncludeDearnessAllowance);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        EngineInputs inputs = new EngineInputs(taxYear, regime,
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment)),
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                plain.filing());
+        return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenPayAndProfessionalTaxAreEntered_grossSalaryIsThePayAlone(int year) {
+        // When
+        PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true);
+
+        // Then — 6,00,000 + 60,000 + 2,40,000 = 9,00,000; the 2,500 paid is not salary
+        assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("900000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenTheTermsProvideForDearnessAllowance_everyBaseIsBasicAndDearnessAllowance(int year) {
+        // When
+        SalaryBases bases = (SalaryBases) run(year, FIRST_SCHEDULE_RATES, true).valueOf(NodeIds.SALARY_BASE);
+
+        // Then — 6,00,000 + 60,000 = 6,60,000; HRA is one of "all other allowances"
+        BASES.forEach(rule -> assertThat(bases.of(rule, 0)).isEqualTo(Money.of("660000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenTheTermsAreSilent_everyBaseIsBasicAlone(int year) {
+        // When
+        SalaryBases bases = (SalaryBases) run(year, FIRST_SCHEDULE_RATES, false).valueOf(NodeIds.SALARY_BASE);
+
+        // Then — 6,00,000
+        BASES.forEach(rule -> assertThat(bases.of(rule, 0)).isEqualTo(Money.of("600000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenOutsideTheNewRegime_deductsProfessionalTaxAndFiftyThousand(int year) {
+        // When
+        PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true);
+
+        // Then — 2,500 + the lesser of 50,000 and 9,00,000 = 52,500
+        assertThat(result.valueOf(NodeIds.SALARY_DEDUCTIONS)).isEqualTo(MoneyValue.of(Money.of("52500")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenInTheNewRegime_deductsSeventyFiveThousandAlone(int year) {
+        // When
+        PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true);
+
+        // Then — the lesser of 75,000 and 9,00,000; no professional tax (s.202(2)(a)(iv))
+        assertThat(result.valueOf(NodeIds.SALARY_DEDUCTIONS)).isEqualTo(MoneyValue.of(Money.of("75000")));
+    }
+}

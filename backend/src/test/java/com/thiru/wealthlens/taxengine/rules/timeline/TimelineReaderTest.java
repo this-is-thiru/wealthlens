@@ -83,7 +83,7 @@ class TimelineReaderTest {
     @Test
     void read_whenTheShippedTimelineIsRead_holdsOnlyTheComponentsARuleReads() {
         // Then — a component arrives with the first rule that reads it (D-089): professional tax (D-093)
-        assertThat(TimelineReader.read(REAL).components()).containsOnlyKeys(new ComponentCode("PROFESSIONAL_TAX"));
+        assertThat(TimelineReader.read(REAL).components()).containsOnlyKeys(new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("COMMISSION"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"));
     }
 
     @Test
@@ -97,7 +97,7 @@ class TimelineReaderTest {
 
         // Then
         assertThat(timeline.components())
-                .containsOnlyKeys(new ComponentCode("FIXTURE_PAY"), new ComponentCode("PROFESSIONAL_TAX"));
+                .containsOnlyKeys(new ComponentCode("FIXTURE_PAY"), new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("COMMISSION"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"));
         assertThat(timeline.components().get(new ComponentCode("FIXTURE_PAY")).cashNature()).isEqualTo(CashNature.CASH);
     }
 

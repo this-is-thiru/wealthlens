@@ -15,7 +15,14 @@ import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
  */
 public final class ComponentCodes {
 
+    public static final ComponentCode BASIC = new ComponentCode("BASIC");
+    public static final ComponentCode BONUS = new ComponentCode("BONUS");
+    public static final ComponentCode COMMISSION = new ComponentCode("COMMISSION");
+    public static final ComponentCode DEARNESS_ALLOWANCE = new ComponentCode("DEARNESS_ALLOWANCE");
+    public static final ComponentCode HRA = new ComponentCode("HRA");
+    public static final ComponentCode LTA = new ComponentCode("LTA");
     public static final ComponentCode PROFESSIONAL_TAX = new ComponentCode("PROFESSIONAL_TAX");
+    public static final ComponentCode SPECIAL_ALLOWANCE = new ComponentCode("SPECIAL_ALLOWANCE");
 
     private ComponentCodes() {
     }

@@ -751,7 +751,7 @@ class PackJsonTest {
             assertThat(pack.rules()).hasSize(24);
             assertThat(pack.regimes()).hasSize(2);
             assertThat(pack.disallowanceSets()).isEmpty();
-            assertThat(pack.components()).containsOnlyKeys(new ComponentCode("PROFESSIONAL_TAX"));
+            assertThat(pack.components()).containsOnlyKeys(new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("COMMISSION"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"));
         }
 
         @Test

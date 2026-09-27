@@ -119,8 +119,8 @@ class RulePackLoadTest {
         @Test
         void itHoldsTheShippedComponentsAndThisTestSaysWhich() {
             // A component arrives with the first rule that reads it (D-089): professional tax came with
-            // SAL-TAX-ON-EMPLOYMENT (D-093); the pay lines follow with W-064.
-            assertThat(load("rulepacks", TY_2026).components()).containsOnlyKeys(new ComponentCode("PROFESSIONAL_TAX"));
+            // SAL-TAX-ON-EMPLOYMENT (D-093), the pay lines with SAL-SALARY-INCLUDES (D-094).
+            assertThat(load("rulepacks", TY_2026).components()).containsOnlyKeys(new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("COMMISSION"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"));
         }
     }
 

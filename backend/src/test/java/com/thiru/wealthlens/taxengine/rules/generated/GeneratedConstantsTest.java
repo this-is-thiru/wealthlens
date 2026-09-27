@@ -142,8 +142,9 @@ class GeneratedConstantsTest {
         @Test
         void componentCodesHoldsExactlyTheShippedComponents() {
             // A component arrives with the first rule that reads it (D-089): professional tax with
-            // SAL-TAX-ON-EMPLOYMENT (D-093)
-            assertThat(ConstantGenerator.componentCodes()).containsExactly("PROFESSIONAL_TAX");
+            // SAL-TAX-ON-EMPLOYMENT (D-093), the pay lines with SAL-SALARY-INCLUDES (D-094)
+            assertThat(ConstantGenerator.componentCodes()).containsExactly(
+                    "BASIC", "BONUS", "COMMISSION", "DEARNESS_ALLOWANCE", "HRA", "LTA", "PROFESSIONAL_TAX", "SPECIAL_ALLOWANCE");
         }
 
         @Test

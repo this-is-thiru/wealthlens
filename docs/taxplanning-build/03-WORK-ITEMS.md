@@ -865,6 +865,7 @@ if that is not enough for the item in hand.
 | W-062 | `SalaryBaseNode` | `DR 01` `SAL-DEF-HRA-001` etc. | **basic + DA where the terms provide**; one function, five rules |
 | W-063 | `SalaryDeductionNode` | `DR 01` R8 | professional tax **only** in the opted-out regime |
 | W-064 | `salary.json` law rows | `DR 01` R7, R8 | |
+| W-064a | Entertainment allowance (`SAL-ENTMT-001`, 1961 s.16(ii)) *(added by D-094)*: `Employment` employer type (Government), component `ENTERTAINMENT_ALLOWANCE`, the "salary (exclusive of any allowance, benefit or other perquisite)" measure, and `SalaryDeductionNode`'s three-limb least-of | `DR 01` R8 | TY 2025-26 only, old regime only (s.115BAC(2)); **no 2025-Act counterpart** — the 2026-27 version is an absence. Placement: owner |
 | W-065 | `SalaryIncomeNode` | | |
 | W-066 | `ProrationBasis` family | `DR 15` C3 | named basis per rule; **no caller divides** |
 | W-066b | `taxengine/temporal/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../temporal/TemporallyApportionedCapTest.java` | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
@@ -924,6 +925,20 @@ if that is not enough for the item in hand.
 >   [NEW_TAX_REGIME]`. `DIS-S202-2A` is owed (Appendix F).
 >
 > Verified by: S2 s.19(1) Table Sl. 1–2 (p.41), s.202(2)(a)(iv) (p.227); `DisallowanceSet.disallows` has no caller.
+
+
+> **Erratum (W-064, 2026-09-27, D-094):**
+> - **`W-064` ships components, not law rows.** After D-091, D-092 and D-093 it holds the seven core cash-salary
+>   components — `BASIC`, `DEARNESS_ALLOWANCE`, `HRA`, `LTA`, `SPECIAL_ALLOWANCE`, `BONUS`, `COMMISSION` — each
+>   feeding `SAL-SALARY-INCLUDES`. "`salary.json`" predates one-file-per-rule (D-053).
+> - **The five allowance-specific codes** (`CHILDREN_EDUCATION_ALLOWANCE`, `HOSTEL_ALLOWANCE`, `UNIFORM_ALLOWANCE`,
+>   `CONVEYANCE_ALLOWANCE`, `TRANSPORT_ALLOWANCE_DISABLED`) arrive with their exemptions in `W-069`, which amends
+>   D-089.
+> - **`SAL-ENTMT-001` is `W-064a`.** It needs an employer type, a fifth salary measure and a node change.
+> - **The salary bases hold basic and DA only**, pending OQ-5 (commission, bonus).
+>
+> Verified by: `ComponentDefinition` (`feedsInto` required), `HeadTotalLines` (D-093), S2 and FA 2026 (no
+> "entertainment allowance").
 
 ---
 
