@@ -495,6 +495,15 @@ not configuration.
 | **`interest.and.fees`** | netpayable, totalincome, credits, `inputs.filingfacts` | **`InterestBreakdown`** | **`INT-*`, `FEE-*`** — new |
 | `round.netpayable` | netpayable, interest | `MoneyValue` | `RATE-ROUND-002`, `ROUND-NEG-001` |
 
+> **Erratum (W-062, 2026-09-27, D-092):** `salary.base` as `Map<RuleId, Money>` loses the employer. HRA and
+> gratuity are measured per employer (and HRA per period, `SAL-HRA-003`), so a base summed across
+> employments is wrong for anyone with two. As built: `SalaryBases` — per rule, per employment — with the
+> rules `SAL-SALARY-FOR-HRA`, `-GRATUITY`, `-EMPLOYER-PENSION`, `-EMPLOYEE-PENSION` (the rulebook's
+> `SAL-DEF-HRA-001`, `-GRAT-`, `-NPS-`, `-80C-NPS-`; D-035 names). Per-period apportionment is the
+> consumer's (`W-066`/`W-067`).
+>
+> Verified by: `01-rulebook.md` R7, R9 `SAL-HRA-003`; `ComponentSet.Line.employment`.
+
 ---
 
 # Part E — `Condition`, resolved (D-3, D-18)

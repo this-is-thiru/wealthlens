@@ -900,6 +900,18 @@ if that is not enough for the item in hand.
 >
 > Verified by: `RuleJson.capOrNull` Javadoc; `CapShape` permits; `coverage.json` (2025 s.16 → `W-061`).
 
+> **Erratum (W-062, 2026-09-27, D-092):** "five rules" is five *uses* (HRA, gratuity, leave encashment,
+> employer NPS, employee NPS) over **four** rule ids; `SAL-DEF-RPF-001`'s base is unread (`NEEDS
+> VERIFICATION`) and is owed to the RPF item. `W-062` ships the four rows (`SAL-SALARY-FOR-*`, `RuleDefinition`
+> `SalaryBase`), both years, and `SalaryBaseNode` evaluating them, with no component: every base is ₹0 until
+> `W-064` gives `BASIC`/`DA` their `salaryBaseFor` entries, and nothing reads a base until `W-067`. The DA
+> condition is the registry's (`onlyWhereTermsProvide`) and the entered fact `Employment`'s
+> (`termsIncludeDearnessAllowance`); the value is per rule per employment; the lines are `StepKind.MEASURE`.
+> No coverage status moves: the definitions are sub-provisions of s.19 (`W-063`), s.124 and Sch. XV (`W-076`)
+> and Rules r.279.
+>
+> Verified by: `01-rulebook.md` R7, H-4; `PackValidator` (component→rule only); `coverage.json`.
+
 ---
 
 ## Phase 8 — Perquisites, employer contributions, Chapter VIII (10 items)

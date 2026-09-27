@@ -266,7 +266,7 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `salary.perquisites` | `PerquisiteNode` | `inputs.components` | `MoneyValue` | ○ Phase 8 |
 | `employer.contrib.charges` | `EmployerContributionNode` | `inputs.components` | `MoneyValue` | ○ Phase 8 |
 | `salary.gross` | `GrossSalaryNode` | `inputs.components`, `salary.perquisites`, `employer.contrib.charges` | `MoneyValue` | ○ `W-061` |
-| `salary.base` | `SalaryBaseNode` | `inputs.components` | `SalaryBases` ⚠ | ○ `W-062` |
+| `salary.base` | `SalaryBaseNode` | `inputs.components` | `SalaryBases` | ✅ `W-062` — `SAL-SALARY-FOR-HRA`, `-GRATUITY`, `-EMPLOYER-PENSION`, `-EMPLOYEE-PENSION` (`SalaryBase` definition); per rule per employment; a registry `salaryBaseFor` entry's `onlyWhereTermsProvide` against `Employment.termsIncludeDearnessAllowance`; one `MEASURE` line per rule (D-092) |
 | `salary.exemptions` | `ExemptionNode` | `salary.gross`, `salary.base` | `MoneyValue` | ○ Phase 7 |
 | `salary.retirement` | `RetirementNode` | `inputs.components`, `EngineInputs.ledgers` | `MoneyValue` | ○ Phase 7 |
 | `salary.deductions` | `SalaryDeductionNode` | `salary.gross` | `MoneyValue` | ○ `W-063` |

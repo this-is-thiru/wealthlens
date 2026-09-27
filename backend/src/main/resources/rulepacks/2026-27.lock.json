@@ -3,12 +3,12 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.15",
-      "checksum": "sha256:58708b9bdf586b5992ed0bb676ba0ba22c2a42a36b2df281652aae5c3f271536"
+      "version": "2026-27.law.16",
+      "checksum": "sha256:96beaecd481698f95b03b4f1e613c5d5935586db1cb7b81d899a40ee08997e20"
     },
     "exec": {
-      "version": "2026-27.exec.3",
-      "checksum": "sha256:e73f66580cb4989ca84fdc961710c6981c81845ac822b2be7bc4a85afbccd9a8"
+      "version": "2026-27.exec.4",
+      "checksum": "sha256:3ea5cd839be0e8241b07d231bb9500e58b9fe1b9484abcf22e650fb969e9da5f"
     },
     "forms": {
       "version": "2026-27.forms.2",
@@ -36,6 +36,10 @@
     "REBATE-NEW-TAX-REGIME": "sha256:9a0e33de06f39d1b16230fed778546b6f7ad5426a90c3511fe4c7e3a3aed510d",
     "REBATE-NEW-TAX-REGIME-EXCESS": "sha256:a104cd7be36de5d029b8b4993f30e3735aab115428a66345489e3cad19983191",
     "REBATE-RESIDENT-INDIVIDUAL": "sha256:cff8a67c2b91bc68d33e16906f9c5b85c2a9d07ed8d1d6db07ea1f10d12dc096",
+    "SAL-SALARY-FOR-EMPLOYEE-PENSION": "sha256:f55ee5ef312b3ca6e73ad992e92bae5d5f339bc6a19f6b3e1bd6c9453aa0a5ee",
+    "SAL-SALARY-FOR-EMPLOYER-PENSION": "sha256:2fe05fecd1bd52eb3944264114689b0bb4edbaa2c70a84b02a3c7643fabcdfea",
+    "SAL-SALARY-FOR-GRATUITY": "sha256:abec324c383133573de35ec601785e78515a10c37779a3b80655205ce65a2781",
+    "SAL-SALARY-FOR-HRA": "sha256:2e421b3211c4f9643b51e7fb6f581eba676d3d0f3304742a2aba0c58a3088dd2",
     "SAL-SALARY-INCLUDES": "sha256:afc2d7785ed56a4fa77c349acf4f52a7a13410e03c216e854cb00dc650fad15c"
   },
   "instruments": {

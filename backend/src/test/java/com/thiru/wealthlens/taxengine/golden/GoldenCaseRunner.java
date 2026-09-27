@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.node.NetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RebateNode;
 import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RoundTotalIncomeNode;
+import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
 import com.thiru.wealthlens.taxengine.node.SurchargeNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
@@ -52,6 +53,7 @@ final class GoldenCaseRunner {
     private static final List<ComputationNode> BUILT = List.of(
             new ComponentPartitionNode(),
             new GrossSalaryNode(),
+            new SalaryBaseNode(),
             new RoundTotalIncomeNode(),
             new TaxByBasisNode(),
             new RebateNode(),

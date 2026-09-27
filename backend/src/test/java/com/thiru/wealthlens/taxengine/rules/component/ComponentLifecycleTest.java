@@ -51,7 +51,7 @@ class ComponentLifecycleTest {
                 CashNature.CASH,
                 TaxTreatment.TAXABLE,
                 feedsInto,
-                Set.of(SAL_HRA_004),
+                Set.of(new SalaryBaseInclusion(SAL_HRA_004, false)),
                 informational,
                 lifecycle,
                 provenance());
@@ -243,7 +243,7 @@ class ComponentLifecycleTest {
         void salaryBaseForIsCarried() {
             // SAL-HRA-004's "basic + DA where the terms provide" is a set of components,
             // and W-062 has nowhere else to read it from
-            assertThat(hra().salaryBaseFor()).containsExactly(SAL_HRA_004);
+            assertThat(hra().salaryBaseFor()).containsExactly(new SalaryBaseInclusion(SAL_HRA_004, false));
         }
     }
 }

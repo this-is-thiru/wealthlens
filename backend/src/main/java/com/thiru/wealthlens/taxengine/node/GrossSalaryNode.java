@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
+import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
@@ -57,6 +58,8 @@ public final class GrossSalaryNode implements ComputationNode {
                 RuleIds.SAL_SALARY_INCLUDES + " carries no definition; gross salary has nothing to total"));
         HeadTotal total = switch (definition) {
             case HeadTotal headTotal -> headTotal;
+            case SalaryBase salaryBase -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
+                    + " defines a salary base, not a head's total; gross salary is the whole head");
         };
         List<ComponentSet.Line> lines = components.in(total.head());
         Money gross = lines.stream().map(ComponentSet.Line::amount).reduce(Money.ZERO, Money::plus);

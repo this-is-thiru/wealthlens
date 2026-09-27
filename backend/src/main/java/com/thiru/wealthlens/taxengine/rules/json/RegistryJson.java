@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentLifecycle;
 import com.thiru.wealthlens.taxengine.rules.component.DeprecationPolicy;
+import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -58,7 +59,7 @@ public final class RegistryJson {
                         PackJson.enumValue(node, "cashNature", where, CashNature.class),
                         PackJson.enumValue(node, "treatment", where, TaxTreatment.class),
                         ruleIds(node, "feedsInto", where),
-                        ruleIds(node, "salaryBaseFor", where),
+                        salaryBaseFor(node, where),
                         node.get("informationalOnly") != null && PackJson.bool(node, "informationalOnly", where),
                         lifecycle(PackJson.object(node, "lifecycle", where), where + ".lifecycle"),
                         ValueJson.provenance(
@@ -141,6 +142,12 @@ public final class RegistryJson {
                         new RuleId(PackJson.text(node, "basis", where)),
                         ValueJson.provenance(
                                 PackJson.object(node, "provenance", where), where + ".provenance")));
+    }
+
+    private static Set<SalaryBaseInclusion> salaryBaseFor(JsonNode node, String path) {
+        return new LinkedHashSet<>(PackJson.arrayOrEmpty(node, "salaryBaseFor", path, e -> new SalaryBaseInclusion(
+                new RuleId(PackJson.text(e.node(), "rule", e.path())),
+                PackJson.bool(e.node(), "onlyWhereTermsProvide", e.path()))));
     }
 
     private static Set<RuleId> ruleIds(JsonNode node, String field, String path) {

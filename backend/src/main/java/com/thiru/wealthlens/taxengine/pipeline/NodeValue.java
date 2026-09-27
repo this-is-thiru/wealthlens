@@ -15,12 +15,12 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
  * that needs the parts should pattern-match rather than sum them back up.
  *
  * <p><b>This clause grows.</b> It permits the values that exist ({@code ComponentSet} arrived with the
- * partition, D-090). {@code 15-review-findings.md}
+ * partition, D-090; {@code SalaryBases} with the salary bases, D-092). {@code 15-review-findings.md}
  * B4 also names {@code HeadResult}, {@code ComponentSet}, {@code ElectionOutcome} and
  * {@code InterestBreakdown} — none of which the design declares anywhere, only lists here — so each
  * arrives with the node that produces it, as the cap shapes did.
  */
-public sealed interface NodeValue permits MoneyValue, TaxByBasis, ComponentSet {
+public sealed interface NodeValue permits MoneyValue, TaxByBasis, ComponentSet, SalaryBases {
 
     /** The single summary figure, for the trace's {@code out} column. */
     Money asMoney();

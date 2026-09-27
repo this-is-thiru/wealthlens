@@ -5,13 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import org.junit.jupiter.api.Test;
 
 /**
- * A rule version stating a definition (D-091): read like a rounding, at most one of cap, relief, rounding and
- * definition, and a head the engine knows. The values are parse inputs checked for round-trip, not law.
+ * A rule version stating a definition (D-091, D-092): read like a rounding, at most one of cap, relief, rounding
+ * and definition, and a head the engine knows. The values are parse inputs checked for round-trip, not law.
  */
 class RuleJsonDefinitionTest {
 
@@ -52,6 +53,32 @@ class RuleJsonDefinitionTest {
         assertThat(version.cap()).isNull();
         assertThat(version.relief()).isEmpty();
         assertThat(version.rounding()).isEmpty();
+    }
+
+    @Test
+    void version_whenSalaryBase_readsIt() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "SalaryBase" }""");
+
+        // Then
+        assertThat(version.definition()).contains(new SalaryBase());
+        assertThat(version.cap()).isNull();
+    }
+
+    @Test
+    void version_whenSalaryBaseBesideACap_isRefusedNamingThePath() {
+        // Given
+        String both = """
+                "cap": { "type": "Fixed", "amount": "0" },
+                "definition": { "type": "SalaryBase" }""";
+
+        // When / Then
+        assertThatThrownBy(() -> versionWith(both))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageStartingWith(PATH)
+                .hasMessageContaining("a cap")
+                .hasMessageContaining("a definition");
     }
 
     @Test
@@ -110,7 +137,8 @@ class RuleJsonDefinitionTest {
                         "definition": { "type": "HeadAverage", "head": "SALARIES" }"""))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining(PATH + ".definition")
-                .hasMessageContaining("HeadTotal");
+                .hasMessageContaining("HeadTotal")
+                .hasMessageContaining("SalaryBase");
     }
 
     @Test

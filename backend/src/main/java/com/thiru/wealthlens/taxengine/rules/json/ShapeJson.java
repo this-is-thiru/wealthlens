@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
+import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -191,12 +192,13 @@ public final class ShapeJson {
      */
     /** A rule's definition (D-091): what it says an amount is. */
     public static RuleDefinition definition(JsonNode node, String path) {
-        String tag = PackJson.tag(node, path, "HeadTotal");
+        String tag = PackJson.tag(node, path, "HeadTotal", "SalaryBase");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
                 yield PackJson.construct(path, () -> new HeadTotal(head));
             }
+            case "SalaryBase" -> new SalaryBase();
             default -> throw unreachable(tag, path);
         };
     }

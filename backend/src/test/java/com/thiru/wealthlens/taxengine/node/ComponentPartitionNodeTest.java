@@ -87,7 +87,7 @@ class ComponentPartitionNodeTest {
     }
 
     private static Employment employment(SalaryComponent... components) {
-        return new Employment(List.of(components));
+        return new Employment(List.of(components), false);
     }
 
     private static SalaryComponent line(ComponentCode code, String rupees) {

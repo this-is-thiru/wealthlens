@@ -1,0 +1,96 @@
+{
+  "ruleId": "SAL-SALARY-FOR-GRATUITY",
+  "_note": "The salary that gratuity (Sch. III / s.19(1) Table Sl. 6) and leave encashment (Sl. 14) are measured against (D-092; rulebook SAL-DEF-GRAT-001, whose 1961 reference \"s.17(1) Expl. / r.2BA\" is wrong). TY 2026-27: Income-tax Act, 2025 s.19(2)(b) (p.45): \"in respect of the entries against serial numbers 6 and 14 thereof, 'Salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites\". Finance Act, 2026 (4 of 2026) searched in full: it contains no \"dearness\" or \"terms of employment\" and amends none of s.19, s.124 or Schedule XV. TY 2025-26: Income-tax Act, 1961 s.10(10) Explanation (thc p.72): \"In this clause, and in clause (10AA), 'salary' shall have the meaning assigned to it in clause (h) of rule 2 of Part A of the Fourth Schedule\" — and Income-tax Act, 1961, Fourth Schedule Part A r.2(h) (thc.nic.in copy, current to Act 7 of 2019, p.853): \"'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites.\" Not searched: any amendment since Act 7 of 2019 to the provisions quoted from the thc.nic.in copy. Act 4 of 1988's assent date (24-1-1988) is as reported from the Journal of Parliamentary Information, June 1988, p.275, and was not read; its gazette issue was not found.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10) Explanation, with Sch. IV Pt A r.2(h)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(2)(b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryBase"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Direct Tax Laws (Amendment) Act, 1987 (4 of 1988), s.6 — substituted \"In this clause, and in clause (10AA)\" for \"In this clause\" in the Explanation to s.10(10) of the Income-tax Act, 1961",
+        "gazetteRef": "Gazette of India issue not found (D-092 addendum)",
+        "notifiedOn": "1988-01-24",
+        "effectiveFrom": "1989-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019): s.10(10) Explanation, p.72 (footnote 3: Act 4 of 1988 s.6, w.e.f. 1-4-1989); Fourth Schedule Part A r.2(h), p.853",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The assent date and Gazette of India issue of the Direct Tax Laws (Amendment) Act, 1987 (4 of 1988): 24-1-1988 is reported by the Journal of Parliamentary Information, June 1988, Appendix IV, p.275 (eparlib.sansad.in/bitstream/123456789/763153/1/jpi_June_1988.pdf), not read. Also any amendment since Act 7 of 2019 to s.10(10) Explanation or Sch. IV Pt A r.2(h)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10) Explanation, with Sch. IV Pt A r.2(h)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(2)(b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryBase"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(2)(b)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(2)(b), p.45; Finance Act, 2026 (4 of 2026) searched in full: it does not amend s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(2)(b), p.45",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

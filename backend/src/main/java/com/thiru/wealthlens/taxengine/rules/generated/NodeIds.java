@@ -18,6 +18,7 @@ public final class NodeIds {
     public static final NodeId INPUTS_COMPONENTS = new NodeId("inputs.components");
     public static final NodeId ROUND_NETPAYABLE = new NodeId("round.netpayable");
     public static final NodeId ROUND_TOTALINCOME = new NodeId("round.totalincome");
+    public static final NodeId SALARY_BASE = new NodeId("salary.base");
     public static final NodeId SALARY_GROSS = new NodeId("salary.gross");
     public static final NodeId TAX_AFTERREBATE = new NodeId("tax.afterrebate");
     public static final NodeId TAX_BYBASIS = new NodeId("tax.bybasis");

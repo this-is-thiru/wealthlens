@@ -239,7 +239,8 @@ class TraceLineTest {
     class Kinds {
 
         @Test
-        void theSevenKindsAreM51sList() {
+        void theKindsAreM51sListAndTheMeasure() {
+            // D-092: a salary base is a figure other rules are computed on — neither income nor relief
             assertThat(StepKind.values())
                     .containsExactly(
                             StepKind.INCOME,
@@ -248,7 +249,8 @@ class TraceLineTest {
                             StepKind.SET_OFF,
                             StepKind.TAX,
                             StepKind.RELIEF,
-                            StepKind.ROUNDING);
+                            StepKind.ROUNDING,
+                            StepKind.MEASURE);
         }
     }
 }

@@ -430,6 +430,16 @@ DeclaredClaim   { ruleId, componentCode, amount, declaredOn, employmentId }
 ProofOfClaim    { declaredClaimId, evidenceType, amount, receivedOn, documentRef, acceptedByEmployer }
 ```
 
+> **Erratum (W-062, 2026-09-27, D-092):** `SalaryComponent.daFormsPartOfRetirementBenefits` is in the
+> wrong place and states the wrong test. The terms of employment are the employment's, not a pay line's —
+> the flag means nothing on `BASIC` — and the definitions it serves say *"if the terms of employment so
+> provide"* (S2 s.19(2)(b), s.124(13)(b), Sch. XV para 1(y)) / *"if provided for under the terms of
+> employment"* (S4 r.279(2)(b)); "forms part of retirement benefits" is not in the text. As built:
+> `Employment.termsIncludeDearnessAllowance`, and which components count only where it holds is the
+> registry's (a `salaryBaseFor` entry's `onlyWhereTermsProvide`).
+>
+> Verified by: `01-rulebook.md` R7 (`SAL-DEF-HRA-001` … `SAL-DEF-80C-NPS-001`), H-4.
+
 ### M3.3 Declarations versus proofs (D5)
 
 `INFERENCE (from TDS-SAL-12BB-001, TDS-SAL-12BB-002, TDS-SAL-ADJUST-001)`: these are **two different

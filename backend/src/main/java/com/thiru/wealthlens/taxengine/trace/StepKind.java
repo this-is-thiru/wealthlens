@@ -7,7 +7,9 @@ package com.thiru.wealthlens.taxengine.trace;
  * enum rather than a string from the pack: a renderer that meets an unknown kind has no sensible
  * section to put it in.
  *
- * <p>The seven values are {@code 05-domain-model.md} M5.1's list, unchanged. They describe the
+ * <p>The first seven values are {@code 05-domain-model.md} M5.1's list; {@code MEASURE} was added by D-092,
+ * because a salary base is a figure the Act defines and other rules are computed on, and none of the seven
+ * says that. They describe the
  * <b>step</b>, not the head of income — {@code EXEMPTION} and {@code DEDUCTION} are different
  * operations under the Act and reach the total in different places, so collapsing them would lose
  * the distinction the trace exists to show.
@@ -33,5 +35,8 @@ public enum StepKind {
     RELIEF,
 
     /** Rounding applied under s.516, kept as its own step so the adjustment is visible. */
-    ROUNDING
+    ROUNDING,
+
+    /** A figure other rules are computed on, neither added nor taken off — a salary base (D-092). */
+    MEASURE
 }

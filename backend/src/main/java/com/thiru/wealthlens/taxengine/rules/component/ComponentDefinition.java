@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -36,8 +37,8 @@ import java.util.Set;
  * @param cashNature whether it is money in hand — {@code D-CASHFLAG}
  * @param treatment how it is treated for tax
  * @param feedsInto the rules that consume it
- * @param salaryBaseFor the salary definitions that include it, such as {@code SAL-HRA-004}'s
- *     basic-plus-dearness-allowance base
+ * @param salaryBaseFor the salary bases it counts in, each saying whether only where the terms of
+ *     employment provide (D-092); at most one entry per base
  * @param informationalOnly true where this component deliberately feeds no rule; reachability
  *     (invariant I3, extended) otherwise requires {@code feedsInto} to be non-empty, because a code
  *     nobody consumes is a figure the user enters and the computation ignores
@@ -52,7 +53,7 @@ public record ComponentDefinition(
         CashNature cashNature,
         TaxTreatment treatment,
         Set<RuleId> feedsInto,
-        Set<RuleId> salaryBaseFor,
+        Set<SalaryBaseInclusion> salaryBaseFor,
         boolean informationalOnly,
         ComponentLifecycle lifecycle,
         Provenance provenance) {
@@ -67,11 +68,22 @@ public record ComponentDefinition(
         }
         feedsInto = feedsInto == null ? Set.of() : Set.copyOf(feedsInto);
         salaryBaseFor = salaryBaseFor == null ? Set.of() : Set.copyOf(salaryBaseFor);
+        requireOneEntryPerBase(code, salaryBaseFor);
 
         if (feedsInto.isEmpty() && !informationalOnly) {
             throw new IllegalArgumentException(
                     code + " feeds no rule and is not marked informationalOnly; a code nobody"
                             + " consumes is a figure the user enters and the computation ignores");
+        }
+    }
+
+    private static void requireOneEntryPerBase(ComponentCode code, Set<SalaryBaseInclusion> salaryBaseFor) {
+        Set<RuleId> seen = new HashSet<>();
+        for (SalaryBaseInclusion inclusion : salaryBaseFor) {
+            if (!seen.add(inclusion.rule())) {
+                throw new IllegalArgumentException(code + " names salary base " + inclusion.rule()
+                        + " twice; it either counts only where the terms provide or it does not");
+            }
         }
     }
 

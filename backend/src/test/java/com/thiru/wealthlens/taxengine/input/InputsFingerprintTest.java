@@ -106,7 +106,8 @@ class InputsFingerprintTest {
                             "entered.employments",
                             mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
                                     new SalaryComponent(new ComponentCode("BASIC"),
-                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))))))))),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
+                                    false)))))),
                     Arguments.of(
                             "regime",
                             mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
@@ -225,6 +226,23 @@ class InputsFingerprintTest {
                     .toList();
 
             assertThat(perturbed).containsAll(components);
+        }
+
+        @Test
+        void employment_whenOnlyTheTermsOnDearnessAllowanceDiffer_movesTheHash() {
+            // Given — D-092: whether DA counts in the salary bases changes HRA and the pension limits
+            EngineInputs silent = copy(baseline(), r -> r.entered = enteringBasic(false));
+            EngineInputs providing = copy(baseline(), r -> r.entered = enteringBasic(true));
+
+            // When / Then
+            assertThat(hashOf(providing)).isNotEqualTo(hashOf(silent));
+        }
+
+        private static EnteredFacts enteringBasic(boolean termsIncludeDearnessAllowance) {
+            return new EnteredFacts(List.of(new Employment(
+                    List.of(new SalaryComponent(new ComponentCode("BASIC"),
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
+                    termsIncludeDearnessAllowance)));
         }
 
         @Test

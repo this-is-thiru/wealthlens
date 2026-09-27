@@ -3,10 +3,10 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-061 — "taxplanning W-061: add gross salary — the total of the SALARIES head, as the Act's definition of salary states (D-091)"
-Last updated              : 2026-09-26 (session 8 — W-055 … W-061 done; build GREEN, 1878 tests)
-Current position          : W-062 — SalaryBaseNode (not started)
-Session count             : 8
+Last checkpoint           : W-062 — "taxplanning W-062: add the salary bases — basic, and dearness allowance where the terms provide, per employer (D-092)"
+Last updated              : 2026-09-27 (session 9 — W-062 done; build GREEN, 1898 tests)
+Current position          : W-063 — SalaryDeductionNode (not started)
+Session count             : 9
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
@@ -55,7 +55,7 @@ Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-04
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
-Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 ·  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
+Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 ·  W-064 ·  W-065 ·  W-066 ·  W-067 ·  W-068 ·  W-069 ·  W-070 ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
@@ -451,6 +451,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-092 | 2026-09-27 | `W-062`: the salary bases before any component or consumer exists | **C1a:** ship `SalaryBaseNode` and the four verified definition rows now (HRA, gratuity/leave encashment, employer NPS, employee NPS), both years, no component — every base ₹0 until `W-064`; `SAL-DEF-RPF-001` owed to the RPF item (its base unread). **C2:** `RuleDefinition` gains `SalaryBase`. **C3a:** a registry `salaryBaseFor` entry is `{rule, onlyWhereTermsProvide}`. **C4a:** `Employment.termsIncludeDearnessAllowance` (statute's words; supersedes `DR 05` M3.2's `SalaryComponent.daFormsPartOfRetirementBenefits`). **C5:** `SalaryBases` per rule per employment (supersedes `DR 15` Part D's `Map<RuleId, Money>`). **C6a:** one line per rule, new `StepKind.MEASURE`. Commission-on-turnover surviving in either year → stop and re-plan (R13). **Addendum (step 5 block):** the gratuity row's TY 2025-26 `introducedBy` cites Act 4 of 1988 with assent 24-1-1988 as reported (JPI June 1988 p.275, not read by me; gazette issue not found) — `UNVERIFIED`, owner: "W-062: approve UNVERIFIED for Act 4 of 1988" | owner: "W-062 approved — proceed as recommended" |
 | D-091 | 2026-09-26 | `W-061`: what grounds gross salary | **C1a:** new item `W-061a` (before `W-061`) — `RuleVersion` may carry a `RuleDefinition` (sealed; first `HeadTotal(HeadCode)`), at most one of cap / relief / rounding / definition. `W-061` authors `SAL-SALARY-INCLUDES` (= `SAL-DEF-001`, s.16 / 1961 s.17(1)) with `HeadTotal(SALARIES)`, both years, s.16 `MODELLED` + catalogue; `GrossSalaryNode` sums the SALARIES head with an INCOME line citing it and joins `GoldenCaseRunner`. **C2:** `salary.gross` requires `inputs.components`; perquisites/charges later | owner: "approved — proceed as recommended" |
 | D-090 | 2026-09-26 | `W-060`: the first entered income, and the partition | **C1a:** `EnteredFacts(List<Employment>)`, `Employment(List<SalaryComponent>)`, `SalaryComponent(ComponentCode, Money annualAmount)` — `DR 05` M3.2's names, only the fields with a caller; later items add theirs. **C2:** `ComponentSet` (new `NodeValue`): entered lines grouped by registry `HeadCode`, unsummed, with their employment. **C3:** a code not in the year's registry throws, naming code, employment and year (`D-CLOSEDSUM`). **C4:** the fingerprint's empty-`EnteredFacts` tripwire becomes a perturbation. **C5:** not registered in `GoldenCaseRunner` until `salary.gross` | owner: "approved — proceed as recommended" |
 | D-089 | 2026-09-26 | `W-059`: the component registry before any rule consumes a component | **C1a:** W-059 builds the plumbing only — `exec/components/<CODE>.json`, the reader, the compiler emitting a year's live components — proven on a fixture, no shipped component. Each component arrives with the first rule that reads it (`W-063` PROFESSIONAL_TAX, `W-064` cash salary, Phase 8, `W-079`, `W-088`), both years, `cashNature` sourced; the reachability invariant stays whole. **C3:** "`DR 15` F-part" recorded as unresolved | owner: "approved — proceed as recommended" |

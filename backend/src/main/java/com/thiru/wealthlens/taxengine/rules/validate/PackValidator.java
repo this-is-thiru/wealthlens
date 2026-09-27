@@ -104,8 +104,8 @@ public final class PackValidator {
         for (ComponentDefinition component : pack.components().values()) {
             component.feedsInto().forEach(
                     rule -> require(known, rule, "component " + component.code() + " feedsInto", problems));
-            component.salaryBaseFor().forEach(
-                    rule -> require(known, rule, "component " + component.code() + " salaryBaseFor", problems));
+            component.salaryBaseFor().forEach(inclusion -> require(
+                    known, inclusion.rule(), "component " + component.code() + " salaryBaseFor", problems));
         }
         for (DisallowanceSet set : pack.disallowanceSets().values()) {
             require(known, set.basis(), "disallowance set " + set.id() + " basis", problems);

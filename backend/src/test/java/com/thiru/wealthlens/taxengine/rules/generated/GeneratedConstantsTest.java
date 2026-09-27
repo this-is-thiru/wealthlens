@@ -166,6 +166,10 @@ class GeneratedConstantsTest {
                             "REBATE-NEW-TAX-REGIME",
                             "REBATE-NEW-TAX-REGIME-EXCESS",
                             "REBATE-RESIDENT-INDIVIDUAL",
+                            "SAL-SALARY-FOR-EMPLOYEE-PENSION",
+                            "SAL-SALARY-FOR-EMPLOYER-PENSION",
+                            "SAL-SALARY-FOR-GRATUITY",
+                            "SAL-SALARY-FOR-HRA",
                             "SAL-SALARY-INCLUDES");
         }
     }

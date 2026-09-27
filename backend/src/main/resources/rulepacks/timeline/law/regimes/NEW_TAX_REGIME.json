@@ -65,6 +65,7 @@
     "nodeRefs": [
       "inputs.components",
       "salary.gross",
+      "salary.base",
       "totalincome",
       "round.totalincome",
       "tax.bybasis",

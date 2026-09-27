@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-062 — SalaryBaseNode
+Item            : W-063 — SalaryDeductionNode
 Stage           : NOT_STARTED
-Plan            : — (plans/W-062.md once written)
+Plan            : — (plans/W-063.md once written)
 Approved        : —
 Steps done      : —
-Next step       : READ the W-062 row (DR 01 SAL-DEF-HRA-001 etc.; "basic + DA where the terms provide; one function, five rules"), rulebook R7 SAL-DEF-HRA/GRAT/NPS/80C-NPS/RPF-001 and the H-4 verdict; SalaryComponent has no daFormsPartOfRetirementBenefits field yet (D-090: added by the item that reads it — this one); which rules exist (none of SAL-DEF-HRA-* are rows; their consumers are W-067 HRA, gratuity, NPS W-076…) — so the D-084/D-089 ordering question will recur: a base with no consuming rule; write plans/W-062.md with the D-043 standing-rules line; STOP for approval
-Last verify     : ./mvnw clean test -pl backend -Punit → 1878 pass, 0 fail, 0 Checkstyle violations (W-061)
-Waiting on      : nothing for W-062; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open
+Next step       : READ the W-063 row ("professional tax only in the opted-out regime"; DR 01 R8), rulebook R8 SAL-STDDED-*/SAL-PTAX-*, D-089 (W-063 brings PROFESSIONAL_TAX with SAL-PTAX-001, both years, cashNature sourced); write plans/W-063.md with the D-043 standing-rules line; STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 1898 pass, 0 fail, 0 Checkstyle violations (W-062)
+Waiting on      : nothing for W-063; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2 open. Carried from W-062: TY 2025-26 goldens log PROVISIONAL (two UNVERIFIED salary-base versions); commission-in-salary-base is W-064's data decision
 Files touched   : —
-Last item commit: taxplanning W-061: add gross salary — the total of the SALARIES head, as the Act's definition of salary states (D-091)
-Updated         : 2026-09-26, session 8
+Last item commit: taxplanning W-062: add the salary bases — basic, and dearness allowance where the terms provide, per employer (D-092)
+Updated         : 2026-09-27, session 9
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
