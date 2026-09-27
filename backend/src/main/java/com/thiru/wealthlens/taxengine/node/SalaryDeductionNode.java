@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -76,6 +77,8 @@ public final class SalaryDeductionNode implements ComputationNode {
             case HeadTotal headTotal -> headTotal;
             case SalaryBase salaryBase -> throw new IllegalStateException(
                     RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines a salary base, not the total of what was paid");
+            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(
+                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines journeys per block, not the total of what was paid");
         };
         HeadTotalLines paid = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class), total,
                 RuleIds.SAL_TAX_ON_EMPLOYMENT);

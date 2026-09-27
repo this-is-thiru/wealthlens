@@ -3,12 +3,12 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.10",
-      "checksum": "sha256:1838fb940a1110fdd2c71e28a89aa4598774df90064ca13da6e7cd304daa0973"
+      "version": "2025-26.law.11",
+      "checksum": "sha256:1583c0fa0a68ca63fe65d497aa086c0134aa92f738673d2501dc5a054b7c8c81"
     },
     "exec": {
-      "version": "2025-26.exec.7",
-      "checksum": "sha256:52bead95b6cf010941c51d356f8d81d7eca48b87070e175dde477a64e63fe6f5"
+      "version": "2025-26.exec.8",
+      "checksum": "sha256:ced56efccf26a028c616bb4f53b4d7f1f86ae94f39fc7f203b59c58124660365"
     },
     "forms": {
       "version": "2025-26.forms.1",
@@ -37,6 +37,8 @@
     "REBATE-NEW-TAX-REGIME-EXCESS": "sha256:d0bdaab617f3c036a247cdae7001270706cf680e2f2d5c9de3afe7351cda0a5e",
     "REBATE-RESIDENT-INDIVIDUAL": "sha256:791963afec72a187b87de2d7fbf77b4b2928a2efdb4fa2ac3ac2b661437ee1a9",
     "SAL-HOUSE-RENT-ALLOWANCE": "sha256:62c7bbeae97eae42a7593e33c5f78f1689ff138866da534087fe189cb47a267e",
+    "SAL-LEAVE-TRAVEL-CONCESSION": "sha256:9a6ab631e66cfa271e5b96355fdc27266a80b45fde5b51d390c09d6e55b1e270",
+    "SAL-LEAVE-TRAVEL-JOURNEYS": "sha256:1fd5d3223ec1e189430af4f728bd0347123865da1d73e9b949896c9d6213270f",
     "SAL-SALARY-FOR-EMPLOYEE-PENSION": "sha256:babf13eb26e2bec4bb6a4bece1f7e99f5279f9d7b3a6187b89cf0bc932662ca7",
     "SAL-SALARY-FOR-EMPLOYER-PENSION": "sha256:cc77c320d12f0125333c6147cc0107c97e3a64532ab68611956315983f27f8c4",
     "SAL-SALARY-FOR-GRATUITY": "sha256:79094de9079927d519908d95e221b2e8939d56a073e3980b47201f8e54ba74fd",

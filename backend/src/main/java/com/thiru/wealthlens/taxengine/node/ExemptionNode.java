@@ -34,8 +34,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The exemptions taken out of salary before its income is struck — first, house rent allowance (Sch. III Table
- * Sl. 11 with Rules 2026 r.279; 1961 s.10(13A) with Rules 1962 r.2A; D-099).
+ * The exemptions taken out of salary before its income is struck — house rent allowance (Sch. III Table Sl. 11
+ * with Rules 2026 r.279; 1961 s.10(13A) with Rules 1962 r.2A; D-099) and the leave travel concession (Sl. 8 with
+ * r.278; s.10(5) with r.2B; D-100, in {@link LeaveTravelExemption}).
  *
  * <p>Per period of occupation, never on annual figures ({@code DR 13} R-11): each rented home the taxpayer
  * occupied gets its own least-of — the allowance received for the period, the rent paid for it in excess of
@@ -45,8 +46,9 @@ import java.util.Set;
  * a nil line (Sl. 11(c), (d)). Where the rule does not apply — the new regime — nothing is exempt and nothing is
  * said.
  *
- * <p>With more than one employment the node refuses: an employment carries no period yet, so an annual allowance
- * cannot be matched to the months each employer paid it, and a pro-rata guess is a plausible wrong figure.
+ * <p>With more than one employment and an exemption claimed, the node refuses: an employment carries no period yet,
+ * so an annual allowance cannot be matched to the months each employer paid it, and a pro-rata guess is a plausible
+ * wrong figure.
  */
 public final class ExemptionNode implements ComputationNode {
 
@@ -68,23 +70,35 @@ public final class ExemptionNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        return Set.of(RuleIds.SAL_HOUSE_RENT_ALLOWANCE);
+        return Set.of(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, RuleIds.SAL_LEAVE_TRAVEL_CONCESSION,
+                RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE, RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
+        List<Employment> employments = ctx.inputs().entered().employments();
+        boolean claimed = !ctx.inputs().entered().tenancies().isEmpty()
+                || !ctx.inputs().entered().leaveTravel().isEmpty();
+        if (claimed && employments.size() > 1) {
+            throw new IllegalStateException("An exemption is claimed with " + employments.size() + " employments,"
+                    + " and an employment carries no period yet, so an annual allowance cannot be matched to the"
+                    + " months each employer paid it; enter one employment until employment periods exist (D-099)");
+        }
+        List<TraceLine> trace = new ArrayList<>(houseRentAllowance(ctx, employments));
+        trace.addAll(LeaveTravelExemption.lines(ctx, trace.size() + 1));
+        Money exempt = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
+        return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
+                : new NodeResult(MoneyValue.of(exempt), trace);
+    }
+
+    /** HRA's lines, one per tenancy; none where the rule does not apply or no home is entered. */
+    private static List<TraceLine> houseRentAllowance(NodeContext ctx, List<Employment> employments) {
         TemporalContext t = ctx.inputs().temporal();
         RuleRow rule = ctx.rule(RuleIds.SAL_HOUSE_RENT_ALLOWANCE);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         List<Tenancy> tenancies = ctx.inputs().entered().tenancies();
         if (!version.regimes().appliesIn(ctx.regime().code()) || tenancies.isEmpty()) {
-            return NodeResult.untraced(MoneyValue.of(Money.ZERO));
-        }
-        List<Employment> employments = ctx.inputs().entered().employments();
-        if (employments.size() > 1) {
-            throw new IllegalStateException("HRA is claimed with " + employments.size() + " employments, and an"
-                    + " employment carries no period yet, so the allowance cannot be matched to the months each"
-                    + " employer paid it; enter one employment until employment periods exist (D-099)");
+            return List.of();
         }
         Money allowanceForYear = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),
                 new HeadTotal(HeadCode.SALARIES), RuleIds.SAL_HOUSE_RENT_ALLOWANCE).total();
@@ -94,8 +108,7 @@ public final class ExemptionNode implements ComputationNode {
         for (Tenancy tenancy : tenancies) {
             trace.add(period(rule, version, t, tenancy, allowanceForYear, salaryForYear, trace.size() + 1));
         }
-        Money exempt = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
-        return new NodeResult(MoneyValue.of(exempt), trace);
+        return trace;
     }
 
     /** One period of occupation: its least-of, or nil with the reason where the home is not rented. */

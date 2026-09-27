@@ -1,0 +1,108 @@
+{
+  "ruleId": "SAL-LEAVE-TRAVEL-JOURNEYS",
+  "_note": "How many journeys are exempt, and when (D-100; rulebook SAL-LTA-BLOCK-001, -CARRY-001; DR 13 R-12): two in a block of four calendar years. TY 2026-27, Income-tax Rules, 2026 r.278(2) (p.1776): \"two journeys performed in a block of four calendar years commencing from the calendar year 2022\"; r.278(3)–(4): where a block is unused, the concession \"first availed of … during first calendar year of the immediately succeeding block … shall be eligible\" and is not counted against the two. TY 2025-26, Income-tax Rules, 1962 r.2B(2): \"two journeys performed in a block of four calendar years commencing from the calendar year 1986\" — the same boundaries (1986 + 36 = 2022) — and r.2B(3) with its Explanation, the same carry-over. Blocks are calendar years, so a tax year straddles two.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(5), with Income-tax Rules, 1962 r.2B; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 8, with Income-tax Rules, 2026 r.278; excluded by s.202(2)(a)(i)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "JourneysPerCalendarBlock",
+        "journeys": 2,
+        "calendarYears": 4,
+        "blocksCommence": 1986
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (First Amendment) Rules, 1998 — r.2B(1) substituted w.r.e.f. 1-10-1997, as amended by Notification S.O. 201(E) (read only in the Department of Revenue compendium's footnote)",
+        "gazetteRef": "S.O. 201(E)",
+        "notifiedOn": "1998-03-12",
+        "effectiveFrom": "1997-10-01",
+        "retrospective": true,
+        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
+        "sourceDescription": "Income-tax Rules, 1962 r.2B as in the Department of Revenue compendium (Taxmann, current to 2010-11), pp.348–350; Income-tax Act, 1961 s.10(5); Finance Act, 2023 s.52 (s.115BAC(2)(i)), gazette CG-DL-E-31032023-244830 pp.33–34",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Rules, 1962 rule 2B after 2011 up to AY 2026-27 — the compendium read is current only to 2010-11; and the notification of the Income-tax (First Amendment) Rules, 1998 itself (read here only as the compendium's footnote: w.r.e.f. 1-10-1997, as amended by S.O. 201(E) of 12-3-1998)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(5), with Income-tax Rules, 1962 r.2B; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 8, with Income-tax Rules, 2026 r.278; excluded by s.202(2)(a)(i)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "JourneysPerCalendarBlock",
+        "journeys": 2,
+        "calendarYears": 4,
+        "blocksCommence": 2022
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 278",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.278, pp.1775–1776; Income-tax Act, 2025 Sch. III Table Sl. 8 (pp.505–506) and s.202(2)(a)(i) (p.227)",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.278, pp.1775–1776",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

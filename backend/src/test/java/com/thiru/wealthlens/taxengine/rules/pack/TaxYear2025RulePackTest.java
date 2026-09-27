@@ -74,9 +74,9 @@ class TaxYear2025RulePackTest {
 
         // Then
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
-        assertThat(pack.rules()).hasSize(25);
+        assertThat(pack.rules()).hasSize(27);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.10");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.11");
     }
 
     @Test

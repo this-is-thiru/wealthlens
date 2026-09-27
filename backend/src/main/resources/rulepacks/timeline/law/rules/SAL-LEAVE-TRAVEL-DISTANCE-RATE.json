@@ -1,0 +1,58 @@
+{
+  "ruleId": "SAL-LEAVE-TRAVEL-DISTANCE-RATE",
+  "_note": "The rate the Rules state for a journey between places not connected by rail, where no recognised public transport system exists (D-100): Income-tax Rules, 2026 r.278(1)(iii)(B) (p.1776): \"an amount calculated at the rate of ₹30 per kilometre, for the distance of the journey by the shortest route shall be admissible\". TY 2026-27 only: Rules 1962 r.2B(1)(iii)(B) states no rate — \"an amount equivalent to the air-conditioned first class rail fare … as if the journey had been performed by rail\" — so for TY 2025-26 that fare is entered like any other.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Rules, 1962",
+        "presence": "ABSENT_IN_THIS_ACT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Rules, 2026",
+        "reference": "r.278(1)(iii)(B)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PerUnitPerPeriod",
+        "amount": "30",
+        "period": "KM"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 278",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.278, pp.1775–1776; Income-tax Act, 2025 Sch. III Table Sl. 8 (pp.505–506) and s.202(2)(a)(i) (p.227)",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.278, pp.1775–1776",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

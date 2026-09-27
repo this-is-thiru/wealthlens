@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.Journey;
+import com.thiru.wealthlens.taxengine.input.JourneyMode;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
@@ -59,11 +61,16 @@ class SalaryHeadPipelineTest {
             RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION);
 
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance) {
-        return run(year, regime, termsIncludeDearnessAllowance, List.of());
+        return run(year, regime, termsIncludeDearnessAllowance, List.of(), List.of());
     }
 
     private static PipelineRunner.Result run(
             int year, RegimeCode regime, boolean termsIncludeDearnessAllowance, List<Tenancy> tenancies) {
+        return run(year, regime, termsIncludeDearnessAllowance, tenancies, List.of());
+    }
+
+    private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
+            List<Tenancy> tenancies, List<Journey> journeys) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = RUNNER.pack(taxYear);
         RegimeSpec shipped = pack.regimes().get(regime);
@@ -73,15 +80,18 @@ class SalaryHeadPipelineTest {
                 new PipelineSpec(List.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS, NodeIds.SALARY_BASE,
                         NodeIds.SALARY_EXEMPTIONS, NodeIds.SALARY_DEDUCTIONS, NodeIds.SALARY_INCOME)),
                 shipped.behaviour(), shipped.provenance());
-        Employment employment = new Employment(List.of(
+        List<SalaryComponent> pay = new java.util.ArrayList<>(List.of(
                 new SalaryComponent(ComponentCodes.BASIC, Money.of("600000")),
                 new SalaryComponent(ComponentCodes.DEARNESS_ALLOWANCE, Money.of("60000")),
                 new SalaryComponent(ComponentCodes.HRA, Money.of("240000")),
-                new SalaryComponent(ComponentCodes.PROFESSIONAL_TAX, Money.of("2500"))),
-                termsIncludeDearnessAllowance);
+                new SalaryComponent(ComponentCodes.PROFESSIONAL_TAX, Money.of("2500"))));
+        if (!journeys.isEmpty()) {
+            pay.add(new SalaryComponent(ComponentCodes.LTA, Money.of("30000")));
+        }
+        Employment employment = new Employment(pay, termsIncludeDearnessAllowance);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), tenancies, List.of()),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), tenancies, journeys),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
@@ -187,5 +197,20 @@ class SalaryHeadPipelineTest {
 
         // Then — 9,00,000 − 75,000 = 8,25,000, as without the home
         assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("825000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenAJourneyOnLeaveIsClaimedOutsideTheNewRegime_incomeFallsByTheFareAdmitted(int year) {
+        // Given — LTA 30,000 received; a rail journey in May: 18,000 spent, fare admitted 15,000
+        Journey rail = new Journey(LocalDate.of(year, 5, 10), JourneyMode.RAIL_CONNECTED, Money.of("18000"),
+                java.util.Optional.of(Money.of("15000")), java.util.Optional.empty());
+
+        // When
+        PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, List.of(), List.of(rail));
+
+        // Then — exempt 15,000; income 9,30,000 − 15,000 − 52,500 = 8,62,500
+        assertThat(result.valueOf(NodeIds.SALARY_EXEMPTIONS)).isEqualTo(MoneyValue.of(Money.of("15000")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("862500")));
     }
 }

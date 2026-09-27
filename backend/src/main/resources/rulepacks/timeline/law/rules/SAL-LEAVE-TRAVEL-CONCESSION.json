@@ -1,0 +1,138 @@
+{
+  "ruleId": "SAL-LEAVE-TRAVEL-CONCESSION",
+  "_note": "The leave travel concession, per journey (D-100; rulebook SAL-LTA-001 to -005, -NEW-001; H-8): the lesser of the amount actually incurred on the travel and the fare the Rules admit for its mode, which the taxpayer states; the total never exceeds the assistance received (Sch. III Table Sl. 8(d): \"shall in no case exceed the amount of expenses actually incurred\"). TY 2026-27, Income-tax Rules, 2026 r.278(1) (pp.1775–1776): \"(i) where the journey is performed by air, the amount shall not exceed the fare admissible for the class of travel to which the employee is entitled, by the shortest route …; (ii) … connected by rail … any mode … other than by air, … the air-conditioned first-class rail fare by the shortest route …; (iii) … not connected by rail … (A) where a recognised public transport system exists, … the 1st class or deluxe class fare …; and (B) where no recognised public transport system exists … ₹30 per kilometre\" (SAL-LEAVE-TRAVEL-DISTANCE-RATE); not in the new regime, s.202(2)(a)(i). TY 2025-26, Income-tax Rules, 1962 r.2B(1): \"(i) … by air, an amount not exceeding the air economy fare of the national carrier by the shortest route …; (ii) … the air-conditioned first class rail fare …; (iii)(A) … the 1st class or deluxe class fare …; (B) … an amount equivalent to the air-conditioned first class rail fare, for the distance of the journey by the shortest route, as if the journey had been performed by rail\"; excluded in the new regime by s.115BAC(2)(i) (Finance Act, 2023 s.52: \"clause (5) or clause (13A) … of section 10\"). The children limit (r.278(5)–(6); SAL-LTA-CHILD-001) is not modelled (Appendix F).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(5), with Income-tax Rules, 1962 r.2B; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 8, with Income-tax Rules, 2026 r.278; excluded by s.202(2)(a)(i)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "amount actually incurred",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_INCURRED"
+            }
+          },
+          {
+            "name": "fare admissible",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "FARE_ADMISSIBLE"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (First Amendment) Rules, 1998 — r.2B(1) substituted w.r.e.f. 1-10-1997, as amended by Notification S.O. 201(E) (read only in the Department of Revenue compendium's footnote)",
+        "gazetteRef": "S.O. 201(E)",
+        "notifiedOn": "1998-03-12",
+        "effectiveFrom": "1997-10-01",
+        "retrospective": true,
+        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
+        "sourceDescription": "Income-tax Rules, 1962 r.2B as in the Department of Revenue compendium (Taxmann, current to 2010-11), pp.348–350; Income-tax Act, 1961 s.10(5); Finance Act, 2023 s.52 (s.115BAC(2)(i)), gazette CG-DL-E-31032023-244830 pp.33–34",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Rules, 1962 rule 2B after 2011 up to AY 2026-27 — the compendium read is current only to 2010-11; and the notification of the Income-tax (First Amendment) Rules, 1998 itself (read here only as the compendium's footnote: w.r.e.f. 1-10-1997, as amended by S.O. 201(E) of 12-3-1998)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(5), with Income-tax Rules, 1962 r.2B; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 8, with Income-tax Rules, 2026 r.278; excluded by s.202(2)(a)(i)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "amount actually incurred",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_INCURRED"
+            }
+          },
+          {
+            "name": "fare admissible",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "FARE_ADMISSIBLE"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 278",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.278, pp.1775–1776; Income-tax Act, 2025 Sch. III Table Sl. 8 (pp.505–506) and s.202(2)(a)(i) (p.227)",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.278, pp.1775–1776",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}
