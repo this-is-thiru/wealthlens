@@ -11,6 +11,10 @@ import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
 import com.thiru.wealthlens.taxengine.rules.rounding.RuleRounding;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.CalendarMonths;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.CompletedMonths;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.Days;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.ProrationBasis;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,8 +66,20 @@ public final class RuleJson {
                         PackJson.array(node, "versions", where, e -> version(e.node(), e.path())),
                         combination,
                         combinationRule,
+                        prorationBasis(node, where),
                         ValueJson.provenance(
                                 PackJson.object(node, "headProvenance", where), where + ".headProvenance")));
+    }
+
+    /** How a segment's share of the year is measured, where versions are prorated per segment (D-098). */
+    private static Optional<ProrationBasis> prorationBasis(JsonNode node, String path) {
+        return PackJson.optionalText(node, "prorationBasis", path).map(name -> switch (name) {
+            case "DAYS" -> new Days();
+            case "CALENDAR_MONTHS" -> new CalendarMonths();
+            case "COMPLETED_MONTHS" -> new CompletedMonths();
+            default -> throw new PackValidationException(path + ".prorationBasis must be one of"
+                    + " [DAYS, CALENDAR_MONTHS, COMPLETED_MONTHS], but was \"" + name + "\"");
+        });
     }
 
     /** One version of a rule. */

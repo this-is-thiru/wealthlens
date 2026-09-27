@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.NoRuleVersionException;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.ProrationBasis;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,9 @@ import java.util.Optional;
  *     assumed. Irrelevant in a year it did not change
  * @param midYearCombinationRule the rule supplying the combination, required when
  *     {@code midYearCombination} is {@link MidYearCombination#STATUTORY} and meaningless otherwise
+ * @param prorationBasis how a segment's share of the year is measured, required when
+ *     {@code midYearCombination} is {@link MidYearCombination#PRORATE_PER_SEGMENT} and meaningless otherwise
+ *     (D-098)
  * @param headProvenance where the rule as a whole was sourced
  */
 public record RuleRow(
@@ -35,11 +39,12 @@ public record RuleRow(
         List<RuleVersion> versions,
         MidYearCombination midYearCombination,
         RuleId midYearCombinationRule,
+        Optional<ProrationBasis> prorationBasis,
         Provenance headProvenance) {
 
     /** A rule with no mid-year change authored, which is the ordinary case. */
     public RuleRow(RuleId id, TemporalAxis axis, List<RuleVersion> versions, Provenance headProvenance) {
-        this(id, axis, versions, MidYearCombination.UNDETERMINED, null, headProvenance);
+        this(id, axis, versions, MidYearCombination.UNDETERMINED, null, Optional.empty(), headProvenance);
     }
 
     public RuleRow {
@@ -63,11 +68,28 @@ public record RuleRow(
             throw new IllegalArgumentException(
                     "Rule " + id + " combines mid-year changes STATUTORY but names no rule to do it");
         }
+        requireBasisExactlyWhenProrated(id, midYearCombination, prorationBasis);
         if (midYearCombination != MidYearCombination.STATUTORY && midYearCombinationRule != null) {
             throw new IllegalArgumentException(
                     "Rule " + id + " names combination rule " + midYearCombinationRule
                             + " but its combination is " + midYearCombination
                             + ", which would never consult it");
+        }
+    }
+
+    private static void requireBasisExactlyWhenProrated(
+            RuleId id, MidYearCombination combination, Optional<ProrationBasis> basis) {
+        if (basis == null) {
+            throw new IllegalArgumentException("Rule " + id + ": prorationBasis may not be null; pass Optional.empty()");
+        }
+        boolean prorated = combination == MidYearCombination.PRORATE_PER_SEGMENT;
+        if (prorated && basis.isEmpty()) {
+            throw new IllegalArgumentException("Rule " + id + " combines mid-year changes PRORATE_PER_SEGMENT but"
+                    + " names no prorationBasis to measure each segment by");
+        }
+        if (!prorated && basis.isPresent()) {
+            throw new IllegalArgumentException("Rule " + id + " names prorationBasis " + basis.get()
+                    + " but its combination is " + combination + ", which never prorates");
         }
     }
 

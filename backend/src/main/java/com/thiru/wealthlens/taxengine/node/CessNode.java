@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -53,7 +54,9 @@ public final class CessNode implements ComputationNode {
                     + (version.cap() == null ? "not a rate" : "a " + version.cap().shapeName())
                     + ", not a percentage of the tax");
         }
-        Money cess = rate.apply(CapContext.of(rate.base(), taxAndSurcharge)).value();
+        Money cess = TemporallyApportionedCap.apply(ctx.rule(RuleIds.RATE_HEALTH_EDUCATION_CESS),
+                        ctx.inputs().temporal(), CapContext.of(rate.base(), taxAndSurcharge))
+                .value();
         return NodeResult.of(MoneyValue.of(cess), TraceLine.of(1, produces(), RuleIds.RATE_HEALTH_EDUCATION_CESS,
                 StepKind.TAX, MoneyValue.of(taxAndSurcharge), MoneyValue.of(cess), version.provenance()));
     }

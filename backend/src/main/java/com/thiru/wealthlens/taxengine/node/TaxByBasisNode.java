@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -64,7 +65,7 @@ public final class TaxByBasisNode implements ComputationNode {
     public NodeResult evaluate(NodeContext ctx) {
         Money totalIncome = ctx.get(NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount();
         RuleRow row = ladderFor(ctx);
-        RuleVersion version = row.versionAt(ctx.inputs().temporal());
+        RuleVersion version = TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal());
         if (!(version.cap() instanceof SlabLadder ladder)) {
             throw new IllegalStateException("Rate table " + row.id() + " for regime " + ctx.regime().code()
                     + " is a " + version.cap().shapeName() + ", not a slab ladder");
@@ -86,7 +87,8 @@ public final class TaxByBasisNode implements ComputationNode {
         List<RuleRow> holding = LADDERS.stream()
                 .filter(id -> !id.equals(table))
                 .map(ctx::rule)
-                .filter(row -> replaces(row.versionAt(ctx.inputs().temporal()), ctx.regime().code(), conditions))
+                .filter(row -> replaces(TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal()),
+                        ctx.regime().code(), conditions))
                 .sorted(Comparator.comparing(row -> row.id().value()))
                 .toList();
         if (holding.size() > 1) {

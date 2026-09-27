@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefContext;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefResult;
 import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
@@ -172,7 +173,8 @@ public final class SurchargeNode implements ComputationNode {
         return relief;
     }
 
+    /** The one version governing the year: a ladder's bands cannot be apportioned (D-098). */
     private static RuleVersion version(NodeContext ctx, RuleId id) {
-        return ctx.rule(id).versionAt(ctx.inputs().temporal());
+        return TemporallyApportionedCap.governingVersion(ctx.rule(id), ctx.inputs().temporal());
     }
 }

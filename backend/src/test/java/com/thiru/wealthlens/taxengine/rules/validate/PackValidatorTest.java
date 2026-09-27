@@ -56,6 +56,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.Days;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.EnumMap;
@@ -512,6 +513,7 @@ class PackValidatorTest {
                                     versionFrom(LocalDate.of(2021, 4, 1), null)),
                             MidYearCombination.LATEST_VERSION_GOVERNS,
                             null,
+                            Optional.empty(),
                             provenance()));
 
             assertThatThrownBy(() -> PackValidator.validate(pack.build()))
@@ -588,6 +590,7 @@ class PackValidatorTest {
                                     provenance())),
                     combination,
                     combinationRule,
+                    combination == MidYearCombination.PRORATE_PER_SEGMENT ? Optional.of(new Days()) : Optional.empty(),
                     provenance());
         }
 

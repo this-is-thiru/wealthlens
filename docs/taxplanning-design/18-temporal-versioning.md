@@ -256,6 +256,19 @@ The combination is data, with its own status:
   "whatToCheck": "whether a mid-year change to the r.280(2) Sl.7 monthly cap applies per month or for the whole year" }
 ```
 
+
+> **Erratum (W-066b, 2026-09-27, D-098):** two branches cannot be built as sketched.
+> - `STATUTORY`'s `rule(...).evaluate(segments, ctx)` presumes a rule shape that evaluates segments. None exists
+>   and no rule in the rulebook uses STATUTORY, so it is refused until its first user.
+> - `ctx.prorated(range, basis)` presumes a `CapContext` that knows dates. It carries amounts and counts only, so
+>   PRORATE_PER_SEGMENT apportions each segment's cap *result* by the segment's share of the year on the rule's
+>   basis. A cap whose input is itself for part of the year is split by its node.
+>
+> As built, the class lives in `rules/pack/`, and nodes that need a ladder rather than a result ask for the
+> governing version.
+>
+> Verified by: `CapContext` (bases, contributions, counts); `MidYearCombination`; no STATUTORY in `01-rulebook.md`.
+
 ---
 
 ## V6 — Component lifecycle (V-4)

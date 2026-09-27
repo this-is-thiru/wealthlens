@@ -18,12 +18,15 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.Days;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -249,7 +252,7 @@ class TaxByBasisNodeTest {
                 v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance());
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
         rules.put(eighty.id(), new RuleRow(eighty.id(), eighty.axis(), List.of(overlapping),
-                eighty.midYearCombination(), eighty.midYearCombinationRule(), eighty.headProvenance()));
+                eighty.midYearCombination(), eighty.midYearCombinationRule(), eighty.prorationBasis(), eighty.headProvenance()));
         RulePack overlap = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules,
                 pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets());
 
@@ -259,6 +262,35 @@ class TaxByBasisNodeTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining(RuleIds.RATE_SLAB_FIRST_SCHEDULE_AGE_60TO79.value())
                 .hasMessageContaining(RuleIds.RATE_SLAB_FIRST_SCHEDULE_AGE_80.value());
+    }
+
+    @Test
+    void evaluate_whenTheLadderChangesMidYearAndIsProrated_isRefusedBecauseNoOneLadderGoverns() {
+        // Given — D-098: the new regime's ladder split at 1 Oct 2026 and declared PRORATE_PER_SEGMENT
+        RulePack pack = pack();
+        RuleRow ladder = pack.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME);
+        RuleVersion v = ladder.versions().getFirst();
+        RuleVersion first = new RuleVersion(
+                new Validity.Between(LocalDate.of(2026, 4, 1), Optional.of(LocalDate.of(2026, 9, 30))), v.regimes(),
+                v.cap(), v.relief(), v.rounding(), v.definition(), v.conditions(), v.provision1961(),
+                v.provision2025(), v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance());
+        RuleVersion second = new RuleVersion(Validity.Between.fromOnwards(LocalDate.of(2026, 10, 1)), v.regimes(),
+                v.cap(), v.relief(), v.rounding(), v.definition(), v.conditions(), v.provision1961(),
+                v.provision2025(), v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance());
+        Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
+        rules.put(ladder.id(), new RuleRow(ladder.id(), ladder.axis(), List.of(first, second),
+                MidYearCombination.PRORATE_PER_SEGMENT, null, Optional.of(new Days()), ladder.headProvenance()));
+        RulePack split = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules,
+                pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets());
+
+        // When / Then — a ladder's bands cannot be apportioned, so the node refuses rather than use year-end
+        assertThatThrownBy(() -> NodeHarness.with(split)
+                        .regime(NEW_TAX_REGIME)
+                        .given(NodeIds.ROUND_TOTALINCOME, Money.of("1000000"))
+                        .run(new TaxByBasisNode()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(RuleIds.RATE_SLAB_NEW_TAX_REGIME.value())
+                .hasMessageContaining("PRORATE_PER_SEGMENT");
     }
 
     @Test

@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -99,7 +100,8 @@ public final class SalaryDeductionNode implements ComputationNode {
         }
         RuleVersion version = applying.getFirst();
         Money salary = ctx.get(NodeIds.SALARY_GROSS, MoneyValue.class).asMoney();
-        CapResult deduction = version.cap().apply(CapContext.of(SALARY, salary));
+        CapResult deduction = TemporallyApportionedCap.apply(
+                ctx.rule(rules.getFirst()), ctx.inputs().temporal(), CapContext.of(SALARY, salary));
         return TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, rules.getFirst(), StepKind.DEDUCTION,
                         MoneyValue.of(salary), MoneyValue.of(deduction.value()), version.provenance())
                 .withLimitedBy(deduction.limitedBy());

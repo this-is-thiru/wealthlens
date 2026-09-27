@@ -867,7 +867,7 @@ if that is not enough for the item in hand.
 | W-064 | `salary.json` law rows | `DR 01` R7, R8 | |
 | W-065 | `SalaryIncomeNode` | | |
 | W-066 | `ProrationBasis` family | `DR 15` C3 | named basis per rule; **no caller divides** |
-| W-066b | `rules/temporal/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../temporal/TemporallyApportionedCapTest.java` *(path corrected by D-097: there is no `taxengine/temporal`)* | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
+| W-066b | `rules/pack/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../pack/TemporallyApportionedCapTest.java` *(path corrected by D-097, then to `rules/pack` by D-098 so `rules.pack` and `rules.temporal` do not depend on each other)* | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
 | W-067 | **creates** `ExemptionNode` — HRA | `DR 06` G1.3 | **per period**; metro % per period; `limitedBy` names the limb |
 | W-068 | **modifies** `ExemptionNode` — LTA | `DR 01` R10 | **calendar** blocks; four independent caps |
 | W-069 | **modifies** `ExemptionNode` — allowances | `DR 01` R11 | ⚠ `SAL-ALW-NEW-SUBSET-001` is **STATUS UNCLEAR** — seed from the **section**, flag visibly |
@@ -964,6 +964,21 @@ if that is not enough for the item in hand.
 >
 > Verified by: `PerUnitPerPeriod.apply` (`ctx.count(period)`); `Money.times(int)` Javadoc; no `taxengine/temporal`
 > package exists.
+
+
+> **Erratum (W-066b, 2026-09-27, D-098):**
+> - **Built, and wired.** `TemporallyApportionedCap` alone would apply nothing, so the four nodes that apply caps
+>   route through it. `CessNode` and `SalaryDeductionNode` call `apply`. `TaxByBasisNode` and `SurchargeNode`
+>   need the ladder itself, so they call `governingVersion`, which allows only LATEST or EARLIEST in a year the
+>   rule changed.
+> - **PRORATE_PER_SEGMENT** is each version's cap over the year's figures, apportioned by the segment's share
+>   of the year on `RuleRow.prorationBasis`. A cap whose input is itself for part of the year is split by its
+>   node (HRA, `W-067`).
+> - **STATUTORY is refused** until the first rule that needs it; nothing in the rulebook does.
+> - UNDETERMINED throws `UndeterminedApportionmentException` (re-parented by `W-105`).
+>
+> Verified by: `TemporalContext.on` (TAX_YEAR resolves at year end); the four nodes' `versionAt(...).cap()`
+> calls; `rules.pack` → `rules.temporal` imports.
 
 ---
 

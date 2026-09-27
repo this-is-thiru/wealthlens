@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet.Line;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
 import com.thiru.wealthlens.taxengine.rules.component.CashNature;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
@@ -19,12 +20,18 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.CalendarMonths;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
@@ -36,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -119,6 +127,46 @@ class SalaryDeductionNodeTest {
         // Then — 40,000, the lesser of 75,000 and the salary; the salary is what bound
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
         assertThat(result.trace().getFirst().limitedBy()).contains("salary");
+    }
+
+    @Test
+    void evaluate_whenTheStandardDeductionChangesMidYearProratedByCalendarMonths_appliesEachForItsMonths() {
+        // Given — D-098: a fixture change to the old-regime amount on 1 Oct 2026, from 50,000 to 60,000
+        RulePack shipped = withFixturePay(2026);
+        RuleRow row = shipped.rule(RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE);
+        RuleVersion v = row.versions().getFirst();
+        RuleVersion first = new RuleVersion(
+                new Validity.Between(LocalDate.of(2026, 4, 1), Optional.of(LocalDate.of(2026, 9, 30))), v.regimes(),
+                new Fixed(Money.of("50000")), v.relief(), v.rounding(), v.definition(), v.conditions(),
+                v.provision1961(), v.provision2025(), v.introducedBy(), v.legalStatus(), v.publicationStatus(),
+                v.provenance());
+        RuleVersion second = new RuleVersion(Validity.Between.fromOnwards(LocalDate.of(2026, 10, 1)), v.regimes(),
+                new Fixed(Money.of("60000")), v.relief(), v.rounding(), v.definition(), v.conditions(),
+                v.provision1961(), v.provision2025(), v.introducedBy(), v.legalStatus(), v.publicationStatus(),
+                v.provenance());
+        Map<RuleId, RuleRow> rules = new HashMap<>(shipped.rules());
+        rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(first, second),
+                MidYearCombination.PRORATE_PER_SEGMENT, null, Optional.of(new CalendarMonths()),
+                row.headProvenance()));
+        RulePack split = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules,
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        TaxYearId taxYear = TaxYearId.of(2026);
+        EngineInputs inputs = new EngineInputs(taxYear, FIRST_SCHEDULE_RATES,
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(2026, 9, 21)), plain.entered(), plain.assessee(),
+                plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
+
+        // When
+        NodeResult result = NodeHarness.with(split)
+                .regime(FIRST_SCHEDULE_RATES)
+                .inputs(inputs)
+                .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of(HeadCode.SALARIES,
+                        List.of(new Line(0, BASIC, Money.of("600000"))))))
+                .given(NodeIds.SALARY_GROSS, MoneyValue.of(Money.of("600000")))
+                .run(new SalaryDeductionNode());
+
+        // Then — 50,000 × 6/12 + 60,000 × 6/12 = 25,000 + 30,000 = 55,000; year-end alone would give 60,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("55000")));
     }
 
     @ParameterizedTest(name = "TY {0}")

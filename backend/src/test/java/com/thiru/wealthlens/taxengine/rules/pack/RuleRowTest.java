@@ -19,6 +19,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
+import com.thiru.wealthlens.taxengine.rules.temporal.proration.Days;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
@@ -336,6 +337,40 @@ class RuleRowTest {
             assertThatThrownBy(() -> new RegimeApplicability.ExceptIn(java.util.Set.of()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("AllRegimes");
+        }
+    }
+
+    @Nested
+    @DisplayName("prorationBasis — required exactly when versions are prorated per segment (D-098)")
+    class ProrationBasisDeclared {
+
+        private List<RuleVersion> oneVersion() {
+            return List.of(version(Validity.Between.fromOnwards(LocalDate.of(2026, 4, 1)), "75000"));
+        }
+
+        @Test
+        void construct_whenProratedPerSegmentWithoutABasis_isRefused() {
+            assertThatThrownBy(() -> new RuleRow(STANDARD_DEDUCTION, TemporalAxis.TAX_YEAR, oneVersion(),
+                            MidYearCombination.PRORATE_PER_SEGMENT, null, Optional.empty(), provenance()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("PRORATE_PER_SEGMENT")
+                    .hasMessageContaining("prorationBasis");
+        }
+
+        @Test
+        void construct_whenABasisIsNamedButNotProrated_isRefused() {
+            assertThatThrownBy(() -> new RuleRow(STANDARD_DEDUCTION, TemporalAxis.TAX_YEAR, oneVersion(),
+                            MidYearCombination.LATEST_VERSION_GOVERNS, null, Optional.of(new Days()), provenance()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("LATEST_VERSION_GOVERNS");
+        }
+
+        @Test
+        void construct_whenProratedWithABasis_carriesIt() {
+            RuleRow row = new RuleRow(STANDARD_DEDUCTION, TemporalAxis.TAX_YEAR, oneVersion(),
+                    MidYearCombination.PRORATE_PER_SEGMENT, null, Optional.of(new Days()), provenance());
+
+            assertThat(row.prorationBasis()).contains(new Days());
         }
     }
 }

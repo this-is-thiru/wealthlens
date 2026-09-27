@@ -190,7 +190,7 @@ class CessNodeTest {
                 v.legalStatus(), v.publicationStatus(), v.provenance());
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
         rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(fixed),
-                row.midYearCombination(), row.midYearCombinationRule(), row.headProvenance()));
+                row.midYearCombination(), row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
         RulePack notAPercentage = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules,
                 pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets());
 

@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-066 — "taxplanning W-066: add the proration bases — days, calendar months and completed months, so no caller divides (D-097)"
-Last updated              : 2026-09-27 (session 9 — W-066 done; build GREEN, 1946 tests)
-Current position          : W-066b — TemporallyApportionedCap (not started)
+Last checkpoint           : W-066b — "taxplanning W-066b: apply a rule that changed inside the year as it declares — per segment, latest, earliest, or refuse (D-098)"
+Last updated              : 2026-09-27 (session 9 — W-066b done; build GREEN, 1965 tests)
+Current position          : W-067 — ExemptionNode: HRA (not started)
 Session count             : 9
 ```
 
@@ -55,7 +55,7 @@ Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-04
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
-Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-067 ·  W-068 ·  W-069 ·  W-070 ·
+Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-066b D  W-067 ·  W-068 ·  W-069 ·  W-066a ·  W-070 ·  W-064a ·
 Phase 8    W-071 ·  W-072 ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
@@ -451,6 +451,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-098 | 2026-09-27 | `W-066b`: applying a rule that changed inside the year | **C1a:** build `TemporallyApportionedCap` and route the four cap-applying nodes through it — `CessNode`, `SalaryDeductionNode` via `apply`; `TaxByBasisNode`, `SurchargeNode` via `governingVersion` (LATEST/EARLIEST only; PRORATE/STATUTORY refused by name). **C2:** PRORATE_PER_SEGMENT = each version's cap over the year's figures, apportioned by the segment's share on the rule's basis, summed. **C3:** STATUTORY refused until its first user. **C4:** `RuleRow.prorationBasis` required iff PRORATE_PER_SEGMENT; JSON `DAYS`/`CALENDAR_MONTHS`/`COMPLETED_MONTHS`. **C5a:** `rules/pack/` (no `rules.pack`↔`rules.temporal` cycle), `UndeterminedApportionmentException` extends `RuntimeException` until `W-105` | owner: "W-066b approved — proceed as recommended" |
 | D-097 | 2026-09-27 | `W-066`: what a proration basis answers | **C1a:** `units(year, window)` (a whole count — `PerUnitPerPeriod`'s) and `apportion(forTheYear, year, window)` (one division at `Money.CALC`, rounded once in `Money`); no public fraction. **C2a:** `Days` actual days (365/366); `CalendarMonths` a part month counts as one; `CompletedMonths` calendar months wholly within the window; windows clipped to the year. **C3a:** no `OccupationPeriods` — HRA's occupied windows are `W-067`'s input, each measured by `Days`. **C4:** `rules/temporal/proration/`; `W-066b`'s `taxengine/temporal/` path corrected | owner: "W-066 approved — proceed as recommended" |
 | D-096 | 2026-09-27 | `W-065`: income under "Salaries", and the missing retirement item | **C1a:** `salary.income` requires `salary.gross`, `salary.deductions`; exemptions (`W-067`) and retirement (`W-066a`) add themselves. **C2a:** `MoneyValue`; `HeadResult` arrives with house property. **C3a:** untraced, as `NetPayableNode`. **C4a:** 2025/1961 s.15 stay `PLANNED`, reassigned to arrears/advance-salary work; `SalaryComponent` states the s.15 contract. **C5a:** a negative salary income is refused. New item **`W-066a`** (retirement and termination: `RetirementNode`, `RET-*`, 2025 s.18) before `W-070` | owner: "W-065 approved — proceed as recommended, place W-066a before W-070" |
 | D-095 | 2026-09-27 | Where `W-064a` (entertainment allowance) goes | After `W-070`: a one-year, old-regime, Government-only deduction of at most ₹5,000, on which nothing later depends; `W-065` next | owner: "option 2 — place W-064a after W-070, start W-065" |
