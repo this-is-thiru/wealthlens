@@ -868,6 +868,7 @@ if that is not enough for the item in hand.
 | W-065 | `SalaryIncomeNode` | | |
 | W-066 | `ProrationBasis` family | `DR 15` C3 | named basis per rule; **no caller divides** |
 | W-066b | `rules/pack/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../pack/TemporallyApportionedCapTest.java` *(path corrected by D-097, then to `rules/pack` by D-098 so `rules.pack` and `rules.temporal` do not depend on each other)* | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
+| W-067a | HRA's inputs and shapes *(added by D-099)*: `input/Tenancy` + `EnteredFacts.tenancies`; `rules/cap/AmountInExcess` (limb (b), "the amount by which … exceeds"); `rules/cap/PercentOfBaseByLocation` + `CapContext.locations` (limb (c)); their JSON | `DR 13` R-11; S4 r.279(1); r.2A | no row, no node — `W-067` uses them |
 | W-067 | **creates** `ExemptionNode` — HRA | `DR 06` G1.3 | **per period**; metro % per period; `limitedBy` names the limb |
 | W-068 | **modifies** `ExemptionNode` — LTA | `DR 01` R10 | **calendar** blocks; four independent caps |
 | W-069 | **modifies** `ExemptionNode` — allowances | `DR 01` R11 | ⚠ `SAL-ALW-NEW-SUBSET-001` is **STATUS UNCLEAR** — seed from the **section**, flag visibly |
@@ -979,6 +980,20 @@ if that is not enough for the item in hand.
 >
 > Verified by: `TemporalContext.on` (TAX_YEAR resolves at year end); the four nodes' `versionAt(...).cap()`
 > calls; `rules.pack` → `rules.temporal` imports.
+
+
+> **Erratum (W-067, 2026-09-27, D-099):**
+> - **Split.** `W-067a` builds the inputs and the two shapes; `W-067` builds the row, `ExemptionNode` and the
+>   wiring.
+> - **HRA is per occupied period (R-11) and needs a tenancy input** that nothing recorded before.
+> - **Limb (b) is a subtraction and limb (c) a location lookup**, so there are two new typed shapes (D-NOFORMULA
+>   allows a typed addition).
+> - **The TY 2025-26 city list is r.2A's four**, `UNVERIFIED` (post-2011 unsearched); TY 2026-27 is r.279's
+>   eight (H-2).
+> - **Two or more employments are refused** until employment periods exist. `SAL-HRA-006` (landlord PAN) is owed.
+>
+> Verified by: S2 Sch. III Table Sl. 11 (p.506); 1961 s.10(13A); S4 r.279 (p.1776); r.2A (DoR pp.347–348); the six
+> `CapShape` permits; `CapContext`; `NodeResult`.
 
 ---
 
@@ -1415,6 +1430,7 @@ none depends on anyone remembering it.
 | `Huf` karta and members | the first rule that reads them | rule B2 |
 | Capital gains on assets outside `portfolio` (manager **M-08**'s gap) | `W-089` (capital-gains milestone) | a user who sells a flat otherwise gets a silently incomplete computation |
 | `DIS-S202-2A` — the new regime's s.202(2)(a) disallowance set, its basis row (`REG-NEW-DISALLOW-001`) and run-time application, so a disallowed rule is *explained* as disallowed; until then `SAL-TAX-ON-EMPLOYMENT` is excluded by `ExceptIn` (D-093) | the first item that explains a regime difference by rule, or that authors a second s.202(2)(a) rule — owner to place | `NEW_TAX_REGIME.json` `_pendingDisallowanceSets` |
+| `SAL-HRA-006` — landlord PAN where aggregate rent paid in the year exceeds ₹1,00,000 (S4 r.205(2) Table Sl. 1): a notice, not a figure; nodes have no notice channel (`NodeResult` is value and trace) (D-099) | the first item that gives nodes a notice channel | `ExemptionNode` has the rent figures |
 | Section catalogue entries for every modelled section | each item that models a section — standing rule 2 | SC-1 ratchet |
 | The rule-authoring admin screen (**OQ-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
 | Dividend income in the surcharge's **excluding** income and in the 15%-limited part (`RATE-SUR-SPLIT-001`), D-086 | `W-079` (`OtherSourcesNode`) | dividends are slab-taxed, so nothing else would take them out of the 25%/37% test |

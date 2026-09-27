@@ -16,7 +16,9 @@ package com.thiru.wealthlens.taxengine.rules.cap;
  * the family is closed as designed: a switch over a cap shape that misses a case does not compile.
  * A seventh shape is a new class and a new permit — never an edit to an existing shape.
  */
-public sealed interface CapShape permits Fixed, PercentOfBase, SlabLadder, LeastOf, AggregateWithCeiling, PerUnitPerPeriod {
+public sealed interface CapShape
+        permits Fixed, PercentOfBase, SlabLadder, LeastOf, AggregateWithCeiling, PerUnitPerPeriod, AmountInExcess,
+                PercentOfBaseByLocation {
 
     /** Applies the cap to the amounts this rule declares it reads. */
     CapResult apply(CapContext ctx);

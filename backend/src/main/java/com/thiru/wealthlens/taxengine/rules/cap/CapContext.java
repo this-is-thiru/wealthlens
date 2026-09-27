@@ -34,19 +34,27 @@ import java.util.Map;
  * @param contributions amounts per pay line, for aggregate caps
  * @param counts quantities, keyed in the same namespace as {@code bases} — a count is not money, so
  *     asking for one as an amount is a pack error rather than a coincidence that happens to parse
+ * @param locations where something is, for a percentage chosen by place — HRA's limb (c) (D-099)
  */
 public record CapContext(
         Map<BaseId, Money> bases,
         Map<ComponentCode, Money> contributions,
-        Map<BaseId, Integer> counts) {
+        Map<BaseId, Integer> counts,
+        Map<BaseId, String> locations) {
 
     public CapContext {
-        if (bases == null || contributions == null || counts == null) {
+        if (bases == null || contributions == null || counts == null || locations == null) {
             throw new IllegalArgumentException("CapContext maps may not be null");
         }
         bases = Map.copyOf(bases);
         contributions = Map.copyOf(contributions);
         counts = Map.copyOf(counts);
+        locations = Map.copyOf(locations);
+    }
+
+    /** A context with no location — every call site written before D-099. */
+    public CapContext(Map<BaseId, Money> bases, Map<ComponentCode, Money> contributions, Map<BaseId, Integer> counts) {
+        this(bases, contributions, counts, Map.of());
     }
 
     /** A context with bases only — the common case, and every call site written before W-018. */
@@ -92,6 +100,20 @@ public record CapContext(
         if (value == null) {
             throw new IllegalArgumentException(
                     "No count for " + id + "; the context defines " + counts.keySet());
+        }
+        return value;
+    }
+
+    /**
+     * Where something is — a location code.
+     *
+     * @throws IllegalArgumentException if the context was given none for {@code id}
+     */
+    public String location(BaseId id) {
+        String value = locations.get(id);
+        if (value == null) {
+            throw new IllegalArgumentException(
+                    "No location for " + id + "; the context defines " + locations.keySet());
         }
         return value;
     }

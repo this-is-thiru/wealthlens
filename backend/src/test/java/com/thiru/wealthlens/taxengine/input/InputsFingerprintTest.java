@@ -107,7 +107,7 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
                                     new SalaryComponent(new ComponentCode("BASIC"),
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                                    false)))))),
+                                    false)), List.of())))),
                     Arguments.of(
                             "regime",
                             mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
@@ -242,7 +242,19 @@ class InputsFingerprintTest {
             return new EnteredFacts(List.of(new Employment(
                     List.of(new SalaryComponent(new ComponentCode("BASIC"),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                    termsIncludeDearnessAllowance)));
+                    termsIncludeDearnessAllowance)), List.of());
+        }
+
+        @Test
+        void enteredFacts_whenOnlyATenancyDiffers_movesTheHash() {
+            // Given — D-099: the HRA exemption reads each tenancy, so it must be in the cache key
+            EngineInputs withTenancy = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(
+                    new Tenancy(com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
+                                    LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31)), "BENGALURU", false,
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000")))));
+
+            // When / Then
+            assertThat(hashOf(withTenancy)).isNotEqualTo(hashOf(baseline()));
         }
 
         @Test

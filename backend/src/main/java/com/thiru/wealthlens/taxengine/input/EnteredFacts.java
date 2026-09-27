@@ -31,22 +31,29 @@ import java.util.List;
  * survives"</i> — so every field added here enters the key without anyone remembering to add it.
  *
  * <p>The first field arrived with the component partition (D-090): the employments, each with its
- * pay lines. Every later income item adds the field it reads, and the fingerprint sees it unasked.
+ * pay lines. The homes occupied arrived with HRA (D-099). Every later income item adds the field it reads, and
+ * the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
+ * @param tenancies each home occupied in the tax year, in the order entered
  */
-public record EnteredFacts(List<Employment> employments) {
+public record EnteredFacts(List<Employment> employments, List<Tenancy> tenancies) {
 
     public EnteredFacts {
         if (employments == null) {
             throw new IllegalArgumentException(
                     "EnteredFacts.employments may not be null; pass an empty list where there are none");
         }
+        if (tenancies == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.tenancies may not be null; pass an empty list where there are none");
+        }
         employments = List.copyOf(employments);
+        tenancies = List.copyOf(tenancies);
     }
 
     /** Nothing entered. */
     public static EnteredFacts none() {
-        return new EnteredFacts(List.of());
+        return new EnteredFacts(List.of(), List.of());
     }
 }

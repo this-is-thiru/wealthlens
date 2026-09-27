@@ -269,7 +269,8 @@ class RegimeElectionSnapshotTest {
             // B-003's lesson: an ABSENT component is invisible to the cache key, a thin one is
             // not. The employments are its first field (D-090); "none" is an empty list, never null.
             assertThat(EnteredFacts.none().employments()).isEmpty();
-            assertThat(EnteredFacts.none()).isEqualTo(new EnteredFacts(java.util.List.of()));
+            assertThat(EnteredFacts.none().tenancies()).isEmpty();
+            assertThat(EnteredFacts.none()).isEqualTo(new EnteredFacts(java.util.List.of(), java.util.List.of()));
         }
     }
 }

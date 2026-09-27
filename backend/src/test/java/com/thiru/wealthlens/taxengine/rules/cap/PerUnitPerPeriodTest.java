@@ -170,7 +170,7 @@ class PerUnitPerPeriodTest {
 
         /**
          * An exhaustive switch with no {@code default}. This does not merely pass — it <b>compiles</b>,
-         * and that is the assertion: adding a seventh {@code CapShape} breaks this line, which is the
+         * and that is the assertion: adding a ninth {@code CapShape} breaks this line, which is the
          * whole point of sealing the family.
          */
         @Test
@@ -191,7 +191,12 @@ class PerUnitPerPeriodTest {
                             java.util.List.of(new com.thiru.wealthlens.taxengine.rules.id.ComponentCode("LIC_PREMIUM")),
                             Money.of("150000"),
                             Map.of()),
-                    PerUnitPerPeriod.perPeriod(Money.of("5000"), MONTH));
+                    PerUnitPerPeriod.perPeriod(Money.of("5000"), MONTH),
+                    new AmountInExcess(new BaseId("RENT_PAID"), new Fixed(Money.ZERO)),
+                    new PercentOfBaseByLocation(new BaseId("SALARY"), new BaseId("LOCATION"),
+                            java.util.List.of(new PercentOfBaseByLocation.Band(java.util.Set.of("MUMBAI"),
+                                    com.thiru.wealthlens.taxengine.rules.money.Rate.percent("50"))),
+                            com.thiru.wealthlens.taxengine.rules.money.Rate.percent("40")));
 
             for (CapShape shape : all) {
                 String kind = switch (shape) {
@@ -201,11 +206,13 @@ class PerUnitPerPeriodTest {
                     case LeastOf ignored -> "least";
                     case AggregateWithCeiling ignored -> "aggregate";
                     case PerUnitPerPeriod ignored -> "perUnit";
+                    case AmountInExcess ignored -> "excess";
+                    case PercentOfBaseByLocation ignored -> "byLocation";
                 };
                 assertThat(kind).isNotBlank();
             }
 
-            assertThat(all).hasSize(6);
+            assertThat(all).hasSize(8);
         }
     }
 }

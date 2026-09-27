@@ -1,11 +1,13 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
 import com.thiru.wealthlens.taxengine.rules.cap.AggregateWithCeiling;
+import com.thiru.wealthlens.taxengine.rules.cap.AmountInExcess;
 import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
 import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.cap.PerUnitPerPeriod;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
+import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
@@ -102,7 +104,9 @@ public final class ShapeJson {
                 "SlabLadder",
                 "LeastOf",
                 "AggregateWithCeiling",
-                "PerUnitPerPeriod");
+                "PerUnitPerPeriod",
+                "AmountInExcess",
+                "PercentOfBaseByLocation");
         return PackJson.construct(path, () ->
         switch (tag) {
                     case "Fixed" -> new Fixed(money(node, "amount", path));
@@ -112,6 +116,9 @@ public final class ShapeJson {
                     case "LeastOf" -> leastOf(node, path);
                     case "AggregateWithCeiling" -> aggregate(node, path);
                     case "PerUnitPerPeriod" -> perUnitPerPeriod(node, path);
+                    case "AmountInExcess" -> new AmountInExcess(new BaseId(PackJson.text(node, "amount", path)),
+                            cap(PackJson.object(node, "threshold", path), path + ".threshold"));
+                    case "PercentOfBaseByLocation" -> percentByLocation(node, path);
                     default -> throw unreachable(tag, path);
                 });
     }
@@ -134,6 +141,16 @@ public final class ShapeJson {
         return new LeastOf(PackJson.array(node, "limbs", path, element -> new LeastOf.Limb(
                 PackJson.text(element.node(), "name", element.path()),
                 cap(PackJson.object(element.node(), "shape", element.path()), element.path() + ".shape"))));
+    }
+
+    private static PercentOfBaseByLocation percentByLocation(JsonNode node, String path) {
+        List<PercentOfBaseByLocation.Band> bands = PackJson.array(node, "bands", path, element ->
+                new PercentOfBaseByLocation.Band(
+                        new java.util.LinkedHashSet<>(PackJson.array(element.node(), "locations", element.path(),
+                                e -> e.node().asString())),
+                        rate(element.node(), "percent", element.path())));
+        return new PercentOfBaseByLocation(new BaseId(PackJson.text(node, "base", path)),
+                new BaseId(PackJson.text(node, "location", path)), bands, rate(node, "otherwise", path));
     }
 
     private static AggregateWithCeiling aggregate(JsonNode node, String path) {
