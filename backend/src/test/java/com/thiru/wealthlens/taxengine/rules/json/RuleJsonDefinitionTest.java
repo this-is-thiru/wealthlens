@@ -4,10 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
+import java.util.EnumSet;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -64,6 +70,46 @@ class RuleJsonDefinitionTest {
         // Then
         assertThat(version.definition()).contains(new SalaryBase());
         assertThat(version.cap()).isNull();
+    }
+
+    @Test
+    void version_whenAFlatTransportLimit_readsItsConditionsAndAmount() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "DisabledTransportLimit",
+                  "conditions": [ "BLIND", "DEAF_AND_DUMB", "ORTHOPAEDIC_LOWER_EXTREMITIES" ],
+                  "perMonth": "3200", "plusDearnessAllowanceThereon": false }""");
+
+        // Then
+        assertThat(version.definition()).contains(new DisabledTransportLimit(
+                Set.of(TransportDisability.BLIND, TransportDisability.DEAF_AND_DUMB,
+                        TransportDisability.ORTHOPAEDIC_LOWER_EXTREMITIES),
+                Money.of("3200"), Optional.empty(), false));
+    }
+
+    @Test
+    void version_whenATransportLimitByCity_readsBothAmounts() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "DisabledTransportLimit",
+                  "conditions": [ "BLIND", "DEAF_AND_DUMB", "ORTHOPAEDIC_LOWER_EXTREMITIES",
+                                  "ORTHOPAEDIC_UPPER_EXTREMITIES" ],
+                  "perMonth": "15000", "perMonthInOtherCities": "8000", "plusDearnessAllowanceThereon": true }""");
+
+        // Then
+        assertThat(version.definition()).contains(new DisabledTransportLimit(
+                EnumSet.allOf(TransportDisability.class), Money.of("15000"), Optional.of(Money.of("8000")), true));
+    }
+
+    @Test
+    void version_whenATransportConditionIsUnknown_isRefusedListingTheKnown() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "DisabledTransportLimit", "conditions": [ "LAME" ],
+                          "perMonth": "3200", "plusDearnessAllowanceThereon": false }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining(PATH + ".definition")
+                .hasMessageContaining("BLIND");
     }
 
     @Test

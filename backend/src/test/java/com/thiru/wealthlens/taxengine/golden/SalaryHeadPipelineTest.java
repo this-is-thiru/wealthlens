@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.golden;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
+import com.thiru.wealthlens.taxengine.input.DisabledTransportClaim;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -20,6 +21,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
+import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -35,6 +37,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -77,6 +80,12 @@ class SalaryHeadPipelineTest {
 
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
             List<Tenancy> tenancies, List<Journey> journeys, List<AllowanceUse> allowanceUses) {
+        return run(year, regime, termsIncludeDearnessAllowance, tenancies, journeys, allowanceUses, Optional.empty());
+    }
+
+    private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
+            List<Tenancy> tenancies, List<Journey> journeys, List<AllowanceUse> allowanceUses,
+            Optional<DisabledTransportClaim> disabledTransport) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = RUNNER.pack(taxYear);
         RegimeSpec shipped = pack.regimes().get(regime);
@@ -97,10 +106,13 @@ class SalaryHeadPipelineTest {
         if (!allowanceUses.isEmpty()) {
             pay.add(new SalaryComponent(ComponentCodes.CONVEYANCE_ALLOWANCE, Money.of("20000")));
         }
+        if (disabledTransport.isPresent()) {
+            pay.add(new SalaryComponent(ComponentCodes.TRANSPORT_ALLOWANCE_DISABLED, Money.of("50000")));
+        }
         Employment employment = new Employment(pay, termsIncludeDearnessAllowance);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), tenancies, journeys, allowanceUses),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), tenancies, journeys, allowanceUses, disabledTransport),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
@@ -234,5 +246,21 @@ class SalaryHeadPipelineTest {
         // Then — gross 9,20,000; exempt 15,000; deduction 75,000; income 8,30,000
         assertThat(result.valueOf(NodeIds.SALARY_EXEMPTIONS)).isEqualTo(MoneyValue.of(Money.of("15000")));
         assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("830000")));
+    }
+
+    @org.junit.jupiter.api.Test
+    void run_whenABlindEmployeesTransportAllowanceInTheNewRegime2025_incomeFallsByTheMonthlyLimit() {
+        // Given — transport 50,000 paid for all twelve months; r.2BB(3) keeps Table Sl. 11 under s.115BAC (D-102)
+        DisabledTransportClaim blind = new DisabledTransportClaim(TransportDisability.BLIND, 12, Optional.empty(),
+                Optional.empty());
+
+        // When
+        PipelineRunner.Result result =
+                run(2025, NEW_TAX_REGIME, true, List.of(), List.of(), List.of(), Optional.of(blind));
+
+        // Then — gross 9,50,000; exempt 3,200 × 12 = 38,400; deduction 75,000; income 8,36,600
+        assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("950000")));
+        assertThat(result.valueOf(NodeIds.SALARY_EXEMPTIONS)).isEqualTo(MoneyValue.of(Money.of("38400")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("836600")));
     }
 }

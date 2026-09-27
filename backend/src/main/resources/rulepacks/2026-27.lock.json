@@ -3,12 +3,12 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.21",
-      "checksum": "sha256:80ff76bd8e5b978aaa82fc03789130d495e9e6a93df6a20b2affe474fbe256e4"
+      "version": "2026-27.law.22",
+      "checksum": "sha256:a4e52d17a41408397f4dc13005767929bd29371f596049a910e837e089fec627"
     },
     "exec": {
-      "version": "2026-27.exec.10",
-      "checksum": "sha256:3e82c2eaba9ddde8ddf4fc61b91b6c4ff5029eafe4bcce64b92f878449c33419"
+      "version": "2026-27.exec.11",
+      "checksum": "sha256:8159018e2c19574d39da986182c8469728f24c8d2af9c0d4915302d66c34118a"
     },
     "forms": {
       "version": "2026-27.forms.2",
@@ -39,6 +39,7 @@
     "SAL-ALW-CHILDREN-EDUCATION": "sha256:cdfa1f02d376c72c225776215f82db701ba379d815441fd408de8e877d54f66a",
     "SAL-ALW-CONVEYANCE": "sha256:f284c3dfebb3e500f3a7cc5b81c2c5f09881cbfd80d6eb3efa2b632daae628ee",
     "SAL-ALW-HOSTEL": "sha256:0cad8b6403ef3a57747780aa80f93e96ee4a7530f9e3e3762395c729310675aa",
+    "SAL-ALW-TRANSPORT-DISABLED": "sha256:fe4498123f0931eae1a7808d16c11dd13795b3405230185031d26c59d0bec20a",
     "SAL-ALW-UNIFORM": "sha256:2ba447c6a003b8475aa87d500bebe47404237faec3292a94bb798ed424f4381b",
     "SAL-HOUSE-RENT-ALLOWANCE": "sha256:8ad357a359701049dd035cb07f0eca471ddf8df665c307b2d09aaac9c206c5b1",
     "SAL-LEAVE-TRAVEL-CONCESSION": "sha256:2ba59b843b42537f3304a7523a104f3b5303da09172de4bd9090a5049bf436a0",

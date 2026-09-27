@@ -38,7 +38,7 @@ import java.util.Set;
  * The exemptions taken out of salary before its income is struck — house rent allowance (Sch. III Table Sl. 11
  * with Rules 2026 r.279; 1961 s.10(13A) with Rules 1962 r.2A; D-099) and the leave travel concession (Sl. 8 with
  * r.278; s.10(5) with r.2B; D-100, in {@link LeaveTravelExemption}) and the salary allowances (Sl. 12–13 with
- * r.280; s.10(14) with r.2BB; D-101, in {@link AllowanceExemption}).
+ * r.280; s.10(14) with r.2BB; D-101, D-102, in {@link AllowanceExemption}).
  *
  * <p>Per period of occupation, never on annual figures ({@code DR 13} R-11): each rented home the taxpayer
  * occupied gets its own least-of — the allowance received for the period, the rent paid for it in excess of
@@ -83,7 +83,8 @@ public final class ExemptionNode implements ComputationNode {
         List<Employment> employments = ctx.inputs().entered().employments();
         boolean claimed = !ctx.inputs().entered().tenancies().isEmpty()
                 || !ctx.inputs().entered().leaveTravel().isEmpty()
-                || !ctx.inputs().entered().allowanceUses().isEmpty();
+                || !ctx.inputs().entered().allowanceUses().isEmpty()
+                || ctx.inputs().entered().disabledTransport().isPresent();
         if (claimed && employments.size() > 1) {
             throw new IllegalStateException("An exemption is claimed with " + employments.size() + " employments,"
                     + " and an employment carries no period yet, so an annual allowance cannot be matched to the"

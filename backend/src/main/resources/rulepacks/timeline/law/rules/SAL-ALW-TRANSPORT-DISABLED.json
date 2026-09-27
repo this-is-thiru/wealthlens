@@ -1,0 +1,112 @@
+{
+  "ruleId": "SAL-ALW-TRANSPORT-DISABLED",
+  "_note": "Transport allowance to an employee who is blind, deaf and dumb, or orthopaedically handicapped, for commuting between residence and duty: exempt up to the lesser of what was paid and the monthly limit times the months covered (D-102). TY 2025-26: Income-tax Rules, 1962 r.2BB(2) Table Sl. 11, \"blind [or deaf and dumb] or orthopaedically handicapped with disability of lower extremities … Whole of India [Rs. 3,200 per month]\" — the brackets mark later substitutions, reported as S.O. 1002(E) of 13-4-2015 (the amount) and S.O. 2604(E) of 23-9-2015 (\"or deaf and dumb\"), neither read; in r.2BB(3)'s list (G.S.R. 452(E), \"serial no. 11 of the Table\"), so also for an assessee taxed under s.115BAC(1A). TY 2026-27: Income-tax Rules, 2026 r.280(2) Table Sl. 10, \"blind or deaf and dumb or orthopaedically handicapped with disability of lower or upper extremities … (i) Metro Cities: ₹15000 plus dearness allowance thereon per month. (ii) Other Cities: ₹8000 dearness allowance thereon per month\"; in r.280(3)'s list, applied in the new regime per s.202(2)(a)(ii). The Rules define neither \"Metro Cities\" nor the dearness allowance \"thereon\" (OQ-7): the taxpayer states both as the employer applies them, and the other cities' row is read as \"plus\" like the metro row.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(14)(ii), with Income-tax Rules, 1962 r.2BB(2) Table Sl. 11 and r.2BB(3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 13, with Income-tax Rules, 2026 r.280(2) Table Sl. 10 and r.280(3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "DisabledTransportLimit",
+        "conditions": [
+          "BLIND",
+          "DEAF_AND_DUMB",
+          "ORTHOPAEDIC_LOWER_EXTREMITIES"
+        ],
+        "perMonth": "3200",
+        "plusDearnessAllowanceThereon": false
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Tenth Amendment) Rules, 2023, G.S.R. 452(E) — r.2BB(3) substituted (the allowances surviving s.115BAC, including Table Sl. 11); the latest change to r.2BB found",
+        "gazetteRef": "G.S.R. 452(E)",
+        "notifiedOn": "2023-06-21",
+        "effectiveFrom": "2023-06-21",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246719.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/11892059/Rule%2B-%2B2BB_en.pdf/fd9a5a13-a5e2-9baf-e18f-cb870d544553?t=1766001049047&version=2.0",
+        "sourceDescription": "Income Tax Department's consolidated Income-tax Rules, 1962 rule 2BB (6 pp.): (2) Table Sl. 11 p.5, (3) p.6; r.2BB(3) as substituted by G.S.R. 452(E), gazette 2023/246719",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(14)(ii), with Income-tax Rules, 1962 r.2BB(2) Table Sl. 11 and r.2BB(3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 13, with Income-tax Rules, 2026 r.280(2) Table Sl. 10 and r.280(3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "DisabledTransportLimit",
+        "conditions": [
+          "BLIND",
+          "DEAF_AND_DUMB",
+          "ORTHOPAEDIC_LOWER_EXTREMITIES",
+          "ORTHOPAEDIC_UPPER_EXTREMITIES"
+        ],
+        "perMonth": "15000",
+        "perMonthInOtherCities": "8000",
+        "plusDearnessAllowanceThereon": true
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 280",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280(2) Table Sl. 10, pp.1782–1783, and r.280(3); Income-tax Act, 2025 Sch. III Table Sl. 13 and s.202(2)(a)(ii)",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Income-tax Rules, 2026 r.280(2) Table Sl. 10 does not define \"Metro Cities\", nor say whose dearness allowance is added \"thereon\", and its other cities' row reads \"₹8000 dearness allowance thereon\" without \"plus\" (OQ-7); this version takes the city class and the dearness allowance as the taxpayer states them and adds it in both rows (D-102). r.280(3) addresses \"an option under section 202(4)\", the opt-out, while this version applies the list in the new regime (D-101). Check the amendment chain after G.S.R. 198(E) and any CBDT clarification."
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

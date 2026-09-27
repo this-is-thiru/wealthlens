@@ -10,10 +10,12 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -210,7 +212,8 @@ public final class ShapeJson {
      */
     /** A rule's definition (D-091): what it says an amount is. */
     public static RuleDefinition definition(JsonNode node, String path) {
-        String tag = PackJson.tag(node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock");
+        String tag = PackJson.tag(
+                node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -220,8 +223,29 @@ public final class ShapeJson {
             case "JourneysPerCalendarBlock" -> PackJson.construct(path, () -> new JourneysPerCalendarBlock(
                     PackJson.integer(node, "journeys", path), PackJson.integer(node, "calendarYears", path),
                     PackJson.integer(node, "blocksCommence", path)));
+            case "DisabledTransportLimit" -> disabledTransportLimit(node, path);
             default -> throw unreachable(tag, path);
         };
+    }
+
+    private static DisabledTransportLimit disabledTransportLimit(JsonNode node, String path) {
+        List<TransportDisability> conditions =
+                PackJson.array(node, "conditions", path, e -> transportDisability(e.node().asString(), e.path()));
+        Money perMonth = money(node, "perMonth", path);
+        Optional<Money> perMonthInOtherCities = optionalMoney(node, "perMonthInOtherCities", path);
+        boolean plusDearnessAllowance = PackJson.bool(node, "plusDearnessAllowanceThereon", path);
+        return PackJson.construct(path, () -> new DisabledTransportLimit(
+                Set.copyOf(conditions), perMonth, perMonthInOtherCities, plusDearnessAllowance));
+    }
+
+    private static TransportDisability transportDisability(String raw, String path) {
+        for (TransportDisability candidate : TransportDisability.values()) {
+            if (candidate.name().equals(raw)) {
+                return candidate;
+            }
+        }
+        throw new PackValidationException(path + " must be one of "
+                + java.util.Arrays.toString(TransportDisability.values()) + ", but was \"" + raw + "\"");
     }
 
     public static RuleRounding rounding(JsonNode node, String path) {

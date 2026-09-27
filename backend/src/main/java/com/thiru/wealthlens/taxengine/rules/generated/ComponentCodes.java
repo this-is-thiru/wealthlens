@@ -26,6 +26,7 @@ public final class ComponentCodes {
     public static final ComponentCode LTA = new ComponentCode("LTA");
     public static final ComponentCode PROFESSIONAL_TAX = new ComponentCode("PROFESSIONAL_TAX");
     public static final ComponentCode SPECIAL_ALLOWANCE = new ComponentCode("SPECIAL_ALLOWANCE");
+    public static final ComponentCode TRANSPORT_ALLOWANCE_DISABLED = new ComponentCode("TRANSPORT_ALLOWANCE_DISABLED");
     public static final ComponentCode UNIFORM_ALLOWANCE = new ComponentCode("UNIFORM_ALLOWANCE");
 
     private ComponentCodes() {

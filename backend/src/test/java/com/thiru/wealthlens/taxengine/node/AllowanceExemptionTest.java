@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
+import com.thiru.wealthlens.taxengine.input.DisabledTransportClaim;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -13,6 +14,8 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CommutingCity;
+import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -29,15 +32,19 @@ import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
  * The allowance exemptions in {@link ExemptionNode} (Sch. III Table Sl. 12–13 with Rules 2026 r.280; s.10(14) with
  * Rules 1962 r.2BB; D-101). Each figure is worked by hand from the prescribed amounts: ₹3,000 and ₹9,000 per month
- * per child for TY 2026-27 (r.280(2) Sl. 7, 8), ₹100 and ₹300 for TY 2025-26 (r.2BB(2) Sl. 5, 6).
+ * per child for TY 2026-27 (r.280(2) Sl. 7, 8), ₹100 and ₹300 for TY 2025-26 (r.2BB(2) Sl. 5, 6); for a disabled
+ * employee's transport (D-102), ₹3,200 per month for TY 2025-26 (r.2BB(2) Sl. 11) and ₹15,000 metro or ₹8,000 other
+ * cities, plus dearness allowance thereon, for TY 2026-27 (r.280(2) Sl. 10).
  */
 class AllowanceExemptionTest {
 
@@ -46,6 +53,17 @@ class AllowanceExemptionTest {
 
     private static NodeResult run(int year, RegimeCode regime, ComponentCode allowance, String received,
             AllowanceUse use) {
+        return run(year, regime, allowance, received, List.of(use), Optional.empty(), 1);
+    }
+
+    private static NodeResult runTransport(int year, RegimeCode regime, String received,
+            DisabledTransportClaim claim) {
+        return run(year, regime, ComponentCodes.TRANSPORT_ALLOWANCE_DISABLED, received, List.of(), Optional.of(claim),
+                1);
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, ComponentCode allowance, String received,
+            List<AllowanceUse> uses, Optional<DisabledTransportClaim> claim, int employments) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -53,7 +71,8 @@ class AllowanceExemptionTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(List.of(new Employment(List.of(), true)), List.of(), List.of(), List.of(use)),
+                new EnteredFacts(Collections.nCopies(employments, new Employment(List.of(), true)), List.of(),
+                        List.of(), uses, claim),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack)
@@ -171,5 +190,96 @@ class AllowanceExemptionTest {
                         AllowanceUse.spent(ComponentCodes.BASIC, Money.of("1000"))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("BASIC");
+    }
+
+    @Test
+    void evaluate_whenBlindAllOf2025_exemptsThreeThousandTwoHundredAMonth() {
+        // When — 3,200 × 12 = 38,400, against 50,000 paid
+        NodeResult result = runTransport(2025, FIRST_SCHEDULE_RATES, "50000", new DisabledTransportClaim(
+                TransportDisability.BLIND, 12, Optional.empty(), Optional.empty()));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("38400")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.SAL_ALW_TRANSPORT_DISABLED);
+            assertThat(line.kind()).isEqualTo(StepKind.EXEMPTION);
+            assertThat(line.limitedBy()).contains("limit per month");
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
+        });
+    }
+
+    @Test
+    void evaluate_whenUpperExtremitiesIn2025_givesANilLineNamingWhy() {
+        // When — r.2BB(2) Sl. 11 names a disability of the lower extremities only
+        NodeResult result = runTransport(2025, FIRST_SCHEDULE_RATES, "50000", new DisabledTransportClaim(
+                TransportDisability.ORTHOPAEDIC_UPPER_EXTREMITIES, 12, Optional.empty(), Optional.empty()));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.limitedBy())
+                .hasValueSatisfying(why -> assertThat(why).contains("ORTHOPAEDIC_UPPER_EXTREMITIES")));
+    }
+
+    @Test
+    void evaluate_whenMetroWithDearnessAllowanceIn2026_isCappedByWhatWasPaidAndVisiblyUnverified() {
+        // When — (15,000 + 1,500) × 12 = 1,98,000, against 1,80,000 paid
+        NodeResult result = runTransport(2026, FIRST_SCHEDULE_RATES, "180000", new DisabledTransportClaim(
+                TransportDisability.ORTHOPAEDIC_UPPER_EXTREMITIES, 12, Optional.of(CommutingCity.METRO_CITY),
+                Optional.of(Money.of("1500"))));
+
+        // Then — OQ-7: the terms are taken as stated, so the version is unverified and the figure PROVISIONAL
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("180000")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.limitedBy()).contains("allowance received");
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+        });
+    }
+
+    @Test
+    void evaluate_whenOtherCityForSixMonthsIn2026_exemptsTheOtherCitiesAmount() {
+        // When — 8,000 × 6 = 48,000, against 60,000 paid
+        NodeResult result = runTransport(2026, FIRST_SCHEDULE_RATES, "60000", new DisabledTransportClaim(
+                TransportDisability.DEAF_AND_DUMB, 6, Optional.of(CommutingCity.OTHER_CITY), Optional.empty()));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("48000")));
+    }
+
+    @Test
+    void evaluate_whenTransportInTheNewRegime_isStillExempt() {
+        // When — r.2BB(3) (G.S.R. 452(E)) names Table Sl. 11 for an assessee taxed under s.115BAC(1A)
+        NodeResult result = runTransport(2025, NEW_TAX_REGIME, "50000", new DisabledTransportClaim(
+                TransportDisability.BLIND, 12, Optional.empty(), Optional.empty()));
+
+        // Then — 3,200 × 12 = 38,400
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("38400")));
+    }
+
+    @Test
+    void evaluate_whenTheCityIsNotStatedIn2026_isRefused() {
+        // When / Then — the limit depends on the city class, which the Rules leave to be stated (OQ-7)
+        assertThatThrownBy(() -> runTransport(2026, FIRST_SCHEDULE_RATES, "60000", new DisabledTransportClaim(
+                        TransportDisability.BLIND, 12, Optional.empty(), Optional.empty())))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("metro");
+    }
+
+    @Test
+    void evaluate_whenTransportIsEnteredAsAnAllowanceUse_isRefusedNamingTheClaim() {
+        // When / Then — its limit turns on the disability, not on an amount spent
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES, ComponentCodes.TRANSPORT_ALLOWANCE_DISABLED,
+                        "60000", AllowanceUse.spent(ComponentCodes.TRANSPORT_ALLOWANCE_DISABLED, Money.of("1000"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("disabled transport claim");
+    }
+
+    @Test
+    void evaluate_whenTwoEmploymentsAndATransportClaim_isRefused() {
+        // When / Then — as for every exemption: the months each employer paid cannot be told apart
+        assertThatThrownBy(() -> run(2025, FIRST_SCHEDULE_RATES, ComponentCodes.TRANSPORT_ALLOWANCE_DISABLED,
+                        "50000", List.of(), Optional.of(new DisabledTransportClaim(TransportDisability.BLIND, 12,
+                                Optional.empty(), Optional.empty())), 2))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("employment");
     }
 }

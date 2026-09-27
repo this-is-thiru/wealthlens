@@ -144,7 +144,7 @@ class GeneratedConstantsTest {
             // A component arrives with the first rule that reads it (D-089): professional tax with
             // SAL-TAX-ON-EMPLOYMENT (D-093), the pay lines with SAL-SALARY-INCLUDES (D-094)
             assertThat(ConstantGenerator.componentCodes()).containsExactly(
-                    "BASIC", "BONUS", "CHILDREN_EDUCATION_ALLOWANCE", "COMMISSION", "CONVEYANCE_ALLOWANCE", "DEARNESS_ALLOWANCE", "HOSTEL_ALLOWANCE", "HRA", "LTA", "PROFESSIONAL_TAX", "SPECIAL_ALLOWANCE", "UNIFORM_ALLOWANCE");
+                    "BASIC", "BONUS", "CHILDREN_EDUCATION_ALLOWANCE", "COMMISSION", "CONVEYANCE_ALLOWANCE", "DEARNESS_ALLOWANCE", "HOSTEL_ALLOWANCE", "HRA", "LTA", "PROFESSIONAL_TAX", "SPECIAL_ALLOWANCE", "TRANSPORT_ALLOWANCE_DISABLED", "UNIFORM_ALLOWANCE");
         }
 
         @Test
@@ -170,6 +170,7 @@ class GeneratedConstantsTest {
                             "SAL-ALW-CHILDREN-EDUCATION",
                             "SAL-ALW-CONVEYANCE",
                             "SAL-ALW-HOSTEL",
+                            "SAL-ALW-TRANSPORT-DISABLED",
                             "SAL-ALW-UNIFORM",
                             "SAL-HOUSE-RENT-ALLOWANCE",
                             "SAL-LEAVE-TRAVEL-CONCESSION",

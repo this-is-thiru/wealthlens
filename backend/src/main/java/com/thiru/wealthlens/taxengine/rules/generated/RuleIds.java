@@ -34,6 +34,7 @@ public final class RuleIds {
     public static final RuleId SAL_ALW_CHILDREN_EDUCATION = new RuleId("SAL-ALW-CHILDREN-EDUCATION");
     public static final RuleId SAL_ALW_CONVEYANCE = new RuleId("SAL-ALW-CONVEYANCE");
     public static final RuleId SAL_ALW_HOSTEL = new RuleId("SAL-ALW-HOSTEL");
+    public static final RuleId SAL_ALW_TRANSPORT_DISABLED = new RuleId("SAL-ALW-TRANSPORT-DISABLED");
     public static final RuleId SAL_ALW_UNIFORM = new RuleId("SAL-ALW-UNIFORM");
     public static final RuleId SAL_HOUSE_RENT_ALLOWANCE = new RuleId("SAL-HOUSE-RENT-ALLOWANCE");
     public static final RuleId SAL_LEAVE_TRAVEL_CONCESSION = new RuleId("SAL-LEAVE-TRAVEL-CONCESSION");

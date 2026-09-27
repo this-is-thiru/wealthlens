@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
+import com.thiru.wealthlens.taxengine.input.DisabledTransportClaim;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
@@ -8,6 +9,10 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
@@ -24,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -36,6 +42,11 @@ import java.util.Set;
  * allowance rule it feeds — and a rule that does not apply in the regime leaves no line. The new regime's list
  * (r.2BB(3); r.280(3), read into the new regime) is each rule's regimes, and a version resting on r.280(3)'s wording
  * is marked unverified, so any figure using it shows as provisional.
+ *
+ * <p>A disabled employee's transport allowance (Sl. 13 with r.280(2) Sl. 10; r.2BB(2) Sl. 11; D-102) is claimed
+ * apart from the uses, since its limit turns on the disability and, from TY 2026-27, on the city class and the
+ * dearness allowance thereon: exempt up to the lesser of what was paid and the monthly limit for each month covered.
+ * A disability the year does not list gets a nil line naming it.
  */
 final class AllowanceExemption {
 
@@ -52,7 +63,9 @@ final class AllowanceExemption {
     }
 
     static Set<RuleId> rules() {
-        return ALLOWANCES;
+        Set<RuleId> rules = new HashSet<>(ALLOWANCES);
+        rules.add(RuleIds.SAL_ALW_TRANSPORT_DISABLED);
+        return Set.copyOf(rules);
     }
 
     /** One EXEMPTION line per allowance use, numbered from {@code firstSequence}. */
@@ -78,7 +91,47 @@ final class AllowanceExemption {
                             version.provenance())
                     .withLimitedBy(exempt.limitedBy()));
         }
+        ctx.inputs().entered().disabledTransport()
+                .flatMap(claim -> transport(ctx, components, claim, firstSequence + lines.size()))
+                .ifPresent(lines::add);
         return lines;
+    }
+
+    /** The transport line: the least of what was paid and the limit for the months covered; nil where not listed. */
+    private static Optional<TraceLine> transport(NodeContext ctx, ComponentSet components,
+            DisabledTransportClaim claim, int sequence) {
+        RuleId ruleId = RuleIds.SAL_ALW_TRANSPORT_DISABLED;
+        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal());
+        if (!version.regimes().appliesIn(ctx.regime().code())) {
+            return Optional.empty();
+        }
+        DisabledTransportLimit limit = transportLimit(version);
+        Money received = HeadTotalLines.of(ctx, components, new HeadTotal(HeadCode.SALARIES), ruleId).total();
+        if (!limit.admits(claim.condition())) {
+            return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, ruleId, StepKind.EXEMPTION,
+                            MoneyValue.of(received), MoneyValue.of(Money.ZERO), version.provenance())
+                    .withLimitedBy("not listed: " + claim.condition() + " is not among this year's disabilities "
+                            + limit.conditions().stream().map(Enum::name).sorted().toList()));
+        }
+        Money ceiling = limit.monthlyLimit(claim.city(), claim.dearnessAllowanceThereon())
+                .times(claim.monthsCovered());
+        return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, ruleId, StepKind.EXEMPTION,
+                        MoneyValue.of(received), MoneyValue.of(Money.min(received, ceiling)), version.provenance())
+                .withLimitedBy(received.isLessThanOrEqual(ceiling) ? "allowance received" : "limit per month"));
+    }
+
+    private static DisabledTransportLimit transportLimit(RuleVersion version) {
+        RuleId ruleId = RuleIds.SAL_ALW_TRANSPORT_DISABLED;
+        return switch (version.definition().orElseThrow(() -> new IllegalStateException(
+                ruleId + " carries no definition of its limit"))) {
+            case DisabledTransportLimit transport -> transport;
+            case HeadTotal headTotal -> throw new IllegalStateException(
+                    ruleId + " defines a head's total, not a transport limit");
+            case SalaryBase salaryBase -> throw new IllegalStateException(
+                    ruleId + " defines a salary base, not a transport limit");
+            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(
+                    ruleId + " defines journeys per block, not a transport limit");
+        };
     }
 
     /** The allowance rule a component feeds; refused where it feeds none, or more than one. */
@@ -86,6 +139,10 @@ final class AllowanceExemption {
         ComponentDefinition definition = ctx.pack().components().get(allowance);
         List<RuleId> fed = definition == null ? List.of()
                 : definition.feedsInto().stream().filter(ALLOWANCES::contains).toList();
+        if (definition != null && definition.feedsInto().contains(RuleIds.SAL_ALW_TRANSPORT_DISABLED)) {
+            throw new IllegalArgumentException(allowance + " is exempt by the disability and the months covered;"
+                    + " enter it as a disabled transport claim, not an allowance use");
+        }
         if (fed.size() != 1) {
             throw new IllegalArgumentException(allowance + " has no allowance exemption to claim a use against");
         }

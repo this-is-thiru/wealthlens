@@ -1,6 +1,6 @@
 {
-  "_note": "Section catalogue entry (D-042, D-060, D-101). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: SAL-ALW-*.json (1961 s.10(14) with Rules 1962 r.2BB; 2025 Sch. III Table Sl. 12–13 with Rules 2026 r.280). routes[0]: SAL-ALW-UNIFORM, SAL-ALW-CONVEYANCE (Sl. 12, actually incurred). routes[1]: SAL-ALW-CHILDREN-EDUCATION, SAL-ALW-HOSTEL (Sl. 13, per month per child, two children). disqualifiers[0]: s.202(2)(a)(ii) / r.2BB(3), each row's regimes; conveyance survives, its TY 2026-27 version UNVERIFIED on r.280(3). routes[2]: transport for a disabled employee, W-069b (OQ-7). routes[3]: the other Sl. 12 allowances and the armed-forces and area allowances, not modelled (D-101).",
+  "_note": "Section catalogue entry (D-042, D-060, D-101, D-102). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: SAL-ALW-*.json (1961 s.10(14) with Rules 1962 r.2BB; 2025 Sch. III Table Sl. 12–13 with Rules 2026 r.280). routes[0]: SAL-ALW-UNIFORM, SAL-ALW-CONVEYANCE (Sl. 12, actually incurred). routes[1]: SAL-ALW-CHILDREN-EDUCATION, SAL-ALW-HOSTEL (Sl. 13, per month per child, two children). disqualifiers[0]: s.202(2)(a)(ii) / r.2BB(3), each row's regimes; conveyance survives, its TY 2026-27 version UNVERIFIED on r.280(3). routes[2]: SAL-ALW-TRANSPORT-DISABLED (Sl. 13 / r.2BB(2) Sl. 11, r.280(2) Sl. 10; per month, the city class and DA thereon as stated, OQ-7), surviving the new regime; its TY 2026-27 version UNVERIFIED (D-102). routes[3]: the other Sl. 12 allowances and the armed-forces and area allowances, not modelled (D-101).",
   "key": "SEC-SALARY-ALLOWANCES",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -13,7 +13,7 @@
     "presence": "PRESENT"
   },
   "plainName": "Salary allowances",
-  "summary": "Some allowances in your salary are partly or wholly free of tax. An allowance for expenses of the job, such as a uniform or conveyance for duties, is exempt only as far as you actually spent the money on that purpose. An allowance for your children's education or hostel is exempt up to a fixed amount a month for each child, for at most two children. In the default regime only a few of these survive, such as conveyance for duties.",
+  "summary": "Some allowances in your salary are partly or wholly free of tax. An allowance for expenses of the job, such as a uniform or conveyance for duties, is exempt only as far as you actually spent the money on that purpose. An allowance for your children's education or hostel is exempt up to a fixed amount a month for each child, for at most two children. An employee who is blind, deaf and dumb, or orthopaedically handicapped may have a transport allowance for commuting exempt up to a fixed amount a month. In the default regime only a few of these survive, such as conveyance for duties and that transport allowance.",
   "routes": [
     {
       "name": "Allowances for expenses of the job",
@@ -45,11 +45,11 @@
     },
     {
       "name": "Transport allowance for a disabled employee",
-      "description": "Commuting allowance for an employee who is blind, deaf and dumb, or orthopaedically handicapped.",
+      "description": "Commuting allowance for an employee who is blind, deaf and dumb, or orthopaedically handicapped: exempt up to a fixed amount for each month it was paid, and no more than the allowance paid. Which disabilities qualify, and whether the amount depends on the city, differ by year.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "Not built yet: its own backlog item adds it, after the meaning of its limit is settled."
+          "type": "ByRule",
+          "rule": "SAL-ALW-TRANSPORT-DISABLED"
         }
       ]
     },

@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
@@ -97,6 +98,8 @@ final class LeaveTravelExemption {
                     RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a head's total, not journeys per block");
             case SalaryBase salaryBase -> throw new IllegalStateException(
                     RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a salary base, not journeys per block");
+            case DisabledTransportLimit transport -> throw new IllegalStateException(
+                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a transport limit, not journeys per block");
         };
     }
 

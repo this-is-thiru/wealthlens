@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.input;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * What the taxpayer entered, as the engine will read it.
@@ -32,19 +33,21 @@ import java.util.List;
  *
  * <p>The first field arrived with the component partition (D-090): the employments, each with its
  * pay lines. The homes occupied arrived with HRA (D-099), the journeys on leave with LTA (D-100), how each
- * allowance was used with the allowance exemptions (D-101). Every later income item adds the field it reads, and
- * the fingerprint sees it unasked.
+ * allowance was used with the allowance exemptions (D-101), a disabled employee's transport claim with its
+ * exemption (D-102). Every later income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
  * @param tenancies each home occupied in the tax year, in the order entered
  * @param leaveTravel each journey on leave claimed in the tax year, in the order entered
  * @param allowanceUses how each allowance was used, for its exemption, in the order entered
+ * @param disabledTransport the transport allowance exemption claimed for a disability, if any
  */
 public record EnteredFacts(
         List<Employment> employments,
         List<Tenancy> tenancies,
         List<Journey> leaveTravel,
-        List<AllowanceUse> allowanceUses) {
+        List<AllowanceUse> allowanceUses,
+        Optional<DisabledTransportClaim> disabledTransport) {
 
     public EnteredFacts {
         if (employments == null) {
@@ -63,6 +66,10 @@ public record EnteredFacts(
             throw new IllegalArgumentException(
                     "EnteredFacts.allowanceUses may not be null; pass an empty list where there are none");
         }
+        if (disabledTransport == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.disabledTransport may not be null; pass Optional.empty() where there is none");
+        }
         employments = List.copyOf(employments);
         tenancies = List.copyOf(tenancies);
         leaveTravel = List.copyOf(leaveTravel);
@@ -71,6 +78,6 @@ public record EnteredFacts(
 
     /** Nothing entered. */
     public static EnteredFacts none() {
-        return new EnteredFacts(List.of(), List.of(), List.of(), List.of());
+        return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty());
     }
 }

@@ -31,6 +31,7 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -61,7 +62,7 @@ class ExemptionNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(employments, tenancies, List.of(), List.of()), plain.assessee(), plain.family(), plain.ledgers(),
+                new EnteredFacts(employments, tenancies, List.of(), List.of(), Optional.empty()), plain.assessee(), plain.family(), plain.ledgers(),
                 plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack)
                 .regime(regime)

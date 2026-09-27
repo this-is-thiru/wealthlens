@@ -8,5 +8,6 @@ package com.thiru.wealthlens.taxengine.rules.definition;
  * only a row has — a version per year, provenance, a line in the trace, and a rule for components to feed —
  * while its content stays data. A new kind of definition is a new class and a new permit.
  */
-public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPerCalendarBlock {
+public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPerCalendarBlock,
+        DisabledTransportLimit {
 }
