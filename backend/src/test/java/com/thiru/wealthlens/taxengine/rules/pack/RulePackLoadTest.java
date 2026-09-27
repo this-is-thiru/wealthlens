@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -79,7 +80,7 @@ class RulePackLoadTest {
             RulePack pack = load("rulepacks", TY_2026);
 
             assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
-            assertThat(pack.rules()).hasSize(21);
+            assertThat(pack.rules()).hasSize(24);
             assertThat(pack.regimes()).hasSize(2);
         }
 
@@ -100,7 +101,7 @@ class RulePackLoadTest {
 
             assertThat(pack.computationCacheKey())
                     .startsWith("2026-27|")
-                    .contains("law=2026-27.law.16")
+                    .contains("law=2026-27.law.17")
                     .doesNotContain("content=");
         }
 
@@ -116,10 +117,10 @@ class RulePackLoadTest {
         }
 
         @Test
-        void itHasNoComponentsYetAndThisTestSaysSo() {
-            // exec/components.json is a stub until W-059, so invariant I7 has nothing to check and
-            // this suite proves less about the registry than about rules and regimes.
-            assertThat(load("rulepacks", TY_2026).components()).isEmpty();
+        void itHoldsTheShippedComponentsAndThisTestSaysWhich() {
+            // A component arrives with the first rule that reads it (D-089): professional tax came with
+            // SAL-TAX-ON-EMPLOYMENT (D-093); the pay lines follow with W-064.
+            assertThat(load("rulepacks", TY_2026).components()).containsOnlyKeys(new ComponentCode("PROFESSIONAL_TAX"));
         }
     }
 

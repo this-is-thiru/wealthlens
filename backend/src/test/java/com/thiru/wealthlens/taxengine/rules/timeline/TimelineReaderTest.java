@@ -66,20 +66,24 @@ class TimelineReaderTest {
                         new RuleId("SAL-SALARY-FOR-HRA"),
                         new RuleId("SAL-SALARY-FOR-GRATUITY"),
                         new RuleId("SAL-SALARY-FOR-EMPLOYER-PENSION"),
-                        new RuleId("SAL-SALARY-FOR-EMPLOYEE-PENSION"));
+                        new RuleId("SAL-SALARY-FOR-EMPLOYEE-PENSION"),
+                        new RuleId("SAL-TAX-ON-EMPLOYMENT"),
+                        new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME"),
+                        new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"));
         assertThat(timeline.regimes().keySet())
                 .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
         assertThat(timeline.pipelineNodes().keySet())
                 .extracting(NodeId::value)
                 .containsExactlyInAnyOrder(
-                        "inputs.components", "salary.gross", "salary.base", "totalincome", "round.totalincome", "tax.bybasis",
+                        "inputs.components", "salary.gross", "salary.base", "salary.deductions",
+                        "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
     }
 
     @Test
-    void read_whenTheShippedTimelineIsRead_holdsNoComponentYet() {
-        // Then — a component arrives with the first rule that reads it (D-089); none does yet
-        assertThat(TimelineReader.read(REAL).components()).isEmpty();
+    void read_whenTheShippedTimelineIsRead_holdsOnlyTheComponentsARuleReads() {
+        // Then — a component arrives with the first rule that reads it (D-089): professional tax (D-093)
+        assertThat(TimelineReader.read(REAL).components()).containsOnlyKeys(new ComponentCode("PROFESSIONAL_TAX"));
     }
 
     @Test
@@ -92,7 +96,8 @@ class TimelineReaderTest {
         Timeline timeline = TimelineReader.read(root);
 
         // Then
-        assertThat(timeline.components()).containsOnlyKeys(new ComponentCode("FIXTURE_PAY"));
+        assertThat(timeline.components())
+                .containsOnlyKeys(new ComponentCode("FIXTURE_PAY"), new ComponentCode("PROFESSIONAL_TAX"));
         assertThat(timeline.components().get(new ComponentCode("FIXTURE_PAY")).cashNature()).isEqualTo(CashNature.CASH);
     }
 

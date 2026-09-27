@@ -7,15 +7,23 @@ import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet.Line;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.component.CashNature;
+import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
+import com.thiru.wealthlens.taxengine.rules.component.ComponentLifecycle;
+import com.thiru.wealthlens.taxengine.rules.component.DeprecationPolicy;
+import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -25,7 +33,10 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -40,11 +51,34 @@ class GrossSalaryNodeTest {
     private static final ComponentCode HRA = new ComponentCode("FIXTURE_HRA");
     private static final ComponentCode INTEREST = new ComponentCode("FIXTURE_INTEREST");
 
+    /** A line under SALARIES that is not salary — a tax the employee pays — feeding another rule. */
+    private static final ComponentCode TAX_PAID = new ComponentCode("FIXTURE_TAX_PAID");
+
+    /**
+     * The shipped pack with a fixture registry: pay lines feed the definition of salary; the tax paid sits under
+     * the same head but feeds a different rule, as professional tax does (D-093).
+     */
     private static RulePack pack(int year) {
         TaxYearId taxYear = TaxYearId.of(year);
-        return new ClasspathRulePackProvider(
+        RulePack shipped = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
+        Map<ComponentCode, ComponentDefinition> registry = Stream.of(
+                        component(shipped, BASIC, HeadCode.SALARIES, RuleIds.SAL_SALARY_INCLUDES),
+                        component(shipped, HRA, HeadCode.SALARIES, RuleIds.SAL_SALARY_INCLUDES),
+                        component(shipped, TAX_PAID, HeadCode.SALARIES, RuleIds.RATE_SLAB_NEW_TAX_REGIME),
+                        component(shipped, INTEREST, HeadCode.OTHER_SOURCES, RuleIds.RATE_SLAB_NEW_TAX_REGIME))
+                .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition));
+        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), registry,
+                shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+    }
+
+    private static ComponentDefinition component(RulePack pack, ComponentCode code, HeadCode head, RuleId feeds) {
+        return new ComponentDefinition(code, "Fixture " + code.value(), head, ComponentKind.SALARY, CashNature.CASH,
+                TaxTreatment.TAXABLE, Set.of(feeds), Set.of(), false,
+                new ComponentLifecycle(DateRange.fromOnwards(LocalDate.of(2025, 4, 1)), Optional.empty(),
+                        new DeprecationPolicy.HistoricalOnly()),
+                pack.rule(RuleIds.SAL_SALARY_INCLUDES).headProvenance());
     }
 
     private static EngineInputs inYear(int year) {
@@ -78,6 +112,24 @@ class GrossSalaryNodeTest {
 
         // Then — 6,00,000 + 2,40,000 + 3,00,000 = 11,40,000; the ₹5,000 of interest is another head's
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1140000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenATaxPaidSitsUnderSalaries_leavesItOutOfGross(int year) {
+        // Given — D-093: professional tax is under SALARIES but feeds its own rule, not the definition of salary
+        ComponentSet withTaxPaid = new ComponentSet(Map.of(HeadCode.SALARIES, List.of(
+                new Line(0, BASIC, Money.of("600000")),
+                new Line(0, TAX_PAID, Money.of("2500")))));
+
+        // When
+        NodeResult result = run(year, withTaxPaid);
+
+        // Then — 6,00,000 only; adding the ₹2,500 paid would raise salary by a tax paid out of it
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("600000")));
+        assertThat(((ComponentSet) result.trace().getFirst().in()).in(HeadCode.SALARIES))
+                .extracting(Line::code)
+                .containsExactly(BASIC);
     }
 
     @ParameterizedTest(name = "TY {0}")

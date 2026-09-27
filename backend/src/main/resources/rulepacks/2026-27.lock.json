@@ -3,12 +3,12 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.16",
-      "checksum": "sha256:96beaecd481698f95b03b4f1e613c5d5935586db1cb7b81d899a40ee08997e20"
+      "version": "2026-27.law.17",
+      "checksum": "sha256:0e8c5a84b9e50c03d68e5b0ee0fe1d889d6cb60caeec3d9d6d7e6be359cce43d"
     },
     "exec": {
-      "version": "2026-27.exec.4",
-      "checksum": "sha256:3ea5cd839be0e8241b07d231bb9500e58b9fe1b9484abcf22e650fb969e9da5f"
+      "version": "2026-27.exec.5",
+      "checksum": "sha256:ee61fd904c17e17d6ada249a8c2d1fd35ab0ad64ad2992292e43dc80baad4024"
     },
     "forms": {
       "version": "2026-27.forms.2",
@@ -40,7 +40,10 @@
     "SAL-SALARY-FOR-EMPLOYER-PENSION": "sha256:2fe05fecd1bd52eb3944264114689b0bb4edbaa2c70a84b02a3c7643fabcdfea",
     "SAL-SALARY-FOR-GRATUITY": "sha256:abec324c383133573de35ec601785e78515a10c37779a3b80655205ce65a2781",
     "SAL-SALARY-FOR-HRA": "sha256:2e421b3211c4f9643b51e7fb6f581eba676d3d0f3304742a2aba0c58a3088dd2",
-    "SAL-SALARY-INCLUDES": "sha256:afc2d7785ed56a4fa77c349acf4f52a7a13410e03c216e854cb00dc650fad15c"
+    "SAL-SALARY-INCLUDES": "sha256:afc2d7785ed56a4fa77c349acf4f52a7a13410e03c216e854cb00dc650fad15c",
+    "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE": "sha256:45433ee9861d84cacac0911e125dbf0e9aac88e80698b6b9fc8326e314ca11e6",
+    "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME": "sha256:e95e5213ced08dbec9fcbde9c78431f2165b409a97d253cb8ad154df7b08eeed",
+    "SAL-TAX-ON-EMPLOYMENT": "sha256:691c973a2e10dd8f2be28cce236a9ca9f3e373bc285ab32a538346a857c37b7a"
   },
   "instruments": {
     "act": {

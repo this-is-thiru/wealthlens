@@ -16,8 +16,6 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -25,8 +23,8 @@ import java.util.Set;
  * G1.1 step 2, D-091).
  *
  * <p>The row states the definition — the total of one head — and the registry decides which components are
- * under that head (D-089), so this node adds the partition's lines for it and names neither a head nor a
- * component itself. Perquisites and employer-contribution charges join the sum with their own items;
+ * under that head and which of them are salary (D-089, D-093), so this node adds the partition's lines that
+ * feed the definition and names neither a head nor a component itself. Perquisites and employer-contribution charges join the sum with their own items;
  * {@code SAL-CHARGE-001}'s due-or-paid test is {@code W-065}'s.
  */
 public final class GrossSalaryNode implements ComputationNode {
@@ -61,10 +59,9 @@ public final class GrossSalaryNode implements ComputationNode {
             case SalaryBase salaryBase -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
                     + " defines a salary base, not a head's total; gross salary is the whole head");
         };
-        List<ComponentSet.Line> lines = components.in(total.head());
-        Money gross = lines.stream().map(ComponentSet.Line::amount).reduce(Money.ZERO, Money::plus);
-        ComponentSet counted = new ComponentSet(lines.isEmpty() ? Map.of() : Map.of(total.head(), lines));
+        HeadTotalLines counted = HeadTotalLines.of(ctx, components, total, RuleIds.SAL_SALARY_INCLUDES);
+        Money gross = counted.total();
         return NodeResult.of(MoneyValue.of(gross), TraceLine.of(1, produces(), RuleIds.SAL_SALARY_INCLUDES,
-                StepKind.INCOME, counted, MoneyValue.of(gross), version.provenance()));
+                StepKind.INCOME, counted.asComponentSet(total), MoneyValue.of(gross), version.provenance()));
     }
 }

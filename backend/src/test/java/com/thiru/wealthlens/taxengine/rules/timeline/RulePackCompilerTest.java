@@ -145,7 +145,7 @@ class RulePackCompilerTest {
         // Then — the file the assembler reads holds it, in the shape RegistryJson loads
         Map<ComponentCode, ComponentDefinition> registry = RegistryJson.components(
                 tree(compiled.files().get("exec/components.json")), "exec/components.json");
-        assertThat(registry).containsOnlyKeys(new ComponentCode("FIXTURE_PAY"));
+        assertThat(registry).containsOnlyKeys(new ComponentCode("FIXTURE_PAY"), new ComponentCode("PROFESSIONAL_TAX"));
     }
 
     @Test

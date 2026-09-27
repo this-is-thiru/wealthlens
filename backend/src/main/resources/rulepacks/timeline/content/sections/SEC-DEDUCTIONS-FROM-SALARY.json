@@ -1,0 +1,59 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-093). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: SAL-TAX-ON-EMPLOYMENT.json, SAL-STANDARD-DEDUCTION-*.json (1961 s.16(ia), (iii); 2025 s.19(1) Table Sl. 1, 2). summary: S2 s.19(1) (p.41) \"computed after making the deductions … in column B\"; Sl. 1 \"Sum paid by the assessee as a tax on employment … Entire amount\"; Sl. 2 \"Standard deduction … or the salary, whichever is less\". routes[0]: SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME, -ANY-OTHER-CASE. routes[1]: SAL-TAX-ON-EMPLOYMENT. disqualifiers[0]: s.202(2)(a)(iv), carried by SAL-TAX-ON-EMPLOYMENT's ExceptIn until DIS-S202-2A (D-093). Table Sl. 3–14 (gratuity, leave encashment and others) are not modelled here: the retirement items build them. No LATER_REVERSAL: the rulebook sources none.",
+  "key": "SEC-DEDUCTIONS-FROM-SALARY",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.16",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.19(1)",
+    "presence": "PRESENT"
+  },
+  "plainName": "Deductions from salary",
+  "summary": "Before your salary is taxed, two amounts come off it: a standard deduction that every employee gets without spending anything, capped at your salary, and any professional tax you paid. The standard deduction is larger in the default regime; professional tax comes off only in the regime you opt into. Other amounts in the same list, such as gratuity, are handled separately.",
+  "routes": [
+    {
+      "name": "Standard deduction",
+      "description": "Given to every employee automatically; it never exceeds your salary, so it cannot turn salary into a loss.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME"
+        }
+      ]
+    },
+    {
+      "name": "Standard deduction outside the default regime",
+      "description": "The same deduction, at the smaller amount, if you opt out of the default regime.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"
+        }
+      ]
+    },
+    {
+      "name": "Professional tax you paid",
+      "description": "The whole of the professional tax you paid to your state comes off your salary.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-TAX-ON-EMPLOYMENT"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Professional tax does not come off in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "SAL-TAX-ON-EMPLOYMENT"
+      }
+    }
+  ]
+}

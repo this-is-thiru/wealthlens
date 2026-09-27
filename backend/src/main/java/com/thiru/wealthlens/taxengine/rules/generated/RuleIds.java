@@ -36,6 +36,9 @@ public final class RuleIds {
     public static final RuleId SAL_SALARY_FOR_GRATUITY = new RuleId("SAL-SALARY-FOR-GRATUITY");
     public static final RuleId SAL_SALARY_FOR_HRA = new RuleId("SAL-SALARY-FOR-HRA");
     public static final RuleId SAL_SALARY_INCLUDES = new RuleId("SAL-SALARY-INCLUDES");
+    public static final RuleId SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE = new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE");
+    public static final RuleId SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME = new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME");
+    public static final RuleId SAL_TAX_ON_EMPLOYMENT = new RuleId("SAL-TAX-ON-EMPLOYMENT");
 
     private RuleIds() {
     }

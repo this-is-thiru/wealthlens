@@ -912,6 +912,19 @@ if that is not enough for the item in hand.
 >
 > Verified by: `01-rulebook.md` R7, H-4; `PackValidator` (component→rule only); `coverage.json`.
 
+
+> **Erratum (W-063, 2026-09-27, D-093):**
+> - **`W-063` takes the standard deduction as well as professional tax.** It authors
+>   `SAL-TAX-ON-EMPLOYMENT` (s.19(1) Table Sl. 1; 1961 s.16(iii)) and `SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME` /
+>   `-ANY-OTHER-CASE` (Sl. 2(a)/(b); 1961 s.16(ia)), and the whole `SalaryDeductionNode`. This amends D-089:
+>   `W-064` keeps the cash-salary components and `SAL-ENTMT-001`.
+> - **Professional tax sits under SALARIES but is not salary.** A `HeadTotal` therefore counts only the head's
+>   lines whose component `feedsInto` the defining rule, and `GrossSalaryNode` filters by the registry.
+> - **The new regime's exclusion of professional tax** (s.202(2)(a)(iv)) is the row's `ExceptIn
+>   [NEW_TAX_REGIME]`. `DIS-S202-2A` is owed (Appendix F).
+>
+> Verified by: S2 s.19(1) Table Sl. 1–2 (p.41), s.202(2)(a)(iv) (p.227); `DisallowanceSet.disallows` has no caller.
+
 ---
 
 ## Phase 8 — Perquisites, employer contributions, Chapter VIII (10 items)
@@ -1346,6 +1359,7 @@ none depends on anyone remembering it.
 | HUF sourcing — each per-type difference in `00-BRIEF.md` §8 as a rulebook row | the first HUF item | rule R1: no per-type number in code without a source |
 | `Huf` karta and members | the first rule that reads them | rule B2 |
 | Capital gains on assets outside `portfolio` (manager **M-08**'s gap) | `W-089` (capital-gains milestone) | a user who sells a flat otherwise gets a silently incomplete computation |
+| `DIS-S202-2A` — the new regime's s.202(2)(a) disallowance set, its basis row (`REG-NEW-DISALLOW-001`) and run-time application, so a disallowed rule is *explained* as disallowed; until then `SAL-TAX-ON-EMPLOYMENT` is excluded by `ExceptIn` (D-093) | the first item that explains a regime difference by rule, or that authors a second s.202(2)(a) rule — owner to place | `NEW_TAX_REGIME.json` `_pendingDisallowanceSets` |
 | Section catalogue entries for every modelled section | each item that models a section — standing rule 2 | SC-1 ratchet |
 | The rule-authoring admin screen (**OQ-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
 | Dividend income in the surcharge's **excluding** income and in the 15%-limited part (`RATE-SUR-SPLIT-001`), D-086 | `W-079` (`OtherSourcesNode`) | dividends are slab-taxed, so nothing else would take them out of the 25%/37% test |

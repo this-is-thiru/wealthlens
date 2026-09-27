@@ -140,10 +140,10 @@ class GeneratedConstantsTest {
         }
 
         @Test
-        void componentCodesIsEmptyUntilTheFirstRuleReadingAComponentArrives() {
-            // A component arrives with the first rule that reads it (D-089). An empty final class is
-            // odd and honest, and this test is what makes it fill in the moment one is authored.
-            assertThat(ConstantGenerator.componentCodes()).isEmpty();
+        void componentCodesHoldsExactlyTheShippedComponents() {
+            // A component arrives with the first rule that reads it (D-089): professional tax with
+            // SAL-TAX-ON-EMPLOYMENT (D-093)
+            assertThat(ConstantGenerator.componentCodes()).containsExactly("PROFESSIONAL_TAX");
         }
 
         @Test
@@ -170,7 +170,10 @@ class GeneratedConstantsTest {
                             "SAL-SALARY-FOR-EMPLOYER-PENSION",
                             "SAL-SALARY-FOR-GRATUITY",
                             "SAL-SALARY-FOR-HRA",
-                            "SAL-SALARY-INCLUDES");
+                            "SAL-SALARY-INCLUDES",
+                            "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE",
+                            "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
+                            "SAL-TAX-ON-EMPLOYMENT");
         }
     }
 

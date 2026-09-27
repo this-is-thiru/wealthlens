@@ -1,0 +1,135 @@
+{
+  "ruleId": "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
+  "_note": "The standard deduction where income-tax is computed under the new regime: the statutory amount or the salary, whichever is less (D-093; rulebook SAL-STDDED-001, -003). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 2(a) (p.41): \"₹ 75000 or the salary, whichever is less, where income-tax is computed under section 202(1)\". Finance Act, 2026 (4 of 2026) searched in full: it does not amend s.19 or s.202. TY 2025-26: Income-tax Act, 1961 s.16(ia) (\"fifty thousand rupees or the amount of the salary, whichever is less\", Finance Act, 2019 s.3) with the proviso inserted by Finance (No. 2) Act, 2024 (15 of 2024) s.10 (gazette p.21), w.e.f. 1-4-2025: \"Provided that in a case where income-tax is computed under clause (ii) of sub-section (1A) of section 115BAC, the provisions of this clause shall have effect as if for the words 'fifty thousand rupees', the words 'seventy-five thousand rupees' had been substituted\". For AY 2026-27 the new regime is computed under s.115BAC(1A)(iii) (Finance Act, 2025 s.25, which also omitted \"or after\" from clause (ii)); no amendment extending the proviso to clause (iii) was found in Finance Acts 2025 or 2026. The Department applies ₹75,000 for AY 2026-27: CBDT ITR-1 Validation Rules for AY 2026-27, Version 1.0 (15-5-2026), p.16, rule 215 — \"In case of New Tax Regime: Taxpayer being an employee can claim Standard deduction u/s 16ia only to the extent of Rs 75000.\" — and the ITR-1 AY 2026-27 schema caps DeductionUs16ia at 75000. Owner decision, D-093 addendum.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.16(ia) and its proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 2(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "statutory amount",
+            "shape": {
+              "type": "Fixed",
+              "amount": "75000"
+            }
+          },
+          {
+            "name": "salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "SALARY"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.10 — the proviso to s.16(ia) substituting \"seventy-five thousand rupees\"",
+        "gazetteRef": "CG-DL-E-16082024-256436",
+        "notifiedOn": "2024-08-16",
+        "effectiveFrom": "2025-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2026-05/CBDT_e-Filing_ITR%201_Validation%20Rules_AY%202026-27.pdf",
+        "sourceDescription": "Finance (No. 2) Act, 2024 s.10, gazette CG-DL-E-16082024-256436 p.21; applied for AY 2026-27 by CBDT e-Filing ITR-1 Validation Rules for AY 2026-27, Version 1.0, 15-5-2026, p.16, rule 215",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.16(ia) and its proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 2(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "statutory amount",
+            "shape": {
+              "type": "Fixed",
+              "amount": "75000"
+            }
+          },
+          {
+            "name": "salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "SALARY"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 2(a)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 2(a), p.41; Finance Act, 2026 searched in full: no amendment",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 2(a), p.41",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

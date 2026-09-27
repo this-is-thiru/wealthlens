@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.generated;
 
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+
 /**
  * GENERATED — do not edit. Source: {@code src/main/resources/rulepacks/&#42;&#42;/*.json}.
  *
@@ -13,7 +15,7 @@ package com.thiru.wealthlens.taxengine.rules.generated;
  */
 public final class ComponentCodes {
 
-    // No values in any pack yet.
+    public static final ComponentCode PROFESSIONAL_TAX = new ComponentCode("PROFESSIONAL_TAX");
 
     private ComponentCodes() {
     }
