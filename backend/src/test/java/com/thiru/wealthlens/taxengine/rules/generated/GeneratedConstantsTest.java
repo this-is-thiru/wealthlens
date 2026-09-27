@@ -151,6 +151,11 @@ class GeneratedConstantsTest {
         void itReadsTheRuleIdsFromTheTimeline() {
             assertThat(ConstantGenerator.ruleIds())
                     .containsExactly(
+                            "PERQ-ACCOM-FURNITURE",
+                            "PERQ-ACCOM-GOVERNMENT",
+                            "PERQ-ACCOM-HOTEL",
+                            "PERQ-ACCOM-LEASED",
+                            "PERQ-ACCOM-OWNED",
                             "RATE-HEALTH-EDUCATION-CESS",
                             "RATE-ROUND-PAYABLE",
                             "RATE-ROUND-TOTAL-INCOME",
@@ -190,6 +195,7 @@ class GeneratedConstantsTest {
                             "SAL-LEAVE-TRAVEL-CONCESSION",
                             "SAL-LEAVE-TRAVEL-DISTANCE-RATE",
                             "SAL-LEAVE-TRAVEL-JOURNEYS",
+                            "SAL-SALARY-FOR-ACCOM",
                             "SAL-SALARY-FOR-EMPLOYEE-PENSION",
                             "SAL-SALARY-FOR-EMPLOYER-PENSION",
                             "SAL-SALARY-FOR-ENTMT",

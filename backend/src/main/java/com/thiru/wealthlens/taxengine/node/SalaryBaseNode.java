@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -52,7 +53,8 @@ public final class SalaryBaseNode implements ComputationNode {
             RuleIds.SAL_SALARY_FOR_GRATUITY,
             RuleIds.SAL_SALARY_FOR_EMPLOYER_PENSION,
             RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION,
-            RuleIds.SAL_SALARY_FOR_ENTMT);
+            RuleIds.SAL_SALARY_FOR_ENTMT,
+            RuleIds.SAL_SALARY_FOR_ACCOM);
 
     @Override
     public NodeId produces() {
@@ -80,10 +82,12 @@ public final class SalaryBaseNode implements ComputationNode {
                 continue;
             }
             RuleVersion version = definingVersion(ctx, rule);
+            DearnessAllowanceTest dearnessAllowance = ((SalaryBase) version.definition().orElseThrow())
+                    .dearnessAllowance();
             Map<HeadCode, List<ComponentSet.Line>> counted = new EnumMap<>(HeadCode.class);
             List<Money> perEmployment = new ArrayList<>(Collections.nCopies(employments.size(), Money.ZERO));
             components.byHead().forEach((head, lines) -> lines.forEach(line -> {
-                if (counts(ctx, line, rule, employments.get(line.employment()))) {
+                if (counts(ctx, line, rule, dearnessAllowance, employments.get(line.employment()))) {
                     counted.computeIfAbsent(head, key -> new ArrayList<>()).add(line);
                     perEmployment.set(line.employment(), perEmployment.get(line.employment()).plus(line.amount()));
                 }
@@ -95,13 +99,20 @@ public final class SalaryBaseNode implements ComputationNode {
         return new NodeResult(new SalaryBases(byRule), trace);
     }
 
-    /** Whether a line is in this base: the registry lists it, and where it counts only on the terms, they provide. */
-    private static boolean counts(NodeContext ctx, ComponentSet.Line line, RuleId rule, Employment employment) {
+    /**
+     * Whether a line is in this base: the registry lists it, and where it counts only as dearness allowance does, the
+     * base's own test passes for the employment (D-111).
+     */
+    private static boolean counts(NodeContext ctx, ComponentSet.Line line, RuleId rule,
+            DearnessAllowanceTest dearnessAllowance, Employment employment) {
         Optional<SalaryBaseInclusion> inclusion = ctx.pack().components().get(line.code()).salaryBaseFor().stream()
                 .filter(entry -> entry.rule().equals(rule))
                 .findFirst();
-        return inclusion.isPresent()
-                && (!inclusion.get().onlyWhereTermsProvide() || employment.termsIncludeDearnessAllowance());
+        boolean testPasses = switch (dearnessAllowance) {
+            case WHERE_TERMS_PROVIDE -> employment.termsIncludeDearnessAllowance();
+            case WHERE_IT_COUNTS_FOR_RETIREMENT -> employment.dearnessAllowanceCountsForRetirement();
+        };
+        return inclusion.isPresent() && (!inclusion.get().onlyWhereTermsProvide() || testPasses);
     }
 
     /** The year's version of a base rule, refused unless it states a salary base in this regime. */

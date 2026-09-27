@@ -90,10 +90,15 @@ class GrossSalaryNodeTest {
     }
 
     private static NodeResult run(int year, ComponentSet components) {
+        return run(year, components, Money.ZERO);
+    }
+
+    private static NodeResult run(int year, ComponentSet components, Money perquisites) {
         return NodeHarness.with(pack(year))
                 .regime(NEW_TAX_REGIME)
                 .inputs(inYear(year))
                 .given(NodeIds.INPUTS_COMPONENTS, components)
+                .given(NodeIds.SALARY_PERQUISITES, MoneyValue.of(perquisites))
                 .run(new GrossSalaryNode());
     }
 
@@ -169,5 +174,18 @@ class GrossSalaryNodeTest {
                 .isEqualTo(year == 2025
                         ? "https://egazette.gov.in/WriteReadData/2023/244830.pdf"
                         : "https://egazette.gov.in/WriteReadData/2025/265620.pdf");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenPerquisitesAreValued_addsThemOnALineOfTheirOwn(int year) {
+        // When — accommodation valued at 96,000 (D-111; S2 s.16(e): salary includes perquisites)
+        NodeResult result = run(year, TWO_EMPLOYMENTS, Money.of("96000"));
+
+        // Then
+        Money pay = result.trace().getFirst().out().asMoney();
+        assertThat(result.value()).isEqualTo(MoneyValue.of(pay.plus(Money.of("96000"))));
+        assertThat(result.trace()).hasSize(2);
+        assertThat(result.trace().get(1).out()).isEqualTo(MoneyValue.of(Money.of("96000")));
     }
 }

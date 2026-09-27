@@ -1,0 +1,98 @@
+{
+  "ruleId": "SAL-SALARY-FOR-ACCOM",
+  "_note": "The \"salary\" the accommodation perquisite is measured against (D-111): pay, allowances, bonus or commission, but not dearness allowance unless it enters the computation of superannuation or retirement benefits (Employment.dearnessAllowanceCountsForRetirement), nor the employer's provident fund contribution, exempt allowances, perquisites or lump sums on leaving. TY 2026-27: Income-tax Rules, 2026 r.15(8)(k) (p.1548), \"'salary' includes the pay, allowances, bonus or commission payable monthly or otherwise or any monetary payment, by whatever name called, from one or more employers, as the case may be, but does not include the following:— (i) dearness allowance or dearness pay, unless it enters into the computation of superannuation or retirement benefits of the employee concerned; (ii) employer's contribution to the provident fund account of the employee; (iii) allowances, which are exempted from payment of tax; (iv) the value of perquisites specified in section 17(1); (v) any payment or expenditure specifically excluded under section 17(2); and (vi) lump-sum payments received at the time of termination of service or superannuation or voluntary retirement, like gratuity, severance pay, leave encashment, voluntary retrenchment benefits, commutation of pension and similar payments\". TY 2025-26: Income-tax Rules, 1962 r.3 Explanation (vi), in the same words save (vi), read in the Department of Revenue's compendium (current to 2010-11), p.388. Which components count is each component's salaryBaseFor; the exempt part of an allowance is taken out by PerquisiteNode, which runs after the exemptions (this base is measured before them).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Rules, 1962",
+        "reference": "r.3 Explanation (vi)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Rules, 2026",
+        "reference": "r.15(8)(k)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_IT_COUNTS_FOR_RETIREMENT"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E), Notification No. 65/2023 — the latest change to Income-tax Rules, 1962 r.3 found (sub-rule (1) substituted; Explanation (v) replaced; Explanation (vi) untouched)",
+        "gazetteRef": "CG-DL-E-18082023-248178",
+        "notifiedOn": "2023-08-18",
+        "effectiveFrom": "2023-09-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
+        "sourceDescription": "Department of Revenue compendium of the Income-tax Rules, 1962 (current to 2010-11), r.3 Explanation (vi), p.388; Gazette CG-DL-E-18082023-248178, G.S.R. 615(E), pp.4–6",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Rules, 1962 r.3 Explanation (vi) between 2011 and AY 2026-27 other than G.S.R. 615(E) (which replaced only Explanation (v)): the compendium read is current only to 2010-11. The Income Tax Department's consolidated rule 3 would settle it."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Rules, 1962",
+        "reference": "r.3 Explanation (vi)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Rules, 2026",
+        "reference": "r.15(8)(k)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_IT_COUNTS_FOR_RETIREMENT"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(8)(k)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(8)(k), p.1548",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(8)(k), p.1548",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

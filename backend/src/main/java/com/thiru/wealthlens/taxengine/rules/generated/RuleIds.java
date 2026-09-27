@@ -15,6 +15,11 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");
+    public static final RuleId PERQ_ACCOM_GOVERNMENT = new RuleId("PERQ-ACCOM-GOVERNMENT");
+    public static final RuleId PERQ_ACCOM_HOTEL = new RuleId("PERQ-ACCOM-HOTEL");
+    public static final RuleId PERQ_ACCOM_LEASED = new RuleId("PERQ-ACCOM-LEASED");
+    public static final RuleId PERQ_ACCOM_OWNED = new RuleId("PERQ-ACCOM-OWNED");
     public static final RuleId RATE_HEALTH_EDUCATION_CESS = new RuleId("RATE-HEALTH-EDUCATION-CESS");
     public static final RuleId RATE_ROUND_PAYABLE = new RuleId("RATE-ROUND-PAYABLE");
     public static final RuleId RATE_ROUND_TOTAL_INCOME = new RuleId("RATE-ROUND-TOTAL-INCOME");
@@ -54,6 +59,7 @@ public final class RuleIds {
     public static final RuleId SAL_LEAVE_TRAVEL_CONCESSION = new RuleId("SAL-LEAVE-TRAVEL-CONCESSION");
     public static final RuleId SAL_LEAVE_TRAVEL_DISTANCE_RATE = new RuleId("SAL-LEAVE-TRAVEL-DISTANCE-RATE");
     public static final RuleId SAL_LEAVE_TRAVEL_JOURNEYS = new RuleId("SAL-LEAVE-TRAVEL-JOURNEYS");
+    public static final RuleId SAL_SALARY_FOR_ACCOM = new RuleId("SAL-SALARY-FOR-ACCOM");
     public static final RuleId SAL_SALARY_FOR_EMPLOYEE_PENSION = new RuleId("SAL-SALARY-FOR-EMPLOYEE-PENSION");
     public static final RuleId SAL_SALARY_FOR_EMPLOYER_PENSION = new RuleId("SAL-SALARY-FOR-EMPLOYER-PENSION");
     public static final RuleId SAL_SALARY_FOR_ENTMT = new RuleId("SAL-SALARY-FOR-ENTMT");

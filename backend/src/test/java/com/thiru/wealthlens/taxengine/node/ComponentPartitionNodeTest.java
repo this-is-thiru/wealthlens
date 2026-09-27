@@ -83,12 +83,12 @@ class ComponentPartitionNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(year);
         return new EngineInputs(taxYear, NEW_TAX_REGIME, TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of()), plain.assessee(), plain.family(), plain.ledgers(), plain.elections(),
+                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of()), plain.assessee(), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
     }
 
     private static Employment employment(SalaryComponent... components) {
-        return new Employment(List.of(components), false, EmployerKind.OTHER);
+        return new Employment(List.of(components), false, EmployerKind.OTHER, false);
     }
 
     private static SalaryComponent line(ComponentCode code, String rupees) {

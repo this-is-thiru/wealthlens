@@ -1,0 +1,130 @@
+{
+  "ruleId": "PERQ-ACCOM-OWNED",
+  "_note": "Accommodation any other employer owns: a percentage of the accommodation \"salary\" for the period occupied, by the city's 2011-census population, less the rent the employee paid (D-111). TY 2026-27: Income-tax Rules, 2026 r.15(2) Table I Sl. 2(a) (p.1541), \"(i) 10% of salary in cities having population exceeding forty lakhs as per 2011 census … (ii) 7.5% of salary in cities having population exceeding fifteen lakhs but not exceeding forty lakhs as per 2011 census …; and (iii) 5% of salary in other areas\", each \"in respect of the period during which the said accommodation was occupied … as reduced by the rent, if any, actually paid\". TY 2025-26: Income-tax Rules, 1962 r.3(1) Table I Sl. 2(a) as substituted by G.S.R. 615(E) (pp.4–5), the same percentages and bands. The band is the taxpayer's (PopulationBand): the Rules name no cities. The salary is SAL-SALARY-FOR-ACCOM less exempt allowances, apportioned to the period by days. The Cost Inflation Index cap for accommodation continued from an earlier year (r.15(2)(d); r.3(1) third proviso) is not built until the index is read: such accommodation is refused (D-111 C5a). Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(i)–(ii), with Income-tax Rules, 1962 r.3(1) Table I Sl. 2(a)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(a)–(b), with Income-tax Rules, 2026 r.15(2) Table I Sl. 2(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBaseByLocation",
+        "base": "SALARY",
+        "location": "LOCATION",
+        "bands": [
+          {
+            "locations": [
+              "ABOVE_FORTY_LAKH"
+            ],
+            "percent": "10"
+          },
+          {
+            "locations": [
+              "FIFTEEN_TO_FORTY_LAKH"
+            ],
+            "percent": "7.5"
+          }
+        ],
+        "otherwise": "5"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E), Notification No. 65/2023 — Income-tax Rules, 1962 r.3(1) substituted",
+        "gazetteRef": "CG-DL-E-18082023-248178",
+        "notifiedOn": "2023-08-18",
+        "effectiveFrom": "2023-09-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "sourceDescription": "Gazette CG-DL-E-18082023-248178, G.S.R. 615(E), Income-tax Rules, 1962 r.3(1) Table I and provisos, pp.4–6",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Rules, 1962 r.3(1) after G.S.R. 615(E) (18-8-2023) up to AY 2026-27: the Income Tax Department's consolidated rule 3 would settle it. Also the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the interim Finance Act, 2024 for s.17(2) itself, unread."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(i)–(ii), with Income-tax Rules, 1962 r.3(1) Table I Sl. 2(a)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(a)–(b), with Income-tax Rules, 2026 r.15(2) Table I Sl. 2(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBaseByLocation",
+        "base": "SALARY",
+        "location": "LOCATION",
+        "bands": [
+          {
+            "locations": [
+              "ABOVE_FORTY_LAKH"
+            ],
+            "percent": "10"
+          },
+          {
+            "locations": [
+              "FIFTEEN_TO_FORTY_LAKH"
+            ],
+            "percent": "7.5"
+          }
+        ],
+        "otherwise": "5"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(2)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(2) Table I and sub-rules (b)–(g), pp.1540–1542",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(2), pp.1540–1542",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

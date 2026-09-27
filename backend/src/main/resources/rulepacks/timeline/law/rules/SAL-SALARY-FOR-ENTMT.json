@@ -23,7 +23,8 @@
         "presence": "ABSENT_IN_THIS_ACT"
       },
       "definition": {
-        "type": "SalaryBase"
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
       },
       "conditions": [],
       "introducedBy": {

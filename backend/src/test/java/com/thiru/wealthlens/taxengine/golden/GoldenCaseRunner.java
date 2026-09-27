@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
 import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
 import com.thiru.wealthlens.taxengine.node.NetPayableNode;
+import com.thiru.wealthlens.taxengine.node.PerquisiteNode;
 import com.thiru.wealthlens.taxengine.node.RebateNode;
 import com.thiru.wealthlens.taxengine.node.RetirementNode;
 import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
@@ -63,6 +64,7 @@ final class GoldenCaseRunner {
             new GrossSalaryNode(),
             new SalaryBaseNode(),
             new ExemptionNode(),
+            new PerquisiteNode(),
             new RetirementNode(),
             new SalaryDeductionNode(),
             new SalaryIncomeNode(),
@@ -125,8 +127,8 @@ final class GoldenCaseRunner {
         SalaryGoldenCase.Salary salary = golden.salary();
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
-                new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER)),
-                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of()),
+                new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER, false)),
+                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);

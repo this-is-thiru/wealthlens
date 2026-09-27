@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -221,7 +222,8 @@ public final class ShapeJson {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
                 yield PackJson.construct(path, () -> new HeadTotal(head));
             }
-            case "SalaryBase" -> new SalaryBase();
+            case "SalaryBase" -> PackJson.construct(path, () -> new SalaryBase(
+                    PackJson.enumValue(node, "dearnessAllowance", path, DearnessAllowanceTest.class)));
             case "JourneysPerCalendarBlock" -> PackJson.construct(path, () -> new JourneysPerCalendarBlock(
                     PackJson.integer(node, "journeys", path), PackJson.integer(node, "calendarYears", path),
                     PackJson.integer(node, "blocksCommence", path)));

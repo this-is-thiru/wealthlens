@@ -1,0 +1,132 @@
+{
+  "ruleId": "PERQ-ACCOM-HOTEL",
+  "_note": "Accommodation in a hotel: the lower of the charges and twenty-four per cent of salary for the period, less the rent the employee paid — except a stay of not more than fifteen days in aggregate on transfer (D-111). TY 2026-27: Income-tax Rules, 2026 r.15(2) Table I Sl. 3 (p.1541), \"Actual charges paid or payable to such hotel or 24% of salary paid or payable for the tax year for the period during which such accommodation is provided, whichever is lower, as reduced by the rent, if any, actually paid or payable by the employee\". TY 2025-26: Income-tax Rules, 1962 r.3(1) Table I Sl. 3 as substituted by G.S.R. 615(E) (p.5), to the same effect. The fifteen-day transfer stay is not entered as a perquisite. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(i)–(ii), with Income-tax Rules, 1962 r.3(1) Table I Sl. 3",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(a)–(b), with Income-tax Rules, 2026 r.15(2) Table I Sl. 3",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "hotel charges",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "EMPLOYER_COST"
+            }
+          },
+          {
+            "name": "twenty-four per cent of salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "24",
+              "base": "SALARY"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E), Notification No. 65/2023 — Income-tax Rules, 1962 r.3(1) substituted",
+        "gazetteRef": "CG-DL-E-18082023-248178",
+        "notifiedOn": "2023-08-18",
+        "effectiveFrom": "2023-09-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "sourceDescription": "Gazette CG-DL-E-18082023-248178, G.S.R. 615(E), Income-tax Rules, 1962 r.3(1) Table I and provisos, pp.4–6",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Rules, 1962 r.3(1) after G.S.R. 615(E) (18-8-2023) up to AY 2026-27: the Income Tax Department's consolidated rule 3 would settle it. Also the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the interim Finance Act, 2024 for s.17(2) itself, unread."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(i)–(ii), with Income-tax Rules, 1962 r.3(1) Table I Sl. 3",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(a)–(b), with Income-tax Rules, 2026 r.15(2) Table I Sl. 3",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "hotel charges",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "EMPLOYER_COST"
+            }
+          },
+          {
+            "name": "twenty-four per cent of salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "24",
+              "base": "SALARY"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(2)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(2) Table I and sub-rules (b)–(g), pp.1540–1542",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(2), pp.1540–1542",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

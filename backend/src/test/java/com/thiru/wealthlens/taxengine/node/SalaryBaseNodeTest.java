@@ -68,11 +68,15 @@ class SalaryBaseNodeTest {
             RuleIds.SAL_SALARY_FOR_EMPLOYER_PENSION,
             RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION);
 
-    /** The bases a year's pack holds: TY 2025-26 adds 1961 s.16(ii)'s, which the 2025 Act lacks (D-105). */
+    /**
+     * The bases a year's pack holds: TY 2025-26 adds 1961 s.16(ii)'s, which the 2025 Act lacks (D-105); both years add
+     * the accommodation perquisite's (D-111).
+     */
     private static List<RuleId> basesIn(int year) {
         return year == 2025
-                ? Stream.concat(BASES.stream(), Stream.of(RuleIds.SAL_SALARY_FOR_ENTMT)).toList()
-                : BASES;
+                ? Stream.concat(BASES.stream(), Stream.of(RuleIds.SAL_SALARY_FOR_ENTMT,
+                        RuleIds.SAL_SALARY_FOR_ACCOM)).toList()
+                : Stream.concat(BASES.stream(), Stream.of(RuleIds.SAL_SALARY_FOR_ACCOM)).toList();
     }
 
     private static RulePack withFixtureComponents(int year) {
@@ -113,7 +117,7 @@ class SalaryBaseNodeTest {
     }
 
     private static Employment employment(boolean termsIncludeDearnessAllowance, SalaryComponent... components) {
-        return new Employment(List.of(components), termsIncludeDearnessAllowance, EmployerKind.OTHER);
+        return new Employment(List.of(components), termsIncludeDearnessAllowance, EmployerKind.OTHER, false);
     }
 
     private static SalaryComponent line(ComponentCode code, String rupees) {
@@ -143,7 +147,7 @@ class SalaryBaseNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs inputs = new EngineInputs(taxYear, NEW_TAX_REGIME,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of()),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack)
@@ -286,5 +290,28 @@ class SalaryBaseNodeTest {
                 .isEqualTo(year == 2025
                         ? "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf"
                         : "https://egazette.gov.in/WriteReadData/2026/271092.pdf");
+    }
+
+    @Test
+    void evaluate_whenTheShippedRegistryMeasuresTheAccommodationSalary_countsAllowancesAndAsksTheRetirementTest() {
+        // Given — basic 6,00,000, DA 60,000, special allowance 1,20,000; the terms provide DA for HRA, but whether DA
+        // counts for retirement differs (D-111)
+        TaxYearId taxYear = TaxYearId.of(2026);
+        RulePack shipped = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        SalaryComponent[] pay = {line(ComponentCodes.BASIC, "600000"), line(ComponentCodes.DEARNESS_ALLOWANCE, "60000"),
+                line(ComponentCodes.SPECIAL_ALLOWANCE, "120000")};
+
+        // When
+        SalaryBases notForRetirement = bases(run(shipped, 2026,
+                List.of(new Employment(List.of(pay), true, EmployerKind.OTHER, false))));
+        SalaryBases forRetirement = bases(run(shipped, 2026,
+                List.of(new Employment(List.of(pay), true, EmployerKind.OTHER, true))));
+
+        // Then — HRA's base 6,60,000 either way; the accommodation salary 7,20,000 without DA, 7,80,000 with it
+        assertThat(notForRetirement.of(RuleIds.SAL_SALARY_FOR_HRA, 0)).isEqualTo(Money.of("660000"));
+        assertThat(notForRetirement.of(RuleIds.SAL_SALARY_FOR_ACCOM, 0)).isEqualTo(Money.of("720000"));
+        assertThat(forRetirement.of(RuleIds.SAL_SALARY_FOR_ACCOM, 0)).isEqualTo(Money.of("780000"));
     }
 }

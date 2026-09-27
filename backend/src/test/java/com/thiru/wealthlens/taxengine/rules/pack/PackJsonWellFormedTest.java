@@ -114,7 +114,7 @@ class PackJsonWellFormedTest {
             // and the check is deliberately blunt: no bound may end in anything but four zeros.
             for (JsonNode rule : rules()) {
                 for (JsonNode version : rule.get("versions")) {
-                    JsonNode bands = version.path("cap").get("bands");
+                    JsonNode bands = slabBands(version);
                     if (bands == null) {
                         continue;
                     }
@@ -124,6 +124,12 @@ class PackJsonWellFormedTest {
                     }
                 }
             }
+        }
+
+        /** A slab ladder's bands; a location cap's "bands" are places, not income bands (D-111). */
+        private static JsonNode slabBands(JsonNode version) {
+            JsonNode cap = version.path("cap");
+            return "SlabLadder".equals(cap.path("type").asText()) ? cap.get("bands") : null;
         }
 
         private static void assertBoundIsRound(JsonNode rule, JsonNode bound) {
@@ -141,7 +147,7 @@ class PackJsonWellFormedTest {
         void bandsAreContiguousWithNoGapAndNoOverlap() {
             for (JsonNode rule : rules()) {
                 for (JsonNode version : rule.get("versions")) {
-                    JsonNode bands = version.path("cap").get("bands");
+                    JsonNode bands = slabBands(version);
                     if (bands == null) {
                         continue;
                     }

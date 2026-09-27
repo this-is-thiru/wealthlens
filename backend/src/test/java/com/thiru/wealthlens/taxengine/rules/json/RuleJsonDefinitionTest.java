@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
@@ -66,10 +67,10 @@ class RuleJsonDefinitionTest {
     void version_whenSalaryBase_readsIt() {
         // When
         RuleVersion version = versionWith("""
-                "definition": { "type": "SalaryBase" }""");
+                "definition": { "type": "SalaryBase", "dearnessAllowance": "WHERE_TERMS_PROVIDE" }""");
 
         // Then
-        assertThat(version.definition()).contains(new SalaryBase());
+        assertThat(version.definition()).contains(new SalaryBase(DearnessAllowanceTest.WHERE_TERMS_PROVIDE));
         assertThat(version.cap()).isNull();
     }
 
@@ -125,11 +126,31 @@ class RuleJsonDefinitionTest {
     }
 
     @Test
+    void version_whenASalaryBaseAsksTheRetirementTest_readsIt() {
+        // When — D-111: the accommodation perquisite's "salary" counts DA only where it counts for retirement
+        RuleVersion version = versionWith("""
+                "definition": { "type": "SalaryBase", "dearnessAllowance": "WHERE_IT_COUNTS_FOR_RETIREMENT" }""");
+
+        // Then
+        assertThat(version.definition())
+                .contains(new SalaryBase(DearnessAllowanceTest.WHERE_IT_COUNTS_FOR_RETIREMENT));
+    }
+
+    @Test
+    void version_whenASalaryBaseOmitsItsDearnessAllowanceTest_isRefused() {
+        // When / Then — two tests exist, so a base must name one
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "SalaryBase" }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("dearnessAllowance");
+    }
+
+    @Test
     void version_whenSalaryBaseBesideACap_isRefusedNamingThePath() {
         // Given
         String both = """
                 "cap": { "type": "Fixed", "amount": "0" },
-                "definition": { "type": "SalaryBase" }""";
+                "definition": { "type": "SalaryBase", "dearnessAllowance": "WHERE_TERMS_PROVIDE" }""";
 
         // When / Then
         assertThatThrownBy(() -> versionWith(both))

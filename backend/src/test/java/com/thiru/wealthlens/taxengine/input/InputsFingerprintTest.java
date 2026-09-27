@@ -107,7 +107,7 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
                                     new SalaryComponent(new ComponentCode("BASIC"),
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                                    false, EmployerKind.OTHER)), List.of(), List.of(), List.of(), Optional.empty(), List.of())))),
+                                    false, EmployerKind.OTHER, false)), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of())))),
                     Arguments.of(
                             "regime",
                             mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
@@ -251,7 +251,7 @@ class InputsFingerprintTest {
             return new EnteredFacts(List.of(new Employment(
                     List.of(new SalaryComponent(new ComponentCode("BASIC"),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                    termsIncludeDearnessAllowance, employerKind)), List.of(), List.of(), List.of(), Optional.empty(), List.of());
+                    termsIncludeDearnessAllowance, employerKind, false)), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of());
         }
 
         @Test
@@ -260,7 +260,7 @@ class InputsFingerprintTest {
             EngineInputs withTenancy = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(
                     new Tenancy(com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
                                     LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31)), "BENGALURU", false,
-                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000"))), List.of(), List.of(), Optional.empty(), List.of()));
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000"))), List.of(), List.of(), Optional.empty(), List.of(), List.of()));
 
             // When / Then
             assertThat(hashOf(withTenancy)).isNotEqualTo(hashOf(baseline()));
@@ -273,7 +273,7 @@ class InputsFingerprintTest {
                     List.of(new Journey(LocalDate.of(2026, 5, 10), JourneyMode.RAIL_CONNECTED,
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("18000"),
                             Optional.of(com.thiru.wealthlens.taxengine.rules.money.Money.of("15000")),
-                            Optional.empty())), List.of(), Optional.empty(), List.of()));
+                            Optional.empty())), List.of(), Optional.empty(), List.of(), List.of()));
 
             // When / Then
             assertThat(hashOf(withJourney)).isNotEqualTo(hashOf(baseline()));
@@ -295,7 +295,7 @@ class InputsFingerprintTest {
         void enteredFacts_whenOnlyAnAllowanceUseDiffers_movesTheHash() {
             // Given — D-101: the allowance exemptions read how each allowance was used
             EngineInputs withUse = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(), List.of(),
-                    List.of(AllowanceUse.forChildren(new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), 2, 12)), Optional.empty(), List.of()));
+                    List.of(AllowanceUse.forChildren(new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), 2, 12)), Optional.empty(), List.of(), List.of()));
 
             // When / Then
             assertThat(hashOf(withUse)).isNotEqualTo(hashOf(baseline()));
@@ -307,7 +307,7 @@ class InputsFingerprintTest {
             EngineInputs withClaim = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
                     List.of(), List.of(), Optional.of(new DisabledTransportClaim(
                             com.thiru.wealthlens.taxengine.rules.definition.TransportDisability.BLIND, 12,
-                            Optional.empty(), Optional.empty())), List.of()));
+                            Optional.empty(), Optional.empty())), List.of(), List.of()));
 
             // When / Then
             assertThat(hashOf(withClaim)).isNotEqualTo(hashOf(baseline()));
@@ -318,7 +318,7 @@ class InputsFingerprintTest {
             // Given — D-103: the retirement deductions read the entry each payment falls under
             EngineInputs withPayment = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
                     List.of(), List.of(), Optional.empty(), List.of(RetirementPayment.of(
-                            new ComponentCode("GRATUITY"), RetirementEntry.GOVERNMENT_GRATUITY))));
+                            new ComponentCode("GRATUITY"), RetirementEntry.GOVERNMENT_GRATUITY)), List.of()));
 
             // When / Then
             assertThat(hashOf(withPayment)).isNotEqualTo(hashOf(baseline()));
@@ -342,7 +342,7 @@ class InputsFingerprintTest {
         private static EnteredFacts enteringGratuity(java.time.LocalDate separatedOn, List<MonthOfPay> months) {
             return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
                     List.of(RetirementPayment.otherGratuity(new ComponentCode("GRATUITY"),
-                            new Separation(java.time.LocalDate.of(2000, 4, 1), separatedOn, months))));
+                            new Separation(java.time.LocalDate.of(2000, 4, 1), separatedOn, months))), List.of());
         }
 
         @Test
@@ -359,7 +359,27 @@ class InputsFingerprintTest {
             return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
                     List.of(RetirementPayment.statutory(new ComponentCode("RETRENCHMENT_COMPENSATION"),
                             RetirementEntry.RETRENCHMENT, new StatutoryEntitlement(java.time.LocalDate.of(2025, 12, 15),
-                                    com.thiru.wealthlens.taxengine.rules.money.Money.of(amount)))));
+                                    com.thiru.wealthlens.taxengine.rules.money.Money.of(amount)))), List.of());
+        }
+
+        @Test
+        void enteredFacts_whenOnlyAnAccommodationsRentDiffers_movesTheHash() {
+            // Given — D-111: the accommodation perquisite reads what the employee paid
+            EngineInputs lower = copy(baseline(), r -> r.entered = enteringAccommodation("24000"));
+            EngineInputs higher = copy(baseline(), r -> r.entered = enteringAccommodation("36000"));
+
+            // When / Then
+            assertThat(hashOf(higher)).isNotEqualTo(hashOf(lower));
+        }
+
+        private static EnteredFacts enteringAccommodation(String rentPaid) {
+            return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(),
+                    List.of(new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
+                            com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
+                                    java.time.LocalDate.of(2026, 4, 1), java.time.LocalDate.of(2027, 3, 31)),
+                            Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(),
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of(rentPaid), Optional.empty(),
+                            com.thiru.wealthlens.taxengine.rules.id.TaxYearId.of(2026))));
         }
 
         @Test

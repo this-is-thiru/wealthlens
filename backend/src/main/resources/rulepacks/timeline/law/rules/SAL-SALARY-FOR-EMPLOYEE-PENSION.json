@@ -24,7 +24,8 @@
         "presence": "PRESENT"
       },
       "definition": {
-        "type": "SalaryBase"
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
       },
       "conditions": [],
       "introducedBy": {
@@ -64,7 +65,8 @@
         "presence": "PRESENT"
       },
       "definition": {
-        "type": "SalaryBase"
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
       },
       "conditions": [],
       "introducedBy": {

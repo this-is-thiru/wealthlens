@@ -19,6 +19,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,8 +28,9 @@ import java.util.Set;
  *
  * <p>The row states the definition — the total of one head — and the registry decides which components are
  * under that head and which of them are salary (D-089, D-093), so this node adds the partition's lines that
- * feed the definition and names neither a head nor a component itself. Perquisites and employer-contribution charges join the sum with their own items;
- * {@code SAL-CHARGE-001}'s due-or-paid test is {@code W-065}'s.
+ * feed the definition and names neither a head nor a component itself. Perquisites — "salary" includes them (S2
+ * s.16(e); 1961 s.17(1)(iv)) — are valued by {@code salary.perquisites} and added on a line of their own (D-111);
+ * employer-contribution charges join the sum with their own item.
  */
 public final class GrossSalaryNode implements ComputationNode {
 
@@ -39,7 +41,7 @@ public final class GrossSalaryNode implements ComputationNode {
 
     @Override
     public Set<NodeId> requires() {
-        return Set.of(NodeIds.INPUTS_COMPONENTS);
+        return Set.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_PERQUISITES);
     }
 
     @Override
@@ -69,8 +71,16 @@ public final class GrossSalaryNode implements ComputationNode {
                     + " defines a transport limit, not a head's total");
         };
         HeadTotalLines counted = HeadTotalLines.of(ctx, components, total, RuleIds.SAL_SALARY_INCLUDES);
-        Money gross = counted.total();
-        return NodeResult.of(MoneyValue.of(gross), TraceLine.of(1, produces(), RuleIds.SAL_SALARY_INCLUDES,
-                StepKind.INCOME, counted.asComponentSet(total), MoneyValue.of(gross), version.provenance()));
+        Money pay = counted.total();
+        TraceLine payLine = TraceLine.of(1, produces(), RuleIds.SAL_SALARY_INCLUDES, StepKind.INCOME,
+                counted.asComponentSet(total), MoneyValue.of(pay), version.provenance());
+        Money perquisites = ctx.get(NodeIds.SALARY_PERQUISITES, MoneyValue.class).asMoney();
+        if (!perquisites.isGreaterThan(Money.ZERO)) {
+            return NodeResult.of(MoneyValue.of(pay), payLine);
+        }
+        return new NodeResult(MoneyValue.of(pay.plus(perquisites)), List.of(payLine,
+                TraceLine.of(2, produces(), RuleIds.SAL_SALARY_INCLUDES, StepKind.INCOME, MoneyValue.of(perquisites),
+                                MoneyValue.of(perquisites), version.provenance())
+                        .withLimitedBy("perquisites, valued in salary.perquisites")));
     }
 }

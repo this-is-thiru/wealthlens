@@ -51,7 +51,7 @@ class ExemptionNodeTest {
     }
 
     private static Employment oneEmployment() {
-        return new Employment(List.of(), true, EmployerKind.OTHER);
+        return new Employment(List.of(), true, EmployerKind.OTHER, false);
     }
 
     private static NodeResult run(int year, RegimeCode regime, List<Employment> employments, List<Tenancy> tenancies,
@@ -63,7 +63,7 @@ class ExemptionNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(employments, tenancies, List.of(), List.of(), Optional.empty(), List.of()), plain.assessee(), plain.family(), plain.ledgers(),
+                new EnteredFacts(employments, tenancies, List.of(), List.of(), Optional.empty(), List.of(), List.of()), plain.assessee(), plain.family(), plain.ledgers(),
                 plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack)
                 .regime(regime)

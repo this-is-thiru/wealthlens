@@ -14,9 +14,15 @@ import java.util.List;
  *     in "salary" — the words of S4 r.279(2)(b), S2 s.19(2)(b), s.124(13)(b) and Sch. XV para 1(y), read by
  *     the salary bases (D-092). It is the employment's, not a pay line's, because the terms are
  * @param employerKind who pays the salary — 1961 s.16(ii) reads whether it is the Government
+ * @param dearnessAllowanceCountsForRetirement whether dearness allowance enters the computation of this
+ *     employment's superannuation or retirement benefits — the test S4 r.15(8)(k) and Rules 1962 r.3 Explanation
+ *     (vi) apply for the accommodation perquisite's "salary" (D-111), which is not the terms test above
  */
 public record Employment(
-        List<SalaryComponent> components, boolean termsIncludeDearnessAllowance, EmployerKind employerKind) {
+        List<SalaryComponent> components,
+        boolean termsIncludeDearnessAllowance,
+        EmployerKind employerKind,
+        boolean dearnessAllowanceCountsForRetirement) {
 
     public Employment {
         if (components == null) {

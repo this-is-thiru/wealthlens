@@ -34,7 +34,8 @@ import java.util.Optional;
  * <p>The first field arrived with the component partition (D-090): the employments, each with its
  * pay lines. The homes occupied arrived with HRA (D-099), the journeys on leave with LTA (D-100), how each
  * allowance was used with the allowance exemptions (D-101), a disabled employee's transport claim with its
- * exemption (D-102), the retirement and termination payments with their deductions (D-103). Every later
+ * exemption (D-102), the retirement and termination payments with their deductions (D-103), the accommodation
+ * employers provide with its perquisite (D-111). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -44,6 +45,7 @@ import java.util.Optional;
  * @param disabledTransport the transport allowance exemption claimed for a disability, if any
  * @param retirementPayments each retirement or termination payment and the entry it falls under, in the order
  *     entered
+ * @param accommodations each residential accommodation an employer provided, in the order entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -51,7 +53,8 @@ public record EnteredFacts(
         List<Journey> leaveTravel,
         List<AllowanceUse> allowanceUses,
         Optional<DisabledTransportClaim> disabledTransport,
-        List<RetirementPayment> retirementPayments) {
+        List<RetirementPayment> retirementPayments,
+        List<EmployerAccommodation> accommodations) {
 
     public EnteredFacts {
         if (employments == null) {
@@ -74,6 +77,10 @@ public record EnteredFacts(
             throw new IllegalArgumentException(
                     "EnteredFacts.disabledTransport may not be null; pass Optional.empty() where there is none");
         }
+        if (accommodations == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.accommodations may not be null; pass an empty list where there are none");
+        }
         if (retirementPayments == null) {
             throw new IllegalArgumentException(
                     "EnteredFacts.retirementPayments may not be null; pass an empty list where there are none");
@@ -83,10 +90,11 @@ public record EnteredFacts(
         leaveTravel = List.copyOf(leaveTravel);
         allowanceUses = List.copyOf(allowanceUses);
         retirementPayments = List.copyOf(retirementPayments);
+        accommodations = List.copyOf(accommodations);
     }
 
     /** Nothing entered. */
     public static EnteredFacts none() {
-        return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of());
+        return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of());
     }
 }

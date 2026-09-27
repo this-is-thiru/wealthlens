@@ -29,6 +29,10 @@
     {
       "rule": "SAL-SALARY-FOR-ENTMT",
       "onlyWhereTermsProvide": false
+    },
+    {
+      "rule": "SAL-SALARY-FOR-ACCOM",
+      "onlyWhereTermsProvide": false
     }
   ],
   "lifecycle": {

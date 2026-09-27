@@ -85,7 +85,13 @@ class TimelineReaderTest {
             new RuleId("RET-LEAVE-ENCASHMENT-OTHER"),
             new RuleId("RET-LEAVE-ENCASHMENT-AGGREGATE"),
             new RuleId("RET-GRATUITY-STATUTORY"),
-            new RuleId("RET-RETRENCHMENT"));
+            new RuleId("RET-RETRENCHMENT"),
+            new RuleId("SAL-SALARY-FOR-ACCOM"),
+            new RuleId("PERQ-ACCOM-GOVERNMENT"),
+            new RuleId("PERQ-ACCOM-OWNED"),
+            new RuleId("PERQ-ACCOM-LEASED"),
+            new RuleId("PERQ-ACCOM-HOTEL"),
+            new RuleId("PERQ-ACCOM-FURNITURE"));
 
     @TempDir
     Path copy;
@@ -102,7 +108,7 @@ class TimelineReaderTest {
         assertThat(timeline.pipelineNodes().keySet())
                 .extracting(NodeId::value)
                 .containsExactlyInAnyOrder(
-                        "inputs.components", "salary.gross", "salary.base", "salary.exemptions", "salary.retirement", "salary.deductions",
+                        "inputs.components", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.deductions",
                         "salary.income",
                         "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");

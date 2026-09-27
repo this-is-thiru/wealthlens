@@ -9,7 +9,12 @@
   "feedsInto": [
     "SAL-SALARY-INCLUDES"
   ],
-  "salaryBaseFor": [],
+  "salaryBaseFor": [
+    {
+      "rule": "SAL-SALARY-FOR-ACCOM",
+      "onlyWhereTermsProvide": false
+    }
+  ],
   "lifecycle": {
     "validity": {
       "from": "2025-04-01"

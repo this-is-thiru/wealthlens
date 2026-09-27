@@ -77,9 +77,10 @@
   "pipeline": {
     "nodeRefs": [
       "inputs.components",
-      "salary.gross",
       "salary.base",
       "salary.exemptions",
+      "salary.perquisites",
+      "salary.gross",
       "salary.retirement",
       "salary.deductions",
       "salary.income",
