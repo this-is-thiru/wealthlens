@@ -191,4 +191,32 @@ class MoneyTest {
             assertThat(Money.of("-1234.99").roundToNearestTenPerSection516()).isEqualTo(Money.of("-1230"));
         }
     }
+
+    @Nested
+    @DisplayName("apportioned — a year's figure for part of it (D-097)")
+    class Apportioned {
+
+        @Test
+        void apportioned_whenOneThirdOfAHundred_dividesOnceAndRoundsToPaise() {
+            // 100 × 1 ÷ 3 = 33.333… → 33.33, once
+            assertThat(Money.of("100").apportioned(1, 3)).isEqualTo(Money.of("33.33"));
+        }
+
+        @Test
+        void apportioned_whenTheWhole_isTheAmountExactly() {
+            assertThat(Money.of("120000").apportioned(365, 365)).isEqualTo(Money.of("120000"));
+        }
+
+        @Test
+        void apportioned_whenNone_isNil() {
+            assertThat(Money.of("120000").apportioned(0, 12)).isEqualTo(Money.ZERO);
+        }
+
+        @Test
+        void apportioned_whenThePartExceedsTheWholeOrTheWholeIsNil_isRefused() {
+            assertThatThrownBy(() -> Money.of("100").apportioned(13, 12)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Money.of("100").apportioned(0, 0)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Money.of("100").apportioned(-1, 12)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
 }

@@ -867,7 +867,7 @@ if that is not enough for the item in hand.
 | W-064 | `salary.json` law rows | `DR 01` R7, R8 | |
 | W-065 | `SalaryIncomeNode` | | |
 | W-066 | `ProrationBasis` family | `DR 15` C3 | named basis per rule; **no caller divides** |
-| W-066b | `taxengine/temporal/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../temporal/TemporallyApportionedCapTest.java` | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
+| W-066b | `rules/temporal/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../temporal/TemporallyApportionedCapTest.java` *(path corrected by D-097: there is no `taxengine/temporal`)* | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
 | W-067 | **creates** `ExemptionNode` — HRA | `DR 06` G1.3 | **per period**; metro % per period; `limitedBy` names the limb |
 | W-068 | **modifies** `ExemptionNode` — LTA | `DR 01` R10 | **calendar** blocks; four independent caps |
 | W-069 | **modifies** `ExemptionNode` — allowances | `DR 01` R11 | ⚠ `SAL-ALW-NEW-SUBSET-001` is **STATUS UNCLEAR** — seed from the **section**, flag visibly |
@@ -954,6 +954,16 @@ if that is not enough for the item in hand.
 >
 > Verified by: S2 s.15 (p.37), s.18 (pp.40–41), s.19(1) (p.41); `02-TECH-SPEC.md` T6; the Phase 7 table (no
 > retirement item before this).
+
+
+> **Erratum (W-066, 2026-09-27, D-097):** a proration basis answers `units(year, window)` (a whole count of days
+> or months, which is what `PerUnitPerPeriod` multiplies) and `apportion(forTheYear, year, window)` (the one
+> division, rounded once in `Money`). It has no public fraction. `CompletedMonths` counts calendar months lying
+> wholly within the window (`DR 13` B2-20). `OccupationPeriods` is `W-067`'s input, not a basis. The family lives
+> in `rules/temporal/proration/`.
+>
+> Verified by: `PerUnitPerPeriod.apply` (`ctx.count(period)`); `Money.times(int)` Javadoc; no `taxengine/temporal`
+> package exists.
 
 ---
 
@@ -1233,7 +1243,7 @@ build break, not a head start.
 |---|---|---|
 | `HeadResult`, `ComponentSet`, `ElectionOutcome`, `InterestBreakdown` | `NodeValue` (`DR 15` B4) | the node that produces each — `HeadResult` with the first head set-off reads (house property, Phase 9; `salary.income` is a `MoneyValue`, D-096), `ComponentSet` at `W-060`, `ElectionOutcome` at `W-082`, `InterestBreakdown` at `W-112` |
 | `RegimeElection`, `HouseElection`, `ChildElection`, `SetOffOrderElection`, `AggregateAllocationElection` | `Election` (`DR 15` C2) | **`W-082`** — the phase table names only the family |
-| `OccupationPeriods` | `ProrationBasis`-adjacent (`DR 15` C3) | **`W-066`** |
+| `OccupationPeriods` | `ProrationBasis`-adjacent (`DR 15` C3) | **`W-067`** — not a basis: HRA's occupied windows, each measured by `Days` (D-097) |
 | `MissingRulePackException`, `UnknownComponentCodeException`, `StatutoryOvershootException`, `NoApplicableItrFormException`, `UndeterminedApportionmentException`, `BlockingDataQualityException` | the `TaxEngineException` hierarchy (`DR 23` A7) | **`W-105`** — which names `TaxError` and `TaxEngineException` and none of the six |
 
 Two of that last group are already reachable and have no thrower:

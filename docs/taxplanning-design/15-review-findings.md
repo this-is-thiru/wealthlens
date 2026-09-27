@@ -385,6 +385,16 @@ Each rule row **names its basis**, so the choice is data and is visible:
 0.65" as an open decision. With a named basis the decision is made **once, in data, visibly** — and
 the `NEEDS VERIFICATION` marker rides along to the user via `A4.2`.
 
+
+> **Erratum (W-066, 2026-09-27, D-097):** `fractionOf` returning a `Fraction` is the wrong output. The month-based
+> caps multiply a whole count (`PerUnitPerPeriod` reads `CapContext.count`, and `Money.times` takes only an
+> `int`), and HRA's salary for a period is one division that must round once. As built, `ProrationBasis` answers
+> `units(year, window)` and `apportion(forTheYear, year, window)`. `CompletedMonths` counts calendar months lying
+> wholly within the window. `OccupationPeriods` has no declaration here and is not a basis: HRA's occupied
+> windows are `W-067`'s input, each measured by `Days`.
+>
+> Verified by: `PerUnitPerPeriod`, `Money.times(int)`, `13-edge-cases.md` B2-20.
+
 ## C4 — Rule-pack lint and diff (D-13)
 
 `X4.1` says adding a year is `cp -r` and edit. That is exactly how H-2 happened in the placeholder: a

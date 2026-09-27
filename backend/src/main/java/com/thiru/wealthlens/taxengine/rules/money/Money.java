@@ -72,6 +72,23 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
         return ofExact(amountInRupees.multiply(BigDecimal.valueOf(multiplier)));
     }
 
+    /**
+     * This amount's share for {@code part} units of {@code whole} — a year's figure for part of the year.
+     *
+     * <p>The one division proration needs (D-097): multiplied by the count, divided once at {@link #CALC}, and
+     * rounded once to paise here. It takes counts, never a rate, so the only fraction it can express is one a
+     * proration basis has counted; {@code ProrationBasis#apportion} is its caller.
+     *
+     * @param part the units the share covers, from 0 to {@code whole}
+     * @param whole the units in the whole, more than 0
+     */
+    public Money apportioned(int part, int whole) {
+        if (whole <= 0 || part < 0 || part > whole) {
+            throw new IllegalArgumentException("A share needs 0 <= part <= whole and whole > 0; got " + part + " of " + whole);
+        }
+        return ofExact(amountInRupees.multiply(BigDecimal.valueOf(part)).divide(BigDecimal.valueOf(whole), CALC));
+    }
+
     /** Clamps a negative amount to zero. Named for what it does, not for what it guards against. */
     public Money floorAtZero() {
         return amountInRupees.signum() < 0 ? ZERO : this;
