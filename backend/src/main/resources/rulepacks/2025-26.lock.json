@@ -3,8 +3,8 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.16",
-      "checksum": "sha256:9a0a7380255be06a6d51db77c0c1947e2485359c314dd88073fb289e26b8c303"
+      "version": "2025-26.law.17",
+      "checksum": "sha256:a1091822a740685c83126e347f0be2ab40d4b31fd9382b22c8535f6ea24a982d"
     },
     "exec": {
       "version": "2025-26.exec.13",
@@ -63,7 +63,7 @@
     "SAL-SALARY-FOR-HRA": "sha256:21c723b2a03cd328636699f534458b39df9be940d518f09f2ba2047245c2305d",
     "SAL-SALARY-INCLUDES": "sha256:f7cbc6538bf722f1dfe0e9f2f3c7c7180166d06c6a09ef8b42e44df97c3beb60",
     "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE": "sha256:cb4fb7f7e4ba6c36cbdc0d180fd3c4cd60fa0e66d41506cd1ba5f48e78a5f0a2",
-    "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME": "sha256:f6d16918f7ab452611de0f1ac6f04be5826dfaa98616170d417dada0aa4fde2c",
+    "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME": "sha256:c44ffed98f5446a511d3077066a67a45fa7a770fd0a880b1133020ee493d6f7d",
     "SAL-TAX-ON-EMPLOYMENT": "sha256:d5ef9dcb4b95d782c30e3f124ad449a37a30655c9a996c9d94399418465045b8"
   },
   "instruments": {

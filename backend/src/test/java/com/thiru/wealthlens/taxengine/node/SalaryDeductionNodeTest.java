@@ -32,6 +32,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -123,6 +124,29 @@ class SalaryDeductionNodeTest {
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME);
         assertThat(result.trace().getFirst().limitedBy()).contains("statutory amount");
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025InTheNewRegime_restsTheSeventyFiveThousandOnTheTaxationLawsAmendmentAct2025() {
+        // Given — D-108: s.16(ia)'s proviso gave Rs 75,000 only under s.115BAC(1A)(ii); TY 2025-26 is computed under
+        // clause (iii), which the Taxation Laws (Amendment) Act, 2025 s.3 added to the proviso from 1-4-2025
+        TaxYearId taxYear = TaxYearId.of(2025);
+        RuleVersion version = withFixturePay(2025).rule(RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME)
+                .versionAt(TemporalContext.forTaxYear(taxYear, LocalDate.of(2025, 9, 21)));
+
+        // When
+        NodeResult result = run(2025, NEW_TAX_REGIME, "600000", null);
+
+        // Then
+        assertThat(version.introducedBy().gazetteRef()).isEqualTo("CG-DL-E-22082025-265618");
+        assertThat(version.introducedBy().retrospective()).isTrue();
+        assertThat(version.introducedBy().effectiveFrom()).isEqualTo(LocalDate.of(2025, 4, 1));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("75000")));
+            assertThat(line.provenance().sourceUrl().toString())
+                    .isEqualTo("https://egazette.gov.in/WriteReadData/2025/265618.pdf");
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
+        });
     }
 
     @ParameterizedTest(name = "TY {0}")
