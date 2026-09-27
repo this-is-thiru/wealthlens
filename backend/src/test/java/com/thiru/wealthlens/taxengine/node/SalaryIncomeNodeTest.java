@@ -31,6 +31,10 @@ class SalaryIncomeNodeTest {
     private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
 
     private static NodeResult run(int year, String gross, String deductions) {
+        return run(year, gross, "0", deductions);
+    }
+
+    private static NodeResult run(int year, String gross, String exemptions, String deductions) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -43,6 +47,7 @@ class SalaryIncomeNodeTest {
                 .regime(FIRST_SCHEDULE_RATES)
                 .inputs(inputs)
                 .given(NodeIds.SALARY_GROSS, MoneyValue.of(Money.of(gross)))
+                .given(NodeIds.SALARY_EXEMPTIONS, MoneyValue.of(Money.of(exemptions)))
                 .given(NodeIds.SALARY_DEDUCTIONS, MoneyValue.of(Money.of(deductions)))
                 .run(new SalaryIncomeNode());
     }
@@ -56,6 +61,16 @@ class SalaryIncomeNodeTest {
         // Then — 9,00,000 − 52,500 = 8,47,500, with no line of its own
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("847500")));
         assertThat(result.trace()).isEmpty();
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAnExemptionIsGiven_takesItOffWithTheDeductions(int year) {
+        // When — D-099: 15,60,000 − 2,28,000 (HRA) − 52,500 = 12,79,500
+        NodeResult result = run(year, "1560000", "228000", "52500");
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1279500")));
     }
 
     @ParameterizedTest(name = "TY {0}")

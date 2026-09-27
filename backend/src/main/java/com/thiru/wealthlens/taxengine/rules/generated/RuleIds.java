@@ -31,6 +31,7 @@ public final class RuleIds {
     public static final RuleId REBATE_NEW_TAX_REGIME = new RuleId("REBATE-NEW-TAX-REGIME");
     public static final RuleId REBATE_NEW_TAX_REGIME_EXCESS = new RuleId("REBATE-NEW-TAX-REGIME-EXCESS");
     public static final RuleId REBATE_RESIDENT_INDIVIDUAL = new RuleId("REBATE-RESIDENT-INDIVIDUAL");
+    public static final RuleId SAL_HOUSE_RENT_ALLOWANCE = new RuleId("SAL-HOUSE-RENT-ALLOWANCE");
     public static final RuleId SAL_SALARY_FOR_EMPLOYEE_PENSION = new RuleId("SAL-SALARY-FOR-EMPLOYEE-PENSION");
     public static final RuleId SAL_SALARY_FOR_EMPLOYER_PENSION = new RuleId("SAL-SALARY-FOR-EMPLOYER-PENSION");
     public static final RuleId SAL_SALARY_FOR_GRATUITY = new RuleId("SAL-SALARY-FOR-GRATUITY");

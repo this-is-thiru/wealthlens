@@ -69,13 +69,14 @@ class TimelineReaderTest {
                         new RuleId("SAL-SALARY-FOR-EMPLOYEE-PENSION"),
                         new RuleId("SAL-TAX-ON-EMPLOYMENT"),
                         new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME"),
-                        new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"));
+                        new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"),
+                        new RuleId("SAL-HOUSE-RENT-ALLOWANCE"));
         assertThat(timeline.regimes().keySet())
                 .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
         assertThat(timeline.pipelineNodes().keySet())
                 .extracting(NodeId::value)
                 .containsExactlyInAnyOrder(
-                        "inputs.components", "salary.gross", "salary.base", "salary.deductions", "salary.income",
+                        "inputs.components", "salary.gross", "salary.base", "salary.exemptions", "salary.deductions", "salary.income",
                         "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
     }

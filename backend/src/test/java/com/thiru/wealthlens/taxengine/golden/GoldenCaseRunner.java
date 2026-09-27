@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
+import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
 import com.thiru.wealthlens.taxengine.node.NetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RebateNode;
@@ -56,6 +57,7 @@ final class GoldenCaseRunner {
             new ComponentPartitionNode(),
             new GrossSalaryNode(),
             new SalaryBaseNode(),
+            new ExemptionNode(),
             new SalaryDeductionNode(),
             new SalaryIncomeNode(),
             new RoundTotalIncomeNode(),

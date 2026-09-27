@@ -79,6 +79,7 @@
       "inputs.components",
       "salary.gross",
       "salary.base",
+      "salary.exemptions",
       "salary.deductions",
       "salary.income",
       "totalincome",

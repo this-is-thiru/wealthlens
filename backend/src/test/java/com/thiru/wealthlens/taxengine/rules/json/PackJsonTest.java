@@ -748,7 +748,7 @@ class PackJsonTest {
                                     "law/regimes.json", resource("law/regimes.json"),
                                     "exec/components.json", resource("exec/components.json")));
 
-            assertThat(pack.rules()).hasSize(24);
+            assertThat(pack.rules()).hasSize(25);
             assertThat(pack.regimes()).hasSize(2);
             assertThat(pack.disallowanceSets()).isEmpty();
             assertThat(pack.components()).containsOnlyKeys(new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("COMMISSION"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"));
@@ -849,7 +849,7 @@ class PackJsonTest {
         @Test
         void theShippedPackStillParses() {
             // So a mutation test that passed because everything fails would be caught
-            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(24);
+            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(25);
         }
 
         @Test

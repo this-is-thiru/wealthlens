@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-061). Content: it changes no number. HRA is not a section of the 2025 Act: its provision there is Schedule III Table Sl. 11 (D-060).",
-  "_sources": "provisions: 01-rulebook.md SAL-HRA-001 (1961 s.10(13A); 2025 Sch. III Table Sl. 11). summary: SAL-HRA-001 (least of three), DR 22 C5 SAL-HRA-001 (what it is; raising one limit alone). routes[0]: SAL-HRA-001, SAL-HRA-002. disqualifiers[0]: SAL-HRA-005 (s.202(2)(a)(i)). disqualifiers[1]: SAL-HRA-002 (Sch. III Sl. 11(c), (d)). disqualifiers[2]: SAL-HRA-003 (r.279(2)(a)). No LATER_REVERSAL: the rulebook sources none (D-061).",
+  "_sources": "provisions: 01-rulebook.md SAL-HRA-001 (1961 s.10(13A); 2025 Sch. III Table Sl. 11). summary: SAL-HRA-001 (least of three), DR 22 C5 SAL-HRA-001 (what it is; raising one limit alone). routes[0]: SAL-HOUSE-RENT-ALLOWANCE (= SAL-HRA-001, -002; D-099). disqualifiers[0]: SAL-HRA-005 (s.202(2)(a)(i)). disqualifiers[1]: SAL-HRA-002 (Sch. III Sl. 11(c), (d)). disqualifiers[2]: SAL-HRA-003 (r.279(2)(a)). No LATER_REVERSAL: the rulebook sources none (D-061). As built (W-067): every route and disqualifier is enforced by SAL-HOUSE-RENT-ALLOWANCE — the least-of per period, its ExceptIn for the default regime, and ExemptionNode's owned/rent-free and relevant-period handling.",
   "key": "SEC-HOUSE-RENT-ALLOWANCE",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -20,8 +20,8 @@
       "description": "Rent you actually pay, for the period you live in the home, set against the allowance you receive.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The HRA exemption rule is not in the timeline yet; the exemption node builds it."
+          "type": "ByRule",
+          "rule": "SAL-HOUSE-RENT-ALLOWANCE"
         }
       ]
     }
@@ -31,24 +31,24 @@
       "kind": "NOT_ELIGIBLE",
       "description": "Not available in the default regime.",
       "enforcedBy": {
-        "type": "NotModelled",
-        "reason": "The default regime's disallowances are not declared yet; they arrive with the rules they forbid."
+        "type": "ByRule",
+        "rule": "SAL-HOUSE-RENT-ALLOWANCE"
       }
     },
     {
       "kind": "CONDITION_FAILED",
       "description": "You own the home you live in, or you do not actually pay rent for it.",
       "enforcedBy": {
-        "type": "NotModelled",
-        "reason": "The HRA exemption rule is not in the timeline yet; the exemption node builds it."
+        "type": "ByRule",
+        "rule": "SAL-HOUSE-RENT-ALLOWANCE"
       }
     },
     {
       "kind": "CONDITION_FAILED",
       "description": "Only the period you actually lived in the rented home counts, not the whole year.",
       "enforcedBy": {
-        "type": "NotModelled",
-        "reason": "The HRA exemption rule is not in the timeline yet; the exemption node builds it."
+        "type": "ByRule",
+        "rule": "SAL-HOUSE-RENT-ALLOWANCE"
       }
     }
   ]

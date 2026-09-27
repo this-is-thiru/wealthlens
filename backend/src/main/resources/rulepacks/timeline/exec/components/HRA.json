@@ -1,13 +1,14 @@
 {
   "code": "HRA",
-  "_note": "An allowance paid in money towards rent. Taxable salary until its exemption (Sch. III Table Sl. 11 / 1961 s.10(13A)) is built by W-067; in no salary base, being one of \"all other allowances\" (D-094). Salary under the head: S2 s.16 (pp.37–38) \"'salary' includes— (a) wages; … (d) any fees or commission; … (f) profits in lieu of, or in addition to, any salary or wages\"; TY 2025-26 1961 s.17(1) (thc p.140) \"(i) wages; … (iv) any fees, commissions, perquisites or profits in lieu of or in addition to any salary or wages\". Which clause covers an allowance is not settled by the words; the engine reads only the head and feedsInto, so nothing turns on it. CASH: paid in money (DR 05 M2).",
+  "_note": "An allowance paid in money towards rent. Its exemption is SAL-HOUSE-RENT-ALLOWANCE (Sch. III Table Sl. 11 / 1961 s.10(13A); W-067); in no salary base, being one of \"all other allowances\" (D-094). Salary under the head: S2 s.16 (pp.37–38) \"'salary' includes— (a) wages; … (d) any fees or commission; … (f) profits in lieu of, or in addition to, any salary or wages\"; TY 2025-26 1961 s.17(1) (thc p.140) \"(i) wages; … (iv) any fees, commissions, perquisites or profits in lieu of or in addition to any salary or wages\". Which clause covers an allowance is not settled by the words; the engine reads only the head and feedsInto, so nothing turns on it. CASH: paid in money (DR 05 M2).",
   "displayName": "House rent allowance",
   "head": "SALARIES",
   "kind": "SALARY",
   "cashNature": "CASH",
   "treatment": "TAXABLE",
   "feedsInto": [
-    "SAL-SALARY-INCLUDES"
+    "SAL-SALARY-INCLUDES",
+    "SAL-HOUSE-RENT-ALLOWANCE"
   ],
   "salaryBaseFor": [],
   "lifecycle": {

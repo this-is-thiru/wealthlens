@@ -6,7 +6,9 @@ import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
+import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
+import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
 import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
 import com.thiru.wealthlens.taxengine.node.SalaryDeductionNode;
@@ -25,6 +27,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.regime.PipelineSpec;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
@@ -47,8 +50,8 @@ class SalaryHeadPipelineTest {
     private static final RegimeCode NEW_TAX_REGIME = new RegimeCode("NEW_TAX_REGIME");
     private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final NodeRegistry SALARY_HEAD = NodeRegistry.of(List.of(
-            new ComponentPartitionNode(), new GrossSalaryNode(), new SalaryBaseNode(), new SalaryDeductionNode(),
-            new SalaryIncomeNode()));
+            new ComponentPartitionNode(), new GrossSalaryNode(), new SalaryBaseNode(), new ExemptionNode(),
+            new SalaryDeductionNode(), new SalaryIncomeNode()));
     private static final List<RuleId> BASES = List.of(
             RuleIds.SAL_SALARY_FOR_HRA,
             RuleIds.SAL_SALARY_FOR_GRATUITY,
@@ -56,6 +59,11 @@ class SalaryHeadPipelineTest {
             RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION);
 
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance) {
+        return run(year, regime, termsIncludeDearnessAllowance, List.of());
+    }
+
+    private static PipelineRunner.Result run(
+            int year, RegimeCode regime, boolean termsIncludeDearnessAllowance, List<Tenancy> tenancies) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = RUNNER.pack(taxYear);
         RegimeSpec shipped = pack.regimes().get(regime);
@@ -63,7 +71,7 @@ class SalaryHeadPipelineTest {
                 shipped.provision2025(), shipped.appliesTo(), shipped.rateTable(), shipped.disallowances(),
                 shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
                 new PipelineSpec(List.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS, NodeIds.SALARY_BASE,
-                        NodeIds.SALARY_DEDUCTIONS, NodeIds.SALARY_INCOME)),
+                        NodeIds.SALARY_EXEMPTIONS, NodeIds.SALARY_DEDUCTIONS, NodeIds.SALARY_INCOME)),
                 shipped.behaviour(), shipped.provenance());
         Employment employment = new Employment(List.of(
                 new SalaryComponent(ComponentCodes.BASIC, Money.of("600000")),
@@ -73,7 +81,7 @@ class SalaryHeadPipelineTest {
                 termsIncludeDearnessAllowance);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), List.of()),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), tenancies),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
@@ -146,6 +154,38 @@ class SalaryHeadPipelineTest {
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true);
 
         // Then — 9,00,000 − 75,000 = 8,25,000
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("825000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenARentedHomeIsEnteredOutsideTheNewRegime_incomeFallsByTheHraExemption(int year) {
+        // Given — rent 1,20,000 for the whole year; Bengaluru is listed only from TY 2026-27 (H-2)
+        Tenancy home = new Tenancy(
+                DateRange.between(LocalDate.of(year, 4, 1), LocalDate.of(year + 1, 3, 31)),
+                year == 2025 ? "ANY_OTHER_PLACE" : "BENGALURU", false, Money.of("120000"));
+
+        // When
+        PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, List.of(home));
+
+        // Then — HRA base 6,60,000: least of 2,40,000; 1,20,000 − 66,000 = 54,000; 40% or 50% of 6,60,000
+        // → 54,000; income 9,00,000 − 54,000 − 52,500 = 7,93,500
+        assertThat(result.valueOf(NodeIds.SALARY_EXEMPTIONS)).isEqualTo(MoneyValue.of(Money.of("54000")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("793500")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenARentedHomeIsEnteredInTheNewRegime_exemptsNothing(int year) {
+        // Given
+        Tenancy home = new Tenancy(
+                DateRange.between(LocalDate.of(year, 4, 1), LocalDate.of(year + 1, 3, 31)),
+                "ANY_OTHER_PLACE", false, Money.of("120000"));
+
+        // When
+        PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, List.of(home));
+
+        // Then — 9,00,000 − 75,000 = 8,25,000, as without the home
         assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("825000")));
     }
 }

@@ -1,0 +1,190 @@
+{
+  "ruleId": "SAL-HOUSE-RENT-ALLOWANCE",
+  "_note": "The house rent allowance exemption, per period of occupation (D-099; rulebook SAL-HRA-001 to -005, H-2; DR 13 R-11): the least of the allowance received for the period, the rent paid for it in excess of one-tenth of salary for it, and the location's percentage of salary for it. TY 2026-27: Income-tax Act, 2025 Sch. III Table Sl. 11 (p.506) exempts a special allowance \"specifically granted to meet expenditure actually incurred on payment of rent … to such extent as may be prescribed having regard to the area or place in which such accommodation is situated\", where the accommodation is \"not owned by him\" and rent is \"actually incurred\"; Income-tax Rules, 2026 r.279(1) (p.1776): \"(a) the actual amount of such allowance received … in respect of the relevant period; or (b) the amount by which the expenditure actually incurred … in payment of rent … exceeds one-tenth of the amount of salary due … for the relevant period; or (c) in case of an assessee employed in the location mentioned in column B … such percentage of salary … due … in respect of the relevant period\" — Mumbai, Kolkata, Delhi, Chennai, Hyderabad, Pune, Ahmedabad and Bengaluru 50%, any other place 40%; r.279(2)(a) the relevant period is occupation; s.202(2)(a)(i) excludes Sch. III Sl. 11 in the new regime. OQ-6: r.279(1)(c) reads 'employed in the location' under a column headed 'Location of residential accommodation'; this row uses the accommodation's location in both years. TY 2025-26: Income-tax Act, 1961 s.10(13A) (thc p.73) and its Explanation (owned, or no rent actually incurred, gets nothing); Income-tax Rules, 1962 r.2A (DoR compendium pp.347–348): \"(b) the amount by which the expenditure actually incurred … exceeds one-tenth of the amount of salary due … in respect of the relevant period; or (c) … (i) where such accommodation is situate at Bombay, Calcutta, Delhi or Madras, one-half of the amount of salary …; and (ii) … at any other place, two-fifth\" — Bombay, Calcutta and Madras are the cities now named Mumbai, Kolkata and Chennai; clause (c) as substituted by the Income-tax (Fourth Amendment) Rules, 1986 (S.O. 412(E), 9-7-1986, w.e.f. 1-4-1987); the new regime excludes s.10(13A) by s.115BAC(2)(i) as substituted by Finance Act, 2023 s.52 (pp.33–34). The salary is SAL-SALARY-FOR-HRA's, apportioned to the period by days (W-066); the allowance received likewise.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(13A), with Income-tax Rules, 1962 r.2A; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 11, with Income-tax Rules, 2026 r.279; excluded by s.202(2)(a)(i)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "allowance received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "HRA_RECEIVED"
+            }
+          },
+          {
+            "name": "rent less one-tenth of salary",
+            "shape": {
+              "type": "AmountInExcess",
+              "amount": "RENT_PAID",
+              "threshold": {
+                "type": "PercentOfBase",
+                "percent": "10",
+                "base": "SALARY"
+              }
+            }
+          },
+          {
+            "name": "percentage of salary",
+            "shape": {
+              "type": "PercentOfBaseByLocation",
+              "base": "SALARY",
+              "location": "LOCATION",
+              "bands": [
+                {
+                  "locations": [
+                    "MUMBAI",
+                    "KOLKATA",
+                    "DELHI",
+                    "CHENNAI"
+                  ],
+                  "percent": "50"
+                }
+              ],
+              "otherwise": "40"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Fourth Amendment) Rules, 1986 — r.2A clause (c) substituted, the four cities at one-half",
+        "gazetteRef": "S.O. 412(E)",
+        "notifiedOn": "1986-07-09",
+        "effectiveFrom": "1987-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/412e-notification-s.o.412-e-date-of-issue-9/7/1986",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
+        "sourceDescription": "Income-tax Rules, 1962 r.2A as in the Department of Revenue compendium (Taxmann, current to 2010-11), pp.347–348; Income-tax Act, 1961 s.10(13A) as on thc.nic.in, p.73; Finance Act, 2023 s.52 (s.115BAC(2)(i)), gazette CG-DL-E-31032023-244830 pp.33–34",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Rules, 1962 rule 2A after 2011 up to AY 2026-27 — the compendium read is current only to 2010-11; in particular whether the four-city list at one-half changed before the Rules, 2026 replaced it (rulebook H-2)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(13A), with Income-tax Rules, 1962 r.2A; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 11, with Income-tax Rules, 2026 r.279; excluded by s.202(2)(a)(i)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "allowance received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "HRA_RECEIVED"
+            }
+          },
+          {
+            "name": "rent less one-tenth of salary",
+            "shape": {
+              "type": "AmountInExcess",
+              "amount": "RENT_PAID",
+              "threshold": {
+                "type": "PercentOfBase",
+                "percent": "10",
+                "base": "SALARY"
+              }
+            }
+          },
+          {
+            "name": "percentage of salary",
+            "shape": {
+              "type": "PercentOfBaseByLocation",
+              "base": "SALARY",
+              "location": "LOCATION",
+              "bands": [
+                {
+                  "locations": [
+                    "MUMBAI",
+                    "KOLKATA",
+                    "DELHI",
+                    "CHENNAI",
+                    "HYDERABAD",
+                    "PUNE",
+                    "AHMEDABAD",
+                    "BENGALURU"
+                  ],
+                  "percent": "50"
+                }
+              ],
+              "otherwise": "40"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 279",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.279(1)–(2), p.1776; Income-tax Act, 2025 Sch. III Table Sl. 11 (p.506) and s.202(2)(a)(i) (p.227)",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.279, p.1776",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}
