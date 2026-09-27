@@ -1,0 +1,98 @@
+{
+  "ruleId": "RET-LEAVE-ENCASHMENT-AGGREGATE",
+  "_note": "The ceiling on other leave encashment across employers and years (D-106; rulebook RET-LEAVE-AGG-001): the aggregate deduction for the tax year may not exceed A − B, where A is the notified limit (this row's amount) and B the amounts allowed in earlier years (LedgerSnapshot.leaveEncashmentAlreadyAllowed); the node forms A − B. TY 2026-27: Income-tax Act, 2025 s.19(2)(f) (pp.45–46), \"if any payment on account of cash equivalent of leave salary is received from one or more than one employer in the same tax year … the aggregate amount of deduction shall not exceed— A – B, where,— A = the limit specified by the Central Government, by notification; and B = the aggregate amount of payment or payments which was received in any one or more earlier tax years and allowed as an exemption or a deduction\". TY 2025-26: Income-tax Act, 1961 s.10(10AA)(ii) first and second provisos (thc.nic.in p.73), to the same effect. A: S.O. 2276(E), Rs. 25,00,000, the same notification as RET-LEAVE-ENCASHMENT-OTHER's limit. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10AA)(ii), first and second provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(2)(f)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "2500000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 31/2023, S.O. 2276(E), under Income-tax Act, 1961 s.10(10AA)(ii): \"Rs. 25,00,000 (twenty-five lakhs rupees only) as the limit in relation to employees … who retire\", deemed in force from 1-4-2023; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "CG-DL-E-24052023-246047",
+        "notifiedOn": "2023-05-24",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246047.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10AA)(ii), first and second provisos, p.73; the notification's Gazette copy (CG-DL-E-24052023-246047), p.2",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Act, 1961 s.10(10AA)(ii), first and second provisos between Act 7 of 2019 (the thc.nic.in text's currency) and AY 2026-27 in the Acts not yet read: the Finance (No. 2) Act, 2019 (Act 23 of 2019), the Taxation Laws (Amendment) Act, 2019 (Act 46 of 2019) and the interim Finance Act, 2024. The Finance Acts 2020–2023, the Finance (No. 2) Act, 2024 and the Finance Act, 2025 were read and none amends it."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10AA)(ii), first and second provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(2)(f)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "2500000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 31/2023, S.O. 2276(E), under Income-tax Act, 1961 s.10(10AA)(ii): \"Rs. 25,00,000 (twenty-five lakhs rupees only) as the limit in relation to employees … who retire\", deemed in force from 1-4-2023; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "CG-DL-E-24052023-246047",
+        "notifiedOn": "2023-05-24",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246047.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(2)(f), pp.45–46, s.202(2)(a) p.227 and s.536(2)(j); the notification's Gazette copy (CG-DL-E-24052023-246047), p.2; Finance Act, 2026 searched in full: no amendment to s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(2)(f), pp.45–46",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

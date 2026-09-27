@@ -3,15 +3,22 @@ package com.thiru.wealthlens.taxengine.node;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
+import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.LeaveAtRetirement;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
+import com.thiru.wealthlens.taxengine.input.MonthOfPay;
 import com.thiru.wealthlens.taxengine.input.RetirementEntry;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
+import com.thiru.wealthlens.taxengine.input.Separation;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet.Line;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -22,6 +29,7 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
@@ -57,6 +65,11 @@ class RetirementNodeTest {
 
     private static NodeResult run(int year, RegimeCode regime, List<Paid> paid, List<RetirementPayment> payments,
             LedgerSnapshot ledgers) {
+        return run(year, regime, paid, payments, ledgers, false);
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, List<Paid> paid, List<RetirementPayment> payments,
+            LedgerSnapshot ledgers, boolean termsIncludeDearnessAllowance) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -64,7 +77,8 @@ class RetirementNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), payments),
+                new EnteredFacts(List.of(new Employment(List.of(), termsIncludeDearnessAllowance, EmployerKind.OTHER)),
+                        List.of(), List.of(), List.of(), Optional.empty(), payments),
                 plain.assessee(), plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         List<Line> lines = new ArrayList<>();
         for (Paid line : paid) {
@@ -200,12 +214,13 @@ class RetirementNodeTest {
 
     @Test
     void evaluate_whenGratuityIsPaidWithoutItsEntry_isRefusedNamingTheItemsStillToCome() {
-        // When / Then — taxing it in full would be a plausible wrong figure where Sl. 5 or 6 applies
+        // When / Then — taxing it in full would be a plausible wrong figure where Sl. 5 applies (D-106: Sl. 6 is built,
+        // Sl. 5 waits on W-066d)
         assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
                         List.of(new Paid(ComponentCodes.GRATUITY, "500000")), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("GRATUITY")
-                .hasMessageContaining("W-066c");
+                .hasMessageContaining("W-066d");
     }
 
     @Test
@@ -238,5 +253,193 @@ class RetirementNodeTest {
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(result.trace()).isEmpty();
+    }
+
+    // ---------------------------------------------------------------- other gratuity and leave (D-106)
+
+    private static final LedgerSnapshot NOTHING_BEFORE = LedgerSnapshot.empty();
+
+    /** Retirement on 30 June of {@code year}, after 25 completed years; each of the ten months pays these lines. */
+    private static Separation retiringInJune(int year, Map<ComponentCode, Money> monthly) {
+        LocalDate separatedOn = LocalDate.of(year, 6, 30);
+        List<MonthOfPay> months = new ArrayList<>();
+        for (int back = 10; back >= 1; back--) {
+            months.add(new MonthOfPay(java.time.YearMonth.from(separatedOn).minusMonths(back), monthly));
+        }
+        return new Separation(separatedOn.minusYears(25).minusMonths(3), separatedOn, months);
+    }
+
+    private static LedgerSnapshot allowedBefore(String gratuity, String leave) {
+        return new LedgerSnapshot(Map.of(), Optional.empty(), Money.of(gratuity), Money.of(leave), 0, Map.of(),
+                Optional.empty());
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenOtherGratuity_deductsHalfAMonthsAverageSalaryForEachCompletedYear(int year) {
+        // When — 25 completed years on an average of 1,00,000: least of 15,00,000, 20,00,000 and
+        // 1/2 × 1,00,000 × 25 = 12,50,000
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                List.of(RetirementPayment.otherGratuity(ComponentCodes.GRATUITY,
+                        retiringInJune(year, Map.of(ComponentCodes.BASIC, Money.of("100000"))))),
+                NOTHING_BEFORE);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1250000")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_OTHER);
+            assertThat(line.limitedBy()).contains("half a month's salary for each completed year");
+        });
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenEarlierYearsUsedPartOfTheGratuityLimit_deductsOnlyWhatRemains(int year) {
+        // When — s.19(2)(a): A − B = 20,00,000 − 10,00,000 = 10,00,000, below the 12,50,000 Sl. 6 allows
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                List.of(RetirementPayment.otherGratuity(ComponentCodes.GRATUITY,
+                        retiringInJune(year, Map.of(ComponentCodes.BASIC, Money.of("100000"))))),
+                allowedBefore("1000000", "0"));
+
+        // Then — the aggregate binds, and the line says what Sl. 6 alone allowed
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_AGGREGATE);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("1250000")));
+        });
+    }
+
+    @Test
+    void evaluate_whenTheTermsAreSilentOnDearnessAllowance_leaveItOutOfTheTenMonthAverage() {
+        // Given — each month 1,00,000 basic and 20,000 DA
+        Map<ComponentCode, Money> monthly = Map.of(ComponentCodes.BASIC, Money.of("100000"),
+                ComponentCodes.DEARNESS_ALLOWANCE, Money.of("20000"));
+        List<RetirementPayment> gratuity = List.of(
+                RetirementPayment.otherGratuity(ComponentCodes.GRATUITY, retiringInJune(2026, monthly)));
+        List<Paid> paid = List.of(new Paid(ComponentCodes.GRATUITY, "1500000"));
+
+        // When
+        NodeResult silent = run(2026, FIRST_SCHEDULE_RATES, paid, gratuity, NOTHING_BEFORE, false);
+        NodeResult providing = run(2026, FIRST_SCHEDULE_RATES, paid, gratuity, NOTHING_BEFORE, true);
+
+        // Then — s.19(2)(b): 1/2 × 1,00,000 × 25 = 12,50,000; with DA 1/2 × 1,20,000 × 25 = 15,00,000
+        assertThat(silent.value()).isEqualTo(MoneyValue.of(Money.of("1250000")));
+        assertThat(providing.value()).isEqualTo(MoneyValue.of(Money.of("1500000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenOtherLeaveEncashment_deductsTheLeastOfItsFourLimbs(int year) {
+        // Given — leave at credit 9,00,000; average 1,00,000, so ten months 10,00,000; limit 25,00,000
+        LeaveAtRetirement leave = new LeaveAtRetirement(LocalDate.of(year, 6, 30), Money.of("900000"),
+                Money.of("100000"));
+
+        // When — received 8,00,000, then 12,00,000
+        NodeResult below = run(year, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
+                List.of(RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT, leave)));
+        NodeResult above = run(year, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "1200000")),
+                List.of(RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT, leave)));
+
+        // Then
+        assertThat(below.value()).isEqualTo(MoneyValue.of(Money.of("800000")));
+        assertThat(above.value()).isEqualTo(MoneyValue.of(Money.of("900000")));
+        // — and the limb that bound is named as each year's Act states it: TY 2025-26 values the leave at the average
+        // salary (1961 s.10(10AA)(ii)); TY 2026-27 takes the cash equivalent of the leave salary (Sl. 14(a))
+        assertThat(above.trace()).singleElement().satisfies(line -> assertThat(line.limitedBy()).contains(
+                year == 2025 ? "leave at credit valued at the ten-month average salary" : "leave salary at credit"));
+    }
+
+    @Test
+    void evaluate_whenEarlierYearsUsedMostOfTheLeaveLimit_deductsOnlyWhatRemains() {
+        // When — s.19(2)(f): 25,00,000 − 20,00,000 = 5,00,000, below the 8,00,000 received
+        NodeResult result = run(2026, NEW_TAX_REGIME, List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
+                List.of(RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT,
+                        new LeaveAtRetirement(LocalDate.of(2026, 6, 30), Money.of("900000"), Money.of("100000")))),
+                allowedBefore("0", "2000000"));
+
+        // Then — and in the new regime too
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.RET_LEAVE_ENCASHMENT_AGGREGATE));
+    }
+
+    @Test
+    void evaluate_whenTheGratuityEventPrecedesTheNotification_isRefused() {
+        // Given — S.O. 1213(E) covers events on or after 29-3-2018
+        LocalDate separatedOn = LocalDate.of(2018, 3, 1);
+        List<MonthOfPay> months = new ArrayList<>();
+        for (int back = 10; back >= 1; back--) {
+            months.add(new MonthOfPay(java.time.YearMonth.from(separatedOn).minusMonths(back),
+                    Map.of(ComponentCodes.BASIC, Money.of("100000"))));
+        }
+        Separation early = new Separation(LocalDate.of(1990, 4, 1), separatedOn, months);
+
+        // When / Then
+        assertThatThrownBy(() -> run(2025, FIRST_SCHEDULE_RATES,
+                        List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                        List.of(RetirementPayment.otherGratuity(ComponentCodes.GRATUITY, early))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("2018-03-29");
+    }
+
+    @Test
+    void evaluate_whenTheLeaveRetirementPrecedesTheNotification_isRefused() {
+        // Given — S.O. 2276(E) is deemed in force from 1-4-2023
+        LeaveAtRetirement early = new LeaveAtRetirement(LocalDate.of(2023, 3, 31), Money.of("900000"),
+                Money.of("100000"));
+
+        // When / Then
+        assertThatThrownBy(() -> run(2025, FIRST_SCHEDULE_RATES,
+                        List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
+                        List.of(RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT, early))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("2023-04-01");
+    }
+
+    @Test
+    void evaluate_whenGratuityAndLeaveNameDifferentSeparations_isRefused() {
+        // When / Then — one separation, one day
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
+                        List.of(new Paid(ComponentCodes.GRATUITY, "1500000"),
+                                new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
+                        List.of(RetirementPayment.otherGratuity(ComponentCodes.GRATUITY,
+                                        retiringInJune(2026, Map.of(ComponentCodes.BASIC, Money.of("100000")))),
+                                RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT,
+                                        new LeaveAtRetirement(LocalDate.of(2026, 5, 31), Money.of("900000"),
+                                                Money.of("100000"))))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("2026-06-30")
+                .hasMessageContaining("2026-05-31");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void rows_whenAnEntrysLimitAndItsAggregatesAreRead_statesOneNotifiedAmount(int year) {
+        // Given — one notification each, stated twice: Sl. 6(b) and s.19(2)(a)'s A; Sl. 14(c) and s.19(2)(f)'s A
+        TaxYearId taxYear = TaxYearId.of(year);
+        RulePack pack = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        TemporalContext t = TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21));
+        CapContext nothing = new CapContext(Map.of());
+
+        // When
+        Money gratuityLimit = limb(pack, RuleIds.RET_GRATUITY_OTHER, "notified limit", t);
+        Money leaveLimit = limb(pack, RuleIds.RET_LEAVE_ENCASHMENT_OTHER, "notified limit", t);
+
+        // Then — S.O. 1213(E) twenty lakh rupees; S.O. 2276(E) Rs. 25,00,000
+        assertThat(gratuityLimit).isEqualTo(Money.of("2000000"))
+                .isEqualTo(TemporallyApportionedCap.apply(pack.rule(RuleIds.RET_GRATUITY_AGGREGATE), t, nothing).value());
+        assertThat(leaveLimit).isEqualTo(Money.of("2500000")).isEqualTo(
+                TemporallyApportionedCap.apply(pack.rule(RuleIds.RET_LEAVE_ENCASHMENT_AGGREGATE), t, nothing).value());
+    }
+
+    private static Money limb(RulePack pack, com.thiru.wealthlens.taxengine.rules.id.RuleId rule, String name,
+            TemporalContext t) {
+        LeastOf leastOf = (LeastOf) pack.rule(rule).versionAt(t).cap();
+        return leastOf.limbs().stream().filter(limb -> limb.name().equals(name)).findFirst().orElseThrow()
+                .shape().apply(new CapContext(Map.of())).value();
     }
 }

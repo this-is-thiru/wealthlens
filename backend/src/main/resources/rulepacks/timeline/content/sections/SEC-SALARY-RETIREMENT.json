@@ -1,6 +1,6 @@
 {
-  "_note": "Section catalogue entry (D-042, D-060, D-103). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: RET-*.json (1961 s.10(10), (10A), (10AA), (10B), (10C); 2025 s.19(1) Table Sl. 3–14 with s.19(2)). summary: S2 s.19(1) (p.41) \"computed after making the deductions\"; s.18(1)(a) profits in lieu of salary include compensation on termination, and no entry of s.19(1) deducts notice pay (rulebook RET-NOTICE-001). routes[0]: RET-GRATUITY-GOVERNMENT (Sl. 3, 4). routes[1]: RET-COMMUTED-PENSION-GOVERNMENT, -OTHER, -FUND (Sl. 7–9). routes[2]: RET-LEAVE-ENCASHMENT-GOVERNMENT (Sl. 13). routes[3]: RET-VOLUNTARY-RETIREMENT (Sl. 12). routes[4]: RET-RETRENCHMENT-APPROVED-SCHEME (Sl. 11). routes[5]: Sl. 5, 6, 10, 14 and s.19(2)(a), (f) — notified limits and the Payment of Gratuity Act / Industrial Disputes Act, W-066c and W-066d (D-103). disqualifiers[0]: s.19(2)(e)(ii)–(iii); 1961 s.10(10C) second and third provisos. Every entry applies in every regime (s.202(2)(a); s.115BAC(2)(i)).",
+  "_note": "Section catalogue entry (D-042, D-060, D-103, D-106). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: RET-*.json (1961 s.10(10), (10A), (10AA), (10B), (10C); 2025 s.19(1) Table Sl. 3–14 with s.19(2)). summary: S2 s.19(1) (p.41) \"computed after making the deductions\"; s.18(1)(a) profits in lieu of salary include compensation on termination, and no entry of s.19(1) deducts notice pay (rulebook RET-NOTICE-001). routes[0]: RET-GRATUITY-GOVERNMENT (Sl. 3, 4). routes[1]: RET-COMMUTED-PENSION-GOVERNMENT, -OTHER, -FUND (Sl. 7–9). routes[2]: RET-LEAVE-ENCASHMENT-GOVERNMENT (Sl. 13). routes[3]: RET-VOLUNTARY-RETIREMENT (Sl. 12). routes[4]: RET-RETRENCHMENT-APPROVED-SCHEME (Sl. 11). routes[5]: RET-GRATUITY-OTHER, RET-GRATUITY-AGGREGATE (Sl. 6, s.19(2)(a); S.O. 1213(E)). routes[6]: RET-LEAVE-ENCASHMENT-OTHER, RET-LEAVE-ENCASHMENT-AGGREGATE (Sl. 14, s.19(2)(f); S.O. 2276(E)) (D-106). routes[7]: Sl. 5 and 10 — the Payment of Gratuity Act / Industrial Disputes Act, repealed 21-11-2025, W-066d (OQ-9). disqualifiers[0]: s.19(2)(e)(ii)–(iii); 1961 s.10(10C) second and third provisos. Every entry applies in every regime (s.202(2)(a); s.115BAC(2)(i)).",
   "key": "SEC-SALARY-RETIREMENT",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -13,7 +13,7 @@
     "presence": "PRESENT"
   },
   "plainName": "Retirement and leaving a job",
-  "summary": "Money paid when you retire or leave a job is salary, but some of it comes off before tax. Gratuity, commuted pension and leave encashment under government schemes come off in full; a pension commuted by any other employer comes off up to a share of its commuted value; compensation under a voluntary retirement scheme comes off up to a fixed limit, once in a lifetime. Notice pay and other compensation for leaving are taxed in full. These apply in both regimes.",
+  "summary": "Money paid when you retire or leave a job is salary, but some of it comes off before tax. Gratuity, commuted pension and leave encashment under government schemes come off in full; a pension commuted by any other employer comes off up to a share of its commuted value; compensation under a voluntary retirement scheme comes off up to a fixed limit, once in a lifetime; gratuity from other employers and other employees' leave encashment come off up to limits the government sets, measured on your salary before you left. Notice pay and other compensation for leaving are taxed in full. These apply in both regimes.",
   "routes": [
     {
       "name": "Gratuity under government pension rules",
@@ -74,12 +74,40 @@
       ]
     },
     {
-      "name": "Other gratuity, leave encashment and retrenchment",
-      "description": "Gratuity under the gratuity law or from other employers, other employees' leave encashment, and other retrenchment compensation.",
+      "name": "Gratuity from any other employer",
+      "description": "Gratuity outside the government schemes comes off up to the least of what you received, a limit the government sets, and half a month's salary for each completed year of service, measured on your average salary for the ten months before the month you left. The limit also caps what comes off across all your employers and years.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-AGGREGATE"
+        }
+      ]
+    },
+    {
+      "name": "Leave encashment for other employees",
+      "description": "Payment for earned leave at retirement, for an employee not in government service, comes off up to the least of what you received, the value of your leave at credit, ten months of your average salary, and a limit the government sets, which also caps what comes off across all your employers and years.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-AGGREGATE"
+        }
+      ]
+    },
+    {
+      "name": "Gratuity under the gratuity law, and retrenchment",
+      "description": "Gratuity under the gratuity law and retrenchment compensation, whose limits come from labour laws replaced during the earlier year.",
       "conditions": [
         {
           "type": "NotModelled",
-          "reason": "Not built yet: the limits are set by government notification or by labour law, which have to be read first; their own backlog items add them."
+          "reason": "Not built yet: the labour laws the tax law names were replaced, and how to read them now is an open question; its own backlog item adds them."
         }
       ]
     }

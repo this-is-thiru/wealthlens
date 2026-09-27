@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-066c — retirement limits set by notification (D-103)
-Stage           : BLOCKED — sourcing
+Item            : W-066d — retirement limits set by other Acts (D-103, D-106): Sl. 5 (Payment of Gratuity Act) and Sl. 10 whole (retrenchment)
+Stage           : BLOCKED — OQ-9
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's sourcing: the gratuity, leave-encashment and retrenchment limit notifications in force for TY 2025-26 and TY 2026-27 (s.536(2)(j) carries 1961 ones forward), and any later ones. Then READ the W-066c row and write plans/W-066c.md; STOP for approval. W-066d is blocked likewise (Payment of Gratuity Act s.4, ID Act s.25F(b), labour codes). Moving to Phase 8 first needs the owner to place W-066c/d after it (R4)
-Last verify     : ./mvnw clean test -pl backend -Punit → 2125 pass, 0 fail, 0 Checkstyle violations (W-064a)
-Waiting on      : the owner — W-066c/d sourcing or re-placement. W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2, OQ-5, OQ-6, OQ-7, OQ-8 open. Carried: TY 2025-26 goldens PROVISIONAL (W-062, W-066a, W-064a); DIS-S202-2A, SAL-HRA-006, SAL-LTA-CHILD-001 owed; nil lines for LTA and allowances in an excluding regime proposed (D-104); EmployerKind vs taxplanning EmployerType reconciliation proposed (D-105)
+Next step       : WAIT for the owner's answer to OQ-9 (read the repealed PGA/IDA references as the Codes' s.53 / s.70(b), or refuse until CBDT speaks); then READ the W-066d row + sources/2026-09-27-retirement-limits.md, write plans/W-066d.md, STOP. Or the owner places W-066d later and Phase 8 (W-071) starts (R4)
+Last verify     : ./mvnw clean test -pl backend -Punit → 2152 pass, 0 fail, 0 Checkstyle violations (W-066c)
+Waiting on      : the owner — OQ-9 or re-placement. W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2, OQ-5, OQ-6, OQ-7, OQ-8, OQ-9 open. Carried: TY 2025-26 goldens PROVISIONAL (F(No.2)A 2019, TLA 2019, interim FA 2024 unread; HRA/LTA rows); DIS-S202-2A, SAL-HRA-006, SAL-LTA-CHILD-001 owed; nil lines for LTA/allowances proposed (D-104); EmployerKind vs EmployerType proposed (D-105)
 Files touched   : —
-Last item commit: taxplanning W-064a: add the entertainment allowance deduction — Government employees, TY 2025-26 old regime only, a year's pack keeping only its own rules (D-105)
+Last item commit: taxplanning W-066c: add other gratuity and leave encashment — notified limits, the ten-month average, capped across employers and years (D-106)
 Updated         : 2026-09-27, session 9
 ```
 

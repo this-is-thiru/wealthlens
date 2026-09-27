@@ -40,16 +40,17 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The retirement and termination deductions from salary (S2 s.19(1) Table Sl. 3, 4, 7–9, 11–13 with s.19(2); 1961
- * s.10(10)(i), (10A), (10AA)(i), (10B) second proviso, (10C); {@code DR 06} G1.1 step 9; D-103).
+ * The retirement and termination deductions from salary (S2 s.19(1) Table Sl. 3, 4, 6–9, 11–14 with s.19(2); 1961
+ * s.10(10)(i), (iii), (10A), (10AA), (10B) second proviso, (10C); {@code DR 06} G1.1 step 9; D-103, D-106).
  *
  * <p>One DEDUCTION line per payment entered, under the entry the taxpayer says it falls under — which turns on the
  * employer and the scheme, facts no amount carries. The amount is the component's, as paid with the salary. Every
  * entry here applies in every regime (s.202(2)(a) excludes Sl. 1 only; s.115BAC(2)(i) none of s.10(10)–(10C)).
  *
- * <p>A retirement component paid without an entry is refused rather than taxed in full: the entries whose limits
- * rest on a notification or another Act (Sl. 5, 6, 10, 14) are not built yet ({@code W-066c}, {@code W-066d}), and
- * taxing such a payment in full would be a plausible wrong figure. Notice pay feeds no retirement rule, so it is
+ * <p>Other gratuity and other leave encashment (Sl. 6, 14) take the notified limits and the caps across employers
+ * and years ({@link NotifiedRetirementLimits}; D-106). A retirement component paid without an entry is refused
+ * rather than taxed in full: the entries resting on the repealed labour Acts (Sl. 5, 10) are not built yet
+ * ({@code W-066d}, OQ-9), and taxing such a payment in full would be a plausible wrong figure. Notice pay feeds no retirement rule, so it is
  * salary taxed in full and needs no entry (s.18(1)(a); {@code RET-NOTICE-001}).
  */
 public final class RetirementNode implements ComputationNode {
@@ -67,6 +68,8 @@ public final class RetirementNode implements ComputationNode {
         rules.put(RetirementEntry.APPROVED_SCHEME_RETRENCHMENT, RuleIds.RET_RETRENCHMENT_APPROVED_SCHEME);
         rules.put(RetirementEntry.VOLUNTARY_RETIREMENT, RuleIds.RET_VOLUNTARY_RETIREMENT);
         rules.put(RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT, RuleIds.RET_LEAVE_ENCASHMENT_GOVERNMENT);
+        rules.put(RetirementEntry.OTHER_GRATUITY, RuleIds.RET_GRATUITY_OTHER);
+        rules.put(RetirementEntry.OTHER_LEAVE_ENCASHMENT, RuleIds.RET_LEAVE_ENCASHMENT_OTHER);
         return Map.copyOf(rules);
     }
 
@@ -82,7 +85,9 @@ public final class RetirementNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        return Set.copyOf(RULE_FOR_ENTRY.values());
+        Set<RuleId> rules = new HashSet<>(RULE_FOR_ENTRY.values());
+        rules.addAll(NotifiedRetirementLimits.aggregateRules());
+        return Set.copyOf(rules);
     }
 
     @Override
@@ -90,6 +95,7 @@ public final class RetirementNode implements ComputationNode {
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
         List<RetirementPayment> payments = ctx.inputs().entered().retirementPayments();
         requireEachRetirementComponentEntered(ctx, components, payments);
+        NotifiedRetirementLimits.requireOneDay(payments);
         boolean gratuityReceived = paid(components, ComponentCodes.GRATUITY).isGreaterThan(Money.ZERO);
         List<TraceLine> trace = new ArrayList<>();
         for (RetirementPayment payment : payments) {
@@ -118,8 +124,7 @@ public final class RetirementNode implements ComputationNode {
             if (retirement && !entered.contains(line.code())) {
                 throw new IllegalArgumentException(line.code() + " is paid but no entry says which of the Act's"
                         + " retirement entries it falls under; enter it. Gratuity under the Payment of Gratuity Act"
-                        + " or any other gratuity, other leave encashment and other retrenchment compensation are"
-                        + " not built yet (W-066c, W-066d)");
+                        + " and retrenchment compensation outside an approved scheme are not built yet (W-066d)");
             }
         }
     }
@@ -152,7 +157,14 @@ public final class RetirementNode implements ComputationNode {
                             : gratuityReceived ? "one-third of the pension's commuted value, gratuity also received"
                                     : "one-half of the pension's commuted value"));
         }
-        CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of(PAYMENT_RECEIVED, received)));
+        Map<BaseId, Money> paidIn = Map.of(PAYMENT_RECEIVED, received);
+        if (NotifiedRetirementLimits.isNotified(payment.entry())) {
+            CapResult deducted = TemporallyApportionedCap.apply(rule, t,
+                    NotifiedRetirementLimits.context(ctx, components, payment, version, paidIn));
+            return Optional.of(NotifiedRetirementLimits.capped(ctx, payment.entry(),
+                    line(sequence, ruleId, received, deducted.value(), version).withLimitedBy(deducted.limitedBy())));
+        }
+        CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(paidIn));
         return Optional.of(line(sequence, ruleId, received, deducted.value(), version)
                 .withLimitedBy(deducted.limitedBy()));
     }

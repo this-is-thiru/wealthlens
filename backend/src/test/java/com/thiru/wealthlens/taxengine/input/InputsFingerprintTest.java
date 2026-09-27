@@ -325,6 +325,27 @@ class InputsFingerprintTest {
         }
 
         @Test
+        void enteredFacts_whenOnlyASeparationsMonthDiffers_movesTheHash() {
+            // Given — D-106: other gratuity is measured on the ten months before the event
+            java.time.LocalDate separatedOn = java.time.LocalDate.of(2025, 6, 30);
+            List<MonthOfPay> months = SeparationTest.tenMonthsBefore(separatedOn, "100000");
+            List<MonthOfPay> raised = new java.util.ArrayList<>(months);
+            raised.set(9, new MonthOfPay(months.get(9).month(), Map.of(new ComponentCode("BASIC"),
+                    com.thiru.wealthlens.taxengine.rules.money.Money.of("110000"))));
+            EngineInputs before = copy(baseline(), r -> r.entered = enteringGratuity(separatedOn, months));
+            EngineInputs after = copy(baseline(), r -> r.entered = enteringGratuity(separatedOn, raised));
+
+            // When / Then
+            assertThat(hashOf(after)).isNotEqualTo(hashOf(before));
+        }
+
+        private static EnteredFacts enteringGratuity(java.time.LocalDate separatedOn, List<MonthOfPay> months) {
+            return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
+                    List.of(RetirementPayment.otherGratuity(new ComponentCode("GRATUITY"),
+                            new Separation(java.time.LocalDate.of(2000, 4, 1), separatedOn, months))));
+        }
+
+        @Test
         void enteredFacts_whenEmpty_isStillInTheCanonicalForm() {
             // D-026: declared and thin rather than absent, so an empty entry is a value in the key too
             assertThat(InputsFingerprint.canonicalFormOf(baseline())).contains("entered=T:EnteredFacts{");

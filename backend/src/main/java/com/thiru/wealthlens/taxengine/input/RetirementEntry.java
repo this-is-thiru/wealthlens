@@ -36,5 +36,12 @@ public enum RetirementEntry {
 
     /** A Central or State Government employee's leave salary for earned leave at retirement — Sl. 13; 1961
      * s.10(10AA)(i). */
-    GOVERNMENT_LEAVE_ENCASHMENT
+    GOVERNMENT_LEAVE_ENCASHMENT,
+
+    /** Any other gratuity, on retirement, incapacity or termination — Sl. 6; 1961 s.10(10)(iii) (D-106). */
+    OTHER_GRATUITY,
+
+    /** Leave salary at retirement for an employee who is not a Central or State Government employee — Sl. 14; 1961
+     * s.10(10AA)(ii) (D-106). */
+    OTHER_LEAVE_ENCASHMENT
 }

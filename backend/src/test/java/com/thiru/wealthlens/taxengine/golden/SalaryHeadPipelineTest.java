@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Journey;
 import com.thiru.wealthlens.taxengine.input.JourneyMode;
+import com.thiru.wealthlens.taxengine.input.LeaveAtRetirement;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
@@ -320,5 +321,23 @@ class SalaryHeadPipelineTest {
                 .isEqualTo(MoneyValue.of(Money.of(year == 2025 ? "57500" : "52500")));
         assertThat(result.valueOf(NodeIds.SALARY_INCOME))
                 .isEqualTo(MoneyValue.of(Money.of(year == 2025 ? "852500" : "857500")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenAPrivateEmployeeRetiresWithLeaveEncashmentInTheNewRegime_theLeastOfItsLimbsComesOff(int year) {
+        // Given — leave encashment 8,00,000 paid; employer's leave salary at credit 9,00,000, average 1,00,000 (D-106)
+        List<SalaryComponent> leave = List.of(new SalaryComponent(ComponentCodes.LEAVE_ENCASHMENT, Money.of("800000")));
+        RetirementPayment encashment = RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT,
+                new LeaveAtRetirement(LocalDate.of(year, 6, 30), Money.of("900000"), Money.of("100000")));
+
+        // When
+        PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(),
+                List.of(), Optional.empty(), leave, List.of(encashment), EmployerKind.OTHER));
+
+        // Then — gross 9,00,000 + 8,00,000 = 17,00,000; least of 8,00,000, 9,00,000, 10,00,000, 25,00,000 = 8,00,000;
+        // standard deduction 75,000; income 8,25,000
+        assertThat(result.valueOf(NodeIds.SALARY_RETIREMENT)).isEqualTo(MoneyValue.of(Money.of("800000")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("825000")));
     }
 }

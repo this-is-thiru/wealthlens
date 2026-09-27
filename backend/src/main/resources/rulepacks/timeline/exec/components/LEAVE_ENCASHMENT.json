@@ -1,6 +1,6 @@
 {
   "code": "LEAVE_ENCASHMENT",
-  "_note": "Paid in money on retirement or termination, and salary: \"any payment received by an employee in respect of any period of leave not availed of by him\" (S2 s.16(h); 1961 s.17(1)(va)); RET-LEAVE-ENCASHMENT-GOVERNMENT now, any other employee's with W-066c (D-103). In no salary base. CASH: paid in money (DR 05 M2).",
+  "_note": "Paid in money on retirement or termination, and salary: \"any payment received by an employee in respect of any period of leave not availed of by him\" (S2 s.16(h); 1961 s.17(1)(va)); RET-LEAVE-ENCASHMENT-GOVERNMENT, or any other employee's RET-LEAVE-ENCASHMENT-OTHER with its aggregate (D-106) (D-103). In no salary base. CASH: paid in money (DR 05 M2).",
   "displayName": "Leave encashment",
   "head": "SALARIES",
   "kind": "SALARY",
@@ -8,7 +8,9 @@
   "treatment": "TAXABLE",
   "feedsInto": [
     "SAL-SALARY-INCLUDES",
-    "RET-LEAVE-ENCASHMENT-GOVERNMENT"
+    "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+    "RET-LEAVE-ENCASHMENT-OTHER",
+    "RET-LEAVE-ENCASHMENT-AGGREGATE"
   ],
   "salaryBaseFor": [],
   "lifecycle": {

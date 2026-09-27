@@ -14,6 +14,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,6 +36,55 @@ class TimelineReaderTest {
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
     private static final String SLAB_FILE = "law/rules/RATE-SLAB-NEW-TAX-REGIME.json";
 
+    /** Every rule the shipped timeline states, listed by hand; the lock, not this test, guards what is inside them. */
+    private static final Set<RuleId> SHIPPED_RULES = Set.of(
+            new RuleId("RATE-SLAB-NEW-TAX-REGIME"),
+            new RuleId("RATE-SLAB-FIRST-SCHEDULE"),
+            new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79"),
+            new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-80"),
+            new RuleId("REBATE-NEW-TAX-REGIME"),
+            new RuleId("REBATE-NEW-TAX-REGIME-EXCESS"),
+            new RuleId("REBATE-RESIDENT-INDIVIDUAL"),
+            new RuleId("RATE-ROUND-TOTAL-INCOME"),
+            new RuleId("RATE-ROUND-PAYABLE"),
+            new RuleId("RATE-HEALTH-EDUCATION-CESS"),
+            new RuleId("RATE-SUR-FIRST-SCHEDULE"),
+            new RuleId("RATE-SUR-FIRST-SCHEDULE-CEILING"),
+            new RuleId("RATE-SUR-FIRST-SCHEDULE-EXCLUDING"),
+            new RuleId("RATE-SUR-NEW-TAX-REGIME"),
+            new RuleId("RATE-SUR-NEW-TAX-REGIME-CEILING"),
+            new RuleId("RATE-SUR-NEW-TAX-REGIME-EXCLUDING"),
+            new RuleId("SAL-SALARY-INCLUDES"),
+            new RuleId("SAL-SALARY-FOR-HRA"),
+            new RuleId("SAL-SALARY-FOR-GRATUITY"),
+            new RuleId("SAL-SALARY-FOR-EMPLOYER-PENSION"),
+            new RuleId("SAL-SALARY-FOR-EMPLOYEE-PENSION"),
+            new RuleId("SAL-TAX-ON-EMPLOYMENT"),
+            new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME"),
+            new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"),
+            new RuleId("SAL-HOUSE-RENT-ALLOWANCE"),
+            new RuleId("SAL-LEAVE-TRAVEL-CONCESSION"),
+            new RuleId("SAL-LEAVE-TRAVEL-DISTANCE-RATE"),
+            new RuleId("SAL-LEAVE-TRAVEL-JOURNEYS"),
+            new RuleId("SAL-ALW-UNIFORM"),
+            new RuleId("SAL-ALW-CONVEYANCE"),
+            new RuleId("SAL-ALW-CHILDREN-EDUCATION"),
+            new RuleId("SAL-ALW-HOSTEL"),
+            new RuleId("SAL-ALW-TRANSPORT-DISABLED"),
+            new RuleId("RET-COMMUTED-PENSION-FUND"),
+            new RuleId("RET-COMMUTED-PENSION-GOVERNMENT"),
+            new RuleId("RET-COMMUTED-PENSION-OTHER"),
+            new RuleId("RET-GRATUITY-GOVERNMENT"),
+            new RuleId("RET-LEAVE-ENCASHMENT-GOVERNMENT"),
+            new RuleId("RET-RETRENCHMENT-APPROVED-SCHEME"),
+            new RuleId("RET-VOLUNTARY-RETIREMENT"),
+            new RuleId("SAL-ENTMT-ALLOWANCE"),
+            new RuleId("SAL-SALARY-FOR-ENTMT"),
+            new RuleId("RET-GRATUITY-OTHER"),
+            new RuleId("RET-GRATUITY-AGGREGATE"),
+            new RuleId("RET-LEAVE-ENCASHMENT-OTHER"),
+            new RuleId("RET-LEAVE-ENCASHMENT-AGGREGATE"));
+
     @TempDir
     Path copy;
 
@@ -44,50 +94,7 @@ class TimelineReaderTest {
         Timeline timeline = TimelineReader.read(REAL);
 
         // Then — listed by hand; the lock, not this test, guards the values inside them
-        assertThat(timeline.rules().keySet())
-                .containsExactlyInAnyOrder(
-                        new RuleId("RATE-SLAB-NEW-TAX-REGIME"),
-                        new RuleId("RATE-SLAB-FIRST-SCHEDULE"),
-                        new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79"),
-                        new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-80"),
-                        new RuleId("REBATE-NEW-TAX-REGIME"),
-                        new RuleId("REBATE-NEW-TAX-REGIME-EXCESS"),
-                        new RuleId("REBATE-RESIDENT-INDIVIDUAL"),
-                        new RuleId("RATE-ROUND-TOTAL-INCOME"),
-                        new RuleId("RATE-ROUND-PAYABLE"),
-                        new RuleId("RATE-HEALTH-EDUCATION-CESS"),
-                        new RuleId("RATE-SUR-FIRST-SCHEDULE"),
-                        new RuleId("RATE-SUR-FIRST-SCHEDULE-CEILING"),
-                        new RuleId("RATE-SUR-FIRST-SCHEDULE-EXCLUDING"),
-                        new RuleId("RATE-SUR-NEW-TAX-REGIME"),
-                        new RuleId("RATE-SUR-NEW-TAX-REGIME-CEILING"),
-                        new RuleId("RATE-SUR-NEW-TAX-REGIME-EXCLUDING"),
-                        new RuleId("SAL-SALARY-INCLUDES"),
-                        new RuleId("SAL-SALARY-FOR-HRA"),
-                        new RuleId("SAL-SALARY-FOR-GRATUITY"),
-                        new RuleId("SAL-SALARY-FOR-EMPLOYER-PENSION"),
-                        new RuleId("SAL-SALARY-FOR-EMPLOYEE-PENSION"),
-                        new RuleId("SAL-TAX-ON-EMPLOYMENT"),
-                        new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME"),
-                        new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"),
-                        new RuleId("SAL-HOUSE-RENT-ALLOWANCE"),
-                        new RuleId("SAL-LEAVE-TRAVEL-CONCESSION"),
-                        new RuleId("SAL-LEAVE-TRAVEL-DISTANCE-RATE"),
-                        new RuleId("SAL-LEAVE-TRAVEL-JOURNEYS"),
-                        new RuleId("SAL-ALW-UNIFORM"),
-                        new RuleId("SAL-ALW-CONVEYANCE"),
-                        new RuleId("SAL-ALW-CHILDREN-EDUCATION"),
-                        new RuleId("SAL-ALW-HOSTEL"),
-                        new RuleId("SAL-ALW-TRANSPORT-DISABLED"),
-                        new RuleId("RET-COMMUTED-PENSION-FUND"),
-                        new RuleId("RET-COMMUTED-PENSION-GOVERNMENT"),
-                        new RuleId("RET-COMMUTED-PENSION-OTHER"),
-                        new RuleId("RET-GRATUITY-GOVERNMENT"),
-                        new RuleId("RET-LEAVE-ENCASHMENT-GOVERNMENT"),
-                        new RuleId("RET-RETRENCHMENT-APPROVED-SCHEME"),
-                        new RuleId("RET-VOLUNTARY-RETIREMENT"),
-                        new RuleId("SAL-ENTMT-ALLOWANCE"),
-                        new RuleId("SAL-SALARY-FOR-ENTMT"));
+        assertThat(timeline.rules().keySet()).containsExactlyInAnyOrderElementsOf(SHIPPED_RULES);
         assertThat(timeline.regimes().keySet())
                 .containsExactlyInAnyOrder(new RegimeCode("NEW_TAX_REGIME"), new RegimeCode("FIRST_SCHEDULE_RATES"));
         assertThat(timeline.pipelineNodes().keySet())
