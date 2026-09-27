@@ -1,0 +1,130 @@
+{
+  "ruleId": "RET-VOLUNTARY-RETIREMENT",
+  "_note": "An amount on voluntary retirement or termination under a scheme, for an employee of the employers the Acts list: deducted up to the least of the amount received and five lakh rupees, once only, and not where relief for arrears was allowed on it (D-103; rulebook RET-VRS-001, -002). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 12 (p.43), \"Minimum of— (a) compensation received; and (b) ₹ 500000.\"; s.19(2)(e)(ii) \"where deduction has been allowed to an employee in respect of the said item for any tax year, no deduction thereunder shall be allowed to him in relation to any other tax year\", (iii) \"where any relief under section 157 has been allowed … such amount shall not be allowed as a deduction\"; (h) the employers (pp.45–46). TY 2025-26: Income-tax Act, 1961 s.10(10C) (thc.nic.in pp.74–75), \"to the extent such amount does not exceed five lakh rupees\"; second proviso, once only; third proviso (Act 33 of 2009 s.4, w.e.f. 1-4-2010), none after relief under s.89. The scheme's conformity to the prescribed guidelines is not checked. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10C)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 12, with s.19(2)(e), (h)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "compensation received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "PAYMENT_RECEIVED"
+            }
+          },
+          {
+            "name": "limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "500000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10) to (10C), so the entry applies in every regime",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10C), pp.74–75; Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52 (s.115BAC(2)(i)), pp.33–34",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Act, 1961 s.10(10C) after Act 7 of 2019 (the thc.nic.in text's currency) up to AY 2026-27: the Finance Acts of 2020, 2021 and 2022 are not read; the Finance Act, 2023, the Finance (No. 2) Act, 2024 and the Finance Act, 2025 were searched by text and none amends it."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10C)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 12, with s.19(2)(e), (h)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "compensation received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "PAYMENT_RECEIVED"
+            }
+          },
+          {
+            "name": "limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "500000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 12, with s.19(2)(e), (h)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 12, with s.19(2)(e), (h), pp.43, 45–46, and s.202(2)(a), p.227; Finance Act, 2026 searched in full: no amendment to s.18 or s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 12, with s.19(2)(e), (h), pp.43, 45–46",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

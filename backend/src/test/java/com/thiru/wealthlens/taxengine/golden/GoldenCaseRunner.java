@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
 import com.thiru.wealthlens.taxengine.node.NetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RebateNode;
+import com.thiru.wealthlens.taxengine.node.RetirementNode;
 import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RoundTotalIncomeNode;
 import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
@@ -58,6 +59,7 @@ final class GoldenCaseRunner {
             new GrossSalaryNode(),
             new SalaryBaseNode(),
             new ExemptionNode(),
+            new RetirementNode(),
             new SalaryDeductionNode(),
             new SalaryIncomeNode(),
             new RoundTotalIncomeNode(),

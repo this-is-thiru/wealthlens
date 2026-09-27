@@ -31,6 +31,13 @@ public final class RuleIds {
     public static final RuleId REBATE_NEW_TAX_REGIME = new RuleId("REBATE-NEW-TAX-REGIME");
     public static final RuleId REBATE_NEW_TAX_REGIME_EXCESS = new RuleId("REBATE-NEW-TAX-REGIME-EXCESS");
     public static final RuleId REBATE_RESIDENT_INDIVIDUAL = new RuleId("REBATE-RESIDENT-INDIVIDUAL");
+    public static final RuleId RET_COMMUTED_PENSION_FUND = new RuleId("RET-COMMUTED-PENSION-FUND");
+    public static final RuleId RET_COMMUTED_PENSION_GOVERNMENT = new RuleId("RET-COMMUTED-PENSION-GOVERNMENT");
+    public static final RuleId RET_COMMUTED_PENSION_OTHER = new RuleId("RET-COMMUTED-PENSION-OTHER");
+    public static final RuleId RET_GRATUITY_GOVERNMENT = new RuleId("RET-GRATUITY-GOVERNMENT");
+    public static final RuleId RET_LEAVE_ENCASHMENT_GOVERNMENT = new RuleId("RET-LEAVE-ENCASHMENT-GOVERNMENT");
+    public static final RuleId RET_RETRENCHMENT_APPROVED_SCHEME = new RuleId("RET-RETRENCHMENT-APPROVED-SCHEME");
+    public static final RuleId RET_VOLUNTARY_RETIREMENT = new RuleId("RET-VOLUNTARY-RETIREMENT");
     public static final RuleId SAL_ALW_CHILDREN_EDUCATION = new RuleId("SAL-ALW-CHILDREN-EDUCATION");
     public static final RuleId SAL_ALW_CONVEYANCE = new RuleId("SAL-ALW-CONVEYANCE");
     public static final RuleId SAL_ALW_HOSTEL = new RuleId("SAL-ALW-HOSTEL");

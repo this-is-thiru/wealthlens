@@ -1,0 +1,242 @@
+package com.thiru.wealthlens.taxengine.node;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
+import com.thiru.wealthlens.taxengine.input.RetirementEntry;
+import com.thiru.wealthlens.taxengine.input.RetirementPayment;
+import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
+import com.thiru.wealthlens.taxengine.pipeline.ComponentSet.Line;
+import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
+import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
+import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
+import com.thiru.wealthlens.taxengine.test.LockedInstruments;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import com.thiru.wealthlens.taxengine.trace.StepKind;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+/**
+ * The retirement and termination deductions (S2 s.19(1) Table Sl. 3–13 as built; 1961 s.10(10)–(10C); D-103). Each
+ * figure is worked by hand from the Acts: ₹500000 for voluntary retirement (Sl. 12; s.10(10C) "five lakh rupees"),
+ * one-third or one-half of the pension's commuted value (Sl. 8; s.10(10A)(ii)), the rest in full.
+ */
+class RetirementNodeTest {
+
+    private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
+    private static final RegimeCode NEW_TAX_REGIME = new RegimeCode("NEW_TAX_REGIME");
+
+    private record Paid(ComponentCode component, String amount) {
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, List<Paid> paid, List<RetirementPayment> payments) {
+        return run(year, regime, paid, payments, LedgerSnapshot.empty());
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, List<Paid> paid, List<RetirementPayment> payments,
+            LedgerSnapshot ledgers) {
+        TaxYearId taxYear = TaxYearId.of(year);
+        RulePack pack = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        EngineInputs inputs = new EngineInputs(taxYear, regime,
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), payments),
+                plain.assessee(), plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
+        List<Line> lines = new ArrayList<>();
+        for (Paid line : paid) {
+            lines.add(new Line(0, line.component(), Money.of(line.amount())));
+        }
+        return NodeHarness.with(pack)
+                .regime(regime)
+                .inputs(inputs)
+                .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of(HeadCode.SALARIES, lines)))
+                .run(new RetirementNode());
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenGovernmentGratuity_deductsItAll(int year) {
+        // When — Sl. 3; s.10(10)(i): entire amount
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1000000")),
+                List.of(RetirementPayment.of(ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_GOVERNMENT);
+            assertThat(line.kind()).isEqualTo(StepKind.DEDUCTION);
+            assertThat(line.provenance().verificationLevel()).isEqualTo(year == 2025
+                    ? VerificationLevel.UNVERIFIED : VerificationLevel.SOURCE_CHECKED);
+        });
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenVoluntaryRetirementAboveTheLimit_deductsTheLimit(int year) {
+        // When — least of 8,00,000 and 5,00,000
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "800000")),
+                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.limitedBy()).contains("limit"));
+    }
+
+    @Test
+    void evaluate_whenVoluntaryRetirementWasAllowedInAnotherYear_givesANilLineNamingIt() {
+        // Given — s.19(2)(e)(ii): once only
+        LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Optional.of(TaxYearId.of(2021)), Money.ZERO,
+                Money.ZERO, 0, Map.of(), Optional.empty());
+
+        // When
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "300000")),
+                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), claimed);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.limitedBy())
+                .hasValueSatisfying(why -> assertThat(why).contains("2021-22")));
+    }
+
+    @Test
+    void evaluate_whenVoluntaryRetirementWasAllowedInThisYear_isStillDeducted() {
+        // Given — a recomputation of the year the deduction was allowed in
+        LedgerSnapshot thisYear = new LedgerSnapshot(Map.of(), Optional.of(TaxYearId.of(2026)), Money.ZERO,
+                Money.ZERO, 0, Map.of(), Optional.empty());
+
+        // When
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "300000")),
+                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), thisYear);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("300000")));
+    }
+
+    @Test
+    void evaluate_whenArrearsReliefWasAllowedOnTheVoluntaryRetirementAmount_givesANilLine() {
+        // When — s.19(2)(e)(iii); 1961 s.10(10C) third proviso
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "300000")),
+                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, true)));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.limitedBy())
+                .hasValueSatisfying(why -> assertThat(why).contains("relief")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAnOtherEmployerCommutesWithGratuity_deductsAThirdOfTheCommutedValue(int year) {
+        // When — commuted value of the whole pension 9,00,000; 4,00,000 received; gratuity 1,00,000 also received:
+        // least of 4,00,000 and 9,00,000 ÷ 3 = 3,00,000; gratuity in full → 4,00,000
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.COMMUTED_PENSION, "400000"),
+                        new Paid(ComponentCodes.GRATUITY, "100000")),
+                List.of(RetirementPayment.otherEmployerCommutation(ComponentCodes.COMMUTED_PENSION,
+                                Money.of("900000")),
+                        RetirementPayment.of(ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)));
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("300000"), Money.of("100000"));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("400000")));
+    }
+
+    @Test
+    void evaluate_whenAnOtherEmployerCommutesWithoutGratuity_deductsUpToHalfTheCommutedValue() {
+        // When — least of 4,00,000 and 9,00,000 ÷ 2 = 4,50,000
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.COMMUTED_PENSION, "400000")),
+                List.of(RetirementPayment.otherEmployerCommutation(ComponentCodes.COMMUTED_PENSION,
+                        Money.of("900000"))));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("400000")));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.limitedBy()).contains("payment received"));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenInTheNewRegime_stillDeducts(int year) {
+        // When — s.202(2)(a)(iv) excludes s.19(1) Sl. 1 only; s.115BAC(2)(i) excludes none of s.10(10)–(10C)
+        NodeResult result = run(year, NEW_TAX_REGIME,
+                List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "600000")),
+                List.of(RetirementPayment.of(ComponentCodes.LEAVE_ENCASHMENT,
+                        RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT)));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("600000")));
+    }
+
+    @Test
+    void evaluate_whenGratuityIsPaidWithoutItsEntry_isRefusedNamingTheItemsStillToCome() {
+        // When / Then — taxing it in full would be a plausible wrong figure where Sl. 5 or 6 applies
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
+                        List.of(new Paid(ComponentCodes.GRATUITY, "500000")), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("GRATUITY")
+                .hasMessageContaining("W-066c");
+    }
+
+    @Test
+    void evaluate_whenAnEntryDoesNotFitItsComponent_isRefused() {
+        // When / Then — gratuity cannot be voluntary retirement compensation
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
+                        List.of(new Paid(ComponentCodes.GRATUITY, "500000")),
+                        List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.GRATUITY, false))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("VOLUNTARY_RETIREMENT");
+    }
+
+    @Test
+    void evaluate_whenAComponentIsEnteredTwice_isRefused() {
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
+                        List.of(new Paid(ComponentCodes.GRATUITY, "500000")),
+                        List.of(RetirementPayment.of(ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY),
+                                RetirementPayment.of(ComponentCodes.GRATUITY,
+                                        RetirementEntry.DEFENCE_RETIRING_GRATUITY))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("twice");
+    }
+
+    @Test
+    void evaluate_whenOnlyNoticePayIsPaid_deductsNothingAndSaysNothing() {
+        // When — profits in lieu of salary (s.18(1)(a)); no entry of s.19(1) deducts it
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.NOTICE_PAY, "100000")), List.of());
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).isEmpty();
+    }
+}

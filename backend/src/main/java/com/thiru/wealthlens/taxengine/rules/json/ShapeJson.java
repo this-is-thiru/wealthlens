@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -213,7 +214,8 @@ public final class ShapeJson {
     /** A rule's definition (D-091): what it says an amount is. */
     public static RuleDefinition definition(JsonNode node, String path) {
         String tag = PackJson.tag(
-                node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit");
+                node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
+                "CommutedPensionShare");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -224,6 +226,9 @@ public final class ShapeJson {
                     PackJson.integer(node, "journeys", path), PackJson.integer(node, "calendarYears", path),
                     PackJson.integer(node, "blocksCommence", path)));
             case "DisabledTransportLimit" -> disabledTransportLimit(node, path);
+            case "CommutedPensionShare" -> PackJson.construct(path, () -> new CommutedPensionShare(
+                    PackJson.integer(node, "oneOverWhereGratuityReceived", path),
+                    PackJson.integer(node, "oneOverOtherwise", path)));
             default -> throw unreachable(tag, path);
         };
     }

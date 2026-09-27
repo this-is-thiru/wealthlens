@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -62,6 +63,8 @@ public final class GrossSalaryNode implements ComputationNode {
                     + " defines a salary base, not a head's total; gross salary is the whole head");
             case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
                     + " defines journeys per block, not a head's total");
+            case CommutedPensionShare share -> throw new IllegalStateException(
+                    RuleIds.SAL_SALARY_INCLUDES + " defines a share of a commuted pension, not a head's total");
             case DisabledTransportLimit transport -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
                     + " defines a transport limit, not a head's total");
         };

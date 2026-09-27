@@ -72,7 +72,7 @@ class AllowanceExemptionTest {
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
                 new EnteredFacts(Collections.nCopies(employments, new Employment(List.of(), true)), List.of(),
-                        List.of(), uses, claim),
+                        List.of(), uses, claim, List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack)

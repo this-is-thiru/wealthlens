@@ -1,0 +1,97 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-103). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: RET-*.json (1961 s.10(10), (10A), (10AA), (10B), (10C); 2025 s.19(1) Table Sl. 3–14 with s.19(2)). summary: S2 s.19(1) (p.41) \"computed after making the deductions\"; s.18(1)(a) profits in lieu of salary include compensation on termination, and no entry of s.19(1) deducts notice pay (rulebook RET-NOTICE-001). routes[0]: RET-GRATUITY-GOVERNMENT (Sl. 3, 4). routes[1]: RET-COMMUTED-PENSION-GOVERNMENT, -OTHER, -FUND (Sl. 7–9). routes[2]: RET-LEAVE-ENCASHMENT-GOVERNMENT (Sl. 13). routes[3]: RET-VOLUNTARY-RETIREMENT (Sl. 12). routes[4]: RET-RETRENCHMENT-APPROVED-SCHEME (Sl. 11). routes[5]: Sl. 5, 6, 10, 14 and s.19(2)(a), (f) — notified limits and the Payment of Gratuity Act / Industrial Disputes Act, W-066c and W-066d (D-103). disqualifiers[0]: s.19(2)(e)(ii)–(iii); 1961 s.10(10C) second and third provisos. Every entry applies in every regime (s.202(2)(a); s.115BAC(2)(i)).",
+  "key": "SEC-SALARY-RETIREMENT",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.10(10), (10A), (10AA), (10B), (10C)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.19(1) Table Sl. 3–14, s.19(2)",
+    "presence": "PRESENT"
+  },
+  "plainName": "Retirement and leaving a job",
+  "summary": "Money paid when you retire or leave a job is salary, but some of it comes off before tax. Gratuity, commuted pension and leave encashment under government schemes come off in full; a pension commuted by any other employer comes off up to a share of its commuted value; compensation under a voluntary retirement scheme comes off up to a fixed limit, once in a lifetime. Notice pay and other compensation for leaving are taxed in full. These apply in both regimes.",
+  "routes": [
+    {
+      "name": "Gratuity under government pension rules",
+      "description": "Death-cum-retirement gratuity under the government's pension rules or a similar scheme, and a defence retiring gratuity, come off in full.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-GOVERNMENT"
+        }
+      ]
+    },
+    {
+      "name": "Commuted pension",
+      "description": "A pension commuted under a government scheme or from a pension fund comes off in full; one commuted by any other employer comes off up to a third of the whole pension's commuted value if you also received gratuity, and up to a half if not.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-GOVERNMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-FUND"
+        }
+      ]
+    },
+    {
+      "name": "Leave encashment for government employees",
+      "description": "A central or state government employee's payment for earned leave at retirement comes off in full.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-GOVERNMENT"
+        }
+      ]
+    },
+    {
+      "name": "Voluntary retirement",
+      "description": "Compensation under a voluntary retirement scheme comes off up to a fixed limit, and no more than what you received.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-VOLUNTARY-RETIREMENT"
+        }
+      ]
+    },
+    {
+      "name": "Retrenchment under an approved scheme",
+      "description": "A workman's retrenchment compensation under a scheme the central government approved comes off in full.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-RETRENCHMENT-APPROVED-SCHEME"
+        }
+      ]
+    },
+    {
+      "name": "Other gratuity, leave encashment and retrenchment",
+      "description": "Gratuity under the gratuity law or from other employers, other employees' leave encashment, and other retrenchment compensation.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "Not built yet: the limits are set by government notification or by labour law, which have to be read first; their own backlog items add them."
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Voluntary retirement compensation comes off only once in a lifetime, and not at all if relief for salary arrears was allowed on it.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "RET-VOLUNTARY-RETIREMENT"
+      }
+    }
+  ]
+}

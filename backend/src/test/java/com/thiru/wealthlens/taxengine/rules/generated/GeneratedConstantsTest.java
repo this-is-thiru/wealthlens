@@ -144,7 +144,7 @@ class GeneratedConstantsTest {
             // A component arrives with the first rule that reads it (D-089): professional tax with
             // SAL-TAX-ON-EMPLOYMENT (D-093), the pay lines with SAL-SALARY-INCLUDES (D-094)
             assertThat(ConstantGenerator.componentCodes()).containsExactly(
-                    "BASIC", "BONUS", "CHILDREN_EDUCATION_ALLOWANCE", "COMMISSION", "CONVEYANCE_ALLOWANCE", "DEARNESS_ALLOWANCE", "HOSTEL_ALLOWANCE", "HRA", "LTA", "PROFESSIONAL_TAX", "SPECIAL_ALLOWANCE", "TRANSPORT_ALLOWANCE_DISABLED", "UNIFORM_ALLOWANCE");
+                    "BASIC", "BONUS", "CHILDREN_EDUCATION_ALLOWANCE", "COMMISSION", "COMMUTED_PENSION", "CONVEYANCE_ALLOWANCE", "DEARNESS_ALLOWANCE", "GRATUITY", "HOSTEL_ALLOWANCE", "HRA", "LEAVE_ENCASHMENT", "LTA", "NOTICE_PAY", "PROFESSIONAL_TAX", "RETRENCHMENT_COMPENSATION", "SPECIAL_ALLOWANCE", "TRANSPORT_ALLOWANCE_DISABLED", "UNIFORM_ALLOWANCE", "VRS_COMPENSATION");
         }
 
         @Test
@@ -167,6 +167,13 @@ class GeneratedConstantsTest {
                             "REBATE-NEW-TAX-REGIME",
                             "REBATE-NEW-TAX-REGIME-EXCESS",
                             "REBATE-RESIDENT-INDIVIDUAL",
+                            "RET-COMMUTED-PENSION-FUND",
+                            "RET-COMMUTED-PENSION-GOVERNMENT",
+                            "RET-COMMUTED-PENSION-OTHER",
+                            "RET-GRATUITY-GOVERNMENT",
+                            "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+                            "RET-RETRENCHMENT-APPROVED-SCHEME",
+                            "RET-VOLUNTARY-RETIREMENT",
                             "SAL-ALW-CHILDREN-EDUCATION",
                             "SAL-ALW-CONVEYANCE",
                             "SAL-ALW-HOSTEL",

@@ -1,0 +1,40 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-103). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: SAL-SALARY-INCLUDES.json and the components that feed it as profits in lieu of salary — NOTICE_PAY, VRS_COMPENSATION, RETRENCHMENT_COMPENSATION (1961 s.17(3); 2025 s.18). summary: S2 s.18(1) (pp.40–41) \"'profits in lieu of salary' includes,— (a) the amount of any compensation due to, or received by, an assessee from his employer or former employer at or in connection with the— (i) termination of his employment; or (ii) modification of the terms and conditions relating thereto; (b) any amount due to, or received … before his joining … or after cessation of his employment …\"; s.16(f) counts them as salary. routes[0]: SAL-SALARY-INCLUDES. What comes off a retirement or termination payment is SEC-SALARY-RETIREMENT (D-103); notice pay has no deduction (rulebook RET-NOTICE-001). Keyman insurance (s.18(1)(c)(iii)) and payments from a fund (s.18(1)(c)(ii), (2)) are not modelled.",
+  "key": "SEC-PROFITS-IN-LIEU-OF-SALARY",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.17(3)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.18",
+    "presence": "PRESENT"
+  },
+  "plainName": "Profits in lieu of salary",
+  "summary": "Compensation from your employer for ending your job or changing its terms, and money received before joining or after leaving an employer, count as salary. Notice pay is taxed in full. Some payments on retirement or leaving come off before tax; see retirement and leaving a job.",
+  "routes": [
+    {
+      "name": "Compensation for leaving or changed terms",
+      "description": "Counted in your salary as paid, including notice pay and compensation under a voluntary retirement scheme or on retrenchment.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-SALARY-INCLUDES"
+        }
+      ]
+    },
+    {
+      "name": "Payments from a fund and keyman insurance",
+      "description": "Payments from a provident or other fund beyond your own contributions, and sums under a keyman insurance policy.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "Not built: rarely part of a salary slip; no backlog item adds it yet."
+        }
+      ]
+    }
+  ],
+  "disqualifiers": []
+}

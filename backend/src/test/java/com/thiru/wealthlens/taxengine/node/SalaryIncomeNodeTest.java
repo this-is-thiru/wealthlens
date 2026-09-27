@@ -35,6 +35,10 @@ class SalaryIncomeNodeTest {
     }
 
     private static NodeResult run(int year, String gross, String exemptions, String deductions) {
+        return run(year, gross, exemptions, "0", deductions);
+    }
+
+    private static NodeResult run(int year, String gross, String exemptions, String retirement, String deductions) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -48,6 +52,7 @@ class SalaryIncomeNodeTest {
                 .inputs(inputs)
                 .given(NodeIds.SALARY_GROSS, MoneyValue.of(Money.of(gross)))
                 .given(NodeIds.SALARY_EXEMPTIONS, MoneyValue.of(Money.of(exemptions)))
+                .given(NodeIds.SALARY_RETIREMENT, MoneyValue.of(Money.of(retirement)))
                 .given(NodeIds.SALARY_DEDUCTIONS, MoneyValue.of(Money.of(deductions)))
                 .run(new SalaryIncomeNode());
     }
@@ -71,6 +76,16 @@ class SalaryIncomeNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1279500")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenARetirementDeductionIsGiven_takesItOffToo(int year) {
+        // When — D-103: 25,00,000 − 2,28,000 (HRA) − 5,00,000 (voluntary retirement) − 52,500 = 17,19,500
+        NodeResult result = run(year, "2500000", "228000", "500000", "52500");
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1719500")));
     }
 
     @ParameterizedTest(name = "TY {0}")

@@ -9,11 +9,13 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Journey;
 import com.thiru.wealthlens.taxengine.input.JourneyMode;
+import com.thiru.wealthlens.taxengine.input.RetirementPayment;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
 import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
+import com.thiru.wealthlens.taxengine.node.RetirementNode;
 import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
 import com.thiru.wealthlens.taxengine.node.SalaryDeductionNode;
 import com.thiru.wealthlens.taxengine.node.SalaryIncomeNode;
@@ -57,7 +59,7 @@ class SalaryHeadPipelineTest {
     private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final NodeRegistry SALARY_HEAD = NodeRegistry.of(List.of(
             new ComponentPartitionNode(), new GrossSalaryNode(), new SalaryBaseNode(), new ExemptionNode(),
-            new SalaryDeductionNode(), new SalaryIncomeNode()));
+            new RetirementNode(), new SalaryDeductionNode(), new SalaryIncomeNode()));
     private static final List<RuleId> BASES = List.of(
             RuleIds.SAL_SALARY_FOR_HRA,
             RuleIds.SAL_SALARY_FOR_GRATUITY,
@@ -86,6 +88,18 @@ class SalaryHeadPipelineTest {
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
             List<Tenancy> tenancies, List<Journey> journeys, List<AllowanceUse> allowanceUses,
             Optional<DisabledTransportClaim> disabledTransport) {
+        return run(year, regime, termsIncludeDearnessAllowance,
+                new Entries(tenancies, journeys, allowanceUses, disabledTransport, List.of(), List.of()));
+    }
+
+    /** What a case enters beyond the base pay. */
+    private record Entries(List<Tenancy> tenancies, List<Journey> journeys, List<AllowanceUse> allowanceUses,
+            Optional<DisabledTransportClaim> disabledTransport, List<SalaryComponent> retirementPay,
+            List<RetirementPayment> retirementPayments) {
+    }
+
+    private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
+            Entries entries) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = RUNNER.pack(taxYear);
         RegimeSpec shipped = pack.regimes().get(regime);
@@ -93,26 +107,29 @@ class SalaryHeadPipelineTest {
                 shipped.provision2025(), shipped.appliesTo(), shipped.rateTable(), shipped.disallowances(),
                 shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
                 new PipelineSpec(List.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS, NodeIds.SALARY_BASE,
-                        NodeIds.SALARY_EXEMPTIONS, NodeIds.SALARY_DEDUCTIONS, NodeIds.SALARY_INCOME)),
+                        NodeIds.SALARY_EXEMPTIONS, NodeIds.SALARY_RETIREMENT, NodeIds.SALARY_DEDUCTIONS,
+                        NodeIds.SALARY_INCOME)),
                 shipped.behaviour(), shipped.provenance());
         List<SalaryComponent> pay = new java.util.ArrayList<>(List.of(
                 new SalaryComponent(ComponentCodes.BASIC, Money.of("600000")),
                 new SalaryComponent(ComponentCodes.DEARNESS_ALLOWANCE, Money.of("60000")),
                 new SalaryComponent(ComponentCodes.HRA, Money.of("240000")),
                 new SalaryComponent(ComponentCodes.PROFESSIONAL_TAX, Money.of("2500"))));
-        if (!journeys.isEmpty()) {
+        if (!entries.journeys().isEmpty()) {
             pay.add(new SalaryComponent(ComponentCodes.LTA, Money.of("30000")));
         }
-        if (!allowanceUses.isEmpty()) {
+        if (!entries.allowanceUses().isEmpty()) {
             pay.add(new SalaryComponent(ComponentCodes.CONVEYANCE_ALLOWANCE, Money.of("20000")));
         }
-        if (disabledTransport.isPresent()) {
+        if (entries.disabledTransport().isPresent()) {
             pay.add(new SalaryComponent(ComponentCodes.TRANSPORT_ALLOWANCE_DISABLED, Money.of("50000")));
         }
+        pay.addAll(entries.retirementPay());
         Employment employment = new Employment(pay, termsIncludeDearnessAllowance);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), tenancies, journeys, allowanceUses, disabledTransport),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), entries.tenancies(), entries.journeys(),
+                        entries.allowanceUses(), entries.disabledTransport(), entries.retirementPayments()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
@@ -262,5 +279,24 @@ class SalaryHeadPipelineTest {
         assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("950000")));
         assertThat(result.valueOf(NodeIds.SALARY_EXEMPTIONS)).isEqualTo(MoneyValue.of(Money.of("38400")));
         assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("836600")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenVoluntaryRetirementAndNoticePayArePaidInTheNewRegime_onlyTheRetirementLimitComesOff(int year) {
+        // Given — VRS 8,00,000 and notice pay 1,00,000 on leaving (D-103)
+        List<SalaryComponent> leaving = List.of(new SalaryComponent(ComponentCodes.VRS_COMPENSATION, Money.of("800000")),
+                new SalaryComponent(ComponentCodes.NOTICE_PAY, Money.of("100000")));
+
+        // When
+        PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
+                Optional.empty(), leaving,
+                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false))));
+
+        // Then — gross 9,00,000 + 8,00,000 + 1,00,000 = 18,00,000; retirement 5,00,000; standard deduction 75,000;
+        // income 12,25,000; notice pay taxed in full
+        assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("1800000")));
+        assertThat(result.valueOf(NodeIds.SALARY_RETIREMENT)).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("1225000")));
     }
 }

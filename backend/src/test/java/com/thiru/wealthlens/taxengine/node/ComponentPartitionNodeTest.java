@@ -82,7 +82,7 @@ class ComponentPartitionNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(year);
         return new EngineInputs(taxYear, NEW_TAX_REGIME, TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty()), plain.assessee(), plain.family(), plain.ledgers(), plain.elections(),
+                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of()), plain.assessee(), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
     }
 

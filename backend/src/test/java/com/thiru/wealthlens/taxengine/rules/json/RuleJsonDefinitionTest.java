@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
@@ -99,6 +100,17 @@ class RuleJsonDefinitionTest {
         // Then
         assertThat(version.definition()).contains(new DisabledTransportLimit(
                 EnumSet.allOf(TransportDisability.class), Money.of("15000"), Optional.of(Money.of("8000")), true));
+    }
+
+    @Test
+    void version_whenACommutedPensionShare_readsBothDivisors() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "CommutedPensionShare", "oneOverWhereGratuityReceived": 3,
+                  "oneOverOtherwise": 2 }""");
+
+        // Then
+        assertThat(version.definition()).contains(new CommutedPensionShare(3, 2));
     }
 
     @Test

@@ -67,6 +67,7 @@
       "salary.gross",
       "salary.base",
       "salary.exemptions",
+      "salary.retirement",
       "salary.deductions",
       "salary.income",
       "totalincome",
