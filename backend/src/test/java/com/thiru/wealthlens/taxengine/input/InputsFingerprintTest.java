@@ -107,7 +107,7 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
                                     new SalaryComponent(new ComponentCode("BASIC"),
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                                    false)), List.of())))),
+                                    false)), List.of(), List.of())))),
                     Arguments.of(
                             "regime",
                             mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
@@ -150,8 +150,7 @@ class InputsFingerprintTest {
                     Arguments.of(
                             "ledgers.gratuityAlreadyAllowed",
                             mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(
-                                    0,
-                                    false,
+                                    Map.of(),
                                     Optional.empty(),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.of("100000"),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
@@ -242,7 +241,7 @@ class InputsFingerprintTest {
             return new EnteredFacts(List.of(new Employment(
                     List.of(new SalaryComponent(new ComponentCode("BASIC"),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                    termsIncludeDearnessAllowance)), List.of());
+                    termsIncludeDearnessAllowance)), List.of(), List.of());
         }
 
         @Test
@@ -251,10 +250,35 @@ class InputsFingerprintTest {
             EngineInputs withTenancy = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(
                     new Tenancy(com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
                                     LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31)), "BENGALURU", false,
-                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000")))));
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000"))), List.of()));
 
             // When / Then
             assertThat(hashOf(withTenancy)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void enteredFacts_whenOnlyAJourneyDiffers_movesTheHash() {
+            // Given — D-100: the LTA exemption reads each journey
+            EngineInputs withJourney = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
+                    List.of(new Journey(LocalDate.of(2026, 5, 10), JourneyMode.RAIL_CONNECTED,
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("18000"),
+                            Optional.of(com.thiru.wealthlens.taxengine.rules.money.Money.of("15000")),
+                            Optional.empty()))));
+
+            // When / Then
+            assertThat(hashOf(withJourney)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void ledgers_whenOnlyABlocksJourneysDiffer_movesTheHash() {
+            // Given — D-100: journeys already claimed in block 2022-2025
+            EngineInputs claimed = copy(baseline(), r -> r.ledgers = new LedgerSnapshot(
+                    Map.of(2022, new LeaveTravelBlock(1, false)), Optional.empty(),
+                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, 0, Map.of(), Optional.empty()));
+
+            // When / Then
+            assertThat(hashOf(claimed)).isNotEqualTo(hashOf(baseline()));
         }
 
         @Test

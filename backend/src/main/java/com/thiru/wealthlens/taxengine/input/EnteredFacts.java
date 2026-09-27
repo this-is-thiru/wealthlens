@@ -31,13 +31,14 @@ import java.util.List;
  * survives"</i> — so every field added here enters the key without anyone remembering to add it.
  *
  * <p>The first field arrived with the component partition (D-090): the employments, each with its
- * pay lines. The homes occupied arrived with HRA (D-099). Every later income item adds the field it reads, and
- * the fingerprint sees it unasked.
+ * pay lines. The homes occupied arrived with HRA (D-099), the journeys on leave with LTA (D-100). Every later
+ * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
  * @param tenancies each home occupied in the tax year, in the order entered
+ * @param leaveTravel each journey on leave claimed in the tax year, in the order entered
  */
-public record EnteredFacts(List<Employment> employments, List<Tenancy> tenancies) {
+public record EnteredFacts(List<Employment> employments, List<Tenancy> tenancies, List<Journey> leaveTravel) {
 
     public EnteredFacts {
         if (employments == null) {
@@ -48,12 +49,17 @@ public record EnteredFacts(List<Employment> employments, List<Tenancy> tenancies
             throw new IllegalArgumentException(
                     "EnteredFacts.tenancies may not be null; pass an empty list where there are none");
         }
+        if (leaveTravel == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.leaveTravel may not be null; pass an empty list where there are none");
+        }
         employments = List.copyOf(employments);
         tenancies = List.copyOf(tenancies);
+        leaveTravel = List.copyOf(leaveTravel);
     }
 
     /** Nothing entered. */
     public static EnteredFacts none() {
-        return new EnteredFacts(List.of(), List.of());
+        return new EnteredFacts(List.of(), List.of(), List.of());
     }
 }

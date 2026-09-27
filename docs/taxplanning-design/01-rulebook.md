@@ -605,6 +605,17 @@ high-rent metro tenant, which is why the list still matters — see `T3`.
 | `SAL-LTA-CHILD-001` | Not available for **more than two surviving children**; the restriction does not apply to children born **before 1 October 1998**, nor to **multiple births after one child**. | r.2B(5),(6) | **r.278(5), (6)** | OLD | VERIFIED (S4, r.278(5),(6)) |
 | `SAL-LTA-NEW-001` | **LTA is not available in the new regime** — s.202(2)(a)(i) disallows Schedule III Table Sl. No. **8**. | s.115BAC(2) | **s.202(2)(a)(i)** | — | VERIFIED for TY 2026-27 (S2) |
 
+
+> **Erratum (W-068, 2026-09-27, D-100):** `SAL-LTA-003`'s statement is the **Rules 1962 r.2B(1)(i)** wording — *"air
+> economy fare of the national carrier by the shortest route"* (as substituted by the IT (First Amdt.) Rules,
+> 1998). For TY 2026-27, **S4 r.278(1)(i)** reads: *"where the journey is performed by air, the amount shall not
+> exceed the fare admissible for the class of travel to which the employee is entitled, by the shortest route to
+> the place of destination"* (p.1776). The two years also differ in (iii)(B): r.2B, *"an amount equivalent to the
+> air-conditioned first class rail fare, for the distance of the journey by the shortest route, as if the journey
+> had been performed by rail"*; r.278, *"₹30 per kilometre"*.
+>
+> Verified by: S4 p.1776 read in full; DoR compendium pp.348–349.
+
 ### **H-8 verdict: CONFIRMED — exempting LTA in full is wrong, on four independent grounds.**
 
 (1) capped at actual travel expenditure (`SAL-LTA-002`); (2) capped at a fare class by the shortest

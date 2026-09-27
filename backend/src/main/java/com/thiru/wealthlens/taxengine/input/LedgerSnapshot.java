@@ -23,10 +23,9 @@ import java.util.Optional;
  * total already consumed, never a remaining balance. A remaining balance is a subtraction, and a
  * subtraction is the engine's job.
  *
- * @param ltaJourneysClaimedInBlock journeys already claimed in the current four-calendar-year block
- *     ({@code SAL-LTA-BLOCK-001})
- * @param ltaCarryOverAvailable whether the carried journey is still available; it does <b>not</b>
- *     count against the new block ({@code SAL-LTA-CARRY-001})
+ * @param leaveTravelByBlock what each four-calendar-year LTA block already holds, keyed by the block's first
+ *     calendar year ({@code SAL-LTA-BLOCK-001}, {@code SAL-LTA-CARRY-001}). By block, not as one current block,
+ *     because a tax year spans two calendar blocks ({@code DR 13} R-12; D-100)
  * @param vrsClaimedIn the tax year VRS was claimed, if ever. Once in a lifetime, and mutually
  *     exclusive with s.157 relief on the same amount ({@code RET-VRS-002})
  * @param gratuityAlreadyAllowed the {@code B} of {@code RET-GRAT-AGG-001}'s {@code A − B}
@@ -39,8 +38,7 @@ import java.util.Optional;
  * @param educationLoanInterestFirstYear starts {@code DED-80E-002}'s eight-year window
  */
 public record LedgerSnapshot(
-        int ltaJourneysClaimedInBlock,
-        boolean ltaCarryOverAvailable,
+        Map<Integer, LeaveTravelBlock> leaveTravelByBlock,
         Optional<TaxYearId> vrsClaimedIn,
         Money gratuityAlreadyAllowed,
         Money leaveEncashmentAlreadyAllowed,
@@ -49,11 +47,11 @@ public record LedgerSnapshot(
         Optional<TaxYearId> educationLoanInterestFirstYear) {
 
     public LedgerSnapshot {
-        if (ltaJourneysClaimedInBlock < 0) {
+        if (leaveTravelByBlock == null) {
             throw new IllegalArgumentException(
-                    "LedgerSnapshot.ltaJourneysClaimedInBlock must not be negative, but was "
-                            + ltaJourneysClaimedInBlock);
+                    "LedgerSnapshot.leaveTravelByBlock may not be null; pass an empty map where nothing was claimed");
         }
+        leaveTravelByBlock = Map.copyOf(leaveTravelByBlock);
         if (preConstructionInstalmentsClaimed < 0) {
             throw new IllegalArgumentException(
                     "LedgerSnapshot.preConstructionInstalmentsClaimed must not be negative, but was "
@@ -81,8 +79,7 @@ public record LedgerSnapshot(
     /** A taxpayer with no history — a first return, and the ordinary case in a golden test. */
     public static LedgerSnapshot empty() {
         return new LedgerSnapshot(
-                0,
-                false,
+                Map.of(),
                 Optional.empty(),
                 Money.ZERO,
                 Money.ZERO,
@@ -94,6 +91,11 @@ public record LedgerSnapshot(
     /** Whether VRS has ever been claimed — {@code RET-VRS-002}'s once-in-a-lifetime test. */
     public boolean vrsAlreadyClaimed() {
         return vrsClaimedIn.isPresent();
+    }
+
+    /** What one LTA block, by its first calendar year, already holds — nothing where nothing was claimed. */
+    public LeaveTravelBlock leaveTravelBlock(int firstCalendarYear) {
+        return leaveTravelByBlock.getOrDefault(firstCalendarYear, new LeaveTravelBlock(0, false));
     }
 
     /** The carried house-property loss that arose in one year, or zero. */

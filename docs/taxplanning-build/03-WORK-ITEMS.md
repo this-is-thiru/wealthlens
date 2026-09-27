@@ -870,6 +870,7 @@ if that is not enough for the item in hand.
 | W-066b | `rules/pack/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../pack/TemporallyApportionedCapTest.java` *(path corrected by D-097, then to `rules/pack` by D-098 so `rules.pack` and `rules.temporal` do not depend on each other)* | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
 | W-067a | HRA's inputs and shapes *(added by D-099)*: `input/Tenancy` + `EnteredFacts.tenancies`; `rules/cap/AmountInExcess` (limb (b), "the amount by which … exceeds"); `rules/cap/PercentOfBaseByLocation` + `CapContext.locations` (limb (c)); their JSON | `DR 13` R-11; S4 r.279(1); r.2A | no row, no node — `W-067` uses them |
 | W-067 | **creates** `ExemptionNode` — HRA | `DR 06` G1.3 | **per period**; metro % per period; `limitedBy` names the limb |
+| W-068a | LTA's inputs *(added by D-100)*: `input/Journey` + `EnteredFacts.leaveTravel`; `input/LeaveTravelBlock` and `LedgerSnapshot`'s per-block map replacing `ltaJourneysClaimedInBlock` / `ltaCarryOverAvailable`; the fingerprint | `DR 13` R-12; S4 r.278; r.2B | a tax year spans two calendar blocks — one counter cannot hold them |
 | W-068 | **modifies** `ExemptionNode` — LTA | `DR 01` R10 | **calendar** blocks; four independent caps |
 | W-069 | **modifies** `ExemptionNode` — allowances | `DR 01` R11 | ⚠ `SAL-ALW-NEW-SUBSET-001` is **STATUS UNCLEAR** — seed from the **section**, flag visibly |
 | W-066a | Retirement and termination *(added by D-096)*: **creates** `RetirementNode` (`salary.retirement`) and the `RET-*` rules — gratuity, leave encashment, commuted pension, VRS, retrenchment — with their components (`DR 05` M2: `GRATUITY`, `LEAVE_ENCASHMENT`, `COMMUTED_PENSION`, `VRS_COMPENSATION`, `RETRENCHMENT_COMPENSATION`), 2025 s.18 profits in lieu of salary (`RET-NOTICE-001`), and `salary.income`'s `salary.retirement` input | `DR 01` RET-*; `DR 06` G1.1 steps 5, 9 | reads `M3.4` cross-year ledgers; uses `SAL-SALARY-FOR-GRATUITY` (`W-062`). Placed before `W-070` by the owner (D-096) |
@@ -994,6 +995,16 @@ if that is not enough for the item in hand.
 >
 > Verified by: S2 Sch. III Table Sl. 11 (p.506); 1961 s.10(13A); S4 r.279 (p.1776); r.2A (DoR pp.347–348); the six
 > `CapShape` permits; `CapContext`; `NodeResult`.
+
+
+> **Erratum (W-068, 2026-09-27, D-100):**
+> - **Split.** `W-068a` builds the journey input and the per-block ledger; `W-068` builds the rows and the node.
+> - **The fares are entered and the rule chooses among them.** Only r.278(1)(iii)(B)'s ₹30/km (TY 2026-27) is a
+>   figure the Rules state.
+> - **The two years differ in the air limb and the no-transport limb** (r.2B against r.278).
+> - **The children limit (`SAL-LTA-CHILD-001`) is not modelled** (Appendix F).
+>
+> Verified by: S2 Sch. III Table Sl. 8; S4 r.278 (pp.1775–1776); r.2B (DoR pp.348–350); `LedgerSnapshot`.
 
 ---
 
@@ -1431,6 +1442,7 @@ none depends on anyone remembering it.
 | Capital gains on assets outside `portfolio` (manager **M-08**'s gap) | `W-089` (capital-gains milestone) | a user who sells a flat otherwise gets a silently incomplete computation |
 | `DIS-S202-2A` — the new regime's s.202(2)(a) disallowance set, its basis row (`REG-NEW-DISALLOW-001`) and run-time application, so a disallowed rule is *explained* as disallowed; until then `SAL-TAX-ON-EMPLOYMENT` is excluded by `ExceptIn` (D-093) | the first item that explains a regime difference by rule, or that authors a second s.202(2)(a) rule — owner to place | `NEW_TAX_REGIME.json` `_pendingDisallowanceSets` |
 | `SAL-HRA-006` — landlord PAN where aggregate rent paid in the year exceeds ₹1,00,000 (S4 r.205(2) Table Sl. 1): a notice, not a figure; nodes have no notice channel (`NodeResult` is value and trace) (D-099) | the first item that gives nodes a notice channel | `ExemptionNode` has the rent figures |
+| `SAL-LTA-CHILD-001` — LTA is not available for more than two surviving children (except children born before 1-10-1998 and multiple births after one child; S4 r.278(5)–(6)): needs a per-person fare on each journey; until then a family with three or more later-born children is over-allowed (D-100) | the item that adds per-person journey fares, before any LTA figure is filed | `SEC-LEAVE-TRAVEL-CONCESSION` marks it `NotModelled` |
 | Section catalogue entries for every modelled section | each item that models a section — standing rule 2 | SC-1 ratchet |
 | The rule-authoring admin screen (**OQ-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
 | Dividend income in the surcharge's **excluding** income and in the 15%-limited part (`RATE-SUR-SPLIT-001`), D-086 | `W-079` (`OtherSourcesNode`) | dividends are slab-taxed, so nothing else would take them out of the 25%/37% test |

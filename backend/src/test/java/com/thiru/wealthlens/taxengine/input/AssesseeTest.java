@@ -235,8 +235,7 @@ class AssesseeTest {
             Map<TaxYearId, Money> mutable = new HashMap<>();
             mutable.put(TaxYearId.of(2024), Money.of("200000"));
             LedgerSnapshot ledgers = new LedgerSnapshot(
-                    0,
-                    false,
+                    Map.of(),
                     Optional.empty(),
                     Money.ZERO,
                     Money.ZERO,
@@ -256,8 +255,7 @@ class AssesseeTest {
             // is also why M3.4 wants append-only ledgers: a decremented counter cannot reproduce
             // a past year's answer.
             LedgerSnapshot ledgers = new LedgerSnapshot(
-                    2,
-                    true,
+                    Map.of(2022, new LeaveTravelBlock(2, true)),
                     Optional.of(TaxYearId.of(2020)),
                     Money.of("500000"),
                     Money.of("300000"),
@@ -267,7 +265,7 @@ class AssesseeTest {
 
             assertThat(ledgers.gratuityAlreadyAllowed()).isEqualTo(Money.of("500000"));
             assertThat(ledgers.preConstructionInstalmentsClaimed()).isEqualTo(3);
-            assertThat(ledgers.ltaJourneysClaimedInBlock()).isEqualTo(2);
+            assertThat(ledgers.leaveTravelBlock(2022)).isEqualTo(new LeaveTravelBlock(2, true));
         }
 
         @Test
@@ -275,8 +273,7 @@ class AssesseeTest {
             assertThat(LedgerSnapshot.empty().vrsAlreadyClaimed()).isFalse();
 
             LedgerSnapshot claimed = new LedgerSnapshot(
-                    0,
-                    false,
+                    Map.of(),
                     Optional.of(TaxYearId.of(2019)),
                     Money.ZERO,
                     Money.ZERO,
@@ -296,8 +293,7 @@ class AssesseeTest {
         @Test
         void aNullAggregateIsRejectedBecauseNothingYetDiffersFromNeverAsked() {
             assertThatThrownBy(() -> new LedgerSnapshot(
-                            0,
-                            false,
+                            Map.of(),
                             Optional.empty(),
                             null,
                             Money.ZERO,
@@ -311,16 +307,24 @@ class AssesseeTest {
         @Test
         void aNegativeCountIsRejected() {
             assertThatThrownBy(() -> new LedgerSnapshot(
-                            -1,
-                            false,
+                            Map.of(),
                             Optional.empty(),
                             Money.ZERO,
                             Money.ZERO,
-                            0,
+                            -1,
                             Map.of(),
                             Optional.empty()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("negative");
+            assertThatThrownBy(() -> new LeaveTravelBlock(-1, false))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("negative");
+        }
+
+        @Test
+        void aBlockNeverClaimedInIsNilRatherThanAbsent() {
+            // D-100: a tax year spans two calendar blocks (R-12), so the ledger holds each block by its first year
+            assertThat(LedgerSnapshot.empty().leaveTravelBlock(2026)).isEqualTo(new LeaveTravelBlock(0, false));
         }
 
         @Test
@@ -329,7 +333,7 @@ class AssesseeTest {
 
             assertThat(empty.gratuityAlreadyAllowed()).isEqualTo(Money.ZERO);
             assertThat(empty.housePropertyLossCarriedForward()).isEmpty();
-            assertThat(empty.ltaCarryOverAvailable()).isFalse();
+            assertThat(empty.leaveTravelByBlock()).isEmpty();
         }
     }
 }
