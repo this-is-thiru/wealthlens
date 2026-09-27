@@ -3,12 +3,12 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.20",
-      "checksum": "sha256:b435e9de556119a30d5f7ad1c622064de8ebfac68da27dcca0a72baa376e9842"
+      "version": "2026-27.law.21",
+      "checksum": "sha256:80ff76bd8e5b978aaa82fc03789130d495e9e6a93df6a20b2affe474fbe256e4"
     },
     "exec": {
-      "version": "2026-27.exec.9",
-      "checksum": "sha256:ced56efccf26a028c616bb4f53b4d7f1f86ae94f39fc7f203b59c58124660365"
+      "version": "2026-27.exec.10",
+      "checksum": "sha256:3e82c2eaba9ddde8ddf4fc61b91b6c4ff5029eafe4bcce64b92f878449c33419"
     },
     "forms": {
       "version": "2026-27.forms.2",
@@ -36,6 +36,10 @@
     "REBATE-NEW-TAX-REGIME": "sha256:9a0e33de06f39d1b16230fed778546b6f7ad5426a90c3511fe4c7e3a3aed510d",
     "REBATE-NEW-TAX-REGIME-EXCESS": "sha256:a104cd7be36de5d029b8b4993f30e3735aab115428a66345489e3cad19983191",
     "REBATE-RESIDENT-INDIVIDUAL": "sha256:cff8a67c2b91bc68d33e16906f9c5b85c2a9d07ed8d1d6db07ea1f10d12dc096",
+    "SAL-ALW-CHILDREN-EDUCATION": "sha256:cdfa1f02d376c72c225776215f82db701ba379d815441fd408de8e877d54f66a",
+    "SAL-ALW-CONVEYANCE": "sha256:f284c3dfebb3e500f3a7cc5b81c2c5f09881cbfd80d6eb3efa2b632daae628ee",
+    "SAL-ALW-HOSTEL": "sha256:0cad8b6403ef3a57747780aa80f93e96ee4a7530f9e3e3762395c729310675aa",
+    "SAL-ALW-UNIFORM": "sha256:2ba447c6a003b8475aa87d500bebe47404237faec3292a94bb798ed424f4381b",
     "SAL-HOUSE-RENT-ALLOWANCE": "sha256:8ad357a359701049dd035cb07f0eca471ddf8df665c307b2d09aaac9c206c5b1",
     "SAL-LEAVE-TRAVEL-CONCESSION": "sha256:2ba59b843b42537f3304a7523a104f3b5303da09172de4bd9090a5049bf436a0",
     "SAL-LEAVE-TRAVEL-DISTANCE-RATE": "sha256:28a537930dc27a6c71f2c1e383c0bb26c1da2866c477ac4d176402561e6faf50",

@@ -548,7 +548,7 @@
     {"act": "INCOME_TAX_ACT_1961", "section": "9", "classification": "DEFERRED", "tier": "BUILT_LATER", "assesseeTypes": []},
     {"act": "INCOME_TAX_ACT_1961", "section": "9A", "classification": "DEFERRED", "tier": "BUILT_LATER", "assesseeTypes": []},
     {"act": "INCOME_TAX_ACT_1961", "section": "9B", "classification": "DEFERRED", "tier": "BUILT_LATER", "assesseeTypes": []},
-    {"act": "INCOME_TAX_ACT_1961", "section": "10", "classification": "MODELLED", "rules": ["SAL-HOUSE-RENT-ALLOWANCE", "SAL-LEAVE-TRAVEL-CONCESSION", "SAL-LEAVE-TRAVEL-JOURNEYS"], "manager": "LeastOf"},
+    {"act": "INCOME_TAX_ACT_1961", "section": "10", "classification": "MODELLED", "rules": ["SAL-HOUSE-RENT-ALLOWANCE", "SAL-LEAVE-TRAVEL-CONCESSION", "SAL-LEAVE-TRAVEL-JOURNEYS", "SAL-ALW-UNIFORM", "SAL-ALW-CONVEYANCE", "SAL-ALW-CHILDREN-EDUCATION", "SAL-ALW-HOSTEL"], "manager": "LeastOf"},
     {"act": "INCOME_TAX_ACT_1961", "section": "10A", "classification": "DEFERRED", "tier": "BUILT_LATER", "assesseeTypes": []},
     {"act": "INCOME_TAX_ACT_1961", "section": "10AA", "classification": "DEFERRED", "tier": "BUILT_LATER", "assesseeTypes": []},
     {"act": "INCOME_TAX_ACT_1961", "section": "10B", "classification": "DEFERRED", "tier": "BUILT_LATER", "assesseeTypes": []},

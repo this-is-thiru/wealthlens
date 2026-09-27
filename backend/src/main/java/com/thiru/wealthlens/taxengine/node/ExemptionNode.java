@@ -29,6 +29,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.proration.ProrationBasis;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +37,8 @@ import java.util.Set;
 /**
  * The exemptions taken out of salary before its income is struck — house rent allowance (Sch. III Table Sl. 11
  * with Rules 2026 r.279; 1961 s.10(13A) with Rules 1962 r.2A; D-099) and the leave travel concession (Sl. 8 with
- * r.278; s.10(5) with r.2B; D-100, in {@link LeaveTravelExemption}).
+ * r.278; s.10(5) with r.2B; D-100, in {@link LeaveTravelExemption}) and the salary allowances (Sl. 12–13 with
+ * r.280; s.10(14) with r.2BB; D-101, in {@link AllowanceExemption}).
  *
  * <p>Per period of occupation, never on annual figures ({@code DR 13} R-11): each rented home the taxpayer
  * occupied gets its own least-of — the allowance received for the period, the rent paid for it in excess of
@@ -70,15 +72,18 @@ public final class ExemptionNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        return Set.of(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, RuleIds.SAL_LEAVE_TRAVEL_CONCESSION,
-                RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE, RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS);
+        Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, RuleIds.SAL_LEAVE_TRAVEL_CONCESSION,
+                RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE, RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS));
+        rules.addAll(AllowanceExemption.rules());
+        return Set.copyOf(rules);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         List<Employment> employments = ctx.inputs().entered().employments();
         boolean claimed = !ctx.inputs().entered().tenancies().isEmpty()
-                || !ctx.inputs().entered().leaveTravel().isEmpty();
+                || !ctx.inputs().entered().leaveTravel().isEmpty()
+                || !ctx.inputs().entered().allowanceUses().isEmpty();
         if (claimed && employments.size() > 1) {
             throw new IllegalStateException("An exemption is claimed with " + employments.size() + " employments,"
                     + " and an employment carries no period yet, so an annual allowance cannot be matched to the"
@@ -86,6 +91,7 @@ public final class ExemptionNode implements ComputationNode {
         }
         List<TraceLine> trace = new ArrayList<>(houseRentAllowance(ctx, employments));
         trace.addAll(LeaveTravelExemption.lines(ctx, trace.size() + 1));
+        trace.addAll(AllowanceExemption.lines(ctx, trace.size() + 1));
         Money exempt = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
                 : new NodeResult(MoneyValue.of(exempt), trace);

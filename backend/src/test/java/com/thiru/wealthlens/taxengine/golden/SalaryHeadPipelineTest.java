@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.golden;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.input.AllowanceUse;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -61,16 +62,21 @@ class SalaryHeadPipelineTest {
             RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION);
 
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance) {
-        return run(year, regime, termsIncludeDearnessAllowance, List.of(), List.of());
+        return run(year, regime, termsIncludeDearnessAllowance, List.of(), List.of(), List.of());
     }
 
     private static PipelineRunner.Result run(
             int year, RegimeCode regime, boolean termsIncludeDearnessAllowance, List<Tenancy> tenancies) {
-        return run(year, regime, termsIncludeDearnessAllowance, tenancies, List.of());
+        return run(year, regime, termsIncludeDearnessAllowance, tenancies, List.of(), List.of());
     }
 
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
             List<Tenancy> tenancies, List<Journey> journeys) {
+        return run(year, regime, termsIncludeDearnessAllowance, tenancies, journeys, List.of());
+    }
+
+    private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
+            List<Tenancy> tenancies, List<Journey> journeys, List<AllowanceUse> allowanceUses) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = RUNNER.pack(taxYear);
         RegimeSpec shipped = pack.regimes().get(regime);
@@ -88,10 +94,13 @@ class SalaryHeadPipelineTest {
         if (!journeys.isEmpty()) {
             pay.add(new SalaryComponent(ComponentCodes.LTA, Money.of("30000")));
         }
+        if (!allowanceUses.isEmpty()) {
+            pay.add(new SalaryComponent(ComponentCodes.CONVEYANCE_ALLOWANCE, Money.of("20000")));
+        }
         Employment employment = new Employment(pay, termsIncludeDearnessAllowance);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), tenancies, journeys, List.of()),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), tenancies, journeys, allowanceUses),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
@@ -212,5 +221,18 @@ class SalaryHeadPipelineTest {
         // Then — exempt 15,000; income 9,30,000 − 15,000 − 52,500 = 8,62,500
         assertThat(result.valueOf(NodeIds.SALARY_EXEMPTIONS)).isEqualTo(MoneyValue.of(Money.of("15000")));
         assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("862500")));
+    }
+
+    @org.junit.jupiter.api.Test
+    void run_whenAConveyanceAllowanceIsSpentInTheNewRegime2026_incomeFallsByWhatWasSpent() {
+        // Given — conveyance 20,000 paid, 15,000 spent; the new regime keeps conveyance (D-101)
+        AllowanceUse conveyance = AllowanceUse.spent(ComponentCodes.CONVEYANCE_ALLOWANCE, Money.of("15000"));
+
+        // When
+        PipelineRunner.Result result = run(2026, NEW_TAX_REGIME, true, List.of(), List.of(), List.of(conveyance));
+
+        // Then — gross 9,20,000; exempt 15,000; deduction 75,000; income 8,30,000
+        assertThat(result.valueOf(NodeIds.SALARY_EXEMPTIONS)).isEqualTo(MoneyValue.of(Money.of("15000")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("830000")));
     }
 }

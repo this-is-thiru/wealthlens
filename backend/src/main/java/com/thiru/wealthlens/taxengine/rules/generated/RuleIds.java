@@ -31,6 +31,10 @@ public final class RuleIds {
     public static final RuleId REBATE_NEW_TAX_REGIME = new RuleId("REBATE-NEW-TAX-REGIME");
     public static final RuleId REBATE_NEW_TAX_REGIME_EXCESS = new RuleId("REBATE-NEW-TAX-REGIME-EXCESS");
     public static final RuleId REBATE_RESIDENT_INDIVIDUAL = new RuleId("REBATE-RESIDENT-INDIVIDUAL");
+    public static final RuleId SAL_ALW_CHILDREN_EDUCATION = new RuleId("SAL-ALW-CHILDREN-EDUCATION");
+    public static final RuleId SAL_ALW_CONVEYANCE = new RuleId("SAL-ALW-CONVEYANCE");
+    public static final RuleId SAL_ALW_HOSTEL = new RuleId("SAL-ALW-HOSTEL");
+    public static final RuleId SAL_ALW_UNIFORM = new RuleId("SAL-ALW-UNIFORM");
     public static final RuleId SAL_HOUSE_RENT_ALLOWANCE = new RuleId("SAL-HOUSE-RENT-ALLOWANCE");
     public static final RuleId SAL_LEAVE_TRAVEL_CONCESSION = new RuleId("SAL-LEAVE-TRAVEL-CONCESSION");
     public static final RuleId SAL_LEAVE_TRAVEL_DISTANCE_RATE = new RuleId("SAL-LEAVE-TRAVEL-DISTANCE-RATE");

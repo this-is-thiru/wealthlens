@@ -1,0 +1,132 @@
+{
+  "ruleId": "SAL-ALW-CONVEYANCE",
+  "_note": "A conveyance allowance for duties, exempt to the extent actually spent, where no free conveyance is provided (D-101; rulebook SAL-ALW-DUTY-001). TY 2026-27: Income-tax Act, 2025 Sch. III Table Sl. 12, \"to the extent to which such expenses are actually incurred for that purpose\"; Income-tax Rules, 2026 r.280(1)(d): \"any allowance granted to meet the expenditure incurred on conveyance in performance of duties of an office or employment of profit where no free conveyance is provided by the employer\"; in r.280(3)'s list, applied in the new regime per s.202(2)(a)(ii) — UNVERIFIED because r.280(3) addresses \"an option under section 202(4)\", the opt-out (SAL-ALW-NEW-SUBSET-001). TY 2025-26: 1961 s.10(14)(i) exempts allowances prescribed \"to the extent to which such expenses are actually incurred\"; Income-tax Rules, 1962 r.2BB(1)(c) with its proviso \"free conveyance is not provided by the employer\"; in r.2BB(3)'s list (G.S.R. 452(E)), so also for an assessee taxed under s.115BAC(1A). Entering the allowance is read as the employer providing no free conveyance.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(14)(i), with Income-tax Rules, 1962 r.2BB(1)(c) and (3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 12, with Income-tax Rules, 2026 r.280(1)(d) and (3)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "allowance received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "ALLOWANCE_RECEIVED"
+            }
+          },
+          {
+            "name": "amount actually incurred",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_INCURRED"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Tenth Amendment) Rules, 2023, G.S.R. 452(E) — r.2BB(3) substituted (the allowances surviving s.115BAC); the latest change to r.2BB found",
+        "gazetteRef": "G.S.R. 452(E)",
+        "notifiedOn": "2023-06-21",
+        "effectiveFrom": "2023-06-21",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246719.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/11892059/Rule%2B-%2B2BB_en.pdf/fd9a5a13-a5e2-9baf-e18f-cb870d544553?t=1766001049047&version=2.0",
+        "sourceDescription": "Income Tax Department's consolidated Income-tax Rules, 1962 rule 2BB (6 pp.): (1)(a)–(f) p.1, (2) Table p.4–5, (3) p.6; r.2BB(3) as substituted by G.S.R. 452(E), gazette 2023/246719",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(14)(i), with Income-tax Rules, 1962 r.2BB(1)(c) and (3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 12, with Income-tax Rules, 2026 r.280(1)(d) and (3)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "allowance received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "ALLOWANCE_RECEIVED"
+            }
+          },
+          {
+            "name": "amount actually incurred",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_INCURRED"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 280",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280, pp.1777–1783; Income-tax Act, 2025 Sch. III Table Sl. 12, 13 and s.202(2)(a)(ii)",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Income-tax Rules, 2026 r.280(3) reads \"An employee, being an assessee, who has exercised an option under section 202(4) shall be entitled to exemption only in respect of allowances mentioned in sub-rule (1)(a) to (d) and in sub-rule (2) [Table: Sl. No. 10]\" — the option under s.202(4) is the opt-out, which inverts s.202(2)(a)(ii); this version applies the list in the new regime (D-101). Check the amendment chain after G.S.R. 198(E) and any CBDT clarification (rulebook SAL-ALW-NEW-SUBSET-001)."
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}
