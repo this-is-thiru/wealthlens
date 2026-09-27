@@ -35,7 +35,9 @@ import java.util.Set;
 /**
  * The salary bases: the narrow "salary" that HRA, gratuity, leave encashment and both pension limits are
  * measured against — basic, and dearness allowance where the terms of employment provide, but no other
- * allowance or perquisite (S4 r.279(2)(b); S2 s.19(2)(b), s.124(13)(b), Sch. XV para 1(y); D-092).
+ * allowance or perquisite (S4 r.279(2)(b); S2 s.19(2)(b), s.124(13)(b), Sch. XV para 1(y); D-092) — and, for
+ * TY 2025-26 only, the entertainment allowance's salary "exclusive of any allowance" (1961 s.16(ii); D-105). A base
+ * the year's pack does not hold is not measured: the Act of that year has no such salary.
  *
  * <p>One function for four rules, because the Acts use one definition four times (rulebook H-4). The node
  * names no component: which lines count, and which only where the terms provide, is each component's
@@ -49,7 +51,8 @@ public final class SalaryBaseNode implements ComputationNode {
             RuleIds.SAL_SALARY_FOR_HRA,
             RuleIds.SAL_SALARY_FOR_GRATUITY,
             RuleIds.SAL_SALARY_FOR_EMPLOYER_PENSION,
-            RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION);
+            RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION,
+            RuleIds.SAL_SALARY_FOR_ENTMT);
 
     @Override
     public NodeId produces() {
@@ -73,6 +76,9 @@ public final class SalaryBaseNode implements ComputationNode {
         Map<RuleId, List<Money>> byRule = new LinkedHashMap<>();
         List<TraceLine> trace = new ArrayList<>();
         for (RuleId rule : BASES) {
+            if (!ctx.pack().rules().containsKey(rule)) {
+                continue;
+            }
             RuleVersion version = definingVersion(ctx, rule);
             Map<HeadCode, List<ComponentSet.Line>> counted = new EnumMap<>(HeadCode.class);
             List<Money> perEmployment = new ArrayList<>(Collections.nCopies(employments.size(), Money.ZERO));

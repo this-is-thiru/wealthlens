@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
 import com.thiru.wealthlens.taxengine.input.DisabledTransportClaim;
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -71,7 +72,7 @@ class AllowanceExemptionTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(Collections.nCopies(employments, new Employment(List.of(), true)), List.of(),
+                new EnteredFacts(Collections.nCopies(employments, new Employment(List.of(), true, EmployerKind.OTHER)), List.of(),
                         List.of(), uses, claim, List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());

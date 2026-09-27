@@ -1,0 +1,76 @@
+{
+  "ruleId": "SAL-ENTMT-ALLOWANCE",
+  "_note": "The entertainment allowance deduction for an employee paid by the Government, TY 2025-26 only, outside the new regime (D-105; rulebook SAL-ENTMT-001). Income-tax Act, 1961 s.16(ii) (thc.nic.in p.140): \"a deduction in respect of any allowance in the nature of an entertainment allowance specifically granted by an employer to the assessee who is in receipt of a salary from the Government, a sum equal to one-fifth of his salary (exclusive of any allowance, benefit or other perquisite) or five thousand rupees, whichever is less\" — two limits, not capped at the allowance received (the words do not say so). Not in the new regime: s.115BAC(2)(i) as substituted by Finance Act, 2023 s.52 lists \"clause (ii) or clause (iii) of section 16\" (p.34). TY 2026-27: the Income-tax Act, 2025 has no counterpart — s.19(1) Table Sl. 1–14 has no such entry and a full-text search of the gazette finds no \"entertainment allowance\" (rulebook SAL-ENTMT-001) — so the rule has no TY 2026-27 version and the allowance is ordinary salary.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.16(ii); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "presence": "ABSENT_IN_THIS_ACT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "one-fifth of salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "20",
+              "base": "SALARY"
+            }
+          },
+          {
+            "name": "limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "5000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), computed without the deduction under s.16(ii) (s.115BAC(2)(i))",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.16(ii), p.140 (footnote 3: Act 14 of 2001 s.12, w.e.f. 1-4-2002); Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52 (s.115BAC(2)(i)), p.34",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Any amendment to Income-tax Act, 1961 s.16(ii) after Act 7 of 2019 (the thc.nic.in text's currency) up to AY 2026-27: the Finance Acts of 2020, 2021 and 2022 are not read; the Finance Act, 2023, the Finance (No. 2) Act, 2024 and the Finance Act, 2025 were searched by text and none amends it."
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+    "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.16(ii), p.140",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "UNVERIFIED",
+    "whatToCheck": "Any amendment to Income-tax Act, 1961 s.16(ii) after Act 7 of 2019 (the thc.nic.in text's currency) up to AY 2026-27: the Finance Acts of 2020, 2021 and 2022 are not read; the Finance Act, 2023, the Finance (No. 2) Act, 2024 and the Finance Act, 2025 were searched by text and none amends it."
+  }
+}

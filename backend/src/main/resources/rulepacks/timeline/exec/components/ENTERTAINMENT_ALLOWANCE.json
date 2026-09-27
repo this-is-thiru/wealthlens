@@ -1,0 +1,28 @@
+{
+  "code": "ENTERTAINMENT_ALLOWANCE",
+  "_note": "An allowance paid in money with the salary, and salary under S2 s.16 / 1961 s.17(1); for an employee paid by the Government, its deduction for TY 2025-26 is SAL-ENTMT-ALLOWANCE (1961 s.16(ii); D-105). From TY 2026-27 the Act has no deduction, so the compiled year keeps only its SAL-SALARY-INCLUDES reference. In no salary base, being an allowance. CASH: paid in money (DR 05 M2).",
+  "displayName": "Entertainment allowance",
+  "head": "SALARIES",
+  "kind": "SALARY",
+  "cashNature": "CASH",
+  "treatment": "TAXABLE",
+  "feedsInto": [
+    "SAL-SALARY-INCLUDES",
+    "SAL-ENTMT-ALLOWANCE"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16; Income-tax Act, 1961 s.16(ii) and s.17(1)",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

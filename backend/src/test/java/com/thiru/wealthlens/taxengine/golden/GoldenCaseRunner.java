@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.golden;
 
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -124,7 +125,7 @@ final class GoldenCaseRunner {
         SalaryGoldenCase.Salary salary = golden.salary();
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
-                new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance())),
+                new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER)),
                         salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());

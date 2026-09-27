@@ -145,7 +145,7 @@ class RulePackCompilerTest {
         // Then — the file the assembler reads holds it, in the shape RegistryJson loads
         Map<ComponentCode, ComponentDefinition> registry = RegistryJson.components(
                 tree(compiled.files().get("exec/components.json")), "exec/components.json");
-        assertThat(registry).containsOnlyKeys(new ComponentCode("FIXTURE_PAY"), new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), new ComponentCode("COMMISSION"), new ComponentCode("CONVEYANCE_ALLOWANCE"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("HOSTEL_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"), new ComponentCode("TRANSPORT_ALLOWANCE_DISABLED"), new ComponentCode("UNIFORM_ALLOWANCE"), new ComponentCode("GRATUITY"), new ComponentCode("LEAVE_ENCASHMENT"), new ComponentCode("COMMUTED_PENSION"), new ComponentCode("VRS_COMPENSATION"), new ComponentCode("RETRENCHMENT_COMPENSATION"), new ComponentCode("NOTICE_PAY"));
+        assertThat(registry).containsOnlyKeys(new ComponentCode("FIXTURE_PAY"), new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), new ComponentCode("COMMISSION"), new ComponentCode("CONVEYANCE_ALLOWANCE"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("ENTERTAINMENT_ALLOWANCE"), new ComponentCode("HOSTEL_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"), new ComponentCode("TRANSPORT_ALLOWANCE_DISABLED"), new ComponentCode("UNIFORM_ALLOWANCE"), new ComponentCode("GRATUITY"), new ComponentCode("LEAVE_ENCASHMENT"), new ComponentCode("COMMUTED_PENSION"), new ComponentCode("VRS_COMPENSATION"), new ComponentCode("RETRENCHMENT_COMPENSATION"), new ComponentCode("NOTICE_PAY"));
     }
 
     @Test
@@ -162,6 +162,45 @@ class RulePackCompilerTest {
         // Then
         assertThat(in2026).doesNotContain("FIXTURE_PAY");
         assertThat(in2025).contains("FIXTURE_PAY");
+    }
+
+    @Test
+    void compile_whenAComponentNamesARuleWithNoVersionInTheYear_dropsThatReferenceInThatYearOnly() throws IOException {
+        // Given — D-105: the distance rate is stated for TY 2026-27 only
+        Path root = timelineCopy();
+        ObjectNode pay = ComponentFiles.component("FIXTURE_PAY", "2025-04-01", Optional.empty());
+        ((ArrayNode) pay.path("feedsInto")).add("SAL-LEAVE-TRAVEL-DISTANCE-RATE");
+        ((ArrayNode) pay.path("salaryBaseFor")).addObject()
+                .put("rule", "SAL-LEAVE-TRAVEL-DISTANCE-RATE").put("onlyWhereTermsProvide", false);
+        ComponentFiles.write(root, "FIXTURE_PAY", pay);
+        Timeline timeline = TimelineReader.read(root);
+
+        // When
+        JsonNode in2025 = compiledComponent(RulePackCompiler.compile(timeline, new TaxYearId(2025)), "FIXTURE_PAY");
+        JsonNode in2026 = compiledComponent(RulePackCompiler.compile(timeline, TY_2026), "FIXTURE_PAY");
+
+        // Then
+        assertThat(in2025.path("feedsInto").toString()).doesNotContain("SAL-LEAVE-TRAVEL-DISTANCE-RATE")
+                .contains(SLAB);
+        assertThat(in2025.path("salaryBaseFor")).isEmpty();
+        assertThat(in2026.path("feedsInto").toString()).contains("SAL-LEAVE-TRAVEL-DISTANCE-RATE");
+        assertThat(in2026.path("salaryBaseFor")).hasSize(1);
+    }
+
+    @Test
+    void compile_whenAComponentNamesARuleNoYearStates_isRefusedNamingIt() throws IOException {
+        // Given — a misspelt rule, which dropping per year would otherwise hide (D-105)
+        Path root = timelineCopy();
+        ObjectNode pay = ComponentFiles.component("FIXTURE_PAY", "2025-04-01", Optional.empty());
+        ((ArrayNode) pay.path("feedsInto")).add("SAL-NO-SUCH-RULE");
+        ComponentFiles.write(root, "FIXTURE_PAY", pay);
+        Timeline timeline = TimelineReader.read(root);
+
+        // When / Then
+        assertThatThrownBy(() -> RulePackCompiler.compile(timeline, TY_2026))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("FIXTURE_PAY")
+                .hasMessageContaining("SAL-NO-SUCH-RULE");
     }
 
     @Test
@@ -193,6 +232,15 @@ class RulePackCompilerTest {
             }
         }
         throw new AssertionError(SLAB + " is not in the compiled pack");
+    }
+
+    private static JsonNode compiledComponent(CompiledPack compiled, String code) {
+        for (JsonNode component : tree(compiled.files().get("exec/components.json")).path("components")) {
+            if (component.path("code").asString().equals(code)) {
+                return component;
+            }
+        }
+        throw new AssertionError(code + " is not in the compiled pack");
     }
 
     private Path timelineCopy() throws IOException {

@@ -1,12 +1,17 @@
 package com.thiru.wealthlens.taxengine.node;
 
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
+import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
+import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
@@ -18,18 +23,24 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
- * The deductions from salary (S2 s.19(1) Table Sl. 1–2; 1961 s.16(ia), (iii); D-093): the tax on employment
- * in full, and the standard deduction — the regime's statutory amount or the salary, whichever is less.
+ * The deductions from salary (S2 s.19(1) Table Sl. 1–2; 1961 s.16(ia), (ii), (iii); D-093, D-105): the tax on
+ * employment in full, the standard deduction — the regime's statutory amount or the salary, whichever is less — and,
+ * for TY 2025-26 only, a Government employee's entertainment allowance, at most one-fifth of the salary exclusive of
+ * allowances or the Act's fixed limit.
  *
  * <p>Which regime allows what is each row's, never this node's: the tax on employment applies everywhere but the
  * new regime (s.202(2)(a)(iv)), and exactly one standard-deduction row applies in any regime, because s.19
@@ -37,7 +48,7 @@ import java.util.Set;
  */
 public final class SalaryDeductionNode implements ComputationNode {
 
-    /** The base the standard deduction's "salary" limb reads: gross salary. */
+    /** The base the standard deduction's "salary" limb reads: gross salary; the entertainment limb, its own base. */
     private static final BaseId SALARY = new BaseId("SALARY");
 
     private static final List<RuleId> STANDARD_DEDUCTIONS = List.of(
@@ -50,13 +61,13 @@ public final class SalaryDeductionNode implements ComputationNode {
 
     @Override
     public Set<NodeId> requires() {
-        return Set.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS);
+        return Set.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS, NodeIds.SALARY_BASE);
     }
 
     @Override
     public Set<RuleId> rules() {
         return Set.of(RuleIds.SAL_TAX_ON_EMPLOYMENT, RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME,
-                RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE);
+                RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE, RuleIds.SAL_ENTMT_ALLOWANCE);
     }
 
     @Override
@@ -64,6 +75,7 @@ public final class SalaryDeductionNode implements ComputationNode {
         List<TraceLine> trace = new ArrayList<>();
         taxOnEmployment(ctx).ifPresent(trace::add);
         trace.add(standardDeduction(ctx, trace.size() + 1));
+        entertainmentAllowance(ctx, trace.size() + 1).ifPresent(trace::add);
         Money total = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return new NodeResult(MoneyValue.of(total), trace);
     }
@@ -90,6 +102,51 @@ public final class SalaryDeductionNode implements ComputationNode {
                 RuleIds.SAL_TAX_ON_EMPLOYMENT);
         return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, RuleIds.SAL_TAX_ON_EMPLOYMENT,
                 StepKind.DEDUCTION, paid.asComponentSet(total), MoneyValue.of(paid.total()), version.provenance()));
+    }
+
+    /**
+     * A Government employee's entertainment allowance (1961 s.16(ii); D-105): the least of one-fifth of the salary
+     * exclusive of allowances and the fixed limit, where an entertainment allowance was paid. None where the year's
+     * Act has no such deduction, the regime excludes it, or no Government employment paid the allowance.
+     */
+    private static Optional<TraceLine> entertainmentAllowance(NodeContext ctx, int sequence) {
+        RuleId ruleId = RuleIds.SAL_ENTMT_ALLOWANCE;
+        if (!ctx.pack().rules().containsKey(ruleId)) {
+            return Optional.empty();
+        }
+        TemporalContext t = ctx.inputs().temporal();
+        RuleRow rule = ctx.rule(ruleId);
+        RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
+        if (!version.regimes().appliesIn(ctx.regime().code())) {
+            return Optional.empty();
+        }
+        ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
+        List<Employment> employments = ctx.inputs().entered().employments();
+        Map<Integer, Money> paidByGovernment = new TreeMap<>();
+        for (ComponentSet.Line line : components.in(HeadCode.SALARIES)) {
+            ComponentDefinition definition = ctx.pack().components().get(line.code());
+            boolean allowance = definition != null && definition.feedsInto().contains(ruleId);
+            if (allowance && employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT) {
+                paidByGovernment.merge(line.employment(), line.amount(), Money::plus);
+            }
+        }
+        paidByGovernment.values().removeIf(amount -> !amount.isGreaterThan(Money.ZERO));
+        if (paidByGovernment.isEmpty()) {
+            return Optional.empty();
+        }
+        if (paidByGovernment.size() > 1) {
+            throw new IllegalArgumentException("An entertainment allowance is paid by " + paidByGovernment.size()
+                    + " Government employments; the Act allows the assessee one sum and does not say whether it is"
+                    + " per employment or in all, so enter one");
+        }
+        int employment = paidByGovernment.keySet().iterator().next();
+        Money salary = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class)
+                .of(RuleIds.SAL_SALARY_FOR_ENTMT, employment);
+        CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of(SALARY, salary)));
+        return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, ruleId, StepKind.DEDUCTION,
+                        MoneyValue.of(paidByGovernment.get(employment)), MoneyValue.of(deducted.value()),
+                        version.provenance())
+                .withLimitedBy(deducted.limitedBy()));
     }
 
     /** The regime's standard deduction, capped at the salary; exactly one row may apply. */

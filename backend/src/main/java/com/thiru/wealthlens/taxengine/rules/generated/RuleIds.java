@@ -43,12 +43,14 @@ public final class RuleIds {
     public static final RuleId SAL_ALW_HOSTEL = new RuleId("SAL-ALW-HOSTEL");
     public static final RuleId SAL_ALW_TRANSPORT_DISABLED = new RuleId("SAL-ALW-TRANSPORT-DISABLED");
     public static final RuleId SAL_ALW_UNIFORM = new RuleId("SAL-ALW-UNIFORM");
+    public static final RuleId SAL_ENTMT_ALLOWANCE = new RuleId("SAL-ENTMT-ALLOWANCE");
     public static final RuleId SAL_HOUSE_RENT_ALLOWANCE = new RuleId("SAL-HOUSE-RENT-ALLOWANCE");
     public static final RuleId SAL_LEAVE_TRAVEL_CONCESSION = new RuleId("SAL-LEAVE-TRAVEL-CONCESSION");
     public static final RuleId SAL_LEAVE_TRAVEL_DISTANCE_RATE = new RuleId("SAL-LEAVE-TRAVEL-DISTANCE-RATE");
     public static final RuleId SAL_LEAVE_TRAVEL_JOURNEYS = new RuleId("SAL-LEAVE-TRAVEL-JOURNEYS");
     public static final RuleId SAL_SALARY_FOR_EMPLOYEE_PENSION = new RuleId("SAL-SALARY-FOR-EMPLOYEE-PENSION");
     public static final RuleId SAL_SALARY_FOR_EMPLOYER_PENSION = new RuleId("SAL-SALARY-FOR-EMPLOYER-PENSION");
+    public static final RuleId SAL_SALARY_FOR_ENTMT = new RuleId("SAL-SALARY-FOR-ENTMT");
     public static final RuleId SAL_SALARY_FOR_GRATUITY = new RuleId("SAL-SALARY-FOR-GRATUITY");
     public static final RuleId SAL_SALARY_FOR_HRA = new RuleId("SAL-SALARY-FOR-HRA");
     public static final RuleId SAL_SALARY_INCLUDES = new RuleId("SAL-SALARY-INCLUDES");

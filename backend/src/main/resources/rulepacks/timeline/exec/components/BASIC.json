@@ -25,6 +25,10 @@
     {
       "rule": "SAL-SALARY-FOR-EMPLOYEE-PENSION",
       "onlyWhereTermsProvide": false
+    },
+    {
+      "rule": "SAL-SALARY-FOR-ENTMT",
+      "onlyWhereTermsProvide": false
     }
   ],
   "lifecycle": {

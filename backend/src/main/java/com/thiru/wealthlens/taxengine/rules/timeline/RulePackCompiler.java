@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
+import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -10,14 +11,17 @@ import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
+import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -31,6 +35,11 @@ import tools.jackson.databind.node.ObjectNode;
  * interim rule in the pack. A rule left with no version is omitted; a reference to it then fails I2,
  * as it would today. A regime is included when it is in force during the year.
  *
+ * <p>A component is projected into the year: its {@code feedsInto} and {@code salaryBaseFor} keep only the rules
+ * the year holds, since a pay line outlives a rule the law states for one year only — an entertainment allowance is
+ * salary in both years, deductible in one (D-105). That would hide a misspelt rule, so a reference to a rule the
+ * timeline states in no year is refused here, before any year is compiled.
+ *
  * <p>The output is canonical — keys sorted, no whitespace, identities sorted, note fields
  * ({@code _}-prefixed) dropped — so a checksum moves when the law moves and not when a note does.
  */
@@ -42,6 +51,7 @@ public final class RulePackCompiler {
     }
 
     public static CompiledPack compile(Timeline timeline, TaxYearId taxYear) {
+        requireComponentReferencesOnTheTimeline(timeline);
         Map<RuleId, String> ruleChecksums = new HashMap<>();
         ArrayNode rules = MAPPER.createArrayNode();
         for (RuleId id : sorted(timeline.rules().keySet(), RuleId::value)) {
@@ -62,7 +72,8 @@ public final class RulePackCompiler {
         ArrayNode components = MAPPER.createArrayNode();
         for (ComponentCode code : sorted(timeline.components().keySet(), ComponentCode::value)) {
             if (timeline.components().get(code).lifecycle().isLiveIn(taxYear)) {
-                components.add(canonical(MAPPER.readTree(timeline.componentSources().get(code))));
+                components.add(canonical(projected(MAPPER.readTree(timeline.componentSources().get(code)),
+                        ruleChecksums.keySet())));
             }
         }
         ArrayNode nodes = MAPPER.createArrayNode();
@@ -82,6 +93,40 @@ public final class RulePackCompiler {
         files.put("forms/itr-forms.json", render(object().set("forms", MAPPER.createArrayNode())));
         files.put("content/explanations.json", render(object().set("explanations", MAPPER.createArrayNode())));
         return new CompiledPack(taxYear, files, ruleChecksums);
+    }
+
+    private static void requireComponentReferencesOnTheTimeline(Timeline timeline) {
+        Set<String> problems = new TreeSet<>();
+        timeline.components().values().forEach(component -> {
+            Stream.concat(component.feedsInto().stream(),
+                            component.salaryBaseFor().stream().map(SalaryBaseInclusion::rule))
+                    .filter(rule -> !timeline.rules().containsKey(rule))
+                    .forEach(rule -> problems.add("component " + component.code() + " names " + rule
+                            + ", which the timeline states in no year"));
+        });
+        if (!problems.isEmpty()) {
+            throw new PackValidationException(String.join("; ", problems));
+        }
+    }
+
+    /** The component as the year sees it: references to rules the year does not hold are dropped. */
+    private static JsonNode projected(JsonNode component, Set<RuleId> held) {
+        ObjectNode copy = (ObjectNode) component.deepCopy();
+        ArrayNode feeds = MAPPER.createArrayNode();
+        component.path("feedsInto").forEach(rule -> {
+            if (held.contains(new RuleId(rule.asString()))) {
+                feeds.add(rule);
+            }
+        });
+        ArrayNode bases = MAPPER.createArrayNode();
+        component.path("salaryBaseFor").forEach(inclusion -> {
+            if (held.contains(new RuleId(inclusion.path("rule").asString()))) {
+                bases.add(inclusion);
+            }
+        });
+        copy.set("feedsInto", feeds);
+        copy.set("salaryBaseFor", bases);
+        return copy;
     }
 
     /** The positions, in the rule's own order, of the versions this year's pack holds. */

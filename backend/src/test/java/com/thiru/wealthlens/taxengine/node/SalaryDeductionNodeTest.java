@@ -1,12 +1,17 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
+import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet.Line;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
 import com.thiru.wealthlens.taxengine.rules.component.CashNature;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
@@ -38,6 +43,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +95,7 @@ class SalaryDeductionNodeTest {
                 .inputs(inputs)
                 .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of(HeadCode.SALARIES, lines)))
                 .given(NodeIds.SALARY_GROSS, MoneyValue.of(Money.of(basic)))
+                .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of()))
                 .run(new SalaryDeductionNode());
     }
 
@@ -163,6 +170,7 @@ class SalaryDeductionNodeTest {
                 .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of(HeadCode.SALARIES,
                         List.of(new Line(0, BASIC, Money.of("600000"))))))
                 .given(NodeIds.SALARY_GROSS, MoneyValue.of(Money.of("600000")))
+                .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of()))
                 .run(new SalaryDeductionNode());
 
         // Then — 50,000 × 6/12 + 60,000 × 6/12 = 25,000 + 30,000 = 55,000; year-end alone would give 60,000
@@ -178,5 +186,115 @@ class SalaryDeductionNodeTest {
         // Then — 0 + 50,000; the tax-on-employment line is there at nil
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("50000")));
         assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    private static NodeResult runEntertainment(int year, RegimeCode regime, List<EmployerKind> employers,
+            String basic, String allowance) {
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        TaxYearId taxYear = TaxYearId.of(year);
+        List<Employment> employments = employers.stream().map(kind -> new Employment(List.of(), false, kind)).toList();
+        EngineInputs inputs = new EngineInputs(taxYear, regime,
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
+                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of()),
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                plain.filing());
+        List<Line> lines = new ArrayList<>();
+        List<Money> bases = new ArrayList<>();
+        for (int employment = 0; employment < employers.size(); employment++) {
+            lines.add(new Line(employment, BASIC, Money.of(basic)));
+            lines.add(new Line(employment, ComponentCodes.ENTERTAINMENT_ALLOWANCE, Money.of(allowance)));
+            bases.add(Money.of(basic));
+        }
+        Money gross = lines.stream().map(Line::amount).reduce(Money.ZERO, Money::plus);
+        NodeHarness harness = NodeHarness.with(withFixturePay(year))
+                .regime(regime)
+                .inputs(inputs)
+                .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of(HeadCode.SALARIES, lines)))
+                .given(NodeIds.SALARY_GROSS, MoneyValue.of(gross));
+        return harness.given(NodeIds.SALARY_BASE, new SalaryBases(year == 2025
+                        ? Map.of(RuleIds.SAL_SALARY_FOR_ENTMT, bases) : Map.of()))
+                .run(new SalaryDeductionNode());
+    }
+
+    private static List<TraceLine> entertainment(NodeResult result) {
+        return result.trace().stream().filter(line -> line.rule().equals(RuleIds.SAL_ENTMT_ALLOWANCE)).toList();
+    }
+
+    @Test
+    void evaluate_whenAGovernmentEmployeeHasAnEntertainmentAllowance_deductsTheLeastOfAFifthAndFiveThousand() {
+        // When — 1961 s.16(ii): least of 3,00,000 ÷ 5 = 60,000 and 5,000
+        NodeResult result = runEntertainment(2025, FIRST_SCHEDULE_RATES, List.of(EmployerKind.GOVERNMENT),
+                "300000", "10000");
+
+        // Then
+        assertThat(entertainment(result)).singleElement().satisfies(line -> {
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("5000")));
+            assertThat(line.kind()).isEqualTo(StepKind.DEDUCTION);
+            assertThat(line.limitedBy()).contains("limit");
+        });
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.SAL_TAX_ON_EMPLOYMENT,
+                RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE, RuleIds.SAL_ENTMT_ALLOWANCE);
+    }
+
+    @Test
+    void evaluate_whenAFifthOfSalaryIsBelowTheLimit_deductsItEvenAboveTheAllowance() {
+        // When — least of 20,000 ÷ 5 = 4,000 and 5,000; the Act does not cap it at the 2,000 paid (D-105)
+        NodeResult result = runEntertainment(2025, FIRST_SCHEDULE_RATES, List.of(EmployerKind.GOVERNMENT),
+                "20000", "2000");
+
+        // Then
+        assertThat(entertainment(result)).singleElement().satisfies(line -> {
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("4000")));
+            assertThat(line.limitedBy()).contains("one-fifth of salary");
+        });
+    }
+
+    @Test
+    void evaluate_whenTheEmployerIsNotTheGovernment_deductsNoEntertainmentAllowance() {
+        // When — "in receipt of a salary from the Government"
+        NodeResult result = runEntertainment(2025, FIRST_SCHEDULE_RATES, List.of(EmployerKind.OTHER), "300000",
+                "10000");
+
+        // Then
+        assertThat(entertainment(result)).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenNoEntertainmentAllowanceIsPaid_deductsNone() {
+        // When — "in respect of any allowance … specifically granted"
+        NodeResult result = runEntertainment(2025, FIRST_SCHEDULE_RATES, List.of(EmployerKind.GOVERNMENT),
+                "300000", "0");
+
+        // Then
+        assertThat(entertainment(result)).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenInTheNewRegime_deductsNoEntertainmentAllowance() {
+        // When — s.115BAC(2)(i): "clause (ii) or clause (iii) of section 16"
+        NodeResult result = runEntertainment(2025, NEW_TAX_REGIME, List.of(EmployerKind.GOVERNMENT), "300000",
+                "10000");
+
+        // Then
+        assertThat(entertainment(result)).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenTaxYear2026_deductsNoEntertainmentAllowance() {
+        // When — the 2025 Act has no counterpart
+        NodeResult result = runEntertainment(2026, FIRST_SCHEDULE_RATES, List.of(EmployerKind.GOVERNMENT),
+                "300000", "10000");
+
+        // Then
+        assertThat(entertainment(result)).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenTwoGovernmentEmploymentsPayTheAllowance_isRefused() {
+        // When / Then — the Act gives "the assessee" one sum; per employment or in all is not stated (D-105)
+        assertThatThrownBy(() -> runEntertainment(2025, FIRST_SCHEDULE_RATES,
+                        List.of(EmployerKind.GOVERNMENT, EmployerKind.GOVERNMENT), "300000", "10000"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("entertainment");
     }
 }

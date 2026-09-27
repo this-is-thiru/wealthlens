@@ -22,6 +22,7 @@ public final class ComponentCodes {
     public static final ComponentCode COMMUTED_PENSION = new ComponentCode("COMMUTED_PENSION");
     public static final ComponentCode CONVEYANCE_ALLOWANCE = new ComponentCode("CONVEYANCE_ALLOWANCE");
     public static final ComponentCode DEARNESS_ALLOWANCE = new ComponentCode("DEARNESS_ALLOWANCE");
+    public static final ComponentCode ENTERTAINMENT_ALLOWANCE = new ComponentCode("ENTERTAINMENT_ALLOWANCE");
     public static final ComponentCode GRATUITY = new ComponentCode("GRATUITY");
     public static final ComponentCode HOSTEL_ALLOWANCE = new ComponentCode("HOSTEL_ALLOWANCE");
     public static final ComponentCode HRA = new ComponentCode("HRA");

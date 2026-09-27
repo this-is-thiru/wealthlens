@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -67,7 +68,7 @@ class LeaveTravelExemptionTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(List.of(new Employment(List.of(), true)), List.of(), journeys, List.of(), Optional.empty(), List.of()), plain.assessee(),
+                new EnteredFacts(List.of(new Employment(List.of(), true, EmployerKind.OTHER)), List.of(), journeys, List.of(), Optional.empty(), List.of()), plain.assessee(),
                 plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack)
                 .regime(regime)

@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -87,7 +88,7 @@ class ComponentPartitionNodeTest {
     }
 
     private static Employment employment(SalaryComponent... components) {
-        return new Employment(List.of(components), false);
+        return new Employment(List.of(components), false, EmployerKind.OTHER);
     }
 
     private static SalaryComponent line(ComponentCode code, String rupees) {

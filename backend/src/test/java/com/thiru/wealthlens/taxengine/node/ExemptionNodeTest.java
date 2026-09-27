@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -50,7 +51,7 @@ class ExemptionNodeTest {
     }
 
     private static Employment oneEmployment() {
-        return new Employment(List.of(), true);
+        return new Employment(List.of(), true, EmployerKind.OTHER);
     }
 
     private static NodeResult run(int year, RegimeCode regime, List<Employment> employments, List<Tenancy> tenancies,

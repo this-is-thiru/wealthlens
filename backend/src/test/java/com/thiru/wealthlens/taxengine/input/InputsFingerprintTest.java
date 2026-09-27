@@ -107,7 +107,7 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
                                     new SalaryComponent(new ComponentCode("BASIC"),
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                                    false)), List.of(), List.of(), List.of(), Optional.empty(), List.of())))),
+                                    false, EmployerKind.OTHER)), List.of(), List.of(), List.of(), Optional.empty(), List.of())))),
                     Arguments.of(
                             "regime",
                             mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
@@ -230,18 +230,28 @@ class InputsFingerprintTest {
         @Test
         void employment_whenOnlyTheTermsOnDearnessAllowanceDiffer_movesTheHash() {
             // Given — D-092: whether DA counts in the salary bases changes HRA and the pension limits
-            EngineInputs silent = copy(baseline(), r -> r.entered = enteringBasic(false));
-            EngineInputs providing = copy(baseline(), r -> r.entered = enteringBasic(true));
+            EngineInputs silent = copy(baseline(), r -> r.entered = enteringBasic(false, EmployerKind.OTHER));
+            EngineInputs providing = copy(baseline(), r -> r.entered = enteringBasic(true, EmployerKind.OTHER));
 
             // When / Then
             assertThat(hashOf(providing)).isNotEqualTo(hashOf(silent));
         }
 
-        private static EnteredFacts enteringBasic(boolean termsIncludeDearnessAllowance) {
+        @Test
+        void employment_whenOnlyTheEmployerKindDiffers_movesTheHash() {
+            // Given — D-105: 1961 s.16(ii) reads whether the salary is from the Government
+            EngineInputs other = copy(baseline(), r -> r.entered = enteringBasic(true, EmployerKind.OTHER));
+            EngineInputs government = copy(baseline(), r -> r.entered = enteringBasic(true, EmployerKind.GOVERNMENT));
+
+            // When / Then
+            assertThat(hashOf(government)).isNotEqualTo(hashOf(other));
+        }
+
+        private static EnteredFacts enteringBasic(boolean termsIncludeDearnessAllowance, EmployerKind employerKind) {
             return new EnteredFacts(List.of(new Employment(
                     List.of(new SalaryComponent(new ComponentCode("BASIC"),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                    termsIncludeDearnessAllowance)), List.of(), List.of(), List.of(), Optional.empty(), List.of());
+                    termsIncludeDearnessAllowance, employerKind)), List.of(), List.of(), List.of(), Optional.empty(), List.of());
         }
 
         @Test

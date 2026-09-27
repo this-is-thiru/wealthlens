@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -19,6 +20,7 @@ import com.thiru.wealthlens.taxengine.rules.component.DeprecationPolicy;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -38,12 +40,14 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -64,18 +68,34 @@ class SalaryBaseNodeTest {
             RuleIds.SAL_SALARY_FOR_EMPLOYER_PENSION,
             RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION);
 
+    /** The bases a year's pack holds: TY 2025-26 adds 1961 s.16(ii)'s, which the 2025 Act lacks (D-105). */
+    private static List<RuleId> basesIn(int year) {
+        return year == 2025
+                ? Stream.concat(BASES.stream(), Stream.of(RuleIds.SAL_SALARY_FOR_ENTMT)).toList()
+                : BASES;
+    }
+
     private static RulePack withFixtureComponents(int year) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack shipped = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
         Map<ComponentCode, ComponentDefinition> registry = Stream.of(
-                        component(shipped, BASIC, inEveryBase(false)),
+                        component(shipped, BASIC, basicBases(year)),
                         component(shipped, DA, inEveryBase(true)),
                         component(shipped, HRA, Set.of()))
                 .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), registry,
                 shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+    }
+
+    /** Basic is in every base, and outright in the entertainment one, which DA is not in (D-105). */
+    private static Set<SalaryBaseInclusion> basicBases(int year) {
+        Set<SalaryBaseInclusion> bases = new HashSet<>(inEveryBase(false));
+        if (year == 2025) {
+            bases.add(new SalaryBaseInclusion(RuleIds.SAL_SALARY_FOR_ENTMT, false));
+        }
+        return bases;
     }
 
     private static Set<SalaryBaseInclusion> inEveryBase(boolean onlyWhereTermsProvide) {
@@ -93,7 +113,7 @@ class SalaryBaseNodeTest {
     }
 
     private static Employment employment(boolean termsIncludeDearnessAllowance, SalaryComponent... components) {
-        return new Employment(List.of(components), termsIncludeDearnessAllowance);
+        return new Employment(List.of(components), termsIncludeDearnessAllowance, EmployerKind.OTHER);
     }
 
     private static SalaryComponent line(ComponentCode code, String rupees) {
@@ -116,13 +136,17 @@ class SalaryBaseNodeTest {
     }
 
     private static NodeResult run(int year, List<Employment> employments) {
+        return run(withFixtureComponents(year), year, employments);
+    }
+
+    private static NodeResult run(RulePack pack, int year, List<Employment> employments) {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs inputs = new EngineInputs(taxYear, NEW_TAX_REGIME,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
-        return NodeHarness.with(withFixtureComponents(year))
+        return NodeHarness.with(pack)
                 .regime(NEW_TAX_REGIME)
                 .inputs(inputs)
                 .given(NodeIds.INPUTS_COMPONENTS, partitioned(employments))
@@ -190,12 +214,13 @@ class SalaryBaseNodeTest {
         NodeResult result = run(year, employments);
 
         // Then
-        assertThat(result.trace()).extracting(TraceLine::rule).containsExactlyElementsOf(BASES);
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactlyElementsOf(basesIn(year));
         assertThat(result.trace()).allSatisfy(line -> {
             assertThat(line.kind()).isEqualTo(StepKind.MEASURE);
             assertThat(line.node()).isEqualTo(NodeIds.SALARY_BASE);
-            assertThat(line.out().asMoney()).isEqualTo(Money.of("660000"));
         });
+        assertThat(result.trace()).filteredOn(line -> BASES.contains(line.rule()))
+                .allSatisfy(line -> assertThat(line.out().asMoney()).isEqualTo(Money.of("660000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -204,10 +229,50 @@ class SalaryBaseNodeTest {
         // When
         NodeResult result = run(year, List.of());
 
-        // Then — P5: four bases with no employment under them, each with its line
-        assertThat(bases(result).byRule()).containsOnlyKeys(BASES);
+        // Then — P5: every base the year holds, with no employment under it, each with its line
+        assertThat(bases(result).byRule()).containsOnlyKeys(basesIn(year));
         assertThat(result.value().asMoney()).isEqualTo(Money.ZERO);
-        assertThat(result.trace()).extracting(TraceLine::rule).containsExactlyElementsOf(BASES);
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactlyElementsOf(basesIn(year));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025_measuresTheEntertainmentBaseWithoutDearnessAllowance() {
+        // Given — the terms provide for DA, which is still an allowance: 1961 s.16(ii) "exclusive of any allowance"
+        List<Employment> employments = List.of(employment(true, line(BASIC, "600000"), line(DA, "60000")));
+
+        // When
+        SalaryBases measured = bases(run(2025, employments));
+
+        // Then — 6,00,000 + 60,000 for HRA; 6,00,000 alone for the entertainment allowance
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_HRA, 0)).isEqualTo(Money.of("660000"));
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_ENTMT, 0)).isEqualTo(Money.of("600000"));
+    }
+
+    @Test
+    void evaluate_whenTheShippedRegistryIsRead_leavesDearnessAllowanceOutOfTheEntertainmentBase() {
+        // Given — the shipped components, the terms providing for DA: 20,000 basic, 50,000 DA
+        TaxYearId taxYear = TaxYearId.of(2025);
+        RulePack shipped = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        List<Employment> employments = List.of(employment(true, line(ComponentCodes.BASIC, "20000"),
+                line(ComponentCodes.DEARNESS_ALLOWANCE, "50000")));
+
+        // When
+        SalaryBases measured = bases(run(shipped, 2025, employments));
+
+        // Then — 1961 s.16(ii) "exclusive of any allowance": 20,000 alone, where HRA's is 70,000
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_ENTMT, 0)).isEqualTo(Money.of("20000"));
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_HRA, 0)).isEqualTo(Money.of("70000"));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2026_measuresNoEntertainmentBase() {
+        // When — the 2025 Act has no entertainment allowance deduction, so no base to measure
+        NodeResult result = run(2026, List.of(employment(true, line(BASIC, "600000"))));
+
+        // Then
+        assertThat(bases(result).byRule()).doesNotContainKey(RuleIds.SAL_SALARY_FOR_ENTMT);
     }
 
     @ParameterizedTest(name = "TY {0}")

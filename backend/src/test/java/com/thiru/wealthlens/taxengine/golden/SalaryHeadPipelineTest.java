@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
 import com.thiru.wealthlens.taxengine.input.DisabledTransportClaim;
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -89,13 +90,14 @@ class SalaryHeadPipelineTest {
             List<Tenancy> tenancies, List<Journey> journeys, List<AllowanceUse> allowanceUses,
             Optional<DisabledTransportClaim> disabledTransport) {
         return run(year, regime, termsIncludeDearnessAllowance,
-                new Entries(tenancies, journeys, allowanceUses, disabledTransport, List.of(), List.of()));
+                new Entries(tenancies, journeys, allowanceUses, disabledTransport, List.of(), List.of(),
+                        EmployerKind.OTHER));
     }
 
     /** What a case enters beyond the base pay. */
     private record Entries(List<Tenancy> tenancies, List<Journey> journeys, List<AllowanceUse> allowanceUses,
-            Optional<DisabledTransportClaim> disabledTransport, List<SalaryComponent> retirementPay,
-            List<RetirementPayment> retirementPayments) {
+            Optional<DisabledTransportClaim> disabledTransport, List<SalaryComponent> otherPay,
+            List<RetirementPayment> retirementPayments, EmployerKind employerKind) {
     }
 
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
@@ -124,8 +126,8 @@ class SalaryHeadPipelineTest {
         if (entries.disabledTransport().isPresent()) {
             pay.add(new SalaryComponent(ComponentCodes.TRANSPORT_ALLOWANCE_DISABLED, Money.of("50000")));
         }
-        pay.addAll(entries.retirementPay());
-        Employment employment = new Employment(pay, termsIncludeDearnessAllowance);
+        pay.addAll(entries.otherPay());
+        Employment employment = new Employment(pay, termsIncludeDearnessAllowance, entries.employerKind());
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), entries.tenancies(), entries.journeys(),
@@ -291,12 +293,32 @@ class SalaryHeadPipelineTest {
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
                 Optional.empty(), leaving,
-                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false))));
+                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), EmployerKind.OTHER));
 
         // Then — gross 9,00,000 + 8,00,000 + 1,00,000 = 18,00,000; retirement 5,00,000; standard deduction 75,000;
         // income 12,25,000; notice pay taxed in full
         assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("1800000")));
         assertThat(result.valueOf(NodeIds.SALARY_RETIREMENT)).isEqualTo(MoneyValue.of(Money.of("500000")));
         assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("1225000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenAGovernmentEmployeeHasAnEntertainmentAllowance_onlyTaxYear2025DeductsIt(int year) {
+        // Given — a Government employee with an entertainment allowance of 10,000 (D-105)
+        List<SalaryComponent> entertainment =
+                List.of(new SalaryComponent(ComponentCodes.ENTERTAINMENT_ALLOWANCE, Money.of("10000")));
+
+        // When
+        PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, new Entries(List.of(), List.of(),
+                List.of(), Optional.empty(), entertainment, List.of(), EmployerKind.GOVERNMENT));
+
+        // Then — gross 9,10,000 both years. TY 2025-26: 2,500 + 50,000 + least of 6,00,000 ÷ 5 and 5,000 = 57,500,
+        // income 8,52,500 (1961 s.16(ii)); TY 2026-27: 52,500, income 8,57,500 — the 2025 Act has no such deduction
+        assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("910000")));
+        assertThat(result.valueOf(NodeIds.SALARY_DEDUCTIONS))
+                .isEqualTo(MoneyValue.of(Money.of(year == 2025 ? "57500" : "52500")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME))
+                .isEqualTo(MoneyValue.of(Money.of(year == 2025 ? "852500" : "857500")));
     }
 }
