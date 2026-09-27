@@ -654,6 +654,16 @@ calendar years of which block. That is a data-model requirement (`M3`), not a ca
 Table**. `FACT (EY alert, opened this session)`: Rules 2026 effect an *"enhancement of exemption
 limits for specified allowances"* — so the TY 2025-26 figures are **lower**, not the same.
 
+
+> **Erratum (W-069, 2026-09-27, D-101):** the DoR compendium's r.2BB (current to 2010–11) is **not** a sufficient
+> source for `SAL-ALW-LIMITS-2025`. Its amounts carry amendment footnotes only to 2000–2010, and r.2BB was amended
+> afterwards (1961 s.115BAC(2)(i) refers to allowances *"prescribed under clause (14) (other than those as may be
+> prescribed for this purpose)"*). The TY 2025-26 figures must be read in r.2BB as in force for AY 2026-27. For
+> `SAL-ALW-NEW-SUBSET-001`, the build seeds r.280(3)'s list into the **new** regime, per s.202(2)(a)(ii), and marks
+> that version `UNVERIFIED` pending the reading this section asks for.
+>
+> Verified by: S4 r.280(3) (p.1783) verbatim; DoR r.2BB footnotes.
+
 ### **H-2 verdict on ₹3,000 / ₹9,000: CONFIRMED.** These are **Rules 2026** figures (S4, r.280(2) Sl. 7, 8).
 
 ### **H-10 verdict: CONFIRMED, and the error is larger than stated.**

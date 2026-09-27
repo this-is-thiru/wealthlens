@@ -107,7 +107,7 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
                                     new SalaryComponent(new ComponentCode("BASIC"),
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                                    false)), List.of(), List.of())))),
+                                    false)), List.of(), List.of(), List.of())))),
                     Arguments.of(
                             "regime",
                             mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
@@ -241,7 +241,7 @@ class InputsFingerprintTest {
             return new EnteredFacts(List.of(new Employment(
                     List.of(new SalaryComponent(new ComponentCode("BASIC"),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                    termsIncludeDearnessAllowance)), List.of(), List.of());
+                    termsIncludeDearnessAllowance)), List.of(), List.of(), List.of());
         }
 
         @Test
@@ -250,7 +250,7 @@ class InputsFingerprintTest {
             EngineInputs withTenancy = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(
                     new Tenancy(com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
                                     LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31)), "BENGALURU", false,
-                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000"))), List.of()));
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000"))), List.of(), List.of()));
 
             // When / Then
             assertThat(hashOf(withTenancy)).isNotEqualTo(hashOf(baseline()));
@@ -263,7 +263,7 @@ class InputsFingerprintTest {
                     List.of(new Journey(LocalDate.of(2026, 5, 10), JourneyMode.RAIL_CONNECTED,
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("18000"),
                             Optional.of(com.thiru.wealthlens.taxengine.rules.money.Money.of("15000")),
-                            Optional.empty()))));
+                            Optional.empty())), List.of()));
 
             // When / Then
             assertThat(hashOf(withJourney)).isNotEqualTo(hashOf(baseline()));
@@ -279,6 +279,16 @@ class InputsFingerprintTest {
 
             // When / Then
             assertThat(hashOf(claimed)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void enteredFacts_whenOnlyAnAllowanceUseDiffers_movesTheHash() {
+            // Given — D-101: the allowance exemptions read how each allowance was used
+            EngineInputs withUse = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(), List.of(),
+                    List.of(AllowanceUse.forChildren(new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), 2, 12))));
+
+            // When / Then
+            assertThat(hashOf(withUse)).isNotEqualTo(hashOf(baseline()));
         }
 
         @Test

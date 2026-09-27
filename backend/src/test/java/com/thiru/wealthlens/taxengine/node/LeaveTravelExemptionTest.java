@@ -67,7 +67,7 @@ class LeaveTravelExemptionTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(List.of(new Employment(List.of(), true)), List.of(), journeys), plain.assessee(),
+                new EnteredFacts(List.of(new Employment(List.of(), true)), List.of(), journeys, List.of()), plain.assessee(),
                 plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack)
                 .regime(regime)

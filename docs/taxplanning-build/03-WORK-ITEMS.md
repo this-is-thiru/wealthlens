@@ -872,7 +872,9 @@ if that is not enough for the item in hand.
 | W-067 | **creates** `ExemptionNode` — HRA | `DR 06` G1.3 | **per period**; metro % per period; `limitedBy` names the limb |
 | W-068a | LTA's inputs *(added by D-100)*: `input/Journey` + `EnteredFacts.leaveTravel`; `input/LeaveTravelBlock` and `LedgerSnapshot`'s per-block map replacing `ltaJourneysClaimedInBlock` / `ltaCarryOverAvailable`; the fingerprint | `DR 13` R-12; S4 r.278; r.2B | a tax year spans two calendar blocks — one counter cannot hold them |
 | W-068 | **modifies** `ExemptionNode` — LTA | `DR 01` R10 | **calendar** blocks; four independent caps |
+| W-069a | Allowances' inputs *(added by D-101)*: `input/AllowanceUse` + `EnteredFacts.allowanceUses` — per allowance component, the amount actually incurred (Sch. III Sl. 12) or the children and months covered (Sl. 13); the fingerprint | S4 r.280; r.2BB | no row, no node |
 | W-069 | **modifies** `ExemptionNode` — allowances | `DR 01` R11 | ⚠ `SAL-ALW-NEW-SUBSET-001` is **STATUS UNCLEAR** — seed from the **section**, flag visibly |
+| W-069b | Transport allowance for a blind, deaf-and-dumb or orthopaedically handicapped employee *(added by D-101)*: S4 r.280(2) Table Sl. 10 / r.2BB(2) Table; the one Sl. 13 allowance that survives the new regime (r.280(3)) | `DR 01` R11, H-10 | needs OQ-7 answered, the employee's disability, and TY 2025-26 sourcing |
 | W-066a | Retirement and termination *(added by D-096)*: **creates** `RetirementNode` (`salary.retirement`) and the `RET-*` rules — gratuity, leave encashment, commuted pension, VRS, retrenchment — with their components (`DR 05` M2: `GRATUITY`, `LEAVE_ENCASHMENT`, `COMMUTED_PENSION`, `VRS_COMPENSATION`, `RETRENCHMENT_COMPENSATION`), 2025 s.18 profits in lieu of salary (`RET-NOTICE-001`), and `salary.income`'s `salary.retirement` input | `DR 01` RET-*; `DR 06` G1.1 steps 5, 9 | reads `M3.4` cross-year ledgers; uses `SAL-SALARY-FOR-GRATUITY` (`W-062`). Placed before `W-070` by the owner (D-096) |
 | W-070 | **T3 golden tests** | `DR 08` T3-1 … T3-5 | T3-2, T3-3 are **PROVISIONAL** — report separately |
 | W-064a | Entertainment allowance (`SAL-ENTMT-001`, 1961 s.16(ii)) *(added by D-094)*: `Employment` employer type (Government), component `ENTERTAINMENT_ALLOWANCE`, the "salary (exclusive of any allowance, benefit or other perquisite)" measure, and `SalaryDeductionNode`'s three-limb least-of | `DR 01` R8 | TY 2025-26 only, old regime only (s.115BAC(2)); **no 2025-Act counterpart** — the 2026-27 version is an absence. Placed after `W-070` by the owner (D-095) |
@@ -1005,6 +1007,17 @@ if that is not enough for the item in hand.
 > - **The children limit (`SAL-LTA-CHILD-001`) is not modelled** (Appendix F).
 >
 > Verified by: S2 Sch. III Table Sl. 8; S4 r.278 (pp.1775–1776); r.2B (DoR pp.348–350); `LedgerSnapshot`.
+
+
+> **Erratum (W-069, 2026-09-27, D-101):**
+> - **Split.** `W-069a` builds the inputs; `W-069` builds uniform, conveyance, CEA and hostel; `W-069b` builds
+>   transport for a disabled employee (OQ-7). The armed-forces and area allowances are out of scope.
+> - **TY 2025-26 Sl. 13 amounts need Rules 1962 r.2BB as in force for AY 2026-27.** The DoR compendium (to
+>   2010–11) is superseded for them, so they are not authored unless sourced.
+> - **`SAL-ALW-NEW-SUBSET-001` is seeded from s.202(2)(a)(ii):** r.280(3)'s list applies in the new regime, and
+>   the version relying on it is `UNVERIFIED`, so figures using it are visibly PROVISIONAL.
+>
+> Verified by: S4 r.280 (pp.1777–1783) read in full; DoR r.2BB (pp.353–357) with its footnotes; 1961 s.115BAC(2)(i).
 
 ---
 
