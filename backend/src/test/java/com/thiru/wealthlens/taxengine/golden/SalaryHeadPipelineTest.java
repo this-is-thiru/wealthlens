@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
 import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
 import com.thiru.wealthlens.taxengine.node.SalaryDeductionNode;
+import com.thiru.wealthlens.taxengine.node.SalaryIncomeNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
@@ -32,8 +33,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * The salary head end to end on the shipped pack — its own components, no fixtures (D-094): the partition,
- * gross salary, the salary bases and the deductions, as a salaried person's entries reach them. Each figure is
+ * The salary head end to end on the shipped pack — its own components, no fixtures (D-094, D-096): the
+ * partition, gross salary, the salary bases, the deductions and income under "Salaries", as a salaried person's entries reach them. Each figure is
  * added up by hand from the entries below and the statutory amounts, ₹75,000 (S2 s.19(1) Table Sl. 2(a)) and
  * ₹50,000 (Sl. 2(b)).
  *
@@ -46,7 +47,8 @@ class SalaryHeadPipelineTest {
     private static final RegimeCode NEW_TAX_REGIME = new RegimeCode("NEW_TAX_REGIME");
     private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final NodeRegistry SALARY_HEAD = NodeRegistry.of(List.of(
-            new ComponentPartitionNode(), new GrossSalaryNode(), new SalaryBaseNode(), new SalaryDeductionNode()));
+            new ComponentPartitionNode(), new GrossSalaryNode(), new SalaryBaseNode(), new SalaryDeductionNode(),
+            new SalaryIncomeNode()));
     private static final List<RuleId> BASES = List.of(
             RuleIds.SAL_SALARY_FOR_HRA,
             RuleIds.SAL_SALARY_FOR_GRATUITY,
@@ -61,7 +63,7 @@ class SalaryHeadPipelineTest {
                 shipped.provision2025(), shipped.appliesTo(), shipped.rateTable(), shipped.disallowances(),
                 shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
                 new PipelineSpec(List.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_GROSS, NodeIds.SALARY_BASE,
-                        NodeIds.SALARY_DEDUCTIONS)),
+                        NodeIds.SALARY_DEDUCTIONS, NodeIds.SALARY_INCOME)),
                 shipped.behaviour(), shipped.provenance());
         Employment employment = new Employment(List.of(
                 new SalaryComponent(ComponentCodes.BASIC, Money.of("600000")),
@@ -125,5 +127,25 @@ class SalaryHeadPipelineTest {
 
         // Then — the lesser of 75,000 and 9,00,000; no professional tax (s.202(2)(a)(iv))
         assertThat(result.valueOf(NodeIds.SALARY_DEDUCTIONS)).isEqualTo(MoneyValue.of(Money.of("75000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenOutsideTheNewRegime_incomeUnderSalariesIsGrossLessBothDeductions(int year) {
+        // When
+        PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true);
+
+        // Then — 9,00,000 − 52,500 = 8,47,500
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("847500")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenInTheNewRegime_incomeUnderSalariesIsGrossLessTheStandardDeduction(int year) {
+        // When
+        PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true);
+
+        // Then — 9,00,000 − 75,000 = 8,25,000
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("825000")));
     }
 }

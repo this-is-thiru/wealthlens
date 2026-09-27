@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-065 — SalaryIncomeNode (next in table order) — BUT W-064a is unplaced
+Item            : W-066 — ProrationBasis family
 Stage           : NOT_STARTED
-Plan            : —
+Plan            : — (plans/W-066.md once written)
 Approved        : —
 Steps done      : —
-Next step       : ASK the owner where W-064a (entertainment allowance, D-094) goes — before W-065 or later (R4: I do not reorder). Then READ the chosen item's row and write its plan; STOP for approval
-Last verify     : ./mvnw clean test -pl backend -Punit → 1918 pass, 0 fail, 0 Checkstyle violations (W-064)
-Waiting on      : owner: W-064a placement; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2, OQ-5 open. Carried: TY 2025-26 goldens log PROVISIONAL (W-062's two UNVERIFIED versions); DIS-S202-2A owed (Appendix F)
+Next step       : READ the W-066 row ("DR 15 C3 — named basis per rule; no caller divides") and its Appendix E/F notes (CompletedMonths, CalendarMonths, Days; OccupationPeriods; W-066b follows); write plans/W-066.md with the D-043 standing-rules line; STOP for approval
+Last verify     : ./mvnw clean test -pl backend -Punit → 1928 pass, 0 fail, 0 Checkstyle violations (W-065)
+Waiting on      : nothing for W-066; W-052d due before Phase 9; D-054 startup wiring UNOWNED. OQ-1, OQ-2, OQ-5 open. Carried: TY 2025-26 goldens log PROVISIONAL (W-062); DIS-S202-2A owed (Appendix F); W-066a (retirement) before W-070; W-064a after W-070
 Files touched   : —
-Last item commit: taxplanning W-064: add the cash-salary components — the pay lines that make gross salary and the salary bases real (D-094)
+Last item commit: taxplanning W-065: add income under Salaries — gross salary less the deductions from salary, never below nil (D-096)
 Updated         : 2026-09-27, session 9
 ```
 

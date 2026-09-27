@@ -80,6 +80,7 @@
       "salary.gross",
       "salary.base",
       "salary.deductions",
+      "salary.income",
       "totalincome",
       "round.totalincome",
       "tax.bybasis",

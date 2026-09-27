@@ -268,9 +268,9 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `salary.gross` | `GrossSalaryNode` | `inputs.components`, `salary.perquisites`, `employer.contrib.charges` | `MoneyValue` | ○ `W-061` — counts only SALARIES lines feeding `SAL-SALARY-INCLUDES` (D-093) |
 | `salary.base` | `SalaryBaseNode` | `inputs.components` | `SalaryBases` | ✅ `W-062` — `SAL-SALARY-FOR-HRA`, `-GRATUITY`, `-EMPLOYER-PENSION`, `-EMPLOYEE-PENSION` (`SalaryBase` definition); per rule per employment; a registry `salaryBaseFor` entry's `onlyWhereTermsProvide` against `Employment.termsIncludeDearnessAllowance`; one `MEASURE` line per rule (D-092) |
 | `salary.exemptions` | `ExemptionNode` | `salary.gross`, `salary.base` | `MoneyValue` | ○ Phase 7 |
-| `salary.retirement` | `RetirementNode` | `inputs.components`, `EngineInputs.ledgers` | `MoneyValue` | ○ Phase 7 |
+| `salary.retirement` | `RetirementNode` | `inputs.components`, `EngineInputs.ledgers` | `MoneyValue` | ○ `W-066a` (D-096) |
 | `salary.deductions` | `SalaryDeductionNode` | `inputs.components`, `salary.gross` | `MoneyValue` | ✅ `W-063` — `SAL-TAX-ON-EMPLOYMENT` (`HeadTotal`, `ExceptIn [NEW_TAX_REGIME]`) and the regime's one `SAL-STANDARD-DEDUCTION-*` (`LeastOf` "statutory amount" / "salary" on base `SALARY` = gross); DEDUCTION lines; a row not applying in the regime leaves none (D-093) |
-| `salary.income` | `SalaryIncomeNode` | `salary.gross`, `salary.exemptions`, `salary.retirement`, `salary.deductions` | `MoneyValue` | ○ `W-065` |
+| `salary.income` | `SalaryIncomeNode` | `salary.gross`, `salary.deductions` (`salary.exemptions` added by `W-067`, `salary.retirement` by `W-066a`, D-096) | `MoneyValue` | ○ `W-065` |
 | `elections.houses` | `HouseElectionNode` | `EngineInputs.entered` | `ElectionOutcome` ⚠ | ○ Phase 9 |
 | `houseproperty.income` | `HousePropertyNode` | `EngineInputs.entered`, `elections.houses` | `HeadResult` ⚠ | ○ Phase 9 |
 | `othersources.income` | `OtherSourcesNode` | `EngineInputs.entered` | `HeadResult` ⚠ | ○ Phase 9 |

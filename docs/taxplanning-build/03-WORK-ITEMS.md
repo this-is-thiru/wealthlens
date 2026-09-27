@@ -865,14 +865,15 @@ if that is not enough for the item in hand.
 | W-062 | `SalaryBaseNode` | `DR 01` `SAL-DEF-HRA-001` etc. | **basic + DA where the terms provide**; one function, five rules |
 | W-063 | `SalaryDeductionNode` | `DR 01` R8 | professional tax **only** in the opted-out regime |
 | W-064 | `salary.json` law rows | `DR 01` R7, R8 | |
-| W-064a | Entertainment allowance (`SAL-ENTMT-001`, 1961 s.16(ii)) *(added by D-094)*: `Employment` employer type (Government), component `ENTERTAINMENT_ALLOWANCE`, the "salary (exclusive of any allowance, benefit or other perquisite)" measure, and `SalaryDeductionNode`'s three-limb least-of | `DR 01` R8 | TY 2025-26 only, old regime only (s.115BAC(2)); **no 2025-Act counterpart** — the 2026-27 version is an absence. Placement: owner |
 | W-065 | `SalaryIncomeNode` | | |
 | W-066 | `ProrationBasis` family | `DR 15` C3 | named basis per rule; **no caller divides** |
 | W-066b | `taxengine/temporal/TemporallyApportionedCap.java` + `RuleRow.prorationBasis` + `.../temporal/TemporallyApportionedCapTest.java` | `DR 18` V5 (`:205-245`) | ⚠ **nothing currently applies a mid-year change.** `W-030` made one declarable and validated; without this a rule that changed inside the year is evaluated as though it never did. Test each `MidYearCombination` branch, and that `UNDETERMINED` **throws** |
 | W-067 | **creates** `ExemptionNode` — HRA | `DR 06` G1.3 | **per period**; metro % per period; `limitedBy` names the limb |
 | W-068 | **modifies** `ExemptionNode` — LTA | `DR 01` R10 | **calendar** blocks; four independent caps |
 | W-069 | **modifies** `ExemptionNode` — allowances | `DR 01` R11 | ⚠ `SAL-ALW-NEW-SUBSET-001` is **STATUS UNCLEAR** — seed from the **section**, flag visibly |
+| W-066a | Retirement and termination *(added by D-096)*: **creates** `RetirementNode` (`salary.retirement`) and the `RET-*` rules — gratuity, leave encashment, commuted pension, VRS, retrenchment — with their components (`DR 05` M2: `GRATUITY`, `LEAVE_ENCASHMENT`, `COMMUTED_PENSION`, `VRS_COMPENSATION`, `RETRENCHMENT_COMPENSATION`), 2025 s.18 profits in lieu of salary (`RET-NOTICE-001`), and `salary.income`'s `salary.retirement` input | `DR 01` RET-*; `DR 06` G1.1 steps 5, 9 | reads `M3.4` cross-year ledgers; uses `SAL-SALARY-FOR-GRATUITY` (`W-062`). Placed before `W-070` by the owner (D-096) |
 | W-070 | **T3 golden tests** | `DR 08` T3-1 … T3-5 | T3-2, T3-3 are **PROVISIONAL** — report separately |
+| W-064a | Entertainment allowance (`SAL-ENTMT-001`, 1961 s.16(ii)) *(added by D-094)*: `Employment` employer type (Government), component `ENTERTAINMENT_ALLOWANCE`, the "salary (exclusive of any allowance, benefit or other perquisite)" measure, and `SalaryDeductionNode`'s three-limb least-of | `DR 01` R8 | TY 2025-26 only, old regime only (s.115BAC(2)); **no 2025-Act counterpart** — the 2026-27 version is an absence. Placed after `W-070` by the owner (D-095) |
 
 > **Erratum (W-059, 2026-09-26, D-089):**
 > - **W-059 builds the registry's plumbing, not its content.** `ComponentDefinition` refuses a component
@@ -939,6 +940,20 @@ if that is not enough for the item in hand.
 >
 > Verified by: `ComponentDefinition` (`feedsInto` required), `HeadTotalLines` (D-093), S2 and FA 2026 (no
 > "entertainment allowance").
+
+
+> **Erratum (W-065, 2026-09-27, D-096):**
+> - **`SalaryIncomeNode` requires `salary.gross` and `salary.deductions` only.** `W-067` adds `salary.exemptions`
+>   and `W-066a` adds `salary.retirement`, each in its own item (the D-079 pattern).
+> - **Its value is a `MoneyValue`, and it is untraced**, as `NetPayableNode` is: every part already has its line,
+>   and no rule states the difference (`DR 06` G1.1 step 12: "—"). A negative result is refused.
+> - **No item owned the retirement node, `RET-*` or 2025 s.18**, and `W-062`/`W-063`'s "the retirement items" named
+>   none. `W-066a` is added before `W-070`.
+> - **2025 and 1961 s.15 (the charge) stay `PLANNED`**, reassigned to the arrears/advance-salary work
+>   (`REL-ARREARS-001`). What an entry means under s.15 is `SalaryComponent`'s contract.
+>
+> Verified by: S2 s.15 (p.37), s.18 (pp.40–41), s.19(1) (p.41); `02-TECH-SPEC.md` T6; the Phase 7 table (no
+> retirement item before this).
 
 ---
 
@@ -1216,7 +1231,7 @@ build break, not a head start.
 
 | Types | Family | Owning item |
 |---|---|---|
-| `HeadResult`, `ComponentSet`, `ElectionOutcome`, `InterestBreakdown` | `NodeValue` (`DR 15` B4) | the node that produces each — `HeadResult` at `W-065`, `ComponentSet` at `W-060`, `ElectionOutcome` at `W-082`, `InterestBreakdown` at `W-112` |
+| `HeadResult`, `ComponentSet`, `ElectionOutcome`, `InterestBreakdown` | `NodeValue` (`DR 15` B4) | the node that produces each — `HeadResult` with the first head set-off reads (house property, Phase 9; `salary.income` is a `MoneyValue`, D-096), `ComponentSet` at `W-060`, `ElectionOutcome` at `W-082`, `InterestBreakdown` at `W-112` |
 | `RegimeElection`, `HouseElection`, `ChildElection`, `SetOffOrderElection`, `AggregateAllocationElection` | `Election` (`DR 15` C2) | **`W-082`** — the phase table names only the family |
 | `OccupationPeriods` | `ProrationBasis`-adjacent (`DR 15` C3) | **`W-066`** |
 | `MissingRulePackException`, `UnknownComponentCodeException`, `StatutoryOvershootException`, `NoApplicableItrFormException`, `UndeterminedApportionmentException`, `BlockingDataQualityException` | the `TaxEngineException` hierarchy (`DR 23` A7) | **`W-105`** — which names `TaxError` and `TaxEngineException` and none of the six |
