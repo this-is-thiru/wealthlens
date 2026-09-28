@@ -1,0 +1,113 @@
+{
+  "ruleId": "PERQ-MEAL-VOUCHER",
+  "_note": "Food through paid vouchers usable only at eating joints: as PERQ-MEAL-AT-WORK, the excess over the limit per meal is salary (D-117). TY 2025-26: \"fifty rupees per meal\", and the limit \"shall not apply to an employee … who has exercised an option under sub-section (5) of section 115BAC or whose income is chargeable to tax under sub-section (1A) of section 115BAC\" (Rules 1962 r.3(7)(iii) second proviso, G.S.R. 452(E), Gazette 246719, read) — so this version is ExceptIn NEW_TAX_REGIME, and there a voucher is valued in full under PERQ-MEAL. TY 2026-27: \"₹200 per meal\" in every regime — S4 and S2 were searched for any such bar and none was found (r.15(5) Table IV Sl. 3 col. D (a), Gazette 271092, p.1546).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viii), with Income-tax Rules, 1962 r.3(7)(iii) first and second provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 3 col. D (a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AmountInExcess",
+        "amount": "MEAL_VALUE",
+        "threshold": {
+          "type": "PerUnitPerPeriod",
+          "amount": "50",
+          "maxUnits": 1,
+          "period": "MEAL"
+        }
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Tenth Amendment) Rules, 2023, G.S.R. 452(E), Notification No. 43/2023 — Income-tax Rules, 1962 r.3(7)(iii) second proviso substituted",
+        "gazetteRef": "CG-DL-E-21062023-246719",
+        "notifiedOn": "2023-06-21",
+        "effectiveFrom": "2023-06-21",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246719.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/42998/Rule-3_2025-12-13_12-11-50_d5ea0b09d5ea0b_en.pdf/09d9b9ee-e51d-2f37-bc21-8c787c0061ea",
+        "sourceDescription": "Income Tax Department, consolidated Income-tax Rules, 1962 rule 3, r.3(7)(iii) first proviso, p.4; Gazette CG-DL-E-21062023-246719, G.S.R. 452(E), second proviso",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Income-tax Rules, 1962 r.3(7)(iii) is read in the Income Tax Department's consolidated rule 3 (no \"as amended up to\" date; its footnotes on r.3(7)(iii) end at G.S.R. 452(E) of 2023): the Gazette text and any amendment up to AY 2026-27. Also the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the interim Finance Act, 2024 are unread for Income-tax Act, 1961 s.17(2)(viii)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viii), with Income-tax Rules, 1962 r.3(7)(iii) first and second provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 3 col. D (a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AmountInExcess",
+        "amount": "MEAL_VALUE",
+        "threshold": {
+          "type": "PerUnitPerPeriod",
+          "amount": "200",
+          "maxUnits": 1,
+          "period": "MEAL"
+        }
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV, p.1546",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV, p.1546",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

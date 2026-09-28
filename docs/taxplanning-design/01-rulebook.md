@@ -786,6 +786,13 @@ Table I / Table II / Table III block to record it.
 
 **Status: VERIFIED** (S4, Table III Sl. 1–7, read directly). Rule number `NEEDS VERIFICATION`.
 
+> **Addendum (W-071e1, 2026-09-28, D-117):** meals and gifts are built (`PERQ-MEAL`, `-AT-WORK`, `-VOUCHER`,
+> `PERQ-GIFT`), both years. TY 2025-26 (Rules 1962 r.3(7)(iii)–(iv), consolidated rule 3): **fifty rupees** per meal;
+> gifts nil **below five thousand rupees**; paid vouchers keep no limit in the **new regime** (second proviso, G.S.R.
+> 452(E), read in the Gazette). TY 2026-27 has no voucher bar — S4 and S2 searched. The Table IV rows sit on
+> **r.15(5)** (Gazette 271092, pp.1545–1546), the rule number this section asked for. Gifts are aggregated per
+> employer (D-117 C4a).
+
 ### `PERQ-ACCOM-2026` — accommodation (Rules 2026, Table I and its sub-rules)
 
 | Rule ID | Statement |

@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.29",
-      "checksum": "sha256:8de2ae29d85660bd9e433f4523da7793bd785764d16d979c46b0e94781185427"
+      "version": "2026-27.law.30",
+      "checksum": "sha256:d77ba87e1e3a2456d38c3f95b0c81867f8c2fbf44685bbb4e3c5d86ccb95e278"
     },
     "exec": {
       "version": "2026-27.exec.18",
@@ -36,6 +36,10 @@
     "PERQ-CAR-PARTLY-LARGE": "sha256:20e44304e851ea9023b105de8e35edba1eeb7a53c7d219f36d284353cfdc49cf",
     "PERQ-CAR-PARTLY-SMALL": "sha256:ad26cd36ecd9ed4dc16fc80c48569f7f0a0e908b9edf6c060108d33013969006",
     "PERQ-CAR-PRIVATE": "sha256:e265f5c0b7377acbe796c8db2e857ba65ff46f588bfce8042758b1f540ee68d7",
+    "PERQ-GIFT": "sha256:7e39a814a61640908b5d4b68e27b89fc9fe6cf269604e58e3538f34f458b3002",
+    "PERQ-MEAL": "sha256:9fedc2ddd887f80bb9ece6123f92d8a7bc8056fe794c2e2a015fed52e8a7be0d",
+    "PERQ-MEAL-AT-WORK": "sha256:84bc88d18e2ba287bc34309e40d1bb2006e9375bd965a083d78d76ffe6e8c12e",
+    "PERQ-MEAL-VOUCHER": "sha256:190ebc57b434ec607fae28f6fcfa5a7a1b7af109cb7cb401ff85f6d791569daf",
     "PERQ-MEDABROAD-STAY": "sha256:a469faac3534e4e0cbf81f46d3abccec163b245a6a8804b79b4ad7dd5fd08015",
     "PERQ-MEDABROAD-TRAVEL": "sha256:11ef3b0cae29584064969c226e74b26bc5b686a6e3827764a534cb1c4ae5268f",
     "PERQ-SPECIFIED-EMPLOYEE": "sha256:350cab6efef74dfff65b64bb61ee3d01c3cc90bdf91d35e0a4a2dbbdefbd2f09",

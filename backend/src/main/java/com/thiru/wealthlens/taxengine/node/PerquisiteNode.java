@@ -44,7 +44,8 @@ import java.util.Set;
  * The value of perquisites, which is salary in every regime (S2 s.16, s.17(1); 1961 s.17(1)(iv), (2); {@code DR 06}
  * G1.1 step 3; D-111). Built so far: residential accommodation (S4 r.15(2) Table I; Rules 1962 r.3(1)) and, through
  * {@link MotorCarPerquisite}, a vehicle the employer provides or runs (Table II; r.3(2); D-113) — which reads
- * {@code salary.monetaryincome} for the specified-employee test.
+ * {@code salary.monetaryincome} for the specified-employee test; meals and gifts through {@link MealPerquisite} and
+ * {@link GiftPerquisite} (Table IV Sl. 3–4; r.3(7)(iii)–(iv); D-117).
  *
  * <p>Each accommodation is valued on its Table row — the licence fee, a percentage of salary by the city's
  * population, the lower of the lease rental or hotel charges and a percentage of salary — "as reduced by the rent …
@@ -69,6 +70,8 @@ public final class PerquisiteNode implements ComputationNode {
 
     private static Set<RuleId> rulesRead() {
         Set<RuleId> rules = new HashSet<>(MotorCarPerquisite.RULES);
+        rules.addAll(MealPerquisite.RULES);
+        rules.add(RuleIds.PERQ_GIFT);
         rules.addAll(Set.of(RuleIds.PERQ_ACCOM_GOVERNMENT, RuleIds.PERQ_ACCOM_OWNED, RuleIds.PERQ_ACCOM_LEASED,
                 RuleIds.PERQ_ACCOM_HOTEL, RuleIds.PERQ_ACCOM_FURNITURE, RuleIds.PERQ_ACCOM_CONTINUED,
                 RuleIds.RATE_COST_INFLATION_INDEX));
@@ -109,6 +112,8 @@ public final class PerquisiteNode implements ComputationNode {
                     trace.add(furniture(ctx, accommodation, furniture, trace.size() + 1)));
         }
         trace.addAll(MotorCarPerquisite.lines(ctx, trace.size() + 1));
+        trace.addAll(MealPerquisite.lines(ctx, trace.size() + 1));
+        trace.addAll(GiftPerquisite.lines(ctx, trace.size() + 1));
         Money value = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
                 : new NodeResult(MoneyValue.of(value), trace);
@@ -224,6 +229,15 @@ public final class PerquisiteNode implements ComputationNode {
         if (!occupied.liesWithin(DateRange.between(t.taxYearStart(), t.taxYearEnd()))) {
             throw new IllegalArgumentException("Accommodation occupied " + occupied + " runs outside the tax year "
                     + t.taxYear().label() + "; enter the part of the period within the year");
+        }
+    }
+
+    /** Refuses an entry naming an employment that was not entered. Shared by the perquisite helpers. */
+    static void requireEnteredEmployment(NodeContext ctx, int employment, String what) {
+        int entered = ctx.inputs().entered().employments().size();
+        if (employment >= entered) {
+            throw new IllegalArgumentException("The " + what + " names employment " + employment + ", but " + entered
+                    + " were entered");
         }
     }
 }

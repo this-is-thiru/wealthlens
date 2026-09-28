@@ -36,7 +36,7 @@ import java.util.Optional;
  * allowance was used with the allowance exemptions (D-101), a disabled employee's transport claim with its
  * exemption (D-102), the retirement and termination payments with their deductions (D-103), the accommodation
  * employers provide with its perquisite (D-111), medical treatment abroad with its exclusion (D-112), the vehicles
- * with the car perquisite (D-113). Every later
+ * with the car perquisite (D-113), meals and gifts with theirs (D-117). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -49,6 +49,8 @@ import java.util.Optional;
  * @param accommodations each residential accommodation an employer provided, in the order entered
  * @param medicalTreatmentAbroad each claim of medical treatment abroad an employer paid for, in the order entered
  * @param vehicles each vehicle an employer provided or ran at its cost, in the order entered
+ * @param meals each set of meals of one value an employer provided, in the order entered
+ * @param gifts each gift, voucher or token an employer gave, in the order entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -59,7 +61,9 @@ public record EnteredFacts(
         List<RetirementPayment> retirementPayments,
         List<EmployerAccommodation> accommodations,
         List<MedicalTreatmentAbroad> medicalTreatmentAbroad,
-        List<EmployerVehicle> vehicles) {
+        List<EmployerVehicle> vehicles,
+        List<EmployerMeals> meals,
+        List<EmployerGift> gifts) {
 
     public EnteredFacts {
         if (employments == null) {
@@ -98,6 +102,10 @@ public record EnteredFacts(
             throw new IllegalArgumentException(
                     "EnteredFacts.vehicles may not be null; pass an empty list where there are none");
         }
+        if (meals == null || gifts == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.meals and gifts may not be null; pass an empty list where there are none");
+        }
         employments = List.copyOf(employments);
         tenancies = List.copyOf(tenancies);
         leaveTravel = List.copyOf(leaveTravel);
@@ -106,11 +114,13 @@ public record EnteredFacts(
         accommodations = List.copyOf(accommodations);
         medicalTreatmentAbroad = List.copyOf(medicalTreatmentAbroad);
         vehicles = List.copyOf(vehicles);
+        meals = List.copyOf(meals);
+        gifts = List.copyOf(gifts);
     }
 
     /** Nothing entered. */
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
-                List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of());
     }
 }
