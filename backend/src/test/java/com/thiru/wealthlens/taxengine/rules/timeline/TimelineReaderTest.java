@@ -93,7 +93,18 @@ class TimelineReaderTest {
             new RuleId("PERQ-ACCOM-HOTEL"),
             new RuleId("PERQ-ACCOM-FURNITURE"),
             new RuleId("PERQ-MEDABROAD-STAY"),
-            new RuleId("PERQ-MEDABROAD-TRAVEL"));
+            new RuleId("PERQ-MEDABROAD-TRAVEL"),
+            new RuleId("PERQ-SPECIFIED-EMPLOYEE"),
+            new RuleId("PERQ-CAR-PARTLY-SMALL"),
+            new RuleId("PERQ-CAR-PARTLY-LARGE"),
+            new RuleId("PERQ-CAR-PARTLY-ELECTRIC"),
+            new RuleId("PERQ-CAR-OWNRUN-SMALL"),
+            new RuleId("PERQ-CAR-OWNRUN-LARGE"),
+            new RuleId("PERQ-CAR-OWNRUN-ELECTRIC"),
+            new RuleId("PERQ-CAR-CHAUFFEUR"),
+            new RuleId("PERQ-CAR-PRIVATE"),
+            new RuleId("PERQ-CAR-EMPLOYEE"),
+            new RuleId("PERQ-CAR-CONVEYANCE"));
 
     @TempDir
     Path copy;
@@ -110,7 +121,7 @@ class TimelineReaderTest {
         assertThat(timeline.pipelineNodes().keySet())
                 .extracting(NodeId::value)
                 .containsExactlyInAnyOrder(
-                        "inputs.components", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.deductions",
+                        "inputs.components", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.monetaryincome", "salary.deductions",
                         "salary.incomebeforetravel", "salary.medicaltravel", "salary.income",
                         "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");

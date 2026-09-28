@@ -72,8 +72,8 @@ class PerquisiteNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(List.of(new Employment(List.of(), true, EmployerKind.OTHER, false)), List.of(),
-                        List.of(), List.of(), Optional.empty(), List.of(), accommodations, List.of()),
+                new EnteredFacts(List.of(new Employment(List.of(), true, EmployerKind.OTHER, false, Optional.empty())), List.of(),
+                        List.of(), List.of(), Optional.empty(), List.of(), accommodations, List.of(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack)
@@ -82,6 +82,7 @@ class PerquisiteNodeTest {
                 .given(NodeIds.SALARY_BASE,
                         new SalaryBases(Map.of(RuleIds.SAL_SALARY_FOR_ACCOM, List.of(Money.of(salary)))))
                 .given(NodeIds.SALARY_EXEMPTIONS, MoneyValue.of(Money.of(exempt)))
+                .given(NodeIds.SALARY_MONETARYINCOME, MoneyValue.of(Money.ZERO))
                 .run(new PerquisiteNode());
     }
 

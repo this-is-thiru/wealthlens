@@ -1,0 +1,98 @@
+{
+  "ruleId": "PERQ-SPECIFIED-EMPLOYEE",
+  "_note": "The prescribed amount a specified employee's income under \"Salaries\" by way of monetary payment, from one or more employers, must exceed; a benefit or amenity is a perquisite only for a specified employee, or a director or substantial-interest holder of a company employer (S2 s.17(1)(c); 1961 s.17(2)(iii); D-113; rulebook PERQ-SPECEMP-001). The measure is salary.monetaryincome; MotorCarPerquisite tests \"exceeds\" against this amount, strictly. TY 2026-27: Income-tax Rules, 2026 r.17, \"₹ 400000\" (Gazette 271092, p.1549). TY 2025-26: Income-tax Rules, 1962 r.3C, \"four lakh rupees\", inserted by G.S.R. 555(E) of 18-8-2025 in force on publication, after the Finance Act, 2025 s.9(a) made the amount prescribed from 1-4-2026 (assessment year 2026-27). Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(iii)(c) as amended by the Finance Act, 2025 s.9(a), with Income-tax Rules, 1962 r.3C",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(c)(ii), with Income-tax Rules, 2026 r.17",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "400000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Twenty Second Amendment) Rules, 2025, G.S.R. 555(E), Notification No. 133/2025 — Income-tax Rules, 1962 r.3C inserted: \"the prescribed income under the head \"Salaries\" shall be four lakh rupees\"",
+        "gazetteRef": "CG-DL-E-18082025-265477",
+        "notifiedOn": "2025-08-18",
+        "effectiveFrom": "2025-08-18",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265477.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265477.pdf",
+        "sourceDescription": "Gazette CG-DL-E-18082025-265477, G.S.R. 555(E), Income-tax Rules, 1962 r.3C, p.2; Income-tax Act, 1961 as on thc.nic.in, s.17(2)(iii), p.142; Finance Act, 2025 s.9(a), Gazette CG-DL-E-29032025-262125, p.20",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The Income-tax Act, 1961 text is read in the thc.nic.in consolidation, current to Act 7 of 2019: the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the interim Finance Act, 2024 are unread for Income-tax Act, 1961 s.17(2)(iii)–(iv)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(iii)(c) as amended by the Finance Act, 2025 s.9(a), with Income-tax Rules, 1962 r.3C",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(c)(ii), with Income-tax Rules, 2026 r.17",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "400000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 17",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.17, p.1549; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(c), p.38",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.17, p.1549",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

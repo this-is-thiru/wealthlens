@@ -29,13 +29,16 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * The value of perquisites, which is salary in every regime (S2 s.16, s.17(1); 1961 s.17(1)(iv), (2); {@code DR 06}
- * G1.1 step 3; D-111). Built so far: residential accommodation (S4 r.15(2) Table I; Rules 1962 r.3(1)).
+ * G1.1 step 3; D-111). Built so far: residential accommodation (S4 r.15(2) Table I; Rules 1962 r.3(1)) and, through
+ * {@link MotorCarPerquisite}, a vehicle the employer provides or runs (Table II; r.3(2); D-113) — which reads
+ * {@code salary.monetaryincome} for the specified-employee test.
  *
  * <p>Each accommodation is valued on its Table row — the licence fee, a percentage of salary by the city's
  * population, the lower of the lease rental or hotel charges and a percentage of salary — "as reduced by the rent …
@@ -55,6 +58,15 @@ public final class PerquisiteNode implements ComputationNode {
 
     private static final Map<AccommodationProvider, RuleId> RULE_FOR_PROVIDER = providerRules();
 
+    private static final Set<RuleId> RULES = rulesRead();
+
+    private static Set<RuleId> rulesRead() {
+        Set<RuleId> rules = new HashSet<>(MotorCarPerquisite.RULES);
+        rules.addAll(Set.of(RuleIds.PERQ_ACCOM_GOVERNMENT, RuleIds.PERQ_ACCOM_OWNED, RuleIds.PERQ_ACCOM_LEASED,
+                RuleIds.PERQ_ACCOM_HOTEL, RuleIds.PERQ_ACCOM_FURNITURE));
+        return Set.copyOf(rules);
+    }
+
     private static Map<AccommodationProvider, RuleId> providerRules() {
         Map<AccommodationProvider, RuleId> rules = new EnumMap<>(AccommodationProvider.class);
         rules.put(AccommodationProvider.GOVERNMENT, RuleIds.PERQ_ACCOM_GOVERNMENT);
@@ -71,13 +83,12 @@ public final class PerquisiteNode implements ComputationNode {
 
     @Override
     public Set<NodeId> requires() {
-        return Set.of(NodeIds.SALARY_BASE, NodeIds.SALARY_EXEMPTIONS);
+        return Set.of(NodeIds.SALARY_BASE, NodeIds.SALARY_EXEMPTIONS, NodeIds.SALARY_MONETARYINCOME);
     }
 
     @Override
     public Set<RuleId> rules() {
-        return Set.of(RuleIds.PERQ_ACCOM_GOVERNMENT, RuleIds.PERQ_ACCOM_OWNED, RuleIds.PERQ_ACCOM_LEASED,
-                RuleIds.PERQ_ACCOM_HOTEL, RuleIds.PERQ_ACCOM_FURNITURE);
+        return RULES;
     }
 
     @Override
@@ -89,6 +100,7 @@ public final class PerquisiteNode implements ComputationNode {
             accommodation.furniture().ifPresent(furniture ->
                     trace.add(furniture(ctx, accommodation, furniture, trace.size() + 1)));
         }
+        trace.addAll(MotorCarPerquisite.lines(ctx, trace.size() + 1));
         Money value = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
                 : new NodeResult(MoneyValue.of(value), trace);

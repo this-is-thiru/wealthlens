@@ -761,6 +761,16 @@ Table I / Table II / Table III block to record it.
 ### `PERQ-CAR-2025` — motor car, TY 2025-26
 **Status: NEEDS VERIFICATION.** Open **Income-tax Rules 1962, rule 3(2) Table**.
 
+> **Addendum (W-071c, 2026-09-28, D-113):** r.3(2) is now read — in the Income Tax Department's consolidated rule 3
+> (no "as amended up to" date; amendment footnotes to 2023, none on r.3(2)), not in the Gazette. Table II, per
+> calendar month: Sl. (1)(c)(i) **Rs. 1,800 / Rs. 2,400**, (1)(c)(ii) **Rs. 600 / Rs. 900**, each **plus Rs. 900**
+> for a chauffeur; Sl. (3)(ii) the expenditure less **Rs. 900**; wear and tear 10% a year of cost; the several-cars
+> proviso and clause (B) as in 2026. **No electric-vehicle column.** Built as `UNVERIFIED` (`PERQ-CAR-*`). The
+> TY 2026-27 rule number is **r.15(3)** (Gazette 271092 pp.1542–1543), which the `PERQ-CAR-2026` note asked for.
+> Whom the car is a perquisite for is not in either Rule: OQ-10.
+>
+> Verified by: `docs/taxplanning-build/sources/2026-09-28-perquisite-thresholds.md` V1–V2.
+
 ### `PERQ-OTHER-2026` — food, gifts, credit card, club, movable assets (Rules 2026, Table III)
 
 | Rule ID | Item | Value |

@@ -53,23 +53,7 @@ public final class GrossSalaryNode implements ComputationNode {
     public NodeResult evaluate(NodeContext ctx) {
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
         RuleVersion version = ctx.rule(RuleIds.SAL_SALARY_INCLUDES).versionAt(ctx.inputs().temporal());
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
-            throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES + " does not apply in regime "
-                    + ctx.regime().code() + "; salary is defined in every regime, so the row is wrong");
-        }
-        RuleDefinition definition = version.definition().orElseThrow(() -> new IllegalStateException(
-                RuleIds.SAL_SALARY_INCLUDES + " carries no definition; gross salary has nothing to total"));
-        HeadTotal total = switch (definition) {
-            case HeadTotal headTotal -> headTotal;
-            case SalaryBase salaryBase -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines a salary base, not a head's total; gross salary is the whole head");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines journeys per block, not a head's total");
-            case CommutedPensionShare share -> throw new IllegalStateException(
-                    RuleIds.SAL_SALARY_INCLUDES + " defines a share of a commuted pension, not a head's total");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines a transport limit, not a head's total");
-        };
+        HeadTotal total = salaryIncludes(ctx, version);
         HeadTotalLines counted = HeadTotalLines.of(ctx, components, total, RuleIds.SAL_SALARY_INCLUDES);
         Money pay = counted.total();
         TraceLine payLine = TraceLine.of(1, produces(), RuleIds.SAL_SALARY_INCLUDES, StepKind.INCOME,
@@ -82,5 +66,36 @@ public final class GrossSalaryNode implements ComputationNode {
                 TraceLine.of(2, produces(), RuleIds.SAL_SALARY_INCLUDES, StepKind.INCOME, MoneyValue.of(perquisites),
                                 MoneyValue.of(perquisites), version.provenance())
                         .withLimitedBy("perquisites, valued in salary.perquisites")));
+    }
+
+    /**
+     * The pay under the head, perquisites apart: the lines {@code SAL-SALARY-INCLUDES} totals. Read also by the
+     * specified-employee measure, which is salary "by way of monetary payment" (D-113). The caller declares
+     * {@code inputs.components} and the rule.
+     */
+    static Money pay(NodeContext ctx) {
+        RuleVersion version = ctx.rule(RuleIds.SAL_SALARY_INCLUDES).versionAt(ctx.inputs().temporal());
+        return HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),
+                salaryIncludes(ctx, version), RuleIds.SAL_SALARY_INCLUDES).total();
+    }
+
+    private static HeadTotal salaryIncludes(NodeContext ctx, RuleVersion version) {
+        if (!version.regimes().appliesIn(ctx.regime().code())) {
+            throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES + " does not apply in regime "
+                    + ctx.regime().code() + "; salary is defined in every regime, so the row is wrong");
+        }
+        RuleDefinition definition = version.definition().orElseThrow(() -> new IllegalStateException(
+                RuleIds.SAL_SALARY_INCLUDES + " carries no definition; gross salary has nothing to total"));
+        return switch (definition) {
+            case HeadTotal headTotal -> headTotal;
+            case SalaryBase salaryBase -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
+                    + " defines a salary base, not a head's total; gross salary is the whole head");
+            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
+                    + " defines journeys per block, not a head's total");
+            case CommutedPensionShare share -> throw new IllegalStateException(
+                    RuleIds.SAL_SALARY_INCLUDES + " defines a share of a commuted pension, not a head's total");
+            case DisabledTransportLimit transport -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
+                    + " defines a transport limit, not a head's total");
+        };
     }
 }

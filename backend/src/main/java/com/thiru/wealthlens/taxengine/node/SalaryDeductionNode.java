@@ -51,6 +51,11 @@ public final class SalaryDeductionNode implements ComputationNode {
     /** The base the standard deduction's "salary" limb reads: gross salary; the entertainment limb, its own base. */
     private static final BaseId SALARY = new BaseId("SALARY");
 
+    /** The rules the deductions read — declared also by a node that applies them to another salary (D-113). */
+    static final Set<RuleId> RULES = Set.of(RuleIds.SAL_TAX_ON_EMPLOYMENT,
+            RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME, RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE,
+            RuleIds.SAL_ENTMT_ALLOWANCE);
+
     private static final List<RuleId> STANDARD_DEDUCTIONS = List.of(
             RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME, RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE);
 
@@ -66,18 +71,34 @@ public final class SalaryDeductionNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        return Set.of(RuleIds.SAL_TAX_ON_EMPLOYMENT, RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME,
-                RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE, RuleIds.SAL_ENTMT_ALLOWANCE);
+        return RULES;
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
+        List<TraceLine> trace = lines(ctx, ctx.get(NodeIds.SALARY_GROSS, MoneyValue.class).asMoney());
+        return new NodeResult(MoneyValue.of(total(trace)), trace);
+    }
+
+    /**
+     * The deductions from a salary other than gross salary — the specified employee's salary "by way of monetary
+     * payment" (D-113), whose standard deduction is capped at that salary. The caller declares this node's rules and
+     * its {@code inputs.components} and {@code salary.base}.
+     */
+    static Money on(NodeContext ctx, Money salary) {
+        return total(lines(ctx, salary));
+    }
+
+    private static List<TraceLine> lines(NodeContext ctx, Money salary) {
         List<TraceLine> trace = new ArrayList<>();
         taxOnEmployment(ctx).ifPresent(trace::add);
-        trace.add(standardDeduction(ctx, trace.size() + 1));
+        trace.add(standardDeduction(ctx, salary, trace.size() + 1));
         entertainmentAllowance(ctx, trace.size() + 1).ifPresent(trace::add);
-        Money total = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
-        return new NodeResult(MoneyValue.of(total), trace);
+        return trace;
+    }
+
+    private static Money total(List<TraceLine> trace) {
+        return trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
     }
 
     /** The whole of the tax on employment entered, where the regime allows it. */
@@ -150,7 +171,7 @@ public final class SalaryDeductionNode implements ComputationNode {
     }
 
     /** The regime's standard deduction, capped at the salary; exactly one row may apply. */
-    private static TraceLine standardDeduction(NodeContext ctx, int sequence) {
+    private static TraceLine standardDeduction(NodeContext ctx, Money salary, int sequence) {
         List<RuleVersion> applying = new ArrayList<>();
         List<RuleId> rules = new ArrayList<>();
         for (RuleId rule : STANDARD_DEDUCTIONS) {
@@ -165,7 +186,6 @@ public final class SalaryDeductionNode implements ComputationNode {
                     + " as its standard deduction; s.19(1) Table Sl. 2 gives every regime exactly one");
         }
         RuleVersion version = applying.getFirst();
-        Money salary = ctx.get(NodeIds.SALARY_GROSS, MoneyValue.class).asMoney();
         CapResult deduction = TemporallyApportionedCap.apply(
                 ctx.rule(rules.getFirst()), ctx.inputs().temporal(), CapContext.of(SALARY, salary));
         return TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, rules.getFirst(), StepKind.DEDUCTION,

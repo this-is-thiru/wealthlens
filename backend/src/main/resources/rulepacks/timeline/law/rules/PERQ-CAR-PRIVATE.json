@@ -1,0 +1,100 @@
+{
+  "ruleId": "PERQ-CAR-PRIVATE",
+  "_note": "An employer's car used exclusively privately, the employer meeting the running: the actual running and maintenance (a chauffeur's pay included) \"as increased by the amount representing normal wear and tear … and as reduced by any amount charged from the employee\"; wear and tear is \"10% per annum of the actual cost\" (D-113). This row is the wear and tear; MotorCarPerquisite adds the entered running and takes off the charge, and apportions the cost to the calendar months provided (Table II is per calendar month). TY 2026-27: r.15(3) Table II Sl. 1(b), (3)(d) (pp.1542–1543). TY 2025-26: r.3(2) Table II Sl. (1)(b), Explanation (consolidated rule 3, pp.2–3). Also the row for every employer car beyond the first where several are provided. Every regime: a perquisite is salary. Valued only for a specified employee (D-113 C1a, OQ-10); MotorCarPerquisite in PerquisiteNode applies it.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(iii), with Income-tax Rules, 1962 r.3(2) Table II Sl. (1)(b) and Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(c), with Income-tax Rules, 2026 r.15(3) Table II Sl. 1(b) and (3)(d)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "CAR_COST"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(2) stands as in the rule in force from 1-4-2009 (r.3(10)), its substituting notification not read",
+        "gazetteRef": "CG-DL-E-18082023-248178",
+        "notifiedOn": "2023-08-18",
+        "effectiveFrom": "2023-09-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/42998/Rule-3_2025-12-13_12-11-50_d5ea0b09d5ea0b_en.pdf/09d9b9ee-e51d-2f37-bc21-8c787c0061ea",
+        "sourceDescription": "Income Tax Department, consolidated Income-tax Rules, 1962 rule 3, r.3(2) Table II, clause (B) and Explanation, pp.2–3 (owner's download, 2026-09-28)",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Income-tax Rules, 1962 r.3(2) is read only in the Income Tax Department's consolidated rule 3 (file dated 2025-12-13; no \"as amended up to\" date; amendment footnotes to 2023, none on r.3(2)): the Gazette text of r.3 as in force from 1-4-2009 (r.3(10)) and any later amendment of r.3(2) up to AY 2026-27. Also the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the interim Finance Act, 2024 are unread for Income-tax Act, 1961 s.17(2)(iii)–(iv)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(iii), with Income-tax Rules, 1962 r.3(2) Table II Sl. (1)(b) and Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(c), with Income-tax Rules, 2026 r.15(3) Table II Sl. 1(b) and (3)(d)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "CAR_COST"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(3)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(3) Table II and (b)–(d), pp.1542–1543",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(3) Table II and (b)–(d), pp.1542–1543",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -216,10 +216,10 @@ class SalaryDeductionNodeTest {
             String basic, String allowance) {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(year);
-        List<Employment> employments = employers.stream().map(kind -> new Employment(List.of(), false, kind, false)).toList();
+        List<Employment> employments = employers.stream().map(kind -> new Employment(List.of(), false, kind, false, Optional.empty())).toList();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of()),
+                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         List<Line> lines = new ArrayList<>();

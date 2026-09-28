@@ -80,6 +80,13 @@ order the Act computes in. Rows in **bold** exist in only one regime.
 | 30 | Less TDS and TCS | `TDS-CREDIT-001` | row 21 |
 | 31 | **Round the payable/refundable** | `RATE-ROUND-002` | **rounding point 2 of 2** |
 
+> **Amendment (W-071c, 2026-09-28, D-113):** step 3 also needs a figure the steps after it produce: whether the
+> employee is a *specified employee*, whose salary "by way of monetary payment" — the head's income without the
+> perquisites — exceeds the prescribed amount (S2 s.17(1)(c)(ii); 1961 s.17(2)(iii)(c)). The engine measures it
+> before valuing perquisites (`salary.monetaryincome`): the pay, less steps 6–9's exemptions and retirement
+> deductions and steps 10–11 applied to that pay. Step 9 is therefore computed before step 3; the form row order is
+> unaffected.
+>
 > **Amendment (W-071b, 2026-09-28, D-112):** one step-3 perquisite cannot be valued at step 3. The employer's
 > spending on **travel** abroad for medical treatment is excluded only where gross total income *"as computed
 > before including therein the said expenditure"* does not exceed the prescribed amount (S2 s.17(3)(b); 1961

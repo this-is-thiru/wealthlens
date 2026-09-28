@@ -78,8 +78,8 @@ class RetirementNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(List.of(new Employment(List.of(), termsIncludeDearnessAllowance, EmployerKind.OTHER, false)),
-                        List.of(), List.of(), List.of(), Optional.empty(), payments, List.of(), List.of()),
+                new EnteredFacts(List.of(new Employment(List.of(), termsIncludeDearnessAllowance, EmployerKind.OTHER, false, Optional.empty())),
+                        List.of(), List.of(), List.of(), Optional.empty(), payments, List.of(), List.of(), List.of()),
                 plain.assessee(), plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         List<Line> lines = new ArrayList<>();
         for (Paid line : paid) {
