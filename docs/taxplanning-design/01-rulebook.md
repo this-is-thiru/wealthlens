@@ -800,6 +800,13 @@ Table I / Table II / Table III block to record it.
 > Rules 1962 r.3(7)(vi) has two separate exclusions (business with records; uniform health-club facilities); S4 Table IV
 > Sl. 6 joins them into one — built as each text reads, OQ-12.
 
+> **Addendum (W-071d, 2026-09-28, D-120):** Table III is **S4 r.15(4)** (Gazette 271092, p.1544) and is built —
+> services, utilities, education, carriers' journeys. TY 2025-26 (Rules 1962 r.3(3)–(6)): the education limit is
+> **one thousand rupees** per child per month (r.3(5) proviso), against ₹3,000; an airline's or the railways' employee's
+> journey is outside both texts and refused. Unlike Table IV, Table III names no limb of s.17: what the employer
+> provides is a benefit or amenity — a specified employee's perquisite — and what meets the employee's obligation is
+> everyone's (OQ-10, widened).
+
 ### `PERQ-ACCOM-2026` — accommodation (Rules 2026, Table I and its sub-rules)
 
 | Rule ID | Statement |

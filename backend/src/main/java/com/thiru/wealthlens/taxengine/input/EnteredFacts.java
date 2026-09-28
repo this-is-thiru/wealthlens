@@ -37,7 +37,8 @@ import java.util.Optional;
  * exemption (D-102), the retirement and termination payments with their deductions (D-103), the accommodation
  * employers provide with its perquisite (D-111), medical treatment abroad with its exclusion (D-112), the vehicles
  * with the car perquisite (D-113), meals and gifts with theirs (D-117), loans with
- * theirs (D-118), the cost-based benefits and assets with theirs (D-119). Every later
+ * theirs (D-118), the cost-based benefits and assets with theirs (D-119), household services, utilities and
+ * education with theirs (D-120). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -56,6 +57,8 @@ import java.util.Optional;
  * @param expenseBenefits each expenditure an employer met that Table IV values at its amount, in the order entered
  * @param assetsLent each movable asset of an employer the employee used, in the order entered
  * @param assetsTransferred each movable asset an employer transferred to the employee, in the order entered
+ * @param householdBenefits each service, utility, education fee or carrier's journey, in the order entered
+ * @param childEducation each child's education in the employer's institution or free by employment, in order
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -72,7 +75,9 @@ public record EnteredFacts(
         List<EmployerLoan> loans,
         List<EmployerExpenseBenefit> expenseBenefits,
         List<EmployerAssetUse> assetsLent,
-        List<EmployerAssetTransfer> assetsTransferred) {
+        List<EmployerAssetTransfer> assetsTransferred,
+        List<EmployerHouseholdBenefit> householdBenefits,
+        List<EmployerChildEducation> childEducation) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -93,6 +98,8 @@ public record EnteredFacts(
         expenseBenefits = copied(expenseBenefits, "expenseBenefits");
         assetsLent = copied(assetsLent, "assetsLent");
         assetsTransferred = copied(assetsTransferred, "assetsTransferred");
+        householdBenefits = copied(householdBenefits, "householdBenefits");
+        childEducation = copied(childEducation, "childEducation");
     }
 
     /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
@@ -108,6 +115,6 @@ public record EnteredFacts(
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of());
+                List.of(), List.of(), List.of());
     }
 }

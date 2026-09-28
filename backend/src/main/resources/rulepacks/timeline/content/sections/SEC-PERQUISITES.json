@@ -1,6 +1,6 @@
 {
-  "_note": "Section catalogue entry (D-042, D-060, D-111, D-112, D-113, D-115, D-117, D-118, D-119). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: PERQ-*.json (1961 s.17(2) with Income-tax Rules, 1962 r.3; 2025 s.17(1) with Income-tax Rules, 2026 r.15). summary: S2 s.16(e) (\"salary\" includes perquisites), s.17(1)(a)–(b) (rent-free accommodation; a concession in rent). routes[0]: PERQ-ACCOM-GOVERNMENT, -OWNED, -LEASED, -HOTEL (r.15(2) Table I Sl. 1–3; r.3(1) Table I as substituted by G.S.R. 615(E)). routes[1]: PERQ-ACCOM-FURNITURE (r.15(2)(e)). routes[2]: PERQ-MEDABROAD-STAY, -TRAVEL (S2 s.17(2)(f), (3); 1961 s.17(2) proviso (vi), (vii)). routes[3]: PERQ-SPECIFIED-EMPLOYEE, PERQ-CAR-* (S2 s.17(1)(c), (f); S4 r.15(3), r.17; 1961 s.17(2)(iii)–(iv); Rules 1962 r.3(2), r.3C). routes[4]: W-071d. routes[5]: PERQ-MEAL, -AT-WORK, -VOUCHER, PERQ-GIFT (S4 r.15(5) Table IV Sl. 3–4; Rules 1962 r.3(7)(iii)–(iv)). routes[6]: PERQ-LOAN, PERQ-LOAN-PETTY (S4 r.15(5) Table IV Sl. 1; Rules 1962 r.3(7)(i)). routes[7]: PERQ-HOLIDAY, -CREDIT-CARD, -CLUB (and its by-year exclusions, OQ-12), -ASSET-USE (-EXCLUDED), -ASSET-TRANSFER-*, -OTHER-BENEFIT (S4 r.15(5) Table IV Sl. 2, 5–9; Rules 1962 r.3(7)(ii), (v)–(ix)). routes[8]–[9]: W-071f–g (D-110, D-116). routes[0] also PERQ-ACCOM-CONTINUED (r.15(2)(d); r.3(1) third proviso) with RATE-COST-INFLATION-INDEX; accommodation first provided before 2023-24 is refused (OQ-11).",
+  "_note": "Section catalogue entry (D-042, D-060, D-111, D-112, D-113, D-115, D-117, D-118, D-119, D-120). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: PERQ-*.json (1961 s.17(2) with Income-tax Rules, 1962 r.3; 2025 s.17(1) with Income-tax Rules, 2026 r.15). summary: S2 s.16(e) (\"salary\" includes perquisites), s.17(1)(a)–(b) (rent-free accommodation; a concession in rent). routes[0]: PERQ-ACCOM-GOVERNMENT, -OWNED, -LEASED, -HOTEL (r.15(2) Table I Sl. 1–3; r.3(1) Table I as substituted by G.S.R. 615(E)). routes[1]: PERQ-ACCOM-FURNITURE (r.15(2)(e)). routes[2]: PERQ-MEDABROAD-STAY, -TRAVEL (S2 s.17(2)(f), (3); 1961 s.17(2) proviso (vi), (vii)). routes[3]: PERQ-SPECIFIED-EMPLOYEE, PERQ-CAR-* (S2 s.17(1)(c), (f); S4 r.15(3), r.17; 1961 s.17(2)(iii)–(iv); Rules 1962 r.3(2), r.3C). routes[4]: PERQ-SERVICES, -UTILITY, -EDUCATION, -EDUCATION-FREE, -CARRIER-TRAVEL (S4 r.15(4) Table III; Rules 1962 r.3(3)–(6)); whom: OQ-10. routes[5]: PERQ-MEAL, -AT-WORK, -VOUCHER, PERQ-GIFT (S4 r.15(5) Table IV Sl. 3–4; Rules 1962 r.3(7)(iii)–(iv)). routes[6]: PERQ-LOAN, PERQ-LOAN-PETTY (S4 r.15(5) Table IV Sl. 1; Rules 1962 r.3(7)(i)). routes[7]: PERQ-HOLIDAY, -CREDIT-CARD, -CLUB (and its by-year exclusions, OQ-12), -ASSET-USE (-EXCLUDED), -ASSET-TRANSFER-*, -OTHER-BENEFIT (S4 r.15(5) Table IV Sl. 2, 5–9; Rules 1962 r.3(7)(ii), (v)–(ix)). routes[8]–[9]: W-071f–g (D-110, D-116). routes[0] also PERQ-ACCOM-CONTINUED (r.15(2)(d); r.3(1) third proviso) with RATE-COST-INFLATION-INDEX; accommodation first provided before 2023-24 is refused (OQ-11).",
   "key": "SEC-PERQUISITES",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -117,11 +117,27 @@
     },
     {
       "name": "Services, utilities and education",
-      "description": "Household staff, gas, electricity and water, and your children's education paid by your employer.",
+      "description": "Household staff, gas, electricity and water, and education for your household, at what your employer pays, and a carrier's free travel at its public fare; taxed only if you are a specified employee unless your employer pays what you owe yourself, and your child's schooling in your employer's own or a free school only above a limit per month.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "Not built yet: its own backlog item adds it."
+          "type": "ByRule",
+          "rule": "PERQ-SERVICES"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-UTILITY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-EDUCATION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-EDUCATION-FREE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CARRIER-TRAVEL"
         }
       ]
     },

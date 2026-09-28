@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.CarEngine;
-import com.thiru.wealthlens.taxengine.input.CompanyEmployer;
 import com.thiru.wealthlens.taxengine.input.EmployerVehicle;
 import com.thiru.wealthlens.taxengine.input.VehicleOwner;
 import com.thiru.wealthlens.taxengine.input.VehicleUse;
@@ -38,7 +37,7 @@ import java.util.Set;
  */
 final class MotorCarPerquisite {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.PERQ_SPECIFIED_EMPLOYEE, RuleIds.PERQ_CAR_PARTLY_SMALL,
+    static final Set<RuleId> RULES = Set.of(RuleIds.PERQ_CAR_PARTLY_SMALL,
             RuleIds.PERQ_CAR_PARTLY_LARGE, RuleIds.PERQ_CAR_PARTLY_ELECTRIC, RuleIds.PERQ_CAR_OWNRUN_SMALL,
             RuleIds.PERQ_CAR_OWNRUN_LARGE, RuleIds.PERQ_CAR_OWNRUN_ELECTRIC, RuleIds.PERQ_CAR_CHAUFFEUR,
             RuleIds.PERQ_CAR_PRIVATE, RuleIds.PERQ_CAR_EMPLOYEE, RuleIds.PERQ_CAR_CONVEYANCE);
@@ -85,8 +84,8 @@ final class MotorCarPerquisite {
     /** Sl. 1: nil for an employee who is not a specified one; else by use, or by the several-cars proviso. */
     private static TraceLine employerCar(NodeContext ctx, List<EmployerVehicle> vehicles, int index, int sequence) {
         EmployerVehicle car = vehicles.get(index);
-        if (!isSpecifiedEmployee(ctx, car.employment())) {
-            return notSpecified(ctx, sequence);
+        if (!SpecifiedEmployee.holdsFor(ctx, car.employment())) {
+            return SpecifiedEmployee.notSpecifiedLine(ctx, sequence);
         }
         List<Integer> sharing = carsNotWhollyOfficial(vehicles, car.employment());
         if (sharing.size() > 1) {
@@ -140,28 +139,6 @@ final class MotorCarPerquisite {
     private static Money tableOfficialUse(NodeContext ctx, EmployerVehicle car) {
         Money official = perMonth(ctx, rowFor(ctx, PARTLY, car), car.months());
         return car.chauffeur() ? official.plus(perMonth(ctx, RuleIds.PERQ_CAR_CHAUFFEUR, car.months())) : official;
-    }
-
-    private static boolean isSpecifiedEmployee(NodeContext ctx, int employment) {
-        boolean byStanding = ctx.inputs().entered().employments().get(employment).companyEmployer()
-                .map(CompanyEmployer::makesEveryBenefitAPerquisite)
-                .orElse(false);
-        return byStanding || monetaryIncome(ctx).isGreaterThan(threshold(ctx));
-    }
-
-    private static TraceLine notSpecified(NodeContext ctx, int sequence) {
-        return line(ctx, RuleIds.PERQ_SPECIFIED_EMPLOYEE, sequence, monetaryIncome(ctx), Money.ZERO,
-                "not a specified employee: salary by way of monetary payment " + monetaryIncome(ctx)
-                        + " does not exceed " + threshold(ctx) + ", and no director or substantial interest");
-    }
-
-    private static Money monetaryIncome(NodeContext ctx) {
-        return ctx.get(NodeIds.SALARY_MONETARYINCOME, MoneyValue.class).asMoney();
-    }
-
-    private static Money threshold(NodeContext ctx) {
-        return TemporallyApportionedCap.apply(ctx.rule(RuleIds.PERQ_SPECIFIED_EMPLOYEE), ctx.inputs().temporal(),
-                new CapContext(Map.of())).value();
     }
 
     /** The positions of the employer's cars one employment lets the employee use otherwise than wholly officially. */

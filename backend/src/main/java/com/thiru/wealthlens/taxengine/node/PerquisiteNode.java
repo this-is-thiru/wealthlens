@@ -48,7 +48,8 @@ import java.util.Set;
  * {@code salary.monetaryincome} for the specified-employee test; meals and gifts through {@link MealPerquisite} and
  * {@link GiftPerquisite} (Table IV Sl. 3–4; r.3(7)(iii)–(iv); D-117); loans through {@link LoanPerquisite} (Sl. 1;
  * r.3(7)(i); D-118); holidays, cards, clubs, other benefits and assets through {@link ExpenseBenefitPerquisite} and
- * {@link AssetPerquisite} (Sl. 2, 5–9; r.3(7)(ii), (v)–(ix); D-119).
+ * {@link AssetPerquisite} (Sl. 2, 5–9; r.3(7)(ii), (v)–(ix); D-119); services, utilities, education and carriers'
+ * journeys through {@link HouseholdBenefitPerquisite} (Table III; r.3(3)–(6); D-120).
  *
  * <p>Each accommodation is valued on its Table row — the licence fee, a percentage of salary by the city's
  * population, the lower of the lease rental or hotel charges and a percentage of salary — "as reduced by the rent …
@@ -78,6 +79,8 @@ public final class PerquisiteNode implements ComputationNode {
         rules.addAll(LoanPerquisite.RULES);
         rules.addAll(ExpenseBenefitPerquisite.RULES);
         rules.addAll(AssetPerquisite.RULES);
+        rules.addAll(HouseholdBenefitPerquisite.RULES);
+        rules.add(RuleIds.PERQ_SPECIFIED_EMPLOYEE);
         rules.addAll(Set.of(RuleIds.PERQ_ACCOM_GOVERNMENT, RuleIds.PERQ_ACCOM_OWNED, RuleIds.PERQ_ACCOM_LEASED,
                 RuleIds.PERQ_ACCOM_HOTEL, RuleIds.PERQ_ACCOM_FURNITURE, RuleIds.PERQ_ACCOM_CONTINUED,
                 RuleIds.RATE_COST_INFLATION_INDEX));
@@ -123,6 +126,7 @@ public final class PerquisiteNode implements ComputationNode {
         trace.addAll(LoanPerquisite.lines(ctx, trace.size() + 1));
         trace.addAll(ExpenseBenefitPerquisite.lines(ctx, trace.size() + 1));
         trace.addAll(AssetPerquisite.lines(ctx, trace.size() + 1));
+        trace.addAll(HouseholdBenefitPerquisite.lines(ctx, trace.size() + 1));
         Money value = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
                 : new NodeResult(MoneyValue.of(value), trace);

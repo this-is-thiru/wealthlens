@@ -36,11 +36,14 @@ public final class RuleIds {
     public static final RuleId PERQ_CAR_PARTLY_LARGE = new RuleId("PERQ-CAR-PARTLY-LARGE");
     public static final RuleId PERQ_CAR_PARTLY_SMALL = new RuleId("PERQ-CAR-PARTLY-SMALL");
     public static final RuleId PERQ_CAR_PRIVATE = new RuleId("PERQ-CAR-PRIVATE");
+    public static final RuleId PERQ_CARRIER_TRAVEL = new RuleId("PERQ-CARRIER-TRAVEL");
     public static final RuleId PERQ_CLUB = new RuleId("PERQ-CLUB");
     public static final RuleId PERQ_CLUB_BUSINESS = new RuleId("PERQ-CLUB-BUSINESS");
     public static final RuleId PERQ_CLUB_BUSINESS_UNIFORM = new RuleId("PERQ-CLUB-BUSINESS-UNIFORM");
     public static final RuleId PERQ_CLUB_UNIFORM = new RuleId("PERQ-CLUB-UNIFORM");
     public static final RuleId PERQ_CREDIT_CARD = new RuleId("PERQ-CREDIT-CARD");
+    public static final RuleId PERQ_EDUCATION = new RuleId("PERQ-EDUCATION");
+    public static final RuleId PERQ_EDUCATION_FREE = new RuleId("PERQ-EDUCATION-FREE");
     public static final RuleId PERQ_GIFT = new RuleId("PERQ-GIFT");
     public static final RuleId PERQ_HOLIDAY = new RuleId("PERQ-HOLIDAY");
     public static final RuleId PERQ_LOAN = new RuleId("PERQ-LOAN");
@@ -51,7 +54,9 @@ public final class RuleIds {
     public static final RuleId PERQ_MEDABROAD_STAY = new RuleId("PERQ-MEDABROAD-STAY");
     public static final RuleId PERQ_MEDABROAD_TRAVEL = new RuleId("PERQ-MEDABROAD-TRAVEL");
     public static final RuleId PERQ_OTHER_BENEFIT = new RuleId("PERQ-OTHER-BENEFIT");
+    public static final RuleId PERQ_SERVICES = new RuleId("PERQ-SERVICES");
     public static final RuleId PERQ_SPECIFIED_EMPLOYEE = new RuleId("PERQ-SPECIFIED-EMPLOYEE");
+    public static final RuleId PERQ_UTILITY = new RuleId("PERQ-UTILITY");
     public static final RuleId RATE_COST_INFLATION_INDEX = new RuleId("RATE-COST-INFLATION-INDEX");
     public static final RuleId RATE_HEALTH_EDUCATION_CESS = new RuleId("RATE-HEALTH-EDUCATION-CESS");
     public static final RuleId RATE_ROUND_PAYABLE = new RuleId("RATE-ROUND-PAYABLE");

@@ -124,7 +124,12 @@ class TimelineReaderTest {
             new RuleId("PERQ-ASSET-TRANSFER-ELECTRONIC"),
             new RuleId("PERQ-ASSET-TRANSFER-CAR"),
             new RuleId("PERQ-ASSET-TRANSFER-OTHER"),
-            new RuleId("PERQ-OTHER-BENEFIT"));
+            new RuleId("PERQ-OTHER-BENEFIT"),
+            new RuleId("PERQ-SERVICES"),
+            new RuleId("PERQ-UTILITY"),
+            new RuleId("PERQ-EDUCATION"),
+            new RuleId("PERQ-EDUCATION-FREE"),
+            new RuleId("PERQ-CARRIER-TRAVEL"));
 
     @TempDir
     Path copy;
