@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
@@ -124,6 +125,8 @@ public final class SalaryDeductionNode implements ComputationNode {
                     RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines an index table, not the total of what was paid");
             case ExcludedAssets excluded -> throw new IllegalStateException(
                     RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines excluded assets, not the total of what was paid");
+            case DayWindow window -> throw new IllegalStateException(
+                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines a window of days, not the total of what was paid");
         };
         HeadTotalLines paid = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class), total,
                 RuleIds.SAL_TAX_ON_EMPLOYMENT);

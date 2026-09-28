@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
@@ -116,6 +117,7 @@ final class AssetPerquisite {
             case DisabledTransportLimit transport -> throw new IllegalStateException(ruleId + " defines a transport limit");
             case CommutedPensionShare share -> throw new IllegalStateException(ruleId + " defines a pension share");
             case IndexByYear index -> throw new IllegalStateException(ruleId + " defines an index table");
+            case DayWindow window -> throw new IllegalStateException(ruleId + " defines a window of days");
         };
     }
 

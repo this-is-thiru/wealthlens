@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
@@ -140,6 +141,8 @@ public final class SalaryBaseNode implements ComputationNode {
                     rule + " defines an index table, not a salary base");
             case ExcludedAssets excluded -> throw new IllegalStateException(
                     rule + " defines excluded assets, not a salary base");
+            case DayWindow window -> throw new IllegalStateException(
+                    rule + " defines a window of days, not a salary base");
         };
     }
 }

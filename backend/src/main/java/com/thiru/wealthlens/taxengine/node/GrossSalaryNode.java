@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
@@ -102,6 +103,8 @@ public final class GrossSalaryNode implements ComputationNode {
                     + " defines an index table, not a head's total");
             case ExcludedAssets excluded -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
                     + " defines excluded assets, not a head's total");
+            case DayWindow window -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
+                    + " defines a window of days, not a head's total");
         };
     }
 }

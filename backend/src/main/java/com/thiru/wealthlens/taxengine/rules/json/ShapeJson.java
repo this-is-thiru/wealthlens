@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
@@ -220,7 +221,7 @@ public final class ShapeJson {
     public static RuleDefinition definition(JsonNode node, String path) {
         String tag = PackJson.tag(
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
-                "CommutedPensionShare", "IndexByYear", "ExcludedAssets");
+                "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -236,6 +237,7 @@ public final class ShapeJson {
                     PackJson.integer(node, "oneOverWhereGratuityReceived", path),
                     PackJson.integer(node, "oneOverOtherwise", path)));
             case "IndexByYear" -> indexByYear(node, path);
+            case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
             case "ExcludedAssets" -> {
                 List<MovableAssetKind> kinds = PackJson.array(node, "kinds", path,
                         e -> movableAssetKind(e.node().asString(), e.path()));

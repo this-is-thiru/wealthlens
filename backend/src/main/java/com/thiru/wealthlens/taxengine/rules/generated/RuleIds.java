@@ -55,7 +55,9 @@ public final class RuleIds {
     public static final RuleId PERQ_MEDABROAD_TRAVEL = new RuleId("PERQ-MEDABROAD-TRAVEL");
     public static final RuleId PERQ_OTHER_BENEFIT = new RuleId("PERQ-OTHER-BENEFIT");
     public static final RuleId PERQ_SERVICES = new RuleId("PERQ-SERVICES");
+    public static final RuleId PERQ_SPECIFIED_DATE = new RuleId("PERQ-SPECIFIED-DATE");
     public static final RuleId PERQ_SPECIFIED_EMPLOYEE = new RuleId("PERQ-SPECIFIED-EMPLOYEE");
+    public static final RuleId PERQ_SPECIFIED_SECURITY = new RuleId("PERQ-SPECIFIED-SECURITY");
     public static final RuleId PERQ_UTILITY = new RuleId("PERQ-UTILITY");
     public static final RuleId RATE_COST_INFLATION_INDEX = new RuleId("RATE-COST-INFLATION-INDEX");
     public static final RuleId RATE_HEALTH_EDUCATION_CESS = new RuleId("RATE-HEALTH-EDUCATION-CESS");

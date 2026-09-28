@@ -807,6 +807,13 @@ Table I / Table II / Table III block to record it.
 > provides is a benefit or amenity — a specified employee's perquisite — and what meets the employee's obligation is
 > everyone's (OQ-10, widened).
 
+> **Addendum (W-071f, 2026-09-28, D-121):** `PERQ-ESOP-001` is built as `PERQ-SPECIFIED-SECURITY`, both years, for
+> every employee and a former employer's allotment too: the fair market value on the exercise date — S4 **r.15(6)**
+> (p.1547) and **(7)** (p.1548): the average of the day's opening and closing prices; the closest preceding close where
+> untraded; a merchant banker's value on a specified date no more than **180 days** before exercise (**r.15(8)(l)**,
+> p.1548; Rules 1962 r.3(8)–(9)) — less the price paid. `PERQ-ESOP-002`, the eligible start-up's deferral (s.392(3)),
+> changes when the tax is paid, not the income or its year: not modelled in the income computation.
+
 ### `PERQ-ACCOM-2026` — accommodation (Rules 2026, Table I and its sub-rules)
 
 | Rule ID | Statement |

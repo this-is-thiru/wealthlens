@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
@@ -49,7 +50,8 @@ import java.util.Set;
  * {@link GiftPerquisite} (Table IV Sl. 3–4; r.3(7)(iii)–(iv); D-117); loans through {@link LoanPerquisite} (Sl. 1;
  * r.3(7)(i); D-118); holidays, cards, clubs, other benefits and assets through {@link ExpenseBenefitPerquisite} and
  * {@link AssetPerquisite} (Sl. 2, 5–9; r.3(7)(ii), (v)–(ix); D-119); services, utilities, education and carriers'
- * journeys through {@link HouseholdBenefitPerquisite} (Table III; r.3(3)–(6); D-120).
+ * journeys through {@link HouseholdBenefitPerquisite} (Table III; r.3(3)–(6); D-120); specified securities and sweat
+ * equity through {@link SpecifiedSecurityPerquisite} (S2 s.17(1)(d), (4); r.15(6)–(7); r.3(8)–(9); D-121).
  *
  * <p>Each accommodation is valued on its Table row — the licence fee, a percentage of salary by the city's
  * population, the lower of the lease rental or hotel charges and a percentage of salary — "as reduced by the rent …
@@ -80,6 +82,7 @@ public final class PerquisiteNode implements ComputationNode {
         rules.addAll(ExpenseBenefitPerquisite.RULES);
         rules.addAll(AssetPerquisite.RULES);
         rules.addAll(HouseholdBenefitPerquisite.RULES);
+        rules.addAll(SpecifiedSecurityPerquisite.RULES);
         rules.add(RuleIds.PERQ_SPECIFIED_EMPLOYEE);
         rules.addAll(Set.of(RuleIds.PERQ_ACCOM_GOVERNMENT, RuleIds.PERQ_ACCOM_OWNED, RuleIds.PERQ_ACCOM_LEASED,
                 RuleIds.PERQ_ACCOM_HOTEL, RuleIds.PERQ_ACCOM_FURNITURE, RuleIds.PERQ_ACCOM_CONTINUED,
@@ -127,6 +130,7 @@ public final class PerquisiteNode implements ComputationNode {
         trace.addAll(ExpenseBenefitPerquisite.lines(ctx, trace.size() + 1));
         trace.addAll(AssetPerquisite.lines(ctx, trace.size() + 1));
         trace.addAll(HouseholdBenefitPerquisite.lines(ctx, trace.size() + 1));
+        trace.addAll(SpecifiedSecurityPerquisite.lines(ctx, trace.size() + 1));
         Money value = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
                 : new NodeResult(MoneyValue.of(value), trace);
@@ -204,6 +208,8 @@ public final class PerquisiteNode implements ComputationNode {
                     ruleId + " defines a share of a commuted pension, not an index");
             case ExcludedAssets excluded -> throw new IllegalStateException(
                     ruleId + " defines excluded assets, not an index");
+            case DayWindow window -> throw new IllegalStateException(
+                    ruleId + " defines a window of days, not an index");
         };
     }
 

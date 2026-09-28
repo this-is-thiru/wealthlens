@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
@@ -149,6 +150,16 @@ class RuleJsonDefinitionTest {
                         "definition": { "type": "ExcludedAssets", "kinds": [ "TELEVISION" ] }"""))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("MOBILE_PHONE");
+    }
+
+    @Test
+    void version_whenADayWindow_readsTheDays() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "DayWindow", "days": 180 }""");
+
+        // Then
+        assertThat(version.definition()).contains(new DayWindow(180));
     }
 
     @Test

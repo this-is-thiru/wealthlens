@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
@@ -109,6 +110,8 @@ final class LeaveTravelExemption {
                     RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines an index table, not journeys per block");
             case ExcludedAssets excluded -> throw new IllegalStateException(
                     RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines excluded assets, not journeys per block");
+            case DayWindow window -> throw new IllegalStateException(
+                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a window of days, not journeys per block");
         };
     }
 
