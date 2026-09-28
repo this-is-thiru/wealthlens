@@ -156,6 +156,8 @@ class GeneratedConstantsTest {
                             "PERQ-ACCOM-HOTEL",
                             "PERQ-ACCOM-LEASED",
                             "PERQ-ACCOM-OWNED",
+                            "PERQ-MEDABROAD-STAY",
+                            "PERQ-MEDABROAD-TRAVEL",
                             "RATE-HEALTH-EDUCATION-CESS",
                             "RATE-ROUND-PAYABLE",
                             "RATE-ROUND-TOTAL-INCOME",

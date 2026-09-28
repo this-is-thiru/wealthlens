@@ -91,7 +91,9 @@ class TimelineReaderTest {
             new RuleId("PERQ-ACCOM-OWNED"),
             new RuleId("PERQ-ACCOM-LEASED"),
             new RuleId("PERQ-ACCOM-HOTEL"),
-            new RuleId("PERQ-ACCOM-FURNITURE"));
+            new RuleId("PERQ-ACCOM-FURNITURE"),
+            new RuleId("PERQ-MEDABROAD-STAY"),
+            new RuleId("PERQ-MEDABROAD-TRAVEL"));
 
     @TempDir
     Path copy;
@@ -109,7 +111,7 @@ class TimelineReaderTest {
                 .extracting(NodeId::value)
                 .containsExactlyInAnyOrder(
                         "inputs.components", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.deductions",
-                        "salary.income",
+                        "salary.incomebeforetravel", "salary.medicaltravel", "salary.income",
                         "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
     }

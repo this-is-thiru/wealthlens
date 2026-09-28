@@ -80,6 +80,15 @@ order the Act computes in. Rows in **bold** exist in only one regime.
 | 30 | Less TDS and TCS | `TDS-CREDIT-001` | row 21 |
 | 31 | **Round the payable/refundable** | `RATE-ROUND-002` | **rounding point 2 of 2** |
 
+> **Amendment (W-071b, 2026-09-28, D-112):** one step-3 perquisite cannot be valued at step 3. The employer's
+> spending on **travel** abroad for medical treatment is excluded only where gross total income *"as computed
+> before including therein the said expenditure"* does not exceed the prescribed amount (S2 s.17(3)(b); 1961
+> s.17(2) proviso (vi)(B)), and that income is step 19's. The engine therefore values medical treatment abroad
+> (`PERQ-MEDABROAD-STAY`, `-TRAVEL`) after the income before it (`salary.incomebeforetravel`) and adds it into
+> step 12 (`salary.income`). While the salary head is the only head built, that income is the salary head's; once
+> steps 13–18 exist the test must read their total, and the travel must still reach the salary head. The form
+> row order is unaffected.
+
 ### G1.2 The ordering decision that is not obvious
 
 `REBATE-ORDER-001`: steps 25 → 26 → 28. Rebate reduces income-tax before surcharge and cess, because

@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Journey;
 import com.thiru.wealthlens.taxengine.input.JourneyMode;
 import com.thiru.wealthlens.taxengine.input.LeaveAtRetirement;
+import com.thiru.wealthlens.taxengine.input.MedicalTreatmentAbroad;
 import com.thiru.wealthlens.taxengine.input.PopulationBand;
 import com.thiru.wealthlens.taxengine.input.RetirementEntry;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
@@ -22,10 +23,12 @@ import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
 import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
+import com.thiru.wealthlens.taxengine.node.MedicalTreatmentAbroadNode;
 import com.thiru.wealthlens.taxengine.node.PerquisiteNode;
 import com.thiru.wealthlens.taxengine.node.RetirementNode;
 import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
 import com.thiru.wealthlens.taxengine.node.SalaryDeductionNode;
+import com.thiru.wealthlens.taxengine.node.SalaryIncomeBeforeTravelNode;
 import com.thiru.wealthlens.taxengine.node.SalaryIncomeNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
@@ -67,7 +70,8 @@ class SalaryHeadPipelineTest {
     private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final NodeRegistry SALARY_HEAD = NodeRegistry.of(List.of(
             new ComponentPartitionNode(), new GrossSalaryNode(), new SalaryBaseNode(), new ExemptionNode(), new PerquisiteNode(),
-            new RetirementNode(), new SalaryDeductionNode(), new SalaryIncomeNode()));
+            new RetirementNode(), new SalaryDeductionNode(), new SalaryIncomeBeforeTravelNode(),
+            new MedicalTreatmentAbroadNode(), new SalaryIncomeNode()));
     private static final List<RuleId> BASES = List.of(
             RuleIds.SAL_SALARY_FOR_HRA,
             RuleIds.SAL_SALARY_FOR_GRATUITY,
@@ -98,14 +102,14 @@ class SalaryHeadPipelineTest {
             Optional<DisabledTransportClaim> disabledTransport) {
         return run(year, regime, termsIncludeDearnessAllowance,
                 new Entries(tenancies, journeys, allowanceUses, disabledTransport, List.of(), List.of(),
-                        EmployerKind.OTHER, List.of()));
+                        EmployerKind.OTHER, List.of(), List.of()));
     }
 
     /** What a case enters beyond the base pay. */
     private record Entries(List<Tenancy> tenancies, List<Journey> journeys, List<AllowanceUse> allowanceUses,
             Optional<DisabledTransportClaim> disabledTransport, List<SalaryComponent> otherPay,
             List<RetirementPayment> retirementPayments, EmployerKind employerKind,
-            List<EmployerAccommodation> accommodations) {
+            List<EmployerAccommodation> accommodations, List<MedicalTreatmentAbroad> medicalTreatmentAbroad) {
     }
 
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
@@ -118,7 +122,8 @@ class SalaryHeadPipelineTest {
                 shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
                 new PipelineSpec(List.of(NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_BASE, NodeIds.SALARY_EXEMPTIONS,
                         NodeIds.SALARY_PERQUISITES, NodeIds.SALARY_GROSS, NodeIds.SALARY_RETIREMENT,
-                        NodeIds.SALARY_DEDUCTIONS, NodeIds.SALARY_INCOME)),
+                        NodeIds.SALARY_DEDUCTIONS, NodeIds.SALARY_INCOMEBEFORETRAVEL, NodeIds.SALARY_MEDICALTRAVEL,
+                        NodeIds.SALARY_INCOME)),
                 shipped.behaviour(), shipped.provenance());
         List<SalaryComponent> pay = new java.util.ArrayList<>(List.of(
                 new SalaryComponent(ComponentCodes.BASIC, Money.of("600000")),
@@ -140,7 +145,7 @@ class SalaryHeadPipelineTest {
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), entries.tenancies(), entries.journeys(),
                         entries.allowanceUses(), entries.disabledTransport(), entries.retirementPayments(),
-                        entries.accommodations()),
+                        entries.accommodations(), entries.medicalTreatmentAbroad()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
@@ -302,7 +307,7 @@ class SalaryHeadPipelineTest {
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
                 Optional.empty(), leaving,
-                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), EmployerKind.OTHER, List.of()));
+                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), EmployerKind.OTHER, List.of(), List.of()));
 
         // Then — gross 9,00,000 + 8,00,000 + 1,00,000 = 18,00,000; retirement 5,00,000; standard deduction 75,000;
         // income 12,25,000; notice pay taxed in full
@@ -320,7 +325,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, new Entries(List.of(), List.of(),
-                List.of(), Optional.empty(), entertainment, List.of(), EmployerKind.GOVERNMENT, List.of()));
+                List.of(), Optional.empty(), entertainment, List.of(), EmployerKind.GOVERNMENT, List.of(), List.of()));
 
         // Then — gross 9,10,000 both years. TY 2025-26: 2,500 + 50,000 + least of 6,00,000 ÷ 5 and 5,000 = 57,500,
         // income 8,52,500 (1961 s.16(ii)); TY 2026-27: 52,500, income 8,57,500 — the 2025 Act has no such deduction
@@ -341,7 +346,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(),
-                List.of(), Optional.empty(), leave, List.of(encashment), EmployerKind.OTHER, List.of()));
+                List.of(), Optional.empty(), leave, List.of(encashment), EmployerKind.OTHER, List.of(), List.of()));
 
         // Then — gross 9,00,000 + 8,00,000 = 17,00,000; least of 8,00,000, 9,00,000, 10,00,000, 25,00,000 = 8,00,000;
         // standard deduction 75,000; income 8,25,000
@@ -360,7 +365,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, new Entries(List.of(), List.of(),
-                List.of(), Optional.empty(), retrenchment, List.of(compensation), EmployerKind.OTHER, List.of()));
+                List.of(), Optional.empty(), retrenchment, List.of(compensation), EmployerKind.OTHER, List.of(), List.of()));
 
         // Then — gross 17,00,000; retirement least of 8,00,000, 6,00,000, 5,00,000 = 5,00,000; deductions 2,500 +
         // 50,000; income 17,00,000 − 5,00,000 − 52,500 = 11,47,500
@@ -379,12 +384,47 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
-                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(home)));
+                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(home), List.of()));
 
         // Then — pay 9,00,000 (basic 6,00,000 + DA 60,000 + HRA 2,40,000); the accommodation salary counts basic and
         // HRA but not DA (it does not count for retirement here): 8,40,000; 10% = 84,000 less 24,000 = 60,000;
         // gross 9,60,000
         assertThat(result.valueOf(NodeIds.SALARY_PERQUISITES)).isEqualTo(MoneyValue.of(Money.of("60000")));
         assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("960000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenTheEmployerPaysForTreatmentAbroadAboveTheThreshold_incomeUnderSalariesRisesInTheNewRegime(int year) {
+        // Given — treatment and stay 6,00,000 of which the Reserve Bank permitted 5,00,000; travel 1,50,000 (D-112)
+        MedicalTreatmentAbroad claim = new MedicalTreatmentAbroad(
+                0, Money.of("600000"), Money.of("150000"), Money.of("500000"), 1);
+
+        // When
+        PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
+                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(claim)));
+
+        // Then — before the travel 9,00,000 − 75,000 = 8,25,000, above 8,00,000, so the travel is salary: 6,00,000
+        // − 5,00,000 = 1,00,000, plus 1,50,000 = 2,50,000; income 8,25,000 + 2,50,000 = 10,75,000
+        assertThat(result.valueOf(NodeIds.SALARY_INCOMEBEFORETRAVEL)).isEqualTo(MoneyValue.of(Money.of("825000")));
+        assertThat(result.valueOf(NodeIds.SALARY_MEDICALTRAVEL)).isEqualTo(MoneyValue.of(Money.of("250000")));
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("1075000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void run_whenTheEmployerPaysForTreatmentAbroadAboveTheThreshold_incomeUnderSalariesRisesOutsideTheNewRegime(
+            int year) {
+        // Given — as above (D-112)
+        MedicalTreatmentAbroad claim = new MedicalTreatmentAbroad(
+                0, Money.of("600000"), Money.of("150000"), Money.of("500000"), 1);
+
+        // When
+        PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, new Entries(List.of(), List.of(),
+                List.of(), Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(claim)));
+
+        // Then — before the travel 9,00,000 − 52,500 = 8,47,500, above 8,00,000; income 8,47,500 + 2,50,000
+        // = 10,97,500
+        assertThat(result.valueOf(NodeIds.SALARY_INCOME)).isEqualTo(MoneyValue.of(Money.of("1097500")));
     }
 }

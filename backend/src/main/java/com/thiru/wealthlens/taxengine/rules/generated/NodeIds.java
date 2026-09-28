@@ -23,6 +23,8 @@ public final class NodeIds {
     public static final NodeId SALARY_EXEMPTIONS = new NodeId("salary.exemptions");
     public static final NodeId SALARY_GROSS = new NodeId("salary.gross");
     public static final NodeId SALARY_INCOME = new NodeId("salary.income");
+    public static final NodeId SALARY_INCOMEBEFORETRAVEL = new NodeId("salary.incomebeforetravel");
+    public static final NodeId SALARY_MEDICALTRAVEL = new NodeId("salary.medicaltravel");
     public static final NodeId SALARY_PERQUISITES = new NodeId("salary.perquisites");
     public static final NodeId SALARY_RETIREMENT = new NodeId("salary.retirement");
     public static final NodeId TAX_AFTERREBATE = new NodeId("tax.afterrebate");

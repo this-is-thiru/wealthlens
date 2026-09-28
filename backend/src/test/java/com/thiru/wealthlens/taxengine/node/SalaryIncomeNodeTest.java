@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
@@ -18,93 +17,49 @@ import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
 import java.util.Set;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 
 /**
- * Income under "Salaries" (S2 s.19(1): "computed after making the deductions"; D-096): gross salary less the
- * deductions from salary, untraced because both already carry their lines. The amounts are fixtures; each
- * difference is worked by hand.
+ * Income under "Salaries": the income before medical travel abroad plus the part of it that is salary (D-112),
+ * untraced because both already carry their lines.
  */
 class SalaryIncomeNodeTest {
 
-    private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
+    private static final RegimeCode NEW_TAX_REGIME = new RegimeCode("NEW_TAX_REGIME");
 
-    private static NodeResult run(int year, String gross, String deductions) {
-        return run(year, gross, "0", deductions);
-    }
-
-    private static NodeResult run(int year, String gross, String exemptions, String deductions) {
-        return run(year, gross, exemptions, "0", deductions);
-    }
-
-    private static NodeResult run(int year, String gross, String exemptions, String retirement, String deductions) {
-        TaxYearId taxYear = TaxYearId.of(year);
+    private static NodeResult run(String beforeTravel, String medicalTravel) {
+        TaxYearId taxYear = TaxYearId.of(2026);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
         EngineInputs plain = NodeHarness.plainTaxpayer();
-        EngineInputs inputs = new EngineInputs(taxYear, FIRST_SCHEDULE_RATES,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), plain.entered(), plain.assessee(),
+        EngineInputs inputs = new EngineInputs(taxYear, NEW_TAX_REGIME,
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(2026, 9, 21)), plain.entered(), plain.assessee(),
                 plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack)
-                .regime(FIRST_SCHEDULE_RATES)
+                .regime(NEW_TAX_REGIME)
                 .inputs(inputs)
-                .given(NodeIds.SALARY_GROSS, MoneyValue.of(Money.of(gross)))
-                .given(NodeIds.SALARY_EXEMPTIONS, MoneyValue.of(Money.of(exemptions)))
-                .given(NodeIds.SALARY_RETIREMENT, MoneyValue.of(Money.of(retirement)))
-                .given(NodeIds.SALARY_DEDUCTIONS, MoneyValue.of(Money.of(deductions)))
+                .given(NodeIds.SALARY_INCOMEBEFORETRAVEL, MoneyValue.of(Money.of(beforeTravel)))
+                .given(NodeIds.SALARY_MEDICALTRAVEL, MoneyValue.of(Money.of(medicalTravel)))
                 .run(new SalaryIncomeNode());
     }
 
-    @ParameterizedTest(name = "TY {0}")
-    @ValueSource(ints = {2025, 2026})
-    void evaluate_whenDeductionsAreBelowGross_isGrossLessDeductions(int year) {
+    @Test
+    void evaluate_whenMedicalTravelIsSalary_addsItToTheIncomeBeforeIt() {
         // When
-        NodeResult result = run(year, "900000", "52500");
+        NodeResult result = run("825000", "250000");
 
-        // Then — 9,00,000 − 52,500 = 8,47,500, with no line of its own
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("847500")));
+        // Then — 8,25,000 + 2,50,000 = 10,75,000, with no line of its own
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1075000")));
         assertThat(result.trace()).isEmpty();
     }
 
-    @ParameterizedTest(name = "TY {0}")
-    @ValueSource(ints = {2025, 2026})
-    void evaluate_whenAnExemptionIsGiven_takesItOffWithTheDeductions(int year) {
-        // When — D-099: 15,60,000 − 2,28,000 (HRA) − 52,500 = 12,79,500
-        NodeResult result = run(year, "1560000", "228000", "52500");
-
-        // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1279500")));
-    }
-
-    @ParameterizedTest(name = "TY {0}")
-    @ValueSource(ints = {2025, 2026})
-    void evaluate_whenARetirementDeductionIsGiven_takesItOffToo(int year) {
-        // When — D-103: 25,00,000 − 2,28,000 (HRA) − 5,00,000 (voluntary retirement) − 52,500 = 17,19,500
-        NodeResult result = run(year, "2500000", "228000", "500000", "52500");
-
-        // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1719500")));
-    }
-
-    @ParameterizedTest(name = "TY {0}")
-    @ValueSource(ints = {2025, 2026})
-    void evaluate_whenNothingIsEntered_isNil(int year) {
+    @Test
+    void evaluate_whenThereIsNoMedicalTravel_isTheIncomeBeforeIt() {
         // When
-        NodeResult result = run(year, "0", "0");
+        NodeResult result = run("825000", "0");
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-    }
-
-    @ParameterizedTest(name = "TY {0}")
-    @ValueSource(ints = {2025, 2026})
-    void evaluate_whenDeductionsExceedGross_isRefusedNamingBoth(int year) {
-        // When / Then — 1,000 of salary against 2,500 of professional tax: the Act gives no loss under "Salaries"
-        assertThatThrownBy(() -> run(year, "1000", "3500"))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("1000")
-                .hasMessageContaining("3500");
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("825000")));
     }
 }

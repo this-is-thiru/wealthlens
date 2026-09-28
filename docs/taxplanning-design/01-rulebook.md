@@ -726,6 +726,15 @@ provenance flag**, so that if a clarification lands the change is one data row.
 | `PERQ-ESOP-002` | An **eligible start-up** under s.140 may **defer** deduction or payment of tax on s.17(1)(d) income to the timing in s.289(3). | s.192(1C) | **s.392(3)** | VERIFIED (S2, s.392(3)) |
 | `PERQ-TAXPAID-001` | Where the employer **pays the tax on a non-monetary perquisite** at its own option, that tax is **not included** in the employee's income. | s.10(10CC) | **Sch. III Table Sl. 10** | VERIFIED (S2, Sch. III Sl. 10) |
 
+> **Addendum (W-071b, 2026-09-28, D-112):** both prescribed amounts are now read, and are the same in both years.
+> `PERQ-SPECEMP-001`: TY 2026-27 S4 r.17, *"₹ 400000"* (p.1549); TY 2025-26 Rules 1962 **r.3C**, *"four lakh
+> rupees"*. `PERQ-MEDABROAD-001`: TY 2026-27 S4 r.19, *"₹ 800000"* (p.1550); TY 2025-26 Rules 1962 **r.3D**,
+> *"eight lakh rupees"*. r.3C and r.3D were inserted by the Income-tax (Twenty Second Amendment) Rules, 2025,
+> G.S.R. 555(E) of 18-8-2025, in force on publication, before AY 2026-27 began.
+>
+> Verified by: Gazette CG-DL-E-18082025-265477 p.2; Gazette CG-DL-E-20032026-271092 pp.1549–1550;
+> `docs/taxplanning-build/sources/2026-09-28-perquisite-thresholds.md`.
+
 ### `PERQ-CAR-2026` — motor car, TY 2026-27 (Rules 2026 r. *(perquisite valuation rule)* Table II, **per calendar month**)
 
 | Circumstance | ≤ 1.6 litres **or electric vehicle** | > 1.6 litres |

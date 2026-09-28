@@ -20,6 +20,8 @@ public final class RuleIds {
     public static final RuleId PERQ_ACCOM_HOTEL = new RuleId("PERQ-ACCOM-HOTEL");
     public static final RuleId PERQ_ACCOM_LEASED = new RuleId("PERQ-ACCOM-LEASED");
     public static final RuleId PERQ_ACCOM_OWNED = new RuleId("PERQ-ACCOM-OWNED");
+    public static final RuleId PERQ_MEDABROAD_STAY = new RuleId("PERQ-MEDABROAD-STAY");
+    public static final RuleId PERQ_MEDABROAD_TRAVEL = new RuleId("PERQ-MEDABROAD-TRAVEL");
     public static final RuleId RATE_HEALTH_EDUCATION_CESS = new RuleId("RATE-HEALTH-EDUCATION-CESS");
     public static final RuleId RATE_ROUND_PAYABLE = new RuleId("RATE-ROUND-PAYABLE");
     public static final RuleId RATE_ROUND_TOTAL_INCOME = new RuleId("RATE-ROUND-TOTAL-INCOME");

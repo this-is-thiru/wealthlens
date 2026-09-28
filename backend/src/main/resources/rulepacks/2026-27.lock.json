@@ -3,12 +3,12 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.26",
-      "checksum": "sha256:ad2fcc4778ab0c8ee4d38476ba514df5819dc5f60a153b840adda09fe5e0dd42"
+      "version": "2026-27.law.27",
+      "checksum": "sha256:42f4b56b3f766aed80f61d1f3ec42806e9830b0dd9601717e081e26085b0eb87"
     },
     "exec": {
-      "version": "2026-27.exec.16",
-      "checksum": "sha256:e82f1c94ae910d27bfcab2004b8d86aa386f58cba080b1346514794115ea9029"
+      "version": "2026-27.exec.17",
+      "checksum": "sha256:414af827766b35e676afeb3745b3b13e0d2b6a97c466b269111bd1770614cce9"
     },
     "forms": {
       "version": "2026-27.forms.2",
@@ -25,6 +25,8 @@
     "PERQ-ACCOM-HOTEL": "sha256:4e41f3d485a3099379ff9e08111865bed9c1b08e7a1da20c765ebe175a01c87f",
     "PERQ-ACCOM-LEASED": "sha256:d34e8ffcf3cf07fd7477065ee095a4d8271e2e3e9e2106a5146b31fbdafaa948",
     "PERQ-ACCOM-OWNED": "sha256:4e618d8d506886fc3005a81c930f0c590566e61994dd5575c150d8aec6b9c5e9",
+    "PERQ-MEDABROAD-STAY": "sha256:a469faac3534e4e0cbf81f46d3abccec163b245a6a8804b79b4ad7dd5fd08015",
+    "PERQ-MEDABROAD-TRAVEL": "sha256:11ef3b0cae29584064969c226e74b26bc5b686a6e3827764a534cb1c4ae5268f",
     "RATE-HEALTH-EDUCATION-CESS": "sha256:d6f953a0c317f70511d8f4fd49437d97eede06a2b07463e4a1c1065e11353eb6",
     "RATE-ROUND-PAYABLE": "sha256:6e4f12089cee93e85c495291deea38aeb85e7958dd507b7a9f5ce7c021146d52",
     "RATE-ROUND-TOTAL-INCOME": "sha256:616c41c94b7c08e82d7efe3301fbc36ac1c88641289ae37fd6a38557dd58c4f7",

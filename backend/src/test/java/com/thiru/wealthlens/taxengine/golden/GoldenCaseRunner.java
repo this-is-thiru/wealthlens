@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
 import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
+import com.thiru.wealthlens.taxengine.node.MedicalTreatmentAbroadNode;
 import com.thiru.wealthlens.taxengine.node.NetPayableNode;
 import com.thiru.wealthlens.taxengine.node.PerquisiteNode;
 import com.thiru.wealthlens.taxengine.node.RebateNode;
@@ -17,6 +18,7 @@ import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
 import com.thiru.wealthlens.taxengine.node.RoundTotalIncomeNode;
 import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
 import com.thiru.wealthlens.taxengine.node.SalaryDeductionNode;
+import com.thiru.wealthlens.taxengine.node.SalaryIncomeBeforeTravelNode;
 import com.thiru.wealthlens.taxengine.node.SalaryIncomeNode;
 import com.thiru.wealthlens.taxengine.node.SurchargeNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
@@ -67,6 +69,8 @@ final class GoldenCaseRunner {
             new PerquisiteNode(),
             new RetirementNode(),
             new SalaryDeductionNode(),
+            new SalaryIncomeBeforeTravelNode(),
+            new MedicalTreatmentAbroadNode(),
             new SalaryIncomeNode(),
             new RoundTotalIncomeNode(),
             new TaxByBasisNode(),
@@ -128,7 +132,7 @@ final class GoldenCaseRunner {
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER, false)),
-                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of(), List.of()),
+                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);

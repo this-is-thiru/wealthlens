@@ -70,6 +70,8 @@
       "salary.gross",
       "salary.retirement",
       "salary.deductions",
+      "salary.incomebeforetravel",
+      "salary.medicaltravel",
       "salary.income",
       "totalincome",
       "round.totalincome",

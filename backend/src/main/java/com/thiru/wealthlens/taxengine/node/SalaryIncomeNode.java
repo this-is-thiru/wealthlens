@@ -11,12 +11,10 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.Set;
 
 /**
- * Income under "Salaries": gross salary less the exemptions, the retirement deductions and the other deductions
- * from salary (S2 s.19(1), "computed after making the deductions"; {@code DR 06} G1.1 step 12; D-096, D-099, D-103).
+ * Income under "Salaries": the income before medical travel abroad, plus the part of an employer's spending on
+ * medical treatment abroad that is a perquisite (S2 s.19(1); s.17(2)(f), (3); 1961 s.17(2) proviso (vi); D-112).
  *
- * <p>Untraced, as {@code NetPayableNode} is: both figures already carry their lines, and no rule states their
- * difference. A result below zero is refused rather than floored: the Act has no loss under this
- * head, so a negative figure means the entries are wrong, and hiding it as nil would pass that on.
+ * <p>Untraced, as {@code NetPayableNode} is: both figures already carry their lines, and no rule states their sum.
  */
 public final class SalaryIncomeNode implements ComputationNode {
 
@@ -27,8 +25,7 @@ public final class SalaryIncomeNode implements ComputationNode {
 
     @Override
     public Set<NodeId> requires() {
-        return Set.of(NodeIds.SALARY_GROSS, NodeIds.SALARY_EXEMPTIONS, NodeIds.SALARY_RETIREMENT,
-                NodeIds.SALARY_DEDUCTIONS);
+        return Set.of(NodeIds.SALARY_INCOMEBEFORETRAVEL, NodeIds.SALARY_MEDICALTRAVEL);
     }
 
     @Override
@@ -38,16 +35,8 @@ public final class SalaryIncomeNode implements ComputationNode {
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
-        Money gross = ctx.get(NodeIds.SALARY_GROSS, MoneyValue.class).asMoney();
-        Money exemptions = ctx.get(NodeIds.SALARY_EXEMPTIONS, MoneyValue.class).asMoney();
-        Money retirement = ctx.get(NodeIds.SALARY_RETIREMENT, MoneyValue.class).asMoney();
-        Money deductions = ctx.get(NodeIds.SALARY_DEDUCTIONS, MoneyValue.class).asMoney();
-        Money taken = exemptions.plus(retirement).plus(deductions);
-        if (taken.isGreaterThan(gross)) {
-            throw new IllegalStateException("The exemptions (" + exemptions + "), retirement deductions ("
-                    + retirement + ") and deductions from salary (" + deductions + ") exceed gross salary (" + gross
-                    + "); the Act has no loss under \"Salaries\", so the entries need correcting");
-        }
-        return NodeResult.untraced(MoneyValue.of(gross.minus(taken)));
+        Money beforeTravel = ctx.get(NodeIds.SALARY_INCOMEBEFORETRAVEL, MoneyValue.class).asMoney();
+        Money medicalTravel = ctx.get(NodeIds.SALARY_MEDICALTRAVEL, MoneyValue.class).asMoney();
+        return NodeResult.untraced(MoneyValue.of(beforeTravel.plus(medicalTravel)));
     }
 }
