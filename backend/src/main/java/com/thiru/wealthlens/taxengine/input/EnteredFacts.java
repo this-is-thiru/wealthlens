@@ -38,7 +38,8 @@ import java.util.Optional;
  * employers provide with its perquisite (D-111), medical treatment abroad with its exclusion (D-112), the vehicles
  * with the car perquisite (D-113), meals and gifts with theirs (D-117), loans with
  * theirs (D-118), the cost-based benefits and assets with theirs (D-119), household services, utilities and
- * education with theirs (D-120), share allotments with theirs (D-121). Every later
+ * education with theirs (D-120), share allotments with theirs (D-121), employer
+ * retirement contributions with the aggregate charge (D-126). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -60,6 +61,7 @@ import java.util.Optional;
  * @param householdBenefits each service, utility, education fee or carrier's journey, in the order entered
  * @param childEducation each child's education in the employer's institution or free by employment, in order
  * @param shareAllotments each allotment of specified securities or sweat equity, in the order entered
+ * @param employerContributions each employer contribution to a retirement fund in the year, in the order entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -79,7 +81,8 @@ public record EnteredFacts(
         List<EmployerAssetTransfer> assetsTransferred,
         List<EmployerHouseholdBenefit> householdBenefits,
         List<EmployerChildEducation> childEducation,
-        List<EmployerShareAllotment> shareAllotments) {
+        List<EmployerShareAllotment> shareAllotments,
+        List<EmployerFundContribution> employerContributions) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -103,6 +106,7 @@ public record EnteredFacts(
         householdBenefits = copied(householdBenefits, "householdBenefits");
         childEducation = copied(childEducation, "childEducation");
         shareAllotments = copied(shareAllotments, "shareAllotments");
+        employerContributions = copied(employerContributions, "employerContributions");
     }
 
     /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
@@ -118,6 +122,6 @@ public record EnteredFacts(
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of());
     }
 }

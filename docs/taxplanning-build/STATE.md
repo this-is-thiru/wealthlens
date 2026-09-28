@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-071g — "taxplanning W-071g: record that tax an employer pays on a non-monetary perquisite is not income — nothing to compute, the 2025 reading left open (D-124)"
-Last updated              : 2026-09-28 (session 10 — W-071g done, W-071 complete; build GREEN, 2340 tests)
-Current position          : W-073 — EmployerContributionNode (not started)
+Last checkpoint           : W-073a — "taxplanning W-073a: add the aggregate employer contribution — PF, NPS and superannuation together beyond seven lakh fifty thousand, salary on a line of its own (D-126)"
+Last updated              : 2026-09-28 (session 10 — W-073a done; build GREEN, 2350 tests)
+Current position          : W-074 — T4 golden tests (not started); W-073b/c BLOCKED on sourcing
 Session count             : 9
 ```
 
@@ -56,7 +56,7 @@ Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
 Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-066b D  W-067a D  W-067 D  W-068a D  W-068 D  W-069a D  W-069 D  W-069b D  W-066a D  W-070 D  W-064a D  W-066c D  W-063a D  W-066d D
-Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f E  W-071g D  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
+Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f E  W-071g D  W-073 —  W-073a D  W-073b B  W-073c B  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
 Phase 11   W-096 ·  W-097 ·  W-098 ·  W-099 ·  W-100 ·  W-101 ·  W-102 ·  W-103 ·  W-104 ·  W-105 ·  W-106 ·  W-107 ·  W-108 ·  W-109 ·  W-110 ·  W-111 ·
@@ -451,6 +451,8 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-126 | 2026-09-28 | `W-073a`: the aggregate employer contribution | **C1:** `EnteredFacts.employerContributions` — `EmployerFundContribution` (employment; fund RECOGNISED_PROVIDENT_FUND / NOTIFIED_PENSION_SCHEME / APPROVED_SUPERANNUATION_FUND; amount). **C2:** `EmployerContributionNode` → `employer.contrib.charges`, added by `GrossSalaryNode` on its own line. **C3:** `PERQ-EMPLOYER-CONTRIBUTION` — `AmountInExcess` over `Fixed` 7,50,000, strict, all employments together. **C4:** both pipelines, before `salary.gross`. **C5:** TY 2026-27 `SOURCE_CHECKED`, TY 2025-26 `UNVERIFIED` (interim FA 2024) | owner: "W-073a approved — proceed as recommended"; "W-073a approved" (2026-09-28) |
+| D-125 | 2026-09-28 | `W-073`: employer retirement contributions split | **C1:** `W-073` becomes **`W-073a`** (the aggregate employer contribution over ₹7,50,000 — S2 s.17(1)(h); 1961 s.17(2)(vii) as substituted by FA 2020 s.13; placed now), **`W-073b`** (the accretion — S2 s.17(1)(i), S4 r.16; 1961 s.17(2)(viia), Rules 1962 r.3B — after sourcing r.3B), **`W-073c`** (recognised-fund contributions over 12% of salary and interest over the notified rate — Sch. XI Pt A para 6; 1961 Sch. IV Pt A r.6 — after sourcing the notified rate); `PF-EEINT-001` moved to **`W-079`** (other sources). **C2:** the aggregate across employments. **C3:** r.16's "₹ 750000 lakhs" read as ₹7,50,000. **C4:** 073a TY 2026-27 `SOURCE_CHECKED`, TY 2025-26 `UNVERIFIED` (interim FA 2024 unread) | owner: "W-073 approved — proceed as recommended; place 073a now, 073b and 073c after sourcing, PF-EEINT-001 with other sources" |
 | D-124 | 2026-09-28 | `W-071g`: tax paid by the employer on a non-monetary perquisite | **C1a:** no engine change — the tax is never counted as income (no input or component carries it); the catalogue route "Tax your employer pays on a benefit" states so, `NotModelled` with that reason; coverage unchanged (per section). **C2a:** the design's reading — the tax is excluded, the perquisite stays — both years; the literal 2025 reading is OQ-13 | owner: "W-071g approved — proceed as recommended"; "W-071g approved" (2026-09-28) |
 | D-123 | 2026-09-28 | `W-071e4`: the Table IV page citations | **C1:** each of the 18 rows cites its own serial and page in `sourceDescription`, `headProvenance` and its `_note` — Sl. 1–2 p.1545; Sl. 3 pp.1545–1546; Sl. 4–6 p.1546; Sl. 7 pp.1546–1547; Sl. 8–9, (5)(b) p.1547; r.15(8)(e) p.1548. No figure changes | owner: "W-071e4 approved — proceed as recommended"; "W-071e4 approved" (2026-09-28) |
 | D-122 | 2026-09-28 | Placement of the Table IV page-citation correction | New item **`W-071e4`** — the 18 Table IV rows of W-071e1–e3 cite Gazette p.1546 for every serial; correct each to its page (Sl. 1–2 p.1545, Sl. 8–9 and (5)(b) p.1547, r.15(8)(e) p.1548). Placed next, before `W-071g` | owner: "Own item next (Recommended)" |

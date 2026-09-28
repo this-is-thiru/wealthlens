@@ -94,11 +94,16 @@ class GrossSalaryNodeTest {
     }
 
     private static NodeResult run(int year, ComponentSet components, Money perquisites) {
+        return run(year, components, perquisites, Money.ZERO);
+    }
+
+    private static NodeResult run(int year, ComponentSet components, Money perquisites, Money contributions) {
         return NodeHarness.with(pack(year))
                 .regime(NEW_TAX_REGIME)
                 .inputs(inYear(year))
                 .given(NodeIds.INPUTS_COMPONENTS, components)
                 .given(NodeIds.SALARY_PERQUISITES, MoneyValue.of(perquisites))
+                .given(NodeIds.EMPLOYER_CONTRIB_CHARGES, MoneyValue.of(contributions))
                 .run(new GrossSalaryNode());
     }
 
@@ -187,5 +192,16 @@ class GrossSalaryNodeTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(pay.plus(Money.of("96000"))));
         assertThat(result.trace()).hasSize(2);
         assertThat(result.trace().get(1).out()).isEqualTo(MoneyValue.of(Money.of("96000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenEmployerContributionsExceedTheLimit_addsTheExcessOnALineOfItsOwn(int year) {
+        // When — pay 11,40,000 across two employments, perquisites 60,000, contributions beyond the limit 74,000
+        NodeResult result = run(year, TWO_EMPLOYMENTS, Money.of("60000"), Money.of("74000"));
+
+        // Then — 11,40,000 + 60,000 + 74,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1274000")));
+        assertThat(result.trace()).hasSize(3);
     }
 }

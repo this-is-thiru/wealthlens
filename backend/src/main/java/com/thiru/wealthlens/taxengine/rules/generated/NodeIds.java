@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
  */
 public final class NodeIds {
 
+    public static final NodeId EMPLOYER_CONTRIB_CHARGES = new NodeId("employer.contrib.charges");
     public static final NodeId INPUTS_COMPONENTS = new NodeId("inputs.components");
     public static final NodeId ROUND_NETPAYABLE = new NodeId("round.netpayable");
     public static final NodeId ROUND_TOTALINCOME = new NodeId("round.totalincome");

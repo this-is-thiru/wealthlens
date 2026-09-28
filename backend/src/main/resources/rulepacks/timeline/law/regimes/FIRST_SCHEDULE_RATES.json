@@ -82,6 +82,7 @@
       "salary.retirement",
       "salary.monetaryincome",
       "salary.perquisites",
+      "employer.contrib.charges",
       "salary.gross",
       "salary.deductions",
       "salary.incomebeforetravel",

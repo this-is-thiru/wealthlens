@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
+import com.thiru.wealthlens.taxengine.node.EmployerContributionNode;
 import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
 import com.thiru.wealthlens.taxengine.node.MedicalTreatmentAbroadNode;
@@ -64,6 +65,7 @@ final class GoldenCaseRunner {
     /** Every node built so far, the real ones. */
     private static final List<ComputationNode> BUILT = List.of(
             new ComponentPartitionNode(),
+            new EmployerContributionNode(),
             new GrossSalaryNode(),
             new SalaryBaseNode(),
             new ExemptionNode(),
@@ -134,7 +136,7 @@ final class GoldenCaseRunner {
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER, false, Optional.empty())),
-                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()),
+                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);

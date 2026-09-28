@@ -131,7 +131,8 @@ class TimelineReaderTest {
             new RuleId("PERQ-EDUCATION-FREE"),
             new RuleId("PERQ-CARRIER-TRAVEL"),
             new RuleId("PERQ-SPECIFIED-SECURITY"),
-            new RuleId("PERQ-SPECIFIED-DATE"));
+            new RuleId("PERQ-SPECIFIED-DATE"),
+            new RuleId("PERQ-EMPLOYER-CONTRIBUTION"));
 
     @TempDir
     Path copy;
@@ -148,7 +149,7 @@ class TimelineReaderTest {
         assertThat(timeline.pipelineNodes().keySet())
                 .extracting(NodeId::value)
                 .containsExactlyInAnyOrder(
-                        "inputs.components", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.monetaryincome", "salary.deductions",
+                        "inputs.components", "employer.contrib.charges", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.monetaryincome", "salary.deductions",
                         "salary.incomebeforetravel", "salary.medicaltravel", "salary.income",
                         "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");

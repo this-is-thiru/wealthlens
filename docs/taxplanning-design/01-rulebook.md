@@ -881,6 +881,13 @@ See `T9`.
 | `PF-WITHDRAW-001` | The accumulated balance is excluded where the employee rendered **five years or more** of continuous service, or service ended through ill-health, closure or a cause beyond the employee's control, or the balance is transferred to the new employer's fund. | Sch. IV Pt A r.8 | **Sch. XI Part A para 8** | applies | applies | VERIFIED (S2, Sch. XI Pt A para 8) |
 | `PF-WITHDRAW-TDS-001` | Where para 8 does **not** apply, EPF trustees deduct tax at **10%** on payment of the accumulated balance where the aggregate is **₹50,000 or more**. | s.192A | **s.392(7)** | 10% / ₹50,000 | 10% / ₹50,000 | VERIFIED for TY 2026-27 (S2, s.392(7)) |
 
+> **Addendum (W-073a, 2026-09-28, D-126):** `PF-AGGCAP-001`'s TY 2025-26 figure is now read in the Gazette —
+> 1961 s.17(2)(vii) as substituted by the **Finance Act, 2020 s.13** (CG-DL-E-27032020-218938, p.21), "seven lakh and
+> fifty thousand rupees", with the scheme of s.80CCD(1) — and built as `PERQ-EMPLOYER-CONTRIBUTION` (both years,
+> across employments, strict). `PF-AGGCAP-002` (W-073b) waits on Rules 1962 r.3B; S4's formula is **r.16**
+> (pp.1548–1549), whose "₹ 750000 lakhs" is a slip for ₹7,50,000. `PF-RPF12-001` (W-073c) waits on the notified rate.
+> `PF-EEINT-001` moved to W-079 (other sources).
+
 ### `DED-NPS-EMP-001` — employer NPS, the deduction side
 
 | Rule ID | Statement | 2025-Act | TY 2026-27 | Status |

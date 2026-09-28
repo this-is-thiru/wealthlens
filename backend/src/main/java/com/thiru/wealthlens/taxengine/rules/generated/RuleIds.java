@@ -44,6 +44,7 @@ public final class RuleIds {
     public static final RuleId PERQ_CREDIT_CARD = new RuleId("PERQ-CREDIT-CARD");
     public static final RuleId PERQ_EDUCATION = new RuleId("PERQ-EDUCATION");
     public static final RuleId PERQ_EDUCATION_FREE = new RuleId("PERQ-EDUCATION-FREE");
+    public static final RuleId PERQ_EMPLOYER_CONTRIBUTION = new RuleId("PERQ-EMPLOYER-CONTRIBUTION");
     public static final RuleId PERQ_GIFT = new RuleId("PERQ-GIFT");
     public static final RuleId PERQ_HOLIDAY = new RuleId("PERQ-HOLIDAY");
     public static final RuleId PERQ_LOAN = new RuleId("PERQ-LOAN");
