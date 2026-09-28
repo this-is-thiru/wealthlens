@@ -819,6 +819,16 @@ is **NEEDS VERIFICATION**; re-read S4 Table I Sl. 1 and 2(a).
 > Verified by: `docs/taxplanning-build/sources/2026-09-28-perquisite-thresholds.md` T4–T6, U1–U3; S4 r.15(2)(d), (g).
 
 ### `PERQ-LOAN-2026`, `PERQ-PHONE-2026`
+
+> **Addendum (W-071e2, 2026-09-28, D-118):** `PERQ-LOAN-2026` is now read and built (`PERQ-LOAN`,
+> `PERQ-LOAN-PETTY`) — S4 **r.15(5) Table IV Sl. 1** (Gazette 271092, p.1546): interest at the State Bank of India's
+> rate for the same purpose on the first day of the tax year, on the "maximum outstanding monthly balance" (each
+> month-end balance, r.15(8)(e)), less interest paid; nil for loans for rule 18 diseases (save what medical insurance
+> reimbursed) or where the loans do not exceed **₹2,00,000** in aggregate. TY 2025-26: Rules 1962 r.3(7)(i) — rule 3A
+> and **twenty thousand rupees** (consolidated rule 3). The Bank's rate is entered, not seeded; one month's interest
+> per balance and the petty test on amounts lent per employer are readings (D-118 C2a, C3a). `PERQ-PHONE-2026`:
+> telephones are excluded from Table IV Sl. 9 and r.3(7)(ix) in both years — W-071e3.
+
 **NEEDS VERIFICATION** — interest-free/concessional loan valuation and telephone treatment were not
 located in the extracted text. Re-read S4's Table III in full and the perquisite rule's remaining
 sub-rules. `FACT (S2, s.17(2)(e))`: employer expenditure on the employee's **commute** between

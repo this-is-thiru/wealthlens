@@ -51,6 +51,8 @@ class GeneratedConstantsTest {
             "PERQ-CAR-PARTLY-SMALL",
             "PERQ-CAR-PRIVATE",
             "PERQ-GIFT",
+            "PERQ-LOAN",
+            "PERQ-LOAN-PETTY",
             "PERQ-MEAL",
             "PERQ-MEAL-AT-WORK",
             "PERQ-MEAL-VOUCHER",

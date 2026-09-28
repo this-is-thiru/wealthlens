@@ -110,7 +110,9 @@ class TimelineReaderTest {
             new RuleId("PERQ-MEAL"),
             new RuleId("PERQ-MEAL-AT-WORK"),
             new RuleId("PERQ-MEAL-VOUCHER"),
-            new RuleId("PERQ-GIFT"));
+            new RuleId("PERQ-GIFT"),
+            new RuleId("PERQ-LOAN"),
+            new RuleId("PERQ-LOAN-PETTY"));
 
     @TempDir
     Path copy;

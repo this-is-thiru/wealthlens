@@ -45,6 +45,22 @@ public record Rate(BigDecimal fraction) implements Comparable<Rate> {
         return Money.ofExact(base.amountInRupees().multiply(fraction, Money.CALC));
     }
 
+    /**
+     * An annual rate applied to a base for {@code part} of {@code whole} periods — a month's interest on a month-end
+     * balance (D-118). Multiplied and divided at {@link Money#CALC} and rounded to paise once, so a year of months
+     * adds up without twelve roundings.
+     *
+     * @param part the periods, 0 or more
+     * @param whole the periods in the year, more than 0
+     */
+    public Money ofShare(Money base, int part, int whole) {
+        if (whole <= 0 || part < 0) {
+            throw new IllegalArgumentException("A share needs part >= 0 and whole > 0; got " + part + " of " + whole);
+        }
+        return Money.ofExact(base.amountInRupees().multiply(fraction, Money.CALC).multiply(BigDecimal.valueOf(part))
+                .divide(BigDecimal.valueOf(whole), Money.CALC));
+    }
+
     /** The rate as the statute writes it, for a trace line: {@code "30%"}, {@code "12.5%"}. */
     public String asPercentLabel() {
         return fraction.multiply(HUNDRED).stripTrailingZeros().toPlainString() + "%";

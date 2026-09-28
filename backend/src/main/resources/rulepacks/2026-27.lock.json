@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.30",
-      "checksum": "sha256:d77ba87e1e3a2456d38c3f95b0c81867f8c2fbf44685bbb4e3c5d86ccb95e278"
+      "version": "2026-27.law.31",
+      "checksum": "sha256:186831f8be2139cf48bb8a4e73c76f6fd77af46c5b39a6e3b6b59d0d717efbfd"
     },
     "exec": {
       "version": "2026-27.exec.18",
@@ -37,6 +37,8 @@
     "PERQ-CAR-PARTLY-SMALL": "sha256:ad26cd36ecd9ed4dc16fc80c48569f7f0a0e908b9edf6c060108d33013969006",
     "PERQ-CAR-PRIVATE": "sha256:e265f5c0b7377acbe796c8db2e857ba65ff46f588bfce8042758b1f540ee68d7",
     "PERQ-GIFT": "sha256:7e39a814a61640908b5d4b68e27b89fc9fe6cf269604e58e3538f34f458b3002",
+    "PERQ-LOAN": "sha256:ac541845cc8bedd005f2c3c5bcc4ff3c7368f88e1cf53d50d93ea973f6d0a5a6",
+    "PERQ-LOAN-PETTY": "sha256:94f965bb58eefd357b8cfc96fda55bfb9a28f6190942f5e08c4ef0145c5ada94",
     "PERQ-MEAL": "sha256:9fedc2ddd887f80bb9ece6123f92d8a7bc8056fe794c2e2a015fed52e8a7be0d",
     "PERQ-MEAL-AT-WORK": "sha256:84bc88d18e2ba287bc34309e40d1bb2006e9375bd965a083d78d76ffe6e8c12e",
     "PERQ-MEAL-VOUCHER": "sha256:190ebc57b434ec607fae28f6fcfa5a7a1b7af109cb7cb401ff85f6d791569daf",

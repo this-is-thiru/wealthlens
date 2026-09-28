@@ -64,4 +64,18 @@ class RateTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("may not be null");
     }
+
+    @Test
+    void ofShare_whenAMonthOfAYear_dividesOnceAndRoundsOnce() {
+        // 28,20,000 × 9% ÷ 12 = 21,150
+        assertThat(Rate.percent("9").ofShare(Money.of("2820000"), 1, 12)).isEqualTo(Money.of("21150"));
+        // 0.62 × 9% ÷ 12 = 0.00465 → 0.00 once; rounding at 9% first (0.06) would give 0.01
+        assertThat(Rate.percent("9").ofShare(Money.of("0.62"), 1, 12)).isEqualTo(Money.ZERO);
+    }
+
+    @Test
+    void ofShare_whenTheWholeIsNil_isRefused() {
+        assertThatThrownBy(() -> Rate.percent("9").ofShare(Money.of("100"), 1, 0))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

@@ -36,7 +36,8 @@ import java.util.Optional;
  * allowance was used with the allowance exemptions (D-101), a disabled employee's transport claim with its
  * exemption (D-102), the retirement and termination payments with their deductions (D-103), the accommodation
  * employers provide with its perquisite (D-111), medical treatment abroad with its exclusion (D-112), the vehicles
- * with the car perquisite (D-113), meals and gifts with theirs (D-117). Every later
+ * with the car perquisite (D-113), meals and gifts with theirs (D-117), loans with
+ * theirs (D-118). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -51,6 +52,7 @@ import java.util.Optional;
  * @param vehicles each vehicle an employer provided or ran at its cost, in the order entered
  * @param meals each set of meals of one value an employer provided, in the order entered
  * @param gifts each gift, voucher or token an employer gave, in the order entered
+ * @param loans each interest-free or concessional loan from an employer, in the order entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -63,64 +65,39 @@ public record EnteredFacts(
         List<MedicalTreatmentAbroad> medicalTreatmentAbroad,
         List<EmployerVehicle> vehicles,
         List<EmployerMeals> meals,
-        List<EmployerGift> gifts) {
+        List<EmployerGift> gifts,
+        List<EmployerLoan> loans) {
 
     public EnteredFacts {
-        if (employments == null) {
-            throw new IllegalArgumentException(
-                    "EnteredFacts.employments may not be null; pass an empty list where there are none");
-        }
-        if (tenancies == null) {
-            throw new IllegalArgumentException(
-                    "EnteredFacts.tenancies may not be null; pass an empty list where there are none");
-        }
-        if (leaveTravel == null) {
-            throw new IllegalArgumentException(
-                    "EnteredFacts.leaveTravel may not be null; pass an empty list where there are none");
-        }
-        if (allowanceUses == null) {
-            throw new IllegalArgumentException(
-                    "EnteredFacts.allowanceUses may not be null; pass an empty list where there are none");
-        }
         if (disabledTransport == null) {
             throw new IllegalArgumentException(
                     "EnteredFacts.disabledTransport may not be null; pass Optional.empty() where there is none");
         }
-        if (accommodations == null) {
+        employments = copied(employments, "employments");
+        tenancies = copied(tenancies, "tenancies");
+        leaveTravel = copied(leaveTravel, "leaveTravel");
+        allowanceUses = copied(allowanceUses, "allowanceUses");
+        retirementPayments = copied(retirementPayments, "retirementPayments");
+        accommodations = copied(accommodations, "accommodations");
+        medicalTreatmentAbroad = copied(medicalTreatmentAbroad, "medicalTreatmentAbroad");
+        vehicles = copied(vehicles, "vehicles");
+        meals = copied(meals, "meals");
+        gifts = copied(gifts, "gifts");
+        loans = copied(loans, "loans");
+    }
+
+    /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
+    private static <T> List<T> copied(List<T> entered, String field) {
+        if (entered == null) {
             throw new IllegalArgumentException(
-                    "EnteredFacts.accommodations may not be null; pass an empty list where there are none");
+                    "EnteredFacts." + field + " may not be null; pass an empty list where there are none");
         }
-        if (retirementPayments == null) {
-            throw new IllegalArgumentException(
-                    "EnteredFacts.retirementPayments may not be null; pass an empty list where there are none");
-        }
-        if (medicalTreatmentAbroad == null) {
-            throw new IllegalArgumentException(
-                    "EnteredFacts.medicalTreatmentAbroad may not be null; pass an empty list where there is none");
-        }
-        if (vehicles == null) {
-            throw new IllegalArgumentException(
-                    "EnteredFacts.vehicles may not be null; pass an empty list where there are none");
-        }
-        if (meals == null || gifts == null) {
-            throw new IllegalArgumentException(
-                    "EnteredFacts.meals and gifts may not be null; pass an empty list where there are none");
-        }
-        employments = List.copyOf(employments);
-        tenancies = List.copyOf(tenancies);
-        leaveTravel = List.copyOf(leaveTravel);
-        allowanceUses = List.copyOf(allowanceUses);
-        retirementPayments = List.copyOf(retirementPayments);
-        accommodations = List.copyOf(accommodations);
-        medicalTreatmentAbroad = List.copyOf(medicalTreatmentAbroad);
-        vehicles = List.copyOf(vehicles);
-        meals = List.copyOf(meals);
-        gifts = List.copyOf(gifts);
+        return List.copyOf(entered);
     }
 
     /** Nothing entered. */
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of());
     }
 }

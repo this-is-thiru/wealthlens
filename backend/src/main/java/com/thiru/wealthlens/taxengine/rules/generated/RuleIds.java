@@ -32,6 +32,8 @@ public final class RuleIds {
     public static final RuleId PERQ_CAR_PARTLY_SMALL = new RuleId("PERQ-CAR-PARTLY-SMALL");
     public static final RuleId PERQ_CAR_PRIVATE = new RuleId("PERQ-CAR-PRIVATE");
     public static final RuleId PERQ_GIFT = new RuleId("PERQ-GIFT");
+    public static final RuleId PERQ_LOAN = new RuleId("PERQ-LOAN");
+    public static final RuleId PERQ_LOAN_PETTY = new RuleId("PERQ-LOAN-PETTY");
     public static final RuleId PERQ_MEAL = new RuleId("PERQ-MEAL");
     public static final RuleId PERQ_MEAL_AT_WORK = new RuleId("PERQ-MEAL-AT-WORK");
     public static final RuleId PERQ_MEAL_VOUCHER = new RuleId("PERQ-MEAL-VOUCHER");

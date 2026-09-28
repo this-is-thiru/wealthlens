@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-071e1 — "taxplanning W-071e1: add meals and gifts — the excess over the limit per meal, gifts in full once they reach the limit, each year's own figures (D-117)"
-Last updated              : 2026-09-28 (session 10 — W-071e1 done; build GREEN, 2280 tests)
-Current position          : W-071e2 — loans (not started; placed by D-116)
+Last checkpoint           : W-071e2 — "taxplanning W-071e2: add loans from the employer — a month's interest at the entered SBI rate per month-end balance, nil for petty and listed-disease loans (D-118)"
+Last updated              : 2026-09-28 (session 10 — W-071e2 done; build GREEN, 2294 tests)
+Current position          : W-071e3 — cost-based benefits (not started; placed by D-116)
 Session count             : 9
 ```
 
@@ -56,7 +56,7 @@ Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
 Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-066b D  W-067a D  W-067 D  W-068a D  W-068 D  W-069a D  W-069 D  W-069b D  W-066a D  W-070 D  W-064a D  W-066c D  W-063a D  W-066d D
-Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 ·  W-071e3 ·  W-071d ·  W-071f ·  W-071g ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
+Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 ·  W-071d ·  W-071f ·  W-071g ·  W-073 ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
 Phase 11   W-096 ·  W-097 ·  W-098 ·  W-099 ·  W-100 ·  W-101 ·  W-102 ·  W-103 ·  W-104 ·  W-105 ·  W-106 ·  W-107 ·  W-108 ·  W-109 ·  W-110 ·  W-111 ·
@@ -451,6 +451,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-118 | 2026-09-28 | `W-071e2`: loans | **C1:** `EnteredFacts.loans` — `EmployerLoan` (employment, amount lent, the SBI rate for the purpose on 1 April — entered, month-end balances ≤ 12, interest paid, whether for a listed disease, insurance reimbursement and its month). **C2a:** Σ month-end balance × rate ÷ 12, rounded once, less interest paid, floored at nil. **C3a:** petty nil on the amounts lent per employer, "not exceeding" (inclusive). **C4:** a listed-disease loan nil, save from the month after reimbursement the lesser of the balance and the amount reimbursed. **C5:** `PERQ-LOAN`, `PERQ-LOAN-PETTY` (₹2,00,000 / twenty thousand rupees), `AllRegimes`, both years. **C6:** TY 2026-27 `SOURCE_CHECKED`, TY 2025-26 `UNVERIFIED` | owner: "W-071e2 approved — proceed as recommended"; "W-071e2 approved" (2026-09-28) |
 | D-117 | 2026-09-28 | `W-071e1`: meals and gifts | **C1:** `EnteredFacts.meals` — `EmployerMeals` (employment, setting AT_WORK / PAID_VOUCHER / TEA_OR_SNACKS_AT_WORK / AT_WORK_REMOTE_OR_OFFSHORE / OTHERWISE, meals, cost and payment per meal). **C2:** `PERQ-MEAL` (100% of value), `PERQ-MEAL-AT-WORK`, `PERQ-MEAL-VOUCHER` (excess over ₹200 / fifty rupees per meal; the voucher row's TY 2025-26 version `ExceptIn NEW_TAX_REGIME`, G.S.R. 452(E)). **C3:** `EnteredFacts.gifts` — `EmployerGift`. **C4a:** gifts aggregated per employer. **C5:** `PERQ-GIFT`, ₹15,000 / five thousand rupees, strictly below → nil, else the whole. **C6:** TY 2026-27 `SOURCE_CHECKED`, TY 2025-26 `UNVERIFIED` | owner: "W-071e1 approved — proceed as recommended"; "W-071e1 approved" (2026-09-28) |
 | D-116 | 2026-09-28 | `W-071e`: other benefits split | **C1:** `W-071e` becomes **`W-071e1`** (meals and gifts — Table IV Sl. 3, 4; r.3(7)(iii), (iv)), **`W-071e2`** (loans — Sl. 1; r.3(7)(i)), **`W-071e3`** (cost-based — Sl. 2, 5–9; r.3(7)(ii), (v)–(ix)); placed e1, e2, e3, before `W-071d`. **C2:** every employee, both years. **C3:** the SBI rate entered per loan, not seeded. **C4:** figures by year. **C5:** the gift test "below" is strict. **C6:** (5)(b) reuses `OfficialUseRecord`. **C7:** TY 2026-27 `SOURCE_CHECKED`, TY 2025-26 `UNVERIFIED` except r.3(7)(iii) second proviso | owner: "W-071e approved — proceed as recommended; place e1, e2, e3 next, before W-071d" |
 | D-115 | 2026-09-28 | `W-071a2`: the Cost Inflation Index cap for continued accommodation | **C1:** `EmployerAccommodation.firstYearValue` — the Sl. 2(a)/(b) amount for the first tax year, after rent, the employer's figure; required for owned or leased accommodation continued from an earlier year. **C2a:** accommodation first provided before 2023-24 still refused — OQ-11. **C3:** the cap binds the Sl. value after rent; furniture outside. **C4:** `RATE-COST-INFLATION-INDEX` with a new `IndexByYear` definition — TY 2025-26 {2023-24: 348, 2024-25: 363, 2025-26: 376}, TY 2026-27 the same plus {2026-27: 384}; a missing year refused. **C5:** `PERQ-ACCOM-CONTINUED`, both years. **C6:** TY 2025-26 covers owned and leased (G.S.R. 636(E)) | owner: "W-071a2 approved — proceed as recommended"; "W-071a2 approved" (2026-09-28) |
