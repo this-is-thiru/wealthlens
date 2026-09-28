@@ -104,7 +104,9 @@ class TimelineReaderTest {
             new RuleId("PERQ-CAR-CHAUFFEUR"),
             new RuleId("PERQ-CAR-PRIVATE"),
             new RuleId("PERQ-CAR-EMPLOYEE"),
-            new RuleId("PERQ-CAR-CONVEYANCE"));
+            new RuleId("PERQ-CAR-CONVEYANCE"),
+            new RuleId("PERQ-ACCOM-CONTINUED"),
+            new RuleId("RATE-COST-INFLATION-INDEX"));
 
     @TempDir
     Path copy;

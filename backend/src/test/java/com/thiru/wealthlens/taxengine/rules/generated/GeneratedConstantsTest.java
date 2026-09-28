@@ -34,6 +34,7 @@ class GeneratedConstantsTest {
 
     /** Every rule the shipped timeline holds, in the generator's order — listed by hand. */
     private static final java.util.List<String> SHIPPED_RULE_IDS = java.util.List.of(
+            "PERQ-ACCOM-CONTINUED",
             "PERQ-ACCOM-FURNITURE",
             "PERQ-ACCOM-GOVERNMENT",
             "PERQ-ACCOM-HOTEL",
@@ -52,6 +53,7 @@ class GeneratedConstantsTest {
             "PERQ-MEDABROAD-STAY",
             "PERQ-MEDABROAD-TRAVEL",
             "PERQ-SPECIFIED-EMPLOYEE",
+            "RATE-COST-INFLATION-INDEX",
             "RATE-HEALTH-EDUCATION-CESS",
             "RATE-ROUND-PAYABLE",
             "RATE-ROUND-TOTAL-INCOME",

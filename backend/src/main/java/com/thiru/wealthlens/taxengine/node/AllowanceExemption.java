@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -134,6 +135,8 @@ final class AllowanceExemption {
                     ruleId + " defines journeys per block, not a transport limit");
             case CommutedPensionShare share -> throw new IllegalStateException(
                     ruleId + " defines a share of a commuted pension, not a transport limit");
+            case IndexByYear index -> throw new IllegalStateException(
+                    ruleId + " defines an index table, not a transport limit");
         };
     }
 

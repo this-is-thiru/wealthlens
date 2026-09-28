@@ -219,4 +219,21 @@ class MoneyTest {
             assertThatThrownBy(() -> Money.of("100").apportioned(-1, 12)).isInstanceOf(IllegalArgumentException.class);
         }
     }
+
+    @Nested
+    @DisplayName("scaledBy — one index over another (D-115)")
+    class ScaledBy {
+
+        @Test
+        void scaledBy_whenTheRatioExceedsOne_dividesOnceAndRoundsToPaise() {
+            // 1,00,000 × 384 ÷ 348 = 1,10,344.827… → 1,10,344.83
+            assertThat(Money.of("100000").scaledBy(384, 348)).isEqualTo(Money.of("110344.83"));
+        }
+
+        @Test
+        void scaledBy_whenTheDenominatorIsNilOrTheNumeratorNegative_isRefused() {
+            assertThatThrownBy(() -> Money.of("100").scaledBy(1, 0)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Money.of("100").scaledBy(-1, 3)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
 }

@@ -8,12 +8,15 @@ import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -112,6 +115,38 @@ class RuleJsonDefinitionTest {
 
         // Then
         assertThat(version.definition()).contains(new CommutedPensionShare(3, 2));
+    }
+
+    @Test
+    void version_whenAnIndexByYear_readsEachFinancialYear() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "IndexByYear", "years": [
+                  { "financialYear": "2023-24", "index": 348 }, { "financialYear": "2024-25", "index": 363 } ] }""");
+
+        // Then
+        assertThat(version.definition())
+                .contains(new IndexByYear(Map.of(TaxYearId.of(2023), 348, TaxYearId.of(2024), 363)));
+    }
+
+    @Test
+    void version_whenAnIndexYearIsMisnamed_isRefusedNamingThePath() {
+        // When / Then — "2023-25" is no financial year
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "IndexByYear", "years": [
+                          { "financialYear": "2023-25", "index": 348 } ] }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("financialYear");
+    }
+
+    @Test
+    void version_whenAnIndexYearIsListedTwice_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "IndexByYear", "years": [
+                          { "financialYear": "2023-24", "index": 348 }, { "financialYear": "2023-24", "index": 349 } ] }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("twice");
     }
 
     @Test

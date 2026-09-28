@@ -89,6 +89,22 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
         return ofExact(amountInRupees.multiply(BigDecimal.valueOf(part)).divide(BigDecimal.valueOf(whole), CALC));
     }
 
+    /**
+     * This amount scaled by a ratio of two counts — one year's index over another's (D-115), which may exceed one.
+     * Multiplied, divided once at {@link #CALC} and rounded once to paise, as {@link #apportioned} is.
+     *
+     * @param numerator the count above, 0 or more
+     * @param denominator the count below, more than 0
+     */
+    public Money scaledBy(int numerator, int denominator) {
+        if (denominator <= 0 || numerator < 0) {
+            throw new IllegalArgumentException("A ratio needs numerator >= 0 and denominator > 0; got " + numerator
+                    + " over " + denominator);
+        }
+        return ofExact(amountInRupees.multiply(BigDecimal.valueOf(numerator))
+                .divide(BigDecimal.valueOf(denominator), CALC));
+    }
+
     /** Clamps a negative amount to zero. Named for what it does, not for what it guards against. */
     public Money floorAtZero() {
         return amountInRupees.signum() < 0 ? ZERO : this;

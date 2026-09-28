@@ -54,13 +54,13 @@ class PerquisiteNodeTest {
 
     private static EmployerAccommodation owned(int year, PopulationBand band, String rent) {
         return new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, wholeYear(year), Optional.of(band),
-                Optional.empty(), Money.of(rent), Optional.empty(), TaxYearId.of(year));
+                Optional.empty(), Money.of(rent), Optional.empty(), TaxYearId.of(year), Optional.empty());
     }
 
     private static EmployerAccommodation paidFor(int year, AccommodationProvider provider, DateRange occupied,
             String cost, String rent) {
         return new EmployerAccommodation(0, provider, occupied, Optional.empty(), Optional.of(Money.of(cost)),
-                Money.of(rent), Optional.empty(), TaxYearId.of(year));
+                Money.of(rent), Optional.empty(), TaxYearId.of(year), Optional.empty());
     }
 
     private static NodeResult run(int year, RegimeCode regime, String salary, String exempt,
@@ -144,7 +144,7 @@ class PerquisiteNodeTest {
         // Given — owned, above forty lakh, furniture costing 2,00,000
         EmployerAccommodation furnished = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
                 wholeYear(2026), Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.of("24000"),
-                Optional.of(Furniture.owned(Money.of("200000"), Money.ZERO)), TaxYearId.of(2026));
+                Optional.of(Furniture.owned(Money.of("200000"), Money.ZERO)), TaxYearId.of(2026), Optional.empty());
 
         // When
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(furnished));
@@ -185,17 +185,95 @@ class PerquisiteNodeTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("96000")));
     }
 
+    private static EmployerAccommodation continued(int year, AccommodationProvider provider, int firstProvidedIn,
+            Optional<String> cost, Optional<String> firstYearValue) {
+        return new EmployerAccommodation(0, provider, wholeYear(year),
+                provider == AccommodationProvider.EMPLOYER_OWNED ? Optional.of(PopulationBand.ABOVE_FORTY_LAKH)
+                        : Optional.empty(),
+                cost.map(Money::of), Money.ZERO, Optional.empty(), TaxYearId.of(firstProvidedIn),
+                firstYearValue.map(Money::of));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenOwnedAccommodationContinuesFromTheFirstTaxYear_isCappedByTheIndex(int year) {
+        // Given — first provided 2023-24 at 1,00,000; this year 10% of 12,00,000 = 1,20,000 (D-115)
+        EmployerAccommodation home = continued(year, AccommodationProvider.EMPLOYER_OWNED, 2023, Optional.empty(),
+                Optional.of("100000"));
+
+        // When
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home));
+
+        // Then — 1,00,000 × 376 / 348 = 1,08,045.98; 1,00,000 × 384 / 348 = 1,10,344.83
+        assertThat(result.value())
+                .isEqualTo(MoneyValue.of(Money.of(year == 2025 ? "108045.98" : "110344.83")));
+        assertThat(result.trace().getFirst().limitedBy())
+                .hasValueSatisfying(bound -> assertThat(bound).contains("Cost Inflation Index"));
+    }
+
     @Test
-    void evaluate_whenOwnedAccommodationContinuesFromAnEarlierYear_isRefusedUntilTheIndexIsRead() {
-        // Given — first provided in 2024-25: r.15(2)(d)'s Cost Inflation Index cap applies (D-111 C5a)
-        EmployerAccommodation continued = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
-                wholeYear(2026), Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.ZERO,
-                Optional.empty(), TaxYearId.of(2024));
+    void evaluate_whenTheContinuedValueIsBelowTheCap_isTheValue() {
+        // Given — 10% of 10,50,000 = 1,05,000 against a cap of 1,10,344.83
+        EmployerAccommodation home = continued(2026, AccommodationProvider.EMPLOYER_OWNED, 2023, Optional.empty(),
+                Optional.of("100000"));
+
+        // When
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, "1050000", "0", List.of(home));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("105000")));
+    }
+
+    @Test
+    void evaluate_whenRentIsPaidOnContinuedAccommodation_capsTheValueAfterRent() {
+        // Given — the Sl. 2(a) amount is "as reduced by the rent" (D-115 C3): 1,20,000 − 24,000 = 96,000
+        EmployerAccommodation home = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
+                wholeYear(2026), Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.of("24000"),
+                Optional.empty(), TaxYearId.of(2023), Optional.of(Money.of("100000")));
+
+        // When
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home));
+
+        // Then — 96,000 is under the cap of 1,10,344.83; capping before rent would give 1,10,344.83 − 24,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("96000")));
+    }
+
+    @Test
+    void evaluate_whenLeasedAccommodationContinuesInTaxYear2025_isCappedToo() {
+        // Given — G.S.R. 636(E): "owned or taken on lease or rent"; first provided 2024-25 at 90,000; this year the
+        // lower of rental 1,00,000 and 10% of 12,00,000
+        EmployerAccommodation home = continued(2025, AccommodationProvider.EMPLOYER_LEASED, 2024,
+                Optional.of("100000"), Optional.of("90000"));
+
+        // When
+        NodeResult result = run(2025, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home));
+
+        // Then — 90,000 × 376 / 363 = 93,223.14
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("93223.14")));
+    }
+
+    @Test
+    void evaluate_whenContinuedWithoutTheFirstYearsAmount_isRefused() {
+        // Given
+        EmployerAccommodation home = continued(2026, AccommodationProvider.EMPLOYER_OWNED, 2024, Optional.empty(),
+                Optional.empty());
 
         // When / Then
-        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(continued)))
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Cost Inflation Index");
+                .hasMessageContaining("first tax year");
+    }
+
+    @Test
+    void evaluate_whenFirstProvidedBeforeTheFirstTaxYear_isRefusedNamingTheQuestion() {
+        // Given — first provided 2022-23 (D-115 C2a)
+        EmployerAccommodation home = continued(2026, AccommodationProvider.EMPLOYER_OWNED, 2022, Optional.empty(),
+                Optional.of("100000"));
+
+        // When / Then
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OQ-11");
     }
 
     @Test

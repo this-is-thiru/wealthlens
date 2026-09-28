@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
@@ -134,6 +135,8 @@ public final class SalaryBaseNode implements ComputationNode {
                     rule + " defines a share of a commuted pension, not a salary base");
             case DisabledTransportLimit transport -> throw new IllegalStateException(
                     rule + " defines a transport limit, not a salary base");
+            case IndexByYear index -> throw new IllegalStateException(
+                    rule + " defines an index table, not a salary base");
         };
     }
 }

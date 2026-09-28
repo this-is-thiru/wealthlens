@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");
     public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");
     public static final RuleId PERQ_ACCOM_GOVERNMENT = new RuleId("PERQ-ACCOM-GOVERNMENT");
     public static final RuleId PERQ_ACCOM_HOTEL = new RuleId("PERQ-ACCOM-HOTEL");
@@ -33,6 +34,7 @@ public final class RuleIds {
     public static final RuleId PERQ_MEDABROAD_STAY = new RuleId("PERQ-MEDABROAD-STAY");
     public static final RuleId PERQ_MEDABROAD_TRAVEL = new RuleId("PERQ-MEDABROAD-TRAVEL");
     public static final RuleId PERQ_SPECIFIED_EMPLOYEE = new RuleId("PERQ-SPECIFIED-EMPLOYEE");
+    public static final RuleId RATE_COST_INFLATION_INDEX = new RuleId("RATE-COST-INFLATION-INDEX");
     public static final RuleId RATE_HEALTH_EDUCATION_CESS = new RuleId("RATE-HEALTH-EDUCATION-CESS");
     public static final RuleId RATE_ROUND_PAYABLE = new RuleId("RATE-ROUND-PAYABLE");
     public static final RuleId RATE_ROUND_TOTAL_INCOME = new RuleId("RATE-ROUND-TOTAL-INCOME");

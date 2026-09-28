@@ -22,6 +22,9 @@ import java.util.Optional;
  * @param rentPaid the rent the employee actually paid for the period
  * @param furniture the furniture, where the accommodation is furnished
  * @param firstProvidedIn the tax year the accommodation was first provided to the employee
+ * @param firstYearValue for owned or leased accommodation continued from an earlier year, the amount the Table
+ *     gave for the first tax year, after rent, as the employer calculated it — the figure the Cost Inflation Index
+ *     cap scales (D-115)
  */
 public record EmployerAccommodation(
         int employment,
@@ -31,11 +34,12 @@ public record EmployerAccommodation(
         Optional<Money> employerCost,
         Money rentPaid,
         Optional<Furniture> furniture,
-        TaxYearId firstProvidedIn) {
+        TaxYearId firstProvidedIn,
+        Optional<Money> firstYearValue) {
 
     public EmployerAccommodation {
         if (provider == null || occupied == null || band == null || employerCost == null || rentPaid == null
-                || furniture == null || firstProvidedIn == null) {
+                || furniture == null || firstProvidedIn == null || firstYearValue == null) {
             throw new IllegalArgumentException("Employer accommodation needs its provider, period, rent paid and"
                     + " first year; pass Optional.empty() for a fact not given");
         }
@@ -43,8 +47,21 @@ public record EmployerAccommodation(
             throw new IllegalArgumentException("An employment position may not be negative, but was " + employment);
         }
         requireTheFactsTheFootingReads(provider, band, employerCost, furniture);
+        requireFirstYearValueFits(provider, firstYearValue);
         if (rentPaid.isLessThan(Money.ZERO)
                 || employerCost.filter(amount -> amount.isLessThan(Money.ZERO)).isPresent()) {
+            throw new IllegalArgumentException("Accommodation amounts may not be negative");
+        }
+    }
+
+    /** Only owned or leased accommodation is capped by its first year's amount, which may not be negative. */
+    private static void requireFirstYearValueFits(AccommodationProvider provider, Optional<Money> firstYearValue) {
+        if (firstYearValue.isPresent() && provider != AccommodationProvider.EMPLOYER_OWNED
+                && provider != AccommodationProvider.EMPLOYER_LEASED) {
+            throw new IllegalArgumentException("Only owned or leased accommodation is capped by the first year's"
+                    + " amount (S4 r.15(2)(d); Rules 1962 r.3(1) third proviso); enter none for " + provider);
+        }
+        if (firstYearValue.filter(amount -> amount.isLessThan(Money.ZERO)).isPresent()) {
             throw new IllegalArgumentException("Accommodation amounts may not be negative");
         }
     }

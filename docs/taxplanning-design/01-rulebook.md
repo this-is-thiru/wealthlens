@@ -801,6 +801,16 @@ Table I / Table II / Table III block to record it.
 percentages (Table I Sl. 1 and 2(a)) were **not in the extracted window** — `PERQ-ACCOM-OWNED-2026`
 is **NEEDS VERIFICATION**; re-read S4 Table I Sl. 1 and 2(a).
 
+> **Addendum (W-071a2, 2026-09-28, D-115):** `PERQ-ACCOM-CAP-2026` is built as `PERQ-ACCOM-CONTINUED`, both years,
+> for owned **and leased** accommodation (TY 2025-26 by corrigendum G.S.R. 636(E)), on the Cost Inflation Index
+> read in the Gazette: 2023-24 **348** (S.O. 2571(E)), 2024-25 **363** (S.O. 2103(E)), 2025-26 **376** (S.O. 2954(E)),
+> 2026-27 **384** (S.O. 3889(E), 2025 Act s.72(8)(a); the earlier years carried by s.536(2)(j)). The rule scales the
+> *first tax year's* amount but divides by the index for the year the accommodation was *initially provided*; the two
+> differ only for accommodation first provided before 2023-24, which stays refused (OQ-11). The Sl. amount capped is
+> after rent; furniture is outside the cap.
+>
+> Verified by: `docs/taxplanning-build/sources/2026-09-28-perquisite-thresholds.md` T4–T6, U1–U3; S4 r.15(2)(d), (g).
+
 ### `PERQ-LOAN-2026`, `PERQ-PHONE-2026`
 **NEEDS VERIFICATION** — interest-free/concessional loan valuation and telephone treatment were not
 located in the extracted text. Re-read S4's Table III in full and the perquisite rule's remaining

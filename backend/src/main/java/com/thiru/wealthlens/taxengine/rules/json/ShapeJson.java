@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
@@ -22,6 +23,7 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
@@ -216,7 +218,7 @@ public final class ShapeJson {
     public static RuleDefinition definition(JsonNode node, String path) {
         String tag = PackJson.tag(
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
-                "CommutedPensionShare");
+                "CommutedPensionShare", "IndexByYear");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -231,8 +233,38 @@ public final class ShapeJson {
             case "CommutedPensionShare" -> PackJson.construct(path, () -> new CommutedPensionShare(
                     PackJson.integer(node, "oneOverWhereGratuityReceived", path),
                     PackJson.integer(node, "oneOverOtherwise", path)));
+            case "IndexByYear" -> indexByYear(node, path);
             default -> throw unreachable(tag, path);
         };
+    }
+
+    /** Each entry names its financial year as a label, {@code "2023-24"}, so the table reads as the notification. */
+    private static IndexByYear indexByYear(JsonNode node, String path) {
+        List<Map.Entry<TaxYearId, Integer>> entries = PackJson.array(node, "years", path,
+                e -> Map.entry(financialYear(PackJson.text(e.node(), "financialYear", e.path()), e.path()),
+                        PackJson.integer(e.node(), "index", e.path())));
+        Map<TaxYearId, Integer> table = new LinkedHashMap<>();
+        for (Map.Entry<TaxYearId, Integer> entry : entries) {
+            if (table.put(entry.getKey(), entry.getValue()) != null) {
+                throw new PackValidationException(path + ".years lists " + entry.getKey().label() + " twice");
+            }
+        }
+        return PackJson.construct(path, () -> new IndexByYear(table));
+    }
+
+    private static TaxYearId financialYear(String label, String path) {
+        TaxYearId year;
+        try {
+            year = TaxYearId.of(Integer.parseInt(label.substring(0, Math.min(4, label.length()))));
+        } catch (NumberFormatException e) {
+            throw new PackValidationException(path + ".financialYear must read like \"2023-24\", but was \"" + label
+                    + "\"");
+        }
+        if (!year.label().equals(label)) {
+            throw new PackValidationException(path + ".financialYear must read like \"2023-24\", but was \"" + label
+                    + "\"");
+        }
+        return year;
     }
 
     private static DisabledTransportLimit disabledTransportLimit(JsonNode node, String path) {

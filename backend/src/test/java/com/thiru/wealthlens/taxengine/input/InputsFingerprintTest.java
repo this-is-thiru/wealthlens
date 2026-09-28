@@ -379,7 +379,7 @@ class InputsFingerprintTest {
                                     java.time.LocalDate.of(2026, 4, 1), java.time.LocalDate.of(2027, 3, 31)),
                             Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of(rentPaid), Optional.empty(),
-                            com.thiru.wealthlens.taxengine.rules.id.TaxYearId.of(2026))), List.of(), List.of());
+                            com.thiru.wealthlens.taxengine.rules.id.TaxYearId.of(2026), Optional.empty())), List.of(), List.of());
         }
 
         @Test

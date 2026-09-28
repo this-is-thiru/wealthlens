@@ -1,0 +1,127 @@
+{
+  "ruleId": "RATE-COST-INFLATION-INDEX",
+  "_note": "The Cost Inflation Index for each financial year, as notified (D-115). Read here only by the accommodation cap (PERQ-ACCOM-CONTINUED; S4 r.15(2)(d), (g); Rules 1962 r.3(1) third proviso, Explanation 2), which needs 2023-24 onward; capital gains are not built. TY 2025-26: the index \"notified … under clause (v) of Explanation to section 48\" — the table of S.O. 1790(E) of 5-6-2017 as amended: 2023-24 \"348\" by S.O. 2571(E), Notification No. 39/2023, 12-6-2023 (Gazette 246459, p.2; it re-inserted the figure first inserted by S.O. 1692(E) of 10-4-2023); 2024-25 \"363\" by S.O. 2103(E), 24-5-2024 (Gazette 254329, p.2); 2025-26 \"376\" by S.O. 2954(E), Notification No. 70/2025, 1-7-2025 (Gazette 264279, p.2). TY 2026-27: the index \"notified … under section 72(8)(a)\" — 2026-27 \"384\" by S.O. 3889(E), 15-7-2026 (Gazette 274522, p.2), which lists 2026-27 alone; the earlier years carry over under 2025 Act s.536(2)(j), which keeps a 1961 notification in force as if made under the corresponding provision. A year the table does not hold is refused. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.48 Explanation (v)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.72(8)(a)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "IndexByYear",
+        "years": [
+          {
+            "financialYear": "2023-24",
+            "index": 348
+          },
+          {
+            "financialYear": "2024-25",
+            "index": 363
+          },
+          {
+            "financialYear": "2025-26",
+            "index": 376
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 70/2025, S.O. 2954(E), under Income-tax Act, 1961 s.48 Explanation (v) — \"25 2025-26 376\" inserted in the table of S.O. 1790(E)",
+        "gazetteRef": "CG-DL-E-01072025-264279",
+        "notifiedOn": "2025-07-01",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/264279.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/264279.pdf",
+        "sourceDescription": "Gazettes CG-DL-E-12062023-246459 (S.O. 2571(E), 348), CG-DL-E-24052024-254329 (S.O. 2103(E), 363), CG-DL-E-01072025-264279 (S.O. 2954(E), 376), each p.2",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.48 Explanation (v)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.72(8)(a)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "IndexByYear",
+        "years": [
+          {
+            "financialYear": "2023-24",
+            "index": 348
+          },
+          {
+            "financialYear": "2024-25",
+            "index": 363
+          },
+          {
+            "financialYear": "2025-26",
+            "index": 376
+          },
+          {
+            "financialYear": "2026-27",
+            "index": 384
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "S.O. 3889(E), F. No. 85/2026, under Income-tax Act, 2025 s.72(8)(a) — \"2026-27 384\"; the earlier years carried by s.536(2)(j)",
+        "gazetteRef": "CG-DL-E-15072026-274522",
+        "notifiedOn": "2026-07-15",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/274522.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/274522.pdf",
+        "sourceDescription": "Gazette CG-DL-E-15072026-274522 (S.O. 3889(E), 384), p.2; the 1961 notifications as for TY 2025-26; Income-tax Act, 2025 s.536(2)(j), Gazette CG-DL-E-22082025-265620",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/274522.pdf",
+    "sourceDescription": "Gazette CG-DL-E-15072026-274522, S.O. 3889(E), p.2",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

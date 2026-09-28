@@ -387,7 +387,7 @@ class SalaryHeadPipelineTest {
         EmployerAccommodation home = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
                 DateRange.between(LocalDate.of(year, 4, 1), LocalDate.of(year + 1, 3, 31)),
                 Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.of("24000"), Optional.empty(),
-                TaxYearId.of(year));
+                TaxYearId.of(year), Optional.empty());
 
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),

@@ -20,7 +20,7 @@ class EmployerAccommodationTest {
         // When
         EmployerAccommodation owned = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, YEAR,
                 Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.of("24000"), Optional.empty(),
-                TaxYearId.of(2026));
+                TaxYearId.of(2026), Optional.empty());
 
         // Then
         assertThat(owned.band()).contains(PopulationBand.ABOVE_FORTY_LAKH);
@@ -31,7 +31,7 @@ class EmployerAccommodationTest {
     void construct_whenOwnedWithoutItsBand_isRefused() {
         // Table I Sl. 2(a): the percentage turns on the city's 2011-census population
         assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, YEAR,
-                        Optional.empty(), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026)))
+                        Optional.empty(), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("population");
     }
@@ -39,7 +39,7 @@ class EmployerAccommodationTest {
     @Test
     void construct_whenLeasedWithoutTheEmployersCost_isRefused() {
         assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_LEASED, YEAR,
-                        Optional.empty(), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026)))
+                        Optional.empty(), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("cost");
     }
@@ -48,7 +48,7 @@ class EmployerAccommodationTest {
     void construct_whenABandIsGivenForLeasedAccommodation_isRefusedRatherThanIgnored() {
         assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_LEASED, YEAR,
                         Optional.of(PopulationBand.ANY_OTHER_PLACE), Optional.of(Money.of("180000")), Money.ZERO,
-                        Optional.empty(), TaxYearId.of(2026)))
+                        Optional.empty(), TaxYearId.of(2026), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("band");
     }
@@ -58,7 +58,7 @@ class EmployerAccommodationTest {
         // Table I Sl. 3: a hotel is valued on its charges; furniture is "Not applicable"
         assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.HOTEL, YEAR, Optional.empty(),
                         Optional.of(Money.of("90000")), Money.ZERO,
-                        Optional.of(Furniture.owned(Money.of("200000"), Money.ZERO)), TaxYearId.of(2026)))
+                        Optional.of(Furniture.owned(Money.of("200000"), Money.ZERO)), TaxYearId.of(2026), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("furniture");
     }
