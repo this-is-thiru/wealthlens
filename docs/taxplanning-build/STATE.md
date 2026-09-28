@@ -5,7 +5,7 @@
 ```
 Last checkpoint           : W-073a — "taxplanning W-073a: add the aggregate employer contribution — PF, NPS and superannuation together beyond seven lakh fifty thousand, salary on a line of its own (D-126)"
 Last updated              : 2026-09-28 (session 10 — W-073a done; build GREEN, 2350 tests)
-Current position          : W-074 — T4 golden tests (not started); W-073b/c BLOCKED on sourcing
+Current position          : W-073b — the accretion (EXPLAINED — plan awaits approval); W-073c sourced; W-074 next placed
 Session count             : 9
 ```
 
@@ -56,7 +56,7 @@ Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d
 Phase 5    W-046 D  W-046b D  W-047 ·  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
 Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-066b D  W-067a D  W-067 D  W-068a D  W-068 D  W-069a D  W-069 D  W-069b D  W-066a D  W-070 D  W-064a D  W-066c D  W-063a D  W-066d D
-Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f E  W-071g D  W-073 —  W-073a D  W-073b B  W-073c B  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
+Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f D  W-071g D  W-073 —  W-073a D  W-073b E  W-073c ·  W-074 ·  W-075 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
 Phase 11   W-096 ·  W-097 ·  W-098 ·  W-099 ·  W-100 ·  W-101 ·  W-102 ·  W-103 ·  W-104 ·  W-105 ·  W-106 ·  W-107 ·  W-108 ·  W-109 ·  W-110 ·  W-111 ·

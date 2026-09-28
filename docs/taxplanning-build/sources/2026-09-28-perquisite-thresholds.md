@@ -63,3 +63,46 @@ word, or a source this session could not open (incometaxindia.gov.in answers 403
 2. **W-071d, W-071e, W-071f** are no longer blocked on rule 3 (V3–V5), each at V1 standing for TY 2025-26.
 3. **W-071a's C5a can be lifted** (U3): every index a TY 2025-26 or TY 2026-27 cap reads is READ. Lifting it changes a DONE item's behaviour (the refusal) — it needs its own item, placed by the owner, and G.S.R. 636(E) (T6) says the TY 2025-26 cap covers leased as well as owned.
 4. **W-071a's TY 2025-26 accommodation rows** could cite V1/V6 for the Explanation's "salary"; still `UNVERIFIED` (consolidation, no currency date).
+
+## Round 3 (2026-09-28) — ChatGPT share `t_6aba428253348191879e4a7142739eef` (W-073b, W-073c, W-079)
+
+| # | Finding | Status | Source |
+|---|---|---|---|
+| W1 | **Rules 2026 r.277** (successor to r.9D): taxable interest = interest accrued in the taxable contribution account; threshold **"₹500000 where no contribution is made by the employer … and ₹250000 in other cases"**; separate taxable / non-taxable accounts from tax year 2021-22 | **READ** | Gazette CG-DL-E-20032026-271092, p.1775 |
+| W2 | **Rules 1962 r.3B** — inserted by the Income-tax (1st Amendment) Rules, 2021, Notification No. 11/2021, **G.S.R. 155(E), 5-3-2021**, w.e.f. 1-4-2021; formula TP = (PC/2) × R + (PC¹ + TP¹) × R, PC/PC¹ the excess over "Rs. 7.5 lakhs", R = I / Favg, the Note capping TP¹ + PC¹ at the opening balance; the agent found no later amendment | **REPORTED** — the agent's quotation of the Department's rule page; its links (incometaxindia, wmstatic-prd) answer **403** here; no egazette copy found by the agent. The structure matches S4 r.16 (READ) | — |
+| W3 | **The recognised-PF interest rate:** Notification No. 24/2011, **S.O. 1046(E), 13-5-2011**, under 1961 Sch. IV Pt A r.6(b), *"with effect from the 1st day of September, 2010, 9.5 per cent."*, superseding S.O. 2091(E) of 26-8-2010 (8.5%); carried into the 2025 Act by s.536(2)(j) (READ earlier, retirement-limits A4); the agent found no later notification | **REPORTED** — no egazette or incometaxindia copy the agent could open; an India Code scan and a PDF reproduction are cited without URLs | — |
+| W4 | **Rules 1962 r.9D** — Notification No. 95/2021, G.S.R. 604(E), 31-8-2021, w.e.f. 1-4-2022; thresholds five lakh / two lakh and fifty thousand rupees | **REPORTED** — the historical incometaxindia PDF URL is 404 (agent); an EPFO copy is cited without a URL | — |
+
+### Effect on the build (for the owner)
+1. **W-073b** — TY 2026-27 buildable (r.16 READ); **TY 2025-26 rests on r.3B, only REPORTED.** Either the owner
+   downloads the Department's Rule 3B page or Notification 11/2021 PDF (403 here) and gives the path — then READ — or
+   W-073b builds TY 2025-26 `UNVERIFIED` on the reported text, the owner's call.
+2. **W-073c** — the 9.5% rate for both years is only REPORTED; S.O. 1046(E) needs a copy that opens (e.g. an egazette
+   `WriteReadData/2011/…` link, or a local download).
+3. **W-079** (`PF-EEINT-001`) — TY 2026-27 r.277 READ; TY 2025-26 r.9D REPORTED.
+
+## Round 4 (2026-09-28) — ChatGPT share `t_6aba458081a4819199e3fb7f88f53433`; each link fetched here
+
+| # | Finding | Status | Source |
+|---|---|---|---|
+| X1 | **Rules 1962 r.3B** — the Gazette pages of **G.S.R. 155(E), 5-3-2021**, Notification No. 11/2021 (F. No. 370142/52/2020-TPL), the Income-tax (1st Amendment) Rules, 2021, *"shall come into force from the 1st day of April, 2021"*; inserted after r.3A: **TP = (PC/2)*R + (PC1+ TP1)*R**, PC and PC1 the employer's principal contribution *"in excess of Rs. 7.5 lakh"*, R = I / Favg, Favg the average of the opening and closing balances, the Note capping TP1 + PC1 at the opening balance — the same as S4 r.16, without r.16's "lakhs" slip | **READ in a Gazette scan hosted by a third party** (saginfotech.com) — the Gazette's own pages, bilingual, but not from egazette or a government site: usable as `UNVERIFIED`, as the consolidated rule 3 (V1) was. No later amendment is reported (the agent) or footnoted | blog.saginfotech.com/wp-content/uploads/2021/03/notification-no-11-2021.pdf |
+| X2 | **Rules 1962 r.9D** — **G.S.R. 604(E), 31-8-2021**, Notification No. 95/2021, the Income-tax (25th Amendment) Rules, 2021, *"shall come into force on 1st day of April, 2022"*; threshold *"(i) five lakh rupees, if the second proviso to clause (11) or clause (12) of section 10 is applicable; and (ii) two lakh and fifty thousand rupees in other cases"* | **READ in a government-hosted copy** (the Comptroller and Auditor General's site) | cag.gov.in/uploads/ae_circulars_office_orders/CircularsOfficeOrders-06131eda5d32ed5-37380890.pdf |
+| X3 | **S.O. 1046(E), 13-5-2011** (9.5%) — the agent's ITD link answers **403** here; its India Code link does not connect | still **REPORTED** | — |
+
+### Effect on the build (for the owner)
+1. **W-073b is sourced for both years** — TY 2026-27 r.16 READ; TY 2025-26 r.3B read in a third-party-hosted Gazette
+   scan, so its version is `UNVERIFIED` naming an egazette copy as what to check.
+2. **W-073c still needs S.O. 1046(E)** read — the ITD PDF (incometaxindia.gov.in/Communications/Notification/
+   920110000000000394.pdf) opened in a browser and saved locally would settle it.
+3. **W-079's `PF-EEINT-001`** — both years read (r.277 in the Gazette; r.9D in a government-hosted copy).
+
+## Round 5 (2026-09-28) — ChatGPT share `t_6aba4727282481918fe6515f0b1fa2a0`
+
+| # | Finding | Status | Source |
+|---|---|---|---|
+| Y1 | **S.O. 1046(E), 13-5-2011**, Notification No. 24/2011/F.No.142/14/2010-SO (TPL), headed *"TO BE PUBLISHED IN THE GAZETTE OF INDIA, EXTRAORDINARY, PART-II, SECTION 3, SUB-SECTION (II)"*: under 1961 Sch. IV Pt A r.6(b), *"in supersession of … S.O. 2091(E), dated the 26th August, 2010, the Central Government hereby fixes, with effect from the 1st day of September, 2010, **9.5 per cent.**, as the rate referred to in the said clause"*. Carried into the 2025 Act (Sch. XI Pt A para 6(b)) by s.536(2)(j) (READ, retirement-limits A4). No later notification reported | **READ in a third-party mirror** (ClearTax CDN) of the Department's PDF (incometaxindia …/920110000000000394.pdf, 403 here) — the issued text, not the Gazette page: usable as `UNVERIFIED`, naming the Gazette copy as what to check | assets.cleartax-cdn.com/finfo/tax_library/920110000000000394.pdf |
+
+### Effect on the build (for the owner)
+- **W-073c is sourced for the rate** (both years, `UNVERIFIED`). Its plan still has to read the 1961 Sch. IV Pt A r.6 text
+  (thc.nic.in, on hand) and the "salary" the 12% is measured on (Sch. XI Pt A; 1961 Sch. IV Pt A r.2) — both in
+  documents already here.
