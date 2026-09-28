@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -137,6 +138,8 @@ public final class SalaryBaseNode implements ComputationNode {
                     rule + " defines a transport limit, not a salary base");
             case IndexByYear index -> throw new IllegalStateException(
                     rule + " defines an index table, not a salary base");
+            case ExcludedAssets excluded -> throw new IllegalStateException(
+                    rule + " defines excluded assets, not a salary base");
         };
     }
 }

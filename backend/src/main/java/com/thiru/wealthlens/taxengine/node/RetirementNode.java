@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -214,6 +215,8 @@ public final class RetirementNode implements ComputationNode {
                     ruleId + " defines a transport limit, not a share of a commuted pension");
             case IndexByYear index -> throw new IllegalStateException(
                     ruleId + " defines an index table, not a share of a commuted pension");
+            case ExcludedAssets excluded -> throw new IllegalStateException(
+                    ruleId + " defines excluded assets, not a share of a commuted pension");
         };
     }
 

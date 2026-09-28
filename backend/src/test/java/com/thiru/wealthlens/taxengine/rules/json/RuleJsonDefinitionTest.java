@@ -7,8 +7,10 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
+import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -127,6 +129,26 @@ class RuleJsonDefinitionTest {
         // Then
         assertThat(version.definition())
                 .contains(new IndexByYear(Map.of(TaxYearId.of(2023), 348, TaxYearId.of(2024), 363)));
+    }
+
+    @Test
+    void version_whenExcludedAssets_readsTheKinds() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "ExcludedAssets", "kinds": [ "LAPTOP_OR_COMPUTER", "TABLET" ] }""");
+
+        // Then
+        assertThat(version.definition())
+                .contains(new ExcludedAssets(Set.of(MovableAssetKind.LAPTOP_OR_COMPUTER, MovableAssetKind.TABLET)));
+    }
+
+    @Test
+    void version_whenAnExcludedAssetKindIsUnknown_isRefusedListingTheKnown() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "ExcludedAssets", "kinds": [ "TELEVISION" ] }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("MOBILE_PHONE");
     }
 
     @Test

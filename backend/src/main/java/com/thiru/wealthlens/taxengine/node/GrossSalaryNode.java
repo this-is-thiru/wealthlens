@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -99,6 +100,8 @@ public final class GrossSalaryNode implements ComputationNode {
                     + " defines a transport limit, not a head's total");
             case IndexByYear index -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
                     + " defines an index table, not a head's total");
+            case ExcludedAssets excluded -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
+                    + " defines excluded assets, not a head's total");
         };
     }
 }

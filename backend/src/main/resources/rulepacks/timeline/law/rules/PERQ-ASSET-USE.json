@@ -1,0 +1,100 @@
+{
+  "ruleId": "PERQ-ASSET-USE",
+  "_note": "Use of a movable asset belonging to or hired by the employer: \"10% per annum of the actual cost of such asset or the amount of rent or charge paid or payable by the employer\", less recoveries (D-119; rulebook PERQ-MOVABLE-2026). The cost is apportioned to the months used before the rate is applied (D-119 C3, as D-113 did the car); a hired asset is its rent for the period. Assets the year excludes are PERQ-ASSET-USE-EXCLUDED. For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1546). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viii), with Income-tax Rules, 1962 r.3(7)(vii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 7",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "ASSET_COST"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(7) stands as in the rule in force from 1-4-2009 (r.3(10))",
+        "gazetteRef": "CG-DL-E-18082023-248178",
+        "notifiedOn": "2023-08-18",
+        "effectiveFrom": "2023-09-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/42998/Rule-3_2025-12-13_12-11-50_d5ea0b09d5ea0b_en.pdf/09d9b9ee-e51d-2f37-bc21-8c787c0061ea",
+        "sourceDescription": "Income Tax Department, consolidated Income-tax Rules, 1962 rule 3, r.3(7)(vii), pp.3–4 (owner's download, 2026-09-28)",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Income-tax Rules, 1962 r.3(7)(vii) is read in the Income Tax Department's consolidated rule 3 (no \"as amended up to\" date; no amendment footnoted on it): the Gazette text and any amendment up to AY 2026-27. Also the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the interim Finance Act, 2024 are unread for Income-tax Act, 1961 s.17(2)(viii)."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viii), with Income-tax Rules, 1962 r.3(7)(vii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 7",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "ASSET_COST"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV and (5)(b), p.1546",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV and (5)(b), p.1546",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

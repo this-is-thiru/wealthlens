@@ -78,4 +78,17 @@ class RateTest {
         assertThatThrownBy(() -> Rate.percent("9").ofShare(Money.of("100"), 1, 0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void leftAfter_whenTwoYearsAtTwentyPercent_isTheReducingBalanceRoundedOnce() {
+        // 10,00,000 × 0.8 × 0.8 = 6,40,000; none left of nothing after any years
+        assertThat(Rate.percent("20").leftAfter(Money.of("1000000"), 2)).isEqualTo(Money.of("640000"));
+        assertThat(Rate.percent("50").leftAfter(Money.of("100000"), 0)).isEqualTo(Money.of("100000"));
+    }
+
+    @Test
+    void leftAfter_whenPeriodsAreNegative_isRefused() {
+        assertThatThrownBy(() -> Rate.percent("20").leftAfter(Money.of("100"), -1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

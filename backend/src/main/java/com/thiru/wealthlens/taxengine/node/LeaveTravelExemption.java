@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -106,6 +107,8 @@ final class LeaveTravelExemption {
                     RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a transport limit, not journeys per block");
             case IndexByYear index -> throw new IllegalStateException(
                     RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines an index table, not journeys per block");
+            case ExcludedAssets excluded -> throw new IllegalStateException(
+                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines excluded assets, not journeys per block");
         };
     }
 

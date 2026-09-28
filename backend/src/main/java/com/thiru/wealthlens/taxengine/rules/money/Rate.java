@@ -61,6 +61,20 @@ public record Rate(BigDecimal fraction) implements Comparable<Rate> {
                 .divide(BigDecimal.valueOf(whole), Money.CALC));
     }
 
+    /**
+     * What is left of a base after this rate is taken off it each period on the reducing balance — an asset's written
+     * down value after its completed years of wear and tear (D-119). Computed exactly and rounded to paise once.
+     *
+     * @param periods the periods, 0 or more
+     */
+    public Money leftAfter(Money base, int periods) {
+        if (periods < 0) {
+            throw new IllegalArgumentException("Periods may not be negative, but were " + periods);
+        }
+        return Money.ofExact(base.amountInRupees().multiply(BigDecimal.ONE.subtract(fraction).pow(periods, Money.CALC),
+                Money.CALC));
+    }
+
     /** The rate as the statute writes it, for a trace line: {@code "30%"}, {@code "12.5%"}. */
     public String asPercentLabel() {
         return fraction.multiply(HUNDRED).stripTrailingZeros().toPlainString() + "%";

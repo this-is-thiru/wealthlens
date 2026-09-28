@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -46,7 +47,8 @@ import java.util.Set;
  * {@link MotorCarPerquisite}, a vehicle the employer provides or runs (Table II; r.3(2); D-113) — which reads
  * {@code salary.monetaryincome} for the specified-employee test; meals and gifts through {@link MealPerquisite} and
  * {@link GiftPerquisite} (Table IV Sl. 3–4; r.3(7)(iii)–(iv); D-117); loans through {@link LoanPerquisite} (Sl. 1;
- * r.3(7)(i); D-118).
+ * r.3(7)(i); D-118); holidays, cards, clubs, other benefits and assets through {@link ExpenseBenefitPerquisite} and
+ * {@link AssetPerquisite} (Sl. 2, 5–9; r.3(7)(ii), (v)–(ix); D-119).
  *
  * <p>Each accommodation is valued on its Table row — the licence fee, a percentage of salary by the city's
  * population, the lower of the lease rental or hotel charges and a percentage of salary — "as reduced by the rent …
@@ -74,6 +76,8 @@ public final class PerquisiteNode implements ComputationNode {
         rules.addAll(MealPerquisite.RULES);
         rules.add(RuleIds.PERQ_GIFT);
         rules.addAll(LoanPerquisite.RULES);
+        rules.addAll(ExpenseBenefitPerquisite.RULES);
+        rules.addAll(AssetPerquisite.RULES);
         rules.addAll(Set.of(RuleIds.PERQ_ACCOM_GOVERNMENT, RuleIds.PERQ_ACCOM_OWNED, RuleIds.PERQ_ACCOM_LEASED,
                 RuleIds.PERQ_ACCOM_HOTEL, RuleIds.PERQ_ACCOM_FURNITURE, RuleIds.PERQ_ACCOM_CONTINUED,
                 RuleIds.RATE_COST_INFLATION_INDEX));
@@ -117,6 +121,8 @@ public final class PerquisiteNode implements ComputationNode {
         trace.addAll(MealPerquisite.lines(ctx, trace.size() + 1));
         trace.addAll(GiftPerquisite.lines(ctx, trace.size() + 1));
         trace.addAll(LoanPerquisite.lines(ctx, trace.size() + 1));
+        trace.addAll(ExpenseBenefitPerquisite.lines(ctx, trace.size() + 1));
+        trace.addAll(AssetPerquisite.lines(ctx, trace.size() + 1));
         Money value = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
                 : new NodeResult(MoneyValue.of(value), trace);
@@ -192,6 +198,8 @@ public final class PerquisiteNode implements ComputationNode {
                     ruleId + " defines a transport limit, not an index");
             case CommutedPensionShare share -> throw new IllegalStateException(
                     ruleId + " defines a share of a commuted pension, not an index");
+            case ExcludedAssets excluded -> throw new IllegalStateException(
+                    ruleId + " defines excluded assets, not an index");
         };
     }
 

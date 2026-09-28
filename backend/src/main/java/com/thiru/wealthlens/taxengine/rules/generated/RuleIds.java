@@ -21,6 +21,11 @@ public final class RuleIds {
     public static final RuleId PERQ_ACCOM_HOTEL = new RuleId("PERQ-ACCOM-HOTEL");
     public static final RuleId PERQ_ACCOM_LEASED = new RuleId("PERQ-ACCOM-LEASED");
     public static final RuleId PERQ_ACCOM_OWNED = new RuleId("PERQ-ACCOM-OWNED");
+    public static final RuleId PERQ_ASSET_TRANSFER_CAR = new RuleId("PERQ-ASSET-TRANSFER-CAR");
+    public static final RuleId PERQ_ASSET_TRANSFER_ELECTRONIC = new RuleId("PERQ-ASSET-TRANSFER-ELECTRONIC");
+    public static final RuleId PERQ_ASSET_TRANSFER_OTHER = new RuleId("PERQ-ASSET-TRANSFER-OTHER");
+    public static final RuleId PERQ_ASSET_USE = new RuleId("PERQ-ASSET-USE");
+    public static final RuleId PERQ_ASSET_USE_EXCLUDED = new RuleId("PERQ-ASSET-USE-EXCLUDED");
     public static final RuleId PERQ_CAR_CHAUFFEUR = new RuleId("PERQ-CAR-CHAUFFEUR");
     public static final RuleId PERQ_CAR_CONVEYANCE = new RuleId("PERQ-CAR-CONVEYANCE");
     public static final RuleId PERQ_CAR_EMPLOYEE = new RuleId("PERQ-CAR-EMPLOYEE");
@@ -31,7 +36,13 @@ public final class RuleIds {
     public static final RuleId PERQ_CAR_PARTLY_LARGE = new RuleId("PERQ-CAR-PARTLY-LARGE");
     public static final RuleId PERQ_CAR_PARTLY_SMALL = new RuleId("PERQ-CAR-PARTLY-SMALL");
     public static final RuleId PERQ_CAR_PRIVATE = new RuleId("PERQ-CAR-PRIVATE");
+    public static final RuleId PERQ_CLUB = new RuleId("PERQ-CLUB");
+    public static final RuleId PERQ_CLUB_BUSINESS = new RuleId("PERQ-CLUB-BUSINESS");
+    public static final RuleId PERQ_CLUB_BUSINESS_UNIFORM = new RuleId("PERQ-CLUB-BUSINESS-UNIFORM");
+    public static final RuleId PERQ_CLUB_UNIFORM = new RuleId("PERQ-CLUB-UNIFORM");
+    public static final RuleId PERQ_CREDIT_CARD = new RuleId("PERQ-CREDIT-CARD");
     public static final RuleId PERQ_GIFT = new RuleId("PERQ-GIFT");
+    public static final RuleId PERQ_HOLIDAY = new RuleId("PERQ-HOLIDAY");
     public static final RuleId PERQ_LOAN = new RuleId("PERQ-LOAN");
     public static final RuleId PERQ_LOAN_PETTY = new RuleId("PERQ-LOAN-PETTY");
     public static final RuleId PERQ_MEAL = new RuleId("PERQ-MEAL");
@@ -39,6 +50,7 @@ public final class RuleIds {
     public static final RuleId PERQ_MEAL_VOUCHER = new RuleId("PERQ-MEAL-VOUCHER");
     public static final RuleId PERQ_MEDABROAD_STAY = new RuleId("PERQ-MEDABROAD-STAY");
     public static final RuleId PERQ_MEDABROAD_TRAVEL = new RuleId("PERQ-MEDABROAD-TRAVEL");
+    public static final RuleId PERQ_OTHER_BENEFIT = new RuleId("PERQ-OTHER-BENEFIT");
     public static final RuleId PERQ_SPECIFIED_EMPLOYEE = new RuleId("PERQ-SPECIFIED-EMPLOYEE");
     public static final RuleId RATE_COST_INFLATION_INDEX = new RuleId("RATE-COST-INFLATION-INDEX");
     public static final RuleId RATE_HEALTH_EDUCATION_CESS = new RuleId("RATE-HEALTH-EDUCATION-CESS");

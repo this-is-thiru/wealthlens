@@ -13,9 +13,11 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
@@ -218,7 +220,7 @@ public final class ShapeJson {
     public static RuleDefinition definition(JsonNode node, String path) {
         String tag = PackJson.tag(
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
-                "CommutedPensionShare", "IndexByYear");
+                "CommutedPensionShare", "IndexByYear", "ExcludedAssets");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -234,6 +236,11 @@ public final class ShapeJson {
                     PackJson.integer(node, "oneOverWhereGratuityReceived", path),
                     PackJson.integer(node, "oneOverOtherwise", path)));
             case "IndexByYear" -> indexByYear(node, path);
+            case "ExcludedAssets" -> {
+                List<MovableAssetKind> kinds = PackJson.array(node, "kinds", path,
+                        e -> movableAssetKind(e.node().asString(), e.path()));
+                yield PackJson.construct(path, () -> new ExcludedAssets(Set.copyOf(kinds)));
+            }
             default -> throw unreachable(tag, path);
         };
     }
@@ -275,6 +282,16 @@ public final class ShapeJson {
         boolean plusDearnessAllowance = PackJson.bool(node, "plusDearnessAllowanceThereon", path);
         return PackJson.construct(path, () -> new DisabledTransportLimit(
                 Set.copyOf(conditions), perMonth, perMonthInOtherCities, plusDearnessAllowance));
+    }
+
+    private static MovableAssetKind movableAssetKind(String raw, String path) {
+        for (MovableAssetKind candidate : MovableAssetKind.values()) {
+            if (candidate.name().equals(raw)) {
+                return candidate;
+            }
+        }
+        throw new PackValidationException(path + " must be one of "
+                + java.util.Arrays.toString(MovableAssetKind.values()) + ", but was \"" + raw + "\"");
     }
 
     private static TransportDisability transportDisability(String raw, String path) {

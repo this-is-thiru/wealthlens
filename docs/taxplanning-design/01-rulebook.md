@@ -793,6 +793,13 @@ Table I / Table II / Table III block to record it.
 > **r.15(5)** (Gazette 271092, pp.1545–1546), the rule number this section asked for. Gifts are aggregated per
 > employer (D-117 C4a).
 
+> **Addendum (W-071e3, 2026-09-28, D-119):** the rest of Table IV is built — holidays, credit cards, clubs, the use
+> (10% a year, apportioned to months) and the transfer (50% / 20% reducing balance, 10% straight line per completed
+> year) of movable assets, other benefits at arm's-length cost, telephones excepted. Excluded from use: laptops and
+> computers (TY 2025-26); laptops, computers, **tablets and mobile phones** (TY 2026-27). **Clubs differ by year:**
+> Rules 1962 r.3(7)(vi) has two separate exclusions (business with records; uniform health-club facilities); S4 Table IV
+> Sl. 6 joins them into one — built as each text reads, OQ-12.
+
 ### `PERQ-ACCOM-2026` — accommodation (Rules 2026, Table I and its sub-rules)
 
 | Rule ID | Statement |

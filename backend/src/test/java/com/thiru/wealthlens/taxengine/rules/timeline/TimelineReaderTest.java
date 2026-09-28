@@ -112,7 +112,19 @@ class TimelineReaderTest {
             new RuleId("PERQ-MEAL-VOUCHER"),
             new RuleId("PERQ-GIFT"),
             new RuleId("PERQ-LOAN"),
-            new RuleId("PERQ-LOAN-PETTY"));
+            new RuleId("PERQ-LOAN-PETTY"),
+            new RuleId("PERQ-HOLIDAY"),
+            new RuleId("PERQ-CREDIT-CARD"),
+            new RuleId("PERQ-CLUB"),
+            new RuleId("PERQ-CLUB-BUSINESS"),
+            new RuleId("PERQ-CLUB-UNIFORM"),
+            new RuleId("PERQ-CLUB-BUSINESS-UNIFORM"),
+            new RuleId("PERQ-ASSET-USE"),
+            new RuleId("PERQ-ASSET-USE-EXCLUDED"),
+            new RuleId("PERQ-ASSET-TRANSFER-ELECTRONIC"),
+            new RuleId("PERQ-ASSET-TRANSFER-CAR"),
+            new RuleId("PERQ-ASSET-TRANSFER-OTHER"),
+            new RuleId("PERQ-OTHER-BENEFIT"));
 
     @TempDir
     Path copy;

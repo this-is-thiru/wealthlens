@@ -9,5 +9,5 @@ package com.thiru.wealthlens.taxengine.rules.definition;
  * while its content stays data. A new kind of definition is a new class and a new permit.
  */
 public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPerCalendarBlock,
-        DisabledTransportLimit, CommutedPensionShare, IndexByYear {
+        DisabledTransportLimit, CommutedPensionShare, IndexByYear, ExcludedAssets {
 }
