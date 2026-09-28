@@ -1,6 +1,6 @@
 {
   "ruleId": "PERQ-MEAL",
-  "_note": "Free food and non-alcoholic beverages an employer provides: \"the amount of expenditure incurred by such employer as reduced by the amount, if any, paid or recovered from the employee\" (D-117; rulebook PERQ-MEAL-2026, alias PERQ-FOOD-BEVERAGES). Food outside the exclusions is salary in full; tea or snacks at work, and food at work in a remote area or off-shore installation, are not salary (nil lines citing this row); paid vouchers in a regime PERQ-MEAL-VOUCHER does not apply in are valued here in full. For every employee (s.17(1)(e); 1961 s.17(2)(viii); D-116 C2). TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV Sl. 3 (Gazette 271092, p.1546). TY 2025-26: Income-tax Rules, 1962 r.3(7)(iii) (consolidated rule 3, pp.3–4). Every regime.",
+  "_note": "Free food and non-alcoholic beverages an employer provides: \"the amount of expenditure incurred by such employer as reduced by the amount, if any, paid or recovered from the employee\" (D-117; rulebook PERQ-MEAL-2026, alias PERQ-FOOD-BEVERAGES). Food outside the exclusions is salary in full; tea or snacks at work, and food at work in a remote area or off-shore installation, are not salary (nil lines citing this row); paid vouchers in a regime PERQ-MEAL-VOUCHER does not apply in are valued here in full. For every employee (s.17(1)(e); 1961 s.17(2)(viii); D-116 C2). TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV Sl. 3 (Gazette 271092, pp.1545–1546). TY 2025-26: Income-tax Rules, 1962 r.3(7)(iii) (consolidated rule 3, pp.3–4). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -85,7 +85,7 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV, p.1546",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 3, pp.1545–1546",
         "accessedOn": "2026-09-28",
         "verificationLevel": "SOURCE_CHECKED"
       }
@@ -93,7 +93,7 @@
   ],
   "headProvenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV, p.1546",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 3, pp.1545–1546",
     "accessedOn": "2026-09-28",
     "verificationLevel": "SOURCE_CHECKED"
   }

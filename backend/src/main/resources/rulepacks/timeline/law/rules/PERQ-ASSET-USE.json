@@ -1,6 +1,6 @@
 {
   "ruleId": "PERQ-ASSET-USE",
-  "_note": "Use of a movable asset belonging to or hired by the employer: \"10% per annum of the actual cost of such asset or the amount of rent or charge paid or payable by the employer\", less recoveries (D-119; rulebook PERQ-MOVABLE-2026). The cost is apportioned to the months used before the rate is applied (D-119 C3, as D-113 did the car); a hired asset is its rent for the period. Assets the year excludes are PERQ-ASSET-USE-EXCLUDED. For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1546). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
+  "_note": "Use of a movable asset belonging to or hired by the employer: \"10% per annum of the actual cost of such asset or the amount of rent or charge paid or payable by the employer\", less recoveries (D-119; rulebook PERQ-MOVABLE-2026). The cost is apportioned to the months used before the rate is applied (D-119 C3, as D-113 did the car); a hired asset is its rent for the period. Assets the year excludes are PERQ-ASSET-USE-EXCLUDED. For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, pp.1546–1547). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -85,7 +85,7 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV and (5)(b), p.1546",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 7, pp.1546–1547",
         "accessedOn": "2026-09-28",
         "verificationLevel": "SOURCE_CHECKED"
       }
@@ -93,7 +93,7 @@
   ],
   "headProvenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV and (5)(b), p.1546",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 7, pp.1546–1547",
     "accessedOn": "2026-09-28",
     "verificationLevel": "SOURCE_CHECKED"
   }

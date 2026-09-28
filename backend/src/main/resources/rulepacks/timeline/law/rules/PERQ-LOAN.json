@@ -1,6 +1,6 @@
 {
   "ruleId": "PERQ-LOAN",
-  "_note": "An interest-free or concessional loan from the employer: \"the sum equal to the interest computed at the annual rate charged by the State Bank of India … as on the 1st day of the relevant tax year in respect of loans by the bank for the same purpose, using the maximum outstanding monthly balance as reduced by the interest, if any, actually paid\" (D-118; rulebook PERQ-LOAN-2026). The Bank's rate is entered per loan (D-116 C3), never a pack figure; \"maximum outstanding monthly balance\" is each month-end balance (r.15(8)(e); r.3 Explanation (vii)), and LoanPerquisite takes one month's interest per month-end balance, the rate ÷ 12 (D-118 C2a — a reading), and hands it in; this row carries the Rule's words and provenance. A loan for treatment of a disease the year's rule lists (rule 18; Rules 1962 r.3A) is nil, save the part a medical insurance scheme reimbursed (col. D (b)). For every employee. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV Sl. 1 (Gazette 271092, p.1546). TY 2025-26: Income-tax Rules, 1962 r.3(7)(i) (consolidated rule 3, p.3). Every regime.",
+  "_note": "An interest-free or concessional loan from the employer: \"the sum equal to the interest computed at the annual rate charged by the State Bank of India … as on the 1st day of the relevant tax year in respect of loans by the bank for the same purpose, using the maximum outstanding monthly balance as reduced by the interest, if any, actually paid\" (D-118; rulebook PERQ-LOAN-2026). The Bank's rate is entered per loan (D-116 C3), never a pack figure; \"maximum outstanding monthly balance\" is each month-end balance (r.15(8)(e); r.3 Explanation (vii)), and LoanPerquisite takes one month's interest per month-end balance, the rate ÷ 12 (D-118 C2a — a reading), and hands it in; this row carries the Rule's words and provenance. A loan for treatment of a disease the year's rule lists (rule 18; Rules 1962 r.3A) is nil, save the part a medical insurance scheme reimbursed (col. D (b)). For every employee. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV Sl. 1 (Gazette 271092, p.1545). TY 2025-26: Income-tax Rules, 1962 r.3(7)(i) (consolidated rule 3, p.3). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -85,7 +85,7 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 1, p.1546, and r.15(8)(e)",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 1, p.1545, and r.15(8)(e), p.1548",
         "accessedOn": "2026-09-28",
         "verificationLevel": "SOURCE_CHECKED"
       }
@@ -93,7 +93,7 @@
   ],
   "headProvenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 1, p.1546, and r.15(8)(e)",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 1, p.1545, and r.15(8)(e), p.1548",
     "accessedOn": "2026-09-28",
     "verificationLevel": "SOURCE_CHECKED"
   }
