@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.42",
-      "checksum": "sha256:08cbbf1429ac93a19a87852a12ddcac15e165376d2f5d6684df75809fb55a851"
+      "version": "2026-27.law.43",
+      "checksum": "sha256:764b0f8792460647bc5ddcd918db0c8875ee9c8d9d0e49eba685ab4c9c10da5d"
     },
     "exec": {
       "version": "2026-27.exec.22",
@@ -20,6 +20,8 @@
     }
   },
   "rules": {
+    "DED-AGNIVEER-GOVERNMENT": "sha256:b9445f5a48cdbcc7f467245b8c2e2dc6611c7b8b9532b30d4dee0b8d6d4d46d1",
+    "DED-AGNIVEER-OWN": "sha256:2ded93b02a81c4941399685c8e6c2f327e360c702ee393d82f9d46eadf2ff7c7",
     "DED-DISABILITY": "sha256:231d2628c3009e1e56bfa02244429c148d359a1e006397cf88e3180a43897039",
     "DED-DISABILITY-SEVERE": "sha256:1a440a6281a415a882eef459e74fdeadb63626ac3b8889a8830ba12511dd968f",
     "DED-DISABLED-DEPENDANT": "sha256:d1f5ddc50761634549f6e64a9c50fcbeb9909b459edefd7d376171eedd7324b1",

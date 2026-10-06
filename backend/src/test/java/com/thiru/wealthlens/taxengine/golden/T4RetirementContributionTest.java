@@ -2,6 +2,8 @@ package com.thiru.wealthlens.taxengine.golden;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.input.EmployerFund;
+import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -48,17 +50,22 @@ class T4RetirementContributionTest {
         // Given
         Money expected = golden.expectedEmployerContributionCharges().orElseThrow();
         Money pay = golden.salary().pay().stream().map(SalaryComponent::annualAmount).reduce(Money.ZERO, Money::plus);
+        Money pensionContribution = golden.salary().employerContributions().stream()
+                .filter(contribution -> contribution.fund() == EmployerFund.NOTIFIED_PENSION_SCHEME)
+                .map(EmployerFundContribution::amount)
+                .reduce(Money.ZERO, Money::plus);
 
         // When
         GoldenCaseRunner.SalaryRun run = RUNNER.run(golden, year);
 
-        // Then — the charge, and gross salary above the pay by exactly that ("added to salary income")
+        // Then — the charge, and gross salary above the pay by that and the employer's pension contribution, which
+        // "salary" includes (S2 s.16(k); D-140 erratum to D-128 C4): T4-1, T4-2 74,000 + 3,36,000 = 4,10,000
         assertThat(run.result().valueOf(NodeIds.EMPLOYER_CONTRIB_CHARGES))
                 .as("%s in %s — %s", golden.id(), year.label(), golden.source())
                 .isEqualTo(MoneyValue.of(expected));
         assertThat(run.result().valueOf(NodeIds.SALARY_GROSS).asMoney().minus(pay))
                 .as("%s in %s — gross less pay", golden.id(), year.label())
-                .isEqualTo(expected);
+                .isEqualTo(expected.plus(pensionContribution));
     }
 
     @Test

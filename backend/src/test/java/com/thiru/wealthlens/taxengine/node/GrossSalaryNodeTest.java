@@ -2,7 +2,13 @@ package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.input.AgniveerCorpusFund;
+import com.thiru.wealthlens.taxengine.input.EmployerFund;
+import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
+import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet.Line;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
@@ -31,6 +37,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -203,5 +210,54 @@ class GrossSalaryNodeTest {
         // Then — 11,40,000 + 60,000 + 74,000
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1274000")));
         assertThat(result.trace()).hasSize(3);
+    }
+
+    /** Inputs entering only an employer's pension contribution and an Agniveer account (two employments entered). */
+    private static EngineInputs entering(int year, List<EmployerFundContribution> contributions,
+            Optional<AgniveerCorpusFund> agniveer) {
+        EngineInputs plain = inYear(year);
+        List<Employment> employments = Collections.nCopies(2,
+                new Employment(List.of(), false, EmployerKind.OTHER, false, Optional.empty()));
+        EnteredFacts facts = new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), contributions, Optional.empty(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), agniveer);
+        return new EngineInputs(plain.taxYear(), plain.regime(), plain.temporal(), facts, plain.assessee(),
+                plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
+    }
+
+    private static NodeResult runEntering(int year, EngineInputs inputs) {
+        return NodeHarness.with(pack(year))
+                .regime(NEW_TAX_REGIME)
+                .inputs(inputs)
+                .given(NodeIds.INPUTS_COMPONENTS, TWO_EMPLOYMENTS)
+                .given(NodeIds.SALARY_PERQUISITES, MoneyValue.of(Money.ZERO))
+                .given(NodeIds.EMPLOYER_CONTRIB_CHARGES, MoneyValue.of(Money.ZERO))
+                .run(new GrossSalaryNode());
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheEmployerContributesToThePensionScheme_addsTheContributionAsSalary(int year) {
+        // When — S2 s.16(k); 1961 s.17(1)(viii): 1,20,000; a provident-fund contribution is not salary here
+        NodeResult result = runEntering(year, entering(year, List.of(
+                new EmployerFundContribution(0, EmployerFund.NOTIFIED_PENSION_SCHEME, Money.of("120000")),
+                new EmployerFundContribution(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("150000"))),
+                Optional.empty()));
+
+        // Then — 11,40,000 + 1,20,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1260000")));
+        assertThat(result.trace()).hasSize(2);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheGovernmentContributesToAnAgniveerAccount_addsItAsSalary(int year) {
+        // When — S2 s.16(l); 1961 s.17(1)(ix): the Government's 30,000, not the Agniveer's own 30,000
+        NodeResult result = runEntering(year, entering(year, List.of(),
+                Optional.of(new AgniveerCorpusFund(Money.of("30000"), Money.of("30000")))));
+
+        // Then — 11,40,000 + 30,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1170000")));
     }
 }

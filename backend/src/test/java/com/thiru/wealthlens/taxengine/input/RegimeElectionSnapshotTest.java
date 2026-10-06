@@ -270,7 +270,7 @@ class RegimeElectionSnapshotTest {
             // not. The employments are its first field (D-090); "none" is an empty list, never null.
             assertThat(EnteredFacts.none().employments()).isEmpty();
             assertThat(EnteredFacts.none().tenancies()).isEmpty();
-            assertThat(EnteredFacts.none()).isEqualTo(new EnteredFacts(java.util.List.of(), java.util.List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()));
+            assertThat(EnteredFacts.none()).isEqualTo(new EnteredFacts(java.util.List.of(), java.util.List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
         }
     }
 }

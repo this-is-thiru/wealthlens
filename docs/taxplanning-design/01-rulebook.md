@@ -1129,6 +1129,12 @@ ordering is the single most common error in this area and is why `G2` exists as 
 > entered as the house's value; s.131's is the stamp duty value. `DED-80EX-001`'s bar is recorded for the house-property
 > head (W-078).
 
+> **Addendum (W-075c3, 2026-10-06, D-140):** S2 s.16(k) and (l) make the employer's pension-scheme contribution and
+> the Government's Agniveer Corpus Fund contribution **salary** (pp.37–38) — so `DED-NPS-EMP-001`…`-003` and
+> `DED-AGNIVEER-001`(2) deduct amounts first included in income; the engine now includes both. `DED-AGNIVEER-001` is
+> built (s.125, p.161). Whether the s.17(1)(h) excess (`PF-AGGCAP-001`) should leave out the pension contribution
+> s.16(k) already counts is OQ-21.
+
 ---
 
 ## R16 — Income from house property

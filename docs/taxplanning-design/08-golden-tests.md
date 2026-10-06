@@ -463,6 +463,12 @@ gap, do not fabricate through it.
 > Whether the employer's NPS contribution is itself salary before the deduction (T4-2's "remains income") is
 > **OQ-14**. **T4-4**'s "NEEDS VERIFICATION" predates the sourcing of Rules 1962 r.9D; settled with `W-079`.
 
+> **Erratum (W-075c3, 2026-10-06, D-140).** OQ-14 is answered: S2 s.16(k) (1961 s.17(1)(viii)) makes the employer's
+> pension-scheme contribution salary. In T4-1 and T4-2 gross salary therefore exceeds the pay by the ₹74,000 excess
+> **and** the ₹3,36,000 contribution — ₹4,10,000; DR 08's "₹74,000 added" is the excess (`employer.contrib.charges`),
+> and T4-2's "the uncapped ₹96,000 … remains income" now holds. Whether the excess should leave out the contribution
+> s.16(k) already counts is OQ-21.
+
 ---
 
 ## T5 — LTA, 80C with employee PF, and the s.123 aggregate

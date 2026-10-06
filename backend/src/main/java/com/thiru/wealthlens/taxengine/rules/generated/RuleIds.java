@@ -15,6 +15,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId DED_AGNIVEER_GOVERNMENT = new RuleId("DED-AGNIVEER-GOVERNMENT");
+    public static final RuleId DED_AGNIVEER_OWN = new RuleId("DED-AGNIVEER-OWN");
     public static final RuleId DED_DISABILITY = new RuleId("DED-DISABILITY");
     public static final RuleId DED_DISABILITY_SEVERE = new RuleId("DED-DISABILITY-SEVERE");
     public static final RuleId DED_DISABLED_DEPENDANT = new RuleId("DED-DISABLED-DEPENDANT");

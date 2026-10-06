@@ -53,8 +53,9 @@ import java.util.stream.Collectors;
  * of it within gross total income (s.122(2)). A row the regime excludes, with something entered for it, gives a nil
  * line naming the regime. TY 2025-26 has none of these rows yet (D-129 C2a), so anything entered there is refused.
  * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136); and s.154, s.127
- * and s.128 ({@link DisabilityDeduction}; D-138); s.129–132, loan interest ({@link LoanInterestDeduction}; D-139). The
- * other deductions are later items (W-075a3, W-075c3–c6).
+ * and s.128 ({@link DisabilityDeduction}; D-138); s.129–132, loan interest ({@link LoanInterestDeduction}; D-139); s.125,
+ * the Agniveer Corpus Fund ({@link AgniveerDeduction}; D-140). The other deductions are later items (W-075a3,
+ * W-075c4–c6).
  */
 public final class ChapterEightNode implements ComputationNode {
 
@@ -80,6 +81,7 @@ public final class ChapterEightNode implements ComputationNode {
         rules.addAll(HealthInsuranceDeduction.RULES);
         rules.addAll(DisabilityDeduction.RULES);
         rules.addAll(LoanInterestDeduction.RULES);
+        rules.addAll(AgniveerDeduction.RULES);
         return Set.copyOf(rules);
     }
 
@@ -97,6 +99,7 @@ public final class ChapterEightNode implements ComputationNode {
                 && ctx.inputs().entered().specifiedDiseaseTreatment().isEmpty()
                 && ctx.inputs().entered().educationLoanInterest().isEmpty()
                 && ctx.inputs().entered().purposeLoanInterest().isEmpty()
+                && !AgniveerDeduction.entered(ctx)
                 && !certifiedDisabled(ctx)) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
@@ -110,6 +113,7 @@ public final class ChapterEightNode implements ComputationNode {
         lines.addAll(HealthInsuranceDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(DisabilityDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(LoanInterestDeduction.lines(ctx, lines.size() + 1));
+        lines.addAll(AgniveerDeduction.lines(ctx, lines.size() + 1));
         return withinGrossTotal(ctx, lines);
     }
 
