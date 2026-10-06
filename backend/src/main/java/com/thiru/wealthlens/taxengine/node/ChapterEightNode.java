@@ -41,6 +41,7 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,8 @@ import java.util.stream.Collectors;
  * amount twice (s.124(5), (10)); the employer's pension contribution by employer and regime (s.124(1)–(2)); then all
  * of it within gross total income (s.122(2)). A row the regime excludes, with something entered for it, gives a nil
  * line naming the regime. TY 2025-26 has none of these rows yet (D-129 C2a), so anything entered there is refused.
- * The other deductions are later items (W-075a3, W-075b–c).
+ * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136). The other
+ * deductions are later items (W-075a3, W-075c).
  */
 public final class ChapterEightNode implements ComputationNode {
 
@@ -77,9 +79,11 @@ public final class ChapterEightNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        return Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN, RuleIds.DED_NPS_EMPLOYER_GOVT,
-                RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME,
-                RuleIds.DED_WITHIN_GROSS_TOTAL, RuleIds.DED_PREMIUM_SHARE);
+        Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN,
+                RuleIds.DED_NPS_EMPLOYER_GOVT, RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME,
+                RuleIds.DED_WITHIN_GROSS_TOTAL, RuleIds.DED_PREMIUM_SHARE));
+        rules.addAll(HealthInsuranceDeduction.RULES);
+        return Set.copyOf(rules);
     }
 
     @Override
@@ -90,7 +94,8 @@ public final class ChapterEightNode implements ComputationNode {
                 .filter(contribution -> contribution.fund() == EmployerFund.NOTIFIED_PENSION_SCHEME)
                 .toList();
         List<LifeInsurancePolicy> policies = ctx.inputs().entered().lifeInsurancePolicies();
-        if (payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty() && policies.isEmpty()) {
+        if (payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty() && policies.isEmpty()
+                && ctx.inputs().entered().healthPayments().isEmpty()) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireRowsThisYear(ctx);
@@ -100,6 +105,7 @@ public final class ChapterEightNode implements ComputationNode {
         Money residue = scheduleXv(ctx, paid, lines);
         ownPension(ctx, residue, paid.getOrDefault(ComponentCodes.NPS_MINOR_DEPOSIT, Money.ZERO), lines);
         employerPension(ctx, employerPension, lines);
+        lines.addAll(HealthInsuranceDeduction.lines(ctx, lines.size() + 1));
         return withinGrossTotal(ctx, lines);
     }
 

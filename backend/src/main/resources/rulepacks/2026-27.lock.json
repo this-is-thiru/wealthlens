@@ -3,12 +3,12 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.39",
-      "checksum": "sha256:00e46e9f0d6df8b3668349235927328f2c96d1031655436f28ee9cb8961d157e"
+      "version": "2026-27.law.40",
+      "checksum": "sha256:1721981d19f6f0a2110d2bf170ba34e31af8dc05aa1781f9fa71353a207dafff"
     },
     "exec": {
-      "version": "2026-27.exec.21",
-      "checksum": "sha256:e5e1c6922a785dd0e0d4a33c741b494250a55c3f6f44de8b615b0e217d366dc7"
+      "version": "2026-27.exec.22",
+      "checksum": "sha256:47e50a1867c697986a131e01f1a3e55721a21de04d66ffbdaf7f3fcb8815fc92"
     },
     "forms": {
       "version": "2026-27.forms.2",
@@ -20,6 +20,11 @@
     }
   },
   "rules": {
+    "DED-HEALTH-CHECKUP": "sha256:1dd3e195e8faa89bb7cdd185645338b3578d7be574f71cb4e49d0816bf13f60e",
+    "DED-HEALTH-FAMILY": "sha256:a2777e3cbe80eb7b28b81d0c5213f089e847a85fc09f0423b3e1d7533ab52410",
+    "DED-HEALTH-FAMILY-SENIOR": "sha256:07044aa0c2785a0029c1c4eca88de60e2da61f46c2358058dc321c3ffd58a268",
+    "DED-HEALTH-PARENTS": "sha256:5d9244192b1ab68516c8def2877c90d88e66ffd9a37305d6e3f29c5454575a3b",
+    "DED-HEALTH-PARENTS-SENIOR": "sha256:fe48e5fda0384e30ee6ca1fb0cb7419005eaf3770087452f495daee11b7cda00",
     "DED-NPS-EMPLOYER-GOVT": "sha256:759bbfa4e15375a421260e5a82966a59cb90455bfd14fb51dbb975bb6c8bee45",
     "DED-NPS-EMPLOYER-NEW-TAX-REGIME": "sha256:8c1fe92af0c789141cb46f92dae38b1159212610b28ce2178046875fdbe187ab",
     "DED-NPS-EMPLOYER-OTHER": "sha256:bfb821da588aa827f852437bd88d0e91c4c3288787ec708522041ea2294c6e89",

@@ -1,0 +1,71 @@
+{
+  "ruleId": "DED-HEALTH-PARENTS",
+  "_note": "80D for the parents: insurance, a notified health scheme and preventive check-ups up to ₹25000 in aggregate (s.126(2)(b), p.161); medical expenditure up to ₹50000 (s.126(2)(d)); together \"The amount of sum referred to in sub-section (2) shall not exceed ₹ 50000 in aggregate of the sum specified under sub-section (2)(a) and (c) or aggregate of the sum specified under sub-section (2)(b) and (d)\" (s.126(4), p.162). Medical expenditure on a senior citizen only \"if no amount has been paid to effect or to keep in force the health insurance of such person\" (s.126(7)); a senior citizen is \"an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year\" (s.2(100), p.20). ChapterEightNode uses this row where no person covered is a senior citizen. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart, s.80D, is unread (W-075d). D-136.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.126(2)(b), (2)(d), (4)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AggregateWithCeiling",
+        "contributors": [
+          "HEALTH_INSURANCE_PARENTS",
+          "MEDICAL_EXPENDITURE_PARENTS"
+        ],
+        "ceiling": "50000",
+        "subCaps": {
+          "HEALTH_INSURANCE_PARENTS": {
+            "type": "Fixed",
+            "amount": "25000"
+          },
+          "MEDICAL_EXPENDITURE_PARENTS": {
+            "type": "Fixed",
+            "amount": "50000"
+          }
+        }
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.126(2)(b), (2)(d), (4)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.126(2)(b), (2)(d), pp.161–162",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.126(2)(b), (2)(d), pp.161–162",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

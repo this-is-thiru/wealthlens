@@ -15,6 +15,11 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId DED_HEALTH_CHECKUP = new RuleId("DED-HEALTH-CHECKUP");
+    public static final RuleId DED_HEALTH_FAMILY = new RuleId("DED-HEALTH-FAMILY");
+    public static final RuleId DED_HEALTH_FAMILY_SENIOR = new RuleId("DED-HEALTH-FAMILY-SENIOR");
+    public static final RuleId DED_HEALTH_PARENTS = new RuleId("DED-HEALTH-PARENTS");
+    public static final RuleId DED_HEALTH_PARENTS_SENIOR = new RuleId("DED-HEALTH-PARENTS-SENIOR");
     public static final RuleId DED_NPS_EMPLOYER_GOVT = new RuleId("DED-NPS-EMPLOYER-GOVT");
     public static final RuleId DED_NPS_EMPLOYER_NEW_TAX_REGIME = new RuleId("DED-NPS-EMPLOYER-NEW-TAX-REGIME");
     public static final RuleId DED_NPS_EMPLOYER_OTHER = new RuleId("DED-NPS-EMPLOYER-OTHER");

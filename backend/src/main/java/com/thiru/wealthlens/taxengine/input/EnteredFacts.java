@@ -41,7 +41,7 @@ import java.util.Optional;
  * education with theirs (D-120), share allotments with theirs (D-121), employer
  * retirement contributions with the aggregate charge (D-126), the funds' history with the accretion on the
  * excess (D-127), the Chapter VIII payments with the deductions (D-132), life policies with their premiums'
- * share (D-134). Every later
+ * share (D-134), health payments with 80D (D-136). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -68,6 +68,7 @@ import java.util.Optional;
  *     the excess, if entered
  * @param qualifyingPayments each sum paid that Chapter VIII lets the payer deduct, other than pay lines, in order
  * @param lifeInsurancePolicies each life policy whose premium was paid in the year, in the order entered
+ * @param healthPayments each payment for health under s.126, in the order entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -91,7 +92,8 @@ public record EnteredFacts(
         List<EmployerFundContribution> employerContributions,
         Optional<RetirementFundHistory> retirementFundHistory,
         List<QualifyingPayment> qualifyingPayments,
-        List<LifeInsurancePolicy> lifeInsurancePolicies) {
+        List<LifeInsurancePolicy> lifeInsurancePolicies,
+        List<HealthPayment> healthPayments) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -122,6 +124,7 @@ public record EnteredFacts(
         employerContributions = copied(employerContributions, "employerContributions");
         qualifyingPayments = copied(qualifyingPayments, "qualifyingPayments");
         lifeInsurancePolicies = copied(lifeInsurancePolicies, "lifeInsurancePolicies");
+        healthPayments = copied(healthPayments, "healthPayments");
     }
 
     /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
@@ -137,6 +140,6 @@ public record EnteredFacts(
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of());
     }
 }

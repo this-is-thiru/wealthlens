@@ -42,6 +42,8 @@ public record FamilySnapshot(List<Member> members) {
      * @param dateOfDeath {@code SAL-LTA-CHILD-001}'s "surviving children"
      * @param bornBeforeOct1998 the first exception to the two-child limit
      * @param multipleBirthAfterFirstChild the second exception
+     * @param residentInIndia whether the person is resident in India in the tax year — a senior citizen is "an
+     *     individual resident in India" (S2 s.2(100)), which {@code DED-80D-007}'s substitution reads (D-136)
      */
     public record Member(
             Relationship relationship,
@@ -50,7 +52,8 @@ public record FamilySnapshot(List<Member> members) {
             Optional<DisabilitySeverity> disability,
             Optional<LocalDate> dateOfDeath,
             boolean bornBeforeOct1998,
-            boolean multipleBirthAfterFirstChild) {
+            boolean multipleBirthAfterFirstChild,
+            boolean residentInIndia) {
 
         public Member {
             if (relationship == null) {

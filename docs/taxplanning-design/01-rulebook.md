@@ -1112,6 +1112,12 @@ ordering is the single most common error in this area and is why `G2` exists as 
 > OQ-16; whether para 2 reaches para 1(j), (k), (l) is OQ-17; both W-075a3. Para 4's reversal of an earlier deduction is
 > not modelled.
 
+> **Addendum (W-075b, 2026-10-06, D-136):** `DED-80D-001`…`-011` are built for TY 2026-27 (S2 s.126, pp.161–162), each
+> read in the Gazette. `DED-80D-005`'s ₹5,000 is applied across both buckets and allocated in the ratio claimed — `DR 06`
+> G2.3's reading; the section states only the aggregate. A senior citizen is resident in India and sixty at any time in
+> the year (s.2(100), p.20). One premium covering a senior citizen and someone who is not is OQ-18; separate premiums put
+> the bucket on the senior limit if any covers a senior citizen. s.126(5)–(6) (a HUF) is not modelled.
+
 ---
 
 ## R16 — Income from house property

@@ -31,6 +31,8 @@ public final class ComponentCodes {
     public static final ComponentCode ENTERTAINMENT_ALLOWANCE = new ComponentCode("ENTERTAINMENT_ALLOWANCE");
     public static final ComponentCode GOVERNMENT_PENSION_ADDITIONAL = new ComponentCode("GOVERNMENT_PENSION_ADDITIONAL");
     public static final ComponentCode GRATUITY = new ComponentCode("GRATUITY");
+    public static final ComponentCode HEALTH_INSURANCE_FAMILY = new ComponentCode("HEALTH_INSURANCE_FAMILY");
+    public static final ComponentCode HEALTH_INSURANCE_PARENTS = new ComponentCode("HEALTH_INSURANCE_PARENTS");
     public static final ComponentCode HOSTEL_ALLOWANCE = new ComponentCode("HOSTEL_ALLOWANCE");
     public static final ComponentCode HOUSE_PURCHASE_PAYMENT = new ComponentCode("HOUSE_PURCHASE_PAYMENT");
     public static final ComponentCode HOUSING_FINANCE_DEPOSIT = new ComponentCode("HOUSING_FINANCE_DEPOSIT");
@@ -38,6 +40,8 @@ public final class ComponentCodes {
     public static final ComponentCode LEAVE_ENCASHMENT = new ComponentCode("LEAVE_ENCASHMENT");
     public static final ComponentCode LIFE_INSURANCE_PREMIUM = new ComponentCode("LIFE_INSURANCE_PREMIUM");
     public static final ComponentCode LTA = new ComponentCode("LTA");
+    public static final ComponentCode MEDICAL_EXPENDITURE_FAMILY = new ComponentCode("MEDICAL_EXPENDITURE_FAMILY");
+    public static final ComponentCode MEDICAL_EXPENDITURE_PARENTS = new ComponentCode("MEDICAL_EXPENDITURE_PARENTS");
     public static final ComponentCode MUTUAL_FUND_PENSION_FUND = new ComponentCode("MUTUAL_FUND_PENSION_FUND");
     public static final ComponentCode MUTUAL_FUND_UNITS = new ComponentCode("MUTUAL_FUND_UNITS");
     public static final ComponentCode NABARD_BONDS = new ComponentCode("NABARD_BONDS");

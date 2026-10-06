@@ -42,7 +42,7 @@ class AssesseeTest {
                 Optional.empty(),
                 Optional.empty(),
                 false,
-                false);
+                false, true);
     }
 
     @Nested
@@ -169,7 +169,7 @@ class AssesseeTest {
                     Optional.empty(),
                     Optional.empty(),
                     false,
-                    false);
+                    false, true);
             FamilySnapshot snapshot =
                     new FamilySnapshot(List.of(child(LocalDate.of(2010, 1, 1)), parent));
 
@@ -188,7 +188,7 @@ class AssesseeTest {
                     Optional.empty(),
                     Optional.empty(),
                     false,
-                    true);
+                    true, true);
 
             assertThat(twin.multipleBirthAfterFirstChild()).isTrue();
             assertThat(twin.bornBeforeOct1998()).isFalse();
@@ -220,7 +220,7 @@ class AssesseeTest {
                             Optional.empty(),
                             Optional.empty(),
                             false,
-                            false))
+                            false, true))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("relationship");
         }
