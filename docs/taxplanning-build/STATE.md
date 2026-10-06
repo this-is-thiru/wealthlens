@@ -3,8 +3,8 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-075a — "taxplanning W-075a: add the s.123 investments ceiling and the pension-scheme deductions — Schedule XV, own and employer NPS, within gross total income, TY 2026-27 (D-130–D-132)"
-Last updated              : 2026-10-06 (session 11 — W-073b, W-074a, W-075a done; build GREEN, 2389 tests)
+Last checkpoint           : W-052d — "taxplanning W-052d: give each regime its election per tax year — TY 2025-26 chosen under 1961 s.115BAC(6) and the s.139(1) due date (D-133)"
+Last updated              : 2026-10-06 (session 11 — W-073b, W-074a, W-075a, W-052d done; Phase 5 complete; build GREEN, 2392 tests)
 Current position          : W-075a2 — the held Schedule XV clauses (not started)
 Session count             : 9
 ```
@@ -53,7 +53,7 @@ Phase 2    W-013 D  W-014 —  W-015 D  W-016 —  W-017 D  W-018 D  W-019 D  W-
 Phase 3    W-023 D  W-024 —  W-025 D  W-026 D  W-026b D  W-026c D  W-027 D  W-028 D  W-029 D  W-030 D  W-031 D  W-031b D  W-032 D  W-032b D  W-033 D  W-033b D  W-033c D  W-034 D  W-034b D   ← COMPLETE
 Phase 4    W-035 D  W-036 D  W-037 D  W-037b D  W-037c D  W-038 D  W-039 D  W-040 D  W-041 —  W-042 D  W-043 D  W-044 D  W-045 —   ← COMPLETE (W-041, W-045 RETIRED)
 Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d D  W-045d2 D  W-045d3 D  W-045e D  W-045f D  W-045g D  W-045g2 D  W-045g3 D  W-045h D  W-045i D  W-045j D  W-045k D  W-045k2 D  W-045l D  W-045m D  W-045n D  W-045o D  W-045o2 D  W-045o3 D   ← COMPLETE (added by D-043)
-Phase 5    W-046 D  W-046b D  W-047 —  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d ·  W-053 D
+Phase 5    W-046 D  W-046b D  W-047 —  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d D  W-053 D   ← COMPLETE
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
 Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-066b D  W-067a D  W-067 D  W-068a D  W-068 D  W-069a D  W-069 D  W-069b D  W-066a D  W-070 D  W-064a D  W-066c D  W-063a D  W-066d D   ← COMPLETE
 Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f D  W-071g D  W-073 —  W-073a D  W-073b D  W-073c ·  W-074 —  W-074a D  W-075 —  W-075a D  W-075a2 ·  W-075b ·  W-075c ·  W-075d ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-074b ·  W-080 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **131** / 209 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-06): every id except the 12 marked `—` (8 retired, 4 split into lettered items)
+Counts — done **132** / 209 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-06): every id except the 12 marked `—` (8 retired, 4 split into lettered items)
 
 ---
 
@@ -451,6 +451,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-133 | 2026-10-06 | `W-052d`: regime election data per tax year | **C1a:** versions on the regime — a regime file's `election` becomes `elections` `[{validity, protocol}]`; `RulePackCompiler` emits the year's one protocol as `election`, so the compiled pack's shape, `RegimeSpec` and readers are unchanged and TY 2026-27 compiles byte-identical. **C2:** TY 2025-26 — `NEW_TAX_REGIME` `DEFAULT_NO_ACTION`, no deadline, 1961 s.115BAC(1A) as substituted by F(No.2)A 2024 s.37 (p.29); `FIRST_SCHEDULE_RATES` `OPT_OUT`, `IN_THE_RETURN`, `DueDateUnder("139(1)")`, the business-income binding, 1961 s.115BAC(6) inserted by FA 2023 s.52(C)(e) (p.35); both `UNVERIFIED` (Rules 1962 r.21AGA / Form 10-IEA; interim FA 2024). **C3:** TY 2025-26 Between 2025-04-01 and 2026-03-31; TY 2026-27 from 2026-04-01. **C4:** `provision1961` unchanged | owner: "W-052d approved — proceed as recommended" (2026-10-06); "W-052d approved" (2026-10-06) |
 | D-132 | 2026-10-06 | `W-075a` Revision 2: the node half | **N1a:** `gti` — `GrossTotalIncomeNode`, requires `salary.income` only until Phase 9 replaces it with `setoff`. **N2a:** `totalincome` — `TotalIncomeNode` = `gti` − `chapterviii`; `gti`, `chapterviii`, `totalincome` wired into both regimes after `salary.income`. **N3:** `EnteredFacts.qualifyingPayments` — `QualifyingPayment(code, amount)`, live `QUALIFYING_PAYMENT` codes only. **N4:** `ChapterEightNode` — s.123, s.124(3)–(4) on the residue, s.124(1)–(2) by employer kind and regime, s.122(2) cap at `gti`; nil line naming the regime where entered but excluded. **N5a:** two employments with an employer NPS contribution refused (OQ-15). **N6:** TY 2025-26 with anything entered refused (W-075d) | owner: "W-075a revision 2 approved — proceed as recommended" (2026-10-06); "W-075a approved" (2026-10-06) |
 | D-131 | 2026-10-06 | `W-075a` R13 revision | **R1a:** W-075a also builds the first slice of the Chapter VIII node evaluating its six rows (invariant I3 kept; that part of W-076 absorbed); the node half planned separately (Revision 2). **R2a:** `DED-NPS-EMPLOYER-NEW` → `DED-NPS-EMPLOYER-NEW-TAX-REGIME` (D-035; precedent `SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME`). **Work:** the on-disk W-075a work kept and amended | owner: "W-075a revision approved — R1a, R2a, keep the work" (2026-10-06); "W-075a approved" (2026-10-06) |
 | D-130 | 2026-10-06 | `W-075a`: the s.123 family and NPS, TY 2026-27 | **C1a:** 21 Schedule XV codes now, one per clause, named from its words (table in plans/W-075a.md); (a), (c), (j), (k), (l) held for **`W-075a2`** (placed right after W-075a). **C2a:** a component's `head` optional; new `ComponentKind.QUALIFYING_PAYMENT` for non-pay codes; `EMPLOYEE_PF`, `EMPLOYEE_SUPERANNUATION`, `EMPLOYEE_NPS` SALARIES / `EMPLOYEE_CONTRIBUTION`. **C3:** rows `DED-SCHEDULE-XV` (AggregateWithCeiling, 1,50,000, `EMPLOYEE_NPS` sub-cap 10% of the employee-pension salary; ExceptIn NEW), `DED-NPS-EMPLOYER-GOVT` (14%, all), `-OTHER` (10%, ExceptIn NEW), `-NEW` (14%, new only), `DED-NPS-OWN` (AggregateWithCeiling over `EMPLOYEE_NPS` residue + `NPS_MINOR_DEPOSIT`, 50,000; ExceptIn NEW), `DED-WITHIN-GROSS-TOTAL` (100% of GTI, all); TY 2026-27 only, SOURCE_CHECKED. **C4:** coverage PLANNED; `SEC-INVESTMENT-DEDUCTION` routes `ByRule DED-SCHEDULE-XV`. **C5:** segments ≤ 12 | owner: "W-075a approved — proceed as recommended"; W-075a2 "Right after W-075a" (2026-10-06); "W-075a approved" (2026-10-06) |
@@ -594,7 +595,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 D-052 (`LegalStatus.WITHDRAWN`/`STRUCK_DOWN` and dates) | UNVERIFIED | `W-045n` | read General Clauses Act 1897 s.6 (thc.nic.in copy is a scan); put `STRUCK_DOWN`'s date meaning to the reviewer named in OQ-1 — until then legal status does not change `RuleRow.versionAt`
 Income-tax Rules, 1962 (TY 2025-26 `rules` instrument) | UNVERIFIED | `W-052c` (D-082) | read the Rules' notification (citation, date, gazette); no Phase 5 rule reads a Rule
 Income-tax Act, 1961 gazette reference (TY 2025-26 `act` instrument) | not read | `W-052c` (D-082) | the Act's Gazette of India publication reference; assent 13-9-1961 and in force 1-4-1962 are read (thc.nic.in copy p.30, s.1(3))
-Regime election data for TY 2025-26 | 2025-Act data carried | `W-052c` → `W-052d` | 1961 s.115BAC(6) and s.139(1) per year
+Regime election data for TY 2025-26 | **UNVERIFIED** (W-052d, D-133): 1961 s.115BAC(6) READ (FA 2023 s.52(C)(e), p.35), (1A) READ (F(No.2)A 2024 s.37, p.29; FA 2025 s.25) | `W-052c` → `W-052d` | Rules 1962 r.21AGA / Form 10-IEA (the prescribed manner; incometaxindia 403) and the interim FA 2024
 
 ---
 

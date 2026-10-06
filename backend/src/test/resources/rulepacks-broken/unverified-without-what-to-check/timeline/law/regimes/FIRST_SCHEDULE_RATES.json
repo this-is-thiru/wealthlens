@@ -18,42 +18,50 @@
     "reference": "s.202(4)",
     "presence": "PRESENT"
   },
-  "election": {
-    "kind": "OPT_OUT",
-    "vehicle": "IN_THE_RETURN",
-    "deadline": {
-      "type": "DueDateUnder",
-      "section": "263(1)"
-    },
-    "binding": {
-      "bindsSubsequentYears": true,
-      "maxWithdrawals": 1,
-      "afterWithdrawal": {
-        "type": "IneligibleUnless",
-        "revival": {
-          "type": "Not",
-          "condition": {
-            "type": "HasIncomeUnderHead",
-            "head": "BUSINESS_OR_PROFESSION"
-          }
-        },
-        "thenUse": "NO_BUSINESS_OR_PROFESSION"
+  "elections": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2024-04-01"
       },
-      "firstReturnOnly": false,
-      "bindingAppliesWhen": [
-        {
-          "type": "HasIncomeUnderHead",
-          "head": "BUSINESS_OR_PROFESSION"
+      "protocol": {
+        "kind": "OPT_OUT",
+        "vehicle": "IN_THE_RETURN",
+        "deadline": {
+          "type": "DueDateUnder",
+          "section": "263(1)"
+        },
+        "binding": {
+          "bindsSubsequentYears": true,
+          "maxWithdrawals": 1,
+          "afterWithdrawal": {
+            "type": "IneligibleUnless",
+            "revival": {
+              "type": "Not",
+              "condition": {
+                "type": "HasIncomeUnderHead",
+                "head": "BUSINESS_OR_PROFESSION"
+              }
+            },
+            "thenUse": "NO_BUSINESS_OR_PROFESSION"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": [
+            {
+              "type": "HasIncomeUnderHead",
+              "head": "BUSINESS_OR_PROFESSION"
+            }
+          ]
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+          "sourceDescription": "Income-tax Rules 2026, r.136 + Table Sl. 4 — the option is in the return, with no separate form",
+          "accessedOn": "2026-09-18",
+          "verificationLevel": "SOURCE_CHECKED"
         }
-      ]
-    },
-    "provenance": {
-      "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-      "sourceDescription": "Income-tax Rules 2026, r.136 + Table Sl. 4 — the option is in the return, with no separate form",
-      "accessedOn": "2026-09-18",
-      "verificationLevel": "SOURCE_CHECKED"
+      }
     }
-  },
+  ],
   "lifecycle": {
     "entryWindow": {
       "from": "2024-04-01"

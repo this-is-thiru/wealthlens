@@ -19,28 +19,66 @@
     "reference": "s.202(1)",
     "presence": "PRESENT"
   },
-  "election": {
-    "kind": "DEFAULT_NO_ACTION",
-    "vehicle": "NONE",
-    "deadline": {
-      "type": "NoDeadline"
-    },
-    "binding": {
-      "bindsSubsequentYears": false,
-      "maxWithdrawals": -1,
-      "afterWithdrawal": {
-        "type": "MayReElect"
+  "elections": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
       },
-      "firstReturnOnly": false,
-      "bindingAppliesWhen": []
+      "protocol": {
+        "kind": "DEFAULT_NO_ACTION",
+        "vehicle": "NONE",
+        "deadline": {
+          "type": "NoDeadline"
+        },
+        "binding": {
+          "bindsSubsequentYears": false,
+          "maxWithdrawals": -1,
+          "afterWithdrawal": {
+            "type": "MayReElect"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": []
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+          "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.37, p.29 — Income-tax Act, 1961 s.115BAC(1A) as substituted: the new regime's rates apply to a person \"other than a person who has exercised an option under sub-section (6)\" — the default unless the option is exercised (D-133)",
+          "accessedOn": "2026-10-06",
+          "verificationLevel": "UNVERIFIED",
+          "whatToCheck": "Income-tax Rules, 1962 r.21AGA and Form 10-IEA — the \"manner as may be prescribed\" for the option under Income-tax Act, 1961 s.115BAC(6), which may make the vehicle a prescribed form for a person with business income — and the interim Finance Act, 2024 (8 of 2024); the Finance (No. 2) Act, 2024 s.37 and the Finance Act, 2025 s.25 were read and amend s.115BAC(1A) only."
+        }
+      }
     },
-    "provenance": {
-      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-      "sourceDescription": "s.202(1) — the default applies unless the option is exercised",
-      "accessedOn": "2026-09-18",
-      "verificationLevel": "SOURCE_CHECKED"
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "protocol": {
+        "kind": "DEFAULT_NO_ACTION",
+        "vehicle": "NONE",
+        "deadline": {
+          "type": "NoDeadline"
+        },
+        "binding": {
+          "bindsSubsequentYears": false,
+          "maxWithdrawals": -1,
+          "afterWithdrawal": {
+            "type": "MayReElect"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": []
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+          "sourceDescription": "s.202(1) — the default applies unless the option is exercised",
+          "accessedOn": "2026-09-18",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
     }
-  },
+  ],
   "lifecycle": {
     "entryWindow": {
       "from": "2024-04-01"

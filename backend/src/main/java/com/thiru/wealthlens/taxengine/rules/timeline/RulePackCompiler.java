@@ -66,7 +66,8 @@ public final class RulePackCompiler {
         ArrayNode regimes = MAPPER.createArrayNode();
         for (RegimeCode code : sorted(timeline.regimes().keySet(), RegimeCode::value)) {
             if (timeline.regimes().get(code).lifecycle().inForceWindow().overlapsTaxYear(taxYear)) {
-                regimes.add(MAPPER.readTree(timeline.regimeSources().get(code)));
+                regimes.add(RegimeElections.forTaxYear(MAPPER.readTree(timeline.regimeSources().get(code)), taxYear,
+                        "law/regimes/" + code.value() + ".json"));
             }
         }
         ArrayNode components = MAPPER.createArrayNode();

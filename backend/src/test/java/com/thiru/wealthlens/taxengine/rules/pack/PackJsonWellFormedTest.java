@@ -54,6 +54,16 @@ class PackJsonWellFormedTest {
         return filesIn("law/rules");
     }
 
+    /** The protocol of the regime's election version that starts on {@code from} (D-133). */
+    private static JsonNode electionFrom(JsonNode regime, String from) {
+        for (JsonNode version : regime.get("elections")) {
+            if (from.equals(version.get("validity").get("from").asText())) {
+                return version.get("protocol");
+            }
+        }
+        throw new IllegalStateException(regime.get("code").asText() + " has no election version from " + from);
+    }
+
     private static List<JsonNode> regimes() {
         return filesIn("law/regimes");
     }
@@ -259,10 +269,10 @@ class PackJsonWellFormedTest {
 
         @Test
         void theOptOutRidesOnTheReturnWithNoForm() {
-            // Rule 136, VERIFIED. Naming a form would send the taxpayer after one that does not exist.
+            // Rule 136, VERIFIED for TY 2026-27. Naming a form would send the taxpayer after one that does not exist.
             for (JsonNode regime : regimes()) {
                 if ("FIRST_SCHEDULE_RATES".equals(regime.get("code").asText())) {
-                    JsonNode election = regime.get("election");
+                    JsonNode election = electionFrom(regime, "2026-04-01");
                     assertThat(election.get("vehicle").asText()).isEqualTo("IN_THE_RETURN");
                     assertThat(election.has("form")).isFalse();
                     assertThat(election.get("deadline").get("section").asText()).isEqualTo("263(1)");
@@ -274,8 +284,10 @@ class PackJsonWellFormedTest {
         void theDefaultRegimeRequiresNoAction() {
             for (JsonNode regime : regimes()) {
                 if (regime.get("isDefault").asBoolean()) {
-                    assertThat(regime.get("election").get("kind").asText())
-                            .isEqualTo("DEFAULT_NO_ACTION");
+                    // Every year's election (D-133)
+                    for (JsonNode version : regime.get("elections")) {
+                        assertThat(version.get("protocol").get("kind").asText()).isEqualTo("DEFAULT_NO_ACTION");
+                    }
                 }
             }
         }

@@ -70,6 +70,14 @@ concurrently in one JVM, because `YR-TRANSIT-001` is the normal case, not an edg
 | `REG-NEW-DISALLOW-002` | Under the new regime, **no set-off** of (i) brought-forward loss or depreciation attributable to a disallowed deduction, and (ii) **any loss under the head "Income from house property" against any other head**. Such loss is deemed fully given effect to and is **not** carried forward. | s.115BAC(2) | **s.202(2)(b), 202(3)** | NEW | VERIFIED (S2, s.202(2)(b), (3)) |
 | `REG-NEW-DISALLOW-003` | Under the new regime, no exemption or deduction for allowances or perquisites **granted under any other law in force**. | s.115BAC(2) | **s.202(2)(c)** | NEW | VERIFIED (S2, s.202(2)(c)) |
 
+> **Addendum (W-052d, 2026-10-06, D-133):** TY 2025-26's election is now read in the Gazette — 1961 s.115BAC(6) as
+> inserted by the **Finance Act, 2023 s.52(C)(e)** from 1-4-2024 (CG-DL-E-31032023-244830, p.35): without business or
+> profession income, the option is exercised *"along with the return of income to be furnished under sub-section (1) of
+> section 139"*; with it, *"on or before the due date specified under sub-section (1) of section 139"*, binding later
+> years, withdrawable once. Neither the Finance (No. 2) Act, 2024 s.37 nor the Finance Act, 2025 s.25 touches (6). The
+> *"manner as may be prescribed"* (Rules 1962 r.21AGA / Form 10-IEA) and the interim Finance Act, 2024 remain unread, so
+> the TY 2025-26 election versions are `UNVERIFIED`.
+
 **H-16 verdict (regime-choice rules for salaried users): CONFIRMED as a real risk area.** The
 salaried opt-out is a *return-time* act tied to a *specific* tax year, and for TY 2026-27 it is not
 even a separate form. Any model that stores "the user's regime" as a profile attribute rather than

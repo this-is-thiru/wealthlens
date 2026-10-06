@@ -20,28 +20,36 @@
     "reference": "s.202(1)",
     "presence": "PRESENT"
   },
-  "election": {
-    "kind": "DEFAULT_NO_ACTION",
-    "vehicle": "NONE",
-    "deadline": {
-      "type": "NoDeadline"
-    },
-    "binding": {
-      "bindsSubsequentYears": false,
-      "maxWithdrawals": -1,
-      "afterWithdrawal": {
-        "type": "MayReElect"
+  "elections": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2024-04-01"
       },
-      "firstReturnOnly": false,
-      "bindingAppliesWhen": []
-    },
-    "provenance": {
-      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-      "sourceDescription": "s.202(1) — the default applies unless the option is exercised",
-      "accessedOn": "2026-09-18",
-      "verificationLevel": "SOURCE_CHECKED"
+      "protocol": {
+        "kind": "DEFAULT_NO_ACTION",
+        "vehicle": "NONE",
+        "deadline": {
+          "type": "NoDeadline"
+        },
+        "binding": {
+          "bindsSubsequentYears": false,
+          "maxWithdrawals": -1,
+          "afterWithdrawal": {
+            "type": "MayReElect"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": []
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+          "sourceDescription": "s.202(1) — the default applies unless the option is exercised",
+          "accessedOn": "2026-09-18",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
     }
-  },
+  ],
   "lifecycle": {
     "entryWindow": {
       "from": "2024-04-01"

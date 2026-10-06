@@ -16,6 +16,9 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.regime.DeadlineSpec;
+import com.thiru.wealthlens.taxengine.rules.regime.ElectionProtocol;
+import com.thiru.wealthlens.taxengine.rules.regime.ElectionVehicle;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.Presence;
@@ -68,6 +71,22 @@ class TaxYear2025RulePackTest {
     // -- the pack ----------------------------------------------------------------------------------
 
     @Test
+    void regimes_whenThe2025PackIsCompiled_electUnderThe1961Act() {
+        // When — D-133: TY 2025-26 is chosen under 1961 s.115BAC, not 2025 s.202
+        RulePack pack = pack();
+        ElectionProtocol optOut = pack.regimes().get(FIRST_SCHEDULE_RATES).election();
+        ElectionProtocol byDefault = pack.regimes().get(NEW_TAX_REGIME).election();
+
+        // Then
+        assertThat(optOut.deadline()).isEqualTo(new DeadlineSpec.DueDateUnder("139(1)"));
+        assertThat(optOut.vehicle()).isEqualTo(ElectionVehicle.IN_THE_RETURN);
+        assertThat(optOut.provenance().sourceDescription()).contains("s.115BAC(6)");
+        assertThat(optOut.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+        assertThat(byDefault.deadline()).isEqualTo(new DeadlineSpec.NoDeadline());
+        assertThat(byDefault.provenance().sourceDescription()).contains("s.115BAC(1A)");
+    }
+
+    @Test
     void load_whenThe2025PackIsCompiled_matchesItsLockAndValidates() {
         // When
         RulePack pack = pack();
@@ -76,7 +95,7 @@ class TaxYear2025RulePackTest {
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
         assertThat(pack.rules()).hasSize(92);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.31");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.32");
     }
 
     @Test

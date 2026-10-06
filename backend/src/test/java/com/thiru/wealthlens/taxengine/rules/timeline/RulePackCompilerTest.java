@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -90,6 +91,30 @@ class RulePackCompilerTest {
     }
 
     @Test
+    void compile_whenARegimeHasNoElectionInTheYear_isRefused() throws IOException {
+        // When / Then — the shipped elections start at 2025-26; the regimes are in force from 2024-25 (D-133)
+        Timeline timeline = TimelineReader.read(timelineCopy());
+        assertThatThrownBy(() -> RulePackCompiler.compile(timeline, new TaxYearId(2024)))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("0 election versions are in force in 2024-25");
+    }
+
+    @Test
+    void read_whenTwoElectionVersionsOverlap_isRefused() throws IOException {
+        // Given — the 2026-27 version moved back into 2025-26
+        Path root = timelineCopy();
+        Path file = root.resolve("law/regimes/FIRST_SCHEDULE_RATES.json");
+        ObjectNode spec = (ObjectNode) tree(file);
+        ((ObjectNode) spec.path("elections").get(1).path("validity")).put("from", "2026-01-01");
+        write(file, spec);
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("election versions overlap");
+    }
+
+    @Test
     void compile_whenAVersionLiesOutsideTheYear_leavesItOutOfThatYearOnly() throws IOException {
         // Given — a 2024-25 version before the 2026-27 one
         Path root = timelineCopy();
@@ -98,6 +123,13 @@ class RulePackCompilerTest {
         ((ObjectNode) earlier.path("validity")).put("from", "2024-04-01").put("to", "2025-03-31");
         ((ArrayNode) rule.path("versions")).insert(0, earlier);
         write(root.resolve(SLAB_FILE), rule);
+        // The copy's regimes need an election in 2024-25 too (D-133); the shipped ones start at 2025-26
+        for (String regime : List.of("NEW_TAX_REGIME", "FIRST_SCHEDULE_RATES")) {
+            Path file = root.resolve("law/regimes/" + regime + ".json");
+            ObjectNode spec = (ObjectNode) tree(file);
+            ((ObjectNode) spec.path("elections").get(0).path("validity")).put("from", "2024-04-01");
+            write(file, spec);
+        }
         Timeline timeline = TimelineReader.read(root);
 
         // When

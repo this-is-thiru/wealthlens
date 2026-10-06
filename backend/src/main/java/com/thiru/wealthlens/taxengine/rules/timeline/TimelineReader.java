@@ -111,7 +111,12 @@ public final class TimelineReader {
                     ruleSources.put(row.id(), content);
                 }
                 case REGIMES -> {
-                    RegimeSpec regime = RegimeJson.regime(node, path);
+                    // Each election version is read once; the timeline keeps the last for code and lifecycle
+                    RegimeSpec regime = RegimeElections.everyVersion(node, path).stream()
+                            .map(version -> RegimeJson.regime(version, path))
+                            .reduce((earlier, later) -> later)
+                            .orElseThrow(() -> new PackValidationException(
+                                    path + ": a regime needs at least one election version"));
                     requireNamedFor(path, stem, regime.code().value());
                     regimes.put(regime.code(), regime);
                     regimeSources.put(regime.code(), content);

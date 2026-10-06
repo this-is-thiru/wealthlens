@@ -18,42 +18,94 @@
     "reference": "s.202(4)",
     "presence": "PRESENT"
   },
-  "election": {
-    "kind": "OPT_OUT",
-    "vehicle": "IN_THE_RETURN",
-    "deadline": {
-      "type": "DueDateUnder",
-      "section": "263(1)"
-    },
-    "binding": {
-      "bindsSubsequentYears": true,
-      "maxWithdrawals": 1,
-      "afterWithdrawal": {
-        "type": "IneligibleUnless",
-        "revival": {
-          "type": "Not",
-          "condition": {
-            "type": "HasIncomeUnderHead",
-            "head": "BUSINESS_OR_PROFESSION"
-          }
-        },
-        "thenUse": "NO_BUSINESS_OR_PROFESSION"
+  "elections": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
       },
-      "firstReturnOnly": false,
-      "bindingAppliesWhen": [
-        {
-          "type": "HasIncomeUnderHead",
-          "head": "BUSINESS_OR_PROFESSION"
+      "protocol": {
+        "kind": "OPT_OUT",
+        "vehicle": "IN_THE_RETURN",
+        "deadline": {
+          "type": "DueDateUnder",
+          "section": "139(1)"
+        },
+        "binding": {
+          "bindsSubsequentYears": true,
+          "maxWithdrawals": 1,
+          "afterWithdrawal": {
+            "type": "IneligibleUnless",
+            "revival": {
+              "type": "Not",
+              "condition": {
+                "type": "HasIncomeUnderHead",
+                "head": "BUSINESS_OR_PROFESSION"
+              }
+            },
+            "thenUse": "NO_BUSINESS_OR_PROFESSION"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": [
+            {
+              "type": "HasIncomeUnderHead",
+              "head": "BUSINESS_OR_PROFESSION"
+            }
+          ]
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+          "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C)(e), p.35 — Income-tax Act, 1961 s.115BAC(6): the option, \"in the manner as may be prescribed\", (ii) \"along with the return of income to be furnished under sub-section (1) of section 139\" for a person without business or profession income; (i) on or before the s.139(1) due date with business income, applying to subsequent years, withdrawn only once and then available again only under (ii) on ceasing to have such income (D-133)",
+          "accessedOn": "2026-10-06",
+          "verificationLevel": "UNVERIFIED",
+          "whatToCheck": "Income-tax Rules, 1962 r.21AGA and Form 10-IEA — the \"manner as may be prescribed\" for the option under Income-tax Act, 1961 s.115BAC(6), which may make the vehicle a prescribed form for a person with business income — and the interim Finance Act, 2024 (8 of 2024); the Finance (No. 2) Act, 2024 s.37 and the Finance Act, 2025 s.25 were read and amend s.115BAC(1A) only."
         }
-      ]
+      }
     },
-    "provenance": {
-      "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-      "sourceDescription": "Income-tax Rules 2026, r.136 + Table Sl. 4 — the option is in the return, with no separate form",
-      "accessedOn": "2026-09-18",
-      "verificationLevel": "SOURCE_CHECKED"
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "protocol": {
+        "kind": "OPT_OUT",
+        "vehicle": "IN_THE_RETURN",
+        "deadline": {
+          "type": "DueDateUnder",
+          "section": "263(1)"
+        },
+        "binding": {
+          "bindsSubsequentYears": true,
+          "maxWithdrawals": 1,
+          "afterWithdrawal": {
+            "type": "IneligibleUnless",
+            "revival": {
+              "type": "Not",
+              "condition": {
+                "type": "HasIncomeUnderHead",
+                "head": "BUSINESS_OR_PROFESSION"
+              }
+            },
+            "thenUse": "NO_BUSINESS_OR_PROFESSION"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": [
+            {
+              "type": "HasIncomeUnderHead",
+              "head": "BUSINESS_OR_PROFESSION"
+            }
+          ]
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+          "sourceDescription": "Income-tax Rules 2026, r.136 + Table Sl. 4 — the option is in the return, with no separate form",
+          "accessedOn": "2026-09-18",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
     }
-  },
+  ],
   "lifecycle": {
     "entryWindow": {
       "from": "2024-04-01"
