@@ -19,6 +19,8 @@ import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
+import com.thiru.wealthlens.taxengine.rules.definition.PolicyIssueWindow;
+import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
@@ -221,7 +223,7 @@ public final class ShapeJson {
     public static RuleDefinition definition(JsonNode node, String path) {
         String tag = PackJson.tag(
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
-                "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow");
+                "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -238,6 +240,12 @@ public final class ShapeJson {
                     PackJson.integer(node, "oneOverOtherwise", path)));
             case "IndexByYear" -> indexByYear(node, path);
             case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
+            case "PremiumShareBands" -> PackJson.construct(path, () -> new PremiumShareBands(PackJson.array(
+                    node, "bands", path, band -> new PremiumShareBands.Band(new PolicyIssueWindow(
+                            PackJson.optionalDate(band.node(), "from", path),
+                            PackJson.optionalDate(band.node(), "to", path),
+                            PackJson.bool(band.node(), "onlyCoveringDisabilityOrDisease", path)),
+                            rate(band.node(), "percent", path)))));
             case "ExcludedAssets" -> {
                 List<MovableAssetKind> kinds = PackJson.array(node, "kinds", path,
                         e -> movableAssetKind(e.node().asString(), e.path()));

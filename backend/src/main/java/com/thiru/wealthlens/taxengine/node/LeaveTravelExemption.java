@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -112,6 +113,8 @@ final class LeaveTravelExemption {
                     RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines excluded assets, not journeys per block");
             case DayWindow window -> throw new IllegalStateException(
                     RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a window of days, not journeys per block");
+            case PremiumShareBands bands -> throw new IllegalStateException(
+                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines premium share bands, not journeys per block");
         };
     }
 

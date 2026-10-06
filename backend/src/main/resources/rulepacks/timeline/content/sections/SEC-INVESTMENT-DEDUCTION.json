@@ -1,6 +1,6 @@
 {
-  "_note": "Section catalogue entry (D-042, D-060, D-061, D-130). Content: it changes no number. No figure, rate, date, tenure, cap or count is typed in text (SC-2, D-061 C2a); each waits for its rule and a placeholder.",
-  "_sources": "provisions: 01-rulebook.md DED-MAP-001 (s.80C -> s.123 + Schedule XV), DED-80C-001 (s.123). summary: DED-80C-001, DED-MAP-021 and H-7 (one ceiling; employee PF inside it, Schedule XV para 1(f)), DED-80C-NPS-CAP-001 (NPS inner cap, para 1(y)), DED-NEWREGIME-001. routes[0..22]: DED-80C-ITEMS-001, in its order (Schedule XV para 1(a)-(z)); para refs the rulebook gives: routes[0] 1(a), routes[5] 1(f), routes[6] 1(g), routes[13] 1(q), routes[14] para 3, routes[20] 1(x), routes[21] 1(y). routes[14] 'principal ... not its interest': DR 22 C5 DED-80C-001 (steps; common mistakes). routes[23]: D-061 C1a — DED-80C-ITEMS-001 says 'among others'. disqualifiers[0]: DED-NEWREGIME-001 (s.202(2)(a)(xii)). disqualifiers[1]: DED-80C-ITEMS-001 (tuition), DR 22 C5 (development fees). No LATER_REVERSAL: the rulebook sources none (D-061). D-130 (W-075a): routes ByRule DED-SCHEDULE-XV for the shipped clauses — routes[1] 1(b), [3]–[8] 1(d)–(i), [10] 1(n), [12] 1(o)–(p), [13]–[22] 1(q)–(z); routes[0] 1(a), [2] 1(c), [9] 1(j)–(k), [11] 1(l) held for W-075a2, NotModelled with their own limit as the reason; routes[23] NotModelled (1(m) ships as MUTUAL_FUND_UNITS without a route of its own).",
+  "_note": "Section catalogue entry (D-042, D-060, D-061, D-130, D-134). Content: it changes no number. No figure, rate, date, tenure, cap or count is typed in text (SC-2, D-061 C2a); each waits for its rule and a placeholder.",
+  "_sources": "provisions: 01-rulebook.md DED-MAP-001 (s.80C -> s.123 + Schedule XV), DED-80C-001 (s.123). summary: DED-80C-001, DED-MAP-021 and H-7 (one ceiling; employee PF inside it, Schedule XV para 1(f)), DED-80C-NPS-CAP-001 (NPS inner cap, para 1(y)), DED-NEWREGIME-001. routes[0..22]: DED-80C-ITEMS-001, in its order (Schedule XV para 1(a)-(z)); para refs the rulebook gives: routes[0] 1(a), routes[5] 1(f), routes[6] 1(g), routes[13] 1(q), routes[14] para 3, routes[20] 1(x), routes[21] 1(y). routes[14] 'principal ... not its interest': DR 22 C5 DED-80C-001 (steps; common mistakes). routes[23]: D-061 C1a — DED-80C-ITEMS-001 says 'among others'. disqualifiers[0]: DED-NEWREGIME-001 (s.202(2)(a)(xii)). disqualifiers[1]: DED-80C-ITEMS-001 (tuition), DR 22 C5 (development fees). disqualifiers[2] LATER_REVERSAL: S2 Schedule XV para 4 Table Sl. 1–4 (p.565), NotModelled (D-134). D-130 (W-075a): routes ByRule DED-SCHEDULE-XV for the shipped clauses — routes[1] 1(b), [3]–[8] 1(d)–(i), [10] 1(n), [12] 1(o)–(p), [13]–[22] 1(q)–(z); routes[0] 1(a), [2] 1(c), [9] 1(j)–(k), [11] 1(l) held for W-075a2, NotModelled with their own limit as the reason; routes[23] NotModelled (1(m) ships as MUTUAL_FUND_UNITS without a route of its own). D-134 (W-075a2): routes[0] 1(a) ByRule DED-SCHEDULE-XV and DED-PREMIUM-SHARE (para 2; D-135); routes[2] 1(c), [9] 1(j)–(k), [11] 1(l) held for W-075a3 (OQ-16, OQ-17); disqualifiers[1]'s reason corrected — the rule is on the timeline, its conditions unchecked.",
   "key": "SEC-INVESTMENT-DEDUCTION",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -20,8 +20,12 @@
       "description": "A premium on life insurance on your own life, your spouse's or a child's.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "This payment's own limit within the ceiling is not modelled yet; it is computed when that limit is."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
+        },
+        {
+          "type": "ByRule",
+          "rule": "DED-PREMIUM-SHARE"
         }
       ]
     },
@@ -270,7 +274,15 @@
       "description": "Tuition fees do not count when they are not for full-time education at an Indian institution, when they are development fees or donations, or beyond the number of children the Schedule allows.",
       "enforcedBy": {
         "type": "NotModelled",
-        "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+        "reason": "The fee entered is taken as the amount that qualifies; these conditions are not checked."
+      }
+    },
+    {
+      "kind": "LATER_REVERSAL",
+      "description": "A deduction already allowed is taken back as income in a later year if a life policy or a unit-linked plan ends early, a home bought with it is sold or the money comes back early, or approved shares are sold early.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "Taking back an earlier year's deduction needs that year's figures; it is not computed."
       }
     }
   ]

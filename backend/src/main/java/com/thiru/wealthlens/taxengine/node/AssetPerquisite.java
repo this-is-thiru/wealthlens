@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -118,6 +119,7 @@ final class AssetPerquisite {
             case CommutedPensionShare share -> throw new IllegalStateException(ruleId + " defines a pension share");
             case IndexByYear index -> throw new IllegalStateException(ruleId + " defines an index table");
             case DayWindow window -> throw new IllegalStateException(ruleId + " defines a window of days");
+            case PremiumShareBands bands -> throw new IllegalStateException(ruleId + " defines premium share bands");
         };
     }
 

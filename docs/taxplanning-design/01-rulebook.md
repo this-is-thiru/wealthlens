@@ -1106,6 +1106,12 @@ ordering is the single most common error in this area and is why `G2` exists as 
 > row's regimes (s.202(2)(a)(xii), p.227). Para 1(y)(ii)'s 20% of gross total income for a non-employee is not modelled.
 > The TY 2025-26 versions wait for W-075d.
 
+> **Addendum (W-075a2, 2026-10-06, D-134, D-135):** Schedule XV para 1(a), life insurance premiums, is built, each policy's
+> premium within para 2's share of its actual capital sum assured (pp.563–564) as `DED-PREMIUM-SHARE`. Para 1(c)'s
+> "20 % of salary" names no salary Schedule XV defines (para 6 does not; S2 s.16 is "for the purposes of this Part") —
+> OQ-16; whether para 2 reaches para 1(j), (k), (l) is OQ-17; both W-075a3. Para 4's reversal of an earlier deduction is
+> not modelled.
+
 ---
 
 ## R16 — Income from house property

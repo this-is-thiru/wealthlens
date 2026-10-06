@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
+import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
@@ -16,6 +17,15 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
+import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
+import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
+import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
+import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -41,12 +51,13 @@ import java.util.stream.Collectors;
  * The Chapter VIII deductions built so far: the s.123 family and the pension scheme (S2 ss.122–124, Schedule XV;
  * {@code DR 06} G2.2; D-130, D-132).
  *
- * <p>In order, because each reads the one before: the Schedule XV sums under one ceiling, the employee's pension
+ * <p>In order, because each reads the one before: each life policy's premium within its share of the sum assured
+ * (Schedule XV para 2), as a measure; the Schedule XV sums under one ceiling, the employee's pension
  * contribution sub-capped first; what that sub-cap left, with a minor's deposit, under s.124(3)–(4) — never the same
  * amount twice (s.124(5), (10)); the employer's pension contribution by employer and regime (s.124(1)–(2)); then all
  * of it within gross total income (s.122(2)). A row the regime excludes, with something entered for it, gives a nil
  * line naming the regime. TY 2025-26 has none of these rows yet (D-129 C2a), so anything entered there is refused.
- * The other deductions are later items (W-075a2–c).
+ * The other deductions are later items (W-075a3, W-075b–c).
  */
 public final class ChapterEightNode implements ComputationNode {
 
@@ -68,7 +79,7 @@ public final class ChapterEightNode implements ComputationNode {
     public Set<RuleId> rules() {
         return Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN, RuleIds.DED_NPS_EMPLOYER_GOVT,
                 RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME,
-                RuleIds.DED_WITHIN_GROSS_TOTAL);
+                RuleIds.DED_WITHIN_GROSS_TOTAL, RuleIds.DED_PREMIUM_SHARE);
     }
 
     @Override
@@ -78,12 +89,14 @@ public final class ChapterEightNode implements ComputationNode {
         List<EmployerFundContribution> employerPension = ctx.inputs().entered().employerContributions().stream()
                 .filter(contribution -> contribution.fund() == EmployerFund.NOTIFIED_PENSION_SCHEME)
                 .toList();
-        if (payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty()) {
+        List<LifeInsurancePolicy> policies = ctx.inputs().entered().lifeInsurancePolicies();
+        if (payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty() && policies.isEmpty()) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireRowsThisYear(ctx);
         Map<ComponentCode, Money> paid = paid(ctx, payLines, payments);
         List<TraceLine> lines = new ArrayList<>();
+        premiums(ctx, policies, paid, lines);
         Money residue = scheduleXv(ctx, paid, lines);
         ownPension(ctx, residue, paid.getOrDefault(ComponentCodes.NPS_MINOR_DEPOSIT, Money.ZERO), lines);
         employerPension(ctx, employerPension, lines);
@@ -113,6 +126,10 @@ public final class ChapterEightNode implements ComputationNode {
         payLines.forEach(line -> paid.merge(line.code(), line.amount(), Money::plus));
         for (QualifyingPayment payment : payments) {
             ComponentDefinition definition = ctx.pack().components().get(payment.code());
+            if (payment.code().equals(ComponentCodes.LIFE_INSURANCE_PREMIUM)) {
+                throw new IllegalArgumentException("A life insurance premium is entered with its policy — the sum"
+                        + " assured, issue date and whom it covers decide how much counts (Schedule XV para 2; D-134)");
+            }
             if (definition == null || !definition.lifecycle().isLiveIn(ctx.inputs().taxYear())
                     || definition.kind() != ComponentKind.QUALIFYING_PAYMENT) {
                 throw new IllegalArgumentException(payment.code() + " is not a qualifying payment in the "
@@ -122,6 +139,51 @@ public final class ChapterEightNode implements ComputationNode {
             paid.merge(payment.code(), payment.amount(), Money::plus);
         }
         return paid;
+    }
+
+    /**
+     * Schedule XV para 2: each policy's premium counts up to its band's share of the actual capital sum assured — a
+     * measure line per policy; the qualifying total is the life insurance contribution to s.123. In a regime the row
+     * does not apply in, the premiums go to s.123 as paid, for its nil line.
+     */
+    private static void premiums(NodeContext ctx, List<LifeInsurancePolicy> policies, Map<ComponentCode, Money> paid,
+            List<TraceLine> lines) {
+        if (policies.isEmpty()) {
+            return;
+        }
+        RuleVersion version = version(ctx, RuleIds.DED_PREMIUM_SHARE);
+        if (!version.regimes().appliesIn(ctx.regime().code())) {
+            policies.forEach(policy -> paid.merge(ComponentCodes.LIFE_INSURANCE_PREMIUM, policy.premiumPaid(),
+                    Money::plus));
+            return;
+        }
+        PremiumShareBands bands = bands(version);
+        for (LifeInsurancePolicy policy : policies) {
+            PremiumShareBands.Band band = bands.bandFor(policy.issuedOn(), policy.coversDisabilityOrSpecifiedDisease());
+            Money share = band.share().of(policy.actualCapitalSumAssured());
+            Money counted = Money.min(policy.premiumPaid(), share);
+            lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, RuleIds.DED_PREMIUM_SHARE, StepKind.MEASURE,
+                            MoneyValue.of(policy.premiumPaid()), MoneyValue.of(counted), version.provenance())
+                    .withLimitedBy(band.share().asPercentLabel() + " of the sum assured " + policy.actualCapitalSumAssured()
+                            + ", a policy issued " + policy.issuedOn()));
+            paid.merge(ComponentCodes.LIFE_INSURANCE_PREMIUM, counted, Money::plus);
+        }
+    }
+
+    private static PremiumShareBands bands(RuleVersion version) {
+        RuleId ruleId = RuleIds.DED_PREMIUM_SHARE;
+        return switch (version.definition().orElseThrow(
+                () -> new IllegalStateException(ruleId + " carries no premium share bands"))) {
+            case PremiumShareBands bands -> bands;
+            case HeadTotal headTotal -> throw new IllegalStateException(ruleId + " defines a head's total");
+            case SalaryBase base -> throw new IllegalStateException(ruleId + " defines a salary base");
+            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(ruleId + " defines journeys");
+            case DisabledTransportLimit transport -> throw new IllegalStateException(ruleId + " defines a transport limit");
+            case CommutedPensionShare share -> throw new IllegalStateException(ruleId + " defines a pension share");
+            case IndexByYear index -> throw new IllegalStateException(ruleId + " defines an index table");
+            case ExcludedAssets excluded -> throw new IllegalStateException(ruleId + " defines excluded assets");
+            case DayWindow window -> throw new IllegalStateException(ruleId + " defines a window of days");
+        };
     }
 
     /** s.123: the Schedule XV sums under one ceiling; returns what the pension sub-cap left, for s.124(3). */
@@ -217,7 +279,10 @@ public final class ChapterEightNode implements ComputationNode {
         if (lines.isEmpty()) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
-        Money total = lines.stream().map(line -> ((MoneyValue) line.out()).asMoney()).reduce(Money.ZERO, Money::plus);
+        Money total = lines.stream()
+                .filter(line -> line.kind() == StepKind.DEDUCTION)
+                .map(line -> ((MoneyValue) line.out()).asMoney())
+                .reduce(Money.ZERO, Money::plus);
         Money grossTotal = ctx.get(NodeIds.GTI, MoneyValue.class).asMoney().floorAtZero();
         Money limit = TemporallyApportionedCap.apply(ctx.rule(RuleIds.DED_WITHIN_GROSS_TOTAL), ctx.inputs().temporal(),
                 CapContext.of(GROSS_TOTAL_INCOME, grossTotal)).value();

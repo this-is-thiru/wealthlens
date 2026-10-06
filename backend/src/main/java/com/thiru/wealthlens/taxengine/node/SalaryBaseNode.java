@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -143,6 +144,8 @@ public final class SalaryBaseNode implements ComputationNode {
                     rule + " defines excluded assets, not a salary base");
             case DayWindow window -> throw new IllegalStateException(
                     rule + " defines a window of days, not a salary base");
+            case PremiumShareBands bands -> throw new IllegalStateException(
+                    rule + " defines premium share bands, not a salary base");
         };
     }
 }

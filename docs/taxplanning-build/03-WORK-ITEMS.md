@@ -1048,10 +1048,11 @@ if that is not enough for the item in hand.
 | W-074a | **T4 golden tests, the built half** *(D-128)*: T4-1 and T4-2's ₹74,000 added (both years), T4-3's `PF-AGGCAP-001` nil (both years); T4-1/T4-2 enter a first-year fund history | `DR 08` T4-1 … T4-3 | TY 2025-26 runs PROVISIONAL |
 | W-075 | ~~`deductions.json` both years~~ **split by D-129** into W-075a–d | `DR 01` R15 | |
 | W-075a | Chapter VIII rows, the s.123 family and NPS, TY 2026-27 *(D-129)*: `DED-80C-001` (`AggregateWithCeiling` over the Schedule XV components, `-NPS-CAP-001` sub-cap), `DED-NPS-EMP-001`…`-003`, `DED-NPS-SELF-001`, `-002`, `DED-NPS-MINOR-001`, `DED-GTI-CAP-001`; the Schedule XV components | `DR 01` R13, R15; `DR 06` G2.2 | component list approved in the plan (C3a); OQ-14 |
-| W-075a2 | Chapter VIII rows, the held Schedule XV clauses, TY 2026-27 *(D-130)*: (a) life insurance with para 2's share of the sum assured; (c) Government deferred annuity's 20% of salary; (j), (k), (l) and whether para 2 reaches them | `DR 01` R15 | ⚠ (c)'s "salary" and para 2's reach not settled by the words |
+| W-075a2 | Chapter VIII rows, the held Schedule XV clauses, TY 2026-27 *(D-130)*: (a) life insurance with para 2's share of the sum assured; (c) Government deferred annuity's 20% of salary; (j), (k), (l) and whether para 2 reaches them | `DR 01` R15 | ⚠ (c)'s "salary" and para 2's reach not settled by the words | **Narrowed by D-134 to (a); (c), (j), (k), (l) → W-075a3.**
 | W-075b | Chapter VIII rows, 80D, TY 2026-27 *(D-129)*: `DED-80D-001`…`-011` | `DR 01` R15; `DR 06` G2.3 | |
 | W-075c | Chapter VIII rows, the rest, TY 2026-27 *(D-129)*: 80DD, 80DDB, 80E, 80EE/EEA/EEB/EX, 80GG, 80TTA/B, 80U, Agniveer | `DR 01` R15 | ⚠ 80DDB senior limb and 80G not read — out until read |
 | W-075d | Chapter VIII rows, TY 2025-26 versions *(D-129)* | `DR 01` R15 | ⚠ needs a sourcing round: 1961 Chapter VI-A as amended to AY 2026-27 |
+| W-075a3 | Chapter VIII rows, Schedule XV (c), (j), (k), (l), TY 2026-27 *(D-134)* | `DR 01` R15 | ⚠ waits on OQ-16 (which salary for (c)) and OQ-17 (para 2's reach); placed after W-075d by the owner |
 | W-076 | `ChapterEightNode` | `DR 06` G2.2, G2.3 | employee PF consumes 80C; 80D is **seven** rules |
 | W-077 | **T5 golden tests** | `DR 08` T5-1 … T5-4 | |
 | W-078 | `houseproperty.json`, `HousePropertyNode` | `DR 01` R16, `DR 06` G1.4 | occupancy drives **four** rules |

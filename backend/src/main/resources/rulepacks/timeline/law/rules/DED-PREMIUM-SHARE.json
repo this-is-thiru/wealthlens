@@ -1,0 +1,73 @@
+{
+  "ruleId": "DED-PREMIUM-SHARE",
+  "_note": "A life insurance premium counts towards s.123 only up to a share of the policy's actual capital sum assured (D-134, D-135; rulebook DED-80C-ITEMS-001): \"The deductions shall apply only to so much of any premium or other payment made on an insurance policy, other than a contract for a deferred annuity, — (a) as is up to 20 % of the actual capital sum assured, in respect of a policy issued on or before the 31st March, 2012; (b) as is up to 10 % of the actual capital sum assured, in respect of a policy issued on or after the 1st April, 2012; (c) as is up to 15 % of the actual capital sum assured, if the policy is issued on or after the 1st April, 2013 and where such policy covers the life of, — (i) a person with a disability or severe disability as referred to in section 154; or (ii) a person suffering from a disease or ailment specified in the rules made under section 128\" (Schedule XV para 2(1), Gazette 265620, pp.563–564); \"actual capital sum assured\" is the minimum amount assured on the insured event, without premiums to be returned or any bonus (para 2(2)). The bands are the definition (PremiumShareBands); ChapterEightNode takes, per policy, the most specific band holding it and the lesser of the premium and the share, which feeds LIFE_INSURANCE_PREMIUM into DED-SCHEDULE-XV. Whether para 2 reaches Schedule XV (j), (k), (l) is OQ-17. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart is unread (W-075d).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Schedule XV para 2",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "PremiumShareBands",
+        "bands": [
+          {
+            "to": "2012-03-31",
+            "onlyCoveringDisabilityOrDisease": false,
+            "percent": "20"
+          },
+          {
+            "from": "2012-04-01",
+            "onlyCoveringDisabilityOrDisease": false,
+            "percent": "10"
+          },
+          {
+            "from": "2013-04-01",
+            "onlyCoveringDisabilityOrDisease": true,
+            "percent": "15"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), Schedule XV para 2",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 2, pp.563–564",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 2, pp.563–564",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

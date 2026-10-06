@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -100,6 +101,7 @@ final class SpecifiedSecurityPerquisite {
         return switch (ctx.rule(ruleId).versionAt(ctx.inputs().temporal()).definition().orElseThrow(
                 () -> new IllegalStateException(ruleId + " carries no window of days"))) {
             case DayWindow window -> window;
+            case PremiumShareBands bands -> throw new IllegalStateException(ruleId + " defines premium share bands");
             case HeadTotal headTotal -> throw new IllegalStateException(ruleId + " defines a head's total");
             case SalaryBase base -> throw new IllegalStateException(ruleId + " defines a salary base");
             case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(ruleId + " defines journeys");

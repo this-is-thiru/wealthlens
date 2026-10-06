@@ -19,6 +19,7 @@ public final class RuleIds {
     public static final RuleId DED_NPS_EMPLOYER_NEW_TAX_REGIME = new RuleId("DED-NPS-EMPLOYER-NEW-TAX-REGIME");
     public static final RuleId DED_NPS_EMPLOYER_OTHER = new RuleId("DED-NPS-EMPLOYER-OTHER");
     public static final RuleId DED_NPS_OWN = new RuleId("DED-NPS-OWN");
+    public static final RuleId DED_PREMIUM_SHARE = new RuleId("DED-PREMIUM-SHARE");
     public static final RuleId DED_SCHEDULE_XV = new RuleId("DED-SCHEDULE-XV");
     public static final RuleId DED_WITHIN_GROSS_TOTAL = new RuleId("DED-WITHIN-GROSS-TOTAL");
     public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");

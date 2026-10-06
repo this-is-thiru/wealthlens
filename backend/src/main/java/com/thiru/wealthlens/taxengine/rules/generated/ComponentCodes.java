@@ -36,6 +36,7 @@ public final class ComponentCodes {
     public static final ComponentCode HOUSING_FINANCE_DEPOSIT = new ComponentCode("HOUSING_FINANCE_DEPOSIT");
     public static final ComponentCode HRA = new ComponentCode("HRA");
     public static final ComponentCode LEAVE_ENCASHMENT = new ComponentCode("LEAVE_ENCASHMENT");
+    public static final ComponentCode LIFE_INSURANCE_PREMIUM = new ComponentCode("LIFE_INSURANCE_PREMIUM");
     public static final ComponentCode LTA = new ComponentCode("LTA");
     public static final ComponentCode MUTUAL_FUND_PENSION_FUND = new ComponentCode("MUTUAL_FUND_PENSION_FUND");
     public static final ComponentCode MUTUAL_FUND_UNITS = new ComponentCode("MUTUAL_FUND_UNITS");

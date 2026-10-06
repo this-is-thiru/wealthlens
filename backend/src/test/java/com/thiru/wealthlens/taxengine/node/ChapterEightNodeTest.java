@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
@@ -73,6 +74,10 @@ class ChapterEightNodeTest {
     }
 
     private static NodeResult run(Case entered) {
+        return run(entered, List.of());
+    }
+
+    private static NodeResult run(Case entered, List<LifeInsurancePolicy> policies) {
         TaxYearId taxYear = TaxYearId.of(entered.year());
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -85,7 +90,7 @@ class ChapterEightNodeTest {
                 new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), entered.employerContributions(), Optional.empty(),
-                        entered.payments()),
+                        entered.payments(), policies),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         List<Money> perEmployment = List.of(entered.salary(), Money.ZERO);
@@ -230,5 +235,77 @@ class ChapterEightNodeTest {
                         Money.of("1000000"))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("is not a qualifying payment");
+    }
+
+    /** What s.123 allows for one policy's premium of 50,000 and nothing else, in the old regime. */
+    private static NodeResult onePolicy(String sumAssured, LocalDate issuedOn, boolean coversDisabilityOrDisease) {
+        return run(new Case(2026, OLD, EmployerKind.OTHER, List.of(), List.of(), List.of(), Money.of("1000000"),
+                Money.of("1000000")), List.of(new LifeInsurancePolicy(Money.of("50000"), Money.of(sumAssured), issuedOn,
+                coversDisabilityOrDisease)));
+    }
+
+    @Test
+    void evaluate_whenAPolicyIssuedAfterApril2012IsPaidFor_countsTenPerCentOfTheSumAssured() {
+        // When
+        NodeResult result = onePolicy("400000", LocalDate.of(2015, 6, 1), false);
+
+        // Then — para 2(1)(b): 10% × 4,00,000 = 40,000 of the 50,000 premium
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
+        assertThat(result.trace().getFirst()).satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.DED_PREMIUM_SHARE);
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("40000")));
+        });
+    }
+
+    @Test
+    void evaluate_whenAPolicyIssuedBeforeApril2012IsPaidFor_countsThePremiumWithinTwentyPerCent() {
+        // When — para 2(1)(a): 20% × 4,00,000 = 80,000, above the 50,000 premium
+        NodeResult result = onePolicy("400000", LocalDate.of(2011, 6, 1), false);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("50000")));
+    }
+
+    @Test
+    void evaluate_whenAPolicyFrom2013CoversADisability_countsFifteenPerCent() {
+        // When — para 2(1)(c): 15% × 3,00,000 = 45,000
+        NodeResult result = onePolicy("300000", LocalDate.of(2015, 6, 1), true);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("45000")));
+    }
+
+    @Test
+    void evaluate_whenAPolicyFrom2012CoversADisability_stillCountsTenPerCent() {
+        // When — issued 1-6-2012, before para 2(1)(c)'s 1-4-2013: 10% × 4,00,000
+        NodeResult result = onePolicy("400000", LocalDate.of(2012, 6, 1), true);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
+    }
+
+    @Test
+    void evaluate_whenAPremiumIsEnteredWithoutItsPolicy_isRefused() {
+        // When / Then — para 2 needs the policy
+        assertThatThrownBy(() -> run(new Case(2026, OLD, EmployerKind.OTHER, List.of(),
+                        List.of(paid(ComponentCodes.LIFE_INSURANCE_PREMIUM, "50000")), List.of(), Money.of("1000000"),
+                        Money.of("1000000"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("entered with its policy");
+    }
+
+    @Test
+    void evaluate_whenAPolicyIsPaidForInTheNewRegime_givesANilLineForTheWholePremium() {
+        // When
+        NodeResult result = run(new Case(2026, NEW, EmployerKind.OTHER, List.of(), List.of(), List.of(),
+                Money.of("1000000"), Money.of("1000000")), List.of(new LifeInsurancePolicy(Money.of("50000"),
+                Money.of("400000"), LocalDate.of(2015, 6, 1), false)));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.DED_SCHEDULE_XV);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("50000")));
+        });
     }
 }

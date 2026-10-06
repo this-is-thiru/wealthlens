@@ -40,7 +40,8 @@ import java.util.Optional;
  * theirs (D-118), the cost-based benefits and assets with theirs (D-119), household services, utilities and
  * education with theirs (D-120), share allotments with theirs (D-121), employer
  * retirement contributions with the aggregate charge (D-126), the funds' history with the accretion on the
- * excess (D-127), the Chapter VIII payments with the deductions (D-132). Every later
+ * excess (D-127), the Chapter VIII payments with the deductions (D-132), life policies with their premiums'
+ * share (D-134). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -66,6 +67,7 @@ import java.util.Optional;
  * @param retirementFundHistory the earlier years' excess and the funds' income and balances, for the accretion on
  *     the excess, if entered
  * @param qualifyingPayments each sum paid that Chapter VIII lets the payer deduct, other than pay lines, in order
+ * @param lifeInsurancePolicies each life policy whose premium was paid in the year, in the order entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -88,7 +90,8 @@ public record EnteredFacts(
         List<EmployerShareAllotment> shareAllotments,
         List<EmployerFundContribution> employerContributions,
         Optional<RetirementFundHistory> retirementFundHistory,
-        List<QualifyingPayment> qualifyingPayments) {
+        List<QualifyingPayment> qualifyingPayments,
+        List<LifeInsurancePolicy> lifeInsurancePolicies) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -118,6 +121,7 @@ public record EnteredFacts(
         shareAllotments = copied(shareAllotments, "shareAllotments");
         employerContributions = copied(employerContributions, "employerContributions");
         qualifyingPayments = copied(qualifyingPayments, "qualifyingPayments");
+        lifeInsurancePolicies = copied(lifeInsurancePolicies, "lifeInsurancePolicies");
     }
 
     /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
@@ -133,6 +137,6 @@ public record EnteredFacts(
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of());
     }
 }

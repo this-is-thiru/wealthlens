@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -143,6 +144,8 @@ final class AllowanceExemption {
                     ruleId + " defines excluded assets, not a transport limit");
             case DayWindow window -> throw new IllegalStateException(
                     ruleId + " defines a window of days, not a transport limit");
+            case PremiumShareBands bands -> throw new IllegalStateException(
+                    ruleId + " defines premium share bands, not a transport limit");
         };
     }
 
