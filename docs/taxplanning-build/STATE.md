@@ -6,7 +6,7 @@
 Last checkpoint           : W-075c3 — "taxplanning W-075c3: count the employer's pension and the Government's Agniveer contributions as salary, and deduct the Agniveer Corpus Fund — gross salary was short of s.16(k) (D-140)"
 Last updated              : 2026-10-06 (session 11 — W-073b, W-074a, W-075a, W-052d, W-075a2, W-075b, W-075c1, W-075c2, W-075c3 done; build GREEN, 2438 tests)
 Current position          : W-075c4 — 80GG, rent without HRA (not started)
-Session count             : 9
+Session count             : 11
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
