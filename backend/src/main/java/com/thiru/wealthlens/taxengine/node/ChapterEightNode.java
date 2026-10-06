@@ -18,15 +18,8 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
-import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -60,7 +53,8 @@ import java.util.stream.Collectors;
  * of it within gross total income (s.122(2)). A row the regime excludes, with something entered for it, gives a nil
  * line naming the regime. TY 2025-26 has none of these rows yet (D-129 C2a), so anything entered there is refused.
  * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136); and s.154, s.127
- * and s.128 ({@link DisabilityDeduction}; D-138). The other deductions are later items (W-075a3, W-075c2–c6).
+ * and s.128 ({@link DisabilityDeduction}; D-138); s.129–132, loan interest ({@link LoanInterestDeduction}; D-139). The
+ * other deductions are later items (W-075a3, W-075c3–c6).
  */
 public final class ChapterEightNode implements ComputationNode {
 
@@ -85,6 +79,7 @@ public final class ChapterEightNode implements ComputationNode {
                 RuleIds.DED_WITHIN_GROSS_TOTAL, RuleIds.DED_PREMIUM_SHARE));
         rules.addAll(HealthInsuranceDeduction.RULES);
         rules.addAll(DisabilityDeduction.RULES);
+        rules.addAll(LoanInterestDeduction.RULES);
         return Set.copyOf(rules);
     }
 
@@ -100,6 +95,8 @@ public final class ChapterEightNode implements ComputationNode {
                 && ctx.inputs().entered().healthPayments().isEmpty()
                 && ctx.inputs().entered().disabledDependantSupport().isEmpty()
                 && ctx.inputs().entered().specifiedDiseaseTreatment().isEmpty()
+                && ctx.inputs().entered().educationLoanInterest().isEmpty()
+                && ctx.inputs().entered().purposeLoanInterest().isEmpty()
                 && !certifiedDisabled(ctx)) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
@@ -112,6 +109,7 @@ public final class ChapterEightNode implements ComputationNode {
         employerPension(ctx, employerPension, lines);
         lines.addAll(HealthInsuranceDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(DisabilityDeduction.lines(ctx, lines.size() + 1));
+        lines.addAll(LoanInterestDeduction.lines(ctx, lines.size() + 1));
         return withinGrossTotal(ctx, lines);
     }
 
@@ -189,18 +187,7 @@ public final class ChapterEightNode implements ComputationNode {
 
     private static PremiumShareBands bands(RuleVersion version) {
         RuleId ruleId = RuleIds.DED_PREMIUM_SHARE;
-        return switch (version.definition().orElseThrow(
-                () -> new IllegalStateException(ruleId + " carries no premium share bands"))) {
-            case PremiumShareBands bands -> bands;
-            case HeadTotal headTotal -> throw new IllegalStateException(ruleId + " defines a head's total");
-            case SalaryBase base -> throw new IllegalStateException(ruleId + " defines a salary base");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(ruleId + " defines journeys");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(ruleId + " defines a transport limit");
-            case CommutedPensionShare share -> throw new IllegalStateException(ruleId + " defines a pension share");
-            case IndexByYear index -> throw new IllegalStateException(ruleId + " defines an index table");
-            case ExcludedAssets excluded -> throw new IllegalStateException(ruleId + " defines excluded assets");
-            case DayWindow window -> throw new IllegalStateException(ruleId + " defines a window of days");
-        };
+        return RuleDefinitions.require(version.definition(), PremiumShareBands.class, ruleId);
     }
 
     /** s.123: the Schedule XV sums under one ceiling; returns what the pension sub-cap left, for s.124(3). */

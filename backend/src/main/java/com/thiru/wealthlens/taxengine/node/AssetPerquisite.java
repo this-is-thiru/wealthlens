@@ -7,15 +7,8 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
-import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
@@ -109,18 +102,7 @@ final class AssetPerquisite {
 
     private static ExcludedAssets excludedAssets(NodeContext ctx, TemporalContext t) {
         RuleId ruleId = RuleIds.PERQ_ASSET_USE_EXCLUDED;
-        return switch (ctx.rule(ruleId).versionAt(t).definition().orElseThrow(() -> new IllegalStateException(
-                ruleId + " carries no list of excluded assets"))) {
-            case ExcludedAssets excluded -> excluded;
-            case HeadTotal headTotal -> throw new IllegalStateException(ruleId + " defines a head's total");
-            case SalaryBase base -> throw new IllegalStateException(ruleId + " defines a salary base");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(ruleId + " defines journeys");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(ruleId + " defines a transport limit");
-            case CommutedPensionShare share -> throw new IllegalStateException(ruleId + " defines a pension share");
-            case IndexByYear index -> throw new IllegalStateException(ruleId + " defines an index table");
-            case DayWindow window -> throw new IllegalStateException(ruleId + " defines a window of days");
-            case PremiumShareBands bands -> throw new IllegalStateException(ruleId + " defines premium share bands");
-        };
+        return RuleDefinitions.require(ctx.rule(ruleId).versionAt(t).definition(), ExcludedAssets.class, ruleId);
     }
 
     private static TraceLine line(NodeContext ctx, RuleId ruleId, Money in, Money value, int sequence, String bound) {

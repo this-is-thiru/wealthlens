@@ -13,14 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
-import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -204,26 +197,7 @@ public final class RetirementNode implements ComputationNode {
 
     private static CommutedPensionShare commutedPensionShare(RuleVersion version) {
         RuleId ruleId = RuleIds.RET_COMMUTED_PENSION_OTHER;
-        return switch (version.definition().orElseThrow(() -> new IllegalStateException(
-                ruleId + " carries no share of the pension"))) {
-            case CommutedPensionShare share -> share;
-            case HeadTotal headTotal -> throw new IllegalStateException(
-                    ruleId + " defines a head's total, not a share of a commuted pension");
-            case SalaryBase salaryBase -> throw new IllegalStateException(
-                    ruleId + " defines a salary base, not a share of a commuted pension");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(
-                    ruleId + " defines journeys per block, not a share of a commuted pension");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(
-                    ruleId + " defines a transport limit, not a share of a commuted pension");
-            case IndexByYear index -> throw new IllegalStateException(
-                    ruleId + " defines an index table, not a share of a commuted pension");
-            case ExcludedAssets excluded -> throw new IllegalStateException(
-                    ruleId + " defines excluded assets, not a share of a commuted pension");
-            case DayWindow window -> throw new IllegalStateException(
-                    ruleId + " defines a window of days, not a share of a commuted pension");
-            case PremiumShareBands bands -> throw new IllegalStateException(
-                    ruleId + " defines premium share bands, not a share of a commuted pension");
-        };
+        return RuleDefinitions.require(version.definition(), CommutedPensionShare.class, ruleId);
     }
 
     private static TraceLine line(int sequence, RuleId ruleId, Money received, Money deducted, RuleVersion version) {

@@ -42,7 +42,7 @@ import java.util.Optional;
  * retirement contributions with the aggregate charge (D-126), the funds' history with the accretion on the
  * excess (D-127), the Chapter VIII payments with the deductions (D-132), life policies with their premiums'
  * share (D-134), health payments with 80D (D-136), disabled dependants' support and specified-disease treatment
- * with 80DD and 80DDB (D-138). Every later
+ * with 80DD and 80DDB (D-138), loan interest with 80E–80EEB (D-139). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -72,6 +72,8 @@ import java.util.Optional;
  * @param healthPayments each payment for health under s.126, in the order entered
  * @param disabledDependantSupport each disabled dependant supported under s.127, in the order entered
  * @param specifiedDiseaseTreatment each specified-disease treatment paid for under s.128, in the order entered
+ * @param educationLoanInterest each education loan's interest paid under s.129, in the order entered
+ * @param purposeLoanInterest each house or electric-vehicle loan's interest under s.130–132, in the order entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -98,7 +100,9 @@ public record EnteredFacts(
         List<LifeInsurancePolicy> lifeInsurancePolicies,
         List<HealthPayment> healthPayments,
         List<DisabledDependantSupport> disabledDependantSupport,
-        List<SpecifiedDiseaseTreatment> specifiedDiseaseTreatment) {
+        List<SpecifiedDiseaseTreatment> specifiedDiseaseTreatment,
+        List<EducationLoanInterest> educationLoanInterest,
+        List<PurposeLoanInterest> purposeLoanInterest) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -132,6 +136,8 @@ public record EnteredFacts(
         healthPayments = copied(healthPayments, "healthPayments");
         disabledDependantSupport = copied(disabledDependantSupport, "disabledDependantSupport");
         specifiedDiseaseTreatment = copied(specifiedDiseaseTreatment, "specifiedDiseaseTreatment");
+        educationLoanInterest = copied(educationLoanInterest, "educationLoanInterest");
+        purposeLoanInterest = copied(purposeLoanInterest, "purposeLoanInterest");
     }
 
     /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
@@ -147,6 +153,6 @@ public record EnteredFacts(
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
     }
 }

@@ -8,16 +8,8 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
-import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -126,26 +118,7 @@ public final class SalaryBaseNode implements ComputationNode {
             throw new IllegalStateException(rule + " does not apply in regime " + ctx.regime().code()
                     + "; a salary base is defined in every regime, so the row is wrong");
         }
-        RuleDefinition definition = version.definition().orElseThrow(() -> new IllegalStateException(
-                rule + " carries no definition; there is no salary base to measure"));
-        return switch (definition) {
-            case SalaryBase salaryBase -> version;
-            case HeadTotal headTotal -> throw new IllegalStateException(
-                    rule + " defines a head's total, not a salary base");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(
-                    rule + " defines journeys per block, not a salary base");
-            case CommutedPensionShare share -> throw new IllegalStateException(
-                    rule + " defines a share of a commuted pension, not a salary base");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(
-                    rule + " defines a transport limit, not a salary base");
-            case IndexByYear index -> throw new IllegalStateException(
-                    rule + " defines an index table, not a salary base");
-            case ExcludedAssets excluded -> throw new IllegalStateException(
-                    rule + " defines excluded assets, not a salary base");
-            case DayWindow window -> throw new IllegalStateException(
-                    rule + " defines a window of days, not a salary base");
-            case PremiumShareBands bands -> throw new IllegalStateException(
-                    rule + " defines premium share bands, not a salary base");
-        };
+        RuleDefinitions.require(version.definition(), SalaryBase.class, rule);
+        return version;
     }
 }

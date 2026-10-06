@@ -23,6 +23,8 @@ import com.thiru.wealthlens.taxengine.rules.definition.PolicyIssueWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -223,7 +225,7 @@ public final class ShapeJson {
     public static RuleDefinition definition(JsonNode node, String path) {
         String tag = PackJson.tag(
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
-                "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands");
+                "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -240,6 +242,13 @@ public final class ShapeJson {
                     PackJson.integer(node, "oneOverOtherwise", path)));
             case "IndexByYear" -> indexByYear(node, path);
             case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
+            case "TaxYearSpan" -> PackJson.construct(path, () -> new TaxYearSpan(
+                    PackJson.integer(node, "succeedingYears", path)));
+            case "SanctionedLoanLimit" -> PackJson.construct(path, () -> new SanctionedLoanLimit(
+                    money(node, "limit", path), PackJson.date(node, "sanctionedFrom", path),
+                    PackJson.date(node, "sanctionedTo", path), optionalMoney(node, "maxAmountSanctioned", path),
+                    optionalMoney(node, "maxPropertyValue", path), optionalMoney(node, "maxStampDutyValue", path),
+                    PackJson.bool(node, "requiresNoHouseOwned", path)));
             case "PremiumShareBands" -> PackJson.construct(path, () -> new PremiumShareBands(PackJson.array(
                     node, "bands", path, band -> new PremiumShareBands.Band(new PolicyIssueWindow(
                             PackJson.optionalDate(band.node(), "from", path),

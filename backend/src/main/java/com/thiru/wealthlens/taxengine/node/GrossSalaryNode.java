@@ -5,16 +5,8 @@ import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
@@ -98,26 +90,6 @@ public final class GrossSalaryNode implements ComputationNode {
             throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES + " does not apply in regime "
                     + ctx.regime().code() + "; salary is defined in every regime, so the row is wrong");
         }
-        RuleDefinition definition = version.definition().orElseThrow(() -> new IllegalStateException(
-                RuleIds.SAL_SALARY_INCLUDES + " carries no definition; gross salary has nothing to total"));
-        return switch (definition) {
-            case HeadTotal headTotal -> headTotal;
-            case SalaryBase salaryBase -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines a salary base, not a head's total; gross salary is the whole head");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines journeys per block, not a head's total");
-            case CommutedPensionShare share -> throw new IllegalStateException(
-                    RuleIds.SAL_SALARY_INCLUDES + " defines a share of a commuted pension, not a head's total");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines a transport limit, not a head's total");
-            case IndexByYear index -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines an index table, not a head's total");
-            case ExcludedAssets excluded -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines excluded assets, not a head's total");
-            case DayWindow window -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines a window of days, not a head's total");
-            case PremiumShareBands bands -> throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES
-                    + " defines premium share bands, not a head's total");
-        };
+        return RuleDefinitions.require(version.definition(), HeadTotal.class, RuleIds.SAL_SALARY_INCLUDES);
     }
 }

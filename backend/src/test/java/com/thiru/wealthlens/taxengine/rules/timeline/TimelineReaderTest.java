@@ -151,7 +151,11 @@ class TimelineReaderTest {
             new RuleId("DED-DISABLED-DEPENDANT"),
             new RuleId("DED-DISABLED-DEPENDANT-SEVERE"),
             new RuleId("DED-SPECIFIED-DISEASE"),
-            new RuleId("DED-SPECIFIED-DISEASE-SENIOR"));
+            new RuleId("DED-SPECIFIED-DISEASE-SENIOR"),
+            new RuleId("DED-EDUCATION-LOAN"),
+            new RuleId("DED-ELECTRIC-VEHICLE-LOAN"),
+            new RuleId("DED-HOUSE-LOAN"),
+            new RuleId("DED-HOUSE-LOAN-EARLIER"));
 
     @TempDir
     Path copy;

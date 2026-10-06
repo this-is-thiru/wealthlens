@@ -10,15 +10,8 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
-import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
@@ -196,24 +189,7 @@ public final class PerquisiteNode implements ComputationNode {
 
     private static IndexByYear costInflationIndex(NodeContext ctx, TemporalContext t) {
         RuleId ruleId = RuleIds.RATE_COST_INFLATION_INDEX;
-        return switch (ctx.rule(ruleId).versionAt(t).definition().orElseThrow(() -> new IllegalStateException(
-                ruleId + " carries no index table"))) {
-            case IndexByYear table -> table;
-            case HeadTotal headTotal -> throw new IllegalStateException(ruleId + " defines a head's total, not an index");
-            case SalaryBase base -> throw new IllegalStateException(ruleId + " defines a salary base, not an index");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(
-                    ruleId + " defines journeys per block, not an index");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(
-                    ruleId + " defines a transport limit, not an index");
-            case CommutedPensionShare share -> throw new IllegalStateException(
-                    ruleId + " defines a share of a commuted pension, not an index");
-            case ExcludedAssets excluded -> throw new IllegalStateException(
-                    ruleId + " defines excluded assets, not an index");
-            case DayWindow window -> throw new IllegalStateException(
-                    ruleId + " defines a window of days, not an index");
-            case PremiumShareBands bands -> throw new IllegalStateException(
-                    ruleId + " defines premium share bands, not an index");
-        };
+        return RuleDefinitions.require(ctx.rule(ruleId).versionAt(t).definition(), IndexByYear.class, ruleId);
     }
 
     /** Furnished: ten per cent a year of the cost for the period, or the hire charges; less the employee's charges. */

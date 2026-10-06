@@ -1124,6 +1124,11 @@ ordering is the single most common error in this area and is why `G2` exists as 
 > reimbursement. s.127's "up to ₹ 75000" is built as a ceiling on the amount spent, one dependant at a time (OQ-19);
 > mixed senior and non-senior treatment under s.128 is OQ-20.
 
+> **Addendum (W-075c2, 2026-10-06, D-139):** `DED-80E-001`, `-002`, `DED-80EE-001`, `DED-80EEA-001` and `DED-80EEB-001` are
+> built for TY 2026-27 (S2 s.129–132, pp.165–167). s.130's "value of residential house property" is undefined and
+> entered as the house's value; s.131's is the stamp duty value. `DED-80EX-001`'s bar is recorded for the house-property
+> head (W-078).
+
 ---
 
 ## R16 — Income from house property

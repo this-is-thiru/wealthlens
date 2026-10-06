@@ -9,15 +9,9 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
@@ -127,26 +121,7 @@ final class AllowanceExemption {
 
     private static DisabledTransportLimit transportLimit(RuleVersion version) {
         RuleId ruleId = RuleIds.SAL_ALW_TRANSPORT_DISABLED;
-        return switch (version.definition().orElseThrow(() -> new IllegalStateException(
-                ruleId + " carries no definition of its limit"))) {
-            case DisabledTransportLimit transport -> transport;
-            case HeadTotal headTotal -> throw new IllegalStateException(
-                    ruleId + " defines a head's total, not a transport limit");
-            case SalaryBase salaryBase -> throw new IllegalStateException(
-                    ruleId + " defines a salary base, not a transport limit");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(
-                    ruleId + " defines journeys per block, not a transport limit");
-            case CommutedPensionShare share -> throw new IllegalStateException(
-                    ruleId + " defines a share of a commuted pension, not a transport limit");
-            case IndexByYear index -> throw new IllegalStateException(
-                    ruleId + " defines an index table, not a transport limit");
-            case ExcludedAssets excluded -> throw new IllegalStateException(
-                    ruleId + " defines excluded assets, not a transport limit");
-            case DayWindow window -> throw new IllegalStateException(
-                    ruleId + " defines a window of days, not a transport limit");
-            case PremiumShareBands bands -> throw new IllegalStateException(
-                    ruleId + " defines premium share bands, not a transport limit");
-        };
+        return RuleDefinitions.require(version.definition(), DisabledTransportLimit.class, ruleId);
     }
 
     /** The allowance rule a component feeds; refused where it feeds none, or more than one. */

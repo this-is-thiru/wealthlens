@@ -10,16 +10,9 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
@@ -95,27 +88,7 @@ final class LeaveTravelExemption {
     private static JourneysPerCalendarBlock blocks(NodeContext ctx, TemporalContext t) {
         RuleVersion version =
                 TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS), t);
-        RuleDefinition definition = version.definition().orElseThrow(() -> new IllegalStateException(
-                RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " carries no definition of its blocks"));
-        return switch (definition) {
-            case JourneysPerCalendarBlock journeys -> journeys;
-            case HeadTotal headTotal -> throw new IllegalStateException(
-                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a head's total, not journeys per block");
-            case SalaryBase salaryBase -> throw new IllegalStateException(
-                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a salary base, not journeys per block");
-            case CommutedPensionShare share -> throw new IllegalStateException(
-                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a share of a commuted pension, not journeys per block");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(
-                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a transport limit, not journeys per block");
-            case IndexByYear index -> throw new IllegalStateException(
-                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines an index table, not journeys per block");
-            case ExcludedAssets excluded -> throw new IllegalStateException(
-                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines excluded assets, not journeys per block");
-            case DayWindow window -> throw new IllegalStateException(
-                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines a window of days, not journeys per block");
-            case PremiumShareBands bands -> throw new IllegalStateException(
-                    RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS + " defines premium share bands, not journeys per block");
-        };
+        return RuleDefinitions.require(version.definition(), JourneysPerCalendarBlock.class, RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS);
     }
 
     /** The fare the Rules admit: r.278(1)(iii)(B)'s rate per kilometre where the year has one, else as entered. */

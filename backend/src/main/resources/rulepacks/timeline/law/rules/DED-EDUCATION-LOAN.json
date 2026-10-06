@@ -1,0 +1,57 @@
+{
+  "ruleId": "DED-EDUCATION-LOAN",
+  "_note": "Interest on a loan for higher education: an individual, \"amount paid as interest during a tax year … on a loan taken by him from any financial institution or any approved charitable institution, if the — (a) loan taken is for the purpose of pursuing higher education of himself or his relative; and (b) payment is made out of his income chargeable to tax\" (s.129(1), p.165) — no limit on the amount; \"in respect of the initial tax year and seven tax years immediately succeeding the initial tax year, or until the interest … is fully paid … whichever is earlier\" (s.129(2)); the initial tax year is \"the tax year in which the assessee starts paying the interest\" (s.129(3)(d)); a relative is the spouse, children, or a student the individual is guardian of (s.129(3)(e)). The span is the definition (TaxYearSpan); the lender, the relative and payment out of taxable income are entry conditions. rulebook DED-80E-001, -002. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart, s.80E, is unread (W-075d). D-139.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.129",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 7
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.129",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.129, p.165",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.129, p.165",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

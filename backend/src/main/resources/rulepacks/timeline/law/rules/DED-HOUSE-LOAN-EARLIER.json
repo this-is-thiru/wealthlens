@@ -1,0 +1,62 @@
+{
+  "ruleId": "DED-HOUSE-LOAN-EARLIER",
+  "_note": "Interest on a loan for a first house: an individual, \"interest payable on loan taken by him from any financial institution for the purpose of acquisition of a residential house property\" (s.130(1), p.165), \"shall not exceed ₹ 50000\" (s.130(2)); \"(a) the loan has been sanctioned by the financial institution during the period beginning on the 1st April, 2016 and ending on the 31st March, 2017; (b) the amount of loan sanctioned … does not exceed thirty-five lakh rupees; (c) the value of residential house property does not exceed fifty lakh rupees; and (d) the assessee does not own any residential house property on the date of sanction of loan\" (s.130(3), p.166) — \"value\" is undefined, entered as the house's value. ChapterEightNode tries this before DED-HOUSE-LOAN (s.131(1)). The same interest is not deductible under any other provision for the same or any other tax year (s.130(4)) — house-property interest under s.22(1)(b) must leave it out (W-078). rulebook DED-80EE-001, DED-80EX-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart, s.80EE, is unread (W-075d). D-139.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.130",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SanctionedLoanLimit",
+        "limit": "50000",
+        "sanctionedFrom": "2016-04-01",
+        "sanctionedTo": "2017-03-31",
+        "maxAmountSanctioned": "3500000",
+        "maxPropertyValue": "5000000",
+        "requiresNoHouseOwned": true
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.130",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.130, pp.165–166",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.130, pp.165–166",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

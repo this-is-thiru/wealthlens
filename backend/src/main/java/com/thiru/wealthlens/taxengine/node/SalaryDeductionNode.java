@@ -12,15 +12,8 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
@@ -111,26 +104,7 @@ public final class SalaryDeductionNode implements ComputationNode {
         if (!version.regimes().appliesIn(ctx.regime().code())) {
             return Optional.empty();
         }
-        HeadTotal total = switch (version.definition().orElseThrow(() -> new IllegalStateException(
-                RuleIds.SAL_TAX_ON_EMPLOYMENT + " carries no definition; there is no amount to deduct"))) {
-            case HeadTotal headTotal -> headTotal;
-            case SalaryBase salaryBase -> throw new IllegalStateException(
-                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines a salary base, not the total of what was paid");
-            case JourneysPerCalendarBlock journeys -> throw new IllegalStateException(
-                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines journeys per block, not the total of what was paid");
-            case CommutedPensionShare share -> throw new IllegalStateException(
-                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines a share of a commuted pension, not the total of what was paid");
-            case DisabledTransportLimit transport -> throw new IllegalStateException(
-                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines a transport limit, not the total of what was paid");
-            case IndexByYear index -> throw new IllegalStateException(
-                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines an index table, not the total of what was paid");
-            case ExcludedAssets excluded -> throw new IllegalStateException(
-                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines excluded assets, not the total of what was paid");
-            case DayWindow window -> throw new IllegalStateException(
-                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines a window of days, not the total of what was paid");
-            case PremiumShareBands bands -> throw new IllegalStateException(
-                    RuleIds.SAL_TAX_ON_EMPLOYMENT + " defines premium share bands, not the total of what was paid");
-        };
+        HeadTotal total = RuleDefinitions.require(version.definition(), HeadTotal.class, RuleIds.SAL_TAX_ON_EMPLOYMENT);
         HeadTotalLines paid = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class), total,
                 RuleIds.SAL_TAX_ON_EMPLOYMENT);
         return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, RuleIds.SAL_TAX_ON_EMPLOYMENT,

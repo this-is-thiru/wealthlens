@@ -19,11 +19,15 @@ public final class RuleIds {
     public static final RuleId DED_DISABILITY_SEVERE = new RuleId("DED-DISABILITY-SEVERE");
     public static final RuleId DED_DISABLED_DEPENDANT = new RuleId("DED-DISABLED-DEPENDANT");
     public static final RuleId DED_DISABLED_DEPENDANT_SEVERE = new RuleId("DED-DISABLED-DEPENDANT-SEVERE");
+    public static final RuleId DED_EDUCATION_LOAN = new RuleId("DED-EDUCATION-LOAN");
+    public static final RuleId DED_ELECTRIC_VEHICLE_LOAN = new RuleId("DED-ELECTRIC-VEHICLE-LOAN");
     public static final RuleId DED_HEALTH_CHECKUP = new RuleId("DED-HEALTH-CHECKUP");
     public static final RuleId DED_HEALTH_FAMILY = new RuleId("DED-HEALTH-FAMILY");
     public static final RuleId DED_HEALTH_FAMILY_SENIOR = new RuleId("DED-HEALTH-FAMILY-SENIOR");
     public static final RuleId DED_HEALTH_PARENTS = new RuleId("DED-HEALTH-PARENTS");
     public static final RuleId DED_HEALTH_PARENTS_SENIOR = new RuleId("DED-HEALTH-PARENTS-SENIOR");
+    public static final RuleId DED_HOUSE_LOAN = new RuleId("DED-HOUSE-LOAN");
+    public static final RuleId DED_HOUSE_LOAN_EARLIER = new RuleId("DED-HOUSE-LOAN-EARLIER");
     public static final RuleId DED_NPS_EMPLOYER_GOVT = new RuleId("DED-NPS-EMPLOYER-GOVT");
     public static final RuleId DED_NPS_EMPLOYER_NEW_TAX_REGIME = new RuleId("DED-NPS-EMPLOYER-NEW-TAX-REGIME");
     public static final RuleId DED_NPS_EMPLOYER_OTHER = new RuleId("DED-NPS-EMPLOYER-OTHER");
