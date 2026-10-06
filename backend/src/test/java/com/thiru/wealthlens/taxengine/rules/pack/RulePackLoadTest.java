@@ -80,7 +80,7 @@ class RulePackLoadTest {
             RulePack pack = load("rulepacks", TY_2026);
 
             assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
-            assertThat(pack.rules()).hasSize(92);
+            assertThat(pack.rules()).hasSize(98);
             assertThat(pack.regimes()).hasSize(2);
         }
 
@@ -101,7 +101,7 @@ class RulePackLoadTest {
 
             assertThat(pack.computationCacheKey())
                     .startsWith("2026-27|")
-                    .contains("law=2026-27.law.37")
+                    .contains("law=2026-27.law.38")
                     .doesNotContain("content=");
         }
 
@@ -120,7 +120,7 @@ class RulePackLoadTest {
         void itHoldsTheShippedComponentsAndThisTestSaysWhich() {
             // A component arrives with the first rule that reads it (D-089): professional tax came with
             // SAL-TAX-ON-EMPLOYMENT (D-093), the pay lines with SAL-SALARY-INCLUDES (D-094).
-            assertThat(load("rulepacks", TY_2026).components()).containsOnlyKeys(new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), new ComponentCode("COMMISSION"), new ComponentCode("CONVEYANCE_ALLOWANCE"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("ENTERTAINMENT_ALLOWANCE"), new ComponentCode("HOSTEL_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"), new ComponentCode("TRANSPORT_ALLOWANCE_DISABLED"), new ComponentCode("UNIFORM_ALLOWANCE"), new ComponentCode("GRATUITY"), new ComponentCode("LEAVE_ENCASHMENT"), new ComponentCode("COMMUTED_PENSION"), new ComponentCode("VRS_COMPENSATION"), new ComponentCode("RETRENCHMENT_COMPENSATION"), new ComponentCode("NOTICE_PAY"));
+            assertThat(load("rulepacks", TY_2026).components()).containsOnlyKeys(new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), new ComponentCode("COMMISSION"), new ComponentCode("CONVEYANCE_ALLOWANCE"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("ENTERTAINMENT_ALLOWANCE"), new ComponentCode("HOSTEL_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"), new ComponentCode("TRANSPORT_ALLOWANCE_DISABLED"), new ComponentCode("UNIFORM_ALLOWANCE"), new ComponentCode("GRATUITY"), new ComponentCode("LEAVE_ENCASHMENT"), new ComponentCode("COMMUTED_PENSION"), new ComponentCode("VRS_COMPENSATION"), new ComponentCode("RETRENCHMENT_COMPENSATION"), new ComponentCode("NOTICE_PAY"), new ComponentCode("DEFERRED_ANNUITY"), new ComponentCode("PROVIDENT_FUNDS_ACT_FUND"), new ComponentCode("NOTIFIED_PROVIDENT_FUND"), new ComponentCode("EMPLOYEE_PF"), new ComponentCode("EMPLOYEE_SUPERANNUATION"), new ComponentCode("NOTIFIED_DEPOSIT_SCHEME"), new ComponentCode("SAVINGS_CERTIFICATE"), new ComponentCode("MUTUAL_FUND_UNITS"), new ComponentCode("MUTUAL_FUND_PENSION_FUND"), new ComponentCode("NATIONAL_HOUSING_BANK_SCHEME"), new ComponentCode("HOUSING_FINANCE_DEPOSIT"), new ComponentCode("TUITION_FEES"), new ComponentCode("HOUSE_PURCHASE_PAYMENT"), new ComponentCode("BANK_TERM_DEPOSIT"), new ComponentCode("NABARD_BONDS"), new ComponentCode("SENIOR_CITIZEN_SAVINGS"), new ComponentCode("POST_OFFICE_TIME_DEPOSIT"), new ComponentCode("GOVERNMENT_PENSION_ADDITIONAL"), new ComponentCode("PENSION_FUND_ANNUITY"), new ComponentCode("EMPLOYEE_NPS"), new ComponentCode("ELIGIBLE_ISSUE_SUBSCRIPTION"), new ComponentCode("NPS_MINOR_DEPOSIT"));
         }
     }
 

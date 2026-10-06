@@ -1,0 +1,58 @@
+{
+  "ruleId": "DED-NPS-EMPLOYER-NEW-TAX-REGIME",
+  "_note": "\"Where the total income of the assessee is chargeable to tax under section 202(1), the provisions of sub-section (1) shall have effect as if for \"10%\" referred to in clause (b) of that sub-section, \"14%\" had been substituted\" (s.124(2), p.160): an employer other than a Government, in the new regime. Base SALARY (s.124(13)(b)). Survives the new regime (s.202(2)(a)(xii)). TY 2026-27 only (D-129 C2a). rulebook DED-NPS-EMP-002, -003. OQ-14. The 1961 counterpart, s.80CCD(2), is unread (W-075d).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(1)(b) with s.124(2)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "14",
+        "base": "SALARY"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.124(1)(b) with s.124(2)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(1)(b), (2), p.160; s.124(13)(b), p.161; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(1)(b), (2), p.160; s.124(13)(b), p.161; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

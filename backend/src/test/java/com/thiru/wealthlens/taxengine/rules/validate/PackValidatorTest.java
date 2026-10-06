@@ -272,7 +272,7 @@ class PackValidatorTest {
                     new ComponentDefinition(
                             EMPLOYEE_PF,
                             "Employee provident fund",
-                            HeadCode.SALARIES,
+                            Optional.of(HeadCode.SALARIES),
                             ComponentKind.EMPLOYEE_CONTRIBUTION,
                             CashNature.CASH_OUTFLOW,
                             TaxTreatment.DEDUCTIBLE,

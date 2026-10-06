@@ -31,12 +31,14 @@ import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -52,6 +54,7 @@ class ComponentPartitionNodeTest {
     private static final ComponentCode BASIC = new ComponentCode("FIXTURE_BASIC");
     private static final ComponentCode HRA = new ComponentCode("FIXTURE_HRA");
     private static final ComponentCode INTEREST = new ComponentCode("FIXTURE_INTEREST");
+    private static final ComponentCode FEES = new ComponentCode("FIXTURE_TUITION_FEES");
     /** Live only in TY 2025-26. */
     private static final ComponentCode WITHDRAWN = new ComponentCode("FIXTURE_WITHDRAWN");
 
@@ -60,20 +63,26 @@ class ComponentPartitionNodeTest {
         RulePack shipped = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
-        Map<ComponentCode, ComponentDefinition> registry = Stream.of(
+        Map<ComponentCode, ComponentDefinition> registry = new HashMap<>(Stream.of(
                         component(shipped, BASIC, HeadCode.SALARIES, DateRange.fromOnwards(LocalDate.of(2025, 4, 1))),
                         component(shipped, HRA, HeadCode.SALARIES, DateRange.fromOnwards(LocalDate.of(2025, 4, 1))),
                         component(shipped, INTEREST, HeadCode.OTHER_SOURCES,
                                 DateRange.fromOnwards(LocalDate.of(2025, 4, 1))),
                         component(shipped, WITHDRAWN, HeadCode.SALARIES,
                                 new DateRange(LocalDate.of(2025, 4, 1), Optional.of(LocalDate.of(2026, 3, 31)))))
-                .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition));
+                .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition)));
+        registry.put(FEES, new ComponentDefinition(FEES, "Fixture tuition fees", Optional.empty(),
+                ComponentKind.QUALIFYING_PAYMENT, CashNature.CASH_OUTFLOW, TaxTreatment.DEDUCTIBLE,
+                Set.of(RuleIds.RATE_SLAB_NEW_TAX_REGIME), Set.of(), false,
+                new ComponentLifecycle(DateRange.fromOnwards(LocalDate.of(2025, 4, 1)), Optional.empty(),
+                        new DeprecationPolicy.HistoricalOnly()),
+                shipped.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME).headProvenance()));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), registry,
                 shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
     }
 
     private static ComponentDefinition component(RulePack pack, ComponentCode code, HeadCode head, DateRange live) {
-        return new ComponentDefinition(code, "Fixture " + code.value(), head, ComponentKind.SALARY, CashNature.CASH,
+        return new ComponentDefinition(code, "Fixture " + code.value(), Optional.of(head), ComponentKind.SALARY, CashNature.CASH,
                 TaxTreatment.TAXABLE, Set.of(RuleIds.RATE_SLAB_NEW_TAX_REGIME), Set.of(), false,
                 new ComponentLifecycle(live, Optional.empty(), new DeprecationPolicy.HistoricalOnly()),
                 pack.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME).headProvenance());
@@ -83,7 +92,7 @@ class ComponentPartitionNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(year);
         return new EngineInputs(taxYear, NEW_TAX_REGIME, TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()), plain.assessee(), plain.family(), plain.ledgers(), plain.elections(),
+                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()), plain.assessee(), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
     }
 
@@ -120,6 +129,18 @@ class ComponentPartitionNodeTest {
                 new Line(1, BASIC, Money.of("300000")));
         assertThat(partitioned.in(HeadCode.OTHER_SOURCES)).containsExactly(new Line(0, INTEREST, Money.of("5000")));
         assertThat(partitioned.in(HeadCode.HOUSE_PROPERTY)).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenAQualifyingPaymentIsEnteredAsPay_isRefused() {
+        // Given — a Schedule XV payment is claimed as a deduction, never summed into a head (D-130)
+        List<Employment> employments = List.of(employment(line(BASIC, "600000"), line(FEES, "60000")));
+
+        // When / Then
+        assertThatThrownBy(() -> run(2026, employments))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("FIXTURE_TUITION_FEES")
+                .hasMessageContaining("income under no head");
     }
 
     @ParameterizedTest(name = "TY {0}")

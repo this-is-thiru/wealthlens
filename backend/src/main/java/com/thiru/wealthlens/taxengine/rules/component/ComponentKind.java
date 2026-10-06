@@ -23,5 +23,11 @@ public enum ComponentKind {
     EMPLOYEE_CONTRIBUTION,
 
     /** Withheld by statute rather than chosen, such as professional tax. */
-    STATUTORY_DEDUCTION
+    STATUTORY_DEDUCTION,
+
+    /**
+     * A sum paid that Chapter VIII lets the payer deduct — a Schedule XV investment, a pension deposit for a minor
+     * (S2 s.123, s.124(4); D-130). It is income under no head, so it is the one kind without one.
+     */
+    QUALIFYING_PAYMENT
 }

@@ -46,7 +46,7 @@ class ComponentLifecycleTest {
         return new ComponentDefinition(
                 HRA,
                 "House rent allowance",
-                HeadCode.SALARIES,
+                Optional.of(HeadCode.SALARIES),
                 ComponentKind.SALARY,
                 CashNature.CASH,
                 TaxTreatment.TAXABLE,
@@ -170,7 +170,7 @@ class ComponentLifecycleTest {
             ComponentDefinition car = new ComponentDefinition(
                     new ComponentCode("PERQ_MOTOR_CAR"),
                     "Motor car",
-                    HeadCode.SALARIES,
+                    Optional.of(HeadCode.SALARIES),
                     ComponentKind.PERQUISITE,
                     CashNature.NON_CASH,
                     TaxTreatment.TAXABLE,
@@ -189,7 +189,7 @@ class ComponentLifecycleTest {
             ComponentDefinition employeePf = new ComponentDefinition(
                     new ComponentCode("EMPLOYEE_PF"),
                     "Employee provident fund contribution",
-                    HeadCode.SALARIES,
+                    Optional.of(HeadCode.SALARIES),
                     ComponentKind.EMPLOYEE_CONTRIBUTION,
                     CashNature.CASH_OUTFLOW,
                     TaxTreatment.DEDUCTIBLE,
@@ -201,6 +201,42 @@ class ComponentLifecycleTest {
 
             assertThat(employeePf.isCash()).isFalse();
             assertThat(employeePf.cashNature()).isEqualTo(CashNature.CASH_OUTFLOW);
+        }
+    }
+
+    @Nested
+    @DisplayName("head — a qualifying payment is income under no head (D-130)")
+    class Head {
+
+        private ComponentDefinition tuitionFees(Optional<HeadCode> head, ComponentKind kind) {
+            return new ComponentDefinition(new ComponentCode("TUITION_FEES"), "Tuition fees", head, kind,
+                    CashNature.CASH_OUTFLOW, TaxTreatment.DEDUCTIBLE, Set.of(new RuleId("DED-SCHEDULE-XV")),
+                    Set.of(), false, ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)), provenance());
+        }
+
+        @Test
+        void componentDefinition_whenAQualifyingPaymentHasNoHead_isAccepted() {
+            // When
+            ComponentDefinition fees = tuitionFees(Optional.empty(), ComponentKind.QUALIFYING_PAYMENT);
+
+            // Then
+            assertThat(fees.head()).isEmpty();
+        }
+
+        @Test
+        void componentDefinition_whenAQualifyingPaymentNamesAHead_isRejected() {
+            // When / Then
+            assertThatThrownBy(() -> tuitionFees(Optional.of(HeadCode.SALARIES), ComponentKind.QUALIFYING_PAYMENT))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("income under no head");
+        }
+
+        @Test
+        void componentDefinition_whenPayHasNoHead_isRejected() {
+            // When / Then — only a qualifying payment may leave the partition
+            assertThatThrownBy(() -> tuitionFees(Optional.empty(), ComponentKind.SALARY))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("every other kind belongs to one");
         }
     }
 
@@ -232,7 +268,7 @@ class ComponentLifecycleTest {
             // Each is read rather than branched on, so none may be absent
             assertThatThrownBy(() ->
                             new ComponentDefinition(
-                                    HRA, "House rent allowance", HeadCode.SALARIES, ComponentKind.SALARY,
+                                    HRA, "House rent allowance", Optional.of(HeadCode.SALARIES), ComponentKind.SALARY,
                                     null, TaxTreatment.TAXABLE, Set.of(SAL_HRA_001), Set.of(), false,
                                     ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)), provenance()))
                     .isInstanceOf(IllegalArgumentException.class)

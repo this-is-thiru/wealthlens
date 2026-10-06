@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -32,7 +33,8 @@ import java.util.Set;
  *
  * @param code the stable identifier
  * @param displayName what a user sees
- * @param head which income head it belongs to — the declared partition
+ * @param head which income head it belongs to — the declared partition; absent only for a
+ *     {@link ComponentKind#QUALIFYING_PAYMENT}, which is income under no head (D-130)
  * @param kind what sort of thing it is
  * @param cashNature whether it is money in hand — {@code D-CASHFLAG}
  * @param treatment how it is treated for tax
@@ -48,7 +50,7 @@ import java.util.Set;
 public record ComponentDefinition(
         ComponentCode code,
         String displayName,
-        HeadCode head,
+        Optional<HeadCode> head,
         ComponentKind kind,
         CashNature cashNature,
         TaxTreatment treatment,
@@ -90,7 +92,7 @@ public record ComponentDefinition(
     private static void requireDescribed(
             ComponentCode code,
             String displayName,
-            HeadCode head,
+            Optional<HeadCode> head,
             ComponentKind kind,
             CashNature cashNature,
             TaxTreatment treatment) {
@@ -104,6 +106,11 @@ public record ComponentDefinition(
             throw new IllegalArgumentException(
                     code + " must declare its head, kind, cash nature and treatment; each is read"
                             + " rather than branched on, so none may be absent");
+        }
+        if (head.isEmpty() != (kind == ComponentKind.QUALIFYING_PAYMENT)) {
+            throw new IllegalArgumentException(code + " is " + kind + " with head " + head.map(Enum::name)
+                    .orElse("none") + "; a qualifying payment is income under no head, and every other kind"
+                    + " belongs to one");
         }
     }
 

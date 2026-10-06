@@ -1089,6 +1089,15 @@ Total NPS-related and 80C-related deduction                   = 2,00,000
 `DED-NPS-SELF-001`. Get the order wrong and the ₹50,000 either vanishes or is counted twice. This
 ordering is the single most common error in this area and is why `G2` exists as a separate algorithm.
 
+> **Addendum (W-075a, 2026-10-06, D-129, D-130):** built for TY 2026-27, each read in Gazette CG-DL-E-22082025-265620 —
+> `DED-80C-001` / `-ITEMS-001` / `-NPS-CAP-001` as `DED-SCHEDULE-XV` (s.123, p.159; Schedule XV para 1, pp.561–563),
+> with 21 of the 26 clauses as components; (a), (c), (j), (k), (l) held for W-075a2 (para 2's share of the sum assured,
+> pp.563–564; (c)'s "20 % of salary" names no salary). `DED-NPS-EMP-001`…`-003` as `DED-NPS-EMPLOYER-GOVT`, `-OTHER`,
+> `-NEW-TAX-REGIME` (s.124(1)–(2), p.160); `DED-NPS-SELF-001`, `-002`, `DED-NPS-MINOR-001` as `DED-NPS-OWN` (s.124(3)–(5), (10));
+> `DED-GTI-CAP-001` / `-DEF-001` as `DED-WITHIN-GROSS-TOTAL` (s.122(2), (10), pp.158–159); `DED-NEWREGIME-001` as each
+> row's regimes (s.202(2)(a)(xii), p.227). Para 1(y)(ii)'s 20% of gross total income for a non-employee is not modelled.
+> The TY 2025-26 versions wait for W-075d.
+
 ---
 
 ## R16 — Income from house property

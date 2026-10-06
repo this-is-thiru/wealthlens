@@ -6,10 +6,12 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.node.CessNode;
+import com.thiru.wealthlens.taxengine.node.ChapterEightNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
 import com.thiru.wealthlens.taxengine.node.EmployerContributionNode;
 import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
+import com.thiru.wealthlens.taxengine.node.GrossTotalIncomeNode;
 import com.thiru.wealthlens.taxengine.node.MedicalTreatmentAbroadNode;
 import com.thiru.wealthlens.taxengine.node.MonetarySalaryIncomeNode;
 import com.thiru.wealthlens.taxengine.node.NetPayableNode;
@@ -76,6 +78,8 @@ final class GoldenCaseRunner {
             new SalaryIncomeBeforeTravelNode(),
             new MedicalTreatmentAbroadNode(),
             new SalaryIncomeNode(),
+            new GrossTotalIncomeNode(),
+            new ChapterEightNode(),
             new RoundTotalIncomeNode(),
             new TaxByBasisNode(),
             new RebateNode(),
@@ -136,7 +140,7 @@ final class GoldenCaseRunner {
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER, false, Optional.empty())),
-                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory()),
+                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);

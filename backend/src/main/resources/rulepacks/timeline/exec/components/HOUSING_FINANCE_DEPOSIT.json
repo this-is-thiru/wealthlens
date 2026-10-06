@@ -1,0 +1,26 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(p): \"subscription to any deposit schemes of (i) a public sector company engaged in providing long-term finance for construction or purchase of houses in India for residential purposes; or (ii) an authority constituted in India by any law, for the purpose of dealing with and satisfying the need for housing accommodation or for the purpose of planning, development or improvement of cities, towns and villages, or for both, as may be notified by the Central Government\" (Gazette 265620, p.562). D-130.",
+  "code": "HOUSING_FINANCE_DEPOSIT",
+  "displayName": "Notified housing finance deposit scheme",
+  "kind": "QUALIFYING_PAYMENT",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2026-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(p), p.562; s.123, p.159",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

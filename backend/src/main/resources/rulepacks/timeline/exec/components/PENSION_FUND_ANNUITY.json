@@ -1,0 +1,26 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(x): \"contribution made from income chargeable to tax to effect or keep in force a contract for any annuity plan of Life Insurance Corporation of India or any other insurer for receiving pension from the fund referred to in Schedule VII (Table: Sl. No. 3)\" (Gazette 265620, p.563). D-130.",
+  "code": "PENSION_FUND_ANNUITY",
+  "displayName": "Annuity plan for a pension from a fund",
+  "kind": "QUALIFYING_PAYMENT",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2026-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(x), p.563; s.123, p.159",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

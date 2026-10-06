@@ -74,7 +74,7 @@ class GrossSalaryNodeTest {
     }
 
     private static ComponentDefinition component(RulePack pack, ComponentCode code, HeadCode head, RuleId feeds) {
-        return new ComponentDefinition(code, "Fixture " + code.value(), head, ComponentKind.SALARY, CashNature.CASH,
+        return new ComponentDefinition(code, "Fixture " + code.value(), Optional.of(head), ComponentKind.SALARY, CashNature.CASH,
                 TaxTreatment.TAXABLE, Set.of(feeds), Set.of(), false,
                 new ComponentLifecycle(DateRange.fromOnwards(LocalDate.of(2025, 4, 1)), Optional.empty(),
                         new DeprecationPolicy.HistoricalOnly()),

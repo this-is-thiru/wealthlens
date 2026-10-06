@@ -279,9 +279,9 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `othersources.income` | `OtherSourcesNode` | `EngineInputs.entered` | `HeadResult` ⚠ | ○ Phase 9 |
 | `capitalgains.income` | `CapitalGainsNode` | `EngineInputs.capitalGains` | `HeadResult` ⚠ | ○ Phase 9 |
 | `setoff` | `SetOffNode` | every head node, `EngineInputs.ledgers` | `HeadMap` ⚠ | ○ Phase 9 |
-| `gti` | `GrossTotalIncomeNode` | `setoff` | `MoneyValue` | ○ Phase 9 |
-| `chapterviii` | `ChapterEightNode` | `gti`, `inputs.components`, `EngineInputs.family` | `MoneyValue` | ○ Phase 8 |
-| `totalincome` | `TotalIncomeNode` | `gti`, `chapterviii` | `MoneyValue` | ○ |
+| `gti` | `GrossTotalIncomeNode` | `salary.income` (Phase 9: `setoff`) | `MoneyValue` | ✅ `W-075a` (D-132) — total income before Chapter VIII (s.122(10)); Salaries is the only head built, so it is `salary.income` until Phase 9 replaces the input with `setoff`; untraced |
+| `chapterviii` | `ChapterEightNode` | `gti`, `inputs.components`, `salary.base`, `EngineInputs.entered` (qualifying payments, employer contributions); `EngineInputs.family` with 80D | `MoneyValue` | ✅ `W-075a` (D-130, D-132), TY 2026-27 — `DED-SCHEDULE-XV` (s.123: pay lines and `qualifyingPayments` under ₹1,50,000, `EMPLOYEE_NPS` sub-capped at 10% of `SAL-SALARY-FOR-EMPLOYEE-PENSION` first); `DED-NPS-OWN` (s.124(3)–(4) on the sub-cap's residue and `NPS_MINOR_DEPOSIT`, ₹50,000); `DED-NPS-EMPLOYER-GOVT` / `-OTHER` / `-NEW-TAX-REGIME` (s.124(1)–(2) by `EmployerKind` and regime, on `SAL-SALARY-FOR-EMPLOYER-PENSION`); `DED-WITHIN-GROSS-TOTAL` (s.122(2), a line where it binds); nil line naming the regime where entered but excluded; two employers' pension contributions refused (OQ-15); TY 2025-26 with anything entered refused (W-075d). 80D, the rest: W-075a2–c |
+| `totalincome` | `TotalIncomeNode` | `gti`, `chapterviii` | `MoneyValue` | ✅ `W-075a` (D-132) — `gti` − `chapterviii`; untraced. Golden T1/T2 runs still enter here with `GivenTotalIncome` |
 | `round.totalincome` | `RoundTotalIncomeNode` | `totalincome` | `MoneyValue` | ✅ `W-050` — s.516 via `RATE-ROUND-TOTAL-INCOME`, one `ROUNDING` line |
 | `tax.bybasis` | `TaxByBasisNode` | `round.totalincome` | `TaxByBasis` | ✅ `W-046`, `W-046b` — the regime's `rateTable`, replaced by the one conditional ladder whose conditions hold (First Schedule 60–79 / 80+; two holding is refused); conditions read `NodeContext.conditions()` (D-072) |
 | `tax.afterrebate` | `RebateNode` | `tax.bybasis`, `round.totalincome` | `TaxByBasis` | ✅ `W-049` |

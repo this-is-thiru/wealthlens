@@ -109,7 +109,7 @@ class SalaryBaseNodeTest {
     }
 
     private static ComponentDefinition component(RulePack pack, ComponentCode code, Set<SalaryBaseInclusion> bases) {
-        return new ComponentDefinition(code, "Fixture " + code.value(), HeadCode.SALARIES, ComponentKind.SALARY,
+        return new ComponentDefinition(code, "Fixture " + code.value(), Optional.of(HeadCode.SALARIES), ComponentKind.SALARY,
                 CashNature.CASH, TaxTreatment.TAXABLE, Set.of(RuleIds.SAL_SALARY_INCLUDES), bases, false,
                 new ComponentLifecycle(DateRange.fromOnwards(LocalDate.of(2025, 4, 1)), Optional.empty(),
                         new DeprecationPolicy.HistoricalOnly()),
@@ -147,7 +147,7 @@ class SalaryBaseNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs inputs = new EngineInputs(taxYear, NEW_TAX_REGIME,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack)

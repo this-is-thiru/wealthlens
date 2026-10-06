@@ -19,6 +19,7 @@ import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import tools.jackson.databind.JsonNode;
 
@@ -54,7 +55,9 @@ public final class RegistryJson {
         new ComponentDefinition(
                         code,
                         PackJson.text(node, "displayName", where),
-                        PackJson.enumValue(node, "head", where, HeadCode.class),
+                        node.get("head") == null
+                                ? Optional.empty()
+                                : Optional.of(PackJson.enumValue(node, "head", where, HeadCode.class)),
                         PackJson.enumValue(node, "kind", where, ComponentKind.class),
                         PackJson.enumValue(node, "cashNature", where, CashNature.class),
                         PackJson.enumValue(node, "treatment", where, TaxTreatment.class),

@@ -1,6 +1,6 @@
 {
-  "_note": "Section catalogue entry (D-042, D-060, D-061). Content: it changes no number. No figure, rate, date, tenure, cap or count is typed in text (SC-2, D-061 C2a); each waits for its rule and a placeholder.",
-  "_sources": "provisions: 01-rulebook.md DED-MAP-001 (s.80C -> s.123 + Schedule XV), DED-80C-001 (s.123). summary: DED-80C-001, DED-MAP-021 and H-7 (one ceiling; employee PF inside it, Schedule XV para 1(f)), DED-80C-NPS-CAP-001 (NPS inner cap, para 1(y)), DED-NEWREGIME-001. routes[0..22]: DED-80C-ITEMS-001, in its order (Schedule XV para 1(a)-(z)); para refs the rulebook gives: routes[0] 1(a), routes[5] 1(f), routes[6] 1(g), routes[13] 1(q), routes[14] para 3, routes[20] 1(x), routes[21] 1(y). routes[14] 'principal ... not its interest': DR 22 C5 DED-80C-001 (steps; common mistakes). routes[23]: D-061 C1a — DED-80C-ITEMS-001 says 'among others'. disqualifiers[0]: DED-NEWREGIME-001 (s.202(2)(a)(xii)). disqualifiers[1]: DED-80C-ITEMS-001 (tuition), DR 22 C5 (development fees). No LATER_REVERSAL: the rulebook sources none (D-061).",
+  "_note": "Section catalogue entry (D-042, D-060, D-061, D-130). Content: it changes no number. No figure, rate, date, tenure, cap or count is typed in text (SC-2, D-061 C2a); each waits for its rule and a placeholder.",
+  "_sources": "provisions: 01-rulebook.md DED-MAP-001 (s.80C -> s.123 + Schedule XV), DED-80C-001 (s.123). summary: DED-80C-001, DED-MAP-021 and H-7 (one ceiling; employee PF inside it, Schedule XV para 1(f)), DED-80C-NPS-CAP-001 (NPS inner cap, para 1(y)), DED-NEWREGIME-001. routes[0..22]: DED-80C-ITEMS-001, in its order (Schedule XV para 1(a)-(z)); para refs the rulebook gives: routes[0] 1(a), routes[5] 1(f), routes[6] 1(g), routes[13] 1(q), routes[14] para 3, routes[20] 1(x), routes[21] 1(y). routes[14] 'principal ... not its interest': DR 22 C5 DED-80C-001 (steps; common mistakes). routes[23]: D-061 C1a — DED-80C-ITEMS-001 says 'among others'. disqualifiers[0]: DED-NEWREGIME-001 (s.202(2)(a)(xii)). disqualifiers[1]: DED-80C-ITEMS-001 (tuition), DR 22 C5 (development fees). No LATER_REVERSAL: the rulebook sources none (D-061). D-130 (W-075a): routes ByRule DED-SCHEDULE-XV for the shipped clauses — routes[1] 1(b), [3]–[8] 1(d)–(i), [10] 1(n), [12] 1(o)–(p), [13]–[22] 1(q)–(z); routes[0] 1(a), [2] 1(c), [9] 1(j)–(k), [11] 1(l) held for W-075a2, NotModelled with their own limit as the reason; routes[23] NotModelled (1(m) ships as MUTUAL_FUND_UNITS without a route of its own).",
   "key": "SEC-INVESTMENT-DEDUCTION",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -21,7 +21,7 @@
       "conditions": [
         {
           "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "reason": "This payment's own limit within the ceiling is not modelled yet; it is computed when that limit is."
         }
       ]
     },
@@ -30,8 +30,8 @@
       "description": "A contract for a deferred annuity.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -41,7 +41,7 @@
       "conditions": [
         {
           "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "reason": "This payment's own limit within the ceiling is not modelled yet; it is computed when that limit is."
         }
       ]
     },
@@ -50,8 +50,8 @@
       "description": "A contribution to a provident fund to which the Provident Funds Act applies.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -60,8 +60,8 @@
       "description": "A contribution to a notified provident fund in the name of yourself, your spouse or a child.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -70,8 +70,8 @@
       "description": "The employee contribution already deducted from your salary counts here, and uses part of the ceiling before you invest anything.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -80,8 +80,8 @@
       "description": "Your contribution as an employee to an approved superannuation fund.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -90,8 +90,8 @@
       "description": "A subscription to a notified security or deposit scheme.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -100,8 +100,8 @@
       "description": "A subscription to National Savings Certificates.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -111,7 +111,7 @@
       "conditions": [
         {
           "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "reason": "This payment's own limit within the ceiling is not modelled yet; it is computed when that limit is."
         }
       ]
     },
@@ -120,8 +120,8 @@
       "description": "A contribution to a mutual fund's pension plan.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -131,7 +131,7 @@
       "conditions": [
         {
           "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "reason": "This payment's own limit within the ceiling is not modelled yet; it is computed when that limit is."
         }
       ]
     },
@@ -140,8 +140,8 @@
       "description": "A subscription to notified infrastructure or city-development instruments.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -150,8 +150,8 @@
       "description": "Tuition fees paid to an Indian institution for the full-time education of your children, up to the number of children the Schedule allows. Development fees and donations do not count.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -160,8 +160,8 @@
       "description": "Payments for the purchase or construction of a residential house, including the principal of a housing loan but not its interest, subject to the conditions the Schedule sets.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -170,8 +170,8 @@
       "description": "A term deposit with a scheduled bank for the term the Schedule sets.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -180,8 +180,8 @@
       "description": "A subscription to bonds of the National Bank for Agriculture and Rural Development.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -190,8 +190,8 @@
       "description": "A deposit under the Senior Citizens' Savings Scheme.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -200,8 +200,8 @@
       "description": "A Post Office time deposit for the term the Schedule sets.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -210,8 +210,8 @@
       "description": "A Central Government employee's contribution to a Tier-II National Pension System account, subject to the lock-in the Schedule sets.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -220,8 +220,8 @@
       "description": "A contribution to an annuity plan for a pension.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -230,8 +230,8 @@
       "description": "Your own contribution to the National Pension System counts here, within its own inner cap, which applies before the overall ceiling.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -240,8 +240,8 @@
       "description": "A subscription to approved equity, debenture or mutual fund issues.",
       "conditions": [
         {
-          "type": "NotModelled",
-          "reason": "The investments deduction rule is not in the timeline yet; the Chapter VIII node builds it."
+          "type": "ByRule",
+          "rule": "DED-SCHEDULE-XV"
         }
       ]
     },
@@ -251,7 +251,7 @@
       "conditions": [
         {
           "type": "NotModelled",
-          "reason": "The rulebook quotes Schedule XV only in part; every clause of its first paragraph remains to be read."
+          "reason": "A payment the list above does not name is not computed; enter it as the item it is, or it is left out."
         }
       ]
     }

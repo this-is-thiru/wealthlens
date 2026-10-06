@@ -1,0 +1,61 @@
+{
+  "ruleId": "DED-NPS-OWN",
+  "_note": "An individual's own payment to the notified pension scheme, \"a deduction not exceeding ₹50000\" (s.124(3), p.160), with a parent's or guardian's deposit to a minor's account, \"the aggregate amount of deduction under sub-section (3) and this sub-section shall not exceed ₹50000\" (s.124(4)). No amount counted under s.123 counts here, nor the reverse (s.124(5), (10)): EMPLOYEE_NPS enters as what DED-SCHEDULE-XV's sub-cap left. The new regime computes total income without \"Chapter VIII other than the provisions of sections 124(1) and 124(2), or 125(2) or 146\" (s.202(2)(a)(xii), p.227) — s.124(3)–(4) are not named, so the old regime only. TY 2026-27 only (D-129 C2a). rulebook DED-NPS-SELF-001, -002, DED-NPS-MINOR-001. The 1961 counterpart, s.80CCD(1B), is unread (W-075d).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(3)–(5), (10)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AggregateWithCeiling",
+        "contributors": [
+          "EMPLOYEE_NPS",
+          "NPS_MINOR_DEPOSIT"
+        ],
+        "ceiling": "50000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.124(3)–(5), (10)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(3)–(5), (10), p.160; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(3)–(5), (10), p.160; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

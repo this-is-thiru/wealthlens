@@ -51,12 +51,19 @@ public final class ComponentPartitionNode implements ComputationNode {
         List<Employment> employments = ctx.inputs().entered().employments();
         for (int position = 0; position < employments.size(); position++) {
             for (SalaryComponent component : employments.get(position).components()) {
-                ComponentDefinition definition = definitionOf(ctx, component, position);
-                byHead.computeIfAbsent(definition.head(), head -> new ArrayList<>())
+                byHead.computeIfAbsent(headOf(definitionOf(ctx, component, position), position),
+                                head -> new ArrayList<>())
                         .add(new ComponentSet.Line(position, component.code(), component.annualAmount()));
             }
         }
         return NodeResult.untraced(new ComponentSet(byHead));
+    }
+
+    /** The head a pay line belongs to; a qualifying payment has none and is claimed, not entered as pay (D-130). */
+    private static HeadCode headOf(ComponentDefinition definition, int position) {
+        return definition.head().orElseThrow(() -> new IllegalArgumentException("Component " + definition.code()
+                + " in employment " + position + " is a " + definition.kind() + ", income under no head; it is"
+                + " claimed as a deduction, not entered as pay (D-130)"));
     }
 
     /** The registry entry live this year, or a refusal — never a line summed in unknown. */

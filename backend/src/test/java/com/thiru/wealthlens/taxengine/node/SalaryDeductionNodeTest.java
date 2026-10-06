@@ -72,7 +72,7 @@ class SalaryDeductionNodeTest {
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
         Map<ComponentCode, ComponentDefinition> registry = new HashMap<>(shipped.components());
-        registry.put(BASIC, new ComponentDefinition(BASIC, "Fixture basic", HeadCode.SALARIES, ComponentKind.SALARY,
+        registry.put(BASIC, new ComponentDefinition(BASIC, "Fixture basic", Optional.of(HeadCode.SALARIES), ComponentKind.SALARY,
                 CashNature.CASH, TaxTreatment.TAXABLE, Set.of(RuleIds.SAL_SALARY_INCLUDES), Set.of(), false,
                 new ComponentLifecycle(DateRange.fromOnwards(LocalDate.of(2025, 4, 1)), Optional.empty(),
                         new DeprecationPolicy.HistoricalOnly()),
@@ -219,7 +219,7 @@ class SalaryDeductionNodeTest {
         List<Employment> employments = employers.stream().map(kind -> new Employment(List.of(), false, kind, false, Optional.empty())).toList();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         List<Line> lines = new ArrayList<>();
