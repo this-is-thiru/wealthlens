@@ -55,7 +55,7 @@ class T3HouseRentAllowanceTest {
         // Then
         assertThat(run.result().valueOf(NodeIds.SALARY_EXEMPTIONS))
                 .as("%s in %s — %s", golden.id(), year.label(), golden.source())
-                .isEqualTo(MoneyValue.of(golden.expectedExemption()));
+                .isEqualTo(MoneyValue.of(golden.expectedExemption().orElseThrow()));
         golden.expectedLimitedBy().ifPresent(limb -> assertThat(run.result().trace())
                 .filteredOn(line -> line.rule().equals(RuleIds.SAL_HOUSE_RENT_ALLOWANCE))
                 .singleElement()

@@ -456,6 +456,13 @@ computation "in such manner as may be prescribed"             → NEEDS VERIFICA
 `UNVERIFIED_RULE` notice rather than a number.** `D-NOSILENT` applied to an unverified rule: name the
 gap, do not fabricate through it.
 
+> **Erratum (W-074a, 2026-10-06, D-128).** **T4-1, T4-2:** these cases state no facts for the accretion on the
+> excess (S2 s.17(1)(i), S4 r.16; 1961 s.17(2)(viia), Rules 1962 r.3B; built by W-073b, D-127), and the engine
+> refuses a positive excess without them. They are entered as a first year: PC1 = TP1 = 0, opening balance 0, closing
+> balance 8,24,000, income accrued 0 — so TP = (74,000 + 2 × 0) × 0 ÷ 8,24,000 = 0 and the ₹74,000 stands.
+> Whether the employer's NPS contribution is itself salary before the deduction (T4-2's "remains income") is
+> **OQ-14**. **T4-4**'s "NEEDS VERIFICATION" predates the sourcing of Rules 1962 r.9D; settled with `W-079`.
+
 ---
 
 ## T5 — LTA, 80C with employee PF, and the s.123 aggregate

@@ -1044,12 +1044,14 @@ if that is not enough for the item in hand.
 | W-073a | The aggregate employer contribution *(D-125)*: **creates** `EmployerContributionNode` (`employer.contrib.charges`, added to gross salary); S2 s.17(1)(h) (₹7,50,000); 1961 s.17(2)(vii) as substituted by FA 2020 s.13 | `DR 01` PF-AGGCAP-001 | both years read in the Gazette (265620 p.38; 218938 p.21) |
 | W-073b | The accretion on the excess *(D-125)*: S2 s.17(1)(i), S4 r.16 (TP = (PC/2) × R + (PC1 + TP1) × R); 1961 s.17(2)(viia), Rules 1962 r.3B | `DR 01` PF-AGGCAP-002 | r.16 read in the Gazette (271092 pp.1548–1549); r.3B read in a third-party-hosted Gazette scan — TY 2025-26 `UNVERIFIED` (D-127) |
 | W-073c | Recognised-fund employer contributions over 12% of salary and interest over the notified rate *(D-125)*: S2 Sch. XI Pt A para 6; 1961 Sch. IV Pt A r.6 | `DR 01` PF-RPF12-001 | ⚠ the notified rate (both years), 1961 Sch. IV Pt A r.6 and Sch. XI's "salary" not read |
-| W-074 | **T4 golden tests** | `DR 08` T4-1 … T4-4 | |
+| W-074 | ~~**T4 golden tests**~~ **split by D-128** into W-074a–b | `DR 08` T4-1 … T4-4 | |
+| W-074a | **T4 golden tests, the built half** *(D-128)*: T4-1 and T4-2's ₹74,000 added (both years), T4-3's `PF-AGGCAP-001` nil (both years); T4-1/T4-2 enter a first-year fund history | `DR 08` T4-1 … T4-3 | TY 2025-26 runs PROVISIONAL |
 | W-075 | `deductions.json` both years | `DR 01` R15 | |
 | W-076 | `ChapterEightNode` | `DR 06` G2.2, G2.3 | employee PF consumes 80C; 80D is **seven** rules |
 | W-077 | **T5 golden tests** | `DR 08` T5-1 … T5-4 | |
 | W-078 | `houseproperty.json`, `HousePropertyNode` | `DR 01` R16, `DR 06` G1.4 | occupancy drives **four** rules |
 | W-079 | `othersources.json`, `OtherSourcesNode` | `DR 01` R17 | dividend deduction is **nil** from TY 2026-27; **also `PF-EEINT-001`** — interest on the employee's own PF contributions over ₹2,50,000 / ₹5,00,000 (Sch. II Sl. 3–4; 1961 s.10(11)–(12) provisos, r.9D), moved here by D-125 |
+| W-074b | **T4 golden tests, the rest** *(D-128)*: T4-1/T4-2 deductions, T4-3's ₹30,000, T4-4 | `DR 08` T4-1 … T4-4 | needs `W-073c`, `W-076`, `W-079`; OQ-14; T4-4's premise (r.9D now read). placed after `W-079` by the owner |
 | W-080 | **T6 golden tests** | `DR 08` T6-1 … T6-7 | |
 
 ---
