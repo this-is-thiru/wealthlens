@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
+import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
@@ -58,8 +59,8 @@ import java.util.stream.Collectors;
  * amount twice (s.124(5), (10)); the employer's pension contribution by employer and regime (s.124(1)–(2)); then all
  * of it within gross total income (s.122(2)). A row the regime excludes, with something entered for it, gives a nil
  * line naming the regime. TY 2025-26 has none of these rows yet (D-129 C2a), so anything entered there is refused.
- * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136). The other
- * deductions are later items (W-075a3, W-075c).
+ * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136); and s.154, s.127
+ * and s.128 ({@link DisabilityDeduction}; D-138). The other deductions are later items (W-075a3, W-075c2–c6).
  */
 public final class ChapterEightNode implements ComputationNode {
 
@@ -83,6 +84,7 @@ public final class ChapterEightNode implements ComputationNode {
                 RuleIds.DED_NPS_EMPLOYER_GOVT, RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME,
                 RuleIds.DED_WITHIN_GROSS_TOTAL, RuleIds.DED_PREMIUM_SHARE));
         rules.addAll(HealthInsuranceDeduction.RULES);
+        rules.addAll(DisabilityDeduction.RULES);
         return Set.copyOf(rules);
     }
 
@@ -95,7 +97,10 @@ public final class ChapterEightNode implements ComputationNode {
                 .toList();
         List<LifeInsurancePolicy> policies = ctx.inputs().entered().lifeInsurancePolicies();
         if (payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty() && policies.isEmpty()
-                && ctx.inputs().entered().healthPayments().isEmpty()) {
+                && ctx.inputs().entered().healthPayments().isEmpty()
+                && ctx.inputs().entered().disabledDependantSupport().isEmpty()
+                && ctx.inputs().entered().specifiedDiseaseTreatment().isEmpty()
+                && !certifiedDisabled(ctx)) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireRowsThisYear(ctx);
@@ -106,7 +111,13 @@ public final class ChapterEightNode implements ComputationNode {
         ownPension(ctx, residue, paid.getOrDefault(ComponentCodes.NPS_MINOR_DEPOSIT, Money.ZERO), lines);
         employerPension(ctx, employerPension, lines);
         lines.addAll(HealthInsuranceDeduction.lines(ctx, lines.size() + 1));
+        lines.addAll(DisabilityDeduction.lines(ctx, lines.size() + 1));
         return withinGrossTotal(ctx, lines);
+    }
+
+    /** Whether the assessee is certified disabled — s.154 applies with nothing entered. */
+    private static boolean certifiedDisabled(NodeContext ctx) {
+        return ctx.inputs().assessee() instanceof Individual individual && individual.disability().isPresent();
     }
 
     /** The pay lines that feed a Chapter VIII row — the employee's own contributions withheld from pay. */

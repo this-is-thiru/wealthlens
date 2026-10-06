@@ -34,6 +34,10 @@ class GeneratedConstantsTest {
 
     /** Every rule the shipped timeline holds, in the generator's order — listed by hand. */
     private static final java.util.List<String> SHIPPED_RULE_IDS = java.util.List.of(
+            "DED-DISABILITY",
+            "DED-DISABILITY-SEVERE",
+            "DED-DISABLED-DEPENDANT",
+            "DED-DISABLED-DEPENDANT-SEVERE",
             "DED-HEALTH-CHECKUP",
             "DED-HEALTH-FAMILY",
             "DED-HEALTH-FAMILY-SENIOR",
@@ -45,6 +49,8 @@ class GeneratedConstantsTest {
             "DED-NPS-OWN",
             "DED-PREMIUM-SHARE",
             "DED-SCHEDULE-XV",
+            "DED-SPECIFIED-DISEASE",
+            "DED-SPECIFIED-DISEASE-SENIOR",
             "DED-WITHIN-GROSS-TOTAL",
             "PERQ-ACCOM-CONTINUED",
             "PERQ-ACCOM-FURNITURE",

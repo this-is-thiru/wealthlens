@@ -1118,6 +1118,12 @@ ordering is the single most common error in this area and is why `G2` exists as 
 > the year (s.2(100), p.20). One premium covering a senior citizen and someone who is not is OQ-18; separate premiums put
 > the bucket on the senior limit if any covers a senior citizen. s.126(5)–(6) (a HUF) is not modelled.
 
+> **Addendum (W-075c1, 2026-10-06, D-138):** `DED-80U-001`, `DED-80DD-001` and `DED-80DDB-001` are built for TY 2026-27
+> (S2 s.154, s.127, s.128). **`DED-80DDB-001`'s senior-citizen limb is now read:** s.128(4) substitutes "₹ 100000" for
+> "₹40000" where the amount is paid for a senior citizen (p.165); s.128(3) reduces the deduction by insurance or employer
+> reimbursement. s.127's "up to ₹ 75000" is built as a ceiling on the amount spent, one dependant at a time (OQ-19);
+> mixed senior and non-senior treatment under s.128 is OQ-20.
+
 ---
 
 ## R16 — Income from house property

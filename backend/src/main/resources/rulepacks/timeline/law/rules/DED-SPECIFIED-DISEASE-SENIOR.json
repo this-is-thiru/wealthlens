@@ -1,0 +1,63 @@
+{
+  "ruleId": "DED-SPECIFIED-DISEASE-SENIOR",
+  "_note": "Treatment of a specified disease for a senior citizen — \"If the amount actually paid is in respect of the assessee or his dependant … and who is senior citizen, the amount of deduction … shall be substituted with \"₹ 100000\" for \"₹40000\"\" (s.128(4), p.165); the age is this row's condition, the person's residence the node's check (s.2(100), p.20); treatment for a senior and a non-senior in one year is refused (OQ-20). s.128(1): a resident assessee, \"the amount actually paid during the tax year or a sum of ₹ 40000, whichever is less … for the medical treatment of such disease or ailment as may be prescribed — (a) for himself or a dependant\" (p.164); \"reduced by any amount received under an insurance from an insurer, or reimbursed by an employer\" (s.128(3), p.165); the prescribed disease and specialist's prescription (s.128(1)–(2)) are entry conditions; \"dependant\" as s.127(9) (s.128(5)(a)). ChapterEightNode allows the lesser of (paid − reimbursed) and this limit. rulebook DED-80DDB-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart, s.80DDB, is unread (W-075d). D-138.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.128(1), (3), (4)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "100000"
+      },
+      "conditions": [
+        {
+          "type": "AgeAtLeast",
+          "years": 60,
+          "subject": "INSURED_PERSON"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.128(1), (3), (4)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.128(1)–(4), pp.164–165; s.2(100), p.20",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.128(1)–(4), pp.164–165; s.2(100), p.20",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

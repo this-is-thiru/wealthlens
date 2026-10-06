@@ -227,8 +227,8 @@ final class HealthInsuranceDeduction {
                 .withLimitedBy(outcome.limitedBy()));
     }
 
-    /** Senior citizen: resident in India and, at any time in the year, of the row's age (s.2(100)). */
-    private static boolean isSenior(NodeContext ctx, RuleVersion seniorRow, LocalDate born, boolean residentInIndia) {
+    /** Senior citizen: resident in India and, at any time in the year, of the row's age (s.2(100)); s.128(4) reads it too. */
+    static boolean isSenior(NodeContext ctx, RuleVersion seniorRow, LocalDate born, boolean residentInIndia) {
         int age = Period.between(born, ctx.inputs().temporal().taxYearEnd()).getYears();
         ConditionContext person = new ConditionContext(residentInIndia,
                 PersonType.INDIVIDUAL,

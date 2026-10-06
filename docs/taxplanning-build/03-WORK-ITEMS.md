@@ -1050,13 +1050,19 @@ if that is not enough for the item in hand.
 | W-075a | Chapter VIII rows, the s.123 family and NPS, TY 2026-27 *(D-129)*: `DED-80C-001` (`AggregateWithCeiling` over the Schedule XV components, `-NPS-CAP-001` sub-cap), `DED-NPS-EMP-001`…`-003`, `DED-NPS-SELF-001`, `-002`, `DED-NPS-MINOR-001`, `DED-GTI-CAP-001`; the Schedule XV components | `DR 01` R13, R15; `DR 06` G2.2 | component list approved in the plan (C3a); OQ-14 |
 | W-075a2 | Chapter VIII rows, the held Schedule XV clauses, TY 2026-27 *(D-130)*: (a) life insurance with para 2's share of the sum assured; (c) Government deferred annuity's 20% of salary; (j), (k), (l) and whether para 2 reaches them | `DR 01` R15 | ⚠ (c)'s "salary" and para 2's reach not settled by the words | **Narrowed by D-134 to (a); (c), (j), (k), (l) → W-075a3.**
 | W-075b | Chapter VIII rows, 80D, TY 2026-27 *(D-129)*: `DED-80D-001`…`-011` | `DR 01` R15; `DR 06` G2.3 | |
-| W-075c | Chapter VIII rows, the rest, TY 2026-27 *(D-129)*: 80DD, 80DDB, 80E, 80EE/EEA/EEB/EX, 80GG, 80TTA/B, 80U, Agniveer | `DR 01` R15 | ⚠ 80DDB senior limb and 80G not read — out until read |
+| W-075c | ~~Chapter VIII rows, the rest~~ **split by D-137** into W-075c1–c6 | `DR 01` R15 | |
+| W-075c1 | Chapter VIII, disability and treatment, TY 2026-27 *(D-137)*: s.127 (80DD), s.128 (80DDB, with (4)'s senior ₹1,00,000), s.154 (80U) | `DR 01` R15 | s.127's "up to" — fixed or capped at spending |
+| W-075c2 | Chapter VIII, loan interest, TY 2026-27 *(D-137)*: s.129 (80E), s.130 (80EE), s.131 (80EEA), s.132 (80EEB) | `DR 01` R15 | the house-property bar on the same interest recorded for W-078 |
+| W-075c3 | Chapter VIII, Agniveer Corpus Fund, TY 2026-27 *(D-137)*: s.125 | `DR 01` R15 | whether the Government's contribution is income first (cf. OQ-14) |
+| W-075c4 | Chapter VIII, rent without HRA, TY 2026-27 *(D-137)*: s.134 (80GG), last among the deductions | `DR 01` R15 | ⚠ the "prescribed" conditions (Rules 2026) unread |
+| W-075c6 | Chapter VIII, donations, TY 2026-27 *(D-137)*: s.133 (80G) | `DR 01` R15 | |
 | W-075d | Chapter VIII rows, TY 2025-26 versions *(D-129)* | `DR 01` R15 | ⚠ needs a sourcing round: 1961 Chapter VI-A as amended to AY 2026-27 |
 | W-075a3 | Chapter VIII rows, Schedule XV (c), (j), (k), (l), TY 2026-27 *(D-134)* | `DR 01` R15 | ⚠ waits on OQ-16 (which salary for (c)) and OQ-17 (para 2's reach); placed after W-075d by the owner |
 | W-076 | `ChapterEightNode` | `DR 06` G2.2, G2.3 | employee PF consumes 80C; 80D is **seven** rules |
 | W-077 | **T5 golden tests** | `DR 08` T5-1 … T5-4 | |
 | W-078 | `houseproperty.json`, `HousePropertyNode` | `DR 01` R16, `DR 06` G1.4 | occupancy drives **four** rules |
 | W-079 | `othersources.json`, `OtherSourcesNode` | `DR 01` R17 | dividend deduction is **nil** from TY 2026-27; **also `PF-EEINT-001`** — interest on the employee's own PF contributions over ₹2,50,000 / ₹5,00,000 (Sch. II Sl. 3–4; 1961 s.10(11)–(12) provisos, r.9D), moved here by D-125 |
+| W-075c5 | Chapter VIII, deposit interest, TY 2026-27 *(D-137)*: s.153 (80TTA / 80TTB) | `DR 01` R15 | after W-079 — needs interest under Other Sources |
 | W-074b | **T4 golden tests, the rest** *(D-128)*: T4-1/T4-2 deductions, T4-3's ₹30,000, T4-4 | `DR 08` T4-1 … T4-4 | needs `W-073c`, `W-076`, `W-079`; OQ-14; T4-4's premise (r.9D now read). placed after `W-079` by the owner |
 | W-080 | **T6 golden tests** | `DR 08` T6-1 … T6-7 | |
 

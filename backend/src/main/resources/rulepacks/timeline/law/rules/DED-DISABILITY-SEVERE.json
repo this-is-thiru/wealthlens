@@ -1,0 +1,65 @@
+{
+  "ruleId": "DED-DISABILITY-SEVERE",
+  "_note": "A person with severe disability (80% or more, s.127(9)(g)): \"An individual, being resident in India, who is certified by a medical authority, at any time during the tax year, as a person with disability or person with severe disability, shall be allowed a deduction of ₹ 75000 or ₹ 125000, respectively\" (s.154(1), p.185); the certificate furnished with the return (s.154(2)) — an entry condition; meanings from s.127 (s.154(3)). rulebook DED-80U-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart, s.80U, is unread (W-075d). D-138.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.154(1)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "125000"
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "IsCertifiedDisabled",
+          "minimum": "SEVERE_DISABILITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.154(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.154, pp.185–186; s.127(9)(g), p.164",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.154, pp.185–186; s.127(9)(g), p.164",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

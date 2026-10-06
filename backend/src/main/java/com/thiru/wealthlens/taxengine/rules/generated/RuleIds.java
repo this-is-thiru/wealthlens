@@ -15,6 +15,10 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId DED_DISABILITY = new RuleId("DED-DISABILITY");
+    public static final RuleId DED_DISABILITY_SEVERE = new RuleId("DED-DISABILITY-SEVERE");
+    public static final RuleId DED_DISABLED_DEPENDANT = new RuleId("DED-DISABLED-DEPENDANT");
+    public static final RuleId DED_DISABLED_DEPENDANT_SEVERE = new RuleId("DED-DISABLED-DEPENDANT-SEVERE");
     public static final RuleId DED_HEALTH_CHECKUP = new RuleId("DED-HEALTH-CHECKUP");
     public static final RuleId DED_HEALTH_FAMILY = new RuleId("DED-HEALTH-FAMILY");
     public static final RuleId DED_HEALTH_FAMILY_SENIOR = new RuleId("DED-HEALTH-FAMILY-SENIOR");
@@ -26,6 +30,8 @@ public final class RuleIds {
     public static final RuleId DED_NPS_OWN = new RuleId("DED-NPS-OWN");
     public static final RuleId DED_PREMIUM_SHARE = new RuleId("DED-PREMIUM-SHARE");
     public static final RuleId DED_SCHEDULE_XV = new RuleId("DED-SCHEDULE-XV");
+    public static final RuleId DED_SPECIFIED_DISEASE = new RuleId("DED-SPECIFIED-DISEASE");
+    public static final RuleId DED_SPECIFIED_DISEASE_SENIOR = new RuleId("DED-SPECIFIED-DISEASE-SENIOR");
     public static final RuleId DED_WITHIN_GROSS_TOTAL = new RuleId("DED-WITHIN-GROSS-TOTAL");
     public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");
     public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");

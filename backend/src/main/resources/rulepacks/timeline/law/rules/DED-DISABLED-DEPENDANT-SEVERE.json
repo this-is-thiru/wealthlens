@@ -1,0 +1,57 @@
+{
+  "ruleId": "DED-DISABLED-DEPENDANT-SEVERE",
+  "_note": "A dependant with severe disability — \"₹ 125000\" for \"₹ 75000\" (s.127(3), p.163): s.127(1): a resident individual \"shall be allowed a deduction up to ₹ 75000 … if during that year he has (a) incurred expenditure for the medical treatment (including nursing), training and rehabilitation of a dependant, being a person with disability; or (b) paid or deposited any amount under a scheme … for the maintenance of a dependant\" (pp.162–163); \"dependant\" — the spouse, children, parents, brothers and sisters \"dependant wholly or mainly\" on the individual (s.127(9)(b)); not one who claimed s.154 (s.127(8)); the certificate with the return (s.127(6)–(7)) and (2)'s scheme conditions are entry conditions. ChapterEightNode allows the lesser of the amount spent or deposited and this limit — \"up to\" read as a ceiling (OQ-19); more than one disabled dependant is refused (OQ-19). rulebook DED-80DD-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart, s.80DD, is unread (W-075d). D-138.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.127(1), (3)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "125000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.127(1), (3)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.127(1), (3), (8), (9), pp.162–164",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.127(1), (3), (8), (9), pp.162–164",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}
