@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.36",
-      "checksum": "sha256:b1121994c413fa403a3334742f56deaccaee9eeea696b2ce63f8cf43fc68e0a8"
+      "version": "2026-27.law.37",
+      "checksum": "sha256:14dc4443176d975452d1f678c48aa6ceecf1d9bf291be96129ff0213761ab675"
     },
     "exec": {
       "version": "2026-27.exec.19",
@@ -47,6 +47,7 @@
     "PERQ-CREDIT-CARD": "sha256:a844dd33b982c689194b66277dac6ca4427aeb550baea9b52f54a86fac93e684",
     "PERQ-EDUCATION": "sha256:1371f66b7de9d823d0d52f96f74ee0c7a147582b70de6106e923bdd09461818e",
     "PERQ-EDUCATION-FREE": "sha256:34d59ad5cf0f3416965a1e20aafe85b0563f84a075555e7783d3d54fb82c60ef",
+    "PERQ-EMPLOYER-ACCRETION": "sha256:805b8ec4cf10c66081a6623bfb61fff71fad8c800c11d28f664255db9bafe45c",
     "PERQ-EMPLOYER-CONTRIBUTION": "sha256:b743e42fa33d41120ce0ad055c6ab7fa0737a43a30f2075ae742f3bbdb5b92ba",
     "PERQ-GIFT": "sha256:39d94690097c3ba021ea2a3118bef4b71d80c240d883b4e2a6ba934f50128e91",
     "PERQ-HOLIDAY": "sha256:64f712fa4d720712840dc5b63f27bb98d0fab8e1dd0f7d33a775b0e83acfa7b6",

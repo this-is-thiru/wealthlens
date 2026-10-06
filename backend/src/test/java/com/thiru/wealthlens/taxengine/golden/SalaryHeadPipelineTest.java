@@ -21,6 +21,7 @@ import com.thiru.wealthlens.taxengine.input.MedicalTreatmentAbroad;
 import com.thiru.wealthlens.taxengine.input.OfficialUseRecord;
 import com.thiru.wealthlens.taxengine.input.PopulationBand;
 import com.thiru.wealthlens.taxengine.input.RetirementEntry;
+import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.input.StatutoryEntitlement;
@@ -111,7 +112,7 @@ class SalaryHeadPipelineTest {
             Optional<DisabledTransportClaim> disabledTransport) {
         return run(year, regime, termsIncludeDearnessAllowance,
                 new Entries(tenancies, journeys, allowanceUses, disabledTransport, List.of(), List.of(),
-                        EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of()));
+                        EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of(), Optional.empty()));
     }
 
     /** What a case enters beyond the base pay. */
@@ -119,7 +120,8 @@ class SalaryHeadPipelineTest {
             Optional<DisabledTransportClaim> disabledTransport, List<SalaryComponent> otherPay,
             List<RetirementPayment> retirementPayments, EmployerKind employerKind,
             List<EmployerAccommodation> accommodations, List<MedicalTreatmentAbroad> medicalTreatmentAbroad,
-            List<EmployerVehicle> vehicles, List<EmployerFundContribution> employerContributions) {
+            List<EmployerVehicle> vehicles, List<EmployerFundContribution> employerContributions,
+            Optional<RetirementFundHistory> retirementFundHistory) {
     }
 
     private static PipelineRunner.Result run(int year, RegimeCode regime, boolean termsIncludeDearnessAllowance,
@@ -155,7 +157,7 @@ class SalaryHeadPipelineTest {
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), entries.tenancies(), entries.journeys(),
                         entries.allowanceUses(), entries.disabledTransport(), entries.retirementPayments(),
-                        entries.accommodations(), entries.medicalTreatmentAbroad(), entries.vehicles(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), entries.employerContributions()),
+                        entries.accommodations(), entries.medicalTreatmentAbroad(), entries.vehicles(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), entries.employerContributions(), entries.retirementFundHistory()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
@@ -317,7 +319,7 @@ class SalaryHeadPipelineTest {
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
                 Optional.empty(), leaving,
-                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of()));
+                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
         // Then — gross 9,00,000 + 8,00,000 + 1,00,000 = 18,00,000; retirement 5,00,000; standard deduction 75,000;
         // income 12,25,000; notice pay taxed in full
@@ -335,7 +337,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, new Entries(List.of(), List.of(),
-                List.of(), Optional.empty(), entertainment, List.of(), EmployerKind.GOVERNMENT, List.of(), List.of(), List.of(), List.of()));
+                List.of(), Optional.empty(), entertainment, List.of(), EmployerKind.GOVERNMENT, List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
         // Then — gross 9,10,000 both years. TY 2025-26: 2,500 + 50,000 + least of 6,00,000 ÷ 5 and 5,000 = 57,500,
         // income 8,52,500 (1961 s.16(ii)); TY 2026-27: 52,500, income 8,57,500 — the 2025 Act has no such deduction
@@ -356,7 +358,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(),
-                List.of(), Optional.empty(), leave, List.of(encashment), EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of()));
+                List.of(), Optional.empty(), leave, List.of(encashment), EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
         // Then — gross 9,00,000 + 8,00,000 = 17,00,000; least of 8,00,000, 9,00,000, 10,00,000, 25,00,000 = 8,00,000;
         // standard deduction 75,000; income 8,25,000
@@ -375,7 +377,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, new Entries(List.of(), List.of(),
-                List.of(), Optional.empty(), retrenchment, List.of(compensation), EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of()));
+                List.of(), Optional.empty(), retrenchment, List.of(compensation), EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
         // Then — gross 17,00,000; retirement least of 8,00,000, 6,00,000, 5,00,000 = 5,00,000; deductions 2,500 +
         // 50,000; income 17,00,000 − 5,00,000 − 52,500 = 11,47,500
@@ -394,7 +396,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
-                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(home), List.of(), List.of(), List.of()));
+                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(home), List.of(), List.of(), List.of(), Optional.empty()));
 
         // Then — pay 9,00,000 (basic 6,00,000 + DA 60,000 + HRA 2,40,000); the accommodation salary counts basic and
         // HRA but not DA (it does not count for retirement here): 8,40,000; 10% = 84,000 less 24,000 = 60,000;
@@ -412,7 +414,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
-                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(claim), List.of(), List.of()));
+                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(claim), List.of(), List.of(), Optional.empty()));
 
         // Then — before the travel 9,00,000 − 75,000 = 8,25,000, above 8,00,000, so the travel is salary: 6,00,000
         // − 5,00,000 = 1,00,000, plus 1,50,000 = 2,50,000; income 8,25,000 + 2,50,000 = 10,75,000
@@ -431,7 +433,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, new Entries(List.of(), List.of(),
-                List.of(), Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(claim), List.of(), List.of()));
+                List.of(), Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(claim), List.of(), List.of(), Optional.empty()));
 
         // Then — before the travel 9,00,000 − 52,500 = 8,47,500, above 8,00,000; income 8,47,500 + 2,50,000
         // = 10,97,500
@@ -468,7 +470,7 @@ class SalaryHeadPipelineTest {
 
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
-                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(), List.of(car), List.of()));
+                Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(), List.of(car), List.of(), Optional.empty()));
 
         // Then — monetary salary 8,25,000 exceeds 4,00,000; (5,000 + 3,000) × 12 = 96,000 or (1,800 + 900) × 12
         // = 32,400, on pay of 9,00,000
@@ -478,8 +480,9 @@ class SalaryHeadPipelineTest {
 
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
-    void run_whenEmployerContributionsExceedTheLimit_grossSalaryRisesByTheExcess(int year) {
-        // Given — R13's example: 2,88,000 + 3,36,000 + 2,00,000 (D-126)
+    void run_whenEmployerContributionsExceedTheLimit_grossSalaryRisesByTheExcessAndItsAccretion(int year) {
+        // Given — R13's example: 2,88,000 + 3,36,000 + 2,00,000 (D-126); PC1 + TP1 1,00,000, I 90,000, balances
+        // 9,00,000 and 11,00,000 (D-127)
         List<EmployerFundContribution> contributions = List.of(
                 new EmployerFundContribution(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("288000")),
                 new EmployerFundContribution(0, EmployerFund.NOTIFIED_PENSION_SCHEME, Money.of("336000")),
@@ -488,9 +491,10 @@ class SalaryHeadPipelineTest {
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
                 Optional.empty(), List.of(), List.of(), EmployerKind.OTHER, List.of(), List.of(), List.of(),
-                contributions));
+                contributions, Optional.of(new RetirementFundHistory(Money.of("60000"), Money.of("40000"),
+                        Money.of("90000"), Money.of("900000"), Money.of("1100000")))));
 
-        // Then — pay 9,00,000 + the excess 74,000
-        assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("974000")));
+        // Then — pay 9,00,000 + the excess 74,000 + (37,000 + 1,00,000) × 90,000 ÷ 10,00,000 = 12,330
+        assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("986330")));
     }
 }

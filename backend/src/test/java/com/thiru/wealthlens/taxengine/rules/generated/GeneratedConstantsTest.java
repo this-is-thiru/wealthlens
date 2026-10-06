@@ -63,6 +63,7 @@ class GeneratedConstantsTest {
             "PERQ-CREDIT-CARD",
             "PERQ-EDUCATION",
             "PERQ-EDUCATION-FREE",
+            "PERQ-EMPLOYER-ACCRETION",
             "PERQ-EMPLOYER-CONTRIBUTION",
             "PERQ-GIFT",
             "PERQ-HOLIDAY",

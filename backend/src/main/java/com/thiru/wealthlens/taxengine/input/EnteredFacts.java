@@ -39,7 +39,8 @@ import java.util.Optional;
  * with the car perquisite (D-113), meals and gifts with theirs (D-117), loans with
  * theirs (D-118), the cost-based benefits and assets with theirs (D-119), household services, utilities and
  * education with theirs (D-120), share allotments with theirs (D-121), employer
- * retirement contributions with the aggregate charge (D-126). Every later
+ * retirement contributions with the aggregate charge (D-126), the funds' history with the accretion on the
+ * excess (D-127). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -62,6 +63,8 @@ import java.util.Optional;
  * @param childEducation each child's education in the employer's institution or free by employment, in order
  * @param shareAllotments each allotment of specified securities or sweat equity, in the order entered
  * @param employerContributions each employer contribution to a retirement fund in the year, in the order entered
+ * @param retirementFundHistory the earlier years' excess and the funds' income and balances, for the accretion on
+ *     the excess, if entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -82,12 +85,17 @@ public record EnteredFacts(
         List<EmployerHouseholdBenefit> householdBenefits,
         List<EmployerChildEducation> childEducation,
         List<EmployerShareAllotment> shareAllotments,
-        List<EmployerFundContribution> employerContributions) {
+        List<EmployerFundContribution> employerContributions,
+        Optional<RetirementFundHistory> retirementFundHistory) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
             throw new IllegalArgumentException(
                     "EnteredFacts.disabledTransport may not be null; pass Optional.empty() where there is none");
+        }
+        if (retirementFundHistory == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.retirementFundHistory may not be null; pass Optional.empty() where there is none");
         }
         employments = copied(employments, "employments");
         tenancies = copied(tenancies, "tenancies");
@@ -122,6 +130,6 @@ public record EnteredFacts(
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
     }
 }

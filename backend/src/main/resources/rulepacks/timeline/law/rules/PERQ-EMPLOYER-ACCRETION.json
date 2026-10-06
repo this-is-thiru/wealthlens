@@ -1,0 +1,100 @@
+{
+  "ruleId": "PERQ-EMPLOYER-ACCRETION",
+  "_note": "The annual accretion by way of interest, dividend or any other amount of similar nature to the balance of the funds of the aggregate employer contribution, to the extent it relates to the contribution beyond the limit, is a perquisite (D-127; rulebook PF-AGGCAP-002). TY 2026-27: Income-tax Act, 2025 s.17(1)(i), \"the annual accretion by way of interest, dividend or any other amount of similar nature during the tax year to the balance at the credit of the fund or scheme referred to in clause (h), computed in such manner, as may be prescribed (to the extent it relates to the contribution referred to in the said clause in any tax year)\" (Gazette 265620, p.39); Income-tax Rules, 2026 r.16: \"TP = (PC/2) × R + (PC1 + TP1) × R\", R = I/F(avg.), F(avg.) the balances on the first and last day of the tax year divided by two; r.16(2)(b), where TP1 and PC1 exceed the opening balance \"the excess amount shall be ignored\" (Gazette 271092, pp.1548–1549). PC's definition reads \"in excess of ₹ 750000 lakhs\" — a slip, read as the ₹7,50,000 of s.17(1)(h) and of PC1 (D-125 C3). TY 2025-26: Income-tax Act, 1961 s.17(2)(viia) as substituted by the Finance Act, 2020 s.13 (Gazette 218938, p.21); Income-tax Rules, 1962 r.3B, inserted by G.S.R. 155(E), 5-3-2021, from 1-4-2021 — the same formula, \"in excess of Rs. 7.5 lakh\", its Note capping TP1 + PC1 at the opening balance. PC is EmployerContributionNode's own excess for the year; PC1, TP1, I and the balances are entered (RetirementFundHistory). The node computes TP — the halving and the ratio are the Rule's arithmetic, one division, rounded once — and hands it in. Every employee. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viia) as substituted by the Finance Act, 2020 s.13, with Income-tax Rules, 1962 r.3B",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(i), with Income-tax Rules, 2026 r.16",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "ACCRETION"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.13 — Income-tax Act, 1961 s.17(2)(vii) and (viia) substituted",
+        "gazetteRef": "CG-DL-E-27032020-218938",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2021-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://blog.saginfotech.com/wp-content/uploads/2021/03/notification-no-11-2021.pdf",
+        "sourceDescription": "Income-tax (1st Amendment) Rules, 2021, G.S.R. 155(E), 5-3-2021, Notification No. 11/2021 — Income-tax Rules, 1962 r.3B, in a Gazette scan hosted by a third party; Gazette CG-DL-E-27032020-218938, Finance Act, 2020 s.13, p.21",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Income-tax Rules, 1962 r.3B is read in a third-party-hosted scan of the Gazette pages of G.S.R. 155(E): read it in an egazette.gov.in copy, and any later amendment to r.3B or to Income-tax Act, 1961 s.17(2)(viia) up to AY 2026-27 — the interim Finance Act, 2024 (8 of 2024) is unread."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viia) as substituted by the Finance Act, 2020 s.13, with Income-tax Rules, 1962 r.3B",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(i), with Income-tax Rules, 2026 r.16",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "ACCRETION"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.17(1)(i)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.16, pp.1548–1549; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(i), p.39",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.16, pp.1548–1549; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(i), p.39",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

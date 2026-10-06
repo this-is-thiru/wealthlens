@@ -1042,7 +1042,7 @@ if that is not enough for the item in hand.
 | W-071g | Tax paid by the employer on a non-monetary perquisite *(D-110)*: S2 Sch. III Table Sl. 10; 1961 s.10(10CC) | `DR 01` PERQ-TAXPAID-001 | |
 | W-073 | ~~`EmployerContributionNode`~~ **split by D-125** into W-073a–c | `DR 01` R13 | **four** independent charges, not one |
 | W-073a | The aggregate employer contribution *(D-125)*: **creates** `EmployerContributionNode` (`employer.contrib.charges`, added to gross salary); S2 s.17(1)(h) (₹7,50,000); 1961 s.17(2)(vii) as substituted by FA 2020 s.13 | `DR 01` PF-AGGCAP-001 | both years read in the Gazette (265620 p.38; 218938 p.21) |
-| W-073b | The accretion on the excess *(D-125)*: S2 s.17(1)(i), S4 r.16 (TP = (PC/2) × R + (PC1 + TP1) × R); 1961 s.17(2)(viia), Rules 1962 r.3B | `DR 01` PF-AGGCAP-002 | ⚠ Rules 1962 r.3B not read |
+| W-073b | The accretion on the excess *(D-125)*: S2 s.17(1)(i), S4 r.16 (TP = (PC/2) × R + (PC1 + TP1) × R); 1961 s.17(2)(viia), Rules 1962 r.3B | `DR 01` PF-AGGCAP-002 | r.16 read in the Gazette (271092 pp.1548–1549); r.3B read in a third-party-hosted Gazette scan — TY 2025-26 `UNVERIFIED` (D-127) |
 | W-073c | Recognised-fund employer contributions over 12% of salary and interest over the notified rate *(D-125)*: S2 Sch. XI Pt A para 6; 1961 Sch. IV Pt A r.6 | `DR 01` PF-RPF12-001 | ⚠ the notified rate (both years), 1961 Sch. IV Pt A r.6 and Sch. XI's "salary" not read |
 | W-074 | **T4 golden tests** | `DR 08` T4-1 … T4-4 | |
 | W-075 | `deductions.json` both years | `DR 01` R15 | |

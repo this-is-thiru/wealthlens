@@ -132,7 +132,8 @@ class TimelineReaderTest {
             new RuleId("PERQ-CARRIER-TRAVEL"),
             new RuleId("PERQ-SPECIFIED-SECURITY"),
             new RuleId("PERQ-SPECIFIED-DATE"),
-            new RuleId("PERQ-EMPLOYER-CONTRIBUTION"));
+            new RuleId("PERQ-EMPLOYER-CONTRIBUTION"),
+            new RuleId("PERQ-EMPLOYER-ACCRETION"));
 
     @TempDir
     Path copy;

@@ -888,6 +888,12 @@ See `T9`.
 > (pp.1548–1549), whose "₹ 750000 lakhs" is a slip for ₹7,50,000. `PF-RPF12-001` (W-073c) waits on the notified rate.
 > `PF-EEINT-001` moved to W-079 (other sources).
 
+> **Addendum (W-073b, 2026-10-06, D-127):** `PF-AGGCAP-002` is built as `PERQ-EMPLOYER-ACCRETION` (both years, every
+> regime). TY 2026-27: S2 s.17(1)(i) with S4 r.16, read in the Gazette (CG-DL-E-20032026-271092, pp.1548–1549). TY
+> 2025-26: 1961 s.17(2)(viia) as substituted by the Finance Act, 2020 s.13, with Rules 1962 r.3B (G.S.R. 155(E),
+> 5-3-2021, from 1-4-2021), read in a third-party-hosted scan of the Gazette pages — `UNVERIFIED` until read in an
+> egazette copy. PC1 + TP1 beyond the opening balance is ignored (r.16(2)(b); r.3B's Note).
+
 ### `DED-NPS-EMP-001` — employer NPS, the deduction side
 
 | Rule ID | Statement | 2025-Act | TY 2026-27 | Status |

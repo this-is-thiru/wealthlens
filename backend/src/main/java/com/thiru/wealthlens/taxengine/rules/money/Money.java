@@ -105,6 +105,22 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
                 .divide(BigDecimal.valueOf(denominator), CALC));
     }
 
+    /**
+     * This amount scaled by a ratio of two amounts — a fund's income over its balance (S4 r.16; D-127). Multiplied,
+     * divided once at {@link #CALC} and rounded once to paise, as {@link #scaledBy(int, int)} is; a ratio of money
+     * to money cannot be a {@link Rate}, which is a percentage the statute states.
+     *
+     * @param numerator the amount above, 0 or more
+     * @param denominator the amount below, more than 0
+     */
+    public Money scaledBy(Money numerator, Money denominator) {
+        if (!denominator.isGreaterThan(ZERO) || numerator.isLessThan(ZERO)) {
+            throw new IllegalArgumentException("A ratio needs numerator >= 0 and denominator > 0; got " + numerator
+                    + " over " + denominator);
+        }
+        return ofExact(amountInRupees.multiply(numerator.amountInRupees).divide(denominator.amountInRupees, CALC));
+    }
+
     /** Clamps a negative amount to zero. Named for what it does, not for what it guards against. */
     public Money floorAtZero() {
         return amountInRupees.signum() < 0 ? ZERO : this;
