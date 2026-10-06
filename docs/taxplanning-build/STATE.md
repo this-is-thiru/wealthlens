@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **97** / 184 live · in flight **0** · blocked **0**  ← computed by script; 184 = 146 base ids − 8 retired + 46 suffixed
+Counts — done **131** / 209 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-06): every id except the 12 marked `—` (8 retired, 4 split into lettered items)
 
 ---
 
