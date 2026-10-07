@@ -1079,6 +1079,10 @@ a single year's inputs. See `M3`.
 > of a sum of seventy-five thousand rupees"* (1,25,000 severe) once anything is spent or deposited — where the 2025
 > Act's s.127 says *"up to ₹ 75000"* (built as the lesser of the amount and the limit; OQ-19).
 
+> **Addendum (W-075d4, 2026-10-07, D-147):** `DED-80E-001`, `-002`, `DED-80EE-001`, `DED-80EEA-001` and `DED-80EEB-001`'s
+> TY 2025-26 figures are built (1961 ss.80E, 80EE; 80EEA and 80EEB as inserted by F(No.2)A 2019 s.25, 80EEA's window
+> extended to 31-3-2022 by FA 2020 s.32 and FA 2021 s.27) — every figure, window and condition equal to TY 2026-27's.
+
 ### **H-7 verdict: CONFIRMED on both limbs.**
 
 `FACT (S2, Schedule XV para 1(f))`: *"contribution by an employee to a recognised provident fund"* is

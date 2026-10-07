@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.EducationLoanInterest;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
@@ -79,12 +78,43 @@ class LoanInterestDeductionTest {
     }
 
     @Test
-    void evaluate_whenEducationLoanInterestIsEnteredForTaxYear2025_refusesNamingTheItemThatAddsTheRows() {
-        // When / Then — D-146: 80E's TY 2025-26 rows are W-075d4's
-        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD,
-                        List.of(new EducationLoanInterest(Money.of("50000"), TaxYearId.of(2022))), List.of()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-075d4");
+    void evaluate_whenTaxYear2025EducationLoanInterestIsEntered_allowsItWithinSection80esSpan() {
+        // When — 1961 s.80E (D-147): started 2020-21, its span runs to 2027-28; started 2016-17, it ended 2023-24
+        NodeResult within = run(TaxYearId.of(2025), OLD,
+                List.of(new EducationLoanInterest(Money.of("80000"), TaxYearId.of(2020))), List.of());
+        NodeResult ended = run(TaxYearId.of(2025), OLD,
+                List.of(new EducationLoanInterest(Money.of("80000"), TaxYearId.of(2016))), List.of());
+
+        // Then
+        assertThat(within.value()).isEqualTo(MoneyValue.of(Money.of("80000")));
+        assertThat(ended.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025HouseLoansAreEntered_triesSection80eeThenSection80eea() {
+        // When — 80EE: sanctioned 15-6-2016, 30 lakh, value 45 lakh; 80EEA: sanctioned 10-5-2021, stamp duty 40 lakh
+        NodeResult earlier = run(TaxYearId.of(2025), OLD, List.of(), List.of(house("70000", LocalDate.of(2016, 6, 15),
+                "3000000", Optional.of("4500000"), Optional.empty(), false)));
+        NodeResult later = run(TaxYearId.of(2025), OLD, List.of(), List.of(house("200000", LocalDate.of(2021, 5, 10),
+                "4000000", Optional.empty(), Optional.of("4000000"), false)));
+        NodeResult outside = run(TaxYearId.of(2025), OLD, List.of(), List.of(house("200000", LocalDate.of(2022, 5, 10),
+                "4000000", Optional.empty(), Optional.of("4000000"), false)));
+
+        // Then — 50,000 (80EE); 1,50,000 (80EEA, sanctioned to 31-3-2022); nil after the window
+        assertThat(earlier.value()).isEqualTo(MoneyValue.of(Money.of("50000")));
+        assertThat(later.value()).isEqualTo(MoneyValue.of(Money.of("150000")));
+        assertThat(outside.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @Test
+    void evaluate_whenATaxYear2025ElectricVehicleLoanIsEntered_allowsItsInterest() {
+        // When — 1961 s.80EEB: sanctioned 1-1-2023, within 1-4-2019 to 31-3-2023
+        NodeResult result = run(TaxYearId.of(2025), OLD, List.of(), List.of(new PurposeLoanInterest(
+                LoanPurpose.ELECTRIC_VEHICLE, Money.of("90000"), LocalDate.of(2023, 1, 1), Money.of("1200000"),
+                Optional.empty(), Optional.empty(), false)));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("90000")));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.AgniveerCorpusFund;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
@@ -21,7 +22,6 @@ import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,12 +36,16 @@ class AgniveerDeductionTest {
     private static final TaxYearId TY_2026 = TaxYearId.of(2026);
 
     private static NodeResult run(RegimeCode regime, String own, String government) {
+        return run(TY_2026, regime, own, government);
+    }
+
+    private static NodeResult run(TaxYearId year, RegimeCode regime, String own, String government) {
         RulePack pack = new ClasspathRulePackProvider(
-                        "rulepacks", Set.of(TY_2026), new JsonPackAssembler(LockedInstruments.of(TY_2026)))
-                .load(TY_2026);
+                        "rulepacks", Set.of(year), new JsonPackAssembler(LockedInstruments.of(year)))
+                .load(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
-        EngineInputs inputs = new EngineInputs(TY_2026, regime,
-                TemporalContext.forTaxYear(TY_2026, LocalDate.of(2026, 9, 21)),
+        EngineInputs inputs = new EngineInputs(year, regime,
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
@@ -54,6 +58,14 @@ class AgniveerDeductionTest {
                 .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of()))
                 .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of()))
                 .run(new ChapterEightNode());
+    }
+
+    @Test
+    void evaluate_whenAnAgniveerSubscribesInTaxYear2025_refusesNamingTheItemThatAddsTheRows() {
+        // When / Then — D-147: 80CCH's TY 2025-26 rows are W-075d5's
+        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD, "30000", "30000"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("W-075d5");
     }
 
     @Test

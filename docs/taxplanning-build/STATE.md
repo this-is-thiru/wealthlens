@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-075d3 — "taxplanning W-075d3: compute 80DD, 80DDB and 80U for TY 2025-26 under the 1961 Act — 80DD there is a fixed sum, so the rows now carry "the lesser of" rather than the node (D-146)"
-Last updated              : 2026-10-07 (session 12 — W-075c4, W-075c6, W-075d split, W-075d0–d3 done; build GREEN, 2477 tests)
-Current position          : W-075d4 — Chapter VIII, TY 2025-26: 80E, 80EE, 80EEA, 80EEB (not started)
+Last checkpoint           : W-075d4 — "taxplanning W-075d4: compute education, house and electric-vehicle loan interest for TY 2025-26 under 1961 ss.80E–80EEB — the same limits and sanction windows as the 2025 Act (D-147)"
+Last updated              : 2026-10-07 (session 12 — W-075c4, W-075c6, W-075d split, W-075d0–d4 done; build GREEN, 2480 tests)
+Current position          : W-075d5 — Chapter VIII, TY 2025-26: 80CCH, 80GG, 80G (not started; first locate TOLA 2020, the PM CARES lead)
 Session count             : 12
 ```
 
@@ -56,7 +56,7 @@ Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d
 Phase 5    W-046 D  W-046b D  W-047 —  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d D  W-053 D   ← COMPLETE
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
 Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-066b D  W-067a D  W-067 D  W-068a D  W-068 D  W-069a D  W-069 D  W-069b D  W-066a D  W-070 D  W-064a D  W-066c D  W-063a D  W-066d D   ← COMPLETE
-Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f D  W-071g D  W-073 —  W-073a D  W-073b D  W-073c ·  W-074 —  W-074a D  W-075 —  W-075a D  W-075a2 D  W-075b D  W-075c —  W-075c1 D  W-075c2 D  W-075c3 D  W-075c4 D  W-075c6 D  W-075d —  W-075d0 D  W-075d1 D  W-075d2 D  W-075d3 D  W-075d4 ·  W-075d5 ·  W-075a3 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-075c5 ·  W-074b ·  W-080 ·
+Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f D  W-071g D  W-073 —  W-073a D  W-073b D  W-073c ·  W-074 —  W-074a D  W-075 —  W-075a D  W-075a2 D  W-075b D  W-075c —  W-075c1 D  W-075c2 D  W-075c3 D  W-075c4 D  W-075c6 D  W-075d —  W-075d0 D  W-075d1 D  W-075d2 D  W-075d3 D  W-075d4 D  W-075d5 ·  W-075a3 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-075c5 ·  W-074b ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
 Phase 11   W-096 ·  W-097 ·  W-098 ·  W-099 ·  W-100 ·  W-101 ·  W-102 ·  W-103 ·  W-104 ·  W-105 ·  W-106 ·  W-107 ·  W-108 ·  W-109 ·  W-110 ·  W-111 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **143** / 220 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-07): every id except the 14 marked `—` (8 retired, 6 split into lettered items)
+Counts — done **144** / 220 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-07): every id except the 14 marked `—` (8 retired, 6 split into lettered items)
 
 ---
 
@@ -451,6 +451,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-147 | 2026-10-07 | `W-075d4`: TY 2025-26 80E–80EEB | **C1:** TY 2025-26 versions of `DED-EDUCATION-LOAN`, `DED-HOUSE-LOAN-EARLIER`, `DED-HOUSE-LOAN`, `DED-ELECTRIC-VEHICLE-LOAN` — the same `TaxYearSpan` / `SanctionedLoanLimit` definitions (1961 ss.80E, 80EE; 80EEA, 80EEB by F(No.2)A 2019 s.25; 80EEA to 31-3-2022 by FA 2020 s.32, FA 2021 s.27), SOURCE_CHECKED as D-144. **C2:** the D-146 refusal test computes; a TY 2025-26 Agniveer entry refused naming W-075d5 | owner: "W-075d4 approved — proceed as recommended" (2026-10-07); "W-075d4 approved" (2026-10-07) |
 | D-146 | 2026-10-07 | `W-075d3`: TY 2025-26 80DD, 80DDB, 80U | **C1a:** "the lesser of" moves from `DisabilityDeduction.claimed` into the rows — the TY 2026-27 s.127/s.128 rows become `LeastOf` (`PercentOfBase` 100 `AMOUNT_CLAIMED`, `Fixed` limit), the same results; TY 2025-26: 80DD `Fixed` 75,000 / 1,25,000 (1961 "a deduction of a sum of"), 80DDB `LeastOf` 40,000 / 1,00,000, 80U `Fixed`. **C2:** an 80DD entry of nil gives a nil line, both years. **C3:** TY 2025-26 versions of all six, SOURCE_CHECKED as D-144; OQ-19 gets the 1961 wording as evidence. **C4:** the D-145 refusal test now computes; a TY 2025-26 education loan refused naming W-075d4 | owner: "W-075d3 approved — proceed as recommended" (2026-10-07); "W-075d3 approved" (2026-10-07) |
 | D-145 | 2026-10-07 | `W-075d2`: TY 2025-26 80D, and two scheme defects | **C1:** TY 2025-26 versions of `DED-HEALTH-FAMILY`, `-PARENTS`, `-FAMILY-SENIOR`, `-PARENTS-SENIOR`, `DED-HEALTH-CHECKUP` under 1961 s.80D (unamended after 2019), the same shapes; the four components live from 2025-04-01; SOURCE_CHECKED as D-144. **C2a:** a GOVERNMENT_HEALTH_SCHEME payment covering a parent is refused, both years (s.126(2)(b), 80D(2)(b)); the parents' notes corrected. **C3a:** only an INSURANCE_PREMIUM sets the senior's 50,000, both years (s.126(8), 80D(4)) — as `requireNotInsuredSenior` already read (7). **C4:** TY 2025-26 health tests replace the D-144 refusal; a TY 2025-26 disability entry refused naming W-075d3. **C5:** erratum on D-136 | owner: "W-075d2 approved — proceed as recommended" (2026-10-07); "W-075d2 approved" (2026-10-07) |
 | D-144 | 2026-10-07 | `W-075d1`: TY 2025-26 80C family and NPS | **C1:** TY 2025-26 versions (2025-04-01 to 2026-03-31) of `DED-SCHEDULE-XV`, `DED-NPS-OWN`, `DED-NPS-EMPLOYER-GOVT`, `-OTHER`, `-NEW-TAX-REGIME`, `DED-WITHIN-GROSS-TOTAL`, `DED-PREMIUM-SHARE` — the 2026 shapes and regimes, 1961 provenance (thc + F(No.2)A 2019 s.23–24, FA 2022 s.20, F(No.2)A 2024 s.25, FA 2025 s.17), SOURCE_CHECKED per the RATE-ROUND/REBATE precedent, `whatToCheck` naming the non-Finance amending Acts unsearched. **C2:** the 23 components live from 2025-04-01, each citing its 1961 clause. **C3a:** the Chapter VIII year guard per section, naming W-075d2–d5; the two whole-chapter tests replaced. **C4:** HUF as TY 2026-27. **C5:** records; the PM CARES / TOLA 2020 lead noted on W-075d5 (recalled, unverified) | owner: "W-075d1 approved — proceed as recommended" (2026-10-07); "W-075d1 approved" (2026-10-07) |
