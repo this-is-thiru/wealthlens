@@ -3,9 +3,9 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-075d5 — "taxplanning W-075d5: compute 80CCH, 80GG and 80G for TY 2025-26 under the 1961 Act, PM CARES read in TOLA 2020 — every Chapter VIII section now computes for both years (D-148)"
-Last updated              : 2026-10-07 (session 12 — W-075c4, W-075c6, W-075d split, W-075d0–d5 done; build GREEN, 2481 tests)
-Current position          : W-075a3 — Schedule XV (c), (j), (k), (l) (not started; waits on OQ-16, OQ-17)
+Last checkpoint           : W-076 — "taxplanning W-076: close out the Chapter VIII node — s.123 and 80C marked modelled, the other built sections waiting on their catalogue entries (W-076a/b), the rest classified (D-149)"
+Last updated              : 2026-10-07 (session 12 — W-075c4, W-075c6, W-075d0–d5, W-076 done; build GREEN, 2481 tests)
+Current position          : W-076a — Chapter VIII catalogue entries, part 1 (not started)
 Session count             : 12
 ```
 
@@ -56,7 +56,7 @@ Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d
 Phase 5    W-046 D  W-046b D  W-047 —  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d D  W-053 D   ← COMPLETE
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
 Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-066b D  W-067a D  W-067 D  W-068a D  W-068 D  W-069a D  W-069 D  W-069b D  W-066a D  W-070 D  W-064a D  W-066c D  W-063a D  W-066d D   ← COMPLETE
-Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f D  W-071g D  W-073 —  W-073a D  W-073b D  W-073c ·  W-074 —  W-074a D  W-075 —  W-075a D  W-075a2 D  W-075b D  W-075c —  W-075c1 D  W-075c2 D  W-075c3 D  W-075c4 D  W-075c6 D  W-075d —  W-075d0 D  W-075d1 D  W-075d2 D  W-075d3 D  W-075d4 D  W-075d5 D  W-075a3 ·  W-076 ·  W-077 ·  W-078 ·  W-079 ·  W-075c5 ·  W-074b ·  W-080 ·
+Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f D  W-071g D  W-073 —  W-073a D  W-073b D  W-073c ·  W-074 —  W-074a D  W-075 —  W-075a D  W-075a2 D  W-075b D  W-075c —  W-075c1 D  W-075c2 D  W-075c3 D  W-075c4 D  W-075c6 D  W-075d —  W-075d0 D  W-075d1 D  W-075d2 D  W-075d3 D  W-075d4 D  W-075d5 D  W-076 D  W-076a ·  W-076b ·  W-075a3 ·  W-077 ·  W-078 ·  W-079 ·  W-075c5 ·  W-074b ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
 Phase 11   W-096 ·  W-097 ·  W-098 ·  W-099 ·  W-100 ·  W-101 ·  W-102 ·  W-103 ·  W-104 ·  W-105 ·  W-106 ·  W-107 ·  W-108 ·  W-109 ·  W-110 ·  W-111 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **145** / 220 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-07): every id except the 14 marked `—` (8 retired, 6 split into lettered items)
+Counts — done **146** / 222 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-07): every id except the 14 marked `—` (8 retired, 6 split into lettered items)
 
 ---
 
@@ -451,6 +451,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-149 | 2026-10-07 | `W-076`: the Chapter VIII close-out | **Placement:** W-076 started ahead of W-075a3 (owner, "start W-076"; W-075a3 waits on OQ-16/17). The node itself was built across W-075a–d5 (D-131). **Revision 1 (R13):** s.136 / 80GGB `DEFERRED BUILT_LATER` with `[]` — `PersonType` has no COMPANY (owner: "Empty list"). **Revision 2 (R13), R1a:** SC-1 refuses a `MODELLED` section without a catalogue entry, so only s.123 / 80C (`SEC-INVESTMENT-DEDUCTION`) become `MODELLED` (`AggregateWithCeiling`); the other 28 built sections stay `PLANNED`, now **W-076a** (ss.122, 124–126 / 80A, 80CCC, 80CCD, 80CCE, 80CCH, 80D) and **W-076b** (ss.127–134, 154 / 80DD–80U), placed right after W-076 (owner). **R2 (C2a):** s.153 / 80TTA / 80TTB → W-075c5; ss.135, 137, 152 / 80GGA, 80GGC, 80RRB `DEFERRED BUILT_SECOND` INDIVIDUAL; 80CCA, 80CCB, 80CCF, 80CCG `OUT_OF_SCOPE` (spent by their own terms, A0 pp.336–341); 80AB, 80AC, 80B `NOT_COMPUTATIONAL`. **R3:** BRIEF M-14 status and Changes line. Counts: MODELLED +2, PLANNED −17, DEFERRED +8, OUT_OF_SCOPE +4, NOT_COMPUTATIONAL +3 | owner: "W-076 approved — proceed as recommended"; "Empty list (Recommended)"; "W-076 revision approved — R1a"; placement "Right after W-076"; "W-076 approved" (2026-10-07) |
 | D-148 | 2026-10-07 | `W-075d5`: TY 2025-26 80CCH, 80GG, 80G | The PM CARES lead resolved: TOLA 2020 = egazette 2020/222110, s.3(XII)(a) p.16 adds PM CARES to s.80G(2)(a)(iiia), whole, deemed from 1-4-2020 (sources A10, M18). **C1:** TY 2025-26 versions of `DED-AGNIVEER-OWN`, `-GOVERNMENT` (80CCH, FA 2023 s.39), `DED-RENT-PAID` (80GG, r.11B), `DED-DONATION-WHOLE`, `-HALF`, `-QUALIFYING`, `-CASH` (80G) — the same shapes and regimes, SOURCE_CHECKED, the residual naming TOLA 2020 as read. **C2:** `DonationClause` maps to 1961: NAMED_FUND = (2)(a) on (1)(i)'s list; FAMILY_PLANNING = (a)(vii); DROUGHT_RELIEF_FUND = (a)(iii); CHARITABLE_INSTITUTION = (a)(iv); PUBLIC_BODY = (a)(v), (vi), (via), (b). **C3:** 80G before 80GG as D-142; OQ-23 and OQ-24 arise in both years. **C4:** the three TY 2025-26 refusal tests compute; records. Every Chapter VIII section built for TY 2026-27 now computes for TY 2025-26 | owner: "W-075d5 approved — proceed as recommended" (2026-10-07); "W-075d5 approved" (2026-10-07) |
 | D-147 | 2026-10-07 | `W-075d4`: TY 2025-26 80E–80EEB | **C1:** TY 2025-26 versions of `DED-EDUCATION-LOAN`, `DED-HOUSE-LOAN-EARLIER`, `DED-HOUSE-LOAN`, `DED-ELECTRIC-VEHICLE-LOAN` — the same `TaxYearSpan` / `SanctionedLoanLimit` definitions (1961 ss.80E, 80EE; 80EEA, 80EEB by F(No.2)A 2019 s.25; 80EEA to 31-3-2022 by FA 2020 s.32, FA 2021 s.27), SOURCE_CHECKED as D-144. **C2:** the D-146 refusal test computes; a TY 2025-26 Agniveer entry refused naming W-075d5 | owner: "W-075d4 approved — proceed as recommended" (2026-10-07); "W-075d4 approved" (2026-10-07) |
 | D-146 | 2026-10-07 | `W-075d3`: TY 2025-26 80DD, 80DDB, 80U | **C1a:** "the lesser of" moves from `DisabilityDeduction.claimed` into the rows — the TY 2026-27 s.127/s.128 rows become `LeastOf` (`PercentOfBase` 100 `AMOUNT_CLAIMED`, `Fixed` limit), the same results; TY 2025-26: 80DD `Fixed` 75,000 / 1,25,000 (1961 "a deduction of a sum of"), 80DDB `LeastOf` 40,000 / 1,00,000, 80U `Fixed`. **C2:** an 80DD entry of nil gives a nil line, both years. **C3:** TY 2025-26 versions of all six, SOURCE_CHECKED as D-144; OQ-19 gets the 1961 wording as evidence. **C4:** the D-145 refusal test now computes; a TY 2025-26 education loan refused naming W-075d4 | owner: "W-075d3 approved — proceed as recommended" (2026-10-07); "W-075d3 approved" (2026-10-07) |
