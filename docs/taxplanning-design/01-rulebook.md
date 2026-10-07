@@ -1083,6 +1083,12 @@ a single year's inputs. See `M3`.
 > TY 2025-26 figures are built (1961 ss.80E, 80EE; 80EEA and 80EEB as inserted by F(No.2)A 2019 s.25, 80EEA's window
 > extended to 31-3-2022 by FA 2020 s.32 and FA 2021 s.27) — every figure, window and condition equal to TY 2026-27's.
 
+> **Addendum (W-075d5, 2026-10-07, D-148):** `DED-AGNIVEER-001`, `DED-80GG-001`, `-002` and `DED-80G-001`'s TY 2025-26
+> figures are built (1961 s.80CCH by FA 2023 s.39; s.80GG with Rules 1962 r.11B; s.80G with PM CARES added by the
+> Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 s.3(XII)(a), and (a)(ii), (iiic),
+> (iiid) omitted from AY 2024-25 by FA 2023 s.40) — equal to TY 2026-27's once s.80G's clauses are mapped to s.133's.
+> Every Chapter VIII section built for TY 2026-27 now computes for TY 2025-26.
+
 ### **H-7 verdict: CONFIRMED on both limbs.**
 
 `FACT (S2, Schedule XV para 1(f))`: *"contribution by an employee to a recognised provident fund"* is

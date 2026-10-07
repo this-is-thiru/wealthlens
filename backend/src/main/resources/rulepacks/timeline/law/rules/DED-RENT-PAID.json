@@ -1,9 +1,85 @@
 {
   "ruleId": "DED-RENT-PAID",
-  "_note": "Rent paid for one's own residence: \"there shall be deducted any expenditure incurred by him towards payment of rent (by whatever name called) in respect of any furnished or unfurnished accommodation occupied by him for the purposes of his own residence\" (s.134(1), p.170); \"allowable on payment of such rent exceeding 10% of his total income, subject to a maximum of ₹ 5000 per month, or 25% of total income for tax year, whichever is less\" (s.134(2)); the total income is \"before allowing deduction for any expenditure under this section\" (s.134(5)) — TOTAL_INCOME is gross total income less the other Chapter VIII deductions, held within it, unrounded; MONTH counts the months of stay the declaration states (OQ-22). The s.134(4) bars — a home owned by the assessee, spouse, minor child or HUF at the place; an occupied home owned elsewhere valued under s.21(6) or (7)(a); any income falling in Schedule III Table Sl. 11 (HRA) — are checked by the node. s.134(3)'s prescribed conditions: Income-tax Rules, 2026 r.65 (p.1581), \"the assessee shall file declaration in Form No. 31\" (pp.1913–1914) — no area limit is prescribed; the Rules' amendment chain after G.S.R. 198(E) is not traced (rulebook S6). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 only; the 1961 counterpart, s.80GG with Rules 1962 r.11B, is unread (W-075d). rulebook DED-80GG-001, -002. D-141.",
+  "_note": "Rent paid for one's own residence: \"there shall be deducted any expenditure incurred by him towards payment of rent (by whatever name called) in respect of any furnished or unfurnished accommodation occupied by him for the purposes of his own residence\" (s.134(1), p.170); \"allowable on payment of such rent exceeding 10% of his total income, subject to a maximum of ₹ 5000 per month, or 25% of total income for tax year, whichever is less\" (s.134(2)); the total income is \"before allowing deduction for any expenditure under this section\" (s.134(5)) — TOTAL_INCOME is gross total income less the other Chapter VIII deductions, held within it, unrounded; MONTH counts the months of stay the declaration states (OQ-22). The s.134(4) bars — a home owned by the assessee, spouse, minor child or HUF at the place; an occupied home owned elsewhere valued under s.21(6) or (7)(a); any income falling in Schedule III Table Sl. 11 (HRA) — are checked by the node. s.134(3)'s prescribed conditions: Income-tax Rules, 2026 r.65 (p.1581), \"the assessee shall file declaration in Form No. 31\" (pp.1913–1914) — no area limit is prescribed; the Rules' amendment chain after G.S.R. 198(E) is not traced (rulebook S6). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80GG with Rules 1962 r.11B, is the TY 2025-26 version (W-075d5). rulebook DED-80GG-001, -002. D-141. TY 2025-26: Income-tax Act, 1961 s.80GG (thc p.354): for an assessee \"not being an assessee having any income falling within clause (13A) of section 10\", rent \"in excess of ten per cent of his total income … to the extent to which such excess expenditure does not exceed five thousand rupees per month or twenty-five per cent of his total income for the year, whichever is less\"; the proviso's ownership bars as s.134(4)(a); the Explanation: both percentages of \"total income before allowing deduction for any expenditure under this section\"; Rules 1962 r.11B: the declaration in Form No. 10BA — no area limit. The same row (the RentDeclaration stands for Form 10BA too). sources/2026-10-07-chapter-via.md B10, R1. D-148.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80GG, with Income-tax Rules, 1962 r.11B; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.134, with Income-tax Rules, 2026 r.65; excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "rent less 10% of total income",
+            "shape": {
+              "type": "AmountInExcess",
+              "amount": "RENT_PAID",
+              "threshold": {
+                "type": "PercentOfBase",
+                "percent": "10",
+                "base": "TOTAL_INCOME"
+              }
+            }
+          },
+          {
+            "name": "5000 per month",
+            "shape": {
+              "type": "PerUnitPerPeriod",
+              "amount": "5000",
+              "maxUnits": 1,
+              "period": "MONTH"
+            }
+          },
+          {
+            "name": "25% of total income",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "25",
+              "base": "TOTAL_INCOME"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80GG — \"five thousand rupees\" subs. by Act 28 of 2016, s.39 (w.e.f. 1-4-2017)",
+        "gazetteRef": "not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "2017-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80GG, p.354; Income-tax Rules, 1962 r.11B, DoR compendium (Taxmann print, current to about 2011) pp.258–259; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80GG after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 and the Finance Acts of 2020 to 2025 (read for Chapter VI-A in W-075d0 and W-075d5, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
     {
       "validity": {
         "type": "Between",
@@ -17,7 +93,8 @@
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
-        "presence": "NOT_YET_VERIFIED"
+        "reference": "s.80GG, with Income-tax Rules, 1962 r.11B; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
       },
       "provision2025": {
         "instrument": "Income-tax Act, 2025",

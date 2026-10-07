@@ -229,13 +229,16 @@ class RentPaidDeductionTest {
     }
 
     @Test
-    void evaluate_whenDeclaredForTaxYear2025_refusesUntilItsRowsExist() {
-        // Given — s.80GG is W-075d's
-        Case c = Case.of("180000", 12).income("600000", "0")
+    void evaluate_whenDeclaredForTaxYear2025_allowsSection80ggsLeastOfThree() {
+        // Given — 1961 s.80GG (D-148): base 4,50,000; rent 1,80,000 over 12 months of TY 2025-26
+        Case c = Case.of("180000", 12)
                 .occupied(DateRange.between(LocalDate.of(2025, 4, 1), LocalDate.of(2026, 3, 31)));
 
-        // When / Then
-        assertThatThrownBy(() -> run(c, TaxYearId.of(2025))).hasMessageContaining("W-075d5");
+        // When — (a) 1,80,000 − 45,000 = 1,35,000; (b) 5,000 × 12 = 60,000; (c) 1,12,500
+        NodeResult result = run(c, TaxYearId.of(2025));
+
+        // Then
+        assertThat(rentLine(result).out()).isEqualTo(MoneyValue.of(Money.of("60000")));
     }
 
     @Test

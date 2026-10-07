@@ -1,9 +1,53 @@
 {
   "ruleId": "DED-AGNIVEER-GOVERNMENT",
-  "_note": "The Central Government's contribution: \"Where the Central Government makes any contribution to the account of an assessee in the Fund referred to in sub-section (1), the assessee shall be allowed a deduction in the computation of his total income of the whole of the amount so contributed\" (s.125(2), p.161) — the whole amount, base AMOUNT_PAID; the same contribution is salary (s.16(l), p.38), so the two net to nil. Every regime: s.202(2)(a)(xii) keeps s.125(2) (p.227). TY 2026-27 only; the 1961 counterpart, s.80CCH, is unread (W-075d). rulebook DED-AGNIVEER-001. D-140.",
+  "_note": "The Central Government's contribution: \"Where the Central Government makes any contribution to the account of an assessee in the Fund referred to in sub-section (1), the assessee shall be allowed a deduction in the computation of his total income of the whole of the amount so contributed\" (s.125(2), p.161) — the whole amount, base AMOUNT_PAID; the same contribution is salary (s.16(l), p.38), so the two net to nil. Every regime: s.202(2)(a)(xii) keeps s.125(2) (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80CCH, is the TY 2025-26 version (W-075d5). rulebook DED-AGNIVEER-001. D-140. TY 2025-26: Income-tax Act, 1961 s.80CCH(2) as inserted by FA 2023 s.39 (p.30): \"Where the Central Government makes any contribution to the account of an assessee in the Agniveer Corpus Fund … the whole of the amount so contributed\"; every regime — s.115BAC(2)(i) excepts \"sub-section (2) of section 80CCH\" (FA 2023 s.52). The contribution is salary under 1961 s.17(1)(ix) (W-075c3). The same row. sources/2026-10-07-chapter-via.md M12, M14. D-148.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80CCH(2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.125(2)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "AMOUNT_PAID"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.39 — s.80CCH inserted; s.52(B) keeps s.80CCH(2) in s.115BAC(2)(i)",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.39 (s.80CCH), p.30; s.52(B), (C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80CCH after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 and the Finance Acts of 2020 to 2025 (read for Chapter VI-A in W-075d0 and W-075d5, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
     {
       "validity": {
         "type": "Between",
@@ -14,7 +58,8 @@
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
-        "presence": "NOT_YET_VERIFIED"
+        "reference": "s.80CCH(2)",
+        "presence": "PRESENT"
       },
       "provision2025": {
         "instrument": "Income-tax Act, 2025",

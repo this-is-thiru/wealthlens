@@ -32,7 +32,6 @@ import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,7 +48,6 @@ class DonationDeductionTest {
     private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
     private static final TaxYearId TY_2026 = TaxYearId.of(2026);
-    private static final DateRange WHOLE_YEAR = DateRange.between(LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31));
 
     private record Case(RegimeCode regime, String grossTotal, String agniveer, List<Donation> donations,
             Optional<String> rent, Optional<Assessee> assessee, TaxYearId year) {
@@ -88,7 +86,8 @@ class DonationDeductionTest {
         Optional<AgniveerCorpusFund> agniveer = Money.of(c.agniveer()).isGreaterThan(Money.ZERO)
                 ? Optional.of(new AgniveerCorpusFund(Money.of(c.agniveer()), Money.ZERO))
                 : Optional.empty();
-        List<Tenancy> tenancies = c.rent().map(rent -> List.of(new Tenancy(WHOLE_YEAR, "ANY_OTHER_PLACE", false,
+        DateRange wholeYear = DateRange.between(c.year().startsOn(), c.year().endsOn());
+        List<Tenancy> tenancies = c.rent().map(rent -> List.of(new Tenancy(wholeYear, "ANY_OTHER_PLACE", false,
                 Money.of(rent)))).orElse(List.of());
         Optional<RentDeclaration> declaration = c.rent().map(rent -> new RentDeclaration(12, false, false));
         EngineInputs inputs = new EngineInputs(c.year(), c.regime(),
@@ -237,11 +236,35 @@ class DonationDeductionTest {
     }
 
     @Test
-    void evaluate_whenDonatingInTaxYear2025_refusesUntilItsRowsExist() {
-        // When / Then — s.80G is W-075d's
-        assertThatThrownBy(() -> run(Case.of(donation(DonationClause.NAMED_FUND, "50000"))
-                        .year(TaxYearId.of(2025))))
-                .hasMessageContaining("W-075d5");
+    void evaluate_whenDonatingInTaxYear2025_appliesSection80g() {
+        // When — 1961 s.80G (D-148): PM CARES 50,000 (TOLA 2020, whole); a charitable institution 2,40,000 over the
+        // 1,00,000 limit, half; the Drought Relief Fund 20,000, half; 2,500 in cash, nil
+        NodeResult pmCares = run(Case.of(donation(DonationClause.NAMED_FUND, "50000")).year(TaxYearId.of(2025)));
+        NodeResult charitable = run(Case.of(donation(DonationClause.CHARITABLE_INSTITUTION, "240000"))
+                .year(TaxYearId.of(2025)));
+        NodeResult drought = run(Case.of(donation(DonationClause.DROUGHT_RELIEF_FUND, "20000"))
+                .year(TaxYearId.of(2025)));
+        NodeResult cash = run(Case.of(new Donation(DonationClause.NAMED_FUND, Money.of("2500"), true, true))
+                .year(TaxYearId.of(2025)));
+
+        // Then
+        assertThat(pmCares.value()).isEqualTo(rupees("50000"));
+        assertThat(charitable.value()).isEqualTo(rupees("50000"));
+        assertThat(drought.value()).isEqualTo(rupees("10000"));
+        assertThat(cash.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025DonationsAndRentAreClaimed_ordersSection80gBeforeSection80gg() {
+        // When — as TY 2026-27: 80G's 20,000 under a 45,000 limit, then 80GG on 4,30,000 → 17,000; over it, refused
+        NodeResult within = run(Case.of(donation(DonationClause.CHARITABLE_INSTITUTION, "40000")).withRent("60000")
+                .year(TaxYearId.of(2025)));
+
+        // Then — 1,50,000 + 20,000 + 17,000
+        assertThat(within.value()).isEqualTo(rupees("187000"));
+        assertThatThrownBy(() -> run(Case.of(donation(DonationClause.CHARITABLE_INSTITUTION, "60000"))
+                        .withRent("60000").year(TaxYearId.of(2025))))
+                .hasMessageContaining("OQ-23");
     }
 
     @Test

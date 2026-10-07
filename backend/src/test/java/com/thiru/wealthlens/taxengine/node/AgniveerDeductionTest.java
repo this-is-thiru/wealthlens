@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.AgniveerCorpusFund;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
@@ -61,11 +60,14 @@ class AgniveerDeductionTest {
     }
 
     @Test
-    void evaluate_whenAnAgniveerSubscribesInTaxYear2025_refusesNamingTheItemThatAddsTheRows() {
-        // When / Then — D-147: 80CCH's TY 2025-26 rows are W-075d5's
-        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD, "30000", "30000"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-075d5");
+    void evaluate_whenAnAgniveerSubscribesInTaxYear2025_deductsUnderSection80cch() {
+        // When — 1961 s.80CCH (D-148): 30,000 + 30,000; the new regime keeps (2) only (s.115BAC(2)(i))
+        NodeResult old = run(TaxYearId.of(2025), OLD, "30000", "30000");
+        NodeResult regime = run(TaxYearId.of(2025), NEW, "30000", "30000");
+
+        // Then
+        assertThat(old.value()).isEqualTo(MoneyValue.of(Money.of("60000")));
+        assertThat(regime.value()).isEqualTo(MoneyValue.of(Money.of("30000")));
     }
 
     @Test
