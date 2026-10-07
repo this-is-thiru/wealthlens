@@ -54,6 +54,7 @@ class GeneratedConstantsTest {
             "DED-NPS-EMPLOYER-OTHER",
             "DED-NPS-OWN",
             "DED-PREMIUM-SHARE",
+            "DED-RENT-PAID",
             "DED-SCHEDULE-XV",
             "DED-SPECIFIED-DISEASE",
             "DED-SPECIFIED-DISEASE-SENIOR",

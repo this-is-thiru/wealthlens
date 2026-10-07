@@ -1054,7 +1054,7 @@ if that is not enough for the item in hand.
 | W-075c1 | Chapter VIII, disability and treatment, TY 2026-27 *(D-137)*: s.127 (80DD), s.128 (80DDB, with (4)'s senior ₹1,00,000), s.154 (80U) | `DR 01` R15 | s.127's "up to" — fixed or capped at spending |
 | W-075c2 | Chapter VIII, loan interest, TY 2026-27 *(D-137)*: s.129 (80E), s.130 (80EE), s.131 (80EEA), s.132 (80EEB) | `DR 01` R15 | the house-property bar on the same interest recorded for W-078 |
 | W-075c3 | Chapter VIII, Agniveer Corpus Fund, TY 2026-27 *(D-137)*: s.125 | `DR 01` R15 | whether the Government's contribution is income first (cf. OQ-14) |
-| W-075c4 | Chapter VIII, rent without HRA, TY 2026-27 *(D-137)*: s.134 (80GG), last among the deductions | `DR 01` R15 | ⚠ the "prescribed" conditions (Rules 2026) unread |
+| W-075c4 | Chapter VIII, rent without HRA, TY 2026-27 *(D-137)*: s.134 (80GG), last among the deductions | `DR 01` R15 | ⚠ the "prescribed" conditions (Rules 2026) unread | **Erratum (W-075c4, 2026-10-07):** the ⚠ is cleared — S4 r.65 (p.1581) prescribes only the Form No. 31 declaration, no area limit (D-141). Verified by: Gazette CG-DL-E-20032026-271092 p.1581.
 | W-075c6 | Chapter VIII, donations, TY 2026-27 *(D-137)*: s.133 (80G) | `DR 01` R15 | |
 | W-075d | Chapter VIII rows, TY 2025-26 versions *(D-129)* | `DR 01` R15 | ⚠ needs a sourcing round: 1961 Chapter VI-A as amended to AY 2026-27 |
 | W-075a3 | Chapter VIII rows, Schedule XV (c), (j), (k), (l), TY 2026-27 *(D-134)* | `DR 01` R15 | ⚠ waits on OQ-16 (which salary for (c)) and OQ-17 (para 2's reach); placed after W-075d by the owner |

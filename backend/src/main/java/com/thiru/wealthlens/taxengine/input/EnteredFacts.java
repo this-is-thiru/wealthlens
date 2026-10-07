@@ -43,7 +43,7 @@ import java.util.Optional;
  * excess (D-127), the Chapter VIII payments with the deductions (D-132), life policies with their premiums'
  * share (D-134), health payments with 80D (D-136), disabled dependants' support and specified-disease treatment
  * with 80DD and 80DDB (D-138), loan interest with 80E–80EEB (D-139), the Agniveer Corpus Fund with s.16(l) and
- * s.125 (D-140). Every later
+ * s.125 (D-140), the rent declaration with s.134 (D-141). Every later
  * income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -76,6 +76,7 @@ import java.util.Optional;
  * @param educationLoanInterest each education loan's interest paid under s.129, in the order entered
  * @param purposeLoanInterest each house or electric-vehicle loan's interest under s.130–132, in the order entered
  * @param agniveerCorpusFund the Agniveer Corpus Fund account, if the assessee is an Agniveer
+ * @param rentDeclaration the Form No. 31 declaration claiming s.134 on the tenancies' rent, if made
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -105,7 +106,8 @@ public record EnteredFacts(
         List<SpecifiedDiseaseTreatment> specifiedDiseaseTreatment,
         List<EducationLoanInterest> educationLoanInterest,
         List<PurposeLoanInterest> purposeLoanInterest,
-        Optional<AgniveerCorpusFund> agniveerCorpusFund) {
+        Optional<AgniveerCorpusFund> agniveerCorpusFund,
+        Optional<RentDeclaration> rentDeclaration) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -115,6 +117,10 @@ public record EnteredFacts(
         if (agniveerCorpusFund == null) {
             throw new IllegalArgumentException(
                     "EnteredFacts.agniveerCorpusFund may not be null; pass Optional.empty() where there is none");
+        }
+        if (rentDeclaration == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.rentDeclaration may not be null; pass Optional.empty() where there is none");
         }
         if (retirementFundHistory == null) {
             throw new IllegalArgumentException(
@@ -161,6 +167,6 @@ public record EnteredFacts(
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                Optional.empty());
+                Optional.empty(), Optional.empty());
     }
 }

@@ -1047,6 +1047,11 @@ a single year's inputs. See `M3`.
 | `DED-RETURN-001` | Deductions under **Part C** of Chapter VIII (the profit-linked ones) are denied where the return is not furnished by the s.263(1) due date or the claim is not made in that return. Part B (the payment-based deductions a salaried user claims) is **not** subject to this bar. | **s.122(5)** | — | — | VERIFIED (S2, s.122(5)) |
 | `DED-NEWREGIME-001` | In the new regime the **entire** Chapter VIII is disallowed except **s.124(1), s.124(2), s.125(2) and s.146**. So in the new regime a salaried individual has exactly **two** Chapter VIII deductions available: employer NPS and the Agniveer Government contribution. | **s.202(2)(a)(xii)** | NEW | — | VERIFIED (S2) |
 
+> **Addendum (W-075c4, 2026-10-07, D-141):** s.134(3)'s *"as may be prescribed"* is S4 **r.65** (p.1581): *"the
+> assessee shall file declaration in Form No. 31"* (pp.1913–1914) — the only condition; **no area or place limit is
+> prescribed** (the Rules' amendment chain after G.S.R. 198(E) not traced, as S6 notes). Form 31 asks the *"Period of
+> Stay (in Months)"*, which limb (b) counts (OQ-22). `DED-80GG-001` and `-002` are built as `DED-RENT-PAID` (TY 2026-27).
+
 ### **H-7 verdict: CONFIRMED on both limbs.**
 
 `FACT (S2, Schedule XV para 1(f))`: *"contribution by an employee to a recognised provident fund"* is

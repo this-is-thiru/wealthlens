@@ -54,8 +54,9 @@ import java.util.stream.Collectors;
  * line naming the regime. TY 2025-26 has none of these rows yet (D-129 C2a), so anything entered there is refused.
  * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136); and s.154, s.127
  * and s.128 ({@link DisabilityDeduction}; D-138); s.129–132, loan interest ({@link LoanInterestDeduction}; D-139); s.125,
- * the Agniveer Corpus Fund ({@link AgniveerDeduction}; D-140). The other deductions are later items (W-075a3,
- * W-075c4–c6).
+ * the Agniveer Corpus Fund ({@link AgniveerDeduction}; D-140); last, s.134, rent paid, on total income before it —
+ * gross total income less the rest, held within it ({@link RentPaidDeduction}; D-141). The other deductions are later
+ * items (W-075a3, W-075c5, W-075c6).
  */
 public final class ChapterEightNode implements ComputationNode {
 
@@ -82,6 +83,7 @@ public final class ChapterEightNode implements ComputationNode {
         rules.addAll(DisabilityDeduction.RULES);
         rules.addAll(LoanInterestDeduction.RULES);
         rules.addAll(AgniveerDeduction.RULES);
+        rules.addAll(RentPaidDeduction.RULES);
         return Set.copyOf(rules);
     }
 
@@ -94,13 +96,7 @@ public final class ChapterEightNode implements ComputationNode {
                 .toList();
         List<LifeInsurancePolicy> policies = ctx.inputs().entered().lifeInsurancePolicies();
         if (payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty() && policies.isEmpty()
-                && ctx.inputs().entered().healthPayments().isEmpty()
-                && ctx.inputs().entered().disabledDependantSupport().isEmpty()
-                && ctx.inputs().entered().specifiedDiseaseTreatment().isEmpty()
-                && ctx.inputs().entered().educationLoanInterest().isEmpty()
-                && ctx.inputs().entered().purposeLoanInterest().isEmpty()
-                && !AgniveerDeduction.entered(ctx)
-                && !certifiedDisabled(ctx)) {
+                && !sectionFactsEntered(ctx)) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireRowsThisYear(ctx);
@@ -114,7 +110,20 @@ public final class ChapterEightNode implements ComputationNode {
         lines.addAll(DisabilityDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(LoanInterestDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(AgniveerDeduction.lines(ctx, lines.size() + 1));
+        RentPaidDeduction.line(ctx, totalIncomeBefore(ctx, lines), lines.size() + 1).ifPresent(lines::add);
         return withinGrossTotal(ctx, lines);
+    }
+
+    /** Whether anything s.125–134 or s.154 reads is entered — the sections after the s.123 family. */
+    private static boolean sectionFactsEntered(NodeContext ctx) {
+        return !ctx.inputs().entered().healthPayments().isEmpty()
+                || !ctx.inputs().entered().disabledDependantSupport().isEmpty()
+                || !ctx.inputs().entered().specifiedDiseaseTreatment().isEmpty()
+                || !ctx.inputs().entered().educationLoanInterest().isEmpty()
+                || !ctx.inputs().entered().purposeLoanInterest().isEmpty()
+                || AgniveerDeduction.entered(ctx)
+                || RentPaidDeduction.entered(ctx)
+                || certifiedDisabled(ctx);
     }
 
     /** Whether the assessee is certified disabled — s.154 applies with nothing entered. */
@@ -282,15 +291,25 @@ public final class ChapterEightNode implements ComputationNode {
                 + " regime");
     }
 
+    /** Total income before s.134 (s.134(5)): gross total income less the deductions so far, held within it. */
+    private static Money totalIncomeBefore(NodeContext ctx, List<TraceLine> lines) {
+        Money grossTotal = ctx.get(NodeIds.GTI, MoneyValue.class).asMoney().floorAtZero();
+        return grossTotal.minus(Money.min(deducted(lines), grossTotal));
+    }
+
+    private static Money deducted(List<TraceLine> lines) {
+        return lines.stream()
+                .filter(line -> line.kind() == StepKind.DEDUCTION)
+                .map(line -> ((MoneyValue) line.out()).asMoney())
+                .reduce(Money.ZERO, Money::plus);
+    }
+
     /** s.122(2): the deductions together never exceed gross total income; a line only where that binds. */
     private static NodeResult withinGrossTotal(NodeContext ctx, List<TraceLine> lines) {
         if (lines.isEmpty()) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
-        Money total = lines.stream()
-                .filter(line -> line.kind() == StepKind.DEDUCTION)
-                .map(line -> ((MoneyValue) line.out()).asMoney())
-                .reduce(Money.ZERO, Money::plus);
+        Money total = deducted(lines);
         Money grossTotal = ctx.get(NodeIds.GTI, MoneyValue.class).asMoney().floorAtZero();
         Money limit = TemporallyApportionedCap.apply(ctx.rule(RuleIds.DED_WITHIN_GROSS_TOTAL), ctx.inputs().temporal(),
                 CapContext.of(GROSS_TOTAL_INCOME, grossTotal)).value();

@@ -35,6 +35,7 @@ public final class RuleIds {
     public static final RuleId DED_NPS_EMPLOYER_OTHER = new RuleId("DED-NPS-EMPLOYER-OTHER");
     public static final RuleId DED_NPS_OWN = new RuleId("DED-NPS-OWN");
     public static final RuleId DED_PREMIUM_SHARE = new RuleId("DED-PREMIUM-SHARE");
+    public static final RuleId DED_RENT_PAID = new RuleId("DED-RENT-PAID");
     public static final RuleId DED_SCHEDULE_XV = new RuleId("DED-SCHEDULE-XV");
     public static final RuleId DED_SPECIFIED_DISEASE = new RuleId("DED-SPECIFIED-DISEASE");
     public static final RuleId DED_SPECIFIED_DISEASE_SENIOR = new RuleId("DED-SPECIFIED-DISEASE-SENIOR");
