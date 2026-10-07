@@ -707,6 +707,8 @@ Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` a
 
 ## Notes for resume
 
+**Session 12 (2026-10-07), paused at the session limit with everything committed:** W-075c4 (80GG), W-075c6 (80G), the W-075d split with W-075d0–d5 (all of Chapter VIII for TY 2025-26, from the 1961 Act and nine amending Acts plus TOLA 2020), W-076 (close-out; two R13 revisions), W-076a (six catalogue entries). D-141–D-150; OQ-22–OQ-24 raised. Build GREEN, 2481 tests. Next: W-076b. Scratchpad files did not survive: Gazette PDFs refetch from egazette by the numbers in `sources/2026-10-07-chapter-via.md` (A0–A10).
+
 **W-075d0 sourcing (session 12, 2026-10-07):**
 - `sources/2026-10-07-chapter-via.md` holds 1961 Chapter VI-A as at AY 2026-27, READ in the thc consolidation (to Act 7 of 2019) and nine amending Acts.
 - **The three Acts the TY 2025-26 goldens' PROVISIONAL note names are now located:** F(No.2)A 2019 = egazette 2019/209695, TLA 2019 = 2019/214648, interim FA 2024 = 2024/252143. Only their Chapter VI-A was read, so the note on the goldens is unchanged.
