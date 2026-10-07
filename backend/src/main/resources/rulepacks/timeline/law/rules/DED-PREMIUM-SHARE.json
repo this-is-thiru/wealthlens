@@ -1,9 +1,71 @@
 {
   "ruleId": "DED-PREMIUM-SHARE",
-  "_note": "A life insurance premium counts towards s.123 only up to a share of the policy's actual capital sum assured (D-134, D-135; rulebook DED-80C-ITEMS-001): \"The deductions shall apply only to so much of any premium or other payment made on an insurance policy, other than a contract for a deferred annuity, — (a) as is up to 20 % of the actual capital sum assured, in respect of a policy issued on or before the 31st March, 2012; (b) as is up to 10 % of the actual capital sum assured, in respect of a policy issued on or after the 1st April, 2012; (c) as is up to 15 % of the actual capital sum assured, if the policy is issued on or after the 1st April, 2013 and where such policy covers the life of, — (i) a person with a disability or severe disability as referred to in section 154; or (ii) a person suffering from a disease or ailment specified in the rules made under section 128\" (Schedule XV para 2(1), Gazette 265620, pp.563–564); \"actual capital sum assured\" is the minimum amount assured on the insured event, without premiums to be returned or any bonus (para 2(2)). The bands are the definition (PremiumShareBands); ChapterEightNode takes, per policy, the most specific band holding it and the lesser of the premium and the share, which feeds LIFE_INSURANCE_PREMIUM into DED-SCHEDULE-XV. Whether para 2 reaches Schedule XV (j), (k), (l) is OQ-17. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart is unread (W-075d).",
+  "_note": "A life insurance premium counts towards s.123 only up to a share of the policy's actual capital sum assured (D-134, D-135; rulebook DED-80C-ITEMS-001): \"The deductions shall apply only to so much of any premium or other payment made on an insurance policy, other than a contract for a deferred annuity, — (a) as is up to 20 % of the actual capital sum assured, in respect of a policy issued on or before the 31st March, 2012; (b) as is up to 10 % of the actual capital sum assured, in respect of a policy issued on or after the 1st April, 2012; (c) as is up to 15 % of the actual capital sum assured, if the policy is issued on or after the 1st April, 2013 and where such policy covers the life of, — (i) a person with a disability or severe disability as referred to in section 154; or (ii) a person suffering from a disease or ailment specified in the rules made under section 128\" (Schedule XV para 2(1), Gazette 265620, pp.563–564); \"actual capital sum assured\" is the minimum amount assured on the insured event, without premiums to be returned or any bonus (para 2(2)). The bands are the definition (PremiumShareBands); ChapterEightNode takes, per policy, the most specific band holding it and the lesser of the premium and the share, which feeds LIFE_INSURANCE_PREMIUM into DED-SCHEDULE-XV. Whether para 2 reaches Schedule XV (j), (k), (l) is OQ-17. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80C(3), (3A), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80C(3) (thc p.333): a policy \"issued on or before the 31st day of March, 2012\" counts \"as is not in excess of twenty per cent of the actual capital sum assured\"; (3A): one \"issued on or after the 1st day of April, 2012 as is not in excess of ten per cent\", and by its proviso one issued on or after 1-4-2013 on the life of a s.80U person with disability or severe disability, or one \"suffering from disease or ailment as specified in the rules made under section 80DDB\", \"fifteen per cent.\" — the same three bands. sources/2026-10-07-chapter-via.md B22. D-144.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80C(3), (3A)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Schedule XV para 2",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "PremiumShareBands",
+        "bands": [
+          {
+            "to": "2012-03-31",
+            "onlyCoveringDisabilityOrDisease": false,
+            "percent": "20"
+          },
+          {
+            "from": "2012-04-01",
+            "onlyCoveringDisabilityOrDisease": false,
+            "percent": "10"
+          },
+          {
+            "from": "2013-04-01",
+            "onlyCoveringDisabilityOrDisease": true,
+            "percent": "15"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80C(3), (3A) — (3) subs. by Act 23 of 2012, s.24 (w.e.f. 1-4-2013), (3A) ins. by s.24 ibid., its proviso ins. by Act 17 of 2013, s.12 (w.e.f. 1-4-2014)",
+        "gazetteRef": "not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "2014-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(3), (3A), p.333",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80C(3), (3A) after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
     {
       "validity": {
         "type": "Between",
@@ -17,7 +79,8 @@
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
-        "presence": "NOT_YET_VERIFIED"
+        "reference": "s.80C(3), (3A)",
+        "presence": "PRESENT"
       },
       "provision2025": {
         "instrument": "Income-tax Act, 2025",

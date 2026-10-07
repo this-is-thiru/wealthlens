@@ -19,7 +19,6 @@ import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -150,10 +149,19 @@ class InvestmentAndPensionDeductionTest {
     }
 
     @Test
-    void taxYear2025Pack_whenLoaded_holdsNoneOfTheseRows() {
-        // Then — D-129 C2a: the TY 2025-26 versions wait for W-075d
-        assertThat(load(TaxYearId.of(2025)).rules().keySet()).doesNotContainAnyElementsOf(List.of(
-                RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_EMPLOYER_GOVT, RuleIds.DED_NPS_EMPLOYER_OTHER,
-                RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME, RuleIds.DED_NPS_OWN, RuleIds.DED_WITHIN_GROSS_TOTAL));
+    void taxYear2025Pack_whenItsEmployerRowsMeetTenLakh_allowSection80CcdTwosShares() {
+        // Given — D-144: the TY 2025-26 versions under 1961 s.80CCD(2) (F(No.2)A 2019 s.24, FA 2022 s.20, F(No.2)A 2024 s.25)
+        TaxYearId year = TaxYearId.of(2025);
+        RulePack pack = load(year);
+        TemporalContext during = TemporalContext.forTaxYear(year, LocalDate.of(2025, 9, 21));
+        CapContext salary = CapContext.of(SALARY, Money.of("1000000"));
+
+        // When / Then — 14%, 10%, 14% of 10,00,000
+        assertThat(TemporallyApportionedCap.apply(pack.rule(RuleIds.DED_NPS_EMPLOYER_GOVT), during, salary).value())
+                .isEqualTo(Money.of("140000"));
+        assertThat(TemporallyApportionedCap.apply(pack.rule(RuleIds.DED_NPS_EMPLOYER_OTHER), during, salary).value())
+                .isEqualTo(Money.of("100000"));
+        assertThat(TemporallyApportionedCap.apply(pack.rule(RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME), during, salary)
+                .value()).isEqualTo(Money.of("140000"));
     }
 }

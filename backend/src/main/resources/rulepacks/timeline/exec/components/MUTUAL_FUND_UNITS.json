@@ -1,5 +1,5 @@
 {
-  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(m): \"subscription to any units of any Mutual Fund referred to in serial number 20 or 21 of the Table in Schedule VII or from the Administrator or the specified company under any plan formulated in accordance with such scheme notified by the Central Government\" (Gazette 265620, p.562). D-130.",
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(m): \"subscription to any units of any Mutual Fund referred to in serial number 20 or 21 of the Table in Schedule VII or from the Administrator or the specified company under any plan formulated in accordance with such scheme notified by the Central Government\" (Gazette 265620, p.562). D-130. TY 2025-26: Income-tax Act, 1961 s.80C(2)(xiii) (thc p.331): \"as subscription to any units of any Mutual Fund referred to in clause (23D) of section 10 … under any plan formulated in accordance with such scheme as the Central Government may … specify\". sources/2026-10-07-chapter-via.md; D-144.",
   "code": "MUTUAL_FUND_UNITS",
   "displayName": "Notified mutual fund units",
   "kind": "QUALIFYING_PAYMENT",
@@ -11,7 +11,7 @@
   "salaryBaseFor": [],
   "lifecycle": {
     "validity": {
-      "from": "2026-04-01"
+      "from": "2025-04-01"
     },
     "onWithdrawal": {
       "type": "HistoricalOnly"
@@ -19,7 +19,7 @@
   },
   "provenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(m), p.562; s.123, p.159",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(m), p.562; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(xiii), p.331",
     "accessedOn": "2026-10-06",
     "verificationLevel": "SOURCE_CHECKED"
   }

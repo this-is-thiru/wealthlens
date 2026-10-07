@@ -1,9 +1,86 @@
 {
   "ruleId": "DED-SCHEDULE-XV",
-  "_note": "The s.123 deduction: \"the whole of the amount paid or deposited in the tax year, being the aggregate of the sums enumerated in Schedule XV, as does not exceed ₹ 150000\" (s.123, p.159). Contributors are the Schedule XV clauses, in the Schedule's order (para 1, pp.561–563); clause (a) arrives with W-075a2 (D-134), each policy's premium already limited by para 2 (DED-PREMIUM-SHARE); clauses (c), (j), (k), (l) are held for W-075a3 (OQ-16, OQ-17). EMPLOYEE_NPS is sub-capped first at para 1(y)(i)'s \"10% of salary, including dearness allowance, if the terms of employment so provide, but excluding all other allowances and perquisites\" (p.563) — base SALARY, the employee-pension salary; limb (ii)'s 20% of gross total income for a non-employee is not modelled. What the sub-cap excludes feeds DED-NPS-OWN (s.124(3), (5), (10)). The new regime computes total income without \"Chapter VIII other than the provisions of sections 124(1) and 124(2), or 125(2) or 146\" (s.202(2)(a)(xii), p.227), so the old regime only. TY 2026-27 only; the 1961 version is W-075d (D-129 C2a). rulebook DED-80C-001, -ITEMS-001, -NPS-CAP-001. The 1961 counterpart, s.80C, 80CCC, 80CCD(1), 80CCE, is unread (W-075d).",
+  "_note": "The s.123 deduction: \"the whole of the amount paid or deposited in the tax year, being the aggregate of the sums enumerated in Schedule XV, as does not exceed ₹ 150000\" (s.123, p.159). Contributors are the Schedule XV clauses, in the Schedule's order (para 1, pp.561–563); clause (a) arrives with W-075a2 (D-134), each policy's premium already limited by para 2 (DED-PREMIUM-SHARE); clauses (c), (j), (k), (l) are held for W-075a3 (OQ-16, OQ-17). EMPLOYEE_NPS is sub-capped first at para 1(y)(i)'s \"10% of salary, including dearness allowance, if the terms of employment so provide, but excluding all other allowances and perquisites\" (p.563) — base SALARY, the employee-pension salary; limb (ii)'s 20% of gross total income for a non-employee is not modelled. What the sub-cap excludes feeds DED-NPS-OWN (s.124(3), (5), (10)). The new regime computes total income without \"Chapter VIII other than the provisions of sections 124(1) and 124(2), or 125(2) or 146\" (s.202(2)(a)(xii), p.227), so the old regime only. TY 2026-27 and TY 2025-26; the 1961 version below (W-075d1). rulebook DED-80C-001, -ITEMS-001, -NPS-CAP-001. The 1961 counterpart, s.80C, 80CCC, 80CCD(1), 80CCE, is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCE (thc p.340): \"The aggregate amount of deductions under section 80C, section 80CCC and sub-section (1) of section 80CCD shall not, in any case, exceed one hundred and fifty thousand rupees\" — the same ceiling over the same sums: s.80C(2)(i)–(xxv) (pp.330–333; (xxv) the Central Government employee's additional pension account, F(No.2)A 2019 s.23), s.80CCC (p.338, Schedule XV (x)) and s.80CCD(1) (pp.338–339, Schedule XV (y)), whose \"(a) in the case of an employee, ten per cent of his salary\" is the EMPLOYEE_NPS sub-cap; 80C(2)(iii), (x), (xi), (xii) are held as Schedule XV (c), (j), (k), (l) are. The new regime excludes Chapter VI-A other than s.80CCD(2), s.80CCH(2) and s.80JJAA (s.115BAC(2)(i), FA 2023 s.52(C)). sources/2026-10-07-chapter-via.md B4–B9, B20–B23, M1, M14. D-144.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "ss.80C, 80CCC, 80CCD(1), 80CCE; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.123 and Schedule XV",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AggregateWithCeiling",
+        "contributors": [
+          "LIFE_INSURANCE_PREMIUM",
+          "DEFERRED_ANNUITY",
+          "PROVIDENT_FUNDS_ACT_FUND",
+          "NOTIFIED_PROVIDENT_FUND",
+          "EMPLOYEE_PF",
+          "EMPLOYEE_SUPERANNUATION",
+          "NOTIFIED_DEPOSIT_SCHEME",
+          "SAVINGS_CERTIFICATE",
+          "MUTUAL_FUND_UNITS",
+          "MUTUAL_FUND_PENSION_FUND",
+          "NATIONAL_HOUSING_BANK_SCHEME",
+          "HOUSING_FINANCE_DEPOSIT",
+          "TUITION_FEES",
+          "HOUSE_PURCHASE_PAYMENT",
+          "BANK_TERM_DEPOSIT",
+          "NABARD_BONDS",
+          "SENIOR_CITIZEN_SAVINGS",
+          "POST_OFFICE_TIME_DEPOSIT",
+          "GOVERNMENT_PENSION_ADDITIONAL",
+          "PENSION_FUND_ANNUITY",
+          "EMPLOYEE_NPS",
+          "ELIGIBLE_ISSUE_SUBSCRIPTION"
+        ],
+        "ceiling": "150000",
+        "subCaps": {
+          "EMPLOYEE_NPS": {
+            "type": "PercentOfBase",
+            "percent": "10",
+            "base": "SALARY"
+          }
+        }
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80CCE — \"one hundred and fifty thousand rupees\" subs. by Act 25 of 2014, s.29 (w.e.f. 1-4-2015), with s.80C(1) subs. by s.27 ibid.",
+        "gazetteRef": "not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "2015-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C pp.330–335, s.80CCC p.338, s.80CCD(1) pp.338–339, s.80CCE p.340; s.80C(2)(xxv) ins. by egazette 2019/209695, Finance (No. 2) Act, 2019 s.23, p.16; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 ss.80C, 80CCC, 80CCD(1) and 80CCE after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
     {
       "validity": {
         "type": "Between",
@@ -17,7 +94,8 @@
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
-        "presence": "NOT_YET_VERIFIED"
+        "reference": "ss.80C, 80CCC, 80CCD(1), 80CCE; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
       },
       "provision2025": {
         "instrument": "Income-tax Act, 2025",

@@ -51,7 +51,8 @@ import java.util.stream.Collectors;
  * contribution sub-capped first; what that sub-cap left, with a minor's deposit, under s.124(3)–(4) — never the same
  * amount twice (s.124(5), (10)); the employer's pension contribution by employer and regime (s.124(1)–(2)); then all
  * of it within gross total income (s.122(2)). A row the regime excludes, with something entered for it, gives a nil
- * line naming the regime. TY 2025-26 has none of these rows yet (D-129 C2a), so anything entered there is refused.
+ * line naming the regime. TY 2025-26 has these rows under the 1961 Act (ss.80C, 80CCC, 80CCD, 80CCE, 80A(2); D-144);
+ * a section whose 1961 rows are not built yet is refused naming its item.
  * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136); and s.154, s.127
  * and s.128 ({@link DisabilityDeduction}; D-138); s.129–132, loan interest ({@link LoanInterestDeduction}; D-139); s.125,
  * the Agniveer Corpus Fund ({@link AgniveerDeduction}; D-140); s.133, donations, on adjusted gross total income —
@@ -65,6 +66,9 @@ public final class ChapterEightNode implements ComputationNode {
     private static final BaseId SALARY = new BaseId("SALARY");
     private static final BaseId GROSS_TOTAL_INCOME = new BaseId("GROSS_TOTAL_INCOME");
     private static final Set<RuleId> PAYMENT_ROWS = Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN);
+    private static final Set<RuleId> INVESTMENT_RULES = Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN,
+            RuleIds.DED_NPS_EMPLOYER_GOVT, RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME,
+            RuleIds.DED_PREMIUM_SHARE);
 
     @Override
     public NodeId produces() {
@@ -78,9 +82,8 @@ public final class ChapterEightNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN,
-                RuleIds.DED_NPS_EMPLOYER_GOVT, RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME,
-                RuleIds.DED_WITHIN_GROSS_TOTAL, RuleIds.DED_PREMIUM_SHARE));
+        Set<RuleId> rules = new HashSet<>(INVESTMENT_RULES);
+        rules.add(RuleIds.DED_WITHIN_GROSS_TOTAL);
         rules.addAll(HealthInsuranceDeduction.RULES);
         rules.addAll(DisabilityDeduction.RULES);
         rules.addAll(LoanInterestDeduction.RULES);
@@ -98,11 +101,12 @@ public final class ChapterEightNode implements ComputationNode {
                 .filter(contribution -> contribution.fund() == EmployerFund.NOTIFIED_PENSION_SCHEME)
                 .toList();
         List<LifeInsurancePolicy> policies = ctx.inputs().entered().lifeInsurancePolicies();
-        if (payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty() && policies.isEmpty()
-                && !sectionFactsEntered(ctx)) {
+        boolean investmentsEntered = !(payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty()
+                && policies.isEmpty());
+        if (!investmentsEntered && !sectionFactsEntered(ctx)) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
-        requireRowsThisYear(ctx);
+        requireRowsThisYear(ctx, investmentsEntered);
         Map<ComponentCode, Money> paid = paid(ctx, payLines, payments);
         List<TraceLine> lines = new ArrayList<>();
         premiums(ctx, policies, paid, lines);
@@ -151,11 +155,29 @@ public final class ChapterEightNode implements ComputationNode {
                 .toList();
     }
 
-    private static void requireRowsThisYear(NodeContext ctx) {
-        if (!ctx.pack().rules().containsKey(RuleIds.DED_SCHEDULE_XV)) {
-            throw new IllegalArgumentException("The Chapter VIII deductions for " + ctx.inputs().taxYear().label()
-                    + " are not in the rule pack yet (W-075d, D-129); what was entered for them cannot be computed"
-                    + " for this year");
+    /**
+     * Each section with something entered needs its rows in this year's pack; TY 2025-26 gains them section by section
+     * (W-075d1–d5), so a section not yet there is refused naming the item that adds it (D-144).
+     */
+    private static void requireRowsThisYear(NodeContext ctx, boolean investmentsEntered) {
+        requireRows(ctx, investmentsEntered, INVESTMENT_RULES, "W-075d1");
+        requireRows(ctx, !ctx.inputs().entered().healthPayments().isEmpty(), HealthInsuranceDeduction.RULES, "W-075d2");
+        requireRows(ctx, !ctx.inputs().entered().disabledDependantSupport().isEmpty()
+                || !ctx.inputs().entered().specifiedDiseaseTreatment().isEmpty() || certifiedDisabled(ctx),
+                DisabilityDeduction.RULES, "W-075d3");
+        requireRows(ctx, !ctx.inputs().entered().educationLoanInterest().isEmpty()
+                || !ctx.inputs().entered().purposeLoanInterest().isEmpty(), LoanInterestDeduction.RULES, "W-075d4");
+        requireRows(ctx, AgniveerDeduction.entered(ctx), AgniveerDeduction.RULES, "W-075d5");
+        requireRows(ctx, DonationDeduction.entered(ctx), DonationDeduction.RULES, "W-075d5");
+        requireRows(ctx, RentPaidDeduction.entered(ctx), RentPaidDeduction.RULES, "W-075d5");
+    }
+
+    private static void requireRows(NodeContext ctx, boolean entered, Set<RuleId> rows, String item) {
+        Set<RuleId> held = ctx.pack().rules().keySet();
+        if (entered && !(held.containsAll(rows) && held.contains(RuleIds.DED_WITHIN_GROSS_TOTAL))) {
+            throw new IllegalArgumentException("What was entered needs Chapter VIII rows the "
+                    + ctx.inputs().taxYear().label() + " rule pack does not hold yet (" + item + ", D-144); it cannot"
+                    + " be computed for this year");
         }
     }
 

@@ -63,12 +63,16 @@ class HealthInsuranceDeductionTest {
     }
 
     private static NodeResult run(RegimeCode regime, HealthPayment... payments) {
+        return run(TY_2026, regime, payments);
+    }
+
+    private static NodeResult run(TaxYearId year, RegimeCode regime, HealthPayment... payments) {
         RulePack pack = new ClasspathRulePackProvider(
-                        "rulepacks", Set.of(TY_2026), new JsonPackAssembler(LockedInstruments.of(TY_2026)))
-                .load(TY_2026);
+                        "rulepacks", Set.of(year), new JsonPackAssembler(LockedInstruments.of(year)))
+                .load(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
-        EngineInputs inputs = new EngineInputs(TY_2026, regime,
-                TemporalContext.forTaxYear(TY_2026, LocalDate.of(2026, 9, 21)),
+        EngineInputs inputs = new EngineInputs(year, regime,
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
@@ -79,6 +83,14 @@ class HealthInsuranceDeductionTest {
                 .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of()))
                 .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of()))
                 .run(new ChapterEightNode());
+    }
+
+    @Test
+    void evaluate_whenHealthPaymentsAreEnteredForTaxYear2025_refusesNamingTheItemThatAddsThem() {
+        // When / Then — D-144: 80D's TY 2025-26 rows are W-075d2's
+        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD, self(HealthPaymentKind.INSURANCE_PREMIUM, "20000")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("W-075d2");
     }
 
     @Test

@@ -1,5 +1,5 @@
 {
-  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(d): \"contribution by an individual to any provident fund to which the Provident Funds Act, 1925 (19 of 1925) applies\" (Gazette 265620, p.561). D-130.",
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(d): \"contribution by an individual to any provident fund to which the Provident Funds Act, 1925 (19 of 1925) applies\" (Gazette 265620, p.561). D-130. TY 2025-26: Income-tax Act, 1961 s.80C(2)(iv) (thc p.330): \"as a contribution by an individual to any provident fund to which the Provident Funds Act, 1925 … applies\". sources/2026-10-07-chapter-via.md; D-144.",
   "code": "PROVIDENT_FUNDS_ACT_FUND",
   "displayName": "Provident fund under the Provident Funds Act, 1925",
   "kind": "QUALIFYING_PAYMENT",
@@ -11,7 +11,7 @@
   "salaryBaseFor": [],
   "lifecycle": {
     "validity": {
-      "from": "2026-04-01"
+      "from": "2025-04-01"
     },
     "onWithdrawal": {
       "type": "HistoricalOnly"
@@ -19,7 +19,7 @@
   },
   "provenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(d), p.561; s.123, p.159",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(d), p.561; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(iv), p.330",
     "accessedOn": "2026-10-06",
     "verificationLevel": "SOURCE_CHECKED"
   }

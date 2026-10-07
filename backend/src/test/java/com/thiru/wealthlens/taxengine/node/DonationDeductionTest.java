@@ -241,7 +241,7 @@ class DonationDeductionTest {
         // When / Then — s.80G is W-075d's
         assertThatThrownBy(() -> run(Case.of(donation(DonationClause.NAMED_FUND, "50000"))
                         .year(TaxYearId.of(2025))))
-                .hasMessageContaining("W-075d");
+                .hasMessageContaining("W-075d5");
     }
 
     @Test

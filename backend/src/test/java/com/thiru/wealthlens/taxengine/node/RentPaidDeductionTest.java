@@ -235,7 +235,7 @@ class RentPaidDeductionTest {
                 .occupied(DateRange.between(LocalDate.of(2025, 4, 1), LocalDate.of(2026, 3, 31)));
 
         // When / Then
-        assertThatThrownBy(() -> run(c, TaxYearId.of(2025))).hasMessageContaining("W-075d");
+        assertThatThrownBy(() -> run(c, TaxYearId.of(2025))).hasMessageContaining("W-075d5");
     }
 
     @Test

@@ -209,12 +209,54 @@ class ChapterEightNodeTest {
     }
 
     @Test
-    void evaluate_whenAnythingIsEnteredForTaxYear2025_isRefused() {
-        // When / Then — D-129 C2a: the TY 2025-26 rows wait for W-075d
-        assertThatThrownBy(() -> run(new Case(2025, OLD, EmployerKind.OTHER, List.of(), List.of(),
-                        List.of(employerPension(0, "100000")), Money.of("1000000"), Money.of("1000000"))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-075d");
+    void evaluate_whenTaxYear2025InvestmentsExceedTheCeiling_allowsOneLakhFiftyThousand() {
+        // When — 1961 s.80CCE: PF 1,00,000 + ELSS 40,000 + tuition 60,000 = 2,00,000 within 1,50,000 (D-144)
+        NodeResult result = run(new Case(2025, OLD, EmployerKind.OTHER,
+                List.of(pay(ComponentCodes.EMPLOYEE_PF, "100000")),
+                List.of(paid(ComponentCodes.MUTUAL_FUND_UNITS, "40000"), paid(ComponentCodes.TUITION_FEES, "60000")),
+                List.of(), Money.of("1000000"), Money.of("1000000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("150000")));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025NpsAndAMinorsDepositAreEntered_allowsTheSubCapThenFiftyThousand() {
+        // When — s.80CCD(1)(a) 10% of 10,00,000 = 1,00,000 in s.80CCE; residue 30,000 + minor 30,000 under (1B), 50,000
+        NodeResult result = run(new Case(2025, OLD, EmployerKind.OTHER,
+                List.of(pay(ComponentCodes.EMPLOYEE_NPS, "130000")),
+                List.of(paid(ComponentCodes.NPS_MINOR_DEPOSIT, "30000")),
+                List.of(), Money.of("1000000"), Money.of("1000000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("150000")));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025EmployerPensionIsEntered_allowsSection80CcdTwoByEmployerAndRegime() {
+        // When — 1,20,000 on salary 10,00,000: another employer 10% old, 14% new; a Government 14% (M2, M8, M15)
+        NodeResult otherOld = run(new Case(2025, OLD, EmployerKind.OTHER, List.of(), List.of(),
+                List.of(employerPension(0, "120000")), Money.of("1000000"), Money.of("1000000")));
+        NodeResult otherNew = run(new Case(2025, NEW, EmployerKind.OTHER, List.of(), List.of(),
+                List.of(employerPension(0, "120000")), Money.of("1000000"), Money.of("1000000")));
+        NodeResult government = run(new Case(2025, OLD, EmployerKind.GOVERNMENT, List.of(), List.of(),
+                List.of(employerPension(0, "120000")), Money.of("1000000"), Money.of("1000000")));
+
+        // Then
+        assertThat(otherOld.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
+        assertThat(otherNew.value()).isEqualTo(MoneyValue.of(Money.of("120000")));
+        assertThat(government.value()).isEqualTo(MoneyValue.of(Money.of("120000")));
+    }
+
+    @Test
+    void evaluate_whenATaxYear2025PolicyIssuedIn2011IsEntered_countsTwentyPerCentOfTheSumAssured() {
+        // When — 1961 s.80C(3): issued on or before 31-3-2012, 20% of 1,00,000 = 20,000 of the 30,000 premium
+        NodeResult result = run(new Case(2025, OLD, EmployerKind.OTHER, List.of(), List.of(), List.of(),
+                        Money.of("1000000"), Money.of("1000000")),
+                List.of(new LifeInsurancePolicy(Money.of("30000"), Money.of("100000"), LocalDate.of(2011, 6, 1), false)));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("20000")));
     }
 
     @Test

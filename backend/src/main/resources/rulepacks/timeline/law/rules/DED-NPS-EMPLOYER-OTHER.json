@@ -1,9 +1,56 @@
 {
   "ruleId": "DED-NPS-EMPLOYER-OTHER",
-  "_note": "The same for \"(b) 10%, where such contribution is made by an employer other than an employer referred to in clause (a)\" (s.124(1)(b), p.160) — in the old regime; in the new regime s.124(2) reads it as 14% (DED-NPS-EMPLOYER-NEW-TAX-REGIME). Base SALARY (s.124(13)(b)). TY 2026-27 only (D-129 C2a). rulebook DED-NPS-EMP-001(b). OQ-14. The 1961 counterpart, s.80CCD(2), is unread (W-075d).",
+  "_note": "The same for \"(b) 10%, where such contribution is made by an employer other than an employer referred to in clause (a)\" (s.124(1)(b), p.160) — in the old regime; in the new regime s.124(2) reads it as 14% (DED-NPS-EMPLOYER-NEW-TAX-REGIME). Base SALARY (s.124(13)(b)). TY 2026-27 and TY 2025-26. rulebook DED-NPS-EMP-001(b). OQ-14. The 1961 counterpart, s.80CCD(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCD(2)(b) (F(No.2)A 2019 s.24, p.16): \"ten per cent., where such contribution is made by any other employer\" — in the old regime; under s.115BAC(1A) F(No.2)A 2024 s.25 reads it as fourteen (DED-NPS-EMPLOYER-NEW-TAX-REGIME). sources/2026-10-07-chapter-via.md B7, M2, M15. D-144.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80CCD(2)(b); in the new regime see DED-NPS-EMPLOYER-NEW-TAX-REGIME",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(1)(b)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "SALARY"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2019 (23 of 2019), s.24 — \"(b) ten per cent., where such contribution is made by any other employer\"",
+        "gazetteRef": "egazette 2019/209695 (the CG-DL-E ID string is not in the extracted text)",
+        "notifiedOn": "2019-08-01",
+        "effectiveFrom": "2020-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/209695.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/209695.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80CCD(2), p.339; egazette 2019/209695, Finance (No. 2) Act, 2019 s.24, p.16; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80CCD(2) after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
     {
       "validity": {
         "type": "Between",
@@ -17,7 +64,8 @@
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
-        "presence": "NOT_YET_VERIFIED"
+        "reference": "s.80CCD(2)(b); in the new regime see DED-NPS-EMPLOYER-NEW-TAX-REGIME",
+        "presence": "PRESENT"
       },
       "provision2025": {
         "instrument": "Income-tax Act, 2025",

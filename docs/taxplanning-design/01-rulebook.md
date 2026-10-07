@@ -1061,6 +1061,14 @@ a single year's inputs. See `M3`.
 > `DED-DONATION-WHOLE`, `-HALF`, `-QUALIFYING`, `-CASH` (TY 2026-27). The order against s.134 is OQ-23; mixed sums
 > under a binding limit, OQ-24.
 
+> **Addendum (W-075d1, 2026-10-07, D-144):** the TY 2025-26 figures of `DED-80C-001`, `-ITEMS-001`, `-NPS-CAP-001`,
+> `DED-NPS-EMP-001`…`-003`, `DED-NPS-SELF-001`, `DED-NPS-MINOR-001` and `DED-GTI-CAP-001` are read and built (1961
+> ss.80C, 80CCC, 80CCD, 80CCE, 80A(2); `docs/taxplanning-build/sources/2026-10-07-chapter-via.md`). They equal TY
+> 2026-27's: 1,50,000 over 80C + 80CCC + 80CCD(1) (s.80CCE); 10% of salary for an employee's 80CCD(1); 50,000 under
+> 80CCD(1B), a minor's account included from AY 2026-27 (FA 2025 s.17); 80CCD(2) 14% for a Central or State Government,
+> 10% for another employer, 14% under s.115BAC(1A) (F(No.2)A 2019 s.24, FA 2022 s.20, F(No.2)A 2024 s.25); the
+> policy-share bands 20/10/15% (s.80C(3), (3A)).
+
 ### **H-7 verdict: CONFIRMED on both limbs.**
 
 `FACT (S2, Schedule XV para 1(f))`: *"contribution by an employee to a recognised provident fund"* is
