@@ -1,0 +1,57 @@
+{
+  "ruleId": "DED-DONATION-CASH",
+  "_note": "The cash bar: \"Any deduction for a donation over ₹ 2000 shall be allowed only if the payment is made by a mode other than cash\" (s.133(5), p.169) — per donation; one over the limit in cash is allowed nothing, one within it is allowed as any other. A definition (CashPaymentLimit), not a cap, because the excess is not what is disallowed. Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 only; the 1961 counterpart, s.80G, is unread (W-075d). rulebook DED-80G-001. D-142.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(5); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "CashPaymentLimit",
+        "atMost": "2000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(5)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(5), p.169; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(5), p.169; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-07",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

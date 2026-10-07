@@ -40,6 +40,11 @@ employer under `TDS-CERT-001` (Form No. 130) and the quarterly statements under 
 information relating to such donation furnished by such institution or fund to the prescribed
 authority"* — the deduction is **only** allowable if the donee independently reported it.
 
+> **Erratum (W-075c6, 2026-10-07):** s.133(6) does not reach every 80G donation — its words are *"in case of a
+> donation made to an institution or fund referred in sub-section (1)(b)(ii)"*, the registered or approved charitable
+> fund or institution; the named funds of (1)(a), the Drought Relief Fund and the bodies of (1)(b)(iii)–(vi) are not
+> conditioned on a donee's report. Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(6)).
+
 So for the primary persona, the position is:
 
 > Almost every **income** figure and at least one **deduction** figure are already known to the
@@ -187,6 +192,11 @@ that includes a statutorily impossible claim (`D-NOSILENT` applied to inputs, no
 merely because the user holds a receipt — it is allowed on the basis of what the **institution
 reported**. So the product's 80G check is not "do you have a receipt", it is "does this appear in your
 pre-filled data, and if not, have you asked the institution why".
+
+> **Erratum (W-075c6, 2026-10-07):** s.133(6) does not reach every 80G donation — its words are *"in case of a
+> donation made to an institution or fund referred in sub-section (1)(b)(ii)"*, the registered or approved charitable
+> fund or institution; the named funds of (1)(a), the Drought Relief Fund and the bodies of (1)(b)(iii)–(vi) are not
+> conditioned on a donee's report. Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(6)).
 
 ### C3.3 Third-party match — the check that actually matters
 

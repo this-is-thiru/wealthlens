@@ -1,0 +1,58 @@
+{
+  "ruleId": "DED-DONATION-QUALIFYING",
+  "_note": "The qualifying limit: \"Where the aggregate of the sums referred to in sub-section (1)(a)(xxiii) and (xxiv), and sub-section (1)(b)(ii) to (vi) exceeds 10% of the adjusted gross total income, then the amount in excess of 10% of the adjusted gross total income shall be ignored for the purpose of computing the aggregate of the sums in respect of which deduction is to be allowed\" (s.133(2), p.169) — the limit is on the sums, before the 100% or 50%. ADJUSTED_GTI: \"gross total income as reduced by any portion thereof on which income-tax is not payable under any provision of this Act and by any amount in respect of which the assessee is entitled to a deduction under any other provision of this Chapter\" (s.133(7)(a), p.170) — the other deductions held within gross total income; no untaxed portion of gross total income exists in the engine yet, and the words name no other exclusion (special-rate capital gains are not named; revisit with Phase 9). Which sums lose the excess where 100% and 50% sums mix is OQ-24; where the limit binds with s.134 claimed, the pair is circular (OQ-23). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 only; the 1961 counterpart, s.80G, is unread (W-075d). rulebook DED-80G-001. D-142.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(2), (7)(a); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "ADJUSTED_GTI"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(2), (7)(a)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(2), p.169; s.133(7)(a), p.170; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(2), p.169; s.133(7)(a), p.170; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-07",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

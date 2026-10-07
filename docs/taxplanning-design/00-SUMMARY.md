@@ -60,6 +60,11 @@ interest paid or credited are reported to the department for **all transactions 
 `FACT (S2, s.133(6))`: an 80G deduction is allowable *only* on the basis of what the institution itself
 reported.
 
+> **Erratum (W-075c6, 2026-10-07):** s.133(6) does not reach every 80G donation — its words are *"in case of a
+> donation made to an institution or fund referred in sub-section (1)(b)(ii)"*, the registered or approved charitable
+> fund or institution; the named funds of (1)(a), the Drought Relief Fund and the bodies of (1)(b)(iii)–(vi) are not
+> conditioned on a donee's report. Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(6)).
+
 `INFERENCE`: for this product's primary user, essentially every income figure is already known to the
 department before the return is filed. So there is no threshold to sit under, and the useful product
 is not a threshold calculator — it is **statutory maximum vs evidenced maximum vs declared amount**,
@@ -265,6 +270,11 @@ and a fee; it does not cost the deduction. This is widely misunderstood.
 | **R+** — return, certificate retained (80U, 80DD, 80DDB) | No, provided the certificate exists |
 | **T** — third-party reported (**80G**) | **Yes.** s.133(6): allowable *"**only** on the basis of the information … furnished by such institution"*. **Your receipt is not enough** |
 | **P** — employer-provided (**employer NPS**) | **Yes** — there is nothing to claim if they did not contribute |
+
+> **Erratum (W-075c6, 2026-10-07):** s.133(6) does not reach every 80G donation — its words are *"in case of a
+> donation made to an institution or fund referred in sub-section (1)(b)(ii)"*, the registered or approved charitable
+> fund or institution; the named funds of (1)(a), the Drought Relief Fund and the bodies of (1)(b)(iii)–(vi) are not
+> conditioned on a donee's report. Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(6)).
 
 **3. Nothing is attached to the return.** `FACT (S4, r.164(11))`: the return is not accompanied by
 *"any document … required to be attached … under any of the provisions of the Act"*. That resolves the

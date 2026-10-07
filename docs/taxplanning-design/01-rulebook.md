@@ -1052,6 +1052,15 @@ a single year's inputs. See `M3`.
 > prescribed** (the Rules' amendment chain after G.S.R. 198(E) not traced, as S6 notes). Form 31 asks the *"Period of
 > Stay (in Months)"*, which limb (b) counts (OQ-22). `DED-80GG-001` and `-002` are built as `DED-RENT-PAID` (TY 2026-27).
 
+> **Addendum (W-075c6, 2026-10-07, D-142):** `DED-80G-001`'s NEEDS VERIFICATION is answered — S2 s.133 read in full
+> (pp.167–170): the whole of (1)(a)(i)–(xxii) without limit; the whole of (1)(a)(xxiii) family planning and (xxiv) (a
+> company's) within the limit; **50%** of (1)(b)(i) the Prime Minister's Drought Relief Fund without limit and of
+> (1)(b)(ii)–(vi) within the limit; the limit is **10% of adjusted gross total income**, applied to the sums (s.133(2));
+> adjusted gross total income is gross total income less any untaxed portion and every other Chapter VIII deduction
+> (s.133(7)(a)); cash over ₹2,000 disallowed (s.133(5)); s.133(6) reaches (1)(b)(ii) only. Built as
+> `DED-DONATION-WHOLE`, `-HALF`, `-QUALIFYING`, `-CASH` (TY 2026-27). The order against s.134 is OQ-23; mixed sums
+> under a binding limit, OQ-24.
+
 ### **H-7 verdict: CONFIRMED on both limbs.**
 
 `FACT (S2, Schedule XV para 1(f))`: *"contribution by an employee to a recognised provident fund"* is

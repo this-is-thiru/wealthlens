@@ -21,6 +21,10 @@ public final class RuleIds {
     public static final RuleId DED_DISABILITY_SEVERE = new RuleId("DED-DISABILITY-SEVERE");
     public static final RuleId DED_DISABLED_DEPENDANT = new RuleId("DED-DISABLED-DEPENDANT");
     public static final RuleId DED_DISABLED_DEPENDANT_SEVERE = new RuleId("DED-DISABLED-DEPENDANT-SEVERE");
+    public static final RuleId DED_DONATION_CASH = new RuleId("DED-DONATION-CASH");
+    public static final RuleId DED_DONATION_HALF = new RuleId("DED-DONATION-HALF");
+    public static final RuleId DED_DONATION_QUALIFYING = new RuleId("DED-DONATION-QUALIFYING");
+    public static final RuleId DED_DONATION_WHOLE = new RuleId("DED-DONATION-WHOLE");
     public static final RuleId DED_EDUCATION_LOAN = new RuleId("DED-EDUCATION-LOAN");
     public static final RuleId DED_ELECTRIC_VEHICLE_LOAN = new RuleId("DED-ELECTRIC-VEHICLE-LOAN");
     public static final RuleId DED_HEALTH_CHECKUP = new RuleId("DED-HEALTH-CHECKUP");

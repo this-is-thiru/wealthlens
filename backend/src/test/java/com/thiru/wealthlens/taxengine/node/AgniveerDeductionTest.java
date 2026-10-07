@@ -46,7 +46,7 @@ class AgniveerDeductionTest {
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(),
-                        Optional.of(new AgniveerCorpusFund(Money.of(own), Money.of(government))), Optional.empty()),
+                        Optional.of(new AgniveerCorpusFund(Money.of(own), Money.of(government))), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs)

@@ -158,7 +158,11 @@ class TimelineReaderTest {
             new RuleId("DED-HOUSE-LOAN-EARLIER"),
             new RuleId("DED-AGNIVEER-GOVERNMENT"),
             new RuleId("DED-AGNIVEER-OWN"),
-            new RuleId("DED-RENT-PAID"));
+            new RuleId("DED-RENT-PAID"),
+            new RuleId("DED-DONATION-WHOLE"),
+            new RuleId("DED-DONATION-HALF"),
+            new RuleId("DED-DONATION-QUALIFYING"),
+            new RuleId("DED-DONATION-CASH"));
 
     @TempDir
     Path copy;

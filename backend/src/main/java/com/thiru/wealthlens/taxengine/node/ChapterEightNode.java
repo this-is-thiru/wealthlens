@@ -54,9 +54,11 @@ import java.util.stream.Collectors;
  * line naming the regime. TY 2025-26 has none of these rows yet (D-129 C2a), so anything entered there is refused.
  * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136); and s.154, s.127
  * and s.128 ({@link DisabilityDeduction}; D-138); s.129–132, loan interest ({@link LoanInterestDeduction}; D-139); s.125,
- * the Agniveer Corpus Fund ({@link AgniveerDeduction}; D-140); last, s.134, rent paid, on total income before it —
- * gross total income less the rest, held within it ({@link RentPaidDeduction}; D-141). The other deductions are later
- * items (W-075a3, W-075c5, W-075c6).
+ * the Agniveer Corpus Fund ({@link AgniveerDeduction}; D-140); s.133, donations, on adjusted gross total income —
+ * gross total income less the rest, held within it ({@link DonationDeduction}; D-142); last, s.134, rent paid, on
+ * total income before it — the same, less s.133 too ({@link RentPaidDeduction}; D-141). Each section's base holds the
+ * other, so they are in that order, which meets both sections' words unless s.133's qualifying limit binds; with rent
+ * claimed as well, that is refused (OQ-23). The other deductions are later items (W-075a3, W-075c5).
  */
 public final class ChapterEightNode implements ComputationNode {
 
@@ -83,6 +85,7 @@ public final class ChapterEightNode implements ComputationNode {
         rules.addAll(DisabilityDeduction.RULES);
         rules.addAll(LoanInterestDeduction.RULES);
         rules.addAll(AgniveerDeduction.RULES);
+        rules.addAll(DonationDeduction.RULES);
         rules.addAll(RentPaidDeduction.RULES);
         return Set.copyOf(rules);
     }
@@ -110,6 +113,14 @@ public final class ChapterEightNode implements ComputationNode {
         lines.addAll(DisabilityDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(LoanInterestDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(AgniveerDeduction.lines(ctx, lines.size() + 1));
+        DonationDeduction.Outcome donations = DonationDeduction.lines(ctx, totalIncomeBefore(ctx, lines),
+                lines.size() + 1);
+        if (donations.qualifyingLimitBound() && RentPaidDeduction.entered(ctx)) {
+            throw new IllegalArgumentException("s.133's qualifying limit binds and s.134 is claimed: adjusted gross total"
+                    + " income is net of s.134 and s.134's base is net of s.133, so neither can be worked first"
+                    + " (OQ-23); refused rather than guessed (D-142)");
+        }
+        lines.addAll(donations.lines());
         RentPaidDeduction.line(ctx, totalIncomeBefore(ctx, lines), lines.size() + 1).ifPresent(lines::add);
         return withinGrossTotal(ctx, lines);
     }
@@ -122,6 +133,7 @@ public final class ChapterEightNode implements ComputationNode {
                 || !ctx.inputs().entered().educationLoanInterest().isEmpty()
                 || !ctx.inputs().entered().purposeLoanInterest().isEmpty()
                 || AgniveerDeduction.entered(ctx)
+                || DonationDeduction.entered(ctx)
                 || RentPaidDeduction.entered(ctx)
                 || certifiedDisabled(ctx);
     }
@@ -291,7 +303,10 @@ public final class ChapterEightNode implements ComputationNode {
                 + " regime");
     }
 
-    /** Total income before s.134 (s.134(5)): gross total income less the deductions so far, held within it. */
+    /**
+     * Gross total income less the deductions so far, held within it — s.133(7)(a)'s adjusted gross total income
+     * before s.133, s.134(5)'s total income before s.134 after it.
+     */
     private static Money totalIncomeBefore(NodeContext ctx, List<TraceLine> lines) {
         Money grossTotal = ctx.get(NodeIds.GTI, MoneyValue.class).asMoney().floorAtZero();
         return grossTotal.minus(Money.min(deducted(lines), grossTotal));

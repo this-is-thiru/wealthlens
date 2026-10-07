@@ -1,0 +1,58 @@
+{
+  "ruleId": "DED-DONATION-HALF",
+  "_note": "Donations allowed at half: \"an amount equal to 50% of the aggregate of the sums paid as donation by an assessee during the tax year to\" s.133(1)(b)(i) the Prime Minister's Drought Relief Fund, without limit, and (ii)–(vi) — a registered or approved charitable fund or institution, the Government or a local authority for a charitable purpose other than family planning, a housing or town-planning authority, a notified minority-community corporation, an entity repairing a notified place — within s.133(2)'s qualifying limit (p.169); Income-tax Rules, 2026 Form No. 114 note 5 (p.2217): \"Donor shall be eligible for deduction of 50% of the donation made subject to 10% of adjusted gross total income as per section 133(2)\". Base AMOUNT_PAID, the sum counted. A (b)(ii) donation is allowed only on the donee's report (s.133(6)). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 only; the 1961 counterpart, s.80G, is unread (W-075d). rulebook DED-80G-001. D-142.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "presence": "NOT_YET_VERIFIED"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(1)(b); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "50",
+        "base": "AMOUNT_PAID"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(1)(b)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(1)(b), (6), p.169; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(1)(b), (6), p.169; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-07",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

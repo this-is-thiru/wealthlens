@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
@@ -225,7 +226,8 @@ public final class ShapeJson {
     public static RuleDefinition definition(JsonNode node, String path) {
         String tag = PackJson.tag(
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
-                "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit");
+                "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
+                "CashPaymentLimit");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -242,6 +244,24 @@ public final class ShapeJson {
                     PackJson.integer(node, "oneOverOtherwise", path)));
             case "IndexByYear" -> indexByYear(node, path);
             case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
+            case "ExcludedAssets" -> {
+                List<MovableAssetKind> kinds = PackJson.array(node, "kinds", path,
+                        e -> movableAssetKind(e.node().asString(), e.path()));
+                yield PackJson.construct(path, () -> new ExcludedAssets(Set.copyOf(kinds)));
+            }
+            default -> chapterEightDefinition(tag, node, path);
+        };
+    }
+
+    /** The Chapter VIII deductions' definitions — apart only to keep each switch within the complexity limit. */
+    private static RuleDefinition chapterEightDefinition(String tag, JsonNode node, String path) {
+        return switch (tag) {
+            case "PremiumShareBands" -> PackJson.construct(path, () -> new PremiumShareBands(PackJson.array(
+                    node, "bands", path, band -> new PremiumShareBands.Band(new PolicyIssueWindow(
+                            PackJson.optionalDate(band.node(), "from", path),
+                            PackJson.optionalDate(band.node(), "to", path),
+                            PackJson.bool(band.node(), "onlyCoveringDisabilityOrDisease", path)),
+                            rate(band.node(), "percent", path)))));
             case "TaxYearSpan" -> PackJson.construct(path, () -> new TaxYearSpan(
                     PackJson.integer(node, "succeedingYears", path)));
             case "SanctionedLoanLimit" -> PackJson.construct(path, () -> new SanctionedLoanLimit(
@@ -249,17 +269,7 @@ public final class ShapeJson {
                     PackJson.date(node, "sanctionedTo", path), optionalMoney(node, "maxAmountSanctioned", path),
                     optionalMoney(node, "maxPropertyValue", path), optionalMoney(node, "maxStampDutyValue", path),
                     PackJson.bool(node, "requiresNoHouseOwned", path)));
-            case "PremiumShareBands" -> PackJson.construct(path, () -> new PremiumShareBands(PackJson.array(
-                    node, "bands", path, band -> new PremiumShareBands.Band(new PolicyIssueWindow(
-                            PackJson.optionalDate(band.node(), "from", path),
-                            PackJson.optionalDate(band.node(), "to", path),
-                            PackJson.bool(band.node(), "onlyCoveringDisabilityOrDisease", path)),
-                            rate(band.node(), "percent", path)))));
-            case "ExcludedAssets" -> {
-                List<MovableAssetKind> kinds = PackJson.array(node, "kinds", path,
-                        e -> movableAssetKind(e.node().asString(), e.path()));
-                yield PackJson.construct(path, () -> new ExcludedAssets(Set.copyOf(kinds)));
-            }
+            case "CashPaymentLimit" -> PackJson.construct(path, () -> new CashPaymentLimit(money(node, "atMost", path)));
             default -> throw unreachable(tag, path);
         };
     }

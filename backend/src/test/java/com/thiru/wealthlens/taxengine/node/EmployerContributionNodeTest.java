@@ -77,7 +77,7 @@ class EmployerContributionNodeTest {
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
                 new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                        List.of(), List.of(), List.of(), contributions, history, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty()),
+                        List.of(), List.of(), List.of(), contributions, history, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack).regime(NEW_TAX_REGIME).inputs(inputs).run(new EmployerContributionNode());
