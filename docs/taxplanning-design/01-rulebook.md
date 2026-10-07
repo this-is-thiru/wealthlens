@@ -1074,6 +1074,11 @@ a single year's inputs. See `M3`.
 > notified or Government health scheme** — and the senior citizen's 50,000 is for a sum paid for **health insurance**
 > (s.126(8); 1961 s.80D(4)), not a scheme contribution; the engine now applies both.
 
+> **Addendum (W-075d3, 2026-10-07, D-146):** `DED-80U-001`, `DED-80DD-001` and `DED-80DDB-001`'s TY 2025-26 figures are
+> built (1961 ss.80U, 80DD, 80DDB). 80U and 80DDB equal TY 2026-27's. **1961 s.80DD gives a fixed sum** — *"a deduction
+> of a sum of seventy-five thousand rupees"* (1,25,000 severe) once anything is spent or deposited — where the 2025
+> Act's s.127 says *"up to ₹ 75000"* (built as the lesser of the amount and the limit; OQ-19).
+
 ### **H-7 verdict: CONFIRMED on both limbs.**
 
 `FACT (S2, Schedule XV para 1(f))`: *"contribution by an employee to a recognised provident fund"* is

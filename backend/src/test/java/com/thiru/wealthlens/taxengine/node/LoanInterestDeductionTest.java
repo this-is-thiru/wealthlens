@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.EducationLoanInterest;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
@@ -39,12 +40,17 @@ class LoanInterestDeductionTest {
 
     private static NodeResult run(RegimeCode regime, List<EducationLoanInterest> education,
             List<PurposeLoanInterest> loans) {
+        return run(TY_2026, regime, education, loans);
+    }
+
+    private static NodeResult run(TaxYearId year, RegimeCode regime, List<EducationLoanInterest> education,
+            List<PurposeLoanInterest> loans) {
         RulePack pack = new ClasspathRulePackProvider(
-                        "rulepacks", Set.of(TY_2026), new JsonPackAssembler(LockedInstruments.of(TY_2026)))
-                .load(TY_2026);
+                        "rulepacks", Set.of(year), new JsonPackAssembler(LockedInstruments.of(year)))
+                .load(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
-        EngineInputs inputs = new EngineInputs(TY_2026, regime,
-                TemporalContext.forTaxYear(TY_2026, LocalDate.of(2026, 9, 21)),
+        EngineInputs inputs = new EngineInputs(year, regime,
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
@@ -70,6 +76,15 @@ class LoanInterestDeductionTest {
 
     private static NodeResult loan(PurposeLoanInterest loan) {
         return run(OLD, List.of(), List.of(loan));
+    }
+
+    @Test
+    void evaluate_whenEducationLoanInterestIsEnteredForTaxYear2025_refusesNamingTheItemThatAddsTheRows() {
+        // When / Then — D-146: 80E's TY 2025-26 rows are W-075d4's
+        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD,
+                        List.of(new EducationLoanInterest(Money.of("50000"), TaxYearId.of(2022))), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("W-075d4");
     }
 
     @Test

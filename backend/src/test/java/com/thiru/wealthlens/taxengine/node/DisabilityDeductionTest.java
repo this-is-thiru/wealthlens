@@ -104,11 +104,53 @@ class DisabilityDeductionTest {
     }
 
     @Test
-    void evaluate_whenADisabledDependantIsSupportedInTaxYear2025_refusesNamingTheItemThatAddsTheRows() {
-        // When / Then — D-145: 80DD's TY 2025-26 rows are W-075d3's
-        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD, plain(), support(0, "60000"), List.of()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-075d3");
+    void evaluate_whenTaxYear2025SupportIsLessThanTheSum_allowsSection80ddsFixedSum() {
+        // When — 1961 s.80DD(1) (D-146): "a deduction of a sum of seventy-five thousand rupees" — 30,000 spent
+        NodeResult result = run(TaxYearId.of(2025), OLD, plain(), support(0, "30000"), List.of());
+        NodeResult severe = run(TaxYearId.of(2025), OLD, plain(), support(1, "30000"), List.of());
+
+        // Then — 75,000 and 1,25,000, whatever was spent
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("75000")));
+        assertThat(severe.value()).isEqualTo(MoneyValue.of(Money.of("125000")));
+    }
+
+    @Test
+    void evaluate_whenNothingIsSpentOnADisabledDependant_allowsNothingInEitherYear() {
+        // When — the deduction is for having incurred expenditure or paid or deposited (s.80DD(1); s.127(1))
+        NodeResult earlier = run(TaxYearId.of(2025), OLD, plain(), support(0, "0"), List.of());
+        NodeResult later = run(OLD, plain(), support(0, "0"), List.of());
+
+        // Then
+        assertThat(earlier.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(later.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(earlier.trace()).singleElement()
+                .satisfies(line -> assertThat(line.limitedBy()).contains("nothing spent or deposited"));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025TreatmentIsEntered_allowsTheLesserOfTheNetAndTheLimit() {
+        // When — 1961 s.80DDB: the assessee's 60,000 less 10,000 → 40,000; the senior parent's 1,50,000 → 1,00,000
+        NodeResult own = run(TaxYearId.of(2025), OLD, plain(), List.of(),
+                List.of(new SpecifiedDiseaseTreatment(true, Optional.empty(), Money.of("60000"), Money.of("10000"))));
+        NodeResult senior = run(TaxYearId.of(2025), OLD, plain(), List.of(), List.of(treated(0, "150000", "0")));
+
+        // Then
+        assertThat(own.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
+        assertThat(senior.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
+    }
+
+    @Test
+    void evaluate_whenTheAssesseeIsCertifiedInTaxYear2025_allowsSection80usFixedSums() {
+        // When — 1961 s.80U(1): 75,000; severe, 1,25,000
+        NodeResult result = run(TaxYearId.of(2025), OLD,
+                assessee(ResidentialStatus.RESIDENT, Optional.of(DisabilitySeverity.DISABILITY)), List.of(), List.of());
+        NodeResult severe = run(TaxYearId.of(2025), OLD,
+                assessee(ResidentialStatus.RESIDENT, Optional.of(DisabilitySeverity.SEVERE_DISABILITY)), List.of(),
+                List.of());
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("75000")));
+        assertThat(severe.value()).isEqualTo(MoneyValue.of(Money.of("125000")));
     }
 
     @Test

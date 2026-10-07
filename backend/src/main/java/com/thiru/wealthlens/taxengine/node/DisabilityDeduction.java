@@ -8,10 +8,12 @@ import com.thiru.wealthlens.taxengine.input.SpecifiedDiseaseTreatment;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -33,12 +35,15 @@ import java.util.Set;
  * refused (OQ-19). s.128 allows the lesser of what was paid less what was reimbursed and the limit, the senior
  * citizen's where the person treated is one; treatment for a senior and a non-senior in one year is refused (OQ-20).
  * A non-resident assessee gets none of them; a row the regime excludes gives a nil line where something is entered.
+ * Each row's cap carries its rule — the lesser of, or a fixed sum: TY 2025-26's 1961 s.80DD is a fixed sum (D-146).
  */
 final class DisabilityDeduction {
 
     static final Set<RuleId> RULES = Set.of(RuleIds.DED_DISABILITY, RuleIds.DED_DISABILITY_SEVERE,
             RuleIds.DED_DISABLED_DEPENDANT, RuleIds.DED_DISABLED_DEPENDANT_SEVERE, RuleIds.DED_SPECIFIED_DISEASE,
             RuleIds.DED_SPECIFIED_DISEASE_SENIOR);
+
+    private static final BaseId AMOUNT_CLAIMED = new BaseId("AMOUNT_CLAIMED");
 
     private DisabilityDeduction() {
     }
@@ -74,7 +79,11 @@ final class DisabilityDeduction {
                 : nil(ctx, firstSequence + lines.size(), row, version, amount));
     }
 
-    /** s.127: one disabled dependant, the lesser of what was spent or deposited and the severity's limit. */
+    /**
+     * s.127: one disabled dependant, under the severity's row — the lesser of what was spent or deposited and the limit
+     * in TY 2026-27, a fixed sum under 1961 s.80DD in TY 2025-26 (the row's cap; D-146). Nothing spent or deposited
+     * gives nothing in either: the deduction is for having incurred or paid something.
+     */
     private static void dependant(NodeContext ctx, int firstSequence, List<TraceLine> lines) {
         List<DisabledDependantSupport> supports = ctx.inputs().entered().disabledDependantSupport();
         if (supports.isEmpty()) {
@@ -94,7 +103,12 @@ final class DisabilityDeduction {
                 "Family member " + support.familyMember() + " has no certified disability (s.127(1))"));
         RuleId row = severity == DisabilitySeverity.SEVERE_DISABILITY
                 ? RuleIds.DED_DISABLED_DEPENDANT_SEVERE : RuleIds.DED_DISABLED_DEPENDANT;
-        claimed(ctx, firstSequence, lines, row, support.spentOrDeposited(), "the amount spent or deposited");
+        if (!support.spentOrDeposited().isGreaterThan(Money.ZERO)) {
+            lines.add(line(ctx, firstSequence + lines.size(), row, version(ctx, row), Money.ZERO, Money.ZERO,
+                    "nothing spent or deposited"));
+            return;
+        }
+        claimed(ctx, firstSequence, lines, row, support.spentOrDeposited());
     }
 
     /** s.128: the lesser of what was paid less what was reimbursed and the limit, a senior citizen's where so. */
@@ -118,12 +132,11 @@ final class DisabilityDeduction {
                     + " in one year: which limit applies is not settled (s.128(4); OQ-20), so it is refused");
         }
         RuleId row = seniors.contains(true) ? RuleIds.DED_SPECIFIED_DISEASE_SENIOR : RuleIds.DED_SPECIFIED_DISEASE;
-        claimed(ctx, firstSequence, lines, row, net, "paid less reimbursed");
+        claimed(ctx, firstSequence, lines, row, net);
     }
 
-    /** A claimed amount against a row's limit, for a resident assessee, in a regime the row applies in. */
-    private static void claimed(NodeContext ctx, int firstSequence, List<TraceLine> lines, RuleId row, Money entered,
-            String what) {
+    /** A claimed amount under its row's cap, for a resident assessee, in a regime the row applies in. */
+    private static void claimed(NodeContext ctx, int firstSequence, List<TraceLine> lines, RuleId row, Money entered) {
         individual(ctx);
         RuleVersion version = version(ctx, row);
         if (!resident(ctx)) {
@@ -135,10 +148,9 @@ final class DisabilityDeduction {
             lines.add(nil(ctx, firstSequence + lines.size(), row, version, entered));
             return;
         }
-        Money limit = limit(ctx, row);
-        Money allowed = Money.min(entered, limit);
-        lines.add(line(ctx, firstSequence + lines.size(), row, version, entered, allowed,
-                allowed.isLessThan(entered) ? "the limit " + limit : what));
+        CapResult allowed = TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),
+                CapContext.of(AMOUNT_CLAIMED, entered));
+        lines.add(line(ctx, firstSequence + lines.size(), row, version, entered, allowed.value(), allowed.limitedBy()));
     }
 
     private static FamilySnapshot.Member dependantMember(NodeContext ctx, int position, String section) {
