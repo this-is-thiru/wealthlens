@@ -1,0 +1,30 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-WITHIN-GROSS-TOTAL provision1961 (s.80A(2), s.80B(5)) and provision2025 (s.122(2), (10)); S2 Chapter VIII heading \"DEDUCTIONS TO BE MADE IN COMPUTING TOTAL INCOME\", s.122 under \"A.—General\". summary: S2 s.122(1), (2), (10); 1961 s.80A(1), (2), s.80B(5) (sources/2026-10-07-chapter-via.md B1, B3). routes[0]: DED-WITHIN-GROSS-TOTAL (its note).",
+  "key": "SEC-DEDUCTIONS-FROM-GROSS-TOTAL-INCOME",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80A(2), with s.80B(5)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.122(2), (10)",
+    "presence": "PRESENT"
+  },
+  "plainName": "Deductions are taken from gross total income",
+  "summary": "The deductions of this part of the Act are allowed from your gross total income, which is your income under every head before any of them. Together they can never be more than that gross total income, however many you qualify for; whatever would go beyond it is simply not allowed. In the default regime only the few deductions it keeps are allowed at all.",
+  "routes": [
+    {
+      "name": "All the deductions together, within gross total income",
+      "description": "Each deduction is worked out under its own rule; the total of them is then held within your gross total income.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-WITHIN-GROSS-TOTAL"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": []
+}

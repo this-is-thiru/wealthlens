@@ -1,0 +1,49 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-AGNIVEER-* provision1961 (s.80CCH) and provision2025 (s.125); S2 heading \"Deduction in respect of contribution to Agnipath Scheme\". summary: S2 s.125(1), (2), s.16(l); 1961 s.80CCH (FA 2023 s.39), s.17(1)(ix) (sources M12, M14; D-140). routes[0]: DED-AGNIVEER-OWN. routes[1]: DED-AGNIVEER-GOVERNMENT. disqualifiers[0]: DED-AGNIVEER-OWN regimes (s.202(2)(a)(xii); s.115BAC(2)(i)).",
+  "key": "SEC-AGNIVEER-CORPUS-FUND",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80CCH",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.125",
+    "presence": "PRESENT"
+  },
+  "plainName": "Agniveer Corpus Fund",
+  "summary": "If you are enrolled in the Agnipath Scheme, what you subscribe to your Agniveer Corpus Fund account is deducted in full, and so is what the Central Government contributes to it. The Government's contribution is also counted as your salary, so the two cancel out for it. The default regime keeps the deduction of the Government's contribution but not of your own.",
+  "routes": [
+    {
+      "name": "Your own subscription",
+      "description": "The whole of what you paid into the Fund in the year is deducted.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-AGNIVEER-OWN"
+        }
+      ]
+    },
+    {
+      "name": "The Central Government's contribution",
+      "description": "The whole of what the Government contributed to your account is deducted, in every regime.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-AGNIVEER-GOVERNMENT"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Your own subscription is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-AGNIVEER-OWN"
+      }
+    }
+  ]
+}
