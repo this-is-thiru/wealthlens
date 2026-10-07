@@ -1,5 +1,5 @@
 {
-  "_note": "A sum qualifying under Income-tax Act, 2025 s.126(2)(b): \"to effect or to keep in force the health insurance, or any payment made for preventive health check-up, for the parent or parents of the assessee, up to ₹25000 in aggregate\" (Gazette 265620, p.161). Entered only as a HealthPayment, never a plain qualifying payment: the limits turn on whom it covers — family (\"the spouse and dependant children\", s.126(10)(b)) or parents, senior citizen or not (s.126(7), (8)(a)). The insurer's scheme must be approved (s.126(11)) — an entry condition. D-136.",
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.126(2)(b): \"to effect or to keep in force the health insurance, or any payment made for preventive health check-up, for the parent or parents of the assessee, up to ₹25000 in aggregate\" (Gazette 265620, p.161). Entered only as a HealthPayment, never a plain qualifying payment: the limits turn on whom it covers — family (\"the spouse and dependant children\", s.126(10)(b)) or parents, senior citizen or not (s.126(7), (8)(a)). The insurer's scheme must be approved (s.126(11)) — an entry condition. D-136. TY 2025-26: Income-tax Act, 1961 s.80D(2)(b): insurance on the health of the parent or parents, or their preventive check-up — no scheme (thc p.341). sources/2026-10-07-chapter-via.md B11; D-145.",
   "code": "HEALTH_INSURANCE_PARENTS",
   "displayName": "Health insurance and check-ups for your parents",
   "kind": "QUALIFYING_PAYMENT",
@@ -12,7 +12,7 @@
   "salaryBaseFor": [],
   "lifecycle": {
     "validity": {
-      "from": "2026-04-01"
+      "from": "2025-04-01"
     },
     "onWithdrawal": {
       "type": "HistoricalOnly"
@@ -20,7 +20,7 @@
   },
   "provenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.126(2)(b), p.161",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.126(2)(b), p.161; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80D(2), p.341",
     "accessedOn": "2026-10-06",
     "verificationLevel": "SOURCE_CHECKED"
   }

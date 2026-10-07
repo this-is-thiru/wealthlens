@@ -1069,6 +1069,11 @@ a single year's inputs. See `M3`.
 > 10% for another employer, 14% under s.115BAC(1A) (F(No.2)A 2019 s.24, FA 2022 s.20, F(No.2)A 2024 s.25); the
 > policy-share bands 20/10/15% (s.80C(3), (3A)).
 
+> **Addendum (W-075d2, 2026-10-07, D-145):** `DED-80D-*`'s TY 2025-26 figures (1961 s.80D, unamended after 2019) equal
+> TY 2026-27's and are built. Both Acts' (2)(b) give the parents' 25,000 for insurance and check-ups only — **no
+> notified or Government health scheme** — and the senior citizen's 50,000 is for a sum paid for **health insurance**
+> (s.126(8); 1961 s.80D(4)), not a scheme contribution; the engine now applies both.
+
 ### **H-7 verdict: CONFIRMED on both limbs.**
 
 `FACT (S2, Schedule XV para 1(f))`: *"contribution by an employee to a recognised provident fund"* is

@@ -43,12 +43,16 @@ class HealthInsuranceDeductionTest {
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
     private static final TaxYearId TY_2026 = TaxYearId.of(2026);
 
-    /** 0 father, 66 by 31-3-2027 and resident; 1 mother, 56; 2 a child not dependant; 3 father, 71, non-resident. */
+    /**
+     * 0 father, 66 by 31-3-2027 and resident; 1 mother, 56; 2 a child not dependant; 3 father, 71, non-resident;
+     * 4 spouse, 66 by 31-3-2027 and resident.
+     */
     private static final FamilySnapshot FAMILY = new FamilySnapshot(List.of(
             member(Relationship.PARENT, LocalDate.of(1960, 5, 1), false, true),
             member(Relationship.PARENT, LocalDate.of(1970, 5, 1), false, true),
             member(Relationship.CHILD, LocalDate.of(2000, 5, 1), false, true),
-            member(Relationship.PARENT, LocalDate.of(1955, 5, 1), false, false)));
+            member(Relationship.PARENT, LocalDate.of(1955, 5, 1), false, false),
+            member(Relationship.SPOUSE, LocalDate.of(1960, 6, 1), false, true)));
 
     private static Member member(Relationship relationship, LocalDate born, boolean dependant, boolean resident) {
         return new Member(relationship, born, dependant, Optional.empty(), Optional.empty(), false, false, resident);
@@ -86,11 +90,54 @@ class HealthInsuranceDeductionTest {
     }
 
     @Test
-    void evaluate_whenHealthPaymentsAreEnteredForTaxYear2025_refusesNamingTheItemThatAddsThem() {
-        // When / Then — D-144: 80D's TY 2025-26 rows are W-075d2's
-        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD, self(HealthPaymentKind.INSURANCE_PREMIUM, "20000")))
+    void evaluate_whenTaxYear2025PaymentsAreEntered_appliesSection80dsLimits() {
+        // When — 1961 s.80D (D-145): own insurance 30,000 → 25,000; the senior father's 60,000 → 50,000
+        NodeResult own = run(TaxYearId.of(2025), OLD, self(HealthPaymentKind.INSURANCE_PREMIUM, "30000"));
+        NodeResult seniorParent = run(TaxYearId.of(2025), OLD,
+                forMembers(HealthPaymentKind.INSURANCE_PREMIUM, "60000", 0));
+
+        // Then
+        assertThat(own.value()).isEqualTo(MoneyValue.of(Money.of("25000")));
+        assertThat(seniorParent.value()).isEqualTo(MoneyValue.of(Money.of("50000")));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025CheckUpsAndAnUninsuredSeniorsMedicalAreEntered_allowsFiveThousandAndTheMedical() {
+        // When — s.80D(2A): check-ups 4,000 + 3,000 within 5,000; (2)(d): the uninsured senior father's 40,000
+        NodeResult result = run(TaxYearId.of(2025), OLD, self(HealthPaymentKind.PREVENTIVE_CHECKUP, "4000"),
+                forMembers(HealthPaymentKind.PREVENTIVE_CHECKUP, "3000", 1),
+                forMembers(HealthPaymentKind.MEDICAL_EXPENDITURE, "40000", 0));
+
+        // Then — 5,000 + 40,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("45000")));
+    }
+
+    @Test
+    void evaluate_whenATaxYear2025LumpSumCoversThreeYears_allowsAThird() {
+        // When — s.80D(4A): 60,000 for three years, a third in each
+        NodeResult result = run(TaxYearId.of(2025), OLD,
+                new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), Money.of("60000"), false, 3));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("20000")));
+    }
+
+    @Test
+    void evaluate_whenAGovernmentSchemeContributionCoversAParent_refuses() {
+        // When / Then — s.126(2)(b) (1961 s.80D(2)(b)): a parent's sum is insurance or a check-up, no scheme (D-145)
+        assertThatThrownBy(() -> run(OLD, forMembers(HealthPaymentKind.GOVERNMENT_HEALTH_SCHEME, "20000", 0)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-075d2");
+                .hasMessageContaining("s.126(2)(b)");
+    }
+
+    @Test
+    void evaluate_whenAGovernmentSchemeContributionCoversASeniorSpouse_keepsTheTwentyFiveThousandLimit() {
+        // When — s.126(8): the senior's 50,000 is for a sum paid for health insurance; a scheme contribution is not
+        NodeResult result = run(OLD, forMembers(HealthPaymentKind.GOVERNMENT_HEALTH_SCHEME, "40000", 4));
+
+        // Then — 25,000, under DED-HEALTH-FAMILY (D-145)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("25000")));
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.DED_HEALTH_FAMILY);
     }
 
     @Test

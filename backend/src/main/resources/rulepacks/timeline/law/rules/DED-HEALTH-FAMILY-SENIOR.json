@@ -1,9 +1,75 @@
 {
   "ruleId": "DED-HEALTH-FAMILY-SENIOR",
-  "_note": "80D for the assessee and family (\"the spouse and dependant children\", s.126(10)(b)): insurance, a notified health scheme and preventive check-ups up to ₹50000 — the senior citizen's substitution, \"such person is a senior citizen, the amount of sum as provided in such clauses, shall be substituted with ₹50000 for ₹25000\" (s.126(8)(a), p.162); medical expenditure up to ₹50000 (s.126(2)(c)); together \"The amount of sum referred to in sub-section (2) shall not exceed ₹ 50000 in aggregate of the sum specified under sub-section (2)(a) and (c) or aggregate of the sum specified under sub-section (2)(b) and (d)\" (s.126(4), p.162). Medical expenditure on a senior citizen only \"if no amount has been paid to effect or to keep in force the health insurance of such person\" (s.126(7)); a senior citizen is \"an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year\" (s.2(100), p.20). The age is this row's condition, AgeAtLeast 60 of the INSURED_PERSON at any time in the year; the person's residence in India is the node's check. ChapterEightNode uses this row where any premium or scheme payment in the bucket covers a senior citizen (separate policies for a senior and a non-senior parent take the senior limit — the node's reading); a floater covering a senior and a non-senior is refused (OQ-18). Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 only; the 1961 counterpart, s.80D, is unread (W-075d). D-136.",
+  "_note": "80D for the assessee and family (\"the spouse and dependant children\", s.126(10)(b)): insurance, a notified health scheme and preventive check-ups up to ₹50000 — the senior citizen's substitution, \"such person is a senior citizen, the amount of sum as provided in such clauses, shall be substituted with ₹50000 for ₹25000\" (s.126(8)(a), p.162); medical expenditure up to ₹50000 (s.126(2)(c)); together \"The amount of sum referred to in sub-section (2) shall not exceed ₹ 50000 in aggregate of the sum specified under sub-section (2)(a) and (c) or aggregate of the sum specified under sub-section (2)(b) and (d)\" (s.126(4), p.162). Medical expenditure on a senior citizen only \"if no amount has been paid to effect or to keep in force the health insurance of such person\" (s.126(7)); a senior citizen is \"an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year\" (s.2(100), p.20). The age is this row's condition, AgeAtLeast 60 of the INSURED_PERSON at any time in the year; the person's residence in India is the node's check. ChapterEightNode uses this row where any premium or scheme payment in the bucket covers a senior citizen (separate policies for a senior and a non-senior parent take the senior limit — the node's reading); a floater covering a senior and a non-senior is refused (OQ-18). Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80D, is the TY 2025-26 version (W-075d2). D-136. TY 2025-26: Income-tax Act, 1961 s.80D(4) (thc p.342): \"Where the sum specified in clause (a) or clause (b) of sub-section (2) … is paid to effect or keep in force an insurance on the health of any person specified therein, and who is a senior citizen, the provisions of this section shall have effect as if for the words twenty-five thousand rupees, the words fifty thousand rupees had been substituted\"; \"senior citizen\" means \"an individual resident in India who is of the age of sixty years or more at any time during the relevant previous year\" (p.343). The same row. sources/2026-10-07-chapter-via.md B13. D-145.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80D(2)(a), (c), (4); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.126(2)(a), (2)(c), (4), (8)(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AggregateWithCeiling",
+        "contributors": [
+          "HEALTH_INSURANCE_FAMILY",
+          "MEDICAL_EXPENDITURE_FAMILY"
+        ],
+        "ceiling": "50000",
+        "subCaps": {
+          "HEALTH_INSURANCE_FAMILY": {
+            "type": "Fixed",
+            "amount": "50000"
+          },
+          "MEDICAL_EXPENDITURE_FAMILY": {
+            "type": "Fixed",
+            "amount": "50000"
+          }
+        }
+      },
+      "conditions": [
+        {
+          "type": "AgeAtLeast",
+          "years": 60,
+          "subject": "INSURED_PERSON"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80D(4) — \"fifty thousand rupees\" subs. by Act 13 of 2018, s.26 (w.e.f. 1-4-2019)",
+        "gazetteRef": "not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "2019-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80D(2)(a), (c), (4), pp.341–342; Explanation (\"senior citizen\"), p.343",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80D after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md; none amends s.80D) were not searched."
+      }
+    },
     {
       "validity": {
         "type": "Between",
@@ -17,7 +83,8 @@
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
-        "presence": "NOT_YET_VERIFIED"
+        "reference": "s.80D(2)(a), (c), (4); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
       },
       "provision2025": {
         "instrument": "Income-tax Act, 2025",

@@ -68,12 +68,17 @@ class DisabilityDeductionTest {
 
     private static NodeResult run(RegimeCode regime, Individual assessee, List<DisabledDependantSupport> supports,
             List<SpecifiedDiseaseTreatment> treatments) {
+        return run(TY_2026, regime, assessee, supports, treatments);
+    }
+
+    private static NodeResult run(TaxYearId year, RegimeCode regime, Individual assessee,
+            List<DisabledDependantSupport> supports, List<SpecifiedDiseaseTreatment> treatments) {
         RulePack pack = new ClasspathRulePackProvider(
-                        "rulepacks", Set.of(TY_2026), new JsonPackAssembler(LockedInstruments.of(TY_2026)))
-                .load(TY_2026);
+                        "rulepacks", Set.of(year), new JsonPackAssembler(LockedInstruments.of(year)))
+                .load(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
-        EngineInputs inputs = new EngineInputs(TY_2026, regime,
-                TemporalContext.forTaxYear(TY_2026, LocalDate.of(2026, 9, 21)),
+        EngineInputs inputs = new EngineInputs(year, regime,
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
@@ -96,6 +101,14 @@ class DisabilityDeductionTest {
 
     private static SpecifiedDiseaseTreatment treated(int member, String paid, String reimbursed) {
         return new SpecifiedDiseaseTreatment(false, Optional.of(member), Money.of(paid), Money.of(reimbursed));
+    }
+
+    @Test
+    void evaluate_whenADisabledDependantIsSupportedInTaxYear2025_refusesNamingTheItemThatAddsTheRows() {
+        // When / Then — D-145: 80DD's TY 2025-26 rows are W-075d3's
+        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD, plain(), support(0, "60000"), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("W-075d3");
     }
 
     @Test

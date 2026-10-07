@@ -97,9 +97,19 @@ final class HealthInsuranceDeduction {
         Bucket bucket = bucketOf(ctx, payment);
         Paid paid = buckets.get(bucket);
         switch (payment.kind()) {
-            case INSURANCE_PREMIUM, GOVERNMENT_HEALTH_SCHEME -> {
+            case INSURANCE_PREMIUM -> {
                 paid.insurance = paid.insurance.plus(payment.amount().apportioned(1, payment.relevantTaxYears()));
                 paid.coversSenior |= coversSenior(ctx, payment, bucket);
+            }
+            case GOVERNMENT_HEALTH_SCHEME -> {
+                if (bucket == Bucket.PARENTS) {
+                    throw new IllegalArgumentException("A health scheme contribution counts for the assessee or the"
+                            + " family only; a parent's sum is insurance or a preventive check-up (s.126(2)(b); 1961"
+                            + " s.80D(2)(b); D-145)");
+                }
+                // The senior citizen's limit is for a sum paid for health insurance (s.126(8); 1961 s.80D(4)), so a
+                // scheme contribution never raises it.
+                paid.insurance = paid.insurance.plus(payment.amount());
             }
             case PREVENTIVE_CHECKUP -> paid.checkups = paid.checkups.plus(payment.amount());
             case MEDICAL_EXPENDITURE -> {
