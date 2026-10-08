@@ -1,0 +1,73 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-DISABLED-DEPENDANT* provision1961 (s.80DD) and provision2025 (s.127). summary: S2 s.127(1), (3), (9)(b); 1961 s.80DD(1) and proviso — a fixed sum (sources B14, M9; D-138, D-146). routes[0]: DED-DISABLED-DEPENDANT. routes[1]: DED-DISABLED-DEPENDANT-SEVERE (s.127(3)). disqualifiers[0]: the rows' regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: s.127(8), DisabilityDeduction. disqualifiers[2]: OQ-19. disqualifiers[3]: D-138, DisabilityDeduction.",
+  "key": "SEC-DISABLED-DEPENDANT",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80DD",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.127",
+    "presence": "PRESENT"
+  },
+  "plainName": "Care of a dependant with disability",
+  "summary": "If you are resident and spent money on the medical treatment, nursing, training and rehabilitation of a dependant with disability, or paid into an approved scheme for their maintenance, a deduction is allowed, larger where the disability is severe. A dependant is your spouse, child, parent, brother or sister who depends wholly or mainly on you. Under the new Act the deduction is up to the limit, so never more than you spent or paid; under the earlier Act it was the limit itself once anything was spent or paid. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "A dependant with disability",
+      "description": "The deduction for a dependant certified as a person with disability.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-DISABLED-DEPENDANT"
+        }
+      ]
+    },
+    {
+      "name": "A dependant with severe disability",
+      "description": "The larger deduction for a dependant certified as a person with severe disability.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-DISABLED-DEPENDANT-SEVERE"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "It is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DISABLED-DEPENDANT"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A dependant who claims the deduction for their own disability is not a dependant for this one.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DISABLED-DEPENDANT"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Support for more than one dependant with disability in the year is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "whether each dependant gives a deduction of their own is not settled"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A Hindu undivided family's claim under this deduction is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "the deduction for a Hindu undivided family is not built"
+      }
+    }
+  ]
+}

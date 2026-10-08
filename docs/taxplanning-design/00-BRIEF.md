@@ -285,7 +285,7 @@ cites them (rule R2); the coverage register (§7) completes the mapping.
 
 | # | Manager | Handles | Sections (as cited) | Code | Status |
 |---|---|---|---|---|---|
-| M-14 | Deduction manager | Chapter VIII: investment-linked aggregate ceiling, payment-linked, income-linked, disability; sub-caps before ceiling; cap at gross total income; no deduction against special-rate income; regime disallowance sets | s.123, s.124, s.133, s.153 … | `AggregateWithCeiling`, `DisallowanceSet` | ✅ shapes · ✅ Chapter VIII node (salaried scope, both years) · ◐ catalogue (W-076a/b); s.153 W-075c5; ss.135, 137, 152 deferred |
+| M-14 | Deduction manager | Chapter VIII: investment-linked aggregate ceiling, payment-linked, income-linked, disability; sub-caps before ceiling; cap at gross total income; no deduction against special-rate income; regime disallowance sets | s.123, s.124, s.133, s.153 … | `AggregateWithCeiling`, `DisallowanceSet` | ✅ shapes · ✅ Chapter VIII node (salaried scope, both years) · ✅ catalogue (W-076a/b); s.153 W-075c5; ss.135, 137, 152 deferred |
 
 **E. Tax**
 
@@ -573,3 +573,4 @@ Current truth above; history here (D-046 B1 applies the same rule to this brief)
 | 2026-09-23 | §5.1: the shipped pack holds **2** rule rows, not 15 | `W-045c` — the earlier figure counted `VERIFIED` markers |
 | 2026-09-24 | §5.2, §10: concept names chosen; OQ-4 decided | `W-045d`, D-051 — the 2025 Act's s.202 heading is "New tax regime" (S2 p.226) |
 | 2026-10-07 | M-14 status: the Chapter VIII node built for the salaried scope in both years; its catalogue entries W-076a/b | `W-076`, D-149 — built across W-075a–d5 (D-131) |
+| 2026-10-08 | M-14 status: the catalogue complete for every built Chapter VIII section | `W-076b`, D-152 — after `W-076a` (D-150) |

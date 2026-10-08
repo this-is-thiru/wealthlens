@@ -1,0 +1,89 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-DONATION-* provision1961 (s.80G) and provision2025 (s.133). summary: S2 s.133(1), (2), (4), (5), (7)(a); 1961 s.80G(1), (2), (4), (5D) (sources B24–B27, M13; TOLA 2020 s.3(XII)(a), A10; D-142, D-148). routes[0]: DED-DONATION-WHOLE (s.133(1)(a)). routes[1]: DED-DONATION-HALF (s.133(1)(b)). disqualifiers[0]: the rows' regimes. disqualifiers[1]: DED-DONATION-QUALIFYING (s.133(2)). disqualifiers[2]: DED-DONATION-CASH (s.133(5)). disqualifiers[3]: OQ-24, DonationDeduction. disqualifiers[4]: OQ-23, ChapterEightNode. disqualifiers[5]: D-142, DonationDeduction.",
+  "key": "SEC-DONATIONS",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80G",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.133",
+    "presence": "PRESENT"
+  },
+  "plainName": "Donations",
+  "summary": "Donations of money to the funds and institutions the Act lists are deducted: to some in full, to others at half. Donations to some of them count only up to a share of your gross total income after your other deductions, and the excess is ignored before the full or half is applied. A donation above a small limit counts only if it was not paid in cash. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "Donations allowed in full",
+      "description": "Donations to the funds the Act names, and for family planning within the qualifying limit, deducted in full.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-DONATION-WHOLE"
+        }
+      ]
+    },
+    {
+      "name": "Donations allowed at half",
+      "description": "Donations to the other listed funds, charities and public bodies, half deducted, most of them within the qualifying limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-DONATION-HALF"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A donation is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DONATION-WHOLE"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "The part of the limited donations beyond the qualifying limit is ignored.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DONATION-QUALIFYING"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A donation above the cash limit that was paid in cash is not deducted at all.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DONATION-CASH"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Family-planning donations and half-allowed donations together beyond the qualifying limit are not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "which donations lose the excess is not settled"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Where the qualifying limit binds and rent paid is also claimed, the deduction is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "each deduction's base depends on the other"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A Hindu undivided family's claim under this deduction is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "donations for a Hindu undivided family is not built"
+      }
+    }
+  ]
+}

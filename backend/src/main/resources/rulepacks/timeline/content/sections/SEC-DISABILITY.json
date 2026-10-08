@@ -1,0 +1,57 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-DISABILITY* provision1961 (s.80U) and provision2025 (s.154). summary: S2 s.154(1)–(3); 1961 s.80U(1) and proviso (sources B18; D-138, D-146). routes[0]: DED-DISABILITY. routes[1]: DED-DISABILITY-SEVERE. disqualifiers[0]: the rows' regimes. disqualifiers[1]: the rows' IsResident condition.",
+  "key": "SEC-DISABILITY",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80U",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.154",
+    "presence": "PRESENT"
+  },
+  "plainName": "Person with disability",
+  "summary": "If you are resident and certified by a medical authority during the year as a person with disability, a fixed deduction is allowed, larger if the disability is severe. The certificate is filed with the return. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "A person with disability",
+      "description": "The fixed deduction for a certified person with disability.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-DISABILITY"
+        }
+      ]
+    },
+    {
+      "name": "A person with severe disability",
+      "description": "The larger fixed deduction for a certified person with severe disability.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-DISABILITY-SEVERE"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "It is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DISABILITY"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "You were not resident in the year.",
+      "enforcedBy": {
+        "type": "ByCondition",
+        "condition": "IsResident"
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-EDUCATION-LOAN provision1961 (s.80E) and provision2025 (s.129). summary: S2 s.129(1)–(3); 1961 s.80E (sources B16; D-139, D-147). routes[0]: DED-EDUCATION-LOAN. disqualifiers[0]: the row's regimes. disqualifiers[1]: the row's TaxYearSpan (s.129(2)).",
+  "key": "SEC-EDUCATION-LOAN-INTEREST",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80E",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.129",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest on an education loan",
+  "summary": "Interest you paid out of your taxable income on a loan from a financial institution or an approved charitable institution, for your own higher education or a relative's, is deducted in full. It runs for a fixed number of years from the year you start paying interest, or until the interest is paid off, whichever ends first. A relative is your spouse, your children, or a student you are the legal guardian of. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "Interest on a loan for higher education",
+      "description": "The whole of the interest paid in the year.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-EDUCATION-LOAN"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "It is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-EDUCATION-LOAN"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Interest paid after the years the deduction runs for is not deducted.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-EDUCATION-LOAN"
+      }
+    }
+  ]
+}
