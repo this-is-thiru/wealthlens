@@ -1,0 +1,145 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-161). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: the 21 rows 1961 s.10 is MODELLED by (W-064–W-068, W-066a); 1961 s.10 'Incomes not included in total income' (thc p.65) / 2025 s.11 (Gazette 265620 p.36). summary: S2 s.11(1), (2) with Schedule III; each row's regimes. routes: the rows by family, as SEC-HOUSE-RENT-ALLOWANCE, SEC-LEAVE-TRAVEL-CONCESSION, SEC-SALARY-ALLOWANCES, SEC-SALARY-RETIREMENT. disqualifiers[0]: SAL-HOUSE-RENT-ALLOWANCE ExceptIn NEW_TAX_REGIME (s.202(2)(a)(i)). disqualifiers[1]: Schedules II, IV, V, VI and VII (s.11(3)) and the rest of Schedule III — no rows.",
+  "key": "SEC-INCOMES-NOT-INCLUDED",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.10",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.11",
+    "presence": "PRESENT"
+  },
+  "plainName": "Incomes not included in total income",
+  "summary": "Some incomes are left out of your total income when the conditions set for them are met: among those built, parts of house rent allowance and leave travel help, certain special allowances, and parts of what you receive on retirement or leaving a job. Where a condition is not met, the income is taxed. Some of them, house rent allowance among them, are not available in the default regime.",
+  "routes": [
+    {
+      "name": "House rent allowance",
+      "description": "The part the rules exempt for rent you pay.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-HOUSE-RENT-ALLOWANCE"
+        }
+      ]
+    },
+    {
+      "name": "Leave travel help",
+      "description": "The part the rules exempt for journeys within India.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-LEAVE-TRAVEL-CONCESSION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "SAL-LEAVE-TRAVEL-JOURNEYS"
+        }
+      ]
+    },
+    {
+      "name": "Special allowances",
+      "description": "The parts the rules exempt for uniform, conveyance, children's education and hostel, and transport for a disabled employee.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-UNIFORM"
+        },
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-CONVEYANCE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-CHILDREN-EDUCATION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-HOSTEL"
+        },
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-TRANSPORT-DISABLED"
+        }
+      ]
+    },
+    {
+      "name": "Retirement and leaving a job",
+      "description": "The parts exempt of gratuity, commuted pension, leave encashment, retrenchment compensation and voluntary retirement.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-GOVERNMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-STATUTORY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-GRATUITY-AGGREGATE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-GOVERNMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-COMMUTED-PENSION-FUND"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-GOVERNMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-LEAVE-ENCASHMENT-AGGREGATE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-RETRENCHMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-RETRENCHMENT-APPROVED-SCHEME"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-VOLUNTARY-RETIREMENT"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "House rent allowance is not exempt in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "SAL-HOUSE-RENT-ALLOWANCE"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "The other incomes the schedules leave out, and the persons wholly exempt, are not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "Not built yet: only the salary-related entries are built."
+      }
+    }
+  ]
+}
