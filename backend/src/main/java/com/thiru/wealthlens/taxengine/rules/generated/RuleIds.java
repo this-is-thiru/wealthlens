@@ -53,6 +53,7 @@ public final class RuleIds {
     public static final RuleId HP_OWN_RESIDENCE_PRE_CONSTRUCTION = new RuleId("HP-OWN-RESIDENCE-PRE-CONSTRUCTION");
     public static final RuleId HP_PRE_CONSTRUCTION = new RuleId("HP-PRE-CONSTRUCTION");
     public static final RuleId HP_STANDARD_DEDUCTION = new RuleId("HP-STANDARD-DEDUCTION");
+    public static final RuleId HP_UNREALISED_RENT = new RuleId("HP-UNREALISED-RENT");
     public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");
     public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");
     public static final RuleId PERQ_ACCOM_GOVERNMENT = new RuleId("PERQ-ACCOM-GOVERNMENT");

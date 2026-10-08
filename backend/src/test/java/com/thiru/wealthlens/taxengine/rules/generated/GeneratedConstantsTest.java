@@ -72,6 +72,7 @@ class GeneratedConstantsTest {
             "HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
             "HP-PRE-CONSTRUCTION",
             "HP-STANDARD-DEDUCTION",
+            "HP-UNREALISED-RENT",
             "PERQ-ACCOM-CONTINUED",
             "PERQ-ACCOM-FURNITURE",
             "PERQ-ACCOM-GOVERNMENT",

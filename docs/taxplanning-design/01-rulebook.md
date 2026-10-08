@@ -1295,6 +1295,14 @@ all, depending on two flags. That is the whole case for `A1`'s regime comparison
 > 2025-26 also borrowed on or after 1-4-1999, the 1961 second proviso). Loans are the assessee's own (s.24(2)); interest
 > deducted under s.130/131 is left out; properties are netted within the head (`SETOFF-INTRA-001`, built as a row by
 > W-081) and the head below nil is refused until W-081. `HP-CAP-SELFOCC-002` for TY 2025-26: built inside the cap.
+>
+> **Addendum (W-078c, 2026-10-08, D-157):** `HP-AV-UNREAL-001`'s prescribed conditions are now read — Income-tax Rules,
+> 2026 r.21 (Gazette 271092, p.1551) and Income-tax Rules, 1962 r.4 (substituted w.e.f. 1-4-2002; DoR compendium
+> p.1.54): rent receivable (1962: payable) but not paid and proved lost and irrecoverable, where the tenancy is bona
+> fide, the tenant has vacated or steps are taken to compel it, the tenant occupies no other property of the assessee,
+> and recovery has been pursued or shown futile (1962: useless). Built as `HP-UNREALISED-RENT`, both years: the rent
+> net of it before the higher-of and the vacancy rule; the conditions are an entry condition. `HP-AV-STOCK-001`
+> (s.21(5)) stays deferred with the business head (D-155).
 
 ---
 

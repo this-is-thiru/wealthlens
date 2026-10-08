@@ -39,12 +39,17 @@ class HousePropertyNodeTest {
     private static final Rate WHOLE = Rate.percent("100");
 
     private static HouseProperty let(String expected, String rent, boolean vacant, String taxes) {
-        return new HouseProperty(HouseOccupancy.LET, Money.of(expected), Money.of(rent), vacant, Money.of(taxes),
-                WHOLE, Money.ZERO, Optional.empty(), List.of());
+        return unrealised(expected, rent, "0", vacant, taxes);
+    }
+
+    private static HouseProperty unrealised(String expected, String rent, String unrealised, boolean vacant,
+            String taxes) {
+        return new HouseProperty(HouseOccupancy.LET, Money.of(expected), Money.of(rent), Money.of(unrealised), vacant,
+                Money.of(taxes), WHOLE, Money.ZERO, Optional.empty(), List.of());
     }
 
     private static HouseProperty unlet(HouseOccupancy occupancy, String expected) {
-        return new HouseProperty(occupancy, Money.of(expected), Money.ZERO, false, Money.ZERO, WHOLE, Money.ZERO, Optional.empty(), List.of());
+        return new HouseProperty(occupancy, Money.of(expected), Money.ZERO, Money.ZERO, false, Money.ZERO, WHOLE, Money.ZERO, Optional.empty(), List.of());
     }
 
     /** R16's let property: 45,000 × 12 = 5,40,000 above an expected 4,80,000; taxes 18,000. */
@@ -115,7 +120,7 @@ class HousePropertyNodeTest {
     @Test
     void evaluate_whenTheAssesseeOwnsAShare_takesThatShareOfTheIncome() {
         // When — half of R16's let property
-        HouseProperty half = new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"), false,
+        HouseProperty half = new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"), Money.ZERO, false,
                 Money.of("18000"), Rate.percent("50"), Money.ZERO, Optional.empty(), List.of());
         NodeResult result = run(2026, List.of(half));
 
@@ -127,7 +132,7 @@ class HousePropertyNodeTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenArrearsOfRentAreReceived_addsThemLessThirtyPerCent(int year) {
         // When — 1,00,000 of arrears on a house now the owner's residence
-        HouseProperty withArrears = new HouseProperty(HouseOccupancy.OWN_RESIDENCE, Money.of("480000"), Money.ZERO,
+        HouseProperty withArrears = new HouseProperty(HouseOccupancy.OWN_RESIDENCE, Money.of("480000"), Money.ZERO, Money.ZERO,
                 false, Money.ZERO, WHOLE, Money.of("100000"), Optional.empty(), List.of());
         NodeResult result = run(year, List.of(withArrears));
 
@@ -176,8 +181,53 @@ class HousePropertyNodeTest {
     void construction_whenAHouseWithRentIsNotEnteredAsLet_isRefused() {
         // When / Then — S2 s.21(7)(b): let at any time is let
         assertThatThrownBy(() -> new HouseProperty(HouseOccupancy.OWN_RESIDENCE, Money.of("300000"),
-                        Money.of("10000"), false, Money.ZERO, WHOLE, Money.ZERO, Optional.empty(), List.of()))
+                        Money.of("10000"), Money.ZERO, false, Money.ZERO, WHOLE, Money.ZERO, Optional.empty(), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("enter it as LET");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenUnrealisedRentBringsTheRentBelowTheExpectedValue_takesTheExpectedValue(int year) {
+        // When — R16's house, 90,000 of the 5,40,000 unrealised
+        NodeResult result = run(year, List.of(unrealised("480000", "540000", "90000", false, "18000")));
+
+        // Then — S2 s.21(4); 1961 s.23(1) Explanation: rent 4,50,000 under 4,80,000; 4,80,000 − 18,000 = 4,62,000,
+        // less 1,38,600
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("323400")));
+        assertThat(result.trace().getFirst()).satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.HP_UNREALISED_RENT);
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("450000")));
+        });
+    }
+
+    @Test
+    void evaluate_whenTheRentLessUnrealisedRentStillExceedsTheExpectedValue_takesThatRent() {
+        // When — 30,000 unrealised
+        NodeResult result = run(2026, List.of(unrealised("480000", "540000", "30000", false, "18000")));
+
+        // Then — 5,10,000 − 18,000 = 4,92,000, less 1,47,600
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("344400")));
+    }
+
+    @Test
+    void evaluate_whenAVacantHouseHasUnrealisedRent_takesTheRentLessIt() {
+        // When — expected 4,80,000, rent 3,60,000 of which 60,000 unrealised, vacant part of the year
+        NodeResult result = run(2026, List.of(unrealised("480000", "360000", "60000", true, "0")));
+
+        // Then — s.21(2) on 3,00,000: 3,00,000 − 90,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("210000")));
+    }
+
+    @Test
+    void construction_whenUnrealisedRentExceedsTheRent_isRefused() {
+        // When / Then — on a house not let the rent is nil, so any unrealised rent is refused too
+        assertThatThrownBy(() -> unrealised("480000", "50000", "60000", false, "0"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("is more than the rent");
+        assertThatThrownBy(() -> new HouseProperty(HouseOccupancy.NOT_LET, Money.of("300000"), Money.ZERO,
+                        Money.of("1000"), false, Money.ZERO, WHOLE, Money.ZERO, Optional.empty(), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("is more than the rent");
     }
 }

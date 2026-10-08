@@ -58,12 +58,12 @@ class HousePropertyInterestTest {
     private static final HousingLoan R16_LOAN = loan("320000", "200000", true);
 
     private static HouseProperty let(LocalDate acquired, HousingLoan... loans) {
-        return new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"), false,
+        return new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"), Money.ZERO, false,
                 Money.of("18000"), WHOLE, Money.ZERO, Optional.of(acquired), List.of(loans));
     }
 
     private static HouseProperty home(LocalDate acquired, HousingLoan... loans) {
-        return new HouseProperty(HouseOccupancy.OWN_RESIDENCE, Money.of("480000"), Money.ZERO, false, Money.ZERO,
+        return new HouseProperty(HouseOccupancy.OWN_RESIDENCE, Money.of("480000"), Money.ZERO, Money.ZERO, false, Money.ZERO,
                 WHOLE, Money.ZERO, Optional.of(acquired), List.of(loans));
     }
 
@@ -289,7 +289,7 @@ class HousePropertyInterestTest {
     @Test
     void evaluate_whenACoOwnerPaysTheirOwnInterest_deductsItFromTheirShareUnshared() {
         // Given — half of R16's let house; the co-owner's own interest 1,00,000
-        HouseProperty half = new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"), false,
+        HouseProperty half = new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"), Money.ZERO, false,
                 Money.of("18000"), Rate.percent("50"), Money.ZERO, Optional.of(ACQUIRED),
                 List.of(loan("100000", "0", true)));
 
@@ -320,7 +320,7 @@ class HousePropertyInterestTest {
     @Test
     void construction_whenALoanToAcquireHasNoAcquisitionDate_isRefused() {
         // When / Then
-        assertThatThrownBy(() -> new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"),
+        assertThatThrownBy(() -> new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"), Money.ZERO,
                         false, Money.ZERO, WHOLE, Money.ZERO, Optional.empty(), List.of(R16_LOAN)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("needs the date it was acquired or constructed");

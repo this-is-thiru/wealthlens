@@ -146,6 +146,7 @@ class TimelineReaderTest {
             new RuleId("HP-OWN-RESIDENCE-INTEREST"),
             new RuleId("HP-OWN-RESIDENCE-PRE-CONSTRUCTION"),
             new RuleId("HP-OWN-RESIDENCE-INTEREST-CAP"),
+            new RuleId("HP-UNREALISED-RENT"),
             new RuleId("DED-SCHEDULE-XV"),
             new RuleId("DED-NPS-EMPLOYER-GOVT"),
             new RuleId("DED-NPS-EMPLOYER-OTHER"),

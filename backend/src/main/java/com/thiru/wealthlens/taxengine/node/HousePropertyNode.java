@@ -40,6 +40,7 @@ public final class HousePropertyNode implements ComputationNode {
 
     private static final BaseId ANNUAL_VALUE = new BaseId("ANNUAL_VALUE");
     private static final BaseId ARREARS = new BaseId("ARREARS");
+    private static final BaseId UNREALISED_RENT = new BaseId("UNREALISED_RENT");
 
     @Override
     public NodeId produces() {
@@ -54,7 +55,7 @@ public final class HousePropertyNode implements ComputationNode {
     @Override
     public Set<RuleId> rules() {
         Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.HP_ANNUAL_VALUE, RuleIds.HP_OWN_RESIDENCE,
-                RuleIds.HP_STANDARD_DEDUCTION, RuleIds.HP_ARREARS));
+                RuleIds.HP_STANDARD_DEDUCTION, RuleIds.HP_ARREARS, RuleIds.HP_UNREALISED_RENT));
         rules.addAll(HousePropertyInterest.RULES);
         return Set.copyOf(rules);
     }
@@ -105,8 +106,9 @@ public final class HousePropertyNode implements ComputationNode {
     }
 
     /**
-     * S2 s.21(1)–(3), (6); 1961 s.23(1)–(2): nil for an own residence; else the higher of the expected letting value and
-     * the rent — the rent where the property was let, vacant, and the rent fell below — less the local taxes paid.
+     * S2 s.21(1)–(4), (6); 1961 s.23(1)–(2): nil for an own residence; else the higher of the expected letting value and
+     * the rent — the rent where the property was let, vacant, and the rent fell below — less the local taxes paid. The
+     * rent is net of what the owner cannot realise before either comparison (s.21(4); 1961 s.23(1) Explanation).
      */
     private static Money annualValue(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
             List<TraceLine> lines) {
@@ -117,7 +119,7 @@ public final class HousePropertyNode implements ComputationNode {
             return Money.ZERO;
         }
         Money expected = property.expectedLettingValue();
-        Money rent = property.rentReceivable();
+        Money rent = actualRent(ctx, t, position, property, lines);
         boolean let = property.occupancy() == HouseOccupancy.LET;
         Money gross = !let ? expected
                 : property.vacantPartOfYear() && rent.isLessThan(expected) ? rent : Money.max(expected, rent);
@@ -132,6 +134,20 @@ public final class HousePropertyNode implements ComputationNode {
                 .withLimitedBy("property " + position + ": " + (let ? "let, rent " + rent : "not let")
                         + ", expected " + expected + ", less local taxes " + property.localTaxesPaid()));
         return value;
+    }
+
+    /** S2 s.21(4) with Rules 2026 r.21; 1961 s.23(1) Explanation with Rules 1962 r.4: the rent less what is unrealised. */
+    private static Money actualRent(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
+            List<TraceLine> lines) {
+        if (property.unrealisedRent().equals(Money.ZERO)) {
+            return property.rentReceivable();
+        }
+        Money unrealised = TemporallyApportionedCap.apply(ctx.rule(RuleIds.HP_UNREALISED_RENT), t,
+                CapContext.of(UNREALISED_RENT, property.unrealisedRent())).value();
+        Money rent = property.rentReceivable().minus(unrealised);
+        lines.add(line(ctx, t, lines, RuleIds.HP_UNREALISED_RENT, StepKind.MEASURE, property.rentReceivable(), rent)
+                .withLimitedBy("property " + position + ": less unrealised rent " + unrealised));
+        return rent;
     }
 
     /** S2 s.21(7)(a); 1961 s.23(4)(a): only as many own residences as the row allows, until the election chooses. */

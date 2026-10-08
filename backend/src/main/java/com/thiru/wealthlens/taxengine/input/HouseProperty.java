@@ -15,6 +15,10 @@ import java.util.Optional;
  * @param occupancy how the owner used it in the year
  * @param expectedLettingValue the sum it might reasonably be expected to let for from year to year
  * @param rentReceivable the actual rent received or receivable for the year, where let
+ * @param unrealisedRent the part of {@code rentReceivable} the tenant did not pay and which is proved lost and
+ *     irrecoverable on the Rules' conditions — the tenancy bona fide, the tenant gone or steps taken to evict, the
+ *     tenant in no other property of the assessee, and recovery pursued or shown futile (S2 s.21(4), Income-tax Rules,
+ *     2026 r.21; 1961 s.23(1) Explanation, Income-tax Rules, 1962 r.4; D-157); entered only where they hold
  * @param vacantPartOfYear whether, being let, it was vacant for the whole or part of the year
  * @param localTaxesPaid the local authority's taxes on it the owner actually paid in the year
  * @param ownershipShare the assessee's definite and ascertainable share — 100% where owned alone
@@ -29,6 +33,7 @@ public record HouseProperty(
         HouseOccupancy occupancy,
         Money expectedLettingValue,
         Money rentReceivable,
+        Money unrealisedRent,
         boolean vacantPartOfYear,
         Money localTaxesPaid,
         Rate ownershipShare,
@@ -40,7 +45,8 @@ public record HouseProperty(
         if (occupancy == null || ownershipShare == null) {
             throw new IllegalArgumentException("A house property needs its occupancy and the assessee's share");
         }
-        for (Money figure : new Money[] {expectedLettingValue, rentReceivable, localTaxesPaid, arrearsReceived}) {
+        for (Money figure : new Money[] {expectedLettingValue, rentReceivable, unrealisedRent, localTaxesPaid,
+                arrearsReceived}) {
             if (figure == null || figure.isLessThan(Money.ZERO)) {
                 throw new IllegalArgumentException("A house property needs every figure, none negative; enter 0"
                         + " where nil");
@@ -53,6 +59,10 @@ public record HouseProperty(
         if (occupancy != HouseOccupancy.LET && (rentReceivable.isGreaterThan(Money.ZERO) || vacantPartOfYear)) {
             throw new IllegalArgumentException("Rent or a vacancy means the house was let at some time in the year;"
                     + " enter it as LET (S2 s.21(7)(b); 1961 s.23(3))");
+        }
+        if (unrealisedRent.isGreaterThan(rentReceivable)) {
+            throw new IllegalArgumentException("Unrealised rent of " + unrealisedRent + " is more than the rent of "
+                    + rentReceivable + " it is part of (S2 s.21(4))");
         }
         loans = requireLoansDated(acquiredOrConstructedOn, loans);
     }
