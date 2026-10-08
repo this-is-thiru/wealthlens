@@ -69,13 +69,14 @@ class SalaryBaseNodeTest {
             RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION);
 
     /**
-     * The bases a year's pack holds: TY 2025-26 adds 1961 s.16(ii)'s, which the 2025 Act lacks (D-105); both years add
-     * the accommodation perquisite's (D-111).
+     * The bases a year's pack holds: TY 2025-26 adds 1961 s.16(ii)'s, which the 2025 Act lacks (D-105), and the
+     * recognised provident fund's, which the Finance Act, 2026 left nothing to measure (D-151); both years add the
+     * accommodation perquisite's (D-111).
      */
     private static List<RuleId> basesIn(int year) {
         return year == 2025
                 ? Stream.concat(BASES.stream(), Stream.of(RuleIds.SAL_SALARY_FOR_ENTMT,
-                        RuleIds.SAL_SALARY_FOR_ACCOM)).toList()
+                        RuleIds.SAL_SALARY_FOR_ACCOM, RuleIds.SAL_SALARY_FOR_RPF)).toList()
                 : Stream.concat(BASES.stream(), Stream.of(RuleIds.SAL_SALARY_FOR_ACCOM)).toList();
     }
 
@@ -147,7 +148,7 @@ class SalaryBaseNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs inputs = new EngineInputs(taxYear, NEW_TAX_REGIME,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack)
@@ -268,6 +269,35 @@ class SalaryBaseNodeTest {
         // Then — 1961 s.16(ii) "exclusive of any allowance": 20,000 alone, where HRA's is 70,000
         assertThat(measured.of(RuleIds.SAL_SALARY_FOR_ENTMT, 0)).isEqualTo(Money.of("20000"));
         assertThat(measured.of(RuleIds.SAL_SALARY_FOR_HRA, 0)).isEqualTo(Money.of("70000"));
+    }
+
+    @ParameterizedTest(name = "terms provide DA: {0}")
+    @ValueSource(booleans = {true, false})
+    void evaluate_whenTheShippedRegistryIsRead_measuresTheProvidentFundBaseWithDearnessAllowanceOnTheTerms(
+            boolean termsIncludeDearnessAllowance) {
+        // Given — the shipped components: 20,000 basic, 50,000 DA
+        TaxYearId taxYear = TaxYearId.of(2025);
+        RulePack shipped = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        List<Employment> employments = List.of(employment(termsIncludeDearnessAllowance,
+                line(ComponentCodes.BASIC, "20000"), line(ComponentCodes.DEARNESS_ALLOWANCE, "50000")));
+
+        // When
+        SalaryBases measured = bases(run(shipped, 2025, employments));
+
+        // Then — 1961 Sch. IV Pt A r.2(h): DA "if the terms of employment so provide" — 70,000, or 20,000 alone
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_RPF, 0))
+                .isEqualTo(Money.of(termsIncludeDearnessAllowance ? "70000" : "20000"));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2026_measuresNoProvidentFundBase() {
+        // When — the Finance Act, 2026 s.127(a)(iii) took the twelve per cent limb out of Sch. XI Pt A para 6
+        NodeResult result = run(2026, List.of(employment(true, line(BASIC, "600000"))));
+
+        // Then
+        assertThat(bases(result).byRule()).doesNotContainKey(RuleIds.SAL_SALARY_FOR_RPF);
     }
 
     @Test

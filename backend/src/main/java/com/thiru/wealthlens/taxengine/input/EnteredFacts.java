@@ -40,11 +40,12 @@ import java.util.Optional;
  * theirs (D-118), the cost-based benefits and assets with theirs (D-119), household services, utilities and
  * education with theirs (D-120), share allotments with theirs (D-121), employer
  * retirement contributions with the aggregate charge (D-126), the funds' history with the accretion on the
- * excess (D-127), the Chapter VIII payments with the deductions (D-132), life policies with their premiums'
- * share (D-134), health payments with 80D (D-136), disabled dependants' support and specified-disease treatment
- * with 80DD and 80DDB (D-138), loan interest with 80E–80EEB (D-139), the Agniveer Corpus Fund with s.16(l) and
- * s.125 (D-140), the rent declaration with s.134 (D-141), donations with s.133 (D-142). Every later
- * income item adds the field it reads, and the fingerprint sees it unasked.
+ * excess (D-127), a recognised fund's interest with its charge above the notified rate (D-151), the Chapter VIII
+ * payments with the deductions (D-132), life policies with their premiums' share (D-134), health payments with
+ * 80D (D-136), disabled dependants' support and specified-disease treatment with 80DD and 80DDB (D-138), loan
+ * interest with 80E–80EEB (D-139), the Agniveer Corpus Fund with s.16(l) and s.125 (D-140), the rent declaration
+ * with s.134 (D-141), donations with s.133 (D-142). Every later income item adds the field it reads, and the
+ * fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
  * @param tenancies each home occupied in the tax year, in the order entered
@@ -68,6 +69,8 @@ import java.util.Optional;
  * @param employerContributions each employer contribution to a retirement fund in the year, in the order entered
  * @param retirementFundHistory the earlier years' excess and the funds' income and balances, for the accretion on
  *     the excess, if entered
+ * @param recognisedFundInterest each recognised provident fund's interest credited in the year and its rate, in
+ *     the order entered
  * @param qualifyingPayments each sum paid that Chapter VIII lets the payer deduct, other than pay lines, in order
  * @param lifeInsurancePolicies each life policy whose premium was paid in the year, in the order entered
  * @param healthPayments each payment for health under s.126, in the order entered
@@ -100,6 +103,7 @@ public record EnteredFacts(
         List<EmployerShareAllotment> shareAllotments,
         List<EmployerFundContribution> employerContributions,
         Optional<RetirementFundHistory> retirementFundHistory,
+        List<RecognisedFundInterest> recognisedFundInterest,
         List<QualifyingPayment> qualifyingPayments,
         List<LifeInsurancePolicy> lifeInsurancePolicies,
         List<HealthPayment> healthPayments,
@@ -146,6 +150,7 @@ public record EnteredFacts(
         childEducation = copied(childEducation, "childEducation");
         shareAllotments = copied(shareAllotments, "shareAllotments");
         employerContributions = copied(employerContributions, "employerContributions");
+        recognisedFundInterest = copied(recognisedFundInterest, "recognisedFundInterest");
         qualifyingPayments = copied(qualifyingPayments, "qualifyingPayments");
         lifeInsurancePolicies = copied(lifeInsurancePolicies, "lifeInsurancePolicies");
         healthPayments = copied(healthPayments, "healthPayments");
@@ -169,7 +174,8 @@ public record EnteredFacts(
     public static EnteredFacts none() {
         return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                Optional.empty(), Optional.empty(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
+                List.of());
     }
 }

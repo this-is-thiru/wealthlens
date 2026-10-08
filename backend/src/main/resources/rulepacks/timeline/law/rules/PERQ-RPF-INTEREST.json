@@ -1,0 +1,110 @@
+{
+  "ruleId": "PERQ-RPF-INTEREST",
+  "_note": "Interest credited on an employee's balance in a recognised provident fund, in so far as it is allowed at a rate above the notified rate, is deemed received and is salary (D-151; rulebook PF-RPF12-001). The rate: S.O. 1046(E), 13-5-2011, Notification No. 24/2011, under 1961 Sch. IV Pt A r.6(b), \"with effect from the 1st day of September, 2010, 9.5 per cent.\", superseding S.O. 2091(E) — read in a third-party mirror of the Department's PDF (sources/2026-09-28-perquisite-thresholds.md Y1). TY 2025-26: Income-tax Act, 1961 Sch. IV Pt A r.6(b) (thc.nic.in p.856), \"interest credited on the balance to the credit of the employee in so far as it is allowed at a rate exceeding such rate as may be fixed by the Central Government\", charged by s.17(1)(vi). TY 2026-27: Income-tax Act, 2025 Sch. XI Pt A para 6 as substituted by the Finance Act, 2026 s.127(a)(iii) from 1-4-2026, \"interest credited on the balance to the credit of an employee in so far as it is allowed at a rate exceeding such rate as fixed by the Central Government by notification\" (Gazette 271439, p.71), charged by s.17(1)(i) (Gazette 265620, p.38); the 2011 notification carried by s.536(2)(j). The portion above the rate is the interest less the notified rate on the balance it was allowed on: the node hands in INTEREST (credited) and BALANCE (interest ÷ the rate allowed), per employment. Every employee. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "Sch. IV Pt A r.6(b), with s.17(1)(vi)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. XI Pt A para 6, with s.17(1)(i)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AmountInExcess",
+        "amount": "INTEREST",
+        "threshold": {
+          "type": "PercentOfBase",
+          "percent": "9.5",
+          "base": "BALANCE"
+        }
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "S.O. 1046(E), Notification No. 24/2011, F.No.142/14/2010-SO (TPL) — the rate under Income-tax Act, 1961 Sch. IV Pt A r.6(b), superseding S.O. 2091(E) of 26-8-2010",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii) — the Gazette copy not found",
+        "notifiedOn": "2011-05-13",
+        "effectiveFrom": "2010-09-01",
+        "retrospective": true,
+        "sourceUrl": "https://assets.cleartax-cdn.com/finfo/tax_library/920110000000000394.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://assets.cleartax-cdn.com/finfo/tax_library/920110000000000394.pdf",
+        "sourceDescription": "S.O. 1046(E), 13-5-2011, Notification No. 24/2011, in a third-party mirror (ClearTax CDN) of the Department's PDF; Income-tax Act, 1961 as on thc.nic.in, Fourth Schedule Part A r.6(b), p.856, and s.17(1)(vi), p.140",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "S.O. 1046(E), 13-5-2011 (Notification No. 24/2011) is read in a third-party mirror of the Department's PDF, not in the Gazette: read it in an egazette.gov.in or India Code copy (upload.indiacode.nic.in, ita_notification_schedule4_notification_no_24_2011_dated_13_5_2011.pdf — unreachable from here), and confirm no later notification has changed the rate (none found, reported only). Also: The Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019, the Finance Act, 2020, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020, the Finance Acts 2021, 2022 and 2023, the Finance Act, 2024, the Finance (No. 2) Act, 2024, the Finance Act, 2025 and the Taxation Laws (Amendment) Act, 2025 were searched by text (\"Fourth Schedule\", \"recognised provident fund\") and none amends Part A of the Income-tax Act's Fourth Schedule."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "Sch. IV Pt A r.6(b), with s.17(1)(vi)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. XI Pt A para 6 as substituted by the Finance Act, 2026 s.127(a)(iii), with s.17(1)(i)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "AmountInExcess",
+        "amount": "INTEREST",
+        "threshold": {
+          "type": "PercentOfBase",
+          "percent": "9.5",
+          "base": "BALANCE"
+        }
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2026 (4 of 2026), s.127(a)(iii) — Income-tax Act, 2025 Sch. XI Pt A para 6 substituted",
+        "gazetteRef": "CG-DL-E-31032026-271439",
+        "notifiedOn": "2026-03-31",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://assets.cleartax-cdn.com/finfo/tax_library/920110000000000394.pdf",
+        "sourceDescription": "S.O. 1046(E), 13-5-2011, Notification No. 24/2011, in a third-party mirror (ClearTax CDN) of the Department's PDF, carried by the Income-tax Act, 2025 s.536(2)(j); Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.127(a)(iii), pp.70–71; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(i), p.38",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "S.O. 1046(E), 13-5-2011 (Notification No. 24/2011) is read in a third-party mirror of the Department's PDF, not in the Gazette: read it in an egazette.gov.in or India Code copy (upload.indiacode.nic.in, ita_notification_schedule4_notification_no_24_2011_dated_13_5_2011.pdf — unreachable from here), and confirm no later notification has changed the rate (none found, reported only)."
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://assets.cleartax-cdn.com/finfo/tax_library/920110000000000394.pdf",
+    "sourceDescription": "S.O. 1046(E), 13-5-2011, Notification No. 24/2011, in a third-party mirror (ClearTax CDN) of the Department's PDF, carried by the Income-tax Act, 2025 s.536(2)(j); Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.127(a)(iii), pp.70–71; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(1)(i), p.38",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "UNVERIFIED",
+    "whatToCheck": "S.O. 1046(E), 13-5-2011 (Notification No. 24/2011) is read in a third-party mirror of the Department's PDF, not in the Gazette: read it in an egazette.gov.in or India Code copy (upload.indiacode.nic.in, ita_notification_schedule4_notification_no_24_2011_dated_13_5_2011.pdf — unreachable from here), and confirm no later notification has changed the rate (none found, reported only)."
+  }
+}

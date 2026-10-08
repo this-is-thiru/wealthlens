@@ -75,6 +75,19 @@ public record Rate(BigDecimal fraction) implements Comparable<Rate> {
                 Money.CALC));
     }
 
+    /**
+     * The base this rate yields {@code earned} on — interest credited at a rate, read back to the balance it was
+     * allowed on (D-151). Divided once at {@link Money#CALC} and rounded to paise.
+     *
+     * @param earned the amount the rate produced, 0 or more
+     */
+    public Money baseYielding(Money earned) {
+        if (fraction.signum() == 0) {
+            throw new IllegalArgumentException("A nil rate yields " + earned + " on no base");
+        }
+        return Money.ofExact(earned.amountInRupees().divide(fraction, Money.CALC));
+    }
+
     /** The rate as the statute writes it, for a trace line: {@code "30%"}, {@code "12.5%"}. */
     public String asPercentLabel() {
         return fraction.multiply(HUNDRED).stripTrailingZeros().toPlainString() + "%";

@@ -91,4 +91,18 @@ class RateTest {
         assertThatThrownBy(() -> Rate.percent("20").leftAfter(Money.of("100"), -1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void baseYielding_whenInterestIsReadBack_isTheBalanceRoundedOnce() {
+        // 1,10,000 ÷ 11% = 10,00,000; 1,000 ÷ 3% = 33,333.333… → 33,333.33
+        assertThat(Rate.percent("11").baseYielding(Money.of("110000"))).isEqualTo(Money.of("1000000"));
+        assertThat(Rate.percent("3").baseYielding(Money.of("1000"))).isEqualTo(Money.of("33333.33"));
+    }
+
+    @Test
+    void baseYielding_whenTheRateIsNil_isRefused() {
+        assertThatThrownBy(() -> Rate.ZERO.baseYielding(Money.of("100")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("nil rate");
+    }
 }

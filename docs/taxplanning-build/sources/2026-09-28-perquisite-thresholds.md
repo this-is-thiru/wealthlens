@@ -106,3 +106,22 @@ word, or a source this session could not open (incometaxindia.gov.in answers 403
 - **W-073c is sourced for the rate** (both years, `UNVERIFIED`). Its plan still has to read the 1961 Sch. IV Pt A r.6 text
   (thc.nic.in, on hand) and the "salary" the 12% is measured on (Sch. XI Pt A; 1961 Sch. IV Pt A r.2) — both in
   documents already here.
+
+## Round 6 (2026-10-08) — ChatGPT share `t_6ac79649a66c8191b86bc4eb6ea97bdb` (W-073c); each link fetched here
+
+| # | Finding | Status | Source |
+|---|---|---|---|
+| Z1 | **S.O. 1046(E), 13-5-2011** — the agent cites an India Code copy (`upload.indiacode.nic.in/showfile?actid=AC_CEN_2_2_00039_196143_1524045010860&filename=ita_notification_schedule4_notification_no_24_2011_dated_13_5_2011.pdf&type=notification`) quoting the same operative sentence as Y1 | still **REPORTED** — that host times out here (three variants); the agent found no egazette copy; egazette `WriteReadData/2011/<n>.pdf` answers 404 for every number probed (100–150000), so 2011 is not numbered that way | — |
+| Z2 | **Finance Act, 2026, s.127(a)(iii)** substitutes Sch. XI Pt A **para 6** of the 2025 Act: the new para 6 keeps only the interest limb — *"The portion of the annual accretion in the tax year to the balance of an employee in a recognised provident fund consisting of interest credited on the balance to the credit of an employee in so far as it is allowed at a rate exceeding such rate as fixed by the Central Government by notification, shall be deemed to have been received by the employee …"*. The former clause (a), *"contributions made by the employer exceeding 12 % of the employee's salary"* (2025 Act as enacted, p.550), is gone. In force **1-4-2026** (s.1(2)(a): ss.2–129) | **READ** | egazette 2026/271439 (CG-DL-E-31032026-271439) pp.70–71; 2025 Act egazette 2025/265620 p.550 |
+| Z3 | **Income-tax Rules, 2026** (G.S.R. 198(E), 20-3-2026, in force 1-4-2026) fix **no** rate for para 6: no "9.5" anywhere in the text; the only reference is a form column *"Interest credited to the assessee's account in recognised provident fund in excess of the rate fixed by the Central Government [See Schedule XI – Part A]"*, beside a column for the 12% excess — the form predates FA 2026 | **READ** | incometax.gov.in `…/2026-03/En-Notified-IT-Rules-2026-20-03-2026.pdf`, Gazette p.2247 (PDF p.715) |
+| Z4 | No notification after S.O. 1046(E) changing the rate, under either Act, up to October 2026 | **REPORTED** (the agent: "none found"); a negative, not provable from here | — |
+
+### Effect on the build (for the owner)
+1. **W-073c's TY 2026-27 half shrinks to the interest limb.** The 12% employer-contribution charge does not exist for
+   TY 2026-27 (Z2); it stands for TY 2025-26 only (1961 Sch. IV Pt A r.6(a)). The rate for the interest limb in
+   TY 2026-27 is S.O. 1046(E)'s 9.5%, carried by s.536(2)(j) into the substituted para 6, which still reads "rate as
+   fixed … by notification" — so the carry-over holds.
+2. **The rulebook is stale on this:** `01-rulebook.md` (`SAL-DEF-RPF-001`, line 498) marks the 12% as VERIFIED for
+   S2 Sch. XI Pt A para 6 — true of the Act as enacted, not of TY 2026-27. An erratum is the owner's to place.
+3. **The 9.5% stays `UNVERIFIED`** (Y1, Z1): no Gazette or government-hosted copy opens here. A browser download of
+   the India Code link (Z1), saved locally, would make it READ.

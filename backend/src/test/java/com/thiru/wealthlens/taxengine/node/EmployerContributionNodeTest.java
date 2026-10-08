@@ -9,14 +9,18 @@ import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.RecognisedFundInterest;
 import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
+import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -26,16 +30,20 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * The aggregate employer contribution beyond ₹7,50,000 (S2 s.17(1)(h); 1961 s.17(2)(vii) as substituted by FA 2020
  * s.13; D-126) and the accretion on it (S2 s.17(1)(i), S4 r.16; 1961 s.17(2)(viia), Rules 1962 r.3B; D-127). Figures
- * by hand, the first being {@code DR 01} R13's worked example.
+ * by hand, the first being {@code DR 01} R13's worked example. The recognised provident fund's own charges — the
+ * employer's contribution beyond twelve per cent of salary (1961 Sch. IV Pt A r.6(a), TY 2025-26 only) and interest
+ * above the notified 9.5 per cent (r.6(b); S2 Sch. XI Pt A para 6 as substituted by FA 2026 s.127) — are D-151's.
  */
 class EmployerContributionNodeTest {
 
@@ -64,8 +72,17 @@ class EmployerContributionNodeTest {
         return run(year, contributions, Optional.empty());
     }
 
+    /** R13's basic of 24,00,000 in both employments, so its 2,88,000 is exactly twelve per cent. */
+    private static final List<Money> R13_SALARY = List.of(Money.of("2400000"), Money.of("2400000"));
+
     private static NodeResult run(int year, List<EmployerFundContribution> contributions,
             Optional<RetirementFundHistory> history) {
+        return run(year, contributions, history, List.of(), R13_SALARY);
+    }
+
+    private static NodeResult run(int year, List<EmployerFundContribution> contributions,
+            Optional<RetirementFundHistory> history, List<RecognisedFundInterest> interest,
+            List<Money> providentFundSalary) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -77,10 +94,12 @@ class EmployerContributionNodeTest {
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
                 new EnteredFacts(employments, List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                        List.of(), List.of(), List.of(), contributions, history, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
+                        List.of(), List.of(), List.of(), contributions, history, interest, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
-        return NodeHarness.with(pack).regime(NEW_TAX_REGIME).inputs(inputs).run(new EmployerContributionNode());
+        return NodeHarness.with(pack).regime(NEW_TAX_REGIME).inputs(inputs)
+                .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of(RuleIds.SAL_SALARY_FOR_RPF, providentFundSalary)))
+                .run(new EmployerContributionNode());
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -191,5 +210,126 @@ class EmployerContributionNodeTest {
         assertThatThrownBy(() -> run(2026, List.of(to(5, EmployerFund.RECOGNISED_PROVIDENT_FUND, "100000"))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("employment 5");
+    }
+
+    private static NodeResult runProvidentFund(int year, List<EmployerFundContribution> contributions,
+            List<Money> salary) {
+        return run(year, contributions, Optional.empty(), List.of(), salary);
+    }
+
+    private static NodeResult runInterest(int year, String credited, String ratePercent) {
+        return run(year, List.of(), Optional.empty(),
+                List.of(new RecognisedFundInterest(0, Money.of(credited), Rate.percent(ratePercent))), R13_SALARY);
+    }
+
+    @Test
+    void evaluate_whenT4Dash3InTaxYear2025_chargesTheContributionBeyondTwelvePerCent() {
+        // When — DR 08 T4-3: basic 10,00,000, employer PF 1,50,000; the aggregate stays under 7,50,000
+        NodeResult result = runProvidentFund(2025, List.of(to(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, "150000")),
+                List.of(Money.of("1000000"), Money.ZERO));
+
+        // Then — 1,50,000 − 12% of 10,00,000 = 1,50,000 − 1,20,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("30000")));
+        assertThat(result.trace()).element(1).satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.PERQ_RPF_CONTRIBUTION);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("150000")));
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("30000")));
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+        });
+    }
+
+    @Test
+    void evaluate_whenT4Dash3InTaxYear2026_chargesNothing() {
+        // When — the same facts after the Finance Act, 2026 s.127(a)(iii) removed the twelve per cent limb
+        NodeResult result = runProvidentFund(2026, List.of(to(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, "150000")),
+                List.of(Money.of("1000000"), Money.ZERO));
+
+        // Then — the aggregate alone, nil
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.PERQ_EMPLOYER_CONTRIBUTION));
+    }
+
+    @ParameterizedTest(name = "salary {0} → {1}")
+    @CsvSource({"1000000, 30000", "800000, 54000"})
+    void evaluate_whenTaxYear2025_measuresTwelvePerCentOfTheSalaryBase(String salary, String charged) {
+        // When — 1,50,000 contributed; the base is basic 8,00,000 + DA 2,00,000 where the terms provide DA, and
+        // 8,00,000 where they do not (SalaryBaseNodeTest measures it)
+        NodeResult result = runProvidentFund(2025, List.of(to(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, "150000")),
+                List.of(Money.of(salary), Money.ZERO));
+
+        // Then — 1,50,000 − 1,20,000; 1,50,000 − 96,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(charged)));
+    }
+
+    @Test
+    void evaluate_whenRecognisedFundContributionsAreExactlyTwelvePerCent_isNil() {
+        // When — R13's example: 2,88,000 on 24,00,000
+        NodeResult result = runProvidentFund(2025, List.of(to(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, "288000")),
+                R13_SALARY);
+
+        // Then — "in excess of twelve per cent."
+        assertThat(result.trace()).element(1).satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.PERQ_RPF_CONTRIBUTION);
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+        });
+    }
+
+    @Test
+    void evaluate_whenTwoEmployersEachHaveAFund_measuresEachAgainstItsOwnSalary() {
+        // When — A: 90,000 on 6,00,000; B: 40,000 on 4,00,000
+        NodeResult result = runProvidentFund(2025, List.of(to(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, "90000"),
+                to(1, EmployerFund.RECOGNISED_PROVIDENT_FUND, "40000")),
+                List.of(Money.of("600000"), Money.of("400000")));
+
+        // Then — A 90,000 − 72,000 = 18,000; B 40,000 − 48,000, nil; pooled it would be 1,30,000 − 1,20,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("18000")));
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.PERQ_RPF_CONTRIBUTION))
+                .extracting(line -> line.out())
+                .containsExactly(MoneyValue.of(Money.of("18000")), MoneyValue.of(Money.ZERO));
+    }
+
+    @Test
+    void evaluate_whenAContributionGoesToAnotherFund_leavesItOutOfTheTwelvePerCent() {
+        // When — a pension-scheme contribution far beyond 12% of a nil salary
+        NodeResult result = runProvidentFund(2025, List.of(to(0, EmployerFund.NOTIFIED_PENSION_SCHEME, "100000")),
+                List.of(Money.ZERO, Money.ZERO));
+
+        // Then — under the aggregate's limit, and no provident fund line
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).noneMatch(line -> line.rule().equals(RuleIds.PERQ_RPF_CONTRIBUTION));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheFundAllowedElevenPerCent_chargesTheInterestAboveNineAndAHalf(int year) {
+        // When — 1,10,000 credited at 11%
+        NodeResult result = runInterest(year, "110000", "11");
+
+        // Then — on a balance of 1,10,000 ÷ 11% = 10,00,000, 9.5% is 95,000; 1,10,000 − 95,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("15000")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.PERQ_RPF_INTEREST);
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("15000")));
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+        });
+    }
+
+    @ParameterizedTest(name = "{0}%")
+    @ValueSource(strings = {"8.25", "9.5"})
+    void evaluate_whenTheFundAllowedNoMoreThanTheNotifiedRate_chargesNothing(String ratePercent) {
+        // When — 82,500 credited
+        NodeResult result = runInterest(2026, "82500", ratePercent);
+
+        // Then — only "a rate exceeding" 9.5% is charged: none of it
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @Test
+    void evaluate_whenInterestIsCreditedAtANilRate_isRefused() {
+        // When / Then — no balance yields interest at nil
+        assertThatThrownBy(() -> runInterest(2026, "10000", "0"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("rate of nil");
     }
 }

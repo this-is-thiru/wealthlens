@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-076a DONE)
+Item            : — (W-073c DONE)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : RESUME HERE (session 13): run the resume check; then WAIT for the owner's pick. Backlog order: W-076b (catalogue entries: ss.127–134, 154 / 80DD, 80DDB, 80E, 80EE, 80EEA, 80EEB, 80G, 80GG, 80U — then BRIEF M-14's "◐ catalogue" → ✅) → W-075a3 (OQ-16/17) → W-077 (T5 goldens) → W-078 … ; W-073c (needs S.O. 1046(E), a local PDF); W-075c5 after W-079. Proposed, not placed: a 22-claim-catalogue erratum (s.133(6) reaches (1)(b)(ii) only); placing ss.135, 137, 152 (deferred by D-149). The session-12 scratchpad (Gazette PDFs, relock.sh) is gone after the shutdown: refetch PDFs from egazette by the ids in sources/2026-10-07-chapter-via.md; recreate the relock helper per memory rulepack-lock-recompute
-Last verify     : ./mvnw clean test -pl backend -Punit → 2481 pass, 0 fail, 0 Checkstyle violations (W-076a, 2026-10-07)
-Waiting on      : the owner — next pick. Open: OQ-1, 2, 5–8, 10–13, 15–24. D-054 startup wiring UNOWNED. Carried: TY 2025-26 goldens PROVISIONAL (its three missing Acts located — 209695, 214648, 252143 — read only for Chapter VI-A); DIS-S202-2A, SAL-HRA-006, SAL-LTA-CHILD-001 owed; D-104, D-105 proposed
+Next step       : WAIT for the owner's pick. Backlog: W-076b → W-075a3 (OQ-16/17) → W-077 → W-078 …; W-075c5 after W-079; W-074b (T4-3 now split a/b). Proposed, not placed: SAL-DEF/PF-RPF errata done; PERQ-EMPLOYER-CONTRIBUTION whatToCheck refresh (interim FA 2024 searched); S.O. 1046(E) India Code PDF to make 9.5% READ; 22-claim-catalogue erratum; ss.135/137/152
+Last verify     : ./mvnw clean test -pl backend -Punit → 2498 pass, 0 fail, BUILD SUCCESS (W-073c, 2026-10-08)
+Waiting on      : the owner — next pick. Open: OQ-1, 2, 5–8, 10–13, 15–24. D-054 startup wiring UNOWNED. Carried: TY 2025-26 goldens PROVISIONAL; DIS-S202-2A, SAL-HRA-006, SAL-LTA-CHILD-001 owed; D-104, D-105 proposed
 Files touched   : —
-Last item commit: taxplanning W-076a: add catalogue entries for the gross-total cap, pension scheme, Agniveer fund, health insurance and 80CCC/80CCE — ten more Chapter VIII sections marked modelled (D-150)
-Updated         : 2026-10-07, session 12 (paused at the owner's request — session limit; all work committed)
+Last item commit: taxplanning W-073c: add the recognised provident fund's own charges — the contribution beyond twelve per cent (TY 2025-26 only) and interest above nine and a half per cent (D-151)
+Updated         : 2026-10-08, session 13
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

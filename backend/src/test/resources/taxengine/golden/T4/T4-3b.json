@@ -1,0 +1,25 @@
+{
+  "id": "T4-3b",
+  "source": "DR 08 T4-3 — TY 2026-27, as corrected by its erratum (W-073c): the twelve per cent limb is gone",
+  "_source": "DR 08 T4-3 expects ₹30,000, but the Finance Act, 2026 s.127(a)(iii) substituted S2 Sch. XI Pt A para 6 without the twelve per cent limb from 1-4-2026 (Gazette 271439, pp.70–71; D-151) — the erratum below DR 08 T4-3. The aggregate 1,50,000 ≤ 7,50,000 adds nothing either, so: 0.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "1000000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "employerContributions": [
+      {
+        "fund": "RECOGNISED_PROVIDENT_FUND",
+        "amount": "150000"
+      }
+    ]
+  },
+  "expected": {
+    "employerContributionCharges": "0"
+  }
+}

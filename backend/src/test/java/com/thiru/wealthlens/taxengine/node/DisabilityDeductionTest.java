@@ -81,7 +81,7 @@ class DisabilityDeductionTest {
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                        List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
+                        List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(),
                         supports, treatments, List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
                 assessee, FAMILY, plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs)

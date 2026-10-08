@@ -99,7 +99,7 @@ class RentPaidDeductionTest {
                 new EnteredFacts(List.of(), List.of(new Tenancy(c.occupied(), "ANY_OTHER_PLACE", false,
                                 Money.of(c.rent()))), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                        List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
+                        List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), other, Optional.of(c.declaration()), List.of()),
                 c.assessee().orElse(plain.assessee()), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());

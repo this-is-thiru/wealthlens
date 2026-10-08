@@ -85,6 +85,8 @@ public final class RuleIds {
     public static final RuleId PERQ_MEDABROAD_STAY = new RuleId("PERQ-MEDABROAD-STAY");
     public static final RuleId PERQ_MEDABROAD_TRAVEL = new RuleId("PERQ-MEDABROAD-TRAVEL");
     public static final RuleId PERQ_OTHER_BENEFIT = new RuleId("PERQ-OTHER-BENEFIT");
+    public static final RuleId PERQ_RPF_CONTRIBUTION = new RuleId("PERQ-RPF-CONTRIBUTION");
+    public static final RuleId PERQ_RPF_INTEREST = new RuleId("PERQ-RPF-INTEREST");
     public static final RuleId PERQ_SERVICES = new RuleId("PERQ-SERVICES");
     public static final RuleId PERQ_SPECIFIED_DATE = new RuleId("PERQ-SPECIFIED-DATE");
     public static final RuleId PERQ_SPECIFIED_EMPLOYEE = new RuleId("PERQ-SPECIFIED-EMPLOYEE");
@@ -136,6 +138,7 @@ public final class RuleIds {
     public static final RuleId SAL_SALARY_FOR_ENTMT = new RuleId("SAL-SALARY-FOR-ENTMT");
     public static final RuleId SAL_SALARY_FOR_GRATUITY = new RuleId("SAL-SALARY-FOR-GRATUITY");
     public static final RuleId SAL_SALARY_FOR_HRA = new RuleId("SAL-SALARY-FOR-HRA");
+    public static final RuleId SAL_SALARY_FOR_RPF = new RuleId("SAL-SALARY-FOR-RPF");
     public static final RuleId SAL_SALARY_INCLUDES = new RuleId("SAL-SALARY-INCLUDES");
     public static final RuleId SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE = new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE");
     public static final RuleId SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME = new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME");

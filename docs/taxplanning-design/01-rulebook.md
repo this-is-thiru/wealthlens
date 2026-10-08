@@ -497,6 +497,13 @@ introduces up to ₹3 of drift on a seven-band walk and makes golden tests un-de
 | `SAL-DEF-80C-NPS-001` | For **employee NPS inside the ₹1.5L cap**: 10% of *"salary, including dearness allowance, if the terms of employment so provide, but excluding all other allowances and perquisites"* for an employee; 20% of **gross total income** for anyone else. | s.80CCD(1) | **Sch. XV para 1(y)** | VERIFIED (S2, Schedule XV para 1(y)) |
 | `SAL-DEF-RPF-001` | For **employer RPF contribution over 12%**: "12% of the employee's salary" — the salary definition for Schedule XI Part A para 6 was **not read**. | Sch. IV Part A r.6 | Sch. XI Part A para 6 | VERIFIED as to the 12% (S2, Sch. XI Pt A para 6); the salary base for it is NEEDS VERIFICATION — open S2 Schedule XI Part A para 2 definitions |
 
+> **Erratum (W-073c, 2026-10-08, D-151):** `SAL-DEF-RPF-001` is not unread and not a TY 2026-27 rule. The definition is
+> 1961 Sch. IV Pt A **r.2(h)** (thc.nic.in p.853) and S2 Sch. XI Pt A **para 2(i)** (Gazette 265620, p.547), the same
+> words: *"'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other
+> allowances and perquisites"*. But the Finance Act, 2026 s.127(a)(iii) removed the 12% limb from para 6 from
+> 1-4-2026, so the base measures something only in **TY 2025-26** (`SAL-SALARY-FOR-RPF`). Verified by: Gazette
+> CG-DL-E-31032026-271439, pp.70–71.
+
 ### **H-4 verdict: CONFIRMED — excluding DA from HRA salary is wrong.**
 
 `FACT (S4, r.279(2)(b))`: DA **is** in the HRA salary base whenever the terms of employment provide
@@ -889,6 +896,13 @@ See `T9`.
 | `PF-WITHDRAW-001` | The accumulated balance is excluded where the employee rendered **five years or more** of continuous service, or service ended through ill-health, closure or a cause beyond the employee's control, or the balance is transferred to the new employer's fund. | Sch. IV Pt A r.8 | **Sch. XI Part A para 8** | applies | applies | VERIFIED (S2, Sch. XI Pt A para 8) |
 | `PF-WITHDRAW-TDS-001` | Where para 8 does **not** apply, EPF trustees deduct tax at **10%** on payment of the accumulated balance where the aggregate is **₹50,000 or more**. | s.192A | **s.392(7)** | 10% / ₹50,000 | 10% / ₹50,000 | VERIFIED for TY 2026-27 (S2, s.392(7)) |
 
+> **Erratum (W-073c, 2026-10-08, D-151):** `PF-RPF12-001` is stated as applying in TY 2026-27 under Sch. XI Part A
+> para 6 with both limbs — true of the Act as enacted (Gazette 265620, p.550), not as in force: the Finance Act, 2026
+> s.127(a)(iii) substituted para 6 from 1-4-2026 with only *"interest credited on the balance … at a rate exceeding
+> such rate as fixed by the Central Government by notification"*. The **12% contribution limb is TY 2025-26 only**
+> (1961 Sch. IV Pt A r.6(a)); the interest limb applies in both years. Verified by: Gazette CG-DL-E-31032026-271439,
+> pp.70–71.
+
 > **Addendum (W-073a, 2026-09-28, D-126):** `PF-AGGCAP-001`'s TY 2025-26 figure is now read in the Gazette —
 > 1961 s.17(2)(vii) as substituted by the **Finance Act, 2020 s.13** (CG-DL-E-27032020-218938, p.21), "seven lakh and
 > fifty thousand rupees", with the scheme of s.80CCD(1) — and built as `PERQ-EMPLOYER-CONTRIBUTION` (both years,
@@ -901,6 +915,13 @@ See `T9`.
 > 2025-26: 1961 s.17(2)(viia) as substituted by the Finance Act, 2020 s.13, with Rules 1962 r.3B (G.S.R. 155(E),
 > 5-3-2021, from 1-4-2021), read in a third-party-hosted scan of the Gazette pages — `UNVERIFIED` until read in an
 > egazette copy. PC1 + TP1 beyond the opening balance is ignored (r.16(2)(b); r.3B's Note).
+
+> **Addendum (W-073c, 2026-10-08, D-151):** `PF-RPF12-001` is built as two rows. `PERQ-RPF-CONTRIBUTION` — the
+> employer's contribution beyond 12% of salary, per employment, **TY 2025-26 only** (1961 Sch. IV Pt A r.6(a),
+> thc.nic.in p.856; no amendment in the amending Acts 2019–2025, searched), against `SAL-SALARY-FOR-RPF` (r.2(h):
+> basic, and DA where the terms provide). `PERQ-RPF-INTEREST` — interest credited above the notified **9.5%**, both
+> years (r.6(b); S2 Sch. XI Pt A para 6 as substituted by FA 2026 s.127(a)(iii)); the rate is S.O. 1046(E),
+> 13-5-2011, read only in a third-party mirror, so `UNVERIFIED`. Both stack on `PF-AGGCAP-001` as stated above.
 
 ### `DED-NPS-EMP-001` — employer NPS, the deduction side
 

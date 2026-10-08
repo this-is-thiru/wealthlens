@@ -442,6 +442,12 @@ PF-RPF12-001:  12% of 10,00,000 = 1,20,000
 **Expected: ₹30,000 added to salary, with `PF-AGGCAP-001` contributing nothing.** `INFERENCE`: two
 independent charges. A single "employer PF exemption" concept produces ₹0 here.
 
+> **Erratum (W-073c, 2026-10-08, D-151):** the ₹30,000 holds for TY 2025-26 only — the Finance Act, 2026
+> s.127(a)(iii) substituted S2 Sch. XI Pt A para 6 from 1-4-2026 with the interest limb alone, so for TY 2026-27
+> `PF-RPF12-001`'s twelve per cent charge does not exist and T4-3 expects **₹0** (the aggregate adds nothing either).
+> The case is run as T4-3a (TY 2025-26, ₹30,000) and T4-3b (TY 2026-27, ₹0).
+> Verified by: Gazette CG-DL-E-31032026-271439, pp.70–71 (s.127), p.1 (s.1(2)(a)).
+
 ### T4-4 — `PF-EEINT-001`, the employee side. **`PROVISIONAL`**
 
 Employee's own RPF contribution ₹6,00,000 in the year; employer also contributes.

@@ -21,8 +21,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * The built half of {@code DR 08} T4 — the employer's retirement contributions — run through the shipped pipeline to
- * income under "Salaries" (D-128): T4-1 and T4-2's excess added to salary, T4-3's aggregate adding nothing. The
- * deductions, T4-3's 12% charge and T4-4 are {@code W-074b}'s. The figures are copied, never computed; PROVISIONAL
+ * income under "Salaries" (D-128): T4-1 and T4-2's excess added to salary; T4-3's aggregate adding nothing and its
+ * twelve per cent charge ₹30,000 in TY 2025-26 (T4-3a) and nothing in TY 2026-27 (T4-3b, the Finance Act, 2026
+ * having removed it; D-151). The deductions and T4-4 are {@code W-074b}'s. The figures are copied, never computed; PROVISIONAL
  * runs are reported separately.
  */
 @Log4j2

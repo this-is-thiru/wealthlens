@@ -63,7 +63,7 @@ class ExemptionNodeTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(employments, tenancies, List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()), plain.assessee(), plain.family(), plain.ledgers(),
+                new EnteredFacts(employments, tenancies, List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()), plain.assessee(), plain.family(), plain.ledgers(),
                 plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack)
                 .regime(regime)

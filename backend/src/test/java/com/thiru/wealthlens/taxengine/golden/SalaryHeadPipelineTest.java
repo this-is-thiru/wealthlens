@@ -157,7 +157,7 @@ class SalaryHeadPipelineTest {
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), entries.tenancies(), entries.journeys(),
                         entries.allowanceUses(), entries.disabledTransport(), entries.retirementPayments(),
-                        entries.accommodations(), entries.medicalTreatmentAbroad(), entries.vehicles(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), entries.employerContributions(), entries.retirementFundHistory(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
+                        entries.accommodations(), entries.medicalTreatmentAbroad(), entries.vehicles(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), entries.employerContributions(), entries.retirementFundHistory(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);
@@ -495,7 +495,9 @@ class SalaryHeadPipelineTest {
                         Money.of("90000"), Money.of("900000"), Money.of("1100000")))));
 
         // Then — pay 9,00,000 + the employer's pension contribution 3,36,000 (s.16(k); D-140) + the excess 74,000
-        // + (37,000 + 1,00,000) × 90,000 ÷ 10,00,000 = 12,330 → 13,22,330
-        assertThat(result.valueOf(NodeIds.SALARY_GROSS)).isEqualTo(MoneyValue.of(Money.of("1322330")));
+        // + (37,000 + 1,00,000) × 90,000 ÷ 10,00,000 = 12,330 → 13,22,330; TY 2025-26 adds the provident fund
+        // contribution beyond 12% of basic 6,00,000 + DA 60,000: 2,88,000 − 79,200 = 2,08,800 → 15,31,130 (D-151)
+        assertThat(result.valueOf(NodeIds.SALARY_GROSS))
+                .isEqualTo(MoneyValue.of(Money.of(year == 2025 ? "1531130" : "1322330")));
     }
 }

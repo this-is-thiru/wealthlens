@@ -3,10 +3,10 @@
 **Read this first, write it last, every session.**
 
 ```
-Last checkpoint           : W-076a — "taxplanning W-076a: add catalogue entries for the gross-total cap, pension scheme, Agniveer fund, health insurance and 80CCC/80CCE — ten more Chapter VIII sections marked modelled (D-150)"
-Last updated              : 2026-10-07 (session 12 — W-075c4, W-075c6, W-075d0–d5, W-076, W-076a done; build GREEN, 2481 tests)
-Current position          : W-076b — Chapter VIII catalogue entries, part 2 (not started)
-Session count             : 12
+Last checkpoint           : W-073c — "taxplanning W-073c: add the recognised provident fund's own charges — the contribution beyond twelve per cent (TY 2025-26 only) and interest above nine and a half per cent (D-151)"
+Last updated              : 2026-10-08 (session 13 — sourcing round 6, W-073c done; build GREEN, 2498 tests)
+Current position          : between items — owner's pick (backlog: W-076b → W-075a3 → W-077 → W-078 …)
+Session count             : 13
 ```
 
 **"Last checkpoint"** records the **item id and the commit subject** of the last accepted item — not
@@ -56,7 +56,7 @@ Phase 4b   W-045a D  W-045b D  W-045b2 D  W-045b3 D  W-045c D  W-045c1 D  W-045d
 Phase 5    W-046 D  W-046b D  W-047 —  W-048 D  W-049a D  W-049 D  W-049b D  W-050a D  W-050 D  W-051 D  W-052 D  W-052b D  W-052c D  W-052d D  W-053 D   ← COMPLETE
 Phase 6    W-054 D  W-055 D  W-056a D  W-056 D  W-057 D  W-058 D   ← COMPLETE
 Phase 7    W-059 D  W-060 D  W-061a D  W-061 D  W-062 D  W-063 D  W-064 D  W-065 D  W-066 D  W-066b D  W-067a D  W-067 D  W-068a D  W-068 D  W-069a D  W-069 D  W-069b D  W-066a D  W-070 D  W-064a D  W-066c D  W-063a D  W-066d D   ← COMPLETE
-Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f D  W-071g D  W-073 —  W-073a D  W-073b D  W-073c ·  W-074 —  W-074a D  W-075 —  W-075a D  W-075a2 D  W-075b D  W-075c —  W-075c1 D  W-075c2 D  W-075c3 D  W-075c4 D  W-075c6 D  W-075d —  W-075d0 D  W-075d1 D  W-075d2 D  W-075d3 D  W-075d4 D  W-075d5 D  W-076 D  W-076a D  W-076b ·  W-075a3 ·  W-077 ·  W-078 ·  W-079 ·  W-075c5 ·  W-074b ·  W-080 ·
+Phase 8    W-071a D  W-071b D  W-071c D  W-071a2 D  W-071e —  W-071e1 D  W-071e2 D  W-071e3 D  W-071e4 D  W-071d D  W-071f D  W-071g D  W-073 —  W-073a D  W-073b D  W-073c D  W-074 —  W-074a D  W-075 —  W-075a D  W-075a2 D  W-075b D  W-075c —  W-075c1 D  W-075c2 D  W-075c3 D  W-075c4 D  W-075c6 D  W-075d —  W-075d0 D  W-075d1 D  W-075d2 D  W-075d3 D  W-075d4 D  W-075d5 D  W-076 D  W-076a D  W-076b ·  W-075a3 ·  W-077 ·  W-078 ·  W-079 ·  W-075c5 ·  W-074b ·  W-080 ·
 Phase 9    W-081 ·  W-082 ·  W-083 ·  W-084 ·  W-085 ·  W-086 ·  W-087 ·  W-088 ·  W-089 ·
 Phase 10   W-090 ·  W-091 ·  W-092 ·  W-093 ·  W-094 ·  W-095 ·
 Phase 11   W-096 ·  W-097 ·  W-098 ·  W-099 ·  W-100 ·  W-101 ·  W-102 ·  W-103 ·  W-104 ·  W-105 ·  W-106 ·  W-107 ·  W-108 ·  W-109 ·  W-110 ·  W-111 ·
@@ -65,7 +65,7 @@ Phase 13   W-124 ·  W-125 ·  W-126 ·  W-127 ·  W-128 ·  W-129 ·  W-130 · 
 Phase 14   W-134 ·  W-135 ·  W-136 ·  W-137 ·  W-138 ·  W-139 ·  W-140 ·  W-141 ·  W-142 ·  W-143 ·  W-144 ·  W-145 ·  W-146 ·
 ```
 
-Counts — done **147** / 222 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-07): every id except the 14 marked `—` (8 retired, 6 split into lettered items)
+Counts — done **148** / 222 live · in flight **0** · blocked **0**  ← counted from the board above (2026-10-08): every id except the 14 marked `—` (8 retired, 6 split into lettered items)
 
 ---
 
@@ -451,6 +451,7 @@ Recorded on the design's own recommendations (`docs/taxplanning-design/16-gettin
 | D-004 | 2026-09-19 | Q4 — advisor path within 12 months? | **Seam only** — `AccessPolicy` from day one with a trivial body | provisional — on recommendation |
 | D-005 | 2026-09-19 | Q5 — document ingestion in release 1? | **Fast-follow**, behind `app.taxplanning.documents.enabled=false` | provisional — on recommendation |
 | D-006 | — | Q6 — who signs off a rule-pack change? | **OPEN — needs a human name.** Does not block any item before `W-032` | — |
+| D-151 | 2026-10-08 | `W-073c`: recognised-fund contributions over 12% and interest over the notified rate | **Finding:** FA 2026 s.127(a)(iii) substituted S2 Sch. XI Pt A para 6 from 1-4-2026 with the interest limb only (Gazette 271439 pp.70–71). **C1:** rows `PERQ-RPF-CONTRIBUTION` (TY 2025-26 only; `AmountInExcess(CONTRIBUTION, PercentOfBase(12, SALARY))`; 1961 Sch. IV Pt A r.6(a)), `PERQ-RPF-INTEREST` (both years; `AmountInExcess(INTEREST, PercentOfBase(9.5, BALANCE))`; r.6(b), para 6 as substituted) and the base `SAL-SALARY-FOR-RPF` (TY 2025-26 only; r.2(h), DA where the terms provide). **C2:** input `RecognisedFundInterest(employment, interestCredited, rateAllowed)`; the contribution limb reads `EmployerFundContribution`. **C3:** `EmployerContributionNode` requires `salary.base`; 12% per employment; a nil salary charges all; interest at a nil rate refused (`Rate.baseYielding`). **C4:** BALANCE rounded to paise, then 9.5% of it. **C5:** all three `UNVERIFIED` (thc not Gazette; the rate via a third-party mirror). **C6:** errata under `DR 01` `PF-RPF12-001`, `SAL-DEF-RPF-001` and `DR 08` T4-3; addendum under R13. **Deviation (owner, step 4):** `golden/T4/T4-3.json` split into T4-3a (TY 2025-26, ₹30,000) and T4-3b (TY 2026-27, ₹0); `SalaryHeadPipelineTest`'s R13 case TY 2025-26 → 15,31,130 | owner: "W-073c approved — proceed as recommended" (2026-10-08); "Update both (Recommended)" (2026-10-08); "W-073c approved" (2026-10-08) |
 | D-150 | 2026-10-07 | `W-076a`: Chapter VIII catalogue entries, part 1 | **C1:** six entries — `SEC-DEDUCTIONS-FROM-GROSS-TOTAL-INCOME` (80A / s.122), `SEC-PENSION-SCHEME` (80CCD / s.124; five routes, three disqualifiers), `SEC-AGNIVEER-CORPUS-FUND` (80CCH / s.125), `SEC-HEALTH-INSURANCE` (80D / s.126; five routes, six disqualifiers — the earlier "80D catalogue entry" proposal), `SEC-PENSION-FUND-ANNUITY` (80CCC / s.123), `SEC-INVESTMENT-AGGREGATE-LIMIT` (80CCE / s.123) — 80CCC and 80CCE get their own because `SectionRef.citedBy` reads one section per provision. **C2:** ss.122, 124, 125, 126 / 80A, 80CCC, 80CCD, 80CCE, 80CCH, 80D `MODELLED` (MODELLED 16 → 26, PLANNED 153 → 143). **C3:** concept keys. No figures in text (SC-2) | owner: "W-076a approved — proceed as recommended" (2026-10-07); "W-076a approved" (2026-10-07) |
 | D-149 | 2026-10-07 | `W-076`: the Chapter VIII close-out | **Placement:** W-076 started ahead of W-075a3 (owner, "start W-076"; W-075a3 waits on OQ-16/17). The node itself was built across W-075a–d5 (D-131). **Revision 1 (R13):** s.136 / 80GGB `DEFERRED BUILT_LATER` with `[]` — `PersonType` has no COMPANY (owner: "Empty list"). **Revision 2 (R13), R1a:** SC-1 refuses a `MODELLED` section without a catalogue entry, so only s.123 / 80C (`SEC-INVESTMENT-DEDUCTION`) become `MODELLED` (`AggregateWithCeiling`); the other 28 built sections stay `PLANNED`, now **W-076a** (ss.122, 124–126 / 80A, 80CCC, 80CCD, 80CCE, 80CCH, 80D) and **W-076b** (ss.127–134, 154 / 80DD–80U), placed right after W-076 (owner). **R2 (C2a):** s.153 / 80TTA / 80TTB → W-075c5; ss.135, 137, 152 / 80GGA, 80GGC, 80RRB `DEFERRED BUILT_SECOND` INDIVIDUAL; 80CCA, 80CCB, 80CCF, 80CCG `OUT_OF_SCOPE` (spent by their own terms, A0 pp.336–341); 80AB, 80AC, 80B `NOT_COMPUTATIONAL`. **R3:** BRIEF M-14 status and Changes line. Counts: MODELLED +2, PLANNED −17, DEFERRED +8, OUT_OF_SCOPE +4, NOT_COMPUTATIONAL +3 | owner: "W-076 approved — proceed as recommended"; "Empty list (Recommended)"; "W-076 revision approved — R1a"; placement "Right after W-076"; "W-076 approved" (2026-10-07) |
 | D-148 | 2026-10-07 | `W-075d5`: TY 2025-26 80CCH, 80GG, 80G | The PM CARES lead resolved: TOLA 2020 = egazette 2020/222110, s.3(XII)(a) p.16 adds PM CARES to s.80G(2)(a)(iiia), whole, deemed from 1-4-2020 (sources A10, M18). **C1:** TY 2025-26 versions of `DED-AGNIVEER-OWN`, `-GOVERNMENT` (80CCH, FA 2023 s.39), `DED-RENT-PAID` (80GG, r.11B), `DED-DONATION-WHOLE`, `-HALF`, `-QUALIFYING`, `-CASH` (80G) — the same shapes and regimes, SOURCE_CHECKED, the residual naming TOLA 2020 as read. **C2:** `DonationClause` maps to 1961: NAMED_FUND = (2)(a) on (1)(i)'s list; FAMILY_PLANNING = (a)(vii); DROUGHT_RELIEF_FUND = (a)(iii); CHARITABLE_INSTITUTION = (a)(iv); PUBLIC_BODY = (a)(v), (vi), (via), (b). **C3:** 80G before 80GG as D-142; OQ-23 and OQ-24 arise in both years. **C4:** the three TY 2025-26 refusal tests compute; records. Every Chapter VIII section built for TY 2026-27 now computes for TY 2025-26 | owner: "W-075d5 approved — proceed as recommended" (2026-10-07); "W-075d5 approved" (2026-10-07) |
@@ -706,6 +707,13 @@ Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` a
 | **`ElectionState` richness** | `WITHDRAWN` vs `PERMANENTLY_INELIGIBLE` is readable but nothing sets it; the protocol that decides is `W-082`'s |
 
 ## Notes for resume
+
+**W-073c (session 13, 2026-10-08):**
+- **Errata (R7):** `DR 01` below R13's table (`PF-RPF12-001`) and below `SAL-DEF-RPF-001`; `DR 08` below T4-3 — the
+  12% limb is TY 2025-26 only (FA 2026 s.127(a)(iii), Gazette 271439 pp.70–71); T4-3 is 0 for TY 2026-27.
+- **Proposals, not done:** `PERQ-EMPLOYER-CONTRIBUTION`'s TY 2025-26 `whatToCheck` still calls the interim FA 2024 unread —
+  it was searched this session (no amendment to s.17(2)(vii) or Sch. IV); the 9.5% becomes READ once the India Code
+  PDF of S.O. 1046(E) is saved locally (sources round 6, Z1).
 
 **Session 12 (2026-10-07), paused at the session limit with everything committed:** W-075c4 (80GG), W-075c6 (80G), the W-075d split with W-075d0–d5 (all of Chapter VIII for TY 2025-26, from the 1961 Act and nine amending Acts plus TOLA 2020), W-076 (close-out; two R13 revisions), W-076a (six catalogue entries). D-141–D-150; OQ-22–OQ-24 raised. Build GREEN, 2481 tests. Next: W-076b. Scratchpad files did not survive: Gazette PDFs refetch from egazette by the numbers in `sources/2026-10-07-chapter-via.md` (A0–A10).
 

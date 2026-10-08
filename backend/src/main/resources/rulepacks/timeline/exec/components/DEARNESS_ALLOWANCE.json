@@ -29,6 +29,10 @@
     {
       "rule": "SAL-SALARY-FOR-ACCOM",
       "onlyWhereTermsProvide": true
+    },
+    {
+      "rule": "SAL-SALARY-FOR-RPF",
+      "onlyWhereTermsProvide": true
     }
   ],
   "lifecycle": {
