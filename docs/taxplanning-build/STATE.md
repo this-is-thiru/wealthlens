@@ -5,7 +5,7 @@
 ```
 Last checkpoint           : W-078e2 — "taxplanning W-078e2: itemise the 42 first-scope gaps as W-089a–W-089d and W-112, and fail the build on any section left without an item (D-162)"
 Last updated              : 2026-10-08 (session 14 — W-078b, c, d, e, e2 done; loose ends placed (D-158, D-159, D-162); build GREEN, 2565 tests)
-Current position          : between items — owner's pick (backlog: W-078f → W-078g → W-078h → W-078i → W-079 → W-075c5 → W-074b → W-079a → W-080 → W-080a …)
+Current position          : between items — owner's pick (backlog: W-078f → W-078g → W-078h → W-078i → W-079 → W-075c5 → W-074b → W-079a → W-080 → W-080a …); session 14 paused, all committed
 Session count             : 14
 ```
 
@@ -720,6 +720,8 @@ Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` a
 ## Notes for resume
 
 **Session 13 (2026-10-08), paused at the session limit with everything committed:** sourcing round 6 (FA 2026 s.127 removes the 12% RPF limb for TY 2026-27), W-073c (D-151), W-076b (D-152), W-077 (D-153), W-075a3 (D-154; OQ-16, OQ-17 answered), W-078 split and W-078a (D-155). Build GREEN, 2533 tests. Next: the owner's pick — W-078b is next in order. Gazette ids read this session: 271439 (FA 2026), 265620 (2025 Act), 262125 (FA 2025, No. 7 of 2025), the Rules 2026 PDF on incometax.gov.in; the 1961 Act from thc.nic.in.
+
+**Session 14 (2026-10-08), paused at the session limit with everything committed:** W-078b (D-156; revision 1, R13), W-078c (D-157; Rules 2026 r.21 and Rules 1962 r.4 read), W-078d (D-160), W-078e (D-161), W-078e2 (D-162) — income from house property complete except stock-in-trade (business head). A loose-ends audit after the owner's challenge placed every dangling id, owed and unowned item: D-158 (W-078d), D-159 (W-078e–i, W-079a, W-080a; notes on W-081, W-119; Appendix F), D-162 (W-089a–d; W-112's sections; the duplicate-names row). Two guards stop a recurrence: `CoverageBacklogTest` and the memory rule `never-leave-items-unplaced`. Build GREEN, 2565 tests. Next: the owner's pick — W-078f is next in order.
 
 **W-078c (session 14, 2026-10-08):**
 - **Sourcing:** the Rule is read — Rules 2026 r.21, Rules 1962 r.4 (see D-157). No errata.
