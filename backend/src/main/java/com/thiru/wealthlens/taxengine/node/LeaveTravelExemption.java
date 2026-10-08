@@ -38,7 +38,8 @@ import java.util.Map;
  * block's first calendar year after an unused block is the carried journey and is not counted (r.278(3)–(4)). An
  * exempt journey is the lesser of the amount incurred and the fare its mode admits — the fare the taxpayer states,
  * or r.278(1)(iii)(B)'s rate per kilometre where the year has one — and the journeys together never exceed the
- * assistance received.
+ * assistance received. Where the year's row does not apply in the regime, each journey still gets a line — nil,
+ * naming the regime — as HRA's does (D-104, D-153): a claim answered by silence reads as one never seen.
  */
 final class LeaveTravelExemption {
 
@@ -49,7 +50,7 @@ final class LeaveTravelExemption {
     private LeaveTravelExemption() {
     }
 
-    /** One EXEMPTION line per journey, numbered from {@code firstSequence}; none where the rule does not apply. */
+    /** One EXEMPTION line per journey, numbered from {@code firstSequence}; nil ones where the regime excludes it. */
     static List<TraceLine> lines(NodeContext ctx, int firstSequence) {
         TemporalContext t = ctx.inputs().temporal();
         RuleRow concession = ctx.rule(RuleIds.SAL_LEAVE_TRAVEL_CONCESSION);
@@ -57,8 +58,16 @@ final class LeaveTravelExemption {
         List<Journey> journeys = ctx.inputs().entered().leaveTravel().stream()
                 .sorted(Comparator.comparing(Journey::startedOn))
                 .toList();
-        if (journeys.isEmpty() || !version.regimes().appliesIn(ctx.regime().code())) {
+        if (journeys.isEmpty()) {
             return List.of();
+        }
+        if (!version.regimes().appliesIn(ctx.regime().code())) {
+            List<TraceLine> nil = new ArrayList<>();
+            for (Journey journey : journeys) {
+                nil.add(line(firstSequence + nil.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO, version)
+                        .withLimitedBy("not in the " + ctx.regime().code().value() + " regime"));
+            }
+            return nil;
         }
         JourneysPerCalendarBlock blocks = blocks(ctx, t);
         Money remaining = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),

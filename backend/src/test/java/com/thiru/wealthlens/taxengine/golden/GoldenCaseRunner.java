@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Individual;
+import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ChapterEightNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
@@ -122,31 +123,43 @@ final class GoldenCaseRunner {
     record SalaryRun(PipelineRunner.Result result, boolean provisional) {
     }
 
-    /** A case stated as salary facts, run through the shipped pipeline to income under "Salaries" (D-104). */
+    /**
+     * A case stated as salary facts, run through the shipped pipeline to income under "Salaries" (D-104), or on to
+     * Chapter VIII where it expects a deduction (D-153).
+     */
     SalaryRun run(SalaryGoldenCase golden, TaxYearId year) {
         RulePack pack = pack(year);
         NodeRegistry registry = NodeRegistry.of(BUILT);
         RegimeSpec shipped = pack.regimes().get(golden.regime());
         List<NodeId> refs = shipped.pipeline().nodeRefs();
-        List<NodeId> toSalaryIncome = refs.subList(0, refs.indexOf(NodeIds.SALARY_INCOME) + 1).stream()
+        NodeId last = golden.expectsDeduction() ? NodeIds.CHAPTERVIII : NodeIds.SALARY_INCOME;
+        List<NodeId> toLast = refs.subList(0, refs.indexOf(last) + 1).stream()
                 .filter(registry.registered()::contains)
                 .toList();
         RegimeSpec salaryHead = new RegimeSpec(shipped.code(), shipped.displayName(), shipped.provision1961(),
                 shipped.provision2025(), shipped.appliesTo(), shipped.rateTable(), shipped.disallowances(),
                 shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
-                new PipelineSpec(toSalaryIncome), shipped.behaviour(), shipped.provenance());
+                new PipelineSpec(toLast), shipped.behaviour(), shipped.provenance());
         EngineInputs plain = NodeHarness.plainTaxpayer();
         SalaryGoldenCase.Salary salary = golden.salary();
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER, false, Optional.empty())),
-                        salary.tenancies(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
-                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                        salary.tenancies(), salary.leaveTravel(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory(), List.of(), salary.qualifyingPayments(), salary.lifeInsurancePolicies(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of()),
+                plain.assessee(), plain.family(), ledger(salary), plain.elections(), plain.capitalGains(),
                 plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
         return new SalaryRun(result, provisional);
+    }
+
+    /** A first return, but for the journeys earlier years claimed in each LTA block. */
+    private static LedgerSnapshot ledger(SalaryGoldenCase.Salary salary) {
+        LedgerSnapshot empty = LedgerSnapshot.empty();
+        return new LedgerSnapshot(salary.leaveTravelLedger(), empty.vrsClaimedIn(), empty.gratuityAlreadyAllowed(),
+                empty.leaveEncashmentAlreadyAllowed(), empty.preConstructionInstalmentsClaimed(),
+                empty.housePropertyLossCarriedForward(), empty.educationLoanInterestFirstYear());
     }
 
     RulePack pack(TaxYearId year) {

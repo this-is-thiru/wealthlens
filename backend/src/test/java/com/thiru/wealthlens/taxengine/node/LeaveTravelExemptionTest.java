@@ -30,7 +30,6 @@ import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
-import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -199,15 +198,19 @@ class LeaveTravelExemptionTest {
     }
 
     @Test
-    void evaluate_whenInTheNewRegime_exemptsNothingAndSaysNothing() {
+    void evaluate_whenInTheNewRegime_exemptsNothingAndSaysWhyForEachJourney() {
         // When
         NodeResult result = run(2026, NEW_TAX_REGIME,
-                List.of(journey("2026-05-10", JourneyMode.RAIL_CONNECTED, "10000", "10000")), PREVIOUS_BLOCK_USED,
-                "50000");
+                List.of(journey("2026-05-10", JourneyMode.RAIL_CONNECTED, "10000", "10000"),
+                        journey("2026-11-02", JourneyMode.AIR, "20000", "25000")), PREVIOUS_BLOCK_USED, "50000");
 
-        // Then — s.202(2)(a)(i)
+        // Then — s.202(2)(a)(i): nothing exempt, and a nil line per journey naming the regime (DR 08 T5-4; D-153)
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).extracting(TraceLine::rule).isEmpty();
+        assertThat(result.trace()).hasSize(2).allSatisfy(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.SAL_LEAVE_TRAVEL_CONCESSION);
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+            assertThat(line.limitedBy()).contains("not in the NEW_TAX_REGIME regime");
+        });
     }
 
     @Test

@@ -554,6 +554,19 @@ taxable LTA = 1,20,000 − 68,000                                      = 52,000
 | New regime | exemption **₹0** with a stated reason, citing `SAL-LTA-NEW-001` |
 | Journey in calendar 2026, none taken in the 2022-2025 block | carried-over journey allowed and **not** counted against the block's two — `SAL-LTA-CARRY-001` |
 
+> **Erratum (W-077, 2026-10-08, D-153).** Facts these cases leave out, entered so they do not bind, and how each is run:
+> **T5-1, T5-2:** the LIC policy's sum assured and issue date are not stated; entered as ₹10,00,000 issued 1-6-2020, so
+> the premium's share (`DED-PREMIUM-SHARE`) is ₹1,00,000 and the ₹30,000 counts in full. **T5-2** has no headroom
+> report to assert (A3 is not built); it is asserted on the trace — the s.123 line's aggregate ₹3,10,000, its
+> deduction ₹1,50,000, ₹2,00,000 in all. **T5-4:** "one journey already claimed in calendar 2027" cannot be a prior
+> year's claim in TY 2026-27, and a calendar-2026 journey would be the carried one; it is run as one journey in the
+> 2026–2029 block's ledger and this journey on 10-2-2027. TY 2025-26 (ⓟ) is run in its own block, 2022–2025: one
+> claimed, this journey on 10-10-2025. The air fare limb is the fare the taxpayer states (D-100), entered as ₹80,000,
+> so the ₹68,000 incurred binds. The carried-over variant is shown with two journeys already claimed in the 2026–2029
+> block. The **new-regime** variant's nil line exists since W-077 (D-153 C6). The **no-evidence** variant is not run:
+> the engine has no evidence-of-expenditure input; it waits on Form 12BB (`TDS-SAL-12BB-002`). Verified by:
+> `T5LeaveTravelAndInvestmentTest`, cases under `test/resources/taxengine/golden/T5/`.
+
 ---
 
 ## T6 — House property and other sources

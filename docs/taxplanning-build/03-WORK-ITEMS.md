@@ -1067,7 +1067,7 @@ if that is not enough for the item in hand.
 | W-076 | `ChapterEightNode` | `DR 06` G2.2, G2.3 | employee PF consumes 80C; 80D is **seven** rules | **Erratum (W-076, 2026-10-07):** the node was built across W-075a–d5 (D-131 onward); W-076 is the close-out — the coverage register (s.123 / 80C MODELLED, the rest re-pointed) and the brief's M-14 (D-149). Verified by: `ChapterEightNode.rules()` and `CoverageRegisterTest`.
 | W-076a | Chapter VIII catalogue entries *(D-149)*: ss.122, 124, 125, 126 / 1961 80A, 80CCC, 80CCD, 80CCE, 80CCH, 80D — one `content/sections` entry per concept (SC-1–SC-4), then those sections `MODELLED` | `00-BRIEF` §6.3 | text from the rows' notes; no figures in text (SC-2) |
 | W-076b | Chapter VIII catalogue entries *(D-149)*: ss.127–134, 154 / 1961 80DD, 80DDB, 80E, 80EE, 80EEA, 80EEB, 80G, 80GG, 80U — as W-076a | `00-BRIEF` §6.3 | as W-076a |
-| W-077 | **T5 golden tests** | `DR 08` T5-1 … T5-4 | |
+| W-077 | **T5 golden tests** | `DR 08` T5-1 … T5-4 | built (D-153): T5-1–T5-3 to Chapter VIII, both years; T5-4 and its variants; the no-evidence variant waits on Form 12BB |
 | W-078 | `houseproperty.json`, `HousePropertyNode` | `DR 01` R16, `DR 06` G1.4 | occupancy drives **four** rules |
 | W-079 | `othersources.json`, `OtherSourcesNode` | `DR 01` R17 | dividend deduction is **nil** from TY 2026-27; **also `PF-EEINT-001`** — interest on the employee's own PF contributions over ₹2,50,000 / ₹5,00,000 (Sch. II Sl. 3–4; 1961 s.10(11)–(12) provisos, r.9D), moved here by D-125 |
 | W-075c5 | Chapter VIII, deposit interest, TY 2026-27 *(D-137)*: s.153 (80TTA / 80TTB) | `DR 01` R15 | after W-079 — needs interest under Other Sources |
