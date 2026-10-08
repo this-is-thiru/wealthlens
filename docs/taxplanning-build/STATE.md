@@ -712,6 +712,8 @@ Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` a
 
 ## Notes for resume
 
+**Session 13 (2026-10-08), paused at the session limit with everything committed:** sourcing round 6 (FA 2026 s.127 removes the 12% RPF limb for TY 2026-27), W-073c (D-151), W-076b (D-152), W-077 (D-153), W-075a3 (D-154; OQ-16, OQ-17 answered), W-078 split and W-078a (D-155). Build GREEN, 2533 tests. Next: the owner's pick — W-078b is next in order. Gazette ids read this session: 271439 (FA 2026), 265620 (2025 Act), 262125 (FA 2025, No. 7 of 2025), the Rules 2026 PDF on incometax.gov.in; the 1961 Act from thc.nic.in.
+
 **W-073c (session 13, 2026-10-08):**
 - **Errata (R7):** `DR 01` below R13's table (`PF-RPF12-001`) and below `SAL-DEF-RPF-001`; `DR 08` below T4-3 — the
   12% limb is TY 2025-26 only (FA 2026 s.127(a)(iii), Gazette 271439 pp.70–71); T4-3 is 0 for TY 2026-27.
