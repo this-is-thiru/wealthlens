@@ -1,0 +1,109 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-160). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: the six HP deduction rows (D-156); 1961 s.24 / 2025 s.22. summary: S2 s.22(1)–(5) with FA 2026 s.38 (Gazette 265620 pp.47–48; 271439 p.41); 1961 s.24 and its provisos and Explanation (thc p.147). routes[0]: HP-STANDARD-DEDUCTION. routes[1]: HP-INTEREST. routes[2]: HP-PRE-CONSTRUCTION (TaxYearSpan). routes[3]: the own-residence rows and OwnResidenceInterestLimit. disqualifiers[0]: s.202(2)(a)(v) / 1961 s.115BAC(2)(i), the row's ExceptIn (the pre-construction part stays in TY 2026-27, D-156 C1(a)). disqualifiers[1]: s.22(2)(a)(ii), (4). disqualifiers[2]: s.22(2)(a)(i) and LoanUse; 1961 adds borrowing on or after a date. disqualifiers[3]: s.130(4), s.131(3), HousePropertyInterest's equality check. disqualifiers[4]: the head below nil refused until W-081.",
+  "key": "SEC-HOUSE-PROPERTY-DEDUCTIONS",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.24",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.22",
+    "presence": "PRESENT"
+  },
+  "plainName": "Deductions from income from house property",
+  "summary": "From a house's annual value a fixed share is deducted, whatever you actually spent, and then the interest payable on money you borrowed to buy, build, repair or rebuild it. Interest for the years before the house was bought or built is spread over the year it was and the following years. For a house valued at nil as your own residence, the interest and the spread-out interest are together limited: a higher limit where the house was bought or built in time with the loan and the lender certifies the interest, a lower one otherwise, and one limit across all such houses. In the default regime the current interest on your own residence is not deducted.",
+  "routes": [
+    {
+      "name": "The fixed share",
+      "description": "A fixed share of the annual value, never actual expenses.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-STANDARD-DEDUCTION"
+        }
+      ]
+    },
+    {
+      "name": "Interest on a let or unlet house",
+      "description": "The interest payable for the year, deducted in full.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-INTEREST"
+        }
+      ]
+    },
+    {
+      "name": "Interest before the house was bought or built",
+      "description": "Spread in equal parts over the year of acquisition or completion and the following years.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-PRE-CONSTRUCTION"
+        }
+      ]
+    },
+    {
+      "name": "Interest on your own residence",
+      "description": "The interest and the spread-out interest, together within the limits.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-OWN-RESIDENCE-INTEREST"
+        },
+        {
+          "type": "ByRule",
+          "rule": "HP-OWN-RESIDENCE-PRE-CONSTRUCTION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "HP-OWN-RESIDENCE-INTEREST-CAP"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "The current interest on your own residence is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "HP-OWN-RESIDENCE-INTEREST"
+      }
+    },
+    {
+      "kind": "PROCESS_MISSED",
+      "description": "Without the lender's certificate of the interest, your own residence gets only the lower limit.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "HP-OWN-RESIDENCE-INTEREST-CAP"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A loan for repairs, or a house not bought or built in time after the borrowing, gets only the lower limit.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "HP-OWN-RESIDENCE-INTEREST-CAP"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Interest you deduct as a first-home loan deduction may not be deducted here again.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "HP-INTEREST"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Deductions above the income of the head would make a loss.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "Not built yet: setting off a loss under this head comes with set-off."
+      }
+    }
+  ]
+}

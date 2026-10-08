@@ -1085,6 +1085,11 @@ if that is not enough for the item in hand.
 | W-080 | **T6 golden tests** | `DR 08` T6-1 … T6-7 | |
 | W-080a | `SAL-LTA-CHILD-001` *(D-159)*: LTA for no more than two surviving children (born before 1-10-1998 and multiple births after one child excepted; S4 r.278(5)–(6); 1961 r.2B counterpart, to source) — per-person fares on each `Journey`, both years | Appendix F | the catalogue marks it `NotModelled` until then |
 
+> **Erratum (W-078d, 2026-10-08):** the W-078d row keeps S2 s.21 / 1961 s.23 `PLANNED` for stock-in-trade — `PLANNED`
+> must name a live item and none builds the business head (its sections are `DEFERRED BUILT_LATER`), so it would point
+> at a done item — they are `MODELLED`, with s.21(5) / s.23(5) a `NotModelled` disqualifier in `SEC-ANNUAL-VALUE` (D-160 C2(a)).
+> Verified by: `Coverage.Planned` (backlogItem required); `content/coverage.json` 2025 ss.26–30 `DEFERRED`; `SectionCatalogueTest`.
+
 ---
 
 ## Phase 9 — Set-off, elections, capital gains (9 items)
