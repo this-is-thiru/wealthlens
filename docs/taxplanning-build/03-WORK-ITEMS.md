@@ -1130,6 +1130,10 @@ if that is not enough for the item in hand.
 > `DR 08` T2-6.
 
 | W-089 | **T13-1 test** — rebate with special-rate income | `DR 13` R-5 | **the most dangerous interaction in the design** |
+| W-089a | When salary is taxed — due, paid in advance, or arrears — and relief for arrears *(D-162)*: S2 s.15, s.157 with Rules 2026 r.73 / Form No. 39; 1961 s.15, s.89 with r.21A / Form 10E (`REL-ARREARS-*`) | `DR 01` R19 | the relief needs the years the salary belongs to |
+| W-089b | `CreditsNode` *(D-162)*: tax already paid, credited — TDS, advance tax, self-assessment tax: S2 s.266, s.396, s.410; 1961 s.140A, s.198, s.199, s.219; produces `credits` for `NetPayableNode` | TS T6 `credits`; `DR 01` R20, R23 | the node TS T6 names and no item owned |
+| W-089c | Advance tax *(D-162)*: who must pay, how much, the instalments — S2 ss.403–409; 1961 ss.207–211, 218 | `DR 01` R23 | before W-112's interest on its default |
+| W-089d | Salary TDS *(D-162)*: the employer's estimate and deduction — S2 s.392; 1961 s.192 (`TDS-SAL-*`) | `DR 01` R20, R21 | Form No. 130 fields per R21 |
 
 ---
 
@@ -1186,7 +1190,7 @@ if that is not enough for the item in hand.
 
 | Item | Produces | Spec | Feature |
 |---|---|---|---|
-| W-112 | **modifies** `FilingPosition` (created by `W-043`; adds its interest component) + **creates** `InterestAndFeeNode` | `DR 15` C1 | — |
+| W-112 | **modifies** `FilingPosition` (created by `W-043`; adds its interest component) + **creates** `InterestAndFeeNode` | `DR 15` C1 | —; **also (D-162):** the sections it computes — S2 ss.423–426, 428, 437; 1961 ss.214–217, 234A–234D, 234F, 244A |
 | W-113 | `ForecastProjection` + endpoint | `DR 20` F29 | **F29** |
 | W-114 | `CalendarProjection` + endpoint | `DR 20` F30 | **F30** |
 | W-115 | `CompletenessProjection` + endpoint | `DR 20` F33 | **F33** |
@@ -1512,6 +1516,7 @@ none depends on anyone remembering it.
 | `SAL-HRA-006` — landlord PAN where aggregate rent paid in the year exceeds ₹1,00,000 (S4 r.205(2) Table Sl. 1): a notice, not a figure; nodes have no notice channel (`NodeResult` is value and trace) (D-099) | the first item that gives nodes a notice channel | `ExemptionNode` has the rent figures **Placed as `W-078h` (D-159).** |
 | `SAL-LTA-CHILD-001` — LTA is not available for more than two surviving children (except children born before 1-10-1998 and multiple births after one child; S4 r.278(5)–(6)): needs a per-person fare on each journey; until then a family with three or more later-born children is over-allowed (D-100) | the item that adds per-person journey fares, before any LTA figure is filed | `SEC-LEAVE-TRAVEL-CONCESSION` marks it `NotModelled` **Placed as `W-080a` (D-159).** |
 | CBDT guidance, if any, on whether the new regime also disallows s.22(1)(c) for an own residence — W-078b followed the text (s.202(2)(a)(v) names s.22(1)(b) only; D-156 C1(a)); the owner downloads, incometaxindia.gov.in being blocked here (D-159) | `W-080` (the T6 goldens fix TY 2026-27 house-property figures) | if a text says otherwise, one version of `HP-OWN-RESIDENCE-PRE-CONSTRUCTION` changes |
+| The pre-W-045a duplicate simple names `DateRange` (`shared/dto`, `taxengine/rules/temporal`) and `ExcelParser` (`shared/util/parser`, `portfolio/service/parser/model`) — `ArchitectureTest.DUPLICATE_NAMES_BEFORE_W045A`, which may only shrink (D-162) | `W-146` | the extensibility claim needs ArchUnit clean without exemptions |
 | Section catalogue entries for every modelled section | each item that models a section — standing rule 2 | SC-1 ratchet |
 | The rule-authoring admin screen (**OQ-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
 | Dividend income in the surcharge's **excluding** income and in the 15%-limited part (`RATE-SUR-SPLIT-001`), D-086 | `W-079` (`OtherSourcesNode`) | dividends are slab-taxed, so nothing else would take them out of the 25%/37% test |

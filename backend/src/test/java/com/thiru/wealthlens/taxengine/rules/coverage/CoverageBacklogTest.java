@@ -21,7 +21,8 @@ import org.junit.jupiter.api.Test;
  * Every {@code PLANNED} section names an item still to be built (D-159, D-161). A pointer at an item that is not on
  * the status board, or is done or retired, leaves a section claimed by nothing — W-078c's {@code W-078d}, never in the
  * backlog, and nine sections left behind by W-046, W-049, W-060 and W-067 went unnoticed that way. The status board in
- * {@code STATE.md} is read because it is the one place an item's status is kept.
+ * {@code STATE.md} is read because it is the one place an item's status is kept. A section in the first scope with no item
+ * at all ({@code DEFERRED BUILT_FIRST}) is refused too: 42 sat there unnamed from W-045o until W-078e2 (D-162).
  */
 class CoverageBacklogTest {
 
@@ -43,6 +44,35 @@ class CoverageBacklogTest {
         assertThat(board).as("the status board in STATE.md").isNotEmpty();
         assertThat(stale).as("PLANNED sections whose item is missing, done or retired — re-point or reclassify them")
                 .isEmpty();
+    }
+
+    @Test
+    void unitemisedGaps_whenTheShippedRegisterIsRead_findsNone() {
+        // Given
+        Timeline timeline = TimelineReader.read(TIMELINE);
+
+        // When
+        List<SectionRef> gaps = unitemisedGaps(CoverageRegister.of(timeline).sections());
+
+        // Then
+        assertThat(gaps).as("DEFERRED BUILT_FIRST sections — in the first scope with no item; give each an item (D-162)")
+                .isEmpty();
+    }
+
+    @Test
+    void unitemisedGaps_whenASectionIsInTheFirstScopeWithNoItem_reportsIt() {
+        // Given
+        SectionRef gap = new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "392");
+        Map<SectionRef, Coverage> sections = Map.of(
+                gap, new Coverage.Deferred(Coverage.ScopeTier.BUILT_FIRST, Set.of(PersonType.INDIVIDUAL)),
+                new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "28"),
+                new Coverage.Deferred(Coverage.ScopeTier.BUILT_LATER, Set.of()));
+
+        // When
+        List<SectionRef> gaps = unitemisedGaps(sections);
+
+        // Then
+        assertThat(gaps).containsExactly(gap);
     }
 
     @Test
@@ -96,6 +126,18 @@ class CoverageBacklogTest {
         }
         return FINISHED.contains(status) ? Optional.of(section + " names " + item + ", which is done or retired")
                 : Optional.empty();
+    }
+
+    /**
+     * Sections {@code DEFERRED BUILT_FIRST}: in the first scope with no item — the tier exists only to be itemised, and
+     * W-078e2 itemised all 42 that sat in it since W-045o (D-162).
+     */
+    private static List<SectionRef> unitemisedGaps(Map<SectionRef, Coverage> sections) {
+        return sections.entrySet().stream()
+                .filter(entry -> entry.getValue() instanceof Coverage.Deferred deferred
+                        && deferred.tier() == Coverage.ScopeTier.BUILT_FIRST)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
     /** The board: the lines from {@code ## Status board} up to the counts line, each {@code W-0nn X} entry. */

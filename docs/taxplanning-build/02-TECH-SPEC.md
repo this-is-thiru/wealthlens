@@ -287,7 +287,7 @@ slot and not a `NodeId` (a node may require no slot at all, D-031). Every other 
 | `tax.afterrebate` | `RebateNode` | `tax.bybasis`, `round.totalincome` | `TaxByBasis` | ✅ `W-049` |
 | `tax.surcharge` | `SurchargeNode` | `tax.afterrebate`, `round.totalincome` | `MoneyValue` | ○ `W-056` |
 | `tax.cess` | `CessNode` | `tax.afterrebate` (`tax.surcharge` added by `W-056`, D-079) | `MoneyValue` | ✅ `W-051` — `RATE-HEALTH-EDUCATION-CESS`, 4% of the whole post-rebate tax, one `TAX` line |
-| `credits` | `CreditsNode` | `EngineInputs` (TDS and advance-tax credits; exact components fixed by the owning item) | `MoneyValue` | ○ Phase 9 |
+| `credits` | `CreditsNode` | `EngineInputs` (TDS and advance-tax credits; exact components fixed by the owning item) | `MoneyValue` | ○ `W-089b` (D-162) |
 | `tax.netpayable` | `NetPayableNode` | `tax.afterrebate`, `tax.cess` (`tax.surcharge` by `W-056`; `credits` by the Phase 9 item, D-080) | `MoneyValue` | ✅ `W-052` — whole post-rebate tax + cess; untraced (no rule states a sum) |
 | `interest.and.fees` | `InterestAndFeeNode` | `tax.netpayable`, `totalincome`, `EngineInputs.filing` | `InterestBreakdown` ⚠ | ○ `W-112` |
 | `round.netpayable` | `RoundNetPayableNode` | `tax.netpayable` (`interest.and.fees` added by `W-112`, D-076) | `MoneyValue` | ✅ `W-050` — s.516 via `RATE-ROUND-PAYABLE`; a refund keeps its sign (`ROUND-NEG-001`) |
