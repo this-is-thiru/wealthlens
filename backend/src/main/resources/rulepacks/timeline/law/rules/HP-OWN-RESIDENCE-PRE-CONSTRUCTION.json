@@ -1,0 +1,103 @@
+{
+  "ruleId": "HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
+  "_note": "Pre-construction interest on an own residence (S2 s.21(6); 1961 s.23(2)) is deducted in five equal instalments, within HP-OWN-RESIDENCE-INTEREST-CAP (D-156; rulebook HP-DED-PRECON-001, HP-CAP-SELFOCC-002). TY 2026-27: Income-tax Act, 2025 s.22(1)(c), (3) (Gazette 265620, pp.47–48), inside the cap by the Finance Act, 2026 s.38 (Gazette 271439, p.41); every regime, because s.202(2)(a)(v) removes only s.22(1)(b) for these properties (p.227) and the Finance Act, 2026 did not extend it (s.56 omits only s.202(2)(a)(iii), p.46) — D-156 C1(a) follows the text, against DR 06 G1.4 and DR 01 R16's new-regime example (errata there). TY 2025-26: Income-tax Act, 1961 s.24(b) Explanation, deducted \"under this clause\" (thc p.147), so s.115BAC(2)(i)'s disallowance of clause (b) for these properties takes it too (Gazette 244830, p.34): except in the new regime. TaxYearSpan(4) as HP-PRE-CONSTRUCTION.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "ExceptIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b) Explanation, s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(1)(c), (3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 4
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52(C) — Income-tax Act, 1961 s.115BAC(2)(i) substituted (w.e.f. 1-4-2024)",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.24(b) Explanation, p.147; Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), p.34",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The thc.nic.in copy is not a Gazette text. s.115BAC(2)(i) is read in the Gazette; s.24(b) in the thc.nic.in copy. The amending Acts from the Finance (No. 2) Act, 2019 to the Taxation Laws (Amendment) Act, 2025 were searched by text for amendments to ss.22–27: only the Finance Act, 2025 s.10 (s.23(2)) amends them."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b) Explanation, s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(1)(c), (3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 4
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.22(1)(c), (3)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(1)(c), p.47; s.22(3), p.48; s.202(2)(a)(v), p.227; Gazette CG-DL-E-31032026-271439, Finance Act, 2026 ss.38, 56, pp.41, 46",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Every regime is the text: s.202(2)(a)(v) names s.22(1)(b) only. No CBDT circular or FAQ was read on whether the new regime also disallows s.22(1)(c) for an own residence (incometaxindia.gov.in is not reachable from here); if one says it does, this version becomes ExceptIn NEW_TAX_REGIME."
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(1)(c), p.47; s.22(3), p.48; s.202(2)(a)(v), p.227; Gazette CG-DL-E-31032026-271439, Finance Act, 2026 ss.38, 56, pp.41, 46",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED",
+    "whatToCheck": "Every regime is the text: s.202(2)(a)(v) names s.22(1)(b) only. No CBDT circular or FAQ was read on whether the new regime also disallows s.22(1)(c) for an own residence (incometaxindia.gov.in is not reachable from here); if one says it does, this version becomes ExceptIn NEW_TAX_REGIME."
+  }
+}

@@ -40,11 +40,11 @@ class HousePropertyNodeTest {
 
     private static HouseProperty let(String expected, String rent, boolean vacant, String taxes) {
         return new HouseProperty(HouseOccupancy.LET, Money.of(expected), Money.of(rent), vacant, Money.of(taxes),
-                WHOLE, Money.ZERO);
+                WHOLE, Money.ZERO, Optional.empty(), List.of());
     }
 
     private static HouseProperty unlet(HouseOccupancy occupancy, String expected) {
-        return new HouseProperty(occupancy, Money.of(expected), Money.ZERO, false, Money.ZERO, WHOLE, Money.ZERO);
+        return new HouseProperty(occupancy, Money.of(expected), Money.ZERO, false, Money.ZERO, WHOLE, Money.ZERO, Optional.empty(), List.of());
     }
 
     /** R16's let property: 45,000 × 12 = 5,40,000 above an expected 4,80,000; taxes 18,000. */
@@ -116,7 +116,7 @@ class HousePropertyNodeTest {
     void evaluate_whenTheAssesseeOwnsAShare_takesThatShareOfTheIncome() {
         // When — half of R16's let property
         HouseProperty half = new HouseProperty(HouseOccupancy.LET, Money.of("480000"), Money.of("540000"), false,
-                Money.of("18000"), Rate.percent("50"), Money.ZERO);
+                Money.of("18000"), Rate.percent("50"), Money.ZERO, Optional.empty(), List.of());
         NodeResult result = run(2026, List.of(half));
 
         // Then — S2 s.24(1): half of 3,65,400
@@ -128,7 +128,7 @@ class HousePropertyNodeTest {
     void evaluate_whenArrearsOfRentAreReceived_addsThemLessThirtyPerCent(int year) {
         // When — 1,00,000 of arrears on a house now the owner's residence
         HouseProperty withArrears = new HouseProperty(HouseOccupancy.OWN_RESIDENCE, Money.of("480000"), Money.ZERO,
-                false, Money.ZERO, WHOLE, Money.of("100000"));
+                false, Money.ZERO, WHOLE, Money.of("100000"), Optional.empty(), List.of());
         NodeResult result = run(year, List.of(withArrears));
 
         // Then — S2 s.23; 1961 s.25A: 1,00,000 − 30,000
@@ -176,7 +176,7 @@ class HousePropertyNodeTest {
     void construction_whenAHouseWithRentIsNotEnteredAsLet_isRefused() {
         // When / Then — S2 s.21(7)(b): let at any time is let
         assertThatThrownBy(() -> new HouseProperty(HouseOccupancy.OWN_RESIDENCE, Money.of("300000"),
-                        Money.of("10000"), false, Money.ZERO, WHOLE, Money.ZERO))
+                        Money.of("10000"), false, Money.ZERO, WHOLE, Money.ZERO, Optional.empty(), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("enter it as LET");
     }

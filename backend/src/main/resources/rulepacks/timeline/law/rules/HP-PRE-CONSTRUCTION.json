@@ -1,0 +1,98 @@
+{
+  "ruleId": "HP-PRE-CONSTRUCTION",
+  "_note": "Interest for the period before the tax year a house was acquired or constructed is deducted in five equal instalments, that tax year and the four after it, for a house other than an own residence (D-156; rulebook HP-DED-PRECON-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(c) \"the amount of any interest payable for the said prior period in five equal instalments for the said tax year and for each of the four immediately succeeding tax years\" (Gazette 265620, p.47); s.22(3): reduced by any amount already allowed under any other provision (p.48) — the entry is the reduced figure. TY 2025-26: Income-tax Act, 1961 s.24(b) Explanation, \"in equal instalments for the said previous year and for each of the four immediately succeeding previous years\", as reduced by any part allowed under any other provision (thc p.147). TaxYearSpan(4): the year of acquisition and four succeeding; five instalments is the span. An own residence's instalments are HP-OWN-RESIDENCE-PRE-CONSTRUCTION. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b) Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(1)(c), (3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 4
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.24 — subs. by Act 14 of 2001, s.15 (w.e.f. 1-4-2002)",
+        "gazetteRef": "not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "2002-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.24(b) Explanation, p.147",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The thc.nic.in copy is not a Gazette text. The amending Acts from the Finance (No. 2) Act, 2019 to the Taxation Laws (Amendment) Act, 2025 were searched by text for amendments to ss.22–27: only the Finance Act, 2025 s.10 (s.23(2)) amends them."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b) Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(1)(c), (3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 4
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.22(1)(c), (3)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(1)(c), p.47; s.22(3), p.48",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(1)(c), p.47; s.22(3), p.48",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

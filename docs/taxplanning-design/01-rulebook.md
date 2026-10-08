@@ -1268,6 +1268,14 @@ HP-NEW-001   s.22(1)(b) disallowed for a s.21(6) property       =        0
              income from house property                         =        0
 ```
 
+> **Erratum (W-078b, 2026-10-08):** the new-regime result omits the ₹40,000 pre-construction instalment — S2
+> s.202(2)(a)(v) disallows s.22(1)(b) only, and s.22(1)(c) is not extended to it by the Finance Act, 2026 (s.56 omits
+> only s.202(2)(a)(iii)) — so in TY 2026-27 the instalment is allowed within the s.22(2) cap (as amended by FA 2026
+> s.38) and the house's income is **−₹40,000**, a loss the new regime may not set off against another head
+> (s.202(2)(b)(ii)); the ₹0 holds for TY 2025-26, where 1961 s.115BAC(2)(i) removes the whole of s.24(b) (D-156 C1(a)).
+> Verified by: Gazette 265620 p.227; Gazette 271439 p.46; Gazette 244830 p.34;
+> `HousePropertyInterestTest.evaluate_whenTheNewRegimeAppliesInTaxYear2026_allowsOnlyTheOwnResidencesInstalment`.
+
 `INFERENCE`: the identical property produces ₹5,400 of income, a ₹2,00,000 deduction, or nothing at
 all, depending on two flags. That is the whole case for `A1`'s regime comparison being property-aware.
 
@@ -1278,6 +1286,15 @@ all, depending on two flags. That is the whole case for `A1`'s regime comparison
 > pre-construction interest *"under this clause"*, and the second proviso caps *"the amount of deduction … under this
 > clause"* at two lakh rupees — so it is inside the cap in TY 2025-26 as FA 2026 s.38 makes it in TY 2026-27 (thc
 > p.147).
+>
+> **Addendum (W-078b, 2026-10-08, D-156):** interest is built, both years — `HP-INTEREST` (s.22(1)(b), (6); 1961
+> s.24(b), s.25), `HP-PRE-CONSTRUCTION` (s.22(1)(c), (3); 1961 s.24(b) Explanation; `TaxYearSpan(4)`), and for an own
+> residence `HP-OWN-RESIDENCE-INTEREST` (`ExceptIn NEW_TAX_REGIME`), `HP-OWN-RESIDENCE-PRE-CONSTRUCTION` (TY 2025-26
+> `ExceptIn NEW_TAX_REGIME`; TY 2026-27 every regime, see the erratum above) and `HP-OWN-RESIDENCE-INTEREST-CAP`
+> (`OwnResidenceInterestLimit`: ₹2,00,000 conditions met, ₹30,000 any other case, ₹2,00,000 aggregate; five years; TY
+> 2025-26 also borrowed on or after 1-4-1999, the 1961 second proviso). Loans are the assessee's own (s.24(2)); interest
+> deducted under s.130/131 is left out; properties are netted within the head (`SETOFF-INTRA-001`, built as a row by
+> W-081) and the head below nil is refused until W-081. `HP-CAP-SELFOCC-002` for TY 2025-26: built inside the cap.
 
 ---
 

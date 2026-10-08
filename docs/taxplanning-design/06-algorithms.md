@@ -166,6 +166,17 @@ after all properties:
     assert Σ self-occupied interestAllowed ≤ cap2L                   # HP-CAP-SELFOCC-003
 ```
 
+> **Erratum (W-078b, 2026-10-08):** `interestAllowed = 0` for a self-occupied property in the new regime takes the
+> pre-construction instalment too, which holds for TY 2025-26 (1961 s.115BAC(2)(i) removes the whole of s.24(b), its
+> Explanation included) but not for TY 2026-27 — S2 s.202(2)(a)(v) removes only "section 22(1)(b), in respect of
+> properties referred to in section 21(6)", the instalments are the separate s.22(1)(c), and the Finance Act, 2026
+> brought (c) under the s.22(2) cap (s.38) without extending s.202(2)(a)(v) (s.56 omits only (iii)) — so from TY 2026-27
+> the new regime allows the instalment within the cap (D-156 C1(a)). Also, the cap is not per property: the houses
+> failing the s.22(2)(a) test are limited together to ₹30,000, those passing together to ₹2,00,000, and all to
+> ₹2,00,000 (1961 s.24(b) provisos; S2 s.22(2), (5)).
+> Verified by: Gazette 265620 pp.47–48, 227; Gazette 271439 pp.41, 46; Gazette 244830 p.34; thc 1961 p.147;
+> `HousePropertyInterestTest.evaluate_whenTheNewRegimeAppliesInTaxYear2026_allowsOnlyTheOwnResidencesInstalment`.
+
 `H-12`: `occupancy` drives four different rules. It is a required field on `HouseProperty` (`M3.2`),
 not an inference from whether rent is zero.
 

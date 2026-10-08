@@ -1,0 +1,105 @@
+{
+  "ruleId": "HP-OWN-RESIDENCE-INTEREST-CAP",
+  "_note": "The interest deducted for own residences (S2 s.21(6); 1961 s.23(2)) is limited: ₹30,000 together for the houses failing the test, ₹2,00,000 together for those passing it, ₹2,00,000 for all (D-156; rulebook HP-CAP-SELFOCC-001, -002, -003, HP-DED-CERT-001). TY 2026-27: Income-tax Act, 2025 s.22(2) \"In case of property or properties referred to in section 21(6), the aggregate amount of deduction under sub-section (1)(b) [and (c)] shall not exceed— (a) ₹ 200000, subject to the following conditions:–– (i) the property has been acquired or constructed with borrowed capital and such acquisition or construction is completed within five years from the end of tax year in which capital was borrowed; (ii) the assessee furnishes a certificate from the person to whom interest is payable on such capital; and (b) ₹30000 in any other case\"; (4) what the certificate states; (5) \"The aggregate of the amounts of deduction under sub-section (2) in respect of properties of the nature referred to in section 21(6) shall not exceed ₹ 200000\" (Gazette 265620, pp.47–48); \"and (c)\" by the Finance Act, 2026 s.38 (Gazette 271439, p.41). TY 2025-26: Income-tax Act, 1961 s.24(b) first proviso \"thirty thousand rupees\"; second proviso \"acquired or constructed with capital borrowed on or after the 1st day of April, 1999 and such acquisition or construction is completed within five years from the end of the financial year in which capital was borrowed … two lakh rupees\" (\"two lakh rupees\" by Act 25 of 2014, s.10, w.e.f. 1-4-2015; \"five years\" by Act 28 of 2016, s.10, w.e.f. 1-4-2017 — thc footnotes 7, 8); third proviso the certificate; last proviso \"the aggregate of the amounts of deduction under the first and second provisos shall not exceed two lakh rupees\" (Act 7 of 2019, s.5, w.e.f. 1-4-2020); the Explanation's instalments are \"under this clause\", so inside the limits (thc p.147). Every regime: in the new regime only what HP-OWN-RESIDENCE-PRE-CONSTRUCTION allows is left to limit.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b) provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(2), (4), (5)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "OwnResidenceInterestLimit",
+        "conditionsMet": "200000",
+        "anyOtherCase": "30000",
+        "aggregate": "200000",
+        "completionYearsAfterBorrowingYear": 5,
+        "borrowedOnOrAfter": "1999-04-01"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.24(b) last proviso — ins. by Act 7 of 2019, s.5 (w.e.f. 1-4-2020)",
+        "gazetteRef": "not read",
+        "notifiedOn": "2019-02-21",
+        "effectiveFrom": "2020-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.24(b) provisos and Explanation, p.147 (footnotes 5–8)",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "The thc.nic.in copy is not a Gazette text. The amending Acts from the Finance (No. 2) Act, 2019 to the Taxation Laws (Amendment) Act, 2025 were searched by text for amendments to ss.22–27: only the Finance Act, 2025 s.10 (s.23(2)) amends them."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b) provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(2), (4), (5)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "OwnResidenceInterestLimit",
+        "conditionsMet": "200000",
+        "anyOtherCase": "30000",
+        "aggregate": "200000",
+        "completionYearsAfterBorrowingYear": 5
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2026 (4 of 2026), s.38 — Income-tax Act, 2025 s.22(2) amended",
+        "gazetteRef": "CG-DL-E-31032026-271439",
+        "notifiedOn": "2026-03-31",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(2), p.47; s.22(4), (5), p.48; Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.38, p.41",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(2), p.47; s.22(4), (5), p.48; Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.38, p.41",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

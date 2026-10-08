@@ -10,5 +10,6 @@ package com.thiru.wealthlens.taxengine.rules.definition;
  */
 public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPerCalendarBlock,
         DisabledTransportLimit, CommutedPensionShare, IndexByYear, ExcludedAssets, DayWindow,
-        PremiumShareBands, TaxYearSpan, SanctionedLoanLimit, CashPaymentLimit, OwnResidenceHouses {
+        PremiumShareBands, TaxYearSpan, SanctionedLoanLimit, CashPaymentLimit, OwnResidenceHouses,
+        OwnResidenceInterestLimit {
 }

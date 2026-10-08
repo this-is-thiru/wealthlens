@@ -21,17 +21,20 @@ import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Income from house property, before interest (S2 ss.20–24; 1961 ss.22–26; {@code DR 01} R16; {@code DR 06} G1.4;
- * D-155): for each property its annual value — nil for a specified own residence, else the higher of what it might
- * let for and the rent, the rent where a vacancy brought it below, less the local taxes paid — less thirty per cent,
- * with arrears of rent less thirty per cent, the assessee's share of it; the head is their sum.
+ * Income from house property (S2 ss.20–24; 1961 ss.22–26; {@code DR 01} R16; {@code DR 06} G1.4; D-155, D-156): for
+ * each property its annual value — nil for a specified own residence, else the higher of what it might let for and
+ * the rent, the rent where a vacancy brought it below, less the local taxes paid — less thirty per cent, with arrears
+ * of rent less thirty per cent, the assessee's share of it, less the interest on what the assessee borrowed for it
+ * ({@link HousePropertyInterest}); the head is their sum, less the own residences' interest within its limits.
  *
- * <p>Interest on borrowed capital, and with it any loss, is {@code W-078b}; until then the head is never below nil,
- * and a property whose local taxes exceed its value is refused rather than carried as a loss nothing yet sets off.
+ * <p>A property below nil is set off against the others under the head, as S2 s.108(1) and 1961 s.70 set off a
+ * loss from one source against another under the same head; the head itself below nil is refused until set-off across
+ * heads and years is built ({@code W-081}).
  */
 public final class HousePropertyNode implements ComputationNode {
 
@@ -50,8 +53,10 @@ public final class HousePropertyNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        return Set.of(RuleIds.HP_ANNUAL_VALUE, RuleIds.HP_OWN_RESIDENCE, RuleIds.HP_STANDARD_DEDUCTION,
-                RuleIds.HP_ARREARS);
+        Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.HP_ANNUAL_VALUE, RuleIds.HP_OWN_RESIDENCE,
+                RuleIds.HP_STANDARD_DEDUCTION, RuleIds.HP_ARREARS));
+        rules.addAll(HousePropertyInterest.RULES);
+        return Set.copyOf(rules);
     }
 
     @Override
@@ -62,10 +67,19 @@ public final class HousePropertyNode implements ComputationNode {
         }
         TemporalContext t = ctx.inputs().temporal();
         requireOwnResidencesWithinLimit(ctx, t, properties);
+        HousePropertyInterest.requireChapterEightShareMatches(properties, ctx.inputs().entered().purposeLoanInterest());
         List<TraceLine> lines = new ArrayList<>();
+        HousePropertyInterest interest = new HousePropertyInterest(ctx, lines);
         Money head = Money.ZERO;
         for (int position = 0; position < properties.size(); position++) {
-            head = head.plus(income(ctx, t, position, properties.get(position), lines));
+            HouseProperty property = properties.get(position);
+            head = head.plus(income(ctx, t, position, property, lines)).minus(interest.deductedFor(position, property));
+        }
+        head = head.minus(interest.ownResidenceAllowed());
+        if (head.isLessThan(Money.ZERO)) {
+            throw new IllegalArgumentException("Income from house property is a loss of " + Money.ZERO.minus(head)
+                    + "; setting it off against other heads or carrying it forward (S2 ss.109, 110; 1961 ss.71, 71B)"
+                    + " — or, in the new tax regime, refusing to (S2 s.202(2)(b)(ii)) — waits on W-081");
         }
         return new NodeResult(MoneyValue.of(head), lines);
     }
@@ -110,8 +124,7 @@ public final class HousePropertyNode implements ComputationNode {
         Money annualValue = gross.minus(property.localTaxesPaid());
         if (annualValue.isLessThan(Money.ZERO)) {
             throw new IllegalArgumentException("Property " + position + ": local taxes of " + property.localTaxesPaid()
-                    + " exceed its value of " + gross + "; a loss from house property waits on interest and set-off"
-                    + " (W-078b, W-081)");
+                    + " exceed its value of " + gross + "; a negative annual value waits on set-off (W-081)");
         }
         Money value = TemporallyApportionedCap.apply(ctx.rule(RuleIds.HP_ANNUAL_VALUE), t,
                 CapContext.of(ANNUAL_VALUE, annualValue)).value();

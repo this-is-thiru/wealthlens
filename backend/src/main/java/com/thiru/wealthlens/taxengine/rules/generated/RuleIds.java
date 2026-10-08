@@ -46,7 +46,12 @@ public final class RuleIds {
     public static final RuleId DED_WITHIN_GROSS_TOTAL = new RuleId("DED-WITHIN-GROSS-TOTAL");
     public static final RuleId HP_ANNUAL_VALUE = new RuleId("HP-ANNUAL-VALUE");
     public static final RuleId HP_ARREARS = new RuleId("HP-ARREARS");
+    public static final RuleId HP_INTEREST = new RuleId("HP-INTEREST");
     public static final RuleId HP_OWN_RESIDENCE = new RuleId("HP-OWN-RESIDENCE");
+    public static final RuleId HP_OWN_RESIDENCE_INTEREST = new RuleId("HP-OWN-RESIDENCE-INTEREST");
+    public static final RuleId HP_OWN_RESIDENCE_INTEREST_CAP = new RuleId("HP-OWN-RESIDENCE-INTEREST-CAP");
+    public static final RuleId HP_OWN_RESIDENCE_PRE_CONSTRUCTION = new RuleId("HP-OWN-RESIDENCE-PRE-CONSTRUCTION");
+    public static final RuleId HP_PRE_CONSTRUCTION = new RuleId("HP-PRE-CONSTRUCTION");
     public static final RuleId HP_STANDARD_DEDUCTION = new RuleId("HP-STANDARD-DEDUCTION");
     public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");
     public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");
