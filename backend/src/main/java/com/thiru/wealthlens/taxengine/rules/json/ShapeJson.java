@@ -20,6 +20,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
+import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
 import com.thiru.wealthlens.taxengine.rules.definition.PolicyIssueWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
@@ -227,7 +228,7 @@ public final class ShapeJson {
         String tag = PackJson.tag(
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
                 "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
-                "CashPaymentLimit");
+                "CashPaymentLimit", "OwnResidenceHouses");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -270,6 +271,8 @@ public final class ShapeJson {
                     optionalMoney(node, "maxPropertyValue", path), optionalMoney(node, "maxStampDutyValue", path),
                     PackJson.bool(node, "requiresNoHouseOwned", path)));
             case "CashPaymentLimit" -> PackJson.construct(path, () -> new CashPaymentLimit(money(node, "atMost", path)));
+            case "OwnResidenceHouses" -> PackJson.construct(path, () -> new OwnResidenceHouses(
+                    PackJson.integer(node, "houses", path)));
             default -> throw unreachable(tag, path);
         };
     }

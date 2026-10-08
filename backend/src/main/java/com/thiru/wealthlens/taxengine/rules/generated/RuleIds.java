@@ -44,6 +44,10 @@ public final class RuleIds {
     public static final RuleId DED_SPECIFIED_DISEASE = new RuleId("DED-SPECIFIED-DISEASE");
     public static final RuleId DED_SPECIFIED_DISEASE_SENIOR = new RuleId("DED-SPECIFIED-DISEASE-SENIOR");
     public static final RuleId DED_WITHIN_GROSS_TOTAL = new RuleId("DED-WITHIN-GROSS-TOTAL");
+    public static final RuleId HP_ANNUAL_VALUE = new RuleId("HP-ANNUAL-VALUE");
+    public static final RuleId HP_ARREARS = new RuleId("HP-ARREARS");
+    public static final RuleId HP_OWN_RESIDENCE = new RuleId("HP-OWN-RESIDENCE");
+    public static final RuleId HP_STANDARD_DEDUCTION = new RuleId("HP-STANDARD-DEDUCTION");
     public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");
     public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");
     public static final RuleId PERQ_ACCOM_GOVERNMENT = new RuleId("PERQ-ACCOM-GOVERNMENT");

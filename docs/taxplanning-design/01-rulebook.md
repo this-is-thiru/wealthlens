@@ -1271,6 +1271,14 @@ HP-NEW-001   s.22(1)(b) disallowed for a s.21(6) property       =        0
 `INFERENCE`: the identical property produces ₹5,400 of income, a ₹2,00,000 deduction, or nothing at
 all, depending on two flags. That is the whole case for `A1`'s regime comparison being property-aware.
 
+> **Addendum (W-078a, 2026-10-08, D-155):** the head is built without interest — `HP-ANNUAL-VALUE`, `HP-OWN-RESIDENCE`
+> (with `OwnResidenceHouses` 2), `HP-STANDARD-DEDUCTION`, `HP-ARREARS`, both years (TY 2025-26: 1961 ss.23–26 in the
+> thc.nic.in copy, s.23(2) as substituted by FA 2025 s.10, Gazette 262125 p.20). Interest is W-078b; unrealised rent
+> W-078c. **`HP-CAP-SELFOCC-002`'s TY 2025-26 position is now read:** 1961 s.24(b)'s Explanation deducts
+> pre-construction interest *"under this clause"*, and the second proviso caps *"the amount of deduction … under this
+> clause"* at two lakh rupees — so it is inside the cap in TY 2025-26 as FA 2026 s.38 makes it in TY 2026-27 (thc
+> p.147).
+
 ---
 
 ## R17 — Income from other sources

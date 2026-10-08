@@ -30,11 +30,24 @@ class TotalIncomeNodeTest {
         // When
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
+                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.ZERO)
                 .run(new GrossTotalIncomeNode());
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("925000")));
         assertThat(result.trace()).isEmpty();
+    }
+
+    @Test
+    void grossTotalIncome_whenHousePropertyHasIncome_addsTheHeadToSalaries() {
+        // When — 9,25,000 under Salaries and 3,65,400 from a let property (D-155)
+        NodeResult result = NodeHarness.with(PACK).regime(OLD)
+                .given(NodeIds.SALARY_INCOME, Money.of("925000"))
+                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
+                .run(new GrossTotalIncomeNode());
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1290400")));
     }
 
     @Test
