@@ -1,0 +1,26 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(j): \"contribution for participation in Unit-linked Insurance Plan, 1971 specified in Schedule II of the Unit Trust of India (Transfer of Undertaking and Repeal) Act, 2002\", in the name of the individual, spouse or any child, or any member of a Hindu undivided family (Gazette 265620, p.561) — whose name it is in is an entry condition. Counted in full: para 2's share of the sum assured reaches para 1(a) alone, the one clause \"subject to paragraph 2\" (OQ-17 answered by the owner, D-154 C2a). TY 2025-26: Income-tax Act, 1961 s.80C(2)(x) (sources B21). D-154.",
+  "code": "UNIT_LINKED_INSURANCE_PLAN",
+  "displayName": "Unit-linked Insurance Plan, 1971",
+  "kind": "QUALIFYING_PAYMENT",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(j), p.561; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(x), pp.330–333",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

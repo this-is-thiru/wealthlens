@@ -3,12 +3,12 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.51",
-      "checksum": "sha256:1beb59192532eef903f2738eed10ad1561e927575e5cd4a0b3ac7e923b01f4d3"
+      "version": "2026-27.law.52",
+      "checksum": "sha256:f3eb97e4122fe4dd3d5594c4aa81dcec6ee8dafa3248ab7dfdda518f17a085e8"
     },
     "exec": {
-      "version": "2026-27.exec.24",
-      "checksum": "sha256:2f2b9ef53824c22a537e8304e17e9de0eb232b8402a2d1770645456a4eb7bcd2"
+      "version": "2026-27.exec.25",
+      "checksum": "sha256:d6ba050f43e788214e4f9ee751e32c5da38df341ac77ab90290f964e6a27347a"
     },
     "forms": {
       "version": "2026-27.forms.2",
@@ -45,7 +45,7 @@
     "DED-NPS-OWN": "sha256:f82569b90640619d59ca52efb3ff09fbd09805791e118544efebf6290b0ea1b8",
     "DED-PREMIUM-SHARE": "sha256:77b8982d166181b2acdd99dab1e778c184011d647632150897e80e2b9b533aa6",
     "DED-RENT-PAID": "sha256:0370e38f6609539710771681129b8de07d9ce2bfe6f5f102b1147507a3117218",
-    "DED-SCHEDULE-XV": "sha256:d206adedbafd187d33f9db2ffc8752649631116b6dfa6794e07ec57233eb6b80",
+    "DED-SCHEDULE-XV": "sha256:6c337a63b6065679ca355e525e1575c1ec4887b4d50c582e93af8a0405bed7a1",
     "DED-SPECIFIED-DISEASE": "sha256:cebef6f3e5ea133e06e339ba45aa67dae7e4165d3c0f7df2c195577ef749be8a",
     "DED-SPECIFIED-DISEASE-SENIOR": "sha256:6e84cff1dd10602850ef2742c9bafbac4ef6d0af3de76339936860f27a5a13d2",
     "DED-WITHIN-GROSS-TOTAL": "sha256:72a2d3306f51c6a64738bd5e1d8e70316d89876be71047073e0068de7c25f33d",

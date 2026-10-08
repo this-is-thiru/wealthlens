@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
  */
 public final class ComponentCodes {
 
+    public static final ComponentCode ANNUITY_PLAN = new ComponentCode("ANNUITY_PLAN");
     public static final ComponentCode BANK_TERM_DEPOSIT = new ComponentCode("BANK_TERM_DEPOSIT");
     public static final ComponentCode BASIC = new ComponentCode("BASIC");
     public static final ComponentCode BONUS = new ComponentCode("BONUS");
@@ -29,6 +30,7 @@ public final class ComponentCodes {
     public static final ComponentCode EMPLOYEE_PF = new ComponentCode("EMPLOYEE_PF");
     public static final ComponentCode EMPLOYEE_SUPERANNUATION = new ComponentCode("EMPLOYEE_SUPERANNUATION");
     public static final ComponentCode ENTERTAINMENT_ALLOWANCE = new ComponentCode("ENTERTAINMENT_ALLOWANCE");
+    public static final ComponentCode GOVERNMENT_DEFERRED_ANNUITY = new ComponentCode("GOVERNMENT_DEFERRED_ANNUITY");
     public static final ComponentCode GOVERNMENT_PENSION_ADDITIONAL = new ComponentCode("GOVERNMENT_PENSION_ADDITIONAL");
     public static final ComponentCode GRATUITY = new ComponentCode("GRATUITY");
     public static final ComponentCode HEALTH_INSURANCE_FAMILY = new ComponentCode("HEALTH_INSURANCE_FAMILY");
@@ -44,6 +46,7 @@ public final class ComponentCodes {
     public static final ComponentCode MEDICAL_EXPENDITURE_PARENTS = new ComponentCode("MEDICAL_EXPENDITURE_PARENTS");
     public static final ComponentCode MUTUAL_FUND_PENSION_FUND = new ComponentCode("MUTUAL_FUND_PENSION_FUND");
     public static final ComponentCode MUTUAL_FUND_UNITS = new ComponentCode("MUTUAL_FUND_UNITS");
+    public static final ComponentCode MUTUAL_FUND_UNIT_LINKED_PLAN = new ComponentCode("MUTUAL_FUND_UNIT_LINKED_PLAN");
     public static final ComponentCode NABARD_BONDS = new ComponentCode("NABARD_BONDS");
     public static final ComponentCode NATIONAL_HOUSING_BANK_SCHEME = new ComponentCode("NATIONAL_HOUSING_BANK_SCHEME");
     public static final ComponentCode NOTICE_PAY = new ComponentCode("NOTICE_PAY");
@@ -61,6 +64,7 @@ public final class ComponentCodes {
     public static final ComponentCode TRANSPORT_ALLOWANCE_DISABLED = new ComponentCode("TRANSPORT_ALLOWANCE_DISABLED");
     public static final ComponentCode TUITION_FEES = new ComponentCode("TUITION_FEES");
     public static final ComponentCode UNIFORM_ALLOWANCE = new ComponentCode("UNIFORM_ALLOWANCE");
+    public static final ComponentCode UNIT_LINKED_INSURANCE_PLAN = new ComponentCode("UNIT_LINKED_INSURANCE_PLAN");
     public static final ComponentCode VRS_COMPENSATION = new ComponentCode("VRS_COMPENSATION");
 
     private ComponentCodes() {

@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
+import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
@@ -64,6 +65,7 @@ import java.util.stream.Collectors;
 public final class ChapterEightNode implements ComputationNode {
 
     private static final BaseId SALARY = new BaseId("SALARY");
+    private static final BaseId GOVERNMENT_SALARY = new BaseId("GOVERNMENT_SALARY");
     private static final BaseId GROSS_TOTAL_INCOME = new BaseId("GROSS_TOTAL_INCOME");
     private static final Set<RuleId> PAYMENT_ROWS = Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN);
     private static final Set<RuleId> INVESTMENT_RULES = Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN,
@@ -107,6 +109,7 @@ public final class ChapterEightNode implements ComputationNode {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireRowsThisYear(ctx, investmentsEntered);
+        requireGovernmentEmployment(ctx, payLines);
         Map<ComponentCode, Money> paid = paid(ctx, payLines, payments);
         List<TraceLine> lines = new ArrayList<>();
         premiums(ctx, policies, paid, lines);
@@ -256,11 +259,38 @@ public final class ChapterEightNode implements ComputationNode {
         for (int employment = 0; employment < ctx.inputs().entered().employments().size(); employment++) {
             salary = salary.plus(bases.of(RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION, employment));
         }
-        AggregateOutcome outcome = cap.applyDetailed(new CapContext(Map.of(SALARY, salary), contributions, Map.of()));
+        AggregateOutcome outcome = cap.applyDetailed(new CapContext(
+                Map.of(SALARY, salary, GOVERNMENT_SALARY, governmentSalary(ctx)), contributions, Map.of()));
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, RuleIds.DED_SCHEDULE_XV, StepKind.DEDUCTION,
                         MoneyValue.of(outcome.aggregate()), MoneyValue.of(outcome.allowed()), version.provenance())
                 .withLimitedBy(outcome.limitedBy()));
         return outcome.subCapResidue().getOrDefault(ComponentCodes.EMPLOYEE_NPS, Money.ZERO);
+    }
+
+    /**
+     * The salary Schedule XV para 1(c)'s twenty per cent is measured on: what the Government employments pay in money
+     * under "Salaries" — their pay lines, not perquisites (OQ-16; D-154).
+     */
+    private static Money governmentSalary(NodeContext ctx) {
+        List<Employment> employments = ctx.inputs().entered().employments();
+        return ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class).in(HeadCode.SALARIES).stream()
+                .filter(line -> employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT)
+                .filter(line -> ctx.pack().components().get(line.code()).kind() == ComponentKind.SALARY)
+                .map(ComponentSet.Line::amount)
+                .reduce(Money.ZERO, Money::plus);
+    }
+
+    /** Schedule XV para 1(c) is a deduction from salary "payable by or on behalf of the Government" (D-154). */
+    private static void requireGovernmentEmployment(NodeContext ctx, List<ComponentSet.Line> payLines) {
+        List<Employment> employments = ctx.inputs().entered().employments();
+        for (ComponentSet.Line line : payLines) {
+            if (line.code().equals(ComponentCodes.GOVERNMENT_DEFERRED_ANNUITY)
+                    && employments.get(line.employment()).employerKind() != EmployerKind.GOVERNMENT) {
+                throw new IllegalArgumentException("A sum deducted for a deferred annuity under Schedule XV para 1(c)"
+                        + " must come from salary payable by the Government; employment " + line.employment()
+                        + " is " + employments.get(line.employment()).employerKind() + " (D-154)");
+            }
+        }
     }
 
     /** s.124(3)–(4): the pension contribution s.123 did not allow, with a minor's deposit, under one ceiling. */

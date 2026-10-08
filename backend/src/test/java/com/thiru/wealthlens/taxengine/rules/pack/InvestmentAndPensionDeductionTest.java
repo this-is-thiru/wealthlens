@@ -32,6 +32,8 @@ class InvestmentAndPensionDeductionTest {
 
     private static final TaxYearId TY_2026 = TaxYearId.of(2026);
     private static final BaseId SALARY = new BaseId("SALARY");
+    /** No Government employment in these cases, so Schedule XV para 1(c)'s base is nil (D-154). */
+    private static final BaseId GOVERNMENT_SALARY = new BaseId("GOVERNMENT_SALARY");
     private static final BaseId GROSS_TOTAL_INCOME = new BaseId("GROSS_TOTAL_INCOME");
     private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
@@ -48,7 +50,7 @@ class InvestmentAndPensionDeductionTest {
         Map<ComponentCode, Money> contributions = new HashMap<>();
         cap.contributors().forEach(code -> contributions.put(code, Money.ZERO));
         contributions.putAll(entered);
-        return cap.applyDetailed(new CapContext(Map.of(SALARY, salary), contributions, Map.of()));
+        return cap.applyDetailed(new CapContext(Map.of(SALARY, salary, GOVERNMENT_SALARY, Money.ZERO), contributions, Map.of()));
     }
 
     private static Money onSalary(RuleId rule, String salary) {

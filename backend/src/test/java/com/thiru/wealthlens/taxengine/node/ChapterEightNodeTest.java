@@ -38,6 +38,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * The s.123 family and the pension scheme under Chapter VIII (S2 ss.122–124, Schedule XV; D-130, D-132). Figures by
@@ -349,5 +351,60 @@ class ChapterEightNodeTest {
             assertThat(line.rule()).isEqualTo(RuleIds.DED_SCHEDULE_XV);
             assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("50000")));
         });
+    }
+
+    /** Schedule XV para 1(c): a Government employee, the given pay lines and ₹1,50,000 deducted for an annuity. */
+    private static Case governmentAnnuity(int year, EmployerKind kind, ComponentSet.Line... pay) {
+        List<ComponentSet.Line> lines = new ArrayList<>(List.of(pay));
+        lines.add(pay(ComponentCodes.GOVERNMENT_DEFERRED_ANNUITY, "150000"));
+        return new Case(year, OLD, kind, lines, List.of(), List.of(), Money.of("600000"), Money.of("700000"));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAGovernmentSalaryDeductionBuysADeferredAnnuity_countsTwentyPerCentOfThePay(int year) {
+        // When — basic 6,00,000; 1,50,000 deducted
+        NodeResult result = run(governmentAnnuity(year, EmployerKind.GOVERNMENT, pay(ComponentCodes.BASIC, "600000")));
+
+        // Then — Schedule XV para 1(c) "20 % of salary"; 1961 s.80C(2)(iii) "one-fifth": 1,20,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("120000")));
+    }
+
+    @Test
+    void evaluate_whenTheGovernmentPayIncludesAnAllowance_measuresTheAnnuityOnAllThePay() {
+        // When — basic 6,00,000 and HRA 1,00,000: the salary payable, not the narrow basic-and-DA base (OQ-16)
+        NodeResult result = run(governmentAnnuity(2026, EmployerKind.GOVERNMENT, pay(ComponentCodes.BASIC, "600000"),
+                pay(ComponentCodes.HRA, "100000")));
+
+        // Then — 20 % of 7,00,000 = 1,40,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("140000")));
+    }
+
+    @Test
+    void evaluate_whenTheAnnuityDeductionIsFromAPrivateSalary_isRefused() {
+        // When / Then — para 1(c) is salary "payable by or on behalf of the Government"
+        assertThatThrownBy(() -> run(governmentAnnuity(2026, EmployerKind.OTHER, pay(ComponentCodes.BASIC, "600000"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("payable by the Government");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenUnitLinkedPlansAndAnAnnuityPlanArePaid_countsThemInFull(int year) {
+        // Given — (j) 40,000, (k) 30,000, (l) 50,000; then 60,000 tuition as well
+        List<QualifyingPayment> plans = List.of(paid(ComponentCodes.UNIT_LINKED_INSURANCE_PLAN, "40000"),
+                paid(ComponentCodes.MUTUAL_FUND_UNIT_LINKED_PLAN, "30000"), paid(ComponentCodes.ANNUITY_PLAN, "50000"));
+        List<QualifyingPayment> withTuition = new ArrayList<>(plans);
+        withTuition.add(paid(ComponentCodes.TUITION_FEES, "60000"));
+
+        // When
+        NodeResult alone = run(new Case(year, OLD, EmployerKind.OTHER, List.of(), plans, List.of(), Money.of("1000000"),
+                Money.of("1000000")));
+        NodeResult capped = run(new Case(year, OLD, EmployerKind.OTHER, List.of(), withTuition, List.of(),
+                Money.of("1000000"), Money.of("1000000")));
+
+        // Then — para 2 reaches (a) alone (OQ-17): 1,20,000 counted whole; with tuition 1,80,000 → the ceiling 1,50,000
+        assertThat(alone.value()).isEqualTo(MoneyValue.of(Money.of("120000")));
+        assertThat(capped.value()).isEqualTo(MoneyValue.of(Money.of("150000")));
     }
 }
