@@ -1072,10 +1072,18 @@ if that is not enough for the item in hand.
 | W-078a | The head without interest *(D-155)*: `HouseProperty` input; annual value (S2 s.21(1)–(3), (6), (7); 1961 s.23); 30% (s.22(1)(a); 1961 s.24(a)); arrears (s.23; 1961 s.25A); co-owner's share (s.24; 1961 s.26); `HousePropertyNode` into gross total income | `DR 01` R16 | both years |
 | W-078b | Interest *(D-155)*: S2 s.22(1)(b), (c), (2)–(6) with FA 2026 s.38; 1961 s.24(b) provisos and Explanation; the new regime's disallowance; the ss.130–132 bar (D-139); a loss refused until W-081 | `DR 01` R16 | pre-construction inside the cap in both years (plan W-078) |
 | W-078c | Unrealised rent (S2 s.21(4); 1961 s.23(1) Explanation, r.4) after sourcing the Rule; stock-in-trade (s.21(5)) deferred with the business head *(D-155)* | `DR 01` R16 | ⚠ the Rule not read |
+| W-078d | House-property catalogue entries *(D-158)*: S2 ss.20, 22–25 / 1961 ss.22, 24–27 — one `content/sections` entry per concept (SC-1–SC-4), then those sections `MODELLED`; S2 s.21 / 1961 s.23 also catalogued but kept `PLANNED` for s.21(5) / s.23(5) stock-in-trade, deferred with the business head | `00-BRIEF` §6.3 | as W-076a; coverage already points here (W-078c) |
+| W-078e | Coverage hygiene *(D-159)*: the nine sections `PLANNED` against done items — 2025 Act ss.4, 5, 11, 13, 155 / 1961 ss.4, 5, 14, 87 (W-046, W-049, W-060, W-067) — each re-pointed to a live item or reclassified with its reason; and a build check that every `PLANNED` `backlogItem` names an item in this file that is not done or retired | `00-BRIEF` §6.3; `CoverageRegister` | the check would have caught W-078d's missing row and these nine |
+| W-078f | Docs and data fixes *(D-159)*: `PERQ-EMPLOYER-CONTRIBUTION` TY 2025-26 `whatToCheck` (the interim FA 2024 was searched) and the 9.5% READ once the owner saves the India Code PDF of S.O. 1046(E); the `22-claim-catalogue.md` channel T erratum (s.133(6) reaches (1)(b)(ii) only, D-142); `00-BRIEF` SC-1 says "`MODELLED` or `PLANNED`" where the check is `MODELLED` only — settle at plan time (correct the brief, or extend the check) | `00-BRIEF` §6.3; `DR 22`; sources round 6 Z1 | the S.O. 1046(E) part waits on the owner's download |
+| W-078g | `DIS-S202-2A` *(D-159)*: the new regime's s.202(2)(a) disallowance set — its basis row `REG-NEW-DISALLOW-001`, run-time application so a disallowed rule is **explained** as disallowed, `NEW_TAX_REGIME` referencing it, and the `ExceptIn NEW_TAX_REGIME` rows that rest on s.202(2)(a) moved onto it (1961 s.115BAC(2) for TY 2025-26) | `DR 01` R2 (`REG-NEW-DISALLOW-001`); `NEW_TAX_REGIME.json` `_pendingDisallowanceSets` | Appendix F's trigger (a second s.202(2)(a) rule) passed long ago — 53 rows cite it |
+| W-078h | A notice channel for nodes *(D-159)*: `NodeResult` gains notices beside value and trace; first notice `SAL-HRA-006` — landlord PAN where rent paid in the year exceeds the S4 r.205(2) threshold (the TY 2025-26 counterpart in the Rules 1962 to be sourced in the item) | `DR 01` R9; Appendix F | a notice, never a figure |
+| W-078i | Known-errors notice on the tax-report PDF *(D-159)*: `GET …/document/tax-report` prints the old engine's known-wrong figures without the notice the JSON endpoint carries (D-064 B1) — add it to the PDF template | D-063, D-064 | user-facing correctness warning |
 | W-079 | `othersources.json`, `OtherSourcesNode` | `DR 01` R17 | dividend deduction is **nil** from TY 2026-27; **also `PF-EEINT-001`** — interest on the employee's own PF contributions over ₹2,50,000 / ₹5,00,000 (Sch. II Sl. 3–4; 1961 s.10(11)–(12) provisos, r.9D), moved here by D-125 |
 | W-075c5 | Chapter VIII, deposit interest, TY 2026-27 *(D-137)*: s.153 (80TTA / 80TTB) | `DR 01` R15 | after W-079 — needs interest under Other Sources |
 | W-074b | **T4 golden tests, the rest** *(D-128)*: T4-1/T4-2 deductions, T4-3's ₹30,000, T4-4 | `DR 08` T4-1 … T4-4 | needs `W-073c`, `W-076`, `W-079`; OQ-14; T4-4's premise (r.9D now read). placed after `W-079` by the owner |
+| W-079a | Startup wiring *(D-159; D-054)*: the running application loads the timeline from the JAR, compiles each year against its lock and serves the packs — today the engine runs only from tests | D-054; `DR 07` X2 (packs loaded and verified at startup) | owned at last; before the income-head milestone |
 | W-080 | **T6 golden tests** | `DR 08` T6-1 … T6-7 | |
+| W-080a | `SAL-LTA-CHILD-001` *(D-159)*: LTA for no more than two surviving children (born before 1-10-1998 and multiple births after one child excepted; S4 r.278(5)–(6); 1961 r.2B counterpart, to source) — per-person fares on each `Journey`, both years | Appendix F | the catalogue marks it `NotModelled` until then |
 
 ---
 
@@ -1083,7 +1091,7 @@ if that is not enough for the item in hand.
 
 | Item | Produces | Spec | ⚠ |
 |---|---|---|---|
-| W-081 | `setoff.json`, `SetOffNode` | `DR 01` R18 | absorption order is **declared and traced** (`DR 13` R-7) |
+| W-081 | `setoff.json`, `SetOffNode` | `DR 01` R18 | absorption order is **declared and traced** (`DR 13` R-7); **also (D-159):** remove `LedgerSnapshot.preConstructionInstalmentsClaimed` — the instalments are fixed by tax year (S2 s.22(1)(c), W-078b) and nothing reads it |
 | W-082 | `Election` family, `ElectionResolver` | `DR 15` C2 | priced by **recomputation**; record all alternatives |
 | W-083 | `HouseElectionNode` | `DR 13` R-6 | which two houses is a **choice**, and optimisable |
 | W-084 | `IncrementalRunner` | `DR 15` B5 | memo only where the graph proves nothing upstream moved |
@@ -1179,7 +1187,7 @@ if that is not enough for the item in hand.
 | W-116 | `content/explanations.json` + renderer | `DR 20` F37 | **F37** |
 | W-117 | `content/claim-catalogue.json` (12 entries) | `DR 22` C5 | **F40** |
 | W-118 | claim-playbook endpoint | `DR 22` C4 | **F40** |
-| W-119 | claim integrity: S / E / D + statutory overshoot | `DR 12` C2, C3.1 | **F23, F24** |
+| W-119 | claim integrity: S / E / D + statutory overshoot | `DR 12` C2, C3.1 | **F23, F24**; **also (D-159):** Form No. 12BB evidence (`TDS-SAL-12BB-001/002`) and `DR 08` T5-4's no-evidence variant, which W-077 left waiting on it |
 | W-120 | documentation checklist | `DR 12` C3.2, `DR 22` C7 | **F25** |
 | W-121 | materiality banding | `DR 22` C6 | **F40.4** |
 | W-122 | progressive onboarding steps | `DR 20` F34 | **F34** |
@@ -1494,9 +1502,10 @@ none depends on anyone remembering it.
 | HUF sourcing — each per-type difference in `00-BRIEF.md` §8 as a rulebook row | the first HUF item | rule R1: no per-type number in code without a source |
 | `Huf` karta and members | the first rule that reads them | rule B2 |
 | Capital gains on assets outside `portfolio` (manager **M-08**'s gap) | `W-089` (capital-gains milestone) | a user who sells a flat otherwise gets a silently incomplete computation |
-| `DIS-S202-2A` — the new regime's s.202(2)(a) disallowance set, its basis row (`REG-NEW-DISALLOW-001`) and run-time application, so a disallowed rule is *explained* as disallowed; until then `SAL-TAX-ON-EMPLOYMENT` is excluded by `ExceptIn` (D-093) | the first item that explains a regime difference by rule, or that authors a second s.202(2)(a) rule — owner to place | `NEW_TAX_REGIME.json` `_pendingDisallowanceSets` |
-| `SAL-HRA-006` — landlord PAN where aggregate rent paid in the year exceeds ₹1,00,000 (S4 r.205(2) Table Sl. 1): a notice, not a figure; nodes have no notice channel (`NodeResult` is value and trace) (D-099) | the first item that gives nodes a notice channel | `ExemptionNode` has the rent figures |
-| `SAL-LTA-CHILD-001` — LTA is not available for more than two surviving children (except children born before 1-10-1998 and multiple births after one child; S4 r.278(5)–(6)): needs a per-person fare on each journey; until then a family with three or more later-born children is over-allowed (D-100) | the item that adds per-person journey fares, before any LTA figure is filed | `SEC-LEAVE-TRAVEL-CONCESSION` marks it `NotModelled` |
+| `DIS-S202-2A` — the new regime's s.202(2)(a) disallowance set, its basis row (`REG-NEW-DISALLOW-001`) and run-time application, so a disallowed rule is *explained* as disallowed; until then `SAL-TAX-ON-EMPLOYMENT` is excluded by `ExceptIn` (D-093) | the first item that explains a regime difference by rule, or that authors a second s.202(2)(a) rule — owner to place | `NEW_TAX_REGIME.json` `_pendingDisallowanceSets` **Placed as `W-078g` (D-159).** |
+| `SAL-HRA-006` — landlord PAN where aggregate rent paid in the year exceeds ₹1,00,000 (S4 r.205(2) Table Sl. 1): a notice, not a figure; nodes have no notice channel (`NodeResult` is value and trace) (D-099) | the first item that gives nodes a notice channel | `ExemptionNode` has the rent figures **Placed as `W-078h` (D-159).** |
+| `SAL-LTA-CHILD-001` — LTA is not available for more than two surviving children (except children born before 1-10-1998 and multiple births after one child; S4 r.278(5)–(6)): needs a per-person fare on each journey; until then a family with three or more later-born children is over-allowed (D-100) | the item that adds per-person journey fares, before any LTA figure is filed | `SEC-LEAVE-TRAVEL-CONCESSION` marks it `NotModelled` **Placed as `W-080a` (D-159).** |
+| CBDT guidance, if any, on whether the new regime also disallows s.22(1)(c) for an own residence — W-078b followed the text (s.202(2)(a)(v) names s.22(1)(b) only; D-156 C1(a)); the owner downloads, incometaxindia.gov.in being blocked here (D-159) | `W-080` (the T6 goldens fix TY 2026-27 house-property figures) | if a text says otherwise, one version of `HP-OWN-RESIDENCE-PRE-CONSTRUCTION` changes |
 | Section catalogue entries for every modelled section | each item that models a section — standing rule 2 | SC-1 ratchet |
 | The rule-authoring admin screen (**OQ-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
 | Dividend income in the surcharge's **excluding** income and in the 15%-limited part (`RATE-SUR-SPLIT-001`), D-086 | `W-079` (`OtherSourcesNode`) | dividends are slab-taxed, so nothing else would take them out of the 25%/37% test |
