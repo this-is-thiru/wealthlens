@@ -81,7 +81,7 @@ final class DonationDeduction {
                     + " are not (D-142)");
         }
         List<TraceLine> lines = new ArrayList<>();
-        if (!version(ctx, RuleIds.DED_DONATION_WHOLE).regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(RuleIds.DED_DONATION_WHOLE, version(ctx, RuleIds.DED_DONATION_WHOLE)).applies()) {
             notInRegime(ctx, donations, firstSequence, lines);
             return new Outcome(lines, false);
         }

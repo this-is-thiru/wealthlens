@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.validate;
 
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.definition.DisallowanceBasis;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -76,6 +77,7 @@ public final class PackValidator {
         checkRuleReferencesResolve(pack, problems);       // I2, generalised
         checkExactlyOneDefaultPerPersonType(pack, problems);  // I5
         checkRegimeSetReferencesResolve(pack, problems);  // I6
+        checkSetBasesNameTheirSets(pack, problems);       // D-165
         checkComponentReferencesResolve(pack, problems);  // I7
         checkYearIsCoveredWithoutGapOrOverlap(pack, problems);  // I13
         checkMidYearChangesAreDeclared(pack, problems);          // I14
@@ -186,6 +188,32 @@ public final class PackValidator {
                             "regime " + regime.code() + " references condition set " + id
                                     + ", which the pack does not define; every taxpayer would be"
                                     + " treated as eligible");
+                }
+            }
+        }
+    }
+
+    /**
+     * D-165 — a disallowance set's basis row is a {@link DisallowanceBasis} naming that set, in every version the pack
+     * holds. The set says which provision forbids; the row says which set its words are the reason for. Checked both
+     * ways because an explanation cites the basis: a basis row that is a cap, or that names another set, would put
+     * the wrong section in front of the taxpayer.
+     */
+    private static void checkSetBasesNameTheirSets(RulePack pack, List<String> problems) {
+        for (DisallowanceSet set : pack.disallowanceSets().values()) {
+            if (!pack.rules().containsKey(set.basis())) {
+                continue;  // reported by I2
+            }
+            for (RuleVersion version : pack.rule(set.basis()).versions()) {
+                boolean namesTheSet = version.definition()
+                        .filter(DisallowanceBasis.class::isInstance)
+                        .map(DisallowanceBasis.class::cast)
+                        .filter(basis -> basis.set().equals(set.id()))
+                        .isPresent();
+                if (!namesTheSet) {
+                    problems.add("disallowance set " + set.id() + " rests on " + set.basis()
+                            + ", whose version from " + version.validity() + " is not a DisallowanceBasis naming "
+                            + set.id() + "; an explanation would cite a provision that is not the set's reason");
                 }
             }
         }

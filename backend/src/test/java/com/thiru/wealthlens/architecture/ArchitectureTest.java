@@ -8,6 +8,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -234,6 +236,20 @@ class ArchitectureTest {
                     .orShould().dependOnClassesThat().haveFullyQualifiedName("java.time.Clock")
                     .because("asOf is an EngineInputs field; a clock inside the engine makes golden tests"
                             + " time-dependent and audits irreproducible");
+
+    /**
+     * A node asks the context whether a rule applies in the regime, never the rule's row.
+     *
+     * <p>A row's {@code regimes} is half the answer: the regime's disallowance sets are the other half (D-165). A
+     * node reading {@code appliesIn} itself applies a rule S2 s.202(2)(a) forbids — a wrong figure, explained as
+     * allowed.
+     */
+    @ArchTest
+    static final ArchRule nodes_ask_the_context_whether_a_rule_applies_in_the_regime =
+            noClasses()
+                    .that().resideInAPackage("..taxengine.node..")
+                    .should().callMethod(RegimeApplicability.class, "appliesIn", RegimeCode.class)
+                    .because("NodeContext.inRegime also applies the regime's disallowance sets (D-165)");
 
     /**
      * Money is {@code Money}, and rates are {@code Rate}.

@@ -2,13 +2,17 @@ package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Every node the engine can run, addressed by what it produces.
@@ -138,5 +142,24 @@ public final class NodeRegistry {
         Set<RuleId> unreachable = new TreeSet<>(java.util.Comparator.comparing(RuleId::value));
         packRuleIds.stream().filter(id -> !evaluated.contains(id)).forEach(unreachable::add);
         return unreachable;
+    }
+
+    /**
+     * I3 against a whole pack: as {@link #rulesNotEvaluatedByAnyNode(Collection)}, with a disallowance set's basis
+     * counted as evaluated wherever a regime references the set. No node computes with the basis, but every
+     * explanation of a rule the set forbids cites it ({@link NodeContext#inRegime}, D-165) — it is in every answer
+     * that set touches, which is the opposite of dead.
+     *
+     * @return the pack's rules no node evaluates and no referenced set cites, sorted
+     */
+    public Set<RuleId> rulesNotEvaluatedByAnyNode(RulePack pack) {
+        Set<RuleId> cited = pack.regimes().values().stream()
+                .flatMap(regime -> regime.disallowances().stream())
+                .map(pack.disallowanceSets()::get)
+                .filter(Objects::nonNull)
+                .map(DisallowanceSet::basis)
+                .collect(Collectors.toSet());
+        return rulesNotEvaluatedByAnyNode(
+                pack.rules().keySet().stream().filter(id -> !cited.contains(id)).toList());
     }
 }

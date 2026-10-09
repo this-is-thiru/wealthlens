@@ -20,6 +20,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -97,6 +99,52 @@ class RulePackCompilerTest {
         assertThatThrownBy(() -> RulePackCompiler.compile(timeline, new TaxYearId(2024)))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("0 election versions are in force in 2024-25");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void compile_whenTheShippedTimelineIsCompiled_holdsTheYearsVersionOfEachDisallowanceSet(int year) {
+        // When — D-165: the set file holds a version per span of years
+        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(TIMELINE), TaxYearId.of(year));
+
+        // Then — one plain set, its year's provision, no versions or validity
+        JsonNode sets = MAPPER.readTree(compiled.files().get("law/regimes.json")).path("disallowanceSets");
+        assertThat(sets).hasSize(1);
+        JsonNode set = sets.get(0);
+        assertThat(set.path("id").asString()).isEqualTo("DIS-NEW-TAX-REGIME-NO-EXEMPTION");
+        assertThat(set.path("displayName").asString()).contains(year == 2025 ? "s.115BAC(2)(i)" : "s.202(2)(a)");
+        assertThat(set.has("versions")).isFalse();
+        assertThat(set.has("validity")).isFalse();
+    }
+
+    @Test
+    void read_whenTwoVersionsOfADisallowanceSetOverlap_isRefused() throws IOException {
+        // Given — the TY 2026-27 version moved back into TY 2025-26
+        Path root = timelineCopy();
+        Path file = root.resolve("law/disallowances/DIS-NEW-TAX-REGIME-NO-EXEMPTION.json");
+        ObjectNode set = (ObjectNode) tree(file);
+        ((ObjectNode) set.path("versions").get(1).path("validity")).put("from", "2026-01-01");
+        write(file, set);
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("law/disallowances/DIS-NEW-TAX-REGIME-NO-EXEMPTION.json: versions overlap");
+    }
+
+    @Test
+    void read_whenADisallowanceSetFileIsNamedForAnotherId_isRefused() throws IOException {
+        // Given
+        Path root = timelineCopy();
+        Path file = root.resolve("law/disallowances/DIS-NEW-TAX-REGIME-NO-EXEMPTION.json");
+        ObjectNode set = (ObjectNode) tree(file);
+        set.put("id", "DIS-SOMETHING-ELSE");
+        write(file, set);
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("holds DIS-SOMETHING-ELSE; a timeline file is named for the one identity it holds");
     }
 
     @Test

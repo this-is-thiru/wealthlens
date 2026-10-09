@@ -105,7 +105,7 @@ public final class GrossSalaryNode implements ComputationNode {
     }
 
     private static HeadTotal salaryIncludes(NodeContext ctx, RuleVersion version) {
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(RuleIds.SAL_SALARY_INCLUDES, version).applies()) {
             throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES + " does not apply in regime "
                     + ctx.regime().code() + "; salary is defined in every regime, so the row is wrong");
         }

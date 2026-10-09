@@ -80,7 +80,7 @@ final class AllowanceExemption {
             RuleId ruleId = allowanceRule(ctx, use.allowance());
             RuleRow rule = ctx.rule(ruleId);
             RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
-            if (!version.regimes().appliesIn(ctx.regime().code())) {
+            if (!ctx.inRegime(ruleId, version).applies()) {
                 continue;
             }
             Money received = paid(components, use.allowance());
@@ -101,7 +101,7 @@ final class AllowanceExemption {
             DisabledTransportClaim claim, int sequence) {
         RuleId ruleId = RuleIds.SAL_ALW_TRANSPORT_DISABLED;
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal());
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(ruleId, version).applies()) {
             return Optional.empty();
         }
         DisabledTransportLimit limit = transportLimit(version);

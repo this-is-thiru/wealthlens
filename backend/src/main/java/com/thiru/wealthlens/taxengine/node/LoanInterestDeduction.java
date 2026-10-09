@@ -60,7 +60,7 @@ final class LoanInterestDeduction {
     private static TraceLine education(NodeContext ctx, EducationLoanInterest loan, int sequence) {
         RuleVersion version = version(ctx, RuleIds.DED_EDUCATION_LOAN);
         Money interest = loan.interestPaid();
-        if (!applies(ctx, version)) {
+        if (!applies(ctx, RuleIds.DED_EDUCATION_LOAN, version)) {
             return line(sequence, RuleIds.DED_EDUCATION_LOAN, version, interest, Money.ZERO, notInRegime(ctx));
         }
         TaxYearSpan span = RuleDefinitions.require(version.definition(), TaxYearSpan.class,
@@ -86,7 +86,7 @@ final class LoanInterestDeduction {
     private static TraceLine limited(NodeContext ctx, PurposeLoanInterest loan, RuleId row, int sequence) {
         RuleVersion version = version(ctx, row);
         Money interest = loan.interestPayable();
-        if (!applies(ctx, version)) {
+        if (!applies(ctx, row, version)) {
             return line(sequence, row, version, interest, Money.ZERO, notInRegime(ctx));
         }
         SanctionedLoanLimit limit = RuleDefinitions.require(version.definition(), SanctionedLoanLimit.class, row);
@@ -135,8 +135,8 @@ final class LoanInterestDeduction {
                 : Optional.empty();
     }
 
-    private static boolean applies(NodeContext ctx, RuleVersion version) {
-        return version.regimes().appliesIn(ctx.regime().code());
+    private static boolean applies(NodeContext ctx, RuleId row, RuleVersion version) {
+        return ctx.inRegime(row, version).applies();
     }
 
     private static String notInRegime(NodeContext ctx) {

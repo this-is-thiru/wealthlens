@@ -15,6 +15,8 @@ import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.definition.DisallowanceBasis;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -109,6 +111,15 @@ class PackValidatorTest {
     }
 
     private static RuleRow rule(RuleId id, CapShape cap) {
+        return rule(id, cap, Optional.empty());
+    }
+
+    /** A disallowance set's basis row: a {@link DisallowanceBasis} naming the set (D-165). */
+    private static RuleRow basis(RuleId id, DisallowanceSetId set) {
+        return rule(id, null, Optional.of(new DisallowanceBasis(set)));
+    }
+
+    private static RuleRow rule(RuleId id, CapShape cap, Optional<RuleDefinition> definition) {
         return new RuleRow(
                 id,
                 TemporalAxis.TAX_YEAR,
@@ -118,7 +129,7 @@ class PackValidatorTest {
                         cap,
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.empty(),
+                        definition,
                         List.of(),
                         Provision.notYetVerified("Income-tax Act, 1961"),
                         Provision.present("Income-tax Act, 2025", "s.202(1)"),
@@ -208,7 +219,7 @@ class PackValidatorTest {
 
         PackBuilder() {
             rules.put(SLAB, rule(SLAB, new Fixed(Money.ZERO)));
-            rules.put(DISALLOW, rule(DISALLOW, new Fixed(Money.ZERO)));
+            rules.put(DISALLOW, basis(DISALLOW, DIS_SET));
             rules.put(ELIG, rule(ELIG, new Fixed(Money.ZERO)));
             rules.put(HRA, rule(HRA, new Fixed(Money.ZERO)));
             disallowanceSets.put(
@@ -394,6 +405,36 @@ class PackValidatorTest {
             assertThatThrownBy(() -> PackValidator.validate(pack.build()))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("treated as eligible");
+        }
+    }
+
+    @Nested
+    @DisplayName("D-165 — a disallowance set and its basis row name each other")
+    class SetBases {
+
+        @Test
+        void validate_whenTheBasisRowNamesAnotherSet_rejectsIt() {
+            // Given
+            PackBuilder pack = validPack();
+            pack.rules.put(DISALLOW, basis(DISALLOW, new DisallowanceSetId("DIS-SOMETHING-ELSE")));
+
+            // When / Then
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("disallowance set " + DIS_SET + " rests on " + DISALLOW)
+                    .hasMessageContaining("is not a DisallowanceBasis naming " + DIS_SET);
+        }
+
+        @Test
+        void validate_whenTheBasisRowIsNotADisallowanceBasis_rejectsIt() {
+            // Given
+            PackBuilder pack = validPack();
+            pack.rules.put(DISALLOW, rule(DISALLOW, new Fixed(Money.ZERO)));
+
+            // When / Then
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("is not a DisallowanceBasis naming " + DIS_SET);
         }
     }
 

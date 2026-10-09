@@ -107,7 +107,7 @@ public final class RegistryJson {
         return byId;
     }
 
-    static DisallowanceSet disallowanceSet(JsonNode node, String path) {
+    public static DisallowanceSet disallowanceSet(JsonNode node, String path) {
         DisallowanceSetId id = new DisallowanceSetId(PackJson.text(node, "id", path));
         String where = path + " (" + id + ")";
 

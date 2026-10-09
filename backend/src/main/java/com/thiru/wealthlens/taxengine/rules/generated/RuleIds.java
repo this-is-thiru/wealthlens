@@ -119,6 +119,7 @@ public final class RuleIds {
     public static final RuleId REBATE_NEW_TAX_REGIME = new RuleId("REBATE-NEW-TAX-REGIME");
     public static final RuleId REBATE_NEW_TAX_REGIME_EXCESS = new RuleId("REBATE-NEW-TAX-REGIME-EXCESS");
     public static final RuleId REBATE_RESIDENT_INDIVIDUAL = new RuleId("REBATE-RESIDENT-INDIVIDUAL");
+    public static final RuleId REG_NEW_TAX_REGIME_NO_EXEMPTION = new RuleId("REG-NEW-TAX-REGIME-NO-EXEMPTION");
     public static final RuleId RET_COMMUTED_PENSION_FUND = new RuleId("RET-COMMUTED-PENSION-FUND");
     public static final RuleId RET_COMMUTED_PENSION_GOVERNMENT = new RuleId("RET-COMMUTED-PENSION-GOVERNMENT");
     public static final RuleId RET_COMMUTED_PENSION_OTHER = new RuleId("RET-COMMUTED-PENSION-OTHER");

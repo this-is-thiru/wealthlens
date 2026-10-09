@@ -119,11 +119,18 @@ class SalaryDeductionNodeTest {
         // When
         NodeResult result = run(year, NEW_TAX_REGIME, "600000", "2500");
 
-        // Then — 75,000 only: s.202(2)(a)(iv) removes the 2,500, and no line claims it
+        // Then — 75,000 only: the regime's set removes the 2,500 (D-165), and its nil line names the provision —
+        // s.202(2)(a), or s.115BAC(2)(i) in TY 2025-26
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("75000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
-                .containsExactly(RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME);
-        assertThat(result.trace().getFirst().limitedBy()).contains("statutory amount");
+                .containsExactly(RuleIds.SAL_TAX_ON_EMPLOYMENT, RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME);
+        TraceLine professionalTax = result.trace().getFirst();
+        assertThat(professionalTax.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(professionalTax.limitedBy()).hasValueSatisfying(reason -> assertThat(reason)
+                .startsWith("disallowed in the NEW_TAX_REGIME regime: ")
+                .contains(year == 2025 ? "s.115BAC(2)(i)" : "s.202(2)(a)")
+                .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")"));
+        assertThat(result.trace().get(1).limitedBy()).contains("statutory amount");
     }
 
     @Test

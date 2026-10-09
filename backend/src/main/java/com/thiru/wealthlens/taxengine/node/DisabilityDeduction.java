@@ -74,7 +74,7 @@ final class DisabilityDeduction {
             return;
         }
         Money amount = limit(ctx, row);
-        lines.add(applies(ctx, version)
+        lines.add(applies(ctx, row, version)
                 ? line(ctx, firstSequence + lines.size(), row, version, amount, amount, "certified")
                 : nil(ctx, firstSequence + lines.size(), row, version, amount));
     }
@@ -144,7 +144,7 @@ final class DisabilityDeduction {
                     "the assessee is not resident in India"));
             return;
         }
-        if (!applies(ctx, version)) {
+        if (!applies(ctx, row, version)) {
             lines.add(nil(ctx, firstSequence + lines.size(), row, version, entered));
             return;
         }
@@ -186,8 +186,8 @@ final class DisabilityDeduction {
         return ctx.inputs().assessee().residence() != Assessee.ResidentialStatus.NON_RESIDENT;
     }
 
-    private static boolean applies(NodeContext ctx, RuleVersion version) {
-        return version.regimes().appliesIn(ctx.regime().code());
+    private static boolean applies(NodeContext ctx, RuleId row, RuleVersion version) {
+        return ctx.inRegime(row, version).applies();
     }
 
     private static Money limit(NodeContext ctx, RuleId row) {

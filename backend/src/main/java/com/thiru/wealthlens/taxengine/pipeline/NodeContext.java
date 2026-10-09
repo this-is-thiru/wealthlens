@@ -8,9 +8,12 @@ import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import java.time.Period;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -211,6 +214,31 @@ public final class NodeContext {
         }
         boolean resident = assessee.residence() != Assessee.ResidentialStatus.NON_RESIDENT;
         return new ConditionContext(resident, assessee.type(), ages, disabilities);
+    }
+
+    /**
+     * Whether a rule applies in this regime, and why not where it does not (D-165): first the version's own
+     * {@code regimes}, then every disallowance set the regime references. The one place a node asks — a node reading
+     * {@code regimes().appliesIn} itself would apply a rule the regime forbids ({@code ArchitectureTest}).
+     *
+     * @param rule the rule the version belongs to, which is what a set lists
+     * @param version the version in force for the node's purpose
+     */
+    public RegimeVerdict inRegime(RuleId rule, RuleVersion version) {
+        if (!version.regimes().appliesIn(regime.code())) {
+            return new RegimeVerdict.ExcludedByRow();
+        }
+        for (DisallowanceSetId id : regime.disallowances()) {
+            DisallowanceSet set = pack.disallowanceSets().get(id);
+            if (set == null) {
+                throw new IllegalStateException("Regime " + regime.code() + " references disallowance set " + id
+                        + ", which pack " + pack.taxYear().label() + " does not define (invariant I6)");
+            }
+            if (set.disallows(rule)) {
+                return new RegimeVerdict.Disallowed(regime.code(), set);
+            }
+        }
+        return new RegimeVerdict.Applies();
     }
 
     public RulePack pack() {

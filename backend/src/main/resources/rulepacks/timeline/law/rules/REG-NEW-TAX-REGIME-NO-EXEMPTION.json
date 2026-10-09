@@ -1,0 +1,103 @@
+{
+  "ruleId": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+  "_note": "The new regime's exemptions and deductions not allowed — the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-165; rulebook R2 REG-NEW-DISALLOW-001, renamed by D-069). TY 2026-27: Income-tax Act, 2025 s.202(2)(a) (p.227): \"(2) For the purposes of sub-section (1), the total income of the assessee shall be computed— (a) without any exemption or deduction under––\" followed by clauses (i)–(xii); (iii) omitted by Finance Act, 2026 s.56 (rulebook R2). TY 2025-26: Income-tax Act, 1961 s.115BAC(2)(i) as substituted by Finance Act, 2023 s.52(C)(a) from 1-4-2024 (p.33): \"(2) For the purposes of sub-section (1A), the total income of the person referred to therein, shall be computed— (i) without any exemption or deduction under the provisions of\" a list of clauses and sections. Defines no amount: it is cited by every explanation of a rule the set forbids (NodeContext.inRegime). Which rules the set lists is the set's file; W-078g2 moves the rest of the ExceptIn rows onto it.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.202(2)(a)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "DisallowanceBasis",
+        "set": "DIS-NEW-TAX-REGIME-NO-EXEMPTION"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52(C)(a) — Income-tax Act, 1961 s.115BAC(2)(i) substituted",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C)(a) (Income-tax Act, 1961 s.115BAC(2)(i) substituted), pp.33–34",
+        "accessedOn": "2026-10-09",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.202(2)(a)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "DisallowanceBasis",
+        "set": "DIS-NEW-TAX-REGIME-NO-EXEMPTION"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.202(2)(a)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.202(2)(a), p.227",
+        "accessedOn": "2026-10-09",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.202(2)(a), p.227",
+    "accessedOn": "2026-10-09",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

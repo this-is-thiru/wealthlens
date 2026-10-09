@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
@@ -70,6 +71,11 @@ public final class RulePackCompiler {
                         "law/regimes/" + code.value() + ".json"));
             }
         }
+        ArrayNode disallowanceSets = MAPPER.createArrayNode();
+        for (DisallowanceSetId id : sorted(timeline.disallowanceSetSources().keySet(), DisallowanceSetId::value)) {
+            DisallowanceSetVersions.forTaxYear(MAPPER.readTree(timeline.disallowanceSetSources().get(id)), taxYear,
+                    "law/disallowances/" + id.value() + ".json").ifPresent(disallowanceSets::add);
+        }
         ArrayNode components = MAPPER.createArrayNode();
         for (ComponentCode code : sorted(timeline.components().keySet(), ComponentCode::value)) {
             if (timeline.components().get(code).lifecycle().isLiveIn(taxYear)) {
@@ -85,7 +91,7 @@ public final class RulePackCompiler {
         files.put("law/rates.json", render(object().set("rules", rules)));
         files.put("law/regimes.json", render(object()
                 .<ObjectNode>set("regimes", regimes)
-                .<ObjectNode>set("disallowanceSets", MAPPER.createArrayNode())
+                .<ObjectNode>set("disallowanceSets", disallowanceSets)
                 .set("conditionSets", MAPPER.createArrayNode())));
         files.put("exec/pipelines.json", render(object()
                 .<ObjectNode>set("nodes", nodes)

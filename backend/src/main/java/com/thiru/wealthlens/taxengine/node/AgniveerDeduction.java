@@ -45,7 +45,7 @@ final class AgniveerDeduction {
             return;
         }
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(row), ctx.inputs().temporal());
-        boolean applies = version.regimes().appliesIn(ctx.regime().code());
+        boolean applies = ctx.inRegime(row, version).applies();
         Money allowed = applies
                 ? TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(), CapContext.of(AMOUNT_PAID, paid))
                         .value()

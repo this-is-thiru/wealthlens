@@ -11,7 +11,6 @@ import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -87,8 +86,7 @@ public final class TaxByBasisNode implements ComputationNode {
         List<RuleRow> holding = LADDERS.stream()
                 .filter(id -> !id.equals(table))
                 .map(ctx::rule)
-                .filter(row -> replaces(TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal()),
-                        ctx.regime().code(), conditions))
+                .filter(row -> replaces(ctx, row, conditions))
                 .sorted(Comparator.comparing(row -> row.id().value()))
                 .toList();
         if (holding.size() > 1) {
@@ -98,8 +96,9 @@ public final class TaxByBasisNode implements ComputationNode {
         return holding.isEmpty() ? ctx.rule(table) : holding.getFirst();
     }
 
-    private static boolean replaces(RuleVersion version, RegimeCode regime, ConditionContext conditions) {
-        return version.regimes().appliesIn(regime)
+    private static boolean replaces(NodeContext ctx, RuleRow row, ConditionContext conditions) {
+        RuleVersion version = TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal());
+        return ctx.inRegime(row.id(), version).applies()
                 && !version.conditions().isEmpty()
                 && version.conditions().stream().allMatch(condition -> condition.holds(conditions));
     }

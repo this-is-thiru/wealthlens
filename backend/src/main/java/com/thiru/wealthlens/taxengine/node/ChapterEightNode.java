@@ -217,7 +217,7 @@ public final class ChapterEightNode implements ComputationNode {
             return;
         }
         RuleVersion version = version(ctx, RuleIds.DED_PREMIUM_SHARE);
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(RuleIds.DED_PREMIUM_SHARE, version).applies()) {
             policies.forEach(policy -> paid.merge(ComponentCodes.LIFE_INSURANCE_PREMIUM, policy.premiumPaid(),
                     Money::plus));
             return;
@@ -250,7 +250,7 @@ public final class ChapterEightNode implements ComputationNode {
         if (!entered.isGreaterThan(Money.ZERO)) {
             return Money.ZERO;
         }
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(RuleIds.DED_SCHEDULE_XV, version).applies()) {
             lines.add(nilLine(ctx, lines, RuleIds.DED_SCHEDULE_XV, version, entered));
             return Money.ZERO;
         }
@@ -300,7 +300,7 @@ public final class ChapterEightNode implements ComputationNode {
             return;
         }
         RuleVersion version = version(ctx, RuleIds.DED_NPS_OWN);
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(RuleIds.DED_NPS_OWN, version).applies()) {
             lines.add(nilLine(ctx, lines, RuleIds.DED_NPS_OWN, version, entered));
             return;
         }
@@ -347,7 +347,7 @@ public final class ChapterEightNode implements ComputationNode {
             return RuleIds.DED_NPS_EMPLOYER_GOVT;
         }
         for (RuleId row : List.of(RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME)) {
-            if (version(ctx, row).regimes().appliesIn(ctx.regime().code())) {
+            if (ctx.inRegime(row, version(ctx, row)).applies()) {
                 return row;
             }
         }

@@ -219,6 +219,11 @@ resources/rulepacks/2026-27/
 No `pipeline-old.json` / `pipeline-new.json`. Pipelines live inside their `RegimeSpec`, so their
 count is data.
 
+> **Erratum (W-078g, 2026-10-09):** `disallowances.json` is not authored per year — the law is authored once on the timeline
+> (D-034), so each set is `timeline/law/disallowances/<id>.json` with a version per span of years (its provision, display name and
+> rules), and a year's pack holds the version in force in `law/regimes.json`'s `disallowanceSets` (D-165).
+> Verified by: `TimelineReader` (`law/disallowances`), `RulePackCompiler`; `RulePackCompilerTest.compile_whenTheShippedTimelineIsCompiled_holdsTheYearsVersionOfEachDisallowanceSet`.
+
 ---
 
 ## E4 — An open component vocabulary that is still typo-proof

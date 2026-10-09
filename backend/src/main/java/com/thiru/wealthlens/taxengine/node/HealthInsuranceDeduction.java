@@ -201,7 +201,7 @@ final class HealthInsuranceDeduction {
         Money toFamily = family.scaledBy(allowed, total);
         buckets.get(Bucket.FAMILY).insurance = buckets.get(Bucket.FAMILY).insurance.plus(toFamily);
         buckets.get(Bucket.PARENTS).insurance = buckets.get(Bucket.PARENTS).insurance.plus(allowed.minus(toFamily));
-        if (version.regimes().appliesIn(ctx.regime().code())) {
+        if (ctx.inRegime(RuleIds.DED_HEALTH_CHECKUP, version).applies()) {
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, RuleIds.DED_HEALTH_CHECKUP,
                             StepKind.MEASURE, MoneyValue.of(total), MoneyValue.of(allowed), version.provenance())
                     .withLimitedBy("split in the ratio claimed: " + toFamily + " family, " + allowed.minus(toFamily)
@@ -220,7 +220,7 @@ final class HealthInsuranceDeduction {
                 ? (paid.coversSenior ? RuleIds.DED_HEALTH_FAMILY_SENIOR : RuleIds.DED_HEALTH_FAMILY)
                 : (paid.coversSenior ? RuleIds.DED_HEALTH_PARENTS_SENIOR : RuleIds.DED_HEALTH_PARENTS);
         RuleVersion version = version(ctx, row);
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(row, version).applies()) {
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
                             MoneyValue.of(entered), MoneyValue.of(Money.ZERO), version.provenance())
                     .withLimitedBy("not in the " + ctx.regime().code().value() + " regime"));

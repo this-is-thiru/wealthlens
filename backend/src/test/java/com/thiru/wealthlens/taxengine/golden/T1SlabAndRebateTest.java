@@ -103,7 +103,7 @@ class T1SlabAndRebateTest {
         RulePack pack = RUNNER.pack(TaxYearId.of(year));
 
         // When
-        Set<RuleId> unevaluated = RUNNER.registry().rulesNotEvaluatedByAnyNode(pack.rules().keySet());
+        Set<RuleId> unevaluated = RUNNER.registry().rulesNotEvaluatedByAnyNode(pack);
 
         // Then
         assertThat(unevaluated).isEmpty();

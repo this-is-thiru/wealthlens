@@ -1,0 +1,41 @@
+{
+  "_note": "The rules the new regime does not allow, by S2 s.202(2)(a) / 1961 s.115BAC(2)(i) (D-165) — one set, referenced by NEW_TAX_REGIME, shared by any later regime the same words cover (DR 10 E3.5). Lists only rules the year holds that rest on the provision: SAL-TAX-ON-EMPLOYMENT (s.202(2)(a)(iv); 1961 s.16(iii) by s.115BAC(2)(i)). The other ExceptIn NEW_TAX_REGIME rows resting on it move here in W-078g2; the rows the regime keys rather than forbids stay ExceptIn.",
+  "id": "DIS-NEW-TAX-REGIME-NO-EXEMPTION",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "displayName": "Income-tax Act, 1961 s.115BAC(2)(i) computes the new regime's total income without this exemption or deduction",
+      "basis": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "disallowedRules": [
+        "SAL-TAX-ON-EMPLOYMENT"
+      ],
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C)(a) (Income-tax Act, 1961 s.115BAC(2)(i) substituted), pp.33–34",
+        "accessedOn": "2026-10-09",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "displayName": "Income-tax Act, 2025 s.202(2)(a) computes the new tax regime's total income without this exemption or deduction",
+      "basis": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "disallowedRules": [
+        "SAL-TAX-ON-EMPLOYMENT"
+      ],
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.202(2)(a), p.227",
+        "accessedOn": "2026-10-09",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ]
+}

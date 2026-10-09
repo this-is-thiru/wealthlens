@@ -117,7 +117,7 @@ public final class SalaryBaseNode implements ComputationNode {
     /** The year's version of a base rule, refused unless it states a salary base in this regime. */
     private static RuleVersion definingVersion(NodeContext ctx, RuleId rule) {
         RuleVersion version = ctx.rule(rule).versionAt(ctx.inputs().temporal());
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(rule, version).applies()) {
             throw new IllegalStateException(rule + " does not apply in regime " + ctx.regime().code()
                     + "; a salary base is defined in every regime, so the row is wrong");
         }

@@ -117,7 +117,7 @@ public final class SurchargeNode implements ComputationNode {
     /** The regime's rows: exactly one set applies, all three of its rows in this regime. */
     private static SurchargeRows rowsFor(NodeContext ctx) {
         List<SurchargeRows> applying = ROWS.stream()
-                .filter(rows -> rows.all().allMatch(id -> version(ctx, id).regimes().appliesIn(ctx.regime().code())))
+                .filter(rows -> rows.all().allMatch(id -> ctx.inRegime(id, version(ctx, id)).applies()))
                 .toList();
         if (applying.size() != 1) {
             throw new IllegalStateException("Regime " + ctx.regime().code() + " has " + applying.size()

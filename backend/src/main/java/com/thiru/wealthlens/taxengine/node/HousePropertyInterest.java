@@ -128,7 +128,7 @@ final class HousePropertyInterest {
         }
         RuleVersion version = version(row);
         String where = "property " + position + ", " + what;
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(row, version).applies()) {
             lines.add(line(row, version, amount, Money.ZERO).withLimitedBy(where + ": not in the "
                     + ctx.regime().code().value() + " regime"));
             return Money.ZERO;

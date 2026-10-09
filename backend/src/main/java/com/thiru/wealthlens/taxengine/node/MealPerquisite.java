@@ -78,7 +78,7 @@ final class MealPerquisite {
 
     private static boolean appliesInRegime(NodeContext ctx, RuleId ruleId) {
         TemporalContext t = ctx.inputs().temporal();
-        return TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), t).regimes().appliesIn(ctx.regime().code());
+        return ctx.inRegime(ruleId, TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), t)).applies();
     }
 
     private static Money total(EmployerMeals meals) {

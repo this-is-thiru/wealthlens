@@ -78,7 +78,7 @@ final class RentPaidDeduction {
 
     /** The regime, then s.134(4) in its order: a home owned at the place, an occupied home elsewhere, HRA. */
     private static Optional<String> bar(NodeContext ctx, RuleVersion version, RentDeclaration declaration) {
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(RuleIds.DED_RENT_PAID, version).applies()) {
             return Optional.of("not in the " + ctx.regime().code().value() + " regime");
         }
         if (declaration.ownsHomeWhereResidesOrWorks()) {

@@ -142,7 +142,7 @@ public final class RetirementNode implements ComputationNode {
         TemporalContext t = ctx.inputs().temporal();
         RuleRow rule = ctx.rule(ruleId);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(ruleId, version).applies()) {
             return Optional.empty();
         }
         Money received = paid(components, payment.component());

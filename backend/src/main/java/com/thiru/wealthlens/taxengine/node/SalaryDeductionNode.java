@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
@@ -39,9 +40,10 @@ import java.util.TreeMap;
  * for TY 2025-26 only, a Government employee's entertainment allowance, at most one-fifth of the salary exclusive of
  * allowances or the Act's fixed limit.
  *
- * <p>Which regime allows what is each row's, never this node's: the tax on employment applies everywhere but the
- * new regime (s.202(2)(a)(iv)), and exactly one standard-deduction row applies in any regime, because s.19
- * itself keys the amount on s.202(1). A row that does not apply in the regime is not evaluated and leaves no line.
+ * <p>Which regime allows what is each row's or the regime's, never this node's: the new regime forbids the tax on
+ * employment (s.202(2)(a)(iv), through its disallowance set — D-165), and exactly one standard-deduction row applies
+ * in any regime, because s.19 itself keys the amount on s.202(1). A row written for other regimes is not evaluated
+ * and leaves no line; a tax on employment paid and disallowed leaves a nil line naming the provision.
  */
 public final class SalaryDeductionNode implements ComputationNode {
 
@@ -98,17 +100,29 @@ public final class SalaryDeductionNode implements ComputationNode {
         return trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
     }
 
-    /** The whole of the tax on employment entered, where the regime allows it. */
+    /**
+     * The whole of the tax on employment entered, where the regime allows it; where the regime forbids it, a nil line
+     * for what was paid, naming the provision (D-165).
+     */
     private static Optional<TraceLine> taxOnEmployment(NodeContext ctx) {
         RuleVersion version = ctx.rule(RuleIds.SAL_TAX_ON_EMPLOYMENT).versionAt(ctx.inputs().temporal());
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        RegimeVerdict verdict = ctx.inRegime(RuleIds.SAL_TAX_ON_EMPLOYMENT, version);
+        if (verdict instanceof RegimeVerdict.ExcludedByRow) {
             return Optional.empty();
         }
         HeadTotal total = RuleDefinitions.require(version.definition(), HeadTotal.class, RuleIds.SAL_TAX_ON_EMPLOYMENT);
         HeadTotalLines paid = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class), total,
                 RuleIds.SAL_TAX_ON_EMPLOYMENT);
+        if (verdict.applies()) {
+            return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, RuleIds.SAL_TAX_ON_EMPLOYMENT,
+                    StepKind.DEDUCTION, paid.asComponentSet(total), MoneyValue.of(paid.total()), version.provenance()));
+        }
+        if (!(verdict instanceof RegimeVerdict.Disallowed disallowed) || !paid.total().isGreaterThan(Money.ZERO)) {
+            return Optional.empty();
+        }
         return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, RuleIds.SAL_TAX_ON_EMPLOYMENT,
-                StepKind.DEDUCTION, paid.asComponentSet(total), MoneyValue.of(paid.total()), version.provenance()));
+                        StepKind.DEDUCTION, paid.asComponentSet(total), MoneyValue.of(Money.ZERO), version.provenance())
+                .withLimitedBy(disallowed.reason()));
     }
 
     /**
@@ -124,7 +138,7 @@ public final class SalaryDeductionNode implements ComputationNode {
         TemporalContext t = ctx.inputs().temporal();
         RuleRow rule = ctx.rule(ruleId);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(ruleId, version).applies()) {
             return Optional.empty();
         }
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
@@ -162,7 +176,7 @@ public final class SalaryDeductionNode implements ComputationNode {
         List<RuleId> rules = new ArrayList<>();
         for (RuleId rule : STANDARD_DEDUCTIONS) {
             RuleVersion version = ctx.rule(rule).versionAt(ctx.inputs().temporal());
-            if (version.regimes().appliesIn(ctx.regime().code())) {
+            if (ctx.inRegime(rule, version).applies()) {
                 applying.add(version);
                 rules.add(rule);
             }

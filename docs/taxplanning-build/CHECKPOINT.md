@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078f DONE)
+Item            : — (W-078g DONE)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : RESUME HERE: run the resume check; then WAIT for the owner's pick. Backlog: W-078g (DIS-S202-2A) → W-078h (notice channel + SAL-HRA-006) → W-078i (tax-report PDF notice) → W-078j (sourcing, 103→102 UNVERIFIED versions + S.O. 1046(E) — split at plan) → W-079 → W-075c5 → W-074b → W-079a → W-080 → W-080a → … → W-089 → W-089a–d → W-090 … Scratchpad PDFs gone after shutdown — refetch: egazette 2025/265620, 2024/252143, 271439, 271092, 244830; relock from the test's mismatch message (memory rulepack-lock-recompute)
-Last verify     : ./mvnw test -pl backend -Punit → 2565 run, 0 fail, BUILD SUCCESS (W-078f, 2026-10-09); targeted 105/105; I1 probe bit
+Next step       : RESUME HERE: run the resume check; then WAIT for the owner's pick. Backlog: W-078g2 (the other 34 rows onto DIS-NEW-TAX-REGIME-NO-EXEMPTION; nil-line wording per node — STATE notes list nine nodes) → W-078h → W-078i → W-078j (sourcing, 102 UNVERIFIED versions + S.O. 1046(E)) → W-079 → W-075c5 → W-074b → W-079a → W-080 → W-080a → … Relock: run TaxYear2025RulePackTest/RulePackLoadTest for changed checksums; new rules need the Zz helper (memory rulepack-lock-recompute)
+Last verify     : ./mvnw test -pl backend -Punit → 2578 run, 0 fail, BUILD SUCCESS (W-078g, 2026-10-09); targeted 296/296; new tests 22/22; probes 1–4 bit
 Waiting on      : the owner — next pick. Open OQs: none (D-163). TY 2025-26 goldens PROVISIONAL until W-078j
 Files touched   : —
-Last item commit: taxplanning W-078f: mark the 1961 employer-contribution limit source-checked, correct channel T to s.133(1)(b)(ii) donations and SC-1 to the check as built (D-164)
+Last item commit: taxplanning W-078g: forbid professional tax in the new regime through its s.202(2)(a) disallowance set, and make every node ask the context whether a rule applies (D-165)
 Updated         : 2026-10-09, session 15
 ```
 

@@ -109,7 +109,7 @@ public final class ExemptionNode implements ComputationNode {
         }
         Money allowanceForYear = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),
                 new HeadTotal(HeadCode.SALARIES), RuleIds.SAL_HOUSE_RENT_ALLOWANCE).total();
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, version).applies()) {
             List<TraceLine> nil = new ArrayList<>();
             for (Tenancy tenancy : tenancies) {
                 requireWithinYear(tenancy.occupied(), t);

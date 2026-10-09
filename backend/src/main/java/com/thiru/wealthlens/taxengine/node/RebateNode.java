@@ -71,7 +71,7 @@ public final class RebateNode implements ComputationNode {
         Money rebated = Money.ZERO;
         for (RuleId id : REBATES) {
             RuleVersion version = ctx.rule(id).versionAt(ctx.inputs().temporal());
-            if (!version.regimes().appliesIn(ctx.regime().code())) {
+            if (!ctx.inRegime(id, version).applies()) {
                 continue;
             }
             ReliefResult granted = grant(id, version, totalIncome, tax, conditions);

@@ -61,7 +61,7 @@ final class LeaveTravelExemption {
         if (journeys.isEmpty()) {
             return List.of();
         }
-        if (!version.regimes().appliesIn(ctx.regime().code())) {
+        if (!ctx.inRegime(RuleIds.SAL_LEAVE_TRAVEL_CONCESSION, version).applies()) {
             List<TraceLine> nil = new ArrayList<>();
             for (Journey journey : journeys) {
                 nil.add(line(firstSequence + nil.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO, version)
