@@ -29,6 +29,6 @@
   },
   "expected": {
     "salaryExemptions": "0",
-    "limitedBy": "not in the NEW_TAX_REGIME regime"
+    "limitedBy": "disallowed in the NEW_TAX_REGIME regime: Income-tax Act, 1961 s.115BAC(2)(i) computes the new regime's total income without this exemption or deduction (REG-NEW-TAX-REGIME-NO-EXEMPTION)"
   }
 }

@@ -173,7 +173,8 @@ class ExemptionNodeTest {
             assertThat(line.rule()).isEqualTo(RuleIds.SAL_HOUSE_RENT_ALLOWANCE);
             assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("600000")));
             assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
-            assertThat(line.limitedBy()).contains("not in the NEW_TAX_REGIME regime");
+            assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).startsWith("disallowed in the NEW_TAX_REGIME regime: ")
+                        .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")"));
         });
     }
 

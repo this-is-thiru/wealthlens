@@ -117,7 +117,7 @@ public final class ExemptionNode implements ComputationNode {
                 nil.add(TraceLine.of(nil.size() + 1, NodeIds.SALARY_EXEMPTIONS, RuleIds.SAL_HOUSE_RENT_ALLOWANCE,
                                 StepKind.EXEMPTION, MoneyValue.of(allowance), MoneyValue.of(Money.ZERO),
                                 version.provenance())
-                        .withLimitedBy("not in the " + ctx.regime().code().value() + " regime"));
+                        .withLimitedBy(ctx.inRegime(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, version).whyNot()));
             }
             return nil;
         }

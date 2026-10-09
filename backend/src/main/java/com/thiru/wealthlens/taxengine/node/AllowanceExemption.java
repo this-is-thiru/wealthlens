@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.input.DisabledTransportClaim;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
+import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
@@ -38,9 +39,10 @@ import java.util.Set;
  * <p>One line per allowance use entered. A duty allowance (Sl. 12) is exempt up to the lesser of what was paid and
  * what was actually spent; a prescribed one (Sl. 13) up to the lesser of what was paid and its amount per month per
  * child, for at most two children. Which rule a use belongs to is its component's — the registry names the
- * allowance rule it feeds — and a rule that does not apply in the regime leaves no line. The new regime's list
- * (r.2BB(3); r.280(3), read into the new regime) is each rule's regimes, and a version resting on r.280(3)'s wording
- * is marked unverified, so any figure using it shows as provisional.
+ * allowance rule it feeds — and a rule the regime forbids gives a nil line for what was received, naming the
+ * provision (D-166). The new regime's list (r.2BB(3); r.280(3), read into the new regime) is the regime's
+ * disallowance set — what is not prescribed there is forbidden by s.202(2)(a)(ii) — and a version resting on
+ * r.280(3)'s wording is marked unverified, so any figure using it shows as provisional.
  *
  * <p>A disabled employee's transport allowance (Sl. 13 with r.280(2) Sl. 10; r.2BB(2) Sl. 11; D-102) is claimed
  * apart from the uses, since its limit turns on the disability and, from TY 2026-27, on the city class and the
@@ -80,10 +82,15 @@ final class AllowanceExemption {
             RuleId ruleId = allowanceRule(ctx, use.allowance());
             RuleRow rule = ctx.rule(ruleId);
             RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
-            if (!ctx.inRegime(ruleId, version).applies()) {
+            Money received = paid(components, use.allowance());
+            RegimeVerdict verdict = ctx.inRegime(ruleId, version);
+            if (!verdict.applies()) {
+                lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_EXEMPTIONS, ruleId,
+                                StepKind.EXEMPTION, MoneyValue.of(received), MoneyValue.of(Money.ZERO),
+                                version.provenance())
+                        .withLimitedBy(verdict.whyNot()));
                 continue;
             }
-            Money received = paid(components, use.allowance());
             CapResult exempt = TemporallyApportionedCap.apply(rule, t, context(ruleId, use, received));
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_EXEMPTIONS, ruleId,
                             StepKind.EXEMPTION, MoneyValue.of(received), MoneyValue.of(exempt.value()),

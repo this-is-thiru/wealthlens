@@ -207,7 +207,8 @@ class RentPaidDeductionTest {
 
         // Then
         assertThat(rentLine(result).out()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(rentLine(result).limitedBy().orElseThrow()).isEqualTo("not in the NEW_TAX_REGIME regime");
+        assertThat(rentLine(result).limitedBy()).hasValueSatisfying(reason -> assertThat(reason).startsWith("disallowed in the NEW_TAX_REGIME regime: ")
+                .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")"));
     }
 
     @Test

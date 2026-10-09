@@ -395,7 +395,7 @@ public final class ChapterEightNode implements ComputationNode {
             Money entered) {
         return TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION, MoneyValue.of(entered),
                         MoneyValue.of(Money.ZERO), version.provenance())
-                .withLimitedBy("not in the " + ctx.regime().code().value() + " regime");
+                .withLimitedBy(ctx.inRegime(row, version).whyNot());
     }
 
     private static RuleVersion version(NodeContext ctx, RuleId row) {

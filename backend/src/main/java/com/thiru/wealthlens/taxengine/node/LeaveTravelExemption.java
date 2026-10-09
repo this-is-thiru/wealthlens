@@ -65,7 +65,7 @@ final class LeaveTravelExemption {
             List<TraceLine> nil = new ArrayList<>();
             for (Journey journey : journeys) {
                 nil.add(line(firstSequence + nil.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO, version)
-                        .withLimitedBy("not in the " + ctx.regime().code().value() + " regime"));
+                        .withLimitedBy(ctx.inRegime(RuleIds.SAL_LEAVE_TRAVEL_CONCESSION, version).whyNot()));
             }
             return nil;
         }

@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: 1961 s.80CCC (A0 p.338, heading \"Deduction in respect of contribution to certain pension funds\"); its 2025 place is Schedule XV para 1(x) under s.123 (component PENSION_FUND_ANNUITY). summary: 1961 s.80CCC(1), (3)(b); s.80CCE; Schedule XV para 1(x) (sources B4, B9). routes[0]: DED-SCHEDULE-XV (contributor PENSION_FUND_ANNUITY). disqualifiers[0]: DED-SCHEDULE-XV regimes.",
+  "_sources": "provisions: 1961 s.80CCC (A0 p.338, heading \"Deduction in respect of contribution to certain pension funds\"); its 2025 place is Schedule XV para 1(x) under s.123 (component PENSION_FUND_ANNUITY). summary: 1961 s.80CCC(1), (3)(b); s.80CCE; Schedule XV para 1(x) (sources B4, B9). routes[0]: DED-SCHEDULE-XV (contributor PENSION_FUND_ANNUITY). disqualifiers[0]: DED-SCHEDULE-XV regimes. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-SCHEDULE-XV (D-166; until then DED-SCHEDULE-XV's ExceptIn).",
   "key": "SEC-PENSION-FUND-ANNUITY",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -32,7 +32,7 @@
       "description": "Not available in the default regime.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "DED-SCHEDULE-XV"
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
       }
     }
   ]

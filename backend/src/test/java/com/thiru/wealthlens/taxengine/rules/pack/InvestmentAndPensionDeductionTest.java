@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.pack;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.AggregateOutcome;
 import com.thiru.wealthlens.taxengine.rules.cap.AggregateWithCeiling;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
@@ -17,6 +18,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,8 +60,10 @@ class InvestmentAndPensionDeductionTest {
                 .value();
     }
 
+    /** As a node asks it: the row's regimes, then the regime's disallowance sets (D-165). */
     private static boolean appliesIn(RuleId rule, RegimeCode regime) {
-        return PACK.rule(rule).versionAt(DURING_THE_YEAR).regimes().appliesIn(regime);
+        return NodeContext.forRun(PACK, PACK.regimes().get(regime), NodeHarness.plainTaxpayer())
+                .inRegime(rule, PACK.rule(rule).versionAt(DURING_THE_YEAR)).applies();
     }
 
     @Test

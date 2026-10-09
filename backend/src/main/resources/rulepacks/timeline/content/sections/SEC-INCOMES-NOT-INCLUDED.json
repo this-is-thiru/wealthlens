@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-161). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: the 21 rows 1961 s.10 is MODELLED by (W-064–W-068, W-066a); 1961 s.10 'Incomes not included in total income' (thc p.65) / 2025 s.11 (Gazette 265620 p.36). summary: S2 s.11(1), (2) with Schedule III; each row's regimes. routes: the rows by family, as SEC-HOUSE-RENT-ALLOWANCE, SEC-LEAVE-TRAVEL-CONCESSION, SEC-SALARY-ALLOWANCES, SEC-SALARY-RETIREMENT. disqualifiers[0]: SAL-HOUSE-RENT-ALLOWANCE ExceptIn NEW_TAX_REGIME (s.202(2)(a)(i)). disqualifiers[1]: Schedules II, IV, V, VI and VII (s.11(3)) and the rest of Schedule III — no rows.",
+  "_sources": "provisions: the 21 rows 1961 s.10 is MODELLED by (W-064–W-068, W-066a); 1961 s.10 'Incomes not included in total income' (thc p.65) / 2025 s.11 (Gazette 265620 p.36). summary: S2 s.11(1), (2) with Schedule III; each row's regimes. routes: the rows by family, as SEC-HOUSE-RENT-ALLOWANCE, SEC-LEAVE-TRAVEL-CONCESSION, SEC-SALARY-ALLOWANCES, SEC-SALARY-RETIREMENT. disqualifiers[0]: SAL-HOUSE-RENT-ALLOWANCE ExceptIn NEW_TAX_REGIME (s.202(2)(a)(i)). disqualifiers[1]: Schedules II, IV, V, VI and VII (s.11(3)) and the rest of Schedule III — no rows. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists SAL-HOUSE-RENT-ALLOWANCE (D-166; until then SAL-HOUSE-RENT-ALLOWANCE's ExceptIn).",
   "key": "SEC-INCOMES-NOT-INCLUDED",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -130,7 +130,7 @@
       "description": "House rent allowance is not exempt in the default regime.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "SAL-HOUSE-RENT-ALLOWANCE"
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
       }
     },
     {

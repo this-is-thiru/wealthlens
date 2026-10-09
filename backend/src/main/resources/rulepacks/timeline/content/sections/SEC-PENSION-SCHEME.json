@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: DED-NPS-* provision1961 (s.80CCD) and provision2025 (s.124); S2 heading \"Deduction in respect of employer and assessee contribution to pension scheme of Central Government\". summary: S2 s.124(1)–(5), (10); 1961 s.80CCD(1), (1B), (2) (sources B5–B7, M2, M8, M15, M17). routes[0]: DED-NPS-EMPLOYER-GOVT (s.124(1)(a); 80CCD(2)(a)). routes[1]: DED-NPS-EMPLOYER-OTHER (s.124(1)(b); 80CCD(2)(b)). routes[2]: DED-NPS-EMPLOYER-NEW-TAX-REGIME (s.124(2); 80CCD(2) proviso). routes[3]: DED-SCHEDULE-XV (Schedule XV para 1(y); 80CCD(1) inside 80CCE). routes[4]: DED-NPS-OWN (s.124(3)–(4); 80CCD(1B) with its second proviso). disqualifiers[0]: DED-NPS-OWN regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: ChapterEightNode refuses two employments' contributions (OQ-15, D-132). disqualifiers[2]: Schedule XV para 1(y)(ii) / 80CCD(1)(b), the non-employee's share of gross total income, not built (DED-SCHEDULE-XV note).",
+  "_sources": "provisions: DED-NPS-* provision1961 (s.80CCD) and provision2025 (s.124); S2 heading \"Deduction in respect of employer and assessee contribution to pension scheme of Central Government\". summary: S2 s.124(1)–(5), (10); 1961 s.80CCD(1), (1B), (2) (sources B5–B7, M2, M8, M15, M17). routes[0]: DED-NPS-EMPLOYER-GOVT (s.124(1)(a); 80CCD(2)(a)). routes[1]: DED-NPS-EMPLOYER-OTHER (s.124(1)(b); 80CCD(2)(b)). routes[2]: DED-NPS-EMPLOYER-NEW-TAX-REGIME (s.124(2); 80CCD(2) proviso). routes[3]: DED-SCHEDULE-XV (Schedule XV para 1(y); 80CCD(1) inside 80CCE). routes[4]: DED-NPS-OWN (s.124(3)–(4); 80CCD(1B) with its second proviso). disqualifiers[0]: DED-NPS-OWN regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: ChapterEightNode refuses two employments' contributions (OQ-15, D-132). disqualifiers[2]: Schedule XV para 1(y)(ii) / 80CCD(1)(b), the non-employee's share of gross total income, not built (DED-SCHEDULE-XV note). disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-NPS-OWN (D-166; until then DED-NPS-OWN's ExceptIn).",
   "key": "SEC-PENSION-SCHEME",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -72,7 +72,7 @@
       "description": "Your own contribution is not deducted in the default regime; only the employer's is.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "DED-NPS-OWN"
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
       }
     },
     {

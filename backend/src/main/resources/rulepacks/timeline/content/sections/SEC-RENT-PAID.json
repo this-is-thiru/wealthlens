@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: DED-RENT-PAID provision1961 (s.80GG) and provision2025 (s.134). summary: S2 s.134(1)–(5) with Income-tax Rules, 2026 r.65 (Form No. 31); 1961 s.80GG and its Explanation with Rules 1962 r.11B (Form No. 10BA) (sources B10, R1; D-141, D-148). routes[0]: DED-RENT-PAID. disqualifiers[0]: the row's regimes. disqualifiers[1]: s.134(4)(c), RentPaidDeduction. disqualifiers[2]: s.134(4)(a), (b). disqualifiers[3]: s.134(3), r.65 — the claim needs the RentDeclaration. disqualifiers[4]: OQ-23. disqualifiers[5]: RentPaidDeduction.",
+  "_sources": "provisions: DED-RENT-PAID provision1961 (s.80GG) and provision2025 (s.134). summary: S2 s.134(1)–(5) with Income-tax Rules, 2026 r.65 (Form No. 31); 1961 s.80GG and its Explanation with Rules 1962 r.11B (Form No. 10BA) (sources B10, R1; D-141, D-148). routes[0]: DED-RENT-PAID. disqualifiers[0]: the row's regimes. disqualifiers[1]: s.134(4)(c), RentPaidDeduction. disqualifiers[2]: s.134(4)(a), (b). disqualifiers[3]: s.134(3), r.65 — the claim needs the RentDeclaration. disqualifiers[4]: OQ-23. disqualifiers[5]: RentPaidDeduction. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-RENT-PAID (D-166; until then DED-RENT-PAID's ExceptIn).",
   "key": "SEC-RENT-PAID",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -32,7 +32,7 @@
       "description": "Rent paid is not deducted in the default regime.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "DED-RENT-PAID"
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
       }
     },
     {

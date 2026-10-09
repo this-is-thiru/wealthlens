@@ -122,13 +122,14 @@ public final class SalaryDeductionNode implements ComputationNode {
         }
         return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, RuleIds.SAL_TAX_ON_EMPLOYMENT,
                         StepKind.DEDUCTION, paid.asComponentSet(total), MoneyValue.of(Money.ZERO), version.provenance())
-                .withLimitedBy(disallowed.reason()));
+                .withLimitedBy(disallowed.whyNot()));
     }
 
     /**
      * A Government employee's entertainment allowance (1961 s.16(ii); D-105): the least of one-fifth of the salary
      * exclusive of allowances and the fixed limit, where an entertainment allowance was paid. None where the year's
-     * Act has no such deduction, the regime excludes it, or no Government employment paid the allowance.
+     * Act has no such deduction, the row is written for other regimes, or no Government employment paid the
+     * allowance; nil, naming the provision, where the regime forbids it (D-166).
      */
     private static Optional<TraceLine> entertainmentAllowance(NodeContext ctx, int sequence) {
         RuleId ruleId = RuleIds.SAL_ENTMT_ALLOWANCE;
@@ -138,7 +139,8 @@ public final class SalaryDeductionNode implements ComputationNode {
         TemporalContext t = ctx.inputs().temporal();
         RuleRow rule = ctx.rule(ruleId);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
-        if (!ctx.inRegime(ruleId, version).applies()) {
+        RegimeVerdict verdict = ctx.inRegime(ruleId, version);
+        if (verdict instanceof RegimeVerdict.ExcludedByRow) {
             return Optional.empty();
         }
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
@@ -161,6 +163,12 @@ public final class SalaryDeductionNode implements ComputationNode {
                     + " per employment or in all, so enter one");
         }
         int employment = paidByGovernment.keySet().iterator().next();
+        if (!verdict.applies()) {
+            return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, ruleId, StepKind.DEDUCTION,
+                            MoneyValue.of(paidByGovernment.get(employment)), MoneyValue.of(Money.ZERO),
+                            version.provenance())
+                    .withLimitedBy(verdict.whyNot()));
+        }
         Money salary = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class)
                 .of(RuleIds.SAL_SALARY_FOR_ENTMT, employment);
         CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of(SALARY, salary)));

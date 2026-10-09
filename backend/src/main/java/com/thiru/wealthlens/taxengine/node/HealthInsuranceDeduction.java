@@ -223,7 +223,7 @@ final class HealthInsuranceDeduction {
         if (!ctx.inRegime(row, version).applies()) {
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
                             MoneyValue.of(entered), MoneyValue.of(Money.ZERO), version.provenance())
-                    .withLimitedBy("not in the " + ctx.regime().code().value() + " regime"));
+                    .withLimitedBy(ctx.inRegime(row, version).whyNot()));
             return;
         }
         ComponentCode insurance = family ? ComponentCodes.HEALTH_INSURANCE_FAMILY

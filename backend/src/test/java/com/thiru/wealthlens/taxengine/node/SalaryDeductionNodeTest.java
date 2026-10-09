@@ -301,13 +301,18 @@ class SalaryDeductionNodeTest {
     }
 
     @Test
-    void evaluate_whenInTheNewRegime_deductsNoEntertainmentAllowance() {
+    void evaluate_whenInTheNewRegime_deductsNoEntertainmentAllowanceAndSaysWhy() {
         // When — s.115BAC(2)(i): "clause (ii) or clause (iii) of section 16"
         NodeResult result = runEntertainment(2025, NEW_TAX_REGIME, List.of(EmployerKind.GOVERNMENT), "300000",
                 "10000");
 
-        // Then
-        assertThat(entertainment(result)).isEmpty();
+        // Then — a nil line for the 10,000 paid, naming the provision (D-166)
+        assertThat(entertainment(result)).singleElement().satisfies(line -> {
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("10000")));
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+            assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason)
+                    .contains("s.115BAC(2)(i)").endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")"));
+        });
     }
 
     @Test

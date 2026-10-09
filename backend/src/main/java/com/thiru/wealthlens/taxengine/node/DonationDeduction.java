@@ -160,13 +160,13 @@ final class DonationDeduction {
 
     private static void notInRegime(NodeContext ctx, List<Donation> donations, int firstSequence,
             List<TraceLine> lines) {
-        String reason = "not in the " + ctx.regime().code().value() + " regime";
         for (boolean whole : new boolean[] {true, false}) {
             Money entered = donations.stream().filter(donation -> donation.clause().isWhole() == whole)
                     .map(Donation::amount).reduce(Money.ZERO, Money::plus);
             if (entered.isGreaterThan(Money.ZERO)) {
                 RuleId row = whole ? RuleIds.DED_DONATION_WHOLE : RuleIds.DED_DONATION_HALF;
-                lines.add(line(ctx, row, entered, Money.ZERO, reason, firstSequence + lines.size()));
+                lines.add(line(ctx, row, entered, Money.ZERO, ctx.inRegime(row, version(ctx, row)).whyNot(),
+                        firstSequence + lines.size()));
             }
         }
     }

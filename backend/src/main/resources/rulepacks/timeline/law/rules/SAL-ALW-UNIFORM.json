@@ -1,6 +1,6 @@
 {
   "ruleId": "SAL-ALW-UNIFORM",
-  "_note": "A uniform allowance, exempt to the extent actually spent on the uniform (D-101; rulebook SAL-ALW-DUTY-001, H-9). TY 2026-27: Income-tax Act, 2025 Sch. III Table Sl. 12, \"to the extent to which such expenses are actually incurred for that purpose\"; Income-tax Rules, 2026 r.280(1)(g): \"any allowance granted to meet the expenditure incurred on the purchase or maintenance of uniform for wear during the performance of the duties of an office or employment of profit\"; not in r.280(3)'s list, so not in the new regime (s.202(2)(a)(ii)). TY 2025-26: 1961 s.10(14)(i) exempts allowances prescribed \"to the extent to which such expenses are actually incurred\"; Income-tax Rules, 1962 r.2BB(1)(f), the same words; not in r.2BB(3)'s list (G.S.R. 452(E)), so not for an assessee taxed under s.115BAC(1A).",
+  "_note": "A uniform allowance, exempt to the extent actually spent on the uniform (D-101; rulebook SAL-ALW-DUTY-001, H-9). TY 2026-27: Income-tax Act, 2025 Sch. III Table Sl. 12, \"to the extent to which such expenses are actually incurred for that purpose\"; Income-tax Rules, 2026 r.280(1)(g): \"any allowance granted to meet the expenditure incurred on the purchase or maintenance of uniform for wear during the performance of the duties of an office or employment of profit\"; not in r.280(3)'s list, so not in the new regime (s.202(2)(a)(ii)). TY 2025-26: 1961 s.10(14)(i) exempts allowances prescribed \"to the extent to which such expenses are actually incurred\"; Income-tax Rules, 1962 r.2BB(1)(f), the same words; not in r.2BB(3)'s list (G.S.R. 452(E)), so not for an assessee taxed under s.115BAC(1A). In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -72,10 +69,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",

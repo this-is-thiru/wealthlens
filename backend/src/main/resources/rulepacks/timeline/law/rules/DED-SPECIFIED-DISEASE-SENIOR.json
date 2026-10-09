@@ -1,6 +1,6 @@
 {
   "ruleId": "DED-SPECIFIED-DISEASE-SENIOR",
-  "_note": "Treatment of a specified disease for a senior citizen — \"If the amount actually paid is in respect of the assessee or his dependant … and who is senior citizen, the amount of deduction … shall be substituted with \"₹ 100000\" for \"₹40000\"\" (s.128(4), p.165); the age is this row's condition, the person's residence the node's check (s.2(100), p.20); treatment for a senior and a non-senior in one year is refused (OQ-20). s.128(1): a resident assessee, \"the amount actually paid during the tax year or a sum of ₹ 40000, whichever is less … for the medical treatment of such disease or ailment as may be prescribed — (a) for himself or a dependant\" (p.164); \"reduced by any amount received under an insurance from an insurer, or reimbursed by an employer\" (s.128(3), p.165); the prescribed disease and specialist's prescription (s.128(1)–(2)) are entry conditions; \"dependant\" as s.127(9) (s.128(5)(a)). ChapterEightNode allows the lesser of (paid − reimbursed) and this limit. rulebook DED-80DDB-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80DDB, is the TY 2025-26 version (W-075d3). D-138. The \"lesser of\" is in the cap since W-075d3 (LeastOf), not the node (D-146). TY 2025-26: Income-tax Act, 1961 s.80DDB third proviso (thc p.345): for an assessee or dependant who is a senior citizen, \"one hundred thousand rupees\" for \"forty thousand rupees\"; \"senior citizen\" means \"an individual resident in India who is of the age of sixty years or more at any time during the relevant previous year\" (p.346) — the same row. sources/2026-10-07-chapter-via.md B15. D-146.",
+  "_note": "Treatment of a specified disease for a senior citizen — \"If the amount actually paid is in respect of the assessee or his dependant … and who is senior citizen, the amount of deduction … shall be substituted with \"₹ 100000\" for \"₹40000\"\" (s.128(4), p.165); the age is this row's condition, the person's residence the node's check (s.2(100), p.20); treatment for a senior and a non-senior in one year is refused (OQ-20). s.128(1): a resident assessee, \"the amount actually paid during the tax year or a sum of ₹ 40000, whichever is less … for the medical treatment of such disease or ailment as may be prescribed — (a) for himself or a dependant\" (p.164); \"reduced by any amount received under an insurance from an insurer, or reimbursed by an employer\" (s.128(3), p.165); the prescribed disease and specialist's prescription (s.128(1)–(2)) are entry conditions; \"dependant\" as s.127(9) (s.128(5)(a)). ChapterEightNode allows the lesser of (paid − reimbursed) and this limit. rulebook DED-80DDB-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80DDB, is the TY 2025-26 version (W-075d3). D-138. The \"lesser of\" is in the cap since W-075d3 (LeastOf), not the node (D-146). TY 2025-26: Income-tax Act, 1961 s.80DDB third proviso (thc p.345): for an assessee or dependant who is a senior citizen, \"one hundred thousand rupees\" for \"forty thousand rupees\"; \"senior citizen\" means \"an individual resident in India who is of the age of sixty years or more at any time during the relevant previous year\" (p.346) — the same row. sources/2026-10-07-chapter-via.md B15. D-146. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -78,10 +75,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",

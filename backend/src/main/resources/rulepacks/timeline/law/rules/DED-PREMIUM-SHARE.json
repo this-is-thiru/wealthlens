@@ -1,6 +1,6 @@
 {
   "ruleId": "DED-PREMIUM-SHARE",
-  "_note": "A life insurance premium counts towards s.123 only up to a share of the policy's actual capital sum assured (D-134, D-135; rulebook DED-80C-ITEMS-001): \"The deductions shall apply only to so much of any premium or other payment made on an insurance policy, other than a contract for a deferred annuity, — (a) as is up to 20 % of the actual capital sum assured, in respect of a policy issued on or before the 31st March, 2012; (b) as is up to 10 % of the actual capital sum assured, in respect of a policy issued on or after the 1st April, 2012; (c) as is up to 15 % of the actual capital sum assured, if the policy is issued on or after the 1st April, 2013 and where such policy covers the life of, — (i) a person with a disability or severe disability as referred to in section 154; or (ii) a person suffering from a disease or ailment specified in the rules made under section 128\" (Schedule XV para 2(1), Gazette 265620, pp.563–564); \"actual capital sum assured\" is the minimum amount assured on the insured event, without premiums to be returned or any bonus (para 2(2)). The bands are the definition (PremiumShareBands); ChapterEightNode takes, per policy, the most specific band holding it and the lesser of the premium and the share, which feeds LIFE_INSURANCE_PREMIUM into DED-SCHEDULE-XV. Whether para 2 reaches Schedule XV (j), (k), (l) is OQ-17. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80C(3), (3A), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80C(3) (thc p.333): a policy \"issued on or before the 31st day of March, 2012\" counts \"as is not in excess of twenty per cent of the actual capital sum assured\"; (3A): one \"issued on or after the 1st day of April, 2012 as is not in excess of ten per cent\", and by its proviso one issued on or after 1-4-2013 on the life of a s.80U person with disability or severe disability, or one \"suffering from disease or ailment as specified in the rules made under section 80DDB\", \"fifteen per cent.\" — the same three bands. sources/2026-10-07-chapter-via.md B22. D-144.",
+  "_note": "A life insurance premium counts towards s.123 only up to a share of the policy's actual capital sum assured (D-134, D-135; rulebook DED-80C-ITEMS-001): \"The deductions shall apply only to so much of any premium or other payment made on an insurance policy, other than a contract for a deferred annuity, — (a) as is up to 20 % of the actual capital sum assured, in respect of a policy issued on or before the 31st March, 2012; (b) as is up to 10 % of the actual capital sum assured, in respect of a policy issued on or after the 1st April, 2012; (c) as is up to 15 % of the actual capital sum assured, if the policy is issued on or after the 1st April, 2013 and where such policy covers the life of, — (i) a person with a disability or severe disability as referred to in section 154; or (ii) a person suffering from a disease or ailment specified in the rules made under section 128\" (Schedule XV para 2(1), Gazette 265620, pp.563–564); \"actual capital sum assured\" is the minimum amount assured on the insured event, without premiums to be returned or any bonus (para 2(2)). The bands are the definition (PremiumShareBands); ChapterEightNode takes, per policy, the most specific band holding it and the lesser of the premium and the share, which feeds LIFE_INSURANCE_PREMIUM into DED-SCHEDULE-XV. Whether para 2 reaches Schedule XV (j), (k), (l) is OQ-17. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80C(3), (3A), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80C(3) (thc p.333): a policy \"issued on or before the 31st day of March, 2012\" counts \"as is not in excess of twenty per cent of the actual capital sum assured\"; (3A): one \"issued on or after the 1st day of April, 2012 as is not in excess of ten per cent\", and by its proviso one issued on or after 1-4-2013 on the life of a s.80U person with disability or severe disability, or one \"suffering from disease or ailment as specified in the rules made under section 80DDB\", \"fifteen per cent.\" — the same three bands. sources/2026-10-07-chapter-via.md B22. D-144. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -72,10 +69,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",

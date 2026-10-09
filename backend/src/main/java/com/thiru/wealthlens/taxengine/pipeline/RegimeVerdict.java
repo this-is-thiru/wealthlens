@@ -17,19 +17,35 @@ public sealed interface RegimeVerdict {
     /** Whether the rule is applied in this regime. */
     boolean applies();
 
+    /**
+     * What a nil line says where the rule is not applied: the provision that forbids it, or that the row is written
+     * for other regimes (D-166). Refused for a rule that applies, which has no such line.
+     */
+    String whyNot();
+
     /** The rule applies. */
     record Applies() implements RegimeVerdict {
         @Override
         public boolean applies() {
             return true;
         }
+
+        @Override
+        public String whyNot() {
+            throw new IllegalStateException("A rule that applies in the regime has no reason for not applying");
+        }
     }
 
     /** The row is written for other regimes. */
-    record ExcludedByRow() implements RegimeVerdict {
+    record ExcludedByRow(RegimeCode regime) implements RegimeVerdict {
         @Override
         public boolean applies() {
             return false;
+        }
+
+        @Override
+        public String whyNot() {
+            return "not in the " + regime.value() + " regime";
         }
     }
 
@@ -40,8 +56,9 @@ public sealed interface RegimeVerdict {
             return false;
         }
 
-        /** What a nil line for the rule says: the regime, the set's statement of its provision, and the basis row. */
-        public String reason() {
+        /** The regime, the set's statement of its provision, and the basis row. */
+        @Override
+        public String whyNot() {
             return "disallowed in the " + regime.value() + " regime: " + set.displayName() + " (" + set.basis() + ")";
         }
     }

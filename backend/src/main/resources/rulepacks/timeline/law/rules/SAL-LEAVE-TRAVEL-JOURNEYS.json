@@ -1,6 +1,6 @@
 {
   "ruleId": "SAL-LEAVE-TRAVEL-JOURNEYS",
-  "_note": "How many journeys are exempt, and when (D-100; rulebook SAL-LTA-BLOCK-001, -CARRY-001; DR 13 R-12): two in a block of four calendar years. TY 2026-27, Income-tax Rules, 2026 r.278(2) (p.1776): \"two journeys performed in a block of four calendar years commencing from the calendar year 2022\"; r.278(3)–(4): where a block is unused, the concession \"first availed of … during first calendar year of the immediately succeeding block … shall be eligible\" and is not counted against the two. TY 2025-26, Income-tax Rules, 1962 r.2B(2): \"two journeys performed in a block of four calendar years commencing from the calendar year 1986\" — the same boundaries (1986 + 36 = 2022) — and r.2B(3) with its Explanation, the same carry-over. Blocks are calendar years, so a tax year straddles two.",
+  "_note": "How many journeys are exempt, and when (D-100; rulebook SAL-LTA-BLOCK-001, -CARRY-001; DR 13 R-12): two in a block of four calendar years. TY 2026-27, Income-tax Rules, 2026 r.278(2) (p.1776): \"two journeys performed in a block of four calendar years commencing from the calendar year 2022\"; r.278(3)–(4): where a block is unused, the concession \"first availed of … during first calendar year of the immediately succeeding block … shall be eligible\" and is not counted against the two. TY 2025-26, Income-tax Rules, 1962 r.2B(2): \"two journeys performed in a block of four calendar years commencing from the calendar year 1986\" — the same boundaries (1986 + 36 = 2022) — and r.2B(3) with its Explanation, the same carry-over. Blocks are calendar years, so a tax year straddles two. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -58,10 +55,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",

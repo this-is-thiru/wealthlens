@@ -185,7 +185,8 @@ class ChapterEightNodeTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(result.trace()).singleElement().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.DED_SCHEDULE_XV);
-            assertThat(line.limitedBy()).contains("not in the NEW_TAX_REGIME regime");
+            assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).startsWith("disallowed in the NEW_TAX_REGIME regime: ")
+                        .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")"));
         });
     }
 

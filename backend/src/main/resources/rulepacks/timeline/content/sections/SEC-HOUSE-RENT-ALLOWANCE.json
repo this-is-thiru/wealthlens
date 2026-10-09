@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-061). Content: it changes no number. HRA is not a section of the 2025 Act: its provision there is Schedule III Table Sl. 11 (D-060).",
-  "_sources": "provisions: 01-rulebook.md SAL-HRA-001 (1961 s.10(13A); 2025 Sch. III Table Sl. 11). summary: SAL-HRA-001 (least of three), DR 22 C5 SAL-HRA-001 (what it is; raising one limit alone). routes[0]: SAL-HOUSE-RENT-ALLOWANCE (= SAL-HRA-001, -002; D-099). disqualifiers[0]: SAL-HRA-005 (s.202(2)(a)(i)). disqualifiers[1]: SAL-HRA-002 (Sch. III Sl. 11(c), (d)). disqualifiers[2]: SAL-HRA-003 (r.279(2)(a)). No LATER_REVERSAL: the rulebook sources none (D-061). As built (W-067): every route and disqualifier is enforced by SAL-HOUSE-RENT-ALLOWANCE — the least-of per period, its ExceptIn for the default regime, and ExemptionNode's owned/rent-free and relevant-period handling.",
+  "_sources": "provisions: 01-rulebook.md SAL-HRA-001 (1961 s.10(13A); 2025 Sch. III Table Sl. 11). summary: SAL-HRA-001 (least of three), DR 22 C5 SAL-HRA-001 (what it is; raising one limit alone). routes[0]: SAL-HOUSE-RENT-ALLOWANCE (= SAL-HRA-001, -002; D-099). disqualifiers[0]: SAL-HRA-005 (s.202(2)(a)(i)). disqualifiers[1]: SAL-HRA-002 (Sch. III Sl. 11(c), (d)). disqualifiers[2]: SAL-HRA-003 (r.279(2)(a)). No LATER_REVERSAL: the rulebook sources none (D-061). As built (W-067): every route and disqualifier is enforced by SAL-HOUSE-RENT-ALLOWANCE — the least-of per period, its ExceptIn for the default regime, and ExemptionNode's owned/rent-free and relevant-period handling. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists SAL-HOUSE-RENT-ALLOWANCE (D-166; until then SAL-HOUSE-RENT-ALLOWANCE's ExceptIn).",
   "key": "SEC-HOUSE-RENT-ALLOWANCE",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -32,7 +32,7 @@
       "description": "Not available in the default regime.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "SAL-HOUSE-RENT-ALLOWANCE"
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
       }
     },
     {

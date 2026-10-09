@@ -1,6 +1,6 @@
 {
   "ruleId": "DED-HOUSE-LOAN",
-  "_note": "Interest on a loan for a house: \"An assessee, being an individual not eligible to claim deduction under section 130, shall be allowed a deduction of interest payable on loan taken by him from any financial institution for the purpose of acquisition of a residential house property, subject to a maximum limit of ₹150000\" (s.131(1), p.166); \"(a) the loan has been sanctioned … during the period beginning on the 1st April, 2019 and ending on the 31st March, 2022; (b) the stamp duty value of residential house property does not exceed forty-five lakh rupees; and (c) the assessee does not own any residential house property on the date of sanction of loan\" (s.131(2)). ChapterEightNode tries DED-HOUSE-LOAN-EARLIER first. The same interest is not deductible under any other provision for the same or any other tax year (s.131(3)) — house-property interest under s.22(1)(b) must leave it out (W-078). rulebook DED-80EEA-001, DED-80EX-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80EEA, is the TY 2025-26 version (W-075d4). D-139. TY 2025-26: Income-tax Act, 1961 s.80EEA as inserted by F(No.2)A 2019 s.25 (p.16): an individual \"not eligible to claim deduction under section 80EE\", interest payable on a loan for acquiring a residential house property, \"(2) … shall not exceed one lakh and fifty thousand rupees\"; (3)(i) sanctioned from 1-4-2019 to 31-3-2020, extended to 2021 by FA 2020 s.32 (p.26) and to \"2022\" by FA 2021 s.27 (p.32); (ii) \"the stamp duty value of residential house property does not exceed forty-five lakh rupees\"; (iii) no residential house property owned on the date of sanction — the same row. sources/2026-10-07-chapter-via.md M3, M5, M7. D-147.",
+  "_note": "Interest on a loan for a house: \"An assessee, being an individual not eligible to claim deduction under section 130, shall be allowed a deduction of interest payable on loan taken by him from any financial institution for the purpose of acquisition of a residential house property, subject to a maximum limit of ₹150000\" (s.131(1), p.166); \"(a) the loan has been sanctioned … during the period beginning on the 1st April, 2019 and ending on the 31st March, 2022; (b) the stamp duty value of residential house property does not exceed forty-five lakh rupees; and (c) the assessee does not own any residential house property on the date of sanction of loan\" (s.131(2)). ChapterEightNode tries DED-HOUSE-LOAN-EARLIER first. The same interest is not deductible under any other provision for the same or any other tax year (s.131(3)) — house-property interest under s.22(1)(b) must leave it out (W-078). rulebook DED-80EEA-001, DED-80EX-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80EEA, is the TY 2025-26 version (W-075d4). D-139. TY 2025-26: Income-tax Act, 1961 s.80EEA as inserted by F(No.2)A 2019 s.25 (p.16): an individual \"not eligible to claim deduction under section 80EE\", interest payable on a loan for acquiring a residential house property, \"(2) … shall not exceed one lakh and fifty thousand rupees\"; (3)(i) sanctioned from 1-4-2019 to 31-3-2020, extended to 2021 by FA 2020 s.32 (p.26) and to \"2022\" by FA 2021 s.27 (p.32); (ii) \"the stamp duty value of residential house property does not exceed forty-five lakh rupees\"; (iii) no residential house property owned on the date of sanction — the same row. sources/2026-10-07-chapter-via.md M3, M5, M7. D-147. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -60,10 +57,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",

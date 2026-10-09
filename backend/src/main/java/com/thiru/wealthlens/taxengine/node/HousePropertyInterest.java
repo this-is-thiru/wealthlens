@@ -129,8 +129,8 @@ final class HousePropertyInterest {
         RuleVersion version = version(row);
         String where = "property " + position + ", " + what;
         if (!ctx.inRegime(row, version).applies()) {
-            lines.add(line(row, version, amount, Money.ZERO).withLimitedBy(where + ": not in the "
-                    + ctx.regime().code().value() + " regime"));
+            lines.add(line(row, version, amount, Money.ZERO)
+                    .withLimitedBy(where + ": " + ctx.inRegime(row, version).whyNot()));
             return Money.ZERO;
         }
         if (loan.payableOutsideIndiaUntaxed()) {

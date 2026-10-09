@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
+import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -45,14 +46,15 @@ final class AgniveerDeduction {
             return;
         }
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(row), ctx.inputs().temporal());
-        boolean applies = ctx.inRegime(row, version).applies();
+        RegimeVerdict verdict = ctx.inRegime(row, version);
+        boolean applies = verdict.applies();
         Money allowed = applies
                 ? TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(), CapContext.of(AMOUNT_PAID, paid))
                         .value()
                 : Money.ZERO;
         lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
                         MoneyValue.of(paid), MoneyValue.of(allowed), version.provenance())
-                .withLimitedBy(applies ? "the whole amount" : "not in the " + ctx.regime().code().value() + " regime"));
+                .withLimitedBy(applies ? "the whole amount" : verdict.whyNot()));
     }
 
     /** Whether an Agniveer account is entered at all. */

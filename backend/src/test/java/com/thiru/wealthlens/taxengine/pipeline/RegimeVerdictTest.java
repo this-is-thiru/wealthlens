@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -44,7 +45,7 @@ class RegimeVerdictTest {
         assertThat(verdict.applies()).isFalse();
         assertThat(verdict).isInstanceOfSatisfying(RegimeVerdict.Disallowed.class, disallowed -> {
             assertThat(disallowed.set().id()).isEqualTo(new DisallowanceSetId("DIS-NEW-TAX-REGIME-NO-EXEMPTION"));
-            assertThat(disallowed.reason())
+            assertThat(disallowed.whyNot())
                     .startsWith("disallowed in the NEW_TAX_REGIME regime: ")
                     .contains(year == 2025 ? "s.115BAC(2)(i)" : "s.202(2)(a)")
                     .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")");
@@ -60,6 +61,7 @@ class RegimeVerdictTest {
         // Then
         assertThat(verdict).isInstanceOf(RegimeVerdict.ExcludedByRow.class);
         assertThat(verdict.applies()).isFalse();
+        assertThat(verdict.whyNot()).isEqualTo("not in the NEW_TAX_REGIME regime");
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -71,5 +73,7 @@ class RegimeVerdictTest {
         // Then
         assertThat(verdict).isInstanceOf(RegimeVerdict.Applies.class);
         assertThat(verdict.applies()).isTrue();
+        assertThatThrownBy(verdict::whyNot).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("no reason for not applying");
     }
 }

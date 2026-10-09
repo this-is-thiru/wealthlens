@@ -196,8 +196,7 @@ final class DisabilityDeduction {
     }
 
     private static TraceLine nil(NodeContext ctx, int sequence, RuleId row, RuleVersion version, Money entered) {
-        return line(ctx, sequence, row, version, entered, Money.ZERO,
-                "not in the " + ctx.regime().code().value() + " regime");
+        return line(ctx, sequence, row, version, entered, Money.ZERO, ctx.inRegime(row, version).whyNot());
     }
 
     private static TraceLine line(NodeContext ctx, int sequence, RuleId row, RuleVersion version, Money in, Money out,

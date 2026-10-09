@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: DED-HOUSE-LOAN-EARLIER provision1961 (s.80EE) and provision2025 (s.130). summary: S2 s.130(1)–(4); 1961 s.80EE (sources B17; D-139, D-147). routes[0]: DED-HOUSE-LOAN-EARLIER (SanctionedLoanLimit). disqualifiers[0]: the row's regimes. disqualifiers[1]: s.130(3), the row's definition. disqualifiers[2]: s.130(4); house property is W-078.",
+  "_sources": "provisions: DED-HOUSE-LOAN-EARLIER provision1961 (s.80EE) and provision2025 (s.130). summary: S2 s.130(1)–(4); 1961 s.80EE (sources B17; D-139, D-147). routes[0]: DED-HOUSE-LOAN-EARLIER (SanctionedLoanLimit). disqualifiers[0]: the row's regimes. disqualifiers[1]: s.130(3), the row's definition. disqualifiers[2]: s.130(4); house property is W-078. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-HOUSE-LOAN-EARLIER (D-166; until then DED-HOUSE-LOAN-EARLIER's ExceptIn).",
   "key": "SEC-HOUSE-LOAN-INTEREST-EARLIER",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -32,7 +32,7 @@
       "description": "It is not deducted in the default regime.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "DED-HOUSE-LOAN-EARLIER"
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
       }
     },
     {

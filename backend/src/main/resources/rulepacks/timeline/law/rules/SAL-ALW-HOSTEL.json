@@ -1,6 +1,6 @@
 {
   "ruleId": "SAL-ALW-HOSTEL",
-  "_note": "An allowance for a child's hostel expenditure, exempt up to a prescribed amount per month per child for at most two children (D-101; rulebook SAL-ALW-PERS-001, H-2). TY 2026-27: Income-tax Rules, 2026 r.280(2) Table Sl. 8 (p.1782): \"Any allowance granted to an employee to meet the hostel expenditure on his child — Whole of India — ₹9000 per month per child up to a maximum of two children\"; not in the new regime. TY 2025-26: Income-tax Rules, 1962 r.2BB(2) Table Sl. 6 (consolidation p.4): \"Rs. 300 per month per child up to a maximum of two children\"; no notification changing the amount between 2011 and 2026 was found; not in r.2BB(3)'s list.",
+  "_note": "An allowance for a child's hostel expenditure, exempt up to a prescribed amount per month per child for at most two children (D-101; rulebook SAL-ALW-PERS-001, H-2). TY 2026-27: Income-tax Rules, 2026 r.280(2) Table Sl. 8 (p.1782): \"Any allowance granted to an employee to meet the hostel expenditure on his child — Whole of India — ₹9000 per month per child up to a maximum of two children\"; not in the new regime. TY 2025-26: Income-tax Rules, 1962 r.2BB(2) Table Sl. 6 (consolidation p.4): \"Rs. 300 per month per child up to a maximum of two children\"; no notification changing the amount between 2011 and 2026 was found; not in r.2BB(3)'s list. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -74,10 +71,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",

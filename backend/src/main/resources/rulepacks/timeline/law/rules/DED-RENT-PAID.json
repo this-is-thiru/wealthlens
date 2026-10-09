@@ -1,6 +1,6 @@
 {
   "ruleId": "DED-RENT-PAID",
-  "_note": "Rent paid for one's own residence: \"there shall be deducted any expenditure incurred by him towards payment of rent (by whatever name called) in respect of any furnished or unfurnished accommodation occupied by him for the purposes of his own residence\" (s.134(1), p.170); \"allowable on payment of such rent exceeding 10% of his total income, subject to a maximum of ₹ 5000 per month, or 25% of total income for tax year, whichever is less\" (s.134(2)); the total income is \"before allowing deduction for any expenditure under this section\" (s.134(5)) — TOTAL_INCOME is gross total income less the other Chapter VIII deductions, held within it, unrounded; MONTH counts the months of stay the declaration states (OQ-22). The s.134(4) bars — a home owned by the assessee, spouse, minor child or HUF at the place; an occupied home owned elsewhere valued under s.21(6) or (7)(a); any income falling in Schedule III Table Sl. 11 (HRA) — are checked by the node. s.134(3)'s prescribed conditions: Income-tax Rules, 2026 r.65 (p.1581), \"the assessee shall file declaration in Form No. 31\" (pp.1913–1914) — no area limit is prescribed; the Rules' amendment chain after G.S.R. 198(E) is not traced (rulebook S6). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80GG with Rules 1962 r.11B, is the TY 2025-26 version (W-075d5). rulebook DED-80GG-001, -002. D-141. TY 2025-26: Income-tax Act, 1961 s.80GG (thc p.354): for an assessee \"not being an assessee having any income falling within clause (13A) of section 10\", rent \"in excess of ten per cent of his total income … to the extent to which such excess expenditure does not exceed five thousand rupees per month or twenty-five per cent of his total income for the year, whichever is less\"; the proviso's ownership bars as s.134(4)(a); the Explanation: both percentages of \"total income before allowing deduction for any expenditure under this section\"; Rules 1962 r.11B: the declaration in Form No. 10BA — no area limit. The same row (the RentDeclaration stands for Form 10BA too). sources/2026-10-07-chapter-via.md B10, R1. D-148.",
+  "_note": "Rent paid for one's own residence: \"there shall be deducted any expenditure incurred by him towards payment of rent (by whatever name called) in respect of any furnished or unfurnished accommodation occupied by him for the purposes of his own residence\" (s.134(1), p.170); \"allowable on payment of such rent exceeding 10% of his total income, subject to a maximum of ₹ 5000 per month, or 25% of total income for tax year, whichever is less\" (s.134(2)); the total income is \"before allowing deduction for any expenditure under this section\" (s.134(5)) — TOTAL_INCOME is gross total income less the other Chapter VIII deductions, held within it, unrounded; MONTH counts the months of stay the declaration states (OQ-22). The s.134(4) bars — a home owned by the assessee, spouse, minor child or HUF at the place; an occupied home owned elsewhere valued under s.21(6) or (7)(a); any income falling in Schedule III Table Sl. 11 (HRA) — are checked by the node. s.134(3)'s prescribed conditions: Income-tax Rules, 2026 r.65 (p.1581), \"the assessee shall file declaration in Form No. 31\" (pp.1913–1914) — no area limit is prescribed; the Rules' amendment chain after G.S.R. 198(E) is not traced (rulebook S6). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80GG with Rules 1962 r.11B, is the TY 2025-26 version (W-075d5). rulebook DED-80GG-001, -002. D-141. TY 2025-26: Income-tax Act, 1961 s.80GG (thc p.354): for an assessee \"not being an assessee having any income falling within clause (13A) of section 10\", rent \"in excess of ten per cent of his total income … to the extent to which such excess expenditure does not exceed five thousand rupees per month or twenty-five per cent of his total income for the year, whichever is less\"; the proviso's ownership bars as s.134(4)(a); the Explanation: both percentages of \"total income before allowing deduction for any expenditure under this section\"; Rules 1962 r.11B: the declaration in Form No. 10BA — no area limit. The same row (the RentDeclaration stands for Form 10BA too). sources/2026-10-07-chapter-via.md B10, R1. D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -86,10 +83,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",

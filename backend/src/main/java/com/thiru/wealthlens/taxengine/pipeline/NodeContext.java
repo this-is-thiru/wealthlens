@@ -226,7 +226,7 @@ public final class NodeContext {
      */
     public RegimeVerdict inRegime(RuleId rule, RuleVersion version) {
         if (!version.regimes().appliesIn(regime.code())) {
-            return new RegimeVerdict.ExcludedByRow();
+            return new RegimeVerdict.ExcludedByRow(regime.code());
         }
         for (DisallowanceSetId id : regime.disallowances()) {
             DisallowanceSet set = pack.disallowanceSets().get(id);

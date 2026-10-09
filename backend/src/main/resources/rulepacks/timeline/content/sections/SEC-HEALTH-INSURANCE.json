@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: DED-HEALTH-* provision1961 (s.80D) and provision2025 (s.126); S2 heading \"Deduction in respect of health insurance premia\". summary: S2 s.126(2)–(10); 1961 s.80D(1)–(5) (sources B11–B13; D-136, D-145). routes[0]: DED-HEALTH-FAMILY (s.126(2)(a), (c), (4)). routes[1]: DED-HEALTH-PARENTS ((2)(b), (d), (4)). routes[2]: DED-HEALTH-FAMILY-SENIOR ((8)(a)). routes[3]: DED-HEALTH-PARENTS-SENIOR ((8)(a)). routes[4]: DED-HEALTH-CHECKUP ((3)). disqualifiers[0]: the rows' regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: s.126(9); 80D(2B) — PaidOtherThanInCash. disqualifiers[2]: s.126(7); 80D(2)(c)-(d) first proviso. disqualifiers[3]: s.126(2)(b); 80D(2)(b), D-145. disqualifiers[4]: OQ-18 (D-136 C3a). disqualifiers[5]: s.126(5)–(6), the HUF, refused (D-136 C6).",
+  "_sources": "provisions: DED-HEALTH-* provision1961 (s.80D) and provision2025 (s.126); S2 heading \"Deduction in respect of health insurance premia\". summary: S2 s.126(2)–(10); 1961 s.80D(1)–(5) (sources B11–B13; D-136, D-145). routes[0]: DED-HEALTH-FAMILY (s.126(2)(a), (c), (4)). routes[1]: DED-HEALTH-PARENTS ((2)(b), (d), (4)). routes[2]: DED-HEALTH-FAMILY-SENIOR ((8)(a)). routes[3]: DED-HEALTH-PARENTS-SENIOR ((8)(a)). routes[4]: DED-HEALTH-CHECKUP ((3)). disqualifiers[0]: the rows' regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: s.126(9); 80D(2B) — PaidOtherThanInCash. disqualifiers[2]: s.126(7); 80D(2)(c)-(d) first proviso. disqualifiers[3]: s.126(2)(b); 80D(2)(b), D-145. disqualifiers[4]: OQ-18 (D-136 C3a). disqualifiers[5]: s.126(5)–(6), the HUF, refused (D-136 C6). disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-HEALTH-FAMILY (D-166; until then DED-HEALTH-FAMILY's ExceptIn).",
   "key": "SEC-HEALTH-INSURANCE",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -72,7 +72,7 @@
       "description": "Not available in the default regime.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "DED-HEALTH-FAMILY"
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
       }
     },
     {

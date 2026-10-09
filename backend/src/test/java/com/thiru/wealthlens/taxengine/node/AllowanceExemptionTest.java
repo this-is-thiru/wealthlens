@@ -124,14 +124,20 @@ class AllowanceExemptionTest {
     }
 
     @Test
-    void evaluate_whenUniformInTheNewRegime_exemptsNothingAndSaysNothing() {
+    void evaluate_whenUniformInTheNewRegime_exemptsNothingAndSaysWhy() {
         // When
         NodeResult result = run(2026, NEW_TAX_REGIME, ComponentCodes.UNIFORM_ALLOWANCE, "12000",
                 AllowanceUse.spent(ComponentCodes.UNIFORM_ALLOWANCE, Money.of("8000")));
 
-        // Then
+        // Then — s.202(2)(a)(ii): not prescribed by r.280(3), so a nil line for what was received (D-166)
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).isEmpty();
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.SAL_ALW_UNIFORM);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("12000")));
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+            assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).startsWith("disallowed in the NEW_TAX_REGIME regime: ")
+                        .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")"));
+        });
     }
 
     @Test

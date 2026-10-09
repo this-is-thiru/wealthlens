@@ -376,6 +376,12 @@ not a missing step.
 > **₹1,32,608.22**, which is the expected figure; months vs days is **OQ-8**. **T3-4b** stands as written: the
 > engine now gives the nil line with its reason (D-104 C2a).
 
+> **Erratum (W-078g2, 2026-10-09, D-166).** **T3-4b:** the nil line W-070 built gave "not in the NEW_TAX_REGIME regime",
+> not the provision the expectation names — it now cites it, through the new regime's disallowance set: "disallowed in
+> the NEW_TAX_REGIME regime: Income-tax Act, 2025 s.202(2)(a) computes the new tax regime's total income without this
+> exemption or deduction (REG-NEW-TAX-REGIME-NO-EXEMPTION)" (TY 2025-26: 1961 s.115BAC(2)(i)). The figure is unchanged.
+> Verified by: `T3HouseRentAllowanceTest`, goldens `T3/T3-4b1.json`, `T3-4b2.json`.
+
 ### T3-5 — DA excluded — **the `H-4` regression test**
 
 Same as T3-1, but the implementation omits DA from the base.
@@ -566,6 +572,11 @@ taxable LTA = 1,20,000 − 68,000                                      = 52,000
 > block. The **new-regime** variant's nil line exists since W-077 (D-153 C6). The **no-evidence** variant is not run:
 > the engine has no evidence-of-expenditure input; it waits on Form 12BB (`TDS-SAL-12BB-002`). Verified by:
 > `T5LeaveTravelAndInvestmentTest`, cases under `test/resources/taxengine/golden/T5/`.
+
+> **Erratum (W-078g2, 2026-10-09, D-166).** **T5-4, new regime:** `SAL-LTA-NEW-001` (renamed by D-069) was never built as a
+> row; the reason cited is the basis of the regime's disallowance set, `REG-NEW-TAX-REGIME-NO-EXEMPTION` (S2 s.202(2)(a);
+> 1961 s.115BAC(2)(i)), in each journey's nil line. The figure is unchanged.
+> Verified by: `T5LeaveTravelAndInvestmentTest`, goldens `T5/T5-4e1.json`, `T5-4e2.json`.
 
 ---
 

@@ -244,6 +244,7 @@ class HealthInsuranceDeductionTest {
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(result.trace()).singleElement()
-                .satisfies(line -> assertThat(line.limitedBy()).contains("not in the NEW_TAX_REGIME regime"));
+                .satisfies(line -> assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).startsWith("disallowed in the NEW_TAX_REGIME regime: ")
+                        .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")")));
     }
 }

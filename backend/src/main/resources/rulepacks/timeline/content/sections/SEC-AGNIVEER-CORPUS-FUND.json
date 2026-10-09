@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: DED-AGNIVEER-* provision1961 (s.80CCH) and provision2025 (s.125); S2 heading \"Deduction in respect of contribution to Agnipath Scheme\". summary: S2 s.125(1), (2), s.16(l); 1961 s.80CCH (FA 2023 s.39), s.17(1)(ix) (sources M12, M14; D-140). routes[0]: DED-AGNIVEER-OWN. routes[1]: DED-AGNIVEER-GOVERNMENT. disqualifiers[0]: DED-AGNIVEER-OWN regimes (s.202(2)(a)(xii); s.115BAC(2)(i)).",
+  "_sources": "provisions: DED-AGNIVEER-* provision1961 (s.80CCH) and provision2025 (s.125); S2 heading \"Deduction in respect of contribution to Agnipath Scheme\". summary: S2 s.125(1), (2), s.16(l); 1961 s.80CCH (FA 2023 s.39), s.17(1)(ix) (sources M12, M14; D-140). routes[0]: DED-AGNIVEER-OWN. routes[1]: DED-AGNIVEER-GOVERNMENT. disqualifiers[0]: DED-AGNIVEER-OWN regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-AGNIVEER-OWN (D-166; until then DED-AGNIVEER-OWN's ExceptIn).",
   "key": "SEC-AGNIVEER-CORPUS-FUND",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -42,7 +42,7 @@
       "description": "Your own subscription is not deducted in the default regime.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "DED-AGNIVEER-OWN"
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
       }
     }
   ]

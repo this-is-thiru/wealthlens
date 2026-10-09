@@ -209,7 +209,8 @@ class LeaveTravelExemptionTest {
         assertThat(result.trace()).hasSize(2).allSatisfy(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.SAL_LEAVE_TRAVEL_CONCESSION);
             assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
-            assertThat(line.limitedBy()).contains("not in the NEW_TAX_REGIME regime");
+            assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).startsWith("disallowed in the NEW_TAX_REGIME regime: ")
+                        .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")"));
         });
     }
 

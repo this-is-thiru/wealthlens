@@ -1,6 +1,6 @@
 {
   "ruleId": "DED-AGNIVEER-OWN",
-  "_note": "The Agniveer's own subscription: \"An assessee, being an individual who has enrolled in the Agnipath Scheme and subscribes to the Agniveer Corpus Fund on or after the 1st November, 2022, shall be allowed a deduction in the computation of his total income, of the whole of the amount paid or deposited in his account in the said Fund during the tax year\" (s.125(1), p.161) — the whole amount, base AMOUNT_PAID; enrolment and the date are entry conditions. Old regime only: s.202(2)(a)(xii) keeps s.125(2), not (1) (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80CCH, is the TY 2025-26 version (W-075d5). rulebook DED-AGNIVEER-001. D-140. TY 2025-26: Income-tax Act, 1961 s.80CCH(1) as inserted by FA 2023 s.39 (p.30): an individual enrolled in the Agnipath Scheme and subscribing to the Agniveer Corpus Fund on or after 1-11-2022, \"the whole of the amount so paid or deposited\"; old regime only — s.115BAC(2)(i) keeps 80CCH(2), not (1). The same row. sources/2026-10-07-chapter-via.md M12, M14. D-148.",
+  "_note": "The Agniveer's own subscription: \"An assessee, being an individual who has enrolled in the Agnipath Scheme and subscribes to the Agniveer Corpus Fund on or after the 1st November, 2022, shall be allowed a deduction in the computation of his total income, of the whole of the amount paid or deposited in his account in the said Fund during the tax year\" (s.125(1), p.161) — the whole amount, base AMOUNT_PAID; enrolment and the date are entry conditions. Old regime only: s.202(2)(a)(xii) keeps s.125(2), not (1) (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80CCH, is the TY 2025-26 version (W-075d5). rulebook DED-AGNIVEER-001. D-140. TY 2025-26: Income-tax Act, 1961 s.80CCH(1) as inserted by FA 2023 s.39 (p.30): an individual enrolled in the Agnipath Scheme and subscribing to the Agniveer Corpus Fund on or after 1-11-2022, \"the whole of the amount so paid or deposited\"; old regime only — s.115BAC(2)(i) keeps 80CCH(2), not (1). The same row. sources/2026-10-07-chapter-via.md M12, M14. D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -57,10 +54,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",

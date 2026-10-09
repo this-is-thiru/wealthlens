@@ -224,7 +224,8 @@ class DonationDeductionTest {
         assertThat(result.trace()).extracting(TraceLine::rule)
                 .containsExactly(RuleIds.DED_DONATION_WHOLE, RuleIds.DED_DONATION_HALF);
         assertThat(result.trace()).allSatisfy(line ->
-                assertThat(line.limitedBy().orElseThrow()).isEqualTo("not in the NEW_TAX_REGIME regime"));
+                assertThat(line.limitedBy()).hasValueSatisfying(reason -> assertThat(reason).startsWith("disallowed in the NEW_TAX_REGIME regime: ")
+                        .endsWith("(" + RuleIds.REG_NEW_TAX_REGIME_NO_EXEMPTION + ")")));
     }
 
     @Test

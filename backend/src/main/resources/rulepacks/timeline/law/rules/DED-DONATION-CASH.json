@@ -1,6 +1,6 @@
 {
   "ruleId": "DED-DONATION-CASH",
-  "_note": "The cash bar: \"Any deduction for a donation over ₹ 2000 shall be allowed only if the payment is made by a mode other than cash\" (s.133(5), p.169) — per donation; one over the limit in cash is allowed nothing, one within it is allowed as any other. A definition (CashPaymentLimit), not a cap, because the excess is not what is disallowed. Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(5D) (thc p.353): \"No deduction shall be allowed under this section in respect of donation of any sum exceeding two thousand rupees unless such sum is paid by any mode other than cash\"; Explanation 5: only a sum of money. The same definition. sources/2026-10-07-chapter-via.md B27. D-148.",
+  "_note": "The cash bar: \"Any deduction for a donation over ₹ 2000 shall be allowed only if the payment is made by a mode other than cash\" (s.133(5), p.169) — per donation; one over the limit in cash is allowed nothing, one within it is allowed as any other. A definition (CashPaymentLimit), not a cap, because the excess is not what is disallowed. Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(5D) (thc p.353): \"No deduction shall be allowed under this section in respect of donation of any sum exceeding two thousand rupees unless such sum is paid by any mode other than cash\"; Explanation 5: only a sum of money. The same definition. sources/2026-10-07-chapter-via.md B27. D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -11,10 +11,7 @@
         "to": "2026-03-31"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
@@ -56,10 +53,7 @@
         "from": "2026-04-01"
       },
       "regimes": {
-        "type": "ExceptIn",
-        "regimes": [
-          "NEW_TAX_REGIME"
-        ]
+        "type": "AllRegimes"
       },
       "provision1961": {
         "instrument": "Income-tax Act, 1961",
