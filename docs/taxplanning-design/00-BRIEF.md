@@ -388,7 +388,7 @@ fact, so the text cannot tell a user they qualify while the engine says they do 
 
 | # | Invariant | Checked by |
 |---|---|---|
-| SC-1 | every `MODELLED` or `PLANNED` section in the coverage register has a catalogue entry | CI |
+| SC-1 | every `MODELLED` section in the coverage register has a catalogue entry; a section once catalogued keeps one (ratchet) | CI |
 | SC-2 | no rupee figure, rate or date is typed in catalogue text — only `{{RuleId.field}}` placeholders | CI (pattern scan) |
 | SC-3 | every disqualifier and route condition references a rule or `Condition`, or is marked `NOT_MODELLED` with a reason | CI |
 | SC-4 | `availability` and `history` are derived from rule versions, never authored | the renderer |
@@ -574,4 +574,5 @@ Current truth above; history here (D-046 B1 applies the same rule to this brief)
 | 2026-09-24 | §5.2, §10: concept names chosen; OQ-4 decided | `W-045d`, D-051 — the 2025 Act's s.202 heading is "New tax regime" (S2 p.226) |
 | 2026-10-07 | M-14 status: the Chapter VIII node built for the salaried scope in both years; its catalogue entries W-076a/b | `W-076`, D-149 — built across W-075a–d5 (D-131) |
 | 2026-10-08 | M-14 status: the catalogue complete for every built Chapter VIII section | `W-076b`, D-152 — after `W-076a` (D-150) |
+| 2026-10-09 | §6.3 SC-1: `MODELLED` sections in full, a ratchet on catalogued ones — not every `PLANNED` section | `W-078f`, D-164 C4a — the check as D-060 approved it; 147 `PLANNED` sections are not built and could not route |
 | 2026-10-09 | OQ-1, OQ-2 closed on their recommendations | D-163 — the owner ratified every open question's recorded answer |

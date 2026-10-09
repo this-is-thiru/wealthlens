@@ -3,8 +3,8 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.42",
-      "checksum": "sha256:e86c66d26c539072834820049cf26796495507022f220e2cf121d7e4dc52a353"
+      "version": "2025-26.law.43",
+      "checksum": "sha256:3bcf3b460c09e11b9eb967e33e30730990d73e461fd33a6435fd2306d05026c6"
     },
     "exec": {
       "version": "2025-26.exec.24",
@@ -86,7 +86,7 @@
     "PERQ-EDUCATION": "sha256:4a373d4cab8f16df379bc91422f4a201ca174951868dd1baef82c64f89c93e52",
     "PERQ-EDUCATION-FREE": "sha256:4c0deb6c7b318afc8cd84da7da4c3fd0cf1f9f81fcfddc0b8a1c851f76b110bd",
     "PERQ-EMPLOYER-ACCRETION": "sha256:097f731d2968fb8c8e6f91e9fb89c95d71d2a35230414bc7b3d935984b3005a1",
-    "PERQ-EMPLOYER-CONTRIBUTION": "sha256:18464f1b6004a3b24241b24512d1667781136d6ab4e56c60a1157a9e40bad93f",
+    "PERQ-EMPLOYER-CONTRIBUTION": "sha256:9c4d2692e88670b7f778534300c1b3f7469a3ecc98be75a5b4ae5dd1cdccb069",
     "PERQ-GIFT": "sha256:35e6cc6088a6a646f6e447710d14cc821f9e9e3cc94abcfba066fc244aeae3cf",
     "PERQ-HOLIDAY": "sha256:0cbf02121ae3326c606908a030cf1a8b4fc414a4e78cda2f35b00093ccd3f299",
     "PERQ-LOAN": "sha256:eb750f2d2da3cc2dbf5cb1ab3792e83964e306a4d5c74b8c313c4820eb51a3ff",

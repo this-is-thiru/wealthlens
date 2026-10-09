@@ -51,6 +51,13 @@ produced on demand** — which is exactly the case for `20-product-gaps.md` F39'
 | **T — Third-party reported** | Allowable **only** if the counterparty reported it | **80G donations** | **s.133(6)** — *"only on the basis of the information … furnished by such institution or fund"* |
 | **P — Employer-provided only** | Not a claim at all; the employer must actually do it | Employer NPS (s.124(1)); employer paying tax on a non-monetary perquisite (s.392(2)) | ss.124(1), 392(2) |
 
+> **Erratum (W-078f, 2026-10-09):** channel T does not cover every 80G donation — s.133(6) conditions the deduction on the donee's report only *"in case of a donation made to an institution or fund referred in
+> sub-section (1)(b)(ii)"* — a fund or institution established in India for a charitable purpose that is a registered
+> non-profit organisation or a Schedule VII (Table: Sl. No. 1) institution or fund approved under section 354; the named funds of (1)(a), the
+> Drought Relief Fund ((1)(b)(i)) and the bodies of (1)(b)(iii)–(vi) are not conditioned on a donee's report, so they
+> are not channel T and are not lost when unreported.
+> Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(1)(b)(ii), s.133(6)), read 2026-10-09; D-142 C6.
+
 `INFERENCE`: only channels **T** and **P** can be *lost*. **T** because the deduction is conditioned on
 someone else's filing; **P** because there is nothing to claim unless the employer acted. Everything
 else survives a missing Form 16 entry.
@@ -82,6 +89,12 @@ notInForm16(rule):
         This is a conversation for next year's FBP window, not this
         year's return.                                                  s.124(1)
 ```
+
+> **Erratum (W-078f, 2026-10-09):** the T verdict is wrong for a donation outside (1)(b)(ii) — s.133(6) conditions the deduction on the donee's report only *"in case of a donation made to an institution or fund referred in
+> sub-section (1)(b)(ii)"* — a fund or institution established in India for a charitable purpose that is a registered
+> non-profit organisation or a Schedule VII (Table: Sl. No. 1) institution or fund approved under section 354; for any other 80G
+> donation an absent report is not a ground to refuse the deduction.
+> Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(1)(b)(ii), s.133(6)), read 2026-10-09; D-142 C6.
 
 `RECOMMENDATION`: show this verdict **next to every claim** that the reconciliation
 (`M4.2`) found in the computation but not in the document. `12-claim-integrity.md` C3.3 already
@@ -202,6 +215,12 @@ procedural steps are `RECOMMENDATION` grounded in it.
 | **Critical** | `FACT (S2, s.133(6))`: the deduction is allowed *"**only** on the basis of the information relating to such donation furnished by such institution or fund to the prescribed authority"*. **Your receipt is not enough.** |
 | **Steps** | 1. Donate **other than in cash** if above ₹2,000 (s.133(5)) — and it must be **money**, not goods (s.133(4)). 2. Give the institution your PAN. 3. **Check your pre-filled data.** 4. If it is absent, **contact the institution** — the deduction is not allowable until they report it. |
 | **If missing from Form 16** | Form 16 is irrelevant here. What matters is whether the **institution** reported it. |
+
+> **Erratum (W-078f, 2026-10-09):** "Critical" and "Steps" 3–4 overstate s.133(6) — s.133(6) conditions the deduction on the donee's report only *"in case of a donation made to an institution or fund referred in
+> sub-section (1)(b)(ii)"* — a fund or institution established in India for a charitable purpose that is a registered
+> non-profit organisation or a Schedule VII (Table: Sl. No. 1) institution or fund approved under section 354; the donee's report is needed only
+> for a (1)(b)(ii) donation.
+> Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(1)(b)(ii), s.133(6)), read 2026-10-09; D-142 C6.
 
 ### `DED-80TTA-001` / `DED-80TTB-001` — deposit interest · channel **R**
 
@@ -347,6 +366,12 @@ FY 2026-27 showing savings and time-deposit interest separately"* is. The separa
 | **T22-11** | Rent ₹1,20,000 a year | landlord-PAN step present, counterparty `LANDLORD`, deadline = the employer's proof cut-off |
 | **T22-12** | A pack rule with no catalogue entry | **load error**, invariant I23 |
 
+> **Erratum (W-078f, 2026-10-09):** T22-2 is right only for a (1)(b)(ii) donation — s.133(6) conditions the deduction on the donee's report only *"in case of a donation made to an institution or fund referred in
+> sub-section (1)(b)(ii)"* — a fund or institution established in India for a charitable purpose that is a registered
+> non-profit organisation or a Schedule VII (Table: Sl. No. 1) institution or fund approved under section 354; a donation to a named fund of (1)(a)
+> absent from pre-filled data is not "not allowable" on s.133(6).
+> Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(1)(b)(ii), s.133(6)), read 2026-10-09; D-142 C6.
+
 ---
 
 ## C9 — The short version
@@ -359,6 +384,12 @@ Claims fall into **five channels**, and only two can be lost: **T** (80G, allowa
 institution reported it — s.133(6), your receipt is not enough) and **P** (employer NPS — there is
 nothing to claim if the employer did not contribute). Everything else, including HRA and LTA, is
 **fully claimable in the return** even when it is absent from Form 16.
+
+> **Erratum (W-078f, 2026-10-09):** channel T is not "80G" as a whole — s.133(6) conditions the deduction on the donee's report only *"in case of a donation made to an institution or fund referred in
+> sub-section (1)(b)(ii)"* — a fund or institution established in India for a charitable purpose that is a registered
+> non-profit organisation or a Schedule VII (Table: Sl. No. 1) institution or fund approved under section 354; only those donations can be lost for want of
+> the institution's report.
+> Verified by: Gazette CG-DL-E-22082025-265620 p.169 (s.133(1)(b)(ii), s.133(6)), read 2026-10-09; D-142 C6.
 
 Nothing is attached to the return (r.164(11)) — certificates are **retained and produced on demand**,
 which is what the document vault is for.

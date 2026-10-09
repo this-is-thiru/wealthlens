@@ -71,7 +71,7 @@ class T4RetirementContributionTest {
 
     @Test
     void run_whenEveryCaseIsComputed_onlyTheTaxYear2025RunsAreProvisional() {
-        // When — PERQ-EMPLOYER-CONTRIBUTION's TY 2025-26 version is UNVERIFIED (D-126 C5), though DR 08 marks no T4-1/T4-2 ⓟ
+        // When — TY 2025-26 runs cite UNVERIFIED versions (W-078j), though DR 08 marks no T4-1/T4-2 ⓟ
         Map<Boolean, List<String>> byProvisional = everyCaseInEveryYear()
                 .map(arguments -> {
                     SalaryGoldenCase golden = (SalaryGoldenCase) arguments.get()[0];

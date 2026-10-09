@@ -114,8 +114,7 @@ class EmployerContributionNodeTest {
         assertThat(result.trace()).first().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.PERQ_EMPLOYER_CONTRIBUTION);
             assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("74000")));
-            assertThat(line.provenance().verificationLevel()).isEqualTo(year == 2025
-                    ? VerificationLevel.UNVERIFIED : VerificationLevel.SOURCE_CHECKED);
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         });
     }
 
