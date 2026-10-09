@@ -12,6 +12,8 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
+import com.thiru.wealthlens.taxengine.rules.definition.ParticularsThreshold;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
@@ -26,12 +28,16 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.temporal.proration.Days;
 import com.thiru.wealthlens.taxengine.rules.temporal.proration.ProrationBasis;
+import com.thiru.wealthlens.taxengine.trace.Notice;
+import com.thiru.wealthlens.taxengine.trace.Severity;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceAnnotation;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -72,8 +78,9 @@ public final class ExemptionNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, RuleIds.SAL_LEAVE_TRAVEL_CONCESSION,
-                RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE, RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS));
+        Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN,
+                RuleIds.SAL_LEAVE_TRAVEL_CONCESSION, RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE,
+                RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS));
         rules.addAll(AllowanceExemption.rules());
         return Set.copyOf(rules);
     }
@@ -90,12 +97,42 @@ public final class ExemptionNode implements ComputationNode {
                     + " and an employment carries no period yet, so an annual allowance cannot be matched to the"
                     + " months each employer paid it; enter one employment until employment periods exist (D-099)");
         }
-        List<TraceLine> trace = new ArrayList<>(houseRentAllowance(ctx, employments));
+        List<TraceLine> houseRent = houseRentAllowance(ctx, employments);
+        List<TraceLine> trace = new ArrayList<>(houseRent);
         trace.addAll(LeaveTravelExemption.lines(ctx, trace.size() + 1));
         trace.addAll(AllowanceExemption.lines(ctx, trace.size() + 1));
         Money exempt = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
-                : new NodeResult(MoneyValue.of(exempt), trace);
+                : new NodeResult(MoneyValue.of(exempt), trace, landlordParticulars(ctx, houseRent).stream().toList());
+    }
+
+    /**
+     * The landlord's particulars the employer needs (S4 r.205(2) Table Sl. 1; 1961 r.26C(2) Table Sl. 1; D-167): a
+     * notice on the first HRA line where HRA applies in the regime and the year's rent paid exceeds the threshold. A
+     * notice, never a figure — the exemption is the same either way. None in a regime that forbids HRA: there is no
+     * claim to support.
+     */
+    private static Optional<TraceAnnotation> landlordParticulars(NodeContext ctx, List<TraceLine> houseRent) {
+        TemporalContext t = ctx.inputs().temporal();
+        RuleVersion allowance = TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.SAL_HOUSE_RENT_ALLOWANCE), t);
+        if (houseRent.isEmpty() || !ctx.inRegime(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, allowance).applies()) {
+            return Optional.empty();
+        }
+        RuleVersion particulars =
+                TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN), t);
+        ParticularsThreshold threshold = RuleDefinitions.require(particulars.definition(), ParticularsThreshold.class,
+                RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN);
+        Money rentPaid = ctx.inputs().entered().tenancies().stream()
+                .filter(tenancy -> !tenancy.ownedByAssessee())
+                .map(Tenancy::rentPaid)
+                .reduce(Money.ZERO, Money::plus);
+        if (!threshold.isExceededBy(rentPaid)) {
+            return Optional.empty();
+        }
+        return Optional.of(TraceAnnotation.of(houseRent.getFirst().sequence(), new Notice(Severity.ACTION_REQUIRED,
+                "Give your employer the landlord's name, address and PAN, and your relationship with the landlord if"
+                        + " any — rent paid in the year is over the limit for these particulars.",
+                List.of(RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN, RuleIds.SAL_HOUSE_RENT_ALLOWANCE))));
     }
 
     /** HRA's lines, one per tenancy; none where the rule does not apply or no home is entered. */

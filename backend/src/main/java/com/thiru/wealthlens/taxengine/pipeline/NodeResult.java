@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
+import com.thiru.wealthlens.taxengine.trace.TraceAnnotation;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.List;
 
@@ -10,11 +11,16 @@ import java.util.List;
  * result ({@code M5.1}, {@code D-VIEWFROMTRACE}) — so a node hands back both, and a node that
  * produced a figure without explaining it has not finished.
  *
+ * <p>What the node has to say <i>about</i> a line — a notice — travels beside the trace as a {@link TraceAnnotation}
+ * addressing that line, never as a free list of warnings ({@code Notice}, O-5; {@code 23-architecture-consolidation.md}
+ * A8; D-167). The annotation carries the line's sequence as the node numbered it; the runner renumbers both together.
+ *
  * @param value what this node computed
  * @param trace the lines it emitted; may be empty for a node that merely re-shapes a value, never
  *     null
+ * @param annotations what it says about its own lines, each addressing exactly one of them; may be empty, never null
  */
-public record NodeResult(NodeValue value, List<TraceLine> trace) {
+public record NodeResult(NodeValue value, List<TraceLine> trace, List<TraceAnnotation> annotations) {
 
     public NodeResult {
         if (value == null) {
@@ -28,6 +34,23 @@ public record NodeResult(NodeValue value, List<TraceLine> trace) {
                             + " lines");
         }
         trace = List.copyOf(trace);
+        if (annotations == null) {
+            throw new IllegalArgumentException(
+                    "NodeResult.annotations may not be null; pass an empty list where the node says nothing");
+        }
+        annotations = List.copyOf(annotations);
+        for (TraceAnnotation annotation : annotations) {
+            long addressed = trace.stream().filter(line -> line.sequence() == annotation.sequence()).count();
+            if (addressed != 1) {
+                throw new IllegalArgumentException("An annotation addresses line " + annotation.sequence() + ", which "
+                        + addressed + " of this node's lines carry; a notice hangs off exactly one line it produced");
+            }
+        }
+    }
+
+    /** A value and its lines, with nothing said about them. */
+    public NodeResult(NodeValue value, List<TraceLine> trace) {
+        this(value, trace, List.of());
     }
 
     /** A value with one explaining line — the ordinary case. */

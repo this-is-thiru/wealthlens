@@ -7,9 +7,11 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.trace.TraceAnnotation;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +55,7 @@ public final class PipelineRunner {
      * @param order the nodes as evaluated, which is the canonical order for this graph
      * @param values every node's output, keyed by the slot it wrote
      * @param trace the whole explanation, renumbered into one ascending sequence
+     * @param annotations what the nodes said about their lines, each at its line's place in {@code trace} (D-167)
      * @param inputs the fingerprint of what was computed from — half of the cache key
      * @param lawAndExec the pack layers that can change a number; {@code content} and {@code forms}
      *     are deliberately excluded, which is what makes an editorial revision free (G-11)
@@ -61,6 +64,7 @@ public final class PipelineRunner {
             List<NodeId> order,
             Map<NodeId, NodeValue> values,
             List<TraceLine> trace,
+            List<TraceAnnotation> annotations,
             InputsFingerprint inputs,
             Map<RulePackLayer, RulePackRef> lawAndExec) {
 
@@ -68,6 +72,7 @@ public final class PipelineRunner {
             order = List.copyOf(order);
             values = Map.copyOf(values);
             trace = List.copyOf(trace);
+            annotations = List.copyOf(annotations);
             lawAndExec = Map.copyOf(lawAndExec);
         }
 
@@ -105,6 +110,7 @@ public final class PipelineRunner {
         NodeContext context =
                 NodeContext.forRun(pack, regime, inputs, new RunRecomputation(ordered, pack, regime, inputs, values));
         List<TraceLine> trace = new ArrayList<>();
+        List<TraceAnnotation> annotations = new ArrayList<>();
 
         for (ComputationNode node : ordered) {
             // No try/catch. A node that cannot evaluate stops the run -- D-NOSILENT.
@@ -113,13 +119,20 @@ public final class PipelineRunner {
             context.put(node.produces(), result.value());
             order.add(node.produces());
             values.put(node.produces(), result.value());
-            result.trace().forEach(line -> trace.add(renumbered(line, trace.size() + 1)));
+            Map<Integer, Integer> globalByLocal = new HashMap<>();
+            for (TraceLine line : result.trace()) {
+                globalByLocal.put(line.sequence(), trace.size() + 1);
+                trace.add(renumbered(line, trace.size() + 1));
+            }
+            result.annotations().forEach(annotation -> annotations.add(
+                    new TraceAnnotation(globalByLocal.get(annotation.sequence()), annotation.notices())));
         }
 
         return new Result(
                 order,
                 values,
                 trace,
+                annotations,
                 InputsFingerprint.of(inputs),
                 computationLayersOf(pack));
     }

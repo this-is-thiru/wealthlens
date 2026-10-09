@@ -46,6 +46,7 @@ class TimelineReaderTest {
             new RuleId("REBATE-NEW-TAX-REGIME-EXCESS"),
             new RuleId("REBATE-RESIDENT-INDIVIDUAL"),
             new RuleId("REG-NEW-TAX-REGIME-NO-EXEMPTION"),
+            new RuleId("SAL-HOUSE-RENT-LANDLORD-PAN"),
             new RuleId("RATE-ROUND-TOTAL-INCOME"),
             new RuleId("RATE-ROUND-PAYABLE"),
             new RuleId("RATE-HEALTH-EDUCATION-CESS"),

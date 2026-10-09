@@ -27,6 +27,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import com.thiru.wealthlens.taxengine.trace.Severity;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
@@ -35,6 +36,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * The HRA exemption, per period of occupation (D-099; S4 r.279; Rules 1962 r.2A; {@code DR 13} R-11). Each figure
@@ -211,5 +214,70 @@ class ExemptionNodeTest {
                         "1320000"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("2026-01-01");
+    }
+
+    /** Mumbai: listed in both years' HRA tables (r.2A; r.279). */
+    private static List<Tenancy> wholeYear(int year, String... rents) {
+        String from = year + "-04-01";
+        String to = (year + 1) + "-03-31";
+        if (rents.length == 1) {
+            return List.of(new Tenancy(between(from, to), "MUMBAI", false, Money.of(rents[0])));
+        }
+        return List.of(new Tenancy(between(from, year + "-09-30"), "MUMBAI", false, Money.of(rents[0])),
+                new Tenancy(between(year + "-10-01", to), "MUMBAI", false, Money.of(rents[1])));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenRentPaidInTheYearExceedsTheThreshold_asksForTheLandlordsParticularsOnTheFirstHraLine(int year) {
+        // When — T3-1's rent, 3,60,000 > 1,00,000 (S4 r.205(2) Table Sl. 1; 1961 r.26C(2) Table Sl. 1)
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES, List.of(oneEmployment()), wholeYear(year, "360000"),
+                "600000", "1320000");
+
+        // Then — a notice, never a figure: on the first HRA line, citing the particulars rule
+        assertThat(result.annotations()).singleElement().satisfies(annotation -> {
+            assertThat(annotation.sequence()).isEqualTo(result.trace().getFirst().sequence());
+            assertThat(annotation.notices()).singleElement().satisfies(notice -> {
+                assertThat(notice.severity()).isEqualTo(Severity.ACTION_REQUIRED);
+                assertThat(notice.message()).contains("landlord's name, address and PAN");
+                assertThat(notice.relatedRules()).containsExactly(RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN,
+                        RuleIds.SAL_HOUSE_RENT_ALLOWANCE);
+            });
+        });
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.SAL_HOUSE_RENT_ALLOWANCE);
+    }
+
+    @Test
+    void evaluate_whenTwoTenanciesTogetherExceedTheThreshold_asksOnceForTheAggregate() {
+        // When — 60,000 + 60,000 = 1,20,000: neither alone exceeds 1,00,000, the year's aggregate does
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, List.of(oneEmployment()),
+                wholeYear(2026, "60000", "60000"), "600000", "1320000");
+
+        // Then
+        assertThat(result.trace()).hasSize(2);
+        assertThat(result.annotations()).singleElement()
+                .satisfies(annotation -> assertThat(annotation.sequence()).isEqualTo(1));
+    }
+
+    @ParameterizedTest(name = "rent {0}")
+    @ValueSource(strings = {"96000", "100000"})
+    void evaluate_whenRentPaidDoesNotExceedTheThreshold_asksForNothing(String rent) {
+        // When — DR 22 T22-10's 96,000, and exactly 1,00,000 ("exceeds")
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, List.of(oneEmployment()), wholeYear(2026, rent),
+                "600000", "1320000");
+
+        // Then
+        assertThat(result.trace()).isNotEmpty();
+        assertThat(result.annotations()).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenTheRegimeForbidsHra_asksForNothing() {
+        // When — no claim in the new regime, so no particulars to support it
+        NodeResult result = run(2026, NEW_TAX_REGIME, List.of(oneEmployment()), wholeYear(2026, "360000"),
+                "600000", "1320000");
+
+        // Then
+        assertThat(result.annotations()).isEmpty();
     }
 }

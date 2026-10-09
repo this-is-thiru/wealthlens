@@ -553,6 +553,13 @@ be wrong in.
 | `SAL-HRA-005` | **HRA is not available in the new regime** — s.202(2)(a)(i) disallows Schedule III Table Sl. No. **11**. | s.115BAC(2) | **s.202(2)(a)(i)** | — | VERIFIED for TY 2026-27 (S2); TY 2025-26 NEEDS VERIFICATION |
 | `SAL-HRA-006` | Landlord PAN: name, address and **PAN of the landlord(s)** must be furnished to the employer where **aggregate rent paid during the tax year exceeds ₹1,00,000**, together with the relationship with the landlord if any. | r.2BB / Form 12BB | **Rules 2026 r.205(2) Table Sl. 1, Form No. 124** | OLD | VERIFIED for TY 2026-27 (S4, r.205(2) Table Sl. 1); TY 2025-26 NEEDS VERIFICATION |
 
+> **Erratum (W-078h, 2026-10-09, D-167):** `SAL-HRA-006`'s 1961 provision is **Income-tax Rules, 1962 r.26C(2) Table Sl. 1**
+> (Form No. 12BB), not r.2BB — inserted by the Income-tax (11th Amendment) Rules, 2016, S.O. 1587(E), 29-4-2016, from 1-6-2016:
+> *"Name, address and permanent account number of the landlord/landlords where the aggregate rent paid during the previous year
+> exceeds rupees one lakh"* — no relationship limb (that is the 2026 text's). Built as `SAL-HOUSE-RENT-LANDLORD-PAN` (concept name, D-035);
+> TY 2025-26 stays `UNVERIFIED` until amendments after 2016 are searched (W-078j).
+> Verified by: egazette 2016/169418 p.6; Gazette CG-DL-E-20032026-271092 p.1687 (r.205(2)); `sources/2026-10-09-landlord-pan.md` L1, L2.
+
 ### `SAL-HRA-METRO-2026` — metro list, TY 2026-27 (Rules 2026 r.279(1)(c) Table)
 
 | Location of residential accommodation | Percentage of salary |

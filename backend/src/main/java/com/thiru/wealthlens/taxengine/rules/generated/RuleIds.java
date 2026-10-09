@@ -140,6 +140,7 @@ public final class RuleIds {
     public static final RuleId SAL_ALW_UNIFORM = new RuleId("SAL-ALW-UNIFORM");
     public static final RuleId SAL_ENTMT_ALLOWANCE = new RuleId("SAL-ENTMT-ALLOWANCE");
     public static final RuleId SAL_HOUSE_RENT_ALLOWANCE = new RuleId("SAL-HOUSE-RENT-ALLOWANCE");
+    public static final RuleId SAL_HOUSE_RENT_LANDLORD_PAN = new RuleId("SAL-HOUSE-RENT-LANDLORD-PAN");
     public static final RuleId SAL_LEAVE_TRAVEL_CONCESSION = new RuleId("SAL-LEAVE-TRAVEL-CONCESSION");
     public static final RuleId SAL_LEAVE_TRAVEL_DISTANCE_RATE = new RuleId("SAL-LEAVE-TRAVEL-DISTANCE-RATE");
     public static final RuleId SAL_LEAVE_TRAVEL_JOURNEYS = new RuleId("SAL-LEAVE-TRAVEL-JOURNEYS");

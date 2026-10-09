@@ -84,7 +84,7 @@ class ComputationProjectorTest {
 
     private static PipelineRunner.Result run(Map<NodeId, NodeValue> values, EngineInputs inputs) {
         return new PipelineRunner.Result(
-                List.copyOf(values.keySet()), values, trace(), InputsFingerprint.of(inputs), lawAndExec());
+                List.copyOf(values.keySet()), values, trace(), List.of(), InputsFingerprint.of(inputs), lawAndExec());
     }
 
     @Test

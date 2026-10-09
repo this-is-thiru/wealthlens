@@ -20,7 +20,10 @@ import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import com.thiru.wealthlens.taxengine.trace.Notice;
+import com.thiru.wealthlens.taxengine.trace.Severity;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceAnnotation;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.io.IOException;
 import java.net.URI;
@@ -147,6 +150,33 @@ class PipelineRunnerTest {
         }
     }
 
+    /** Adds two slots, emits two lines and says something about the second (D-167). */
+    private record AnnotatingNode(NodeId produces, NodeId left, NodeId right, Provenance provenance)
+            implements ComputationNode {
+
+        @Override
+        public Set<NodeId> requires() {
+            return Set.of(left, right);
+        }
+
+        @Override
+        public Set<RuleId> rules() {
+            return Set.of(SLAB);
+        }
+
+        @Override
+        public NodeResult evaluate(NodeContext ctx) {
+            Money sum = ctx.get(left).asMoney().plus(ctx.get(right).asMoney());
+            List<TraceLine> lines = List.of(
+                    TraceLine.of(1, produces, SLAB, StepKind.INCOME, MoneyValue.of(Money.ZERO), MoneyValue.of(sum),
+                            provenance),
+                    TraceLine.of(2, produces, SLAB, StepKind.INCOME, MoneyValue.of(sum), MoneyValue.of(sum),
+                            provenance));
+            return new NodeResult(MoneyValue.of(sum), lines,
+                    List.of(TraceAnnotation.of(2, Notice.of(Severity.ACTION_REQUIRED, "about the second line"))));
+        }
+    }
+
     /** components (source) -> salary.gross -> salary.income, which also reads components. */
     private static NodeRegistry registry(RulePack pack) {
         Provenance p = provenanceFrom(pack);
@@ -269,6 +299,34 @@ class PipelineRunnerTest {
             assertThat(line.kind()).isEqualTo(StepKind.INCOME);
             assertThat(line.out().asMoney()).isEqualTo(Money.of("2800000"));
             assertThat(line.provenance()).isEqualTo(provenanceFrom(pack));
+        }
+
+        @Test
+        void run_whenANodeAnnotatesItsSecondLine_putsTheAnnotationAtThatLinesPlaceInTheWholeTrace() {
+            // Given — components (untraced), salary.gross (one line), then a node annotating its own line 2
+            RulePack pack = pack();
+            Provenance p = provenanceFrom(pack);
+            NodeRegistry registry = NodeRegistry.of(List.of(
+                    new SourceNode(COMPONENTS, p),
+                    new EarningNode(GROSS, COMPONENTS, Money.of("2800000"), p),
+                    new AnnotatingNode(SALARY, GROSS, COMPONENTS, p)));
+
+            // When
+            PipelineRunner.Result result = PipelineRunner.run(registry, pack,
+                    regimeRunning(pack, SALARY, GROSS, COMPONENTS), NodeHarness.plainTaxpayer());
+
+            // Then — local line 2 of the third node is line 3 of the run, and the annotation moved with it
+            assertThat(result.annotations()).singleElement().satisfies(annotation -> {
+                assertThat(annotation.sequence()).isEqualTo(3);
+                assertThat(annotation.notices()).extracting(Notice::message).containsExactly("about the second line");
+            });
+            assertThat(result.trace().get(2).node()).isEqualTo(SALARY);
+            assertThat(result.trace().get(2).in()).isEqualTo(result.trace().get(2).out());
+        }
+
+        @Test
+        void run_whenNoNodeSaysAnything_hasNoAnnotations() {
+            assertThat(runAll(pack()).annotations()).isEmpty();
         }
 
         @Test

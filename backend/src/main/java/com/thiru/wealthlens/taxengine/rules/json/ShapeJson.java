@@ -23,6 +23,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceInterestLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ParticularsThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.PolicyIssueWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
@@ -231,7 +232,8 @@ public final class ShapeJson {
         String tag = PackJson.tag(
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
                 "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
-                "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis");
+                "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
+                "ParticularsThreshold");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -276,6 +278,8 @@ public final class ShapeJson {
                     optionalMoney(node, "maxPropertyValue", path), optionalMoney(node, "maxStampDutyValue", path),
                     PackJson.bool(node, "requiresNoHouseOwned", path)));
             case "CashPaymentLimit" -> PackJson.construct(path, () -> new CashPaymentLimit(money(node, "atMost", path)));
+            case "ParticularsThreshold" -> PackJson.construct(path, () -> new ParticularsThreshold(
+                    money(node, "exceeds", path)));
             case "OwnResidenceHouses" -> PackJson.construct(path, () -> new OwnResidenceHouses(
                     PackJson.integer(node, "houses", path)));
             case "OwnResidenceInterestLimit" -> PackJson.construct(path, () -> new OwnResidenceInterestLimit(
