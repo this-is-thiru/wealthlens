@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileRequest;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileResponse;
 import io.restassured.RestAssured;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -359,6 +360,22 @@ public class TaxPlanningControllerIntegrationTest extends AbstractIntegrationTes
         assertNotNull(reportResp.getBody());
         assertTrue(reportResp.getBody().length > 0);
         assertEquals("application/pdf", reportResp.getHeaders().getContentType().toString());
+        // D-168: the report prints the same known-wrong figures as the JSON endpoint, and the same notice
+        String text = pdfText(reportResp.getBody());
+        assertTrue(text.contains("Do not rely on these figures."), "the tax report carries the known-errors notice");
+    }
+
+    private static String pdfText(byte[] pdf) {
+        try {
+            com.itextpdf.text.pdf.PdfReader reader = new com.itextpdf.text.pdf.PdfReader(pdf);
+            try {
+                return com.itextpdf.text.pdf.parser.PdfTextExtractor.getTextFromPage(reader, 1).replaceAll("\\s+", " ");
+            } finally {
+                reader.close();
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("the tax report is not a readable PDF", e);
+        }
     }
 
     // ============================================================

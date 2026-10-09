@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxplanning.document;
 
 import com.thiru.wealthlens.taxplanning.recommendation.RestructuringResult;
+import com.thiru.wealthlens.taxplanning.salary.dto.KnownErrorsComputation;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileResponse;
 import com.thiru.wealthlens.taxplanning.salary.entity.SalaryProfileEntity;
 import com.thiru.wealthlens.taxplanning.salary.entity.TaxComputationEntity;
@@ -31,6 +32,8 @@ public class DocumentGenerationService {
         context.setVariable("restructuring", restructuring);
         context.setVariable("generatedOn", LocalDate.now());
         context.setVariable("disclaimer", "This is an indicative computation only. Consult a qualified CA for advice.");
+        // The JSON response's notice, above the figures: the report prints the same known-wrong numbers (D-063, D-168)
+        context.setVariable("knownErrors", KnownErrorsComputation.NOTICE);
         String html = templateEngine.process("taxplanning/tax-comparison-report", context);
         return convertHtmlToPdf(html);
     }
