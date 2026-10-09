@@ -548,8 +548,8 @@ schema change. A one-valued enum is fine; a record whose fields assume an indivi
 
 | # | Question, plainly | Recommendation | Needed by |
 |---|---|---|---|
-| OQ-1 | When a rule changes (a Budget raises a limit), **who checks the new number before it goes live?** The publish gate (§5.4) has a "reviewer approves" step and nobody is named. (D-006) | **You approve every change now** (verification level `SOURCE_CHECKED`); **a CA reviews a sample** of golden cases before anyone outside the family relies on it (`PROFESSIONALLY_REVIEWED`) | before the first rule change after launch |
-| OQ-2 | Rules are edited **as files in the code** and go live with a deployment. A **web screen** could let a non-developer edit them instead. **When do you want that screen?** | **Not now.** After persistence and the API exist (milestone `W-111`); files + review are enough until then | before a non-developer edits a rule |
+| ~~OQ-1~~ | **Closed (D-163): the recommendation is the decision.** When a rule changes (a Budget raises a limit), **who checks the new number before it goes live?** The publish gate (§5.4) has a "reviewer approves" step and nobody is named. (D-006) | **You approve every change now** (verification level `SOURCE_CHECKED`); **a CA reviews a sample** of golden cases before anyone outside the family relies on it (`PROFESSIONALLY_REVIEWED`) | before the first rule change after launch |
+| ~~OQ-2~~ | **Closed (D-163): the recommendation is the decision.** Rules are edited **as files in the code** and go live with a deployment. A **web screen** could let a non-developer edit them instead. **When do you want that screen?** | **Not now.** After persistence and the API exist (milestone `W-111`); files + review are enough until then | before a non-developer edits a rule |
 | OQ-3 | The **old** tax-planning feature is still live and returns numbers known to be wrong — e.g. at ₹60 L income (new regime) it charges no surcharge, understating tax by roughly ₹1.4 lakh. **Turn it off, warn on it, or leave it?** | **Warn now** (a visible "known errors — being replaced" flag on the response), **remove it** when the replacement passes its golden tests (`09-build-plan.md` B2) | now |
 | ~~OQ-4 (old)~~ | ~~TY 2025-26?~~ | **Decided (D-041): build both years**, matching `portfolio` | — |
 | ~~OQ-5~~ | ~~the swallow-failures rule~~ | **Decided (D-049): deleted** — Checkstyle `IllegalCatch` enforces the intent | — |
@@ -574,3 +574,4 @@ Current truth above; history here (D-046 B1 applies the same rule to this brief)
 | 2026-09-24 | §5.2, §10: concept names chosen; OQ-4 decided | `W-045d`, D-051 — the 2025 Act's s.202 heading is "New tax regime" (S2 p.226) |
 | 2026-10-07 | M-14 status: the Chapter VIII node built for the salaried scope in both years; its catalogue entries W-076a/b | `W-076`, D-149 — built across W-075a–d5 (D-131) |
 | 2026-10-08 | M-14 status: the catalogue complete for every built Chapter VIII section | `W-076b`, D-152 — after `W-076a` (D-150) |
+| 2026-10-09 | OQ-1, OQ-2 closed on their recommendations | D-163 — the owner ratified every open question's recorded answer |
