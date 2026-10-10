@@ -45,18 +45,16 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), Fourth Schedule Part A r.6(a), p.856 (footnote 5: \"twelve\" subs. by Act 26 of 1997, s.58, for \"ten\", w.e.f. 1-4-1998); s.17(1)(vi), p.140",
-        "accessedOn": "2026-10-08",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "The thc.nic.in copy is not a Gazette text, and the Finance Act, 1997 (26 of 1997) s.58 is not read in the Gazette. The Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019, the Finance Act, 2020, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020, the Finance Acts 2021, 2022 and 2023, the Finance Act, 2024, the Finance (No. 2) Act, 2024, the Finance Act, 2025 and the Taxation Laws (Amendment) Act, 2025 were searched by text (\"Fourth Schedule\", \"recognised provident fund\") and none amends Part A of the Income-tax Act's Fourth Schedule."
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), Fourth Schedule Part A r.6(a), p.856 (footnote 5: \"twelve\" subs. by Act 26 of 1997, s.58, for \"ten\", w.e.f. 1-4-1998); s.17(1)(vi), p.140; Income-tax Act, 1961 Sch. IV Pt A r.6(a), with s.17(1)(vi): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     }
   ],
   "headProvenance": {
     "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-    "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), Fourth Schedule Part A r.6(a), p.856 (footnote 5: \"twelve\" subs. by Act 26 of 1997, s.58, for \"ten\", w.e.f. 1-4-1998); s.17(1)(vi), p.140",
-    "accessedOn": "2026-10-08",
-    "verificationLevel": "UNVERIFIED",
-    "whatToCheck": "The thc.nic.in copy is not a Gazette text, and the Finance Act, 1997 (26 of 1997) s.58 is not read in the Gazette. The Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019, the Finance Act, 2020, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020, the Finance Acts 2021, 2022 and 2023, the Finance Act, 2024, the Finance (No. 2) Act, 2024, the Finance Act, 2025 and the Taxation Laws (Amendment) Act, 2025 were searched by text (\"Fourth Schedule\", \"recognised provident fund\") and none amends Part A of the Income-tax Act's Fourth Schedule."
+    "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), Fourth Schedule Part A r.6(a), p.856 (footnote 5: \"twelve\" subs. by Act 26 of 1997, s.58, for \"ten\", w.e.f. 1-4-1998); s.17(1)(vi), p.140; Income-tax Act, 1961 Sch. IV Pt A r.6(a), with s.17(1)(vi): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+    "accessedOn": "2026-10-10",
+    "verificationLevel": "SOURCE_CHECKED"
   }
 }

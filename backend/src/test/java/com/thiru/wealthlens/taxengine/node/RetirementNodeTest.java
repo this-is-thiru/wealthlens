@@ -104,8 +104,7 @@ class RetirementNodeTest {
         assertThat(result.trace()).singleElement().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_GOVERNMENT);
             assertThat(line.kind()).isEqualTo(StepKind.DEDUCTION);
-            assertThat(line.provenance().verificationLevel()).isEqualTo(year == 2025
-                    ? VerificationLevel.UNVERIFIED : VerificationLevel.SOURCE_CHECKED);
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         });
     }
 

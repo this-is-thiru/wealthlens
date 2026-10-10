@@ -42,10 +42,9 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.24(a), p.147 (footnote: Act 14 of 2001 s.15, w.e.f. 1-4-2002)",
-        "accessedOn": "2026-10-08",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "The thc.nic.in copy is not a Gazette text. The amending Acts from the Finance (No. 2) Act, 2019 to the Taxation Laws (Amendment) Act, 2025 were searched by text for amendments to ss.22–27: only the Finance Act, 2025 s.10 (s.23(2)) amends them."
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.24(a), p.147 (footnote: Act 14 of 2001 s.15, w.e.f. 1-4-2002); Income-tax Act, 1961 s.24(a): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {

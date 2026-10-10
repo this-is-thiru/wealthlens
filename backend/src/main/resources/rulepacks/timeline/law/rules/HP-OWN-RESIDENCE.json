@@ -41,10 +41,9 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
-        "sourceDescription": "Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.10, p.20; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.23(3), (4), pp.146–147",
-        "accessedOn": "2026-10-08",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "s.23(3) and (4) are read in the thc.nic.in copy, not a Gazette text. The amending Acts from the Finance (No. 2) Act, 2019 to the Taxation Laws (Amendment) Act, 2025 were searched by text for amendments to ss.22–27: only the Finance Act, 2025 s.10 (s.23(2)) amends them."
+        "sourceDescription": "Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.10, p.20; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.23(3), (4), pp.146–147; Income-tax Act, 1961 s.23(2)–(4): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {

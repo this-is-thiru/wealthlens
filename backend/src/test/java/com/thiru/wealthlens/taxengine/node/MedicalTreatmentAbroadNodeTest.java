@@ -78,8 +78,7 @@ class MedicalTreatmentAbroadNodeTest {
             assertThat(line.kind()).isEqualTo(StepKind.INCOME);
             assertThat(line.limitedBy()).hasValueSatisfying(bound ->
                     assertThat(bound).contains("the extent permitted by the Reserve Bank of India"));
-            assertThat(line.provenance().verificationLevel()).isEqualTo(year == 2025
-                    ? VerificationLevel.UNVERIFIED : VerificationLevel.SOURCE_CHECKED);
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         });
     }
 

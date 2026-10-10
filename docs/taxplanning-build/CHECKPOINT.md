@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078i DONE)
+Item            : — (W-078j1 DONE)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : RESUME HERE (session 16): run the resume check; then WAIT for the owner's pick. Backlog: W-078j (sourcing: 103 UNVERIFIED versions incl. SAL-HOUSE-RENT-LANDLORD-PAN TY 2025-26, + S.O. 1046(E) — split at plan) → W-078k (convertHtmlToPdf catch(Exception), D-169) → W-079 → W-075c5 → W-074b → W-079a → W-080 → W-080a → … Unrun: TaxPlanningControllerIntegrationTest (needs Docker). Scratchpad PDFs gone after shutdown — egazette 2025/265620, 2023/244830, 2026/271092, 2016/169418, 2024/252143
-Last verify     : ./mvnw test -pl backend -Punit → 2591 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078i, 2026-10-09); DocumentGenerationServiceTest 1/1; probe bit
-Waiting on      : the owner — next pick. Open OQs: none. TY 2025-26 goldens PROVISIONAL until W-078j
+Next step       : WAIT for the owner's pick. Next in order: W-078j2 (group B r.3, ~37 versions — ask the owner for ChatGPT sourcing of the G.S.R. list amending r.3 since 2009) → W-078j3 → W-078j4 → W-078j5 → W-078k → W-079 → W-075c5 → W-074b → W-079a → W-080 → W-080a … Universal golden blockers: SAL-SALARY-FOR-ACCOM (j2), SAL-SALARY-FOR-HRA (j3), SAL-SALARY-FOR-GRATUITY (j4). Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2591 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j1, 2026-10-10)
+Waiting on      : the owner — next pick. Open OQs: none
 Files touched   : —
-Last item commit: taxplanning W-078i: print the known-errors notice on the tax-report PDF above every figure, as the JSON endpoint carries it (D-168)
-Updated         : 2026-10-09, session 15 (paused at the owner's session-limit notice)
+Last item commit: taxplanning W-078j1: read the 2019–2026 amending Acts for the 1961 sections of 27 TY 2025-26 versions and mark them SOURCE_CHECKED (D-170)
+Updated         : 2026-10-10, session 16
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

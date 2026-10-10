@@ -41,10 +41,9 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10)(iii), first and second provisos, p.72; the notification's Gazette copy (Gazette of India Extraordinary Part II s.3(ii) No. 1079, 8-3-2019), p.2",
-        "accessedOn": "2026-09-27",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "Any amendment to Income-tax Act, 1961 s.10(10)(iii), first and second provisos between Act 7 of 2019 (the thc.nic.in text's currency) and AY 2026-27 in the Acts not yet read: the Finance (No. 2) Act, 2019 (Act 23 of 2019), the Taxation Laws (Amendment) Act, 2019 (Act 46 of 2019) and the interim Finance Act, 2024. The Finance Acts 2020–2023, the Finance (No. 2) Act, 2024 and the Finance Act, 2025 were read and none amends it."
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10)(iii), first and second provisos, p.72; the notification's Gazette copy (Gazette of India Extraordinary Part II s.3(ii) No. 1079, 8-3-2019), p.2; Income-tax Act, 1961 s.10(10)(iii), first and second provisos: the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {
