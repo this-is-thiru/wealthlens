@@ -127,7 +127,7 @@ class MealAndGiftPerquisiteTest {
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("6600")));
         assertThat(result.trace().getFirst().provenance().verificationLevel())
-                .isEqualTo(VerificationLevel.UNVERIFIED);
+                .isEqualTo(VerificationLevel.SOURCE_CHECKED);
     }
 
     @Test

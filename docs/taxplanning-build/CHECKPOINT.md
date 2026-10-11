@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078j3b DONE; between items)
+Item            : — (W-078j2a DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j2a (D-172: owner downloads the Income Tax Department PDFs of Notification No. 94/2009 (S.O. 3245(E)) and No. 2/2010 (S.O. 66(E)); lifts SAL-SALARY-FOR-ACCOM) → W-078j4 (lifts SAL-SALARY-FOR-GRATUITY) → W-078j5 → W-078k → W-079 … Owner files arrive via scratchpad copy (~/Downloads is blocked; memory taxplanning-owner-workflow). Unrun: TaxPlanningControllerIntegrationTest (Docker)
-Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j3b, 2026-10-11)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j4 (groups C, E: S.O. 1046(E) of 2011 for PERQ-RPF-INTEREST (India Code download by the owner), the 1999 retrenchment-limit notification, the Direct Tax Laws (Amendment) Act 1987's assent + Gazette, a CBDT clarification on the gratuity reading (D-107); record why the two TY 2026-27 r.280 versions stay (OQ-7); lifts SAL-SALARY-FOR-GRATUITY, the last golden blocker) → W-078j5 → W-078k → W-079 … Owner files arrive via scratchpad/rules_in (~/Downloads blocked). Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j2a, 2026-10-11)
 Waiting on      : the owner — next pick. Open OQs: none
-Files touched   : none (clean tree after the W-078j3b commit)
-Last item commit: taxplanning W-078j3b: let one year's election name a vehicle per class of taxpayer and give TY 2025-26's opt-out Form No. 10-IEA for business income (D-179)
+Files touched   : none (clean tree after the W-078j2a commit)
+Last item commit: taxplanning W-078j2a: read rule 3's 2009 substitution and 2010 corrigendum in the Department's copies and mark the remaining 33 TY 2025-26 r.3 versions SOURCE_CHECKED (D-180)
 Updated         : 2026-10-11, session 17
 ```
 

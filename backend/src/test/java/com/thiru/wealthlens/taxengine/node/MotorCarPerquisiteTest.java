@@ -101,8 +101,7 @@ class MotorCarPerquisiteTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(year == 2026 ? "96000" : "32400")));
         assertThat(result.trace()).singleElement().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.PERQ_CAR_PARTLY_SMALL);
-            assertThat(line.provenance().verificationLevel()).isEqualTo(year == 2025
-                    ? VerificationLevel.UNVERIFIED : VerificationLevel.SOURCE_CHECKED);
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         });
     }
 

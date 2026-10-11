@@ -80,7 +80,7 @@ class T5LeaveTravelAndInvestmentTest {
     @Test
     void run_whenEveryCaseIsComputed_reportsTheTaxYear2025LeaveTravelRunsAsProvisional() {
         // When — DR 08 marks T5-4's TY 2025-26 half PROVISIONAL; every TY 2025-26 run cites the salary bases,
-        // of which SAL-SALARY-FOR-ACCOM (W-078j2a) and SAL-SALARY-FOR-GRATUITY (W-078j4) are still UNVERIFIED
+        // of which SAL-SALARY-FOR-GRATUITY (W-078j4) is still UNVERIFIED
         Map<Boolean, List<String>> byProvisional = everyCaseInEveryYear()
                 .map(arguments -> {
                     SalaryGoldenCase golden = (SalaryGoldenCase) arguments.get()[0];

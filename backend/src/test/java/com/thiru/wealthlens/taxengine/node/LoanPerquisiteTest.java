@@ -85,8 +85,7 @@ class LoanPerquisiteTest {
 
         // Then — 12 × 5,00,000 × 9% ÷ 12 = 45,000, less 10,000
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("35000")));
-        assertThat(result.trace().getFirst().provenance().verificationLevel()).isEqualTo(year == 2025
-                ? VerificationLevel.UNVERIFIED : VerificationLevel.SOURCE_CHECKED);
+        assertThat(result.trace().getFirst().provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
     }
 
     @Test

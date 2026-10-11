@@ -88,8 +88,7 @@ class HouseholdBenefitPerquisiteTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
-        assertThat(result.trace().getFirst().provenance().verificationLevel()).isEqualTo(year == 2025
-                ? VerificationLevel.UNVERIFIED : VerificationLevel.SOURCE_CHECKED);
+        assertThat(result.trace().getFirst().provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
     }
 
     @Test
