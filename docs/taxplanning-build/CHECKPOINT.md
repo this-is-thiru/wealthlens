@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078j4 DONE; between items)
+Item            : — (W-078j4b DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j4b (needs the owner's India Code PDF of S.O. 1046(E) / Notif. 24/2011, the 25-6-1999 s.10(10B) notification, and a ChatGPT share — prompt in plans/W-078j4.md "What I need from you") → W-078j5 (14 introducedBy) → W-078k (PDF catch) → W-079 … No golden run is PROVISIONAL now. Owner files via scratchpad/rules_in (~/Downloads blocked; Finder ⌥-drag if cp is refused). Unrun: TaxPlanningControllerIntegrationTest (Docker)
-Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j4, 2026-10-11)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j5 (group D: the 14 introducedBy markers — HP-* ×7 (Act 14 of 2001 etc.), PERQ-RPF-CONTRIBUTION, PERQ-RPF-INTEREST (S.O. 1046(E) Gazette copy), RET-RETRENCHMENT (Notif. 10969 Gazette copy), SAL-LEAVE-TRAVEL-* ×2 (S.O. 201(E)), SAL-SALARY-FOR-GRATUITY (DTLA 1987 assent + Gazette), SAL-SALARY-FOR-RPF) → W-078k (PDF catch) → W-079 … Remaining provenance UNVERIFIED: only the two TY 2026-27 r.280 versions (kept: defect in the text). No golden run is PROVISIONAL. Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j4b, 2026-10-11)
 Waiting on      : the owner — next pick. Open OQs: none
-Files touched   : none (clean tree after the W-078j4 commit)
-Last item commit: taxplanning W-078j4: read the General Clauses Act s.8 for the labour-Code reading and mark the salary-for-gratuity and statutory-gratuity versions SOURCE_CHECKED, so no golden run is provisional (D-181)
+Files touched   : none (clean tree after the W-078j4b commit)
+Last item commit: taxplanning W-078j4b: mark the RPF interest rate and the retrenchment limit SOURCE_CHECKED on the owner's copies and walk the Income-tax Rules 2026 amendments for r.280 (D-183)
 Updated         : 2026-10-11, session 17
 ```
 

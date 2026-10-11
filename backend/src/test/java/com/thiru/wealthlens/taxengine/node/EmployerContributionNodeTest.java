@@ -309,7 +309,7 @@ class EmployerContributionNodeTest {
         assertThat(result.trace()).singleElement().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.PERQ_RPF_INTEREST);
             assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("15000")));
-            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         });
     }
 
