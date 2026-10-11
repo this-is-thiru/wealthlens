@@ -460,15 +460,15 @@ class RetirementNodeTest {
         NodeResult below = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "900000")),
                 List.of(statutory(ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY, year, "1153846.15")));
 
-        // Then — the line names the separation day, which says which Act the figure answers to (D-107), and is
-        // unverified while the law names a repealed Act
+        // Then — the line names the separation day, which says which Act the figure answers to (D-107); the repealed
+        // Act's reference reads as the Code's by the General Clauses Act, 1897 s.8(1), so the version is checked
         assertThat(above.value()).isEqualTo(MoneyValue.of(Money.of("1153846.15")));
         assertThat(below.value()).isEqualTo(MoneyValue.of(Money.of("900000")));
         assertThat(above.trace()).singleElement().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_STATUTORY);
             assertThat(line.limitedBy()).hasValueSatisfying(why -> assertThat(why)
                     .contains("amount under the gratuity statute").contains(year + "-12-15"));
-            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         });
     }
 

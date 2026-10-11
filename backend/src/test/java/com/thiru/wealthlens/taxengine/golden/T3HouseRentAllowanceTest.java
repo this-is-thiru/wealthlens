@@ -63,9 +63,9 @@ class T3HouseRentAllowanceTest {
     }
 
     @Test
-    void run_whenEveryCaseIsComputed_onlyTheTaxYear2025RunsAreProvisional() {
-        // When — DR 08 marks T3-2 and T3-3's TY 2025-26 half PROVISIONAL; every TY 2025-26 run cites the salary bases,
-        // of which SAL-SALARY-FOR-GRATUITY (W-078j4) is still UNVERIFIED
+    void run_whenEveryCaseIsComputed_noRunIsProvisional() {
+        // When — DR 08 marks some TY 2025-26 halves PROVISIONAL; the sourcing round (D-170 – D-181) has checked every
+        // version these runs cite, so none is now
         Map<Boolean, List<String>> byProvisional = everyCaseInEveryYear()
                 .map(arguments -> {
                     SalaryGoldenCase golden = (SalaryGoldenCase) arguments.get()[0];
@@ -80,11 +80,8 @@ class T3HouseRentAllowanceTest {
                 .collect(Collectors.partitioningBy(Map.Entry::getKey,
                         Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
 
-        // Then — reported separately: every TY 2025-26 run, and no TY 2026-27 run
-        assertThat(byProvisional.get(true)).allSatisfy(run -> assertThat(run).endsWith("2025-26"))
-                .contains("T3-2 2025-26", "T3-3b 2025-26");
-        assertThat(byProvisional.get(false)).allSatisfy(run -> assertThat(run).endsWith("2026-27"))
-                .contains("T3-1 2026-27", "T3-3a 2026-27");
+        // Then — no run in either year cites an UNVERIFIED version; a new one would be reported here
+        assertThat(byProvisional.get(true)).isEmpty();
     }
 
     @Test

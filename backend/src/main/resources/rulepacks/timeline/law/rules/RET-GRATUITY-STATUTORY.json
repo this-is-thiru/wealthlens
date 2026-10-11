@@ -58,10 +58,9 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10)(ii), p.71; the labour statutes and their repeal: sources/2026-09-27-retirement-limits.md",
-        "accessedOn": "2026-09-27",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "The reading of D-107: the Payment of Gratuity Act, 1972 was repealed on 21-11-2025 (Code on Social Security, 2020 s.164(1) item 6, in force by S.O. 5319(E), CG-DL-E-21112025-267882), and its s.4(2)–(3) is read as the Code's s.53(2)–(3) for a separation on or after that day. Check for a CBDT clarification or an amendment of the Income-tax Acts naming the Code. Also any amendment to Income-tax Act, 1961 s.10(10)(ii) in the Finance (No. 2) Act, 2019 (Act 23 of 2019), the Taxation Laws (Amendment) Act, 2019 (Act 46 of 2019) and the interim Finance Act, 2024, not yet read (every other amending Act 2020–2025 is read and none amends it)."
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10)(ii), p.71; the labour statutes and their repeal: sources/2026-09-27-retirement-limits.md; s.10(10)(ii): the amending Acts F(No.2)A 2019, TLA 2019, FA 2020, TOLA 2020, FA 2021–2023, the interim FA 2024, F(No.2)A 2024, FA 2025, TLA 2025 and FA 2026 are read and none amends it (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md); the Payment of Gratuity Act, 1972, repealed on 21-11-2025 by the Code on Social Security, 2020 s.164(1) item 6 (S.O. 5319(E), CG-DL-E-21112025-267882), is re-enacted with modification by the Code's s.53(2)–(3), so by the General Clauses Act, 1897 s.8(1) (\"references in any other enactment … to the provision so repealed shall, unless a different intention appears, be construed as references to the provision so re-enacted\"; thc.nic.in copy, p.18) the reference reads as s.53(2)–(3) for a separation on or after that day (D-107); no CBDT clarification found (sources/2026-09-27-retirement-limits.md C5) (docs/taxplanning-build/sources/2026-10-11-groups-c-e.md)",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {
@@ -117,10 +116,9 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 5, p.41, s.202(2)(a) p.227 and s.536(2)(j); Finance Act, 2026 searched in full: no amendment to s.19",
-        "accessedOn": "2026-09-27",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "The reading of D-107: the Payment of Gratuity Act, 1972 was repealed on 21-11-2025 (Code on Social Security, 2020 s.164(1) item 6, in force by S.O. 5319(E), CG-DL-E-21112025-267882), and its s.4(2)–(3) is read as the Code's s.53(2)–(3) for a separation on or after that day. Check for a CBDT clarification or an amendment of the Income-tax Acts naming the Code."
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 5, p.41, s.202(2)(a) p.227 and s.536(2)(j); Finance Act, 2026 searched in full: no amendment to s.19; the 2025 Act's reference likewise: the Payment of Gratuity Act, 1972, repealed on 21-11-2025 by the Code on Social Security, 2020 s.164(1) item 6 (S.O. 5319(E), CG-DL-E-21112025-267882), is re-enacted with modification by the Code's s.53(2)–(3), so by the General Clauses Act, 1897 s.8(1) (\"references in any other enactment … to the provision so repealed shall, unless a different intention appears, be construed as references to the provision so re-enacted\"; thc.nic.in copy, p.18) the reference reads as s.53(2)–(3) for a separation on or after that day (D-107); no CBDT clarification found (sources/2026-09-27-retirement-limits.md C5) (docs/taxplanning-build/sources/2026-10-11-groups-c-e.md)",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     }
   ],
