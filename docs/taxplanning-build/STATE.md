@@ -4,7 +4,7 @@
 
 ```
 Last checkpoint           : W-078j4b — "taxplanning W-078j4b: mark the RPF interest rate and the retrenchment limit SOURCE_CHECKED on the owner's copies and walk the Income-tax Rules 2026 amendments for r.280 (D-183)"
-Last updated              : 2026-10-11 (session 17 — W-078j3, j3b, j2a, j4 done; W-078j4b awaiting review: RPF interest and retrenchment SOURCE_CHECKED (D-182), Rules 2026 chain walked to 8-10-2026; build GREEN, 2600 tests)
+Last updated              : 2026-10-11 (session 17 — paused at the owner's session-limit notice; W-078j3, j3b, j2a, j4, j4b done (D-173 – D-183); no golden run PROVISIONAL; build GREEN, 2600 tests)
 Current position          : between items — W-078j4b done; next in order W-078j5 (group D: the 14 introducedBy markers) → W-078k → W-079 …
 Session count             : 17
 ```
@@ -757,6 +757,8 @@ Session-3 questions Q1–Q3 below are **answered by D-043** (`W-045i`, `W-053` a
 **Session 17, W-078j4 (done, "W-078j4 approved"):** split per D-181 — new row **W-078j4b** (S.O. 1046(E), the 1999 s.10(10B) notification, the Rules 2026 chain, a CBDT clarification). Read: General Clauses Act, 1897 s.8(1) (thc scan, printed p.18) — with the Codes' re-enactments (CoSS s.53, IRC s.70) it is the statutory basis of D-107. `SAL-SALARY-FOR-GRATUITY` v0 → `SOURCE_CHECKED` (D-170 C2a; its 1987-Act dates are W-078j5's `introducedBy`); `RET-GRATUITY-STATUTORY` v0, v1 → `SOURCE_CHECKED`; `RET-RETRENCHMENT` narrowed to the 1999 notification; the two r.280 versions kept with the reason. `2025-26.law.52`, `2026-27.law.59`. **No golden run in T1–T5 is PROVISIONAL any more** (trace probe); T3/T4/T5 assert none (C2a) — DR 08's TY 2025-26 PROVISIONAL marks are lifted by the sourcing round. Pins: RetirementNodeTest (status), 2 law strings. Inventory 24 → 21 (7 left for j4b/kept, 14 `introducedBy` for j5). Build GREEN, 2600.
 
 **Session 17, W-078j4b (done, "W-078j4b approved"):** D-182: the owner's sources (Manupatra copy of Notif. 24/2011; the Department's s.10 page and its footnote 28) accepted as verified, cited as what they are. `PERQ-RPF-INTEREST` v0, v1, head and `RET-RETRENCHMENT` v0, v1 → `SOURCE_CHECKED`; footnote 28's "1-1-1977" vs the DoR's "1-1-1997" recorded (no date in the data). Rules 2026 chain walked from the owner's share + egazette: 241(E) → 646(E) → 656(E) → 822(E) → 830(E) → 871(E) (8-10-2026, missed by the share) + corrigendum 286(E): r.279/r.280 untouched, so the two r.280 versions stay. `2025-26.law.53`, `2026-27.law.60`; 1 status pin, 2 law strings. Inventory 21 → 16 (14 `introducedBy` for W-078j5 + 2 r.280). Build GREEN, 2600.
+
+**Session 17 pause (2026-10-11):** paused at the owner's session-limit notice, Mac shutting down, between items with every item committed (last: W-078j4b, `3a58cc63`). This pause note and CHECKPOINT are committed on their own (a docs commit, not an item commit), at the owner's request. The scratchpad (owner PDFs, helper tools) is lost on shutdown; everything used is cited in `sources/`, and the helpers are rebuilt from memory (rulepack-lock-recompute, taxplanning-owner-workflow, egazette-locate-by-scan). Next in order: W-078j5 (14 `introducedBy`), then W-078k.
 
 **Session 15 (2026-10-09), paused at the owner's session-limit notice:** OQs closed on their as-built answers (D-163) and W-078j placed; W-078f (D-164), W-078g (D-165), W-078g2 (D-166), W-078h (D-167), W-078i (D-168) done and committed; W-078k placed (D-169). Build GREEN, 2591 tests. TaxPlanningControllerIntegrationTest's new PDF assertion not run (no Docker).
 
