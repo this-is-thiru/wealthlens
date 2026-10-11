@@ -42,11 +42,10 @@
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",
       "provenance": {
-        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
-        "sourceDescription": "Income-tax Rules, 1962 r.2B as in the Department of Revenue compendium (Taxmann, current to 2010-11), pp.348–350; Income-tax Act, 1961 s.10(5); Finance Act, 2023 s.52 (s.115BAC(2)(i)), gazette CG-DL-E-31032023-244830 pp.33–34",
-        "accessedOn": "2026-09-27",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "Any amendment to Income-tax Rules, 1962 rule 2B after 2011 up to AY 2026-27 — the compendium read is current only to 2010-11; and the notification of the Income-tax (First Amendment) Rules, 1998 itself (read here only as the compendium's footnote: w.r.e.f. 1-10-1997, as amended by S.O. 201(E) of 12-3-1998)."
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/rule-2b-1",
+        "sourceDescription": "Income-tax Rules, 1962 r.2B(2) \"two journeys performed in a block of four calendar years commencing from the calendar year 1986\" and r.2B(3) with its Explanation (the carry-over), in the owner's capture of the Income Tax Department's rule page (upload date 13-12-2025; vouched for by the owner, D-177); r.2B(1B) (G.S.R. 320(E), 5-5-2021, Gazette CG-DL-E-05052021-226843 p.4) reads \"one journey\" only where the AY 2021-22 cash-allowance exemption is claimed; no later amendment to 31-3-2026: the Department page and the amendment list (ChatGPT share t_6acb25ca…) agree, the Gazette amendment chain from 1-9-2025 is read and the 2024–2025 notifications are clear (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G4–G5); Income-tax Act, 1961 s.10(5); Finance Act, 2023 s.52 (s.115BAC(2)(i)), gazette CG-DL-E-31032023-244830 pp.33–34",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {

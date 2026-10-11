@@ -41,11 +41,10 @@
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",
       "provenance": {
-        "sourceUrl": "https://blog.saginfotech.com/wp-content/uploads/2021/03/notification-no-11-2021.pdf",
-        "sourceDescription": "Income-tax (1st Amendment) Rules, 2021, G.S.R. 155(E), 5-3-2021, Notification No. 11/2021 — Income-tax Rules, 1962 r.3B, in a Gazette scan hosted by a third party; Gazette CG-DL-E-27032020-218938, Finance Act, 2020 s.13, p.21",
-        "accessedOn": "2026-10-06",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "Income-tax Rules, 1962 r.3B is read in a third-party-hosted scan of the Gazette pages of G.S.R. 155(E): read it in an egazette.gov.in copy, and any later amendment to r.3B or to Income-tax Act, 1961 s.17(2)(viia) up to AY 2026-27 — the interim Finance Act, 2024 (8 of 2024) is read and does not amend s.17(2)(viia) (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)."
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2021/225670.pdf",
+        "sourceDescription": "Gazette CG-DL-E-05032021-225670, G.S.R. 155(E), 5-3-2021, Notification No. 11/2021, the Income-tax (1st Amendment) Rules, 2021 — Income-tax Rules, 1962 r.3B inserted from 1-4-2021, pp.2–3; the owner's capture of the Department's rule page (upload date 13-12-2025, footnote: inserted by the First Amendment Rules, 2021; D-177) and the amendment list agree that it is unamended; the Gazette amendment chain from 1-9-2025 is read and the 2024–2025 notifications are clear (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G6); Gazette CG-DL-E-27032020-218938, Finance Act, 2020 s.13, p.21; the interim Finance Act, 2024 does not amend s.17(2)(viia) (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {

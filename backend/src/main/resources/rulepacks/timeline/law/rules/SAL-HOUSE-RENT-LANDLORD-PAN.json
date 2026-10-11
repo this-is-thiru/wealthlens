@@ -1,6 +1,6 @@
 {
   "ruleId": "SAL-HOUSE-RENT-LANDLORD-PAN",
-  "_note": "The landlord's particulars an employee gives the employer to have HRA counted at source (D-167; rulebook R9 SAL-HRA-006). A notice, never a figure: ExemptionNode annotates the first HRA line where HRA applies in the regime and the aggregate rent paid for the year's tenancies exceeds the threshold — exactly the threshold does not. TY 2026-27: Income-tax Rules, 2026 r.205(2) Table Sl. 1 (p.1687): \"House rent allowance. — Name, address and Permanent Account Number of the landlord or landlords, where the aggregate rent paid during the tax year exceeds ₹ 100000 and relationship with the landlord, if any.\", furnished in Form No. 124 to the person paying under s.392(1) (r.205(1)). TY 2025-26: Income-tax Rules, 1962 r.26C(2) Table Sl. 1, inserted by S.O. 1587(E) from 1-6-2016 (egazette 2016/169418, p.6): \"Name, address and permanent account number of the landlord/landlords where the aggregate rent paid during the previous year exceeds rupees one lakh\", in Form No. 12BB — no relationship limb; later amendments not searched (UNVERIFIED).",
+  "_note": "The landlord's particulars an employee gives the employer to have HRA counted at source (D-167; rulebook R9 SAL-HRA-006). A notice, never a figure: ExemptionNode annotates the first HRA line where HRA applies in the regime and the aggregate rent paid for the year's tenancies exceeds the threshold — exactly the threshold does not. TY 2026-27: Income-tax Rules, 2026 r.205(2) Table Sl. 1 (p.1687): \"House rent allowance. — Name, address and Permanent Account Number of the landlord or landlords, where the aggregate rent paid during the tax year exceeds ₹ 100000 and relationship with the landlord, if any.\", furnished in Form No. 124 to the person paying under s.392(1) (r.205(1)). TY 2025-26: Income-tax Rules, 1962 r.26C(2) Table Sl. 1, inserted by S.O. 1587(E) from 1-6-2016 (egazette 2016/169418, p.6): \"Name, address and permanent account number of the landlord/landlords where the aggregate rent paid during the previous year exceeds rupees one lakh\", in Form No. 12BB — no relationship limb; r.26C unamended to 31-3-2026 (the Department's consolidated rule, 13-12-2025); Form No. 12BB takes the PAN or Aadhaar number from 1-9-2019 (Income-tax (Twelfth Amendment) Rules, 2019, per the Department's form).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -41,10 +41,9 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2016/169418.pdf",
-        "sourceDescription": "Gazette of India Extraordinary Part II Sec. 3(ii) No. 1030, S.O. 1587(E), 29-4-2016, Income-tax (11th Amendment) Rules, 2016 — r.26C inserted, p.6",
-        "accessedOn": "2026-10-09",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "Any amendment to Income-tax Rules, 1962 r.26C or Form No. 12BB between 1-6-2016 and AY 2026-27: r.26C(2) Table Sl. 1 is read as inserted by S.O. 1587(E) (\"where the aggregate rent paid during the previous year exceeds rupees one lakh\"); no consolidation current to 2025 opens here (sources 2026-10-09-landlord-pan.md L4)."
+        "sourceDescription": "Gazette of India Extraordinary Part II Sec. 3(ii) No. 1030, S.O. 1587(E), 29-4-2016, Income-tax (11th Amendment) Rules, 2016 — r.26C inserted, p.6; the Income Tax Department's consolidated r.26C (upload date 13-12-2025; D-175) carries the same Table Sl. 1 with no amendment, agreeing with the amendment list; the Gazette amendment chain from 1-9-2025 is read and the 2024–2025 notifications are clear. Form No. 12BB itself was amended by the Income-tax (Twelfth Amendment) Rules, 2019 w.r.e.f. 1-9-2019 (\"permanent account number or Aadhaar number\"), read only in the Department's Form 12BB footnote 2 — the threshold is unchanged (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G10–G11)",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {

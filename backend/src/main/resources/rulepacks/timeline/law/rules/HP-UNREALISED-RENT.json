@@ -41,11 +41,10 @@
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",
       "provenance": {
-        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
-        "sourceDescription": "Income-tax Rules, 1962 r.4 as in the Department of Revenue compendium (Taxmann, current to 2010-11), p.1.54 (footnote 82); Income-tax Act, 1961 s.23(1) Explanation as on thc.nic.in (current to Act 7 of 2019), p.146",
-        "accessedOn": "2026-10-08",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "Neither copy is a Gazette text. Any amendment to Income-tax Rules, 1962 rule 4 after 2010-11 up to its replacement by the Income-tax Rules, 2026 — the compendium is current only to 2010-11; the Rules 2026 r.21 repeats its conditions. The amending Acts from the Finance (No. 2) Act, 2019 to the Taxation Laws (Amendment) Act, 2025 were searched by text for amendments to ss.22–27: only the Finance Act, 2025 s.10 (s.23(2)) amends them."
+        "sourceUrl": "https://www.incometaxindia.gov.in/income-tax-rules",
+        "sourceDescription": "Income-tax Rules, 1962 r.4 on the Income Tax Department's consolidated rule page (D-176) — as substituted by the Income-tax (Eighth Amendment) Rules, 2001 (S.O. 631(E), 2-7-2001, w.e.f. 1-4-2002), whose Gazette text is not on egazette; no later amendment to 31-3-2026: the Department page and the amendment list (ChatGPT share t_6acb25ca…) agree, the Gazette amendment chain from 1-9-2025 is read and the 2024–2025 notifications are clear (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G7); Income-tax Act, 1961 s.23(1) Explanation as on thc.nic.in (current to Act 7 of 2019), p.146 — the Acts F(No.2)A 2019 … FA 2026 amend ss.22–27 only by the Finance Act, 2025 s.10 (s.23(2))",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {

@@ -95,7 +95,7 @@ class TaxYear2025RulePackTest {
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
         assertThat(pack.rules()).hasSize(136);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.48");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.49");
     }
 
     @Test
@@ -108,7 +108,7 @@ class TaxYear2025RulePackTest {
         assertThat(instruments.act().citation()).isEqualTo("Income-tax Act, 1961 (43 of 1961)");
         assertThat(instruments.act().assentedOn()).contains(LocalDate.of(1961, 9, 13));
         assertThat(instruments.act().inForceFrom()).isEqualTo(LocalDate.of(1962, 4, 1));
-        assertThat(instruments.rules().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+        assertThat(instruments.rules().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
     }
 
     // -- each rule cites the 1961 side for TY 2025-26 --------------------------------------------

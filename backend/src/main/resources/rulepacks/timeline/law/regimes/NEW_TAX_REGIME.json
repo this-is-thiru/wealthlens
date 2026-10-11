@@ -44,10 +44,9 @@
         },
         "provenance": {
           "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
-          "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.37, p.29 — Income-tax Act, 1961 s.115BAC(1A) as substituted: the new regime's rates apply to a person \"other than a person who has exercised an option under sub-section (6)\" — the default unless the option is exercised (D-133)",
-          "accessedOn": "2026-10-06",
-          "verificationLevel": "UNVERIFIED",
-          "whatToCheck": "Income-tax Rules, 1962 r.21AGA and Form 10-IEA — the \"manner as may be prescribed\" for the option under Income-tax Act, 1961 s.115BAC(6), which may make the vehicle a prescribed form for a person with business income — and the interim Finance Act, 2024 (8 of 2024); the Finance (No. 2) Act, 2024 s.37 and the Finance Act, 2025 s.25 were read and amend s.115BAC(1A) only."
+          "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.37, p.29 — Income-tax Act, 1961 s.115BAC(1A) as substituted: the new regime's rates apply to a person \"other than a person who has exercised an option under sub-section (6)\" — the default unless the option is exercised (D-133); Income-tax Rules, 1962 r.21AGA (G.S.R. 452(E), 21-6-2023, Gazette 2023/246719 p.6; the Department's consolidated rule, 13-12-2025, agrees) prescribes the manner of the option only, not the default; the interim Finance Act, 2024 (Gazette 252143) does not amend s.115BAC (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G8, G9, G12)",
+          "accessedOn": "2026-10-11",
+          "verificationLevel": "SOURCE_CHECKED"
         }
       }
     },

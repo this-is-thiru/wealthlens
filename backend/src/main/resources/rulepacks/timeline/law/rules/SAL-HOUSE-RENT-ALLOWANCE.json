@@ -81,11 +81,10 @@
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",
       "provenance": {
-        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
-        "sourceDescription": "Income-tax Rules, 1962 r.2A as in the Department of Revenue compendium (Taxmann, current to 2010-11), pp.347–348; Income-tax Act, 1961 s.10(13A) as on thc.nic.in, p.73; Finance Act, 2023 s.52 (s.115BAC(2)(i)), gazette CG-DL-E-31032023-244830 pp.33–34",
-        "accessedOn": "2026-09-27",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "Any amendment to Income-tax Rules, 1962 rule 2A after 2011 up to AY 2026-27 — the compendium read is current only to 2010-11; in particular whether the four-city list at one-half changed before the Rules, 2026 replaced it (rulebook H-2)."
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/rule-2a-1",
+        "sourceDescription": "Income-tax Rules, 1962 r.2A(a)–(c) on the Income Tax Department's consolidated rule page (upload date 13-12-2025; D-176) — clause (c) as substituted by the Income-tax (Fourth Amendment) Rules, 1986 (S.O. 412(E), 9-7-1986), whose Gazette text is not on egazette; no later amendment to 31-3-2026: the Department page and the amendment list (ChatGPT share t_6acb25ca…) agree, the Gazette amendment chain from 1-9-2025 is read and the 2024–2025 notifications are clear (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G3); Income-tax Act, 1961 s.10(13A) as on thc.nic.in, p.73; Finance Act, 2023 s.52 (s.115BAC(2)(i)), gazette CG-DL-E-31032023-244830 pp.33–34",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
       }
     },
     {

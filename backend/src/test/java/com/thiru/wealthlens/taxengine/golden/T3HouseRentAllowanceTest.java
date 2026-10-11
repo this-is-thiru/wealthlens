@@ -64,7 +64,8 @@ class T3HouseRentAllowanceTest {
 
     @Test
     void run_whenEveryCaseIsComputed_onlyTheTaxYear2025RunsAreProvisional() {
-        // When — DR 08 marks T3-2 and T3-3's TY 2025-26 half PROVISIONAL; the pack's TY 2025-26 HRA rows are UNVERIFIED
+        // When — DR 08 marks T3-2 and T3-3's TY 2025-26 half PROVISIONAL; every TY 2025-26 run cites the salary bases,
+        // of which SAL-SALARY-FOR-ACCOM (W-078j2a) and SAL-SALARY-FOR-GRATUITY (W-078j4) are still UNVERIFIED
         Map<Boolean, List<String>> byProvisional = everyCaseInEveryYear()
                 .map(arguments -> {
                     SalaryGoldenCase golden = (SalaryGoldenCase) arguments.get()[0];

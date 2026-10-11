@@ -3,8 +3,8 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.48",
-      "checksum": "sha256:aad023329e6a8f5256f64f748ce356062d915979b1c167960c15f8cd8c530e7f"
+      "version": "2025-26.law.49",
+      "checksum": "sha256:5271c65255ac8afe5e9392e9157563e0c2ec67db5496fd6c4544d9d4d0d6b8fa"
     },
     "exec": {
       "version": "2025-26.exec.24",
@@ -58,7 +58,7 @@
     "HP-OWN-RESIDENCE-PRE-CONSTRUCTION": "sha256:81878dc6147ce97b61043030c6604c0f105cdf4677418e2301a13f528c1537dd",
     "HP-PRE-CONSTRUCTION": "sha256:556247a70661bf94ad049937b2c63f12a05177922f0bf66e51929b82bcad22e4",
     "HP-STANDARD-DEDUCTION": "sha256:ef7333d714603609121cccf025fc4babcc7949c370eef17d4288deb515c439a5",
-    "HP-UNREALISED-RENT": "sha256:135964d67566cacab5d60c77fed4f390e328e7bf97664c269be248059bd73933",
+    "HP-UNREALISED-RENT": "sha256:ff05cc314ca281e0d0487ca55c730afd397a8e8ac394f1d2e6a7ab717a90e2cd",
     "PERQ-ACCOM-CONTINUED": "sha256:9188041be37dbaf56fb748be255ddd03a6845e2b71e66be7f44ae01294997b62",
     "PERQ-ACCOM-FURNITURE": "sha256:2059793cf0ceff823e59a42a69dd6388c9dfd03828cc06bf67d6752b57eaf0de",
     "PERQ-ACCOM-GOVERNMENT": "sha256:38e5fdb91b2906ed867e5cf8e2573a8df0a3dc8a74872a7872130ee9d2f872b8",
@@ -85,7 +85,7 @@
     "PERQ-CREDIT-CARD": "sha256:390ab633e402e8166e9bb0f50feb45813f312520a455d2d9164228de177605d2",
     "PERQ-EDUCATION": "sha256:f4775f23c63348ae2e53a8f01c81a8f19ea8de9e173953ced62e8eab8c298a59",
     "PERQ-EDUCATION-FREE": "sha256:8c63eea5895a3a9b8f4b86394dd27388bad32f20de57563db5ca44553201cc8f",
-    "PERQ-EMPLOYER-ACCRETION": "sha256:44fb28583c78cf49629117ffd6d7342e1d9518b928e215930b7415aa2e191d6d",
+    "PERQ-EMPLOYER-ACCRETION": "sha256:3b5e3618cba3bc6faadd00eda4b45f2f3f62771d3f70b48ac0aebe0cb64a800e",
     "PERQ-EMPLOYER-CONTRIBUTION": "sha256:9c4d2692e88670b7f778534300c1b3f7469a3ecc98be75a5b4ae5dd1cdccb069",
     "PERQ-GIFT": "sha256:e05a005cfba4c3217d2a482bc3194eba9f14ff4e6cee4379cb3c77c51250a91d",
     "PERQ-HOLIDAY": "sha256:b70d6bde5bb369e90553b5ef9a7b7406587f6ef74fc3b17788621165f2f62991",
@@ -141,16 +141,16 @@
     "SAL-ALW-TRANSPORT-DISABLED": "sha256:1dca6d7425e6e35b20984d7d3e0d00eda2a5264cd54f5ba7be12807bcca61924",
     "SAL-ALW-UNIFORM": "sha256:adebe72b25b75c6dcd010721c270020162a530eaa68a7fd2744a50d7ac687f88",
     "SAL-ENTMT-ALLOWANCE": "sha256:52763b9938c2e559036938769e4d1c343c5ec7a4d918babaaba6fea0301224dd",
-    "SAL-HOUSE-RENT-ALLOWANCE": "sha256:0c73c5eacbad4d46047d0b5337acf2dbd023afc29ced7271a50e7399535b6b30",
-    "SAL-HOUSE-RENT-LANDLORD-PAN": "sha256:f94b625ef66df4640f3e03f292220cde68b517e72bff1e4c67ddc4d7e5aac790",
-    "SAL-LEAVE-TRAVEL-CONCESSION": "sha256:bb186f302a1189d53e06bfeab70328fc0ea42c9285c0de5230b20b6a9fb1f37f",
-    "SAL-LEAVE-TRAVEL-JOURNEYS": "sha256:58aaf16db5bd358b16f056d7b829be506e91ff449edea49713b13c8c8b07e751",
+    "SAL-HOUSE-RENT-ALLOWANCE": "sha256:56c812cecfa0bd5db13531b9fcef763d229659dbf2c28832008a4f259614e2ef",
+    "SAL-HOUSE-RENT-LANDLORD-PAN": "sha256:67353d113f9085c2cbde5205ef83073f7119e930d1b12822a5e2991bc2384cec",
+    "SAL-LEAVE-TRAVEL-CONCESSION": "sha256:f6e55bd9cde13c42bab7b3eafbda0f3bf687b2568207bd6cf50ad5b8aba3712c",
+    "SAL-LEAVE-TRAVEL-JOURNEYS": "sha256:c0c6aa142159f7dad0aaaef1903dc8895c0644fddacddd3d4be0332be500417c",
     "SAL-SALARY-FOR-ACCOM": "sha256:2b85a9101088089985ae92c584f375708fd0445edc29edd668953dd93ecad4f1",
     "SAL-SALARY-FOR-EMPLOYEE-PENSION": "sha256:fe54bf38832e12b38fe8c36e0452766dfa88b96067982654a19e0ea0bdbe8ad5",
     "SAL-SALARY-FOR-EMPLOYER-PENSION": "sha256:5fb59de7de9a608da58c0f6e4a190a213037e82974486acf51891d53249311e0",
     "SAL-SALARY-FOR-ENTMT": "sha256:6bf2aafc25c21575a94febba04293fb42d61357a7c46d9ce63cc44864ca6454f",
     "SAL-SALARY-FOR-GRATUITY": "sha256:be785143fb3edaa98038f1763fc2098610526e4f6cbd9558c2299c896f15117f",
-    "SAL-SALARY-FOR-HRA": "sha256:a8474f1bdb3d0b8dac359c2c2a6616c5b6c55a59d84d64fd7a403aa66bf40fef",
+    "SAL-SALARY-FOR-HRA": "sha256:62b7317a236ee93caa48f1d3361fd51ba6f3691c204f8bb056751a3d8c7c5419",
     "SAL-SALARY-FOR-RPF": "sha256:5b93973d15be6ec76bda9e74f4ac5db43d1f376ece40a6a3b07525f774bf757b",
     "SAL-SALARY-INCLUDES": "sha256:f7cbc6538bf722f1dfe0e9f2f3c7c7180166d06c6a09ef8b42e44df97c3beb60",
     "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE": "sha256:cb4fb7f7e4ba6c36cbdc0d180fd3c4cd60fa0e66d41506cd1ba5f48e78a5f0a2",
@@ -179,10 +179,10 @@
     "rules": {
       "citation": "Income-tax Rules, 1962",
       "inForceFrom": "1962-04-01",
-      "gazetteRef": "not read",
-      "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-      "verificationLevel": "UNVERIFIED",
-      "note": "not read: the notification (citation, date, gazette) of the Income-tax Rules, 1962; inForceFrom is the Act's commencement, not a date read from the Rules. No Phase 5 rule reads a Rule (D-082)"
+      "gazetteRef": "S.O. 969(E), 26-3-1962, Gazette of India Extraordinary Part II s.3(ii)",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2021/225670.pdf",
+      "verificationLevel": "SOURCE_CHECKED",
+      "note": "citation, number, date and Gazette part read in the Gazette's own recitals: \"The principle rules were published in the Gazette of India, Extraordinary, Part II, Section 3, sub-section (ii) vide notification number. S.O. 969 dated the 26th March, 1962\" (G.S.R. 155(E), egazette 2021/225670 p.3; also G.S.R. 615(E) 2023/248178, G.S.R. 664(E) 2020/222660 p.2); r.1(2) \"They shall come into force on the 1st day of April, 1962\" read in the Income Tax Department's consolidated rule 1 (D-173 C5a); the 1962 Gazette facsimile is not on egazette and is unread (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G1–G2)"
     }
   }
 }

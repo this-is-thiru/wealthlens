@@ -57,9 +57,9 @@
         "provenance": {
           "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
           "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C)(e), p.35 — Income-tax Act, 1961 s.115BAC(6): the option, \"in the manner as may be prescribed\", (ii) \"along with the return of income to be furnished under sub-section (1) of section 139\" for a person without business or profession income; (i) on or before the s.139(1) due date with business income, applying to subsequent years, withdrawn only once and then available again only under (ii) on ceasing to have such income (D-133)",
-          "accessedOn": "2026-10-06",
+          "accessedOn": "2026-10-11",
           "verificationLevel": "UNVERIFIED",
-          "whatToCheck": "Income-tax Rules, 1962 r.21AGA and Form 10-IEA — the \"manner as may be prescribed\" for the option under Income-tax Act, 1961 s.115BAC(6), which may make the vehicle a prescribed form for a person with business income — and the interim Finance Act, 2024 (8 of 2024); the Finance (No. 2) Act, 2024 s.37 and the Finance Act, 2025 s.25 were read and amend s.115BAC(1A) only."
+          "whatToCheck": "The vehicle is wrong for a person with business income (W-078j3b, D-174): Income-tax Rules, 1962 r.21AGA(1), inserted by G.S.R. 452(E), 21-6-2023 (Gazette 2023/246719 p.6), reads \"(a) in Form No. 10-IEA on or before the due date specified under sub-section (1) of section 139 … in the case of a person having income from business or profession; (b) in the return of income … in the case of a person not having income from business or profession\", and r.21AGA(2) puts the withdrawal in Form No. 10-IEA; this protocol says IN_THE_RETURN for everyone. Right for a person without business income. The rest is read: r.21AGA unamended (the Department's consolidated rule, 13-12-2025), the interim Finance Act, 2024 does not amend s.115BAC (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G8, G9, G12)."
         }
       }
     },

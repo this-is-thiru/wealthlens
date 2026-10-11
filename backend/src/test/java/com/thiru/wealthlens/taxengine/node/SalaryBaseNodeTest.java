@@ -315,10 +315,11 @@ class SalaryBaseNodeTest {
         // When
         TraceLine hra = run(year, List.of()).trace().getFirst();
 
-        // Then — 2025-26 rests on Rules 1962 r.2A as read in the DoR compendium; 2026-27 on Rules 2026 r.279(2)(b)
+        // Then — 2025-26 rests on Rules 1962 r.2A as read in the Department's consolidated rule (D-176); 2026-27 on
+        // Rules 2026 r.279(2)(b)
         assertThat(hra.provenance().sourceUrl().toString())
                 .isEqualTo(year == 2025
-                        ? "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf"
+                        ? "https://www.incometaxindia.gov.in/w/rule-2a-1"
                         : "https://egazette.gov.in/WriteReadData/2026/271092.pdf");
     }
 
