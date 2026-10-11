@@ -278,6 +278,7 @@ class RegimeLifecycleTest {
                     ElectionKind.OPT_OUT,
                     ElectionVehicle.IN_THE_RETURN,
                     java.util.Optional.empty(),
+                    java.util.List.of(),
                     new DeadlineSpec.DueDateUnder("263(1)"),
                     s202Binding(),
                     provenance(VerificationLevel.SOURCE_CHECKED, null));
@@ -294,6 +295,7 @@ class RegimeLifecycleTest {
                                     ElectionKind.OPT_OUT,
                                     ElectionVehicle.IN_THE_RETURN,
                                     java.util.Optional.of(new FormRef("10-IEA", "Regime option")),
+                                    java.util.List.of(),
                                     new DeadlineSpec.DueDateUnder("263(1)"),
                                     s202Binding(),
                                     provenance(VerificationLevel.SOURCE_CHECKED, null)))
@@ -308,6 +310,7 @@ class RegimeLifecycleTest {
                                     ElectionKind.OPT_OUT,
                                     ElectionVehicle.PRESCRIBED_FORM,
                                     java.util.Optional.empty(),
+                                    java.util.List.of(),
                                     new DeadlineSpec.DueDateUnder("263(1)"),
                                     s202Binding(),
                                     provenance(VerificationLevel.SOURCE_CHECKED, null)))
@@ -323,6 +326,7 @@ class RegimeLifecycleTest {
                     ElectionKind.OPT_OUT,
                     ElectionVehicle.PRESCRIBED_FORM,
                     java.util.Optional.of(new FormRef("10-IEA", "Option under s.115BAC(6)")),
+                    java.util.List.of(),
                     new DeadlineSpec.DueDateUnder("139(1)"),
                     s202Binding(),
                     provenance(
@@ -339,12 +343,117 @@ class RegimeLifecycleTest {
                     ElectionKind.DEFAULT_NO_ACTION,
                     ElectionVehicle.NONE,
                     java.util.Optional.empty(),
+                    java.util.List.of(),
                     new DeadlineSpec.NoDeadline(),
                     BindingSpec.free(),
                     provenance(VerificationLevel.SOURCE_CHECKED, null));
 
             assertThat(protocol.kind()).isEqualTo(ElectionKind.DEFAULT_NO_ACTION);
             assertThat(protocol.binding().isUnlimitedWithdrawals()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("r.21AGA — one year, two vehicles, TY 2025-26")
+    class VehicleRoutes {
+
+        private static final VehicleRoute FORM_FOR_BUSINESS = new VehicleRoute(
+                java.util.List.of(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION)),
+                ElectionVehicle.PRESCRIBED_FORM,
+                java.util.Optional.of(new FormRef("10-IEA", "Option under s.115BAC(6)")));
+
+        private static ElectionProtocol optOut(java.util.List<VehicleRoute> routes) {
+            return new ElectionProtocol(
+                    ElectionKind.OPT_OUT,
+                    ElectionVehicle.IN_THE_RETURN,
+                    java.util.Optional.empty(),
+                    routes,
+                    new DeadlineSpec.DueDateUnder("139(1)"),
+                    s202Binding(),
+                    provenance(VerificationLevel.SOURCE_CHECKED, null));
+        }
+
+        @Test
+        void vehicleFor_whenNoRouteIsDeclared_everyoneUsesTheProtocolsOwnVehicle() {
+            // When
+            VehicleRoute route = optOut(java.util.List.of()).vehicleFor(taxpayerWith(HeadCode.BUSINESS_OR_PROFESSION));
+
+            // Then
+            assertThat(route.vehicle()).isEqualTo(ElectionVehicle.IN_THE_RETURN);
+            assertThat(route.form()).isEmpty();
+        }
+
+        @Test
+        void vehicleFor_whenTheTaxpayerHasBusinessIncome_takesTheFormRoute() {
+            // When — r.21AGA(1)(a)
+            VehicleRoute route = optOut(java.util.List.of(FORM_FOR_BUSINESS))
+                    .vehicleFor(taxpayerWith(HeadCode.SALARIES, HeadCode.BUSINESS_OR_PROFESSION));
+
+            // Then
+            assertThat(route.vehicle()).isEqualTo(ElectionVehicle.PRESCRIBED_FORM);
+            assertThat(route.form()).map(FormRef::number).contains("10-IEA");
+        }
+
+        @Test
+        void vehicleFor_whenTheTaxpayerHasNoBusinessIncome_usesTheReturn() {
+            // When — r.21AGA(1)(b)
+            VehicleRoute route = optOut(java.util.List.of(FORM_FOR_BUSINESS)).vehicleFor(taxpayerWith(HeadCode.SALARIES));
+
+            // Then
+            assertThat(route.vehicle()).isEqualTo(ElectionVehicle.IN_THE_RETURN);
+            assertThat(route.form()).isEmpty();
+        }
+
+        @Test
+        void vehicleFor_whenTwoRoutesMatch_theFirstWins() {
+            // Given
+            VehicleRoute returnForSalaries = new VehicleRoute(
+                    java.util.List.of(new HasIncomeUnderHead(HeadCode.SALARIES)),
+                    ElectionVehicle.IN_THE_RETURN,
+                    java.util.Optional.empty());
+
+            // When
+            VehicleRoute route = optOut(java.util.List.of(FORM_FOR_BUSINESS, returnForSalaries))
+                    .vehicleFor(taxpayerWith(HeadCode.SALARIES, HeadCode.BUSINESS_OR_PROFESSION));
+
+            // Then
+            assertThat(route).isEqualTo(FORM_FOR_BUSINESS);
+        }
+
+        @Test
+        void constructor_whenARouteNamesNobody_isRejected() {
+            // Given — a route for everyone would hide the protocol's own vehicle
+            VehicleRoute forEveryone = new VehicleRoute(
+                    java.util.List.of(),
+                    ElectionVehicle.PRESCRIBED_FORM,
+                    java.util.Optional.of(new FormRef("10-IEA", "Option under s.115BAC(6)")));
+
+            // When / Then
+            assertThatThrownBy(() -> optOut(java.util.List.of(forEveryone)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("whom it is for");
+        }
+
+        @Test
+        void constructor_whenARoutePrescribesAFormWithoutNamingIt_isRejected() {
+            // When / Then
+            assertThatThrownBy(() -> new VehicleRoute(
+                            java.util.List.of(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION)),
+                            ElectionVehicle.PRESCRIBED_FORM,
+                            java.util.Optional.empty()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("and not what");
+        }
+
+        @Test
+        void constructor_whenARouteNamesAFormAlongsideTheReturn_isRejected() {
+            // When / Then
+            assertThatThrownBy(() -> new VehicleRoute(
+                            java.util.List.of(new HasIncomeUnderHead(HeadCode.SALARIES)),
+                            ElectionVehicle.IN_THE_RETURN,
+                            java.util.Optional.of(new FormRef("10-IEA", "Option under s.115BAC(6)"))))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("does not exist");
         }
     }
 
@@ -459,6 +568,7 @@ class RegimeLifecycleTest {
                 ElectionKind.DEFAULT_NO_ACTION,
                 ElectionVehicle.NONE,
                 java.util.Optional.empty(),
+                java.util.List.of(),
                 new DeadlineSpec.NoDeadline(),
                 BindingSpec.free(),
                 provenance(VerificationLevel.SOURCE_CHECKED, null));
@@ -517,6 +627,7 @@ class RegimeLifecycleTest {
                                 ElectionKind.OPT_IN,
                                 ElectionVehicle.IN_THE_RETURN,
                                 java.util.Optional.empty(),
+                                java.util.List.of(),
                                 new DeadlineSpec.DueDateUnder("263(1)"),
                                 BindingSpec.free(),
                                 provenance(VerificationLevel.SOURCE_CHECKED, null)),

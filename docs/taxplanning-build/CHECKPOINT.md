@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078j3 DONE; between items)
+Item            : — (W-078j3b DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j3b (D-174: model the TY 2025-26 opt-out vehicle by business income — r.21AGA(1)(a) Form No. 10-IEA by the s.139(1) due date, (b) in the return; withdrawal in Form 10-IEA; ElectionProtocol holds one vehicle per year) → W-078j2a (owner downloads ITD PDFs of Notif. 94/2009 + 2/2010) → W-078j4 → W-078j5 → W-078k → W-079 … Golden blockers: SAL-SALARY-FOR-ACCOM (j2a), SAL-SALARY-FOR-GRATUITY (j4). Unrun: TaxPlanningControllerIntegrationTest (Docker)
-Last verify     : ./mvnw test -pl backend -Punit → 2591 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j3, 2026-10-11)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j2a (D-172: owner downloads the Income Tax Department PDFs of Notification No. 94/2009 (S.O. 3245(E)) and No. 2/2010 (S.O. 66(E)); lifts SAL-SALARY-FOR-ACCOM) → W-078j4 (lifts SAL-SALARY-FOR-GRATUITY) → W-078j5 → W-078k → W-079 … Owner files arrive via scratchpad copy (~/Downloads is blocked; memory taxplanning-owner-workflow). Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j3b, 2026-10-11)
 Waiting on      : the owner — next pick. Open OQs: none
-Files touched   : none (clean tree after the W-078j3 commit)
-Last item commit: taxplanning W-078j3: read rules 2A, 2B, 3B, 4, 21AGA and 26C and mark seven TY 2025-26 versions, the default-regime election and the Rules' instrument SOURCE_CHECKED (D-173)
+Files touched   : none (clean tree after the W-078j3b commit)
+Last item commit: taxplanning W-078j3b: let one year's election name a vehicle per class of taxpayer and give TY 2025-26's opt-out Form No. 10-IEA for business income (D-179)
 Updated         : 2026-10-11, session 17
 ```
 

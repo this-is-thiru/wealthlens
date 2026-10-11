@@ -164,6 +164,7 @@ class PackValidatorTest {
                         isDefault ? ElectionKind.DEFAULT_NO_ACTION : ElectionKind.OPT_OUT,
                         isDefault ? ElectionVehicle.NONE : ElectionVehicle.IN_THE_RETURN,
                         Optional.empty(),
+                        List.of(),
                         isDefault ? new DeadlineSpec.NoDeadline() : new DeadlineSpec.DueDateUnder("263(1)"),
                         BindingSpec.free(),
                         provenance()),

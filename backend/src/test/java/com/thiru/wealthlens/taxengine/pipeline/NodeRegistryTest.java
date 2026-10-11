@@ -424,6 +424,7 @@ class NodeRegistryTest {
                         ElectionKind.DEFAULT_NO_ACTION,
                         ElectionVehicle.NONE,
                         Optional.empty(),
+                        List.of(),
                         new DeadlineSpec.NoDeadline(),
                         BindingSpec.free(),
                         provenance()),

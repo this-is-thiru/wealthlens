@@ -20,10 +20,12 @@ import com.thiru.wealthlens.taxengine.rules.regime.InvalidationPolicy;
 import com.thiru.wealthlens.taxengine.rules.regime.PipelineSpec;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeLifecycle;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.regime.VehicleRoute;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import tools.jackson.databind.JsonNode;
 
@@ -115,14 +117,28 @@ public final class RegimeJson {
         new ElectionProtocol(
                         PackJson.enumValue(node, "kind", path, ElectionKind.class),
                         PackJson.enumValue(node, "vehicle", path, ElectionVehicle.class),
-                        PackJson.optionalObject(node, "form", path)
-                                .map(form -> new FormRef(
-                                        PackJson.text(form, "number", path + ".form"),
-                                        PackJson.text(form, "displayName", path + ".form"))),
+                        form(node, path),
+                        PackJson.arrayOrEmpty(node, "vehicleWhen", path,
+                                route -> vehicleRoute(route.node(), route.path())),
                         deadline(PackJson.object(node, "deadline", path), path + ".deadline"),
                         binding(PackJson.object(node, "binding", path), path + ".binding"),
                         ValueJson.provenance(
                                 PackJson.object(node, "provenance", path), path + ".provenance")));
+    }
+
+    static VehicleRoute vehicleRoute(JsonNode node, String path) {
+        return PackJson.construct(path, () ->
+        new VehicleRoute(
+                        ConditionJson.conditions(node, "appliesWhen", path),
+                        PackJson.enumValue(node, "vehicle", path, ElectionVehicle.class),
+                        form(node, path)));
+    }
+
+    private static Optional<FormRef> form(JsonNode node, String path) {
+        return PackJson.optionalObject(node, "form", path)
+                .map(form -> new FormRef(
+                        PackJson.text(form, "number", path + ".form"),
+                        PackJson.text(form, "displayName", path + ".form")));
     }
 
     static DeadlineSpec deadline(JsonNode node, String path) {

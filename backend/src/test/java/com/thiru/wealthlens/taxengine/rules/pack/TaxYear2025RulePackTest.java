@@ -10,6 +10,10 @@ import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
+import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
+import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -19,6 +23,8 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.regime.DeadlineSpec;
 import com.thiru.wealthlens.taxengine.rules.regime.ElectionProtocol;
 import com.thiru.wealthlens.taxengine.rules.regime.ElectionVehicle;
+import com.thiru.wealthlens.taxengine.rules.regime.FormRef;
+import com.thiru.wealthlens.taxengine.rules.regime.VehicleRoute;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.Presence;
@@ -30,6 +36,8 @@ import com.thiru.wealthlens.taxengine.rules.validate.PackValidator;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -81,9 +89,31 @@ class TaxYear2025RulePackTest {
         assertThat(optOut.deadline()).isEqualTo(new DeadlineSpec.DueDateUnder("139(1)"));
         assertThat(optOut.vehicle()).isEqualTo(ElectionVehicle.IN_THE_RETURN);
         assertThat(optOut.provenance().sourceDescription()).contains("s.115BAC(6)");
-        assertThat(optOut.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+        assertThat(optOut.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         assertThat(byDefault.deadline()).isEqualTo(new DeadlineSpec.NoDeadline());
         assertThat(byDefault.provenance().sourceDescription()).contains("s.115BAC(1A)");
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource({
+        "BUSINESS_OR_PROFESSION, PRESCRIBED_FORM, 10-IEA",
+        "SALARIES, IN_THE_RETURN, ''"
+    })
+    void vehicleFor_whenOptingOutOfTheNewRegimeIn2025_formOnlyWithBusinessIncome(
+            HeadCode head, ElectionVehicle expectedVehicle, String expectedForm) {
+        // Given — r.21AGA(1) (G.S.R. 452(E), Gazette 2023/246719 p.6): (a) Form No. 10-IEA by the s.139(1) due date
+        // for a person having income from business or profession; (b) in the return for one not having it
+        ElectionProtocol optOut = pack().regimes().get(FIRST_SCHEDULE_RATES).election();
+        ConditionContext taxpayer = new ConditionContext(true, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, 40),
+                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), Optional.empty());
+
+        // When
+        VehicleRoute route = optOut.vehicleFor(taxpayer);
+
+        // Then — both limbs run to the s.139(1) due date
+        assertThat(route.vehicle()).isEqualTo(expectedVehicle);
+        assertThat(route.form().map(FormRef::number).orElse("")).isEqualTo(expectedForm);
+        assertThat(optOut.deadline()).isEqualTo(new DeadlineSpec.DueDateUnder("139(1)"));
     }
 
     @Test
@@ -95,7 +125,7 @@ class TaxYear2025RulePackTest {
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
         assertThat(pack.rules()).hasSize(136);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.49");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.50");
     }
 
     @Test

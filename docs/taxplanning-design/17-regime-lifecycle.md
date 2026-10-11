@@ -151,6 +151,16 @@ public sealed interface AfterWithdrawal {
 }
 ```
 
+> **Erratum (W-078j3b, 2026-10-11):** `ElectionProtocol` above holds **one** `vehicle` and one `form`
+> per protocol, but one year's option can need two — Income-tax Rules, 1962 r.21AGA(1) (G.S.R. 452(E),
+> 21-6-2023) puts the TY 2025-26 opt-out *"(a) in Form No. 10-IEA on or before the due date specified
+> under sub-section (1) of section 139 … in the case of a person having income from business or
+> profession; (b) in the return of income … in the case of a person not having income from business or
+> profession"* — so the record also carries `List<VehicleRoute> vehicleWhen` (each
+> `VehicleRoute(List<Condition> appliesWhen, ElectionVehicle vehicle, Optional<FormRef> form)`, first
+> match wins, empty = everyone uses `vehicle`), the same idiom as `bindingAppliesWhen`.
+> Verified by: egazette 2023/246719 p.6; `backend/src/main/java/com/thiru/wealthlens/taxengine/rules/regime/VehicleRoute.java`.
+
 The s.202(4) case, entirely in data:
 
 ```json
