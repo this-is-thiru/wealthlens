@@ -54,12 +54,12 @@
       "conditions": [],
       "introducedBy": {
         "instrumentCitation": "Notification No. 10969 [F. No. 200/21/97-IT(A-I)], 25-6-1999, under Income-tax Act, 1961 s.10(10B) proviso (ii): Rs. 5,00,000 where retrenchment is on or after 1-1-1997 — as printed in the Department of Revenue's consolidation of the Act, footnote 66; the Gazette copy not found; carried into the Income-tax Act, 2025 by s.536(2)(j)",
-        "gazetteRef": "Gazette copy not found (DoR consolidation, footnote 66 to s.10(10B))",
+        "gazetteRef": "Gazette copy not found; the Department's page for Notification No. 10969 (\"on or after the 1st January, 1997\") as relayed by the owner's ChatGPT share t_6ad1f9cb43088191bebeec3cbf177912 (D-186); DoR consolidation, footnote 66 to s.10(10B)",
         "notifiedOn": "1999-06-25",
         "effectiveFrom": "1997-01-01",
         "retrospective": true,
-        "sourceUrl": "https://dor.gov.in/files/acts_files/IT%20Act%20%28English%29_0_0.pdf",
-        "verificationLevel": "UNVERIFIED"
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/10969-notification-10969-date-of-issue-25/6/1999",
+        "verificationLevel": "SOURCE_CHECKED"
       },
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",

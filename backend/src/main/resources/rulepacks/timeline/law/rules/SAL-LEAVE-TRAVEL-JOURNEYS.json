@@ -31,13 +31,13 @@
       },
       "conditions": [],
       "introducedBy": {
-        "instrumentCitation": "Income-tax (First Amendment) Rules, 1998 — r.2B(1) substituted w.r.e.f. 1-10-1997, as amended by Notification S.O. 201(E) (read only in the Department of Revenue compendium's footnote)",
-        "gazetteRef": "S.O. 201(E)",
-        "notifiedOn": "1998-03-12",
+        "instrumentCitation": "Income-tax (First Amendment) Rules, 1998, S.O. 34(E), 12-1-1998 — r.2B(1) substituted w.r.e.f. 1-10-1997; corrected by S.O. 201(E), 12-3-1998 (Notification No. 10546, F. No. 142/85/97-TPL): for \"1989\" read \"1997\"",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), 12-1-1998, p.39 — as cited in S.O. 201(E); the Department's pages for S.O. 34(E) and S.O. 201(E) as relayed by the owner's ChatGPT share t_6ad1f9cb43088191bebeec3cbf177912 (D-186)",
+        "notifiedOn": "1998-01-12",
         "effectiveFrom": "1997-10-01",
         "retrospective": true,
-        "sourceUrl": "https://dor.gov.in/files/rules_files/IT%20Rules_1.pdf",
-        "verificationLevel": "UNVERIFIED"
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/34e-notification-s.o.34-e-date-of-issue-12/1/1998",
+        "verificationLevel": "SOURCE_CHECKED"
       },
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",
