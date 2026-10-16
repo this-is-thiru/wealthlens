@@ -54,7 +54,6 @@
     <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]time[\\/]TLocalDateTime\.java$"/>
     <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]time[\\/]TLocalTime\.java$"/>
     <suppress checks="HideUtilityClassConstructor" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]shared[\\/]util[\\/]transaction[\\/]ExcelHeaders\.java$"/>
-    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]document[\\/]DocumentGenerationService\.java$"/>
     <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]AbstractTaxEngine\.java$"/>
     <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]AbstractTaxEngine\.java$"/>
     <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]NewRegimeTaxEngine\.java$"/>

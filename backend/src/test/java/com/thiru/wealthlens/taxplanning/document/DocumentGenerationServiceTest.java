@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxplanning.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.parser.PdfTextExtractor;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.thymeleaf.templateresolver.StringTemplateResolver;
+import org.xhtmlrenderer.util.XRRuntimeException;
 
 /**
  * The tax-report PDF carries the old calculator's known-errors notice before any figure (D-063, D-168): the report
@@ -96,5 +99,23 @@ class DocumentGenerationServiceTest {
         assertThat(text).contains(opening).contains("Do not rely on these figures.");
         assertThat(text.indexOf(opening)).isLessThan(text.indexOf("Employee Details"));
         assertThat(text.indexOf(opening)).isLessThan(text.indexOf("Annual CTC"));
+    }
+
+    @Test
+    void generateTaxComparisonReport_whenTheTemplateIsNotXhtml_reportsTheRenderingFailure() {
+        // Given — a string resolver renders the template name itself, which is not XML, so the PDF renderer must fail
+        SpringTemplateEngine engine = new SpringTemplateEngine();
+        engine.setTemplateResolver(new StringTemplateResolver());
+        DocumentGenerationService service = new DocumentGenerationService(engine);
+
+        // When
+        Throwable failure = catchThrowable(() -> service.generateTaxComparisonReport(computation(), profile(), null));
+
+        // Then — the failure names the report and keeps the renderer's own reason, rather than a bare "failed"
+        assertThat(failure)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("tax-comparison report could not be rendered as a PDF")
+                .hasMessageContaining("Content is not allowed in prolog")
+                .hasCauseInstanceOf(XRRuntimeException.class);
     }
 }

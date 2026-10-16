@@ -18,8 +18,8 @@ import org.junit.jupiter.api.Test;
  */
 class CheckstyleBaselineTest {
 
-    /** The number of baseline entries recorded on 2026-09-23. May only be lowered. */
-    private static final int MAXIMUM_BASELINE_ENTRIES = 99;
+    /** The baseline's size: 99 when recorded on 2026-09-23, 98 since W-078k (D-192). May only be lowered. */
+    private static final int MAXIMUM_BASELINE_ENTRIES = 98;
 
     private static final Path SUPPRESSIONS = Path.of("..", "checkstyle-suppressions.xml");
 
