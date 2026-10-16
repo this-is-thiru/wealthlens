@@ -149,6 +149,13 @@ class TimelineReaderTest {
             new RuleId("HP-OWN-RESIDENCE-PRE-CONSTRUCTION"),
             new RuleId("HP-OWN-RESIDENCE-INTEREST-CAP"),
             new RuleId("HP-UNREALISED-RENT"),
+            new RuleId("OS-INTEREST"),
+            new RuleId("OS-DIVIDEND"),
+            new RuleId("OS-DIVIDEND-INTEREST"),
+            new RuleId("OS-DEEMED-DIVIDEND"),
+            new RuleId("OS-BANKER-COMMISSION"),
+            new RuleId("OS-OTHER-EXPENDITURE"),
+            new RuleId("OS-COMPENSATION-INTEREST"),
             new RuleId("DED-SCHEDULE-XV"),
             new RuleId("DED-NPS-EMPLOYER-GOVT"),
             new RuleId("DED-NPS-EMPLOYER-OTHER"),
@@ -196,7 +203,7 @@ class TimelineReaderTest {
                 .containsExactlyInAnyOrder(
                         "inputs.components", "employer.contrib.charges", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.monetaryincome", "salary.deductions",
                         "salary.incomebeforetravel", "salary.medicaltravel", "salary.income",
-                        "houseproperty.income", "gti", "chapterviii", "totalincome", "round.totalincome", "tax.bybasis",
+                        "houseproperty.income", "othersources.income", "gti", "chapterviii", "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
     }
 

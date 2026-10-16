@@ -20,6 +20,7 @@ public final class NodeIds {
     public static final NodeId GTI = new NodeId("gti");
     public static final NodeId HOUSEPROPERTY_INCOME = new NodeId("houseproperty.income");
     public static final NodeId INPUTS_COMPONENTS = new NodeId("inputs.components");
+    public static final NodeId OTHERSOURCES_INCOME = new NodeId("othersources.income");
     public static final NodeId ROUND_NETPAYABLE = new NodeId("round.netpayable");
     public static final NodeId ROUND_TOTALINCOME = new NodeId("round.totalincome");
     public static final NodeId SALARY_BASE = new NodeId("salary.base");

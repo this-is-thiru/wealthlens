@@ -4,6 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
+import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
+import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.Recomputation;
@@ -16,12 +20,16 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -171,5 +179,54 @@ class SurchargeNodeTest {
         assertThatThrownBy(() -> run(year, NEW_TAX_REGIME, "50000000", withGains))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("W-088");
+    }
+
+    /** A taxpayer whose only entry is a dividend: what the excluding-income test needs to see (D-194 C4a). */
+    private static EngineInputs withDividend(int year, RegimeCode regime) {
+        TaxYearId taxYear = TaxYearId.of(year);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        OtherSourceItem dividend = new OtherSourceItem(OtherSourceKind.DIVIDEND, Money.of("1000000"), Money.ZERO,
+                Money.ZERO, Money.ZERO, false);
+        return new EngineInputs(taxYear, regime, TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
+                        List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                        List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
+                        List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
+                        List.of(), List.of(), List.of(dividend)),
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                plain.filing());
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenDividendsMeetTheExcludingIncomeBand_refusesUntilTheSplitIsBuilt(int year) {
+        // Given — T2-4's 5,00,00,000 under the first schedule, part of it a dividend: the excluding ladder's 25% bites
+        NodeHarness harness = NodeHarness.with(pack(year))
+                .regime(FIRST_SCHEDULE_RATES)
+                .inputs(withDividend(year, FIRST_SCHEDULE_RATES))
+                .given(NodeIds.ROUND_TOTALINCOME, Money.of("50000000"))
+                .given(NodeIds.TAX_AFTERREBATE, TaxByBasis.atSlabRatesOnly(Money.of("14812500")))
+                .recomputation(atThresholds(FIRST_SCHEDULE_RATES));
+
+        // When / Then — taking the dividend out of the test could lower the rate: refused, naming W-079e
+        assertThatThrownBy(() -> harness.run(new SurchargeNode()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("W-079e");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenDividendsAreBelowTheExcludingIncomeBand_chargesAsBefore(int year) {
+        // When — T2-1's 50,00,000 in the new regime, part of it a dividend: the excluding ladder is nil there
+        NodeResult result = NodeHarness.with(pack(year))
+                .regime(NEW_TAX_REGIME)
+                .inputs(withDividend(year, NEW_TAX_REGIME))
+                .given(NodeIds.ROUND_TOTALINCOME, Money.of("5000000"))
+                .given(NodeIds.TAX_AFTERREBATE, TaxByBasis.atSlabRatesOnly(Money.of("1080000")))
+                .recomputation(atThresholds(NEW_TAX_REGIME))
+                .run(new SurchargeNode());
+
+        // Then — "TI does not EXCEED 50,00,000 → no surcharge"
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
     }
 }

@@ -31,6 +31,7 @@ class TotalIncomeNodeTest {
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.ZERO)
+                .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
                 .run(new GrossTotalIncomeNode());
 
         // Then
@@ -44,10 +45,24 @@ class TotalIncomeNodeTest {
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
+                .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
                 .run(new GrossTotalIncomeNode());
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1290400")));
+    }
+
+    @Test
+    void grossTotalIncome_whenOtherSourcesHasIncome_addsTheHeadToTheOthers() {
+        // When — 9,25,000 under Salaries, 3,65,400 from house property and 95,000 from other sources (D-194)
+        NodeResult result = NodeHarness.with(PACK).regime(OLD)
+                .given(NodeIds.SALARY_INCOME, Money.of("925000"))
+                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
+                .given(NodeIds.OTHERSOURCES_INCOME, Money.of("95000"))
+                .run(new GrossTotalIncomeNode());
+
+        // Then — 9,25,000 + 3,65,400 + 95,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1385400")));
     }
 
     @Test

@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078k DONE; between items)
+Item            : — (W-079b DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-079 (othersources.json, OtherSourcesNode; DR 01 R17; PF-EEINT-001) → W-075c5 → W-074b → W-079a → W-080 → W-080a → W-078j7b. UNVERIFIED: 6, owned by W-078j7b. Unrun: TaxPlanningControllerIntegrationTest (Docker)
-Last verify     : ./mvnw test -pl backend -Punit → 2601 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078k, 2026-10-16)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-075c5 (Chapter VIII deposit interest, s.153 / 80TTA-80TTB; needs OtherSourceKind.OTHER_INTEREST split savings vs deposits?) → W-079c → W-079d → W-079e → W-079f → W-079g → W-074b → W-079a → W-080 → W-080a → W-078j7b. UNVERIFIED: 9, all owned by W-078j7b. Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2626 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-079b, 2026-10-16)
 Waiting on      : the owner — next pick. Open OQs: none
 Files touched   : none
-Last item commit: taxplanning W-078k: catch only the PDF renderer's own exceptions and say which report failed, and drop the file's IllegalCatch exemption (D-192)
+Last item commit: taxplanning W-079b: add income from other sources — interest and dividends with each year's deductions, into gross total income, and split W-079 (D-193, D-194)
 Updated         : 2026-10-16, session 18
 ```
 

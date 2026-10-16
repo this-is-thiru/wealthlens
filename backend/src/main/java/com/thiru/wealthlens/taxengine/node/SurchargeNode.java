@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
+import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
@@ -38,10 +39,11 @@ import java.util.stream.Stream;
  * (U) plus the income above it (V). U is the real engine's tax after rebate at the threshold, recomputed
  * ({@code DR 06} G3.2, D-086), plus the surcharge on it without relief.
  *
- * <p><b>No split yet.</b> The graph carries no dividend income ({@code W-079}) and no special-rate tax
- * ({@code W-088}), so the excluding income is the total income and the whole tax takes the one rate. Tax
- * at a special rate is refused rather than surcharged as if it were not there: {@code RATE-SUR-SPLIT-001}
- * limits its surcharge to 15%, and that is {@code W-088}'s.
+ * <p><b>No split yet.</b> The excluding income is still the total income, so the whole tax takes the one rate.
+ * Dividends now reach the total income ({@code OtherSourcesNode}, D-194), so a case with dividend or unit income
+ * whose excluding-income ladder bites — where taking the dividends out could lower the rate — is refused until the
+ * split is built ({@code W-079e}). Tax at a special rate is refused rather than surcharged as if it were not
+ * there: {@code RATE-SUR-SPLIT-001} limits its surcharge to 15%, and that is {@code W-088}'s.
  */
 public final class SurchargeNode implements ComputationNode {
 
@@ -56,6 +58,9 @@ public final class SurchargeNode implements ComputationNode {
     /** The rate a ladder set, the ladder that set it, and the ladder it beat, if the other was lower. */
     private record ChosenRate(Rate rate, RuleId rule, RuleVersion version, Optional<String> over) {
     }
+
+    private static final Set<OtherSourceKind> DIVIDEND_KINDS = Set.of(OtherSourceKind.DIVIDEND,
+            OtherSourceKind.DEEMED_DIVIDEND, OtherSourceKind.UNIT_INCOME);
 
     private static final List<SurchargeRows> ROWS = List.of(
             new SurchargeRows(RuleIds.RATE_SUR_NEW_TAX_REGIME, RuleIds.RATE_SUR_NEW_TAX_REGIME_EXCLUDING,
@@ -85,6 +90,7 @@ public final class SurchargeNode implements ComputationNode {
         TaxByBasis afterRebate = ctx.get(NodeIds.TAX_AFTERREBATE, TaxByBasis.class);
         refuseSpecialRateTax(afterRebate);
         SurchargeRows rows = rowsFor(ctx);
+        refuseDividendsInTheExcludingTest(ctx, rows, totalIncome);
 
         Money tax = afterRebate.asMoney();
         ChosenRate rate = rateAt(ctx, rows, totalIncome);
@@ -111,6 +117,25 @@ public final class SurchargeNode implements ComputationNode {
             throw new IllegalStateException("The tax carries " + afterRebate.totalAtSpecialRates()
                     + " at special rates; its surcharge is limited to 15% (RATE-SUR-SPLIT-001) and that split,"
                     + " with the special gains taken out of the 25%/37% test, is W-088's (D-086)");
+        }
+    }
+
+    /**
+     * The 25%/37% clauses test the total income excluding dividend income; until that split is built, a case whose
+     * dividends could change the answer — the excluding ladder biting at this income — is refused (D-194 C4a).
+     */
+    private static void refuseDividendsInTheExcludingTest(NodeContext ctx, SurchargeRows rows, Money totalIncome) {
+        boolean dividends = ctx.inputs().entered().otherSourceItems().stream()
+                .anyMatch(item -> DIVIDEND_KINDS.contains(item.kind()) && item.received().isGreaterThan(Money.ZERO));
+        if (!dividends) {
+            return;
+        }
+        Rate excluding = bandRate(rows.onIncomeExcludingGains(), version(ctx, rows.onIncomeExcludingGains()),
+                totalIncome);
+        if (excluding.compareTo(Rate.ZERO) > 0) {
+            throw new IllegalArgumentException("A total income of " + totalIncome + " with dividend or unit income"
+                    + " reaches the " + excluding.asPercentLabel() + " surcharge band of " + rows.onIncomeExcludingGains()
+                    + ", which tests the income excluding dividends; taking them out of that test is W-079e's (D-086)");
         }
     }
 

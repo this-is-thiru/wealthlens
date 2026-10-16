@@ -3,12 +3,12 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.56",
-      "checksum": "sha256:c99551da8f955d2da42ba5826c65a48229271a5ade98a8cc48d3d4c34240e225"
+      "version": "2025-26.law.57",
+      "checksum": "sha256:9e0944a98ec30fc79c2195fd232f0c797c499fb13eda48b07bb9ee2c5f02fdf8"
     },
     "exec": {
-      "version": "2025-26.exec.24",
-      "checksum": "sha256:af76690c12344469e2af6b98b587d15b97d4abcb73b94d03ef103c48f62e4ddc"
+      "version": "2025-26.exec.25",
+      "checksum": "sha256:3095303df41f1947cef94d34f13e71e3c2152d90efb392b8035edbc2aa4cf7e6"
     },
     "forms": {
       "version": "2025-26.forms.1",
@@ -59,6 +59,13 @@
     "HP-PRE-CONSTRUCTION": "sha256:26abd947e23cb94d7f0db3285290fe4c9c44a9c190dd7de105f1a24d96875e76",
     "HP-STANDARD-DEDUCTION": "sha256:c8b004f2d7e58121470e6dfce87bccc337375a8a58f64349d7d5a050016d93fa",
     "HP-UNREALISED-RENT": "sha256:587b9766a465a50dc5e187bedbf9d36101a1e6dfdcdfb62a4a69ba3f96f71a94",
+    "OS-BANKER-COMMISSION": "sha256:8c5900d2ff6019ec592b168f4345fcf780da7546f3906ea6638238059321ba15",
+    "OS-COMPENSATION-INTEREST": "sha256:91d6a120b62892c1cb37cc6c5b483b539d9af0b7992e680945b3f0acf4f98c6b",
+    "OS-DEEMED-DIVIDEND": "sha256:35cd317c83d8539e00c76235e21f76d2455fcf8ebe8f88a86a02835e603f293f",
+    "OS-DIVIDEND": "sha256:bf30847b4057041dd0b01d035d30349dea827a6370b0b6fcddd671836d8ac501",
+    "OS-DIVIDEND-INTEREST": "sha256:1296475f5891cda4d7b87a8c3f28a87c0fbfe0a6b1e35bc67d9d95bca4b3eafa",
+    "OS-INTEREST": "sha256:abd39e136526c9d70b826e11eceb71c5dad8a0f4b29245695f75e73d03eb1c4e",
+    "OS-OTHER-EXPENDITURE": "sha256:2234688eb958e29642d24f5c654c737b7529272af6ff3b3d823af6a5e2b21194",
     "PERQ-ACCOM-CONTINUED": "sha256:9188041be37dbaf56fb748be255ddd03a6845e2b71e66be7f44ae01294997b62",
     "PERQ-ACCOM-FURNITURE": "sha256:2059793cf0ceff823e59a42a69dd6388c9dfd03828cc06bf67d6752b57eaf0de",
     "PERQ-ACCOM-GOVERNMENT": "sha256:38e5fdb91b2906ed867e5cf8e2573a8df0a3dc8a74872a7872130ee9d2f872b8",

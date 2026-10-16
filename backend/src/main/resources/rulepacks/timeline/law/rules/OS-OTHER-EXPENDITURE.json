@@ -1,0 +1,99 @@
+{
+  "ruleId": "OS-OTHER-EXPENDITURE",
+  "_note": "Any other expenditure, not capital, laid out wholly and exclusively for making or earning the income is deducted (D-194; rulebook OS-GENERAL-001) — but never personal expenses, nor interest or salary payable outside India untaxed (OS-NODED-001: a nil line), nor anything against dividends or unit income (OS-DIVIDEND-INTEREST) or interest on compensation (OS-COMPENSATION-INTEREST). TY 2026-27: Income-tax Act, 2025 s.93(1)(e) (p.142), s.94(1) (p.142). TY 2025-26: Income-tax Act, 1961 s.57(iii), s.58(1)(a) (thc p.310). Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.57(iii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.93(1)(e)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "EXPENDITURE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.57(iii) as enacted",
+        "gazetteRef": "the 1961 Gazette of India issue not found — egazette, India Code, the Goa Official Gazette 1987–2014 and the owner's ChatGPT share t_6ad20d9ccc688191a3d9b332798e0c0a searched (W-078j6b); re-searched by W-078j7b",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.57(iii), s.58(1)(a), p.310; the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for ss.56–58 (docs/taxplanning-build/sources/2026-10-16-other-sources.md)",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.57(iii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.93(1)(e)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "EXPENDITURE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.93(1)(e)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.93(1)(e), s.94(1), p.142; Finance Act, 2026 s.44 amends only s.93(1)(a) and (2)",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.93(1)(e), s.94(1), p.142; Finance Act, 2026 s.44 amends only s.93(1)(a) and (2)",
+    "accessedOn": "2026-10-16",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

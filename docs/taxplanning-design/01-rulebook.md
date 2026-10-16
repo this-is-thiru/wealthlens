@@ -1331,6 +1331,14 @@ all, depending on two flags. That is the whole case for `A1`'s regime comparison
 | `OS-LOTTERY-001` | **No deduction of any expenditure or allowance whatsoever** against winnings from lotteries, crossword puzzles, races, card games, gambling or betting. (Horse-owners maintaining racehorses are excepted.) | s.58(4) | **s.94(4), (5)** | BOTH | — | — | VERIFIED (S2, s.94(4),(5)) |
 | `OS-GIFT-001` | Sums of money or property received without or for inadequate consideration are chargeable under this head above a **₹50,000** threshold, with exclusions for **relatives**, marriage, will/inheritance, contemplation of death, local authorities, registered non-profits, listed non-transfers, a trust solely for the individual's relatives, and prescribed classes. For immovable property the threshold is the **higher of ₹50,000 or 10% of consideration**. | s.56(2)(x) | **s.92(2)(m), 92(3), 92(4)** | BOTH | — | — | VERIFIED (S2, s.92(2)(m), (3)) |
 
+> **Erratum (W-079b, 2026-10-16, D-194):** `OS-COLL-001`'s TY 2025-26 cell "dividends + interest" is wrong — since
+> 1-4-2021 the 1961 s.57 proviso (FA 2020 s.30(b)) allows no deduction from dividend or unit income but interest expense,
+> so a banker's commission is deductible against interest on securities only, in both years; and R17 has no row for
+> interest on compensation — 1961 s.56(2)(viii) / s.57(iv) and 2025 Act s.92(2)(i) / s.93(1)(f) allow **50%** of it and
+> no other deduction, in both years (`OS-COMPINT-001`, built in W-079b).
+> Verified by: egazette 2020/218938 p.25 (FA 2020 s.30); thc.nic.in Income-tax Act, 1961 p.310 (s.57(iv)); Gazette
+> 265620 p.142 (s.93(1)(f)); `docs/taxplanning-build/sources/2026-10-16-other-sources.md`.
+
 ---
 
 ## R18 — Set-off and carry-forward

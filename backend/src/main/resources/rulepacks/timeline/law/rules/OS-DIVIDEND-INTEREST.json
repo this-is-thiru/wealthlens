@@ -1,0 +1,99 @@
+{
+  "ruleId": "OS-DIVIDEND-INTEREST",
+  "_note": "The only deduction against dividend income and Mutual Fund or specified-company unit income is interest expense, at most twenty per cent of that income (TY 2025-26), and none at all from TY 2026-27 (D-194; rulebook OS-DIV-DED-2025/-2026). TY 2025-26: Income-tax Act, 1961 s.57 proviso, ins. by the Finance Act, 2020 s.30(b) (egazette 2020/218938 p.25): \"no deduction shall be allowed from the dividend income, or income in respect of units of a Mutual Fund … other than deduction on account of interest expense, and in any previous year such deduction shall not exceed twenty per cent. of the dividend income, or income in respect of such units, included in the total income for that year, without deduction under this section\" — so no banker's commission or other expense either. TY 2026-27: Income-tax Act, 2025 s.93(2) as substituted by the Finance Act, 2026 s.44(b) (p.43): \"in respect of any dividend income or income from units of a Mutual Fund … no deduction shall be allowed\". The cap is the allowance; the interest expense entered is deducted up to it. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.57 proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.93(2)(b)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "20",
+        "base": "DIVIDEND"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.30(b) — the proviso to s.57 of the Income-tax Act, 1961 (w.e.f. 1-4-2021)",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, No. 20, 27-3-2020 (egazette 2020/218938), p.25",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2021-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.57, p.310 (no proviso — it is later); the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for ss.56–58 (docs/taxplanning-build/sources/2026-10-16-other-sources.md); the proviso read in the Finance Act, 2020 s.30(b), egazette 2020/218938 p.25",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.57 proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.93(2)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "0",
+        "base": "DIVIDEND"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2026 (4 of 2026), s.44(b) — s.93(2) of the Income-tax Act, 2025 substituted (in force 1-4-2026 by s.1(2)(a))",
+        "gazetteRef": "CG-DL-E-31032026-271439",
+        "notifiedOn": "2026-03-30",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.44(b), p.43, and s.1(2)(a), p.1; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.93(2) as enacted, p.142",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+    "sourceDescription": "Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.44(b), p.43, and s.1(2)(a), p.1; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.93(2) as enacted, p.142",
+    "accessedOn": "2026-10-16",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

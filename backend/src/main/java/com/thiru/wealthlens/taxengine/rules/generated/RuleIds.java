@@ -54,6 +54,13 @@ public final class RuleIds {
     public static final RuleId HP_PRE_CONSTRUCTION = new RuleId("HP-PRE-CONSTRUCTION");
     public static final RuleId HP_STANDARD_DEDUCTION = new RuleId("HP-STANDARD-DEDUCTION");
     public static final RuleId HP_UNREALISED_RENT = new RuleId("HP-UNREALISED-RENT");
+    public static final RuleId OS_BANKER_COMMISSION = new RuleId("OS-BANKER-COMMISSION");
+    public static final RuleId OS_COMPENSATION_INTEREST = new RuleId("OS-COMPENSATION-INTEREST");
+    public static final RuleId OS_DEEMED_DIVIDEND = new RuleId("OS-DEEMED-DIVIDEND");
+    public static final RuleId OS_DIVIDEND = new RuleId("OS-DIVIDEND");
+    public static final RuleId OS_DIVIDEND_INTEREST = new RuleId("OS-DIVIDEND-INTEREST");
+    public static final RuleId OS_INTEREST = new RuleId("OS-INTEREST");
+    public static final RuleId OS_OTHER_EXPENDITURE = new RuleId("OS-OTHER-EXPENDITURE");
     public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");
     public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");
     public static final RuleId PERQ_ACCOM_GOVERNMENT = new RuleId("PERQ-ACCOM-GOVERNMENT");
