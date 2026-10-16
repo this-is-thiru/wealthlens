@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078j6a DONE; between items)
+Item            : — (W-078j6b DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j6b (DED-DONATION-HALF, -QUALIFYING, DED-EDUCATION-LOAN, DED-SPECIFIED-DISEASE, DED-WITHIN-GROSS-TOTAL, RATE-ROUND-PAYABLE, -TOTAL-INCOME (effectiveFrom fix, D-188 C2a), the 1961 Gazette for SAL-SALARY-FOR-RPF + the lock's act) → W-078j7 → W-078k … Unrun: TaxPlanningControllerIntegrationTest (Docker)
-Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j6a, 2026-10-16)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j7 (r.280 watch: Rules 2026 amendments after 8-10-2026 + CBDT; and re-search FA 1966, 1968 s.30, 1976, 1995 and the 1961 Gazette, D-190) → W-078k (PDF catch) → W-079 … Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j6b, 2026-10-16)
 Waiting on      : the owner — next pick. Open OQs: none
 Files touched   : none
-Last item commit: taxplanning W-078j6a: read the 2012–2018 Finance Acts behind 14 introducedBy precedents and give each its Gazette reference and date (D-188)
+Last item commit: taxplanning W-078j6b: read the 1966–2007 Acts behind the last 7 introducedBy precedents, correct two RATE-ROUND effective dates and an FA 2007 section, and leave three UNVERIFIED (D-188 – D-190)
 Updated         : 2026-10-16, session 18
 ```
 
