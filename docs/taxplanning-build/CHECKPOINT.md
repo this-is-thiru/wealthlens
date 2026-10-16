@@ -14,7 +14,7 @@ Last verify     : ./mvnw test -pl backend -Punit → 2658 run, 0 fail, BUILD SUC
 Waiting on      : the owner — next pick. Open OQs: OQ-25
 Files touched   : none
 Last item commit: taxplanning W-079c: add family pension, a Government death gratuity and a fund pension's commutation to other sources — one-third within ₹15,000 / ₹25,000 new, the others in full, in both years (D-196, D-197)
-Updated         : 2026-10-16, session 19
+Updated         : 2026-10-16, session 19 (paused at the owner's session-limit notice; Mac shut down — scratchpad wiped)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
