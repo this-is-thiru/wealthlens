@@ -13,7 +13,24 @@ public enum OtherSourceKind {
     /** Interest on securities (S2 s.92(2)(e); 1961 s.56(2)(id)), against which a banker's commission is allowed. */
     INTEREST_ON_SECURITIES,
 
-    /** Any other interest — deposits, savings — charged by the residual rule (S2 s.92(1); 1961 s.56(1)). */
+    /**
+     * Interest on a deposit in a savings account, not a time deposit, with a bank, a co-operative society engaged in
+     * banking or a Post Office — the interest s.153(2)(a) reaches (S2 s.153(1)(i)–(iii); 1961 s.80TTA(1); D-195).
+     */
+    SAVINGS_DEPOSIT_INTEREST,
+
+    /**
+     * Interest on any other deposit with a bank, a co-operative society engaged in banking or a Post Office, time
+     * deposits included — which only a senior citizen's s.153(2)(b) reaches (1961 s.80TTB(1); D-195).
+     */
+    DEPOSIT_INTEREST,
+
+    /**
+     * Any other interest charged by the residual rule (S2 s.92(1); 1961 s.56(1)) — a company deposit, a loan — and
+     * never a deposit with a bank, a co-operative bank or a Post Office, which is one of the two kinds above. A
+     * deposit held for a firm, an association of persons or a body of individuals is not the assessee's own interest
+     * (S2 s.153(3), (4)) and is not entered.
+     */
     OTHER_INTEREST,
 
     /** A dividend, other than a deemed one (S2 s.92(2)(a); 1961 s.56(2)(i)). */

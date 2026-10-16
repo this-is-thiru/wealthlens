@@ -56,11 +56,12 @@ import java.util.stream.Collectors;
  * a section whose 1961 rows are not built yet is refused naming its item.
  * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136); and s.154, s.127
  * and s.128 ({@link DisabilityDeduction}; D-138); s.129–132, loan interest ({@link LoanInterestDeduction}; D-139); s.125,
- * the Agniveer Corpus Fund ({@link AgniveerDeduction}; D-140); s.133, donations, on adjusted gross total income —
+ * the Agniveer Corpus Fund ({@link AgniveerDeduction}; D-140); s.153, deposit interest, in both years
+ * ({@link DepositInterestDeduction}; D-195); s.133, donations, on adjusted gross total income —
  * gross total income less the rest, held within it ({@link DonationDeduction}; D-142); last, s.134, rent paid, on
  * total income before it — the same, less s.133 too ({@link RentPaidDeduction}; D-141). Each section's base holds the
  * other, so they are in that order, which meets both sections' words unless s.133's qualifying limit binds; with rent
- * claimed as well, that is refused (OQ-23). The other deductions are later items (W-075a3, W-075c5).
+ * claimed as well, that is refused (OQ-23). The other deductions are later items (W-075a3).
  */
 public final class ChapterEightNode implements ComputationNode {
 
@@ -90,6 +91,7 @@ public final class ChapterEightNode implements ComputationNode {
         rules.addAll(DisabilityDeduction.RULES);
         rules.addAll(LoanInterestDeduction.RULES);
         rules.addAll(AgniveerDeduction.RULES);
+        rules.addAll(DepositInterestDeduction.RULES);
         rules.addAll(DonationDeduction.RULES);
         rules.addAll(RentPaidDeduction.RULES);
         return Set.copyOf(rules);
@@ -120,6 +122,7 @@ public final class ChapterEightNode implements ComputationNode {
         lines.addAll(DisabilityDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(LoanInterestDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(AgniveerDeduction.lines(ctx, lines.size() + 1));
+        lines.addAll(DepositInterestDeduction.lines(ctx, lines.size() + 1));
         DonationDeduction.Outcome donations = DonationDeduction.lines(ctx, totalIncomeBefore(ctx, lines),
                 lines.size() + 1);
         if (donations.qualifyingLimitBound() && RentPaidDeduction.entered(ctx)) {
@@ -132,7 +135,7 @@ public final class ChapterEightNode implements ComputationNode {
         return withinGrossTotal(ctx, lines);
     }
 
-    /** Whether anything s.125–134 or s.154 reads is entered — the sections after the s.123 family. */
+    /** Whether anything s.125–134, s.153 or s.154 reads is entered — the sections after the s.123 family. */
     private static boolean sectionFactsEntered(NodeContext ctx) {
         return !ctx.inputs().entered().healthPayments().isEmpty()
                 || !ctx.inputs().entered().disabledDependantSupport().isEmpty()
@@ -140,6 +143,7 @@ public final class ChapterEightNode implements ComputationNode {
                 || !ctx.inputs().entered().educationLoanInterest().isEmpty()
                 || !ctx.inputs().entered().purposeLoanInterest().isEmpty()
                 || AgniveerDeduction.entered(ctx)
+                || DepositInterestDeduction.entered(ctx)
                 || DonationDeduction.entered(ctx)
                 || RentPaidDeduction.entered(ctx)
                 || certifiedDisabled(ctx);

@@ -88,7 +88,8 @@ public final class OtherSourcesNode implements ComputationNode {
     private static Money itemIncome(Lines lines, int position, OtherSourceItem item) {
         String where = "item " + position;
         return switch (item.kind()) {
-            case INTEREST_ON_SECURITIES, OTHER_INTEREST -> interest(lines, where, item);
+            case INTEREST_ON_SECURITIES, SAVINGS_DEPOSIT_INTEREST, DEPOSIT_INTEREST, OTHER_INTEREST ->
+                    interest(lines, where, item);
             case DIVIDEND, UNIT_INCOME -> dividend(lines, where, item, RuleIds.OS_DIVIDEND_INTEREST,
                     "only interest expense is deducted against dividend and unit income, within the year's limit");
             case DEEMED_DIVIDEND -> dividend(lines, where, item, RuleIds.OS_DEEMED_DIVIDEND,

@@ -1,0 +1,148 @@
+{
+  "ruleId": "DED-DEPOSIT-INTEREST-SENIOR",
+  "_note": "Deposit interest of a senior citizen — \"in case of an assessee mentioned in sub-section (1)(b), the whole of the interest up to a maximum amount of ₹ 50000 on deposits in any account, including time deposits\" (s.153(2)(b), p.185), for \"(b) an individual, being a senior citizen\" (s.153(1)); \"senior citizen\" means \"an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year\" (s.2(100), p.20) — this row's conditions, tested on the assessee's age on the last day of the year (NodeContext.conditions). The interest is the entered SAVINGS_DEPOSIT_INTEREST and DEPOSIT_INTEREST together; an expense entered against it is refused (OQ-25). rulebook DED-80TTB-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2025-26: Income-tax Act, 1961 s.80TTB(1) and Explanation (thc p.425) — \"fifty thousand rupees\" in the aggregate, the same definition for \"the relevant previous year\". sources/2026-10-16-deposit-interest.md. D-195. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-166).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80TTB(1), Explanation; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.153(1)(b), (2)(b), (5); s.2(100)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "the interest",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "INTEREST"
+            }
+          },
+          {
+            "name": "the limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "50000"
+            }
+          }
+        ]
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "AgeAtLeast",
+          "years": 60,
+          "subject": "SELF"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80TTB — ins. by Act 13 of 2018, s.32 (w.e.f. 1-4-2019)",
+        "gazetteRef": "Act 13 of 2018: Gazette of India, Extraordinary, Part II, Section 1, No. 17, 29-3-2018 (egazette 2018/184302), p.17",
+        "notifiedOn": "2018-03-29",
+        "effectiveFrom": "2019-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/184302.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80TTB and Explanation, p.425",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80TTB after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Acts, 2019 and 2025, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 and the Finance Acts of 2020 to 2026 (all searched for it, none amends it: sources/2026-10-07-chapter-via.md, sources/2026-10-16-deposit-interest.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80TTB(1), Explanation; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.153(1)(b), (2)(b), (5); s.2(100)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "the interest",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "INTEREST"
+            }
+          },
+          {
+            "name": "the limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "50000"
+            }
+          }
+        ]
+      },
+      "conditions": [
+        {
+          "type": "IsResident"
+        },
+        {
+          "type": "AgeAtLeast",
+          "years": 60,
+          "subject": "SELF"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.153(1)(b), (2)(b), (5); s.2(100)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.153(1), (2)(b), (5), p.185; s.2(100), p.20",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.153(1), (2)(b), (5), p.185; s.2(100), p.20",
+    "accessedOn": "2026-10-16",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

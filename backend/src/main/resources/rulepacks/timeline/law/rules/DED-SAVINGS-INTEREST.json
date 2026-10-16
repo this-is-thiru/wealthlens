@@ -1,0 +1,130 @@
+{
+  "ruleId": "DED-SAVINGS-INTEREST",
+  "_note": "Savings-account interest — \"in case of an assessee mentioned in sub-section (1)(a) or (c), the whole of the interest up to a maximum amount of ₹ 10000 on deposits in a savings account, excluding time deposits\" (s.153(2)(a), p.185), for \"(a) an individual, not being a senior citizen; or … (c) a Hindu undivided family\" whose gross total income \"includes income by way of interest on deposits with\" a bank, a co-operative bank or a Post Office (s.153(1)); time deposits are \"repayable on expiry of fixed periods\" (s.153(5)). The deposit-taker and account are the entered kind (OtherSourceKind.SAVINGS_DEPOSIT_INTEREST); a senior citizen takes DED-DEPOSIT-INTEREST-SENIOR instead; an expense entered against the interest is refused (OQ-25). rulebook DED-80TTA-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2025-26: Income-tax Act, 1961 s.80TTA(1) (thc pp.424–425) — an individual or HUF \"(other than the assessee referred to in section 80TTB)\", interest \"(not being time deposits) in a savings account\", \"ten thousand rupees\" in the aggregate; its Post Office is the Indian Post Office Act, 1898's, repealed by the Post Office Act, 2023, which changes no figure. sources/2026-10-16-deposit-interest.md. D-195. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-166).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80TTA(1); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.153(1)(a), (c), (2)(a), (5)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "the interest",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "INTEREST"
+            }
+          },
+          {
+            "name": "the limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "10000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80TTA — ins. by Act 23 of 2012, s.31 (w.e.f. 1-4-2013); the words \"(other than the assessee referred to in section 80TTB)\" ins. by Act 13 of 2018, s.31 (w.e.f. 1-4-2019)",
+        "gazetteRef": "Act 23 of 2012: Gazette of India, Extraordinary, Part II, Section 1, 28-5-2012 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 23-5-2013, p.507; Act 13 of 2018: Gazette of India, Extraordinary, Part II, Section 1, No. 17, 29-3-2018 (egazette 2018/184302), p.17",
+        "notifiedOn": "2012-05-28",
+        "effectiveFrom": "2013-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/1314/1314-8-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80TTA, pp.424–425",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80TTA after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Acts, 2019 and 2025, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 and the Finance Acts of 2020 to 2026 (all searched for it, none amends it: sources/2026-10-07-chapter-via.md, sources/2026-10-16-deposit-interest.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80TTA(1); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.153(1)(a), (c), (2)(a), (5)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "the interest",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "INTEREST"
+            }
+          },
+          {
+            "name": "the limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "10000"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.153(1)(a), (c), (2)(a), (5)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.153(1), (2)(a), (5), p.185",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.153(1), (2)(a), (5), p.185",
+    "accessedOn": "2026-10-16",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -231,8 +231,8 @@ class OtherSourcesNodeTest {
 
     /** {@code DR 08} T6-6: savings 14,000; time deposit 90,000; dividend 2,00,000 bearing 60,000 of interest. */
     private static final List<OtherSourceItem> T6_6 = List.of(
-            item(OtherSourceKind.OTHER_INTEREST, "14000", "0", "0", "0"),
-            item(OtherSourceKind.OTHER_INTEREST, "90000", "0", "0", "0"),
+            item(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST, "14000", "0", "0", "0"),
+            item(OtherSourceKind.DEPOSIT_INTEREST, "90000", "0", "0", "0"),
             item(OtherSourceKind.DIVIDEND, "200000", "0", "60000", "0"));
 
     @Test

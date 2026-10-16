@@ -184,7 +184,9 @@ class TimelineReaderTest {
             new RuleId("DED-DONATION-WHOLE"),
             new RuleId("DED-DONATION-HALF"),
             new RuleId("DED-DONATION-QUALIFYING"),
-            new RuleId("DED-DONATION-CASH"));
+            new RuleId("DED-DONATION-CASH"),
+            new RuleId("DED-SAVINGS-INTEREST"),
+            new RuleId("DED-DEPOSIT-INTEREST-SENIOR"));
 
     @TempDir
     Path copy;

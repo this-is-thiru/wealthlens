@@ -36,6 +36,7 @@ class GeneratedConstantsTest {
     private static final java.util.List<String> SHIPPED_RULE_IDS = java.util.List.of(
             "DED-AGNIVEER-GOVERNMENT",
             "DED-AGNIVEER-OWN",
+            "DED-DEPOSIT-INTEREST-SENIOR",
             "DED-DISABILITY",
             "DED-DISABILITY-SEVERE",
             "DED-DISABLED-DEPENDANT",
@@ -59,6 +60,7 @@ class GeneratedConstantsTest {
             "DED-NPS-OWN",
             "DED-PREMIUM-SHARE",
             "DED-RENT-PAID",
+            "DED-SAVINGS-INTEREST",
             "DED-SCHEDULE-XV",
             "DED-SPECIFIED-DISEASE",
             "DED-SPECIFIED-DISEASE-SENIOR",

@@ -1,0 +1,134 @@
+package com.thiru.wealthlens.taxengine.node;
+
+import com.thiru.wealthlens.taxengine.input.Individual;
+import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
+import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
+import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
+import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
+import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
+import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * s.153 — interest on deposits with a bank, a co-operative bank or a Post Office — for {@link ChapterEightNode} (S2;
+ * 1961 ss.80TTA, 80TTB; D-195). A senior citizen deducts the interest on any such deposit up to the senior row's
+ * limit, and the savings row is not reached (s.153(2)(b)); anyone else, a HUF included, the savings-account interest
+ * up to the savings row's, and a time deposit's interest is a nil line (s.153(2)(a)). It runs before s.133, whose
+ * adjusted gross total income is net of it.
+ *
+ * <p>Whether the interest is taken as received or net of the expenditure the head deducted against it is open: the
+ * net-income rule (S2 s.122(9); 1961 s.80AB) is written for Part C, and these sections are in Part D / CA. So an item
+ * with an expense, which s.153 would reach, is refused rather than guessed (OQ-25).
+ */
+final class DepositInterestDeduction {
+
+    static final Set<RuleId> RULES = Set.of(RuleIds.DED_SAVINGS_INTEREST, RuleIds.DED_DEPOSIT_INTEREST_SENIOR);
+
+    private static final BaseId INTEREST = new BaseId("INTEREST");
+
+    private DepositInterestDeduction() {
+    }
+
+    /** The lines, numbered from {@code firstSequence}; none where no deposit interest is entered. */
+    static List<TraceLine> lines(NodeContext ctx, int firstSequence) {
+        List<OtherSourceItem> deposits = deposits(ctx);
+        if (deposits.isEmpty()) {
+            return List.of();
+        }
+        Money savings = received(deposits, OtherSourceKind.SAVINGS_DEPOSIT_INTEREST);
+        Money other = received(deposits, OtherSourceKind.DEPOSIT_INTEREST);
+        List<TraceLine> lines = new ArrayList<>();
+        if (isSenior(ctx)) {
+            requireNoExpense(ctx, RuleIds.DED_DEPOSIT_INTEREST_SENIOR, deposits);
+            add(ctx, RuleIds.DED_DEPOSIT_INTEREST_SENIOR, savings.plus(other), firstSequence, lines);
+            return lines;
+        }
+        requireNoExpense(ctx, RuleIds.DED_SAVINGS_INTEREST, deposits.stream()
+                .filter(item -> item.kind() == OtherSourceKind.SAVINGS_DEPOSIT_INTEREST)
+                .toList());
+        if (savings.isGreaterThan(Money.ZERO)) {
+            add(ctx, RuleIds.DED_SAVINGS_INTEREST, savings, firstSequence, lines);
+        }
+        if (other.isGreaterThan(Money.ZERO)) {
+            lines.add(line(ctx, RuleIds.DED_SAVINGS_INTEREST, firstSequence + lines.size(), other, Money.ZERO,
+                    "s.153(2)(a) is savings-account interest only, time deposits excluded; deposit interest is"
+                            + " deducted only for a senior citizen (s.153(2)(b); 1961 ss.80TTA, 80TTB)"));
+        }
+        return lines;
+    }
+
+    /** Whether any interest on a deposit with a bank, a co-operative bank or a Post Office is entered. */
+    static boolean entered(NodeContext ctx) {
+        return !deposits(ctx).isEmpty();
+    }
+
+    /**
+     * A senior citizen: an individual resident in India of sixty or more at any time in the year (S2 s.2(100); 1961
+     * s.80TTB Explanation) — the senior row's conditions. A HUF has no age, so it is never one.
+     */
+    private static boolean isSenior(NodeContext ctx) {
+        return ctx.inputs().assessee() instanceof Individual
+                && version(ctx, RuleIds.DED_DEPOSIT_INTEREST_SENIOR).conditions().stream()
+                        .allMatch(condition -> condition.holds(ctx.conditions()));
+    }
+
+    /** OQ-25: where the row would deduct the interest, an expense against it leaves its amount open. */
+    private static void requireNoExpense(NodeContext ctx, RuleId row, List<OtherSourceItem> reached) {
+        if (!ctx.inRegime(row, version(ctx, row)).applies()) {
+            return;
+        }
+        boolean expensed = reached.stream().anyMatch(item -> item.bankerCommission().plus(item.interestExpense())
+                .plus(item.otherExpenditure()).isGreaterThan(Money.ZERO));
+        if (expensed) {
+            throw new IllegalArgumentException("Deposit interest with an expense entered against it: whether s.153 is"
+                    + " worked on the interest received or on what the head includes after the expense is not settled"
+                    + " (OQ-25), so it is refused rather than guessed (D-195)");
+        }
+    }
+
+    private static void add(NodeContext ctx, RuleId row, Money interest, int firstSequence, List<TraceLine> lines) {
+        RegimeVerdict verdict = ctx.inRegime(row, version(ctx, row));
+        if (!verdict.applies()) {
+            lines.add(line(ctx, row, firstSequence + lines.size(), interest, Money.ZERO, verdict.whyNot()));
+            return;
+        }
+        CapResult allowed = TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),
+                CapContext.of(INTEREST, interest));
+        lines.add(line(ctx, row, firstSequence + lines.size(), interest, allowed.value(), allowed.limitedBy()));
+    }
+
+    private static TraceLine line(NodeContext ctx, RuleId row, int sequence, Money interest, Money allowed,
+            String limitedBy) {
+        return TraceLine.of(sequence, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION, MoneyValue.of(interest),
+                        MoneyValue.of(allowed), version(ctx, row).provenance())
+                .withLimitedBy(limitedBy);
+    }
+
+    private static List<OtherSourceItem> deposits(NodeContext ctx) {
+        return ctx.inputs().entered().otherSourceItems().stream()
+                .filter(item -> item.kind() == OtherSourceKind.SAVINGS_DEPOSIT_INTEREST
+                        || item.kind() == OtherSourceKind.DEPOSIT_INTEREST)
+                .toList();
+    }
+
+    private static Money received(List<OtherSourceItem> deposits, OtherSourceKind kind) {
+        return deposits.stream().filter(item -> item.kind() == kind).map(OtherSourceItem::received)
+                .reduce(Money.ZERO, Money::plus);
+    }
+
+    private static RuleVersion version(NodeContext ctx, RuleId row) {
+        return TemporallyApportionedCap.governingVersion(ctx.rule(row), ctx.inputs().temporal());
+    }
+}

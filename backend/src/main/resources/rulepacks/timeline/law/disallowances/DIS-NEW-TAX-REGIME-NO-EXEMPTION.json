@@ -12,6 +12,7 @@
       "basis": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
       "disallowedRules": [
         "DED-AGNIVEER-OWN",
+        "DED-DEPOSIT-INTEREST-SENIOR",
         "DED-DISABILITY",
         "DED-DISABILITY-SEVERE",
         "DED-DISABLED-DEPENDANT",
@@ -32,6 +33,7 @@
         "DED-NPS-OWN",
         "DED-PREMIUM-SHARE",
         "DED-RENT-PAID",
+        "DED-SAVINGS-INTEREST",
         "DED-SCHEDULE-XV",
         "DED-SPECIFIED-DISEASE",
         "DED-SPECIFIED-DISEASE-SENIOR",
@@ -62,6 +64,7 @@
       "basis": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
       "disallowedRules": [
         "DED-AGNIVEER-OWN",
+        "DED-DEPOSIT-INTEREST-SENIOR",
         "DED-DISABILITY",
         "DED-DISABILITY-SEVERE",
         "DED-DISABLED-DEPENDANT",
@@ -82,6 +85,7 @@
         "DED-NPS-OWN",
         "DED-PREMIUM-SHARE",
         "DED-RENT-PAID",
+        "DED-SAVINGS-INTEREST",
         "DED-SCHEDULE-XV",
         "DED-SPECIFIED-DISEASE",
         "DED-SPECIFIED-DISEASE-SENIOR",

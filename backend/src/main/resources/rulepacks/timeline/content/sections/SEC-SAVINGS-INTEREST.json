@@ -1,0 +1,71 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-SAVINGS-INTEREST provision1961 (s.80TTA) and provision2025 (s.153; its senior limb is SEC-DEPOSIT-INTEREST-SENIOR, as s.123 has two entries). summary: S2 s.153(1)(a), (c), (2)(a), (5); 1961 s.80TTA (sources/2026-10-16-deposit-interest.md; D-195). routes[0]: DED-SAVINGS-INTEREST. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists the row (D-166). disqualifiers[1]: s.153(2)(a), DepositInterestDeduction's nil line. disqualifiers[2]: s.153(1)(i)–(iii), the entered kind (OtherSourceKind). disqualifiers[3]: s.153(1)(b), the senior row instead. disqualifiers[4]: OQ-25.",
+  "key": "SEC-SAVINGS-INTEREST",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80TTA",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.153",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest on a savings account",
+  "summary": "Interest on a savings account with a bank, a co-operative bank or a post office is deducted up to a limit, for an individual who is not a senior citizen and for a Hindu undivided family. Interest on a fixed or other time deposit does not count. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "Savings-account interest",
+      "description": "The savings-account interest, up to the lower limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-SAVINGS-INTEREST"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Deposit interest is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Unless you are a senior citizen, interest on a fixed or other time deposit is not deducted.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-SAVINGS-INTEREST"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Interest from anyone other than a bank, a co-operative bank or a post office — a company deposit or a loan — is not deducted.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-SAVINGS-INTEREST"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A senior citizen takes the deduction for deposit interest instead.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DEPOSIT-INTEREST-SENIOR"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Where an expense is entered against the deposit interest, the deduction is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "whether the interest is taken before or after the expense is not settled"
+      }
+    }
+  ]
+}

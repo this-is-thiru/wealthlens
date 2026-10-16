@@ -17,6 +17,7 @@ public final class RuleIds {
 
     public static final RuleId DED_AGNIVEER_GOVERNMENT = new RuleId("DED-AGNIVEER-GOVERNMENT");
     public static final RuleId DED_AGNIVEER_OWN = new RuleId("DED-AGNIVEER-OWN");
+    public static final RuleId DED_DEPOSIT_INTEREST_SENIOR = new RuleId("DED-DEPOSIT-INTEREST-SENIOR");
     public static final RuleId DED_DISABILITY = new RuleId("DED-DISABILITY");
     public static final RuleId DED_DISABILITY_SEVERE = new RuleId("DED-DISABILITY-SEVERE");
     public static final RuleId DED_DISABLED_DEPENDANT = new RuleId("DED-DISABLED-DEPENDANT");
@@ -40,6 +41,7 @@ public final class RuleIds {
     public static final RuleId DED_NPS_OWN = new RuleId("DED-NPS-OWN");
     public static final RuleId DED_PREMIUM_SHARE = new RuleId("DED-PREMIUM-SHARE");
     public static final RuleId DED_RENT_PAID = new RuleId("DED-RENT-PAID");
+    public static final RuleId DED_SAVINGS_INTEREST = new RuleId("DED-SAVINGS-INTEREST");
     public static final RuleId DED_SCHEDULE_XV = new RuleId("DED-SCHEDULE-XV");
     public static final RuleId DED_SPECIFIED_DISEASE = new RuleId("DED-SPECIFIED-DISEASE");
     public static final RuleId DED_SPECIFIED_DISEASE_SENIOR = new RuleId("DED-SPECIFIED-DISEASE-SENIOR");
