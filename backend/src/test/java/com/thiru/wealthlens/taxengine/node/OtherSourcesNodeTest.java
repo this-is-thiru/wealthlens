@@ -36,6 +36,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class OtherSourcesNodeTest {
 
     private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
+    private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
 
     private static OtherSourceItem item(OtherSourceKind kind, String received, String commission, String interest,
             String other) {
@@ -44,12 +45,16 @@ class OtherSourcesNodeTest {
     }
 
     private static NodeResult run(int year, List<OtherSourceItem> items) {
+        return run(year, OLD, items);
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
         EngineInputs plain = NodeHarness.plainTaxpayer();
-        EngineInputs inputs = new EngineInputs(taxYear, OLD,
+        EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
@@ -58,7 +63,7 @@ class OtherSourcesNodeTest {
                         List.of(), List.of(), items),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
-        return NodeHarness.with(pack).regime(OLD).inputs(inputs).run(new OtherSourcesNode());
+        return NodeHarness.with(pack).regime(regime).inputs(inputs).run(new OtherSourcesNode());
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -251,5 +256,113 @@ class OtherSourcesNodeTest {
 
         // Then — DR 08 T6-6: "0.20 × 2,00,000 = 40,000"; "3,04,000 − 40,000 = 2,64,000"
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("264000")));
+    }
+
+    private static OtherSourceItem pension(String received) {
+        return item(OtherSourceKind.FAMILY_PENSION, received, "0", "0", "0");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAFamilyPensionsThirdIsUnderTheOldLimit_deductsTheThird(int year) {
+        // When — 30,000 − min(30,000 ÷ 3, 15,000) (S2 s.93(1)(d)(ii); 1961 s.57(iia))
+        NodeResult result = run(year, OLD, List.of(pension("30000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("20000")));
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_FAMILY_PENSION);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAFamilyPensionsThirdExceedsTheOldLimit_deductsFifteenThousand(int year) {
+        // When — 60,000 − min(20,000, 15,000)
+        NodeResult result = run(year, OLD, List.of(pension("60000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("45000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAFamilyPensionsThirdIsUnderTheNewRegimesLimit_deductsTheThird(int year) {
+        // When — 60,000 − min(20,000, 25,000) (S2 s.93(1)(d)(i); F(No.2)A 2024 s.24(b))
+        NodeResult result = run(year, NEW, List.of(pension("60000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
+        assertThat(result.trace()).extracting(TraceLine::rule)
+                .containsExactly(RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAFamilyPensionsThirdExceedsTheNewRegimesLimit_deductsTwentyFiveThousand(int year) {
+        // When — 90,000 − min(30,000, 25,000)
+        NodeResult result = run(year, NEW, List.of(pension("90000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("65000")));
+    }
+
+    @Test
+    void evaluate_whenAFamilyPensionsThirdIsNotWhole_dividesOnceToPaise() {
+        // When — 10,000 − 3,333.33 (10,000 ÷ 3 = 3,333.333…)
+        NodeResult result = run(2026, OLD, List.of(pension("10000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("6666.67")));
+    }
+
+    @Test
+    void evaluate_whenAFamilyPensionBearsOtherExpenditure_deductsItAfterTheThird() {
+        // Given — 60,000 of family pension, 1,000 of other expenditure
+        OtherSourceItem expensed = item(OtherSourceKind.FAMILY_PENSION, "60000", "0", "0", "1000");
+
+        // When — 60,000 − 15,000 − 1,000 (S2 s.93(1)(d)(ii), (e))
+        NodeResult result = run(2026, OLD, List.of(expensed));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("44000")));
+        assertThat(result.trace()).extracting(TraceLine::rule)
+                .containsExactly(RuleIds.OS_FAMILY_PENSION, RuleIds.OS_OTHER_EXPENDITURE);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAFundPensionIsCommuted_deductsTheEntireAmount(int year) {
+        // When — S2 s.93(1)(g); 1961 s.10(10A)(iii)
+        NodeResult result = run(year, OLD, List.of(item(OtherSourceKind.COMMUTED_FUND_PENSION, "500000", "0", "0",
+                "0")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.OS_COMMUTED_PENSION);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        });
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAGovernmentGratuityIsReceivedOnDeath_deductsTheEntireAmount(int year) {
+        // When — S2 s.93(1)(h) with s.19(2)(g); 1961 s.10(10)(i)
+        NodeResult result = run(year, NEW, List.of(item(OtherSourceKind.DEATH_GRATUITY, "1000000", "0", "0", "0")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_DEATH_GRATUITY);
+    }
+
+    @Test
+    void evaluate_whenAnExpenseIsEnteredAgainstADeathGratuity_isANilLine() {
+        // When — the entire amount is deducted already, so the 2,000 has nothing to bear against
+        NodeResult result = run(2026, OLD, List.of(item(OtherSourceKind.DEATH_GRATUITY, "1000000", "0", "0", "2000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).extracting(TraceLine::out)
+                .containsExactly(MoneyValue.of(Money.ZERO), MoneyValue.of(Money.ZERO));
+        assertThat(result.trace().get(1).limitedBy().orElseThrow()).contains("entire amount");
     }
 }

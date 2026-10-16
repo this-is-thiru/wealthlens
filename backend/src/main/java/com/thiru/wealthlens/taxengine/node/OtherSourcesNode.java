@@ -7,6 +7,8 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.definition.FamilyPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
@@ -14,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -31,6 +34,9 @@ import java.util.Set;
  * 2026-27, when nothing at all. A deemed dividend bears nothing in either year; interest on compensation bears half of
  * itself and nothing else. An expense the law does not allow is a nil line naming why, never silently left out.
  *
+ * <p>A family pension bears one-third of itself within the regime's limit, and other expenditure; a fund pension's
+ * commutation and a Government gratuity received on the employee's death bear the entire amount (D-196).
+ *
  * <p>Winnings and the other kinds are refused: winnings' own rate is deferred in the coverage register, and the
  * remaining clauses of S2 s.92(2) are {@code W-079g}'s. The head below nil is refused until set-off is built
  * ({@code W-081}), as house property's is.
@@ -42,6 +48,10 @@ public final class OtherSourcesNode implements ComputationNode {
     private static final BaseId COMMISSION = new BaseId("COMMISSION");
     private static final BaseId EXPENDITURE = new BaseId("EXPENDITURE");
     private static final BaseId COMPENSATION_INTEREST = new BaseId("COMPENSATION_INTEREST");
+    private static final BaseId COMMUTED_PENSION = new BaseId("COMMUTED_PENSION");
+    private static final BaseId GRATUITY = new BaseId("GRATUITY");
+    private static final List<RuleId> FAMILY_PENSION_ROWS = List.of(RuleIds.OS_FAMILY_PENSION,
+            RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME);
 
     private static final String UNTAXED_ABROAD = ": payable outside India untaxed (S2 s.94(1)(b), (c); 1961"
             + " s.58(1)(a)(ii), (iii))";
@@ -60,7 +70,8 @@ public final class OtherSourcesNode implements ComputationNode {
     public Set<RuleId> rules() {
         return Set.of(RuleIds.OS_INTEREST, RuleIds.OS_DIVIDEND, RuleIds.OS_DIVIDEND_INTEREST,
                 RuleIds.OS_DEEMED_DIVIDEND, RuleIds.OS_BANKER_COMMISSION, RuleIds.OS_OTHER_EXPENDITURE,
-                RuleIds.OS_COMPENSATION_INTEREST);
+                RuleIds.OS_COMPENSATION_INTEREST, RuleIds.OS_FAMILY_PENSION, RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME,
+                RuleIds.OS_COMMUTED_PENSION, RuleIds.OS_DEATH_GRATUITY);
     }
 
     @Override
@@ -95,6 +106,11 @@ public final class OtherSourcesNode implements ComputationNode {
             case DEEMED_DIVIDEND -> dividend(lines, where, item, RuleIds.OS_DEEMED_DIVIDEND,
                     "nothing is deducted against a deemed dividend");
             case INTEREST_ON_COMPENSATION -> compensationInterest(lines, where, item);
+            case FAMILY_PENSION -> familyPension(lines, where, item);
+            case COMMUTED_FUND_PENSION -> wholeDeducted(lines, where, item, RuleIds.OS_COMMUTED_PENSION, COMMUTED_PENSION,
+                    "commutation of a fund pension");
+            case DEATH_GRATUITY -> wholeDeducted(lines, where, item, RuleIds.OS_DEATH_GRATUITY, GRATUITY,
+                    "gratuity received on the employee's death");
             case WINNINGS, OTHER -> throw new IllegalStateException(item.kind() + " passed requireBuiltKinds");
         };
     }
@@ -140,6 +156,39 @@ public final class OtherSourcesNode implements ComputationNode {
         Money refused = item.bankerCommission().plus(item.interestExpense()).plus(item.otherExpenditure());
         if (refused.isGreaterThan(Money.ZERO)) {
             lines.nil(RuleIds.OS_COMPENSATION_INTEREST, refused, where + ": no other deduction is allowed");
+        }
+        return income;
+    }
+
+    /**
+     * S2 s.93(1)(d), (e); 1961 s.57(iia), (iii): one-third of the pension within the regime's limit, then other
+     * expenditure; a banker's commission is for interest on securities only.
+     */
+    private static Money familyPension(Lines lines, String where, OtherSourceItem item) {
+        RuleId row = lines.applying(FAMILY_PENSION_ROWS);
+        Money share = lines.familyPensionShare(row).deduction(item.received());
+        Money income = item.received().minus(share);
+        lines.add(row, StepKind.INCOME, item.received(), income, where + ": family pension less " + share);
+        if (item.bankerCommission().isGreaterThan(Money.ZERO)) {
+            lines.nil(RuleIds.OS_BANKER_COMMISSION, item.bankerCommission(), where
+                    + ": a banker's commission is deducted against interest on securities only");
+        }
+        Money expenses = item.interestExpense().plus(item.otherExpenditure());
+        Money expenditure = expenses.isGreaterThan(Money.ZERO)
+                ? lines.deduction(RuleIds.OS_OTHER_EXPENDITURE, EXPENDITURE, item, expenses, where)
+                : Money.ZERO;
+        return income.minus(expenditure);
+    }
+
+    /** S2 s.93(1)(g), (h); 1961 s.10(10A)(iii), s.10(10)(i): the entire amount, so nothing is left to bear an expense. */
+    private static Money wholeDeducted(Lines lines, String where, OtherSourceItem item, RuleId row, BaseId base,
+            String what) {
+        Money deduction = lines.applied(row, base, item.received());
+        Money income = item.received().minus(deduction);
+        lines.add(row, StepKind.INCOME, item.received(), income, where + ": " + what + " less " + deduction);
+        Money refused = item.bankerCommission().plus(item.interestExpense()).plus(item.otherExpenditure());
+        if (refused.isGreaterThan(Money.ZERO)) {
+            lines.nil(row, refused, where + ": the entire amount is deducted already");
         }
         return income;
     }
@@ -213,6 +262,26 @@ public final class OtherSourcesNode implements ComputationNode {
             Money allowed = applied(rule, base, amount);
             add(rule, StepKind.DEDUCTION, amount, allowed, where);
             return allowed;
+        }
+
+        /** The one row of {@code rows} the regime applies; the rows are keyed by regime, so exactly one does. */
+        RuleId applying(List<RuleId> rows) {
+            List<RuleId> applying = rows.stream()
+                    .filter(row -> ctx.inRegime(row, version(row)).applies())
+                    .toList();
+            if (applying.size() != 1) {
+                throw new IllegalStateException(applying.size() + " of " + rows + " apply in the "
+                        + ctx.regime().code().value() + " regime; exactly one must");
+            }
+            return applying.getFirst();
+        }
+
+        FamilyPensionShare familyPensionShare(RuleId row) {
+            return RuleDefinitions.require(version(row).definition(), FamilyPensionShare.class, row);
+        }
+
+        private RuleVersion version(RuleId row) {
+            return TemporallyApportionedCap.governingVersion(ctx.rule(row), temporal);
         }
 
         Money nil(RuleId rule, Money amount, String why) {

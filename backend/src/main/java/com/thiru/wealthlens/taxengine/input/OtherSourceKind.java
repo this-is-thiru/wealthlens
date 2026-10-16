@@ -48,6 +48,28 @@ public enum OtherSourceKind {
     /** Interest on compensation or enhanced compensation (S2 s.92(2)(i); 1961 s.56(2)(viii)): half is deducted. */
     INTEREST_ON_COMPENSATION,
 
+    /**
+     * A family pension — a regular monthly amount payable by the employer to a family member of an employee upon the
+     * employee's death (S2 s.93(1)(d); 1961 s.57(iia) Explanation; D-196). A gallantry awardee's family pension and an
+     * armed-forces family pension for a death in operational duties are excluded from total income (S2 Schedule III
+     * Sl. 15, 16; 1961 s.10(18)(ii), (19)) and are not entered.
+     */
+    FAMILY_PENSION,
+
+    /**
+     * Commutation of a pension received from a fund set up by the Life Insurance Corporation of India on or after
+     * 1 August 1996, or by another insurer, under a pension scheme (S2 s.93(1)(g), Schedule VII Sl. 3; 1961
+     * s.10(10A)(iii), s.10(23AAB); D-196).
+     */
+    COMMUTED_FUND_PENSION,
+
+    /**
+     * A death-cum-retirement gratuity under the Government's pension rules or a similar scheme (S2 s.19(2)(g); 1961
+     * s.10(10)(i)), received on the employee's death (S2 s.93(1)(h); D-196). Another employer's gratuity paid on a
+     * death has no clause of its own here and is {@link #OTHER}.
+     */
+    DEATH_GRATUITY,
+
     /** Winnings from lotteries, races, games or betting (S2 s.92(2)(b)): refused, their rate not built. */
     WINNINGS,
 

@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.DisallowanceBasis;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
+import com.thiru.wealthlens.taxengine.rules.definition.FamilyPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -233,7 +234,7 @@ public final class ShapeJson {
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
                 "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
-                "ParticularsThreshold");
+                "ParticularsThreshold", "FamilyPensionShare");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -248,6 +249,8 @@ public final class ShapeJson {
             case "CommutedPensionShare" -> PackJson.construct(path, () -> new CommutedPensionShare(
                     PackJson.integer(node, "oneOverWhereGratuityReceived", path),
                     PackJson.integer(node, "oneOverOtherwise", path)));
+            case "FamilyPensionShare" -> PackJson.construct(path, () -> new FamilyPensionShare(
+                    PackJson.integer(node, "oneOver", path), money(node, "limit", path)));
             case "IndexByYear" -> indexByYear(node, path);
             case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
             case "DisallowanceBasis" -> PackJson.construct(path, () -> new DisallowanceBasis(

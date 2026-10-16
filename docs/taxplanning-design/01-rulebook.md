@@ -1338,6 +1338,15 @@ all, depending on two flags. That is the whole case for `A1`'s regime comparison
 > no other deduction, in both years (`OS-COMPINT-001`, built in W-079b).
 > Verified by: egazette 2020/218938 p.25 (FA 2020 s.30); thc.nic.in Income-tax Act, 1961 p.310 (s.57(iv)); Gazette
 > 265620 p.142 (s.93(1)(f)); `docs/taxplanning-build/sources/2026-10-16-other-sources.md`.
+>
+> **Erratum (W-079c, 2026-10-16, D-196):** the 1961 cells of three R17 rows are wrong — `OS-FAMPEN-001`'s ₹25,000 /
+> ₹15,000 is no longer *NEEDS VERIFICATION*: 1961 s.57(iia) allows *"thirty-three and one-third per cent of such income
+> or fifteen thousand rupees, whichever is less"*, and F(No.2)A 2024 s.24(b) reads "twenty-five thousand rupees" for it
+> where tax is computed under s.115BAC(1A)(ii), w.e.f. 1-4-2025; and `OS-GRATUITY-DEATH-001` and `OS-COMMUT-001` show
+> "—" for 1961, but s.10(10)(i) (a Government death-cum-retirement gratuity) and s.10(10A)(iii) (commutation of a pension
+> from a s.10(23AAB) fund) take the same amounts out of income — exemptions, not s.57 deductions, to the same effect.
+> Verified by: thc.nic.in Income-tax Act, 1961 pp.71, 72, 310; egazette 2024/256436 p.24 (F(No.2)A 2024 s.24(b));
+> `docs/taxplanning-build/sources/2026-10-16-family-pension.md`.
 
 ---
 
