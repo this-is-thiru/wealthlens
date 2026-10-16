@@ -14,7 +14,7 @@ Last verify     : ./mvnw test -pl backend -Punit → 2626 run, 0 fail, BUILD SUC
 Waiting on      : the owner — next pick. Open OQs: none
 Files touched   : none
 Last item commit: taxplanning W-079b: add income from other sources — interest and dividends with each year's deductions, into gross total income, and split W-079 (D-193, D-194)
-Updated         : 2026-10-16, session 18
+Updated         : 2026-10-16, session 18 (paused at the owner's session-limit notice; Mac shut down — scratchpad wiped)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
