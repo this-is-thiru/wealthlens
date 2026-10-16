@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078j5 DONE; between items)
+Item            : — (W-078j6a DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j6 (re-read the 21 introducedBy precedents under D-184 + the 1961 Gazette for SAL-SALARY-FOR-RPF and the 2025-26 lock's act instrument) → W-078j7 (r.280 watch) → W-078k (PDF catch) → W-079 … UNVERIFIED left: SAL-SALARY-FOR-RPF introducedBy (W-078j6), the two TY 2026-27 r.280 versions (W-078j7). Unrun: TaxPlanningControllerIntegrationTest (Docker)
-Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j5, 2026-10-16)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-078j6b (DED-DONATION-HALF, -QUALIFYING, DED-EDUCATION-LOAN, DED-SPECIFIED-DISEASE, DED-WITHIN-GROSS-TOTAL, RATE-ROUND-PAYABLE, -TOTAL-INCOME (effectiveFrom fix, D-188 C2a), the 1961 Gazette for SAL-SALARY-FOR-RPF + the lock's act) → W-078j7 → W-078k … Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2600 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-078j6a, 2026-10-16)
 Waiting on      : the owner — next pick. Open OQs: none
 Files touched   : none
-Last item commit: taxplanning W-078j5: read the instruments behind 13 introducedBy markers and mark them SOURCE_CHECKED, re-citing the LTC rules to S.O. 34(E) (D-184 – D-187)
+Last item commit: taxplanning W-078j6a: read the 2012–2018 Finance Acts behind 14 introducedBy precedents and give each its Gazette reference and date (D-188)
 Updated         : 2026-10-16, session 18
 ```
 
