@@ -1,0 +1,21 @@
+{
+  "id": "T6-1",
+  "source": "DR 08 T6-1 — let-out property",
+  "_source": "\"Rent ₹45,000/month; municipal taxes ₹18,000; interest ₹3,20,000; pre-construction ₹2,00,000, instalment 3 of 5.\" \"annual value = actual rent 5,40,000\"; \"less municipal taxes paid = 18,000\"; \"30% × 5,22,000 = 1,56,600\"; \"interest, uncapped (let out) = 3,20,000\"; \"2,00,000 ÷ 5 = 40,000\"; \"Expected: ₹5,400.\" INFERENCE, not DR 08's (D-211 C3): the expected letting value is entered as the rent, since DR 08 takes the annual value as the actual rent; the house is dated into the tax year two before the year run, which gives instalment 3, and the capital borrowed a year before that; the old regime, the DR 08 matrix's column for T6-1.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": ["2025-26", "2026-27"],
+  "houseProperties": [
+    {
+      "occupancy": "LET",
+      "expectedLettingValue": "540000",
+      "rentReceivable": "540000",
+      "localTaxesPaid": "18000",
+      "interestPayable": "320000",
+      "preConstructionInterest": "200000",
+      "preConstructionInstalment": 3
+    }
+  ],
+  "expected": {
+    "housePropertyIncome": "5400"
+  }
+}

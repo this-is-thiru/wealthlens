@@ -684,6 +684,22 @@ DED-80TTA-001 does not apply to a senior citizen
 ```
 **Expected: ₹50,000, and `DED-80TTA-001` absent from the trace.**
 
+> **Erratum (W-080, 2026-10-17, D-211).** T6 runs as golden tests through the shipped pipeline to Chapter VIII,
+> except where the head is a loss, which is refused until set-off (W-081):
+> - **T6-2, T6-4, T6-5** each come to a loss under the head (−₹2,00,000, −₹2,00,000, −₹30,000), so they run with
+>   W-081.
+> - **T6-3 in TY 2026-27 is −₹40,000, not ₹0,** as `DR 01` R16's erratum (D-156 C1(a)). The new regime disallows
+>   s.22(1)(b) only (S2 s.202(2)(a)(v)); the Finance Act, 2026 does not extend that to s.22(1)(c) (s.56 omits only
+>   s.202(2)(a)(iii)). So the ₹40,000 pre-construction instalment is allowed, and the loss may not be set off against
+>   another head (s.202(2)(b)(ii)). ₹0 holds for TY 2025-26, where 1961 s.115BAC(2)(i) removes the whole of s.24(b);
+>   both own-residence rows are nil lines there. T6-3's second line, *"SETOFF-NEW-002 … destroyed"*, is set-off's,
+>   and the TY 2026-27 half runs with W-081.
+> - **T6-6 in TY 2025-26 is not `PROVISIONAL`:** the 1961 s.57 proviso (interest allowed up to 20% of the dividend)
+>   is read and `SOURCE_CHECKED` (`OS-DIVIDEND-INTEREST`, D-194). The matrix's *"T6-6ⓟ"* falls with it.
+>
+> Verified by: `T6HousePropertyAndOtherSourcesTest`, goldens `T6/T6-1.json`, `T6-3.json` (TY 2025-26),
+> `T6-6.json`, `T6-7.json`.
+
 ---
 
 ## T7 — TDS projection
@@ -938,6 +954,9 @@ invented.
 | T7 TDS projection | T7-4, T7-5 | T7-1..T7-3 | T7-4, T7-5 | T7-1..T7-3 |
 | T8 reconciliation | T8-5 | T8-1..T8-4, T8-6 | T8-5 | T8-1..T8-4, T8-6 |
 | T9 robustness | year- and regime-independent, run once per cell where applicable |
+
+> **Erratum (W-080, 2026-10-17, D-211):** T6's row — *"T6-6ⓟ"* is no longer provisional, and the 2026-27 NEW
+> column's T6-3 is −₹40,000 and runs with W-081 (see the erratum under T6-7).
 
 **Counts: 9 `PROVISIONAL` cases, all of them TY 2025-26, all traceable to the single blocked source
 (`incometaxindia.gov.in`, HTTP 403 — S10) that prevented the Income-tax Rules 1962 from being opened.**

@@ -1128,7 +1128,7 @@ if that is not enough for the item in hand.
 
 | Item | Produces | Spec | ⚠ |
 |---|---|---|---|
-| W-081 | `setoff.json`, `SetOffNode` | `DR 01` R18 | absorption order is **declared and traced** (`DR 13` R-7); **also (D-159):** remove `LedgerSnapshot.preConstructionInstalmentsClaimed` — the instalments are fixed by tax year (S2 s.22(1)(c), W-078b) and nothing reads it |
+| W-081 | `setoff.json`, `SetOffNode` | `DR 01` R18 | absorption order is **declared and traced** (`DR 13` R-7); **also (D-159):** remove `LedgerSnapshot.preConstructionInstalmentsClaimed` — the instalments are fixed by tax year (S2 s.22(1)(c), W-078b) and nothing reads it; **also (D-211):** run `DR 08` T6-2, T6-4, T6-5 and T6-3's TY 2026-27 half (−₹40,000, D-156) as golden tests — each a loss under the head, refused until set-off |
 | W-082 | `Election` family, `ElectionResolver` | `DR 15` C2 | priced by **recomputation**; record all alternatives |
 | W-083 | `HouseElectionNode` | `DR 13` R-6 | which two houses is a **choice**, and optimisable |
 | W-084 | `IncrementalRunner` | `DR 15` B5 | memo only where the graph proves nothing upstream moved |

@@ -158,6 +158,34 @@ final class GoldenCaseRunner {
         return new SalaryRun(result, provisional);
     }
 
+    /**
+     * A T6 case, run through the shipped pipeline to Chapter VIII on its houses and other-source items alone, the
+     * person aged as {@link GoldenCase} ages them (D-211).
+     */
+    SalaryRun run(HouseAndOtherSourcesGoldenCase golden, TaxYearId year) {
+        RulePack pack = pack(year);
+        NodeRegistry registry = NodeRegistry.of(BUILT);
+        RegimeSpec shipped = pack.regimes().get(golden.regime());
+        List<NodeId> refs = shipped.pipeline().nodeRefs();
+        List<NodeId> toChapterEight = refs.subList(0, refs.indexOf(NodeIds.CHAPTERVIII) + 1).stream()
+                .filter(registry.registered()::contains)
+                .toList();
+        RegimeSpec heads = new RegimeSpec(shipped.code(), shipped.displayName(), shipped.provision1961(),
+                shipped.provision2025(), shipped.appliesTo(), shipped.rateTable(), shipped.disallowances(),
+                shipped.eligibility(), shipped.election(), shipped.lifecycle(), shipped.isDefault(),
+                new PipelineSpec(toChapterEight), shipped.behaviour(), shipped.provenance());
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        EngineInputs inputs = new EngineInputs(year, golden.regime(),
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of()),
+                aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(), plain.elections(),
+                plain.capitalGains(), plain.filing());
+        PipelineRunner.Result result = PipelineRunner.run(registry, pack, heads, inputs);
+        boolean provisional = result.trace().stream()
+                .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
+        return new SalaryRun(result, provisional);
+    }
+
     /** A first return, but for the journeys earlier years claimed in each LTA block. */
     private static LedgerSnapshot ledger(SalaryGoldenCase.Salary salary) {
         LedgerSnapshot empty = LedgerSnapshot.empty();
@@ -206,15 +234,21 @@ final class GoldenCaseRunner {
 
     private static EngineInputs inputs(GoldenCase golden, TaxYearId year) {
         EngineInputs plain = NodeHarness.plainTaxpayer();
+        return new EngineInputs(year, golden.regime(),
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                plain.entered(), aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(),
+                plain.elections(), plain.capitalGains(), plain.filing());
+    }
+
+    /**
+     * The harness's person, or one of the case's age — six months short of a birthday, so the completed age at the
+     * year's end is exactly the case's.
+     */
+    private static Individual aged(EngineInputs plain, TaxYearId year, Optional<Integer> ageAtYearEnd) {
         Individual harness = (Individual) plain.assessee();
-        // Six months short of a birthday, so the completed age at the year's end is exactly the case's
-        Individual person = golden.ageAtYearEnd()
+        return ageAtYearEnd
                 .map(age -> new Individual(year.endsOn().minusYears(age).minusMonths(6), harness.residence(),
                         Optional.empty(), Optional.empty()))
                 .orElse(harness);
-        return new EngineInputs(year, golden.regime(),
-                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
-                plain.entered(), person, plain.family(), plain.ledgers(), plain.elections(),
-                plain.capitalGains(), plain.filing());
     }
 }
