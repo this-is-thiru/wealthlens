@@ -5,7 +5,7 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : — (W-081c DONE; W-081 complete; between items)
-Stage           : between items
+Stage           : PAUSED (session 20 ended at the owner's session-limit notice; Mac shut down) — between items
 Plan            : —
 Approved        : —
 Steps done      : —
@@ -14,7 +14,7 @@ Last verify     : unit -Punit → 2864 run, 0 fail, 0 Checkstyle (W-081c, 2026-1
 Waiting on      : the owner — next pick
 Files touched   : none
 Last item commit: taxplanning W-081c: close out the set-off chapter's coverage — S2 ss.108–110 / 1961 ss.70, 71, 71B modelled with catalogue entries, capital gains to W-088, the rest deferred, s.71A spent (D-219)
-Updated         : 2026-10-17, session 20 (W-081c committed)
+Updated         : 2026-10-17, session 20 — paused; resume with "Resume taxplanning: read CHECKPOINT.md and do its Next step"
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
