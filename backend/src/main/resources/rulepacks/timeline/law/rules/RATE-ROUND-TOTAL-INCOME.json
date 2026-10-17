@@ -29,12 +29,12 @@
       "conditions": [],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.288A — ins. by Act 13 of 1966, s.34 (w.e.f. 1-4-1966); words subs. by Act 19 of 1968, s.30 (w.e.f. 1-4-1969)",
-        "gazetteRef": "Act 13 of 1966 s.34: not found; Act 19 of 1968 s.30: not found — its Gazette (Part II, Section 1, 11-5-1968) is named in the official errata to it (legislative.gov.in compilation, PDF p.21); searched egazette, India Code, the Goa Official Gazette 1987–2014, the owner's ChatGPT share t_6ad20d9ccc688191a3d9b332798e0c0a",
+        "gazetteRef": "Act 13 of 1966 (assent 13-5-1966) s.34: read in Acts of the Parliament of India, 1966 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.83 (PDF p.93); Act 19 of 1968 (assent 11-5-1968) s.30 and Third Schedule item 24 (s.288A): read in Acts of the Parliament of India, 1968 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), pp.84 and 123 (PDF pp.94, 133) — its Gazette, Part II, Section 1, 11-5-1968, is named in the official errata (legislative.gov.in compilation, PDF p.21); the Gazette of India issue itself not read (D-215)",
         "notifiedOn": "1968-05-11",
         "effectiveFrom": "1969-04-01",
         "retrospective": false,
-        "sourceUrl": "https://www.legislative.gov.in/static/uploads/2025/06/efa543f8ef2e8d257b9d57d2bddb5770.pdf",
-        "verificationLevel": "UNVERIFIED"
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Acts_of_the_Parliament_of_India_1968.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
       },
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",

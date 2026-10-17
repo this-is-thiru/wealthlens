@@ -31,12 +31,12 @@
       "conditions": [],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80G(1) — subs. by Act 66 of 1976, s.17 (w.e.f. 1-4-1977), (1)(i) subs. by Act 32 of 1985, s.18 (w.e.f. 1-4-1986)",
-        "gazetteRef": "Act 66 of 1976 s.17: not found (egazette, India Code, the Goa Official Gazette 1987–2014, the owner's ChatGPT share t_6ad20d9ccc688191a3d9b332798e0c0a); Act 32 of 1985 s.18: relayed by that share, not read here",
-        "notifiedOn": "1961-09-13",
+        "gazetteRef": "Act 66 of 1976 (assent 27-5-1976) s.17: read in Acts of the Parliament of India, 1976 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.442 (PDF p.456); Act 32 of 1985 (assent 24-5-1985) s.18(a): read in Acts of the Parliament of India, 1985 (the Legislative Department's annual volume; Wikimedia Commons DjVu scan, read from the page images), p.143 (DjVu p.155); the Gazette of India issue itself not read (D-215)",
+        "notifiedOn": "1985-05-24",
         "effectiveFrom": "1986-04-01",
         "retrospective": false,
-        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-        "verificationLevel": "UNVERIFIED"
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Acts_of_the_Parliament_of_India_1985.djvu",
+        "verificationLevel": "SOURCE_CHECKED"
       },
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",

@@ -31,12 +31,12 @@
       "conditions": [],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.57(iii) as enacted",
-        "gazetteRef": "the 1961 Gazette of India issue not found — egazette, India Code, the Goa Official Gazette 1987–2014 and the owner's ChatGPT share t_6ad20d9ccc688191a3d9b332798e0c0a searched (W-078j6b); re-searched by W-078j7b",
+        "gazetteRef": "Act 43 of 1961 (assent 13-9-1961) s.57(iii) as enacted: read in Acts of the Parliament of India, 1961 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.308 (PDF p.320); the Gazette of India issue itself not read (D-215)",
         "notifiedOn": "1961-09-13",
         "effectiveFrom": "1962-04-01",
         "retrospective": false,
-        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
-        "verificationLevel": "UNVERIFIED"
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Acts_of_the_Parliament_of_India_1961.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
       },
       "legalStatus": "IN_FORCE",
       "publicationStatus": "PUBLISHED",
