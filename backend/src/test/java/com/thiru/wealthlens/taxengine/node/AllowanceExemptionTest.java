@@ -101,14 +101,16 @@ class AllowanceExemptionTest {
     }
 
     @Test
-    void evaluate_whenConveyanceInTheNewRegime2026_isExemptAndVisiblyUnverified() {
+    void evaluate_whenConveyanceInTheNewRegime2026_isExemptAndSourceChecked() {
         // When — 20,000 paid, 15,000 spent; r.280(3)'s list read into the new regime (D-101)
         NodeResult result = run(2026, NEW_TAX_REGIME, ComponentCodes.CONVEYANCE_ALLOWANCE, "20000",
                 AllowanceUse.spent(ComponentCodes.CONVEYANCE_ALLOWANCE, Money.of("15000")));
 
-        // Then — exempt, and the line says its version is unverified, so the computation is PROVISIONAL
+        // Then — exempt; r.280(3)'s "option under section 202(4)" read into the new regime on the owner's ruling
+        // (D-216), so the version is SOURCE_CHECKED and the computation is not provisional
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("15000")));
-        assertThat(result.trace().getFirst().provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+        assertThat(result.trace().getFirst().provenance().verificationLevel())
+                .isEqualTo(VerificationLevel.SOURCE_CHECKED);
     }
 
     @Test
@@ -228,17 +230,17 @@ class AllowanceExemptionTest {
     }
 
     @Test
-    void evaluate_whenMetroWithDearnessAllowanceIn2026_isCappedByWhatWasPaidAndVisiblyUnverified() {
+    void evaluate_whenMetroWithDearnessAllowanceIn2026_isCappedByWhatWasPaidAndSourceChecked() {
         // When — (15,000 + 1,500) × 12 = 1,98,000, against 1,80,000 paid
         NodeResult result = runTransport(2026, FIRST_SCHEDULE_RATES, "180000", new DisabledTransportClaim(
                 TransportDisability.ORTHOPAEDIC_UPPER_EXTREMITIES, 12, Optional.of(CommutingCity.METRO_CITY),
                 Optional.of(Money.of("1500"))));
 
-        // Then — OQ-7: the terms are taken as stated, so the version is unverified and the figure PROVISIONAL
+        // Then — OQ-7's terms taken as stated, on the owner's ruling (D-216): the version is SOURCE_CHECKED
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("180000")));
         assertThat(result.trace()).singleElement().satisfies(line -> {
             assertThat(line.limitedBy()).contains("allowance received");
-            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.UNVERIFIED);
+            assertThat(line.provenance().verificationLevel()).isEqualTo(VerificationLevel.SOURCE_CHECKED);
         });
     }
 

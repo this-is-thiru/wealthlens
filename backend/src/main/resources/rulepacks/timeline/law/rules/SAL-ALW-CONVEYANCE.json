@@ -1,6 +1,6 @@
 {
   "ruleId": "SAL-ALW-CONVEYANCE",
-  "_note": "A conveyance allowance for duties, exempt to the extent actually spent, where no free conveyance is provided (D-101; rulebook SAL-ALW-DUTY-001). TY 2026-27: Income-tax Act, 2025 Sch. III Table Sl. 12, \"to the extent to which such expenses are actually incurred for that purpose\"; Income-tax Rules, 2026 r.280(1)(d): \"any allowance granted to meet the expenditure incurred on conveyance in performance of duties of an office or employment of profit where no free conveyance is provided by the employer\"; in r.280(3)'s list, applied in the new regime per s.202(2)(a)(ii) — UNVERIFIED because r.280(3) addresses \"an option under section 202(4)\", the opt-out (SAL-ALW-NEW-SUBSET-001). TY 2025-26: 1961 s.10(14)(i) exempts allowances prescribed \"to the extent to which such expenses are actually incurred\"; Income-tax Rules, 1962 r.2BB(1)(c) with its proviso \"free conveyance is not provided by the employer\"; in r.2BB(3)'s list (G.S.R. 452(E)), so also for an assessee taxed under s.115BAC(1A). Entering the allowance is read as the employer providing no free conveyance.",
+  "_note": "A conveyance allowance for duties, exempt to the extent actually spent, where no free conveyance is provided (D-101; rulebook SAL-ALW-DUTY-001). TY 2026-27: Income-tax Act, 2025 Sch. III Table Sl. 12, \"to the extent to which such expenses are actually incurred for that purpose\"; Income-tax Rules, 2026 r.280(1)(d): \"any allowance granted to meet the expenditure incurred on conveyance in performance of duties of an office or employment of profit where no free conveyance is provided by the employer\"; in r.280(3)'s list, applied in the new regime per s.202(2)(a)(ii) — r.280(3) addresses \"an option under section 202(4)\", the opt-out (SAL-ALW-NEW-SUBSET-001); no official interpretation exists, and the owner rules this reading settled (D-216), so the version is SOURCE_CHECKED. TY 2025-26: 1961 s.10(14)(i) exempts allowances prescribed \"to the extent to which such expenses are actually incurred\"; Income-tax Rules, 1962 r.2BB(1)(c) with its proviso \"free conveyance is not provided by the employer\"; in r.2BB(3)'s list (G.S.R. 452(E)), so also for an assessee taxed under s.115BAC(1A). Entering the allowance is read as the employer providing no free conveyance.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -116,10 +116,9 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
-        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280, pp.1777–1783; Income-tax Act, 2025 Sch. III Table Sl. 12, 13 and s.202(2)(a)(ii)",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280, pp.1777–1783; Income-tax Act, 2025 Sch. III Table Sl. 12, 13 and s.202(2)(a)(ii); r.280(3) names \"an option under section 202(4)\", the opt-out; no official interpretation to 17-10-2026 (docs/taxplanning-build/sources/2026-10-17-r280-watch.md §6); read as applying in the new regime per s.202(2)(a)(ii) — the owner's ruling (D-216; D-101)",
         "accessedOn": "2026-10-11",
-        "verificationLevel": "UNVERIFIED",
-        "whatToCheck": "Stays UNVERIFIED: the defect is in the text, not in the reading. Income-tax Rules, 2026 r.280(3) reads \"An employee, being an assessee, who has exercised an option under section 202(4) shall be entitled to exemption only in respect of allowances mentioned in sub-rule (1)(a) to (d) and in sub-rule (2) [Table: Sl. No. 10]\" — the option under s.202(4) is the opt-out, which inverts s.202(2)(a)(ii); this version applies the list in the new regime (D-101). No source read settles it; an amendment to r.280 or a CBDT clarification would. Walked (W-078j4b, docs/taxplanning-build/sources/2026-10-11-groups-c-e.md): every amendment of the Income-tax Rules, 2026 to 8-10-2026 — G.S.R. 241(E), 646(E), 656(E), 822(E), 830(E), 871(E) and the corrigendum G.S.R. 286(E) — leaves r.279 and r.280 untouched."
+        "verificationLevel": "SOURCE_CHECKED"
       }
     }
   ],
