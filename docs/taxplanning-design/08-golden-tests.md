@@ -481,6 +481,14 @@ gap, do not fabricate through it.
 > and T4-2's "the uncapped ₹96,000 … remains income" now holds. Whether the excess should leave out the contribution
 > s.16(k) already counts is OQ-21.
 
+> **Erratum (W-074b, 2026-10-17, D-209).** **T4-4**'s assertion that the computation *"emits an `UNVERIFIED_RULE`
+> notice rather than a number"* no longer holds: the prescribed manner is read in both years — Rules 1962 r.9D
+> (G.S.R. 604(E), 31-8-2021) and S4 r.277 — and both make the taxable interest *"the interest accrued … in the taxable
+> contribution account"*, the fund's own figure (`OS-PF-TAXABLE-INTEREST`, `SOURCE_CHECKED`; D-198, D-199). The case
+> now asserts the excess, **₹3,50,000**, as the year's contribution beyond the threshold, and a charge equal to the
+> fund's taxable-account interest — nil here, as the case states none. Run in the new regime, both years.
+> Verified by: `T4RetirementContributionTest`; `docs/taxplanning-build/sources/2026-10-17-pf-own-interest.md`.
+
 ---
 
 ## T5 — LTA, 80C with employee PF, and the s.123 aggregate

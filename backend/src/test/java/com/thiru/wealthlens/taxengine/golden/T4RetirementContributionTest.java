@@ -7,8 +7,11 @@ import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,11 +23,13 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
- * The built half of {@code DR 08} T4 — the employer's retirement contributions — run through the shipped pipeline to
- * income under "Salaries" (D-128): T4-1 and T4-2's excess added to salary; T4-3's aggregate adding nothing and its
- * twelve per cent charge ₹30,000 in TY 2025-26 (T4-3a) and nothing in TY 2026-27 (T4-3b, the Finance Act, 2026
- * having removed it; D-151). The deductions and T4-4 are {@code W-074b}'s. The figures are copied, never computed; PROVISIONAL
- * runs are reported separately.
+ * {@code DR 08} T4 — PF and NPS — run through the shipped pipeline (D-128, D-209): T4-1 and T4-2's excess added to
+ * salary and the employer's pension-scheme contribution deducted under Chapter VIII (₹3,36,000 in the new regime,
+ * ₹2,40,000 in the old); T4-3's aggregate adding nothing and its twelve per cent charge ₹30,000 in TY 2025-26 (T4-3a)
+ * and nothing in TY 2026-27 (T4-3b, the Finance Act, 2026 having removed it; D-151); T4-4's own contribution of
+ * ₹6,00,000 measured ₹3,50,000 beyond the threshold, its taxable-account interest — nil, the case stating none — the
+ * whole charge (DR 08's W-074b erratum). The figures are copied, never computed; PROVISIONAL runs are reported
+ * separately.
  */
 @Log4j2
 class T4RetirementContributionTest {
@@ -67,6 +72,21 @@ class T4RetirementContributionTest {
         assertThat(run.result().valueOf(NodeIds.SALARY_GROSS).asMoney().minus(pay))
                 .as("%s in %s — gross less pay", golden.id(), year.label())
                 .isEqualTo(expected.plus(pensionContribution));
+        golden.expectedChapterEightDeduction().ifPresent(deduction -> assertThat(
+                        run.result().valueOf(NodeIds.CHAPTERVIII))
+                .as("%s in %s — Chapter VIII", golden.id(), year.label())
+                .isEqualTo(MoneyValue.of(deduction)));
+        golden.expectedOtherSourcesIncome().ifPresent(income -> assertThat(
+                        run.result().valueOf(NodeIds.OTHERSOURCES_INCOME))
+                .as("%s in %s — income from other sources", golden.id(), year.label())
+                .isEqualTo(MoneyValue.of(income)));
+        golden.expectedProvidentFundExcess().ifPresent(excess -> assertThat(run.result().trace().stream()
+                        .filter(line -> line.rule().equals(RuleIds.OS_PF_TAXABLE_INTEREST))
+                        .filter(line -> line.kind() == StepKind.MEASURE)
+                        .map(TraceLine::out)
+                        .toList())
+                .as("%s in %s — the contribution beyond the threshold", golden.id(), year.label())
+                .containsExactly(MoneyValue.of(excess)));
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.input.Journey;
 import com.thiru.wealthlens.taxengine.input.JourneyMode;
 import com.thiru.wealthlens.taxengine.input.LeaveTravelBlock;
 import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
+import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
 import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
@@ -40,6 +41,10 @@ import tools.jackson.databind.JsonNode;
  * @param expectedChapterEightDeduction the Chapter VIII deductions the case allows, compared with {@code chapterviii}
  * @param expectedScheduleXvAggregate the s.123 aggregate the case states before the ceiling — the trace's
  *     {@code DED-SCHEDULE-XV} line's input
+ * @param expectedProvidentFundExcess the year's own PF contribution beyond the threshold the case states — the
+ *     {@code OS-PF-TAXABLE-INTEREST} MEASURE line's output (D-209)
+ * @param expectedOtherSourcesIncome the income from other sources the case states, compared with
+ *     {@code othersources.income}
  */
 record SalaryGoldenCase(
         String id,
@@ -51,22 +56,29 @@ record SalaryGoldenCase(
         Optional<String> expectedLimitedBy,
         Optional<Money> expectedEmployerContributionCharges,
         Optional<Money> expectedChapterEightDeduction,
-        Optional<Money> expectedScheduleXvAggregate) {
+        Optional<Money> expectedScheduleXvAggregate,
+        Optional<Money> expectedProvidentFundExcess,
+        Optional<Money> expectedOtherSourcesIncome) {
 
     /**
      * What the case enters for the one employment, the homes occupied, the employer's retirement funds, the Chapter
-     * VIII payments and policies, the journeys on leave and the earlier claims in each block.
+     * VIII payments and policies, the journeys on leave and the earlier claims in each block, and the person's own
+     * provident fund accounts.
      */
     record Salary(List<SalaryComponent> pay, boolean termsIncludeDearnessAllowance, List<Tenancy> tenancies,
             List<EmployerFundContribution> employerContributions,
             Optional<RetirementFundHistory> retirementFundHistory, List<QualifyingPayment> qualifyingPayments,
             List<LifeInsurancePolicy> lifeInsurancePolicies, List<Journey> leaveTravel,
-            Map<Integer, LeaveTravelBlock> leaveTravelLedger) {
+            Map<Integer, LeaveTravelBlock> leaveTravelLedger, List<ProvidentFundAccount> providentFundAccounts) {
     }
 
-    /** Whether the case is run on to Chapter VIII. */
+    /**
+     * Whether the case is run on to Chapter VIII — for a deduction, or for income from other sources, which gross
+     * total income takes in on the way.
+     */
     boolean expectsDeduction() {
-        return expectedChapterEightDeduction.isPresent() || expectedScheduleXvAggregate.isPresent();
+        return expectedChapterEightDeduction.isPresent() || expectedScheduleXvAggregate.isPresent()
+                || expectedProvidentFundExcess.isPresent() || expectedOtherSourcesIncome.isPresent();
     }
 
     static List<SalaryGoldenCase> loadAll(String directory) {
@@ -100,12 +112,24 @@ record SalaryGoldenCase(
                 List.copyOf(years),
                 new Salary(List.copyOf(pay), salary.get("termsIncludeDearnessAllowance").asBoolean(),
                         List.copyOf(tenancies), List.copyOf(contributions), history(salary), payments(salary),
-                        policies(salary), journeys(salary), ledger(salary)),
+                        policies(salary), journeys(salary), ledger(salary), accounts(salary)),
                 money(expected, "salaryExemptions"),
                 expected.has("limitedBy") ? Optional.of(expected.get("limitedBy").asString()) : Optional.empty(),
                 money(expected, "employerContributionCharges"),
                 money(expected, "chapterEightDeduction"),
-                money(expected, "scheduleXvAggregate"));
+                money(expected, "scheduleXvAggregate"),
+                money(expected, "providentFundExcess"),
+                money(expected, "otherSourcesIncome"));
+    }
+
+    private static List<ProvidentFundAccount> accounts(JsonNode salary) {
+        List<ProvidentFundAccount> accounts = new ArrayList<>();
+        if (salary.has("providentFundAccounts")) {
+            salary.get("providentFundAccounts").forEach(account -> accounts.add(new ProvidentFundAccount(
+                    Money.of(account.get("contributed").asString()), account.get("employerContributes").asBoolean(),
+                    Money.of(account.get("taxableAccountInterest").asString()))));
+        }
+        return List.copyOf(accounts);
     }
 
     private static List<QualifyingPayment> payments(JsonNode salary) {
