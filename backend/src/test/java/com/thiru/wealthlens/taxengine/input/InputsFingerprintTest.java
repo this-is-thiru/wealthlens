@@ -152,7 +152,6 @@ class InputsFingerprintTest {
                                     Optional.empty(),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.of("100000"),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
-                                    0,
                                     Map.of(),
                                     Optional.empty())))),
                     Arguments.of(
@@ -283,7 +282,7 @@ class InputsFingerprintTest {
             EngineInputs claimed = copy(baseline(), r -> r.ledgers = new LedgerSnapshot(
                     Map.of(2022, new LeaveTravelBlock(1, false)), Optional.empty(),
                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
-                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, 0, Map.of(), Optional.empty()));
+                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, Map.of(), Optional.empty()));
 
             // When / Then
             assertThat(hashOf(claimed)).isNotEqualTo(hashOf(baseline()));

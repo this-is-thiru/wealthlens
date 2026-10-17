@@ -1,0 +1,99 @@
+{
+  "ruleId": "SETOFF-CARRIED-DISALLOWED-PART",
+  "_note": "The part of a carried house-property loss attributable to a deduction the new regime disallows — set off as any carried loss in the old regime, and neither set off nor carried in the new: \"without set off of— (i) any loss carried forward … from any earlier tax year, if such loss … is attributable to any of the deductions referred to in clause (a)\" (Income-tax Act, 2025 s.202(2)(b)(i), pp.227–228), \"deemed to have been given full effect to\" (s.202(3)). Clause (a)(v) is s.22(1)(b) for an own residence (s.21(6)) — the interest the new regime disallows. TY 2025-26: Income-tax Act, 1961 s.115BAC(2)(ii)(a), (3), inserted by the Finance Act, 2020 s.53. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-SETOFF (D-218). The attributable figure is the ledger's (CarriedHousePropertyLoss), from the year the loss arose.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.115BAC(2)(ii)(a), (3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.202(2)(b)(i), (3)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "LOSS"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.53 — Income-tax Act, 1961 s.115BAC inserted w.e.f. 1-4-2021, with s.115BAC(2)(ii)(b) and (3)",
+        "gazetteRef": "Act 12 of 2020: Gazette of India, Extraordinary, Part II, Section 1, 27-3-2020 (egazette 2020/218938), pp.33–34; s.115BAC(2)(ii) and (3) not amended by the Finance Acts 2023 (s.52, (2) opening and (i) only), 2024 (No. 2) (s.37, (1A)) or 2025 (s.25, (1A))",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2021-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "sourceDescription": "Gazette (egazette 2020/218938), Finance Act, 2020 s.53 (Income-tax Act, 1961 s.115BAC(2)(ii)(a), (3)), pp.33–34; not amended since (Finance Acts 2023 s.52, 2024 (No. 2) s.37, 2025 s.25 amend other parts)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.115BAC(2)(ii)(a), (3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.202(2)(b)(i), (3)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "LOSS"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.202(2)(b)(i), (3)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.202(2)(a)(v), (2)(b)(i), (3), pp.227–228",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.202(2)(b)(i), (3), pp.227–228",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

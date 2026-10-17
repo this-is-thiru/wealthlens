@@ -227,20 +227,19 @@ class AssesseeTest {
 
         @Test
         void theCarryForwardMapIsDefensivelyCopied() {
-            Map<TaxYearId, Money> mutable = new HashMap<>();
-            mutable.put(TaxYearId.of(2024), Money.of("200000"));
+            Map<TaxYearId, CarriedHousePropertyLoss> mutable = new HashMap<>();
+            mutable.put(TaxYearId.of(2024), new CarriedHousePropertyLoss(Money.of("200000"), Money.ZERO, Money.ZERO));
             LedgerSnapshot ledgers = new LedgerSnapshot(
                     Map.of(),
                     Optional.empty(),
                     Money.ZERO,
                     Money.ZERO,
-                    0,
                     mutable,
                     Optional.empty());
 
-            mutable.put(TaxYearId.of(2024), Money.of("999999"));
+            mutable.put(TaxYearId.of(2024), new CarriedHousePropertyLoss(Money.of("999999"), Money.ZERO, Money.ZERO));
 
-            assertThat(ledgers.housePropertyLossFrom(TaxYearId.of(2024)))
+            assertThat(ledgers.housePropertyLossCarriedForward().get(TaxYearId.of(2024)).loss())
                     .isEqualTo(Money.of("200000"));
         }
 
@@ -254,12 +253,10 @@ class AssesseeTest {
                     Optional.of(TaxYearId.of(2020)),
                     Money.of("500000"),
                     Money.of("300000"),
-                    3,
                     Map.of(),
                     Optional.of(TaxYearId.of(2022)));
 
             assertThat(ledgers.gratuityAlreadyAllowed()).isEqualTo(Money.of("500000"));
-            assertThat(ledgers.preConstructionInstalmentsClaimed()).isEqualTo(3);
             assertThat(ledgers.leaveTravelBlock(2022)).isEqualTo(new LeaveTravelBlock(2, true));
         }
 
@@ -272,17 +269,10 @@ class AssesseeTest {
                     Optional.of(TaxYearId.of(2019)),
                     Money.ZERO,
                     Money.ZERO,
-                    0,
                     Map.of(),
                     Optional.empty());
 
             assertThat(claimed.vrsAlreadyClaimed()).isTrue();
-        }
-
-        @Test
-        void anUnclaimedYearIsZeroRatherThanAbsent() {
-            assertThat(LedgerSnapshot.empty().housePropertyLossFrom(TaxYearId.of(2024)))
-                    .isEqualTo(Money.ZERO);
         }
 
         @Test
@@ -292,7 +282,6 @@ class AssesseeTest {
                             Optional.empty(),
                             null,
                             Money.ZERO,
-                            0,
                             Map.of(),
                             Optional.empty()))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -300,20 +289,24 @@ class AssesseeTest {
         }
 
         @Test
-        void aNegativeCountIsRejected() {
-            assertThatThrownBy(() -> new LedgerSnapshot(
-                            Map.of(),
-                            Optional.empty(),
-                            Money.ZERO,
-                            Money.ZERO,
-                            -1,
-                            Map.of(),
-                            Optional.empty()))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("negative");
+        void aNegativeBlockCountIsRejected() {
             assertThatThrownBy(() -> new LeaveTravelBlock(-1, false))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("negative");
+        }
+
+        @Test
+        void carriedHousePropertyLoss_whenAPartExceedsTheLoss_isRefused() {
+            // D-218: totals consumed, never remaining — the attributable part and the absorbed amount are parts of the loss
+            assertThatThrownBy(() -> new CarriedHousePropertyLoss(Money.of("100000"), Money.of("100001"), Money.ZERO))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("each at most the loss");
+            assertThatThrownBy(() -> new CarriedHousePropertyLoss(Money.of("100000"), Money.ZERO, Money.of("100001")))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("each at most the loss");
+            assertThatThrownBy(() -> new CarriedHousePropertyLoss(Money.of("-1"), Money.ZERO, Money.ZERO))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("may not be negative");
         }
 
         @Test

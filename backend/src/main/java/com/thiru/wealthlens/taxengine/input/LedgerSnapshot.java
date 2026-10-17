@@ -10,11 +10,12 @@ import java.util.Optional;
  *
  * <h2>Why a year is not enough</h2>
  *
- * <p>{@code 05-domain-model.md} M3.4. Six rules reach outside the year being computed, and each
- * would silently over-allow without this record: a four-calendar-year LTA block, a once-in-a-lifetime
+ * <p>{@code 05-domain-model.md} M3.4. Rules reach outside the year being computed, and each would
+ * silently over-allow without this record: a four-calendar-year LTA block, a once-in-a-lifetime
  * VRS exemption, gratuity and leave-encashment ceilings expressed as {@code A − B} across every
- * earlier year <b>and employer</b>, five equal pre-construction instalments, an eight-year
- * house-property loss carry-forward, and {@code DED-80E-002}'s eight-year window.
+ * earlier year <b>and employer</b>, an eight-year house-property loss carry-forward, and
+ * {@code DED-80E-002}'s eight-year window. The five pre-construction instalments need no ledger: each
+ * tax year's instalment is fixed by the year of acquisition (S2 s.22(1)(c); D-159).
  *
  * <p>M3.4's own recommendation is that each is persisted as an <b>append-only ledger keyed on
  * (profile, rule, tax year)</b> rather than a mutable counter, because a recomputation must be able
@@ -30,11 +31,10 @@ import java.util.Optional;
  *     exclusive with s.157 relief on the same amount ({@code RET-VRS-002})
  * @param gratuityAlreadyAllowed the {@code B} of {@code RET-GRAT-AGG-001}'s {@code A − B}
  * @param leaveEncashmentAlreadyAllowed the {@code B} of {@code RET-LEAVE-AGG-001}'s {@code A − B}
- * @param preConstructionInstalmentsClaimed how many of the five are gone
- *     ({@code HP-DED-PRECON-001})
- * @param housePropertyLossCarriedForward loss by the year it arose, so the eight-year expiry is
- *     computable ({@code SETOFF-CF-HP-001}). <b>Destroyed, not deferred, in the new regime</b>
- *     ({@code SETOFF-NEW-002}) — which is a rule about this map, not a reason to omit it
+ * @param housePropertyLossCarriedForward each carried house-property loss by the year it arose, so the
+ *     eight-year expiry is computable (S2 s.110; 1961 s.71B; D-218). The part attributable to a deduction
+ *     the new regime disallows is <b>destroyed, not deferred,</b> in a new-regime year (S2 s.202(3);
+ *     {@code SETOFF-NEW-002})
  * @param educationLoanInterestFirstYear starts {@code DED-80E-002}'s eight-year window
  */
 public record LedgerSnapshot(
@@ -42,8 +42,7 @@ public record LedgerSnapshot(
         Optional<TaxYearId> vrsClaimedIn,
         Money gratuityAlreadyAllowed,
         Money leaveEncashmentAlreadyAllowed,
-        int preConstructionInstalmentsClaimed,
-        Map<TaxYearId, Money> housePropertyLossCarriedForward,
+        Map<TaxYearId, CarriedHousePropertyLoss> housePropertyLossCarriedForward,
         Optional<TaxYearId> educationLoanInterestFirstYear) {
 
     public LedgerSnapshot {
@@ -52,11 +51,6 @@ public record LedgerSnapshot(
                     "LedgerSnapshot.leaveTravelByBlock may not be null; pass an empty map where nothing was claimed");
         }
         leaveTravelByBlock = Map.copyOf(leaveTravelByBlock);
-        if (preConstructionInstalmentsClaimed < 0) {
-            throw new IllegalArgumentException(
-                    "LedgerSnapshot.preConstructionInstalmentsClaimed must not be negative, but was "
-                            + preConstructionInstalmentsClaimed);
-        }
         if (gratuityAlreadyAllowed == null || leaveEncashmentAlreadyAllowed == null) {
             throw new IllegalArgumentException(
                     "LedgerSnapshot aggregate figures may not be null; pass Money.ZERO where"
@@ -83,7 +77,6 @@ public record LedgerSnapshot(
                 Optional.empty(),
                 Money.ZERO,
                 Money.ZERO,
-                0,
                 Map.of(),
                 Optional.empty());
     }
@@ -96,10 +89,5 @@ public record LedgerSnapshot(
     /** What one LTA block, by its first calendar year, already holds — nothing where nothing was claimed. */
     public LeaveTravelBlock leaveTravelBlock(int firstCalendarYear) {
         return leaveTravelByBlock.getOrDefault(firstCalendarYear, new LeaveTravelBlock(0, false));
-    }
-
-    /** The carried house-property loss that arose in one year, or zero. */
-    public Money housePropertyLossFrom(TaxYearId year) {
-        return housePropertyLossCarriedForward.getOrDefault(year, Money.ZERO);
     }
 }

@@ -80,7 +80,7 @@ class RulePackLoadTest {
             RulePack pack = load("rulepacks", TY_2026);
 
             assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
-            assertThat(pack.rules()).hasSize(161);
+            assertThat(pack.rules()).hasSize(163);
             assertThat(pack.regimes()).hasSize(2);
         }
 
@@ -101,7 +101,7 @@ class RulePackLoadTest {
 
             assertThat(pack.computationCacheKey())
                     .startsWith("2026-27|")
-                    .contains("law=2026-27.law.71")
+                    .contains("law=2026-27.law.72")
                     .doesNotContain("content=");
         }
 

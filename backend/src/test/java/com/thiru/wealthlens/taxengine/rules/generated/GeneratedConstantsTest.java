@@ -201,6 +201,8 @@ class GeneratedConstantsTest {
             "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
             "SAL-TAX-ON-EMPLOYMENT",
             "SETOFF-ACROSS-HEADS",
+            "SETOFF-CARRIED-DISALLOWED-PART",
+            "SETOFF-CARRIED-HOUSE-PROPERTY",
             "SETOFF-HOUSE-PROPERTY");
 
     private record Target(

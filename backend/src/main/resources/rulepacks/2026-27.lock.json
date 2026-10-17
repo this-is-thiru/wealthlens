@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.71",
-      "checksum": "sha256:0ba98310ce5537eeea526beafae0b44f022b7acb2f037a224f4188b81f664169"
+      "version": "2026-27.law.72",
+      "checksum": "sha256:d1154754e87ec7180656fa1e66893a8c8c53c86547d08e35bd56c2301d466df4"
     },
     "exec": {
       "version": "2026-27.exec.28",
@@ -180,6 +180,8 @@
     "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME": "sha256:e95e5213ced08dbec9fcbde9c78431f2165b409a97d253cb8ad154df7b08eeed",
     "SAL-TAX-ON-EMPLOYMENT": "sha256:8903208b873a76704282264cfd9bc0805c743a87cd4ad094777b3c846ea0d668",
     "SETOFF-ACROSS-HEADS": "sha256:438e2c119d41db735bd9d5fcb5772390a8a0e797f3cbbe5d9200cf75263692a3",
+    "SETOFF-CARRIED-DISALLOWED-PART": "sha256:867a7a84b49de1fa41d48756b01387cb2826d6a7e005e847ae545df575d7ba4f",
+    "SETOFF-CARRIED-HOUSE-PROPERTY": "sha256:79d94c3453f5ca013d25287148f63901afd52adc58c0c2ec27454df1d5f25fbc",
     "SETOFF-HOUSE-PROPERTY": "sha256:8d7d891623fe967a0b2b73cef1c07224cf7bbcc3132783ee99560b34771f7e42"
   },
   "instruments": {

@@ -1,9 +1,12 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
+import com.thiru.wealthlens.taxengine.input.CarriedHousePropertyLoss;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -21,6 +24,7 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,11 +47,20 @@ class SetOffNodeTest {
 
     private static NodeResult run(int year, RegimeCode regime, String salaries, String houseProperty,
             String otherSources) {
+        return run(year, regime, salaries, houseProperty, otherSources, Map.of());
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, String salaries, String houseProperty,
+            String otherSources, Map<TaxYearId, CarriedHousePropertyLoss> carried) {
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
+        LedgerSnapshot empty = LedgerSnapshot.empty();
+        LedgerSnapshot ledgers = new LedgerSnapshot(empty.leaveTravelByBlock(), empty.vrsClaimedIn(),
+                empty.gratuityAlreadyAllowed(), empty.leaveEncashmentAlreadyAllowed(), carried,
+                empty.educationLoanInterestFirstYear());
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), plain.entered(), plain.assessee(),
-                plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
+                plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack(year)).regime(regime).inputs(inputs)
                 .given(NodeIds.SALARY_INCOME, Money.of(salaries))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of(houseProperty))
@@ -162,5 +175,126 @@ class SetOffNodeTest {
             assertThat(line.out()).isEqualTo(rupees("50000"));
             assertThat(line.limitedBy().orElseThrow()).contains("not carried forward");
         });
+    }
+
+    private static CarriedHousePropertyLoss carried(String loss, String attributable, String absorbed) {
+        return new CarriedHousePropertyLoss(Money.of(loss), Money.of(attributable), Money.of(absorbed));
+    }
+
+    private static List<TraceLine> lines(NodeResult result, com.thiru.wealthlens.taxengine.rules.id.RuleId rule,
+            StepKind kind) {
+        return result.trace().stream().filter(line -> line.rule().equals(rule) && line.kind() == kind).toList();
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenALossIsBroughtForward_setsItOffAgainstHousePropertyIncome(int year) {
+        // When — 5,00,000 salary, 1,00,000 house-property income, 60,000 carried from two years before
+        NodeResult result = run(year, OLD, "500000", "100000", "0",
+                Map.of(TaxYearId.of(year - 2), carried("60000", "0", "0")));
+
+        // Then — 5,00,000 + (1,00,000 − 60,000) (S2 s.110(1)(a); 1961 s.71B)
+        assertThat(result.value()).isEqualTo(rupees("540000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF)).singleElement()
+                .satisfies(line -> {
+                    assertThat(line.in()).isEqualTo(rupees("100000"));
+                    assertThat(line.out()).isEqualTo(rupees("60000"));
+                    assertThat(line.limitedBy().orElseThrow()).contains("OQ-29");
+                });
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.MEASURE)).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenTheCarriedLossExceedsHousePropertyIncome_leavesSalariesAloneAndCarriesTheRest() {
+        // When — 50,000 house-property income, 80,000 carried
+        NodeResult result = run(2026, OLD, "500000", "50000", "0", Map.of(TaxYearId.of(2024), carried("80000", "0", "0")));
+
+        // Then — only against house property: 50,000 set off, salary untouched, 30,000 still carried
+        assertThat(result.value()).isEqualTo(rupees("500000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.MEASURE)).singleElement()
+                .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("30000")));
+    }
+
+    @Test
+    void evaluate_whenLossesAreCarriedFromTwoYears_usesTheOldestFirst() {
+        // When — 50,000 house-property income; 30,000 from 2023-24 and 40,000 from 2024-25
+        NodeResult result = run(2026, OLD, "0", "50000", "0", Map.of(TaxYearId.of(2023), carried("30000", "0", "0"),
+                TaxYearId.of(2024), carried("40000", "0", "0")));
+
+        // Then — 30,000 of 2023-24's, then 20,000 of 2024-25's; 20,000 of it still carried
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF))
+                .extracting(TraceLine::out).containsExactly(rupees("30000"), rupees("20000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF).get(0).limitedBy()
+                .orElseThrow()).contains("loss of 2023-24");
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.MEASURE)).singleElement()
+                .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("20000")));
+    }
+
+    @Test
+    void evaluate_whenALossIsInItsNinthYear_hasExpired() {
+        // When — TY 2026-27: 2017-18's loss is nine years back, 2018-19's eight (S2 s.110(2))
+        NodeResult result = run(2026, OLD, "0", "100000", "0", Map.of(TaxYearId.of(2017), carried("50000", "0", "0"),
+                TaxYearId.of(2018), carried("10000", "0", "0")));
+
+        // Then — 2018-19's 10,000 set off; 2017-18's 50,000 expired
+        assertThat(result.value()).isEqualTo(rupees("90000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF)).extracting(TraceLine::out)
+                .containsExactly(rupees("10000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.MEASURE)).singleElement()
+                .satisfies(line -> {
+                    assertThat(line.out()).isEqualTo(rupees("50000"));
+                    assertThat(line.limitedBy().orElseThrow()).contains("2017-18 expired");
+                });
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheNewRegimeMeetsAnAttributablePart_destroysItAndUsesTheRest(int year) {
+        // When — 1,00,000 house-property income; 70,000 carried, 50,000 of it from own-residence interest
+        NodeResult result = run(year, NEW, "0", "100000", "0",
+                Map.of(TaxYearId.of(year - 1), carried("70000", "50000", "0")));
+
+        // Then — the 50,000 gone (S2 s.202(2)(b)(i), (3)); the 20,000 set off: 1,00,000 − 20,000
+        assertThat(result.value()).isEqualTo(rupees("80000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_DISALLOWED_PART, StepKind.SET_OFF)).singleElement()
+                .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("0")));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_DISALLOWED_PART, StepKind.MEASURE)).singleElement()
+                .satisfies(line -> {
+                    assertThat(line.out()).isEqualTo(rupees("50000"));
+                    assertThat(line.limitedBy().orElseThrow()).contains("deemed to have been given full effect to");
+                });
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF)).extracting(TraceLine::out)
+                .containsExactly(rupees("20000"));
+    }
+
+    @Test
+    void evaluate_whenTheOldRegimeMeetsAnAttributablePart_usesItFirst() {
+        // When — the same ledger, the old regime
+        NodeResult result = run(2026, OLD, "0", "100000", "0", Map.of(TaxYearId.of(2025), carried("70000", "50000", "0")));
+
+        // Then — 50,000 (the attributable part, first) then 20,000: 1,00,000 − 70,000
+        assertThat(result.value()).isEqualTo(rupees("30000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_DISALLOWED_PART, StepKind.SET_OFF)).extracting(TraceLine::out)
+                .containsExactly(rupees("50000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF)).extracting(TraceLine::out)
+                .containsExactly(rupees("20000"));
+    }
+
+    @Test
+    void evaluate_whenPartOfACarriedLossWasAbsorbedEarlier_usesOnlyWhatRemains() {
+        // When — 70,000 carried, 50,000 attributable, 60,000 absorbed since: 10,000 remains, none attributable
+        NodeResult result = run(2026, NEW, "0", "100000", "0", Map.of(TaxYearId.of(2024), carried("70000", "50000", "60000")));
+
+        // Then — 10,000 set off; nothing destroyed
+        assertThat(result.value()).isEqualTo(rupees("90000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_DISALLOWED_PART, StepKind.MEASURE)).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenTheLedgerCarriesALossFromThisYear_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> run(2026, OLD, "0", "100000", "0", Map.of(TaxYearId.of(2026), carried("1000", "0", "0"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("carried only to later years");
     }
 }

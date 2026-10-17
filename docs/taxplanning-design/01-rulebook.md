@@ -1419,6 +1419,18 @@ matters for the same reason.
 > Verified by: Gazette 265620 pp.147–148, 227–228; egazette 2017/175141 p.18; egazette 2020/218938 pp.33–34; Acts
 > of the Parliament of India, 1991, p.185; `SetOffNodeTest`; `T6HousePropertyAndOtherSourcesTest`.
 
+> **Addendum (W-081b, 2026-10-17, D-218):** carry-forward is built, both years:
+> - `SETOFF-CARRIED-HOUSE-PROPERTY` (`SETOFF-CF-HP-001`; S2 s.110; 1961 s.71B, inserted by the Finance (No. 2)
+>   Act, 1998 s.26), a `TaxYearSpan(8)`: the loss carried from the ledger is set off only against the
+>   house-property income left after this year's set-off, and expires after eight years.
+> - `SETOFF-CARRIED-DISALLOWED-PART` (`SETOFF-NEW-001`'s first limb; S2 s.202(2)(b)(i), (3); 1961
+>   s.115BAC(2)(ii)(a), (3)): the part of a carried loss attributable to a deduction the new regime disallows. It is
+>   listed in `DIS-NEW-TAX-REGIME-NO-SETOFF`, so a new-regime year destroys it.
+> - Order: oldest year first, the attributable part first — declared, not prescribed (OQ-29).
+> - s.121 (the return condition) does not reach s.110.
+>
+> Verified by: Gazette 265620 pp.148, 158, 227–228; Acts of the Parliament of India, 1998, p.98; `SetOffNodeTest`.
+
 ---
 
 ## R19 — Relief for arrears

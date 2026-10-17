@@ -126,7 +126,7 @@ class RetirementNodeTest {
     void evaluate_whenVoluntaryRetirementWasAllowedInAnotherYear_givesANilLineNamingIt() {
         // Given — s.19(2)(e)(ii): once only
         LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Optional.of(TaxYearId.of(2021)), Money.ZERO,
-                Money.ZERO, 0, Map.of(), Optional.empty());
+                Money.ZERO, Map.of(), Optional.empty());
 
         // When
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
@@ -143,7 +143,7 @@ class RetirementNodeTest {
     void evaluate_whenVoluntaryRetirementWasAllowedInThisYear_isStillDeducted() {
         // Given — a recomputation of the year the deduction was allowed in
         LedgerSnapshot thisYear = new LedgerSnapshot(Map.of(), Optional.of(TaxYearId.of(2026)), Money.ZERO,
-                Money.ZERO, 0, Map.of(), Optional.empty());
+                Money.ZERO, Map.of(), Optional.empty());
 
         // When
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
@@ -270,7 +270,7 @@ class RetirementNodeTest {
     }
 
     private static LedgerSnapshot allowedBefore(String gratuity, String leave) {
-        return new LedgerSnapshot(Map.of(), Optional.empty(), Money.of(gratuity), Money.of(leave), 0, Map.of(),
+        return new LedgerSnapshot(Map.of(), Optional.empty(), Money.of(gratuity), Money.of(leave), Map.of(),
                 Optional.empty());
     }
 

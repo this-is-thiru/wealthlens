@@ -192,7 +192,7 @@ final class GoldenCaseRunner {
     private static LedgerSnapshot ledger(SalaryGoldenCase.Salary salary) {
         LedgerSnapshot empty = LedgerSnapshot.empty();
         return new LedgerSnapshot(salary.leaveTravelLedger(), empty.vrsClaimedIn(), empty.gratuityAlreadyAllowed(),
-                empty.leaveEncashmentAlreadyAllowed(), empty.preConstructionInstalmentsClaimed(),
+                empty.leaveEncashmentAlreadyAllowed(),
                 empty.housePropertyLossCarriedForward(), empty.educationLoanInterestFirstYear());
     }
 

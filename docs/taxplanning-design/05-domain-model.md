@@ -472,6 +472,17 @@ investment or expenditure evidence.
 mutable counter. A recomputation must be able to reproduce any past year's answer, and a counter that
 has been decremented cannot.
 
+> **Erratum (W-081b, 2026-10-17, D-218):**
+> - `preConstructionInstalmentsClaimed` is not cross-year state. Each tax year's instalment is fixed by the year
+>   the house was acquired or constructed (S2 s.22(1)(c); W-078b), so the ledger field was removed (D-159).
+> - The carried house-property loss is held per year of origin as `CarriedHousePropertyLoss(loss,
+>   attributableToNewRegimeDisallowance, absorbedSince)`. These are totals consumed, never a remaining balance.
+>   The attributable part is what a new-regime year destroys (S2 s.202(2)(b)(i), (3)).
+> - The year's newly carried, still-carried, expired and destroyed amounts are trace lines (D-VIEWFROMTRACE). No
+>   item yet persists ledgers from them.
+>
+> Verified by: `LedgerSnapshot`, `CarriedHousePropertyLoss`, `SetOffNodeTest`.
+
 ---
 
 ## M4 — Documents: ingestion, parse result, confidence, reconciliation

@@ -143,6 +143,8 @@ class TimelineReaderTest {
             new RuleId("SAL-SALARY-FOR-RPF"),
             new RuleId("SETOFF-ACROSS-HEADS"),
             new RuleId("SETOFF-HOUSE-PROPERTY"),
+            new RuleId("SETOFF-CARRIED-HOUSE-PROPERTY"),
+            new RuleId("SETOFF-CARRIED-DISALLOWED-PART"),
             new RuleId("HP-ANNUAL-VALUE"),
             new RuleId("HP-OWN-RESIDENCE"),
             new RuleId("HP-STANDARD-DEDUCTION"),
