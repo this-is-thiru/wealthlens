@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.input;
 
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 
@@ -15,15 +16,18 @@ import java.time.LocalDate;
  * @param issuedOn when the policy was issued
  * @param unitLinked whether it is a unit linked insurance policy (S2 Schedule II Note 1(f))
  * @param onDeath whether the sums were received on the death of a person
- * @param highestAnnualPremium the highest annual premium payable during the policy's term
+ * @param highestAnnualPremium the highest annual premium payable during the policy's term, without the Goods and
+ *     Services Tax (Circular No. 15/2023 para 5)
  * @param actualCapitalSumAssured the minimum amount assured on the insured event, without premiums to be returned or
  *     any bonus (S2 Schedule XV para 2(2))
  * @param coversDisabilityOrSpecifiedDisease whether it is a special policy — on the life of a person with a disability
  *     or severe disability (s.154), or suffering from a disease or ailment specified under s.128
  * @param issuedByIfscOffice whether an International Financial Services Centre insurance office issued it
- * @param heldWithOthersOfItsClass whether the person holds another policy of the same capped class — a unit linked
- *     policy issued on or after 1 February 2021, or another policy issued on or after 1 April 2023 — whose premiums
- *     the aggregate limit counts together ({@code W-079g2b})
+ * @param claimsExemption whether the person claims this policy's consideration exempt — which, for a capped policy (a
+ *     unit linked one issued on or after 1 February 2021, another on or after 1 April 2023), puts its premium in the set
+ *     the aggregate limit tests (CBDT Circulars No. 2/2022, 15/2023; D-207); a capped policy not claimed is charged
+ * @param premiumFrom the first tax year the premium is payable
+ * @param premiumTo the last tax year the premium is payable — a surrender ends it
  * @param premiumsNotDeductedOrUsed the premium paid during the term till the receipt that was not claimed as a
  *     deduction and not counted in an earlier year's computation — r.59's B or D
  */
@@ -36,12 +40,17 @@ public record LifePolicyReceipt(
         Money actualCapitalSumAssured,
         boolean coversDisabilityOrSpecifiedDisease,
         boolean issuedByIfscOffice,
-        boolean heldWithOthersOfItsClass,
+        boolean claimsExemption,
+        TaxYearId premiumFrom,
+        TaxYearId premiumTo,
         Money premiumsNotDeductedOrUsed) {
 
     public LifePolicyReceipt {
-        if (issuedOn == null) {
-            throw new IllegalArgumentException("A life policy receipt needs the policy's issue date");
+        if (issuedOn == null || premiumFrom == null || premiumTo == null) {
+            throw new IllegalArgumentException("A life policy receipt needs the policy's issue date and premium years");
+        }
+        if (premiumTo.startYear() < premiumFrom.startYear()) {
+            throw new IllegalArgumentException("A life policy's premium years may not end before they start");
         }
         for (Money figure : new Money[] {received, highestAnnualPremium, actualCapitalSumAssured,
             premiumsNotDeductedOrUsed}) {
@@ -53,5 +62,10 @@ public record LifePolicyReceipt(
             throw new IllegalArgumentException("A life policy receipt needs an actual capital sum assured above nil,"
                     + " the ratio's denominator");
         }
+    }
+
+    /** Whether the premium is payable in {@code year}. */
+    public boolean payableIn(int year) {
+        return year >= premiumFrom.startYear() && year <= premiumTo.startYear();
     }
 }

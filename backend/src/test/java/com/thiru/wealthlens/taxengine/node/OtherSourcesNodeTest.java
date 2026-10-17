@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.BusinessTrustUnits;
+import com.thiru.wealthlens.taxengine.input.ClaimedPolicy;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.GiftExclusion;
@@ -28,6 +29,7 @@ import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -81,6 +83,16 @@ class OtherSourcesNodeTest {
     private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items,
             List<ProvidentFundAccount> accounts, List<GiftReceived> gifts, List<BusinessTrustUnits> trusts,
             List<LifePolicyReceipt> policies) {
+        return run(year, regime, new HeadEntries(items, accounts, gifts, trusts, policies, List.of()));
+    }
+
+    /** Everything entered for the head, in {@link EnteredFacts}' order. */
+    private record HeadEntries(List<OtherSourceItem> items, List<ProvidentFundAccount> accounts,
+            List<GiftReceived> gifts, List<BusinessTrustUnits> trusts, List<LifePolicyReceipt> policies,
+            List<ClaimedPolicy> claimed) {
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, HeadEntries head) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -92,7 +104,8 @@ class OtherSourcesNodeTest {
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                        List.of(), List.of(), items, accounts, gifts, trusts, policies),
+                        List.of(), List.of(), head.items(), head.accounts(), head.gifts(), head.trusts(),
+                        head.policies(), head.claimed()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs).run(new OtherSourcesNode());
@@ -744,7 +757,12 @@ class OtherSourcesNodeTest {
     private static LifePolicyReceipt policy(LocalDate issuedOn, String received, String premium, String sumAssured,
             String unused) {
         return new LifePolicyReceipt(Money.of(received), issuedOn, false, false, Money.of(premium), Money.of(sumAssured),
-                false, false, false, Money.of(unused));
+                false, false, true, years(issuedOn), TaxYearId.of(years(issuedOn).startYear() + 9), Money.of(unused));
+    }
+
+    /** The tax year a policy issued on {@code issuedOn} first pays premium in. */
+    private static TaxYearId years(LocalDate issuedOn) {
+        return TaxYearId.of(issuedOn.getMonthValue() >= 4 ? issuedOn.getYear() : issuedOn.getYear() - 1);
     }
 
     private static NodeResult runPolicies(int year, LifePolicyReceipt... policies) {
@@ -787,7 +805,8 @@ class OtherSourcesNodeTest {
     void evaluate_whenASpecialPolicysPremiumIsWithinFifteenPerCent_excludesTheSums(int year) {
         // When — the same 11.67%, on the life of a person with a disability
         NodeResult result = runPolicies(year, new LifePolicyReceipt(Money.of("1000000"), IN_2015, false, false,
-                Money.of("70000"), Money.of("600000"), true, false, false, Money.of("300000")));
+                Money.of("70000"), Money.of("600000"), true, false, true, TaxYearId.of(2015), TaxYearId.of(2024),
+                Money.of("300000")));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
@@ -830,7 +849,8 @@ class OtherSourcesNodeTest {
     void evaluate_whenTheSumsAreReceivedOnADeath_excludesThem(int year) {
         // When — the same policy, on the insured's death
         NodeResult result = runPolicies(year, new LifePolicyReceipt(Money.of("4000000"), IN_2023, false, true,
-                Money.of("600000"), Money.of("10000000"), false, false, false, Money.of("3000000")));
+                Money.of("600000"), Money.of("10000000"), false, false, true, TaxYearId.of(2023), TaxYearId.of(2032),
+                Money.of("3000000")));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
@@ -841,21 +861,11 @@ class OtherSourcesNodeTest {
     void evaluate_whenAUnitLinkedPolicyIsNotExcluded_refusesItAsCapitalGains(int year) {
         // When / Then — a ULIP from 2022 at 3,00,000 a year, above 2,50,000
         LifePolicyReceipt ulip = new LifePolicyReceipt(Money.of("2000000"), LocalDate.of(2022, 6, 1), true, false,
-                Money.of("300000"), Money.of("5000000"), false, false, false, Money.of("1500000"));
+                Money.of("300000"), Money.of("5000000"), false, false, true, TaxYearId.of(2022), TaxYearId.of(2031),
+                Money.of("1500000"));
         assertThatThrownBy(() -> runPolicies(year, ulip))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("W-088");
-    }
-
-    @ParameterizedTest(name = "TY {0}")
-    @ValueSource(ints = {2025, 2026})
-    void evaluate_whenACappedPolicyIsHeldWithOthersOfItsClass_refusesItNamingTheRowThatBuildsIt(int year) {
-        // When / Then
-        LifePolicyReceipt held = new LifePolicyReceipt(Money.of("4000000"), IN_2023, false, false, Money.of("600000"),
-                Money.of("10000000"), false, false, true, Money.of("3000000"));
-        assertThatThrownBy(() -> runPolicies(year, held))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-079g2b");
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -873,7 +883,8 @@ class OtherSourcesNodeTest {
     void evaluate_whenAnIfscOfficeIssuedTheCappedPolicyIn2025_excludesTheSums(int year) {
         // When — 6,00,000 a year on 1,00,00,000, issued 1-5-2025 by an IFSC office
         NodeResult result = runPolicies(year, new LifePolicyReceipt(Money.of("4000000"), LocalDate.of(2025, 5, 1),
-                false, false, Money.of("600000"), Money.of("10000000"), false, true, false, Money.of("3000000")));
+                false, false, Money.of("600000"), Money.of("10000000"), false, true, true, TaxYearId.of(2025),
+                TaxYearId.of(2034), Money.of("3000000")));
 
         // Then — no premium limit (TY 2026-27 from 1-4-2025; TY 2025-26 any date); 6% within 10%
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
@@ -889,5 +900,135 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("710000")));
+    }
+
+    /** A capped policy's receipt — not unit linked, issued on {@code issuedOn}, sum assured ten times the premium. */
+    private static LifePolicyReceipt capped(LocalDate issuedOn, int fromYear, int toYear, String premium,
+            String received, String unused, boolean claims) {
+        Money annual = Money.of(premium);
+        return new LifePolicyReceipt(Money.of(received), issuedOn, false, false, annual,
+                Money.of(annual.amountInRupees().multiply(BigDecimal.TEN).toPlainString()), false, false,
+                claims, TaxYearId.of(fromYear), TaxYearId.of(toYear), Money.of(unused));
+    }
+
+    private static ClaimedPolicy old(LocalDate issuedOn, boolean unitLinked, String premium, int fromYear, int toYear) {
+        return new ClaimedPolicy(issuedOn, unitLinked, Money.of(premium), TaxYearId.of(fromYear), TaxYearId.of(toYear));
+    }
+
+    private static NodeResult runCapped(int year, List<ClaimedPolicy> claimed, LifePolicyReceipt... receipts) {
+        return run(year, OLD, new HeadEntries(List.of(), List.of(), List.of(), List.of(), List.of(receipts), claimed));
+    }
+
+    private static final LocalDate APRIL_2023 = LocalDate.of(2023, 4, 1);
+    private static final LocalDate APRIL_2024 = LocalDate.of(2024, 4, 1);
+
+    /*
+     * Several capped policies, from the examples of CBDT Circular No. 15/2023 (other policies, ₹5,00,000), continued
+     * by S2 s.536(2)(j) (D-207; docs/taxplanning-build/sources/2026-10-17-capped-policies.md A3). Premium years run
+     * from issue to the year before maturity; received and unused premium are fixtures.
+     */
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenOnePolicyIsOverTheLimitAlone_chargesItAndExcludesTheOther(int year) {
+        // When — Ex. 4: A 4,50,000 and B 5,50,000, both claimed
+        NodeResult result = runCapped(year, List.of(),
+                capped(APRIL_2023, 2023, 2032, "450000", "5200000", "4500000", true),
+                capped(APRIL_2023, 2023, 2032, "550000", "6000000", "5500000", true));
+
+        // Then — B over 5,00,000 alone: 60,00,000 − 55,00,000 = 5,00,000; A excluded
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.trace()).extracting(TraceLine::kind).containsExactly(StepKind.EXEMPTION, StepKind.INCOME);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheClaimedSetIsWithinTheLimit_excludesEach(int year) {
+        // When — Ex. 5: A 1,00,000 and B 3,50,000 claimed; C 6,00,000 over alone
+        NodeResult result = runCapped(year, List.of(),
+                capped(APRIL_2023, 2023, 2032, "100000", "1200000", "1000000", true),
+                capped(APRIL_2023, 2023, 2032, "350000", "4000000", "3500000", true),
+                capped(APRIL_2023, 2023, 2032, "600000", "7000000", "6000000", true));
+
+        // Then — 4,50,000 within 5,00,000: A and B excluded; C 70,00,000 − 60,00,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenSeveralClaimsTogetherBreachTheLimit_refusesForThePersonToChoose(int year) {
+        // When / Then — 1,00,000 + 3,50,000 + 2,00,000 = 6,50,000, all claimed
+        assertThatThrownBy(() -> runCapped(year, List.of(),
+                        capped(APRIL_2023, 2023, 2032, "100000", "1200000", "1000000", true),
+                        capped(APRIL_2023, 2023, 2032, "350000", "4000000", "3500000", true),
+                        capped(APRIL_2023, 2023, 2032, "200000", "2400000", "2000000", true)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("choose which to claim");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenASingleClaimBreachesWithAnOldPolicy_chargesIt(int year) {
+        // When — Ex. 7: old X 4,50,000 (2023-24 to 2032-33); A 1,00,000 from 2024-25 claimed
+        NodeResult result = runCapped(year, List.of(old(APRIL_2023, false, "450000", 2023, 2032)),
+                capped(APRIL_2024, 2024, 2033, "100000", "1200000", "1000000", true));
+
+        // Then — 5,50,000 in 2024-25: not excluded; 12,00,000 − 10,00,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAClaimWithAnOldPolicyStaysWithinTheLimit_excludesIt(int year) {
+        // When — Ex. 9: old X 2,50,000; B 2,50,000 claimed
+        NodeResult result = runCapped(year, List.of(old(APRIL_2023, false, "250000", 2023, 2032)),
+                capped(APRIL_2024, 2024, 2033, "250000", "3800000", "2500000", true));
+
+        // Then — 5,00,000 does not exceed
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenThePremiumYearsDoNotOverlap_excludesBoth(int year) {
+        // When — Ex. 8: old X 5,00,000 for 2023-24 to 2033-34; A 5,00,000 for 2034-35 to 2047-48
+        NodeResult result = runCapped(year, List.of(old(APRIL_2023, false, "500000", 2023, 2033)),
+                capped(LocalDate.of(2034, 4, 1), 2034, 2047, "500000", "5200000", "5000000", true));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAnOldUlipIsHeld_testsOtherPoliciesApart(int year) {
+        // When — Ex. 13: old ULIP X 1,00,000 and old policy A 1,00,000; policy C 1,50,000 claimed
+        NodeResult result = runCapped(year, List.of(old(LocalDate.of(2021, 4, 1), true, "100000", 2021, 2032),
+                        old(APRIL_2023, false, "100000", 2023, 2032)),
+                capped(APRIL_2023, 2023, 2032, "150000", "1800000", "1500000", true));
+
+        // Then — A + C = 2,50,000 within 5,00,000; the ULIP counts toward its own class only
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenACappedPolicyIsNotClaimed_chargesIt(int year) {
+        // When — within every limit, but not claimed exempt
+        NodeResult result = runCapped(year, List.of(),
+                capped(APRIL_2023, 2023, 2032, "100000", "1200000", "1000000", false));
+
+        // Then — 12,00,000 − 10,00,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAnOldPolicyIsNotOfACappedClass_isRefused(int year) {
+        // When / Then — a 2015 policy is outside the caps
+        assertThatThrownBy(() -> runCapped(year, List.of(old(LocalDate.of(2015, 4, 1), false, "100000", 2015, 2024)),
+                        capped(APRIL_2023, 2023, 2032, "100000", "1200000", "1000000", true)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not of a capped class");
     }
 }

@@ -145,8 +145,8 @@ public final class OtherSourcesNode implements ComputationNode {
         for (int position = 0; position < trusts.size(); position++) {
             head = head.plus(businessTrustIncome(lines, position, trusts.get(position)));
         }
-        for (int position = 0; position < policies.size(); position++) {
-            head = head.plus(LifePolicySums.income(ctx, lines, position, policies.get(position)));
+        if (!policies.isEmpty()) {
+            head = head.plus(LifePolicySums.income(ctx, lines, policies, ctx.inputs().entered().claimedLifePolicies()));
         }
         if (head.isLessThan(Money.ZERO)) {
             throw new IllegalArgumentException("Income from other sources is a loss of " + Money.ZERO.minus(head)

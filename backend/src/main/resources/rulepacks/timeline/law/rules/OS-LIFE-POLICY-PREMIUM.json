@@ -1,6 +1,6 @@
 {
   "ruleId": "OS-LIFE-POLICY-PREMIUM",
-  "_note": "The premium a capped life policy may not exceed in any year for its sums to be excluded (D-205). TY 2026-27: Income-tax Act, 2025 Schedule II Table Sl. 2 col. C (a): a unit linked policy issued on or after 1-2-2021, \"aggregate of premium for all such policies (in any of the tax years during the term of all of such policies) is ≤ ₹ 2,50,000\"; any other policy issued on or after 1-4-2023, ≤ ₹ 5,00,000 (p.499); (b) the limits \"shall not apply to any sum received under a life Insurance policy issued on or after the 1st April, 2025, by the international Financial Services Centre Insurance Office\". Not on death (col. C (a)). TY 2025-26: 1961 s.10(10D) fourth and sixth provisos (FA 2021 s.6(c); FA 2023 s.5(d)), the eighth as FA 2025 s.6(e) substituted it — not on death, nor for any policy an IFSC insurance office issued, with no issue date. Several capped policies of one class are W-079g2b's, under the Board's guidelines. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-life-policies.md.",
+  "_note": "The premium a capped life policy may not exceed in any year for its sums to be excluded (D-205). TY 2026-27: Income-tax Act, 2025 Schedule II Table Sl. 2 col. C (a): a unit linked policy issued on or after 1-2-2021, \"aggregate of premium for all such policies (in any of the tax years during the term of all of such policies) is ≤ ₹ 2,50,000\"; any other policy issued on or after 1-4-2023, ≤ ₹ 5,00,000 (p.499); (b) the limits \"shall not apply to any sum received under a life Insurance policy issued on or after the 1st April, 2025, by the international Financial Services Centre Insurance Office\". Not on death (col. C (a)). TY 2025-26: 1961 s.10(10D) fourth and sixth provisos (FA 2021 s.6(c); FA 2023 s.5(d)), the eighth as FA 2025 s.6(e) substituted it — not on death, nor for any policy an IFSC insurance office issued, with no issue date. Several capped policies of one class follow the Board's guidelines, CBDT Circulars No. 2/2022 (ULIPs, 19-1-2022) and No. 15/2023 (other policies, 16-8-2023), in force for TY 2026-27 by S2 s.536(2)(j): only this year's claims and the policies claimed exempt earlier count, year by year over their premium years, and a claim that breaches is not excluded (LifePolicySums; D-207); premium is without GST (No. 15/2023 para 5). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-life-policies.md.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -44,7 +44,7 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
-        "sourceDescription": "Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.6(e) and s.1(2)(a); CG-DL-E-31032023-244830, Finance Act, 2023 s.5(d), pp.15–16; CG-DL-E-28032021-226208, Finance Act, 2021 s.6(c), pp.17–18 (docs/taxplanning-build/sources/2026-10-17-life-policies.md)",
+        "sourceDescription": "Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.6(e) and s.1(2)(a); CG-DL-E-31032023-244830, Finance Act, 2023 s.5(d), pp.15–16; CG-DL-E-28032021-226208, Finance Act, 2021 s.6(c), pp.17–18 (docs/taxplanning-build/sources/2026-10-17-life-policies.md); CBDT Circular No. 2/2022 (19-1-2022, F. No. 370142/61/2021-TPL) and No. 15/2023 (16-8-2023, F. No. 370142/28/2023-TPL), the Department's PDFs as the owner saved them (docs/taxplanning-build/sources/2026-10-17-capped-policies.md)",
         "accessedOn": "2026-10-17",
         "verificationLevel": "SOURCE_CHECKED"
       }
@@ -89,7 +89,7 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule II Table Sl. 2 col. C (a), (b), p.499; Finance Act, 2026 does not amend Sl. 2",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule II Table Sl. 2 col. C (a), (b), p.499; Finance Act, 2026 does not amend Sl. 2; Gazette CG-DL-E-22082025-265620 s.536(2)(j), p.492, continuing them; CBDT Circular No. 2/2022 (19-1-2022, F. No. 370142/61/2021-TPL) and No. 15/2023 (16-8-2023, F. No. 370142/28/2023-TPL), the Department's PDFs as the owner saved them (docs/taxplanning-build/sources/2026-10-17-capped-policies.md)",
         "accessedOn": "2026-10-17",
         "verificationLevel": "SOURCE_CHECKED"
       }
@@ -97,7 +97,7 @@
   ],
   "headProvenance": {
     "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
-    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule II Table Sl. 2 col. C (a), (b), p.499; Finance Act, 2026 does not amend Sl. 2",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule II Table Sl. 2 col. C (a), (b), p.499; Finance Act, 2026 does not amend Sl. 2; Gazette CG-DL-E-22082025-265620 s.536(2)(j), p.492, continuing them; CBDT Circular No. 2/2022 (19-1-2022, F. No. 370142/61/2021-TPL) and No. 15/2023 (16-8-2023, F. No. 370142/28/2023-TPL), the Department's PDFs as the owner saved them (docs/taxplanning-build/sources/2026-10-17-capped-policies.md)",
     "accessedOn": "2026-10-17",
     "verificationLevel": "SOURCE_CHECKED"
   }

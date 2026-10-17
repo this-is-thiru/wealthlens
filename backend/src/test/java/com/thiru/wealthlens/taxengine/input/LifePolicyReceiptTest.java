@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.input;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,7 @@ class LifePolicyReceiptTest {
 
     private static LifePolicyReceipt receipt(String received, String premium, String sumAssured, String unused) {
         return new LifePolicyReceipt(Money.of(received), LocalDate.of(2015, 6, 1), false, false, Money.of(premium),
-                Money.of(sumAssured), false, false, false, Money.of(unused));
+                Money.of(sumAssured), false, false, true, TaxYearId.of(2015), TaxYearId.of(2024), Money.of(unused));
     }
 
     @Test
@@ -41,7 +42,15 @@ class LifePolicyReceiptTest {
     @Test
     void construct_whenTheIssueDateIsMissing_isRefused() {
         assertThatThrownBy(() -> new LifePolicyReceipt(Money.ZERO, null, false, false, Money.ZERO, Money.of("1"), false,
-                        false, false, Money.ZERO))
+                        false, true, TaxYearId.of(2015), TaxYearId.of(2024), Money.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void construct_whenThePremiumYearsRunBackwards_isRefused() {
+        assertThatThrownBy(() -> new LifePolicyReceipt(Money.ZERO, LocalDate.of(2023, 4, 1), false, false, Money.ZERO,
+                        Money.of("1"), false, false, true, TaxYearId.of(2030), TaxYearId.of(2029), Money.ZERO))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("premium years");
     }
 }

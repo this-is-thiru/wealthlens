@@ -47,7 +47,8 @@ import java.util.Optional;
  * with s.134 (D-141), donations with s.133 (D-142), the houses owned with income from house property (D-155), the items of income from other
  * sources with that head (D-194), the person's own provident fund accounts with their taxable interest
  * (D-198), the gifts received with the charge on them (D-201), business-trust holdings with their specified sums
- * (D-203), life-policy receipts with their exclusion and charge (D-205). Every
+ * (D-203), life-policy receipts with their exclusion and charge (D-205), the policies claimed exempt earlier for
+ * the aggregate premium limit (D-207). Every
  * later income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -92,6 +93,7 @@ import java.util.Optional;
  * @param giftsReceived each sum or property received without or for inadequate consideration, in the order entered
  * @param businessTrustUnits each holding of a business trust's units, for its specified sum, in the order entered
  * @param lifePolicyReceipts each sum received under a life insurance policy, in the order entered
+ * @param claimedLifePolicies each capped policy whose consideration was claimed exempt in an earlier tax year
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -130,7 +132,8 @@ public record EnteredFacts(
         List<ProvidentFundAccount> providentFundAccounts,
         List<GiftReceived> giftsReceived,
         List<BusinessTrustUnits> businessTrustUnits,
-        List<LifePolicyReceipt> lifePolicyReceipts) {
+        List<LifePolicyReceipt> lifePolicyReceipts,
+        List<ClaimedPolicy> claimedLifePolicies) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -182,6 +185,7 @@ public record EnteredFacts(
         giftsReceived = copied(giftsReceived, "giftsReceived");
         businessTrustUnits = copied(businessTrustUnits, "businessTrustUnits");
         lifePolicyReceipts = copied(lifePolicyReceipts, "lifePolicyReceipts");
+        claimedLifePolicies = copied(claimedLifePolicies, "claimedLifePolicies");
     }
 
     /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
@@ -199,6 +203,6 @@ public record EnteredFacts(
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
     }
 }
