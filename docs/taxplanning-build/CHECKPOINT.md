@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-079f DONE; between items)
+Item            : — (W-079g1 DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-079g → W-074b → W-079a → W-080 → W-080a → W-078j7b. UNVERIFIED: 9, all owned by W-078j7b. Open OQs: OQ-25, OQ-26. Unrun: TaxPlanningControllerIntegrationTest (Docker)
-Last verify     : ./mvnw test -pl backend -Punit → 2722 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-079f, 2026-10-17)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-079g2 → W-079g3 → W-074b → W-079a → W-080 → W-080a → W-078j7b. UNVERIFIED: 10, all owned by W-078j7b. Open OQs: OQ-25, OQ-26. Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2745 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-079g1, 2026-10-17)
 Waiting on      : the owner — next pick. Open OQs: OQ-25, OQ-26
 Files touched   : none
-Last item commit: taxplanning W-079f: add gifts to other sources — sums and property received without or for inadequate consideration above ₹50,000 (immovable: the higher of ₹50,000 or 10%), the exclusions, TY 2025-26's COVID-19 grounds within ₹10,00,000 (D-201)
-Updated         : 2026-10-17, session 20 (W-079f committed)
+Last item commit: taxplanning W-079g1: add Keyman sums, forfeited advances, termination compensation, business-trust specified sums and the residue to other sources, and split W-079g — the business-head clauses refused, life policies to W-079g2 (D-202 – D-204)
+Updated         : 2026-10-17, session 20 (W-079g1 committed)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

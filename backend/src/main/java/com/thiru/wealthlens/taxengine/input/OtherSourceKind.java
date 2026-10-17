@@ -4,9 +4,10 @@ package com.thiru.wealthlens.taxengine.input;
  * What an item of income from other sources is, as its deductions turn on it (S2 ss.92–94; 1961 ss.56–58;
  * {@code DR 01} R17; D-194).
  *
- * <p>Winnings and the other kinds the head names are entered so they can be refused by name rather than slipping in
- * under a kind that would deduct from them: winnings are taxed at a rate of their own, deferred in the coverage
- * register (1961 s.115BB), and the remaining clauses of S2 s.92(2) are {@code W-079g}'s.
+ * <p>Some kinds are entered only so they can be refused by name rather than slipping in under a kind that would deduct
+ * from them: winnings are taxed at a rate of their own, deferred in the coverage register (1961 s.115BB); employee
+ * contributions received and the letting of machinery, plant or furniture take the business head's deductions, which
+ * are deferred with it (D-202); and life-policy sums need Schedule II Sl. 2's test ({@code W-079g2}).
  */
 public enum OtherSourceKind {
 
@@ -70,9 +71,53 @@ public enum OtherSourceKind {
      */
     DEATH_GRATUITY,
 
+    /**
+     * A sum received under a Keyman insurance policy, bonus included, that is neither salary — an employee's is profits
+     * in lieu of salary (S2 s.18(1)(c)(iii); 1961 s.17(3)(iii)) — nor business income (S2 s.92(2)(d); 1961
+     * s.56(2)(iv); D-203).
+     */
+    KEYMAN_POLICY,
+
+    /**
+     * An advance received during negotiations for the transfer of a capital asset, forfeited when the negotiations did
+     * not end in a transfer (S2 s.92(2)(h); 1961 s.56(2)(ix)).
+     */
+    FORFEITED_ADVANCE,
+
+    /**
+     * Compensation in connection with the termination of employment or a change in its terms, from someone other than
+     * the employer or a former employer — whose compensation is profits in lieu of salary (S2 s.18(1)(a); 1961
+     * s.17(3)(i)) — (S2 s.92(2)(j); 1961 s.56(2)(xi)).
+     */
+    TERMINATION_COMPENSATION,
+
     /** Winnings from lotteries, races, games or betting (S2 s.92(2)(b)): refused, their rate not built. */
     WINNINGS,
 
-    /** Any other income under the head — S2 s.92(2)(c), (d), (f)–(h), (j)–(l) and the residue: refused until W-079g. */
+    /**
+     * Sums received from employees as contributions to their funds (S2 s.92(2)(c); 1961 s.56(2)(ic)): refused, their
+     * deduction being the business head's (S2 s.29(1)(e); 1961 s.36(1)(va)), deferred with it (D-202).
+     */
+    EMPLOYEE_CONTRIBUTIONS,
+
+    /**
+     * Income from machinery, plant or furniture let on hire (S2 s.92(2)(f); 1961 s.56(2)(ii)): refused, its deductions
+     * — repairs, insurance, depreciation — being the business head's (S2 ss.28, 33; 1961 ss.30–32), deferred with it.
+     */
+    MACHINERY_LETTING,
+
+    /**
+     * Income from letting machinery, plant or furniture with buildings whose letting is inseparable from it (S2
+     * s.92(2)(g); 1961 s.56(2)(iii)): refused, as {@link #MACHINERY_LETTING}.
+     */
+    MACHINERY_AND_BUILDING_LETTING,
+
+    /** Sums under a life policy (S2 s.92(2)(l); 1961 s.56(2)(xiii)): refused until {@code W-079g2}. */
+    LIFE_POLICY,
+
+    /**
+     * Any other income chargeable under the head and under no other — S2 s.92(1), 1961 s.56(1) — the person's claim
+     * that it belongs to none of the kinds above and to no other head (D-203).
+     */
     OTHER
 }

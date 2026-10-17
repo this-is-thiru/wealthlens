@@ -1,0 +1,99 @@
+{
+  "ruleId": "OS-RESIDUAL",
+  "_note": "Income of every kind chargeable under other sources and under no other head, not one of the kinds named for the head, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(1) \"Income of every kind which is not to be excluded from the total income under this Act, shall be chargeable to income-tax under the head \"Income from other sources\", if it is not chargeable to income-tax under any of the heads specified in section 13(a) to (d)\" (p.137). TY 2025-26: 1961 s.56(1), \"under any of the heads specified in section 14, items A to E\", as enacted — its 1961 Gazette not found, as OS-INTEREST's and OS-OTHER-EXPENDITURE's. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(1)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "RESIDUAL"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.56(1) as enacted",
+        "gazetteRef": "the 1961 Gazette of India issue not found — egazette, India Code, the Goa Official Gazette 1987–2014 and the owner's ChatGPT share t_6ad20d9ccc688191a3d9b332798e0c0a searched (W-078j6b); re-searched by W-078j7b",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.56(1), p.303; the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for s.56 (docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md; docs/taxplanning-build/sources/2026-10-17-gifts.md B9)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(1)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "RESIDUAL"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(1), p.137; Finance Act, 2026 does not amend s.92",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(1), p.137; Finance Act, 2026 does not amend s.92",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

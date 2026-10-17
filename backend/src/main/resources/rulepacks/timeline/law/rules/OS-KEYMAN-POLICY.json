@@ -1,0 +1,99 @@
+{
+  "ruleId": "OS-KEYMAN-POLICY",
+  "_note": "A Keyman insurance policy's sums, bonus included, under other sources, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(2)(d) \"any sum received under a Keyman insurance policy, as defined in Schedule II (Note 1) including the bonus allocated on such policy, if such income is not chargeable to income-tax under the head \"Profits and gains of business or profession\" or under the head \"Salaries\"\" (p.138); an employee's such sums are profits in lieu of salary (s.18(1)(c)(iii)). TY 2025-26: 1961 s.56(2)(iv), the same by reference to s.2(24)(xi) (F(No.2)A 1996 ss.3(b), 21). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(iv), s.2(24)(xi)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(2)(d)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "KEYMAN"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 1996 (33 of 1996), s.21 — s.56(2)(iv) of the Income-tax Act, 1961 inserted, with s.3(b) inserting s.2(24)(xi) (w.e.f. 1-10-1996)",
+        "gazetteRef": "Act 33 of 1996 (28-9-1996): ss.3(b), 21 read in the Legislative Department's annual compilation 'Acts of the Parliament of India, 1996', pp.190, 197, via Wikimedia Commons (D-204)",
+        "notifiedOn": "1996-09-28",
+        "effectiveFrom": "1996-10-01",
+        "retrospective": false,
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Acts_of_the_Parliament_of_India_1996.djvu",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.56(2)(iv), p.303; Finance (No. 2) Act, 1996 ss.3(b), 21 (D-204); the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for s.56 (docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md; docs/taxplanning-build/sources/2026-10-17-gifts.md B9)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(iv), s.2(24)(xi)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(2)(d)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "KEYMAN"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(2)(d)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(2)(d), p.138, and s.18(1)(c)(iii), p.41; Finance Act, 2026 does not amend s.92",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(2)(d), p.138, and s.18(1)(c)(iii), p.41; Finance Act, 2026 does not amend s.92",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

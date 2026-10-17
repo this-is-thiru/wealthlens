@@ -1,0 +1,99 @@
+{
+  "ruleId": "OS-FORFEITED-ADVANCE",
+  "_note": "An advance forfeited when negotiations for a capital asset's transfer fail, under other sources, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(2)(h) \"any sum of money received as an advance or otherwise during negotiations for the transfer of a capital asset, if–– (i) such sum is forfeited; and (ii) the negotiations do not result in transfer of such capital asset\" (p.138). TY 2025-26: 1961 s.56(2)(ix), the same words (F(No.2)A 2014 s.25). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(ix)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(2)(h)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "ADVANCE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2014 (25 of 2014), s.25 — s.56(2)(ix) of the Income-tax Act, 1961 inserted (w.e.f. 1-4-2015)",
+        "gazetteRef": "Act 25 of 2014: Gazette of India, Extraordinary, Part II, Section 1, No. 29, 6-8-2014 (egazette 2014/160514), p.14",
+        "notifiedOn": "2014-08-06",
+        "effectiveFrom": "2015-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2014/160514.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.56(2)(ix), p.308; Gazette egazette 2014/160514, Finance (No. 2) Act, 2014 s.25, p.14; the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for s.56 (docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md; docs/taxplanning-build/sources/2026-10-17-gifts.md B9)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(ix)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.92(2)(h)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "ADVANCE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(2)(h)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(2)(h), p.138; Finance Act, 2026 does not amend s.92",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.92(2)(h), p.138; Finance Act, 2026 does not amend s.92",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

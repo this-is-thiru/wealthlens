@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
+import com.thiru.wealthlens.taxengine.input.BusinessTrustUnits;
 import com.thiru.wealthlens.taxengine.input.GiftExclusion;
 import com.thiru.wealthlens.taxengine.input.GiftKind;
 import com.thiru.wealthlens.taxengine.input.GiftReceived;
@@ -28,6 +29,7 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,8 +53,13 @@ import java.util.Set;
  * the year's sums together, the year's other property received free together, each immovable property and each
  * other purchase below value on its own; a receipt on an excluded ground counts toward nothing (D-201).
  *
- * <p>Winnings and the other kinds are refused: winnings' own rate is deferred in the coverage register, and the
- * remaining clauses of S2 s.92(2) are {@code W-079g}'s. The head below nil is refused until set-off is built
+ * <p>Keyman policy sums, forfeited advances, compensation on termination from someone other than the employer, a
+ * business trust's specified sums and the residue are income in full, the first four and the residue bearing other
+ * expenditure (D-203).
+ *
+ * <p>Winnings are refused, their own rate being deferred in the coverage register; so are employee contributions
+ * received and the letting of machinery, plant or furniture, whose deductions are the business head's, deferred with
+ * it (D-202), and life-policy sums ({@code W-079g2}). The head below nil is refused until set-off is built
  * ({@code W-081}), as house property's is.
  */
 public final class OtherSourcesNode implements ComputationNode {
@@ -65,6 +72,23 @@ public final class OtherSourcesNode implements ComputationNode {
     private static final BaseId COMMUTED_PENSION = new BaseId("COMMUTED_PENSION");
     private static final BaseId GRATUITY = new BaseId("GRATUITY");
     private static final BaseId GIFT = new BaseId("GIFT");
+    private static final BaseId BUSINESS_TRUST = new BaseId("BUSINESS_TRUST");
+
+    /** The row, its base and the trace's words for each kind received in full (D-203). */
+    private record InFullRow(RuleId row, BaseId base, String what) {
+    }
+
+    private static final Map<OtherSourceKind, InFullRow> IN_FULL = Map.of(
+            OtherSourceKind.KEYMAN_POLICY, new InFullRow(RuleIds.OS_KEYMAN_POLICY, new BaseId("KEYMAN"),
+                    "Keyman policy sums"),
+            OtherSourceKind.FORFEITED_ADVANCE, new InFullRow(RuleIds.OS_FORFEITED_ADVANCE, new BaseId("ADVANCE"),
+                    "advance forfeited"),
+            OtherSourceKind.TERMINATION_COMPENSATION, new InFullRow(RuleIds.OS_TERMINATION_COMPENSATION,
+                    new BaseId("COMPENSATION"), "compensation on termination, not from the employer"),
+            OtherSourceKind.OTHER, new InFullRow(RuleIds.OS_RESIDUAL, new BaseId("RESIDUAL"),
+                    "other income under the head"));
+    private static final Set<OtherSourceKind> BUSINESS_HEAD_KINDS = Set.of(OtherSourceKind.EMPLOYEE_CONTRIBUTIONS,
+            OtherSourceKind.MACHINERY_LETTING, OtherSourceKind.MACHINERY_AND_BUILDING_LETTING);
     private static final Set<GiftExclusion> COVID_GROUNDS = Set.of(GiftExclusion.COVID_TREATMENT,
             GiftExclusion.COVID_DEATH_FROM_EMPLOYER, GiftExclusion.COVID_DEATH_FROM_OTHERS);
     private static final List<RuleId> FAMILY_PENSION_ROWS = List.of(RuleIds.OS_FAMILY_PENSION,
@@ -89,7 +113,8 @@ public final class OtherSourcesNode implements ComputationNode {
                 RuleIds.OS_DEEMED_DIVIDEND, RuleIds.OS_BANKER_COMMISSION, RuleIds.OS_OTHER_EXPENDITURE,
                 RuleIds.OS_COMPENSATION_INTEREST, RuleIds.OS_FAMILY_PENSION, RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME,
                 RuleIds.OS_COMMUTED_PENSION, RuleIds.OS_DEATH_GRATUITY, RuleIds.OS_PF_TAXABLE_INTEREST, RuleIds.OS_GIFT,
-                RuleIds.OS_GIFT_COVID_DEATH);
+                RuleIds.OS_GIFT_COVID_DEATH, RuleIds.OS_KEYMAN_POLICY, RuleIds.OS_FORFEITED_ADVANCE,
+                RuleIds.OS_TERMINATION_COMPENSATION, RuleIds.OS_BUSINESS_TRUST, RuleIds.OS_RESIDUAL);
     }
 
     @Override
@@ -97,7 +122,8 @@ public final class OtherSourcesNode implements ComputationNode {
         List<OtherSourceItem> items = ctx.inputs().entered().otherSourceItems();
         List<ProvidentFundAccount> accounts = ctx.inputs().entered().providentFundAccounts();
         List<GiftReceived> gifts = ctx.inputs().entered().giftsReceived();
-        if (items.isEmpty() && accounts.isEmpty() && gifts.isEmpty()) {
+        List<BusinessTrustUnits> trusts = ctx.inputs().entered().businessTrustUnits();
+        if (items.isEmpty() && accounts.isEmpty() && gifts.isEmpty() && trusts.isEmpty()) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireBuiltKinds(items);
@@ -112,6 +138,9 @@ public final class OtherSourcesNode implements ComputationNode {
         }
         if (!gifts.isEmpty()) {
             head = head.plus(giftIncome(ctx, lines, gifts));
+        }
+        for (int position = 0; position < trusts.size(); position++) {
+            head = head.plus(businessTrustIncome(lines, position, trusts.get(position)));
         }
         if (head.isLessThan(Money.ZERO)) {
             throw new IllegalArgumentException("Income from other sources is a loss of " + Money.ZERO.minus(head)
@@ -137,7 +166,9 @@ public final class OtherSourcesNode implements ComputationNode {
                     "commutation of a fund pension");
             case DEATH_GRATUITY -> wholeDeducted(lines, where, item, RuleIds.OS_DEATH_GRATUITY, GRATUITY,
                     "gratuity received on the employee's death");
-            case WINNINGS, OTHER -> throw new IllegalStateException(item.kind() + " passed requireBuiltKinds");
+            case KEYMAN_POLICY, FORFEITED_ADVANCE, TERMINATION_COMPENSATION, OTHER -> inFull(lines, where, item);
+            case WINNINGS, EMPLOYEE_CONTRIBUTIONS, MACHINERY_LETTING, MACHINERY_AND_BUILDING_LETTING, LIFE_POLICY ->
+                    throw new IllegalStateException(item.kind() + " passed requireBuiltKinds");
         };
     }
 
@@ -195,15 +226,42 @@ public final class OtherSourcesNode implements ComputationNode {
         Money share = lines.familyPensionShare(row).deduction(item.received());
         Money income = item.received().minus(share);
         lines.add(row, StepKind.INCOME, item.received(), income, where + ": family pension less " + share);
+        return income.minus(otherExpenditure(lines, where, item));
+    }
+
+    /**
+     * S2 s.92(1), (2)(d), (h), (j), s.93(1)(e); 1961 s.56(1), (2)(iv), (ix), (xi), s.57(iii): the whole sum, less the
+     * expenditure laid out for it (D-203).
+     */
+    private static Money inFull(Lines lines, String where, OtherSourceItem item) {
+        InFullRow kind = IN_FULL.get(item.kind());
+        Money income = lines.applied(kind.row(), kind.base(), item.received());
+        lines.add(kind.row(), StepKind.INCOME, item.received(), income, where + ": " + kind.what());
+        return income.minus(otherExpenditure(lines, where, item));
+    }
+
+    /**
+     * S2 s.93(1)(e); 1961 s.57(iii): interest expense and other expenditure laid out for the income; a banker's
+     * commission is for interest on securities only, so a nil line here.
+     */
+    private static Money otherExpenditure(Lines lines, String where, OtherSourceItem item) {
         if (item.bankerCommission().isGreaterThan(Money.ZERO)) {
             lines.nil(RuleIds.OS_BANKER_COMMISSION, item.bankerCommission(), where
                     + ": a banker's commission is deducted against interest on securities only");
         }
         Money expenses = item.interestExpense().plus(item.otherExpenditure());
-        Money expenditure = expenses.isGreaterThan(Money.ZERO)
+        return expenses.isGreaterThan(Money.ZERO)
                 ? lines.deduction(RuleIds.OS_OTHER_EXPENDITURE, EXPENDITURE, item, expenses, where)
                 : Money.ZERO;
-        return income.minus(expenditure);
+    }
+
+    /** S2 s.92(2)(k); 1961 s.56(2)(xii): the holding's specified sum, A − B − C, nil where B and C exceed A. */
+    private static Money businessTrustIncome(Lines lines, int position, BusinessTrustUnits units) {
+        Money income = lines.applied(RuleIds.OS_BUSINESS_TRUST, BUSINESS_TRUST, units.specifiedSum());
+        lines.add(RuleIds.OS_BUSINESS_TRUST, StepKind.INCOME, units.distributed(), income, "business trust holding "
+                + position + ": " + units.distributed() + " distributed less " + units.issuedAt() + " issued and "
+                + units.chargedEarlier() + " charged earlier, never below nil");
+        return income;
     }
 
     /** S2 s.93(1)(g), (h); 1961 s.10(10A)(iii), s.10(10)(i): the entire amount, so nothing is left to bear an expense. */
@@ -369,7 +427,7 @@ public final class OtherSourcesNode implements ComputationNode {
         }
     }
 
-    /** Winnings and the remaining clauses are not built: refused by name rather than computed as something else. */
+    /** Winnings and the kinds still unbuilt are refused by name rather than computed as something else. */
     private static void requireBuiltKinds(List<OtherSourceItem> items) {
         for (int position = 0; position < items.size(); position++) {
             OtherSourceKind kind = items.get(position).kind();
@@ -378,10 +436,14 @@ public final class OtherSourcesNode implements ComputationNode {
                         + " betting are taxed at a rate of their own, which is deferred in the coverage register"
                         + " (Income-tax Act, 1961 s.115BB) and not built");
             }
-            if (kind == OtherSourceKind.OTHER) {
-                throw new IllegalArgumentException("Item " + position + ": income from other sources other than"
-                        + " interest and dividends — S2 s.92(2)(c), (d), (f)–(h), (j)–(l) and the residue — waits on"
-                        + " W-079g");
+            if (BUSINESS_HEAD_KINDS.contains(kind)) {
+                throw new IllegalArgumentException("Item " + position + ": " + kind + " takes the business head's"
+                        + " deductions (S2 ss.28, 29(1)(e), 33; Income-tax Act, 1961 ss.30–32, 36(1)(va)), which are"
+                        + " deferred in the coverage register with that head (D-202)");
+            }
+            if (kind == OtherSourceKind.LIFE_POLICY) {
+                throw new IllegalArgumentException("Item " + position + ": sums under a life policy need Schedule II"
+                        + " Sl. 2's exclusion test and S4 r.59's computation, which are W-079g2's");
             }
         }
     }

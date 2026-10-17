@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.input.BusinessTrustUnits;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.GiftExclusion;
@@ -32,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -67,6 +69,11 @@ class OtherSourcesNodeTest {
 
     private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items,
             List<ProvidentFundAccount> accounts, List<GiftReceived> gifts) {
+        return run(year, regime, items, accounts, gifts, List.of());
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items,
+            List<ProvidentFundAccount> accounts, List<GiftReceived> gifts, List<BusinessTrustUnits> trusts) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -78,7 +85,7 @@ class OtherSourcesNodeTest {
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                        List.of(), List.of(), items, accounts, gifts),
+                        List.of(), List.of(), items, accounts, gifts, trusts),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs).run(new OtherSourcesNode());
@@ -236,12 +243,23 @@ class OtherSourcesNodeTest {
                 .hasMessageContaining("s.115BB");
     }
 
-    @Test
-    void evaluate_whenAnotherKindIsEntered_refusesItNamingTheRowThatBuildsIt() {
-        // When / Then
-        assertThatThrownBy(() -> run(2026, List.of(item(OtherSourceKind.OTHER, "100000", "0", "0", "0"))))
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(value = OtherSourceKind.class, names = {"EMPLOYEE_CONTRIBUTIONS", "MACHINERY_LETTING",
+        "MACHINERY_AND_BUILDING_LETTING"})
+    void evaluate_whenAKindTakesTheBusinessHeadsDeductions_refusesItNamingThem(OtherSourceKind kind) {
+        // When / Then — S2 s.93(1)(b), (c) send these to ss.28, 29(1)(e), 33, deferred with the business head (D-202)
+        assertThatThrownBy(() -> run(2026, List.of(item(kind, "100000", "0", "0", "0"))))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-079g");
+                .hasMessageContaining("business head")
+                .hasMessageContaining("D-202");
+    }
+
+    @Test
+    void evaluate_whenLifePolicySumsAreEntered_refusesThemNamingTheRowThatBuildsThem() {
+        // When / Then
+        assertThatThrownBy(() -> run(2026, List.of(item(OtherSourceKind.LIFE_POLICY, "100000", "0", "0", "0"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("W-079g2");
     }
 
     @Test
@@ -619,5 +637,107 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("65000")));
+    }
+
+    private static NodeResult runTrusts(int year, BusinessTrustUnits... trusts) {
+        return run(year, OLD, List.of(), List.of(), List.of(), List.of(trusts));
+    }
+
+    /*
+     * The clauses received in full (S2 s.92(1), (2)(d), (h), (j), (k); 1961 s.56(1), (2)(iv), (ix), (xi), (xii); D-203),
+     * from docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md. Worked by hand.
+     */
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenKeymanSumsBearExpenditure_chargesTheRest(int year) {
+        // When — 5,00,000 under a Keyman policy, 10,000 laid out for it
+        NodeResult result = run(year, List.of(item(OtherSourceKind.KEYMAN_POLICY, "500000", "0", "0", "10000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("490000")));
+        assertThat(result.trace()).extracting(TraceLine::rule)
+                .containsExactly(RuleIds.OS_KEYMAN_POLICY, RuleIds.OS_OTHER_EXPENDITURE);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAnAdvanceIsForfeited_chargesItInFull(int year) {
+        // When
+        NodeResult result = run(year, List.of(item(OtherSourceKind.FORFEITED_ADVANCE, "200000", "0", "0", "0")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_FORFEITED_ADVANCE);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenCompensationOnTerminationComesFromAThirdParty_chargesItInFull(int year) {
+        // When
+        NodeResult result = run(year, List.of(item(OtherSourceKind.TERMINATION_COMPENSATION, "300000", "0", "0",
+                "0")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("300000")));
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_TERMINATION_COMPENSATION);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenABusinessTrustDistributedBeyondIssueAndEarlierCharges_chargesTheSpecifiedSum(int year) {
+        // When — A 1,50,000, B 1,00,000, C 20,000
+        NodeResult result = runTrusts(year, new BusinessTrustUnits(Money.of("150000"), Money.of("100000"),
+                Money.of("20000")));
+
+        // Then — A − B − C = 30,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("30000")));
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_BUSINESS_TRUST);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenIssueAndEarlierChargesReachTheDistributions_chargesNothing(int year) {
+        // When — B + C = 1,10,000 against A of 1,00,000, and against A of 1,10,000
+        NodeResult result = runTrusts(year,
+                new BusinessTrustUnits(Money.of("100000"), Money.of("80000"), Money.of("30000")),
+                new BusinessTrustUnits(Money.of("110000"), Money.of("80000"), Money.of("30000")));
+
+        // Then — "deemed to be zero, if the sum of B and C is greater than A"; equal gives zero too
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenResidualIncomeBearsExpenditure_chargesTheRest(int year) {
+        // When — 25,000 of other income under the head, 5,000 laid out for it
+        NodeResult result = run(year, List.of(item(OtherSourceKind.OTHER, "25000", "0", "0", "5000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("20000")));
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_RESIDUAL);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenKeymanSumsCarryABankersCommission_allowsItNot(int year) {
+        // When
+        NodeResult result = run(year, List.of(item(OtherSourceKind.KEYMAN_POLICY, "500000", "1000", "0", "0")));
+
+        // Then — a nil line; 5,00,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.trace().get(1).rule()).isEqualTo(RuleIds.OS_BANKER_COMMISSION);
+        assertThat(result.trace().get(1).out()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAForfeitedAdvanceSitsBesideInterest_addsBoth(int year) {
+        // When
+        NodeResult result = run(year, List.of(item(OtherSourceKind.FORFEITED_ADVANCE, "200000", "0", "0", "0"),
+                item(OtherSourceKind.INTEREST_ON_SECURITIES, "10000", "0", "0", "0")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("210000")));
     }
 }

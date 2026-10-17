@@ -57,6 +57,7 @@ public final class RuleIds {
     public static final RuleId HP_STANDARD_DEDUCTION = new RuleId("HP-STANDARD-DEDUCTION");
     public static final RuleId HP_UNREALISED_RENT = new RuleId("HP-UNREALISED-RENT");
     public static final RuleId OS_BANKER_COMMISSION = new RuleId("OS-BANKER-COMMISSION");
+    public static final RuleId OS_BUSINESS_TRUST = new RuleId("OS-BUSINESS-TRUST");
     public static final RuleId OS_COMMUTED_PENSION = new RuleId("OS-COMMUTED-PENSION");
     public static final RuleId OS_COMPENSATION_INTEREST = new RuleId("OS-COMPENSATION-INTEREST");
     public static final RuleId OS_DEATH_GRATUITY = new RuleId("OS-DEATH-GRATUITY");
@@ -65,11 +66,15 @@ public final class RuleIds {
     public static final RuleId OS_DIVIDEND_INTEREST = new RuleId("OS-DIVIDEND-INTEREST");
     public static final RuleId OS_FAMILY_PENSION = new RuleId("OS-FAMILY-PENSION");
     public static final RuleId OS_FAMILY_PENSION_NEW_TAX_REGIME = new RuleId("OS-FAMILY-PENSION-NEW-TAX-REGIME");
+    public static final RuleId OS_FORFEITED_ADVANCE = new RuleId("OS-FORFEITED-ADVANCE");
     public static final RuleId OS_GIFT = new RuleId("OS-GIFT");
     public static final RuleId OS_GIFT_COVID_DEATH = new RuleId("OS-GIFT-COVID-DEATH");
     public static final RuleId OS_INTEREST = new RuleId("OS-INTEREST");
+    public static final RuleId OS_KEYMAN_POLICY = new RuleId("OS-KEYMAN-POLICY");
     public static final RuleId OS_OTHER_EXPENDITURE = new RuleId("OS-OTHER-EXPENDITURE");
     public static final RuleId OS_PF_TAXABLE_INTEREST = new RuleId("OS-PF-TAXABLE-INTEREST");
+    public static final RuleId OS_RESIDUAL = new RuleId("OS-RESIDUAL");
+    public static final RuleId OS_TERMINATION_COMPENSATION = new RuleId("OS-TERMINATION-COMPENSATION");
     public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");
     public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");
     public static final RuleId PERQ_ACCOM_GOVERNMENT = new RuleId("PERQ-ACCOM-GOVERNMENT");

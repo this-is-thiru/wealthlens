@@ -100,7 +100,7 @@ class RentPaidDeductionTest {
                                 Money.of(c.rent()))), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(),
-                        List.of(), List.of(), List.of(), List.of(), other, Optional.of(c.declaration()), List.of(), List.of(), List.of(), List.of(), List.of()),
+                        List.of(), List.of(), List.of(), List.of(), other, Optional.of(c.declaration()), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()),
                 c.assessee().orElse(plain.assessee()), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
         ComponentSet pay = new ComponentSet(Money.of(c.hra()).isGreaterThan(Money.ZERO)
