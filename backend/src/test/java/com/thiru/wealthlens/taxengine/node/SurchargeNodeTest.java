@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -183,24 +184,31 @@ class SurchargeNodeTest {
 
     /** A taxpayer whose only entry is a dividend: what the excluding-income test needs to see (D-194 C4a). */
     private static EngineInputs withDividend(int year, RegimeCode regime) {
+        return withItems(year, regime, item(OtherSourceKind.DIVIDEND, "1000000", "0"));
+    }
+
+    private static OtherSourceItem item(OtherSourceKind kind, String received, String interestExpense) {
+        return new OtherSourceItem(kind, Money.of(received), Money.ZERO, Money.of(interestExpense), Money.ZERO, false);
+    }
+
+    /** A taxpayer whose only entries are these items of income from other sources. */
+    private static EngineInputs withItems(int year, RegimeCode regime, OtherSourceItem... items) {
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
-        OtherSourceItem dividend = new OtherSourceItem(OtherSourceKind.DIVIDEND, Money.of("1000000"), Money.ZERO,
-                Money.ZERO, Money.ZERO, false);
         return new EngineInputs(taxYear, regime, TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                        List.of(), List.of(), List.of(dividend), List.of()),
+                        List.of(), List.of(), List.of(items), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
     }
 
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
-    void evaluate_whenDividendsMeetTheExcludingIncomeBand_refusesUntilTheSplitIsBuilt(int year) {
-        // Given — T2-4's 5,00,00,000 under the first schedule, part of it a dividend: the excluding ladder's 25% bites
+    void evaluate_whenTheIncomeLessDividendsStillMeetsTheExcludingBand_isRefusedUntilTheLimitIsMeasured(int year) {
+        // Given — T2-4's 5,00,00,000 under the first schedule, 10,00,000 of it a dividend: 4,90,00,000 still bites
         NodeHarness harness = NodeHarness.with(pack(year))
                 .regime(FIRST_SCHEDULE_RATES)
                 .inputs(withDividend(year, FIRST_SCHEDULE_RATES))
@@ -208,10 +216,11 @@ class SurchargeNodeTest {
                 .given(NodeIds.TAX_AFTERREBATE, TaxByBasis.atSlabRatesOnly(Money.of("14812500")))
                 .recomputation(atThresholds(FIRST_SCHEDULE_RATES));
 
-        // When / Then — taking the dividend out of the test could lower the rate: refused, naming W-079e
+        // When / Then — the dividends' own tax would bear at most 15%, and measuring it is OQ-26: refused
         assertThatThrownBy(() -> harness.run(new SurchargeNode()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-079e");
+                .hasMessageContaining("OQ-26")
+                .hasMessageContaining("W-088");
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -228,5 +237,134 @@ class SurchargeNodeTest {
 
         // Then — "TI does not EXCEED 50,00,000 → no surcharge"
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    private static NodeResult runWith(int year, RegimeCode regime, String totalIncome, String afterRebate,
+            OtherSourceItem... items) {
+        return harnessWith(year, regime, totalIncome, afterRebate, items).run(new SurchargeNode());
+    }
+
+    private static NodeHarness harnessWith(int year, RegimeCode regime, String totalIncome, String afterRebate,
+            OtherSourceItem... items) {
+        return NodeHarness.with(pack(year))
+                .regime(regime)
+                .inputs(withItems(year, regime, items))
+                .given(NodeIds.ROUND_TOTALINCOME, Money.of(totalIncome))
+                .given(NodeIds.TAX_AFTERREBATE, TaxByBasis.atSlabRatesOnly(Money.of(afterRebate)))
+                .recomputation(atThresholds(regime));
+    }
+
+    /*
+     * Tax after rebate at 2,50,00,000 by the same slab tables as TAX_AT_THRESHOLD: first schedule
+     * 1,12,500 + 0.30 × 2,40,00,000 = 73,12,500; new regime 3,00,000 + 0.30 × 2,26,00,000 = 70,80,000. At 5,00,00,000
+     * (first schedule) DR 08 T2-4's 1,48,12,500. Relief: U at 2,00,00,000 is that table's tax × 1.15, and with V the
+     * income above it every W below exceeds the unrelieved tax and surcharge, so each relief is nil.
+     */
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenDividendsTakeTheIncomeToTheExcludingThresholdExactly_chargesFifteenPerCent(int year) {
+        // When — DR 08 T2-6's shape with a dividend: 2,50,00,000 of which 50,00,000 is dividend
+        NodeResult result = runWith(year, FIRST_SCHEDULE_RATES, "25000000", "7312500",
+                item(OtherSourceKind.DIVIDEND, "5000000", "0"));
+
+        // Then — excluding 2,00,00,000 does not exceed 2,00,00,000; clause (v): 0.15 × 73,12,500
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1096875")));
+        assertThat(result.trace().get(0).rule()).isEqualTo(RuleIds.RATE_SUR_FIRST_SCHEDULE);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenDividendsKeepTheNewRegimesExcludingIncomeAtTheThreshold_chargesFifteenPerCent(int year) {
+        // When — new regime, 2,50,00,000 of which 50,00,000 is dividend
+        NodeResult result = runWith(year, NEW_TAX_REGIME, "25000000", "7080000",
+                item(OtherSourceKind.DIVIDEND, "5000000", "0"));
+
+        // Then — clause (iv): 0.15 × 70,80,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1062000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheIncomeLessDividendsIsJustOverTheThreshold_isRefused(int year) {
+        // Given — 2,50,00,000 of which 49,99,990 is dividend: 2,00,00,010 exceeds 2,00,00,000
+        NodeHarness harness = harnessWith(year, FIRST_SCHEDULE_RATES, "25000000", "7312500",
+                item(OtherSourceKind.DIVIDEND, "4999990", "0"));
+
+        // When / Then
+        assertThatThrownBy(() -> harness.run(new SurchargeNode()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OQ-26");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenLargeDividendsTakeTheExcludingIncomeOutOfTheTopBands_chargesFifteenPerCent(int year) {
+        // When — 5,00,00,000 of which 3,00,00,000 is dividend: excluding 2,00,00,000
+        NodeResult result = runWith(year, FIRST_SCHEDULE_RATES, "50000000", "14812500",
+                item(OtherSourceKind.DIVIDEND, "30000000", "0"));
+
+        // Then — 0.15 × 1,48,12,500, not 25% of it
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("2221875")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheIncomeIsUnitIncome_keepsItInTheExcludingIncome(int year) {
+        // When — 5,00,00,000 of which 3,00,00,000 is Mutual Fund unit income: not dividend (S2 s.2(40); D-200 C2a)
+        NodeResult result = runWith(year, FIRST_SCHEDULE_RATES, "50000000", "14812500",
+                item(OtherSourceKind.UNIT_INCOME, "30000000", "0"));
+
+        // Then — DR 08 T2-4: 0.25 × 1,48,12,500
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("3703125")));
+        assertThat(result.trace().get(0).rule()).isEqualTo(RuleIds.RATE_SUR_FIRST_SCHEDULE_EXCLUDING);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheDividendIsDeemed_takesItOutToo(int year) {
+        // When — as the T2-6 shape, the 50,00,000 a deemed dividend (S2 s.2(40)(e), (f))
+        NodeResult result = runWith(year, FIRST_SCHEDULE_RATES, "25000000", "7312500",
+                item(OtherSourceKind.DEEMED_DIVIDEND, "5000000", "0"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1096875")));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025AllowsInterestAgainstTheDividend_takesOutTheDividendLessIt() {
+        // Given — 50,00,000 of dividend bearing 1,000 of interest; 20% × 50,00,000 = 10,00,000, so all 1,000 allowed
+        NodeHarness harness = harnessWith(2025, FIRST_SCHEDULE_RATES, "25000000", "7312500",
+                item(OtherSourceKind.DIVIDEND, "5000000", "1000"));
+
+        // When / Then — dividend income 49,99,000: excluding 2,00,01,000 exceeds the threshold
+        assertThatThrownBy(() -> harness.run(new SurchargeNode()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OQ-26");
+    }
+
+    @Test
+    void evaluate_whenTaxYear2026AllowsNoInterestAgainstTheDividend_takesOutTheWholeDividend() {
+        // When — the same facts in TY 2026-27, where the deduction is nil (FA 2026 s.44(b))
+        NodeResult result = runWith(2026, FIRST_SCHEDULE_RATES, "25000000", "7312500",
+                item(OtherSourceKind.DIVIDEND, "5000000", "1000"));
+
+        // Then — dividend income 50,00,000: excluding 2,00,00,000; 0.15 × 73,12,500
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1096875")));
+    }
+
+    @Test
+    void evaluate_whenTheYearsLimitBindsOverDividendsAndUnitsBoth_isRefused() {
+        // Given — TY 2025-26: 10,00,000 dividend bearing 3,00,000 interest, 5,00,000 units bearing 1,00,000;
+        // the limit 20% × 15,00,000 = 3,00,000 is under the 4,00,000 claimed, and no text divides it
+        NodeHarness harness = harnessWith(2025, FIRST_SCHEDULE_RATES, "21000000", "6112500",
+                item(OtherSourceKind.DIVIDEND, "1000000", "300000"), item(OtherSourceKind.UNIT_INCOME, "500000",
+                        "100000"));
+
+        // When / Then
+        assertThatThrownBy(() -> harness.run(new SurchargeNode()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OQ-26")
+                .hasMessageContaining("dividends' —");
     }
 }

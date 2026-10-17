@@ -436,6 +436,14 @@ capped at 15%** while the rest of the income may bear 25% or 37%. `INFERENCE`: s
 **not** a single rate applied to total tax; it is at minimum a two-bucket computation. D3 sends
 capital gains in from `portfolio`, so this is live for the primary user, not theoretical.
 
+> **Addendum (W-079e, 2026-10-17, D-200):** the "excluding" test is built for dividend income — S2 s.2(40), a
+> company's distributions with the deemed dividends; Mutual Fund unit income, named apart from "dividend" throughout the
+> Act, stays in. The amount taken out is the dividend income total income includes: received, less the interest the
+> head allows against it. Where the income excluding dividends is at or under ₹2,00,00,000 the rate is clause (i), (ii)
+> or the "not covered → 15%" clause on the whole tax, and this limit cannot bind. Above it, the limit needs the tax
+> "computed in respect of" slab-taxed dividends, which no text read measures (**OQ-26**; `W-088`). Marginal relief is
+> measured on total income (Part I-A Para F Table 2, p.84).
+
 ---
 
 ## R6 — Cess and rounding

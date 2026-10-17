@@ -208,27 +208,58 @@ public final class OtherSourcesNode implements ComputationNode {
      * the year's dividend and unit income, within the row's share of that income — the year's, not each item's.
      */
     private static Money dividendInterestAllowed(Lines lines, List<OtherSourceItem> items) {
-        Money dividends = Money.ZERO;
-        Money interest = Money.ZERO;
+        DividendInterest interest = dividendInterest(lines.ctx, items);
+        if (interest.claimed().equals(Money.ZERO)) {
+            return Money.ZERO;
+        }
+        if (interest.untaxedAbroad()) {
+            return lines.nil(RuleIds.OS_DIVIDEND_INTEREST, interest.claimed(), "dividend and unit income"
+                    + UNTAXED_ABROAD);
+        }
+        Money allowed = interest.allowed();
+        lines.add(RuleIds.OS_DIVIDEND_INTEREST, StepKind.DEDUCTION, interest.claimed(), allowed,
+                "interest expense against dividend and unit income of " + interest.base() + ", limited to "
+                        + interest.limit());
+        return allowed;
+    }
+
+    /**
+     * The year's interest expense against dividend and unit income (S2 s.93(2); 1961 s.57 proviso): what was claimed,
+     * how much of it on dividend items, and the limit on what is allowed. Computed once, here, for this head and for
+     * the surcharge's dividend income (D-200).
+     *
+     * @param base the year's dividend and unit income, which the limit is a share of
+     * @param claimed the interest expense claimed against dividend and unit items
+     * @param claimedOnDividends the part of {@code claimed} entered against dividend items
+     * @param limit the row's share of {@code base}
+     * @param untaxedAbroad whether any of it is payable outside India untaxed, which bars all of it
+     */
+    record DividendInterest(Money base, Money claimed, Money claimedOnDividends, Money limit, boolean untaxedAbroad) {
+
+        /** The interest allowed: nil where barred, else the claim within the limit. */
+        Money allowed() {
+            return untaxedAbroad ? Money.ZERO : Money.min(claimed, limit);
+        }
+    }
+
+    static DividendInterest dividendInterest(NodeContext ctx, List<OtherSourceItem> items) {
+        Money base = Money.ZERO;
+        Money claimed = Money.ZERO;
+        Money claimedOnDividends = Money.ZERO;
         boolean untaxedAbroad = false;
         for (OtherSourceItem item : items) {
             if (item.kind() == OtherSourceKind.DIVIDEND || item.kind() == OtherSourceKind.UNIT_INCOME) {
-                dividends = dividends.plus(item.received());
-                interest = interest.plus(item.interestExpense());
+                base = base.plus(item.received());
+                claimed = claimed.plus(item.interestExpense());
                 untaxedAbroad |= item.payableOutsideIndiaUntaxed() && item.interestExpense().isGreaterThan(Money.ZERO);
+                if (item.kind() == OtherSourceKind.DIVIDEND) {
+                    claimedOnDividends = claimedOnDividends.plus(item.interestExpense());
+                }
             }
         }
-        if (interest.equals(Money.ZERO)) {
-            return Money.ZERO;
-        }
-        if (untaxedAbroad) {
-            return lines.nil(RuleIds.OS_DIVIDEND_INTEREST, interest, "dividend and unit income" + UNTAXED_ABROAD);
-        }
-        Money limit = lines.applied(RuleIds.OS_DIVIDEND_INTEREST, DIVIDEND, dividends);
-        Money allowed = Money.min(interest, limit);
-        lines.add(RuleIds.OS_DIVIDEND_INTEREST, StepKind.DEDUCTION, interest, allowed,
-                "interest expense against dividend and unit income of " + dividends + ", limited to " + limit);
-        return allowed;
+        Money limit = TemporallyApportionedCap.apply(ctx.rule(RuleIds.OS_DIVIDEND_INTEREST), ctx.inputs().temporal(),
+                CapContext.of(DIVIDEND, base)).value();
+        return new DividendInterest(base, claimed, claimedOnDividends, limit, untaxedAbroad);
     }
 
     /**

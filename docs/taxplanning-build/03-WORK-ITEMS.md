@@ -1156,6 +1156,13 @@ if that is not enough for the item in hand.
 > gains into the `-EXCLUDING` ladders' income, lifting `SurchargeNode`'s refusal of special-rate tax, and
 > `DR 08` T2-6.
 
+> **Erratum (W-079e, 2026-10-17, D-200):** for dividend income the limit needs *"the amount of income-tax computed in
+> respect of that part of income"*, and no text read gives that tax where dividends are taxed at slab rates — **OQ-26**.
+> W-079e took dividends out of the 25%/37% test and refuses, naming OQ-26 and `W-088`, a case whose income excluding
+> dividends still reaches that ladder; `W-088` builds the dividend slice of the limit on OQ-26's answer.
+> Verified by: FA 2026 Part I-A Para F Table 1 Sl. 1 (vi), p.83; `DR 06` G3 ("specialTax = tax on the dividend …
+> slices", no method); `SurchargeNode`.
+
 | W-089 | **T13-1 test** — rebate with special-rate income | `DR 13` R-5 | **the most dangerous interaction in the design** |
 | W-089a | When salary is taxed — due, paid in advance, or arrears — and relief for arrears *(D-162)*: S2 s.15, s.157 with Rules 2026 r.73 / Form No. 39; 1961 s.15, s.89 with r.21A / Form 10E (`REL-ARREARS-*`) | `DR 01` R19 | the relief needs the years the salary belongs to |
 | W-089b | `CreditsNode` *(D-162)*: tax already paid, credited — TDS, advance tax, self-assessment tax: S2 s.266, s.396, s.410; 1961 s.140A, s.198, s.199, s.219; produces `credits` for `NetPayableNode` | TS T6 `credits`; `DR 01` R20, R23 | the node TS T6 names and no item owned |
@@ -1547,6 +1554,12 @@ none depends on anyone remembering it.
 | Section catalogue entries for every modelled section | each item that models a section — standing rule 2 | SC-1 ratchet |
 | The rule-authoring admin screen (**OQ-2**) | after `W-111` | files + PR review suffice until an API and persistence exist |
 | Dividend income in the surcharge's **excluding** income and in the 15%-limited part (`RATE-SUR-SPLIT-001`), D-086 | `W-079` (`OtherSourcesNode`) | dividends are slab-taxed, so nothing else would take them out of the 25%/37% test |
+
+> **Erratum (W-079e, 2026-10-17, D-200):** only the first half landed with `W-079`'s split — `W-079e` takes dividend
+> income (S2 s.2(40), deemed dividends included; Mutual Fund unit income is not dividend) out of the excluding income.
+> The 15%-limited part for dividends waits on **OQ-26** and is `W-088`'s, with the special gains (D-086).
+> Verified by: `SurchargeNode`; `plans/W-079e.md`.
+
 | The surcharge split, special gains in the excluding income, T2-6 (D-086) | `W-088` | `SurchargeNode` refuses special-rate tax until then |
 | `DR 19` E4.1 `aDeductionNeverIncreasesTax` (D-088) | `W-076` (`ChapterEightNode`) | the first node that takes a deduction |
 | `DR 19` E4.1 `splittingAComponentIsNeutral` (D-088) | `W-060`/`W-061` (component partition, gross salary) | the first nodes that read components |

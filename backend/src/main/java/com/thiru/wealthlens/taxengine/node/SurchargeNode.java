@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.taxengine.node;
 
+import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
+import com.thiru.wealthlens.taxengine.node.OtherSourcesNode.DividendInterest;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
@@ -39,11 +41,13 @@ import java.util.stream.Stream;
  * (U) plus the income above it (V). U is the real engine's tax after rebate at the threshold, recomputed
  * ({@code DR 06} G3.2, D-086), plus the surcharge on it without relief.
  *
- * <p><b>No split yet.</b> The excluding income is still the total income, so the whole tax takes the one rate.
- * Dividends now reach the total income ({@code OtherSourcesNode}, D-194), so a case with dividend or unit income
- * whose excluding-income ladder bites — where taking the dividends out could lower the rate — is refused until the
- * split is built ({@code W-079e}). Tax at a special rate is refused rather than surcharged as if it were not
- * there: {@code RATE-SUR-SPLIT-001} limits its surcharge to 15%, and that is {@code W-088}'s.
+ * <p><b>Dividends out of the 25%/37% test.</b> The excluding ladder reads the total income less the dividend income
+ * it includes — dividends and deemed dividends (S2 s.2(40)), less the interest the head allows against them; Mutual
+ * Fund unit income is not dividend and stays in (D-200). Where that leaves the ladder unbitten, the whole tax takes
+ * the one rate and the 15% limit on the dividends' tax cannot bind. Where the ladder still bites with dividends
+ * present, the case is refused: the limit needs the tax "computed in respect of" slab-taxed dividends, which no text
+ * read measures ({@code OQ-26}; {@code W-088}). Tax at a special rate is refused rather than surcharged as if it
+ * were not there: {@code RATE-SUR-SPLIT-001} limits its surcharge to 15%, and that is {@code W-088}'s.
  */
 public final class SurchargeNode implements ComputationNode {
 
@@ -60,7 +64,7 @@ public final class SurchargeNode implements ComputationNode {
     }
 
     private static final Set<OtherSourceKind> DIVIDEND_KINDS = Set.of(OtherSourceKind.DIVIDEND,
-            OtherSourceKind.DEEMED_DIVIDEND, OtherSourceKind.UNIT_INCOME);
+            OtherSourceKind.DEEMED_DIVIDEND);
 
     private static final List<SurchargeRows> ROWS = List.of(
             new SurchargeRows(RuleIds.RATE_SUR_NEW_TAX_REGIME, RuleIds.RATE_SUR_NEW_TAX_REGIME_EXCLUDING,
@@ -81,7 +85,8 @@ public final class SurchargeNode implements ComputationNode {
 
     @Override
     public Set<RuleId> rules() {
-        return ROWS.stream().flatMap(SurchargeRows::all).collect(Collectors.toUnmodifiableSet());
+        return Stream.concat(ROWS.stream().flatMap(SurchargeRows::all), Stream.of(RuleIds.OS_DIVIDEND_INTEREST))
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -90,14 +95,17 @@ public final class SurchargeNode implements ComputationNode {
         TaxByBasis afterRebate = ctx.get(NodeIds.TAX_AFTERREBATE, TaxByBasis.class);
         refuseSpecialRateTax(afterRebate);
         SurchargeRows rows = rowsFor(ctx);
-        refuseDividendsInTheExcludingTest(ctx, rows, totalIncome);
+        Money dividends = excludingRate(ctx, rows, totalIncome, Money.ZERO).compareTo(Rate.ZERO) > 0
+                ? dividendIncome(ctx)
+                : Money.ZERO;
+        refuseWhereTheDividendLimitWouldBind(ctx, rows, totalIncome, dividends);
 
         Money tax = afterRebate.asMoney();
-        ChosenRate rate = rateAt(ctx, rows, totalIncome);
+        ChosenRate rate = rateAt(ctx, rows, totalIncome, dividends);
         Money surcharge = rate.rate().of(tax);
         RuleVersion ceiling = version(ctx, rows.ceiling());
         ReliefResult relief = ceilingOf(rows.ceiling(), ceiling).shape().apply(new ReliefContext(
-                totalIncome, tax.plus(surcharge), Optional.of(income -> unrelievedAt(ctx, rows, income))));
+                totalIncome, tax.plus(surcharge), Optional.of(income -> unrelievedAt(ctx, rows, income, dividends))));
         if (relief.amount().isGreaterThan(surcharge)) {
             throw new IllegalStateException("Marginal relief of " + relief.amount() + " exceeds the surcharge of "
                     + surcharge + " at " + totalIncome + "; " + rows.ceiling() + " and the ladders disagree");
@@ -121,22 +129,68 @@ public final class SurchargeNode implements ComputationNode {
     }
 
     /**
-     * The 25%/37% clauses test the total income excluding dividend income; until that split is built, a case whose
-     * dividends could change the answer — the excluding ladder biting at this income — is refused (D-194 C4a).
+     * The dividend income the total income includes (S2 s.2(40); D-200): dividends and deemed dividends received, less
+     * the interest the head allows against the dividend items. Unit income is not dividend.
      */
-    private static void refuseDividendsInTheExcludingTest(NodeContext ctx, SurchargeRows rows, Money totalIncome) {
-        boolean dividends = ctx.inputs().entered().otherSourceItems().stream()
-                .anyMatch(item -> DIVIDEND_KINDS.contains(item.kind()) && item.received().isGreaterThan(Money.ZERO));
-        if (!dividends) {
+    private static Money dividendIncome(NodeContext ctx) {
+        List<OtherSourceItem> items = ctx.inputs().entered().otherSourceItems();
+        Money received = items.stream()
+                .filter(item -> DIVIDEND_KINDS.contains(item.kind()))
+                .map(OtherSourceItem::received)
+                .reduce(Money.ZERO, Money::plus);
+        if (received.equals(Money.ZERO)) {
+            return Money.ZERO;
+        }
+        return received.minus(interestAllowedOnDividends(OtherSourcesNode.dividendInterest(ctx, items)));
+    }
+
+    /**
+     * The dividends' part of the interest allowed. It is determined unless the year's limit binds above nil over
+     * interest claimed against both dividends and unit income, where no text says how the allowance divides (OQ-26).
+     */
+    private static Money interestAllowedOnDividends(DividendInterest interest) {
+        Money allowed = interest.allowed();
+        if (interest.claimedOnDividends().equals(Money.ZERO) || allowed.equals(Money.ZERO)) {
+            return Money.ZERO;
+        }
+        if (allowed.equals(interest.claimed())) {
+            return interest.claimedOnDividends();
+        }
+        if (interest.claimedOnDividends().equals(interest.claimed())) {
+            return allowed;
+        }
+        throw new IllegalArgumentException("Interest expense of " + interest.claimed() + " against dividend and unit"
+                + " income is limited to " + allowed + "; what part of that is the dividends' — and so how much"
+                + " dividend income the 25%/37% surcharge test leaves out — is OQ-26");
+    }
+
+    /**
+     * With dividends in the total income and the excluding ladder still biting without them, the dividends' own tax
+     * bears at most 15% (the last clause of each surcharge table); measuring that tax is OQ-26, and building it W-088's.
+     */
+    private static void refuseWhereTheDividendLimitWouldBind(NodeContext ctx, SurchargeRows rows, Money totalIncome,
+            Money dividends) {
+        if (dividends.equals(Money.ZERO)) {
             return;
         }
-        Rate excluding = bandRate(rows.onIncomeExcludingGains(), version(ctx, rows.onIncomeExcludingGains()),
-                totalIncome);
+        Rate excluding = excludingRate(ctx, rows, totalIncome, dividends);
         if (excluding.compareTo(Rate.ZERO) > 0) {
-            throw new IllegalArgumentException("A total income of " + totalIncome + " with dividend or unit income"
-                    + " reaches the " + excluding.asPercentLabel() + " surcharge band of " + rows.onIncomeExcludingGains()
-                    + ", which tests the income excluding dividends; taking them out of that test is W-079e's (D-086)");
+            throw new IllegalArgumentException("A total income of " + totalIncome + " less dividend income of "
+                    + dividends + " still reaches the " + excluding.asPercentLabel() + " surcharge band of "
+                    + rows.onIncomeExcludingGains() + "; the surcharge on the dividends' own tax is limited to 15%, and"
+                    + " how that tax is measured for slab-taxed dividends is OQ-26, to be built by W-088 (D-200)");
         }
+    }
+
+    /** The excluding ladder's rate at the income less the dividend income it includes, never below nil. */
+    private static Rate excludingRate(NodeContext ctx, SurchargeRows rows, Money income, Money dividends) {
+        return bandRate(rows.onIncomeExcludingGains(), version(ctx, rows.onIncomeExcludingGains()),
+                excludingDividends(income, dividends));
+    }
+
+    private static Money excludingDividends(Money income, Money dividends) {
+        Money excluding = income.minus(dividends);
+        return excluding.isLessThan(Money.ZERO) ? Money.ZERO : excluding;
     }
 
     /** The regime's rows: exactly one set applies, all three of its rows in this regime. */
@@ -152,15 +206,16 @@ public final class SurchargeNode implements ComputationNode {
     }
 
     /**
-     * The greater of the two ladders' rates at this income. The excluding income is the total income while
-     * the graph carries no dividends or special gains (D-086); where both rates are equal the total-income
-     * ladder is cited, its clauses coming first in the Act.
+     * The greater of the two ladders' rates at this income: the total-income ladder at the total income, the
+     * excluding ladder at the total income less the dividend income (D-086, D-200). Where both rates are equal the
+     * total-income ladder is cited, its clauses coming first in the Act.
      */
-    private static ChosenRate rateAt(NodeContext ctx, SurchargeRows rows, Money totalIncome) {
+    private static ChosenRate rateAt(NodeContext ctx, SurchargeRows rows, Money totalIncome, Money dividends) {
         RuleVersion onTotal = version(ctx, rows.onTotalIncome());
         RuleVersion excluding = version(ctx, rows.onIncomeExcludingGains());
         Rate totalRate = bandRate(rows.onTotalIncome(), onTotal, totalIncome);
-        Rate excludingRate = bandRate(rows.onIncomeExcludingGains(), excluding, totalIncome);
+        Rate excludingRate = bandRate(rows.onIncomeExcludingGains(), excluding,
+                excludingDividends(totalIncome, dividends));
         if (excludingRate.compareTo(totalRate) > 0) {
             return new ChosenRate(excludingRate, rows.onIncomeExcludingGains(), excluding,
                     Optional.of("greater than " + rows.onTotalIncome() + " at " + totalRate.asPercentLabel()));
@@ -180,12 +235,15 @@ public final class SurchargeNode implements ComputationNode {
         return ladder.bandFor(income).map(SlabLadder.Band::rate).orElse(Rate.ZERO);
     }
 
-    /** U: the real tax after rebate at this income, recomputed, plus its surcharge without relief. */
-    private static Money unrelievedAt(NodeContext ctx, SurchargeRows rows, Money income) {
+    /**
+     * U: the real tax after rebate at this income, recomputed, plus its surcharge without relief — the dividend income
+     * held as it is, so the excluding ladder reads the threshold less it.
+     */
+    private static Money unrelievedAt(NodeContext ctx, SurchargeRows rows, Money income, Money dividends) {
         TaxByBasis atIncome = (TaxByBasis) ctx.recomputed(
                 NodeIds.TAX_AFTERREBATE, NodeIds.ROUND_TOTALINCOME, MoneyValue.of(income));
         Money tax = atIncome.asMoney();
-        return tax.plus(rateAt(ctx, rows, income).rate().of(tax));
+        return tax.plus(rateAt(ctx, rows, income, dividends).rate().of(tax));
     }
 
     private static RuleRelief ceilingOf(RuleId id, RuleVersion version) {
