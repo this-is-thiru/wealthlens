@@ -18,6 +18,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.DisallowanceBasis;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.FamilyPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
@@ -235,7 +236,7 @@ public final class ShapeJson {
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
                 "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
-                "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold");
+                "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -267,7 +268,10 @@ public final class ShapeJson {
         };
     }
 
-    /** The Chapter VIII deductions' definitions — apart only to keep each switch within the complexity limit. */
+    /**
+     * The Chapter VIII deductions' definitions and the gift threshold — apart only to keep each switch within the
+     * complexity limit.
+     */
     private static RuleDefinition chapterEightDefinition(String tag, JsonNode node, String path) {
         return switch (tag) {
             case "PremiumShareBands" -> PackJson.construct(path, () -> new PremiumShareBands(PackJson.array(
@@ -276,6 +280,8 @@ public final class ShapeJson {
                             PackJson.optionalDate(band.node(), "to", path),
                             PackJson.bool(band.node(), "onlyCoveringDisabilityOrDisease", path)),
                             rate(band.node(), "percent", path)))));
+            case "GiftThreshold" -> PackJson.construct(path, () -> new GiftThreshold(money(node, "exceeds", path),
+                    rate(node, "considerationSharePercent", path)));
             case "TaxYearSpan" -> PackJson.construct(path, () -> new TaxYearSpan(
                     PackJson.integer(node, "succeedingYears", path)));
             case "SanctionedLoanLimit" -> PackJson.construct(path, () -> new SanctionedLoanLimit(

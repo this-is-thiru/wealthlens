@@ -80,7 +80,7 @@ class HealthInsuranceDeductionTest {
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
-                        List.of(payments), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of()),
+                        List.of(payments), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of()),
                 plain.assessee(), FAMILY, plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs)
                 .given(NodeIds.GTI, Money.of("1000000"))

@@ -1357,6 +1357,14 @@ all, depending on two flags. That is the whole case for `A1`'s regime comparison
 > Verified by: egazette 2020/218938 p.25 (FA 2020 s.30); thc.nic.in Income-tax Act, 1961 p.310 (s.57(iv)); Gazette
 > 265620 p.142 (s.93(1)(f)); `docs/taxplanning-build/sources/2026-10-16-other-sources.md`.
 >
+> **Erratum (W-079f, 2026-10-17, D-201):** `OS-GIFT-001`'s 1961 cell is incomplete — s.56(2)(x)'s immovable-property
+> tolerance has been the higher of ₹50,000 and **10%** of the consideration since FA 2020 s.29(B)(i) (w.e.f. 1-4-2021; 5%
+> before, FA 2018 s.23), and its proviso has three exclusions the 2025 Act dropped: (XI) a prescribed class (F(No.2)A 2019)
+> and (XII), (XIII) the COVID-19 receipts (FA 2022 s.16, deemed from 1-4-2020), (XIII)(B) only to the extent the year's
+> sums do not exceed ₹10,00,000. Built as `OS-GIFT` (both years) and `OS-GIFT-COVID-DEATH` (TY 2025-26 only).
+> Verified by: egazette 2020/218938 p.25; 2022/234693 pp.26–27; 2019/209695 p.14;
+> `docs/taxplanning-build/sources/2026-10-17-gifts.md`.
+>
 > **Erratum (W-079c, 2026-10-16, D-196):** the 1961 cells of three R17 rows are wrong — `OS-FAMPEN-001`'s ₹25,000 /
 > ₹15,000 is no longer *NEEDS VERIFICATION*: 1961 s.57(iia) allows *"thirty-three and one-third per cent of such income
 > or fifteen thousand rupees, whichever is less"*, and F(No.2)A 2024 s.24(b) reads "twenty-five thousand rupees" for it

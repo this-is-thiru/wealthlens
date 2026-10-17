@@ -65,6 +65,8 @@ public final class RuleIds {
     public static final RuleId OS_DIVIDEND_INTEREST = new RuleId("OS-DIVIDEND-INTEREST");
     public static final RuleId OS_FAMILY_PENSION = new RuleId("OS-FAMILY-PENSION");
     public static final RuleId OS_FAMILY_PENSION_NEW_TAX_REGIME = new RuleId("OS-FAMILY-PENSION-NEW-TAX-REGIME");
+    public static final RuleId OS_GIFT = new RuleId("OS-GIFT");
+    public static final RuleId OS_GIFT_COVID_DEATH = new RuleId("OS-GIFT-COVID-DEATH");
     public static final RuleId OS_INTEREST = new RuleId("OS-INTEREST");
     public static final RuleId OS_OTHER_EXPENDITURE = new RuleId("OS-OTHER-EXPENDITURE");
     public static final RuleId OS_PF_TAXABLE_INTEREST = new RuleId("OS-PF-TAXABLE-INTEREST");

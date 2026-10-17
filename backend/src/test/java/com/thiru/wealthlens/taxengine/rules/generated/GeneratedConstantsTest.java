@@ -84,6 +84,8 @@ class GeneratedConstantsTest {
             "OS-DIVIDEND-INTEREST",
             "OS-FAMILY-PENSION",
             "OS-FAMILY-PENSION-NEW-TAX-REGIME",
+            "OS-GIFT",
+            "OS-GIFT-COVID-DEATH",
             "OS-INTEREST",
             "OS-OTHER-EXPENDITURE",
             "OS-PF-TAXABLE-INTEREST",

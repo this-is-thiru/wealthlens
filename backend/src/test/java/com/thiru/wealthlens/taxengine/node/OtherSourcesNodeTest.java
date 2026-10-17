@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.GiftExclusion;
+import com.thiru.wealthlens.taxengine.input.GiftKind;
+import com.thiru.wealthlens.taxengine.input.GiftReceived;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
@@ -59,6 +62,11 @@ class OtherSourcesNodeTest {
 
     private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items,
             List<ProvidentFundAccount> accounts) {
+        return run(year, regime, items, accounts, List.of());
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items,
+            List<ProvidentFundAccount> accounts, List<GiftReceived> gifts) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -70,7 +78,7 @@ class OtherSourcesNodeTest {
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                        List.of(), List.of(), items, accounts),
+                        List.of(), List.of(), items, accounts, gifts),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs).run(new OtherSourcesNode());
@@ -464,5 +472,152 @@ class OtherSourcesNodeTest {
 
         // Then — 30,000 − min(10,000, 15,000) = 20,000, plus 12,000
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("32000")));
+    }
+
+    private static GiftReceived gift(GiftKind kind, String consideration, String value) {
+        return new GiftReceived(kind, Money.of(consideration), Money.of(value), Optional.empty());
+    }
+
+    private static GiftReceived sum(String value) {
+        return gift(GiftKind.SUM_OF_MONEY, "0", value);
+    }
+
+    private static GiftReceived excluded(GiftExclusion ground, String value) {
+        return new GiftReceived(GiftKind.SUM_OF_MONEY, Money.ZERO, Money.of(value), Optional.of(ground));
+    }
+
+    private static NodeResult runGifts(int year, GiftReceived... gifts) {
+        return run(year, OLD, List.of(), List.of(), List.of(gifts));
+    }
+
+    /*
+     * Gifts (S2 s.92(2)(m), (3); 1961 s.56(2)(x); D-201): ₹50,000, and for immovable property the higher of ₹50,000
+     * and 10% of the consideration, from docs/taxplanning-build/sources/2026-10-17-gifts.md. Worked by hand.
+     */
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheYearsSumsExceedTheThreshold_chargesTheWhole(int year) {
+        // When — 30,000 and 25,000 from friends
+        NodeResult result = runGifts(year, sum("30000"), sum("25000"));
+
+        // Then — "the total of which exceeds ₹ 50000, the whole of such sum": 55,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("55000")));
+        assertThat(result.trace()).extracting(TraceLine::rule).containsOnly(RuleIds.OS_GIFT);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheYearsSumsEqualTheThreshold_chargesNothing(int year) {
+        // When — 30,000 and 20,000: 50,000 does not exceed 50,000
+        NodeResult result = runGifts(year, sum("30000"), sum("20000"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenALargeSumIsFromARelative_leavesItOutOfTheTotal(int year) {
+        // When — 1,00,000 from a relative and 40,000 from a friend
+        NodeResult result = runGifts(year, excluded(GiftExclusion.RELATIVE, "100000"), sum("40000"));
+
+        // Then — the relative's sum counts toward nothing; 40,000 alone does not exceed
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace().getFirst().kind()).isEqualTo(StepKind.EXEMPTION);
+        assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("100000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenImmovablePropertyIsReceivedFree_chargesItsStampDutyValue(int year) {
+        // When — a flat received for nothing, stamp duty value 6,00,000
+        NodeResult result = runGifts(year, gift(GiftKind.IMMOVABLE_PROPERTY, "0", "600000"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("600000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenImmovablePropertyIsBoughtWithinTheTolerance_chargesNothing(int year) {
+        // When — paid 50,00,000 for a stamp duty value of 54,00,000
+        NodeResult result = runGifts(year, gift(GiftKind.IMMOVABLE_PROPERTY, "5000000", "5400000"));
+
+        // Then — 4,00,000 is not more than max(50,000, 10% of 50,00,000 = 5,00,000)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenImmovablePropertyIsBoughtBeyondTheTolerance_chargesTheExcess(int year) {
+        // When — paid 50,00,000 for 56,00,000; and paid 3,00,000 for 3,60,000
+        NodeResult result = runGifts(year, gift(GiftKind.IMMOVABLE_PROPERTY, "5000000", "5600000"),
+                gift(GiftKind.IMMOVABLE_PROPERTY, "300000", "360000"));
+
+        // Then — 6,00,000 > 5,00,000; 60,000 > max(50,000, 30,000): each on its own, 6,60,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("660000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenOtherPropertyIsReceivedFree_testsTheAggregate(int year) {
+        // When — shares worth 30,000 and jewellery worth 25,000, both for nothing
+        NodeResult result = runGifts(year, gift(GiftKind.OTHER_PROPERTY, "0", "30000"),
+                gift(GiftKind.OTHER_PROPERTY, "0", "25000"));
+
+        // Then — "the aggregate fair market value of which exceeds ₹ 50000": 55,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("55000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenOtherPropertyIsBoughtBelowItsValue_chargesAShortfallAboveTheThreshold(int year) {
+        // When — jewellery worth 1,60,000 for 1,00,000; another worth 1,50,000 for 1,00,000
+        NodeResult result = runGifts(year, gift(GiftKind.OTHER_PROPERTY, "100000", "160000"),
+                gift(GiftKind.OTHER_PROPERTY, "100000", "150000"));
+
+        // Then — 60,000 exceeds 50,000; 50,000 does not: 60,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("60000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheSumsAreMarriageGifts_chargesNothing(int year) {
+        // When
+        NodeResult result = runGifts(year, excluded(GiftExclusion.MARRIAGE, "500000"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025HasCovidDeathSumsAboveTheLimit_chargesTheRest() {
+        // When — 12,00,000 to the family of a person who died of COVID-19, from others (1961 proviso (XIII)(B))
+        NodeResult result = runGifts(2025, excluded(GiftExclusion.COVID_DEATH_FROM_OTHERS, "1200000"));
+
+        // Then — 10,00,000 excluded; 2,00,000 remains and exceeds 50,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_GIFT_COVID_DEATH);
+        assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2026IsGivenACovidGround_isRefused() {
+        // When / Then — the 2025 Act's s.92(3) has no such ground
+        assertThatThrownBy(() -> runGifts(2026, excluded(GiftExclusion.COVID_TREATMENT, "100000")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("s.92(3) has no such exclusion");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenGiftsSitBesideInterest_addsBoth(int year) {
+        // When — the 55,000 of sums and 10,000 of interest on securities
+        NodeResult result = run(year, OLD, List.of(item(OtherSourceKind.INTEREST_ON_SECURITIES, "10000", "0", "0",
+                "0")), List.of(), List.of(sum("30000"), sum("25000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("65000")));
     }
 }

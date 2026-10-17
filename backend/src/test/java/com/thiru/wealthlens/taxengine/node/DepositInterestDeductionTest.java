@@ -87,7 +87,7 @@ class DepositInterestDeductionTest {
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                        donations, List.of(), items, List.of()),
+                        donations, List.of(), items, List.of(), List.of()),
                 assessee, plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs)
                 .given(NodeIds.GTI, Money.of("1000000"))

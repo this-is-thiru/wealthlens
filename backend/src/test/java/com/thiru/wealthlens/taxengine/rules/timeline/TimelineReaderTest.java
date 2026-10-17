@@ -161,6 +161,8 @@ class TimelineReaderTest {
             new RuleId("OS-COMMUTED-PENSION"),
             new RuleId("OS-DEATH-GRATUITY"),
             new RuleId("OS-PF-TAXABLE-INTEREST"),
+            new RuleId("OS-GIFT"),
+            new RuleId("OS-GIFT-COVID-DEATH"),
             new RuleId("DED-SCHEDULE-XV"),
             new RuleId("DED-NPS-EMPLOYER-GOVT"),
             new RuleId("DED-NPS-EMPLOYER-OTHER"),

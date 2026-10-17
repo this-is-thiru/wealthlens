@@ -753,7 +753,7 @@ class PackJsonTest {
                                     "law/regimes.json", resource("law/regimes.json"),
                                     "exec/components.json", resource("exec/components.json")));
 
-            assertThat(pack.rules()).hasSize(148);
+            assertThat(pack.rules()).hasSize(149);
             assertThat(pack.regimes()).hasSize(2);
             assertThat(pack.disallowanceSets()).containsOnlyKeys(new DisallowanceSetId("DIS-NEW-TAX-REGIME-NO-EXEMPTION"));
             assertThat(pack.components()).containsOnlyKeys(new ComponentCode("BASIC"), new ComponentCode("BONUS"), new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), new ComponentCode("COMMISSION"), new ComponentCode("CONVEYANCE_ALLOWANCE"), new ComponentCode("DEARNESS_ALLOWANCE"), new ComponentCode("ENTERTAINMENT_ALLOWANCE"), new ComponentCode("HOSTEL_ALLOWANCE"), new ComponentCode("HRA"), new ComponentCode("LTA"), new ComponentCode("PROFESSIONAL_TAX"), new ComponentCode("SPECIAL_ALLOWANCE"), new ComponentCode("TRANSPORT_ALLOWANCE_DISABLED"), new ComponentCode("UNIFORM_ALLOWANCE"), new ComponentCode("GRATUITY"), new ComponentCode("LEAVE_ENCASHMENT"), new ComponentCode("COMMUTED_PENSION"), new ComponentCode("VRS_COMPENSATION"), new ComponentCode("RETRENCHMENT_COMPENSATION"), new ComponentCode("NOTICE_PAY"), new ComponentCode("DEFERRED_ANNUITY"), new ComponentCode("PROVIDENT_FUNDS_ACT_FUND"), new ComponentCode("NOTIFIED_PROVIDENT_FUND"), new ComponentCode("EMPLOYEE_PF"), new ComponentCode("EMPLOYEE_SUPERANNUATION"), new ComponentCode("NOTIFIED_DEPOSIT_SCHEME"), new ComponentCode("SAVINGS_CERTIFICATE"), new ComponentCode("MUTUAL_FUND_UNITS"), new ComponentCode("MUTUAL_FUND_PENSION_FUND"), new ComponentCode("NATIONAL_HOUSING_BANK_SCHEME"), new ComponentCode("HOUSING_FINANCE_DEPOSIT"), new ComponentCode("TUITION_FEES"), new ComponentCode("HOUSE_PURCHASE_PAYMENT"), new ComponentCode("BANK_TERM_DEPOSIT"), new ComponentCode("NABARD_BONDS"), new ComponentCode("SENIOR_CITIZEN_SAVINGS"), new ComponentCode("POST_OFFICE_TIME_DEPOSIT"), new ComponentCode("GOVERNMENT_PENSION_ADDITIONAL"), new ComponentCode("PENSION_FUND_ANNUITY"), new ComponentCode("EMPLOYEE_NPS"), new ComponentCode("ELIGIBLE_ISSUE_SUBSCRIPTION"), new ComponentCode("NPS_MINOR_DEPOSIT"), new ComponentCode("LIFE_INSURANCE_PREMIUM"), new ComponentCode("HEALTH_INSURANCE_FAMILY"), new ComponentCode("HEALTH_INSURANCE_PARENTS"), new ComponentCode("MEDICAL_EXPENDITURE_FAMILY"), new ComponentCode("MEDICAL_EXPENDITURE_PARENTS"), new ComponentCode("GOVERNMENT_DEFERRED_ANNUITY"), new ComponentCode("UNIT_LINKED_INSURANCE_PLAN"), new ComponentCode("MUTUAL_FUND_UNIT_LINKED_PLAN"), new ComponentCode("ANNUITY_PLAN"));
@@ -854,7 +854,7 @@ class PackJsonTest {
         @Test
         void theShippedPackStillParses() {
             // So a mutation test that passed because everything fails would be caught
-            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(148);
+            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(149);
         }
 
         @Test

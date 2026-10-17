@@ -1,5 +1,8 @@
 package com.thiru.wealthlens.taxengine.node;
 
+import com.thiru.wealthlens.taxengine.input.GiftExclusion;
+import com.thiru.wealthlens.taxengine.input.GiftKind;
+import com.thiru.wealthlens.taxengine.input.GiftReceived;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
@@ -9,6 +12,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.definition.FamilyPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.ProvidentFundThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -43,6 +47,10 @@ import java.util.Set;
  * interest the fund accrued in the taxable contribution account, as the fund reports it, with the year's excess over
  * the threshold measured per fund to show what entered that account (D-198).
  *
+ * <p>Gifts — sums and property received without, or for inadequate, consideration — are income above the threshold:
+ * the year's sums together, the year's other property received free together, each immovable property and each
+ * other purchase below value on its own; a receipt on an excluded ground counts toward nothing (D-201).
+ *
  * <p>Winnings and the other kinds are refused: winnings' own rate is deferred in the coverage register, and the
  * remaining clauses of S2 s.92(2) are {@code W-079g}'s. The head below nil is refused until set-off is built
  * ({@code W-081}), as house property's is.
@@ -56,6 +64,9 @@ public final class OtherSourcesNode implements ComputationNode {
     private static final BaseId COMPENSATION_INTEREST = new BaseId("COMPENSATION_INTEREST");
     private static final BaseId COMMUTED_PENSION = new BaseId("COMMUTED_PENSION");
     private static final BaseId GRATUITY = new BaseId("GRATUITY");
+    private static final BaseId GIFT = new BaseId("GIFT");
+    private static final Set<GiftExclusion> COVID_GROUNDS = Set.of(GiftExclusion.COVID_TREATMENT,
+            GiftExclusion.COVID_DEATH_FROM_EMPLOYER, GiftExclusion.COVID_DEATH_FROM_OTHERS);
     private static final List<RuleId> FAMILY_PENSION_ROWS = List.of(RuleIds.OS_FAMILY_PENSION,
             RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME);
 
@@ -77,14 +88,16 @@ public final class OtherSourcesNode implements ComputationNode {
         return Set.of(RuleIds.OS_INTEREST, RuleIds.OS_DIVIDEND, RuleIds.OS_DIVIDEND_INTEREST,
                 RuleIds.OS_DEEMED_DIVIDEND, RuleIds.OS_BANKER_COMMISSION, RuleIds.OS_OTHER_EXPENDITURE,
                 RuleIds.OS_COMPENSATION_INTEREST, RuleIds.OS_FAMILY_PENSION, RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME,
-                RuleIds.OS_COMMUTED_PENSION, RuleIds.OS_DEATH_GRATUITY, RuleIds.OS_PF_TAXABLE_INTEREST);
+                RuleIds.OS_COMMUTED_PENSION, RuleIds.OS_DEATH_GRATUITY, RuleIds.OS_PF_TAXABLE_INTEREST, RuleIds.OS_GIFT,
+                RuleIds.OS_GIFT_COVID_DEATH);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         List<OtherSourceItem> items = ctx.inputs().entered().otherSourceItems();
         List<ProvidentFundAccount> accounts = ctx.inputs().entered().providentFundAccounts();
-        if (items.isEmpty() && accounts.isEmpty()) {
+        List<GiftReceived> gifts = ctx.inputs().entered().giftsReceived();
+        if (items.isEmpty() && accounts.isEmpty() && gifts.isEmpty()) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireBuiltKinds(items);
@@ -96,6 +109,9 @@ public final class OtherSourcesNode implements ComputationNode {
         head = head.minus(dividendInterestAllowed(lines, items));
         for (int position = 0; position < accounts.size(); position++) {
             head = head.plus(providentFundInterest(lines, position, accounts.get(position)));
+        }
+        if (!gifts.isEmpty()) {
+            head = head.plus(giftIncome(ctx, lines, gifts));
         }
         if (head.isLessThan(Money.ZERO)) {
             throw new IllegalArgumentException("Income from other sources is a loss of " + Money.ZERO.minus(head)
@@ -277,6 +293,82 @@ public final class OtherSourcesNode implements ComputationNode {
         return account.taxableAccountInterest();
     }
 
+    /**
+     * S2 s.92(2)(m), (3); 1961 s.56(2)(x) and its proviso: the year's gifts. The sums received are tested together,
+     * as is the other property received free ("the total of which", "the aggregate fair market value"); each
+     * immovable property, and each other property bought below its value, is tested on its own.
+     */
+    private static Money giftIncome(NodeContext ctx, Lines lines, List<GiftReceived> gifts) {
+        GiftThreshold threshold = lines.giftThreshold();
+        Money sums = Money.ZERO;
+        Money propertyFree = Money.ZERO;
+        Money covidDeathSums = Money.ZERO;
+        Money charged = Money.ZERO;
+        for (int position = 0; position < gifts.size(); position++) {
+            GiftReceived gift = gifts.get(position);
+            String where = "gift " + position;
+            if (gift.excludedAs().isPresent()) {
+                GiftExclusion ground = gift.excludedAs().get();
+                requireGroundOfTheYear(ctx, where, gift, ground);
+                if (ground == GiftExclusion.COVID_DEATH_FROM_OTHERS) {
+                    covidDeathSums = covidDeathSums.plus(gift.value());
+                } else {
+                    lines.add(RuleIds.OS_GIFT, StepKind.EXEMPTION, gift.value(), gift.value(),
+                            where + ": excluded, " + ground);
+                }
+                continue;
+            }
+            switch (gift.kind()) {
+                case SUM_OF_MONEY -> sums = sums.plus(gift.value());
+                case IMMOVABLE_PROPERTY -> charged = charged.plus(lines.chargedGift(where + ": immovable property",
+                        gift.value(), threshold.immovablePropertyCharged(gift.consideration(), gift.value())));
+                case OTHER_PROPERTY -> {
+                    if (gift.consideration().equals(Money.ZERO)) {
+                        propertyFree = propertyFree.plus(gift.value());
+                    } else {
+                        charged = charged.plus(lines.chargedGift(where + ": property bought below its value",
+                                gift.value(), threshold.propertyShortfallCharged(gift.consideration(), gift.value())));
+                    }
+                }
+            }
+        }
+        sums = sums.plus(covidDeathSumsBeyondTheLimit(lines, covidDeathSums));
+        charged = charged.plus(lines.chargedGift("sums of money received without consideration", sums,
+                threshold.isExceededBy(sums) ? sums : Money.ZERO));
+        return charged.plus(lines.chargedGift("other property received without consideration", propertyFree,
+                threshold.isExceededBy(propertyFree) ? propertyFree : Money.ZERO));
+    }
+
+    /** 1961 s.56(2)(x) proviso (XIII)(B): such sums are excluded only up to the limit; the rest are sums like any. */
+    private static Money covidDeathSumsBeyondTheLimit(Lines lines, Money covidDeathSums) {
+        if (covidDeathSums.equals(Money.ZERO)) {
+            return Money.ZERO;
+        }
+        Money excluded = Money.min(covidDeathSums, lines.applied(RuleIds.OS_GIFT_COVID_DEATH, GIFT, covidDeathSums));
+        lines.add(RuleIds.OS_GIFT_COVID_DEATH, StepKind.EXEMPTION, covidDeathSums, excluded,
+                "sums to the family of a person whose death was related to COVID-19, excluded up to the limit");
+        return covidDeathSums.minus(excluded);
+    }
+
+    /**
+     * The COVID-19 grounds are the 1961 proviso's (XII), (XIII), which the 2025 Act's s.92(3) does not have; they exist
+     * where the pack carries {@code OS-GIFT-COVID-DEATH}, the one row FA 2022's insertion needs a number for. (XIII)(B)
+     * reaches sums only.
+     */
+    private static void requireGroundOfTheYear(NodeContext ctx, String where, GiftReceived gift, GiftExclusion ground) {
+        if (!COVID_GROUNDS.contains(ground)) {
+            return;
+        }
+        if (!ctx.pack().rules().containsKey(RuleIds.OS_GIFT_COVID_DEATH)) {
+            throw new IllegalArgumentException(where + ": " + ground + " is a ground of the Income-tax Act, 1961 s.56(2)(x)"
+                    + " proviso (XII), (XIII) only; the Income-tax Act, 2025 s.92(3) has no such exclusion");
+        }
+        if (ground == GiftExclusion.COVID_DEATH_FROM_OTHERS && gift.kind() != GiftKind.SUM_OF_MONEY) {
+            throw new IllegalArgumentException(where + ": proviso (XIII)(B) excludes sums of money only, not "
+                    + gift.kind());
+        }
+    }
+
     /** Winnings and the remaining clauses are not built: refused by name rather than computed as something else. */
     private static void requireBuiltKinds(List<OtherSourceItem> items) {
         for (int position = 0; position < items.size(); position++) {
@@ -334,6 +426,19 @@ public final class OtherSourcesNode implements ComputationNode {
 
         FamilyPensionShare familyPensionShare(RuleId row) {
             return RuleDefinitions.require(version(row).definition(), FamilyPensionShare.class, row);
+        }
+
+        GiftThreshold giftThreshold() {
+            return RuleDefinitions.require(version(RuleIds.OS_GIFT).definition(), GiftThreshold.class,
+                    RuleIds.OS_GIFT);
+        }
+
+        /** One INCOME line for a gift or a total of gifts: what was received, what of it is charged. */
+        Money chargedGift(String what, Money received, Money chargedAmount) {
+            if (received.isGreaterThan(Money.ZERO)) {
+                add(RuleIds.OS_GIFT, StepKind.INCOME, received, chargedAmount, what);
+            }
+            return chargedAmount;
         }
 
         ProvidentFundThreshold providentFundThreshold() {

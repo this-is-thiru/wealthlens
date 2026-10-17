@@ -1,0 +1,55 @@
+{
+  "ruleId": "OS-GIFT-COVID-DEATH",
+  "_note": "The COVID-19 death receipts from others, TY 2025-26 only (D-201): Income-tax Act, 1961 s.56(2)(x) proviso (XIII), inserted by FA 2022 s.16(b) and deemed from 1-4-2020: \"(XIII) by a member of the family of a deceased person,— (A) from the employer of the deceased person; or (B) from any other person or persons to the extent that such sum or aggregate of such sums does not exceed ten lakh rupees, where the cause of death of such person is illness related to COVID-19 and the payment is— (i) received within twelve months from the date of death of such person; and (ii) subject to such other conditions, as the Central Government may, by notification …, specify\" (egazette 2022/234693 p.26). The cap is the most of the year's (XIII)(B) sums excluded; the rest is tested as any other sum (OS-GIFT). The 2025 Act's s.92(3) has no such ground, so the row has no TY 2026-27 version and the ground is refused there. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.56(2)(x) proviso (XIII)(B)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "presence": "ABSENT_IN_THIS_ACT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "1000000"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2022 (6 of 2022), s.16(b)(i) — clauses (XII) and (XIII) of the proviso to s.56(2)(x), deemed inserted w.e.f. 1-4-2020",
+        "gazetteRef": "CG-DL-E-31032022-234693",
+        "notifiedOn": "2022-03-30",
+        "effectiveFrom": "2020-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2022/234693.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2022/234693.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032022-234693, Finance Act, 2022 s.16(b)(i), p.26; no later Act to the Finance Act, 2026 amends s.56(2)(x) (docs/taxplanning-build/sources/2026-10-17-gifts.md)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2022/234693.pdf",
+    "sourceDescription": "Gazette CG-DL-E-31032022-234693, Finance Act, 2022 s.16(b)(i), p.26; no later Act to the Finance Act, 2026 amends s.56(2)(x) (docs/taxplanning-build/sources/2026-10-17-gifts.md)",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}
