@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.63",
-      "checksum": "sha256:13dded8dea2a92513c149c4f7c1c733487c6ae651e4ffe4c704f21c4427ab3fb"
+      "version": "2026-27.law.64",
+      "checksum": "sha256:565545ed00879aba3853a91a579e958219e43d96b76c380d5295acd7ff8469b5"
     },
     "exec": {
       "version": "2026-27.exec.27",
@@ -72,6 +72,7 @@
     "OS-FAMILY-PENSION-NEW-TAX-REGIME": "sha256:c86f36ce4a9c479d85a48b1409240e050bda43fcc0b23a529a205e0c40ed1aa5",
     "OS-INTEREST": "sha256:81bef7109f82e3ae55ec8c5abd3f4bd4ba93b955cb61790dc46c5a7c7f92015a",
     "OS-OTHER-EXPENDITURE": "sha256:d022633694b2eab5275a40f78d4cd1d6ce6882f5e4c5264a17e1762a735cfbe5",
+    "OS-PF-TAXABLE-INTEREST": "sha256:cb6daf8cf6e1f3b281bf429d84dcd2d60750987f2de060679dbd7a960d8468f6",
     "PERQ-ACCOM-CONTINUED": "sha256:0c67a322711cec7a35031f6183ea4c3e450c5560f6c829b1e68b0612db16e7d3",
     "PERQ-ACCOM-FURNITURE": "sha256:c80d7fefc56384fe6a6c4ffb7fc6e068ef228c1500b8b653537d7faa27fc66e8",
     "PERQ-ACCOM-GOVERNMENT": "sha256:0e9b7b470fd625b3cf93e33071e43bc84b660528c1997d54bfef68483d01b33e",

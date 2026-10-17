@@ -160,6 +160,7 @@ class TimelineReaderTest {
             new RuleId("OS-FAMILY-PENSION-NEW-TAX-REGIME"),
             new RuleId("OS-COMMUTED-PENSION"),
             new RuleId("OS-DEATH-GRATUITY"),
+            new RuleId("OS-PF-TAXABLE-INTEREST"),
             new RuleId("DED-SCHEDULE-XV"),
             new RuleId("DED-NPS-EMPLOYER-GOVT"),
             new RuleId("DED-NPS-EMPLOYER-OTHER"),

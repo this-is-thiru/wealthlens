@@ -2,12 +2,14 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
+import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.definition.FamilyPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.ProvidentFundThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -36,6 +38,10 @@ import java.util.Set;
  *
  * <p>A family pension bears one-third of itself within the regime's limit, and other expenditure; a fund pension's
  * commutation and a Government gratuity received on the employee's death bear the entire amount (D-196).
+ *
+ * <p>A provident fund's interest on the person's own contributions beyond the threshold is income in full: the
+ * interest the fund accrued in the taxable contribution account, as the fund reports it, with the year's excess over
+ * the threshold measured per fund to show what entered that account (D-198).
  *
  * <p>Winnings and the other kinds are refused: winnings' own rate is deferred in the coverage register, and the
  * remaining clauses of S2 s.92(2) are {@code W-079g}'s. The head below nil is refused until set-off is built
@@ -71,13 +77,14 @@ public final class OtherSourcesNode implements ComputationNode {
         return Set.of(RuleIds.OS_INTEREST, RuleIds.OS_DIVIDEND, RuleIds.OS_DIVIDEND_INTEREST,
                 RuleIds.OS_DEEMED_DIVIDEND, RuleIds.OS_BANKER_COMMISSION, RuleIds.OS_OTHER_EXPENDITURE,
                 RuleIds.OS_COMPENSATION_INTEREST, RuleIds.OS_FAMILY_PENSION, RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME,
-                RuleIds.OS_COMMUTED_PENSION, RuleIds.OS_DEATH_GRATUITY);
+                RuleIds.OS_COMMUTED_PENSION, RuleIds.OS_DEATH_GRATUITY, RuleIds.OS_PF_TAXABLE_INTEREST);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         List<OtherSourceItem> items = ctx.inputs().entered().otherSourceItems();
-        if (items.isEmpty()) {
+        List<ProvidentFundAccount> accounts = ctx.inputs().entered().providentFundAccounts();
+        if (items.isEmpty() && accounts.isEmpty()) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireBuiltKinds(items);
@@ -87,6 +94,9 @@ public final class OtherSourcesNode implements ComputationNode {
             head = head.plus(itemIncome(lines, position, items.get(position)));
         }
         head = head.minus(dividendInterestAllowed(lines, items));
+        for (int position = 0; position < accounts.size(); position++) {
+            head = head.plus(providentFundInterest(lines, position, accounts.get(position)));
+        }
         if (head.isLessThan(Money.ZERO)) {
             throw new IllegalArgumentException("Income from other sources is a loss of " + Money.ZERO.minus(head)
                     + "; setting it off against other heads or carrying it forward (S2 s.109; 1961 s.71) waits on"
@@ -221,6 +231,21 @@ public final class OtherSourcesNode implements ComputationNode {
         return allowed;
     }
 
+    /**
+     * S2 Schedule II Sl. 3(a), 4(a) with S4 r.277; 1961 s.10(11), (12) provisos with Rules 1962 r.9D: the interest
+     * accrued in the fund's taxable contribution account, all of it income, and this year's contribution beyond the
+     * threshold, which is what entered that account this year.
+     */
+    private static Money providentFundInterest(Lines lines, int position, ProvidentFundAccount account) {
+        String where = "provident fund " + position;
+        Money excess = lines.providentFundThreshold().excess(account.contributed(), account.employerContributes());
+        lines.add(RuleIds.OS_PF_TAXABLE_INTEREST, StepKind.MEASURE, account.contributed(), excess,
+                where + ": the contribution beyond the threshold enters the taxable contribution account");
+        lines.add(RuleIds.OS_PF_TAXABLE_INTEREST, StepKind.INCOME, account.taxableAccountInterest(),
+                account.taxableAccountInterest(), where + ": interest accrued in the taxable contribution account");
+        return account.taxableAccountInterest();
+    }
+
     /** Winnings and the remaining clauses are not built: refused by name rather than computed as something else. */
     private static void requireBuiltKinds(List<OtherSourceItem> items) {
         for (int position = 0; position < items.size(); position++) {
@@ -278,6 +303,11 @@ public final class OtherSourcesNode implements ComputationNode {
 
         FamilyPensionShare familyPensionShare(RuleId row) {
             return RuleDefinitions.require(version(row).definition(), FamilyPensionShare.class, row);
+        }
+
+        ProvidentFundThreshold providentFundThreshold() {
+            return RuleDefinitions.require(version(RuleIds.OS_PF_TAXABLE_INTEREST).definition(),
+                    ProvidentFundThreshold.class, RuleIds.OS_PF_TAXABLE_INTEREST);
         }
 
         private RuleVersion version(RuleId row) {

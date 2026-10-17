@@ -45,7 +45,8 @@ import java.util.Optional;
  * 80D (D-136), disabled dependants' support and specified-disease treatment with 80DD and 80DDB (D-138), loan
  * interest with 80E–80EEB (D-139), the Agniveer Corpus Fund with s.16(l) and s.125 (D-140), the rent declaration
  * with s.134 (D-141), donations with s.133 (D-142), the houses owned with income from house property (D-155), the items of income from other
- * sources with that head (D-194). Every
+ * sources with that head (D-194), the person's own provident fund accounts with their taxable interest
+ * (D-198). Every
  * later income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -85,6 +86,8 @@ import java.util.Optional;
  * @param houseProperties each building or appurtenant land owned, for income from house property, in the order
  *     entered
  * @param otherSourceItems each item of income from other sources, in the order entered
+ * @param providentFundAccounts each provident fund the person contributed to, for its taxable interest, in the order
+ *     entered
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -119,7 +122,8 @@ public record EnteredFacts(
         Optional<RentDeclaration> rentDeclaration,
         List<Donation> donations,
         List<HouseProperty> houseProperties,
-        List<OtherSourceItem> otherSourceItems) {
+        List<OtherSourceItem> otherSourceItems,
+        List<ProvidentFundAccount> providentFundAccounts) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -167,6 +171,7 @@ public record EnteredFacts(
         donations = copied(donations, "donations");
         houseProperties = copied(houseProperties, "houseProperties");
         otherSourceItems = copied(otherSourceItems, "otherSourceItems");
+        providentFundAccounts = copied(providentFundAccounts, "providentFundAccounts");
     }
 
     /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
@@ -184,6 +189,6 @@ public record EnteredFacts(
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of());
     }
 }

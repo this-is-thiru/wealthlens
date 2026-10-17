@@ -86,6 +86,7 @@ class GeneratedConstantsTest {
             "OS-FAMILY-PENSION-NEW-TAX-REGIME",
             "OS-INTEREST",
             "OS-OTHER-EXPENDITURE",
+            "OS-PF-TAXABLE-INTEREST",
             "PERQ-ACCOM-CONTINUED",
             "PERQ-ACCOM-FURNITURE",
             "PERQ-ACCOM-GOVERNMENT",

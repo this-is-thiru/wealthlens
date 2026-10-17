@@ -7,8 +7,10 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
+import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -19,6 +21,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
@@ -31,7 +34,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * Income from other sources: interest and dividends (S2 ss.92–94; 1961 ss.56–58; D-194). Figures by hand from the
  * sources quoted in {@code docs/taxplanning-build/sources/2026-10-16-other-sources.md}: the 20% of the 1961 s.57
- * proviso (FA 2020 s.30(b)), nil from TY 2026-27 (FA 2026 s.44(b)), 50% of interest on compensation.
+ * proviso (FA 2020 s.30(b)), nil from TY 2026-27 (FA 2026 s.44(b)), 50% of interest on compensation; and the
+ * provident fund thresholds of {@code 2026-10-17-pf-own-interest.md} — ₹5,00,000 where the employer makes no
+ * contribution, ₹2,50,000 otherwise (S2 Schedule II Sl. 3(a), 4(a); 1961 s.10(11), (12) provisos; D-198).
  */
 class OtherSourcesNodeTest {
 
@@ -49,6 +54,11 @@ class OtherSourcesNodeTest {
     }
 
     private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items) {
+        return run(year, regime, items, List.of());
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items,
+            List<ProvidentFundAccount> accounts) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -60,7 +70,7 @@ class OtherSourcesNodeTest {
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                        List.of(), List.of(), items),
+                        List.of(), List.of(), items, accounts),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs).run(new OtherSourcesNode());
@@ -364,5 +374,95 @@ class OtherSourcesNodeTest {
         assertThat(result.trace()).extracting(TraceLine::out)
                 .containsExactly(MoneyValue.of(Money.ZERO), MoneyValue.of(Money.ZERO));
         assertThat(result.trace().get(1).limitedBy().orElseThrow()).contains("entire amount");
+    }
+
+    private static ProvidentFundAccount fund(String contributed, boolean employerContributes, String interest) {
+        return new ProvidentFundAccount(Money.of(contributed), employerContributes, Money.of(interest));
+    }
+
+    private static NodeResult runFunds(int year, ProvidentFundAccount... accounts) {
+        return run(year, OLD, List.of(), List.of(accounts));
+    }
+
+    /** The MEASURE lines' out: each fund's contribution beyond its threshold, in order. */
+    private static List<NodeValue> excesses(NodeResult result) {
+        return result.trace().stream().filter(line -> line.kind() == StepKind.MEASURE).map(TraceLine::out).toList();
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheEmployerContributesAndTheContributionExceedsTheThreshold_measuresTheExcessAndTaxesTheInterest(
+            int year) {
+        // Given — DR 08 T4-4's 6,00,000 with an employer that contributes; the fund reports 12,000 taxable interest
+        ProvidentFundAccount account = fund("600000", true, "12000");
+
+        // When
+        NodeResult result = runFunds(year, account);
+
+        // Then — 6,00,000 − 2,50,000 = 3,50,000 enters the taxable account; the 12,000 is income
+        assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.of("350000")));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("12000")));
+        assertThat(result.trace()).extracting(TraceLine::rule)
+                .containsOnly(RuleIds.OS_PF_TAXABLE_INTEREST);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenNoEmployerContributes_measuresTheExcessOverTheHigherThreshold(int year) {
+        // When — 6,00,000 to a fund the employer does not contribute to; 5,000 taxable interest
+        NodeResult result = runFunds(year, fund("600000", false, "5000"));
+
+        // Then — 6,00,000 − 5,00,000 = 1,00,000
+        assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.of("100000")));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("5000")));
+    }
+
+    @Test
+    void evaluate_whenTheContributionEqualsTheThreshold_measuresNoExcess() {
+        // When — exactly 5,00,000, no employer contribution: "exceeds", so equal is not
+        NodeResult result = runFunds(2026, fund("500000", false, "0"));
+
+        // Then
+        assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.ZERO));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @Test
+    void evaluate_whenTheContributionIsJustOverTheLowerThreshold_measuresTheSmallExcess() {
+        // When — 2,60,000 with an employer that contributes; 400 taxable interest
+        NodeResult result = runFunds(2026, fund("260000", true, "400"));
+
+        // Then — 2,60,000 − 2,50,000 = 10,000
+        assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.of("10000")));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("400")));
+    }
+
+    @Test
+    void evaluate_whenThisYearIsUnderTheThresholdButEarlierYearsWereNot_taxesTheReportedInterest() {
+        // When — 1,00,000 this year, but 8,000 accrued on earlier years' taxable contributions (r.277(3)(b))
+        NodeResult result = runFunds(2026, fund("100000", true, "8000"));
+
+        // Then
+        assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.ZERO));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("8000")));
+    }
+
+    @Test
+    void evaluate_whenTwoFundsAreEachUnderTheirThreshold_testsEachFundAlone() {
+        // When — 4,00,000 (no employer) and 2,00,000 (employer): 6,00,000 together, under the threshold in each fund
+        NodeResult result = runFunds(2026, fund("400000", false, "0"), fund("200000", true, "0"));
+
+        // Then — "in that fund": nothing beyond either threshold
+        assertThat(excesses(result)).containsExactly(MoneyValue.of(Money.ZERO), MoneyValue.of(Money.ZERO));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @Test
+    void evaluate_whenAFundSitsBesideAFamilyPension_addsBoth() {
+        // When — family pension 30,000 in the old regime, and T4-4's fund with 12,000 taxable interest
+        NodeResult result = run(2026, OLD, List.of(pension("30000")), List.of(fund("600000", true, "12000")));
+
+        // Then — 30,000 − min(10,000, 15,000) = 20,000, plus 12,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("32000")));
     }
 }

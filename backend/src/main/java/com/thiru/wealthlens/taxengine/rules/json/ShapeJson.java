@@ -27,6 +27,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceInterestLimit
 import com.thiru.wealthlens.taxengine.rules.definition.ParticularsThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.PolicyIssueWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
+import com.thiru.wealthlens.taxengine.rules.definition.ProvidentFundThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
@@ -234,7 +235,7 @@ public final class ShapeJson {
                 node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
                 "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
-                "ParticularsThreshold", "FamilyPensionShare");
+                "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -251,6 +252,8 @@ public final class ShapeJson {
                     PackJson.integer(node, "oneOverOtherwise", path)));
             case "FamilyPensionShare" -> PackJson.construct(path, () -> new FamilyPensionShare(
                     PackJson.integer(node, "oneOver", path), money(node, "limit", path)));
+            case "ProvidentFundThreshold" -> PackJson.construct(path, () -> new ProvidentFundThreshold(
+                    money(node, "withoutEmployerContribution", path), money(node, "otherwise", path)));
             case "IndexByYear" -> indexByYear(node, path);
             case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
             case "DisallowanceBasis" -> PackJson.construct(path, () -> new DisallowanceBasis(

@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-079c DONE; between items)
+Item            : — (W-079d DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-079d → W-079e → W-079f → W-079g → W-074b → W-079a → W-080 → W-080a → W-078j7b. UNVERIFIED: 9, all owned by W-078j7b. Open OQ: OQ-25. Unrun: TaxPlanningControllerIntegrationTest (Docker)
-Last verify     : ./mvnw test -pl backend -Punit → 2658 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-079c, 2026-10-16)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-079e → W-079f → W-079g → W-074b → W-079a → W-080 → W-080a → W-078j7b. UNVERIFIED: 9, all owned by W-078j7b. Open OQ: OQ-25. Unrun: TaxPlanningControllerIntegrationTest (Docker)
+Last verify     : ./mvnw test -pl backend -Punit → 2675 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-079d, 2026-10-17)
 Waiting on      : the owner — next pick. Open OQs: OQ-25
 Files touched   : none
-Last item commit: taxplanning W-079c: add family pension, a Government death gratuity and a fund pension's commutation to other sources — one-third within ₹15,000 / ₹25,000 new, the others in full, in both years (D-196, D-197)
-Updated         : 2026-10-16, session 19 (paused at the owner's session-limit notice; Mac shut down — scratchpad wiped)
+Last item commit: taxplanning W-079d: add the taxable interest on a person's own provident-fund contributions to other sources — the fund's taxable-account interest, with the excess over ₹5,00,000 / ₹2,50,000 measured per fund, in both years (D-198, D-199)
+Updated         : 2026-10-17, session 20 (W-079d committed)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

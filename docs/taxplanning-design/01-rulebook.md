@@ -930,6 +930,16 @@ See `T9`.
 > years (r.6(b); S2 Sch. XI Pt A para 6 as substituted by FA 2026 s.127(a)(iii)); the rate is S.O. 1046(E),
 > 13-5-2011, read only in a third-party mirror, so `UNVERIFIED`. Both stack on `PF-AGGCAP-001` as stated above.
 
+> **Addendum (W-079d, 2026-10-17, D-198):** `PF-EEINT-001` is built as `OS-PF-TAXABLE-INTEREST` (income from other
+> sources, both years, every regime). Its TY 2025-26 law is now read: the 1961 s.10(11), (12) first and second provisos
+> inserted by the Finance Act, 2021 s.6(d), w.e.f. 1-4-2022 (CG-DL-E-28032021-226208, p.18 — "two lakh and fifty
+> thousand rupees", "five lakh rupees" where the employer makes no contribution, "in that fund"). The prescribed
+> manner is read in both years: Rules 1962 r.9D (G.S.R. 604(E), 31-8-2021, CG-DL-E-31082021-229312, p.3, in force
+> 1-4-2022) and S4 r.277 (CG-DL-E-20032026-271092, p.1775). Both make the taxable interest *"the interest accrued
+> during the [previous / tax] year in the taxable contribution account"*: the fund's own account of each year's excess
+> contribution since 2021-22 and its interest, less withdrawals. No rate or crediting method is prescribed, so the
+> amount is the fund's figure, entered; the year's excess over the threshold is measured per fund.
+
 ### `DED-NPS-EMP-001` — employer NPS, the deduction side
 
 | Rule ID | Statement | 2025-Act | TY 2026-27 | Status |

@@ -67,6 +67,7 @@ public final class RuleIds {
     public static final RuleId OS_FAMILY_PENSION_NEW_TAX_REGIME = new RuleId("OS-FAMILY-PENSION-NEW-TAX-REGIME");
     public static final RuleId OS_INTEREST = new RuleId("OS-INTEREST");
     public static final RuleId OS_OTHER_EXPENDITURE = new RuleId("OS-OTHER-EXPENDITURE");
+    public static final RuleId OS_PF_TAXABLE_INTEREST = new RuleId("OS-PF-TAXABLE-INTEREST");
     public static final RuleId PERQ_ACCOM_CONTINUED = new RuleId("PERQ-ACCOM-CONTINUED");
     public static final RuleId PERQ_ACCOM_FURNITURE = new RuleId("PERQ-ACCOM-FURNITURE");
     public static final RuleId PERQ_ACCOM_GOVERNMENT = new RuleId("PERQ-ACCOM-GOVERNMENT");
