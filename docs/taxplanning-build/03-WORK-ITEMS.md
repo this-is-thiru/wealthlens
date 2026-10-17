@@ -1172,6 +1172,7 @@ if that is not enough for the item in hand.
 | W-089b | `CreditsNode` *(D-162)*: tax already paid, credited — TDS, advance tax, self-assessment tax: S2 s.266, s.396, s.410; 1961 s.140A, s.198, s.199, s.219; produces `credits` for `NetPayableNode` | TS T6 `credits`; `DR 01` R20, R23 | the node TS T6 names and no item owned |
 | W-089c | Advance tax *(D-162)*: who must pay, how much, the instalments — S2 ss.403–409; 1961 ss.207–211, 218 | `DR 01` R23 | before W-112's interest on its default |
 | W-089d | Salary TDS *(D-162)*: the employer's estimate and deduction — S2 s.392; 1961 s.192 (`TDS-SAL-*`) | `DR 01` R20, R21 | Form No. 130 fields per R21 |
+| W-078j7c | The r.280 watch, next run *(D-213)*: the W-078j7b scope from 17-10-2026 onward — scan egazette from 2026/277272 (all pages; prove on G.S.R. 871(E), 2026/276956; ranged GETs, HEAD is unreliable there) and read the Department's Latest News list for Income-tax Rules, 2026 amendments and CBDT clarifications touching r.279 / r.280 (`SAL-ALW-CONVEYANCE`, `SAL-ALW-TRANSPORT-DISABLED` TY 2026-27; D-101, D-102, OQ-7); re-search FA 1966 s.34, FA 1968 s.30, FA 1976 s.17, FA 1995 s.16 and the 1961 Gazette of India (`RATE-ROUND-TOTAL-INCOME`, `DED-DONATION-HALF`, `DED-DONATION-QUALIFYING`, `SAL-SALARY-FOR-RPF`, `OS-INTEREST`, `OS-DIVIDEND`, `OS-OTHER-EXPENDITURE`, `OS-RESIDUAL`, the lock's `act`; D-190) | `sources/2026-10-17-r280-watch.md` | a changed r.280 reading is a rule change → its own plan; a found Gazette → the D-188 bar; placed at the end of Phase 9, a watch per phase (D-213 C3a) |
 
 ---
 
