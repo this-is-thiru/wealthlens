@@ -6,7 +6,8 @@
   ],
   "rateTable": "RATE-SLAB-NEW-TAX-REGIME",
   "disallowances": [
-    "DIS-NEW-TAX-REGIME-NO-EXEMPTION"
+    "DIS-NEW-TAX-REGIME-NO-EXEMPTION",
+    "DIS-NEW-TAX-REGIME-NO-SETOFF"
   ],
   "eligibility": [],
   "isDefault": true,
@@ -115,6 +116,7 @@
       "salary.income",
       "houseproperty.income",
       "othersources.income",
+      "setoff",
       "gti",
       "chapterviii",
       "totalincome",

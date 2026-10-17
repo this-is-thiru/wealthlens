@@ -1,6 +1,6 @@
 {
-  "id": "T6-3",
-  "source": "DR 08 T6-3 — the same property, self-occupied, new regime",
+  "id": "T6-3a",
+  "source": "DR 08 T6-3, TY 2025-26 — the same property, self-occupied, new regime",
   "_source": "TY 2025-26 only: in TY 2026-27 the new regime disallows s.22(1)(b) only (S2 s.202(2)(a)(v)), so the ₹40,000 pre-construction instalment is allowed and the house comes to −₹40,000, a loss refused until set-off — that half runs with W-081 (DR 01 R16's erratum, D-156 C1(a); DR 08's W-080 erratum, D-211 revision 1). In TY 2025-26, 1961 s.115BAC(2)(i) removes the whole of s.24(b). \"HP-NEW-001 s.22(1)(b) disallowed for a s.21(6) property = 0\"; \"income from house property = 0\"; \"Expected: ₹0, with two trace lines stating the disallowance and the destruction.\" The disallowance is the new regime's set (DIS-NEW-TAX-REGIME-NO-EXEMPTION: HP-OWN-RESIDENCE-INTEREST and HP-OWN-RESIDENCE-PRE-CONSTRUCTION), each a nil line; the destruction line is set-off's, W-081 (DR 08's W-080 erratum, D-211). T6-1's house and loan, not let: no rent; the letting value and taxes are T6-1's and do not count, an own residence's annual value being nil. INFERENCE, not DR 08's (D-211 C3): the dates as T6-1's; the lender's certificate held.",
   "regime": "NEW_TAX_REGIME",
   "taxYears": ["2025-26"],

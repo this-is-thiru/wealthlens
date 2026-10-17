@@ -32,6 +32,10 @@ import tools.jackson.databind.JsonNode;
  * @param expectedChapterEightDeduction compared with {@code chapterviii}, by year; empty where unstated
  * @param expectedNilRules rules the case says are disallowed: each has a line, and every line is nil
  * @param expectedAbsentRules rules the case says do not apply: no line cites them
+ * @param expectedHousePropertyLossSetOff the house-property loss set off against the other heads, by year — the
+ *     {@code SETOFF-HOUSE-PROPERTY} SET_OFF lines added up (D-217)
+ * @param expectedHousePropertyLossDestroyed the house-property loss the new regime deems given full effect to, by year
+ *     — the {@code SETOFF-HOUSE-PROPERTY} MEASURE line (S2 s.202(3); D-217)
  */
 record HouseAndOtherSourcesGoldenCase(
         String id,
@@ -45,21 +49,27 @@ record HouseAndOtherSourcesGoldenCase(
         Map<TaxYearId, Money> expectedOtherSourcesIncome,
         Map<TaxYearId, Money> expectedChapterEightDeduction,
         List<RuleId> expectedNilRules,
-        List<RuleId> expectedAbsentRules) {
+        List<RuleId> expectedAbsentRules,
+        Map<TaxYearId, Money> expectedHousePropertyLossSetOff,
+        Map<TaxYearId, Money> expectedHousePropertyLossDestroyed) {
 
     /**
      * A house as the case states it, owned alone, with one loan borrowed to acquire or construct it.
      *
      * <p>The case states which pre-construction instalment the year takes ("instalment 3 of 5"), not dates. The
      * house is dated into the tax year {@code instalment − 1} before the year run, which gives that instalment, and
-     * the capital borrowed a year before that; the higher own-residence limit's lender certificate is held.
+     * the capital borrowed a year before that — or {@code completedYearsAfterBorrowingYear} more, where the case says
+     * the house was completed that many years after the end of the tax year of borrowing (T6-5); the higher
+     * own-residence limit's lender certificate is held.
      */
     record Property(HouseOccupancy occupancy, Money expectedLettingValue, Money rentReceivable, Money localTaxesPaid,
-            Money interestPayable, Money preConstructionInterest, int preConstructionInstalment) {
+            Money interestPayable, Money preConstructionInterest, int preConstructionInstalment,
+            int completedYearsAfterBorrowingYear) {
 
         HouseProperty in(TaxYearId year) {
             LocalDate acquired = year.startsOn().minusYears(preConstructionInstalment - 1L);
-            HousingLoan loan = new HousingLoan(LoanUse.ACQUISITION_OR_CONSTRUCTION, acquired.minusYears(1),
+            HousingLoan loan = new HousingLoan(LoanUse.ACQUISITION_OR_CONSTRUCTION,
+                    acquired.minusYears(1L + completedYearsAfterBorrowingYear),
                     interestPayable, preConstructionInterest, Money.ZERO, true, false);
             return new HouseProperty(occupancy, expectedLettingValue, rentReceivable, Money.ZERO, false,
                     localTaxesPaid, Rate.percent("100"), Money.ZERO, Optional.of(acquired), List.of(loan));
@@ -85,7 +95,8 @@ record HouseAndOtherSourcesGoldenCase(
                 Money.of(house.get("localTaxesPaid").asString()),
                 Money.of(house.get("interestPayable").asString()),
                 Money.of(house.get("preConstructionInterest").asString()),
-                house.get("preConstructionInstalment").asInt())));
+                house.get("preConstructionInstalment").asInt(),
+                house.path("completedYearsAfterBorrowingYear").asInt(0))));
         List<OtherSourceItem> items = new ArrayList<>();
         node.path("otherSources").forEach(item -> items.add(new OtherSourceItem(
                 OtherSourceKind.valueOf(item.get("kind").asString()), Money.of(item.get("received").asString()),
@@ -103,7 +114,9 @@ record HouseAndOtherSourcesGoldenCase(
                 byYear(expected, "otherSourcesIncome", years),
                 byYear(expected, "chapterEightDeduction", years),
                 rules(expected, "nilRules"),
-                rules(expected, "absentRules"));
+                rules(expected, "absentRules"),
+                byYear(expected, "housePropertyLossSetOff", years),
+                byYear(expected, "housePropertyLossDestroyed", years));
     }
 
     /** One amount for every year, or an object of amounts keyed by year label. */

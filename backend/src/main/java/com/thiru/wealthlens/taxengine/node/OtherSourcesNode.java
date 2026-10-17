@@ -60,8 +60,8 @@ import java.util.Set;
  *
  * <p>Winnings are refused, their own rate being deferred in the coverage register; so are employee contributions
  * received and the letting of machinery, plant or furniture, whose deductions are the business head's, deferred with
- * it (D-202), and life-policy sums ({@code W-079g2}). The head below nil is refused until set-off is built
- * ({@code W-081}), as house property's is.
+ * it (D-202), and life-policy sums ({@code W-079g2}). The head below nil is a loss, which {@link SetOffNode} sets off
+ * against the other heads (D-217).
  */
 public final class OtherSourcesNode implements ComputationNode {
 
@@ -147,11 +147,6 @@ public final class OtherSourcesNode implements ComputationNode {
         }
         if (!policies.isEmpty()) {
             head = head.plus(LifePolicySums.income(ctx, lines, policies, ctx.inputs().entered().claimedLifePolicies()));
-        }
-        if (head.isLessThan(Money.ZERO)) {
-            throw new IllegalArgumentException("Income from other sources is a loss of " + Money.ZERO.minus(head)
-                    + "; setting it off against other heads or carrying it forward (S2 s.109; 1961 s.71) waits on"
-                    + " W-081");
         }
         return new NodeResult(MoneyValue.of(head), lines.all());
     }

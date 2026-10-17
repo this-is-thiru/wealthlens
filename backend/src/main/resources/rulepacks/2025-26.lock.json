@@ -3,12 +3,12 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.66",
-      "checksum": "sha256:f84134b81983a7279b270a8f5b3b1d9ea1b7f82db49716aac999b1d18061da9e"
+      "version": "2025-26.law.67",
+      "checksum": "sha256:63448b3d04b7cc7e30fd7151fe01eec32780780fdb4f4b2c551de5ecabc3e5c1"
     },
     "exec": {
-      "version": "2025-26.exec.25",
-      "checksum": "sha256:3095303df41f1947cef94d34f13e71e3c2152d90efb392b8035edbc2aa4cf7e6"
+      "version": "2025-26.exec.26",
+      "checksum": "sha256:343181835a8b853d8575f1a13c97ef16bb9cdd176531364d9dc5d72d9882f611"
     },
     "forms": {
       "version": "2025-26.forms.1",
@@ -146,6 +146,7 @@
     "REBATE-NEW-TAX-REGIME-EXCESS": "sha256:d0bdaab617f3c036a247cdae7001270706cf680e2f2d5c9de3afe7351cda0a5e",
     "REBATE-RESIDENT-INDIVIDUAL": "sha256:791963afec72a187b87de2d7fbf77b4b2928a2efdb4fa2ac3ac2b661437ee1a9",
     "REG-NEW-TAX-REGIME-NO-EXEMPTION": "sha256:15d48dfb8ece4cecbde344ee4bf83806bd52bbeaaa6a82eda43931c7b968df2d",
+    "REG-NEW-TAX-REGIME-NO-SETOFF": "sha256:9d2ff7016d650746f185d667c4f33d3d8f293059b2f29d95fb0b36fa83c20f7c",
     "RET-COMMUTED-PENSION-FUND": "sha256:49051f679ea41022af43eac8ba06d6ff2a149103a3ac59ec63d8a1e7a47e8a7f",
     "RET-COMMUTED-PENSION-GOVERNMENT": "sha256:d080ea82b1bb16da60313380947c5a621edaf7b7f3923314cc22b96d5ead5256",
     "RET-COMMUTED-PENSION-OTHER": "sha256:982748f4854e3e55e18adf2fa8c00ce8a3b1c0c7ad81e4057f614015f07b102d",
@@ -180,7 +181,9 @@
     "SAL-SALARY-INCLUDES": "sha256:f7cbc6538bf722f1dfe0e9f2f3c7c7180166d06c6a09ef8b42e44df97c3beb60",
     "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE": "sha256:cb4fb7f7e4ba6c36cbdc0d180fd3c4cd60fa0e66d41506cd1ba5f48e78a5f0a2",
     "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME": "sha256:c44ffed98f5446a511d3077066a67a45fa7a770fd0a880b1133020ee493d6f7d",
-    "SAL-TAX-ON-EMPLOYMENT": "sha256:f7d7f39272ad79e8901b3eff22adbdd64817a0f87b716772be4e2b846e65e0c8"
+    "SAL-TAX-ON-EMPLOYMENT": "sha256:f7d7f39272ad79e8901b3eff22adbdd64817a0f87b716772be4e2b846e65e0c8",
+    "SETOFF-ACROSS-HEADS": "sha256:ec19c252654d5727c6278dd805a9a24ed5ff4ed6969db3f61ccce261201e3ef2",
+    "SETOFF-HOUSE-PROPERTY": "sha256:cc76b9c9a9676db1caff55a29c3e34efbf3a471c7bd5496c1aa168e3397f2a5d"
   },
   "instruments": {
     "act": {

@@ -33,6 +33,7 @@ public final class NodeIds {
     public static final NodeId SALARY_MONETARYINCOME = new NodeId("salary.monetaryincome");
     public static final NodeId SALARY_PERQUISITES = new NodeId("salary.perquisites");
     public static final NodeId SALARY_RETIREMENT = new NodeId("salary.retirement");
+    public static final NodeId SETOFF = new NodeId("setoff");
     public static final NodeId TAX_AFTERREBATE = new NodeId("tax.afterrebate");
     public static final NodeId TAX_BYBASIS = new NodeId("tax.bybasis");
     public static final NodeId TAX_CESS = new NodeId("tax.cess");

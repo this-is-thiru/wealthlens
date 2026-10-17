@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-078j7b3 DONE; Phase 8 complete; between items)
+Item            : — (W-081a DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-081 (set-off; also runs DR 08 T6-2, T6-4, T6-5 and T6-3's TY 2026-27 half, D-211). UNVERIFIED: 0 (W-078j7c, after W-089d, watches r.280). Open OQs: OQ-25, OQ-26, OQ-27. Unplaced proposals: D-210 C2(b) (PackAssembler takes the instruments); W-080's SalaryRun rename
-Last verify     : unit -Punit → 2836 run, 0 fail, 0 Checkstyle (W-078j7b3, 2026-10-17)
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-081b (carry-forward: ledger redesign, s.110 / s.71B, s.202(2)(b)(i), (3), result field, preConstructionInstalmentsClaimed removal; classify the 31 coverage entries pointing at it). UNVERIFIED: 0. Open OQs: OQ-25 – OQ-28. Unplaced proposals: D-210 C2(b); W-080's SalaryRun rename
+Last verify     : unit -Punit → 2854 run, 0 fail, 0 Checkstyle (W-081a, 2026-10-17)
 Waiting on      : the owner — next pick
 Files touched   : none
-Last item commit: taxplanning W-078j7b3: source-check r.280's two TY 2026-27 allowance versions on the owner's ruling of its defective text — no UNVERIFIED rule version remains (D-216)
-Updated         : 2026-10-17, session 20 (W-078j7b3 committed)
+Last item commit: taxplanning W-081a: set a head's loss off against the other heads within the year — house-property loss capped at ₹2,00,000 and destroyed in the new regime, order declared; DR 08 T6-2, T6-4, T6-5, T6-3 TY 2026-27 run (D-217)
+Updated         : 2026-10-17, session 20 (W-081a committed)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

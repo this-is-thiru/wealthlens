@@ -16,7 +16,10 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** Gross total income and total income (S2 s.122(1), (10); D-132). Fixture amounts; no figure is tax. */
+/**
+ * The heads added up after set-off, gross total income and total income (S2 s.122(1), (10); D-132, D-217). Fixture
+ * amounts; no figure is tax.
+ */
 class TotalIncomeNodeTest {
 
     private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
@@ -26,13 +29,13 @@ class TotalIncomeNodeTest {
             .load(TY_2026);
 
     @Test
-    void grossTotalIncome_whenSalariesIsTheOnlyHead_isIncomeUnderSalaries() {
+    void setOff_whenSalariesIsTheOnlyHead_isIncomeUnderSalaries() {
         // When
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.ZERO)
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
-                .run(new GrossTotalIncomeNode());
+                .run(new SetOffNode());
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("925000")));
@@ -40,29 +43,41 @@ class TotalIncomeNodeTest {
     }
 
     @Test
-    void grossTotalIncome_whenHousePropertyHasIncome_addsTheHeadToSalaries() {
+    void setOff_whenHousePropertyHasIncome_addsTheHeadToSalaries() {
         // When — 9,25,000 under Salaries and 3,65,400 from a let property (D-155)
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
-                .run(new GrossTotalIncomeNode());
+                .run(new SetOffNode());
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1290400")));
     }
 
     @Test
-    void grossTotalIncome_whenOtherSourcesHasIncome_addsTheHeadToTheOthers() {
+    void setOff_whenOtherSourcesHasIncome_addsTheHeadToTheOthers() {
         // When — 9,25,000 under Salaries, 3,65,400 from house property and 95,000 from other sources (D-194)
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.of("95000"))
-                .run(new GrossTotalIncomeNode());
+                .run(new SetOffNode());
 
         // Then — 9,25,000 + 3,65,400 + 95,000
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1385400")));
+    }
+
+    @Test
+    void grossTotalIncome_whenTheHeadsAreSetOff_isTheirTotalAfterSetOff() {
+        // When — the heads come to 11,90,400 after set-off (D-217)
+        NodeResult result = NodeHarness.with(PACK).regime(OLD)
+                .given(NodeIds.SETOFF, Money.of("1190400"))
+                .run(new GrossTotalIncomeNode());
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1190400")));
+        assertThat(result.trace()).isEmpty();
     }
 
     @Test

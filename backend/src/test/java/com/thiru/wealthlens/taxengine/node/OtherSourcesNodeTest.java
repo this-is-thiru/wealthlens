@@ -275,11 +275,12 @@ class OtherSourcesNodeTest {
     }
 
     @Test
-    void evaluate_whenExpensesExceedTheIncome_refusesTheLossUntilSetOff() {
-        // When / Then — 10,000 of interest against 15,000 of expenditure
-        assertThatThrownBy(() -> run(2026, List.of(item(OtherSourceKind.OTHER_INTEREST, "10000", "0", "0", "15000"))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-081");
+    void evaluate_whenExpensesExceedTheIncome_isTheLossForSetOff() {
+        // When — 10,000 of interest against 15,000 of expenditure
+        NodeResult result = run(2026, List.of(item(OtherSourceKind.OTHER_INTEREST, "10000", "0", "0", "15000")));
+
+        // Then — −5,000, which SetOffNode sets off against the other heads (D-217)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("-5000")));
     }
 
     /** {@code DR 08} T6-6: savings 14,000; time deposit 90,000; dividend 2,00,000 bearing 60,000 of interest. */

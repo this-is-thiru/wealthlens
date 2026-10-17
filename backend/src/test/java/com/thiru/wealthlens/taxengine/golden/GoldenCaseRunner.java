@@ -27,6 +27,7 @@ import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
 import com.thiru.wealthlens.taxengine.node.SalaryDeductionNode;
 import com.thiru.wealthlens.taxengine.node.SalaryIncomeBeforeTravelNode;
 import com.thiru.wealthlens.taxengine.node.SalaryIncomeNode;
+import com.thiru.wealthlens.taxengine.node.SetOffNode;
 import com.thiru.wealthlens.taxengine.node.SurchargeNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
@@ -83,6 +84,7 @@ final class GoldenCaseRunner {
             new SalaryIncomeNode(),
             new HousePropertyNode(),
             new OtherSourcesNode(),
+            new SetOffNode(),
             new GrossTotalIncomeNode(),
             new ChapterEightNode(),
             new RoundTotalIncomeNode(),

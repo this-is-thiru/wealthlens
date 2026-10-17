@@ -33,8 +33,8 @@ import java.util.Set;
  * ({@link HousePropertyInterest}); the head is their sum, less the own residences' interest within its limits.
  *
  * <p>A property below nil is set off against the others under the head, as S2 s.108(1) and 1961 s.70 set off a
- * loss from one source against another under the same head; the head itself below nil is refused until set-off across
- * heads and years is built ({@code W-081}).
+ * loss from one source against another under the same head; the head itself below nil is a loss, which {@link
+ * SetOffNode} sets off against the other heads (D-217).
  */
 public final class HousePropertyNode implements ComputationNode {
 
@@ -77,11 +77,6 @@ public final class HousePropertyNode implements ComputationNode {
             head = head.plus(income(ctx, t, position, property, lines)).minus(interest.deductedFor(position, property));
         }
         head = head.minus(interest.ownResidenceAllowed());
-        if (head.isLessThan(Money.ZERO)) {
-            throw new IllegalArgumentException("Income from house property is a loss of " + Money.ZERO.minus(head)
-                    + "; setting it off against other heads or carrying it forward (S2 ss.109, 110; 1961 ss.71, 71B)"
-                    + " — or, in the new tax regime, refusing to (S2 s.202(2)(b)(ii)) — waits on W-081");
-        }
         return new NodeResult(MoneyValue.of(head), lines);
     }
 

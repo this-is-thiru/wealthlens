@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
@@ -239,7 +240,7 @@ public final class ShapeJson {
                 "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
-                "SurvivingChildrenLimit");
+                "SurvivingChildrenLimit", "AbsorptionOrder");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -291,6 +292,11 @@ public final class ShapeJson {
                     PackJson.optionalDate(node, "ifscIssuedFrom", path)));
             case "SurvivingChildrenLimit" -> PackJson.construct(path, () -> new SurvivingChildrenLimit(
                     PackJson.integer(node, "children", path), PackJson.date(node, "exceptBornBefore", path)));
+            case "AbsorptionOrder" -> {
+                List<HeadCode> heads = PackJson.array(node, "heads", path,
+                        e -> headCode(e.node().asString(), e.path()));
+                yield PackJson.construct(path, () -> new AbsorptionOrder(heads));
+            }
             case "TaxYearSpan" -> PackJson.construct(path, () -> new TaxYearSpan(
                     PackJson.integer(node, "succeedingYears", path)));
             case "SanctionedLoanLimit" -> PackJson.construct(path, () -> new SanctionedLoanLimit(
@@ -348,6 +354,17 @@ public final class ShapeJson {
         boolean plusDearnessAllowance = PackJson.bool(node, "plusDearnessAllowanceThereon", path);
         return PackJson.construct(path, () -> new DisabledTransportLimit(
                 Set.copyOf(conditions), perMonth, perMonthInOtherCities, plusDearnessAllowance));
+    }
+
+    /** A head in an absorption order, named in the failure with the heads there are. */
+    private static HeadCode headCode(String raw, String path) {
+        for (HeadCode candidate : HeadCode.values()) {
+            if (candidate.name().equals(raw)) {
+                return candidate;
+            }
+        }
+        throw new PackValidationException(path + " must be one of " + java.util.Arrays.toString(HeadCode.values())
+                + ", but was \"" + raw + "\"");
     }
 
     private static MovableAssetKind movableAssetKind(String raw, String path) {

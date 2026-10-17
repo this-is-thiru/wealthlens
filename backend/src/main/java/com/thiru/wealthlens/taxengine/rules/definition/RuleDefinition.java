@@ -12,5 +12,6 @@ public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPe
         DisabledTransportLimit, CommutedPensionShare, IndexByYear, ExcludedAssets, DayWindow,
         PremiumShareBands, TaxYearSpan, SanctionedLoanLimit, CashPaymentLimit, OwnResidenceHouses,
         OwnResidenceInterestLimit, DisallowanceBasis, ParticularsThreshold, FamilyPensionShare,
-        ProvidentFundThreshold, GiftThreshold, PolicyPremiumLimits, SurvivingChildrenLimit {
+        ProvidentFundThreshold, GiftThreshold, PolicyPremiumLimits, SurvivingChildrenLimit,
+        AbsorptionOrder {
 }

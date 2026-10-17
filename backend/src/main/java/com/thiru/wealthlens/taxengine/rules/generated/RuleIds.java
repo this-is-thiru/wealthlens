@@ -144,6 +144,7 @@ public final class RuleIds {
     public static final RuleId REBATE_NEW_TAX_REGIME_EXCESS = new RuleId("REBATE-NEW-TAX-REGIME-EXCESS");
     public static final RuleId REBATE_RESIDENT_INDIVIDUAL = new RuleId("REBATE-RESIDENT-INDIVIDUAL");
     public static final RuleId REG_NEW_TAX_REGIME_NO_EXEMPTION = new RuleId("REG-NEW-TAX-REGIME-NO-EXEMPTION");
+    public static final RuleId REG_NEW_TAX_REGIME_NO_SETOFF = new RuleId("REG-NEW-TAX-REGIME-NO-SETOFF");
     public static final RuleId RET_COMMUTED_PENSION_FUND = new RuleId("RET-COMMUTED-PENSION-FUND");
     public static final RuleId RET_COMMUTED_PENSION_GOVERNMENT = new RuleId("RET-COMMUTED-PENSION-GOVERNMENT");
     public static final RuleId RET_COMMUTED_PENSION_OTHER = new RuleId("RET-COMMUTED-PENSION-OTHER");
@@ -180,6 +181,8 @@ public final class RuleIds {
     public static final RuleId SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE = new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE");
     public static final RuleId SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME = new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME");
     public static final RuleId SAL_TAX_ON_EMPLOYMENT = new RuleId("SAL-TAX-ON-EMPLOYMENT");
+    public static final RuleId SETOFF_ACROSS_HEADS = new RuleId("SETOFF-ACROSS-HEADS");
+    public static final RuleId SETOFF_HOUSE_PROPERTY = new RuleId("SETOFF-HOUSE-PROPERTY");
 
     private RuleIds() {
     }

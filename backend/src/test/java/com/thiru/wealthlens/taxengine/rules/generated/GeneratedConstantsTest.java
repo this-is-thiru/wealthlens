@@ -163,6 +163,7 @@ class GeneratedConstantsTest {
             "REBATE-NEW-TAX-REGIME-EXCESS",
             "REBATE-RESIDENT-INDIVIDUAL",
             "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+            "REG-NEW-TAX-REGIME-NO-SETOFF",
             "RET-COMMUTED-PENSION-FUND",
             "RET-COMMUTED-PENSION-GOVERNMENT",
             "RET-COMMUTED-PENSION-OTHER",
@@ -198,7 +199,9 @@ class GeneratedConstantsTest {
             "SAL-SALARY-INCLUDES",
             "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE",
             "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
-            "SAL-TAX-ON-EMPLOYMENT");
+            "SAL-TAX-ON-EMPLOYMENT",
+            "SETOFF-ACROSS-HEADS",
+            "SETOFF-HOUSE-PROPERTY");
 
     private record Target(
             String className, String valueType, java.util.List<String> purpose, TreeSet<String> values) {}

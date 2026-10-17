@@ -301,12 +301,12 @@ class HousePropertyInterestTest {
     }
 
     @Test
-    void evaluate_whenTheHeadIsALoss_isRefusedUntilSetOff() {
-        // When / Then — R16's own residence alone: −2,00,000
-        assertThatThrownBy(() -> run(2026, OLD, List.of(home(ACQUIRED, R16_LOAN))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("loss of 200000")
-                .hasMessageContaining("W-081");
+    void evaluate_whenTheHeadIsALoss_isTheLossForSetOff() {
+        // When — R16's own residence alone
+        NodeResult result = run(2026, OLD, List.of(home(ACQUIRED, R16_LOAN)));
+
+        // Then — −2,00,000, which SetOffNode sets off against the other heads (D-217)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("-200000")));
     }
 
     @Test

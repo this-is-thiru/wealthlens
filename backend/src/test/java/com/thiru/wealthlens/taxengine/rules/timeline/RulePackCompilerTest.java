@@ -107,14 +107,20 @@ class RulePackCompilerTest {
         // When — D-165: the set file holds a version per span of years
         CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(TIMELINE), TaxYearId.of(year));
 
-        // Then — one plain set, its year's provision, no versions or validity
+        // Then — two plain sets (D-165; D-217), each its year's provision, no versions or validity
         JsonNode sets = MAPPER.readTree(compiled.files().get("law/regimes.json")).path("disallowanceSets");
-        assertThat(sets).hasSize(1);
-        JsonNode set = sets.get(0);
-        assertThat(set.path("id").asString()).isEqualTo("DIS-NEW-TAX-REGIME-NO-EXEMPTION");
-        assertThat(set.path("displayName").asString()).contains(year == 2025 ? "s.115BAC(2)(i)" : "s.202(2)(a)");
-        assertThat(set.has("versions")).isFalse();
-        assertThat(set.has("validity")).isFalse();
+        assertThat(sets).hasSize(2);
+        Map<String, JsonNode> byId = new java.util.HashMap<>();
+        sets.forEach(set -> byId.put(set.path("id").asString(), set));
+        assertThat(byId).containsOnlyKeys("DIS-NEW-TAX-REGIME-NO-EXEMPTION", "DIS-NEW-TAX-REGIME-NO-SETOFF");
+        assertThat(byId.get("DIS-NEW-TAX-REGIME-NO-EXEMPTION").path("displayName").asString())
+                .contains(year == 2025 ? "s.115BAC(2)(i)" : "s.202(2)(a)");
+        assertThat(byId.get("DIS-NEW-TAX-REGIME-NO-SETOFF").path("displayName").asString())
+                .contains(year == 2025 ? "s.115BAC(2)(ii)(b)" : "s.202(2)(b)(ii)");
+        byId.values().forEach(set -> {
+            assertThat(set.has("versions")).isFalse();
+            assertThat(set.has("validity")).isFalse();
+        });
     }
 
     @Test

@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +58,8 @@ class T6HousePropertyAndOtherSourcesTest {
                     .isNotEmpty()
                     .allSatisfy(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO)));
         }
+        assertSum(run, golden, year, StepKind.SET_OFF, golden.expectedHousePropertyLossSetOff(), "loss set off");
+        assertSum(run, golden, year, StepKind.MEASURE, golden.expectedHousePropertyLossDestroyed(), "loss destroyed");
         for (RuleId rule : golden.expectedAbsentRules()) {
             assertThat(lines(run, rule)).as("%s in %s — %s absent", golden.id(), year.label(), rule).isEmpty();
         }
@@ -67,6 +71,17 @@ class T6HousePropertyAndOtherSourcesTest {
         if (expected.containsKey(year)) {
             assertThat(run.result().valueOf(node)).as("%s in %s — %s", golden.id(), year.label(), node)
                     .isEqualTo(MoneyValue.of(expected.get(year)));
+        }
+    }
+
+    /** The {@code SETOFF-HOUSE-PROPERTY} lines of one kind, their outputs added up. */
+    private static void assertSum(GoldenCaseRunner.SalaryRun run, HouseAndOtherSourcesGoldenCase golden,
+            TaxYearId year, StepKind kind, Map<TaxYearId, Money> expected, String what) {
+        if (expected.containsKey(year)) {
+            Money sum = lines(run, RuleIds.SETOFF_HOUSE_PROPERTY).stream().filter(line -> line.kind() == kind)
+                    .map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
+            assertThat(sum).as("%s in %s — house-property %s", golden.id(), year.label(), what)
+                    .isEqualTo(expected.get(year));
         }
     }
 

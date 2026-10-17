@@ -1403,6 +1403,22 @@ not merely deferred, it is **destroyed**. A regime comparison that treats the ne
 HP loss as a carry-forward asset overstates the new regime. This is the mirror of `SAL-PTAX-002` and
 matters for the same reason.
 
+> **Addendum (W-081a, 2026-10-17, D-217):** set-off within the year is built, both years:
+> - `SETOFF-ACROSS-HEADS` (S2 s.109(1); 1961 s.71(1), (2)) carries a declared `AbsorptionOrder`: SALARIES, then
+>   HOUSE_PROPERTY, then OTHER_SOURCES, the loss head itself skipped. Neither Act prescribes an order, and every set-off
+>   line says so (`DR 13` R-7; OQ-28, W-082).
+> - `SETOFF-HOUSE-PROPERTY` (`SETOFF-HP-001`; S2 s.109(1)(b); 1961 s.71(3A), inserted by the Finance Act, 2017 s.31)
+>   is a ₹2,00,000 limit, in every regime as a row.
+> - The new regime forbids it through `DIS-NEW-TAX-REGIME-NO-SETOFF` (basis `REG-NEW-TAX-REGIME-NO-SETOFF`; S2
+>   s.202(2)(b)(ii), (3); 1961 s.115BAC(2)(ii)(b), (3), inserted by the Finance Act, 2020 s.53). The loss is a
+>   MEASURE line, *"deemed to have been given full effect to"* — `SETOFF-NEW-002`'s destruction, made visible.
+> - A loss under other sources is set off without a limit, and what is left is not carried (S2 ss.110–115 carry none
+>   under that head).
+> - Carry-forward (`SETOFF-CF-HP-001`) and brought-forward losses (`SETOFF-NEW-001`'s first limb) are W-081b's.
+>
+> Verified by: Gazette 265620 pp.147–148, 227–228; egazette 2017/175141 p.18; egazette 2020/218938 pp.33–34; Acts
+> of the Parliament of India, 1991, p.185; `SetOffNodeTest`; `T6HousePropertyAndOtherSourcesTest`.
+
 ---
 
 ## R19 — Relief for arrears

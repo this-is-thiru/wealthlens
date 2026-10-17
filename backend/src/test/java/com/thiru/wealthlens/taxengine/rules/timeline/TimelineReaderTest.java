@@ -46,6 +46,7 @@ class TimelineReaderTest {
             new RuleId("REBATE-NEW-TAX-REGIME-EXCESS"),
             new RuleId("REBATE-RESIDENT-INDIVIDUAL"),
             new RuleId("REG-NEW-TAX-REGIME-NO-EXEMPTION"),
+            new RuleId("REG-NEW-TAX-REGIME-NO-SETOFF"),
             new RuleId("SAL-HOUSE-RENT-LANDLORD-PAN"),
             new RuleId("RATE-ROUND-TOTAL-INCOME"),
             new RuleId("RATE-ROUND-PAYABLE"),
@@ -140,6 +141,8 @@ class TimelineReaderTest {
             new RuleId("PERQ-RPF-CONTRIBUTION"),
             new RuleId("PERQ-RPF-INTEREST"),
             new RuleId("SAL-SALARY-FOR-RPF"),
+            new RuleId("SETOFF-ACROSS-HEADS"),
+            new RuleId("SETOFF-HOUSE-PROPERTY"),
             new RuleId("HP-ANNUAL-VALUE"),
             new RuleId("HP-OWN-RESIDENCE"),
             new RuleId("HP-STANDARD-DEDUCTION"),
@@ -221,7 +224,7 @@ class TimelineReaderTest {
                 .containsExactlyInAnyOrder(
                         "inputs.components", "employer.contrib.charges", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.monetaryincome", "salary.deductions",
                         "salary.incomebeforetravel", "salary.medicaltravel", "salary.income",
-                        "houseproperty.income", "othersources.income", "gti", "chapterviii", "totalincome", "round.totalincome", "tax.bybasis",
+                        "houseproperty.income", "othersources.income", "setoff", "gti", "chapterviii", "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
     }
 
