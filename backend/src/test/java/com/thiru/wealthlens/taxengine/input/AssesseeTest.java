@@ -41,7 +41,6 @@ class AssesseeTest {
                 true,
                 Optional.empty(),
                 Optional.empty(),
-                false,
                 false, true);
     }
 
@@ -168,7 +167,6 @@ class AssesseeTest {
                     true,
                     Optional.empty(),
                     Optional.empty(),
-                    false,
                     false, true);
             FamilySnapshot snapshot =
                     new FamilySnapshot(List.of(child(LocalDate.of(2010, 1, 1)), parent));
@@ -178,20 +176,18 @@ class AssesseeTest {
         }
 
         @Test
-        void theTwoLtaExceptionsAreFactsAndNotDerivations() {
-            // SAL-LTA-CHILD-001's exceptions. Neither is derivable from a date of birth: the
-            // second is a fact about a birth, not about a person.
+        void theMultipleBirthExceptionIsAFactAndNotADerivation() {
+            // SAL-LEAVE-TRAVEL-CHILDREN's second exception is a fact about a birth, not derivable from a date of
+            // birth; the first, born before the rule's date, is read from the date of birth (D-212)
             Member twin = new Member(
                     Relationship.CHILD,
                     LocalDate.of(2001, 5, 5),
                     true,
                     Optional.empty(),
                     Optional.empty(),
-                    false,
                     true, true);
 
             assertThat(twin.multipleBirthAfterFirstChild()).isTrue();
-            assertThat(twin.bornBeforeOct1998()).isFalse();
         }
 
         @Test
@@ -219,7 +215,6 @@ class AssesseeTest {
                             true,
                             Optional.empty(),
                             Optional.empty(),
-                            false,
                             false, true))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("relationship");

@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.68",
-      "checksum": "sha256:8796aa37237db3d31918e4179ca1713f82830b922c7dc916292bd5c61a00fc9a"
+      "version": "2026-27.law.69",
+      "checksum": "sha256:d1da0a4b3fe6ecc2b91ca66c8d1b8a6126dd9ed4913b73adb5e9b06f8c931b01"
     },
     "exec": {
       "version": "2026-27.exec.27",
@@ -165,6 +165,7 @@
     "SAL-ALW-UNIFORM": "sha256:4e46d290ed2b55e97158f9782bcbcd64eafc7f4da1abd8e7446d1e8e34aa006e",
     "SAL-HOUSE-RENT-ALLOWANCE": "sha256:15b6c42aad4382a2ebc855b42af090dc134c5bda7ea882d4fc971a3d822fb62d",
     "SAL-HOUSE-RENT-LANDLORD-PAN": "sha256:a9eb98a7e7608ed0d52faaf732457bfb03d1425116df818d9f2020108406e0be",
+    "SAL-LEAVE-TRAVEL-CHILDREN": "sha256:75ae1d38472c17c79f3b329b7a5f7ff32ad1085d2b928a0d0ad91e60799d3d0a",
     "SAL-LEAVE-TRAVEL-CONCESSION": "sha256:8f2ef70966ac7e0513950e4f6195bd7cf50379df37d6b555fade39bad23caea8",
     "SAL-LEAVE-TRAVEL-DISTANCE-RATE": "sha256:2030f0bb7608774611562cda87d00a83b29377f6cb189105aacd90c8592ba568",
     "SAL-LEAVE-TRAVEL-JOURNEYS": "sha256:efb21922edd4fd37623fb31a8983b7ad6a2f59c7c6dbea9e9e28b000f501e276",

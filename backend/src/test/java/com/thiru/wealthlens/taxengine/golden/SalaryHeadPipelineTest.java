@@ -270,7 +270,7 @@ class SalaryHeadPipelineTest {
     void run_whenAJourneyOnLeaveIsClaimedOutsideTheNewRegime_incomeFallsByTheFareAdmitted(int year) {
         // Given — LTA 30,000 received; a rail journey in May: 18,000 spent, fare admitted 15,000
         Journey rail = new Journey(LocalDate.of(year, 5, 10), JourneyMode.RAIL_CONNECTED, Money.of("18000"),
-                java.util.Optional.of(Money.of("15000")), java.util.Optional.empty());
+                java.util.Optional.of(Money.of("15000")), java.util.Optional.empty(), List.of());
 
         // When
         PipelineRunner.Result result = run(year, FIRST_SCHEDULE_RATES, true, List.of(), List.of(rail));

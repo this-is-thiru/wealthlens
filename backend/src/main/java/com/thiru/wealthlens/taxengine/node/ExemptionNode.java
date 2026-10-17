@@ -79,7 +79,8 @@ public final class ExemptionNode implements ComputationNode {
     @Override
     public Set<RuleId> rules() {
         Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN,
-                RuleIds.SAL_LEAVE_TRAVEL_CONCESSION, RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE,
+                RuleIds.SAL_LEAVE_TRAVEL_CHILDREN, RuleIds.SAL_LEAVE_TRAVEL_CONCESSION,
+                RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE,
                 RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS));
         rules.addAll(AllowanceExemption.rules());
         return Set.copyOf(rules);

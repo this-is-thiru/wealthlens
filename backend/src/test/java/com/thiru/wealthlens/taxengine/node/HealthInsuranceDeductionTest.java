@@ -55,7 +55,7 @@ class HealthInsuranceDeductionTest {
             member(Relationship.SPOUSE, LocalDate.of(1960, 6, 1), false, true)));
 
     private static Member member(Relationship relationship, LocalDate born, boolean dependant, boolean resident) {
-        return new Member(relationship, born, dependant, Optional.empty(), Optional.empty(), false, false, resident);
+        return new Member(relationship, born, dependant, Optional.empty(), Optional.empty(), false, resident);
     }
 
     private static HealthPayment self(HealthPaymentKind kind, String amount) {

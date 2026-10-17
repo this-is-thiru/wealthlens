@@ -635,6 +635,15 @@ high-rent metro tenant, which is why the list still matters — see `T3`.
 | `SAL-LTA-CHILD-001` | Not available for **more than two surviving children**; the restriction does not apply to children born **before 1 October 1998**, nor to **multiple births after one child**. | r.2B(5),(6) | **r.278(5), (6)** | OLD | VERIFIED (S4, r.278(5),(6)) |
 | `SAL-LTA-NEW-001` | **LTA is not available in the new regime** — s.202(2)(a)(i) disallows Schedule III Table Sl. No. **8**. | s.115BAC(2) | **s.202(2)(a)(i)** | — | VERIFIED for TY 2026-27 (S2) |
 
+> **Erratum (W-080a, 2026-10-17, D-212):** `SAL-LTA-CHILD-001`'s 1961 column reads *"r.2B(5),(6)"*; the 1961
+> provision is **r.2B(4) and its proviso** — *"(4) The exemption referred to in sub-rule (1) shall not be available to
+> more than two surviving children of an individual after 1st October, 1998 : Provided that this sub-rule shall not
+> apply in respect of children born before 1st October, 1998, and also in case of multiple births after one child."*
+> Built as `SAL-LEAVE-TRAVEL-CHILDREN` in both years: the two eldest counted children are covered (an inference, the
+> Rules naming none), and each journey is split by traveller where a child is beyond the limit.
+> Verified by: Department of Revenue compendium of the Income-tax Rules, 1962 (`files/rules_files/IT Rules_1.pdf`)
+> p.350; Gazette 271092 p.1776 (r.278(5)–(6)); `LeaveTravelExemptionTest`.
+
 
 > **Erratum (W-068, 2026-09-27, D-100):** `SAL-LTA-003`'s statement is the **Rules 1962 r.2B(1)(i)** wording — *"air
 > economy fare of the national carrier by the shortest route"* (as substituted by the IT (First Amdt.) Rules,

@@ -158,7 +158,7 @@ record SalaryGoldenCase(
                     LocalDate.parse(journey.get("startedOn").asString()),
                     JourneyMode.valueOf(journey.get("mode").asString()),
                     Money.of(journey.get("amountIncurred").asString()),
-                    Optional.of(Money.of(journey.get("fareAdmissible").asString())), Optional.empty())));
+                    Optional.of(Money.of(journey.get("fareAdmissible").asString())), Optional.empty(), List.of())));
         }
         return List.copyOf(journeys);
     }

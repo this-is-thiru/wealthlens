@@ -3,8 +3,8 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.64",
-      "checksum": "sha256:6b7abca6b17858b989e5b7fb1afc1a4fa738e91a6cd3f4c669d4a82376cbdd24"
+      "version": "2025-26.law.65",
+      "checksum": "sha256:cafdb803f1fefe2097c110b5af14718b685be637e38289d9836328fda682a27f"
     },
     "exec": {
       "version": "2025-26.exec.25",
@@ -167,6 +167,7 @@
     "SAL-ENTMT-ALLOWANCE": "sha256:52763b9938c2e559036938769e4d1c343c5ec7a4d918babaaba6fea0301224dd",
     "SAL-HOUSE-RENT-ALLOWANCE": "sha256:56c812cecfa0bd5db13531b9fcef763d229659dbf2c28832008a4f259614e2ef",
     "SAL-HOUSE-RENT-LANDLORD-PAN": "sha256:67353d113f9085c2cbde5205ef83073f7119e930d1b12822a5e2991bc2384cec",
+    "SAL-LEAVE-TRAVEL-CHILDREN": "sha256:ea3dd2ac2eeae875a4c0d3e6b4df24917b0bf305b47413511d12a0996f88a65d",
     "SAL-LEAVE-TRAVEL-CONCESSION": "sha256:357aa50bdb95e76b4b56172fe82ce7be18b62cf4efb5becc6a72c275c6f101dd",
     "SAL-LEAVE-TRAVEL-JOURNEYS": "sha256:ebce22357e6c6a02dbefb717b9c787d0434a08dd3ce18f9708ab0458a8b72920",
     "SAL-SALARY-FOR-ACCOM": "sha256:543476db5ee8a925b9f00d6f4f0a8e30a24a24690189ceac7f81cb70cac3ed6b",

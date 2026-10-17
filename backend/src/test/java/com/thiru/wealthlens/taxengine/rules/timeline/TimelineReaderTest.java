@@ -65,6 +65,7 @@ class TimelineReaderTest {
             new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME"),
             new RuleId("SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE"),
             new RuleId("SAL-HOUSE-RENT-ALLOWANCE"),
+            new RuleId("SAL-LEAVE-TRAVEL-CHILDREN"),
             new RuleId("SAL-LEAVE-TRAVEL-CONCESSION"),
             new RuleId("SAL-LEAVE-TRAVEL-DISTANCE-RATE"),
             new RuleId("SAL-LEAVE-TRAVEL-JOURNEYS"),

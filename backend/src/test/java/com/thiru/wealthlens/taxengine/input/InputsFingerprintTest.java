@@ -51,7 +51,6 @@ class InputsFingerprintTest {
                 true,
                 Optional.empty(),
                 Optional.empty(),
-                false,
                 false, true))));
     }
 
@@ -145,7 +144,6 @@ class InputsFingerprintTest {
                                             true,
                                             Optional.empty(),
                                             Optional.empty(),
-                                            false,
                                             false, true)))))),
                     Arguments.of(
                             "ledgers.gratuityAlreadyAllowed",
@@ -273,7 +271,7 @@ class InputsFingerprintTest {
                     List.of(new Journey(LocalDate.of(2026, 5, 10), JourneyMode.RAIL_CONNECTED,
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("18000"),
                             Optional.of(com.thiru.wealthlens.taxengine.rules.money.Money.of("15000")),
-                            Optional.empty())), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()));
+                            Optional.empty(), List.of())), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()));
 
             // When / Then
             assertThat(hashOf(withJourney)).isNotEqualTo(hashOf(baseline()));
@@ -427,10 +425,10 @@ class InputsFingerprintTest {
             // cause a needless miss.
             Member first = new Member(
                     Relationship.CHILD, LocalDate.of(2010, 4, 4), true,
-                    Optional.empty(), Optional.empty(), false, false, true);
+                    Optional.empty(), Optional.empty(), false, true);
             Member second = new Member(
                     Relationship.PARENT, LocalDate.of(1955, 4, 4), true,
-                    Optional.empty(), Optional.empty(), false, false, true);
+                    Optional.empty(), Optional.empty(), false, true);
 
             assertThat(hashOf(copy(baseline(), r -> r.family =
                             new FamilySnapshot(List.of(first, second)))))

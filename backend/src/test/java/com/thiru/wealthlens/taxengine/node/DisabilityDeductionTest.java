@@ -54,12 +54,12 @@ class DisabilityDeductionTest {
             member(Relationship.PARENT, LocalDate.of(1960, 5, 1), true, DisabilitySeverity.DISABILITY),
             member(Relationship.SIBLING, LocalDate.of(1986, 5, 1), true, DisabilitySeverity.SEVERE_DISABILITY),
             member(Relationship.SIBLING, LocalDate.of(1988, 5, 1), false, DisabilitySeverity.DISABILITY),
-            new Member(Relationship.PARENT, LocalDate.of(1970, 5, 1), true, Optional.empty(), Optional.empty(), false,
+            new Member(Relationship.PARENT, LocalDate.of(1970, 5, 1), true, Optional.empty(), Optional.empty(),
                     false, true)));
 
     private static Member member(Relationship relationship, LocalDate born, boolean dependant,
             DisabilitySeverity severity) {
-        return new Member(relationship, born, dependant, Optional.of(severity), Optional.empty(), false, false, true);
+        return new Member(relationship, born, dependant, Optional.of(severity), Optional.empty(), false, true);
     }
 
     private static Individual assessee(ResidentialStatus residence, Optional<DisabilitySeverity> disability) {
