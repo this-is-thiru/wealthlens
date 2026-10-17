@@ -19,5 +19,31 @@
       "checksum": "sha256:29f8a32de376a5eea0ad7856021db0adab80f58637603811c7041b03c7a0b44e"
     }
   },
-  "rules": {}
+  "rules": {},
+  "instruments": {
+    "_note": "Fixture instruments, as RulePackLoadTest's: a lock must name them (D-210); these years are not law.",
+    "act": {
+      "citation": "Income-tax Act, 2025 (30 of 2025)",
+      "assentedOn": "2025-08-21",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-22082025-265620",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    },
+    "financeAct": {
+      "citation": "Income-tax Act, 2025 (30 of 2025)",
+      "assentedOn": "2025-08-21",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-22082025-265620",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    },
+    "rules": {
+      "citation": "Income-tax Rules, 2026",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-20032026-271092",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    }
+  }
 }

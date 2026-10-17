@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-074b DONE; between items)
+Item            : — (W-079a DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-079a → W-080 → W-080a → W-078j7b. UNVERIFIED: 10, all owned by W-078j7b. Open OQs: OQ-25, OQ-26
-Last verify     : ./mvnw clean test -pl backend -Punit → 2801 run, 0 fail, BUILD SUCCESS, 0 Checkstyle violations (W-074b, 2026-10-17)
-Waiting on      : the owner — next pick. Open OQs: OQ-25, OQ-26
+Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-080 → W-080a → W-078j7b. UNVERIFIED: 10, all owned by W-078j7b. Open OQs: OQ-25, OQ-26. Unplaced proposal: D-210 C2(b) (PackAssembler takes the instruments)
+Last verify     : unit -Punit → 2813 run, 0 fail, 0 Checkstyle; integration → 247 run, 0 fail (W-079a, 2026-10-17)
+Waiting on      : the owner — next pick
 Files touched   : none
-Last item commit: taxplanning W-074b: finish the T4 golden tests — the employer pension-scheme deduction for T4-1 / T4-2 and T4-4's own-PF excess of ₹3,50,000, with DR 08's T4-4 erratum (D-209)
-Updated         : 2026-10-17, session 20 (W-074b committed)
+Last item commit: taxplanning W-079a: compile and verify the shipped rule packs at startup, from the JAR — a timeline that differs from its lock now stops the boot, each year assembled with its own lock's instruments (D-210)
+Updated         : 2026-10-17, session 20 (W-079a committed)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

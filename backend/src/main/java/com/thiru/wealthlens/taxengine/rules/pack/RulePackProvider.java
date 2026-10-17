@@ -7,7 +7,9 @@ import java.util.Set;
  * Where rule packs come from.
  *
  * <p>An SPI so that a future source — a signed remote pack, say — is a new class rather than a
- * change here. One implementation ships: {@link com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider}. There is deliberately no
+ * change here. {@link com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider} compiles a year from the
+ * classpath; {@link com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks} holds what the application
+ * compiled at startup (D-210). There is deliberately no
  * database-backed provider and no administrative write path: a pack is an immutable, reviewed,
  * checksummed artefact, and a pack that can be edited in production is one nobody can reproduce a
  * computation from ({@code D-IMMUTABLE}).

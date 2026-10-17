@@ -9,12 +9,23 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Discovery, lock reading and lock verification, against a synthetic timeline.
@@ -147,6 +158,69 @@ class ClasspathRulePackProviderTest {
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("no-such-root/2099-00.lock.json")
                     .hasMessageContaining("not on the classpath");
+        }
+    }
+
+    /**
+     * The application runs from a JAR, where the timeline is an archive entry, not a directory (D-210). The
+     * shipped timeline is zipped as a plain JAR lays it out; the Spring Boot JAR's own nested filesystem is
+     * proved by the probe in {@code plans/W-079a.md}, since it needs the repackaged application.
+     */
+    @Nested
+    @DisplayName("loading from a JAR")
+    class FromJar {
+
+        private static final Path TIMELINE = Path.of("src/main/resources/rulepacks/timeline");
+
+        @TempDir
+        Path directory;
+
+        @Test
+        void timelineAt_whenTheTimelineIsInAJar_compilesEachYearAsFromTheDirectory() throws IOException {
+            // Given
+            Path jar = jarOf(TIMELINE, directory.resolve("timeline.jar"));
+            URL url = URI.create("jar:" + jar.toUri() + "!/rulepacks/timeline").toURL();
+
+            // When
+            Timeline fromJar = ClasspathRulePackProvider.timelineAt(url);
+
+            // Then
+            Timeline fromDirectory = TimelineReader.read(TIMELINE);
+            for (TaxYearId year : List.of(TaxYearId.of(2025), TaxYearId.of(2026))) {
+                assertThat(RulePackCompiler.compile(fromJar, year).files())
+                        .as(year.label())
+                        .isEqualTo(RulePackCompiler.compile(fromDirectory, year).files());
+            }
+        }
+
+        @Test
+        void timelineAt_whenTheTimelineIsNeitherADirectoryNorAJar_refusesNamingTheLocation() throws IOException {
+            // Given
+            URL url = URI.create("https://example.invalid/rulepacks/timeline").toURL();
+
+            // When / Then
+            assertThatThrownBy(() -> ClasspathRulePackProvider.timelineAt(url))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessage("The timeline is at https://example.invalid/rulepacks/timeline; it is read only from"
+                            + " a directory or a JAR on the classpath");
+        }
+
+        private static Path jarOf(Path timeline, Path jar) throws IOException {
+            try (OutputStream out = Files.newOutputStream(jar);
+                    ZipOutputStream zip = new ZipOutputStream(out);
+                    Stream<Path> paths = Files.walk(timeline)) {
+                for (Path path : paths.sorted().toList()) {
+                    String name = "rulepacks/timeline/" + timeline.relativize(path).toString().replace('\\', '/');
+                    if (Files.isDirectory(path)) {
+                        zip.putNextEntry(new ZipEntry(name.endsWith("/") ? name : name + "/"));
+                    } else {
+                        zip.putNextEntry(new ZipEntry(name));
+                        Files.copy(path, zip);
+                    }
+                    zip.closeEntry();
+                }
+            }
+            return jar;
         }
     }
 }

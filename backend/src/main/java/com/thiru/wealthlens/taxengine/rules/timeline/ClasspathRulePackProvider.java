@@ -8,10 +8,15 @@ import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -67,37 +72,62 @@ public final class ClasspathRulePackProvider implements RulePackProvider {
                     "No pack for " + year + "; this provider serves " + new TreeSet<>(
                             years.stream().map(TaxYearId::label).toList()));
         }
-        String lockPath = root + "/" + year.label() + ".lock.json";
-        RulePackLock lock = RulePackLock.read(year, read(lockPath), lockPath);
-        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(timelineDirectory()), year);
+        RulePackLock lock = lock(root, year);
+        CompiledPack compiled = RulePackCompiler.compile(timeline(), year);
         lock.verify(compiled);
         return assembler.assemble(year, lock.layers(), compiled.files());
     }
 
-    /**
-     * The timeline as a directory. Inside a JAR it is not one, and loading it from there is not built:
-     * no item owns wiring a provider into the application yet (D-054), so this refuses rather than
-     * guess.
-     */
-    private Path timelineDirectory() {
+    private Timeline timeline() {
         String resource = root + "/timeline";
         URL url = getClass().getClassLoader().getResource(resource);
         if (url == null) {
             throw new PackValidationException(resource + " is not on the classpath");
         }
-        if (!"file".equals(url.getProtocol())) {
-            throw new PackValidationException(resource + " is at " + url + "; loading a timeline from inside a"
-                    + " JAR is not built — it has no owner yet (D-054)");
-        }
+        return timelineAt(url);
+    }
+
+    /**
+     * Reads the timeline at {@code url}: a directory when run from the build's classes, an archive entry
+     * when run from the application's JAR (D-210). The Spring Boot loader already has a filesystem open
+     * for its own nested JAR; a plain JAR has none, so one is opened for the read and closed after it.
+     * Any other location is refused, because it is not a place this application ships from.
+     */
+    static Timeline timelineAt(URL url) {
+        URI uri;
         try {
-            return Path.of(url.toURI());
+            uri = url.toURI();
         } catch (URISyntaxException e) {
-            throw new PackValidationException(resource + " has an unusable location " + url, e);
+            throw new PackValidationException("The timeline has an unusable location " + url, e);
+        }
+        return switch (url.getProtocol()) {
+            case "file" -> TimelineReader.read(Path.of(uri));
+            case "jar" -> timelineInArchive(uri);
+            default -> throw new PackValidationException("The timeline is at " + url + "; it is read only from a"
+                    + " directory or a JAR on the classpath");
+        };
+    }
+
+    private static Timeline timelineInArchive(URI uri) {
+        try {
+            return TimelineReader.read(Path.of(uri));
+        } catch (FileSystemNotFoundException notOpen) {
+            try (FileSystem archive = FileSystems.newFileSystem(uri, Map.of())) {
+                return TimelineReader.read(archive.provider().getPath(uri));
+            } catch (IOException e) {
+                throw new UncheckedIOException("Could not open the archive holding the timeline at " + uri, e);
+            }
         }
     }
 
-    private String read(String resourcePath) {
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+    /** The lock for {@code year} under the classpath directory {@code root}. */
+    static RulePackLock lock(String root, TaxYearId year) {
+        String lockPath = root + "/" + year.label() + ".lock.json";
+        return RulePackLock.read(year, read(lockPath), lockPath);
+    }
+
+    private static String read(String resourcePath) {
+        try (InputStream in = ClasspathRulePackProvider.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (in == null) {
                 throw new PackValidationException(resourcePath + " is not on the classpath");
             }
