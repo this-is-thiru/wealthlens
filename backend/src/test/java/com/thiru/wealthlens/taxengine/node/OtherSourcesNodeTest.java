@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.GiftExclusion;
 import com.thiru.wealthlens.taxengine.input.GiftKind;
 import com.thiru.wealthlens.taxengine.input.GiftReceived;
+import com.thiru.wealthlens.taxengine.input.LifePolicyReceipt;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
@@ -74,6 +75,12 @@ class OtherSourcesNodeTest {
 
     private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items,
             List<ProvidentFundAccount> accounts, List<GiftReceived> gifts, List<BusinessTrustUnits> trusts) {
+        return run(year, regime, items, accounts, gifts, trusts, List.of());
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, List<OtherSourceItem> items,
+            List<ProvidentFundAccount> accounts, List<GiftReceived> gifts, List<BusinessTrustUnits> trusts,
+            List<LifePolicyReceipt> policies) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -85,7 +92,7 @@ class OtherSourcesNodeTest {
                         List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                        List.of(), List.of(), items, accounts, gifts, trusts),
+                        List.of(), List.of(), items, accounts, gifts, trusts, policies),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs).run(new OtherSourcesNode());
@@ -252,14 +259,6 @@ class OtherSourcesNodeTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("business head")
                 .hasMessageContaining("D-202");
-    }
-
-    @Test
-    void evaluate_whenLifePolicySumsAreEntered_refusesThemNamingTheRowThatBuildsThem() {
-        // When / Then
-        assertThatThrownBy(() -> run(2026, List.of(item(OtherSourceKind.LIFE_POLICY, "100000", "0", "0", "0"))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-079g2");
     }
 
     @Test
@@ -739,5 +738,156 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("210000")));
+    }
+
+    /** A policy's receipt: not unit linked, not on death, not special, not IFSC, held alone unless said otherwise. */
+    private static LifePolicyReceipt policy(LocalDate issuedOn, String received, String premium, String sumAssured,
+            String unused) {
+        return new LifePolicyReceipt(Money.of(received), issuedOn, false, false, Money.of(premium), Money.of(sumAssured),
+                false, false, false, Money.of(unused));
+    }
+
+    private static NodeResult runPolicies(int year, LifePolicyReceipt... policies) {
+        return run(year, OLD, List.of(), List.of(), List.of(), List.of(), List.of(policies));
+    }
+
+    private static final LocalDate IN_2015 = LocalDate.of(2015, 6, 1);
+    private static final LocalDate IN_2023 = LocalDate.of(2023, 6, 1);
+
+    /*
+     * Life-policy sums (S2 Schedule II Sl. 2, s.92(2)(l), S4 r.59; 1961 s.10(10D), s.56(2)(xiii), r.11UACA; D-205),
+     * from docs/taxplanning-build/sources/2026-10-17-life-policies.md. Worked by hand.
+     */
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenThePremiumIsWithinTenPerCent_excludesTheSums(int year) {
+        // When — 50,000 a year on 6,00,000 assured: 8.33%
+        NodeResult result = runPolicies(year, policy(IN_2015, "800000", "50000", "600000", "0"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace().getFirst().kind()).isEqualTo(StepKind.EXEMPTION);
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_LIFE_POLICY_RATIO);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenThePremiumIsAboveTenPerCent_chargesTheSumBeyondThePremiums(int year) {
+        // When — 70,000 on 6,00,000: 11.67%; 10,00,000 received, 3,00,000 of premium not deducted
+        NodeResult result = runPolicies(year, policy(IN_2015, "1000000", "70000", "600000", "300000"));
+
+        // Then — r.59 A − B
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("700000")));
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_LIFE_POLICY);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenASpecialPolicysPremiumIsWithinFifteenPerCent_excludesTheSums(int year) {
+        // When — the same 11.67%, on the life of a person with a disability
+        NodeResult result = runPolicies(year, new LifePolicyReceipt(Money.of("1000000"), IN_2015, false, false,
+                Money.of("70000"), Money.of("600000"), true, false, false, Money.of("300000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAPolicyIssuedIn2010IsTestedAtTwentyPerCent_excludesOnlyWithin(int year) {
+        // When — 90,000 on 5,00,000 (18%) and 1,10,000 on 5,00,000 (22%)
+        LocalDate in2010 = LocalDate.of(2010, 6, 1);
+        NodeResult result = runPolicies(year, policy(in2010, "500000", "90000", "500000", "400000"),
+                policy(in2010, "500000", "110000", "500000", "400000"));
+
+        // Then — the first excluded; the second 5,00,000 − 4,00,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenThePolicyPredatesApril2003_excludesWhateverThePremium(int year) {
+        // When — 1,50,000 on 5,00,000: 30%, issued 2001
+        NodeResult result = runPolicies(year, policy(LocalDate.of(2001, 6, 1), "800000", "150000", "500000", "0"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAPolicyFrom2023HasAPremiumAboveFiveLakh_chargesTheSumBeyondThePremiums(int year) {
+        // When — 6,00,000 a year on 1,00,00,000 (6%), 40,00,000 received, 30,00,000 not deducted
+        NodeResult result = runPolicies(year, policy(IN_2023, "4000000", "600000", "10000000", "3000000"));
+
+        // Then — the 5,00,000 limit breached: 10,00,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheSumsAreReceivedOnADeath_excludesThem(int year) {
+        // When — the same policy, on the insured's death
+        NodeResult result = runPolicies(year, new LifePolicyReceipt(Money.of("4000000"), IN_2023, false, true,
+                Money.of("600000"), Money.of("10000000"), false, false, false, Money.of("3000000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAUnitLinkedPolicyIsNotExcluded_refusesItAsCapitalGains(int year) {
+        // When / Then — a ULIP from 2022 at 3,00,000 a year, above 2,50,000
+        LifePolicyReceipt ulip = new LifePolicyReceipt(Money.of("2000000"), LocalDate.of(2022, 6, 1), true, false,
+                Money.of("300000"), Money.of("5000000"), false, false, false, Money.of("1500000"));
+        assertThatThrownBy(() -> runPolicies(year, ulip))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("W-088");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenACappedPolicyIsHeldWithOthersOfItsClass_refusesItNamingTheRowThatBuildsIt(int year) {
+        // When / Then
+        LifePolicyReceipt held = new LifePolicyReceipt(Money.of("4000000"), IN_2023, false, false, Money.of("600000"),
+                Money.of("10000000"), false, false, true, Money.of("3000000"));
+        assertThatThrownBy(() -> runPolicies(year, held))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("W-079g2b");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheSumsDoNotExceedThePremiums_chargesNothing(int year) {
+        // When — 10,00,000 received against 12,00,000 of premium not deducted
+        NodeResult result = runPolicies(year, policy(IN_2015, "1000000", "70000", "600000", "1200000"));
+
+        // Then — "the sum exceeding": nil, never a loss
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAnIfscOfficeIssuedTheCappedPolicyIn2025_excludesTheSums(int year) {
+        // When — 6,00,000 a year on 1,00,00,000, issued 1-5-2025 by an IFSC office
+        NodeResult result = runPolicies(year, new LifePolicyReceipt(Money.of("4000000"), LocalDate.of(2025, 5, 1),
+                false, false, Money.of("600000"), Money.of("10000000"), false, true, false, Money.of("3000000")));
+
+        // Then — no premium limit (TY 2026-27 from 1-4-2025; TY 2025-26 any date); 6% within 10%
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenALifePolicySitsBesideInterest_addsBoth(int year) {
+        // When
+        NodeResult result = run(year, OLD, List.of(item(OtherSourceKind.INTEREST_ON_SECURITIES, "10000", "0", "0",
+                "0")), List.of(), List.of(), List.of(), List.of(policy(IN_2015, "1000000", "70000", "600000",
+                "300000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("710000")));
     }
 }

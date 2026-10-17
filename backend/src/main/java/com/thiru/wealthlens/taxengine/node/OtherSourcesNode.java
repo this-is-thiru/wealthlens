@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.input.BusinessTrustUnits;
 import com.thiru.wealthlens.taxengine.input.GiftExclusion;
 import com.thiru.wealthlens.taxengine.input.GiftKind;
 import com.thiru.wealthlens.taxengine.input.GiftReceived;
+import com.thiru.wealthlens.taxengine.input.LifePolicyReceipt;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
@@ -55,7 +56,7 @@ import java.util.Set;
  *
  * <p>Keyman policy sums, forfeited advances, compensation on termination from someone other than the employer, a
  * business trust's specified sums and the residue are income in full, the first four and the residue bearing other
- * expenditure (D-203).
+ * expenditure (D-203). A life policy's sums are excluded or charged by {@link LifePolicySums} (D-205).
  *
  * <p>Winnings are refused, their own rate being deferred in the coverage register; so are employee contributions
  * received and the letting of machinery, plant or furniture, whose deductions are the business head's, deferred with
@@ -114,7 +115,8 @@ public final class OtherSourcesNode implements ComputationNode {
                 RuleIds.OS_COMPENSATION_INTEREST, RuleIds.OS_FAMILY_PENSION, RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME,
                 RuleIds.OS_COMMUTED_PENSION, RuleIds.OS_DEATH_GRATUITY, RuleIds.OS_PF_TAXABLE_INTEREST, RuleIds.OS_GIFT,
                 RuleIds.OS_GIFT_COVID_DEATH, RuleIds.OS_KEYMAN_POLICY, RuleIds.OS_FORFEITED_ADVANCE,
-                RuleIds.OS_TERMINATION_COMPENSATION, RuleIds.OS_BUSINESS_TRUST, RuleIds.OS_RESIDUAL);
+                RuleIds.OS_TERMINATION_COMPENSATION, RuleIds.OS_BUSINESS_TRUST, RuleIds.OS_RESIDUAL,
+                RuleIds.OS_LIFE_POLICY_RATIO, RuleIds.OS_LIFE_POLICY_PREMIUM, RuleIds.OS_LIFE_POLICY);
     }
 
     @Override
@@ -123,7 +125,8 @@ public final class OtherSourcesNode implements ComputationNode {
         List<ProvidentFundAccount> accounts = ctx.inputs().entered().providentFundAccounts();
         List<GiftReceived> gifts = ctx.inputs().entered().giftsReceived();
         List<BusinessTrustUnits> trusts = ctx.inputs().entered().businessTrustUnits();
-        if (items.isEmpty() && accounts.isEmpty() && gifts.isEmpty() && trusts.isEmpty()) {
+        List<LifePolicyReceipt> policies = ctx.inputs().entered().lifePolicyReceipts();
+        if (items.isEmpty() && accounts.isEmpty() && gifts.isEmpty() && trusts.isEmpty() && policies.isEmpty()) {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireBuiltKinds(items);
@@ -141,6 +144,9 @@ public final class OtherSourcesNode implements ComputationNode {
         }
         for (int position = 0; position < trusts.size(); position++) {
             head = head.plus(businessTrustIncome(lines, position, trusts.get(position)));
+        }
+        for (int position = 0; position < policies.size(); position++) {
+            head = head.plus(LifePolicySums.income(ctx, lines, position, policies.get(position)));
         }
         if (head.isLessThan(Money.ZERO)) {
             throw new IllegalArgumentException("Income from other sources is a loss of " + Money.ZERO.minus(head)
@@ -167,7 +173,7 @@ public final class OtherSourcesNode implements ComputationNode {
             case DEATH_GRATUITY -> wholeDeducted(lines, where, item, RuleIds.OS_DEATH_GRATUITY, GRATUITY,
                     "gratuity received on the employee's death");
             case KEYMAN_POLICY, FORFEITED_ADVANCE, TERMINATION_COMPENSATION, OTHER -> inFull(lines, where, item);
-            case WINNINGS, EMPLOYEE_CONTRIBUTIONS, MACHINERY_LETTING, MACHINERY_AND_BUILDING_LETTING, LIFE_POLICY ->
+            case WINNINGS, EMPLOYEE_CONTRIBUTIONS, MACHINERY_LETTING, MACHINERY_AND_BUILDING_LETTING ->
                     throw new IllegalStateException(item.kind() + " passed requireBuiltKinds");
         };
     }
@@ -441,15 +447,11 @@ public final class OtherSourcesNode implements ComputationNode {
                         + " deductions (S2 ss.28, 29(1)(e), 33; Income-tax Act, 1961 ss.30–32, 36(1)(va)), which are"
                         + " deferred in the coverage register with that head (D-202)");
             }
-            if (kind == OtherSourceKind.LIFE_POLICY) {
-                throw new IllegalArgumentException("Item " + position + ": sums under a life policy need Schedule II"
-                        + " Sl. 2's exclusion test and S4 r.59's computation, which are W-079g2's");
-            }
         }
     }
 
     /** The node's trace lines, numbered as they are added, each citing the version of its row that governs. */
-    private static final class Lines {
+    static final class Lines {
 
         private final NodeContext ctx;
         private final TemporalContext temporal;

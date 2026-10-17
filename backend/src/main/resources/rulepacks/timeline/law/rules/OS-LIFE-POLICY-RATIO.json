@@ -1,0 +1,131 @@
+{
+  "ruleId": "OS-LIFE-POLICY-RATIO",
+  "_note": "Whether a life policy's sums are excluded from total income by its premium against its actual capital sum assured (D-205). TY 2026-27: Income-tax Act, 2025 Schedule II Table Sl. 2 col. C (a), policies \"issued during the period mentioned in column B …, except where such sum is received on the death of a person, … shall fulfil the conditions\": 1-4-2003 → 31-3-2012 ratio ≤ 20%; 1-4-2012 → 31-3-2013 ≤ 10%; from 1-4-2013 ≤ 15% for a special policy, ≤ 10% for others (pp.498–499); the ratio is \"the highest percentage of annual premium payable to the actual capital sum assured, during the term of the policy\" (Note 1(d), p.503). A policy issued before 1-4-2003 has no condition. TY 2025-26: 1961 s.10(10D)(c), (d) and the third proviso — the same bands (FA 2003 s.6(c); FA 2012 s.5(A); FA 2013 s.5(I)). The bands are PremiumShareBands, as Schedule XV para 2's (DED-PREMIUM-SHARE). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-life-policies.md.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10D)(c), (d), third proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Schedule II Table Sl. 2 col. C (a)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "PremiumShareBands",
+        "bands": [
+          {
+            "from": "2003-04-01",
+            "to": "2012-03-31",
+            "onlyCoveringDisabilityOrDisease": false,
+            "percent": "20"
+          },
+          {
+            "from": "2012-04-01",
+            "onlyCoveringDisabilityOrDisease": false,
+            "percent": "10"
+          },
+          {
+            "from": "2013-04-01",
+            "onlyCoveringDisabilityOrDisease": true,
+            "percent": "15"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.10(10D) — subs. by the Finance Act, 2003 (32 of 2003), s.6(c) (w.e.f. 1-4-2004); (c) limited and (d) ins. by the Finance Act, 2012 (23 of 2012), s.5(A) (w.e.f. 1-4-2013); the fifteen per cent. proviso ins. by the Finance Act, 2013 (17 of 2013), s.5(I) (w.e.f. 1-4-2014)",
+        "gazetteRef": "Act 17 of 2013: Gazette of India, Extraordinary, Part II, Section 1, 10-5-2013 — read in its reprint, Tamil Nadu Government Gazette, Extraordinary, Part IV, Section 4, No. 248, 30-8-2013, p.431; Act 23 of 2012: Gazette of India, Extraordinary, Part II, Section 1, 28-5-2012 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 23-5-2013, p.498 (page image, read by eye); Act 32 of 2003: Gazette of India, Extraordinary, Part II, Section 1, 14-5-2003 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 25, 20-9-2007, p.835",
+        "notifiedOn": "2013-05-10",
+        "effectiveFrom": "2014-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://stationeryprinting.tn.gov.in/extraordinary/2013/248-Ex-IV-4.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10D); the Finance Act, 2003 s.6(c), 2012 s.5(A) and 2013 s.5(I) read in their State reprints; the Finance Acts 2021 (s.6(c)), 2023 (s.5(d)) and 2025 (s.6(e)) touch only the provisos on premium limits (docs/taxplanning-build/sources/2026-10-17-life-policies.md)",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10D)(c), (d), third proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Schedule II Table Sl. 2 col. C (a)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "PremiumShareBands",
+        "bands": [
+          {
+            "from": "2003-04-01",
+            "to": "2012-03-31",
+            "onlyCoveringDisabilityOrDisease": false,
+            "percent": "20"
+          },
+          {
+            "from": "2012-04-01",
+            "onlyCoveringDisabilityOrDisease": false,
+            "percent": "10"
+          },
+          {
+            "from": "2013-04-01",
+            "onlyCoveringDisabilityOrDisease": true,
+            "percent": "15"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), Schedule II Table Sl. 2, Note 1",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule II Table Sl. 2, pp.498–499, Note 1, pp.502–503; Finance Act, 2026 does not amend Sl. 2",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule II Table Sl. 2, pp.498–499, Note 1, pp.502–503; Finance Act, 2026 does not amend Sl. 2",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

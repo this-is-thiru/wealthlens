@@ -157,7 +157,7 @@ class SalaryHeadPipelineTest {
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), new EnteredFacts(List.of(employment), entries.tenancies(), entries.journeys(),
                         entries.allowanceUses(), entries.disabledTransport(), entries.retirementPayments(),
-                        entries.accommodations(), entries.medicalTreatmentAbroad(), entries.vehicles(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), entries.employerContributions(), entries.retirementFundHistory(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()),
+                        entries.accommodations(), entries.medicalTreatmentAbroad(), entries.vehicles(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), entries.employerContributions(), entries.retirementFundHistory(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return PipelineRunner.run(SALARY_HEAD, pack, salaryHead, inputs);

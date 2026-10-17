@@ -7,7 +7,7 @@ package com.thiru.wealthlens.taxengine.input;
  * <p>Some kinds are entered only so they can be refused by name rather than slipping in under a kind that would deduct
  * from them: winnings are taxed at a rate of their own, deferred in the coverage register (1961 s.115BB); employee
  * contributions received and the letting of machinery, plant or furniture take the business head's deductions, which
- * are deferred with it (D-202); and life-policy sums need Schedule II Sl. 2's test ({@code W-079g2}).
+ * are deferred with it (D-202). Life-policy sums are a {@link LifePolicyReceipt}, not a kind (D-205).
  */
 public enum OtherSourceKind {
 
@@ -111,9 +111,6 @@ public enum OtherSourceKind {
      * s.92(2)(g); 1961 s.56(2)(iii)): refused, as {@link #MACHINERY_LETTING}.
      */
     MACHINERY_AND_BUILDING_LETTING,
-
-    /** Sums under a life policy (S2 s.92(2)(l); 1961 s.56(2)(xiii)): refused until {@code W-079g2}. */
-    LIFE_POLICY,
 
     /**
      * Any other income chargeable under the head and under no other — S2 s.92(1), 1961 s.56(1) — the person's claim

@@ -71,6 +71,9 @@ public final class RuleIds {
     public static final RuleId OS_GIFT_COVID_DEATH = new RuleId("OS-GIFT-COVID-DEATH");
     public static final RuleId OS_INTEREST = new RuleId("OS-INTEREST");
     public static final RuleId OS_KEYMAN_POLICY = new RuleId("OS-KEYMAN-POLICY");
+    public static final RuleId OS_LIFE_POLICY = new RuleId("OS-LIFE-POLICY");
+    public static final RuleId OS_LIFE_POLICY_PREMIUM = new RuleId("OS-LIFE-POLICY-PREMIUM");
+    public static final RuleId OS_LIFE_POLICY_RATIO = new RuleId("OS-LIFE-POLICY-RATIO");
     public static final RuleId OS_OTHER_EXPENDITURE = new RuleId("OS-OTHER-EXPENDITURE");
     public static final RuleId OS_PF_TAXABLE_INTEREST = new RuleId("OS-PF-TAXABLE-INTEREST");
     public static final RuleId OS_RESIDUAL = new RuleId("OS-RESIDUAL");

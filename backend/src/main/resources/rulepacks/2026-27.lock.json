@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.66",
-      "checksum": "sha256:f8fb1f7c29406583e583b16e2f121c60f737c11c3ddbf65c676e6bb9992a6aaa"
+      "version": "2026-27.law.67",
+      "checksum": "sha256:faf3a667bb415c7000be03f02e6a8b39980d1a44666a8e3d0f25dfb4eece6519"
     },
     "exec": {
       "version": "2026-27.exec.27",
@@ -75,6 +75,9 @@
     "OS-GIFT": "sha256:43bdec4ae20ffa3780dce7534fa2fcbe31441c654a191a326a5e4e2192491b6f",
     "OS-INTEREST": "sha256:81bef7109f82e3ae55ec8c5abd3f4bd4ba93b955cb61790dc46c5a7c7f92015a",
     "OS-KEYMAN-POLICY": "sha256:f6366c8acb50b98a319a52499abeb4cd38d793ac68dcc9090b9d9987c802b8f9",
+    "OS-LIFE-POLICY": "sha256:0d4b25bd212583c5acaa4ea183b51fa09154dcf4cb80053f91686786366c50dc",
+    "OS-LIFE-POLICY-PREMIUM": "sha256:80bb5c414908701862fb83d178c620ae6d0cc6bc09241653b949fda93ef376bb",
+    "OS-LIFE-POLICY-RATIO": "sha256:d5fe9e6e51d3d90d56449d341fb4fac35afc31c295032f019ad5584bdb8be205",
     "OS-OTHER-EXPENDITURE": "sha256:d022633694b2eab5275a40f78d4cd1d6ce6882f5e4c5264a17e1762a735cfbe5",
     "OS-PF-TAXABLE-INTEREST": "sha256:cb6daf8cf6e1f3b281bf429d84dcd2d60750987f2de060679dbd7a960d8468f6",
     "OS-RESIDUAL": "sha256:13ac404cea8f73c84ffc78c4ab7543a5d250f0f1bf985e8d4b1c03d7ce3151cb",
