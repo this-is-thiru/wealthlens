@@ -5,10 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.thiru.wealthlens.taxengine.election.ElectionMode;
 import com.thiru.wealthlens.taxengine.election.ElectionResolver;
 import com.thiru.wealthlens.taxengine.election.PricedAlternative;
+import com.thiru.wealthlens.taxengine.election.SetOffOrderElection;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -33,6 +36,21 @@ class RegimeElectionPipelineTest {
         assertThat(resolution.run().valueOf(NodeIds.ROUND_NETPAYABLE).asMoney()).isEqualTo(Money.of("18954000"));
         assertThat(resolution.outcome().alternatives()).containsExactly(
                 new PricedAlternative<>(NEW, Money.of("18954000")), new PricedAlternative<>(OLD, Money.of("19256250")));
+    }
+
+    @Test
+    void resolveRegimeAndSetOffOrder_whenTotalIncomeIsFiveCrore_pricesTheRegimesAsAlone() {
+        // When — DR 08 T2-4's facts with the set-off order elected too: no loss, so every order costs the same
+        ElectionResolver.JointResolution resolution =
+                RUNNER.resolveRegimeAndSetOffOrder(TaxYearId.of(2026), Money.of("50000000"));
+
+        // Then — each regime under its own pipeline (D-222): 1,89,54,000 new, 1,92,56,250 old; the declared order
+        assertThat(resolution.outcomes().get(0).chosen()).isEqualTo(NEW);
+        assertThat(List.<Object>copyOf(resolution.outcomes().get(0).alternatives())).containsExactly(
+                new PricedAlternative<>(NEW, Money.of("18954000")), new PricedAlternative<>(OLD, Money.of("19256250")));
+        assertThat(resolution.outcomes().get(1).chosen()).isEqualTo(new SetOffOrderElection().candidates(
+                NodeHarness.plainTaxpayer(), RUNNER.pack(TaxYearId.of(2026))).getFirst());
+        assertThat(resolution.run().valueOf(NodeIds.ROUND_NETPAYABLE).asMoney()).isEqualTo(Money.of("18954000"));
     }
 
     @Test

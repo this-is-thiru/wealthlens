@@ -227,15 +227,30 @@ final class GoldenCaseRunner {
         List<ComputationNode> nodes = new ArrayList<>(BUILT);
         nodes.add(new TotalIncomeNode());
         EngineInputs plain = NodeHarness.plainTaxpayer();
+        return ElectionResolver.resolve(new RegimeElection(), NodeRegistry.of(nodes), pack,
+                pack.regimes().get(plain.regime()), interestOnly(year, interest));
+    }
+
+    /** The regime and the set-off order resolved together on {@link #resolveRegime}'s facts (D-236). */
+    ElectionResolver.JointResolution resolveRegimeAndSetOffOrder(TaxYearId year, Money interest) {
+        RulePack pack = pack(year);
+        List<ComputationNode> nodes = new ArrayList<>(BUILT);
+        nodes.add(new TotalIncomeNode());
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        return ElectionResolver.resolveTogether(List.of(new RegimeElection(), new SetOffOrderElection()),
+                NodeRegistry.of(nodes), pack, pack.regimes().get(plain.regime()), interestOnly(year, interest));
+    }
+
+    /** The harness taxpayer with other-sources interest the only income. */
+    private static EngineInputs interestOnly(TaxYearId year, Money interest) {
+        EngineInputs plain = NodeHarness.plainTaxpayer();
         OtherSourceItem item = new OtherSourceItem(OtherSourceKind.OTHER_INTEREST, interest, Money.ZERO, Money.ZERO,
                 Money.ZERO, false);
-        EngineInputs inputs = new EngineInputs(year, plain.regime(),
+        return new EngineInputs(year, plain.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
-        return ElectionResolver.resolve(new RegimeElection(), NodeRegistry.of(nodes), pack,
-                pack.regimes().get(plain.regime()), inputs);
     }
 
     /**

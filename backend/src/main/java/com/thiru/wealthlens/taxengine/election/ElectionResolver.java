@@ -14,8 +14,11 @@ import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 /**
  * Resolves an election by recomputation ({@code DR 15} C2, {@code D-MARGINAL}): never by a heuristic.
@@ -29,6 +32,11 @@ import java.util.Optional;
  * <p>Every alternative becomes a MEASURE line of the election's basis rule under its node, appended to the chosen
  * run's trace — the outputs are projections of the trace ({@code D-VIEWFROMTRACE}), so an alternative kept anywhere
  * else would be one no view could show.
+ *
+ * <p>Elections are not independent — the regime changes what a house specification is worth (D-230) — so several are
+ * resolved together over every combination of their choices, not one after another (D-236). Each election's outcome
+ * then prices each of its choices at the best combination that makes it, so its lines number its choices, not the
+ * combinations.
  */
 public final class ElectionResolver {
 
@@ -47,6 +55,22 @@ public final class ElectionResolver {
             if (outcome == null || run == null) {
                 throw new IllegalArgumentException("A resolution needs its outcome and its run");
             }
+        }
+    }
+
+    /**
+     * Several elections resolved together.
+     *
+     * @param outcomes each election's outcome, in the order the elections were given
+     * @param run the computation with every choice made, its trace ending in the alternatives' lines
+     */
+    public record JointResolution(List<ElectionOutcome<?>> outcomes, PipelineRunner.Result run) {
+
+        public JointResolution {
+            if (outcomes == null || run == null) {
+                throw new IllegalArgumentException("A joint resolution needs its outcomes and its run");
+            }
+            outcomes = List.copyOf(outcomes);
         }
     }
 
@@ -84,18 +108,189 @@ public final class ElectionResolver {
         return new Resolution<>(outcome, withAlternatives(cheapest, election, outcome, pack, inputs));
     }
 
+    /**
+     * Resolve several elections together: every combination of their choices is a whole run — each election's choices
+     * in its order, a stated election only its stated choice, the regime the one the choices name — and the one with
+     * the least {@code tax.netpayable} is taken. A tie goes to the earlier combination, the first election's choice
+     * the most significant, so to the declared defaults where they are among the cheapest.
+     *
+     * @throws IllegalArgumentException if anything is missing, fewer than two elections are given, two are of one
+     *     kind, or one offers no choice
+     */
+    public static JointResolution resolveTogether(
+            List<Election<?>> elections, NodeRegistry registry, RulePack pack, RegimeSpec regime, EngineInputs inputs) {
+        requireJointlyResolvable(elections, registry, pack, regime, inputs);
+        List<Choices<?>> all = IntStream.range(0, elections.size())
+                .<Choices<?>>mapToObj(i -> Choices.of(elections.get(i), i, inputs, pack))
+                .toList();
+        int[] radix = all.stream().mapToInt(Choices::size).toArray();
+        int combinations = Arrays.stream(radix).reduce(1, Math::multiplyExact);
+        PipelineRunner.Result cheapest = null;
+        int[] chosen = null;
+        for (int combination = 0; combination < combinations; combination++) {
+            int[] picks = digits(combination, radix);
+            PipelineRunner.Result run = runChoosing(all, picks, registry, pack, regime, inputs);
+            Money netPayable = run.valueOf(NodeIds.TAX_NETPAYABLE).asMoney();
+            all.forEach(choices -> choices.price(picks, netPayable));
+            if (cheapest == null || netPayable.isLessThan(cheapest.valueOf(NodeIds.TAX_NETPAYABLE).asMoney())) {
+                cheapest = run;
+                chosen = picks;
+            }
+        }
+        List<TraceLine> trace = new ArrayList<>(cheapest.trace());
+        List<ElectionOutcome<?>> outcomes = new ArrayList<>(all.size());
+        for (int i = 0; i < all.size(); i++) {
+            outcomes.add(all.get(i).outcome(chosen[i], trace, all, combinations, pack, inputs));
+        }
+        return new JointResolution(outcomes, withTrace(cheapest, trace));
+    }
+
+    private static void requireJointlyResolvable(List<Election<?>> elections, NodeRegistry registry, RulePack pack,
+            RegimeSpec regime, EngineInputs inputs) {
+        if (elections == null || registry == null || pack == null || regime == null || inputs == null) {
+            throw new IllegalArgumentException("Resolving elections together needs the elections, a registry, a pack,"
+                    + " a regime and the inputs; the engine fetches none of them for itself");
+        }
+        if (elections.size() < 2 || elections.stream().map(Object::getClass).distinct().count() != elections.size()) {
+            throw new IllegalArgumentException("Resolving together needs two or more elections of different kinds, but"
+                    + " was given " + elections.stream().map(e -> e.getClass().getSimpleName()).toList()
+                    + "; resolve one alone");
+        }
+    }
+
+    /** One combination's whole run: every choice made, under the regime the choices name. */
+    private static PipelineRunner.Result runChoosing(List<Choices<?>> all, int[] picks, NodeRegistry registry,
+            RulePack pack, RegimeSpec regime, EngineInputs inputs) {
+        EngineInputs choosing = inputs;
+        RegimeSpec computing = regime;
+        for (int i = 0; i < all.size(); i++) {
+            choosing = all.get(i).choosing(picks[i], choosing);
+            computing = all.get(i).regimeFor(picks[i], computing, pack);
+        }
+        return PipelineRunner.run(registry, pack, computing, choosing);
+    }
+
+    /** {@code combination}'s choice index for each election, the last election's varying fastest. */
+    private static int[] digits(int combination, int[] radix) {
+        int[] picks = new int[radix.length];
+        int rest = combination;
+        for (int i = radix.length - 1; i >= 0; i--) {
+            picks[i] = rest % radix[i];
+            rest /= radix[i];
+        }
+        return picks;
+    }
+
+    /**
+     * One election's choices in a joint resolution, and the best combination found so far for each — its least net
+     * payable, the earlier combination keeping a tie.
+     */
+    private static final class Choices<T> {
+
+        private final Election<T> election;
+        private final int position;
+        private final List<T> choices;
+        private final boolean stated;
+        private final List<Money> best;
+        private final List<int[]> bestPicks;
+
+        private Choices(Election<T> election, int position, List<T> choices, boolean stated) {
+            this.election = election;
+            this.position = position;
+            this.choices = choices;
+            this.stated = stated;
+            this.best = new ArrayList<>(Collections.nCopies(choices.size(), null));
+            this.bestPicks = new ArrayList<>(Collections.nCopies(choices.size(), null));
+        }
+
+        static <T> Choices<T> of(Election<T> election, int position, EngineInputs inputs, RulePack pack) {
+            Optional<T> stated = election.stated(inputs);
+            List<T> choices = stated.map(List::of).orElseGet(() -> election.candidates(inputs, pack));
+            if (choices.isEmpty()) {
+                throw new IllegalArgumentException(election.getClass().getSimpleName() + " offers no choice to price");
+            }
+            return new Choices<>(election, position, List.copyOf(choices), stated.isPresent());
+        }
+
+        int size() {
+            return choices.size();
+        }
+
+        EngineInputs choosing(int pick, EngineInputs inputs) {
+            return election.choosing(choices.get(pick), inputs);
+        }
+
+        RegimeSpec regimeFor(int pick, RegimeSpec computing, RulePack pack) {
+            return election.regimeFor(choices.get(pick), computing, pack);
+        }
+
+        String describe(int pick, RulePack pack) {
+            return election.describe(choices.get(pick), pack);
+        }
+
+        /** Record a combination's net payable against this election's choice in it. */
+        void price(int[] picks, Money netPayable) {
+            int pick = picks[position];
+            if (best.get(pick) == null || netPayable.isLessThan(best.get(pick))) {
+                best.set(pick, netPayable);
+                bestPicks.set(pick, picks);
+            }
+        }
+
+        /** The outcome, its lines appended to {@code trace}: one per choice, at its best combination. */
+        ElectionOutcome<T> outcome(int chosen, List<TraceLine> trace, List<Choices<?>> all, int combinations,
+                RulePack pack, EngineInputs inputs) {
+            List<PricedAlternative<T>> priced = new ArrayList<>(choices.size());
+            for (int pick = 0; pick < choices.size(); pick++) {
+                priced.add(new PricedAlternative<>(choices.get(pick), best.get(pick)));
+            }
+            ElectionOutcome<T> outcome = new ElectionOutcome<>(choices.get(chosen),
+                    stated ? ElectionMode.USER_SPECIFIED : ElectionMode.AUTO_OPTIMISE, priced);
+            for (int pick = 0; pick < choices.size(); pick++) {
+                String why = stated ? why(election, outcome, priced.get(pick), pack)
+                        : jointly(pick, chosen, all, combinations, pack);
+                trace.add(line(trace.size() + 1, election, priced.get(pick), why, pack, inputs));
+            }
+            return outcome;
+        }
+
+        private String jointly(int pick, int chosen, List<Choices<?>> all, int combinations, RulePack pack) {
+            List<String> others = new ArrayList<>();
+            for (Choices<?> other : all) {
+                if (other != this) {
+                    others.add(other.describe(bestPicks.get(pick)[other.position], pack));
+                }
+            }
+            return describe(pick, pack) + ": net payable, the other elections at their best for it ("
+                    + String.join("; ", others) + "); " + (pick == chosen ? "chosen" : "not chosen")
+                    + " — priced jointly by recomputation against " + combinations + " combinations, the least taken,"
+                    + " a tie going to the earlier, every declared default first";
+        }
+    }
+
     /** The run, its trace ending in one line per alternative priced. */
     private static <T> PipelineRunner.Result withAlternatives(PipelineRunner.Result run, Election<T> election,
             ElectionOutcome<T> outcome, RulePack pack, EngineInputs inputs) {
         List<TraceLine> trace = new ArrayList<>(run.trace());
         for (PricedAlternative<T> alternative : outcome.alternatives()) {
-            RuleId basis = election.basis(alternative.choice(), pack);
-            Provenance provenance =
-                    TemporallyApportionedCap.governingVersion(pack.rule(basis), inputs.temporal()).provenance();
-            MoneyValue netPayable = MoneyValue.of(alternative.netPayable());
-            trace.add(TraceLine.of(trace.size() + 1, election.node(), basis, StepKind.MEASURE, netPayable, netPayable,
-                    provenance).withLimitedBy(why(election, outcome, alternative, pack)));
+            trace.add(line(trace.size() + 1, election, alternative, why(election, outcome, alternative, pack), pack,
+                    inputs));
         }
+        return withTrace(run, trace);
+    }
+
+    /** An alternative's MEASURE line: its net payable, under the election's node, citing the choice's basis. */
+    private static <T> TraceLine line(int sequence, Election<T> election, PricedAlternative<T> alternative, String why,
+            RulePack pack, EngineInputs inputs) {
+        RuleId basis = election.basis(alternative.choice(), pack);
+        Provenance provenance =
+                TemporallyApportionedCap.governingVersion(pack.rule(basis), inputs.temporal()).provenance();
+        MoneyValue netPayable = MoneyValue.of(alternative.netPayable());
+        return TraceLine.of(sequence, election.node(), basis, StepKind.MEASURE, netPayable, netPayable, provenance)
+                .withLimitedBy(why);
+    }
+
+    private static PipelineRunner.Result withTrace(PipelineRunner.Result run, List<TraceLine> trace) {
         return new PipelineRunner.Result(run.order(), run.values(), trace, run.annotations(), run.inputs(),
                 run.lawAndExec());
     }
