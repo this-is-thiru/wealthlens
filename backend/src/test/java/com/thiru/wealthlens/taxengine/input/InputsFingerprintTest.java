@@ -315,7 +315,7 @@ class InputsFingerprintTest {
         void enteredFacts_whenOnlyARetirementPaymentDiffers_movesTheHash() {
             // Given — D-103: the retirement deductions read the entry each payment falls under
             EngineInputs withPayment = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
-                    List.of(), List.of(), Optional.empty(), List.of(RetirementPayment.of(
+                    List.of(), List.of(), Optional.empty(), List.of(RetirementPayment.of(0,
                             new ComponentCode("GRATUITY"), RetirementEntry.GOVERNMENT_GRATUITY)), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
             // When / Then
@@ -339,7 +339,7 @@ class InputsFingerprintTest {
 
         private static EnteredFacts enteringGratuity(java.time.LocalDate separatedOn, List<MonthOfPay> months) {
             return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
-                    List.of(RetirementPayment.otherGratuity(new ComponentCode("GRATUITY"),
+                    List.of(RetirementPayment.otherGratuity(0, new ComponentCode("GRATUITY"),
                             new Separation(java.time.LocalDate.of(2000, 4, 1), separatedOn, months))), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
         }
 
@@ -355,7 +355,7 @@ class InputsFingerprintTest {
 
         private static EnteredFacts enteringStatutory(String amount) {
             return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
-                    List.of(RetirementPayment.statutory(new ComponentCode("RETRENCHMENT_COMPENSATION"),
+                    List.of(RetirementPayment.statutory(0, new ComponentCode("RETRENCHMENT_COMPENSATION"),
                             RetirementEntry.RETRENCHMENT, new StatutoryEntitlement(java.time.LocalDate.of(2025, 12, 15),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.of(amount)))), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
         }

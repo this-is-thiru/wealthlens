@@ -58,17 +58,12 @@ public final class RetirementNode implements ComputationNode {
     private static final Map<RetirementEntry, RuleId> RULE_FOR_ENTRY = entryRules();
 
     /**
-     * The entries measured on one employer's facts or against a limit, and the item that measures a second employer's
-     * payment (D-224). Summing two employers' payments into one would measure both on the first employer's facts and
-     * cap them once; the entries deducted in full are unaffected and absent here.
+     * The entries whose payments from a second employer in the year are not yet measured: each reads one employer's
+     * facts or a limit whose treatment across employers is unread (D-224, D-225 — W-066g). Other gratuity and other
+     * leave encashment are measured per employment with the year's total capped (D-225).
      */
-    private static final Map<RetirementEntry, String> MEASURED_ON_ONE_EMPLOYER = Map.of(
-            RetirementEntry.OTHER_GRATUITY, "W-066f",
-            RetirementEntry.OTHER_LEAVE_ENCASHMENT, "W-066f",
-            RetirementEntry.OTHER_EMPLOYER_COMMUTATION, "W-066g",
-            RetirementEntry.VOLUNTARY_RETIREMENT, "W-066g",
-            RetirementEntry.STATUTORY_GRATUITY, "W-066g",
-            RetirementEntry.RETRENCHMENT, "W-066g");
+    private static final Set<RetirementEntry> ONE_EMPLOYER_ONLY = Set.of(RetirementEntry.OTHER_EMPLOYER_COMMUTATION,
+            RetirementEntry.VOLUNTARY_RETIREMENT, RetirementEntry.STATUTORY_GRATUITY, RetirementEntry.RETRENCHMENT);
     private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
     private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
 
@@ -111,26 +106,42 @@ public final class RetirementNode implements ComputationNode {
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
         List<RetirementPayment> payments = ctx.inputs().entered().retirementPayments();
         requireEachRetirementComponentEntered(ctx, components, payments);
-        requireOneEmployerWhereMeasuredOnOne(components, payments);
+        requireOneEmploymentWhereNotMeasuredPerEmployment(payments);
         NotifiedRetirementLimits.requireOneDay(payments);
         boolean gratuityReceived = paid(components, ComponentCodes.GRATUITY).isGreaterThan(Money.ZERO);
         List<TraceLine> trace = new ArrayList<>();
+        Map<RetirementEntry, Money> allowedThisYear = new EnumMap<>(RetirementEntry.class);
         for (RetirementPayment payment : payments) {
-            payment(ctx, components, payment, gratuityReceived, trace.size() + 1).ifPresent(trace::add);
+            payment(ctx, components, payment, gratuityReceived, allowedThisYear, trace.size() + 1).ifPresent(line -> {
+                trace.add(line);
+                allowedThisYear.merge(payment.entry(), line.out().asMoney(), Money::plus);
+            });
         }
         Money deducted = trace.stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
         return trace.isEmpty() ? NodeResult.untraced(MoneyValue.of(Money.ZERO))
                 : new NodeResult(MoneyValue.of(deducted), trace);
     }
 
-    /** Refuses a component entered twice, and one paid that feeds a retirement rule without an entry. */
+    /** A component as one employment paid it — what a retirement payment is entered against (D-225). */
+    private record PaidBy(ComponentCode component, int employment) {
+    }
+
+    /**
+     * Refuses a payment naming no employment, a component and employment entered twice, and a component an employment
+     * paid that feeds a retirement rule without an entry.
+     */
     private static void requireEachRetirementComponentEntered(NodeContext ctx, ComponentSet components,
             List<RetirementPayment> payments) {
-        Set<ComponentCode> entered = new HashSet<>();
+        int employments = ctx.inputs().entered().employments().size();
+        Set<PaidBy> entered = new HashSet<>();
         for (RetirementPayment payment : payments) {
-            if (!entered.add(payment.component())) {
-                throw new IllegalArgumentException(payment.component() + " is entered twice; enter one retirement"
-                        + " payment per component");
+            if (payment.employment() >= employments) {
+                throw new IllegalArgumentException(payment.component() + " is entered for employment "
+                        + payment.employment() + ", but " + employments + " employment(s) are entered");
+            }
+            if (!entered.add(new PaidBy(payment.component(), payment.employment()))) {
+                throw new IllegalArgumentException(payment.component() + " is entered twice for employment "
+                        + payment.employment() + "; enter one retirement payment per component per employment");
             }
         }
         Set<RuleId> retirementRules = Set.copyOf(RULE_FOR_ENTRY.values());
@@ -138,35 +149,29 @@ public final class RetirementNode implements ComputationNode {
             ComponentDefinition definition = ctx.pack().components().get(line.code());
             boolean retirement = definition != null
                     && definition.feedsInto().stream().anyMatch(retirementRules::contains);
-            if (retirement && !entered.contains(line.code())) {
+            if (retirement && !entered.contains(new PaidBy(line.code(), line.employment()))) {
                 throw new IllegalArgumentException(line.code() + " is paid but no entry says which of the Act's"
                         + " retirement entries it falls under, which turns on the scheme it was paid under; enter it");
             }
         }
     }
 
-    /** Refuses a payment more than one employment paid, where its entry is measured on one employer's facts. */
-    private static void requireOneEmployerWhereMeasuredOnOne(ComponentSet components, List<RetirementPayment> payments) {
-        for (RetirementPayment payment : payments) {
-            String item = MEASURED_ON_ONE_EMPLOYER.get(payment.entry());
-            if (item == null) {
-                continue;
-            }
+    /** Refuses payments of one entry from more than one employment, where that is not yet measured (W-066g). */
+    private static void requireOneEmploymentWhereNotMeasuredPerEmployment(List<RetirementPayment> payments) {
+        for (RetirementEntry entry : ONE_EMPLOYER_ONLY) {
             Set<Integer> employments = new TreeSet<>();
-            components.in(HeadCode.SALARIES).stream()
-                    .filter(line -> line.code().equals(payment.component()))
-                    .forEach(line -> employments.add(line.employment()));
+            payments.stream().filter(payment -> payment.entry() == entry)
+                    .forEach(payment -> employments.add(payment.employment()));
             if (employments.size() > 1) {
-                throw new IllegalArgumentException(payment.component() + " under " + payment.entry() + " is paid by"
-                        + " more than one employment " + employments + "; each employer's payment is measured on its"
-                        + " own facts and limits, which is not built — " + item);
+                throw new IllegalArgumentException(entry + " is paid by more than one employment " + employments
+                        + "; how a second employer's payment is measured is not built — W-066g");
             }
         }
     }
 
     /** One payment's line; none where its rule does not apply in the regime. */
     private static Optional<TraceLine> payment(NodeContext ctx, ComponentSet components, RetirementPayment payment,
-            boolean gratuityReceived, int sequence) {
+            boolean gratuityReceived, Map<RetirementEntry, Money> allowedThisYear, int sequence) {
         RuleId ruleId = RULE_FOR_ENTRY.get(payment.entry());
         ComponentDefinition definition = ctx.pack().components().get(payment.component());
         if (definition == null || !definition.feedsInto().contains(ruleId)) {
@@ -179,7 +184,7 @@ public final class RetirementNode implements ComputationNode {
         if (!ctx.inRegime(ruleId, version).applies()) {
             return Optional.empty();
         }
-        Money received = paid(components, payment.component());
+        Money received = paid(components, payment);
         Optional<String> barred = voluntaryRetirementBar(ctx, payment);
         if (barred.isPresent()) {
             return Optional.of(line(sequence, ruleId, received, Money.ZERO, version).withLimitedBy(barred.get()));
@@ -195,8 +200,9 @@ public final class RetirementNode implements ComputationNode {
         Map<BaseId, Money> paidIn = Map.of(PAYMENT_RECEIVED, received);
         if (NotifiedRetirementLimits.isNotified(payment.entry())) {
             CapResult deducted = TemporallyApportionedCap.apply(rule, t,
-                    NotifiedRetirementLimits.context(ctx, components, payment, version, paidIn));
+                    NotifiedRetirementLimits.context(ctx, payment, version, paidIn));
             return Optional.of(NotifiedRetirementLimits.capped(ctx, payment.entry(),
+                    allowedThisYear.getOrDefault(payment.entry(), Money.ZERO),
                     line(sequence, ruleId, received, deducted.value(), version).withLimitedBy(deducted.limitedBy())));
         }
         if (payment.statutory().isPresent()) {
@@ -237,6 +243,14 @@ public final class RetirementNode implements ComputationNode {
     private static TraceLine line(int sequence, RuleId ruleId, Money received, Money deducted, RuleVersion version) {
         return TraceLine.of(sequence, NodeIds.SALARY_RETIREMENT, ruleId, StepKind.DEDUCTION, MoneyValue.of(received),
                 MoneyValue.of(deducted), version.provenance());
+    }
+
+    /** What the payment's own employment paid of its component. */
+    private static Money paid(ComponentSet components, RetirementPayment payment) {
+        return components.in(HeadCode.SALARIES).stream()
+                .filter(line -> line.code().equals(payment.component()) && line.employment() == payment.employment())
+                .map(ComponentSet.Line::amount)
+                .reduce(Money.ZERO, Money::plus);
     }
 
     private static Money paid(ComponentSet components, ComponentCode component) {

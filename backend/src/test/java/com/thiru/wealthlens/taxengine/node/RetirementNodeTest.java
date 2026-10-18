@@ -97,7 +97,7 @@ class RetirementNodeTest {
     void evaluate_whenGovernmentGratuity_deductsItAll(int year) {
         // When — Sl. 3; s.10(10)(i): entire amount
         NodeResult result = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1000000")),
-                List.of(RetirementPayment.of(ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)));
+                List.of(RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1000000")));
@@ -114,7 +114,7 @@ class RetirementNodeTest {
         // When — least of 8,00,000 and 5,00,000
         NodeResult result = run(year, FIRST_SCHEDULE_RATES,
                 List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "800000")),
-                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)));
+                List.of(RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, false)));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
@@ -131,7 +131,7 @@ class RetirementNodeTest {
         // When
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
                 List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "300000")),
-                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), claimed);
+                List.of(RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, false)), claimed);
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
@@ -148,7 +148,7 @@ class RetirementNodeTest {
         // When
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
                 List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "300000")),
-                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), thisYear);
+                List.of(RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, false)), thisYear);
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("300000")));
@@ -159,7 +159,7 @@ class RetirementNodeTest {
         // When — s.19(2)(e)(iii); 1961 s.10(10C) third proviso
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
                 List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "300000")),
-                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, true)));
+                List.of(RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, true)));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
@@ -175,9 +175,9 @@ class RetirementNodeTest {
         NodeResult result = run(year, FIRST_SCHEDULE_RATES,
                 List.of(new Paid(ComponentCodes.COMMUTED_PENSION, "400000"),
                         new Paid(ComponentCodes.GRATUITY, "100000")),
-                List.of(RetirementPayment.otherEmployerCommutation(ComponentCodes.COMMUTED_PENSION,
+                List.of(RetirementPayment.otherEmployerCommutation(0, ComponentCodes.COMMUTED_PENSION,
                                 Money.of("900000")),
-                        RetirementPayment.of(ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)));
+                        RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)));
 
         // Then
         assertThat(result.trace()).extracting(line -> line.out().asMoney())
@@ -190,7 +190,7 @@ class RetirementNodeTest {
         // When — least of 4,00,000 and 9,00,000 ÷ 2 = 4,50,000
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
                 List.of(new Paid(ComponentCodes.COMMUTED_PENSION, "400000")),
-                List.of(RetirementPayment.otherEmployerCommutation(ComponentCodes.COMMUTED_PENSION,
+                List.of(RetirementPayment.otherEmployerCommutation(0, ComponentCodes.COMMUTED_PENSION,
                         Money.of("900000"))));
 
         // Then
@@ -205,7 +205,7 @@ class RetirementNodeTest {
         // When — s.202(2)(a)(iv) excludes s.19(1) Sl. 1 only; s.115BAC(2)(i) excludes none of s.10(10)–(10C)
         NodeResult result = run(year, NEW_TAX_REGIME,
                 List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "600000")),
-                List.of(RetirementPayment.of(ComponentCodes.LEAVE_ENCASHMENT,
+                List.of(RetirementPayment.of(0, ComponentCodes.LEAVE_ENCASHMENT,
                         RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT)));
 
         // Then
@@ -228,7 +228,7 @@ class RetirementNodeTest {
         // When / Then — gratuity cannot be voluntary retirement compensation
         assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
                         List.of(new Paid(ComponentCodes.GRATUITY, "500000")),
-                        List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.GRATUITY, false))))
+                        List.of(RetirementPayment.voluntaryRetirement(0, ComponentCodes.GRATUITY, false))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("VOLUNTARY_RETIREMENT");
     }
@@ -237,8 +237,8 @@ class RetirementNodeTest {
     void evaluate_whenAComponentIsEnteredTwice_isRefused() {
         assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
                         List.of(new Paid(ComponentCodes.GRATUITY, "500000")),
-                        List.of(RetirementPayment.of(ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY),
-                                RetirementPayment.of(ComponentCodes.GRATUITY,
+                        List.of(RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY),
+                                RetirementPayment.of(0, ComponentCodes.GRATUITY,
                                         RetirementEntry.DEFENCE_RETIRING_GRATUITY))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("twice");
@@ -280,7 +280,7 @@ class RetirementNodeTest {
         // When — 25 completed years on an average of 1,00,000: least of 15,00,000, 20,00,000 and
         // 1/2 × 1,00,000 × 25 = 12,50,000
         NodeResult result = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
-                List.of(RetirementPayment.otherGratuity(ComponentCodes.GRATUITY,
+                List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY,
                         retiringInJune(year, Map.of(ComponentCodes.BASIC, Money.of("100000"))))),
                 NOTHING_BEFORE);
 
@@ -297,7 +297,7 @@ class RetirementNodeTest {
     void evaluate_whenEarlierYearsUsedPartOfTheGratuityLimit_deductsOnlyWhatRemains(int year) {
         // When — s.19(2)(a): A − B = 20,00,000 − 10,00,000 = 10,00,000, below the 12,50,000 Sl. 6 allows
         NodeResult result = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
-                List.of(RetirementPayment.otherGratuity(ComponentCodes.GRATUITY,
+                List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY,
                         retiringInJune(year, Map.of(ComponentCodes.BASIC, Money.of("100000"))))),
                 allowedBefore("1000000", "0"));
 
@@ -315,7 +315,7 @@ class RetirementNodeTest {
         Map<ComponentCode, Money> monthly = Map.of(ComponentCodes.BASIC, Money.of("100000"),
                 ComponentCodes.DEARNESS_ALLOWANCE, Money.of("20000"));
         List<RetirementPayment> gratuity = List.of(
-                RetirementPayment.otherGratuity(ComponentCodes.GRATUITY, retiringInJune(2026, monthly)));
+                RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY, retiringInJune(2026, monthly)));
         List<Paid> paid = List.of(new Paid(ComponentCodes.GRATUITY, "1500000"));
 
         // When
@@ -337,10 +337,10 @@ class RetirementNodeTest {
         // When — received 8,00,000, then 12,00,000
         NodeResult below = run(year, FIRST_SCHEDULE_RATES,
                 List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
-                List.of(RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT, leave)));
+                List.of(RetirementPayment.otherLeaveEncashment(0, ComponentCodes.LEAVE_ENCASHMENT, leave)));
         NodeResult above = run(year, FIRST_SCHEDULE_RATES,
                 List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "1200000")),
-                List.of(RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT, leave)));
+                List.of(RetirementPayment.otherLeaveEncashment(0, ComponentCodes.LEAVE_ENCASHMENT, leave)));
 
         // Then
         assertThat(below.value()).isEqualTo(MoneyValue.of(Money.of("800000")));
@@ -355,7 +355,7 @@ class RetirementNodeTest {
     void evaluate_whenEarlierYearsUsedMostOfTheLeaveLimit_deductsOnlyWhatRemains() {
         // When — s.19(2)(f): 25,00,000 − 20,00,000 = 5,00,000, below the 8,00,000 received
         NodeResult result = run(2026, NEW_TAX_REGIME, List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
-                List.of(RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT,
+                List.of(RetirementPayment.otherLeaveEncashment(0, ComponentCodes.LEAVE_ENCASHMENT,
                         new LeaveAtRetirement(LocalDate.of(2026, 6, 30), Money.of("900000"), Money.of("100000")))),
                 allowedBefore("0", "2000000"));
 
@@ -379,7 +379,7 @@ class RetirementNodeTest {
         // When / Then
         assertThatThrownBy(() -> run(2025, FIRST_SCHEDULE_RATES,
                         List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
-                        List.of(RetirementPayment.otherGratuity(ComponentCodes.GRATUITY, early))))
+                        List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY, early))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("2018-03-29");
     }
@@ -393,7 +393,7 @@ class RetirementNodeTest {
         // When / Then
         assertThatThrownBy(() -> run(2025, FIRST_SCHEDULE_RATES,
                         List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
-                        List.of(RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT, early))))
+                        List.of(RetirementPayment.otherLeaveEncashment(0, ComponentCodes.LEAVE_ENCASHMENT, early))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("2023-04-01");
     }
@@ -404,9 +404,9 @@ class RetirementNodeTest {
         assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES,
                         List.of(new Paid(ComponentCodes.GRATUITY, "1500000"),
                                 new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
-                        List.of(RetirementPayment.otherGratuity(ComponentCodes.GRATUITY,
+                        List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY,
                                         retiringInJune(2026, Map.of(ComponentCodes.BASIC, Money.of("100000")))),
-                                RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT,
+                                RetirementPayment.otherLeaveEncashment(0, ComponentCodes.LEAVE_ENCASHMENT,
                                         new LeaveAtRetirement(LocalDate.of(2026, 5, 31), Money.of("900000"),
                                                 Money.of("100000"))))))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -447,7 +447,7 @@ class RetirementNodeTest {
 
     private static RetirementPayment statutory(ComponentCode component, RetirementEntry entry, int year,
             String amount) {
-        return RetirementPayment.statutory(component, entry,
+        return RetirementPayment.statutory(0, component, entry,
                 new StatutoryEntitlement(LocalDate.of(year, 12, 15), Money.of(amount)));
     }
 
@@ -501,24 +501,22 @@ class RetirementNodeTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("300000")));
     }
 
-    // ---------------------------------------------------------------- two employers in one year (D-224)
+    // ---------------------------------------------------------------- two employers in one year (D-224, D-225)
 
-    /** One component paid by two employments, entered as one payment. */
-    private static NodeResult runTwoEmployers(ComponentCode component, String first, String second,
-            RetirementPayment payment) {
-        TaxYearId taxYear = TaxYearId.of(2026);
+    /** Two employments: each pay line names its employment; the payments are entered per employment. */
+    private static NodeResult runTwoEmployers(int year, List<Line> lines, List<RetirementPayment> payments,
+            LedgerSnapshot ledgers) {
+        TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         Employment employment = new Employment(List.of(), false, EmployerKind.OTHER, false, Optional.empty());
         EngineInputs inputs = new EngineInputs(taxYear, FIRST_SCHEDULE_RATES,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(2026, 9, 21)),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
                 new EnteredFacts(List.of(employment, employment),
-                        List.of(), List.of(), List.of(), Optional.empty(), List.of(payment), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
-                plain.assessee(), plain.family(), LedgerSnapshot.empty(), plain.elections(), plain.capitalGains(),
-                plain.filing());
-        List<Line> lines = List.of(new Line(0, component, Money.of(first)), new Line(1, component, Money.of(second)));
+                        List.of(), List.of(), List.of(), Optional.empty(), payments, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                plain.assessee(), plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack)
                 .regime(FIRST_SCHEDULE_RATES)
                 .inputs(inputs)
@@ -526,47 +524,174 @@ class RetirementNodeTest {
                 .run(new RetirementNode());
     }
 
-    static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> paymentsMeasuredOnOneEmployer() {
-        return java.util.stream.Stream.of(
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.GRATUITY,
-                        RetirementPayment.otherGratuity(ComponentCodes.GRATUITY,
-                                retiringInJune(2026, Map.of(ComponentCodes.BASIC, Money.of("100000")))), "W-066f"),
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.LEAVE_ENCASHMENT,
-                        RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT,
-                                new LeaveAtRetirement(LocalDate.of(2026, 6, 30), Money.of("900000"),
-                                        Money.of("100000"))), "W-066f"),
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.COMMUTED_PENSION,
-                        RetirementPayment.otherEmployerCommutation(ComponentCodes.COMMUTED_PENSION,
-                                Money.of("900000")), "W-066g"),
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.VRS_COMPENSATION,
-                        RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false), "W-066g"),
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.GRATUITY,
-                        statutory(ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY, 2026, "1153846.15"),
-                        "W-066g"),
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.RETRENCHMENT_COMPENSATION,
-                        statutory(ComponentCodes.RETRENCHMENT_COMPENSATION, RetirementEntry.RETRENCHMENT, 2026,
-                                "300000"), "W-066g"));
+    /** A separation on 30 June after {@code years} completed years, each of the ten months paying {@code basic}. */
+    private static Separation retiringInJuneAfter(int year, int years, String basic) {
+        LocalDate separatedOn = LocalDate.of(year, 6, 30);
+        List<MonthOfPay> months = new ArrayList<>();
+        for (int back = 10; back >= 1; back--) {
+            months.add(new MonthOfPay(java.time.YearMonth.from(separatedOn).minusMonths(back),
+                    Map.of(ComponentCodes.BASIC, Money.of(basic))));
+        }
+        return new Separation(separatedOn.minusYears(years).minusMonths(3), separatedOn, months);
     }
 
-    @ParameterizedTest(name = "{1}")
-    @org.junit.jupiter.params.provider.MethodSource("paymentsMeasuredOnOneEmployer")
-    void evaluate_whenTwoEmployersPayAComponentMeasuredOnOneEmployer_isRefused(ComponentCode component,
-            RetirementPayment payment, String item) {
-        // When / Then — 2,00,000 from each employer, entered as one payment
-        assertThatThrownBy(() -> runTwoEmployers(component, "200000", "200000", payment))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(payment.entry().name())
-                .hasMessageContaining("more than one employment")
-                .hasMessageContaining(item);
+    private static NodeResult twoGratuities(int year, String secondReceived, int secondYears, String secondAverage,
+            LedgerSnapshot ledgers) {
+        return runTwoEmployers(year,
+                List.of(new Line(0, ComponentCodes.GRATUITY, Money.of("1500000")),
+                        new Line(1, ComponentCodes.GRATUITY, Money.of(secondReceived))),
+                List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY,
+                                retiringInJuneAfter(year, 25, "100000")),
+                        RetirementPayment.otherGratuity(1, ComponentCodes.GRATUITY,
+                                retiringInJuneAfter(year, secondYears, secondAverage))),
+                ledgers);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTwoEmployersGratuitiesStayUnderTheLimit_deductsEachOnItsOwnFacts(int year) {
+        // When — employer 1: least of 15,00,000, 20,00,000, 1/2 × 1,00,000 × 25 = 12,50,000; employer 2: least of
+        // 10,00,000, 20,00,000, 1/2 × 80,000 × 10 = 4,00,000; together 16,50,000, under 20,00,000
+        NodeResult result = twoGratuities(year, "1000000", 10, "80000", NOTHING_BEFORE);
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("1250000"), Money.of("400000"));
+        assertThat(result.trace()).allSatisfy(line -> assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_OTHER));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1650000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTwoEmployersGratuitiesExceedTheLimit_capsTheYearsTotal(int year) {
+        // When — employer 2: least of 15,00,000, 20,00,000, 1/2 × 1,00,000 × 20 = 10,00,000, cut to
+        // 20,00,000 − 12,50,000 = 7,50,000 (s.19(2)(a): the aggregate from one or more employers)
+        NodeResult result = twoGratuities(year, "1500000", 20, "100000", NOTHING_BEFORE);
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("1250000"), Money.of("750000"));
+        assertThat(result.trace().get(1)).satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_AGGREGATE);
+            assertThat(line.in().asMoney()).isEqualTo(Money.of("1000000"));
+            assertThat(line.limitedBy().orElseThrow()).contains("this year's earlier payments").contains("D-225");
+        });
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("2000000")));
     }
 
     @Test
-    void evaluate_whenTwoEmployersPayAGratuityExemptInFull_deductsBoth() {
-        // When — Sl. 3; s.10(10)(i): entire amount, 3,00,000 + 2,00,000
-        NodeResult result = runTwoEmployers(ComponentCodes.GRATUITY, "300000", "200000",
-                RetirementPayment.of(ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY));
+    void evaluate_whenEarlierYearsAndThisYearsFirstGratuityUseTheLimit_deductsWhatRemains() {
+        // When — B = 5,00,000: employer 1 min(12,50,000, 15,00,000) = 12,50,000; employer 2
+        // min(10,00,000, 15,00,000 − 12,50,000) = 2,50,000
+        NodeResult result = twoGratuities(2026, "1500000", 20, "100000", allowedBefore("500000", "0"));
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("1250000"), Money.of("250000"));
+    }
+
+    @Test
+    void evaluate_whenTwoEmployersLeaveEncashmentsExceedTheLimit_capsTheYearsTotal() {
+        // When — employer 1: least of 9,00,000 at credit, 10 × 1,00,000, 25,00,000 and 9,00,000 received = 9,00,000;
+        // employer 2: least of 20,00,000, 10 × 2,50,000, 25,00,000 and 20,00,000 = 20,00,000, cut to
+        // 25,00,000 − 9,00,000 = 16,00,000 (s.19(2)(f))
+        NodeResult result = runTwoEmployers(2026,
+                List.of(new Line(0, ComponentCodes.LEAVE_ENCASHMENT, Money.of("900000")),
+                        new Line(1, ComponentCodes.LEAVE_ENCASHMENT, Money.of("2000000"))),
+                List.of(RetirementPayment.otherLeaveEncashment(0, ComponentCodes.LEAVE_ENCASHMENT,
+                                new LeaveAtRetirement(LocalDate.of(2026, 6, 30), Money.of("900000"), Money.of("100000"))),
+                        RetirementPayment.otherLeaveEncashment(1, ComponentCodes.LEAVE_ENCASHMENT,
+                                new LeaveAtRetirement(LocalDate.of(2026, 8, 31), Money.of("2000000"),
+                                        Money.of("250000")))),
+                NOTHING_BEFORE);
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("900000"), Money.of("1600000"));
+        assertThat(result.trace().get(1).rule()).isEqualTo(RuleIds.RET_LEAVE_ENCASHMENT_AGGREGATE);
+    }
+
+    @Test
+    void evaluate_whenTwoEmployersPayGovernmentGratuity_deductsBoth() {
+        // When — Sl. 3; s.10(10)(i): entire amount, 3,00,000 + 2,00,000, one payment per employment
+        NodeResult result = runTwoEmployers(2026,
+                List.of(new Line(0, ComponentCodes.GRATUITY, Money.of("300000")),
+                        new Line(1, ComponentCodes.GRATUITY, Money.of("200000"))),
+                List.of(RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY),
+                        RetirementPayment.of(1, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)),
+                NOTHING_BEFORE);
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+    }
+
+    @Test
+    void evaluate_whenAPaymentNamesNoEnteredEmployment_isRefused() {
+        // When / Then — employment 2 of two
+        assertThatThrownBy(() -> runTwoEmployers(2026, List.of(new Line(0, ComponentCodes.GRATUITY, Money.of("1"))),
+                List.of(RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY),
+                        RetirementPayment.of(2, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)),
+                NOTHING_BEFORE))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("employment 2");
+    }
+
+    @Test
+    void evaluate_whenAComponentIsEnteredTwiceForOneEmployment_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> runTwoEmployers(2026, List.of(new Line(0, ComponentCodes.GRATUITY, Money.of("1"))),
+                List.of(RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY),
+                        RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)),
+                NOTHING_BEFORE))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("entered twice for employment 0");
+    }
+
+    @Test
+    void evaluate_whenAnEmploymentsRetirementLineHasNoPayment_isRefused() {
+        // When / Then — employment 1 pays gratuity, only employment 0's is entered
+        assertThatThrownBy(() -> runTwoEmployers(2026,
+                List.of(new Line(0, ComponentCodes.GRATUITY, Money.of("300000")),
+                        new Line(1, ComponentCodes.GRATUITY, Money.of("200000"))),
+                List.of(RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY)),
+                NOTHING_BEFORE))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no entry says");
+    }
+
+    static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> entriesNotYetMeasuredPerEmployment() {
+        return java.util.stream.Stream.of(
+                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.COMMUTED_PENSION,
+                        RetirementPayment.otherEmployerCommutation(0, ComponentCodes.COMMUTED_PENSION, Money.of("900000")),
+                        RetirementPayment.otherEmployerCommutation(1, ComponentCodes.COMMUTED_PENSION, Money.of("900000"))),
+                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.VRS_COMPENSATION,
+                        RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, false),
+                        RetirementPayment.voluntaryRetirement(1, ComponentCodes.VRS_COMPENSATION, false)),
+                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.GRATUITY,
+                        RetirementPayment.statutory(0, ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY,
+                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("100000"))),
+                        RetirementPayment.statutory(1, ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY,
+                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("100000")))),
+                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.RETRENCHMENT_COMPENSATION,
+                        RetirementPayment.statutory(0, ComponentCodes.RETRENCHMENT_COMPENSATION,
+                                RetirementEntry.RETRENCHMENT,
+                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("100000"))),
+                        RetirementPayment.statutory(1, ComponentCodes.RETRENCHMENT_COMPENSATION,
+                                RetirementEntry.RETRENCHMENT,
+                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("100000")))));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @org.junit.jupiter.params.provider.MethodSource("entriesNotYetMeasuredPerEmployment")
+    void evaluate_whenTwoEmploymentsPayAnEntryNotYetMeasuredPerEmployment_isRefused(ComponentCode component,
+            RetirementPayment first, RetirementPayment second) {
+        // When / Then — 2,00,000 from each employment, each entered against its own
+        assertThatThrownBy(() -> runTwoEmployers(2026,
+                List.of(new Line(0, component, Money.of("200000")), new Line(1, component, Money.of("200000"))),
+                List.of(first, second), NOTHING_BEFORE))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(first.entry().name())
+                .hasMessageContaining("more than one employment")
+                .hasMessageContaining("W-066g");
     }
 }

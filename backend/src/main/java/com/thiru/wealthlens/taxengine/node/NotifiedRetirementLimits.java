@@ -6,13 +6,11 @@ import com.thiru.wealthlens.taxengine.input.MonthOfPay;
 import com.thiru.wealthlens.taxengine.input.RetirementEntry;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
 import com.thiru.wealthlens.taxengine.input.Separation;
-import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
-import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -60,26 +58,31 @@ final class NotifiedRetirementLimits {
         return AGGREGATE_FOR_ENTRY.containsKey(entry);
     }
 
-    /** Refuses a gratuity and a leave encashment that name different days: one employment ends once. */
+    /** Refuses an employment's gratuity and leave encashment that name different days: one employment ends once. */
     static void requireOneDay(List<RetirementPayment> payments) {
-        Optional<LocalDate> separated = payments.stream()
-                .flatMap(payment -> payment.separation().stream()).map(Separation::separatedOn).findFirst();
-        Optional<LocalDate> retired = payments.stream()
-                .flatMap(payment -> payment.leave().stream()).map(LeaveAtRetirement::retiredOn).findFirst();
-        if (separated.isPresent() && retired.isPresent() && !separated.equals(retired)) {
-            throw new IllegalArgumentException("The gratuity is entered for a separation on " + separated.get()
-                    + " and the leave encashment for a retirement on " + retired.get() + "; one employment ends once");
-        }
+        payments.stream().map(RetirementPayment::employment).distinct().forEach(employment -> {
+            List<RetirementPayment> its = payments.stream().filter(payment -> payment.employment() == employment)
+                    .toList();
+            Optional<LocalDate> separated = its.stream()
+                    .flatMap(payment -> payment.separation().stream()).map(Separation::separatedOn).findFirst();
+            Optional<LocalDate> retired = its.stream()
+                    .flatMap(payment -> payment.leave().stream()).map(LeaveAtRetirement::retiredOn).findFirst();
+            if (separated.isPresent() && retired.isPresent() && !separated.equals(retired)) {
+                throw new IllegalArgumentException("Employment " + employment + "'s gratuity is entered for a"
+                        + " separation on " + separated.get() + " and its leave encashment for a retirement on "
+                        + retired.get() + "; one employment ends once");
+            }
+        });
     }
 
     /** The amounts the entry's least-of reads, after refusing an event its notification does not cover. */
-    static CapContext context(NodeContext ctx, ComponentSet components, RetirementPayment payment,
+    static CapContext context(NodeContext ctx, RetirementPayment payment,
             RuleVersion version, Map<BaseId, Money> received) {
         Map<BaseId, Money> bases = new HashMap<>(received);
         if (payment.entry() == RetirementEntry.OTHER_GRATUITY) {
             Separation separation = payment.separation().orElseThrow();
             requireCovered(version, separation.separatedOn(), payment);
-            Money average = tenMonthAverage(ctx, separation, employmentOf(ctx, components, payment.component()));
+            Money average = tenMonthAverage(ctx, separation, ctx.inputs().entered().employments().get(payment.employment()));
             bases.put(AVERAGE_SALARY_BY_COMPLETED_YEARS, average.times(separation.completedYears()));
         } else {
             LeaveAtRetirement leave = payment.leave().orElseThrow();
@@ -91,10 +94,12 @@ final class NotifiedRetirementLimits {
     }
 
     /**
-     * The line as the aggregate leaves it: unchanged where A − B is not below it, else a line citing the aggregate
-     * rule, with what the entry alone allowed as its input and A − B as its output.
+     * The line as the aggregate leaves it: unchanged where what A − B leaves is not below it, else a line citing the
+     * aggregate rule, with what the entry alone allowed as its input and what is left as its output. A − B caps the
+     * year's total from every employer (S2 s.19(2)(a), (f); 1961 provisos), so this year's earlier payments of the
+     * entry, in the order entered, come off it first; which payment absorbs the cut changes no tax (D-225).
      */
-    static TraceLine capped(NodeContext ctx, RetirementEntry entry, TraceLine line) {
+    static TraceLine capped(NodeContext ctx, RetirementEntry entry, Money allowedThisYear, TraceLine line) {
         RuleId aggregateId = AGGREGATE_FOR_ENTRY.get(entry);
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(aggregateId), ctx.inputs().temporal());
         Money limit = TemporallyApportionedCap.apply(ctx.rule(aggregateId), ctx.inputs().temporal(),
@@ -102,14 +107,19 @@ final class NotifiedRetirementLimits {
         Money allowedBefore = entry == RetirementEntry.OTHER_GRATUITY
                 ? ctx.inputs().ledgers().gratuityAlreadyAllowed()
                 : ctx.inputs().ledgers().leaveEncashmentAlreadyAllowed();
-        Money remaining = limit.minus(allowedBefore).floorAtZero();
+        Money remaining = limit.minus(allowedBefore).floorAtZero().minus(allowedThisYear).floorAtZero();
         Money allowed = line.out().asMoney();
         if (allowed.isLessThanOrEqual(remaining)) {
             return line;
         }
+        String why = "notified limit less the " + allowedBefore + " allowed in earlier years";
+        if (allowedThisYear.isGreaterThan(Money.ZERO)) {
+            why += " and the " + allowedThisYear + " allowed on this year's earlier payments, in the order entered (the"
+                    + " split changes no tax; D-225)";
+        }
         return TraceLine.of(line.sequence(), line.node(), aggregateId, line.kind(), MoneyValue.of(allowed),
                         MoneyValue.of(remaining), version.provenance())
-                .withLimitedBy("notified limit less the " + allowedBefore + " allowed in earlier years");
+                .withLimitedBy(why);
     }
 
     private static void requireCovered(RuleVersion version, LocalDate event, RetirementPayment payment) {
@@ -146,16 +156,5 @@ final class NotifiedRetirementLimits {
                 .map(SalaryBaseInclusion::onlyWhereTermsProvide)
                 .map(onlyWhereTerms -> !onlyWhereTerms || employment.termsIncludeDearnessAllowance())
                 .orElse(false);
-    }
-
-    /** The employment that paid the component — its terms decide whether DA is salary. */
-    private static Employment employmentOf(NodeContext ctx, ComponentSet components, ComponentCode component) {
-        int employment = components.in(HeadCode.SALARIES).stream()
-                .filter(line -> line.code().equals(component))
-                .mapToInt(ComponentSet.Line::employment)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(component + " is entered as a retirement payment but"
-                        + " not paid"));
-        return ctx.inputs().entered().employments().get(employment);
     }
 }

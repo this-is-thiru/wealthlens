@@ -319,7 +319,7 @@ class SalaryHeadPipelineTest {
         // When
         PipelineRunner.Result result = run(year, NEW_TAX_REGIME, true, new Entries(List.of(), List.of(), List.of(),
                 Optional.empty(), leaving,
-                List.of(RetirementPayment.voluntaryRetirement(ComponentCodes.VRS_COMPENSATION, false)), EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of(), Optional.empty()));
+                List.of(RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, false)), EmployerKind.OTHER, List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
         // Then — gross 9,00,000 + 8,00,000 + 1,00,000 = 18,00,000; retirement 5,00,000; standard deduction 75,000;
         // income 12,25,000; notice pay taxed in full
@@ -353,7 +353,7 @@ class SalaryHeadPipelineTest {
     void run_whenAPrivateEmployeeRetiresWithLeaveEncashmentInTheNewRegime_theLeastOfItsLimbsComesOff(int year) {
         // Given — leave encashment 8,00,000 paid; employer's leave salary at credit 9,00,000, average 1,00,000 (D-106)
         List<SalaryComponent> leave = List.of(new SalaryComponent(ComponentCodes.LEAVE_ENCASHMENT, Money.of("800000")));
-        RetirementPayment encashment = RetirementPayment.otherLeaveEncashment(ComponentCodes.LEAVE_ENCASHMENT,
+        RetirementPayment encashment = RetirementPayment.otherLeaveEncashment(0, ComponentCodes.LEAVE_ENCASHMENT,
                 new LeaveAtRetirement(LocalDate.of(year, 6, 30), Money.of("900000"), Money.of("100000")));
 
         // When
@@ -372,7 +372,7 @@ class SalaryHeadPipelineTest {
         // Given — retrenchment compensation 8,00,000; the employer's figure under the statute 6,00,000 (D-109)
         List<SalaryComponent> retrenchment =
                 List.of(new SalaryComponent(ComponentCodes.RETRENCHMENT_COMPENSATION, Money.of("800000")));
-        RetirementPayment compensation = RetirementPayment.statutory(ComponentCodes.RETRENCHMENT_COMPENSATION,
+        RetirementPayment compensation = RetirementPayment.statutory(0, ComponentCodes.RETRENCHMENT_COMPENSATION,
                 RetirementEntry.RETRENCHMENT, new StatutoryEntitlement(LocalDate.of(year, 12, 15), Money.of("600000")));
 
         // When
