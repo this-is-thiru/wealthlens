@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * The retirement and termination deductions from salary (S2 s.19(1) Table Sl. 3–14 with s.19(2); 1961 s.10(10),
@@ -57,13 +56,6 @@ public final class RetirementNode implements ComputationNode {
 
     private static final Map<RetirementEntry, RuleId> RULE_FOR_ENTRY = entryRules();
 
-    /**
-     * The entries whose payments from a second employer in the year are not yet measured: each reads one employer's
-     * facts or a limit whose treatment across employers is unread (D-224, D-225 — W-066g). Other gratuity and other
-     * leave encashment are measured per employment with the year's total capped (D-225).
-     */
-    private static final Set<RetirementEntry> ONE_EMPLOYER_ONLY = Set.of(RetirementEntry.OTHER_EMPLOYER_COMMUTATION,
-            RetirementEntry.VOLUNTARY_RETIREMENT, RetirementEntry.STATUTORY_GRATUITY, RetirementEntry.RETRENCHMENT);
     private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
     private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
 
@@ -106,8 +98,9 @@ public final class RetirementNode implements ComputationNode {
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
         List<RetirementPayment> payments = ctx.inputs().entered().retirementPayments();
         requireEachRetirementComponentEntered(ctx, components, payments);
-        requireOneEmploymentWhereNotMeasuredPerEmployment(payments);
         NotifiedRetirementLimits.requireOneDay(payments);
+        // Any employer's gratuity: "the employee has received gratuity" (S2 s.19(1) Table Sl. 8); "receives any
+        // gratuity" (1961 s.10(10A)(ii)) — neither names the employer (D-226)
         boolean gratuityReceived = paid(components, ComponentCodes.GRATUITY).isGreaterThan(Money.ZERO);
         List<TraceLine> trace = new ArrayList<>();
         Map<RetirementEntry, Money> allowedThisYear = new EnumMap<>(RetirementEntry.class);
@@ -156,19 +149,6 @@ public final class RetirementNode implements ComputationNode {
         }
     }
 
-    /** Refuses payments of one entry from more than one employment, where that is not yet measured (W-066g). */
-    private static void requireOneEmploymentWhereNotMeasuredPerEmployment(List<RetirementPayment> payments) {
-        for (RetirementEntry entry : ONE_EMPLOYER_ONLY) {
-            Set<Integer> employments = new TreeSet<>();
-            payments.stream().filter(payment -> payment.entry() == entry)
-                    .forEach(payment -> employments.add(payment.employment()));
-            if (employments.size() > 1) {
-                throw new IllegalArgumentException(entry + " is paid by more than one employment " + employments
-                        + "; how a second employer's payment is measured is not built — W-066g");
-            }
-        }
-    }
-
     /** One payment's line; none where its rule does not apply in the regime. */
     private static Optional<TraceLine> payment(NodeContext ctx, ComponentSet components, RetirementPayment payment,
             boolean gratuityReceived, Map<RetirementEntry, Money> allowedThisYear, int sequence) {
@@ -212,9 +192,31 @@ public final class RetirementNode implements ComputationNode {
             return Optional.of(line(sequence, ruleId, received, deducted.value(), version).withLimitedBy(
                     deducted.limitedBy() + "; separation on " + entitlement.separatedOn()));
         }
+        if (payment.entry() == RetirementEntry.VOLUNTARY_RETIREMENT) {
+            return Optional.of(voluntaryRetirement(rule, t, received,
+                    allowedThisYear.getOrDefault(payment.entry(), Money.ZERO), sequence, version));
+        }
         CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(paidIn));
         return Optional.of(line(sequence, ruleId, received, deducted.value(), version)
                 .withLimitedBy(deducted.limitedBy()));
+    }
+
+    /**
+     * A voluntary retirement payment, the limit taken once for the employee's year: the rule applied to this year's
+     * earlier allowed amounts together with this one, less those (D-227 — "any scheme or schemes", one limit; S2
+     * s.19(1) Table Sl. 12; 1961 s.10(10C)). Statutory gratuity, retrenchment and commutation are limited per payment
+     * (D-226, D-227); other gratuity and leave encashment are capped on the year's total by notification (D-225).
+     */
+    private static TraceLine voluntaryRetirement(RuleRow rule, TemporalContext t, Money received, Money allowedThisYear,
+            int sequence, RuleVersion version) {
+        CapResult together = TemporallyApportionedCap.apply(rule, t,
+                new CapContext(Map.of(PAYMENT_RECEIVED, allowedThisYear.plus(received))));
+        Money allowed = together.value().minus(allowedThisYear);
+        String why = allowedThisYear.isGreaterThan(Money.ZERO) && allowed.isLessThan(received)
+                ? together.limitedBy() + ", less the " + allowedThisYear + " allowed on this year's earlier voluntary"
+                        + " retirement payments, in the order entered (one limit for the employee; D-227)"
+                : together.limitedBy();
+        return line(sequence, RuleIds.RET_VOLUNTARY_RETIREMENT, received, allowed, version).withLimitedBy(why);
     }
 
     /**

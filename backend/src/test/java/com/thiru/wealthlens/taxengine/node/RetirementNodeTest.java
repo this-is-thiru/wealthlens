@@ -659,39 +659,95 @@ class RetirementNodeTest {
                 .hasMessageContaining("no entry says");
     }
 
-    static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> entriesNotYetMeasuredPerEmployment() {
-        return java.util.stream.Stream.of(
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.COMMUTED_PENSION,
-                        RetirementPayment.otherEmployerCommutation(0, ComponentCodes.COMMUTED_PENSION, Money.of("900000")),
-                        RetirementPayment.otherEmployerCommutation(1, ComponentCodes.COMMUTED_PENSION, Money.of("900000"))),
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.VRS_COMPENSATION,
-                        RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, false),
-                        RetirementPayment.voluntaryRetirement(1, ComponentCodes.VRS_COMPENSATION, false)),
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.GRATUITY,
-                        RetirementPayment.statutory(0, ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY,
-                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("100000"))),
+    @Test
+    void evaluate_whenTwoEmployersPayStatutoryGratuity_limitsEachToItsOwnEntitlement() {
+        // When — Sl. 5; s.10(10)(ii): employer 1 received 4,00,000 against 3,00,000 under the statute → 3,00,000;
+        // employer 2 received 1,50,000 against 2,00,000 → 1,50,000; no aggregate (D-226)
+        NodeResult result = runTwoEmployers(2026,
+                List.of(new Line(0, ComponentCodes.GRATUITY, Money.of("400000")),
+                        new Line(1, ComponentCodes.GRATUITY, Money.of("150000"))),
+                List.of(RetirementPayment.statutory(0, ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY,
+                                new StatutoryEntitlement(LocalDate.of(2026, 6, 30), Money.of("300000"))),
                         RetirementPayment.statutory(1, ComponentCodes.GRATUITY, RetirementEntry.STATUTORY_GRATUITY,
-                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("100000")))),
-                org.junit.jupiter.params.provider.Arguments.of(ComponentCodes.RETRENCHMENT_COMPENSATION,
-                        RetirementPayment.statutory(0, ComponentCodes.RETRENCHMENT_COMPENSATION,
-                                RetirementEntry.RETRENCHMENT,
-                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("100000"))),
-                        RetirementPayment.statutory(1, ComponentCodes.RETRENCHMENT_COMPENSATION,
-                                RetirementEntry.RETRENCHMENT,
-                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("100000")))));
+                                new StatutoryEntitlement(LocalDate.of(2026, 9, 30), Money.of("200000")))),
+                NOTHING_BEFORE);
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("300000"), Money.of("150000"));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("450000")));
     }
 
-    @ParameterizedTest(name = "{1}")
-    @org.junit.jupiter.params.provider.MethodSource("entriesNotYetMeasuredPerEmployment")
-    void evaluate_whenTwoEmploymentsPayAnEntryNotYetMeasuredPerEmployment_isRefused(ComponentCode component,
-            RetirementPayment first, RetirementPayment second) {
-        // When / Then — 2,00,000 from each employment, each entered against its own
-        assertThatThrownBy(() -> runTwoEmployers(2026,
-                List.of(new Line(0, component, Money.of("200000")), new Line(1, component, Money.of("200000"))),
-                List.of(first, second), NOTHING_BEFORE))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(first.entry().name())
-                .hasMessageContaining("more than one employment")
-                .hasMessageContaining("W-066g");
+    @Test
+    void evaluate_whenOneEmployerPaysGratuityAndAnotherCommutes_takesTheOneThirdLimb() {
+        // When — Sl. 8; s.10(10A)(ii): employer 2's commuted value 9,00,000, 4,00,000 received; a gratuity from
+        // employer 1 counts (D-226): least of 4,00,000 and 9,00,000 ÷ 3 = 3,00,000. Employer 1's own commutation:
+        // commuted value 6,00,000, 1,00,000 received → 1,00,000. Its gratuity 2,00,000, Government, in full
+        NodeResult result = runTwoEmployers(2026,
+                List.of(new Line(0, ComponentCodes.GRATUITY, Money.of("200000")),
+                        new Line(0, ComponentCodes.COMMUTED_PENSION, Money.of("100000")),
+                        new Line(1, ComponentCodes.COMMUTED_PENSION, Money.of("400000"))),
+                List.of(RetirementPayment.of(0, ComponentCodes.GRATUITY, RetirementEntry.GOVERNMENT_GRATUITY),
+                        RetirementPayment.otherEmployerCommutation(0, ComponentCodes.COMMUTED_PENSION, Money.of("600000")),
+                        RetirementPayment.otherEmployerCommutation(1, ComponentCodes.COMMUTED_PENSION, Money.of("900000"))),
+                NOTHING_BEFORE);
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("200000"), Money.of("100000"), Money.of("300000"));
+        assertThat(result.trace().get(2).limitedBy().orElseThrow()).contains("one-third");
+    }
+
+    private static NodeResult twoVoluntaryRetirements(String first, String second) {
+        return runTwoEmployers(2026,
+                List.of(new Line(0, ComponentCodes.VRS_COMPENSATION, Money.of(first)),
+                        new Line(1, ComponentCodes.VRS_COMPENSATION, Money.of(second))),
+                List.of(RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, false),
+                        RetirementPayment.voluntaryRetirement(1, ComponentCodes.VRS_COMPENSATION, false)),
+                NOTHING_BEFORE);
+    }
+
+    @Test
+    void evaluate_whenTwoEmployersVoluntaryRetirementStaysUnderTheLimit_deductsBoth() {
+        // When — Sl. 12; s.10(10C): 2,00,000 + 1,50,000 = 3,50,000, under the one 5,00,000 (D-227)
+        NodeResult result = twoVoluntaryRetirements("200000", "150000");
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("200000"), Money.of("150000"));
+    }
+
+    @Test
+    void evaluate_whenTwoEmployersVoluntaryRetirementExceedsTheLimit_takesOneLimitForTheYear() {
+        // When — employer 1: 3,00,000; employer 2: least of 3,00,000 + 4,00,000 and 5,00,000, less 3,00,000 = 2,00,000
+        NodeResult result = twoVoluntaryRetirements("300000", "400000");
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("300000"), Money.of("200000"));
+        assertThat(result.trace().get(1).limitedBy().orElseThrow()).contains("earlier voluntary retirement")
+                .contains("D-227");
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+    }
+
+    @Test
+    void evaluate_whenTwoEmployersRetrenchAWorkman_limitsEachRetrenchmentOnItsOwn() {
+        // When — Sl. 10; s.10(10B), per retrenchment (D-227): employer 1 least of 4,00,000, 3,00,000 under the
+        // statute and 5,00,000 = 3,00,000; employer 2 least of 6,00,000, 7,00,000 and 5,00,000 = 5,00,000
+        NodeResult result = runTwoEmployers(2026,
+                List.of(new Line(0, ComponentCodes.RETRENCHMENT_COMPENSATION, Money.of("400000")),
+                        new Line(1, ComponentCodes.RETRENCHMENT_COMPENSATION, Money.of("600000"))),
+                List.of(RetirementPayment.statutory(0, ComponentCodes.RETRENCHMENT_COMPENSATION,
+                                RetirementEntry.RETRENCHMENT,
+                                new StatutoryEntitlement(LocalDate.of(2026, 6, 30), Money.of("300000"))),
+                        RetirementPayment.statutory(1, ComponentCodes.RETRENCHMENT_COMPENSATION,
+                                RetirementEntry.RETRENCHMENT,
+                                new StatutoryEntitlement(LocalDate.of(2026, 12, 15), Money.of("700000")))),
+                NOTHING_BEFORE);
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.out().asMoney())
+                .containsExactly(Money.of("300000"), Money.of("500000"));
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("800000")));
     }
 }
