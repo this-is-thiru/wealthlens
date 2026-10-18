@@ -28,13 +28,14 @@ import java.util.Set;
  * up to the savings row's, and a time deposit's interest is a nil line (s.153(2)(a)). It runs before s.133, whose
  * adjusted gross total income is net of it.
  *
- * <p>Whether the interest is taken as received or net of the expenditure the head deducted against it is open: the
- * net-income rule (S2 s.122(9); 1961 s.80AB) is written for Part C, and these sections are in Part D / CA. So an item
- * with an expense, which s.153 would reach, is refused rather than guessed (OQ-25).
+ * <p>The interest is what gross total income includes — each item net of the expenditure the head deducted against
+ * it ({@link OtherSourcesNode#interestIncluded}), the items together floored at nil (OQ-25, D-228, D-231).
  */
 final class DepositInterestDeduction {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.DED_SAVINGS_INTEREST, RuleIds.DED_DEPOSIT_INTEREST_SENIOR);
+    /** The rows, and the head's rows the net interest is read through. */
+    static final Set<RuleId> RULES = Set.of(RuleIds.DED_SAVINGS_INTEREST, RuleIds.DED_DEPOSIT_INTEREST_SENIOR,
+            RuleIds.OS_INTEREST, RuleIds.OS_BANKER_COMMISSION, RuleIds.OS_OTHER_EXPENDITURE);
 
     private static final BaseId INTEREST = new BaseId("INTEREST");
 
@@ -47,19 +48,18 @@ final class DepositInterestDeduction {
         if (deposits.isEmpty()) {
             return List.of();
         }
-        Money savings = received(deposits, OtherSourceKind.SAVINGS_DEPOSIT_INTEREST);
-        Money other = received(deposits, OtherSourceKind.DEPOSIT_INTEREST);
+        List<OtherSourceItem> savingsItems = deposits.stream()
+                .filter(item -> item.kind() == OtherSourceKind.SAVINGS_DEPOSIT_INTEREST).toList();
+        List<OtherSourceItem> depositItems = deposits.stream()
+                .filter(item -> item.kind() == OtherSourceKind.DEPOSIT_INTEREST).toList();
         List<TraceLine> lines = new ArrayList<>();
         if (isSenior(ctx)) {
-            requireNoExpense(ctx, RuleIds.DED_DEPOSIT_INTEREST_SENIOR, deposits);
-            add(ctx, RuleIds.DED_DEPOSIT_INTEREST_SENIOR, savings.plus(other), firstSequence, lines);
+            add(ctx, RuleIds.DED_DEPOSIT_INTEREST_SENIOR, deposits, firstSequence, lines);
             return lines;
         }
-        requireNoExpense(ctx, RuleIds.DED_SAVINGS_INTEREST, deposits.stream()
-                .filter(item -> item.kind() == OtherSourceKind.SAVINGS_DEPOSIT_INTEREST)
-                .toList());
-        if (savings.isGreaterThan(Money.ZERO)) {
-            add(ctx, RuleIds.DED_SAVINGS_INTEREST, savings, firstSequence, lines);
+        Money other = included(ctx, depositItems);
+        if (!savingsItems.isEmpty() && included(ctx, savingsItems).isGreaterThan(Money.ZERO)) {
+            add(ctx, RuleIds.DED_SAVINGS_INTEREST, savingsItems, firstSequence, lines);
         }
         if (other.isGreaterThan(Money.ZERO)) {
             lines.add(line(ctx, RuleIds.DED_SAVINGS_INTEREST, firstSequence + lines.size(), other, Money.ZERO,
@@ -84,21 +84,9 @@ final class DepositInterestDeduction {
                         .allMatch(condition -> condition.holds(ctx.conditions()));
     }
 
-    /** OQ-25: where the row would deduct the interest, an expense against it leaves its amount open. */
-    private static void requireNoExpense(NodeContext ctx, RuleId row, List<OtherSourceItem> reached) {
-        if (!ctx.inRegime(row, version(ctx, row)).applies()) {
-            return;
-        }
-        boolean expensed = reached.stream().anyMatch(item -> item.bankerCommission().plus(item.interestExpense())
-                .plus(item.otherExpenditure()).isGreaterThan(Money.ZERO));
-        if (expensed) {
-            throw new IllegalArgumentException("Deposit interest with an expense entered against it: whether s.153 is"
-                    + " worked on the interest received or on what the head includes after the expense is not settled"
-                    + " (OQ-25), so it is refused rather than guessed (D-195)");
-        }
-    }
-
-    private static void add(NodeContext ctx, RuleId row, Money interest, int firstSequence, List<TraceLine> lines) {
+    private static void add(NodeContext ctx, RuleId row, List<OtherSourceItem> items, int firstSequence,
+            List<TraceLine> lines) {
+        Money interest = included(ctx, items);
         RegimeVerdict verdict = ctx.inRegime(row, version(ctx, row));
         if (!verdict.applies()) {
             lines.add(line(ctx, row, firstSequence + lines.size(), interest, Money.ZERO, verdict.whyNot()));
@@ -106,7 +94,15 @@ final class DepositInterestDeduction {
         }
         CapResult allowed = TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),
                 CapContext.of(INTEREST, interest));
-        lines.add(line(ctx, row, firstSequence + lines.size(), interest, allowed.value(), allowed.limitedBy()));
+        String why = interest.isLessThan(received(items)) ? allowed.limitedBy() + "; interest net of the expenditure"
+                + " deducted against it (S2 s.93(1)(e); 1961 s.57(iii); D-228)" : allowed.limitedBy();
+        lines.add(line(ctx, row, firstSequence + lines.size(), interest, allowed.value(), why));
+    }
+
+    /** What gross total income includes of these items: each net of its expenditure, together floored at nil. */
+    private static Money included(NodeContext ctx, List<OtherSourceItem> items) {
+        return items.stream().map(item -> OtherSourcesNode.interestIncluded(ctx, item)).reduce(Money.ZERO, Money::plus)
+                .floorAtZero();
     }
 
     private static TraceLine line(NodeContext ctx, RuleId row, int sequence, Money interest, Money allowed,
@@ -123,9 +119,8 @@ final class DepositInterestDeduction {
                 .toList();
     }
 
-    private static Money received(List<OtherSourceItem> deposits, OtherSourceKind kind) {
-        return deposits.stream().filter(item -> item.kind() == kind).map(OtherSourceItem::received)
-                .reduce(Money.ZERO, Money::plus);
+    private static Money received(List<OtherSourceItem> items) {
+        return items.stream().map(OtherSourceItem::received).reduce(Money.ZERO, Money::plus);
     }
 
     private static RuleVersion version(NodeContext ctx, RuleId row) {

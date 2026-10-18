@@ -177,18 +177,41 @@ public final class OtherSourcesNode implements ComputationNode {
     private static Money interest(Lines lines, String where, OtherSourceItem item) {
         Money income = lines.applied(RuleIds.OS_INTEREST, INTEREST, item.received());
         lines.add(RuleIds.OS_INTEREST, StepKind.INCOME, item.received(), income, where + ": " + item.kind());
-        Money commission = Money.ZERO;
         if (item.bankerCommission().isGreaterThan(Money.ZERO)) {
-            commission = item.kind() == OtherSourceKind.INTEREST_ON_SECURITIES
-                    ? lines.deduction(RuleIds.OS_BANKER_COMMISSION, COMMISSION, item, item.bankerCommission(), where)
-                    : lines.nil(RuleIds.OS_BANKER_COMMISSION, item.bankerCommission(), where
-                            + ": a banker's commission is deducted against interest on securities only");
+            if (item.kind() == OtherSourceKind.INTEREST_ON_SECURITIES) {
+                lines.deduction(RuleIds.OS_BANKER_COMMISSION, COMMISSION, item, item.bankerCommission(), where);
+            } else {
+                lines.nil(RuleIds.OS_BANKER_COMMISSION, item.bankerCommission(), where
+                        + ": a banker's commission is deducted against interest on securities only");
+            }
         }
         Money expenses = item.interestExpense().plus(item.otherExpenditure());
-        Money expenditure = expenses.isGreaterThan(Money.ZERO)
-                ? lines.deduction(RuleIds.OS_OTHER_EXPENDITURE, EXPENDITURE, item, expenses, where)
-                : Money.ZERO;
+        if (expenses.isGreaterThan(Money.ZERO)) {
+            lines.deduction(RuleIds.OS_OTHER_EXPENDITURE, EXPENDITURE, item, expenses, where);
+        }
+        return interestIncluded(lines.ctx, item);
+    }
+
+    /**
+     * An interest item's income as the head includes it — the interest less the banker's commission (securities only)
+     * and the expenditure allowed against it, nothing where payable outside India untaxed — the figure s.153 is worked
+     * on (D-228, D-231). {@link #interest} traces the same arithmetic and returns this.
+     */
+    static Money interestIncluded(NodeContext ctx, OtherSourceItem item) {
+        TemporalContext t = ctx.inputs().temporal();
+        Money income = applied(ctx, t, RuleIds.OS_INTEREST, INTEREST, item.received());
+        boolean allowed = !item.payableOutsideIndiaUntaxed();
+        Money commission = allowed && item.kind() == OtherSourceKind.INTEREST_ON_SECURITIES
+                && item.bankerCommission().isGreaterThan(Money.ZERO)
+                ? applied(ctx, t, RuleIds.OS_BANKER_COMMISSION, COMMISSION, item.bankerCommission()) : Money.ZERO;
+        Money expenses = item.interestExpense().plus(item.otherExpenditure());
+        Money expenditure = allowed && expenses.isGreaterThan(Money.ZERO)
+                ? applied(ctx, t, RuleIds.OS_OTHER_EXPENDITURE, EXPENDITURE, expenses) : Money.ZERO;
         return income.minus(commission).minus(expenditure);
+    }
+
+    private static Money applied(NodeContext ctx, TemporalContext t, RuleId rule, BaseId base, Money amount) {
+        return TemporallyApportionedCap.apply(ctx.rule(rule), t, CapContext.of(base, amount)).value();
     }
 
     /** S2 s.92(2)(a), s.93(2); 1961 s.56(2)(i), s.57 provisos: the income, with every expense but interest refused. */

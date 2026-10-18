@@ -1102,6 +1102,10 @@ a single year's inputs. See `M3`.
 | `DED-RETURN-001` | Deductions under **Part C** of Chapter VIII (the profit-linked ones) are denied where the return is not furnished by the s.263(1) due date or the claim is not made in that return. Part B (the payment-based deductions a salaried user claims) is **not** subject to this bar. | **s.122(5)** | — | — | VERIFIED (S2, s.122(5)) |
 | `DED-NEWREGIME-001` | In the new regime the **entire** Chapter VIII is disallowed except **s.124(1), s.124(2), s.125(2) and s.146**. So in the new regime a salaried individual has exactly **two** Chapter VIII deductions available: employer NPS and the Agniveer Government contribution. | **s.202(2)(a)(xii)** | NEW | — | VERIFIED (S2) |
 
+> **Addendum (W-075c5b, 2026-10-18, D-228, D-231):** `DED-80TTA-001` / `DED-80TTB-001` are worked on the deposit interest
+> gross total income includes — each item net of the expenditure deducted against it under S2 s.93(1)(e) / 1961 s.57(iii),
+> the items together floored at nil (the owner's answer to OQ-25).
+
 > **Addendum (W-075c4, 2026-10-07, D-141):** s.134(3)'s *"as may be prescribed"* is S4 **r.65** (p.1581): *"the
 > assessee shall file declaration in Form No. 31"* (pp.1913–1914) — the only condition; **no area or place limit is
 > prescribed** (the Rules' amendment chain after G.S.R. 198(E) not traced, as S6 notes). Form 31 asks the *"Period of

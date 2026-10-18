@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.input.Assessee;
@@ -195,16 +194,68 @@ class DepositInterestDeductionTest {
         });
     }
 
-    @Test
-    void evaluate_whenAnExpenseIsEnteredAgainstSavingsInterest_refusesItUntilOq25IsAnswered() {
-        // Given — 14,000 of savings interest bearing 1,000 of other expenditure
-        OtherSourceItem expensed = new OtherSourceItem(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST, Money.of("14000"),
-                Money.ZERO, Money.ZERO, Money.of("1000"), false);
+    private static OtherSourceItem expensed(OtherSourceKind kind, String interest, String expenditure,
+            boolean payableOutsideIndiaUntaxed) {
+        return new OtherSourceItem(kind, Money.of(interest), Money.ZERO, Money.ZERO, Money.of(expenditure),
+                payableOutsideIndiaUntaxed);
+    }
 
-        // When / Then — gross or net is open (S2 s.122(9) and 1961 s.80AB reach Part C only)
-        assertThatThrownBy(() -> run(2026, OLD, UNDER_SIXTY, List.of(expensed)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("OQ-25");
+    private static Money deducted(NodeResult result, RuleId row) {
+        return lines(result, row).stream().map(line -> line.out().asMoney()).reduce(Money.ZERO, Money::plus);
+    }
+
+    @Test
+    void evaluate_whenSavingsInterestBearsExpenditure_deductsTheNetInterest() {
+        // When — 25,000 of savings interest less 18,000 of other expenditure = 7,000, under 10,000 (D-228)
+        NodeResult result = run(2026, OLD, UNDER_SIXTY,
+                List.of(expensed(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST, "25000", "18000", false)));
+
+        // Then
+        assertThat(lines(result, RuleIds.DED_SAVINGS_INTEREST)).singleElement().satisfies(line -> {
+            assertThat(line.in()).isEqualTo(rupees("7000"));
+            assertThat(line.out()).isEqualTo(rupees("7000"));
+            assertThat(line.limitedBy().orElseThrow()).contains("net of the expenditure").contains("D-228");
+        });
+    }
+
+    @Test
+    void evaluate_whenTheNetSavingsInterestExceedsTheLimit_deductsTheLimit() {
+        // When — 30,000 − 5,000 = 25,000, above 10,000
+        NodeResult result = run(2026, OLD, UNDER_SIXTY,
+                List.of(expensed(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST, "30000", "5000", false)));
+
+        // Then
+        assertThat(deducted(result, RuleIds.DED_SAVINGS_INTEREST)).isEqualTo(Money.of("10000"));
+    }
+
+    @Test
+    void evaluate_whenASeniorsDepositInterestBearsExpenditure_deductsTheNetOfAllDeposits() {
+        // When — deposit 80,000 − 40,000 + savings 6,000 = 46,000, under 50,000
+        NodeResult result = run(2026, OLD, SIXTY_SEVEN,
+                List.of(expensed(OtherSourceKind.DEPOSIT_INTEREST, "80000", "40000", false), savings("6000")));
+
+        // Then
+        assertThat(deducted(result, RuleIds.DED_DEPOSIT_INTEREST_SENIOR)).isEqualTo(Money.of("46000"));
+    }
+
+    @Test
+    void evaluate_whenTheExpenditureIsPayableOutsideIndiaUntaxed_deductsOnTheInterestReceived() {
+        // When — the head allows none of it (S2 s.94(1)(b), (c)), so the net is the 14,000 received; limit 10,000
+        NodeResult result = run(2026, OLD, UNDER_SIXTY,
+                List.of(expensed(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST, "14000", "1000", true)));
+
+        // Then
+        assertThat(deducted(result, RuleIds.DED_SAVINGS_INTEREST)).isEqualTo(Money.of("10000"));
+    }
+
+    @Test
+    void evaluate_whenOneItemsExpenditureExceedsItsInterest_takesTheItemsTogether() {
+        // When — 5,000 − 8,000 = −3,000 and 12,000: 9,000 together, under 10,000
+        NodeResult result = run(2026, OLD, UNDER_SIXTY,
+                List.of(expensed(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST, "5000", "8000", false), savings("12000")));
+
+        // Then
+        assertThat(deducted(result, RuleIds.DED_SAVINGS_INTEREST)).isEqualTo(Money.of("9000"));
     }
 
     @Test
