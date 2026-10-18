@@ -50,7 +50,8 @@ import java.util.stream.IntStream;
  * <p>The concession covers no more than two surviving children, not counting children born before the rule's date
  * nor children of a multiple birth after one child (r.278(5)–(6); Rules 1962 r.2B(4); D-212). Where more are
  * counted, the two eldest are covered, and each journey must be split by traveller: a child left out gets a nil
- * line of its own and the journey is exempt on the rest.
+ * line of its own and the journey is exempt on the rest. A journey priced per kilometre keeps the whole rate for its
+ * distance: the rate prices the journey, not a person, so the child left out takes no share of it (D-228).
  */
 final class LeaveTravelExemption {
 
@@ -146,15 +147,15 @@ final class LeaveTravelExemption {
                 fares = fares.plus(traveller.fareAdmissible().orElse(Money.ZERO));
                 continue;
             }
-            if (journey.fareAdmissible().isEmpty()) {
-                throw new IllegalArgumentException("The journey of " + journey.startedOn() + " is priced per"
-                        + " kilometre and carries family position " + position.get() + ", a child beyond the limit;"
-                        + " what part of the rate is that child's the Rules do not say (OQ-27)");
-            }
+            String perKilometre = journey.fareAdmissible().isEmpty()
+                    ? "; the rate per kilometre is for the journey's distance, so none of it is the child's"
+                            + " (r.278(1)(iii)(B); D-228)"
+                    : "";
             leftOut.add(TraceLine.of(firstSequence + leftOut.size(), NodeIds.SALARY_EXEMPTIONS,
                     RuleIds.SAL_LEAVE_TRAVEL_CHILDREN, StepKind.EXEMPTION, MoneyValue.of(traveller.amountIncurred()),
                     MoneyValue.of(Money.ZERO), version.provenance()).withLimitedBy("family position " + position.get()
-                    + ": a child beyond the " + limit.children() + " surviving children the concession covers"));
+                    + ": a child beyond the " + limit.children() + " surviving children the concession covers"
+                    + perKilometre));
         }
         Money admitted = fares;
         return new Covered(spent, journey.fareAdmissible().map(whole -> admitted), List.copyOf(leftOut));

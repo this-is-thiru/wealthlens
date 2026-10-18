@@ -366,18 +366,43 @@ class LeaveTravelExemptionTest {
         }
 
         @Test
-        void evaluate_whenAJourneyPricedPerKilometreCarriesAChildBeyondTheLimit_refusesNamingOq27() {
-            // Given — no rail and no public transport, 400 km: the Rules price the journey, not each person
+        void evaluate_whenAJourneyPricedPerKilometreCarriesAChildBeyondTheLimit_exemptsTheCoveredTravel() {
+            // Given — no rail and no public transport, 400 km; the employee 8,000 and position 2 6,000
             Journey road = new Journey(LocalDate.of(2026, 5, 10), JourneyMode.NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT,
                     Money.of("14000"), Optional.empty(), Optional.of(400), List.of(
                             new JourneyTraveller(Optional.empty(), Money.of("8000"), Optional.empty()),
                             new JourneyTraveller(Optional.of(2), Money.of("6000"), Optional.empty())));
 
-            // When / Then
-            assertThatThrownBy(() -> runFor(2026, road, child("2005-03-01"), child("2008-03-01"),
-                    child("2012-03-01")))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("OQ-27");
+            // When
+            NodeResult result = runFor(2026, road, child("2005-03-01"), child("2008-03-01"), child("2012-03-01"));
+
+            // Then — min(8,000, 30 × 400 = 12,000) = 8,000; a headcount share of the rate would give 6,000
+            assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("8000")));
+            assertThat(lines(result, RuleIds.SAL_LEAVE_TRAVEL_CHILDREN)).singleElement().satisfies(line -> {
+                assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("6000")));
+                assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+                assertThat(line.limitedBy().orElseThrow()).contains("none of it is the child's");
+            });
+        }
+
+        @Test
+        void evaluate_whenThePerKilometreRateBindsWithAChildBeyondTheLimit_keepsTheWholeRate() {
+            // Given — 300 km; the employee 6,000, position 0 5,000 and position 2 4,000
+            Journey road = new Journey(LocalDate.of(2026, 5, 10), JourneyMode.NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT,
+                    Money.of("15000"), Optional.empty(), Optional.of(300), List.of(
+                            new JourneyTraveller(Optional.empty(), Money.of("6000"), Optional.empty()),
+                            new JourneyTraveller(Optional.of(0), Money.of("5000"), Optional.empty()),
+                            new JourneyTraveller(Optional.of(2), Money.of("4000"), Optional.empty())));
+
+            // When
+            NodeResult result = runFor(2026, road, child("2005-03-01"), child("2008-03-01"), child("2012-03-01"));
+
+            // Then — min(11,000, 30 × 300 = 9,000) = 9,000; a headcount share (two of three) would give 6,000
+            assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("9000")));
+            assertThat(lines(result, RuleIds.SAL_LEAVE_TRAVEL_CHILDREN)).singleElement().satisfies(line -> {
+                assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("4000")));
+                assertThat(line.limitedBy().orElseThrow()).contains("none of it is the child's");
+            });
         }
 
         @Test
