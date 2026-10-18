@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
@@ -51,7 +52,8 @@ import java.util.stream.Collectors;
  * (Schedule XV para 2), as a measure; the Schedule XV sums under one ceiling, the employee's pension
  * contribution sub-capped first; what that sub-cap left, with a minor's deposit, under s.124(3)–(4) — never the same
  * amount twice (s.124(5), (10)); the employer's pension contribution by employer and regime (s.124(1)–(2)); then all
- * of it within gross total income (s.122(2)). A row the regime excludes, with something entered for it, gives a nil
+ * of it within gross total income (s.122(2)). Every base here is gross total income less the capital gains charged at
+ * special rates, which no Chapter VIII deduction may reach (s.196(4), s.197(5), s.198(6); D-244). A row the regime excludes, with something entered for it, gives a nil
  * line naming the regime. TY 2025-26 has these rows under the 1961 Act (ss.80C, 80CCC, 80CCD, 80CCE, 80A(2); D-144);
  * a section whose 1961 rows are not built yet is refused naming its item.
  * Then s.126, health insurance and medical expenditure ({@link HealthInsuranceDeduction}; D-136); and s.154, s.127
@@ -72,6 +74,8 @@ public final class ChapterEightNode implements ComputationNode {
     private static final Set<RuleId> INVESTMENT_RULES = Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN,
             RuleIds.DED_NPS_EMPLOYER_GOVT, RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME,
             RuleIds.DED_PREMIUM_SHARE);
+    private static final Set<RuleId> SPECIAL_RATE_ROWS = Set.of(RuleIds.RATE_CG_SHORT_LISTED_EQUITY,
+            RuleIds.RATE_CG_LONG_OTHER, RuleIds.RATE_CG_LONG_LISTED_EQUITY);
 
     @Override
     public NodeId produces() {
@@ -80,13 +84,14 @@ public final class ChapterEightNode implements ComputationNode {
 
     @Override
     public Set<NodeId> requires() {
-        return Set.of(NodeIds.GTI, NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_BASE);
+        return Set.of(NodeIds.GTI, NodeIds.SETOFF, NodeIds.INPUTS_COMPONENTS, NodeIds.SALARY_BASE);
     }
 
     @Override
     public Set<RuleId> rules() {
         Set<RuleId> rules = new HashSet<>(INVESTMENT_RULES);
         rules.add(RuleIds.DED_WITHIN_GROSS_TOTAL);
+        rules.addAll(SPECIAL_RATE_ROWS);
         rules.addAll(HealthInsuranceDeduction.RULES);
         rules.addAll(DisabilityDeduction.RULES);
         rules.addAll(LoanInterestDeduction.RULES);
@@ -364,7 +369,7 @@ public final class ChapterEightNode implements ComputationNode {
      * before s.133, s.134(5)'s total income before s.134 after it.
      */
     private static Money totalIncomeBefore(NodeContext ctx, List<TraceLine> lines) {
-        Money grossTotal = ctx.get(NodeIds.GTI, MoneyValue.class).asMoney().floorAtZero();
+        Money grossTotal = grossTotalForDeductions(ctx);
         return grossTotal.minus(Money.min(deducted(lines), grossTotal));
     }
 
@@ -381,7 +386,7 @@ public final class ChapterEightNode implements ComputationNode {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         Money total = deducted(lines);
-        Money grossTotal = ctx.get(NodeIds.GTI, MoneyValue.class).asMoney().floorAtZero();
+        Money grossTotal = grossTotalForDeductions(ctx);
         Money limit = TemporallyApportionedCap.apply(ctx.rule(RuleIds.DED_WITHIN_GROSS_TOTAL), ctx.inputs().temporal(),
                 CapContext.of(GROSS_TOTAL_INCOME, grossTotal)).value();
         if (!total.isGreaterThan(limit)) {
@@ -391,8 +396,30 @@ public final class ChapterEightNode implements ComputationNode {
         capped.add(TraceLine.of(capped.size() + 1, NodeIds.CHAPTERVIII, RuleIds.DED_WITHIN_GROSS_TOTAL,
                         StepKind.DEDUCTION, MoneyValue.of(total), MoneyValue.of(limit),
                         version(ctx, RuleIds.DED_WITHIN_GROSS_TOTAL).provenance())
-                .withLimitedBy("gross total income " + grossTotal));
+                .withLimitedBy(grossTotalLabel(ctx, grossTotal)));
         return new NodeResult(MoneyValue.of(limit), capped);
+    }
+
+    /**
+     * Gross total income as Chapter VIII reads it: less the capital gains charged at special rates, "as if the gross
+     * total income as so reduced were the gross total income" (S2 s.196(4), s.197(5), s.198(6); 1961 ss.111A(2),
+     * 112(2), 112A(5); D-244) — for every base here, the s.122(2) ceiling and s.133's and s.134's alike.
+     */
+    private static Money grossTotalForDeductions(NodeContext ctx) {
+        Money grossTotal = ctx.get(NodeIds.GTI, MoneyValue.class).asMoney().floorAtZero();
+        return grossTotal.minus(specialRateGains(ctx)).floorAtZero();
+    }
+
+    private static Money specialRateGains(NodeContext ctx) {
+        return TaxByBasisNode.atSpecialRates(ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
+    }
+
+    private static String grossTotalLabel(NodeContext ctx, Money grossTotal) {
+        Money special = specialRateGains(ctx);
+        return special.isGreaterThan(Money.ZERO)
+                ? "gross total income less the capital gains at special rates (" + special + ", "
+                        + SPECIAL_RATE_ROWS.stream().map(RuleId::value).sorted().toList() + ") " + grossTotal
+                : "gross total income " + grossTotal;
     }
 
     private static TraceLine nilLine(NodeContext ctx, List<TraceLine> lines, RuleId row, RuleVersion version,

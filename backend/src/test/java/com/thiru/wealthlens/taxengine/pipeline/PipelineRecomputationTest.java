@@ -25,6 +25,7 @@ import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -73,6 +74,30 @@ class PipelineRecomputationTest {
         }
     }
 
+    /** The heads after set-off with no capital gains, which {@code tax.bybasis} reads for its special-rate parts. */
+    private record NoCapitalGains() implements ComputationNode {
+
+        @Override
+        public NodeId produces() {
+            return NodeIds.SETOFF;
+        }
+
+        @Override
+        public Set<NodeId> requires() {
+            return Set.of();
+        }
+
+        @Override
+        public Set<RuleId> rules() {
+            return Set.of();
+        }
+
+        @Override
+        public NodeResult evaluate(NodeContext ctx) {
+            return NodeResult.untraced(new HeadsAfterSetOff(Money.ZERO, Map.of()));
+        }
+    }
+
     /** Re-enters once: {@code target} as it would be had {@code pinned} been {@code at}. */
     private record ReenteringProbe(NodeId target, NodeId pinned, Money at) implements ComputationNode {
 
@@ -104,7 +129,8 @@ class PipelineRecomputationTest {
     private static PipelineRunner.Result run(
             RegimeCode code, int ageAtYearEnd, String totalIncome, Optional<ComputationNode> probe) {
         List<ComputationNode> nodes = Stream.concat(
-                        Stream.of(new StatedTotalIncome(Money.of(totalIncome)), new RoundTotalIncomeNode(),
+                        Stream.of(new StatedTotalIncome(Money.of(totalIncome)), new NoCapitalGains(),
+                                new RoundTotalIncomeNode(),
                                 new TaxByBasisNode(), new RebateNode()),
                         probe.stream())
                 .toList();

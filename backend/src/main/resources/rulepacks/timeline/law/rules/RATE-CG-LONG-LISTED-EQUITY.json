@@ -1,0 +1,121 @@
+{
+  "ruleId": "RATE-CG-LONG-LISTED-EQUITY",
+  "_note": "Long-term gains on equity shares bought and sold with securities transaction tax, and on equity-oriented fund and business-trust units sold with it, charged apart from total income (D-244). TY 2026-27: Income-tax Act, 2025 s.198(2)(a) (p.222): \"income-tax calculated on such long-term capital gains exceeding ₹ 125000 at the rate of 12.5%\". TY 2025-26: Income-tax Act, 1961 s.112A(2)(i)(b) as substituted by the Finance (No. 2) Act, 2024 s.31 (pp.27–28): \"exceeding one lakh twenty-five thousand rupees … at the rate of twelve and one-half per cent. for any transfer which takes place on or after the 23rd day of July, 2024\". The ladder is applied to the gains after the basic-exemption shift (RATE-CG-SHORTFALL-ORDER): 1961 s.112A(2) proviso reduces them \"for the purposes of clause (i)\", and the Department's ITR-2 utility (AY 2026-27) shifts first and exempts after. TY 2026-27: s.198(3)(b) taxes the shifted balance \"at the rate as referred to in sub-section (2)\" — whether the Rs. 1,25,000 survives the shift is OQ-33; the declared default is that it does, as under the 1961 Act. Chapter VIII is kept off by s.198(6) / s.112A(5); the rebate under s.198(7) / s.112A(6) is W-089's. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 18–20.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.112A(2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.198(2)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "SlabLadder",
+        "base": "SPECIAL_RATE_GAINS",
+        "bands": [
+          {
+            "lowerExclusive": "0",
+            "upperInclusive": "125000",
+            "rate": "0"
+          },
+          {
+            "lowerExclusive": "125000",
+            "upperInclusive": null,
+            "rate": "12.5"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.31 — Income-tax Act, 1961 s.112A(2)(i) (ten per cent. before 23-7-2024, twelve and one-half per cent. on or after, above one lakh twenty-five thousand rupees), deemed substituted w.e.f. 23-7-2024",
+        "gazetteRef": "CG-DL-E-16082024-256436",
+        "notifiedOn": "2024-08-16",
+        "effectiveFrom": "2024-07-23",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.31, pp.27–28; Income-tax Act, 1961 s.112A, thc.nic.in copy pp.463–464; no later amendment of s.112A in the Acts of 2025–2026 (operative words searched; docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md row 9)",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.112A(2)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.198(2)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "SlabLadder",
+        "base": "SPECIAL_RATE_GAINS",
+        "bands": [
+          {
+            "lowerExclusive": "0",
+            "upperInclusive": "125000",
+            "rate": "0"
+          },
+          {
+            "lowerExclusive": "125000",
+            "upperInclusive": null,
+            "rate": "12.5"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.198(2)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.198(2), (3), pp.222–223; not amended by the Finance Act, 2026 or the Taxation Laws (Amendment) Act, 2025",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.198, pp.222–223",
+    "accessedOn": "2026-10-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

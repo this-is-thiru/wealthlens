@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-088a DONE; between items)
+Item            : — (W-088b DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's pick. Next in order: W-088b (special-rate tax: S2 ss.196–198 / 1961 ss.111A, 112, 112A rows, the ₹1,25,000, the basic-exemption shift, Chapter VIII limited; lifts gti's special-rate refusal), then W-088c (OQ-30 first), W-088d, W-088e, W-088f (OQ-31). Open OQs: OQ-30, OQ-31, OQ-32. UNVERIFIED: 0. Unplaced proposals: none
-Last verify     : unit -Punit → 2971 run, 0 fail, 0 Checkstyle; integration 252/0 (W-088a, 2026-10-18; orb start + DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock)
-Waiting on      : the owner — next pick
+Next step       : WAIT for the owner's pick, and ask placement of the two limbs (S2 s.197(3) / 1961 s.112(1)(a) second proviso land-or-building; s.197(4) / s.112(1)(c)(iii) non-resident unlisted). Next in order: W-088c (OQ-30 first), W-088d, W-088e, W-088f (OQ-31). Open OQs: OQ-30 – OQ-33
+Last verify     : unit -Punit (clean) → 2975 run, 0 fail, 0 Checkstyle; integration 252/0 (W-088b, 2026-10-18)
+Waiting on      : the owner — next pick; placement of two limbs
 Files touched   : none
-Last item commit: taxplanning W-088a: compute the capital-gains head per rate basis and set losses off within it and into it from other heads — the order a declared default, OQ-32 raised; W-088 split into W-088a–f (D-242, D-243)
-Updated         : 2026-10-18, session 21 — W-088a committed
+Last item commit: taxplanning W-088b: tax the special-rate capital gains at their own rates, with the unused basic exemption shifted onto them and Chapter VIII kept off them — the shift order the Department's utility's, OQ-33 raised (D-244)
+Updated         : 2026-10-18, session 21 — W-088b committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.RebateNode;
 import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
@@ -123,9 +124,9 @@ class TaxYear2025RulePackTest {
 
         // Then
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
-        assertThat(pack.rules()).hasSize(167);
+        assertThat(pack.rules()).hasSize(171);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.69");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.70");
     }
 
     @Test
@@ -205,6 +206,7 @@ class TaxYear2025RulePackTest {
         // When
         var slab = NodeHarness.with(pack).regime(code).inputs(inputs2025(code))
                 .given(NodeIds.ROUND_TOTALINCOME, Money.of(totalIncome))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.ZERO, Map.of()))
                 .run(new TaxByBasisNode());
         var rebated = NodeHarness.with(pack).regime(code).inputs(inputs2025(code))
                 .given(NodeIds.ROUND_TOTALINCOME, Money.of(totalIncome))

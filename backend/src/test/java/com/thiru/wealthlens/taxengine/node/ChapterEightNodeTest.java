@@ -12,10 +12,12 @@ import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -80,6 +82,11 @@ class ChapterEightNodeTest {
     }
 
     private static NodeResult run(Case entered, List<LifeInsurancePolicy> policies) {
+        return run(entered, policies, Map.of());
+    }
+
+    private static NodeResult run(Case entered, List<LifeInsurancePolicy> policies,
+            Map<CapitalGainsPart, Money> capitalGains) {
         TaxYearId taxYear = TaxYearId.of(entered.year());
         RulePack pack = new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
@@ -98,6 +105,7 @@ class ChapterEightNodeTest {
         List<Money> perEmployment = List.of(entered.salary(), Money.ZERO);
         return NodeHarness.with(pack).regime(entered.regime()).inputs(inputs)
                 .given(NodeIds.GTI, entered.grossTotal())
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(entered.grossTotal(), capitalGains))
                 .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(entered.payLines().isEmpty()
                         ? Map.of() : Map.of(HeadCode.SALARIES, new ArrayList<>(entered.payLines()))))
                 .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of(
@@ -198,6 +206,26 @@ class ChapterEightNodeTest {
         // Then — s.122(2)
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
         assertThat(result.trace().getLast().rule()).isEqualTo(RuleIds.DED_WITHIN_GROSS_TOTAL);
+    }
+
+    @Test
+    void evaluate_whenGrossTotalIncomeHoldsSpecialRateGains_capsTheDeductionsAtTheRest() {
+        // Given — D: TY 2025-26, old regime; salary 1,00,000 and s.112A gains 5,00,000 = gross total income 6,00,000;
+        // PF 1,00,000 + tuition 50,000 = 1,50,000 within s.80CCE. Chapter VI-A is allowed from gross total income
+        // less the s.112A gains (s.112A(5); D-244): 1,00,000, not 1,50,000
+        Case entered = new Case(2025, OLD, EmployerKind.OTHER, List.of(pay(ComponentCodes.EMPLOYEE_PF, "100000")),
+                List.of(paid(ComponentCodes.TUITION_FEES, "50000")), List.of(), Money.of("100000"),
+                Money.of("600000"));
+
+        // When
+        NodeResult result = run(entered, List.of(),
+                Map.of(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("500000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
+        assertThat(result.trace().getLast().rule()).isEqualTo(RuleIds.DED_WITHIN_GROSS_TOTAL);
+        assertThat(result.trace().getLast().limitedBy())
+                .hasValueSatisfying(text -> assertThat(text).contains("less the capital gains at special rates"));
     }
 
     @Test

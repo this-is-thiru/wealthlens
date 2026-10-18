@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
@@ -101,16 +100,15 @@ class TotalIncomeNodeTest {
     }
 
     @Test
-    void grossTotalIncome_whenASpecialRateCapitalGainSurvives_isRefusedUntilW088b() {
-        // Given — 10,000 of listed short-term gains in the total
-        NodeHarness harness = NodeHarness.with(PACK).regime(OLD)
+    void grossTotalIncome_whenASpecialRateCapitalGainSurvives_includesIt() {
+        // When — 10,000 of listed short-term gains in the total; tax.bybasis charges them at their own rate (D-244)
+        NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("110000"),
-                        Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("10000"))));
+                        Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("10000"))))
+                .run(new GrossTotalIncomeNode());
 
-        // When / Then — taxing it at slab rates would be a wrong figure, not a smaller one
-        assertThatThrownBy(() -> harness.run(new GrossTotalIncomeNode()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("W-088b");
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("110000")));
     }
 
     @Test

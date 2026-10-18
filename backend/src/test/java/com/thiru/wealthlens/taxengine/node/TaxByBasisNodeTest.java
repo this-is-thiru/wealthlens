@@ -2,15 +2,20 @@ package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.Individual;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeAtLeast;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -25,9 +30,11 @@ import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.Instrument;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
 import com.thiru.wealthlens.taxengine.rules.temporal.proration.Days;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
+import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -77,6 +84,7 @@ class TaxByBasisNodeTest {
         return NodeHarness.with(pack())
                 .regime(regime)
                 .given(NodeIds.ROUND_TOTALINCOME, Money.of(roundedTotalIncome))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.ZERO, Map.of()))
                 .run(new TaxByBasisNode());
     }
 
@@ -155,6 +163,7 @@ class TaxByBasisNodeTest {
                 .regime(regime)
                 .inputs(inputs)
                 .given(NodeIds.ROUND_TOTALINCOME, Money.of(income))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.ZERO, Map.of()))
                 .run(new TaxByBasisNode());
     }
 
@@ -287,6 +296,7 @@ class TaxByBasisNodeTest {
         assertThatThrownBy(() -> NodeHarness.with(split)
                         .regime(NEW_TAX_REGIME)
                         .given(NodeIds.ROUND_TOTALINCOME, Money.of("1000000"))
+                        .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.ZERO, Map.of()))
                         .run(new TaxByBasisNode()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining(RuleIds.RATE_SLAB_NEW_TAX_REGIME.value())
@@ -299,5 +309,85 @@ class TaxByBasisNodeTest {
         assertThatThrownBy(() -> NodeHarness.with(pack()).regime(NEW_TAX_REGIME).run(new TaxByBasisNode()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining(NodeIds.ROUND_TOTALINCOME.value());
+    }
+
+    // Special-rate capital gains (D-244). Expected figures are worked by hand in plans/W-088b.md, cases A–C.
+
+    private static final SpecialRateId SHORT_LISTED = new SpecialRateId("RATE_CG_SHORT_LISTED_EQUITY");
+    private static final SpecialRateId LONG_OTHER = new SpecialRateId("RATE_CG_LONG_OTHER");
+    private static final SpecialRateId LONG_LISTED = new SpecialRateId("RATE_CG_LONG_LISTED_EQUITY");
+
+    private static NodeResult runWithGains(int year, RegimeCode regime, ResidentialStatus residence,
+            String roundedTotalIncome, Map<CapitalGainsPart, Money> gains) {
+        TaxYearId taxYear = TaxYearId.of(year);
+        RulePack pack = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        Individual person = new Individual(taxYear.endsOn().minusYears(40).minusMonths(6), residence,
+                Optional.empty(), Optional.empty());
+        EngineInputs inputs = new EngineInputs(taxYear, regime,
+                TemporalContext.forTaxYear(taxYear, taxYear.startsOn().plusMonths(5)), plain.entered(), person,
+                plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
+        return NodeHarness.with(pack).regime(regime).inputs(inputs)
+                .given(NodeIds.ROUND_TOTALINCOME, Money.of(roundedTotalIncome))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of(roundedTotalIncome), gains))
+                .run(new TaxByBasisNode());
+    }
+
+    private static Map<CapitalGainsPart, Money> caseAGains() {
+        return Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("50000"),
+                CapitalGainsPart.LONG_TERM_OTHER, Money.of("80000"),
+                CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("200000"));
+    }
+
+    @Test
+    void evaluate_whenAResidentsSlabIncomeLeavesTheBasicExemptionUnused_shiftsItOntoTheGainsInOrder() {
+        // Given — A: TY 2025-26, old regime, resident aged 40; slab income 1,50,000 + s.111A 50,000 + s.112 80,000
+        // + s.112A 2,00,000 = 4,80,000. Basic exemption 2,50,000 − 1,50,000 = 1,00,000 unused: s.111A 50,000 → nil,
+        // s.112 80,000 → 30,000. Tax: slab 0; s.111A 0; s.112 30,000 × 12.5% = 3,750;
+        // s.112A (2,00,000 − 1,25,000) × 12.5% = 9,375
+        // When
+        NodeResult result = runWithGains(2025, FIRST_SCHEDULE_RATES, ResidentialStatus.RESIDENT, "480000",
+                caseAGains());
+
+        // Then
+        assertThat(result.value()).isEqualTo(new TaxByBasis(Money.ZERO, Map.of(SHORT_LISTED, Money.ZERO,
+                LONG_OTHER, Money.of("3750"), LONG_LISTED, Money.of("9375"))));
+        assertThat(result.trace()).filteredOn(line -> line.kind() == StepKind.MEASURE)
+                .extracting(TraceLine::rule, TraceLine::in, TraceLine::out)
+                .containsExactly(
+                        tuple(RuleIds.RATE_CG_SHORTFALL_ORDER,
+                                MoneyValue.of(Money.of("50000")), MoneyValue.of(Money.ZERO)),
+                        tuple(RuleIds.RATE_CG_SHORTFALL_ORDER,
+                                MoneyValue.of(Money.of("80000")), MoneyValue.of(Money.of("30000"))));
+    }
+
+    @Test
+    void evaluate_whenTheAssesseeIsNonResident_shiftsNothing() {
+        // Given — B: case A's figures, non-resident: s.111A 50,000 × 20% = 10,000; s.112 80,000 × 12.5% = 10,000;
+        // s.112A 9,375; slab income 1,50,000 within the nil band
+        // When
+        NodeResult result = runWithGains(2025, FIRST_SCHEDULE_RATES, ResidentialStatus.NON_RESIDENT, "480000",
+                caseAGains());
+
+        // Then
+        assertThat(result.value()).isEqualTo(new TaxByBasis(Money.ZERO, Map.of(SHORT_LISTED, Money.of("10000"),
+                LONG_OTHER, Money.of("10000"), LONG_LISTED, Money.of("9375"))));
+        assertThat(result.trace()).noneMatch(line -> line.kind() == StepKind.MEASURE);
+    }
+
+    @Test
+    void evaluate_whenT13Dash1sFactsAreEntered_chargesTheListedLongTermGainsAfterTheShiftAndTheExemption() {
+        // Given — C: TY 2026-27, new regime, resident; slab income 1,00,000, s.198 gains 11,00,000.
+        // 4,00,000 − 1,00,000 = 3,00,000 shifted → 8,00,000; (8,00,000 − 1,25,000) × 12.5% = 84,375 (OQ-33's
+        // default: the 1,25,000 survives the shift)
+        // When
+        NodeResult result = runWithGains(2026, NEW_TAX_REGIME, ResidentialStatus.RESIDENT, "1200000",
+                Map.of(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("1100000")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(new TaxByBasis(Money.ZERO, Map.of(LONG_LISTED, Money.of("84375"))));
+        assertThat(result.trace().getFirst().in()).isEqualTo(MoneyValue.of(Money.of("100000")));
     }
 }

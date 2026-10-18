@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.input.Huf;
 import com.thiru.wealthlens.taxengine.input.RentDeclaration;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
@@ -108,6 +109,7 @@ class RentPaidDeductionTest {
                 : Map.of());
         return NodeHarness.with(pack).regime(c.regime()).inputs(inputs)
                 .given(NodeIds.GTI, Money.of(c.grossTotal()))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of(c.grossTotal()), Map.of()))
                 .given(NodeIds.INPUTS_COMPONENTS, pay)
                 .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of()))
                 .run(new ChapterEightNode());

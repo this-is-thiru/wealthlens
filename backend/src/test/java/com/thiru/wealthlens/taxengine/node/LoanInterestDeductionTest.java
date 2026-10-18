@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.LoanPurpose;
 import com.thiru.wealthlens.taxengine.input.PurposeLoanInterest;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
@@ -58,6 +59,7 @@ class LoanInterestDeductionTest {
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs)
                 .given(NodeIds.GTI, Money.of("2000000"))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("2000000"), Map.of()))
                 .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of()))
                 .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of()))
                 .run(new ChapterEightNode());

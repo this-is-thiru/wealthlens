@@ -13,6 +13,7 @@ import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.SpecifiedDiseaseTreatment;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
@@ -86,6 +87,7 @@ class DisabilityDeductionTest {
                 assessee, FAMILY, plain.ledgers(), plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs)
                 .given(NodeIds.GTI, Money.of("1000000"))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("1000000"), Map.of()))
                 .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of()))
                 .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of()))
                 .run(new ChapterEightNode());

@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.input.AgniveerCorpusFund;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
@@ -54,6 +55,7 @@ class AgniveerDeductionTest {
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs)
                 .given(NodeIds.GTI, Money.of("1000000"))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("1000000"), Map.of()))
                 .given(NodeIds.INPUTS_COMPONENTS, new ComponentSet(Map.of()))
                 .given(NodeIds.SALARY_BASE, new SalaryBases(Map.of()))
                 .run(new ChapterEightNode());

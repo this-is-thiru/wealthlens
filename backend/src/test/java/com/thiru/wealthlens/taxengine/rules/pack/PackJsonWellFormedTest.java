@@ -12,6 +12,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -142,11 +144,21 @@ class PackJsonWellFormedTest {
             return "SlabLadder".equals(cap.path("type").asText()) ? cap.get("bands") : null;
         }
 
+        /**
+         * Statutory bounds that are right and not round: s.198(2)(a) / 1961 s.112A(2)(i) charge long-term gains
+         * "exceeding ₹ 125000" (D-244). Each is named by rule and value, so the guard stays blunt for every other bound.
+         */
+        private static final Map<String, Set<String>> STATUTORY_BOUNDS =
+                Map.of("RATE-CG-LONG-LISTED-EQUITY", Set.of("125000"));
+
         private static void assertBoundIsRound(JsonNode rule, JsonNode bound) {
             if (bound == null || bound.isNull()) {
                 return;
             }
             String value = bound.asText();
+            if (STATUTORY_BOUNDS.getOrDefault(rule.get("ruleId").asText(), Set.of()).contains(value)) {
+                return;
+            }
             assertThat(value.equals("0") || value.endsWith("0000"))
                     .as("%s band bound %s — a bound ending in 1 is the 400001 trap",
                             rule.get("ruleId").asText(), value)

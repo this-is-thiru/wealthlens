@@ -126,6 +126,10 @@ public final class RuleIds {
     public static final RuleId PERQ_SPECIFIED_EMPLOYEE = new RuleId("PERQ-SPECIFIED-EMPLOYEE");
     public static final RuleId PERQ_SPECIFIED_SECURITY = new RuleId("PERQ-SPECIFIED-SECURITY");
     public static final RuleId PERQ_UTILITY = new RuleId("PERQ-UTILITY");
+    public static final RuleId RATE_CG_LONG_LISTED_EQUITY = new RuleId("RATE-CG-LONG-LISTED-EQUITY");
+    public static final RuleId RATE_CG_LONG_OTHER = new RuleId("RATE-CG-LONG-OTHER");
+    public static final RuleId RATE_CG_SHORT_LISTED_EQUITY = new RuleId("RATE-CG-SHORT-LISTED-EQUITY");
+    public static final RuleId RATE_CG_SHORTFALL_ORDER = new RuleId("RATE-CG-SHORTFALL-ORDER");
     public static final RuleId RATE_COST_INFLATION_INDEX = new RuleId("RATE-COST-INFLATION-INDEX");
     public static final RuleId RATE_HEALTH_EDUCATION_CESS = new RuleId("RATE-HEALTH-EDUCATION-CESS");
     public static final RuleId RATE_ROUND_PAYABLE = new RuleId("RATE-ROUND-PAYABLE");

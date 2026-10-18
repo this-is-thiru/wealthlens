@@ -36,6 +36,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ProvidentFundThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.SurvivingChildrenLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
@@ -242,7 +243,8 @@ public final class ShapeJson {
                 "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
-                "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder");
+                "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
+                "SpecialRateShortfallOrder");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -314,7 +316,10 @@ public final class ShapeJson {
         };
     }
 
-    /** The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243). */
+    /**
+     * The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243), and the
+     * special-rate parts the unused basic exemption (D-244).
+     */
     private static RuleDefinition setOffDefinition(String tag, JsonNode node, String path) {
         return switch (tag) {
             case "AbsorptionOrder" -> {
@@ -326,6 +331,11 @@ public final class ShapeJson {
                 List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,
                         e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
                 yield PackJson.construct(path, () -> new CapitalGainsAbsorptionOrder(parts));
+            }
+            case "SpecialRateShortfallOrder" -> {
+                List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,
+                        e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
+                yield PackJson.construct(path, () -> new SpecialRateShortfallOrder(parts));
             }
             default -> throw unreachable(tag, path);
         };

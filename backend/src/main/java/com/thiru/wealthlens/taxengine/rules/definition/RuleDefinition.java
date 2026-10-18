@@ -13,5 +13,5 @@ public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPe
         PremiumShareBands, TaxYearSpan, SanctionedLoanLimit, CashPaymentLimit, OwnResidenceHouses,
         OwnResidenceInterestLimit, DisallowanceBasis, ParticularsThreshold, FamilyPensionShare,
         ProvidentFundThreshold, GiftThreshold, PolicyPremiumLimits, SurvivingChildrenLimit,
-        AbsorptionOrder, CapitalGainsAbsorptionOrder {
+        AbsorptionOrder, CapitalGainsAbsorptionOrder, SpecialRateShortfallOrder {
 }

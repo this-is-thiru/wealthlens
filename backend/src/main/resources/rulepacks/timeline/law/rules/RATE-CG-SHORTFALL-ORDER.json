@@ -1,0 +1,105 @@
+{
+  "ruleId": "RATE-CG-SHORTFALL-ORDER",
+  "_note": "The basic exemption the rest of total income leaves unused, shifted onto the special-rate capital gains of a resident individual or HUF (D-244). TY 2026-27: Income-tax Act, 2025 s.196(2), s.197(2), s.198(3) (pp.221–223): where total income \"as reduced by\" such gains \"is below the maximum amount which is not chargeable to income-tax\", the gains are \"reduced by the amount by which the total income as so reduced falls short\". TY 2025-26: Income-tax Act, 1961 s.111A(1) first proviso, s.112(1)(a) proviso (both as substituted or amended by the Finance (No. 2) Act, 2024 ss.29, 30) and s.112A(2) proviso (thc p.464). Neither Act orders the parts when several hold gains. SpecialRateShortfallOrder: short-term listed equity, long-term other, long-term listed equity — TY 2025-26 the order of the Department's ITR-2 utility AY 2026-27 v1.4 (sheet SPI - SI, U38 then U53, U57, U60); TY 2026-27 a declared default, the 2025 Act's words being the same. The maximum amount not chargeable is the zero-rate band of the slab ladder that applies. A non-resident shifts nothing. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 16–20.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.111A(1), s.112(1)(a), s.112A(2) provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.196(2), s.197(2), s.198(3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SpecialRateShortfallOrder",
+        "parts": [
+          "SHORT_TERM_LISTED_EQUITY",
+          "LONG_TERM_OTHER",
+          "LONG_TERM_LISTED_EQUITY"
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.29, s.30 — Income-tax Act, 1961 s.111A(1) first proviso (\"rate as applicable in clause (i)\") and s.112(1)(a) proviso, deemed substituted w.e.f. 23-7-2024",
+        "gazetteRef": "CG-DL-E-16082024-256436",
+        "notifiedOn": "2024-08-16",
+        "effectiveFrom": "2024-07-23",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 ss.29, 30, p.26; Income-tax Act, 1961 s.112A(2) proviso, thc.nic.in copy p.464; the order: ITR-2 Excel utility AY 2026-27 v1.4, https://www.incometax.gov.in/iec/foportal/sites/default/files/2026-08/ITR2_AY_26-27_V1.4.zip, sheet SPI - SI U38, U53, U57, U60, I28",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.111A(1), s.112(1)(a), s.112A(2) provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.196(2), s.197(2), s.198(3)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SpecialRateShortfallOrder",
+        "parts": [
+          "SHORT_TERM_LISTED_EQUITY",
+          "LONG_TERM_OTHER",
+          "LONG_TERM_LISTED_EQUITY"
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.196(2), s.197(2), s.198(3)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.196(2), s.197(2), s.198(3), pp.221–223; the order a declared default (D-244)",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 ss.196–198, pp.220–223",
+    "accessedOn": "2026-10-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}
