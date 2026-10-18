@@ -47,7 +47,7 @@ class T6HousePropertyAndOtherSourcesTest {
     void run_whenTheCaseIsComputed_givesExactlyWhatDr08States(HouseAndOtherSourcesGoldenCase golden,
             TaxYearId year) {
         // When
-        GoldenCaseRunner.SalaryRun run = RUNNER.run(golden, year);
+        GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(golden, year);
 
         // Then
         assertFigure(run, golden, year, NodeIds.HOUSEPROPERTY_INCOME, golden.expectedHousePropertyIncome());
@@ -66,7 +66,7 @@ class T6HousePropertyAndOtherSourcesTest {
         assertThat(run.provisional()).as("%s in %s — provisional", golden.id(), year.label()).isFalse();
     }
 
-    private static void assertFigure(GoldenCaseRunner.SalaryRun run, HouseAndOtherSourcesGoldenCase golden,
+    private static void assertFigure(GoldenCaseRunner.ShippedPipelineRun run, HouseAndOtherSourcesGoldenCase golden,
             TaxYearId year, NodeId node, Map<TaxYearId, Money> expected) {
         if (expected.containsKey(year)) {
             assertThat(run.result().valueOf(node)).as("%s in %s — %s", golden.id(), year.label(), node)
@@ -75,7 +75,7 @@ class T6HousePropertyAndOtherSourcesTest {
     }
 
     /** The {@code SETOFF-HOUSE-PROPERTY} lines of one kind, their outputs added up. */
-    private static void assertSum(GoldenCaseRunner.SalaryRun run, HouseAndOtherSourcesGoldenCase golden,
+    private static void assertSum(GoldenCaseRunner.ShippedPipelineRun run, HouseAndOtherSourcesGoldenCase golden,
             TaxYearId year, StepKind kind, Map<TaxYearId, Money> expected, String what) {
         if (expected.containsKey(year)) {
             Money sum = lines(run, RuleIds.SETOFF_HOUSE_PROPERTY).stream().filter(line -> line.kind() == kind)
@@ -85,7 +85,7 @@ class T6HousePropertyAndOtherSourcesTest {
         }
     }
 
-    private static List<TraceLine> lines(GoldenCaseRunner.SalaryRun run, RuleId rule) {
+    private static List<TraceLine> lines(GoldenCaseRunner.ShippedPipelineRun run, RuleId rule) {
         return run.result().trace().stream().filter(line -> line.rule().equals(rule)).toList();
     }
 }

@@ -46,7 +46,7 @@ class T5LeaveTravelAndInvestmentTest {
     @MethodSource("everyCaseInEveryYear")
     void run_whenTheCaseIsComputed_givesExactlyWhatDr08States(SalaryGoldenCase golden, TaxYearId year) {
         // When
-        GoldenCaseRunner.SalaryRun run = RUNNER.run(golden, year);
+        GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(golden, year);
 
         // Then
         String described = golden.id() + " in " + year.label() + " — " + golden.source();

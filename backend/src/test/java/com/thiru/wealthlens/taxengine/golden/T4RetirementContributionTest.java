@@ -62,7 +62,7 @@ class T4RetirementContributionTest {
                 .reduce(Money.ZERO, Money::plus);
 
         // When
-        GoldenCaseRunner.SalaryRun run = RUNNER.run(golden, year);
+        GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(golden, year);
 
         // Then — the charge, and gross salary above the pay by that and the employer's pension contribution, which
         // "salary" includes (S2 s.16(k); D-140 erratum to D-128 C4): T4-1, T4-2 74,000 + 3,36,000 = 4,10,000

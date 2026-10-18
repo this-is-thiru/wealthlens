@@ -134,18 +134,18 @@ final class GoldenCaseRunner {
     }
 
     /**
-     * One salary-head run.
+     * A run of the shipped pipeline up to a slot, for a golden case stated on one head's facts.
      *
      * @param provisional whether any line cites an {@code UNVERIFIED} rule version — reported, never skipped
      */
-    record SalaryRun(PipelineRunner.Result result, boolean provisional) {
+    record ShippedPipelineRun(PipelineRunner.Result result, boolean provisional) {
     }
 
     /**
      * A case stated as salary facts, run through the shipped pipeline to income under "Salaries" (D-104), or on to
      * Chapter VIII where it expects a deduction (D-153).
      */
-    SalaryRun run(SalaryGoldenCase golden, TaxYearId year) {
+    ShippedPipelineRun run(SalaryGoldenCase golden, TaxYearId year) {
         RulePack pack = pack(year);
         NodeRegistry registry = NodeRegistry.of(BUILT);
         RegimeSpec shipped = pack.regimes().get(golden.regime());
@@ -169,14 +169,14 @@ final class GoldenCaseRunner {
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
-        return new SalaryRun(result, provisional);
+        return new ShippedPipelineRun(result, provisional);
     }
 
     /**
      * A T6 case, run through the shipped pipeline to Chapter VIII on its houses and other-source items alone, the
      * person aged as {@link GoldenCase} ages them (D-211).
      */
-    SalaryRun run(HouseAndOtherSourcesGoldenCase golden, TaxYearId year) {
+    ShippedPipelineRun run(HouseAndOtherSourcesGoldenCase golden, TaxYearId year) {
         RulePack pack = pack(year);
         NodeRegistry registry = NodeRegistry.of(BUILT);
         RegimeSpec shipped = pack.regimes().get(golden.regime());
@@ -197,7 +197,7 @@ final class GoldenCaseRunner {
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, heads, inputs);
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
-        return new SalaryRun(result, provisional);
+        return new ShippedPipelineRun(result, provisional);
     }
 
     /**

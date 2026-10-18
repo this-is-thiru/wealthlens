@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-080a2 DONE; between items)
+Item            : — (W-080a3 DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's pick. Next in order: W-080a3 (rename the test-only GoldenCaseRunner.SalaryRun), then W-079e2, W-084, W-084a. Open OQs: OQ-30 (W-088). UNVERIFIED: 0. Unplaced proposals: none
-Last verify     : unit -Punit → 2910 run, 0 fail, 0 Checkstyle (W-080a2, 2026-10-18)
+Next step       : WAIT for the owner's pick. Next in order: W-079e2 (TY 2025-26 interest allowance shared by dividends and units, OQ-26 Q2: by income share), then W-084, W-084a, W-085. Open OQs: OQ-30 (W-088). UNVERIFIED: 0. Unplaced proposals: none
+Last verify     : unit -Punit → 2910 run, 0 fail, 0 Checkstyle (W-080a3, 2026-10-18)
 Waiting on      : the owner — next pick
 Files touched   : none
-Last item commit: taxplanning W-080a2: price a per-kilometre LTA journey with an uncovered child on the whole rate — the child takes no share, the OQ-27 refusal removed (D-232)
-Updated         : 2026-10-18, session 21 — W-080a2 committed
+Last item commit: taxplanning W-080a3: rename the test-only GoldenCaseRunner.SalaryRun to ShippedPipelineRun — it holds house-property and other-sources runs too, so the old name misled (D-233)
+Updated         : 2026-10-18, session 21 — W-080a3 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

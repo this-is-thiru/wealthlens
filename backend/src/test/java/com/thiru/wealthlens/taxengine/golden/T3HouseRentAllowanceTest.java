@@ -50,7 +50,7 @@ class T3HouseRentAllowanceTest {
     @MethodSource("everyCaseInEveryYear")
     void run_whenTheCaseIsComputed_exemptsExactlyWhatDr08States(SalaryGoldenCase golden, TaxYearId year) {
         // When
-        GoldenCaseRunner.SalaryRun run = RUNNER.run(golden, year);
+        GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(golden, year);
 
         // Then
         assertThat(run.result().valueOf(NodeIds.SALARY_EXEMPTIONS))
