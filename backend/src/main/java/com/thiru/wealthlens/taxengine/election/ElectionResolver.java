@@ -23,8 +23,8 @@ import java.util.Optional;
  * <p>A stated choice is computed once, each choice under the regime it names ({@link Election#regimeFor}; D-222). Otherwise each choice is a whole pipeline run and the one with the least
  * {@code tax.netpayable} is taken; a tie goes to the earlier choice, so to the declared default where it is among the
  * cheapest. Whole runs, because the in-run {@code Recomputation} (D-086) seeds what it does not rerun from the run's
- * values so far, which an election read early in the graph does not yet have; {@code IncrementalRunner} (W-084) is to
- * make this cheaper. The resolver sits outside the graph, so it runs the pipeline itself (D-220).
+ * values so far, which an election read early in the graph does not yet have; a whole run costs milliseconds, and
+ * reusing part of one needs input reads the graph does not yet record (D-235, W-143a). The resolver sits outside the graph, so it runs the pipeline itself (D-220).
  *
  * <p>Every alternative becomes a MEASURE line of the election's basis rule under its node, appended to the chosen
  * run's trace — the outputs are projections of the trace ({@code D-VIEWFROMTRACE}), so an alternative kept anywhere

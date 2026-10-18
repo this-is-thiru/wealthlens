@@ -1146,8 +1146,8 @@ if that is not enough for the item in hand.
 | W-080a2 | LTA per-kilometre journeys with an uncovered child *(D-228, OQ-27)*: Rules 2026 r.278(1)(iii)(B)'s ₹30 per kilometre is for the distance of the journey, so a child the two-children limit leaves out takes no share of it; lifts D-212 C6a's refusal | `DR 01` R10; D-212; D-228 | |
 | W-080a3 | Rename the test-only `GoldenCaseRunner.SalaryRun` *(D-228)*: it holds a run of the shipped pipeline to a slot and whether any line cites an `UNVERIFIED` version, for salary, house-property and other-sources golden cases alike — a name stating that, its 12 uses updated; no behaviour change | CLAUDE.md standard 3; `plans/W-080.md` | test code only |
 | W-079e2 | The TY 2025-26 interest allowance shared by dividends and units *(D-229, OQ-26 Q2)*: where the 1961 s.57 proviso's 20% limit binds over interest claimed against both, the allowed interest is attributed to dividend and unit income in proportion to each's income, giving the dividend income taken out of the surcharge's 25%/37% test; lifts D-200 C3a's refusal | `DR 06` G3; D-200; D-229 | TY 2025-26 only (nil from TY 2026-27, S2 s.93(2)) |
-| W-084 | `IncrementalRunner` | `DR 15` B5 | memo only where the graph proves nothing upstream moved |
-| W-084a | Several elections resolved together *(D-230)*: the product of the choices of the elections a computation carries (regime, house specification, set-off order), priced jointly on `IncrementalRunner`; today each is resolved alone, which is not jointly optimal (the regime changes what a house choice is worth) | `DR 15` C2, B5; D-230 | needs W-084 |
+| W-084 | `IncrementalRunner` | `DR 15` B5 | memo only where the graph proves nothing upstream moved **Closed (D-235):** no code — no input read is a graph edge, so the graph cannot prove what an input change reaches; the need placed as W-143a |
+| W-084a | Several elections resolved together *(D-230)*: the product of the choices of the elections a computation carries (regime, house specification, set-off order), priced jointly on `IncrementalRunner`; today each is resolved alone, which is not jointly optimal (the regime changes what a house choice is worth) | `DR 15` C2, B5; D-230 | needs W-084 **Erratum (D-235):** priced jointly on whole runs — W-084 closed without code; no longer needs it |
 | W-085 | `CapitalGainsSummary`, `CapitalGainsBucket`, `RateBasisHint` | `DR 13` R-10, `DR 15` F5 | gross buckets; **no tax amounts** |
 
 > **Erratum (W-037b, 2026-09-21):** `RateBasisHint` **moves to `W-037b`**, which declares it in
@@ -1298,6 +1298,7 @@ if that is not enough for the item in hand.
 | W-141 | independent Python oracle + `expected.csv` | `DR 19` E4.2 |
 | W-142 | trace snapshot tests | `DR 19` E4.3 |
 | W-143 | performance benchmarks N1–N3 | `01-PRD.md` §5 |
+| W-143a | `IncrementalRunner` with declared input reads *(D-235)*: every node declares the `EngineInputs` parts it reads, enforced by `NodeContext` as `rules()` is, so the graph can prove what an input change reaches; then re-evaluate only what it reaches (`DR 15` B5) — built only if W-143's benchmarks of N1–N3 or of W-084a's joint pricing miss their budget, else closed by a D-row with the measurement | `DR 15` B5; D-235 | needs W-143's measurement |
 | W-144 | JaCoCo + PIT gates | `DR 07` X5.5 |
 | W-145 | persona fixtures | `DR 19` E10 |
 | W-146 | **synthetic pack test** — three regimes, synthetic year, sunset | `DR 10` E8, `DR 17` T17-11, `DR 18` T18-13 |
@@ -1369,7 +1370,7 @@ written down. Where a type's owning item is `—`, it has **no home yet**: stop 
 | `PackDiff`, `Finding`, `ValueChanged`, `RuleAdded`, `RuleRemoved`, `ProvisionRenumbered`, `SuspiciousCopy`, `CarriedForwardUnverified` | `W-139` | `Finding` is a sealed family of six; the table names neither |
 | `BoundaryCaseGenerator` | `W-140` | named in prose only |
 | `Fixtures`, `Pack2026` | `W-145` | the persona fixtures and the pack they read |
-| `IncrementalRunner` | `W-084` | named in prose only |
+| `IncrementalRunner` | `W-084` | named in prose only **Moved (D-235):** → `W-143a` |
 | `T1SlabAndRebateBoundaryTest` | `W-053` | `W-053` names `T1SlabAndRebateTest`; `16-getting-started.md` also declares a boundary variant |
 | `RegimeBehaviour`, `DataDrivenRegimeBehaviour` | **`W-031b`** | L5's escape hatch. `BehaviourId` (built, `W-026c`) carries invariant I9 — *a behaviour id with no registered implementation is a load error* — which **cannot be checked until a registry exists**. No item builds one |
 | `ComponentCodes`, `RuleIds` | **`W-032b`** | `19-engineering-foundations.md` E-series: **build-time generated** constants giving compile-safety over pack data. No item generates them, and no item sets up the generator |
