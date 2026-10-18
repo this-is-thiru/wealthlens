@@ -1,18 +1,19 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.Recomputation;
 import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -40,8 +41,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * The surcharge on the tax after rebate, at the greater of the two ladders' rates, less the W = U + V
- * relief (D-084, D-085, D-086). Every expected figure is copied from {@code DR 08} T2 (VERIFIED, both years);
- * none is computed here.
+ * relief (D-084, D-085, D-086), the tax on dividends and the special gains limited to fifteen per cent (D-246). Every
+ * expected figure is copied from {@code DR 08} T2 (VERIFIED, both years) or worked by hand in {@code plans/W-088c.md}
+ * and the test's comment; none is computed by running the node.
  */
 class SurchargeNodeTest {
 
@@ -57,6 +59,19 @@ class SurchargeNodeTest {
             NEW_TAX_REGIME, Map.of(Money.of("5000000"), Money.of("1080000"), Money.of("20000000"), Money.of("5580000")),
             FIRST_SCHEDULE_RATES,
             Map.of(Money.of("20000000"), Money.of("5812500"), Money.of("50000000"), Money.of("14812500")));
+
+    private static final HeadsAfterSetOff NO_CAPITAL_GAINS = new HeadsAfterSetOff(Money.ZERO, Map.of());
+    private static final SpecialRateId LONG_LISTED = new SpecialRateId("RATE_CG_LONG_LISTED_EQUITY");
+
+    /*
+     * DR 08 T2-6's shape (D-246): first schedule, 2,50,00,000 = 2,00,00,000 slab + 50,00,000 listed long-term gains.
+     * Slab tax 12,500 + 1,00,000 + 0.30 × 1,90,00,000 = 58,12,500; the gains' (50,00,000 − 1,25,000) × 12.5% = 6,09,375.
+     * At 2,00,00,000 with the gains held: slab 1,50,00,000 → 43,12,500.
+     */
+    private static final Map<CapitalGainsPart, Money> FIFTY_LAKH_LISTED =
+            Map.of(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("5000000"));
+    private static final Map<Money, TaxByBasis> FIRST_SCHEDULE_AT_TWO_CRORE_WITH_GAINS = Map.of(Money.of("20000000"),
+            new TaxByBasis(Money.of("4312500"), Map.of(LONG_LISTED, Money.of("609375"))));
 
     private static RulePack pack(int year) {
         TaxYearId taxYear = TaxYearId.of(year);
@@ -81,6 +96,7 @@ class SurchargeNodeTest {
                 .regime(regime)
                 .given(NodeIds.ROUND_TOTALINCOME, Money.of(totalIncome))
                 .given(NodeIds.TAX_AFTERREBATE, afterRebate)
+                .given(NodeIds.SETOFF, NO_CAPITAL_GAINS)
                 .recomputation(atThresholds(regime))
                 .run(new SurchargeNode());
     }
@@ -171,15 +187,100 @@ class SurchargeNodeTest {
 
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
-    void evaluate_whenTheTaxCarriesSpecialRateTax_isRefusedUntilTheSplitExists(int year) {
-        // Given — RATE-SUR-SPLIT-001 and the excluding income's special gains are W-088's (D-086)
-        TaxByBasis withGains = TaxByBasis.atSlabRatesOnly(Money.of("14580000"))
-                .plusSpecialRate(new SpecialRateId("LTCG"), Money.of("100000"));
+    void evaluate_whenTheTaxCarriesSpecialRateTax_limitsItsSurchargeToFifteenPerCent(int year) {
+        // Given — new regime, 5,00,00,000 of which 8,25,000 is listed long-term gains: slab tax on 4,91,75,000 =
+        // 3,00,000 + 0.30 × 4,67,75,000 = 1,43,32,500; the gains' tax (8,25,000 − 1,25,000) × 12.5% = 87,500
+        TaxByBasis tax = new TaxByBasis(Money.of("14332500"), Map.of(LONG_LISTED, Money.of("87500")));
 
-        // When / Then
-        assertThatThrownBy(() -> run(year, NEW_TAX_REGIME, "50000000", withGains))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("W-088");
+        // When — U at 2,00,00,000: slab tax on 1,91,75,000 = 53,32,500, with the gains' 87,500
+        NodeResult result = runWithGains(year, NEW_TAX_REGIME, "50000000", tax, Map.of(
+                CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("825000")), Map.of(Money.of("20000000"),
+                new TaxByBasis(Money.of("5332500"), Map.of(LONG_LISTED, Money.of("87500")))));
+
+        // Then — excluding 4,91,75,000: 25% × 1,43,32,500 = 35,83,125; 15% × 87,500 = 13,125 (D-246); relief nil
+        // (U = 54,20,000 × 1.15 = 62,33,000; W = 3,62,33,000)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("3596250")));
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(
+                RuleIds.RATE_SUR_NEW_TAX_REGIME_EXCLUDING, RuleIds.RATE_SUR_NEW_TAX_REGIME_LIMIT,
+                RuleIds.RATE_SUR_NEW_TAX_REGIME_CEILING);
+    }
+
+    /**
+     * A run with special-rate capital gains on {@code setoff}, re-entry answering from {@code atThreshold} — the tax
+     * after rebate at each threshold with those gains held (D-246).
+     */
+    private static NodeResult runWithGains(int year, RegimeCode regime, String totalIncome, TaxByBasis afterRebate,
+            Map<CapitalGainsPart, Money> gains, Map<Money, TaxByBasis> atThreshold, OtherSourceItem... items) {
+        return NodeHarness.with(pack(year))
+                .regime(regime)
+                .inputs(withItems(year, regime, items))
+                .given(NodeIds.ROUND_TOTALINCOME, Money.of(totalIncome))
+                .given(NodeIds.TAX_AFTERREBATE, afterRebate)
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of(totalIncome), gains))
+                .recomputation((target, pinned, value) -> {
+                    TaxByBasis tax = atThreshold.get(value.asMoney());
+                    assertThat(tax).as("tax after rebate at " + value.asMoney()).isNotNull();
+                    return tax;
+                })
+                .run(new SurchargeNode());
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenT2Dash6sSpecialGainsAreLeftOut_staysOnTheFifteenPerCentClause(int year) {
+        // When — S1
+        NodeResult result = runWithGains(year, FIRST_SCHEDULE_RATES, "25000000",
+                new TaxByBasis(Money.of("5812500"), Map.of(LONG_LISTED, Money.of("609375"))), FIFTY_LAKH_LISTED,
+                FIRST_SCHEDULE_AT_TWO_CRORE_WITH_GAINS);
+
+        // Then — excluding 2,00,00,000 does not exceed 2,00,00,000; clause (v) 15% on both: 8,71,875 + 91,406.25;
+        // relief nil (U = 49,21,875 × 1.15 = 56,60,156.25; W = 1,06,60,156.25 ≥ 73,85,156.25)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("963281.25")));
+        assertThat(result.trace().get(0).rule()).isEqualTo(RuleIds.RATE_SUR_FIRST_SCHEDULE);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheRestReachesTheTwentyFivePerCentBand_limitsTheGainsTaxToFifteen(int year) {
+        // When — S2: 3,00,00,000 = 2,50,00,000 slab + 50,00,000 listed long-term gains; slab tax 1,12,500 +
+        // 0.30 × 2,40,00,000 = 73,12,500
+        NodeResult result = runWithGains(year, FIRST_SCHEDULE_RATES, "30000000",
+                new TaxByBasis(Money.of("7312500"), Map.of(LONG_LISTED, Money.of("609375"))), FIFTY_LAKH_LISTED,
+                FIRST_SCHEDULE_AT_TWO_CRORE_WITH_GAINS);
+
+        // Then — excluding 2,50,00,000: 25% × 73,12,500 = 18,28,125; 15% × 6,09,375 = 91,406.25 — not 25% of the
+        // whole, 19,80,468.75; relief nil (W = 1,56,60,156.25)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1919531.25")));
+        assertThat(result.trace().get(0).rule()).isEqualTo(RuleIds.RATE_SUR_FIRST_SCHEDULE_EXCLUDING);
+        assertThat(result.trace().get(1).in()).isEqualTo(MoneyValue.of(Money.of("609375")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenDividendsMeetTheTwentyFivePerCentBand_limitsTheirShareOfTheSlabTax(int year) {
+        // When — S3: new regime, 3,00,00,000 including 30,00,000 of dividends; slab tax 3,00,000 + 0.30 ×
+        // 2,76,00,000 = 85,80,000
+        NodeResult result = runWith(year, NEW_TAX_REGIME, "30000000", "8580000",
+                item(OtherSourceKind.DIVIDEND, "3000000", "0"));
+
+        // Then — excluding 2,70,00,000: 25%; the dividends' share 85,80,000 × 30,00,000 ÷ 3,00,00,000 = 8,58,000
+        // (D-229); 25% × 77,22,000 = 19,30,500 + 15% × 8,58,000 = 1,28,700; relief nil (U = 55,80,000 × 1.15)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("2059200")));
+        assertThat(result.trace().get(1).in()).isEqualTo(MoneyValue.of(Money.of("858000")));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenDividendsAndSpecialGainsArePresent_measuresTheShareOnTheAggregateIncome(int year) {
+        // When — S4: first schedule, 3,00,00,000 = 2,50,00,000 slab (25,00,000 of it dividend) + 50,00,000 listed
+        // long-term gains
+        NodeResult result = runWithGains(year, FIRST_SCHEDULE_RATES, "30000000",
+                new TaxByBasis(Money.of("7312500"), Map.of(LONG_LISTED, Money.of("609375"))), FIFTY_LAKH_LISTED,
+                FIRST_SCHEDULE_AT_TWO_CRORE_WITH_GAINS, item(OtherSourceKind.DIVIDEND, "2500000", "0"));
+
+        // Then — excluding 2,25,00,000: 25%; share 73,12,500 × 25,00,000 ÷ 2,50,00,000 (aggregate income) = 7,31,250;
+        // 25% × 65,81,250 = 16,45,312.50 + 15% × (7,31,250 + 6,09,375) = 2,01,093.75; relief nil
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1846406.25")));
     }
 
     /** A taxpayer whose only entry is a dividend: what the excluding-income test needs to see (D-194 C4a). */
@@ -207,20 +308,14 @@ class SurchargeNodeTest {
 
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
-    void evaluate_whenTheIncomeLessDividendsStillMeetsTheExcludingBand_isRefusedUntilTheLimitIsMeasured(int year) {
-        // Given — T2-4's 5,00,00,000 under the first schedule, 10,00,000 of it a dividend: 4,90,00,000 still bites
-        NodeHarness harness = NodeHarness.with(pack(year))
-                .regime(FIRST_SCHEDULE_RATES)
-                .inputs(withDividend(year, FIRST_SCHEDULE_RATES))
-                .given(NodeIds.ROUND_TOTALINCOME, Money.of("50000000"))
-                .given(NodeIds.TAX_AFTERREBATE, TaxByBasis.atSlabRatesOnly(Money.of("14812500")))
-                .recomputation(atThresholds(FIRST_SCHEDULE_RATES));
+    void evaluate_whenTheIncomeLessDividendsStillMeetsTheExcludingBand_limitsTheDividendsShare(int year) {
+        // When — T2-4's 5,00,00,000 under the first schedule, 10,00,000 of it a dividend: 4,90,00,000 still bites
+        NodeResult result = runWith(year, FIRST_SCHEDULE_RATES, "50000000", "14812500",
+                item(OtherSourceKind.DIVIDEND, "1000000", "0"));
 
-        // When / Then — the dividends' own tax would bear at most 15%, and measuring it is OQ-26: refused
-        assertThatThrownBy(() -> harness.run(new SurchargeNode()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("OQ-26")
-                .hasMessageContaining("W-088");
+        // Then — share 1,48,12,500 × 10,00,000 ÷ 5,00,00,000 = 2,96,250 (D-229); 25% × 1,45,16,250 = 36,29,062.50 +
+        // 15% × 2,96,250 = 44,437.50; relief nil (U at 2,00,00,000 = 58,12,500 × 1.15; W ≥ 3,66,84,375)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("3673500")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -232,6 +327,7 @@ class SurchargeNodeTest {
                 .inputs(withDividend(year, NEW_TAX_REGIME))
                 .given(NodeIds.ROUND_TOTALINCOME, Money.of("5000000"))
                 .given(NodeIds.TAX_AFTERREBATE, TaxByBasis.atSlabRatesOnly(Money.of("1080000")))
+                .given(NodeIds.SETOFF, NO_CAPITAL_GAINS)
                 .recomputation(atThresholds(NEW_TAX_REGIME))
                 .run(new SurchargeNode());
 
@@ -251,6 +347,7 @@ class SurchargeNodeTest {
                 .inputs(withItems(year, regime, items))
                 .given(NodeIds.ROUND_TOTALINCOME, Money.of(totalIncome))
                 .given(NodeIds.TAX_AFTERREBATE, TaxByBasis.atSlabRatesOnly(Money.of(afterRebate)))
+                .given(NodeIds.SETOFF, NO_CAPITAL_GAINS)
                 .recomputation(atThresholds(regime));
     }
 
@@ -286,15 +383,14 @@ class SurchargeNodeTest {
 
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
-    void evaluate_whenTheIncomeLessDividendsIsJustOverTheThreshold_isRefused(int year) {
-        // Given — 2,50,00,000 of which 49,99,990 is dividend: 2,00,00,010 exceeds 2,00,00,000
-        NodeHarness harness = harnessWith(year, FIRST_SCHEDULE_RATES, "25000000", "7312500",
+    void evaluate_whenTheIncomeLessDividendsIsJustOverTheThreshold_chargesTwentyFivePerCentOnTheRest(int year) {
+        // When — 2,50,00,000 of which 49,99,990 is dividend: 2,00,00,010 exceeds 2,00,00,000
+        NodeResult result = runWith(year, FIRST_SCHEDULE_RATES, "25000000", "7312500",
                 item(OtherSourceKind.DIVIDEND, "4999990", "0"));
 
-        // When / Then
-        assertThatThrownBy(() -> harness.run(new SurchargeNode()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("OQ-26");
+        // Then — share 73,12,500 × 49,99,990 ÷ 2,50,00,000 = 14,62,497.075 → 14,62,497.08; 25% × 58,50,002.92 =
+        // 14,62,500.73 + 15% × 14,62,497.08 = 2,19,374.562 → 2,19,374.56; relief nil (W = 1,16,84,375)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1681875.29")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -334,13 +430,13 @@ class SurchargeNodeTest {
     @Test
     void evaluate_whenTaxYear2025AllowsInterestAgainstTheDividend_takesOutTheDividendLessIt() {
         // Given — 50,00,000 of dividend bearing 1,000 of interest; 20% × 50,00,000 = 10,00,000, so all 1,000 allowed
-        NodeHarness harness = harnessWith(2025, FIRST_SCHEDULE_RATES, "25000000", "7312500",
+        NodeResult result = runWith(2025, FIRST_SCHEDULE_RATES, "25000000", "7312500",
                 item(OtherSourceKind.DIVIDEND, "5000000", "1000"));
 
-        // When / Then — dividend income 49,99,000: excluding 2,00,01,000 exceeds the threshold
-        assertThatThrownBy(() -> harness.run(new SurchargeNode()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("OQ-26");
+        // Then — dividend income 49,99,000: excluding 2,00,01,000 exceeds the threshold, so 25% on the rest; share
+        // 73,12,500 × 49,99,000 ÷ 2,50,00,000 = 14,62,207.50; 25% × 58,50,292.50 = 14,62,573.125 → 14,62,573.13 +
+        // 15% × 14,62,207.50 = 2,19,331.125 → 2,19,331.13 (each part rounded once); relief nil (W = 1,16,84,375)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1681904.26")));
     }
 
     @Test
@@ -389,14 +485,15 @@ class SurchargeNodeTest {
     void evaluate_whenTheUnitsIncomeShareExceedsTheirClaim_attributesTheRestToTheDividends() {
         // Given — 10,00,000 dividend bearing 5,00,000, 10,00,000 units bearing 1,00,000; allowed 4,00,000; the
         // units' share 2,00,000 is more than their 1,00,000, so the dividends' is 4,00,000 − 1,00,000 = 3,00,000
-        NodeHarness harness = harnessWith(2025, FIRST_SCHEDULE_RATES, "20800000", "6052500",
+        NodeResult result = runWith(2025, FIRST_SCHEDULE_RATES, "20800000", "6052500",
                 item(OtherSourceKind.DIVIDEND, "1000000", "500000"), item(OtherSourceKind.UNIT_INCOME, "1000000",
                         "100000"));
 
-        // When / Then — dividend income 7,00,000: excluding 2,01,00,000 still reaches the 25% ladder with dividends
-        // present, which is W-088's; the bare share would leave 2,00,00,000 and charge 15%
-        assertThatThrownBy(() -> harness.run(new SurchargeNode()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("W-088");
+        // Then — dividend income 7,00,000: excluding 2,01,00,000 reaches the 25% ladder (the bare share would leave
+        // 2,00,00,000 and charge 15%). Share 60,52,500 × 7,00,000 ÷ 2,08,00,000 = 2,03,689.903… → 2,03,689.90;
+        // 25% × 58,48,810.10 = 14,62,202.525 → 14,62,202.53 + 15% × 2,03,689.90 = 30,553.485 → 30,553.49 =
+        // 14,92,756.02. Relief binds: U at 2,00,00,000 = 58,12,500 × 1.15 = 66,84,375 (one rate there, so the whole
+        // tax is charged at it); W = 74,84,375 against 75,45,256.02 → relief 60,881.02; surcharge 14,31,875
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1431875")));
     }
 }

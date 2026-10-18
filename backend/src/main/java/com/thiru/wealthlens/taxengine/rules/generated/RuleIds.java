@@ -141,9 +141,11 @@ public final class RuleIds {
     public static final RuleId RATE_SUR_FIRST_SCHEDULE = new RuleId("RATE-SUR-FIRST-SCHEDULE");
     public static final RuleId RATE_SUR_FIRST_SCHEDULE_CEILING = new RuleId("RATE-SUR-FIRST-SCHEDULE-CEILING");
     public static final RuleId RATE_SUR_FIRST_SCHEDULE_EXCLUDING = new RuleId("RATE-SUR-FIRST-SCHEDULE-EXCLUDING");
+    public static final RuleId RATE_SUR_FIRST_SCHEDULE_LIMIT = new RuleId("RATE-SUR-FIRST-SCHEDULE-LIMIT");
     public static final RuleId RATE_SUR_NEW_TAX_REGIME = new RuleId("RATE-SUR-NEW-TAX-REGIME");
     public static final RuleId RATE_SUR_NEW_TAX_REGIME_CEILING = new RuleId("RATE-SUR-NEW-TAX-REGIME-CEILING");
     public static final RuleId RATE_SUR_NEW_TAX_REGIME_EXCLUDING = new RuleId("RATE-SUR-NEW-TAX-REGIME-EXCLUDING");
+    public static final RuleId RATE_SUR_NEW_TAX_REGIME_LIMIT = new RuleId("RATE-SUR-NEW-TAX-REGIME-LIMIT");
     public static final RuleId REBATE_NEW_TAX_REGIME = new RuleId("REBATE-NEW-TAX-REGIME");
     public static final RuleId REBATE_NEW_TAX_REGIME_EXCESS = new RuleId("REBATE-NEW-TAX-REGIME-EXCESS");
     public static final RuleId REBATE_RESIDENT_INDIVIDUAL = new RuleId("REBATE-RESIDENT-INDIVIDUAL");

@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-088b DONE; between items)
+Item            : — (W-088c DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's pick, and ask placement of the two limbs (S2 s.197(3) / 1961 s.112(1)(a) second proviso land-or-building; s.197(4) / s.112(1)(c)(iii) non-resident unlisted). Next in order: W-088c (OQ-30 first), W-088d, W-088e, W-088f (OQ-31). Open OQs: OQ-30 – OQ-33
-Last verify     : unit -Punit (clean) → 2975 run, 0 fail, 0 Checkstyle; integration 252/0 (W-088b, 2026-10-18)
-Waiting on      : the owner — next pick; placement of two limbs
+Next step       : WAIT for the owner's pick. Next in order: W-088d (capital-loss carry-forward, S2 s.111 / 1961 s.74), then W-088e, W-088f (OQ-31), W-088g, W-088h, W-089. Open OQs: OQ-31, OQ-32, OQ-33
+Last verify     : unit -Punit (clean) → 2983 run, 0 fail, 0 Checkstyle; integration 252/0 (W-088c, 2026-10-18)
+Waiting on      : the owner — next pick
 Files touched   : none
-Last item commit: taxplanning W-088b: tax the special-rate capital gains at their own rates, with the unused basic exemption shifted onto them and Chapter VIII kept off them — the shift order the Department's utility's, OQ-33 raised (D-244)
-Updated         : 2026-10-18, session 21 — W-088b committed
+Last item commit: taxplanning W-088c: limit the surcharge on the tax on dividends and special-rate gains to 15% and leave those gains out of the 25%/37% test — the dividends' share pro rata on aggregate income, OQ-30 answered by the Act (D-245, D-246)
+Updated         : 2026-10-18, session 21 — W-088c committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
