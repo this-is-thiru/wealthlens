@@ -1,12 +1,14 @@
 package com.thiru.wealthlens.taxengine.golden;
 
 import com.thiru.wealthlens.taxengine.election.ElectionResolver;
+import com.thiru.wealthlens.taxengine.election.HouseElection;
 import com.thiru.wealthlens.taxengine.election.RegimeElection;
 import com.thiru.wealthlens.taxengine.election.SetOffOrderElection;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.HouseProperty;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
@@ -234,6 +236,27 @@ final class GoldenCaseRunner {
                 plain.filing());
         return ElectionResolver.resolve(new RegimeElection(), NodeRegistry.of(nodes), pack,
                 pack.regimes().get(plain.regime()), inputs);
+    }
+
+    /**
+     * The houses' specification resolved by recomputation over the whole shipped engine (D-230), other-sources interest
+     * the only other income, the harness taxpayer in the given regime.
+     */
+    ElectionResolver.Resolution<List<Integer>> resolveHouses(TaxYearId year, RegimeCode regime,
+            List<HouseProperty> houses, Money interest) {
+        RulePack pack = pack(year);
+        List<ComputationNode> nodes = new ArrayList<>(BUILT);
+        nodes.add(new TotalIncomeNode());
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        OtherSourceItem item = new OtherSourceItem(OtherSourceKind.OTHER_INTEREST, interest, Money.ZERO, Money.ZERO,
+                Money.ZERO, false);
+        EngineInputs inputs = new EngineInputs(year, regime,
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), houses, List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                plain.filing());
+        return ElectionResolver.resolve(new HouseElection(), NodeRegistry.of(nodes), pack, pack.regimes().get(regime),
+                inputs);
     }
 
     /** A first return, but for the journeys earlier years claimed in each LTA block. */

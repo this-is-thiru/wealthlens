@@ -1142,7 +1142,12 @@ if that is not enough for the item in hand.
 | W-066f | Other gratuity and other leave encashment from more than one employer *(D-224)*: `RetirementPayment` names the employment that paid it (one payment per component per employment); each payment measured on its own employment's terms, separation or leave figures (S2 s.19(1) Table Sl. 6, 14; 1961 s.10(10)(iii), (10AA)(ii)); the year's total capped at A − B (S2 s.19(2)(a), (f); 1961 provisos — "from one or more than one employer in the same tax year … the aggregate amount of deduction shall not exceed"); the split of the cap cannot change the tax (same head), so no election (D-223); lifts W-066e's refusal for these two entries | `DR 01` R14; D-106; D-224 | ~50 test call sites gain the employment |
 | W-066g | The other capped retirement entries from more than one employer *(D-224)*: commuted pension from another employer (S2 s.19(1) Table Sl. 8; 1961 s.10(10A)(ii)), voluntary retirement (Sl. 12; s.10(10C)), statutory gratuity and retrenchment (D-109) — each to source for a second employer in the year; and whether a commutation's "gratuity also received" limb reads the same employer's gratuity (today every employment's `GRATUITY`); lifts W-066e's refusal for these four | `DR 01` R14; D-103, D-109; D-224 | needs W-066f's per-employment payment |
 | W-083 | `HouseElectionNode` | `DR 13` R-6 | which two houses is a **choice**, and optimisable **also (D-220):** the `HouseElection` variant of `Election` (W-082a), and `ElectionOutcome` as a `NodeValue` variant |
+| W-075c5b | Deposit interest net of its expenditure *(D-228, OQ-25)*: s.153 (1961 ss.80TTA, 80TTB) worked on the interest net of the expenditure deducted against it under S2 s.93(1)(e) / 1961 s.57(iii) — the amount gross total income includes; lifts D-195 C2a's refusal of a deposit-interest item with an expense where s.153 applies | `DR 01` R15; D-195; D-228 | the `DepositInterestDeduction` reads the head's net interest per item |
+| W-080a2 | LTA per-kilometre journeys with an uncovered child *(D-228, OQ-27)*: Rules 2026 r.278(1)(iii)(B)'s ₹30 per kilometre is for the distance of the journey, so a child the two-children limit leaves out takes no share of it; lifts D-212 C6a's refusal | `DR 01` R10; D-212; D-228 | |
+| W-080a3 | Rename the test-only `GoldenCaseRunner.SalaryRun` *(D-228)*: it holds a run of the shipped pipeline to a slot and whether any line cites an `UNVERIFIED` version, for salary, house-property and other-sources golden cases alike — a name stating that, its 12 uses updated; no behaviour change | CLAUDE.md standard 3; `plans/W-080.md` | test code only |
+| W-079e2 | The TY 2025-26 interest allowance shared by dividends and units *(D-229, OQ-26 Q2)*: where the 1961 s.57 proviso's 20% limit binds over interest claimed against both, the allowed interest is attributed to dividend and unit income in proportion to each's income, giving the dividend income taken out of the surcharge's 25%/37% test; lifts D-200 C3a's refusal | `DR 06` G3; D-200; D-229 | TY 2025-26 only (nil from TY 2026-27, S2 s.93(2)) |
 | W-084 | `IncrementalRunner` | `DR 15` B5 | memo only where the graph proves nothing upstream moved |
+| W-084a | Several elections resolved together *(D-230)*: the product of the choices of the elections a computation carries (regime, house specification, set-off order), priced jointly on `IncrementalRunner`; today each is resolved alone, which is not jointly optimal (the regime changes what a house choice is worth) | `DR 15` C2, B5; D-230 | needs W-084 |
 | W-085 | `CapitalGainsSummary`, `CapitalGainsBucket`, `RateBasisHint` | `DR 13` R-10, `DR 15` F5 | gross buckets; **no tax amounts** |
 
 > **Erratum (W-037b, 2026-09-21):** `RateBasisHint` **moves to `W-037b`**, which declares it in
@@ -1177,6 +1182,11 @@ if that is not enough for the item in hand.
 > dividends still reaches that ladder; `W-088` builds the dividend slice of the limit on OQ-26's answer.
 > Verified by: FA 2026 Part I-A Para F Table 1 Sl. 1 (vi), p.83; `DR 06` G3 ("specialTax = tax on the dividend …
 > slices", no method); `SurchargeNode`.
+
+> **Erratum (D-229, 2026-10-18):** OQ-26 is answered — `W-088` builds the dividend slice as the pro-rata share (the slab tax ×
+> dividend income ÷ aggregate income, as the Department's ITR-2 utility computes it, `V300`), and also answers **OQ-30** (whether unit
+> distributions count as dividend income for the limit) before it is planned.
+> Verified by: `sources/2026-10-18-dividend-surcharge-attribution.md` sources 8–9.
 
 | W-089 | **T13-1 test** — rebate with special-rate income | `DR 13` R-5 | **the most dangerous interaction in the design** |
 | W-089a | When salary is taxed — due, paid in advance, or arrears — and relief for arrears *(D-162)*: S2 s.15, s.157 with Rules 2026 r.73 / Form No. 39; 1961 s.15, s.89 with r.21A / Form 10E (`REL-ARREARS-*`) | `DR 01` R19 | the relief needs the years the salary belongs to |
@@ -1416,6 +1426,9 @@ build break, not a head start.
 
 > **Erratum (W-082c, 2026-10-18, D-223):** `ChildElection` and `AggregateAllocationElection` are not built — neither choice exists in the model (counts against one per-child limit; one other gratuity a year against a fixed B); the gratuity allocation returns with W-066e if two gratuities in one year leave a choice.
 > Verified by: `plans/W-082c.md` findings 1–2; `AllowanceExemption.java` l.157–163; `RetirementNode.java` l.111–119.
+
+> **Erratum (W-083, 2026-10-18, D-230):** W-083 builds no `HouseElectionNode` and no `elections.houses` slot, and `ElectionOutcome` does not become a `NodeValue` there: the house choice is read by `houseproperty.income`, early in the graph, so it is resolved outside the graph like the other elections (`HouseElection`, an `Election` variant); `ElectionOutcome`'s `NodeValue` variant waits for a node that produces one, which no item now plans. This also corrects W-083's row (*"`HouseElectionNode`"*) and D-220's note on it.
+> Verified by: `plans/W-083.md` findings 1–2; `PipelineRunner.java` `RunRecomputation`.
 
 Two of that last group are already reachable and have no thrower:
 **`UndeterminedApportionmentException`** is what `W-066b`'s `TemporallyApportionedCap` must throw on

@@ -18,7 +18,7 @@ import java.util.Optional;
  *
  * @param <T> what is chosen
  */
-public sealed interface Election<T> permits RegimeElection, SetOffOrderElection {
+public sealed interface Election<T> permits HouseElection, RegimeElection, SetOffOrderElection {
 
     /** The rule a choice's priced line cites: what the choice changes, so the figure is addressable by it. */
     RuleId basis(T choice, RulePack pack);
