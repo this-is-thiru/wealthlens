@@ -1148,7 +1148,7 @@ if that is not enough for the item in hand.
 | W-079e2 | The TY 2025-26 interest allowance shared by dividends and units *(D-229, OQ-26 Q2)*: where the 1961 s.57 proviso's 20% limit binds over interest claimed against both, the allowed interest is attributed to dividend and unit income in proportion to each's income, giving the dividend income taken out of the surcharge's 25%/37% test; lifts D-200 C3a's refusal | `DR 06` G3; D-200; D-229 | TY 2025-26 only (nil from TY 2026-27, S2 s.93(2)) |
 | W-084 | `IncrementalRunner` | `DR 15` B5 | memo only where the graph proves nothing upstream moved **Closed (D-235):** no code — no input read is a graph edge, so the graph cannot prove what an input change reaches; the need placed as W-143a |
 | W-084a | Several elections resolved together *(D-230)*: the product of the choices of the elections a computation carries (regime, house specification, set-off order), priced jointly on `IncrementalRunner`; today each is resolved alone, which is not jointly optimal (the regime changes what a house choice is worth) | `DR 15` C2, B5; D-230 | needs W-084 **Erratum (D-235):** priced jointly on whole runs — W-084 closed without code; no longer needs it |
-| W-085 | `CapitalGainsSummary`, `CapitalGainsBucket`, `RateBasisHint` | `DR 13` R-10, `DR 15` F5 | gross buckets; **no tax amounts** |
+| W-085 | `CapitalGainsSummary`, `CapitalGainsBucket`, `RateBasisHint` | `DR 13` R-10, `DR 15` F5 | gross buckets; **no tax amounts** **Built (D-237):** `portfolio/dto/` records — one bucket per classification, asset type and sub-class (`gainRupees`, `TMoney`-canonical), no brought-forward loss (the tax ledger's, W-088); W-086 builds it from `trade_outcomes` |
 
 > **Erratum (W-037b, 2026-09-21):** `RateBasisHint` **moves to `W-037b`**, which declares it in
 > `taxrules.component`. `W-037b`'s `CapitalGainsInput` is typed in it and cannot wait for Phase 9;
@@ -1351,7 +1351,7 @@ written down. Where a type's owning item is `—`, it has **no home yet**: stop 
 | `Computation` | `W-043` | `05-domain-model.md`'s name for what A6 split into `TaxComputation` + `FilingPosition` — confirm it is the same thing before building both |
 | `CompletedMonths`, `CalendarMonths`, `Days` | `W-066` | the three `ProrationBasis` variants; the phase table names only the family |
 | `Election`, `ElectionResolver`, `ElectionState`, `ElectionEvent`, `RegimeElectionHistory` | `W-082` | L3's second half — per-taxpayer election state, append-only |
-| `CapitalGainsSummary`, `CapitalGainsBucket` | `W-085` | named in prose only |
+| `CapitalGainsSummary`, `CapitalGainsBucket` | `W-085` | named in prose only **Built (D-237)** |
 | `MoneyBridge` | `W-087` | named in prose only |
 | `ItrFormSpec`, `ItrFormSelector` | `W-090`, `W-091` | **+ invariants I19, I20** (D-016) |
 | `ItrSchedule`, `FieldSource`, `FromRule`, `FromNode`, `FromComponents`, `FromProfile`, `ManualEntry`, `SumOf`, `ScheduleField` | `W-092` | `FieldSource` is a sealed family of six; the table names the parent. **+ I21, I22** |

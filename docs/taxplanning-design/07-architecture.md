@@ -73,6 +73,13 @@ Three properties, each forced by something read this session:
   `RECOMMENDATION`: a non-zero `UNCLASSIFIED` **blocks** the computation with an
   `ACTION_REQUIRED` notice. Defaulting it either way is O-1's silent zero wearing a different hat.
 
+> **Erratum (W-085, 2026-10-18):** the sketch's `Map<CapitalGainsType, Money>` cannot decide the rate basis — the
+> rate depends on the asset, and `ProfitAndLossEntity` already sums every asset per classification — and its two
+> brought-forward fields have no source in `portfolio` (see `15-review-findings.md` F5's erratum). Built as one bucket
+> per classification, asset type and sub-class, read from `trade_outcomes` by `W-086`, with no brought-forward loss
+> (D-237). Verified by: `TradeOutcomeEntity.java:65-66, 152-153` (`asset_type`, `instrument_sub_class`);
+> `RealisedProfits.gainsByClassification` (`Map<CapitalGainsType, FinancialReport>`).
+
 ### X1.4 Events
 
 `FACT`: `grep -rln "ApplicationEventPublisher|@ApplicationModuleListener|@EventListener"` over

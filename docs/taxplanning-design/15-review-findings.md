@@ -698,6 +698,16 @@ against **any** capital gain; a long-term loss **only** against long-term) is a 
 in the rule pack, and it interacts with `SETOFF-NEW-001`'s regime-dependent treatment. `portfolio` has
 neither the pack nor the regime.
 
+> **Erratum (W-085, 2026-10-18):** `portfolio` cannot supply brought-forward balances, and the sketch's
+> `broughtForward` field is dropped — `portfolio` holds no capital-loss carry-forward at all, and the balance a year
+> brings forward is what earlier *returns* left after their own set-off (s.108(2), s.111), a tax figure: it is the
+> tax ledger's, built with S2 s.111 by `W-088` (coverage `PLANNED`, D-219 C3a), as the house-property loss is
+> (`W-081b`). `ProfileId` and `TaxYearId` are not visible to `portfolio`; the read-model is
+> `CapitalGainsSummary(email, financialYear, buckets, asOf, portfolioComputationRef)`, each bucket
+> `(CapitalGainsType, AssetType, Optional<String> instrumentSubClass, double gainRupees)` (D-237).
+> Verified by: `grep -rln "BroughtForward\|broughtForward\|carriedForward" backend/src/main/java/com/thiru/wealthlens/portfolio`
+> → nothing; `coverage.json:114`.
+
 ## F6 — Fingerprint, corrected (D-9)
 
 ```java

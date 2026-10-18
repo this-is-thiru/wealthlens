@@ -112,7 +112,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 `profile/` `TaxpayerProfile` `Pan` `FamilyMember` `Employer` `Landlord` `Lender` `BankAccount`
 (○ `W-096`–`W-098`) · `workspace/` `TaxYearWorkspace` `FilingDraft` `DraftRevision` `DraftInputs`
 `EntryProvenance` (○ `W-099`, `W-100`) · `assemble/` `EngineInputsAssembler` — the **only** place
-`EngineInputs` is built (○ `W-103`) · `portfolio/` `MoneyBridge` `CapitalGainsAdapter` (○ Phase 9) ·
+`EngineInputs` is built (○ `W-103`) · `portfolio/` `MoneyBridge` `CapitalGainsAdapter` (○ Phase 9), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) ·
 `projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`)
 · `scenario/` `Scenario` `ScenarioDiff` `DiffLine` (⚠ UNOWNED) · `controller/` DTOs only · `job/`
 `TaxJob` + 6 jobs, `JobLease` (○ `W-137`).
@@ -540,3 +540,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-10-18 | T6: `salary.exemptions` — a per-kilometre LTA journey with a child beyond the limit priced on the whole rate for its distance; the OQ-27 refusal removed | `W-080a2`, D-232 |
 | 2026-10-18 | T6: `tax.surcharge` — the TY 2025-26 interest allowance shared by dividends and units attributed by income share, bounded by each side's claim (`DividendInterest.receivedOnDividends`); the OQ-26 Q2 refusal removed | `W-079e2`, D-234 |
 | 2026-10-18 | T2: `election/` — `ElectionResolver.resolveTogether`, `JointResolution`: several elections priced jointly on whole runs | `W-084a`, D-236 |
+| 2026-10-18 | T2: `portfolio`'s read-model `CapitalGainsSummary`, `CapitalGainsBucket` named beside the adapter | `W-085`, D-237 |
