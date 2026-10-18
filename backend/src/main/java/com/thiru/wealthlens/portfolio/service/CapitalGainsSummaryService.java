@@ -42,6 +42,9 @@ public class CapitalGainsSummaryService {
 
     private static final Pattern FINANCIAL_YEAR = Pattern.compile("(\\d{4})-(\\d{4})");
 
+    /** The charge catalogue's code for securities transaction tax. */
+    private static final String STT = "STT";
+
     private final TradeOutcomeRepository tradeOutcomeRepository;
 
     /**
@@ -105,17 +108,25 @@ public class CapitalGainsSummaryService {
         return TMoney.scale(sale - cost - row.getDeductibleBuyCharges() - row.getDeductibleSellCharges());
     }
 
-    /** What a bucket is one of: the rows a bucket sums share all three. */
-    private record BucketKey(CapitalGainsType classification, AssetType assetType, Optional<String> subClass) {
+    /** What a bucket is one of: the rows a bucket sums share all five. */
+    private record BucketKey(CapitalGainsType classification, AssetType assetType, Optional<String> subClass,
+            boolean sttOnAcquisition, boolean sttOnTransfer) {
 
         static BucketKey of(TradeOutcomeEntity row) {
             return new BucketKey(row.getCapitalGainsType(), row.getAssetType(),
-                    Optional.ofNullable(row.getInstrumentSubClass()));
+                    Optional.ofNullable(row.getInstrumentSubClass()), boreStt(row.getBuyChargeBreakup()),
+                    boreStt(row.getSellChargeBreakup()));
         }
 
         CapitalGainsBucket bucket(double gainRupees) {
-            return new CapitalGainsBucket(classification, assetType, subClass, gainRupees);
+            return new CapitalGainsBucket(classification, assetType, subClass, sttOnAcquisition, sttOnTransfer,
+                    gainRupees);
         }
+    }
+
+    /** Whether a breakdown levied securities transaction tax — the condition S2 ss.196 and 198 turn on (D-241). */
+    private static boolean boreStt(Map<String, Double> breakup) {
+        return breakup != null && breakup.getOrDefault(STT, 0.0) > 0;
     }
 
     /** {@code trade_outcomes:} and a digest of the rows read, so a later read of changed rows names another run. */

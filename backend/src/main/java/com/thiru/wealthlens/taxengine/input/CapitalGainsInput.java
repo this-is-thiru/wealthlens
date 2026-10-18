@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.input;
 
-import com.thiru.wealthlens.taxengine.rules.component.RateBasisHint;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.Instant;

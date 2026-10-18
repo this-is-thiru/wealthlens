@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-087 DONE; between items)
+Item            : — (W-087b DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's pick. Next in order: W-087b (CapitalGainsAdapter — source first: S2 ss.196–198, 1961 ss.111A, 112, 112A; RateBasisHint exposure; SPECULATIVE / NOT_CAPITAL_GAINS / UNCLASSIFIED), then W-088, W-089, W-089a. Open OQs: OQ-30 (W-088). UNVERIFIED: 0. Unplaced proposals: none
-Last verify     : unit -Punit → 2946 run, 0 fail, 0 Checkstyle (W-087, 2026-10-18); integration 252/0 (W-086a; DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock)
+Next step       : WAIT for the owner's pick. Next in order: W-088 (CapitalGainsNode — owns OQ-26 C1's pro-rata 15% limit, OQ-30, OQ-31, S2 s.111 carry-forward), then W-089, W-089a, W-089b. Open OQs: OQ-30, OQ-31 (both W-088). UNVERIFIED: 0. Unplaced proposals: none
+Last verify     : unit -Punit → 2959 run, 0 fail, 0 Checkstyle; integration 252/0 (W-087b, 2026-10-18; DOCKER_HOST=unix://$HOME/.orbstack/run/docker.sock)
 Waiting on      : the owner — next pick
 Files touched   : none
-Last item commit: taxplanning W-087: add MoneyBridge, the one-way seam from canonical double rupees to exact Money — a non-canonical double is refused, not rounded; the adapter split to W-087b (D-240)
-Updated         : 2026-10-18, session 21 — W-087 committed
+Last item commit: taxplanning W-087b: map portfolio's capital gains into CapitalGainsInput — term and rate basis from the STT conditions of S2 ss.196–198 and 1961 ss.111A, 112, 112A; unclassified and speculative gains refused, OQ-31 raised (D-241)
+Updated         : 2026-10-18, session 21 — W-087b committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

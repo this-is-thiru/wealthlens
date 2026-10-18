@@ -67,7 +67,7 @@ class CapitalGainsSummaryServiceTest {
         return row;
     }
 
-    /** Rows A, B (short-term equity) and C (long-term equity) of the plan's table. */
+    /** Rows A, B (short-term equity) and C (long-term equity) of the plan's table, each sale bearing STT. */
     private static List<TradeOutcomeEntity> rowsAtoC() {
         TradeOutcomeEntity a = charged(row("A", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 120, 100, 10), 5, 7);
         a.setSellChargeBreakup(Map.of("BROKERAGE", 7.0, "STT", 1.20));
@@ -75,7 +75,9 @@ class CapitalGainsSummaryServiceTest {
         a.setNetProfit(178.80);
         TradeOutcomeEntity b = charged(row("B", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 150, 130, 4), 2, 3);
         b.setSellMiscCharges(10);
+        b.setSellChargeBreakup(Map.of("BROKERAGE", 3.0, "STT", 0.60));
         TradeOutcomeEntity c = charged(row("C", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 500, 300, 2), 4, 6);
+        c.setSellChargeBreakup(Map.of("BROKERAGE", 6.0, "STT", 1.00));
         return List.of(a, b, c);
     }
 
@@ -107,6 +109,26 @@ class CapitalGainsSummaryServiceTest {
 
         // Then
         assertCanonical(188.00, summary.buckets().getFirst().gainRupees());
+    }
+
+    @Test
+    void summaryFor_whenTheBreakdownsShowStt_recordsItOnEachSide() {
+        // Given — row A's sale bore STT 1.20, its buy only brokerage; row D's buy and sale both bore STT
+        TradeOutcomeEntity d = charged(row("D", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 110, 100, 1), 0, 0);
+        d.setBuyChargeBreakup(Map.of("STT", 0.10));
+        d.setBuyBrokerCharges(0.10);
+        d.setSellChargeBreakup(Map.of("STT", 0.11));
+        d.setSellBrokerCharges(0.11);
+
+        // When
+        CapitalGainsSummary summary = summaryOf(List.of(rowsAtoC().getFirst(), d));
+
+        // Then — two short-term equity buckets, apart by STT on the buy (D-241)
+        assertThat(summary.buckets()).hasSize(2);
+        assertThat(summary.buckets().get(0).sttOnAcquisition()).isFalse();
+        assertThat(summary.buckets().get(0).sttOnTransfer()).isTrue();
+        assertThat(summary.buckets().get(1).sttOnAcquisition()).isTrue();
+        assertThat(summary.buckets().get(1).sttOnTransfer()).isTrue();
     }
 
     @Test

@@ -18,7 +18,7 @@ class CapitalGainsSummaryTest {
     private static final Instant AS_OF = Instant.parse("2026-04-15T10:00:00Z");
 
     private static CapitalGainsBucket equity(CapitalGainsType classification, double gainRupees) {
-        return new CapitalGainsBucket(classification, AssetType.EQUITY, Optional.empty(), gainRupees);
+        return new CapitalGainsBucket(classification, AssetType.EQUITY, Optional.empty(), true, true, gainRupees);
     }
 
     private static CapitalGainsSummary summary(List<CapitalGainsBucket> buckets) {
@@ -54,7 +54,8 @@ class CapitalGainsSummaryTest {
     @Test
     void capitalGainsBucket_whenTheSubClassIsNull_isRefused() {
         // When / Then
-        assertThatThrownBy(() -> new CapitalGainsBucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY, null, 100))
+        assertThatThrownBy(() -> new CapitalGainsBucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY, null, true,
+                true, 100))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Optional.empty()");
     }
@@ -78,17 +79,30 @@ class CapitalGainsSummaryTest {
         assertThatThrownBy(() -> summary(List.of(equity(CapitalGainsType.SHORT_TERM, 100),
                 equity(CapitalGainsType.SHORT_TERM, 50))))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("SHORT_TERM EQUITY without a sub-class");
+                .hasMessageContaining("SHORT_TERM EQUITY without a sub-class with the same STT");
     }
 
     @Test
     void capitalGainsSummary_whenOneClassificationSpansTwoAssets_keepsBoth() {
         // Given — the rate depends on the asset, so equity and a mutual fund stay apart
         CapitalGainsBucket fund = new CapitalGainsBucket(CapitalGainsType.UNCLASSIFIED, AssetType.MUTUAL_FUND,
-                Optional.empty(), 400);
+                Optional.empty(), false, false, 400);
 
         // When
         CapitalGainsSummary summary = summary(List.of(equity(CapitalGainsType.UNCLASSIFIED, 300), fund));
+
+        // Then
+        assertThat(summary.buckets()).hasSize(2);
+    }
+
+    @Test
+    void capitalGainsSummary_whenTwoBucketsDifferOnlyInStt_keepsBoth() {
+        // Given — the special rates turn on STT (S2 ss.196, 198), so a sale with and one without stay apart (D-241)
+        CapitalGainsBucket withoutStt = new CapitalGainsBucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY,
+                Optional.empty(), true, false, 50);
+
+        // When
+        CapitalGainsSummary summary = summary(List.of(equity(CapitalGainsType.SHORT_TERM, 100), withoutStt));
 
         // Then
         assertThat(summary.buckets()).hasSize(2);

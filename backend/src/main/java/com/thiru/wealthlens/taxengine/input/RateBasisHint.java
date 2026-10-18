@@ -1,4 +1,4 @@
-package com.thiru.wealthlens.taxengine.rules.component;
+package com.thiru.wealthlens.taxengine.input;
 
 /**
  * Which rate basis a capital-gains bucket falls on.
@@ -11,10 +11,9 @@ package com.thiru.wealthlens.taxengine.rules.component;
  * income-tax computed in respect of that part of income", and only the side holding a rule pack can
  * compute it.
  *
- * <p>It lives in {@code taxengine.rules} so that one vocabulary serves both the read-model and the
- * engine. A second copy elsewhere would be the two-vocabularies failure that
- * {@code 02-lessons.md} L1 describes (decision <b>D-025</b>; {@code W-085}'s row is reduced
- * accordingly).
+ * <p>It lives beside {@link CapitalGainsInput}, its one user, in the package other modules may see: the tax side
+ * decides the basis when it maps {@code portfolio}'s read-model, which carries none (D-237, D-241). One copy only — a
+ * second would be the two-vocabularies failure {@code 02-lessons.md} L1 describes (D-025).
  *
  * <p><b>An unrecognised basis is a blocking error, not a fallback to slab</b> (R-10, and
  * {@code 13-edge-cases.md} row 67). Defaulting an unknown basis to the slab ladder produces a
