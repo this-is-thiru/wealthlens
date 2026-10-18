@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
+import com.thiru.wealthlens.taxengine.input.CarriedCapitalLoss;
 import com.thiru.wealthlens.taxengine.input.CarriedHousePropertyLoss;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
@@ -68,7 +69,7 @@ class SetOffNodeTest {
         LedgerSnapshot empty = LedgerSnapshot.empty();
         LedgerSnapshot ledgers = new LedgerSnapshot(empty.leaveTravelByBlock(), empty.vrsClaimedIn(),
                 empty.gratuityAlreadyAllowed(), empty.leaveEncashmentAlreadyAllowed(), carried,
-                empty.educationLoanInterestFirstYear());
+                empty.educationLoanInterestFirstYear(), Map.of());
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), entered, plain.assessee(),
                 plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
@@ -382,5 +383,137 @@ class SetOffNodeTest {
         assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.of("10000"));
         assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("50000"));
         assertThat(heads.total()).isEqualTo(Money.of("60000"));
+    }
+
+    /** TY {@code year}, with capital-gains parts and the capital losses carried in (D-247); the other heads nil. */
+    private static NodeResult runWithCarriedCapitalLoss(int year, RegimeCode regime, Map<CapitalGainsPart, Money> parts,
+            Map<TaxYearId, CarriedCapitalLoss> carried) {
+        TaxYearId taxYear = TaxYearId.of(year);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        LedgerSnapshot empty = LedgerSnapshot.empty();
+        LedgerSnapshot ledgers = new LedgerSnapshot(empty.leaveTravelByBlock(), empty.vrsClaimedIn(),
+                empty.gratuityAlreadyAllowed(), empty.leaveEncashmentAlreadyAllowed(),
+                empty.housePropertyLossCarriedForward(), empty.educationLoanInterestFirstYear(), carried);
+        EngineInputs inputs = new EngineInputs(taxYear, regime,
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), plain.entered(), plain.assessee(),
+                plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
+        return NodeHarness.with(pack(year)).regime(regime).inputs(inputs)
+                .given(NodeIds.SALARY_INCOME, Money.ZERO)
+                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.ZERO)
+                .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
+                .given(NodeIds.CAPITALGAINS_INCOME, new CapitalGainsHead(parts, Money.ZERO, Money.ZERO))
+                .run(new SetOffNode());
+    }
+
+    private static CarriedCapitalLoss capitalLoss(String shortTerm, String longTerm, String longTermAbsorbed,
+            boolean inTime) {
+        return new CarriedCapitalLoss(Money.of(shortTerm), Money.of(longTerm), Money.ZERO, Money.of(longTermAbsorbed),
+                inTime);
+    }
+
+    /** Case A's gains: short-term listed 1,00,000, long-term listed 3,00,000. */
+    private static Map<CapitalGainsPart, Money> caseAGains() {
+        return Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("100000"),
+                CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("300000"));
+    }
+
+    /** Case A's ledger, by the first of its two years of origin: long-term 2,00,000 (50,000 absorbed) and short-term
+     * 30,000 from the first, short-term 40,000 from the next. */
+    private static Map<TaxYearId, CarriedCapitalLoss> caseALedger(int firstYear, boolean secondInTime) {
+        return Map.of(TaxYearId.of(firstYear), capitalLoss("30000", "200000", "50000", true),
+                TaxYearId.of(firstYear + 1), capitalLoss("40000", "0", "0", secondInTime));
+    }
+
+    private static void assertCaseA(NodeResult result) {
+        // long-term 1,50,000 off long-term listed → 1,50,000; short-term 30,000 then 40,000 off short-term listed
+        // (the slab part being nil) → 30,000; the head down 2,20,000 from 4,00,000
+        HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
+        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("30000"));
+        assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("150000"));
+        assertThat(heads.total()).isEqualTo(Money.of("180000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.SET_OFF))
+                .extracting(TraceLine::out)
+                .containsExactly(rupees("150000"), rupees("30000"), rupees("40000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).isEmpty();
+    }
+
+    @Test
+    void evaluate_whenCapitalLossesAreCarriedFromTwoYears_setsTheOldestOffFirstLongTermBeforeShort() {
+        // When — A: TY 2026-27, old regime, losses of TY 2023-24 and TY 2024-25
+        NodeResult result = runWithCarriedCapitalLoss(2026, OLD, caseAGains(), caseALedger(2023, true));
+
+        // Then
+        assertCaseA(result);
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025CarriesTheSameLosses_setsThemOffUnderSection74() {
+        // When — E: A's figures in TY 2025-26, losses of TY 2022-23 and TY 2023-24
+        NodeResult result = runWithCarriedCapitalLoss(2025, OLD, caseAGains(), caseALedger(2022, true));
+
+        // Then
+        assertCaseA(result);
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.SET_OFF).getFirst().provenance()
+                .sourceDescription()).contains("s.74");
+    }
+
+    @Test
+    void evaluate_whenTheNewRegimeMeetsACarriedCapitalLoss_setsItOffAsTheOldDoes() {
+        // When — F: A in the new regime; a capital loss is not attributable to a disallowed deduction
+        NodeResult result = runWithCarriedCapitalLoss(2026, NEW, caseAGains(), caseALedger(2023, true));
+
+        // Then
+        assertCaseA(result);
+    }
+
+    @Test
+    void evaluate_whenACapitalLossIsInItsNinthYear_hasExpiredButTheEighthIsUsed() {
+        // When — B: TY 2026-27; 10,000 short-term from TY 2018-19 (the eighth year after) and from TY 2017-18
+        NodeResult result = runWithCarriedCapitalLoss(2026, OLD,
+                Map.of(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("100000")),
+                Map.of(TaxYearId.of(2017), capitalLoss("10000", "0", "0", true),
+                        TaxYearId.of(2018), capitalLoss("10000", "0", "0", true)));
+
+        // Then — only TY 2018-19's is set off
+        HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
+        assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("90000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
+                .satisfies(line -> assertThat(line.limitedBy().orElseThrow()).contains("2017-18").contains("expired"));
+    }
+
+    @Test
+    void evaluate_whenOnlyShortTermGainsMeetACarriedLongTermLoss_carriesItAll() {
+        // When — C: a long-term loss of 1,00,000 brought in; only short-term listed gains of 50,000
+        NodeResult result = runWithCarriedCapitalLoss(2026, OLD,
+                Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("50000")),
+                Map.of(TaxYearId.of(2024), capitalLoss("0", "100000", "0", true)));
+
+        // Then — S2 s.111(1)(a)(ii): only against long-term gains
+        HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
+        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("50000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.SET_OFF)).isEmpty();
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
+                .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("100000")));
+    }
+
+    @Test
+    void evaluate_whenALossWasNotDeterminedInAReturnFiledInTime_doesNotCarryIt() {
+        // When — D: A's ledger with TY 2024-25's loss from a late return
+        NodeResult result = runWithCarriedCapitalLoss(2026, OLD, caseAGains(), caseALedger(2023, false));
+
+        // Then — its 40,000 is not set off: short-term listed 70,000; the line names s.121
+        HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
+        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("70000"));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
+                .satisfies(line -> assertThat(line.limitedBy().orElseThrow()).contains("s.121"));
+    }
+
+    @Test
+    void evaluate_whenTheLedgerCarriesACapitalLossFromThisYear_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> runWithCarriedCapitalLoss(2026, OLD, caseAGains(),
+                Map.of(TaxYearId.of(2026), capitalLoss("1000", "0", "0", true))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("carried only to later years");
     }
 }

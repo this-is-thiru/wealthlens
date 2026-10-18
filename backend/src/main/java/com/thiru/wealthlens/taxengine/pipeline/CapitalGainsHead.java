@@ -10,8 +10,8 @@ import java.util.Map;
  * still holds, and what loss the head could not absorb.
  *
  * <p>Kept by part, not as one figure, because each part is taxed on its own basis and absorbs other heads' losses in
- * its own turn. A loss left is not set off against any other head (S2 s.109(2); 1961 s.71(3)); carrying it is
- * W-088d's.
+ * its own turn. A loss left is not set off against any other head (S2 s.109(2); 1961 s.71(3)); it is carried forward
+ * (S2 s.111; 1961 s.74; D-247).
  *
  * @param parts every part's surviving gain, nil or more
  * @param shortTermLossLeft the year's short-term loss no part absorbed

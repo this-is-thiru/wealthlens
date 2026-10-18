@@ -70,11 +70,10 @@ class CapitalGainsAdapterTest {
         // When
         CapitalGainsInput input = inputOf();
 
-        // Then — portfolio's TLocalDate form; pinned to the summary's run, no brought-forward loss (S2 s.111, W-088)
+        // Then — portfolio's TLocalDate form; pinned to the summary's run
         verify(capitalGainsSummaryService).summaryFor(EMAIL, "2025-2026");
         assertThat(input.asOf()).isEqualTo(AS_OF);
         assertThat(input.portfolioComputationRef()).isEqualTo("trade_outcomes:ref");
-        assertThat(input.broughtForward()).isEmpty();
     }
 
     @Test

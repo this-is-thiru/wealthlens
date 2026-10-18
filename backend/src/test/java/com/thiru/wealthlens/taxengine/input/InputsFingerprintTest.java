@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
-import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BroughtForwardLoss;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Member;
@@ -153,7 +152,7 @@ class InputsFingerprintTest {
                                     com.thiru.wealthlens.taxengine.rules.money.Money.of("100000"),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
                                     Map.of(),
-                                    Optional.empty())))),
+                                    Optional.empty(), Map.of())))),
                     Arguments.of(
                             "elections.stateByRegime",
                             mutate(in -> copy(in, r -> r.elections = new RegimeElectionSnapshot(
@@ -167,7 +166,6 @@ class InputsFingerprintTest {
                                             Term.LONG_TERM,
                                             RateBasisHint.SPECIAL_RATE_LISTED_EQUITY,
                                             Optional.empty())),
-                                    List.of(),
                                     PF_AS_OF,
                                     "pf-run-1")))),
                     Arguments.of(
@@ -175,15 +173,19 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.capitalGains = CapitalGainsInput.none(
                                     PF_AS_OF.plusSeconds(1), "pf-run-1")))),
                     Arguments.of(
-                            "capitalGains.broughtForward",
-                            mutate(in -> copy(in, r -> r.capitalGains = new CapitalGainsInput(
-                                    List.of(),
-                                    List.of(new BroughtForwardLoss(
-                                            TaxYearId.of(2024),
-                                            Term.SHORT_TERM,
-                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("1000"))),
-                                    PF_AS_OF,
-                                    "pf-run-1")))),
+                            "ledgers.capitalLossCarriedForward",
+                            mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(
+                                    Map.of(),
+                                    Optional.empty(),
+                                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                                    Map.of(),
+                                    Optional.empty(),
+                                    Map.of(TaxYearId.of(2024), new CarriedCapitalLoss(
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("10000"),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, true)))))),
                     Arguments.of(
                             "filing.advanceTaxPaid",
                             mutate(in -> copy(in, r -> r.filing = new FilingFacts(
@@ -282,7 +284,7 @@ class InputsFingerprintTest {
             EngineInputs claimed = copy(baseline(), r -> r.ledgers = new LedgerSnapshot(
                     Map.of(2022, new LeaveTravelBlock(1, false)), Optional.empty(),
                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
-                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, Map.of(), Optional.empty()));
+                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, Map.of(), Optional.empty(), Map.of()));
 
             // When / Then
             assertThat(hashOf(claimed)).isNotEqualTo(hashOf(baseline()));

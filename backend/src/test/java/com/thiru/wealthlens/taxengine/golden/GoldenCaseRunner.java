@@ -281,7 +281,7 @@ final class GoldenCaseRunner {
         LedgerSnapshot empty = LedgerSnapshot.empty();
         return new LedgerSnapshot(salary.leaveTravelLedger(), empty.vrsClaimedIn(), empty.gratuityAlreadyAllowed(),
                 empty.leaveEncashmentAlreadyAllowed(),
-                empty.housePropertyLossCarriedForward(), empty.educationLoanInterestFirstYear());
+                empty.housePropertyLossCarriedForward(), empty.educationLoanInterestFirstYear(), Map.of());
     }
 
     RulePack pack(TaxYearId year) {

@@ -3,12 +3,10 @@ package com.thiru.wealthlens.taxengine.input;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BroughtForwardLoss;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
-import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.regime.ElectionState;
 import java.time.Instant;
@@ -177,11 +175,6 @@ class RegimeElectionSnapshotTest {
                                     Term.SHORT_TERM,
                                     RateBasisHint.SLAB,
                                     Optional.of("PF-FIFO-001"))),
-                    List.of(
-                            new BroughtForwardLoss(
-                                    TaxYearId.of(2023), Term.LONG_TERM, Money.of("50000")),
-                            new BroughtForwardLoss(
-                                    TaxYearId.of(2024), Term.SHORT_TERM, Money.of("20000"))),
                     AS_OF,
                     "pf-run-77");
         }
@@ -192,18 +185,6 @@ class RegimeElectionSnapshotTest {
                     .isEqualTo(Money.of("300000"));
             assertThat(withBuckets().grossGainOn(RateBasisHint.SPECIAL_RATE_OTHER))
                     .isEqualTo(Money.ZERO);
-        }
-
-        @Test
-        void lossesArriveUnNettedAndKeepTheirTerm() {
-            // F5: NOT pre-netted. s.108(2) is asymmetric -- a short-term loss goes against any
-            // capital gain, a long-term loss only against long-term -- so netting early would
-            // silently over-allow.
-            CapitalGainsInput input = withBuckets();
-
-            assertThat(input.broughtForwardLossOf(Term.LONG_TERM)).isEqualTo(Money.of("50000"));
-            assertThat(input.broughtForwardLossOf(Term.SHORT_TERM)).isEqualTo(Money.of("20000"));
-            assertThat(input.broughtForward()).hasSize(2);
         }
 
         @Test
@@ -230,7 +211,7 @@ class RegimeElectionSnapshotTest {
             buckets.add(new Bucket(
                     Money.of("100"), Term.LONG_TERM, RateBasisHint.SLAB, Optional.empty()));
             CapitalGainsInput input =
-                    new CapitalGainsInput(buckets, new ArrayList<>(), AS_OF, "pf-run-1");
+                    new CapitalGainsInput(buckets, AS_OF, "pf-run-1");
 
             buckets.add(new Bucket(
                     Money.of("999999"), Term.SHORT_TERM, RateBasisHint.SLAB, Optional.empty()));
@@ -242,10 +223,10 @@ class RegimeElectionSnapshotTest {
         void thePinIsMandatoryBecauseADraftMustBeComparableLater() {
             // F4.1: the "portfolio has changed since you last computed" prompt is a comparison of
             // two asOf values, not a recomputation. Without the pin there is nothing to compare.
-            assertThatThrownBy(() -> new CapitalGainsInput(List.of(), List.of(), null, "ref"))
+            assertThatThrownBy(() -> new CapitalGainsInput(List.of(), null, "ref"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("asOf");
-            assertThatThrownBy(() -> new CapitalGainsInput(List.of(), List.of(), AS_OF, "  "))
+            assertThatThrownBy(() -> new CapitalGainsInput(List.of(), AS_OF, "  "))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("computation reference");
         }

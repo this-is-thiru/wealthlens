@@ -235,7 +235,7 @@ class AssesseeTest {
                     Money.ZERO,
                     Money.ZERO,
                     mutable,
-                    Optional.empty());
+                    Optional.empty(), Map.of());
 
             mutable.put(TaxYearId.of(2024), new CarriedHousePropertyLoss(Money.of("999999"), Money.ZERO, Money.ZERO));
 
@@ -254,7 +254,7 @@ class AssesseeTest {
                     Money.of("500000"),
                     Money.of("300000"),
                     Map.of(),
-                    Optional.of(TaxYearId.of(2022)));
+                    Optional.of(TaxYearId.of(2022)), Map.of());
 
             assertThat(ledgers.gratuityAlreadyAllowed()).isEqualTo(Money.of("500000"));
             assertThat(ledgers.leaveTravelBlock(2022)).isEqualTo(new LeaveTravelBlock(2, true));
@@ -270,7 +270,7 @@ class AssesseeTest {
                     Money.ZERO,
                     Money.ZERO,
                     Map.of(),
-                    Optional.empty());
+                    Optional.empty(), Map.of());
 
             assertThat(claimed.vrsAlreadyClaimed()).isTrue();
         }
@@ -283,7 +283,7 @@ class AssesseeTest {
                             null,
                             Money.ZERO,
                             Map.of(),
-                            Optional.empty()))
+                            Optional.empty(), Map.of()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("different ceilings");
         }

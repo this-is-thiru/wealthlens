@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.input;
 
-import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.Instant;
 import java.util.List;
@@ -16,8 +15,8 @@ import java.util.Optional;
  * owns the rate basis, ss.196/197/198, the surcharge split and s.108(2) set-off. So every figure
  * here is a <b>gross amount with a hint</b>, and no figure here is a tax.
  *
- * <p>Brought-forward losses arrive <b>un-netted</b>, per origin year and per term (F5). Netting
- * them early would destroy the asymmetry s.108(2) depends on — see {@link Term}.
+ * <p>Losses carried in from earlier years are not here: what earlier returns absorbed is the tax side's history,
+ * held in {@link LedgerSnapshot#capitalLossCarriedForward} (D-247).
  *
  * <h2>Pinned, not live</h2>
  *
@@ -34,14 +33,12 @@ import java.util.Optional;
  * upstream ({@code X1.3}), not something the engine reasons about.
  *
  * @param buckets gross gain per bucket; may be empty, never null
- * @param broughtForward un-netted losses by origin year and term
  * @param asOf when the portfolio computed this
  * @param portfolioComputationRef the portfolio's own reference for the run, so a pinned figure can
  *     be traced back to what produced it
  */
 public record CapitalGainsInput(
         List<Bucket> buckets,
-        List<BroughtForwardLoss> broughtForward,
         Instant asOf,
         String portfolioComputationRef) {
 
@@ -91,35 +88,10 @@ public record CapitalGainsInput(
         }
     }
 
-    /**
-     * A loss carried in from an earlier year, as the portfolio holds it.
-     *
-     * @param originYear the year the loss arose, which is what makes the expiry computable
-     * @param term long or short — the two are not interchangeable under s.108(2)
-     * @param amount the un-netted amount
-     */
-    public record BroughtForwardLoss(TaxYearId originYear, Term term, Money amount) {
-
-        public BroughtForwardLoss {
-            if (originYear == null) {
-                throw new IllegalArgumentException(
-                        "A brought-forward loss must name the year it arose; the carry-forward"
-                                + " window is counted from it");
-            }
-            if (term == null) {
-                throw new IllegalArgumentException(
-                        "A brought-forward loss must state its term; s.108(2) is asymmetric");
-            }
-            if (amount == null) {
-                throw new IllegalArgumentException("A brought-forward loss must carry an amount");
-            }
-        }
-    }
-
     public CapitalGainsInput {
-        if (buckets == null || broughtForward == null) {
+        if (buckets == null) {
             throw new IllegalArgumentException(
-                    "CapitalGainsInput lists may not be null; pass empty lists for a taxpayer with"
+                    "CapitalGainsInput buckets may not be null; pass an empty list for a taxpayer with"
                             + " no capital gains");
         }
         if (asOf == null) {
@@ -133,12 +105,11 @@ public record CapitalGainsInput(
                             + " pinned figure can be traced to what produced it");
         }
         buckets = List.copyOf(buckets);
-        broughtForward = List.copyOf(broughtForward);
     }
 
     /** No capital gains at all, pinned to a run that found none. */
     public static CapitalGainsInput none(Instant asOf, String portfolioComputationRef) {
-        return new CapitalGainsInput(List.of(), List.of(), asOf, portfolioComputationRef);
+        return new CapitalGainsInput(List.of(), asOf, portfolioComputationRef);
     }
 
     /** Gross gain on one rate basis — the input to the surcharge split. */
@@ -146,14 +117,6 @@ public record CapitalGainsInput(
         return buckets.stream()
                 .filter(b -> b.basis() == basis)
                 .map(Bucket::gain)
-                .reduce(Money.ZERO, Money::plus);
-    }
-
-    /** Un-netted brought-forward losses of one term — what s.108(2) may set off, and against what. */
-    public Money broughtForwardLossOf(Term term) {
-        return broughtForward.stream()
-                .filter(l -> l.term() == term)
-                .map(BroughtForwardLoss::amount)
                 .reduce(Money.ZERO, Money::plus);
     }
 }

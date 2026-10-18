@@ -207,6 +207,7 @@ class GeneratedConstantsTest {
             "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME",
             "SAL-TAX-ON-EMPLOYMENT",
             "SETOFF-ACROSS-HEADS",
+            "SETOFF-CARRIED-CAPITAL-GAINS",
             "SETOFF-CARRIED-DISALLOWED-PART",
             "SETOFF-CARRIED-HOUSE-PROPERTY",
             "SETOFF-HOUSE-PROPERTY",

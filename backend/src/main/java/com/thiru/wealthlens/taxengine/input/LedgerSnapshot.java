@@ -13,8 +13,8 @@ import java.util.Optional;
  * <p>{@code 05-domain-model.md} M3.4. Rules reach outside the year being computed, and each would
  * silently over-allow without this record: a four-calendar-year LTA block, a once-in-a-lifetime
  * VRS exemption, gratuity and leave-encashment ceilings expressed as {@code A − B} across every
- * earlier year <b>and employer</b>, an eight-year house-property loss carry-forward, and
- * {@code DED-80E-002}'s eight-year window. The five pre-construction instalments need no ledger: each
+ * earlier year <b>and employer</b>, an eight-year house-property loss carry-forward, the same for a capital
+ * loss, and {@code DED-80E-002}'s eight-year window. The five pre-construction instalments need no ledger: each
  * tax year's instalment is fixed by the year of acquisition (S2 s.22(1)(c); D-159).
  *
  * <p>M3.4's own recommendation is that each is persisted as an <b>append-only ledger keyed on
@@ -36,6 +36,8 @@ import java.util.Optional;
  *     the new regime disallows is <b>destroyed, not deferred,</b> in a new-regime year (S2 s.202(3);
  *     {@code SETOFF-NEW-002})
  * @param educationLoanInterestFirstYear starts {@code DED-80E-002}'s eight-year window
+ * @param capitalLossCarriedForward each carried capital loss by the year it arose, by term, so the eight-year expiry
+ *     and the long-term asymmetry are computable (S2 s.111, s.536(2)(n); 1961 s.74; D-247)
  */
 public record LedgerSnapshot(
         Map<Integer, LeaveTravelBlock> leaveTravelByBlock,
@@ -43,7 +45,8 @@ public record LedgerSnapshot(
         Money gratuityAlreadyAllowed,
         Money leaveEncashmentAlreadyAllowed,
         Map<TaxYearId, CarriedHousePropertyLoss> housePropertyLossCarriedForward,
-        Optional<TaxYearId> educationLoanInterestFirstYear) {
+        Optional<TaxYearId> educationLoanInterestFirstYear,
+        Map<TaxYearId, CarriedCapitalLoss> capitalLossCarriedForward) {
 
     public LedgerSnapshot {
         if (leaveTravelByBlock == null) {
@@ -68,6 +71,12 @@ public record LedgerSnapshot(
                             + " map where there is no carried loss");
         }
         housePropertyLossCarriedForward = Map.copyOf(housePropertyLossCarriedForward);
+        if (capitalLossCarriedForward == null) {
+            throw new IllegalArgumentException(
+                    "LedgerSnapshot.capitalLossCarriedForward may not be null; pass an empty map where there is no"
+                            + " carried loss");
+        }
+        capitalLossCarriedForward = Map.copyOf(capitalLossCarriedForward);
     }
 
     /** A taxpayer with no history — a first return, and the ordinary case in a golden test. */
@@ -78,7 +87,8 @@ public record LedgerSnapshot(
                 Money.ZERO,
                 Money.ZERO,
                 Map.of(),
-                Optional.empty());
+                Optional.empty(),
+                Map.of());
     }
 
     /** Whether VRS has ever been claimed — {@code RET-VRS-002}'s once-in-a-lifetime test. */

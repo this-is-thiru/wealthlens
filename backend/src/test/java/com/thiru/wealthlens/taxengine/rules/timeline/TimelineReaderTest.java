@@ -148,6 +148,7 @@ class TimelineReaderTest {
             new RuleId("SETOFF-CARRIED-HOUSE-PROPERTY"),
             new RuleId("SETOFF-CARRIED-DISALLOWED-PART"),
             new RuleId("SETOFF-WITHIN-CAPITAL-GAINS"),
+            new RuleId("SETOFF-CARRIED-CAPITAL-GAINS"),
             new RuleId("RATE-CG-LONG-LISTED-EQUITY"),
             new RuleId("RATE-CG-LONG-OTHER"),
             new RuleId("RATE-CG-SHORT-LISTED-EQUITY"),

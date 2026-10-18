@@ -1,0 +1,97 @@
+{
+  "ruleId": "SETOFF-CARRIED-CAPITAL-GAINS",
+  "_note": "A capital loss carried forward and set off only against capital gains, a long-term loss only against long-term gains, for at most eight tax years after the one it was first computed in (D-247; rulebook SETOFF-CF-CG-001). TY 2026-27: Income-tax Act, 2025 s.111(1)(a): the loss not set off as per s.108 \"shall be carried forward to the following tax year\" — (i) short-term \"only against the income under the head 'Capital gains', if any, assessable for that tax year in respect of any other capital asset\", (ii) long-term \"only against … any other long-term capital asset\"; s.111(2) \"No loss shall be carried forward under this section for more than eight tax years immediately succeeding the tax year for which the loss was first computed\" (p.148); s.121: not carried \"which has not been determined in pursuance of a return filed under section 263(1)\" (p.158); s.536(2)(n): a 1961 s.74 loss carried into the 2025 Act's years in the same manner, \"upto eight financial years immediately succeeding the financial year in which such loss was first computed\" (p.493). TY 2025-26: Income-tax Act, 1961 s.74(1), (2), sub-section (1) as substituted by the Finance Act, 2002 s.29 w.e.f. 1-4-2003 (thc copy p.325; Goa reprint), and s.80 (p.327); unamended 2019–2026. TaxYearSpan(8): the year the loss arose and the eight after it; used only in the eight. The order — this year's set-off first, then the oldest year's loss, its long-term part before its short-term, each against the parts in SETOFF-WITHIN-CAPITAL-GAINS's order — is declared, the Acts prescribing none (OQ-29, OQ-32 by analogy). A capital loss is not attributable to a deduction the new regime disallows (s.202(2)(b)(i); s.115BAC(2)(ii)(a)), so it carries in both regimes. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 21–25.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.74(1), (2), with s.80",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.111, with s.121",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 8
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2002 (20 of 2002), s.29 — Income-tax Act, 1961 s.74(1) substituted w.e.f. 1-4-2003",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, 13-5-2002 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 36, 4-12-2003 (assent 11-5-2002)",
+        "notifiedOn": "2002-05-13",
+        "effectiveFrom": "2003-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0304/0304-36-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 s.74(1), (2) p.325 and s.80 p.327, thc.nic.in copy (current to Act 7 of 2019); the Finance Act, 2002 s.29 (Goa reprint, Series I No. 36, 4-12-2003, PDF p.17); no amendment of s.74 or s.80 in the Acts of 2019–2026 (their egazette texts searched)",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.74(1), (2), with s.80",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.111, with s.121 and s.536(2)(n)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 8
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.111, s.121, s.536(2)(n)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.111 p.148, s.121 p.158, s.536(2)(n) p.493; not amended by the Finance Act, 2026 or the Taxation Laws (Amendment) Act, 2025",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.111, p.148",
+    "accessedOn": "2026-10-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

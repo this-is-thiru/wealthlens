@@ -59,7 +59,7 @@ class LeaveTravelExemptionTest {
     private static final LedgerSnapshot PREVIOUS_BLOCK_USED = ledger(Map.of(2022, new LeaveTravelBlock(1, false)));
 
     private static LedgerSnapshot ledger(Map<Integer, LeaveTravelBlock> blocks) {
-        return new LedgerSnapshot(blocks, Optional.empty(), Money.ZERO, Money.ZERO, Map.of(), Optional.empty());
+        return new LedgerSnapshot(blocks, Optional.empty(), Money.ZERO, Money.ZERO, Map.of(), Optional.empty(), Map.of());
     }
 
     private static Journey journey(String startedOn, JourneyMode mode, String incurred, String fare) {

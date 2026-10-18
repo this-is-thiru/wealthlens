@@ -55,7 +55,7 @@ class CapitalGainsNodeTest {
         EngineInputs inputs = new EngineInputs(taxYear, plain.regime(),
                 TemporalContext.forTaxYear(taxYear, taxYear.startsOn().plusMonths(5)), plain.entered(),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(),
-                new CapitalGainsInput(List.of(buckets), List.of(), Instant.parse("2026-04-15T10:00:00Z"), "run-1"),
+                new CapitalGainsInput(List.of(buckets), Instant.parse("2026-04-15T10:00:00Z"), "run-1"),
                 plain.filing());
         return NodeHarness.with(pack(year)).regime(plain.regime()).inputs(inputs).run(new CapitalGainsNode());
     }
@@ -97,11 +97,11 @@ class CapitalGainsNodeTest {
                 bucket("-8000", Term.LONG_TERM, RateBasisHint.SPECIAL_RATE_OTHER));
         CapitalGainsHead head = (CapitalGainsHead) result.value();
 
-        // Then — not set off against any other head (S2 s.109(2)); carried by W-088d
+        // Then — not set off against any other head (S2 s.109(2)); carried forward (S2 s.111; D-247)
         assertThat(head.total()).isEqualTo(Money.ZERO);
         assertThat(head.shortTermLossLeft()).isEqualTo(Money.of("5000"));
         assertThat(head.longTermLossLeft()).isEqualTo(Money.of("8000"));
-        assertThat(result.trace()).filteredOn(line -> line.limitedBy().orElse("").contains("W-088d")).hasSize(2)
+        assertThat(result.trace()).filteredOn(line -> line.limitedBy().orElse("").contains("carried forward (S2 s.111(1)")).hasSize(2)
                 .allSatisfy(line -> {
                     assertThat(line.rule()).isEqualTo(RuleIds.SETOFF_WITHIN_CAPITAL_GAINS);
                     assertThat(line.kind()).isEqualTo(StepKind.MEASURE);

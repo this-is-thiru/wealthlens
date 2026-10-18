@@ -188,6 +188,7 @@ public final class RuleIds {
     public static final RuleId SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME = new RuleId("SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME");
     public static final RuleId SAL_TAX_ON_EMPLOYMENT = new RuleId("SAL-TAX-ON-EMPLOYMENT");
     public static final RuleId SETOFF_ACROSS_HEADS = new RuleId("SETOFF-ACROSS-HEADS");
+    public static final RuleId SETOFF_CARRIED_CAPITAL_GAINS = new RuleId("SETOFF-CARRIED-CAPITAL-GAINS");
     public static final RuleId SETOFF_CARRIED_DISALLOWED_PART = new RuleId("SETOFF-CARRIED-DISALLOWED-PART");
     public static final RuleId SETOFF_CARRIED_HOUSE_PROPERTY = new RuleId("SETOFF-CARRIED-HOUSE-PROPERTY");
     public static final RuleId SETOFF_HOUSE_PROPERTY = new RuleId("SETOFF-HOUSE-PROPERTY");

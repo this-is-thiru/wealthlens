@@ -49,7 +49,7 @@ public class CapitalGainsAdapter {
                 .map(CapitalGainsAdapter::bucketOf)
                 .flatMap(Optional::stream)
                 .toList();
-        return new CapitalGainsInput(buckets, List.of(), summary.asOf(), summary.portfolioComputationRef());
+        return new CapitalGainsInput(buckets, summary.asOf(), summary.portfolioComputationRef());
     }
 
     /** The engine's bucket, or none for a nil amount and for income of another head. */

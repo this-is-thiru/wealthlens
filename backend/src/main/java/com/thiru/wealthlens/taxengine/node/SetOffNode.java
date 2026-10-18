@@ -59,6 +59,9 @@ import java.util.TreeMap;
  * default, the Acts prescribing none (D-221). A year's loss is used for eight years after it arose
  * (S2 s.110; 1961 s.71B), and expires after that; in the new regime its attributable part is deemed given full effect
  * to (S2 s.202(2)(b)(i), (3)). What is still carried is a MEASURE line per year of origin (D-218).
+ *
+ * <p>Last, the capital losses carried in from earlier years, term by term ({@link CarriedCapitalLossSetOff}; S2 s.111;
+ * 1961 s.74; D-247).
  */
 public final class SetOffNode implements ComputationNode {
 
@@ -85,7 +88,8 @@ public final class SetOffNode implements ComputationNode {
     @Override
     public Set<RuleId> rules() {
         return Set.of(RuleIds.SETOFF_ACROSS_HEADS, RuleIds.SETOFF_HOUSE_PROPERTY, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
-                RuleIds.SETOFF_CARRIED_DISALLOWED_PART, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS);
+                RuleIds.SETOFF_CARRIED_DISALLOWED_PART, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS,
+                RuleIds.SETOFF_CARRIED_CAPITAL_GAINS);
     }
 
     @Override
@@ -117,6 +121,7 @@ public final class SetOffNode implements ComputationNode {
             }
         }
         broughtForward(ctx, t, income, lines);
+        CarriedCapitalLossSetOff.apply(ctx, order.capitalGainsOrder(), income, parts, lines);
         Money total = income.values().stream().reduce(Money.ZERO, Money::plus);
         return new NodeResult(new HeadsAfterSetOff(total, parts), lines);
     }

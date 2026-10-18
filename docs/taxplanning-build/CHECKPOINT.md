@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-088c DONE; between items)
+Item            : — (W-088d DONE; between items)
 Stage           : between items
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's pick. Next in order: W-088d (capital-loss carry-forward, S2 s.111 / 1961 s.74), then W-088e, W-088f (OQ-31), W-088g, W-088h, W-089. Open OQs: OQ-31, OQ-32, OQ-33
-Last verify     : unit -Punit (clean) → 2983 run, 0 fail, 0 Checkstyle; integration 252/0 (W-088c, 2026-10-18)
+Next step       : WAIT for the owner's pick. Next in order: W-088e (the capital-gains chapter's coverage close-out, 57 pointers, content only), then W-088f (OQ-31), W-088g, W-088h, W-089. Open OQs: OQ-31, OQ-32, OQ-33
+Last verify     : unit -Punit (clean) → 2989 run, 0 fail, 0 Checkstyle; integration 252/0 (W-088d, 2026-10-18)
 Waiting on      : the owner — next pick
 Files touched   : none
-Last item commit: taxplanning W-088c: limit the surcharge on the tax on dividends and special-rate gains to 15% and leave those gains out of the 25%/37% test — the dividends' share pro rata on aggregate income, OQ-30 answered by the Act (D-245, D-246)
-Updated         : 2026-10-18, session 21 — W-088c committed
+Last item commit: taxplanning W-088d: carry a capital loss forward eight years from the tax ledger, long-term only against long-term gains — the input's brought-forward field removed, the order declared (D-247)
+Updated         : 2026-10-18, session 21 — W-088d committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

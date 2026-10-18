@@ -34,7 +34,7 @@ import java.util.Set;
  * parts, a short-term loss against any part. The long-term loss goes first, because it can use fewer parts; each loss
  * takes the parts in {@code SETOFF-WITHIN-CAPITAL-GAINS}'s declared order, which neither Act prescribes (OQ-32), and
  * every set-off line names it. What no part absorbs is shown and stays in the head — a capital-gains loss is not set
- * off against another head (S2 s.109(2); 1961 s.71(3)), and carrying it is W-088d's.
+ * off against another head (S2 s.109(2); 1961 s.71(3)); it is carried forward (S2 s.111; 1961 s.74; D-247).
  */
 public final class CapitalGainsNode implements ComputationNode {
 
@@ -108,7 +108,7 @@ public final class CapitalGainsNode implements ComputationNode {
         }
         if (remaining.isGreaterThan(Money.ZERO)) {
             lines.add(line(lines, version, StepKind.MEASURE, loss, remaining).withLimitedBy(which + " loss not set off,"
-                    + " and not against another head (S2 s.109(2); 1961 s.71(3)); carried forward — W-088d"));
+                    + " and not against another head (S2 s.109(2); 1961 s.71(3)); carried forward (S2 s.111(1); 1961 s.74(1))"));
         }
         return remaining;
     }
