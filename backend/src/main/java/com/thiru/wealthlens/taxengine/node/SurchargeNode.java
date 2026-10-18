@@ -145,23 +145,19 @@ public final class SurchargeNode implements ComputationNode {
     }
 
     /**
-     * The dividends' part of the interest allowed. It is determined unless the year's limit binds above nil over
-     * interest claimed against both dividends and unit income, where no text says how the allowance divides (OQ-26).
+     * The dividends' part of the interest allowed: in proportion to the dividends' share of the dividend and unit
+     * income (D-229), but never more than was claimed against the dividends nor less than the units' claim leaves
+     * them, since the head deducts no item more than its own expense (D-234). Where the limit does not bind each side
+     * keeps its own claim; where only one side claimed, it takes all that is allowed.
      */
     private static Money interestAllowedOnDividends(DividendInterest interest) {
         Money allowed = interest.allowed();
-        if (interest.claimedOnDividends().equals(Money.ZERO) || allowed.equals(Money.ZERO)) {
+        if (allowed.equals(Money.ZERO)) {
             return Money.ZERO;
         }
-        if (allowed.equals(interest.claimed())) {
-            return interest.claimedOnDividends();
-        }
-        if (interest.claimedOnDividends().equals(interest.claimed())) {
-            return allowed;
-        }
-        throw new IllegalArgumentException("Interest expense of " + interest.claimed() + " against dividend and unit"
-                + " income is limited to " + allowed + "; what part of that is the dividends' — and so how much"
-                + " dividend income the 25%/37% surcharge test leaves out — is OQ-26");
+        Money proportional = allowed.scaledBy(interest.receivedOnDividends(), interest.base());
+        Money claimedOnUnits = interest.claimed().minus(interest.claimedOnDividends());
+        return Money.min(interest.claimedOnDividends(), Money.max(allowed.minus(claimedOnUnits), proportional));
     }
 
     /**

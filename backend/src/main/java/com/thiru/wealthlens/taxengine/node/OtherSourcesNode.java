@@ -327,12 +327,14 @@ public final class OtherSourcesNode implements ComputationNode {
      * the surcharge's dividend income (D-200).
      *
      * @param base the year's dividend and unit income, which the limit is a share of
+     * @param receivedOnDividends the part of {@code base} received as dividends
      * @param claimed the interest expense claimed against dividend and unit items
      * @param claimedOnDividends the part of {@code claimed} entered against dividend items
      * @param limit the row's share of {@code base}
      * @param untaxedAbroad whether any of it is payable outside India untaxed, which bars all of it
      */
-    record DividendInterest(Money base, Money claimed, Money claimedOnDividends, Money limit, boolean untaxedAbroad) {
+    record DividendInterest(Money base, Money receivedOnDividends, Money claimed, Money claimedOnDividends, Money limit,
+            boolean untaxedAbroad) {
 
         /** The interest allowed: nil where barred, else the claim within the limit. */
         Money allowed() {
@@ -342,6 +344,7 @@ public final class OtherSourcesNode implements ComputationNode {
 
     static DividendInterest dividendInterest(NodeContext ctx, List<OtherSourceItem> items) {
         Money base = Money.ZERO;
+        Money receivedOnDividends = Money.ZERO;
         Money claimed = Money.ZERO;
         Money claimedOnDividends = Money.ZERO;
         boolean untaxedAbroad = false;
@@ -351,13 +354,14 @@ public final class OtherSourcesNode implements ComputationNode {
                 claimed = claimed.plus(item.interestExpense());
                 untaxedAbroad |= item.payableOutsideIndiaUntaxed() && item.interestExpense().isGreaterThan(Money.ZERO);
                 if (item.kind() == OtherSourceKind.DIVIDEND) {
+                    receivedOnDividends = receivedOnDividends.plus(item.received());
                     claimedOnDividends = claimedOnDividends.plus(item.interestExpense());
                 }
             }
         }
         Money limit = TemporallyApportionedCap.apply(ctx.rule(RuleIds.OS_DIVIDEND_INTEREST), ctx.inputs().temporal(),
                 CapContext.of(DIVIDEND, base)).value();
-        return new DividendInterest(base, claimed, claimedOnDividends, limit, untaxedAbroad);
+        return new DividendInterest(base, receivedOnDividends, claimed, claimedOnDividends, limit, untaxedAbroad);
     }
 
     /**

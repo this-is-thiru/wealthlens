@@ -353,18 +353,50 @@ class SurchargeNodeTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1096875")));
     }
 
+    /*
+     * TY 2025-26, where the 1961 s.57 proviso's 20% limit binds over interest claimed against dividends and units both:
+     * the allowed interest is the dividends' in proportion to their income (D-229), bounded by each side's claim
+     * (D-234). Each case sits at the excluding threshold, so the dividends' share decides the ladder. Relief is nil:
+     * at 1,00,00,000 the tax 28,12,500 × 1.10 plus the 1,07,00,000 or more above it exceeds every unrelieved figure.
+     */
+
     @Test
-    void evaluate_whenTheYearsLimitBindsOverDividendsAndUnitsBoth_isRefused() {
-        // Given — TY 2025-26: 10,00,000 dividend bearing 3,00,000 interest, 5,00,000 units bearing 1,00,000;
-        // the limit 20% × 15,00,000 = 3,00,000 is under the 4,00,000 claimed, and no text divides it
-        NodeHarness harness = harnessWith(2025, FIRST_SCHEDULE_RATES, "21000000", "6112500",
+    void evaluate_whenTheYearsLimitBindsOverDividendsAndUnitsBoth_attributesTheAllowanceByIncome() {
+        // Given — 10,00,000 dividend bearing 3,00,000 interest, 5,00,000 units bearing 1,00,000; allowed
+        // min(4,00,000, 20% × 15,00,000) = 3,00,000; the dividends' 3,00,000 × 10/15 = 2,00,000
+        NodeResult result = runWith(2025, FIRST_SCHEDULE_RATES, "20800000", "6052500",
                 item(OtherSourceKind.DIVIDEND, "1000000", "300000"), item(OtherSourceKind.UNIT_INCOME, "500000",
                         "100000"));
 
-        // When / Then
+        // Then — dividend income 8,00,000: excluding 2,00,00,000 does not exceed the threshold; 0.15 × 60,52,500
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("907875")));
+    }
+
+    @Test
+    void evaluate_whenTheDividendsIncomeShareExceedsTheirClaim_attributesOnlyTheirClaim() {
+        // Given — 10,00,000 dividend bearing 1,00,000, 10,00,000 units bearing 5,00,000; allowed
+        // min(6,00,000, 4,00,000) = 4,00,000; the income share 2,00,000 is more than the 1,00,000 claimed
+        NodeResult result = runWith(2025, FIRST_SCHEDULE_RATES, "20900000", "6082500",
+                item(OtherSourceKind.DIVIDEND, "1000000", "100000"), item(OtherSourceKind.UNIT_INCOME, "1000000",
+                        "500000"));
+
+        // Then — dividend income 9,00,000: excluding 2,00,00,000; 0.15 × 60,82,500. The bare share would leave
+        // 2,01,00,000, over the threshold
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("912375")));
+    }
+
+    @Test
+    void evaluate_whenTheUnitsIncomeShareExceedsTheirClaim_attributesTheRestToTheDividends() {
+        // Given — 10,00,000 dividend bearing 5,00,000, 10,00,000 units bearing 1,00,000; allowed 4,00,000; the
+        // units' share 2,00,000 is more than their 1,00,000, so the dividends' is 4,00,000 − 1,00,000 = 3,00,000
+        NodeHarness harness = harnessWith(2025, FIRST_SCHEDULE_RATES, "20800000", "6052500",
+                item(OtherSourceKind.DIVIDEND, "1000000", "500000"), item(OtherSourceKind.UNIT_INCOME, "1000000",
+                        "100000"));
+
+        // When / Then — dividend income 7,00,000: excluding 2,01,00,000 still reaches the 25% ladder with dividends
+        // present, which is W-088's; the bare share would leave 2,00,00,000 and charge 15%
         assertThatThrownBy(() -> harness.run(new SurchargeNode()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("OQ-26")
-                .hasMessageContaining("dividends' —");
+                .hasMessageContaining("W-088");
     }
 }

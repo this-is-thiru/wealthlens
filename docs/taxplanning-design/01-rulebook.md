@@ -444,6 +444,11 @@ capital gains in from `portfolio`, so this is live for the primary user, not the
 > "computed in respect of" slab-taxed dividends, which no text read measures (**OQ-26**; `W-088`). Marginal relief is
 > measured on total income (Part I-A Para F Table 2, p.84).
 
+> **Addendum (W-079e2, 2026-10-18, D-229, D-234):** in TY 2025-26, where the 1961 s.57 proviso's 20% limit binds
+> over interest claimed against both dividends and unit income, the interest allowed is the dividends' in proportion
+> to their share of that income (the owner's ruling; no text divides it), bounded so that neither side takes more
+> than was claimed against it.
+
 ---
 
 ## R6 — Cess and rounding
