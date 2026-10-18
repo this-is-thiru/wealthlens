@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
+import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -179,7 +180,7 @@ public class TradeMatchingService {
                     .capitalGainsType();
 
             // Financial year
-            String financialYear = deriveFinancialYear(sell.getSellDate());
+            String financialYear = TLocalDate.financialYear(sell.getSellDate());
 
             MatchedTrade trade = MatchedTrade.builder()
                     .email(sell.getEmail())
@@ -324,19 +325,6 @@ public class TradeMatchingService {
                 .miscCharges(sellTxn.getMiscCharges())
                 .sellDate(sellTxn.getTransactionDate())
                 .build();
-    }
-
-    private String deriveFinancialYear(LocalDate transactionDate) {
-        if (transactionDate == null) {
-            return "UNKNOWN";
-        }
-        int year = transactionDate.getYear();
-        int month = transactionDate.getMonthValue();
-        if (month <= 3) {
-            return String.format("FY%d-%02d", year - 1, (year % 100));
-        } else {
-            return String.format("FY%d-%02d", year, ((year + 1) % 100));
-        }
     }
 
     private AuditMetadata buildAuditMetadata() {

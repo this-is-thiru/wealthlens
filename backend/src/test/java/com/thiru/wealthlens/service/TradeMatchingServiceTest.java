@@ -400,6 +400,43 @@ class TradeMatchingServiceTest {
     }
 
     @Test
+    void matchSellToLots_whenSoldEitherSideOfTheYearEnd_writesTheYearAsPortfolioDoes() {
+        // Given — one lot of 10; sells of 5 on 31 March 2024 and 5 on 1 April 2024
+        List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(List.of(createBuyTransaction("test@example.com",
+                "RELIANCE", "Reliance Industries", BrokerName.ZERODHA, AccountType.SELF, "main", 100.0, 10.0, 0.0,
+                0.0, LocalDate.of(2023, 1, 15))));
+
+        // When
+        String lastDay = tradeMatchingService.matchSellToLots(sellOfFive("sell-1", LocalDate.of(2024, 3, 31)), lots)
+                .getFirst().getFinancialYear();
+        String firstDay = tradeMatchingService.matchSellToLots(sellOfFive("sell-2", LocalDate.of(2024, 4, 1)), lots)
+                .getFirst().getFinancialYear();
+
+        // Then — TLocalDate.financialYear's form, as every other portfolio writer uses (D-239), not FY2023-24
+        assertEquals("2023-2024", lastDay);
+        assertEquals("2024-2025", firstDay);
+    }
+
+    private static SellRequest sellOfFive(String id, LocalDate sellDate) {
+        return SellRequest.builder()
+                .id(id)
+                .email("test@example.com")
+                .stockCode("RELIANCE")
+                .stockName("Reliance Industries")
+                .exchangeName("NSE")
+                .brokerName(BrokerName.ZERODHA)
+                .assetType(AssetType.EQUITY)
+                .accountType(AccountType.SELF)
+                .accountHolder("main")
+                .sellPrice(150.0)
+                .quantity(5.0)
+                .brokerCharges(0.0)
+                .miscCharges(0.0)
+                .sellDate(sellDate)
+                .build();
+    }
+
+    @Test
     void shouldConvertToTradeOutcomeEntity() {
         // Given
         MatchedTrade trade = MatchedTrade.builder()
