@@ -14,7 +14,7 @@ import java.util.Set;
  * loss left after that return's own set-off is a tax figure, kept on the tax side with S2 s.111.
  *
  * @param email whose gains these are
- * @param financialYear the year as {@code portfolio} keys it, such as {@code FY2025-26}
+ * @param financialYear the year as {@code portfolio} keys it, such as {@code 2025-2026} ({@code TLocalDate.financialYear})
  * @param buckets one per classification, asset type and sub-class; may be empty
  * @param asOf when {@code portfolio} computed this, so a computation can pin what it ran against
  * @param portfolioComputationRef {@code portfolio}'s reference for the run that produced it

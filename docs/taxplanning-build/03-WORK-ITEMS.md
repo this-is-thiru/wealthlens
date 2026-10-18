@@ -1167,8 +1167,9 @@ if that is not enough for the item in hand.
 > Verified by: `find backend/src/main/java -name CapitalGainsType.java`
 > → `portfolio/dto/enums/CapitalGainsType.java`; `13-edge-cases.md:254`;
 > `./mvnw test -pl backend -Dtest=RegimeElectionSnapshotTest` — 20/20.
-| W-086 | `portfolio` published read-model | `DR 07` X1.3 | modulith test must pass with the new dependency |
-| W-087 | `MoneyBridge` | `DR 19` E1 | `toTMoney` **throws** — one-way seam |
+| W-086 | `portfolio` published read-model | `DR 07` X1.3 | modulith test must pass with the new dependency **Built (D-238):** `CapitalGainsSummaryService.summaryFor(email, financialYear)` over `trade_outcomes` by sell date; gain = sale − adjusted cost − deductible charges; a row with charges and no breakdown refuses; the dependency was already declared and no `taxplanning` class imports `portfolio` yet — the first import is W-087's adapter |
+| W-086a | One financial-year form in `trade_outcomes` *(D-238)*: `TradeMatchingService.deriveFinancialYear` writes `FY2025-26` where the rest of `portfolio` writes `TLocalDate.financialYear` (`2025-2026`) — use `TLocalDate.financialYear`, and a migration rewrites the `FY…` rows | D-238 | `portfolio` code; W-086 selects by sell date meanwhile |
+| W-087 | `MoneyBridge` | `DR 19` E1 | `toTMoney` **throws** — one-way seam **also (D-238):** `CapitalGainsAdapter` in `taxplanning.portfolio` — calls `CapitalGainsSummaryService.summaryFor` and maps the buckets to `CapitalGainsInput` through the bridge (the first `taxplanning` → `portfolio` import, so the modulith check meets it here) |
 | W-088 | `CapitalGainsNode` | `DR 13` R-10 | `UNCLASSIFIED` → 409; `SPECULATIVE` excluded |
 
 > **Erratum (W-056, 2026-09-26, D-086):** `W-088` also takes the surcharge split: `RATE-SUR-SPLIT-001` (the

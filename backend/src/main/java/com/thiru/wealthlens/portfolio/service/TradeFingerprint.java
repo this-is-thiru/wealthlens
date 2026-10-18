@@ -37,7 +37,8 @@ public final class TradeFingerprint {
         return sha256(material);
     }
 
-    private static String sha256(String material) {
+    /** The hex SHA-256 of {@code material}; shared with {@link CapitalGainsSummaryService}'s computation reference. */
+    static String sha256(String material) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(material.getBytes(StandardCharsets.UTF_8)));
