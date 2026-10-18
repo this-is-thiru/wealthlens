@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -19,7 +20,7 @@ import java.util.Optional;
 /**
  * Resolves an election by recomputation ({@code DR 15} C2, {@code D-MARGINAL}): never by a heuristic.
  *
- * <p>A stated choice is computed once. Otherwise each choice is a whole pipeline run and the one with the least
+ * <p>A stated choice is computed once, each choice under the regime it names ({@link Election#regimeFor}; D-222). Otherwise each choice is a whole pipeline run and the one with the least
  * {@code tax.netpayable} is taken; a tie goes to the earlier choice, so to the declared default where it is among the
  * cheapest. Whole runs, because the in-run {@code Recomputation} (D-086) seeds what it does not rerun from the run's
  * values so far, which an election read early in the graph does not yet have; {@code IncrementalRunner} (W-084) is to
@@ -63,13 +64,14 @@ public final class ElectionResolver {
         Optional<T> stated = election.stated(inputs);
         List<T> choices = stated.map(List::of).orElseGet(() -> election.candidates(inputs, pack));
         if (choices.isEmpty()) {
-            throw new IllegalArgumentException(election.basis() + " offers no choice to price");
+            throw new IllegalArgumentException(election.getClass().getSimpleName() + " offers no choice to price");
         }
         List<PricedAlternative<T>> priced = new ArrayList<>(choices.size());
         PipelineRunner.Result cheapest = null;
         T chosen = null;
         for (T choice : choices) {
-            PipelineRunner.Result run = PipelineRunner.run(registry, pack, regime, election.choosing(choice, inputs));
+            PipelineRunner.Result run = PipelineRunner.run(registry, pack, election.regimeFor(choice, regime, pack),
+                    election.choosing(choice, inputs));
             Money netPayable = run.valueOf(NodeIds.TAX_NETPAYABLE).asMoney();
             priced.add(new PricedAlternative<>(choice, netPayable));
             if (cheapest == null || netPayable.isLessThan(cheapest.valueOf(NodeIds.TAX_NETPAYABLE).asMoney())) {
@@ -85,20 +87,22 @@ public final class ElectionResolver {
     /** The run, its trace ending in one line per alternative priced. */
     private static <T> PipelineRunner.Result withAlternatives(PipelineRunner.Result run, Election<T> election,
             ElectionOutcome<T> outcome, RulePack pack, EngineInputs inputs) {
-        Provenance provenance = TemporallyApportionedCap.governingVersion(pack.rule(election.basis()),
-                inputs.temporal()).provenance();
         List<TraceLine> trace = new ArrayList<>(run.trace());
         for (PricedAlternative<T> alternative : outcome.alternatives()) {
+            RuleId basis = election.basis(alternative.choice(), pack);
+            Provenance provenance =
+                    TemporallyApportionedCap.governingVersion(pack.rule(basis), inputs.temporal()).provenance();
             MoneyValue netPayable = MoneyValue.of(alternative.netPayable());
-            trace.add(TraceLine.of(trace.size() + 1, election.node(), election.basis(), StepKind.MEASURE, netPayable,
-                    netPayable, provenance).withLimitedBy(why(election, outcome, alternative)));
+            trace.add(TraceLine.of(trace.size() + 1, election.node(), basis, StepKind.MEASURE, netPayable, netPayable,
+                    provenance).withLimitedBy(why(election, outcome, alternative, pack)));
         }
         return new PipelineRunner.Result(run.order(), run.values(), trace, run.annotations(), run.inputs(),
                 run.lawAndExec());
     }
 
-    private static <T> String why(Election<T> election, ElectionOutcome<T> outcome, PricedAlternative<T> alternative) {
-        String choice = election.describe(alternative.choice()) + ": net payable";
+    private static <T> String why(Election<T> election, ElectionOutcome<T> outcome, PricedAlternative<T> alternative,
+            RulePack pack) {
+        String choice = election.describe(alternative.choice(), pack) + ": net payable";
         if (outcome.mode() == ElectionMode.USER_SPECIFIED) {
             return choice + "; stated by the assessee, applied as stated and not priced against the others";
         }

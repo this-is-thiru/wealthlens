@@ -1206,6 +1206,7 @@ if that is not enough for the item in hand.
 | W-098 | `Employer`, `Landlord`, `Lender`, `BankAccount` | `DR 15` F3, F4 |
 | W-099 | `TaxYearWorkspace`, `FilingDraft`, `DraftInputs` | `DR 11` F2 |
 | W-082d | The regime election history *(D-220)*: `RegimeElectionHistory` (per profile and regime, append-only, `stateAsAt(TaxYearId)`) and `ElectionEvent` (`DR 17` L3) in `taxplanning` — the source W-103 projects into `RegimeElectionSnapshot`; moved from W-082 (Appendix A) because it holds `ProfileId` (W-096) and `DraftId` (W-099) | `DR 17` L3 | before W-103 |
+| W-082e | The s.202(4)(a) binding, history-aware regime offers *(D-222)*: `DR 17` L3's state branches — IN_EFFECT carried into later years, WITHDRAWN and the withdrawals used (`RegimeElectionSnapshot.withdrawalsUsedFor`), PERMANENTLY_INELIGIBLE with `AfterWithdrawal.IneligibleUnless` revival and its route, LAPSED with `ContinuationPolicy`; `RegimeOffer` gains `Continuing` / `Lapsed`; lifts W-082b's refusal of a regime whose binding applies | `DR 17` L3; `01-rulebook.md` R2 `REG-OPTOUT-YEARLY-001` | needs W-082d's history and, to be reachable, income under the business head |
 | W-100 | `DraftRevision` + JSON-Patch apply/replay | `DR 11` F2 |
 | W-101 | repositories + indexes | TS T7 |
 | W-102 | `cleanDatabase()` additions | TS T7 — **every** collection |

@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +27,7 @@ import java.util.Optional;
 public final class SetOffOrderElection implements Election<List<HeadCode>> {
 
     @Override
-    public RuleId basis() {
+    public RuleId basis(List<HeadCode> choice, RulePack pack) {
         return RuleIds.SETOFF_ACROSS_HEADS;
     }
 
@@ -58,7 +59,12 @@ public final class SetOffOrderElection implements Election<List<HeadCode>> {
     }
 
     @Override
-    public String describe(List<HeadCode> choice) {
+    public RegimeSpec regimeFor(List<HeadCode> choice, RegimeSpec computing, RulePack pack) {
+        return computing;
+    }
+
+    @Override
+    public String describe(List<HeadCode> choice, RulePack pack) {
         return "absorption order " + choice;
     }
 

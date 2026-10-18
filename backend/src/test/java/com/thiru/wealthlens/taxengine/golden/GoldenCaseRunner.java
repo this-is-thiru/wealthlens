@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.golden;
 
 import com.thiru.wealthlens.taxengine.election.ElectionResolver;
+import com.thiru.wealthlens.taxengine.election.RegimeElection;
 import com.thiru.wealthlens.taxengine.election.SetOffOrderElection;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
@@ -8,6 +9,8 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
+import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
+import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ChapterEightNode;
@@ -44,6 +47,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -213,6 +217,23 @@ final class GoldenCaseRunner {
                 plain.capitalGains(), plain.filing());
         return ElectionResolver.resolve(new SetOffOrderElection(), NodeRegistry.of(nodes), pack,
                 pack.regimes().get(golden.regime()), inputs);
+    }
+
+    /** The regime resolved by recomputation over the whole shipped engine, other-sources interest the only income (D-222). */
+    ElectionResolver.Resolution<RegimeCode> resolveRegime(TaxYearId year, Money interest) {
+        RulePack pack = pack(year);
+        List<ComputationNode> nodes = new ArrayList<>(BUILT);
+        nodes.add(new TotalIncomeNode());
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        OtherSourceItem item = new OtherSourceItem(OtherSourceKind.OTHER_INTEREST, interest, Money.ZERO, Money.ZERO,
+                Money.ZERO, false);
+        EngineInputs inputs = new EngineInputs(year, plain.regime(),
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                plain.filing());
+        return ElectionResolver.resolve(new RegimeElection(), NodeRegistry.of(nodes), pack,
+                pack.regimes().get(plain.regime()), inputs);
     }
 
     /** A first return, but for the journeys earlier years claimed in each LTA block. */

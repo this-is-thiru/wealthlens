@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-082a — the election core and the set-off order (W-082 split, D-220)
-Stage           : DONE — "W-082a approved" (2026-10-18); committing
-Plan            : plans/W-082.md (C0a split; OQ-28 may choose, OQ-29 default kept — D-221)
-Approved        : "W-082 approved — proceed as recommended" (2026-10-18)
-Steps done      : 1–8
-Next step       : WAIT for the owner's review. On "W-082a approved": commit the named paths below (one commit, subject "taxplanning W-082a: …"), STATE Last checkpoint first. Next in order then: W-082b
-Last verify     : unit -Punit → 2876 run, 0 fail, 0 Checkstyle (W-082a, 2026-10-18)
+Item            : W-082b — the regime election
+Stage           : DONE — "W-082b approved" (2026-10-18); committing
+Plan            : plans/W-082b.md (D-222)
+Approved        : "W-082b approved — proceed as recommended" (2026-10-18)
+Steps done      : 1–6
+Next step       : WAIT for the owner's review. On "W-082b approved": STATE Last checkpoint, then commit the named paths below (one commit "taxplanning W-082b: …"). Next in order then: W-082c
+Last verify     : unit -Punit → 2885 run, 0 fail, 0 Checkstyle (W-082b, 2026-10-18)
 Waiting on      : —
-Files touched   : backend main: taxengine/election/ (6 new), input/EnteredFacts, node/SetOffNode, rules/definition/AbsorptionOrder; backend test: election/ElectionResolverTest, golden/{SetOffOrderElectionPipelineTest (new), GoldenCaseRunner, SalaryHeadPipelineTest}, input/{InputsFingerprintTest, RegimeElectionSnapshotTest}, node/*Test (31 files, EnteredFacts arg); docs: 02-TECH-SPEC, 03-WORK-ITEMS, STATE, plans/W-082.md, sources/2026-10-18-set-off-order.md
-Last item commit: taxplanning W-081c: close out the set-off chapter's coverage — S2 ss.108–110 / 1961 ss.70, 71, 71B modelled with catalogue entries, capital gains to W-088, the rest deferred, s.71A spent (D-219)
-Updated         : 2026-10-18, session 21 — W-082a awaiting review
+Files touched   : backend main election/{Election, ElectionResolver, SetOffOrderElection (mod); RegimeElection, RegimeOffer, RegimeOffers (new)}; backend test election/RegimeOffersTest (new), golden/{RegimeElectionPipelineTest (new), GoldenCaseRunner}; docs 02-TECH-SPEC, 03-WORK-ITEMS, STATE, plans/W-082b.md
+Last item commit: taxplanning W-082a: let the assessee elect the set-off order and price every order by recomputation — the Election family's core, OQ-28 / OQ-29 answered (D-220, D-221)
+Updated         : 2026-10-18, session 21 — W-082b awaiting review
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

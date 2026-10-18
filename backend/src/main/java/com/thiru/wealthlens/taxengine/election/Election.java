@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,10 +18,10 @@ import java.util.Optional;
  *
  * @param <T> what is chosen
  */
-public sealed interface Election<T> permits SetOffOrderElection {
+public sealed interface Election<T> permits RegimeElection, SetOffOrderElection {
 
-    /** The rule the choice is made under; the priced alternatives are lines of it. */
-    RuleId basis();
+    /** The rule a choice's priced line cites: what the choice changes, so the figure is addressable by it. */
+    RuleId basis(T choice, RulePack pack);
 
     /** The node whose computation the choice changes; the alternatives' lines are placed under it. */
     NodeId node();
@@ -34,6 +35,9 @@ public sealed interface Election<T> permits SetOffOrderElection {
     /** The inputs with {@code choice} made. */
     EngineInputs choosing(T choice, EngineInputs inputs);
 
+    /** The regime a choice is computed under — the one being computed, unless the choice is the regime (D-222). */
+    RegimeSpec regimeFor(T choice, RegimeSpec computing, RulePack pack);
+
     /** The choice in words, for its line. */
-    String describe(T choice);
+    String describe(T choice, RulePack pack);
 }
