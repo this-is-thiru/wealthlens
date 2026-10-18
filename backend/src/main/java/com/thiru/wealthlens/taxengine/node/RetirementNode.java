@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * The retirement and termination deductions from salary (S2 s.19(1) Table Sl. 3–14 with s.19(2); 1961 s.10(10),
@@ -55,6 +56,19 @@ import java.util.Set;
 public final class RetirementNode implements ComputationNode {
 
     private static final Map<RetirementEntry, RuleId> RULE_FOR_ENTRY = entryRules();
+
+    /**
+     * The entries measured on one employer's facts or against a limit, and the item that measures a second employer's
+     * payment (D-224). Summing two employers' payments into one would measure both on the first employer's facts and
+     * cap them once; the entries deducted in full are unaffected and absent here.
+     */
+    private static final Map<RetirementEntry, String> MEASURED_ON_ONE_EMPLOYER = Map.of(
+            RetirementEntry.OTHER_GRATUITY, "W-066f",
+            RetirementEntry.OTHER_LEAVE_ENCASHMENT, "W-066f",
+            RetirementEntry.OTHER_EMPLOYER_COMMUTATION, "W-066g",
+            RetirementEntry.VOLUNTARY_RETIREMENT, "W-066g",
+            RetirementEntry.STATUTORY_GRATUITY, "W-066g",
+            RetirementEntry.RETRENCHMENT, "W-066g");
     private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
     private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
 
@@ -97,6 +111,7 @@ public final class RetirementNode implements ComputationNode {
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
         List<RetirementPayment> payments = ctx.inputs().entered().retirementPayments();
         requireEachRetirementComponentEntered(ctx, components, payments);
+        requireOneEmployerWhereMeasuredOnOne(components, payments);
         NotifiedRetirementLimits.requireOneDay(payments);
         boolean gratuityReceived = paid(components, ComponentCodes.GRATUITY).isGreaterThan(Money.ZERO);
         List<TraceLine> trace = new ArrayList<>();
@@ -126,6 +141,25 @@ public final class RetirementNode implements ComputationNode {
             if (retirement && !entered.contains(line.code())) {
                 throw new IllegalArgumentException(line.code() + " is paid but no entry says which of the Act's"
                         + " retirement entries it falls under, which turns on the scheme it was paid under; enter it");
+            }
+        }
+    }
+
+    /** Refuses a payment more than one employment paid, where its entry is measured on one employer's facts. */
+    private static void requireOneEmployerWhereMeasuredOnOne(ComponentSet components, List<RetirementPayment> payments) {
+        for (RetirementPayment payment : payments) {
+            String item = MEASURED_ON_ONE_EMPLOYER.get(payment.entry());
+            if (item == null) {
+                continue;
+            }
+            Set<Integer> employments = new TreeSet<>();
+            components.in(HeadCode.SALARIES).stream()
+                    .filter(line -> line.code().equals(payment.component()))
+                    .forEach(line -> employments.add(line.employment()));
+            if (employments.size() > 1) {
+                throw new IllegalArgumentException(payment.component() + " under " + payment.entry() + " is paid by"
+                        + " more than one employment " + employments + "; each employer's payment is measured on its"
+                        + " own facts and limits, which is not built — " + item);
             }
         }
     }
