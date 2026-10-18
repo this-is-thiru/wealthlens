@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.input;
 
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +50,7 @@ import java.util.Optional;
  * sources with that head (D-194), the person's own provident fund accounts with their taxable interest
  * (D-198), the gifts received with the charge on them (D-201), business-trust holdings with their specified sums
  * (D-203), life-policy receipts with their exclusion and charge (D-205), the policies claimed exempt earlier for
- * the aggregate premium limit (D-207). Every
+ * the aggregate premium limit (D-207), the order the assessee elects for set-off with its election (D-221). Every
  * later income item adds the field it reads, and the fingerprint sees it unasked.
  *
  * @param employments each employment in the tax year, in the order entered
@@ -94,6 +96,8 @@ import java.util.Optional;
  * @param businessTrustUnits each holding of a business trust's units, for its specified sum, in the order entered
  * @param lifePolicyReceipts each sum received under a life insurance policy, in the order entered
  * @param claimedLifePolicies each capped policy whose consideration was claimed exempt in an earlier tax year
+ * @param absorptionOrder the order in which the heads absorb a loss, if the assessee elects one (S2 s.109(1); 1961
+ *     s.71; D-221) — each head once
  */
 public record EnteredFacts(
         List<Employment> employments,
@@ -133,7 +137,8 @@ public record EnteredFacts(
         List<GiftReceived> giftsReceived,
         List<BusinessTrustUnits> businessTrustUnits,
         List<LifePolicyReceipt> lifePolicyReceipts,
-        List<ClaimedPolicy> claimedLifePolicies) {
+        List<ClaimedPolicy> claimedLifePolicies,
+        Optional<List<HeadCode>> absorptionOrder) {
 
     public EnteredFacts {
         if (disabledTransport == null) {
@@ -186,6 +191,20 @@ public record EnteredFacts(
         businessTrustUnits = copied(businessTrustUnits, "businessTrustUnits");
         lifePolicyReceipts = copied(lifePolicyReceipts, "lifePolicyReceipts");
         claimedLifePolicies = copied(claimedLifePolicies, "claimedLifePolicies");
+        absorptionOrder = elected(absorptionOrder);
+    }
+
+    /** An immutable copy of the elected order, refusing a missing one and a head named twice. */
+    private static Optional<List<HeadCode>> elected(Optional<List<HeadCode>> absorptionOrder) {
+        if (absorptionOrder == null) {
+            throw new IllegalArgumentException(
+                    "EnteredFacts.absorptionOrder may not be null; pass Optional.empty() where none is elected");
+        }
+        Optional<List<HeadCode>> copy = absorptionOrder.map(order -> copied(order, "absorptionOrder"));
+        if (copy.isPresent() && new HashSet<>(copy.get()).size() != copy.get().size()) {
+            throw new IllegalArgumentException("An elected absorption order names each head once, but was " + copy.get());
+        }
+        return copy;
     }
 
     /** An immutable copy of an entered list, refusing a missing one: an absent list is entered as an empty one. */
@@ -203,6 +222,17 @@ public record EnteredFacts(
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
-                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
+    }
+
+    /** The same facts, with {@code order} elected for set-off — how an election's choice enters a computation. */
+    public EnteredFacts withAbsorptionOrder(List<HeadCode> order) {
+        return new EnteredFacts(employments, tenancies, leaveTravel, allowanceUses, disabledTransport, retirementPayments,
+                accommodations, medicalTreatmentAbroad, vehicles, meals, gifts, loans, expenseBenefits, assetsLent,
+                assetsTransferred, householdBenefits, childEducation, shareAllotments, employerContributions,
+                retirementFundHistory, recognisedFundInterest, qualifyingPayments, lifeInsurancePolicies, healthPayments,
+                disabledDependantSupport, specifiedDiseaseTreatment, educationLoanInterest, purposeLoanInterest,
+                agniveerCorpusFund, rentDeclaration, donations, houseProperties, otherSourceItems, providentFundAccounts,
+                giftsReceived, businessTrustUnits, lifePolicyReceipts, claimedLifePolicies, Optional.of(order));
     }
 }

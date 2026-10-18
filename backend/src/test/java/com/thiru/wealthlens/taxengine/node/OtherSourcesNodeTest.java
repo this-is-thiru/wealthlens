@@ -105,7 +105,7 @@ class OtherSourcesNodeTest {
                         List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(),
                         List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
                         List.of(), List.of(), head.items(), head.accounts(), head.gifts(), head.trusts(),
-                        head.policies(), head.claimed()),
+                        head.policies(), head.claimed(), Optional.empty()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return NodeHarness.with(pack).regime(regime).inputs(inputs).run(new OtherSourcesNode());

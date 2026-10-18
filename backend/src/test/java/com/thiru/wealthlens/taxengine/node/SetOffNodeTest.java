@@ -6,9 +6,11 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.input.CarriedHousePropertyLoss;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -52,6 +54,12 @@ class SetOffNodeTest {
 
     private static NodeResult run(int year, RegimeCode regime, String salaries, String houseProperty,
             String otherSources, Map<TaxYearId, CarriedHousePropertyLoss> carried) {
+        return run(year, regime, salaries, houseProperty, otherSources, carried,
+                NodeHarness.plainTaxpayer().entered());
+    }
+
+    private static NodeResult run(int year, RegimeCode regime, String salaries, String houseProperty,
+            String otherSources, Map<TaxYearId, CarriedHousePropertyLoss> carried, EnteredFacts entered) {
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         LedgerSnapshot empty = LedgerSnapshot.empty();
@@ -59,7 +67,7 @@ class SetOffNodeTest {
                 empty.gratuityAlreadyAllowed(), empty.leaveEncashmentAlreadyAllowed(), carried,
                 empty.educationLoanInterestFirstYear());
         EngineInputs inputs = new EngineInputs(taxYear, regime,
-                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), plain.entered(), plain.assessee(),
+                TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), entered, plain.assessee(),
                 plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
         return NodeHarness.with(pack(year)).regime(regime).inputs(inputs)
                 .given(NodeIds.SALARY_INCOME, Money.of(salaries))
@@ -89,7 +97,7 @@ class SetOffNodeTest {
             assertThat(line.in()).isEqualTo(rupees("1000000"));
             assertThat(line.out()).isEqualTo(rupees("150000"));
             assertThat(line.limitedBy().orElseThrow()).contains("HOUSE_PROPERTY loss against SALARIES")
-                    .contains("[SALARIES, HOUSE_PROPERTY, OTHER_SOURCES]").contains("OQ-28");
+                    .contains("[SALARIES, HOUSE_PROPERTY, OTHER_SOURCES]").contains("the declared default").contains("D-221");
         });
     }
 
@@ -130,6 +138,36 @@ class SetOffNodeTest {
                 .containsExactly(tuple(rupees("100000"), rupees("100000")), tuple(rupees("200000"), rupees("50000")));
         assertThat(lines(result, StepKind.SET_OFF).get(1).limitedBy().orElseThrow())
                 .contains("HOUSE_PROPERTY loss against OTHER_SOURCES");
+    }
+
+    @Test
+    void evaluate_whenTheAssesseeElectsOtherSourcesFirst_setsOffInThatOrder() {
+        // Given — the same 1,50,000 loss, 1,00,000 salary and 2,00,000 under other sources, other sources elected first
+        EnteredFacts elected = EnteredFacts.none().withAbsorptionOrder(
+                List.of(HeadCode.OTHER_SOURCES, HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES));
+
+        // When
+        NodeResult result = run(2026, OLD, "100000", "-150000", "200000", Map.of(), elected);
+
+        // Then — all 1,50,000 from other sources, nothing from salaries; 1,00,000 + 50,000 left either way
+        assertThat(result.value()).isEqualTo(rupees("150000"));
+        assertThat(lines(result, StepKind.SET_OFF)).singleElement().satisfies(line -> {
+            assertThat(line.in()).isEqualTo(rupees("200000"));
+            assertThat(line.out()).isEqualTo(rupees("150000"));
+            assertThat(line.limitedBy().orElseThrow()).contains("HOUSE_PROPERTY loss against OTHER_SOURCES")
+                    .contains("[OTHER_SOURCES, HOUSE_PROPERTY, SALARIES]").contains("elected").contains("D-221");
+        });
+    }
+
+    @Test
+    void evaluate_whenTheElectedOrderLeavesOutAHead_isRefused() {
+        // Given — house property left out, so its loss would never be taken
+        EnteredFacts elected = EnteredFacts.none().withAbsorptionOrder(List.of(HeadCode.OTHER_SOURCES, HeadCode.SALARIES));
+
+        // When / Then
+        assertThatThrownBy(() -> run(2026, OLD, "100000", "-150000", "200000", Map.of(), elected))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must name the heads");
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -199,7 +237,7 @@ class SetOffNodeTest {
                 .satisfies(line -> {
                     assertThat(line.in()).isEqualTo(rupees("100000"));
                     assertThat(line.out()).isEqualTo(rupees("60000"));
-                    assertThat(line.limitedBy().orElseThrow()).contains("OQ-29");
+                    assertThat(line.limitedBy().orElseThrow()).contains("Schedule BFLA").contains("D-221");
                 });
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.MEASURE)).isEmpty();
     }

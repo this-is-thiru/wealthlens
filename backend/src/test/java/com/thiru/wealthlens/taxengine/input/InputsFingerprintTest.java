@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
 import com.thiru.wealthlens.taxengine.rules.component.RateBasisHint;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -106,7 +107,7 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
                                     new SalaryComponent(new ComponentCode("BASIC"),
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                                    false, EmployerKind.OTHER, false, Optional.empty())), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of())))),
+                                    false, EmployerKind.OTHER, false, Optional.empty())), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty())))),
                     Arguments.of(
                             "regime",
                             mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
@@ -248,7 +249,7 @@ class InputsFingerprintTest {
             return new EnteredFacts(List.of(new Employment(
                     List.of(new SalaryComponent(new ComponentCode("BASIC"),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
-                    termsIncludeDearnessAllowance, employerKind, false, Optional.empty())), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                    termsIncludeDearnessAllowance, employerKind, false, Optional.empty())), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
         }
 
         @Test
@@ -257,7 +258,7 @@ class InputsFingerprintTest {
             EngineInputs withTenancy = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(
                     new Tenancy(com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
                                     LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31)), "BENGALURU", false,
-                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000"))), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()));
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000"))), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
             // When / Then
             assertThat(hashOf(withTenancy)).isNotEqualTo(hashOf(baseline()));
@@ -270,7 +271,7 @@ class InputsFingerprintTest {
                     List.of(new Journey(LocalDate.of(2026, 5, 10), JourneyMode.RAIL_CONNECTED,
                             com.thiru.wealthlens.taxengine.rules.money.Money.of("18000"),
                             Optional.of(com.thiru.wealthlens.taxengine.rules.money.Money.of("15000")),
-                            Optional.empty(), List.of())), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()));
+                            Optional.empty(), List.of())), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
             // When / Then
             assertThat(hashOf(withJourney)).isNotEqualTo(hashOf(baseline()));
@@ -292,7 +293,7 @@ class InputsFingerprintTest {
         void enteredFacts_whenOnlyAnAllowanceUseDiffers_movesTheHash() {
             // Given — D-101: the allowance exemptions read how each allowance was used
             EngineInputs withUse = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(), List.of(),
-                    List.of(AllowanceUse.forChildren(new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), 2, 12)), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()));
+                    List.of(AllowanceUse.forChildren(new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), 2, 12)), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
             // When / Then
             assertThat(hashOf(withUse)).isNotEqualTo(hashOf(baseline()));
@@ -304,7 +305,7 @@ class InputsFingerprintTest {
             EngineInputs withClaim = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
                     List.of(), List.of(), Optional.of(new DisabledTransportClaim(
                             com.thiru.wealthlens.taxengine.rules.definition.TransportDisability.BLIND, 12,
-                            Optional.empty(), Optional.empty())), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()));
+                            Optional.empty(), Optional.empty())), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
             // When / Then
             assertThat(hashOf(withClaim)).isNotEqualTo(hashOf(baseline()));
@@ -315,7 +316,7 @@ class InputsFingerprintTest {
             // Given — D-103: the retirement deductions read the entry each payment falls under
             EngineInputs withPayment = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
                     List.of(), List.of(), Optional.empty(), List.of(RetirementPayment.of(
-                            new ComponentCode("GRATUITY"), RetirementEntry.GOVERNMENT_GRATUITY)), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of()));
+                            new ComponentCode("GRATUITY"), RetirementEntry.GOVERNMENT_GRATUITY)), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
 
             // When / Then
             assertThat(hashOf(withPayment)).isNotEqualTo(hashOf(baseline()));
@@ -339,7 +340,7 @@ class InputsFingerprintTest {
         private static EnteredFacts enteringGratuity(java.time.LocalDate separatedOn, List<MonthOfPay> months) {
             return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
                     List.of(RetirementPayment.otherGratuity(new ComponentCode("GRATUITY"),
-                            new Separation(java.time.LocalDate.of(2000, 4, 1), separatedOn, months))), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                            new Separation(java.time.LocalDate.of(2000, 4, 1), separatedOn, months))), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
         }
 
         @Test
@@ -356,7 +357,7 @@ class InputsFingerprintTest {
             return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
                     List.of(RetirementPayment.statutory(new ComponentCode("RETRENCHMENT_COMPENSATION"),
                             RetirementEntry.RETRENCHMENT, new StatutoryEntitlement(java.time.LocalDate.of(2025, 12, 15),
-                                    com.thiru.wealthlens.taxengine.rules.money.Money.of(amount)))), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                                    com.thiru.wealthlens.taxengine.rules.money.Money.of(amount)))), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
         }
 
         @Test
@@ -376,7 +377,19 @@ class InputsFingerprintTest {
                                     java.time.LocalDate.of(2026, 4, 1), java.time.LocalDate.of(2027, 3, 31)),
                             Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of(rentPaid), Optional.empty(),
-                            com.thiru.wealthlens.taxengine.rules.id.TaxYearId.of(2026), Optional.empty())), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                            com.thiru.wealthlens.taxengine.rules.id.TaxYearId.of(2026), Optional.empty())), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
+        }
+
+        @Test
+        void enteredFacts_whenOnlyTheElectedAbsorptionOrderDiffers_movesTheHash() {
+            // Given — D-221: the order the heads absorb a loss in can change the surcharge, so it is in the key
+            EngineInputs salariesFirst = copy(baseline(), r -> r.entered = EnteredFacts.none().withAbsorptionOrder(
+                    List.of(HeadCode.SALARIES, HeadCode.HOUSE_PROPERTY, HeadCode.OTHER_SOURCES)));
+            EngineInputs otherSourcesFirst = copy(baseline(), r -> r.entered = EnteredFacts.none().withAbsorptionOrder(
+                    List.of(HeadCode.OTHER_SOURCES, HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES)));
+
+            // When / Then
+            assertThat(hashOf(otherSourcesFirst)).isNotEqualTo(hashOf(salariesFirst));
         }
 
         @Test

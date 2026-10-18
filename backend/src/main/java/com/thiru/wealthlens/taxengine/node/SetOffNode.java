@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -37,22 +38,28 @@ import java.util.TreeMap;
  * Income under the heads after a head's loss is set off against the others in the year (S2 s.109; 1961 s.71;
  * {@code DR 01} R18; D-217).
  *
- * <p>Each head's loss, taken in the declared {@link AbsorptionOrder}, is absorbed by the other heads in that order —
+ * <p>Each head's loss, taken in the order the assessee elected or else the declared {@link AbsorptionOrder}, is
+ * absorbed by the other heads in that order —
  * a house-property loss only up to the {@code SETOFF-HOUSE-PROPERTY} limit, and not at all where the regime forbids it
  * (S2 s.202(2)(b)(ii); 1961 s.115BAC(2)(ii)(b)). Every set-off is a line naming the order, which neither Act
- * prescribes (OQ-28). What is not set off is a MEASURE line: a house-property loss carried forward (W-081b) or, in the
+ * prescribes and the assessee may choose (D-221; {@code SetOffOrderElection} prices it). What is not set off is a MEASURE line: a house-property loss carried forward (W-081b) or, in the
  * new regime, deemed given full effect to and gone (S2 s.202(3)); a loss under other sources, which no provision
  * carries. The value is the heads' income after set-off — what gross total income adds up.
  *
  * <p>Then the house-property loss carried in from earlier years ({@link LedgerSnapshot}) is set off against what
  * house-property income is left, oldest year first, the part attributable to a deduction the new regime disallows
- * before the rest — an order the Acts do not prescribe (OQ-29). A year's loss is used for eight years after it arose
+ * before the rest — after this year's set-off, as the return computes it (ITR-2 Schedule BFLA), and otherwise a declared
+ * default, the Acts prescribing none (D-221). A year's loss is used for eight years after it arose
  * (S2 s.110; 1961 s.71B), and expires after that; in the new regime its attributable part is deemed given full effect
  * to (S2 s.202(2)(b)(i), (3)). What is still carried is a MEASURE line per year of origin (D-218).
  */
 public final class SetOffNode implements ComputationNode {
 
     private static final BaseId LOSS = new BaseId("LOSS");
+
+    /** The order the heads absorb a loss in this run, and whether the assessee elected it — said on every line. */
+    private record OrderInUse(AbsorptionOrder order, String basis) {
+    }
 
     @Override
     public NodeId produces() {
@@ -77,12 +84,17 @@ public final class SetOffNode implements ComputationNode {
         heads.put(HeadCode.SALARIES, ctx.get(NodeIds.SALARY_INCOME, MoneyValue.class).asMoney());
         heads.put(HeadCode.HOUSE_PROPERTY, ctx.get(NodeIds.HOUSEPROPERTY_INCOME, MoneyValue.class).asMoney());
         heads.put(HeadCode.OTHER_SOURCES, ctx.get(NodeIds.OTHERSOURCES_INCOME, MoneyValue.class).asMoney());
-        AbsorptionOrder order = RuleDefinitions.require(version(ctx, t, RuleIds.SETOFF_ACROSS_HEADS).definition(),
+        AbsorptionOrder declared = RuleDefinitions.require(version(ctx, t, RuleIds.SETOFF_ACROSS_HEADS).definition(),
                 AbsorptionOrder.class, RuleIds.SETOFF_ACROSS_HEADS);
+        Optional<List<HeadCode>> elected = ctx.inputs().entered().absorptionOrder();
+        elected.ifPresent(stated -> requireSameHeads(stated, declared));
+        OrderInUse order = new OrderInUse(elected.map(AbsorptionOrder::new).orElse(declared), elected.isPresent()
+                ? "elected (S2 s.109(1); 1961 s.71; D-221)"
+                : "the declared default: the Act prescribes none and none was elected (D-221)");
         Map<HeadCode, Money> income = new EnumMap<>(HeadCode.class);
         heads.forEach((head, amount) -> income.put(head, Money.max(amount, Money.ZERO)));
         List<TraceLine> lines = new ArrayList<>();
-        for (HeadCode lossHead : order.heads()) {
+        for (HeadCode lossHead : order.order().heads()) {
             Money loss = Money.ZERO.minus(heads.getOrDefault(lossHead, Money.ZERO));
             if (loss.isGreaterThan(Money.ZERO)) {
                 setOff(ctx, t, order, lossHead, loss, income, lines);
@@ -94,7 +106,7 @@ public final class SetOffNode implements ComputationNode {
     }
 
     /** One head's loss: what may be set off, set off against the others in order, and what is left. */
-    private static void setOff(NodeContext ctx, TemporalContext t, AbsorptionOrder order, HeadCode lossHead,
+    private static void setOff(NodeContext ctx, TemporalContext t, OrderInUse order, HeadCode lossHead,
             Money loss, Map<HeadCode, Money> income, List<TraceLine> lines) {
         boolean houseProperty = lossHead == HeadCode.HOUSE_PROPERTY;
         RuleId row = houseProperty ? RuleIds.SETOFF_HOUSE_PROPERTY : RuleIds.SETOFF_ACROSS_HEADS;
@@ -122,10 +134,10 @@ public final class SetOffNode implements ComputationNode {
     }
 
     /** The other heads absorb up to {@code allowed} of the loss, in order; returns how much they took. */
-    private static Money absorb(AbsorptionOrder order, HeadCode lossHead, Money allowed, Map<HeadCode, Money> income,
+    private static Money absorb(OrderInUse order, HeadCode lossHead, Money allowed, Map<HeadCode, Money> income,
             List<TraceLine> lines, RuleId row, RuleVersion version) {
         Money remaining = allowed;
-        for (HeadCode head : order.heads()) {
+        for (HeadCode head : order.order().heads()) {
             Money available = income.getOrDefault(head, Money.ZERO);
             if (head == lossHead || !remaining.isGreaterThan(Money.ZERO) || !available.isGreaterThan(Money.ZERO)) {
                 continue;
@@ -134,7 +146,7 @@ public final class SetOffNode implements ComputationNode {
             income.put(head, available.minus(taken));
             remaining = remaining.minus(taken);
             lines.add(line(lines, row, version, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
-                    + " loss against " + head + "; order " + order.heads() + ", the Act prescribing none (OQ-28)"));
+                    + " loss against " + head + "; order " + order.order().heads() + ", " + order.basis()));
         }
         return allowed.minus(remaining);
     }
@@ -206,10 +218,19 @@ public final class SetOffNode implements ComputationNode {
         if (taken.isGreaterThan(Money.ZERO)) {
             income.put(HeadCode.HOUSE_PROPERTY, available.minus(taken));
             lines.add(line(lines, row, version(ctx, t, row), StepKind.SET_OFF, available, taken).withLimitedBy("loss of "
-                    + arose.label() + " against HOUSE_PROPERTY; order: this year's set-off, then the oldest year, the"
-                    + " attributable part first — the Act prescribing none (OQ-29)"));
+                    + arose.label() + " against HOUSE_PROPERTY; order: this year's set-off first (ITR-2 Schedule BFLA),"
+                    + " then the oldest year, the attributable part first — the declared default, the Acts prescribing"
+                    + " none (D-221)"));
         }
         return amount.minus(taken);
+    }
+
+    /** Refuses an elected order that leaves out a head or adds one: every head's loss is taken in the order. */
+    private static void requireSameHeads(List<HeadCode> elected, AbsorptionOrder declared) {
+        if (!Set.copyOf(elected).equals(Set.copyOf(declared.heads()))) {
+            throw new IllegalArgumentException("The elected absorption order " + elected + " must name the heads "
+                    + declared.heads() + ", each once, in the order the assessee chooses");
+        }
     }
 
     private static RuleVersion version(NodeContext ctx, TemporalContext t, RuleId row) {

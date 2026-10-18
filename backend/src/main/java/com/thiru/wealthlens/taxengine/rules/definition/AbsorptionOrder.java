@@ -9,7 +9,7 @@ import java.util.List;
  *
  * <p>Neither Act prescribes one, and with special-rate income the order changes the surcharge ({@code DR 13} R-7), so
  * the order is declared here rather than left to iteration order, and every set-off line names it. The loss head
- * itself is skipped. Whether the assessee may choose is OQ-28.
+ * itself is skipped. The assessee may choose another (D-221): this is the order used when none is elected.
  *
  * @param heads the heads in the order they absorb a loss, each once
  */

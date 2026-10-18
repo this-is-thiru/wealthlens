@@ -1,11 +1,14 @@
 package com.thiru.wealthlens.taxengine.golden;
 
+import com.thiru.wealthlens.taxengine.election.ElectionResolver;
+import com.thiru.wealthlens.taxengine.election.SetOffOrderElection;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
+import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ChapterEightNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
@@ -30,12 +33,15 @@ import com.thiru.wealthlens.taxengine.node.SalaryIncomeNode;
 import com.thiru.wealthlens.taxengine.node.SetOffNode;
 import com.thiru.wealthlens.taxengine.node.SurchargeNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
+import com.thiru.wealthlens.taxengine.node.TotalIncomeNode;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.result.ComputationId;
 import com.thiru.wealthlens.taxengine.result.ComputationProjector;
 import com.thiru.wealthlens.taxengine.result.TaxComputation;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -151,7 +157,7 @@ final class GoldenCaseRunner {
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER, false, Optional.empty())),
-                        salary.tenancies(), salary.leaveTravel(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory(), List.of(), salary.qualifyingPayments(), salary.lifeInsurancePolicies(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), salary.providentFundAccounts(), List.of(), List.of(), List.of(), List.of()),
+                        salary.tenancies(), salary.leaveTravel(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory(), List.of(), salary.qualifyingPayments(), salary.lifeInsurancePolicies(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), salary.providentFundAccounts(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
                 plain.assessee(), plain.family(), ledger(salary), plain.elections(), plain.capitalGains(),
                 plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);
@@ -179,13 +185,34 @@ final class GoldenCaseRunner {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
-                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of()),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
                 aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, heads, inputs);
         boolean provisional = result.trace().stream()
                 .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
         return new SalaryRun(result, provisional);
+    }
+
+    /**
+     * A T6 case with one employment's basic pay added, its set-off order resolved by recomputation over the whole
+     * shipped pipeline, through the real total-income node to net payable (D-221).
+     */
+    ElectionResolver.Resolution<List<HeadCode>> resolveSetOffOrder(HouseAndOtherSourcesGoldenCase golden,
+            TaxYearId year, Money basicPay) {
+        RulePack pack = pack(year);
+        List<ComputationNode> nodes = new ArrayList<>(BUILT);
+        nodes.add(new TotalIncomeNode());
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        Employment employment = new Employment(List.of(new SalaryComponent(ComponentCodes.BASIC, basicPay)), false,
+                EmployerKind.OTHER, false, Optional.empty());
+        EngineInputs inputs = new EngineInputs(year, golden.regime(),
+                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                new EnteredFacts(List.of(employment), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(), plain.elections(),
+                plain.capitalGains(), plain.filing());
+        return ElectionResolver.resolve(new SetOffOrderElection(), NodeRegistry.of(nodes), pack,
+                pack.regimes().get(golden.regime()), inputs);
     }
 
     /** A first return, but for the journeys earlier years claimed in each LTA block. */

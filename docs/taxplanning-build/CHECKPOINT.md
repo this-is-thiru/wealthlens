@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-081c DONE; W-081 complete; between items)
-Stage           : PAUSED (session 20 ended at the owner's session-limit notice; Mac shut down) — between items
-Plan            : —
-Approved        : —
-Steps done      : —
-Next step       : run the resume check; then WAIT for the owner's pick. Next in order: W-082 (Election family, ElectionResolver; carries OQ-28, OQ-29). UNVERIFIED: 0. Open OQs: OQ-25 – OQ-29. Unplaced proposals: D-210 C2(b); W-080's SalaryRun rename
-Last verify     : unit -Punit → 2864 run, 0 fail, 0 Checkstyle (W-081c, 2026-10-17)
-Waiting on      : the owner — next pick
-Files touched   : none
+Item            : W-082a — the election core and the set-off order (W-082 split, D-220)
+Stage           : DONE — "W-082a approved" (2026-10-18); committing
+Plan            : plans/W-082.md (C0a split; OQ-28 may choose, OQ-29 default kept — D-221)
+Approved        : "W-082 approved — proceed as recommended" (2026-10-18)
+Steps done      : 1–8
+Next step       : WAIT for the owner's review. On "W-082a approved": commit the named paths below (one commit, subject "taxplanning W-082a: …"), STATE Last checkpoint first. Next in order then: W-082b
+Last verify     : unit -Punit → 2876 run, 0 fail, 0 Checkstyle (W-082a, 2026-10-18)
+Waiting on      : —
+Files touched   : backend main: taxengine/election/ (6 new), input/EnteredFacts, node/SetOffNode, rules/definition/AbsorptionOrder; backend test: election/ElectionResolverTest, golden/{SetOffOrderElectionPipelineTest (new), GoldenCaseRunner, SalaryHeadPipelineTest}, input/{InputsFingerprintTest, RegimeElectionSnapshotTest}, node/*Test (31 files, EnteredFacts arg); docs: 02-TECH-SPEC, 03-WORK-ITEMS, STATE, plans/W-082.md, sources/2026-10-18-set-off-order.md
 Last item commit: taxplanning W-081c: close out the set-off chapter's coverage — S2 ss.108–110 / 1961 ss.70, 71, 71B modelled with catalogue entries, capital gains to W-088, the rest deferred, s.71A spent (D-219)
-Updated         : 2026-10-17, session 20 — paused; resume with "Resume taxplanning: read CHECKPOINT.md and do its Next step"
+Updated         : 2026-10-18, session 21 — W-082a awaiting review
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
