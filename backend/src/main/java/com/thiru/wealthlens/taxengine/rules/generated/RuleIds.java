@@ -185,6 +185,7 @@ public final class RuleIds {
     public static final RuleId SETOFF_CARRIED_DISALLOWED_PART = new RuleId("SETOFF-CARRIED-DISALLOWED-PART");
     public static final RuleId SETOFF_CARRIED_HOUSE_PROPERTY = new RuleId("SETOFF-CARRIED-HOUSE-PROPERTY");
     public static final RuleId SETOFF_HOUSE_PROPERTY = new RuleId("SETOFF-HOUSE-PROPERTY");
+    public static final RuleId SETOFF_WITHIN_CAPITAL_GAINS = new RuleId("SETOFF-WITHIN-CAPITAL-GAINS");
 
     private RuleIds() {
     }

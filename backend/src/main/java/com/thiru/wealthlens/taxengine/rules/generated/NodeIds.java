@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
  */
 public final class NodeIds {
 
+    public static final NodeId CAPITALGAINS_INCOME = new NodeId("capitalgains.income");
     public static final NodeId CHAPTERVIII = new NodeId("chapterviii");
     public static final NodeId EMPLOYER_CONTRIB_CHARGES = new NodeId("employer.contrib.charges");
     public static final NodeId GTI = new NodeId("gti");

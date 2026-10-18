@@ -25,3 +25,13 @@ W-088's. Read in session 21 with pypdf 6.14.0 from the official copies below.
   `SPECIAL_RATE_LISTED_EQUITY`.
 - Any other long-term gain → `SPECIAL_RATE_OTHER` (S2 s.197; 1961 s.112), **except** a share bought without STT
   whose acquisition the notification (row 10) covers. That case is unread.
+
+## Set-off within and across heads (W-088a, 2026-10-18)
+
+| # | Source | Status | What it says |
+|---|---|---|---|
+| 11 | Income-tax Act, 2025, s.108(1), (2) (p.147) | READ | (1) is for heads *"other than 'Capital gains'"*. (2): *"(a) any short-term capital asset is a loss, such loss shall be set off against the income, computed in respect of any other capital asset for that year; (b) any long-term capital asset is a loss, such loss shall be set off against the income computed in respect of any other long-term capital asset for that year."* No order among the gains a short-term loss may absorb |
+| 12 | Same, s.109(1), (2) (p.148) | READ | (1): a loss under any head other than capital gains *"shall be set off against income of the assessee under any other head, including 'Capital gains'"*. (2): *"the loss under the head 'Capital gains' shall not be set off against income under any other head"* |
+| 13 | Income-tax Act, 1961, thc copy, s.70(2), (3) and s.71(1)–(3) (pp.317–318) | READ | s.70(2), (3): the same asymmetry. s.71(2): another head's loss may be set off *"under any head of income including the head 'Capital gains' (whether relating to short-term capital assets or any other capital assets)"*. s.71(3): a capital-gains loss not against another head |
+| 14 | The amending Acts (rows 5–9) for "In section 70 / 71 of the Income-tax Act" | READ (searched) | One hit, FA 2026 s.43, which is Part B and amends the **2025** Act's s.70(1)(x) (Sovereign Gold Bond redemption), not the 1961 s.70. The 1961 ss.70–71 are unamended since the thc copy |
+| 15 | Finance Act, 2002 (20 of 2002) s.27, as reprinted in the Official Gazette, Government of Goa, Series I No. 36, 4-12-2003, p.1375 (`https://goaprintingpress.gov.in/downloads/0304/0304-36-SI-OG.pdf`, PDF p.17) — an official copy (D-184) | READ | The Goa notification: *"The Finance Act, 2002 (Central Act No. 20 of 2002) … assented to by the President of India on 11-5-2002 and published in the Gazette of India, Extraordinary, Part II, Section 1, dated 13-5-2002"*. s.27: *"For section 70 of the Income-tax Act, the following section shall be substituted with effect from the 1st day of April, 2003"* — sub-ss.(1)–(3) in the words of the thc copy (row 13). OCR text, read against the page |

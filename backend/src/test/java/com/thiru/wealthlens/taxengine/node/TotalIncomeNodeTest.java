@@ -1,9 +1,13 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -13,6 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -35,10 +40,11 @@ class TotalIncomeNodeTest {
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.ZERO)
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
+                .given(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.none())
                 .run(new SetOffNode());
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("925000")));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("925000"));
         assertThat(result.trace()).isEmpty();
     }
 
@@ -49,10 +55,11 @@ class TotalIncomeNodeTest {
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
+                .given(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.none())
                 .run(new SetOffNode());
 
         // Then
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1290400")));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("1290400"));
     }
 
     @Test
@@ -62,17 +69,18 @@ class TotalIncomeNodeTest {
                 .given(NodeIds.SALARY_INCOME, Money.of("925000"))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of("365400"))
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.of("95000"))
+                .given(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.none())
                 .run(new SetOffNode());
 
         // Then — 9,25,000 + 3,65,400 + 95,000
-        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1385400")));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("1385400"));
     }
 
     @Test
     void grossTotalIncome_whenTheHeadsAreSetOff_isTheirTotalAfterSetOff() {
         // When — the heads come to 11,90,400 after set-off (D-217)
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
-                .given(NodeIds.SETOFF, Money.of("1190400"))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("1190400"), Map.of()))
                 .run(new GrossTotalIncomeNode());
 
         // Then
@@ -90,5 +98,30 @@ class TotalIncomeNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("725000")));
+    }
+
+    @Test
+    void grossTotalIncome_whenASpecialRateCapitalGainSurvives_isRefusedUntilW088b() {
+        // Given — 10,000 of listed short-term gains in the total
+        NodeHarness harness = NodeHarness.with(PACK).regime(OLD)
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("110000"),
+                        Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("10000"))));
+
+        // When / Then — taxing it at slab rates would be a wrong figure, not a smaller one
+        assertThatThrownBy(() -> harness.run(new GrossTotalIncomeNode()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("W-088b");
+    }
+
+    @Test
+    void grossTotalIncome_whenTheOnlyCapitalGainIsOnTheSlab_includesIt() {
+        // When — 10,000 of short-term gains charged with total income
+        NodeResult result = NodeHarness.with(PACK).regime(OLD)
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("110000"),
+                        Map.of(CapitalGainsPart.SHORT_TERM_SLAB, Money.of("10000"))))
+                .run(new GrossTotalIncomeNode());
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("110000")));
     }
 }

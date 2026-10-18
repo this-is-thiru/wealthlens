@@ -20,7 +20,8 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
  * {@code InterestBreakdown} — none of which the design declares anywhere, only lists here — so each
  * arrives with the node that produces it, as the cap shapes did.
  */
-public sealed interface NodeValue permits MoneyValue, TaxByBasis, ComponentSet, SalaryBases {
+public sealed interface NodeValue
+        permits MoneyValue, TaxByBasis, ComponentSet, SalaryBases, CapitalGainsHead, HeadsAfterSetOff {
 
     /** The single summary figure, for the trace's {@code out} column. */
     Money asMoney();

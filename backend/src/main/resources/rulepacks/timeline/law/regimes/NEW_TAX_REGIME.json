@@ -116,6 +116,7 @@
       "salary.income",
       "houseproperty.income",
       "othersources.income",
+      "capitalgains.income",
       "setoff",
       "gti",
       "chapterviii",

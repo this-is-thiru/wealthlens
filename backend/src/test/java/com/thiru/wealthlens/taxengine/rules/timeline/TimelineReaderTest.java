@@ -145,6 +145,7 @@ class TimelineReaderTest {
             new RuleId("SETOFF-HOUSE-PROPERTY"),
             new RuleId("SETOFF-CARRIED-HOUSE-PROPERTY"),
             new RuleId("SETOFF-CARRIED-DISALLOWED-PART"),
+            new RuleId("SETOFF-WITHIN-CAPITAL-GAINS"),
             new RuleId("HP-ANNUAL-VALUE"),
             new RuleId("HP-OWN-RESIDENCE"),
             new RuleId("HP-STANDARD-DEDUCTION"),
@@ -226,7 +227,7 @@ class TimelineReaderTest {
                 .containsExactlyInAnyOrder(
                         "inputs.components", "employer.contrib.charges", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.monetaryincome", "salary.deductions",
                         "salary.incomebeforetravel", "salary.medicaltravel", "salary.income",
-                        "houseproperty.income", "othersources.income", "setoff", "gti", "chapterviii", "totalincome", "round.totalincome", "tax.bybasis",
+                        "houseproperty.income", "othersources.income", "capitalgains.income", "setoff", "gti", "chapterviii", "totalincome", "round.totalincome", "tax.bybasis",
                         "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
     }
 

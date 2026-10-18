@@ -203,7 +203,8 @@ class GeneratedConstantsTest {
             "SETOFF-ACROSS-HEADS",
             "SETOFF-CARRIED-DISALLOWED-PART",
             "SETOFF-CARRIED-HOUSE-PROPERTY",
-            "SETOFF-HOUSE-PROPERTY");
+            "SETOFF-HOUSE-PROPERTY",
+            "SETOFF-WITHIN-CAPITAL-GAINS");
 
     private record Target(
             String className, String valueType, java.util.List<String> purpose, TreeSet<String> values) {}

@@ -3,12 +3,12 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.72",
-      "checksum": "sha256:d1154754e87ec7180656fa1e66893a8c8c53c86547d08e35bd56c2301d466df4"
+      "version": "2026-27.law.73",
+      "checksum": "sha256:702290d52483b376d60872dba3248ca09963e924963130f4f2dc28799a2a10cf"
     },
     "exec": {
-      "version": "2026-27.exec.28",
-      "checksum": "sha256:ce9ac25fedf391cf1e978327109b4349135a28e27b85a23c657c7aad2724dd83"
+      "version": "2026-27.exec.29",
+      "checksum": "sha256:1a9ce9f7c766e5158756bbf10a73448e5e1c2bdc66dfbbf2fb4dd925cad7180b"
     },
     "forms": {
       "version": "2026-27.forms.2",
@@ -179,10 +179,11 @@
     "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE": "sha256:45433ee9861d84cacac0911e125dbf0e9aac88e80698b6b9fc8326e314ca11e6",
     "SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME": "sha256:e95e5213ced08dbec9fcbde9c78431f2165b409a97d253cb8ad154df7b08eeed",
     "SAL-TAX-ON-EMPLOYMENT": "sha256:8903208b873a76704282264cfd9bc0805c743a87cd4ad094777b3c846ea0d668",
-    "SETOFF-ACROSS-HEADS": "sha256:438e2c119d41db735bd9d5fcb5772390a8a0e797f3cbbe5d9200cf75263692a3",
+    "SETOFF-ACROSS-HEADS": "sha256:8f6dc0b3556511e832d6de79ec6b60672b036dfd699c7d2820b5b602da7e57f9",
     "SETOFF-CARRIED-DISALLOWED-PART": "sha256:867a7a84b49de1fa41d48756b01387cb2826d6a7e005e847ae545df575d7ba4f",
     "SETOFF-CARRIED-HOUSE-PROPERTY": "sha256:79d94c3453f5ca013d25287148f63901afd52adc58c0c2ec27454df1d5f25fbc",
-    "SETOFF-HOUSE-PROPERTY": "sha256:8d7d891623fe967a0b2b73cef1c07224cf7bbcc3132783ee99560b34771f7e42"
+    "SETOFF-HOUSE-PROPERTY": "sha256:8d7d891623fe967a0b2b73cef1c07224cf7bbcc3132783ee99560b34771f7e42",
+    "SETOFF-WITHIN-CAPITAL-GAINS": "sha256:abfd6779a8eba1e332f545848725bf3c4d9249a1886e6c221d77fbbfe6525bbd"
   },
   "instruments": {
     "act": {

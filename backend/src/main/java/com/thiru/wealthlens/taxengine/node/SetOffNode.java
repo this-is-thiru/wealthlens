@@ -2,7 +2,9 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.CarriedHousePropertyLoss;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
+import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
@@ -11,6 +13,8 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -44,7 +48,10 @@ import java.util.TreeMap;
  * (S2 s.202(2)(b)(ii); 1961 s.115BAC(2)(ii)(b)). Every set-off is a line naming the order, which neither Act
  * prescribes and the assessee may choose (D-221; {@code SetOffOrderElection} prices it). What is not set off is a MEASURE line: a house-property loss carried forward (W-081b) or, in the
  * new regime, deemed given full effect to and gone (S2 s.202(3)); a loss under other sources, which no provision
- * carries. The value is the heads' income after set-off — what gross total income adds up.
+ * carries. Capital gains absorb a loss part by part, in {@code SETOFF-WITHIN-CAPITAL-GAINS}'s order (S2 s.109(1); 1961
+ * s.71(2); D-243), and lend none: their own loss stays in their head ({@link CapitalGainsNode}). The value is the heads'
+ * income after set-off — what gross total income adds up — with each capital-gains part, which is taxed on its own
+ * basis.
  *
  * <p>Then the house-property loss carried in from earlier years ({@link LedgerSnapshot}) is set off against what
  * house-property income is left, oldest year first, the part attributable to a deduction the new regime disallows
@@ -57,8 +64,11 @@ public final class SetOffNode implements ComputationNode {
 
     private static final BaseId LOSS = new BaseId("LOSS");
 
-    /** The order the heads absorb a loss in this run, and whether the assessee elected it — said on every line. */
-    private record OrderInUse(AbsorptionOrder order, String basis) {
+    /**
+     * The order the heads absorb a loss in this run, and whether the assessee elected it — said on every line — with
+     * the order the capital-gains parts absorb it in.
+     */
+    private record OrderInUse(AbsorptionOrder order, String basis, CapitalGainsAbsorptionOrder capitalGainsOrder) {
     }
 
     @Override
@@ -68,13 +78,14 @@ public final class SetOffNode implements ComputationNode {
 
     @Override
     public Set<NodeId> requires() {
-        return Set.of(NodeIds.SALARY_INCOME, NodeIds.HOUSEPROPERTY_INCOME, NodeIds.OTHERSOURCES_INCOME);
+        return Set.of(NodeIds.SALARY_INCOME, NodeIds.HOUSEPROPERTY_INCOME, NodeIds.OTHERSOURCES_INCOME,
+                NodeIds.CAPITALGAINS_INCOME);
     }
 
     @Override
     public Set<RuleId> rules() {
         return Set.of(RuleIds.SETOFF_ACROSS_HEADS, RuleIds.SETOFF_HOUSE_PROPERTY, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
-                RuleIds.SETOFF_CARRIED_DISALLOWED_PART);
+                RuleIds.SETOFF_CARRIED_DISALLOWED_PART, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS);
     }
 
     @Override
@@ -84,30 +95,35 @@ public final class SetOffNode implements ComputationNode {
         heads.put(HeadCode.SALARIES, ctx.get(NodeIds.SALARY_INCOME, MoneyValue.class).asMoney());
         heads.put(HeadCode.HOUSE_PROPERTY, ctx.get(NodeIds.HOUSEPROPERTY_INCOME, MoneyValue.class).asMoney());
         heads.put(HeadCode.OTHER_SOURCES, ctx.get(NodeIds.OTHERSOURCES_INCOME, MoneyValue.class).asMoney());
+        CapitalGainsHead capitalGains = ctx.get(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.class);
+        Map<CapitalGainsPart, Money> parts = new EnumMap<>(capitalGains.parts());
+        heads.put(HeadCode.CAPITAL_GAINS, capitalGains.total());
         AbsorptionOrder declared = RuleDefinitions.require(version(ctx, t, RuleIds.SETOFF_ACROSS_HEADS).definition(),
                 AbsorptionOrder.class, RuleIds.SETOFF_ACROSS_HEADS);
         Optional<List<HeadCode>> elected = ctx.inputs().entered().absorptionOrder();
         elected.ifPresent(stated -> requireSameHeads(stated, declared));
         OrderInUse order = new OrderInUse(elected.map(AbsorptionOrder::new).orElse(declared), elected.isPresent()
                 ? "elected (S2 s.109(1); 1961 s.71; D-221)"
-                : "the declared default: the Act prescribes none and none was elected (D-221)");
+                : "the declared default: the Act prescribes none and none was elected (D-221)",
+                RuleDefinitions.require(version(ctx, t, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS).definition(),
+                        CapitalGainsAbsorptionOrder.class, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS));
         Map<HeadCode, Money> income = new EnumMap<>(HeadCode.class);
         heads.forEach((head, amount) -> income.put(head, Money.max(amount, Money.ZERO)));
         List<TraceLine> lines = new ArrayList<>();
         for (HeadCode lossHead : order.order().heads()) {
             Money loss = Money.ZERO.minus(heads.getOrDefault(lossHead, Money.ZERO));
             if (loss.isGreaterThan(Money.ZERO)) {
-                setOff(ctx, t, order, lossHead, loss, income, lines);
+                setOff(ctx, t, order, lossHead, loss, new Absorbing(income, parts), lines);
             }
         }
         broughtForward(ctx, t, income, lines);
         Money total = income.values().stream().reduce(Money.ZERO, Money::plus);
-        return new NodeResult(MoneyValue.of(total), lines);
+        return new NodeResult(new HeadsAfterSetOff(total, parts), lines);
     }
 
     /** One head's loss: what may be set off, set off against the others in order, and what is left. */
     private static void setOff(NodeContext ctx, TemporalContext t, OrderInUse order, HeadCode lossHead,
-            Money loss, Map<HeadCode, Money> income, List<TraceLine> lines) {
+            Money loss, Absorbing into, List<TraceLine> lines) {
         boolean houseProperty = lossHead == HeadCode.HOUSE_PROPERTY;
         RuleId row = houseProperty ? RuleIds.SETOFF_HOUSE_PROPERTY : RuleIds.SETOFF_ACROSS_HEADS;
         RuleVersion version = version(ctx, t, row);
@@ -124,7 +140,7 @@ public final class SetOffNode implements ComputationNode {
             allowed = limit.value();
             lines.add(line(lines, row, version, StepKind.MEASURE, loss, allowed).withLimitedBy(limit.limitedBy()));
         }
-        Money setOff = absorb(order, lossHead, allowed, income, lines, row, version);
+        Money setOff = absorb(order, lossHead, allowed, into, lines, row, version);
         Money left = loss.minus(setOff);
         if (left.isGreaterThan(Money.ZERO)) {
             lines.add(line(lines, row, version, StepKind.MEASURE, loss, left).withLimitedBy(houseProperty
@@ -133,22 +149,49 @@ public final class SetOffNode implements ComputationNode {
         }
     }
 
+    /** The heads' income and the capital-gains parts, both reduced as a loss is absorbed. */
+    private record Absorbing(Map<HeadCode, Money> income, Map<CapitalGainsPart, Money> parts) {
+    }
+
     /** The other heads absorb up to {@code allowed} of the loss, in order; returns how much they took. */
-    private static Money absorb(OrderInUse order, HeadCode lossHead, Money allowed, Map<HeadCode, Money> income,
+    private static Money absorb(OrderInUse order, HeadCode lossHead, Money allowed, Absorbing into,
             List<TraceLine> lines, RuleId row, RuleVersion version) {
         Money remaining = allowed;
         for (HeadCode head : order.order().heads()) {
-            Money available = income.getOrDefault(head, Money.ZERO);
+            Money available = into.income().getOrDefault(head, Money.ZERO);
             if (head == lossHead || !remaining.isGreaterThan(Money.ZERO) || !available.isGreaterThan(Money.ZERO)) {
                 continue;
             }
-            Money taken = Money.min(remaining, available);
-            income.put(head, available.minus(taken));
+            Money taken = head == HeadCode.CAPITAL_GAINS
+                    ? absorbCapitalGains(order, lossHead, remaining, into.parts(), lines, row, version)
+                    : Money.min(remaining, available);
+            into.income().put(head, available.minus(taken));
             remaining = remaining.minus(taken);
-            lines.add(line(lines, row, version, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
-                    + " loss against " + head + "; order " + order.order().heads() + ", " + order.basis()));
+            if (head != HeadCode.CAPITAL_GAINS) {
+                lines.add(line(lines, row, version, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
+                        + " loss against " + head + "; order " + order.order().heads() + ", " + order.basis()));
+            }
         }
         return allowed.minus(remaining);
+    }
+
+    /** The capital-gains parts absorb up to {@code loss}, in their order, a line each; returns how much they took. */
+    private static Money absorbCapitalGains(OrderInUse order, HeadCode lossHead, Money loss,
+            Map<CapitalGainsPart, Money> parts, List<TraceLine> lines, RuleId row, RuleVersion version) {
+        Money remaining = loss;
+        for (CapitalGainsPart part : order.capitalGainsOrder().parts()) {
+            Money available = parts.getOrDefault(part, Money.ZERO);
+            if (!remaining.isGreaterThan(Money.ZERO) || !available.isGreaterThan(Money.ZERO)) {
+                continue;
+            }
+            Money taken = Money.min(remaining, available);
+            parts.put(part, available.minus(taken));
+            remaining = remaining.minus(taken);
+            lines.add(line(lines, row, version, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
+                    + " loss against CAPITAL_GAINS " + part + "; order " + order.order().heads() + ", " + order.basis()
+                    + "; within capital gains " + order.capitalGainsOrder().parts() + ", the declared default (OQ-32)"));
+        }
+        return loss.minus(remaining);
     }
 
     /** The carried house-property losses, oldest first, against the house-property income left (S2 s.110; 1961 s.71B). */

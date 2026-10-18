@@ -8,9 +8,12 @@ import com.thiru.wealthlens.taxengine.input.CarriedHousePropertyLoss;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
+import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
+import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -73,6 +76,7 @@ class SetOffNodeTest {
                 .given(NodeIds.SALARY_INCOME, Money.of(salaries))
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of(houseProperty))
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.of(otherSources))
+                .given(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.none())
                 .run(new SetOffNode());
     }
 
@@ -91,13 +95,13 @@ class SetOffNodeTest {
         NodeResult result = run(year, OLD, "1000000", "-150000", "0");
 
         // Then — 10,00,000 − 1,50,000
-        assertThat(result.value()).isEqualTo(rupees("850000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("850000"));
         assertThat(lines(result, StepKind.SET_OFF)).singleElement().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.SETOFF_HOUSE_PROPERTY);
             assertThat(line.in()).isEqualTo(rupees("1000000"));
             assertThat(line.out()).isEqualTo(rupees("150000"));
             assertThat(line.limitedBy().orElseThrow()).contains("HOUSE_PROPERTY loss against SALARIES")
-                    .contains("[SALARIES, HOUSE_PROPERTY, OTHER_SOURCES]").contains("the declared default").contains("D-221");
+                    .contains("[SALARIES, HOUSE_PROPERTY, OTHER_SOURCES, CAPITAL_GAINS]").contains("the declared default").contains("D-221");
         });
     }
 
@@ -108,7 +112,7 @@ class SetOffNodeTest {
         NodeResult result = run(year, OLD, "1000000", "-300000", "0");
 
         // Then — 2,00,000 set off, 10,00,000 − 2,00,000; 1,00,000 left to carry forward (W-081b)
-        assertThat(result.value()).isEqualTo(rupees("800000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("800000"));
         assertThat(lines(result, StepKind.SET_OFF)).extracting(TraceLine::out).containsExactly(rupees("200000"));
         assertThat(lines(result, StepKind.MEASURE)).extracting(TraceLine::in, TraceLine::out)
                 .containsExactly(tuple(rupees("300000"), rupees("200000")), tuple(rupees("300000"), rupees("100000")));
@@ -122,7 +126,7 @@ class SetOffNodeTest {
         NodeResult result = run(2026, OLD, "50000", "-150000", "0");
 
         // Then — 50,000 set off, nil left under the heads, 1,00,000 to carry forward
-        assertThat(result.value()).isEqualTo(rupees("0"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("0"));
         assertThat(lines(result, StepKind.SET_OFF)).extracting(TraceLine::out).containsExactly(rupees("50000"));
         assertThat(lines(result, StepKind.MEASURE).get(1).out()).isEqualTo(rupees("100000"));
     }
@@ -133,7 +137,7 @@ class SetOffNodeTest {
         NodeResult result = run(2026, OLD, "100000", "-150000", "200000");
 
         // Then — the declared order: 1,00,000 from salaries, then 50,000 from other sources; 1,50,000 left
-        assertThat(result.value()).isEqualTo(rupees("150000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("150000"));
         assertThat(lines(result, StepKind.SET_OFF)).extracting(TraceLine::in, TraceLine::out)
                 .containsExactly(tuple(rupees("100000"), rupees("100000")), tuple(rupees("200000"), rupees("50000")));
         assertThat(lines(result, StepKind.SET_OFF).get(1).limitedBy().orElseThrow())
@@ -144,18 +148,18 @@ class SetOffNodeTest {
     void evaluate_whenTheAssesseeElectsOtherSourcesFirst_setsOffInThatOrder() {
         // Given — the same 1,50,000 loss, 1,00,000 salary and 2,00,000 under other sources, other sources elected first
         EnteredFacts elected = EnteredFacts.none().withAbsorptionOrder(
-                List.of(HeadCode.OTHER_SOURCES, HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES));
+                List.of(HeadCode.OTHER_SOURCES, HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES, HeadCode.CAPITAL_GAINS));
 
         // When
         NodeResult result = run(2026, OLD, "100000", "-150000", "200000", Map.of(), elected);
 
         // Then — all 1,50,000 from other sources, nothing from salaries; 1,00,000 + 50,000 left either way
-        assertThat(result.value()).isEqualTo(rupees("150000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("150000"));
         assertThat(lines(result, StepKind.SET_OFF)).singleElement().satisfies(line -> {
             assertThat(line.in()).isEqualTo(rupees("200000"));
             assertThat(line.out()).isEqualTo(rupees("150000"));
             assertThat(line.limitedBy().orElseThrow()).contains("HOUSE_PROPERTY loss against OTHER_SOURCES")
-                    .contains("[OTHER_SOURCES, HOUSE_PROPERTY, SALARIES]").contains("elected").contains("D-221");
+                    .contains("[OTHER_SOURCES, HOUSE_PROPERTY, SALARIES, CAPITAL_GAINS]").contains("elected").contains("D-221");
         });
     }
 
@@ -177,7 +181,7 @@ class SetOffNodeTest {
         NodeResult result = run(year, NEW, "1000000", "-40000", "0");
 
         // Then — nothing set off; the loss deemed given full effect to (S2 s.202(2)(b)(ii), (3); 1961 s.115BAC)
-        assertThat(result.value()).isEqualTo(rupees("1000000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("1000000"));
         assertThat(lines(result, StepKind.SET_OFF)).singleElement().satisfies(line -> {
             assertThat(line.out()).isEqualTo(rupees("0"));
             assertThat(line.limitedBy().orElseThrow()).contains("REG-NEW-TAX-REGIME-NO-SETOFF");
@@ -194,7 +198,7 @@ class SetOffNodeTest {
         NodeResult result = run(2026, OLD, "1000000", "0", "-300000");
 
         // Then — the whole 3,00,000 (s.109(1) sets no limit for this head)
-        assertThat(result.value()).isEqualTo(rupees("700000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("700000"));
         assertThat(lines(result, StepKind.SET_OFF)).singleElement().satisfies(line -> {
             assertThat(line.rule()).isEqualTo(RuleIds.SETOFF_ACROSS_HEADS);
             assertThat(line.out()).isEqualTo(rupees("300000"));
@@ -208,7 +212,7 @@ class SetOffNodeTest {
         NodeResult result = run(2026, OLD, "100000", "0", "-150000");
 
         // Then — 1,00,000 set off; 50,000 left, which no provision carries forward
-        assertThat(result.value()).isEqualTo(rupees("0"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("0"));
         assertThat(lines(result, StepKind.MEASURE)).singleElement().satisfies(line -> {
             assertThat(line.out()).isEqualTo(rupees("50000"));
             assertThat(line.limitedBy().orElseThrow()).contains("not carried forward");
@@ -232,7 +236,7 @@ class SetOffNodeTest {
                 Map.of(TaxYearId.of(year - 2), carried("60000", "0", "0")));
 
         // Then — 5,00,000 + (1,00,000 − 60,000) (S2 s.110(1)(a); 1961 s.71B)
-        assertThat(result.value()).isEqualTo(rupees("540000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("540000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF)).singleElement()
                 .satisfies(line -> {
                     assertThat(line.in()).isEqualTo(rupees("100000"));
@@ -248,7 +252,7 @@ class SetOffNodeTest {
         NodeResult result = run(2026, OLD, "500000", "50000", "0", Map.of(TaxYearId.of(2024), carried("80000", "0", "0")));
 
         // Then — only against house property: 50,000 set off, salary untouched, 30,000 still carried
-        assertThat(result.value()).isEqualTo(rupees("500000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("500000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.MEASURE)).singleElement()
                 .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("30000")));
     }
@@ -275,7 +279,7 @@ class SetOffNodeTest {
                 TaxYearId.of(2018), carried("10000", "0", "0")));
 
         // Then — 2018-19's 10,000 set off; 2017-18's 50,000 expired
-        assertThat(result.value()).isEqualTo(rupees("90000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("90000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF)).extracting(TraceLine::out)
                 .containsExactly(rupees("10000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.MEASURE)).singleElement()
@@ -293,7 +297,7 @@ class SetOffNodeTest {
                 Map.of(TaxYearId.of(year - 1), carried("70000", "50000", "0")));
 
         // Then — the 50,000 gone (S2 s.202(2)(b)(i), (3)); the 20,000 set off: 1,00,000 − 20,000
-        assertThat(result.value()).isEqualTo(rupees("80000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("80000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_DISALLOWED_PART, StepKind.SET_OFF)).singleElement()
                 .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("0")));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_DISALLOWED_PART, StepKind.MEASURE)).singleElement()
@@ -311,7 +315,7 @@ class SetOffNodeTest {
         NodeResult result = run(2026, OLD, "0", "100000", "0", Map.of(TaxYearId.of(2025), carried("70000", "50000", "0")));
 
         // Then — 50,000 (the attributable part, first) then 20,000: 1,00,000 − 70,000
-        assertThat(result.value()).isEqualTo(rupees("30000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("30000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_DISALLOWED_PART, StepKind.SET_OFF)).extracting(TraceLine::out)
                 .containsExactly(rupees("50000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, StepKind.SET_OFF)).extracting(TraceLine::out)
@@ -324,7 +328,7 @@ class SetOffNodeTest {
         NodeResult result = run(2026, NEW, "0", "100000", "0", Map.of(TaxYearId.of(2024), carried("70000", "50000", "60000")));
 
         // Then — 10,000 set off; nothing destroyed
-        assertThat(result.value()).isEqualTo(rupees("90000"));
+        assertThat(result.value().asMoney()).isEqualTo(Money.of("90000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_DISALLOWED_PART, StepKind.MEASURE)).isEmpty();
     }
 
@@ -334,5 +338,49 @@ class SetOffNodeTest {
         assertThatThrownBy(() -> run(2026, OLD, "0", "100000", "0", Map.of(TaxYearId.of(2026), carried("1000", "0", "0"))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("carried only to later years");
+    }
+
+    /** As {@link #run}, TY 2026-27 old regime, with capital-gains parts and no carried losses. */
+    private static NodeResult runWithCapitalGains(String salaries, String houseProperty, String otherSources,
+            Map<CapitalGainsPart, Money> parts) {
+        TaxYearId taxYear = TaxYearId.of(2026);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        EngineInputs inputs = new EngineInputs(taxYear, OLD, TemporalContext.forTaxYear(taxYear, LocalDate.of(2026, 9, 21)),
+                plain.entered(), plain.assessee(), plain.family(), plain.ledgers(), plain.elections(),
+                plain.capitalGains(), plain.filing());
+        return NodeHarness.with(pack(2026)).regime(OLD).inputs(inputs)
+                .given(NodeIds.SALARY_INCOME, Money.of(salaries))
+                .given(NodeIds.HOUSEPROPERTY_INCOME, Money.of(houseProperty))
+                .given(NodeIds.OTHERSOURCES_INCOME, Money.of(otherSources))
+                .given(NodeIds.CAPITALGAINS_INCOME, new CapitalGainsHead(parts, Money.ZERO, Money.ZERO))
+                .run(new SetOffNode());
+    }
+
+    @Test
+    void evaluate_whenAHousePropertyLossMeetsOnlyCapitalGains_takesTheirPartsInOrder() {
+        // When — a 60,000 house-property loss; short-term slab 30,000, long-term listed 50,000; nothing else
+        NodeResult result = runWithCapitalGains("0", "-60000", "0", Map.of(CapitalGainsPart.SHORT_TERM_SLAB,
+                Money.of("30000"), CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("50000")));
+
+        // Then — S2 s.109(1) "including 'Capital gains'": 30,000 slab, then 30,000 of the listed part; 20,000 left
+        HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
+        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.ZERO);
+        assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("20000"));
+        assertThat(heads.total()).isEqualTo(Money.of("20000"));
+        assertThat(lines(result, StepKind.SET_OFF)).hasSize(2).allSatisfy(line ->
+                assertThat(line.limitedBy().orElseThrow()).contains("CAPITAL_GAINS").contains("OQ-32"));
+    }
+
+    @Test
+    void evaluate_whenAnotherHeadHasIncome_setsOffAgainstItBeforeCapitalGains() {
+        // When — the same, with other sources 40,000: capital gains are last in the declared order (D-243)
+        NodeResult result = runWithCapitalGains("0", "-60000", "40000", Map.of(CapitalGainsPart.SHORT_TERM_SLAB,
+                Money.of("30000"), CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("50000")));
+
+        // Then — 40,000 from other sources, 20,000 from the slab part; the listed part untouched
+        HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
+        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.of("10000"));
+        assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("50000"));
+        assertThat(heads.total()).isEqualTo(Money.of("60000"));
     }
 }

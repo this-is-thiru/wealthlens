@@ -46,11 +46,11 @@ import org.junit.jupiter.api.Test;
 class ElectionResolverTest {
 
     private static final List<HeadCode> DEFAULT =
-            List.of(HeadCode.SALARIES, HeadCode.HOUSE_PROPERTY, HeadCode.OTHER_SOURCES);
+            List.of(HeadCode.SALARIES, HeadCode.HOUSE_PROPERTY, HeadCode.OTHER_SOURCES, HeadCode.CAPITAL_GAINS);
     private static final List<HeadCode> OTHER_SOURCES_FIRST =
-            List.of(HeadCode.OTHER_SOURCES, HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES);
+            List.of(HeadCode.OTHER_SOURCES, HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES, HeadCode.CAPITAL_GAINS);
     private static final List<HeadCode> HOUSE_PROPERTY_FIRST =
-            List.of(HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES, HeadCode.OTHER_SOURCES);
+            List.of(HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES, HeadCode.OTHER_SOURCES, HeadCode.CAPITAL_GAINS);
 
     private static final RulePack PACK = new ClasspathRulePackProvider("rulepacks", Set.of(TaxYearId.of(2026)),
             new JsonPackAssembler(LockedInstruments.of(TaxYearId.of(2026)))).load(TaxYearId.of(2026));
@@ -101,8 +101,8 @@ class ElectionResolverTest {
         // When
         List<List<HeadCode>> candidates = new SetOffOrderElection().candidates(NodeHarness.plainTaxpayer(), PACK);
 
-        // Then — 3! = 6 orders, each once, SALARIES / HOUSE_PROPERTY / OTHER_SOURCES first
-        assertThat(candidates).hasSize(6).doesNotHaveDuplicates().first().isEqualTo(DEFAULT);
+        // Then — 4! = 24 orders, each once, SALARIES / HOUSE_PROPERTY / OTHER_SOURCES / CAPITAL_GAINS first (D-243)
+        assertThat(candidates).hasSize(24).doesNotHaveDuplicates().first().isEqualTo(DEFAULT);
         assertThat(candidates).allSatisfy(order -> assertThat(order).containsExactlyInAnyOrderElementsOf(DEFAULT));
     }
 
@@ -114,18 +114,19 @@ class ElectionResolverTest {
         // When
         ElectionResolver.Resolution<List<HeadCode>> resolution = resolve(prices, NodeHarness.plainTaxpayer());
 
-        // Then — chosen by price; six alternatives, six lines, one of them chosen
+        // Then — chosen by price; 24 alternatives, 24 lines, one of them chosen
         assertThat(resolution.outcome().mode()).isEqualTo(ElectionMode.AUTO_OPTIMISE);
         assertThat(resolution.outcome().chosen()).isEqualTo(OTHER_SOURCES_FIRST);
-        assertThat(resolution.outcome().alternatives()).hasSize(6);
+        assertThat(resolution.outcome().alternatives()).hasSize(24);
         assertThat(resolution.run().valueOf(NodeIds.TAX_NETPAYABLE)).isEqualTo(MoneyValue.of(Money.of("100")));
-        assertThat(resolution.run().trace()).hasSize(6).allSatisfy(line -> {
+        assertThat(resolution.run().trace()).hasSize(24).allSatisfy(line -> {
             assertThat(line.node()).isEqualTo(NodeIds.SETOFF);
             assertThat(line.rule()).isEqualTo(RuleIds.SETOFF_ACROSS_HEADS);
             assertThat(line.kind()).isEqualTo(StepKind.MEASURE);
             assertThat(line.in()).isEqualTo(line.out());
         });
-        assertThat(resolution.run().trace()).extracting(TraceLine::sequence).containsExactly(1, 2, 3, 4, 5, 6);
+        assertThat(resolution.run().trace()).extracting(TraceLine::sequence)
+                .containsExactlyElementsOf(IntStream.rangeClosed(1, 24).boxed().toList());
         assertThat(resolution.run().trace()).filteredOn(line -> line.limitedBy().orElseThrow().contains("; chosen"))
                 .singleElement().satisfies(line -> {
                     assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("100")));
@@ -146,8 +147,8 @@ class ElectionResolverTest {
 
     @Test
     void resolve_whenTwoOrdersTieBelowTheDefault_takesTheEarlierCandidate() {
-        // Given — other sources first and house property first both net 100. The candidates run S-HP-OS, S-OS-HP,
-        // HP-S-OS, HP-OS-S, OS-S-HP, OS-HP-S, so house property first (third) comes before other sources first (sixth)
+        // Given — other sources first and house property first both net 100. The candidates run in blocks of six by
+        // first head (S, HP, OS, CG), so HP-S-OS-CG (seventh) comes before OS-HP-S-CG (fifteenth)
         Map<List<HeadCode>, Money> prices =
                 Map.of(OTHER_SOURCES_FIRST, Money.of("100"), HOUSE_PROPERTY_FIRST, Money.of("100"));
 
@@ -278,7 +279,7 @@ class ElectionResolverTest {
 
         @Test
         void resolveTogether_whenTheBestPairIsNotEachBestAlone_takesTheCheapestPair() {
-            // When — 4 house sets ({}, {0, 1}, {0}, {1}) × 6 orders = 24 combinations
+            // When — 4 house sets ({}, {0, 1}, {0}, {1}) × 24 orders = 96 combinations
             ElectionResolver.JointResolution resolution = resolveTogether(PRICES, twoHousesNotLet());
 
             // Then — each outcome's choice from the pair at 100; {0} priced at its best order, 140; the default
@@ -302,17 +303,17 @@ class ElectionResolverTest {
             // When
             ElectionResolver.JointResolution resolution = resolveTogether(PRICES, twoHousesNotLet());
 
-            // Then — 4 house lines, then 6 order lines, numbered on; each names the others at their best
-            assertThat(resolution.run().trace()).hasSize(10).extracting(TraceLine::sequence)
-                    .containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+            // Then — 4 house lines, then 24 order lines, numbered on; each names the others at their best
+            assertThat(resolution.run().trace()).hasSize(28).extracting(TraceLine::sequence)
+                    .containsExactlyElementsOf(IntStream.rangeClosed(1, 28).boxed().toList());
             assertThat(resolution.run().trace().subList(0, 4)).allSatisfy(line -> {
                 assertThat(line.node()).isEqualTo(NodeIds.HOUSEPROPERTY_INCOME);
                 assertThat(line.rule()).isEqualTo(RuleIds.HP_OWN_RESIDENCE);
             });
-            assertThat(resolution.run().trace().subList(4, 10)).allSatisfy(line -> {
+            assertThat(resolution.run().trace().subList(4, 28)).allSatisfy(line -> {
                 assertThat(line.node()).isEqualTo(NodeIds.SETOFF);
                 assertThat(line.kind()).isEqualTo(StepKind.MEASURE);
-                assertThat(line.limitedBy().orElseThrow()).contains("priced jointly by recomputation against 24");
+                assertThat(line.limitedBy().orElseThrow()).contains("priced jointly by recomputation against 96");
             });
             assertThat(resolution.run().trace()).filteredOn(line -> line.limitedBy().orElseThrow().contains("; chosen"))
                     .hasSize(2).allSatisfy(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("100"))));

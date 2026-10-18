@@ -11,6 +11,8 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
@@ -240,7 +242,7 @@ public final class ShapeJson {
                 "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
-                "SurvivingChildrenLimit", "AbsorptionOrder");
+                "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -292,11 +294,6 @@ public final class ShapeJson {
                     PackJson.optionalDate(node, "ifscIssuedFrom", path)));
             case "SurvivingChildrenLimit" -> PackJson.construct(path, () -> new SurvivingChildrenLimit(
                     PackJson.integer(node, "children", path), PackJson.date(node, "exceptBornBefore", path)));
-            case "AbsorptionOrder" -> {
-                List<HeadCode> heads = PackJson.array(node, "heads", path,
-                        e -> headCode(e.node().asString(), e.path()));
-                yield PackJson.construct(path, () -> new AbsorptionOrder(heads));
-            }
             case "TaxYearSpan" -> PackJson.construct(path, () -> new TaxYearSpan(
                     PackJson.integer(node, "succeedingYears", path)));
             case "SanctionedLoanLimit" -> PackJson.construct(path, () -> new SanctionedLoanLimit(
@@ -313,6 +310,23 @@ public final class ShapeJson {
                     money(node, "conditionsMet", path), money(node, "anyOtherCase", path),
                     money(node, "aggregate", path), PackJson.integer(node, "completionYearsAfterBorrowingYear", path),
                     PackJson.optionalDate(node, "borrowedOnOrAfter", path)));
+            default -> setOffDefinition(tag, node, path);
+        };
+    }
+
+    /** The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243). */
+    private static RuleDefinition setOffDefinition(String tag, JsonNode node, String path) {
+        return switch (tag) {
+            case "AbsorptionOrder" -> {
+                List<HeadCode> heads = PackJson.array(node, "heads", path,
+                        e -> constant(e.node().asString(), e.path(), HeadCode.class));
+                yield PackJson.construct(path, () -> new AbsorptionOrder(heads));
+            }
+            case "CapitalGainsAbsorptionOrder" -> {
+                List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,
+                        e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
+                yield PackJson.construct(path, () -> new CapitalGainsAbsorptionOrder(parts));
+            }
             default -> throw unreachable(tag, path);
         };
     }
@@ -357,14 +371,14 @@ public final class ShapeJson {
     }
 
     /** A head in an absorption order, named in the failure with the heads there are. */
-    private static HeadCode headCode(String raw, String path) {
-        for (HeadCode candidate : HeadCode.values()) {
+    private static <E extends Enum<E>> E constant(String raw, String path, Class<E> type) {
+        for (E candidate : type.getEnumConstants()) {
             if (candidate.name().equals(raw)) {
                 return candidate;
             }
         }
-        throw new PackValidationException(path + " must be one of " + java.util.Arrays.toString(HeadCode.values())
-                + ", but was \"" + raw + "\"");
+        throw new PackValidationException(path + " must be one of "
+                + java.util.Arrays.toString(type.getEnumConstants()) + ", but was \"" + raw + "\"");
     }
 
     private static MovableAssetKind movableAssetKind(String raw, String path) {

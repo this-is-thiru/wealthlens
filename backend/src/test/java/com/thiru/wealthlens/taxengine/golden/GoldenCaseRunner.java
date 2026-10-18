@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
+import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ChapterEightNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
@@ -96,6 +97,7 @@ final class GoldenCaseRunner {
             new SalaryIncomeNode(),
             new HousePropertyNode(),
             new OtherSourcesNode(),
+            new CapitalGainsNode(),
             new SetOffNode(),
             new GrossTotalIncomeNode(),
             new ChapterEightNode(),

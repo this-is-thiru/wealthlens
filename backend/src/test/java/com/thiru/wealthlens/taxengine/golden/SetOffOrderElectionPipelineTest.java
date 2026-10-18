@@ -37,13 +37,14 @@ class SetOffOrderElectionPipelineTest {
         ElectionResolver.Resolution<List<HeadCode>> resolution =
                 RUNNER.resolveSetOffOrder(golden, TaxYearId.of(2026), Money.of("100000"));
 
-        // Then — six orders, one price; the default chosen
+        // Then — 24 orders (capital gains the fourth head, D-243), one price; the default chosen
         Money netPayable = resolution.run().valueOf(NodeIds.TAX_NETPAYABLE).asMoney();
         assertThat(resolution.outcome().mode()).isEqualTo(ElectionMode.AUTO_OPTIMISE);
-        assertThat(resolution.outcome().alternatives()).hasSize(6).extracting(PricedAlternative::netPayable)
+        assertThat(resolution.outcome().alternatives()).hasSize(24).extracting(PricedAlternative::netPayable)
                 .containsOnly(netPayable);
         assertThat(resolution.outcome().chosen())
-                .isEqualTo(List.of(HeadCode.SALARIES, HeadCode.HOUSE_PROPERTY, HeadCode.OTHER_SOURCES));
+                .isEqualTo(List.of(HeadCode.SALARIES, HeadCode.HOUSE_PROPERTY, HeadCode.OTHER_SOURCES,
+                        HeadCode.CAPITAL_GAINS));
 
         // and the chosen run sets the ₹2,00,000 off salaries first, the rest against other sources
         List<TraceLine> setOff = resolution.run().trace().stream()
