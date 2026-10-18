@@ -112,7 +112,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 `profile/` `TaxpayerProfile` `Pan` `FamilyMember` `Employer` `Landlord` `Lender` `BankAccount`
 (○ `W-096`–`W-098`) · `workspace/` `TaxYearWorkspace` `FilingDraft` `DraftRevision` `DraftInputs`
 `EntryProvenance` (○ `W-099`, `W-100`) · `assemble/` `EngineInputsAssembler` — the **only** place
-`EngineInputs` is built (○ `W-103`) · `portfolio/` `MoneyBridge` `CapitalGainsAdapter` (○ Phase 9), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) from `service.CapitalGainsSummaryService.summaryFor(email, financialYear)` (✅ `W-086`, D-238; the adapter → `W-087`) ·
+`EngineInputs` is built (○ `W-103`) · `portfolio/` `MoneyBridge` (✅ `W-087`, D-240: `fromTMoney` refuses a non-canonical or non-finite double; `toTMoney` throws) `CapitalGainsAdapter` (○ `W-087b`), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) from `service.CapitalGainsSummaryService.summaryFor(email, financialYear)` (✅ `W-086`, D-238; the adapter → `W-087b`) ·
 `projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`)
 · `scenario/` `Scenario` `ScenarioDiff` `DiffLine` (⚠ UNOWNED) · `controller/` DTOs only · `job/`
 `TaxJob` + 6 jobs, `JobLease` (○ `W-137`).
@@ -542,3 +542,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-10-18 | T2: `election/` — `ElectionResolver.resolveTogether`, `JointResolution`: several elections priced jointly on whole runs | `W-084a`, D-236 |
 | 2026-10-18 | T2: `portfolio`'s read-model `CapitalGainsSummary`, `CapitalGainsBucket` named beside the adapter | `W-085`, D-237 |
 | 2026-10-18 | T2: `portfolio`'s `CapitalGainsSummaryService` publishes it; `CapitalGainsAdapter` joins `MoneyBridge` in W-087 | `W-086`, D-238 |
+| 2026-10-18 | T2: `taxplanning/portfolio/MoneyBridge`; `CapitalGainsAdapter` split to W-087b | `W-087`, D-240 |
