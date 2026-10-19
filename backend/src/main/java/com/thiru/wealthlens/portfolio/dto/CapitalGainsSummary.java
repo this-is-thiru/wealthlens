@@ -15,7 +15,8 @@ import java.util.Set;
  *
  * @param email whose gains these are
  * @param financialYear the year as {@code portfolio} keys it, such as {@code 2025-2026} ({@code TLocalDate.financialYear})
- * @param buckets one per classification, asset type, sub-class and STT on each side; may be empty
+ * @param buckets one per classification, asset type, sub-class, STT on each side, acquisition and its date; may be
+ *     empty
  * @param asOf when {@code portfolio} computed this, so a computation can pin what it ran against
  * @param portfolioComputationRef {@code portfolio}'s reference for the run that produced it
  */
@@ -38,10 +39,12 @@ public record CapitalGainsSummary(
         Set<List<Object>> keys = new HashSet<>();
         for (CapitalGainsBucket bucket : buckets) {
             if (!keys.add(List.of(bucket.classification(), bucket.assetType(), bucket.instrumentSubClass(),
-                    bucket.sttOnAcquisition(), bucket.sttOnTransfer()))) {
+                    bucket.sttOnAcquisition(), bucket.sttOnTransfer(), bucket.acquisition(),
+                    bucket.acquiredOn()))) {
                 throw new IllegalArgumentException("Two capital-gains buckets are " + bucket.classification() + " "
                         + bucket.assetType() + " " + bucket.instrumentSubClass().orElse("without a sub-class")
-                        + " with the same STT; publish one per classification, asset type, sub-class and STT");
+                        + " with the same STT and acquisition; publish one per classification, asset type, sub-class,"
+                        + " STT and acquisition");
             }
         }
     }

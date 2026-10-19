@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.portfolio.service;
 
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -108,19 +109,29 @@ public class CapitalGainsSummaryService {
         return TMoney.scale(sale - cost - row.getDeductibleBuyCharges() - row.getDeductibleSellCharges());
     }
 
-    /** What a bucket is one of: the rows a bucket sums share all five. */
+    /** What a bucket is one of: the rows a bucket sums share all seven. */
     private record BucketKey(CapitalGainsType classification, AssetType assetType, Optional<String> subClass,
-            boolean sttOnAcquisition, boolean sttOnTransfer) {
+            boolean sttOnAcquisition, boolean sttOnTransfer, Acquisition acquisition, LocalDate acquiredOn) {
 
         static BucketKey of(TradeOutcomeEntity row) {
             return new BucketKey(row.getCapitalGainsType(), row.getAssetType(),
                     Optional.ofNullable(row.getInstrumentSubClass()), boreStt(row.getBuyChargeBreakup()),
-                    boreStt(row.getSellChargeBreakup()));
+                    boreStt(row.getSellChargeBreakup()),
+                    Acquisition.stored(row.getAcquisitionMode(), row.getAcquisitionCorporateAction()),
+                    acquiredOnOf(row));
         }
 
         CapitalGainsBucket bucket(double gainRupees) {
             return new CapitalGainsBucket(classification, assetType, subClass, sttOnAcquisition, sttOnTransfer,
-                    gainRupees);
+                    acquisition, acquiredOn, gainRupees);
+        }
+
+        private static LocalDate acquiredOnOf(TradeOutcomeEntity row) {
+            if (row.getBuyDate() == null) {
+                throw new IllegalArgumentException("The disposal " + row.getId() + " has no buy date, so when it was"
+                        + " acquired is unknown");
+            }
+            return row.getBuyDate();
         }
     }
 

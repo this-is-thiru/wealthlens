@@ -23,7 +23,9 @@ import org.springframework.stereotype.Component;
  * ({@code sources/2026-10-18-capital-gains-basis.md}). A short-term gain on equity whose sale bore STT, and a long-term
  * one whose buy and sale both did, fall on the listed-equity rates; without STT on the sale the short-term gain is
  * charged with the rest of total income, the long-term one under s.197 / s.112. A long-term gain on equity bought
- * without STT turns on a notification not yet read (OQ-31), and is refused.
+ * without STT turns on S.O. 5054(E) (1961 s.112A(4), carried to S2 s.198(5) by s.536(2)(j); OQ-31, D-249), which
+ * waives the condition by acquisition date and kind. That law belongs in rule data, not here (W-088f2), so the gain is
+ * refused with the facts the waiver will be applied to.
  *
  * <p>Nothing is defaulted. An unclassified gain blocks, as does speculative business income, which this engine does
  * not compute; any other asset with a capital-gains classification blocks until the instrument registry classifies
@@ -39,8 +41,8 @@ public class CapitalGainsAdapter {
     /**
      * The capital gains of {@code email} for {@code year}, pinned to the summary they were read from.
      *
-     * @throws IllegalArgumentException if a gain is unclassified, speculative, of an asset not yet mapped, or turns on
-     *     OQ-31
+     * @throws IllegalArgumentException if a gain is unclassified, speculative, of an asset not yet mapped, or on equity
+     *     with no STT on record for the buy
      */
     public CapitalGainsInput inputFor(String email, TaxYearId year) {
         CapitalGainsSummary summary =
@@ -87,9 +89,11 @@ public class CapitalGainsAdapter {
             return RateBasisHint.SPECIAL_RATE_OTHER;
         }
         if (!bucket.sttOnAcquisition()) {
-            throw new IllegalArgumentException("Long-term gains of " + bucket.gainRupees() + " on equity bought without"
-                    + " securities transaction tax fall under s.112A / s.198 only for the acquisitions a notification"
-                    + " names, which is not yet read (OQ-31)");
+            throw new IllegalArgumentException("Long-term gains of " + bucket.gainRupees() + " on equity with no"
+                    + " securities transaction tax on record for the buy (acquired " + bucket.acquisition().mode()
+                    + bucket.acquisition().corporateAction().map(type -> " " + type).orElse("") + " on "
+                    + bucket.acquiredOn() + ") fall under s.112A / s.198 only where S.O. 5054(E) waives that condition,"
+                    + " a rule not yet in the rule data (W-088f2)");
         }
         return RateBasisHint.SPECIAL_RATE_LISTED_EQUITY;
     }

@@ -247,6 +247,8 @@ Someone must apply ss.196/197/198 rates. `portfolio` has no rule pack and no tax
 
 > **Erratum (W-088d, 2026-10-18):** `portfolio` does not own brought-forward loss balances — what earlier returns absorbed is the tax side's history — the carried capital loss is `LedgerSnapshot.capitalLossCarriedForward` (per year of origin and term, consumed totals), set off by `SETOFF-CARRIED-CAPITAL-GAINS` (S2 s.111; 1961 s.74; D-247), and `CapitalGainsInput` carries no brought-forward field.
 > Verified by: `backend/src/main/java/com/thiru/wealthlens/taxengine/input/CarriedCapitalLoss.java`; `grep -rn broughtForward backend/src/main` (no hits).
+>
+> **Erratum (W-088f, 2026-10-19):** the read-model also publishes how and when each lot was acquired (`acquisition`: purchase, a corporate action with its type, or unrecorded; `acquiredOn`) — facts only. What they mean for the rate (S.O. 5054(E) under 1961 s.112A(4) / S2 s.198(5)) is the tax side's rule data, W-088f2 (D-249).
 
 The read-model therefore carries a **rate-basis hint per bucket**, not a tax amount:
 

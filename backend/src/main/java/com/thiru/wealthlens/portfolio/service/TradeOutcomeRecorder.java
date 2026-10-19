@@ -4,6 +4,7 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.service.ChargeDeductibilityService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -171,6 +172,8 @@ public class TradeOutcomeRecorder {
                 .sourceBuyLotId(asset.getId())
                 .corporateActionDerived(asset.getCorporateActionType() != null)
                 .appliedCorporateActions(asset.getCorporateActions())
+                .acquisitionMode(Acquisition.of(asset.getCorporateActionType()).mode())
+                .acquisitionCorporateAction(asset.getCorporateActionType())
                 .build();
     }
 

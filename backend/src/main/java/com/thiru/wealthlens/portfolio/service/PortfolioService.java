@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
@@ -767,6 +768,8 @@ public class PortfolioService {
                 .sourceBuyLotId(assetEntity.getId())
                 .corporateActionDerived(corporateActionDerived)
                 .appliedCorporateActions(assetEntity.getCorporateActions())
+                .acquisitionMode(Acquisition.of(assetEntity.getCorporateActionType()).mode())
+                .acquisitionCorporateAction(assetEntity.getCorporateActionType())
                 .build();
 
         return context;

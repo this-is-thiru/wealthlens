@@ -1,7 +1,9 @@
 package com.thiru.wealthlens.portfolio.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
@@ -200,6 +202,17 @@ public class TradeOutcomeEntity implements AuditableEntity {
 
     @Field("applied_corporate_actions")
     private List<CorporateActionEntity> appliedCorporateActions = new ArrayList<>();
+
+    /**
+     * How the lot came to be held, from the lot's own record. Unlike {@link #corporateActionDerived}, which a purchase
+     * later split also sets, this is the lot's origin; absent on rows written before W-088f (D-249).
+     */
+    @Field("acquisition_mode")
+    private AcquisitionMode acquisitionMode;
+
+    /** The corporate action that created the lot, carried as itself; set only when {@link #acquisitionMode} says so. */
+    @Field("acquisition_corporate_action")
+    private CorporateActionType acquisitionCorporateAction;
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();

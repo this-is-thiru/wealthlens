@@ -3,13 +3,17 @@ package com.thiru.wealthlens.portfolio.service;
 import static com.thiru.wealthlens.testsupport.MoneyAssert.assertCanonical;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
@@ -49,6 +53,7 @@ class CapitalGainsSummaryServiceTest {
         row.setCapitalGainsType(classification);
         row.setAssetType(assetType);
         row.setSellDate(LocalDate.of(2025, 6, 2));
+        row.setBuyDate(LocalDate.of(2024, 1, 2));
         row.setSellPrice(sellPrice);
         row.setSellQuantity(quantity);
         row.setCorporateActionAdjustedBuyPrice(buyPrice);
@@ -64,6 +69,13 @@ class CapitalGainsSummaryServiceTest {
         row.setSellBrokerCharges(deductibleSell);
         row.setSellChargeBreakup(Map.of("BROKERAGE", deductibleSell));
         row.setDeductibleSellCharges(deductibleSell);
+        return row;
+    }
+
+    /** The row's sale bore STT and its buy none, the case S.O. 5054(E) decides. */
+    private static TradeOutcomeEntity soldWithStt(TradeOutcomeEntity row) {
+        row.setSellBrokerCharges(0.10);
+        row.setSellChargeBreakup(Map.of("STT", 0.10));
         return row;
     }
 
@@ -129,6 +141,46 @@ class CapitalGainsSummaryServiceTest {
         assertThat(summary.buckets().get(0).sttOnTransfer()).isTrue();
         assertThat(summary.buckets().get(1).sttOnAcquisition()).isTrue();
         assertThat(summary.buckets().get(1).sttOnTransfer()).isTrue();
+    }
+
+    @Test
+    void summaryFor_whenRowsDifferInHowOrWhenAcquired_publishesTheFactsApart() {
+        // Given -- long-term equity sold with STT, no STT on any buy: a bonus, a row from before the acquisition was
+        // kept, and two purchases a day apart. Facts only: no date means anything here (D-249)
+        TradeOutcomeEntity bonus = soldWithStt(row("E", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 110, 0, 1));
+        bonus.setAcquisitionMode(AcquisitionMode.CORPORATE_ACTION);
+        bonus.setAcquisitionCorporateAction(CorporateActionType.BONUS);
+        TradeOutcomeEntity unrecorded = soldWithStt(row("F", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1));
+        TradeOutcomeEntity first = soldWithStt(row("G", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 130, 100, 1));
+        first.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        first.setBuyDate(LocalDate.of(2004, 9, 30));
+        TradeOutcomeEntity next = soldWithStt(row("H", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 140, 100, 1));
+        next.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        next.setBuyDate(LocalDate.of(2004, 10, 1));
+
+        // When
+        CapitalGainsSummary summary = summaryOf(List.of(bonus, unrecorded, first, next));
+
+        // Then -- four buckets; gains 110, 20, 30 and 40 by hand
+        assertThat(summary.buckets()).extracting(CapitalGainsBucket::acquisition, CapitalGainsBucket::acquiredOn)
+                .containsExactly(tuple(Acquisition.of(CorporateActionType.BONUS), LocalDate.of(2024, 1, 2)),
+                        tuple(Acquisition.UNRECORDED, LocalDate.of(2024, 1, 2)),
+                        tuple(Acquisition.of(null), LocalDate.of(2004, 9, 30)),
+                        tuple(Acquisition.of(null), LocalDate.of(2004, 10, 1)));
+        assertCanonical(110.00, summary.buckets().get(0).gainRupees());
+        assertCanonical(40.00, summary.buckets().get(3).gainRupees());
+    }
+
+    @Test
+    void summaryFor_whenARowHasNoBuyDate_isRefused() {
+        // Given
+        TradeOutcomeEntity undated = row("J", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1);
+        undated.setBuyDate(null);
+
+        // When / Then
+        assertThatThrownBy(() -> summaryOf(List.of(undated)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("has no buy date");
     }
 
     @Test

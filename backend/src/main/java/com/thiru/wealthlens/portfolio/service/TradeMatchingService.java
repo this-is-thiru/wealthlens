@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
@@ -65,6 +66,7 @@ public class TradeMatchingService {
             double totalMiscCharges = 0;
             List<String> buyTransactionIds = new ArrayList<>();
             boolean corporateActionDerived = false;
+            List<Acquisition> acquisitions = new ArrayList<>();
             List<CorporateActionEntity> corporateActions = new ArrayList<>();
 
             for (TransactionEntity txn : txns) {
@@ -78,6 +80,7 @@ public class TradeMatchingService {
                 totalBrokerCharges += brokerCharges;
                 totalMiscCharges += miscCharges;
                 buyTransactionIds.add(txn.getId());
+                acquisitions.add(Acquisition.of(txn.getCorporateActionType()));
 
                 // Check if CA-derived
                 if (txn.getCorporateActionType() != null || price == 0) {
@@ -113,6 +116,7 @@ public class TradeMatchingService {
                     .buyTransactionIds(buyTransactionIds)
                     .corporateActions(corporateActions.isEmpty() ? null : corporateActions)
                     .corporateActionDerived(corporateActionDerived)
+                    .acquisition(Acquisition.common(acquisitions))
                     .build();
 
             lots.add(lot);
@@ -213,6 +217,7 @@ public class TradeMatchingService {
                     .sourceBuyLotId(lot.getId())
                     .corporateActionDerived(lot.isCorporateActionDerived())
                     .appliedCorporateActions(lot.getCorporateActions())
+                    .acquisition(lot.getAcquisition())
                     .build();
 
             matchedTrades.add(trade);
@@ -260,6 +265,8 @@ public class TradeMatchingService {
                 .sourceBuyLotId(trade.getSourceBuyLotId())
                 .corporateActionDerived(trade.isCorporateActionDerived())
                 .appliedCorporateActions(trade.getAppliedCorporateActions())
+                .acquisitionMode(trade.getAcquisition().mode())
+                .acquisitionCorporateAction(trade.getAcquisition().corporateAction().orElse(null))
                 .build();
     }
 
@@ -299,6 +306,8 @@ public class TradeMatchingService {
         entity.setSourceBuyLotId(trade.getSourceBuyLotId());
         entity.setCorporateActionDerived(trade.isCorporateActionDerived());
         entity.setAppliedCorporateActions(trade.getAppliedCorporateActions());
+        entity.setAcquisitionMode(trade.getAcquisition().mode());
+        entity.setAcquisitionCorporateAction(trade.getAcquisition().corporateAction().orElse(null));
 
         entity.setAuditMetadata(buildAuditMetadata());
 
@@ -357,6 +366,9 @@ public class TradeMatchingService {
         private List<String> buyTransactionIds;
         private List<CorporateActionEntity> corporateActions;
         private boolean corporateActionDerived;
+        /** How the lot was acquired; a lot built without saying is unrecorded. */
+        @Builder.Default
+        private Acquisition acquisition = Acquisition.UNRECORDED;
     }
 
     @Data
@@ -415,5 +427,8 @@ public class TradeMatchingService {
         private String sourceBuyLotId;
         private boolean corporateActionDerived;
         private List<CorporateActionEntity> appliedCorporateActions;
+        /** How the lot was acquired; a lot built without saying is unrecorded. */
+        @Builder.Default
+        private Acquisition acquisition = Acquisition.UNRECORDED;
     }
 }

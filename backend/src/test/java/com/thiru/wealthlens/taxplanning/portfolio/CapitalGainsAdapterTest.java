@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
@@ -17,6 +19,7 @@ import com.thiru.wealthlens.taxengine.input.RateBasisHint;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -27,13 +30,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Each read-model bucket's term and rate basis, from the conditions of S2 ss.196–198 and 1961 ss.111A, 112, 112A
- * (D-241; {@code sources/2026-10-18-capital-gains-basis.md}).
+ * (D-241; {@code sources/2026-10-18-capital-gains-basis.md}), and for equity bought without STT, S.O. 5054(E) (D-249).
  */
 @ExtendWith(MockitoExtension.class)
 class CapitalGainsAdapterTest {
 
     private static final String EMAIL = "user@example.com";
     private static final TaxYearId YEAR = TaxYearId.of(2025);
+    private static final LocalDate ACQUIRED_ON = LocalDate.of(2023, 4, 3);
     private static final Instant AS_OF = Instant.parse("2026-04-15T10:00:00Z");
 
     @Mock
@@ -45,7 +49,13 @@ class CapitalGainsAdapterTest {
     private static CapitalGainsBucket bucket(CapitalGainsType classification, AssetType assetType,
             boolean sttOnAcquisition, boolean sttOnTransfer, double gainRupees) {
         return new CapitalGainsBucket(classification, assetType, Optional.empty(), sttOnAcquisition, sttOnTransfer,
-                gainRupees);
+                Acquisition.of(null), ACQUIRED_ON, gainRupees);
+    }
+
+    /** Long-term equity sold with STT, its buy without, acquired as stated. */
+    private static CapitalGainsBucket boughtWithoutStt(Acquisition acquisition, LocalDate acquiredOn) {
+        return new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY, Optional.empty(), false, true,
+                acquisition, acquiredOn, 1000.50);
     }
 
     private static CapitalGainsBucket equity(CapitalGainsType classification, boolean sttOnAcquisition,
@@ -118,11 +128,22 @@ class CapitalGainsAdapterTest {
     }
 
     @Test
-    void inputFor_whenLongTermEquityWasBoughtWithoutStt_isRefusedNamingOq31() {
-        // When / Then — which acquisitions the s.112A(4) / s.198(5) notification covers is unread
-        assertThatThrownBy(() -> inputOf(equity(CapitalGainsType.LONG_TERM, false, true)))
+    void inputFor_whenLongTermEquityWithoutSttWasABonusAllotment_isRefusedWithTheFactsTheWaiverNeeds() {
+        // When / Then — S.O. 5054(E)'s waiver is rule data, not code (W-088f2); the refusal names the facts
+        assertThatThrownBy(() -> inputOf(boughtWithoutStt(Acquisition.of(CorporateActionType.BONUS),
+                LocalDate.of(2020, 1, 10))))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("OQ-31");
+                .hasMessageContaining("acquired CORPORATE_ACTION BONUS on 2020-01-10")
+                .hasMessageContaining("S.O. 5054(E)")
+                .hasMessageContaining("W-088f2");
+    }
+
+    @Test
+    void inputFor_whenLongTermEquityWithoutSttHasNoRecordedAcquisition_isRefused() {
+        // When / Then — a row written before the acquisition was kept
+        assertThatThrownBy(() -> inputOf(boughtWithoutStt(Acquisition.UNRECORDED, LocalDate.of(2003, 6, 1))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("acquired UNRECORDED on 2003-06-01");
     }
 
     @Test

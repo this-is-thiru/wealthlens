@@ -7,10 +7,12 @@ import static org.mockito.Mockito.*;
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
@@ -685,5 +687,30 @@ class PortfolioServiceTest {
             deducted = TMoney.add(deducted, row.getBuyBrokerCharges());
         }
         MoneyAssert.assertCanonical("V1 lifetime buy charge", 10.00, deducted);
+    }
+
+    @Test
+    void sellStock_v1_whenTheLotWasABonusAllotment_recordsItsAcquisition() {
+        // Given -- the lot's own record says how it was acquired; S.O. 5054(E) turns on it (W-088f)
+        AssetEntity asset = sellableLot("buy-1", 3.0, 0.0, LocalDate.of(2020, 1, 10));
+        asset.setCorporateActionType(CorporateActionType.BONUS);
+        when(portfolioRepository
+                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
+                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(1.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        assertEquals(AcquisitionMode.CORPORATE_ACTION, captor.getValue().getAcquisitionMode());
+        assertEquals(CorporateActionType.BONUS, captor.getValue().getAcquisitionCorporateAction());
     }
 }

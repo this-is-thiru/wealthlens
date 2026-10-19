@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.lenient;
 
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
@@ -549,5 +550,59 @@ class TradeMatchingServiceTest {
         txn.setTransactionDate(date);
         txn.setCorporateActions(new ArrayList<>());
         return txn;
+    }
+
+    /** A transaction of INFY at Zerodha, created by {@code corporateActionType} where one is given. */
+    private static TransactionEntity infy(String id, LocalDate date, double quantity, double price,
+            CorporateActionType corporateActionType) {
+        TransactionEntity transaction = new TransactionEntity();
+        transaction.setId(id);
+        transaction.setEmail("test@example.com");
+        transaction.setStockCode("INFY");
+        transaction.setBrokerName(BrokerName.ZERODHA);
+        transaction.setAssetType(AssetType.EQUITY);
+        transaction.setTransactionDate(date);
+        transaction.setQuantity(quantity);
+        transaction.setPrice(price);
+        transaction.setCorporateActionType(corporateActionType);
+        return transaction;
+    }
+
+    private List<Acquisition> acquisitionsOf(List<TransactionEntity> buys, TransactionEntity sell) {
+        List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(buys);
+        return tradeMatchingService.matchSellToLots(tradeMatchingService.toSellRequest(sell), lots).stream()
+                .map(tradeMatchingService::toTradeOutcomeEntity)
+                .map(row -> Acquisition.stored(row.getAcquisitionMode(), row.getAcquisitionCorporateAction()))
+                .toList();
+    }
+
+    @Test
+    void toTradeOutcomeEntity_whenTheSellSpansABonusAndAPurchase_recordsEachLotsAcquisition() {
+        // Given -- 10 bonus shares, then 10 bought; 15 sold, FIFO takes the bonus lot first (W-088f)
+        List<TransactionEntity> buys = List.of(
+                infy("buy-1", LocalDate.of(2020, 1, 10), 10, 0, CorporateActionType.BONUS),
+                infy("buy-2", LocalDate.of(2021, 1, 10), 10, 100, null));
+
+        // When
+        List<Acquisition> acquisitions = acquisitionsOf(buys,
+                infy("sell-1", LocalDate.of(2025, 6, 10), 15, 200, null));
+
+        // Then
+        assertEquals(List.of(Acquisition.of(CorporateActionType.BONUS), Acquisition.of(null)), acquisitions);
+    }
+
+    @Test
+    void toTradeOutcomeEntity_whenSameDayBuysOfTwoModesMerge_recordsTheLotAsUnrecorded() {
+        // Given -- a bonus and a purchase on one day become one lot, which is neither
+        List<TransactionEntity> buys = List.of(
+                infy("buy-1", LocalDate.of(2020, 1, 10), 10, 0, CorporateActionType.BONUS),
+                infy("buy-2", LocalDate.of(2020, 1, 10), 10, 100, null));
+
+        // When
+        List<Acquisition> acquisitions = acquisitionsOf(buys,
+                infy("sell-1", LocalDate.of(2025, 6, 10), 5, 200, null));
+
+        // Then
+        assertEquals(List.of(Acquisition.UNRECORDED), acquisitions);
     }
 }

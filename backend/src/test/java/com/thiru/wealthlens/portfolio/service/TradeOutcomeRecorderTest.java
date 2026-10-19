@@ -14,8 +14,10 @@ import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
 import com.thiru.wealthlens.brokercharges.service.ChargeDeductibilityService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
@@ -394,5 +396,26 @@ class TradeOutcomeRecorderTest {
             allocated = TMoney.add(allocated, row.getBuyBrokerCharges());
         }
         MoneyAssert.assertCanonical("lifetime buy charge allocated", 10.00, allocated);
+    }
+
+    @Test
+    void record_whenTheLotIsADemergerAllotment_recordsItsAcquisition() {
+        // Given -- a lot created by a demerger carries it on its own record (W-088f)
+        AssetEntity demerged = lot("buy-1", 0.0, 100.0, 0.0);
+        demerged.setCorporateActionType(CorporateActionType.DEMERGER);
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(demerged, 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-2", 1.0, 150.0, 0.0), 1.0, 2.0));
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(2.0, 200.0, TradeSegment.DELIVERY), "sell-1", lots,
+                Optional.empty());
+
+        // Then -- the demerged lot and the purchased one, each its own
+        List<TradeOutcomeContext> rows = captureSaved(2);
+        assertEquals(AcquisitionMode.CORPORATE_ACTION, rows.get(0).getAcquisitionMode());
+        assertEquals(CorporateActionType.DEMERGER, rows.get(0).getAcquisitionCorporateAction());
+        assertEquals(AcquisitionMode.PURCHASE, rows.get(1).getAcquisitionMode());
+        assertNull(rows.get(1).getAcquisitionCorporateAction());
     }
 }

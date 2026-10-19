@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.portfolio.dto.context;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
@@ -67,4 +69,6 @@ public class TradeOutcomeContext {
     // CA tracking
     private Boolean corporateActionDerived;
     private List<CorporateActionEntity> appliedCorporateActions;
+    private AcquisitionMode acquisitionMode;
+    private CorporateActionType acquisitionCorporateAction;
 }

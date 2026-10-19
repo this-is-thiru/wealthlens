@@ -44,6 +44,12 @@ override convenience. Where the build enforces one, the enforcing check is named
 - Fail fast and loudly at the boundary; validate once, on the way in.
 - Dependencies point one way; a new cross-module import needs the `allowedDependencies` change and a reason.
 - Money in the tax modules is `Money`, never `double`/`float`/`long`; nowhere may money be compared with a bare `assertEquals`.
+- **Everything extendable — facts, not rules.** Models and read-models publish facts (dates, events, modes, amounts),
+  never a flag or label derived from today's law (`acquiredBeforeX`, `isEligible`, a term computed from a fixed
+  threshold). Every legal date, boundary, rate or qualifying list is tax-year-versioned rule data on the tax side,
+  never a Java constant, `if` or `switch`, so a law that changes, lapses and returns is new data, not new code. Open
+  categories pass through as themselves (carry the `CorporateActionType`, don't collapse it into a catch-all).
+  Existing violations are listed by `W-088l`; a new one is a defect.
 
 ### 5. Tests
 
