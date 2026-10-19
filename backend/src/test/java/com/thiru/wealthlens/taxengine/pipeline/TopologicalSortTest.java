@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +26,7 @@ class TopologicalSortTest {
     private static final NodeId HP = new NodeId("houseproperty.income");
     private static final NodeId GTI = new NodeId("gti");
 
-    private record StubNode(NodeId produces, Set<NodeId> requires, Set<RuleId> rules)
+    private record StubNode(NodeId produces, Set<NodeId> requires, Set<RuleSetId> ruleSets)
             implements ComputationNode {
 
         @Override

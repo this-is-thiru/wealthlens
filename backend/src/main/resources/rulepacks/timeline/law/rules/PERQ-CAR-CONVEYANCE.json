@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CAR-CONVEYANCE",
+  "ruleSet": "RS-PERQ-CAR-CONVEYANCE",
   "_note": "The employee's own other automotive conveyance run at the employer's cost, used partly privately: the actual expenditure \"as reduced by the amount of\" a fixed sum per calendar month — or by a higher amount for official use on records and certificate (D-113). A perquisite for every employee (s.17(1)(f); 1961 s.17(2)(iv); D-113 C1a, OQ-10). TY 2026-27: r.15(3) Table II Sl. 3(b), \"₹3000\" (p.1543), per calendar month as the Table is headed. TY 2025-26: r.3(2) Table II Sl. (3)(ii), \"Rs. 900\" (consolidated rule 3, p.2). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

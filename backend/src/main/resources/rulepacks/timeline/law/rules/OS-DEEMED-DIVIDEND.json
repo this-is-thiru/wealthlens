@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-DEEMED-DIVIDEND",
+  "ruleSet": "RS-OS-DEEMED-DIVIDEND",
   "_note": "Nothing is deducted against a dividend deemed by S2 s.2(40)(f) / 1961 s.2(22)(f) (D-194; F(No.2)A 2024). TY 2025-26: Income-tax Act, 1961 s.57 second proviso, ins. by the Finance (No. 2) Act, 2024 s.24(c) w.e.f. 1-10-2024 (egazette 2024/256436 p.24): \"no deduction shall be allowed in case of dividend income of the nature referred to in sub-clause (f) of clause (22) of section 2\". TY 2026-27: Income-tax Act, 2025 s.93(2) as substituted by the Finance Act, 2026 s.44(b) (p.43): no deduction against any dividend income. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

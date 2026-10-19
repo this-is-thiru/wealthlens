@@ -15,9 +15,10 @@ import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -45,8 +46,8 @@ import java.util.Set;
  */
 final class HealthInsuranceDeduction {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.DED_HEALTH_FAMILY, RuleIds.DED_HEALTH_FAMILY_SENIOR,
-            RuleIds.DED_HEALTH_PARENTS, RuleIds.DED_HEALTH_PARENTS_SENIOR, RuleIds.DED_HEALTH_CHECKUP);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_HEALTH_FAMILY, RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR,
+            RuleSetIds.RS_DED_HEALTH_PARENTS, RuleSetIds.RS_DED_HEALTH_PARENTS_SENIOR, RuleSetIds.RS_DED_HEALTH_CHECKUP);
 
     private enum Bucket { FAMILY, PARENTS }
 
@@ -150,7 +151,7 @@ final class HealthInsuranceDeduction {
 
     private static boolean coversSenior(NodeContext ctx, HealthPayment payment, Bucket bucket) {
         RuleVersion seniorRow = version(ctx, bucket == Bucket.FAMILY
-                ? RuleIds.DED_HEALTH_FAMILY_SENIOR : RuleIds.DED_HEALTH_PARENTS_SENIOR);
+                ? ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR) : ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_PARENTS_SENIOR));
         List<Boolean> seniors = new ArrayList<>();
         if (payment.coversAssessee()) {
             seniors.add(isSenior(ctx, seniorRow, assesseeBirth(ctx), resident(ctx.inputs().assessee())));
@@ -168,7 +169,7 @@ final class HealthInsuranceDeduction {
 
     /** s.126(7): medical expenditure on a senior citizen only where no premium was paid for that person. */
     private static void requireNotInsuredSenior(NodeContext ctx, HealthPayment medical, List<HealthPayment> all) {
-        RuleVersion familySenior = version(ctx, RuleIds.DED_HEALTH_FAMILY_SENIOR);
+        RuleVersion familySenior = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR));
         List<HealthPayment> premiums = all.stream()
                 .filter(payment -> payment.kind() == HealthPaymentKind.INSURANCE_PREMIUM)
                 .toList();
@@ -195,14 +196,14 @@ final class HealthInsuranceDeduction {
         if (!total.isGreaterThan(Money.ZERO)) {
             return;
         }
-        RuleVersion version = version(ctx, RuleIds.DED_HEALTH_CHECKUP);
-        Money allowed = Money.min(total, TemporallyApportionedCap.apply(ctx.rule(RuleIds.DED_HEALTH_CHECKUP),
+        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_CHECKUP));
+        Money allowed = Money.min(total, TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_DED_HEALTH_CHECKUP),
                 ctx.inputs().temporal(), new CapContext(Map.of())).value());
         Money toFamily = family.scaledBy(allowed, total);
         buckets.get(Bucket.FAMILY).insurance = buckets.get(Bucket.FAMILY).insurance.plus(toFamily);
         buckets.get(Bucket.PARENTS).insurance = buckets.get(Bucket.PARENTS).insurance.plus(allowed.minus(toFamily));
-        if (ctx.inRegime(RuleIds.DED_HEALTH_CHECKUP, version).applies()) {
-            lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, RuleIds.DED_HEALTH_CHECKUP,
+        if (ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_CHECKUP), version).applies()) {
+            lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_CHECKUP),
                             StepKind.MEASURE, MoneyValue.of(total), MoneyValue.of(allowed), version.provenance())
                     .withLimitedBy("split in the ratio claimed: " + toFamily + " family, " + allowed.minus(toFamily)
                             + " parents"));
@@ -217,8 +218,8 @@ final class HealthInsuranceDeduction {
         }
         boolean family = bucket == Bucket.FAMILY;
         RuleId row = family
-                ? (paid.coversSenior ? RuleIds.DED_HEALTH_FAMILY_SENIOR : RuleIds.DED_HEALTH_FAMILY)
-                : (paid.coversSenior ? RuleIds.DED_HEALTH_PARENTS_SENIOR : RuleIds.DED_HEALTH_PARENTS);
+                ? (paid.coversSenior ? ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR) : ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_FAMILY))
+                : (paid.coversSenior ? ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_PARENTS_SENIOR) : ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_PARENTS));
         RuleVersion version = version(ctx, row);
         if (!ctx.inRegime(row, version).applies()) {
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,

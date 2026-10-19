@@ -10,9 +10,11 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -69,7 +71,7 @@ class NodeHarnessTest {
     }
 
     /** Doubles its input and says so, which is enough to show the wiring works. */
-    private record DoublingNode(NodeId produces, Set<NodeId> requires, Set<RuleId> rules)
+    private record DoublingNode(NodeId produces, Set<NodeId> requires, Set<RuleSetId> ruleSets)
             implements ComputationNode {
 
         @Override
@@ -81,16 +83,16 @@ class NodeHarnessTest {
                     TraceLine.of(
                             1,
                             produces,
-                            rules.iterator().next(),
+                            ctx.ruleIdOf(ruleSets.iterator().next()),
                             StepKind.TAX,
                             MoneyValue.of(in),
                             MoneyValue.of(out),
-                            ctx.rule(rules.iterator().next()).headProvenance()));
+                            ctx.ruleOf(ruleSets.iterator().next()).headProvenance()));
         }
     }
 
     private static ComputationNode doubling() {
-        return new DoublingNode(TAX, Set.of(TOTAL_INCOME), Set.of(SLAB));
+        return new DoublingNode(TAX, Set.of(TOTAL_INCOME), Set.of(RuleSetIds.RS_RATE_SLAB));
     }
 
     @Nested
@@ -113,8 +115,9 @@ class NodeHarnessTest {
         void theTraceComesBackWithTheValue() {
             RulePack pack = pack();
 
+            // The node names a rule set; the new regime's row is the one RS-RATE-SLAB gives that regime (D-252)
             NodeResult result = NodeHarness.with(pack)
-                    .regime(anyRegimeIn(pack))
+                    .regime(new RegimeCode("NEW_TAX_REGIME"))
                     .given(TOTAL_INCOME, Money.of("1200000"))
                     .run(doubling());
 
@@ -222,7 +225,7 @@ class NodeHarnessTest {
                 }
 
                 @Override
-                public Set<RuleId> rules() {
+                public Set<RuleSetId> ruleSets() {
                     return Set.of();
                 }
 

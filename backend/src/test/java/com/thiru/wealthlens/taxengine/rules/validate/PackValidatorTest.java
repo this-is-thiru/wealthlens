@@ -21,6 +21,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.ConditionSet;
@@ -31,6 +32,9 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSelection;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
+import com.thiru.wealthlens.taxengine.rules.pack.SelectionGround;
 import com.thiru.wealthlens.taxengine.rules.regime.BehaviourId;
 import com.thiru.wealthlens.taxengine.rules.regime.BindingSpec;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
@@ -234,8 +238,18 @@ class PackValidatorTest {
         }
 
         RulePack build() {
-            return new RulePack(
-                    TY, layers(), instruments(), rules, components, regimes, disallowanceSets, conditionSets);
+            return new RulePack(TY, layers(), instruments(), rules, oneRowSets(rules.keySet()), components, regimes,
+                    disallowanceSets, conditionSets);
+        }
+
+        /** Each rule in a set of its own, as most shipped rows are (D-252). */
+        private static Map<RuleSetId, RuleSet> oneRowSets(Set<RuleId> rules) {
+            Map<RuleSetId, RuleSet> sets = new LinkedHashMap<>();
+            rules.forEach(rule -> {
+                RuleSetId id = new RuleSetId("RS-" + rule.value());
+                sets.put(id, new RuleSet(id, RuleSelection.EXACTLY_ONE, SelectionGround.REGIME, List.of(rule)));
+            });
+            return sets;
         }
     }
 
@@ -246,6 +260,56 @@ class PackValidatorTest {
         @Test
         void validates() {
             assertThatCode(() -> PackValidator.validate(validPack().build())).doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
+    @DisplayName("D-252 — every row is reached through a rule set")
+    class RuleSets {
+
+        @Test
+        void validate_whenARuleIsInNoSet_isRefusedNamingIt() {
+            // Given — the slab rule's set dropped, so no set holds it
+            RulePack whole = validPack().build();
+            Map<RuleSetId, RuleSet> sets = new LinkedHashMap<>(whole.ruleSets());
+            sets.remove(new RuleSetId("RS-" + SLAB.value()));
+            RulePack orphaned = new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(), sets,
+                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets());
+
+            // When / Then
+            assertThatThrownBy(() -> PackValidator.validate(orphaned))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("rule RATE-SLAB-NEW-TAX-REGIME names no rule set");
+        }
+
+        @Test
+        void validate_whenASetTakingExactlyOneHoldsNoRowThisYear_isRefused() {
+            // Given — a set the year holds no row of, declared as needing one
+            RulePack whole = validPack().build();
+            Map<RuleSetId, RuleSet> sets = new LinkedHashMap<>(whole.ruleSets());
+            RuleSetId empty = new RuleSetId("RS-NOT-THIS-YEAR");
+            sets.put(empty, new RuleSet(empty, RuleSelection.EXACTLY_ONE, SelectionGround.REGIME, List.of()));
+            RulePack withEmpty = new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(), sets,
+                    whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets());
+
+            // When / Then — a provision of one year only is AT_MOST_ONE instead
+            assertThatThrownBy(() -> PackValidator.validate(withEmpty))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("rule set RS-NOT-THIS-YEAR takes exactly one row");
+        }
+
+        @Test
+        void validate_whenASetTakingAtMostOneHoldsNoRowThisYear_validates() {
+            // Given
+            RulePack whole = validPack().build();
+            Map<RuleSetId, RuleSet> sets = new LinkedHashMap<>(whole.ruleSets());
+            RuleSetId optional = new RuleSetId("RS-ONE-YEAR-ONLY");
+            sets.put(optional, new RuleSet(optional, RuleSelection.AT_MOST_ONE, SelectionGround.REGIME, List.of()));
+            RulePack withOptional = new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(),
+                    sets, whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets());
+
+            // When / Then
+            assertThatCode(() -> PackValidator.validate(withOptional)).doesNotThrowAnyException();
         }
     }
 

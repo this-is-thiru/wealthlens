@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
@@ -15,6 +16,9 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSelection;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
+import com.thiru.wealthlens.taxengine.rules.pack.SelectionGround;
 import com.thiru.wealthlens.taxengine.rules.regime.BindingSpec;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.ContinuationPolicy;
@@ -49,6 +53,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -65,7 +71,7 @@ class NodeRegistryTest {
     private static final RuleId HRA = new RuleId("SAL-HRA-001");
 
     /** A node that does nothing but declare, which is all the registry inspects. */
-    private record StubNode(NodeId produces, Set<NodeId> requires, Set<RuleId> rules)
+    private record StubNode(NodeId produces, Set<NodeId> requires, Set<RuleSetId> ruleSets)
             implements ComputationNode {
 
         @Override
@@ -75,7 +81,17 @@ class NodeRegistryTest {
     }
 
     private static ComputationNode node(NodeId produces, Set<NodeId> requires, RuleId... rules) {
-        return new StubNode(produces, requires, Set.of(rules));
+        return new StubNode(produces, requires, Stream.of(rules).map(NodeRegistryTest::setOf).collect(Collectors.toSet()));
+    }
+
+    /** Each rule in a one-row set of its own, as the shipped pack holds most rows (D-252). */
+    private static RuleSetId setOf(RuleId rule) {
+        return new RuleSetId("RS-" + rule.value());
+    }
+
+    private static Map<RuleSetId, RuleSet> setsOf(RuleId... rules) {
+        return Stream.of(rules).collect(Collectors.toMap(NodeRegistryTest::setOf,
+                rule -> new RuleSet(setOf(rule), RuleSelection.EXACTLY_ONE, SelectionGround.REGIME, List.of(rule))));
     }
 
     @Nested
@@ -170,7 +186,7 @@ class NodeRegistryTest {
         void aRuleNoNodeEvaluatesIsReported() {
             NodeRegistry registry = NodeRegistry.of(List.of(node(INCOME, Set.of(GROSS), STD)));
 
-            assertThat(registry.rulesNotEvaluatedByAnyNode(List.of(STD, HRA)))
+            assertThat(registry.rulesNotEvaluatedByAnyNode(List.of(STD, HRA), setsOf(STD, HRA)))
                     .containsExactly(HRA);
         }
 
@@ -179,7 +195,7 @@ class NodeRegistryTest {
             NodeRegistry registry = NodeRegistry.of(List.of(
                     node(INCOME, Set.of(GROSS), STD), node(GROSS, Set.of(EXEMPT), HRA)));
 
-            assertThat(registry.rulesNotEvaluatedByAnyNode(List.of(STD, HRA))).isEmpty();
+            assertThat(registry.rulesNotEvaluatedByAnyNode(List.of(STD, HRA), setsOf(STD, HRA))).isEmpty();
         }
 
         @Test
@@ -188,7 +204,7 @@ class NodeRegistryTest {
             RuleId z = new RuleId("ZZZ-001");
             NodeRegistry registry = NodeRegistry.of(List.of(node(INCOME, Set.of(GROSS))));
 
-            assertThat(registry.rulesNotEvaluatedByAnyNode(List.of(z, a)))
+            assertThat(registry.rulesNotEvaluatedByAnyNode(List.of(z, a), setsOf(z, a)))
                     .containsExactly(a, z);
         }
 
@@ -198,7 +214,7 @@ class NodeRegistryTest {
             // nodes that evaluate them are Phases 5 to 9. The check is proven here and enabled
             // when a real pipeline first exists.
             assertThat(NodeRegistry.of(List.of()).size()).isZero();
-            assertThat(NodeRegistry.of(List.of()).rulesNotEvaluatedByAnyNode(List.of(STD)))
+            assertThat(NodeRegistry.of(List.of()).rulesNotEvaluatedByAnyNode(List.of(STD), setsOf(STD)))
                     .containsExactly(STD);
         }
     }
@@ -375,7 +391,7 @@ class NodeRegistryTest {
                 new TaxYearId(2026),
                 layers,
                 instruments(),
-                Map.of(STD, stdDeductionRule()),
+                Map.of(STD, stdDeductionRule()), Map.of(),
                 Map.of(),
                 Map.of(),
                 Map.of(),

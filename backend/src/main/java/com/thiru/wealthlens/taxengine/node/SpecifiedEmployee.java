@@ -5,7 +5,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -35,9 +35,9 @@ final class SpecifiedEmployee {
 
     /** A nil line for a benefit that is not a perquisite because the employee is not a specified one. */
     static TraceLine notSpecifiedLine(NodeContext ctx, int sequence) {
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, RuleIds.PERQ_SPECIFIED_EMPLOYEE, StepKind.INCOME,
+        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ctx.ruleIdOf(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE), StepKind.INCOME,
                         MoneyValue.of(monetaryIncome(ctx)), MoneyValue.of(Money.ZERO),
-                        TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.PERQ_SPECIFIED_EMPLOYEE),
+                        TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE),
                                 ctx.inputs().temporal()).provenance())
                 .withLimitedBy("not a specified employee: salary by way of monetary payment " + monetaryIncome(ctx)
                         + " does not exceed " + threshold(ctx) + ", and no director or substantial interest");
@@ -48,7 +48,7 @@ final class SpecifiedEmployee {
     }
 
     private static Money threshold(NodeContext ctx) {
-        return TemporallyApportionedCap.apply(ctx.rule(RuleIds.PERQ_SPECIFIED_EMPLOYEE), ctx.inputs().temporal(),
+        return TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE), ctx.inputs().temporal(),
                 new CapContext(Map.of())).value();
     }
 }

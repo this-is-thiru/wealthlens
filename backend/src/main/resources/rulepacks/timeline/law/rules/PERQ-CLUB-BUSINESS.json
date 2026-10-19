@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CLUB-BUSINESS",
+  "ruleSet": "RS-PERQ-CLUB-BUSINESS",
   "_note": "TY 2025-26 only: \"Nothing contained in this clause shall apply if such expenditure is incurred wholly and exclusively for business purposes\" with complete details kept and the employer's certificate (Rules 1962 r.3(7)(vi)(B), consolidated rule 3, p.4) — a nil, its own exclusion (D-119 C2a, OQ-12). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

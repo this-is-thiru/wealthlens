@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-ACCOM-GOVERNMENT",
+  "ruleSet": "RS-PERQ-ACCOM-GOVERNMENT",
   "_note": "Accommodation the Central or a State Government provides its own employee: the licence fee the Government determines, less the rent the employee actually paid (D-111; rulebook PERQ-ACCOM-*). TY 2026-27: Income-tax Rules, 2026 r.15(2) Table I Sl. 1 (p.1540), \"License fee determined by the Central Government or any State Government in respect of accommodation in accordance with the rules framed by such Government as reduced by the rent actually paid by the employee\". TY 2025-26: Income-tax Rules, 1962 r.3(1) Table I Sl. 1 as substituted by G.S.R. 615(E) (p.4), in the same words. The rent is taken off by PerquisiteNode, as every Table I row reads \"as reduced by the rent … actually paid\"; furniture is PERQ-ACCOM-FURNITURE. Every regime: a perquisite is salary (S2 s.16, s.17(1); 1961 s.17(1)(iv), (2)).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

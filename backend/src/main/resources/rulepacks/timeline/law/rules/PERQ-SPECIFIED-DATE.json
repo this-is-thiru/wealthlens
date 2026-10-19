@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-SPECIFIED-DATE",
+  "ruleSet": "RS-PERQ-SPECIFIED-DATE",
   "_note": "The merchant banker's \"specified date\": \"the date of exercising of the option\" or \"any date earlier than the date of the exercising of the option, not being a date which is more than one hundred and eighty days earlier\" (S4 r.15(8)(l), Gazette 271092, p.1548; Rules 1962 r.3(8)(iv)(e), consolidated rule 3, p.5; D-121 C4a). A window of days, held as a DayWindow definition. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

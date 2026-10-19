@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CARRIER-TRAVEL",
+  "ruleSet": "RS-PERQ-CARRIER-TRAVEL",
   "_note": "A carrier's free or concessional personal journey for the employee or a household member: \"the value at which such benefit or amenity is offered by such employer to the public\", less recoveries (D-120). Not for an employee of an airline or the railways — Table III Sl. 4 and r.3(6) \"shall not apply\" and neither says what does, so such a journey is refused (D-120 C4a). Provided by the employer, so salary only for a specified employee (OQ-10). Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(4) Table III (Gazette 271092, p.1544). TY 2025-26: Income-tax Rules, 1962 r.3(3)–(6) (consolidated rule 3, p.3). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

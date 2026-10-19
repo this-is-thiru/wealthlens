@@ -8,9 +8,9 @@ import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -39,8 +39,8 @@ public final class CessNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        return Set.of(RuleIds.RATE_HEALTH_EDUCATION_CESS);
+    public Set<RuleSetId> ruleSets() {
+        return Set.of(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS);
     }
 
     @Override
@@ -48,16 +48,16 @@ public final class CessNode implements ComputationNode {
         Money taxAndSurcharge = ctx.get(NodeIds.TAX_AFTERREBATE, TaxByBasis.class)
                 .asMoney()
                 .plus(ctx.get(NodeIds.TAX_SURCHARGE, MoneyValue.class).amount());
-        RuleVersion version = ctx.rule(RuleIds.RATE_HEALTH_EDUCATION_CESS).versionAt(ctx.inputs().temporal());
+        RuleVersion version = ctx.ruleOf(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS).versionAt(ctx.inputs().temporal());
         if (!(version.cap() instanceof PercentOfBase rate)) {
-            throw new IllegalStateException("Cess rule " + RuleIds.RATE_HEALTH_EDUCATION_CESS + " is "
+            throw new IllegalStateException("Cess rule " + ctx.ruleIdOf(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS) + " is "
                     + (version.cap() == null ? "not a rate" : "a " + version.cap().shapeName())
                     + ", not a percentage of the tax");
         }
-        Money cess = TemporallyApportionedCap.apply(ctx.rule(RuleIds.RATE_HEALTH_EDUCATION_CESS),
+        Money cess = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS),
                         ctx.inputs().temporal(), CapContext.of(rate.base(), taxAndSurcharge))
                 .value();
-        return NodeResult.of(MoneyValue.of(cess), TraceLine.of(1, produces(), RuleIds.RATE_HEALTH_EDUCATION_CESS,
+        return NodeResult.of(MoneyValue.of(cess), TraceLine.of(1, produces(), ctx.ruleIdOf(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS),
                 StepKind.TAX, MoneyValue.of(taxAndSurcharge), MoneyValue.of(cess), version.provenance()));
     }
 }

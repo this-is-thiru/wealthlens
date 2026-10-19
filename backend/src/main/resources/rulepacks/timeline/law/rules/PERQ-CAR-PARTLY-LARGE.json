@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CAR-PARTLY-LARGE",
+  "ruleSet": "RS-PERQ-CAR-PARTLY-LARGE",
   "_note": "As PERQ-CAR-PARTLY-SMALL, engine over 1.6 litres (D-113). TY 2026-27: r.15(3) Table II Sl. 1(c)(i) column D, \"₹ 7000\" (p.1542). TY 2025-26: r.3(2) Table II Sl. (1)(c)(i), \"Rs. 2,400\" (consolidated rule 3, p.2). Every regime: a perquisite is salary. Valued only for a specified employee (D-113 C1a, OQ-10); MotorCarPerquisite in PerquisiteNode applies it.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

@@ -24,11 +24,12 @@ import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The Chapter VIII deductions built so far: the s.123 family and the pension scheme (S2 ss.122–124, Schedule XV;
@@ -70,12 +72,12 @@ public final class ChapterEightNode implements ComputationNode {
     private static final BaseId SALARY = new BaseId("SALARY");
     private static final BaseId GOVERNMENT_SALARY = new BaseId("GOVERNMENT_SALARY");
     private static final BaseId GROSS_TOTAL_INCOME = new BaseId("GROSS_TOTAL_INCOME");
-    private static final Set<RuleId> PAYMENT_ROWS = Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN);
-    private static final Set<RuleId> INVESTMENT_RULES = Set.of(RuleIds.DED_SCHEDULE_XV, RuleIds.DED_NPS_OWN,
-            RuleIds.DED_NPS_EMPLOYER_GOVT, RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME,
-            RuleIds.DED_PREMIUM_SHARE);
-    private static final Set<RuleId> SPECIAL_RATE_ROWS = Set.of(RuleIds.RATE_CG_SHORT_LISTED_EQUITY,
-            RuleIds.RATE_CG_LONG_OTHER, RuleIds.RATE_CG_LONG_LISTED_EQUITY);
+    private static final Set<RuleSetId> PAYMENT_ROWS = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV, RuleSetIds.RS_DED_NPS_OWN);
+    private static final Set<RuleSetId> INVESTMENT_RULES = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV,
+            RuleSetIds.RS_DED_NPS_OWN, RuleSetIds.RS_DED_NPS_EMPLOYER_GOVT, RuleSetIds.RS_DED_NPS_EMPLOYER,
+            RuleSetIds.RS_DED_PREMIUM_SHARE);
+    private static final Set<RuleSetId> SPECIAL_RATE_ROWS = Set.of(RuleSetIds.RS_RATE_CG_SHORT_LISTED_EQUITY,
+            RuleSetIds.RS_RATE_CG_LONG_OTHER, RuleSetIds.RS_RATE_CG_LONG_LISTED_EQUITY);
 
     @Override
     public NodeId produces() {
@@ -88,9 +90,9 @@ public final class ChapterEightNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        Set<RuleId> rules = new HashSet<>(INVESTMENT_RULES);
-        rules.add(RuleIds.DED_WITHIN_GROSS_TOTAL);
+    public Set<RuleSetId> ruleSets() {
+        Set<RuleSetId> rules = new HashSet<>(INVESTMENT_RULES);
+        rules.add(RuleSetIds.RS_DED_WITHIN_GROSS_TOTAL);
         rules.addAll(SPECIAL_RATE_ROWS);
         rules.addAll(HealthInsuranceDeduction.RULES);
         rules.addAll(DisabilityDeduction.RULES);
@@ -163,7 +165,7 @@ public final class ChapterEightNode implements ComputationNode {
     private static List<ComponentSet.Line> payLines(NodeContext ctx) {
         return ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class).in(HeadCode.SALARIES).stream()
                 .filter(line -> !Collections.disjoint(ctx.pack().components().get(line.code()).feedsInto(),
-                        PAYMENT_ROWS))
+                        ctx.pack().membersOf(PAYMENT_ROWS)))
                 .toList();
     }
 
@@ -184,9 +186,11 @@ public final class ChapterEightNode implements ComputationNode {
         requireRows(ctx, RentPaidDeduction.entered(ctx), RentPaidDeduction.RULES, "W-075d5");
     }
 
-    private static void requireRows(NodeContext ctx, boolean entered, Set<RuleId> rows, String item) {
-        Set<RuleId> held = ctx.pack().rules().keySet();
-        if (entered && !(held.containsAll(rows) && held.contains(RuleIds.DED_WITHIN_GROSS_TOTAL))) {
+    /** Each set, and the gross-total limit's, holds a row this year: a set with none is a deduction not yet built. */
+    private static void requireRows(NodeContext ctx, boolean entered, Set<RuleSetId> sets, String item) {
+        boolean held = Stream.concat(sets.stream(), Stream.of(RuleSetIds.RS_DED_WITHIN_GROSS_TOTAL))
+                .allMatch(set -> !ctx.pack().ruleSet(set).members().isEmpty());
+        if (entered && !held) {
             throw new IllegalArgumentException("What was entered needs Chapter VIII rows the "
                     + ctx.inputs().taxYear().label() + " rule pack does not hold yet (" + item + ", D-144); it cannot"
                     + " be computed for this year");
@@ -225,18 +229,18 @@ public final class ChapterEightNode implements ComputationNode {
         if (policies.isEmpty()) {
             return;
         }
-        RuleVersion version = version(ctx, RuleIds.DED_PREMIUM_SHARE);
-        if (!ctx.inRegime(RuleIds.DED_PREMIUM_SHARE, version).applies()) {
+        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE));
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE), version).applies()) {
             policies.forEach(policy -> paid.merge(ComponentCodes.LIFE_INSURANCE_PREMIUM, policy.premiumPaid(),
                     Money::plus));
             return;
         }
-        PremiumShareBands bands = bands(version);
+        PremiumShareBands bands = bands(ctx, version);
         for (LifeInsurancePolicy policy : policies) {
             PremiumShareBands.Band band = bands.bandFor(policy.issuedOn(), policy.coversDisabilityOrSpecifiedDisease());
             Money share = band.share().of(policy.actualCapitalSumAssured());
             Money counted = Money.min(policy.premiumPaid(), share);
-            lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, RuleIds.DED_PREMIUM_SHARE, StepKind.MEASURE,
+            lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE), StepKind.MEASURE,
                             MoneyValue.of(policy.premiumPaid()), MoneyValue.of(counted), version.provenance())
                     .withLimitedBy(band.share().asPercentLabel() + " of the sum assured " + policy.actualCapitalSumAssured()
                             + ", a policy issued " + policy.issuedOn()));
@@ -244,14 +248,14 @@ public final class ChapterEightNode implements ComputationNode {
         }
     }
 
-    private static PremiumShareBands bands(RuleVersion version) {
-        RuleId ruleId = RuleIds.DED_PREMIUM_SHARE;
+    private static PremiumShareBands bands(NodeContext ctx, RuleVersion version) {
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE);
         return RuleDefinitions.require(version.definition(), PremiumShareBands.class, ruleId);
     }
 
     /** s.123: the Schedule XV sums under one ceiling; returns what the pension sub-cap left, for s.124(3). */
     private static Money scheduleXv(NodeContext ctx, Map<ComponentCode, Money> paid, List<TraceLine> lines) {
-        RuleVersion version = version(ctx, RuleIds.DED_SCHEDULE_XV);
+        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV));
         AggregateWithCeiling cap = (AggregateWithCeiling) version.cap();
         Map<ComponentCode, Money> contributions = new LinkedHashMap<>();
         cap.contributors().forEach(code -> contributions.put(code, paid.getOrDefault(code, Money.ZERO)));
@@ -259,18 +263,18 @@ public final class ChapterEightNode implements ComputationNode {
         if (!entered.isGreaterThan(Money.ZERO)) {
             return Money.ZERO;
         }
-        if (!ctx.inRegime(RuleIds.DED_SCHEDULE_XV, version).applies()) {
-            lines.add(nilLine(ctx, lines, RuleIds.DED_SCHEDULE_XV, version, entered));
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), version).applies()) {
+            lines.add(nilLine(ctx, lines, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), version, entered));
             return Money.ZERO;
         }
         SalaryBases bases = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class);
         Money salary = Money.ZERO;
         for (int employment = 0; employment < ctx.inputs().entered().employments().size(); employment++) {
-            salary = salary.plus(bases.of(RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION, employment));
+            salary = salary.plus(bases.of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_EMPLOYEE_PENSION), employment));
         }
         AggregateOutcome outcome = cap.applyDetailed(new CapContext(
                 Map.of(SALARY, salary, GOVERNMENT_SALARY, governmentSalary(ctx)), contributions, Map.of()));
-        lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, RuleIds.DED_SCHEDULE_XV, StepKind.DEDUCTION,
+        lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), StepKind.DEDUCTION,
                         MoneyValue.of(outcome.aggregate()), MoneyValue.of(outcome.allowed()), version.provenance())
                 .withLimitedBy(outcome.limitedBy()));
         return outcome.subCapResidue().getOrDefault(ComponentCodes.EMPLOYEE_NPS, Money.ZERO);
@@ -308,14 +312,14 @@ public final class ChapterEightNode implements ComputationNode {
         if (!entered.isGreaterThan(Money.ZERO)) {
             return;
         }
-        RuleVersion version = version(ctx, RuleIds.DED_NPS_OWN);
-        if (!ctx.inRegime(RuleIds.DED_NPS_OWN, version).applies()) {
-            lines.add(nilLine(ctx, lines, RuleIds.DED_NPS_OWN, version, entered));
+        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN));
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), version).applies()) {
+            lines.add(nilLine(ctx, lines, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), version, entered));
             return;
         }
         AggregateOutcome outcome = ((AggregateWithCeiling) version.cap()).applyDetailed(CapContext.ofContributions(
                 Map.of(ComponentCodes.EMPLOYEE_NPS, residue, ComponentCodes.NPS_MINOR_DEPOSIT, minorDeposit)));
-        lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, RuleIds.DED_NPS_OWN, StepKind.DEDUCTION,
+        lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), StepKind.DEDUCTION,
                         MoneyValue.of(entered), MoneyValue.of(outcome.allowed()), version.provenance())
                 .withLimitedBy(outcome.limitedBy()));
     }
@@ -340,7 +344,7 @@ public final class ChapterEightNode implements ComputationNode {
         RuleId row = employerRow(ctx, employment);
         TemporalContext t = ctx.inputs().temporal();
         Money salary = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class)
-                .of(RuleIds.SAL_SALARY_FOR_EMPLOYER_PENSION, employment);
+                .of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_EMPLOYER_PENSION), employment);
         Money limit = TemporallyApportionedCap.apply(ctx.rule(row), t, CapContext.of(SALARY, salary)).value();
         Money allowed = Money.min(contributed, limit);
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
@@ -350,18 +354,15 @@ public final class ChapterEightNode implements ComputationNode {
                         : "the contribution"));
     }
 
-    /** A Government employer's row in every regime; any other employer's by the regime (s.124(1)(b), (2)). */
+    /**
+     * A Government employer's row in every regime; any other employer's, the row its rule set gives the regime
+     * (s.124(1)(b), (2); D-252). Which employer is the employment's fact, chosen here until W-088m2.
+     */
     private static RuleId employerRow(NodeContext ctx, int employment) {
         if (ctx.inputs().entered().employments().get(employment).employerKind() == EmployerKind.GOVERNMENT) {
-            return RuleIds.DED_NPS_EMPLOYER_GOVT;
+            return ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_EMPLOYER_GOVT);
         }
-        for (RuleId row : List.of(RuleIds.DED_NPS_EMPLOYER_OTHER, RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME)) {
-            if (ctx.inRegime(row, version(ctx, row)).applies()) {
-                return row;
-            }
-        }
-        throw new IllegalStateException("No employer pension row applies in the " + ctx.regime().code().value()
-                + " regime");
+        return ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_EMPLOYER);
     }
 
     /**
@@ -387,15 +388,15 @@ public final class ChapterEightNode implements ComputationNode {
         }
         Money total = deducted(lines);
         Money grossTotal = grossTotalForDeductions(ctx);
-        Money limit = TemporallyApportionedCap.apply(ctx.rule(RuleIds.DED_WITHIN_GROSS_TOTAL), ctx.inputs().temporal(),
+        Money limit = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_DED_WITHIN_GROSS_TOTAL), ctx.inputs().temporal(),
                 CapContext.of(GROSS_TOTAL_INCOME, grossTotal)).value();
         if (!total.isGreaterThan(limit)) {
             return new NodeResult(MoneyValue.of(total), lines);
         }
         List<TraceLine> capped = new ArrayList<>(lines);
-        capped.add(TraceLine.of(capped.size() + 1, NodeIds.CHAPTERVIII, RuleIds.DED_WITHIN_GROSS_TOTAL,
+        capped.add(TraceLine.of(capped.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_WITHIN_GROSS_TOTAL),
                         StepKind.DEDUCTION, MoneyValue.of(total), MoneyValue.of(limit),
-                        version(ctx, RuleIds.DED_WITHIN_GROSS_TOTAL).provenance())
+                        version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_WITHIN_GROSS_TOTAL)).provenance())
                 .withLimitedBy(grossTotalLabel(ctx, grossTotal)));
         return new NodeResult(MoneyValue.of(limit), capped);
     }
@@ -418,7 +419,8 @@ public final class ChapterEightNode implements ComputationNode {
         Money special = specialRateGains(ctx);
         return special.isGreaterThan(Money.ZERO)
                 ? "gross total income less the capital gains at special rates (" + special + ", "
-                        + SPECIAL_RATE_ROWS.stream().map(RuleId::value).sorted().toList() + ") " + grossTotal
+                        + SPECIAL_RATE_ROWS.stream().map(set -> ctx.ruleIdOf(set).value()).sorted().toList() + ") "
+                        + grossTotal
                 : "gross total income " + grossTotal;
     }
 

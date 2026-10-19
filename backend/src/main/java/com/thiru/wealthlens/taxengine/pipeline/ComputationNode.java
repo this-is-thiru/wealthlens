@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import java.util.Set;
 
 /**
@@ -44,13 +44,14 @@ public interface ComputationNode {
     Set<NodeId> requires();
 
     /**
-     * The rules this node evaluates.
+     * The rule sets this node evaluates — sets, never rows, so a row added to a set is reached with no change here
+     * (D-252); which row of a set applies is the pack's to say ({@link NodeContext#ruleOf}).
      *
-     * <p>For provenance, and for invariant <b>I3</b>: a pack rule named by no node is a dead rule,
+     * <p>For provenance, and for invariant <b>I3</b>: a pack rule in no set a node names is a dead rule,
      * which is {@code O-19}'s failure — a deduction present in the pack, absent from every answer,
      * and silent about it. {@link NodeRegistry#rulesNotEvaluatedByAnyNode} is that check.
      */
-    Set<RuleId> rules();
+    Set<RuleSetId> ruleSets();
 
     /**
      * Compute it.

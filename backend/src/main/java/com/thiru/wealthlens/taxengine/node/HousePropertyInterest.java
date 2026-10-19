@@ -13,9 +13,10 @@ import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceInterestLimit
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -36,9 +37,9 @@ import java.util.Set;
  */
 final class HousePropertyInterest {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.HP_INTEREST, RuleIds.HP_PRE_CONSTRUCTION,
-            RuleIds.HP_OWN_RESIDENCE_INTEREST, RuleIds.HP_OWN_RESIDENCE_PRE_CONSTRUCTION,
-            RuleIds.HP_OWN_RESIDENCE_INTEREST_CAP);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_HP_INTEREST, RuleSetIds.RS_HP_PRE_CONSTRUCTION,
+            RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST, RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION,
+            RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP);
 
     private static final BaseId INTEREST = new BaseId("INTEREST");
 
@@ -83,8 +84,8 @@ final class HousePropertyInterest {
      */
     Money deductedFor(int position, HouseProperty property) {
         boolean ownResidence = property.occupancy() == HouseOccupancy.OWN_RESIDENCE;
-        RuleId current = ownResidence ? RuleIds.HP_OWN_RESIDENCE_INTEREST : RuleIds.HP_INTEREST;
-        RuleId prior = ownResidence ? RuleIds.HP_OWN_RESIDENCE_PRE_CONSTRUCTION : RuleIds.HP_PRE_CONSTRUCTION;
+        RuleId current = ownResidence ? ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST) : ctx.ruleIdOf(RuleSetIds.RS_HP_INTEREST);
+        RuleId prior = ownResidence ? ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION) : ctx.ruleIdOf(RuleSetIds.RS_HP_PRE_CONSTRUCTION);
         Money deducted = Money.ZERO;
         for (HousingLoan loan : property.loans()) {
             Money interest = allowed(position, current, loan, yearsInterest(loan), "the year's interest");
@@ -110,11 +111,11 @@ final class HousePropertyInterest {
         if (gathered.equals(Money.ZERO)) {
             return Money.ZERO;
         }
-        RuleVersion version = version(RuleIds.HP_OWN_RESIDENCE_INTEREST_CAP);
+        RuleVersion version = version(ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP));
         OwnResidenceInterestLimit limit = limit(version);
         Money allowed = Money.min(Money.min(ownResidenceAnyOtherCase, limit.anyOtherCase())
                 .plus(Money.min(ownResidenceConditionsMet, limit.conditionsMet())), limit.aggregate());
-        lines.add(line(RuleIds.HP_OWN_RESIDENCE_INTEREST_CAP, version, gathered, allowed)
+        lines.add(line(ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP), version, gathered, allowed)
                 .withLimitedBy("own residences: " + ownResidenceConditionsMet + " within " + limit.conditionsMet()
                         + ", " + ownResidenceAnyOtherCase + " within " + limit.anyOtherCase() + ", together within "
                         + limit.aggregate()));
@@ -161,7 +162,7 @@ final class HousePropertyInterest {
             return Money.ZERO;
         }
         RuleId row = property.occupancy() == HouseOccupancy.OWN_RESIDENCE
-                ? RuleIds.HP_OWN_RESIDENCE_PRE_CONSTRUCTION : RuleIds.HP_PRE_CONSTRUCTION;
+                ? ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION) : ctx.ruleIdOf(RuleSetIds.RS_HP_PRE_CONSTRUCTION);
         TaxYearSpan span = RuleDefinitions.require(version(row).definition(), TaxYearSpan.class, row);
         if (!span.holds(taxYearOf(acquiredOn(property)), ctx.inputs().taxYear())) {
             return Money.ZERO;
@@ -176,7 +177,7 @@ final class HousePropertyInterest {
      * and the lender's certificate furnished.
      */
     private boolean qualifiesForHigherLimit(HouseProperty property, HousingLoan loan) {
-        OwnResidenceInterestLimit limit = limit(version(RuleIds.HP_OWN_RESIDENCE_INTEREST_CAP));
+        OwnResidenceInterestLimit limit = limit(version(ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP)));
         if (loan.use() != LoanUse.ACQUISITION_OR_CONSTRUCTION || !loan.lenderCertificateHeld()) {
             return false;
         }
@@ -205,7 +206,7 @@ final class HousePropertyInterest {
 
     private OwnResidenceInterestLimit limit(RuleVersion version) {
         return RuleDefinitions.require(version.definition(), OwnResidenceInterestLimit.class,
-                RuleIds.HP_OWN_RESIDENCE_INTEREST_CAP);
+                ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP));
     }
 
     private RuleVersion version(RuleId row) {

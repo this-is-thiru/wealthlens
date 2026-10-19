@@ -9,9 +9,10 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -37,10 +38,10 @@ import java.util.Set;
  */
 final class MotorCarPerquisite {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.PERQ_CAR_PARTLY_SMALL,
-            RuleIds.PERQ_CAR_PARTLY_LARGE, RuleIds.PERQ_CAR_PARTLY_ELECTRIC, RuleIds.PERQ_CAR_OWNRUN_SMALL,
-            RuleIds.PERQ_CAR_OWNRUN_LARGE, RuleIds.PERQ_CAR_OWNRUN_ELECTRIC, RuleIds.PERQ_CAR_CHAUFFEUR,
-            RuleIds.PERQ_CAR_PRIVATE, RuleIds.PERQ_CAR_EMPLOYEE, RuleIds.PERQ_CAR_CONVEYANCE);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_CAR_PARTLY_SMALL,
+            RuleSetIds.RS_PERQ_CAR_PARTLY_LARGE, RuleSetIds.RS_PERQ_CAR_PARTLY_ELECTRIC, RuleSetIds.RS_PERQ_CAR_OWNRUN_SMALL,
+            RuleSetIds.RS_PERQ_CAR_OWNRUN_LARGE, RuleSetIds.RS_PERQ_CAR_OWNRUN_ELECTRIC, RuleSetIds.RS_PERQ_CAR_CHAUFFEUR,
+            RuleSetIds.RS_PERQ_CAR_PRIVATE, RuleSetIds.RS_PERQ_CAR_EMPLOYEE, RuleSetIds.RS_PERQ_CAR_CONVEYANCE);
 
     private static final BaseId MONTH = new BaseId("MONTH");
     private static final BaseId CAR_COST = new BaseId("CAR_COST");
@@ -48,12 +49,12 @@ final class MotorCarPerquisite {
     private static final BaseId TABLE_OFFICIAL_USE = new BaseId("TABLE_OFFICIAL_USE");
     private static final BaseId CLAIMED_OFFICIAL_USE = new BaseId("CLAIMED_OFFICIAL_USE");
 
-    private static final Map<CarEngine, RuleId> PARTLY = Map.of(CarEngine.UP_TO_1600_CC,
-            RuleIds.PERQ_CAR_PARTLY_SMALL, CarEngine.ABOVE_1600_CC, RuleIds.PERQ_CAR_PARTLY_LARGE,
-            CarEngine.ELECTRIC, RuleIds.PERQ_CAR_PARTLY_ELECTRIC);
-    private static final Map<CarEngine, RuleId> OWN_RUNNING = Map.of(CarEngine.UP_TO_1600_CC,
-            RuleIds.PERQ_CAR_OWNRUN_SMALL, CarEngine.ABOVE_1600_CC, RuleIds.PERQ_CAR_OWNRUN_LARGE,
-            CarEngine.ELECTRIC, RuleIds.PERQ_CAR_OWNRUN_ELECTRIC);
+    private static final Map<CarEngine, RuleSetId> PARTLY = Map.of(CarEngine.UP_TO_1600_CC,
+            RuleSetIds.RS_PERQ_CAR_PARTLY_SMALL, CarEngine.ABOVE_1600_CC, RuleSetIds.RS_PERQ_CAR_PARTLY_LARGE,
+            CarEngine.ELECTRIC, RuleSetIds.RS_PERQ_CAR_PARTLY_ELECTRIC);
+    private static final Map<CarEngine, RuleSetId> OWN_RUNNING = Map.of(CarEngine.UP_TO_1600_CC,
+            RuleSetIds.RS_PERQ_CAR_OWNRUN_SMALL, CarEngine.ABOVE_1600_CC, RuleSetIds.RS_PERQ_CAR_OWNRUN_LARGE,
+            CarEngine.ELECTRIC, RuleSetIds.RS_PERQ_CAR_OWNRUN_ELECTRIC);
 
     private MotorCarPerquisite() {
     }
@@ -72,9 +73,9 @@ final class MotorCarPerquisite {
             int sequence = firstSequence + lines.size();
             lines.add(switch (vehicle.owner()) {
                 case EMPLOYER_CAR -> employerCar(ctx, vehicles, i, sequence);
-                case EMPLOYEE_CAR -> ownVehicle(ctx, vehicle, RuleIds.PERQ_CAR_EMPLOYEE,
+                case EMPLOYEE_CAR -> ownVehicle(ctx, vehicle, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_EMPLOYEE),
                         tableOfficialUse(ctx, vehicle), sequence);
-                case EMPLOYEE_OTHER_CONVEYANCE -> ownVehicle(ctx, vehicle, RuleIds.PERQ_CAR_CONVEYANCE, Money.ZERO,
+                case EMPLOYEE_OTHER_CONVEYANCE -> ownVehicle(ctx, vehicle, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_CONVEYANCE), Money.ZERO,
                         sequence);
             });
         }
@@ -98,14 +99,14 @@ final class MotorCarPerquisite {
     }
 
     /** Sl. 1(c)(i) or (ii) for the months, plus the chauffeur's amount. */
-    private static TraceLine partly(NodeContext ctx, EmployerVehicle car, Map<CarEngine, RuleId> column,
+    private static TraceLine partly(NodeContext ctx, EmployerVehicle car, Map<CarEngine, RuleSetId> column,
             int sequence) {
         requireNoCharge(car);
         RuleId ruleId = rowFor(ctx, column, car);
         Money value = perMonth(ctx, ruleId, car.months());
         String bound = ruleId + " for " + car.months() + " months";
         if (car.chauffeur()) {
-            value = value.plus(perMonth(ctx, RuleIds.PERQ_CAR_CHAUFFEUR, car.months()));
+            value = value.plus(perMonth(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_CHAUFFEUR), car.months()));
             bound += ", plus the chauffeur's amount";
         }
         return line(ctx, ruleId, sequence, car.runningExpenditure(), value, bound);
@@ -116,10 +117,10 @@ final class MotorCarPerquisite {
         Money cost = car.cost().orElseThrow(() -> new IllegalArgumentException("An employer's car valued at its"
                 + " running and wear and tear (Table II Sl. 1(b)) needs its actual cost"));
         TemporalContext t = ctx.inputs().temporal();
-        CapResult wearAndTear = TemporallyApportionedCap.apply(ctx.rule(RuleIds.PERQ_CAR_PRIVATE), t,
+        CapResult wearAndTear = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_CAR_PRIVATE), t,
                 CapContext.of(CAR_COST, cost.apportioned(car.months(), 12)));
         Money value = car.runningExpenditure().plus(wearAndTear.value()).minus(car.chargedToEmployee()).floorAtZero();
-        return line(ctx, RuleIds.PERQ_CAR_PRIVATE, sequence, car.runningExpenditure(), value,
+        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_PRIVATE), sequence, car.runningExpenditure(), value,
                 "running plus wear and tear " + wearAndTear.value() + " (" + wearAndTear.limitedBy() + " for "
                         + car.months() + " months), less the charge " + car.chargedToEmployee());
     }
@@ -138,7 +139,7 @@ final class MotorCarPerquisite {
     /** The Sl. 1(c)(i) amount an employee's own car's expenditure is reduced by, with a chauffeur's if paid. */
     private static Money tableOfficialUse(NodeContext ctx, EmployerVehicle car) {
         Money official = perMonth(ctx, rowFor(ctx, PARTLY, car), car.months());
-        return car.chauffeur() ? official.plus(perMonth(ctx, RuleIds.PERQ_CAR_CHAUFFEUR, car.months())) : official;
+        return car.chauffeur() ? official.plus(perMonth(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_CHAUFFEUR), car.months())) : official;
     }
 
     /** The positions of the employer's cars one employment lets the employee use otherwise than wholly officially. */
@@ -155,14 +156,11 @@ final class MotorCarPerquisite {
     }
 
     /** The column's row for the engine; an electric car has one only in a year whose Table names it (D-113 C5a). */
-    private static RuleId rowFor(NodeContext ctx, Map<CarEngine, RuleId> column, EmployerVehicle car) {
-        RuleId ruleId = column.get(car.engine().orElseThrow());
-        if (!ctx.pack().rules().containsKey(ruleId)) {
-            throw new IllegalArgumentException("Table II for " + ctx.inputs().temporal().taxYear().label()
-                    + " has no column for an electric car, which has no cubic capacity (Rules 1962 r.3(2)); it"
-                    + " cannot be valued for this year (D-113)");
-        }
-        return ruleId;
+    private static RuleId rowFor(NodeContext ctx, Map<CarEngine, RuleSetId> column, EmployerVehicle car) {
+        return ctx.optionalRuleOf(column.get(car.engine().orElseThrow())).map(RuleRow::id)
+                .orElseThrow(() -> new IllegalArgumentException("Table II for "
+                        + ctx.inputs().temporal().taxYear().label() + " has no column for an electric car, which has"
+                        + " no cubic capacity (Rules 1962 r.3(2)); it cannot be valued for this year (D-113)"));
     }
 
     private static Money perMonth(NodeContext ctx, RuleId ruleId, int months) {

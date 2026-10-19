@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-COMMUTED-PENSION",
+  "ruleSet": "RS-OS-COMMUTED-PENSION",
   "_note": "Commutation of a pension from an insurer's pension fund, under other sources: deducted in full (D-196; rulebook OS-COMMUT-001). TY 2026-27: Income-tax Act, 2025 s.93(1)(g) \"for income in the nature of commutation of pension received from a fund as specified in Schedule VII (Table: Sl. No. 3), the entire amount\" (p.142); Schedule VII Sl. 3: \"Any fund, by whatever name called, set up by the Life Insurance Corporation of India on or after the 1st August, 1996 or any other insurer under a pension scheme\". The salary head's counterpart is RET-COMMUTED-PENSION-FUND (s.19(1) Table Sl. 9). TY 2025-26: Income-tax Act, 1961 s.10(10A)(iii) \"any payment in commutation of pension received from a fund under clause (23AAB)\" (thc p.72) — an exemption, not a s.57 deduction, which takes the same amount out of income; its introducedBy as RET-COMMUTED-PENSION-FUND's. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

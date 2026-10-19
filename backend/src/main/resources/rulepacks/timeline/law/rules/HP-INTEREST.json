@@ -1,5 +1,6 @@
 {
   "ruleId": "HP-INTEREST",
+  "ruleSet": "RS-HP-INTEREST",
   "_note": "Interest payable on capital borrowed to acquire, construct, repair, renew or reconstruct a house is deducted in full from income from house property, for a house other than an own residence (D-156; rulebook HP-DED-INT-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(b) \"where the property has been acquired, constructed, repaired, renewed or reconstructed with borrowed capital, the amount of any interest payable on such capital\" (Gazette 265620, p.47); s.22(6): interest payable outside India is not allowed if tax has not been paid or deducted on it under Chapter XIX-B and there is no agent in India under s.306 (p.48). TY 2025-26: Income-tax Act, 1961 s.24(b), the same words; s.25, interest payable outside India with no tax paid or deducted under Chapter XVII-B and no agent under s.163 (thc p.147). The whole of it: PercentOfBase 100 states the node's arithmetic, as HP-ANNUAL-VALUE does. An own residence's interest is HP-OWN-RESIDENCE-INTEREST. Interest the assessee deducts under s.130 or s.131 is left out (s.130(4), s.131(3); D-139). Every regime: s.202(2)(a)(v) and 1961 s.115BAC(2)(i) disallow it only for an own residence.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

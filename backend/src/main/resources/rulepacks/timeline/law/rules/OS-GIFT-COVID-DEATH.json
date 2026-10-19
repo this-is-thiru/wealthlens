@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-GIFT-COVID-DEATH",
+  "ruleSet": "RS-OS-GIFT-COVID-DEATH",
   "_note": "The COVID-19 death receipts from others, TY 2025-26 only (D-201): Income-tax Act, 1961 s.56(2)(x) proviso (XIII), inserted by FA 2022 s.16(b) and deemed from 1-4-2020: \"(XIII) by a member of the family of a deceased person,— (A) from the employer of the deceased person; or (B) from any other person or persons to the extent that such sum or aggregate of such sums does not exceed ten lakh rupees, where the cause of death of such person is illness related to COVID-19 and the payment is— (i) received within twelve months from the date of death of such person; and (ii) subject to such other conditions, as the Central Government may, by notification …, specify\" (egazette 2022/234693 p.26). The cap is the most of the year's (XIII)(B) sums excluded; the rest is tested as any other sum (OS-GIFT). The 2025 Act's s.92(3) has no such ground, so the row has no TY 2026-27 version and the ground is refused there. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

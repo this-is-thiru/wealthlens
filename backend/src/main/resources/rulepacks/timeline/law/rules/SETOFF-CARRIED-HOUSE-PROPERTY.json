@@ -1,5 +1,6 @@
 {
   "ruleId": "SETOFF-CARRIED-HOUSE-PROPERTY",
+  "ruleSet": "RS-SETOFF-CARRIED-HOUSE-PROPERTY",
   "_note": "A house-property loss carried forward and set off only against income from house property, for at most eight tax years after the one it arose in (D-218; rulebook SETOFF-CF-HP-001). TY 2026-27: Income-tax Act, 2025 s.110(1): the loss not set off \"shall be carried forward to the following tax year and— (a) be set off only against the income from house property, if any, assessable for that tax year\"; s.110(2): \"No loss shall be carried forward under this section for more than eight tax years immediately succeeding the tax year for which the loss was first computed\" (p.148); s.121's return condition does not name s.110 (p.158). TY 2025-26: Income-tax Act, 1961 s.71B, inserted by the Finance (No. 2) Act, 1998 s.26 w.e.f. 1-4-1999, unchanged since (thc copy p.319). TaxYearSpan(8): the year the loss arose and the eight after it; the loss is used only in the eight. The order — this year's set-off first, then the oldest year's loss, the part attributable to a new-regime disallowance first — is declared, the Acts prescribing none (OQ-29). The part attributable to a deduction the new regime disallows is SETOFF-CARRIED-DISALLOWED-PART's.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

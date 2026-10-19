@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-LIFE-POLICY-RATIO",
+  "ruleSet": "RS-OS-LIFE-POLICY-RATIO",
   "_note": "Whether a life policy's sums are excluded from total income by its premium against its actual capital sum assured (D-205). TY 2026-27: Income-tax Act, 2025 Schedule II Table Sl. 2 col. C (a), policies \"issued during the period mentioned in column B …, except where such sum is received on the death of a person, … shall fulfil the conditions\": 1-4-2003 → 31-3-2012 ratio ≤ 20%; 1-4-2012 → 31-3-2013 ≤ 10%; from 1-4-2013 ≤ 15% for a special policy, ≤ 10% for others (pp.498–499); the ratio is \"the highest percentage of annual premium payable to the actual capital sum assured, during the term of the policy\" (Note 1(d), p.503). A policy issued before 1-4-2003 has no condition. TY 2025-26: 1961 s.10(10D)(c), (d) and the third proviso — the same bands (FA 2003 s.6(c); FA 2012 s.5(A); FA 2013 s.5(I)). The bands are PremiumShareBands, as Schedule XV para 2's (DED-PREMIUM-SHARE). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-life-policies.md.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

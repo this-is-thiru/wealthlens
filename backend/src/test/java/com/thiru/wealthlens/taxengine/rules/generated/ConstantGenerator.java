@@ -6,7 +6,7 @@ import java.util.Locale;
 import java.util.TreeSet;
 
 /**
- * Reads the timeline and produces the text of {@code RuleIds}, {@code ComponentCodes} and
+ * Reads the timeline and produces the text of {@code RuleIds}, {@code RuleSetIds}, {@code ComponentCodes} and
  * {@code NodeIds}.
  *
  * <p>Lives in test scope because nothing at runtime needs it: the constants it writes are committed
@@ -29,6 +29,16 @@ final class ConstantGenerator {
     static TreeSet<String> ruleIds() {
         TreeSet<String> ids = new TreeSet<>();
         TimelineReader.read(TIMELINE).rules().keySet().forEach(id -> ids.add(id.value()));
+        return ids;
+    }
+
+    /** Every rule set the timeline declares, sorted (D-252). */
+    static TreeSet<String> ruleSetIds() {
+        TreeSet<String> ids = new TreeSet<>();
+        tools.jackson.databind.json.JsonMapper.builder().build()
+                .readTree(TimelineReader.read(TIMELINE).ruleSets().orElseThrow())
+                .path("ruleSets")
+                .forEach(set -> ids.add(set.path("id").asString()));
         return ids;
     }
 

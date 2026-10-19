@@ -60,6 +60,8 @@ public final class TimelineReader {
             ACTS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
+    /** The rule sets every year's pack declares; each rule row names its own (D-252). */
+    private static final String RULE_SETS = "law/rule-sets.json";
 
     private TimelineReader() {
     }
@@ -68,6 +70,12 @@ public final class TimelineReader {
         Contents contents = new Contents();
         for (Path file : files(root)) {
             String path = root.relativize(file).toString().replace(file.getFileSystem().getSeparator(), "/");
+            if (RULE_SETS.equals(path)) {
+                String content = contentOf(file);
+                parse(content, path);
+                contents.ruleSets(content);
+                continue;
+            }
             if (COVERAGE.equals(path)) {
                 String content = contentOf(file);
                 parse(content, path);
@@ -78,7 +86,7 @@ public final class TimelineReader {
             if (!KNOWN_DIRECTORIES.contains(directory) || !path.endsWith(".json")) {
                 throw new PackValidationException(
                         path + ": not a timeline file; a timeline holds only .json files under "
-                                + KNOWN_DIRECTORIES + ", and " + COVERAGE);
+                                + KNOWN_DIRECTORIES + ", " + RULE_SETS + " and " + COVERAGE);
             }
             String content = contentOf(file);
             String stem = file.getFileName().toString().replaceFirst("\\.json$", "");
@@ -101,6 +109,11 @@ public final class TimelineReader {
         private final Map<String, String> sections = new HashMap<>();
         private final Map<String, String> acts = new HashMap<>();
         private Optional<String> coverage = Optional.empty();
+        private Optional<String> ruleSets = Optional.empty();
+
+        void ruleSets(String content) {
+            ruleSets = Optional.of(content);
+        }
 
         void coverage(String content) {
             coverage = Optional.of(content);
@@ -159,8 +172,7 @@ public final class TimelineReader {
         }
 
         Timeline timeline() {
-            return new Timeline(rules, regimes, ruleSources, regimeSources, disallowanceSetSources, components,
-                    componentSources,
+            return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources, components, componentSources,
                     pipelineNodes, coverage, sections, acts);
         }
     }

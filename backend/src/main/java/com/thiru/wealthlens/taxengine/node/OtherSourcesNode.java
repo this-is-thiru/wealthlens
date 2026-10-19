@@ -18,11 +18,13 @@ import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.ProvidentFundThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -31,6 +33,7 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -75,25 +78,23 @@ public final class OtherSourcesNode implements ComputationNode {
     private static final BaseId GIFT = new BaseId("GIFT");
     private static final BaseId BUSINESS_TRUST = new BaseId("BUSINESS_TRUST");
 
-    /** The row, its base and the trace's words for each kind received in full (D-203). */
-    private record InFullRow(RuleId row, BaseId base, String what) {
+    /** The rule set, its base and the trace's words for each kind received in full (D-203, D-252). */
+    private record InFullRow(RuleSetId ruleSet, BaseId base, String what) {
     }
 
     private static final Map<OtherSourceKind, InFullRow> IN_FULL = Map.of(
-            OtherSourceKind.KEYMAN_POLICY, new InFullRow(RuleIds.OS_KEYMAN_POLICY, new BaseId("KEYMAN"),
+            OtherSourceKind.KEYMAN_POLICY, new InFullRow(RuleSetIds.RS_OS_KEYMAN_POLICY, new BaseId("KEYMAN"),
                     "Keyman policy sums"),
-            OtherSourceKind.FORFEITED_ADVANCE, new InFullRow(RuleIds.OS_FORFEITED_ADVANCE, new BaseId("ADVANCE"),
+            OtherSourceKind.FORFEITED_ADVANCE, new InFullRow(RuleSetIds.RS_OS_FORFEITED_ADVANCE, new BaseId("ADVANCE"),
                     "advance forfeited"),
-            OtherSourceKind.TERMINATION_COMPENSATION, new InFullRow(RuleIds.OS_TERMINATION_COMPENSATION,
+            OtherSourceKind.TERMINATION_COMPENSATION, new InFullRow(RuleSetIds.RS_OS_TERMINATION_COMPENSATION,
                     new BaseId("COMPENSATION"), "compensation on termination, not from the employer"),
-            OtherSourceKind.OTHER, new InFullRow(RuleIds.OS_RESIDUAL, new BaseId("RESIDUAL"),
+            OtherSourceKind.OTHER, new InFullRow(RuleSetIds.RS_OS_RESIDUAL, new BaseId("RESIDUAL"),
                     "other income under the head"));
     private static final Set<OtherSourceKind> BUSINESS_HEAD_KINDS = Set.of(OtherSourceKind.EMPLOYEE_CONTRIBUTIONS,
             OtherSourceKind.MACHINERY_LETTING, OtherSourceKind.MACHINERY_AND_BUILDING_LETTING);
     private static final Set<GiftExclusion> COVID_GROUNDS = Set.of(GiftExclusion.COVID_TREATMENT,
             GiftExclusion.COVID_DEATH_FROM_EMPLOYER, GiftExclusion.COVID_DEATH_FROM_OTHERS);
-    private static final List<RuleId> FAMILY_PENSION_ROWS = List.of(RuleIds.OS_FAMILY_PENSION,
-            RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME);
 
     private static final String UNTAXED_ABROAD = ": payable outside India untaxed (S2 s.94(1)(b), (c); 1961"
             + " s.58(1)(a)(ii), (iii))";
@@ -109,14 +110,14 @@ public final class OtherSourcesNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        return Set.of(RuleIds.OS_INTEREST, RuleIds.OS_DIVIDEND, RuleIds.OS_DIVIDEND_INTEREST,
-                RuleIds.OS_DEEMED_DIVIDEND, RuleIds.OS_BANKER_COMMISSION, RuleIds.OS_OTHER_EXPENDITURE,
-                RuleIds.OS_COMPENSATION_INTEREST, RuleIds.OS_FAMILY_PENSION, RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME,
-                RuleIds.OS_COMMUTED_PENSION, RuleIds.OS_DEATH_GRATUITY, RuleIds.OS_PF_TAXABLE_INTEREST, RuleIds.OS_GIFT,
-                RuleIds.OS_GIFT_COVID_DEATH, RuleIds.OS_KEYMAN_POLICY, RuleIds.OS_FORFEITED_ADVANCE,
-                RuleIds.OS_TERMINATION_COMPENSATION, RuleIds.OS_BUSINESS_TRUST, RuleIds.OS_RESIDUAL,
-                RuleIds.OS_LIFE_POLICY_RATIO, RuleIds.OS_LIFE_POLICY_PREMIUM, RuleIds.OS_LIFE_POLICY);
+    public Set<RuleSetId> ruleSets() {
+        return Set.of(RuleSetIds.RS_OS_INTEREST, RuleSetIds.RS_OS_DIVIDEND, RuleSetIds.RS_OS_DIVIDEND_INTEREST,
+                RuleSetIds.RS_OS_DEEMED_DIVIDEND, RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE,
+                RuleSetIds.RS_OS_COMPENSATION_INTEREST, RuleSetIds.RS_OS_FAMILY_PENSION,
+                RuleSetIds.RS_OS_COMMUTED_PENSION, RuleSetIds.RS_OS_DEATH_GRATUITY, RuleSetIds.RS_OS_PF_TAXABLE_INTEREST, RuleSetIds.RS_OS_GIFT,
+                RuleSetIds.RS_OS_GIFT_COVID_DEATH, RuleSetIds.RS_OS_KEYMAN_POLICY, RuleSetIds.RS_OS_FORFEITED_ADVANCE,
+                RuleSetIds.RS_OS_TERMINATION_COMPENSATION, RuleSetIds.RS_OS_BUSINESS_TRUST, RuleSetIds.RS_OS_RESIDUAL,
+                RuleSetIds.RS_OS_LIFE_POLICY_RATIO, RuleSetIds.RS_OS_LIFE_POLICY_PREMIUM, RuleSetIds.RS_OS_LIFE_POLICY);
     }
 
     @Override
@@ -157,15 +158,15 @@ public final class OtherSourcesNode implements ComputationNode {
         return switch (item.kind()) {
             case INTEREST_ON_SECURITIES, SAVINGS_DEPOSIT_INTEREST, DEPOSIT_INTEREST, OTHER_INTEREST ->
                     interest(lines, where, item);
-            case DIVIDEND, UNIT_INCOME -> dividend(lines, where, item, RuleIds.OS_DIVIDEND_INTEREST,
+            case DIVIDEND, UNIT_INCOME -> dividend(lines, where, item, lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST),
                     "only interest expense is deducted against dividend and unit income, within the year's limit");
-            case DEEMED_DIVIDEND -> dividend(lines, where, item, RuleIds.OS_DEEMED_DIVIDEND,
+            case DEEMED_DIVIDEND -> dividend(lines, where, item, lines.row(RuleSetIds.RS_OS_DEEMED_DIVIDEND),
                     "nothing is deducted against a deemed dividend");
             case INTEREST_ON_COMPENSATION -> compensationInterest(lines, where, item);
             case FAMILY_PENSION -> familyPension(lines, where, item);
-            case COMMUTED_FUND_PENSION -> wholeDeducted(lines, where, item, RuleIds.OS_COMMUTED_PENSION, COMMUTED_PENSION,
+            case COMMUTED_FUND_PENSION -> wholeDeducted(lines, where, item, lines.row(RuleSetIds.RS_OS_COMMUTED_PENSION), COMMUTED_PENSION,
                     "commutation of a fund pension");
-            case DEATH_GRATUITY -> wholeDeducted(lines, where, item, RuleIds.OS_DEATH_GRATUITY, GRATUITY,
+            case DEATH_GRATUITY -> wholeDeducted(lines, where, item, lines.row(RuleSetIds.RS_OS_DEATH_GRATUITY), GRATUITY,
                     "gratuity received on the employee's death");
             case KEYMAN_POLICY, FORFEITED_ADVANCE, TERMINATION_COMPENSATION, OTHER -> inFull(lines, where, item);
             case WINNINGS, EMPLOYEE_CONTRIBUTIONS, MACHINERY_LETTING, MACHINERY_AND_BUILDING_LETTING ->
@@ -175,19 +176,19 @@ public final class OtherSourcesNode implements ComputationNode {
 
     /** S2 s.92(1), (2)(e), s.93(1)(a), (e); 1961 s.56(1), (2)(id), s.57(i), (iii). */
     private static Money interest(Lines lines, String where, OtherSourceItem item) {
-        Money income = lines.applied(RuleIds.OS_INTEREST, INTEREST, item.received());
-        lines.add(RuleIds.OS_INTEREST, StepKind.INCOME, item.received(), income, where + ": " + item.kind());
+        Money income = lines.applied(lines.row(RuleSetIds.RS_OS_INTEREST), INTEREST, item.received());
+        lines.add(lines.row(RuleSetIds.RS_OS_INTEREST), StepKind.INCOME, item.received(), income, where + ": " + item.kind());
         if (item.bankerCommission().isGreaterThan(Money.ZERO)) {
             if (item.kind() == OtherSourceKind.INTEREST_ON_SECURITIES) {
-                lines.deduction(RuleIds.OS_BANKER_COMMISSION, COMMISSION, item, item.bankerCommission(), where);
+                lines.deduction(lines.row(RuleSetIds.RS_OS_BANKER_COMMISSION), COMMISSION, item, item.bankerCommission(), where);
             } else {
-                lines.nil(RuleIds.OS_BANKER_COMMISSION, item.bankerCommission(), where
+                lines.nil(lines.row(RuleSetIds.RS_OS_BANKER_COMMISSION), item.bankerCommission(), where
                         + ": a banker's commission is deducted against interest on securities only");
             }
         }
         Money expenses = item.interestExpense().plus(item.otherExpenditure());
         if (expenses.isGreaterThan(Money.ZERO)) {
-            lines.deduction(RuleIds.OS_OTHER_EXPENDITURE, EXPENDITURE, item, expenses, where);
+            lines.deduction(lines.row(RuleSetIds.RS_OS_OTHER_EXPENDITURE), EXPENDITURE, item, expenses, where);
         }
         return interestIncluded(lines.ctx, item);
     }
@@ -199,14 +200,14 @@ public final class OtherSourcesNode implements ComputationNode {
      */
     static Money interestIncluded(NodeContext ctx, OtherSourceItem item) {
         TemporalContext t = ctx.inputs().temporal();
-        Money income = applied(ctx, t, RuleIds.OS_INTEREST, INTEREST, item.received());
+        Money income = applied(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_OS_INTEREST), INTEREST, item.received());
         boolean allowed = !item.payableOutsideIndiaUntaxed();
         Money commission = allowed && item.kind() == OtherSourceKind.INTEREST_ON_SECURITIES
                 && item.bankerCommission().isGreaterThan(Money.ZERO)
-                ? applied(ctx, t, RuleIds.OS_BANKER_COMMISSION, COMMISSION, item.bankerCommission()) : Money.ZERO;
+                ? applied(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_OS_BANKER_COMMISSION), COMMISSION, item.bankerCommission()) : Money.ZERO;
         Money expenses = item.interestExpense().plus(item.otherExpenditure());
         Money expenditure = allowed && expenses.isGreaterThan(Money.ZERO)
-                ? applied(ctx, t, RuleIds.OS_OTHER_EXPENDITURE, EXPENDITURE, expenses) : Money.ZERO;
+                ? applied(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_OS_OTHER_EXPENDITURE), EXPENDITURE, expenses) : Money.ZERO;
         return income.minus(commission).minus(expenditure);
     }
 
@@ -216,8 +217,8 @@ public final class OtherSourcesNode implements ComputationNode {
 
     /** S2 s.92(2)(a), s.93(2); 1961 s.56(2)(i), s.57 provisos: the income, with every expense but interest refused. */
     private static Money dividend(Lines lines, String where, OtherSourceItem item, RuleId refusingRow, String why) {
-        Money income = lines.applied(RuleIds.OS_DIVIDEND, DIVIDEND, item.received());
-        lines.add(RuleIds.OS_DIVIDEND, StepKind.INCOME, item.received(), income, where + ": " + item.kind());
+        Money income = lines.applied(lines.row(RuleSetIds.RS_OS_DIVIDEND), DIVIDEND, item.received());
+        lines.add(lines.row(RuleSetIds.RS_OS_DIVIDEND), StepKind.INCOME, item.received(), income, where + ": " + item.kind());
         Money refused = item.bankerCommission().plus(item.otherExpenditure());
         if (item.kind() == OtherSourceKind.DEEMED_DIVIDEND) {
             refused = refused.plus(item.interestExpense());
@@ -230,13 +231,13 @@ public final class OtherSourcesNode implements ComputationNode {
 
     /** S2 s.92(2)(i), s.93(1)(f); 1961 s.56(2)(viii), s.57(iv): half deducted, and no other deduction. */
     private static Money compensationInterest(Lines lines, String where, OtherSourceItem item) {
-        Money deduction = lines.applied(RuleIds.OS_COMPENSATION_INTEREST, COMPENSATION_INTEREST, item.received());
+        Money deduction = lines.applied(lines.row(RuleSetIds.RS_OS_COMPENSATION_INTEREST), COMPENSATION_INTEREST, item.received());
         Money income = item.received().minus(deduction);
-        lines.add(RuleIds.OS_COMPENSATION_INTEREST, StepKind.INCOME, item.received(), income,
+        lines.add(lines.row(RuleSetIds.RS_OS_COMPENSATION_INTEREST), StepKind.INCOME, item.received(), income,
                 where + ": interest on compensation less " + deduction);
         Money refused = item.bankerCommission().plus(item.interestExpense()).plus(item.otherExpenditure());
         if (refused.isGreaterThan(Money.ZERO)) {
-            lines.nil(RuleIds.OS_COMPENSATION_INTEREST, refused, where + ": no other deduction is allowed");
+            lines.nil(lines.row(RuleSetIds.RS_OS_COMPENSATION_INTEREST), refused, where + ": no other deduction is allowed");
         }
         return income;
     }
@@ -246,7 +247,7 @@ public final class OtherSourcesNode implements ComputationNode {
      * expenditure; a banker's commission is for interest on securities only.
      */
     private static Money familyPension(Lines lines, String where, OtherSourceItem item) {
-        RuleId row = lines.applying(FAMILY_PENSION_ROWS);
+        RuleId row = lines.row(RuleSetIds.RS_OS_FAMILY_PENSION);
         Money share = lines.familyPensionShare(row).deduction(item.received());
         Money income = item.received().minus(share);
         lines.add(row, StepKind.INCOME, item.received(), income, where + ": family pension less " + share);
@@ -259,8 +260,9 @@ public final class OtherSourcesNode implements ComputationNode {
      */
     private static Money inFull(Lines lines, String where, OtherSourceItem item) {
         InFullRow kind = IN_FULL.get(item.kind());
-        Money income = lines.applied(kind.row(), kind.base(), item.received());
-        lines.add(kind.row(), StepKind.INCOME, item.received(), income, where + ": " + kind.what());
+        RuleId row = lines.row(kind.ruleSet());
+        Money income = lines.applied(row, kind.base(), item.received());
+        lines.add(row, StepKind.INCOME, item.received(), income, where + ": " + kind.what());
         return income.minus(otherExpenditure(lines, where, item));
     }
 
@@ -270,19 +272,19 @@ public final class OtherSourcesNode implements ComputationNode {
      */
     private static Money otherExpenditure(Lines lines, String where, OtherSourceItem item) {
         if (item.bankerCommission().isGreaterThan(Money.ZERO)) {
-            lines.nil(RuleIds.OS_BANKER_COMMISSION, item.bankerCommission(), where
+            lines.nil(lines.row(RuleSetIds.RS_OS_BANKER_COMMISSION), item.bankerCommission(), where
                     + ": a banker's commission is deducted against interest on securities only");
         }
         Money expenses = item.interestExpense().plus(item.otherExpenditure());
         return expenses.isGreaterThan(Money.ZERO)
-                ? lines.deduction(RuleIds.OS_OTHER_EXPENDITURE, EXPENDITURE, item, expenses, where)
+                ? lines.deduction(lines.row(RuleSetIds.RS_OS_OTHER_EXPENDITURE), EXPENDITURE, item, expenses, where)
                 : Money.ZERO;
     }
 
     /** S2 s.92(2)(k); 1961 s.56(2)(xii): the holding's specified sum, A − B − C, nil where B and C exceed A. */
     private static Money businessTrustIncome(Lines lines, int position, BusinessTrustUnits units) {
-        Money income = lines.applied(RuleIds.OS_BUSINESS_TRUST, BUSINESS_TRUST, units.specifiedSum());
-        lines.add(RuleIds.OS_BUSINESS_TRUST, StepKind.INCOME, units.distributed(), income, "business trust holding "
+        Money income = lines.applied(lines.row(RuleSetIds.RS_OS_BUSINESS_TRUST), BUSINESS_TRUST, units.specifiedSum());
+        lines.add(lines.row(RuleSetIds.RS_OS_BUSINESS_TRUST), StepKind.INCOME, units.distributed(), income, "business trust holding "
                 + position + ": " + units.distributed() + " distributed less " + units.issuedAt() + " issued and "
                 + units.chargedEarlier() + " charged earlier, never below nil");
         return income;
@@ -311,11 +313,11 @@ public final class OtherSourcesNode implements ComputationNode {
             return Money.ZERO;
         }
         if (interest.untaxedAbroad()) {
-            return lines.nil(RuleIds.OS_DIVIDEND_INTEREST, interest.claimed(), "dividend and unit income"
+            return lines.nil(lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST), interest.claimed(), "dividend and unit income"
                     + UNTAXED_ABROAD);
         }
         Money allowed = interest.allowed();
-        lines.add(RuleIds.OS_DIVIDEND_INTEREST, StepKind.DEDUCTION, interest.claimed(), allowed,
+        lines.add(lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST), StepKind.DEDUCTION, interest.claimed(), allowed,
                 "interest expense against dividend and unit income of " + interest.base() + ", limited to "
                         + interest.limit());
         return allowed;
@@ -359,7 +361,7 @@ public final class OtherSourcesNode implements ComputationNode {
                 }
             }
         }
-        Money limit = TemporallyApportionedCap.apply(ctx.rule(RuleIds.OS_DIVIDEND_INTEREST), ctx.inputs().temporal(),
+        Money limit = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_OS_DIVIDEND_INTEREST), ctx.inputs().temporal(),
                 CapContext.of(DIVIDEND, base)).value();
         return new DividendInterest(base, receivedOnDividends, claimed, claimedOnDividends, limit, untaxedAbroad);
     }
@@ -372,9 +374,9 @@ public final class OtherSourcesNode implements ComputationNode {
     private static Money providentFundInterest(Lines lines, int position, ProvidentFundAccount account) {
         String where = "provident fund " + position;
         Money excess = lines.providentFundThreshold().excess(account.contributed(), account.employerContributes());
-        lines.add(RuleIds.OS_PF_TAXABLE_INTEREST, StepKind.MEASURE, account.contributed(), excess,
+        lines.add(lines.row(RuleSetIds.RS_OS_PF_TAXABLE_INTEREST), StepKind.MEASURE, account.contributed(), excess,
                 where + ": the contribution beyond the threshold enters the taxable contribution account");
-        lines.add(RuleIds.OS_PF_TAXABLE_INTEREST, StepKind.INCOME, account.taxableAccountInterest(),
+        lines.add(lines.row(RuleSetIds.RS_OS_PF_TAXABLE_INTEREST), StepKind.INCOME, account.taxableAccountInterest(),
                 account.taxableAccountInterest(), where + ": interest accrued in the taxable contribution account");
         return account.taxableAccountInterest();
     }
@@ -399,7 +401,7 @@ public final class OtherSourcesNode implements ComputationNode {
                 if (ground == GiftExclusion.COVID_DEATH_FROM_OTHERS) {
                     covidDeathSums = covidDeathSums.plus(gift.value());
                 } else {
-                    lines.add(RuleIds.OS_GIFT, StepKind.EXEMPTION, gift.value(), gift.value(),
+                    lines.add(ctx.ruleIdOf(RuleSetIds.RS_OS_GIFT), StepKind.EXEMPTION, gift.value(), gift.value(),
                             where + ": excluded, " + ground);
                 }
                 continue;
@@ -430,8 +432,11 @@ public final class OtherSourcesNode implements ComputationNode {
         if (covidDeathSums.equals(Money.ZERO)) {
             return Money.ZERO;
         }
-        Money excluded = Money.min(covidDeathSums, lines.applied(RuleIds.OS_GIFT_COVID_DEATH, GIFT, covidDeathSums));
-        lines.add(RuleIds.OS_GIFT_COVID_DEATH, StepKind.EXEMPTION, covidDeathSums, excluded,
+        RuleId row = lines.optionalRow(RuleSetIds.RS_OS_GIFT_COVID_DEATH).orElseThrow(() -> new IllegalStateException(
+                "Sums excluded on a COVID-19 ground reached " + RuleSetIds.RS_OS_GIFT_COVID_DEATH + ", which the year does not"
+                        + " hold; requireGroundOfTheYear refuses such a gift first"));
+        Money excluded = Money.min(covidDeathSums, lines.applied(row, GIFT, covidDeathSums));
+        lines.add(row, StepKind.EXEMPTION, covidDeathSums, excluded,
                 "sums to the family of a person whose death was related to COVID-19, excluded up to the limit");
         return covidDeathSums.minus(excluded);
     }
@@ -445,7 +450,7 @@ public final class OtherSourcesNode implements ComputationNode {
         if (!COVID_GROUNDS.contains(ground)) {
             return;
         }
-        if (!ctx.pack().rules().containsKey(RuleIds.OS_GIFT_COVID_DEATH)) {
+        if (ctx.optionalRuleOf(RuleSetIds.RS_OS_GIFT_COVID_DEATH).isEmpty()) {
             throw new IllegalArgumentException(where + ": " + ground + " is a ground of the Income-tax Act, 1961 s.56(2)(x)"
                     + " proviso (XII), (XIII) only; the Income-tax Act, 2025 s.92(3) has no such exclusion");
         }
@@ -498,16 +503,14 @@ public final class OtherSourcesNode implements ComputationNode {
             return allowed;
         }
 
-        /** The one row of {@code rows} the regime applies; the rows are keyed by regime, so exactly one does. */
-        RuleId applying(List<RuleId> rows) {
-            List<RuleId> applying = rows.stream()
-                    .filter(row -> ctx.inRegime(row, version(row)).applies())
-                    .toList();
-            if (applying.size() != 1) {
-                throw new IllegalStateException(applying.size() + " of " + rows + " apply in the "
-                        + ctx.regime().code().value() + " regime; exactly one must");
-            }
-            return applying.getFirst();
+        /** The row of {@code set} the regime applies (D-252). */
+        RuleId row(RuleSetId set) {
+            return ctx.ruleIdOf(set);
+        }
+
+        /** The row of a set the year may not hold. */
+        Optional<RuleId> optionalRow(RuleSetId set) {
+            return ctx.optionalRuleOf(set).map(RuleRow::id);
         }
 
         FamilyPensionShare familyPensionShare(RuleId row) {
@@ -515,21 +518,21 @@ public final class OtherSourcesNode implements ComputationNode {
         }
 
         GiftThreshold giftThreshold() {
-            return RuleDefinitions.require(version(RuleIds.OS_GIFT).definition(), GiftThreshold.class,
-                    RuleIds.OS_GIFT);
+            return RuleDefinitions.require(version(ctx.ruleIdOf(RuleSetIds.RS_OS_GIFT)).definition(), GiftThreshold.class,
+                    ctx.ruleIdOf(RuleSetIds.RS_OS_GIFT));
         }
 
         /** One INCOME line for a gift or a total of gifts: what was received, what of it is charged. */
         Money chargedGift(String what, Money received, Money chargedAmount) {
             if (received.isGreaterThan(Money.ZERO)) {
-                add(RuleIds.OS_GIFT, StepKind.INCOME, received, chargedAmount, what);
+                add(ctx.ruleIdOf(RuleSetIds.RS_OS_GIFT), StepKind.INCOME, received, chargedAmount, what);
             }
             return chargedAmount;
         }
 
         ProvidentFundThreshold providentFundThreshold() {
-            return RuleDefinitions.require(version(RuleIds.OS_PF_TAXABLE_INTEREST).definition(),
-                    ProvidentFundThreshold.class, RuleIds.OS_PF_TAXABLE_INTEREST);
+            return RuleDefinitions.require(version(ctx.ruleIdOf(RuleSetIds.RS_OS_PF_TAXABLE_INTEREST)).definition(),
+                    ProvidentFundThreshold.class, ctx.ruleIdOf(RuleSetIds.RS_OS_PF_TAXABLE_INTEREST));
         }
 
         private RuleVersion version(RuleId row) {

@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-ACCOM-FURNITURE",
+  "ruleSet": "RS-PERQ-ACCOM-FURNITURE",
   "_note": "Furniture in furnished accommodation: ten per cent a year of its cost, or the hire charges where hired from a third party, less what the employee pays for it (D-111). TY 2026-27: Income-tax Rules, 2026 r.15(2)(e) (p.1542), \"(i) … increased by 10% per annum of the cost of furniture (including television sets, radio sets, refrigerators, other household appliances, air-conditioning plant or equipment), as reduced by any charges paid or payable for the same by the employee during the tax year; and (ii) if such furniture is hired from a third party, the value of perquisite would be the actual hire charges payable for the same as reduced by any charges paid or payable\". TY 2025-26: Income-tax Rules, 1962 r.3(1) Table I col. 4 as substituted by G.S.R. 615(E) (pp.4–5), to the same effect. This row is the ten per cent; PerquisiteNode apportions it to the period by days, takes hire charges as entered, and takes off the employee's charges. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

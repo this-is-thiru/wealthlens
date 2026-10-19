@@ -1,5 +1,6 @@
 {
   "ruleId": "SAL-LEAVE-TRAVEL-CHILDREN",
+  "ruleSet": "RS-SAL-LEAVE-TRAVEL-CHILDREN",
   "_note": "How many surviving children the leave travel concession covers (D-212; rulebook SAL-LTA-CHILD-001): two, not counting children born before 1-10-1998 nor children of a multiple birth after one child. TY 2026-27, Income-tax Rules, 2026 r.278(5)–(6) (p.1776); TY 2025-26, Income-tax Rules, 1962 r.2B(4) and its proviso — the rulebook's \"r.2B(5),(6)\" is wrong (erratum there). The limit falls on children: a journey on which a child beyond it travels keeps the rest of the family's travel exempt, the child's share a nil line. Which counted children are covered the Rules do not say; the two eldest are taken, r.278(6)'s \"multiple births after one child\" counting children by birth (D-212 C3a, an inference). \"Surviving\" is read on the journey's start date. In every regime as a row; the new regime forbids the concession through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

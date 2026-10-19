@@ -5,9 +5,9 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,11 +24,11 @@ import java.util.Set;
  */
 public final class MonetarySalaryIncomeNode implements ComputationNode {
 
-    private static final Set<RuleId> RULES = rulesRead();
+    private static final Set<RuleSetId> RULES = rulesRead();
 
-    private static Set<RuleId> rulesRead() {
-        Set<RuleId> rules = new HashSet<>(SalaryDeductionNode.RULES);
-        rules.add(RuleIds.SAL_SALARY_INCLUDES);
+    private static Set<RuleSetId> rulesRead() {
+        Set<RuleSetId> rules = new HashSet<>(SalaryDeductionNode.RULES);
+        rules.add(RuleSetIds.RS_SAL_SALARY_INCLUDES);
         return Set.copyOf(rules);
     }
 
@@ -44,7 +44,7 @@ public final class MonetarySalaryIncomeNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
+    public Set<RuleSetId> ruleSets() {
         return RULES;
     }
 

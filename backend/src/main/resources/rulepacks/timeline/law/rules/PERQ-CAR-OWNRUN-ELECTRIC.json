@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CAR-OWNRUN-ELECTRIC",
+  "ruleSet": "RS-PERQ-CAR-OWNRUN-ELECTRIC",
   "_note": "As PERQ-CAR-OWNRUN-SMALL for an electric car, TY 2026-27 only (column C, p.1543); refused in TY 2025-26 (D-113 C5a). Every regime: a perquisite is salary. Valued only for a specified employee (D-113 C1a, OQ-10); MotorCarPerquisite in PerquisiteNode applies it.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

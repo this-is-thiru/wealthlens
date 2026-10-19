@@ -1,5 +1,7 @@
 {
   "ruleId": "REBATE-NEW-TAX-REGIME",
+  "ruleSet": "RS-REBATE",
+  "ruleSetPosition": 1,
   "_note": "S2 s.156(2)(a): \"Where the total income of a resident individual assessee for any tax year is chargeable to tax under section 202(1) … (a) the income does not exceed twelve lakh rupees, 100% of the income-tax payable or ₹ 60000, whichever is less\". Limited by s.156(3): \"shall not exceed income-tax payable as per the rates provided in section 202(1)\". Not amended by FA 2026. 1961 counterpart: s.87A first proviso (a), as amended by FA 2025 s.20. TY 2025-26 (W-052c, D-082): FA 2025 s.20, w.e.f. 1st April, 2026, amends 1961 s.87A's first proviso (a) to \"twelve hundred thousand rupees\" / \"sixty thousand rupees\" and inserts the second proviso: \"the deduction under the first proviso, shall not exceed the amount of income-tax payable as per the rates provided in sub-section (1A) of section 115BAC\" — the same figures and limit. AY 2026-27 = TY 2025-26.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

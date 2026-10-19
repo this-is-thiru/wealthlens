@@ -8,16 +8,22 @@ import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSelection;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
+import com.thiru.wealthlens.taxengine.rules.pack.SelectionGround;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import java.time.Period;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -54,7 +60,7 @@ public final class NodeContext {
     private final Map<NodeId, NodeValue> computed;
 
     private final Set<NodeId> declaredRequires;
-    private final Set<RuleId> declaredRules;
+    private final Set<RuleSetId> declaredRuleSets;
 
     /** How this run recomputes a slot at another value; one that cannot says so when asked. */
     private final Recomputation recomputation;
@@ -65,14 +71,14 @@ public final class NodeContext {
             EngineInputs inputs,
             Map<NodeId, NodeValue> computed,
             Set<NodeId> declaredRequires,
-            Set<RuleId> declaredRules,
+            Set<RuleSetId> declaredRuleSets,
             Recomputation recomputation) {
         this.pack = pack;
         this.regime = regime;
         this.inputs = inputs;
         this.computed = computed;
         this.declaredRequires = declaredRequires;
-        this.declaredRules = declaredRules;
+        this.declaredRuleSets = declaredRuleSets;
         this.recomputation = recomputation;
     }
 
@@ -104,7 +110,7 @@ public final class NodeContext {
         }
         return new NodeContext(
                 pack, regime, inputs, computed, Set.copyOf(node.requires()),
-                Set.copyOf(node.rules()), recomputation);
+                Set.copyOf(node.ruleSets()), recomputation);
     }
 
     /** Record a node's output. The runner's call, after {@code evaluate}. */
@@ -177,20 +183,100 @@ public final class NodeContext {
     }
 
     /**
-     * A rule this node declared it evaluates.
+     * The row of an {@link RuleSelection#EXACTLY_ONE} set: the set's only row, or the one that applies here (D-252).
      *
-     * @throws IllegalStateException if the node did not declare it in
-     *     {@link ComputationNode#rules()}
+     * @throws IllegalStateException if the node did not declare the set, the set takes another selection, or none or
+     *     several of its rows apply
+     */
+    public RuleRow ruleOf(RuleSetId id) {
+        List<RuleRow> chosen = chosen(id, RuleSelection.EXACTLY_ONE);
+        if (chosen.isEmpty()) {
+            throw new IllegalStateException("Pack " + pack.taxYear().label() + " holds no row of rule set " + id
+                    + ", which takes exactly one");
+        }
+        return chosen.getFirst();
+    }
+
+    /** The id of {@link #ruleOf}'s row — what a trace line, a definition or a salary base is keyed on. */
+    public RuleId ruleIdOf(RuleSetId id) {
+        return ruleOf(id).id();
+    }
+
+    /** The row of an {@link RuleSelection#AT_MOST_ONE} set, where the year holds one (D-252). */
+    public Optional<RuleRow> optionalRuleOf(RuleSetId id) {
+        return chosen(id, RuleSelection.AT_MOST_ONE).stream().findFirst();
+    }
+
+    /**
+     * Every row of an {@link RuleSelection#ALL_THAT_APPLY} set the year holds, in the set's order (D-252). The node
+     * applies each the regime allows, and traces the rest as it always has.
+     */
+    public List<RuleRow> rulesOf(RuleSetId id) {
+        return rowsOf(declared(id, RuleSelection.ALL_THAT_APPLY));
+    }
+
+    /**
+     * A row of a set this node declared — for a node that reads a row it already chose, or names its id in a trace.
+     *
+     * @throws IllegalStateException if no set the node declared holds the row
      */
     public RuleRow rule(RuleId id) {
-        if (!declaredRules.contains(id)) {
+        boolean declared = declaredRuleSets.stream()
+                .map(set -> pack.ruleSets().get(set))
+                .anyMatch(set -> set != null && set.members().contains(id));
+        if (!declared) {
             throw new IllegalStateException(
-                    "This node did not declare " + id + " in rules(), so it may not evaluate it."
-                            + " It declared " + declaredRules + ". Reachability (invariant I3) is"
-                            + " computed from that set, so an undeclared rule would look dead while"
+                    "This node declared no rule set holding " + id + ", so it may not evaluate it."
+                            + " It declared " + declaredRuleSets + ". Reachability (invariant I3) is"
+                            + " computed from those sets, so an undeclared rule would look dead while"
                             + " being applied");
         }
         return pack.rule(id);
+    }
+
+    private RuleSet declared(RuleSetId id, RuleSelection expected) {
+        if (!declaredRuleSets.contains(id)) {
+            throw new IllegalStateException("This node did not declare rule set " + id + " in ruleSets(), so it may"
+                    + " not evaluate it. It declared " + declaredRuleSets);
+        }
+        RuleSet set = pack.ruleSet(id);
+        if (set.selection() != expected) {
+            throw new IllegalStateException("Rule set " + id + " takes " + set.selection() + ", but the node reads it"
+                    + " as " + expected + "; the pack and the node disagree on how many rows it may take");
+        }
+        return set;
+    }
+
+    private List<RuleRow> rowsOf(RuleSet set) {
+        return set.members().stream().map(pack::rule).toList();
+    }
+
+    /** The set's only row, or the one of several that applies on the set's ground; never several. */
+    private List<RuleRow> chosen(RuleSetId id, RuleSelection expected) {
+        RuleSet set = declared(id, expected);
+        List<RuleRow> rows = rowsOf(set);
+        if (rows.size() <= 1) {
+            return rows;
+        }
+        List<RuleRow> applying = rows.stream().filter(row -> appliesHere(row, set.ground())).toList();
+        if (applying.size() != 1) {
+            throw new IllegalStateException("Rule set " + id + " has " + applying.size() + " of its rows "
+                    + rows.stream().map(RuleRow::id).toList() + " applying in regime " + regime.code() + " for "
+                    + pack.taxYear().label() + "; exactly one must");
+        }
+        return applying;
+    }
+
+    private boolean appliesHere(RuleRow row, SelectionGround ground) {
+        RuleVersion version = row.versionAt(inputs.temporal());
+        if (!inRegime(row.id(), version).applies()) {
+            return false;
+        }
+        if (ground == SelectionGround.REGIME) {
+            return true;
+        }
+        ConditionContext facts = conditions();
+        return version.conditions().stream().allMatch(condition -> condition.holds(facts));
     }
 
     /**

@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-EDUCATION-FREE",
+  "ruleSet": "RS-PERQ-EDUCATION-FREE",
   "_note": "A child's education in the employer's own institution, or free elsewhere by reason of the employment: the cost in a similar institution in or near the locality, less recoveries, only \"where the cost of such education or value of such benefit per child exceeds\" the limit per month — all or nothing, on the cost before recovery (D-120 C3). This row is the limit. TY 2026-27: \"₹3,000 per month\" (r.15(4) Table III Sl. 3(b)–(c), Gazette 271092, p.1544). TY 2025-26: nil \"if the cost … per child does not exceed one thousand rupees per month\" (Rules 1962 r.3(5) proviso, consolidated rule 3, p.3). Provided by the employer, so salary only for a specified employee (OQ-10). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

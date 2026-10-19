@@ -1,5 +1,6 @@
 {
   "ruleId": "RATE-CG-SHORTFALL-ORDER",
+  "ruleSet": "RS-RATE-CG-SHORTFALL-ORDER",
   "_note": "The basic exemption the rest of total income leaves unused, shifted onto the special-rate capital gains of a resident individual or HUF (D-244). TY 2026-27: Income-tax Act, 2025 s.196(2), s.197(2), s.198(3) (pp.221–223): where total income \"as reduced by\" such gains \"is below the maximum amount which is not chargeable to income-tax\", the gains are \"reduced by the amount by which the total income as so reduced falls short\". TY 2025-26: Income-tax Act, 1961 s.111A(1) first proviso, s.112(1)(a) proviso (both as substituted or amended by the Finance (No. 2) Act, 2024 ss.29, 30) and s.112A(2) proviso (thc p.464). Neither Act orders the parts when several hold gains. SpecialRateShortfallOrder: short-term listed equity, long-term other, long-term listed equity — TY 2025-26 the order of the Department's ITR-2 utility AY 2026-27 v1.4 (sheet SPI - SI, U38 then U53, U57, U60); TY 2026-27 a declared default, the 2025 Act's words being the same. The maximum amount not chargeable is the zero-rate band of the slab ladder that applies. A non-resident shifts nothing. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 16–20.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

@@ -10,10 +10,10 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -56,8 +56,8 @@ public final class MedicalTreatmentAbroadNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        return Set.of(RuleIds.PERQ_MEDABROAD_STAY, RuleIds.PERQ_MEDABROAD_TRAVEL);
+    public Set<RuleSetId> ruleSets() {
+        return Set.of(RuleSetIds.RS_PERQ_MEDABROAD_STAY, RuleSetIds.RS_PERQ_MEDABROAD_TRAVEL);
     }
 
     @Override
@@ -81,13 +81,13 @@ public final class MedicalTreatmentAbroadNode implements ComputationNode {
     /** Treatment and stay, less what the Reserve Bank of India permitted. */
     private static TraceLine treatmentAndStay(NodeContext ctx, MedicalTreatmentAbroad claim, int sequence) {
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = ctx.rule(RuleIds.PERQ_MEDABROAD_STAY);
+        RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_MEDABROAD_STAY);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         CapResult excluded = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of(
                 TREATMENT_AND_STAY, claim.treatmentAndStay(),
                 PERMITTED_BY_RESERVE_BANK, claim.permittedByReserveBank())));
         Money value = claim.treatmentAndStay().minus(excluded.value());
-        return TraceLine.of(sequence, NodeIds.SALARY_MEDICALTRAVEL, RuleIds.PERQ_MEDABROAD_STAY, StepKind.INCOME,
+        return TraceLine.of(sequence, NodeIds.SALARY_MEDICALTRAVEL, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEDABROAD_STAY), StepKind.INCOME,
                         MoneyValue.of(claim.treatmentAndStay()), MoneyValue.of(value), version.provenance())
                 .withLimitedBy("excluded " + excluded.value() + ", " + excluded.limitedBy());
     }
@@ -96,7 +96,7 @@ public final class MedicalTreatmentAbroadNode implements ComputationNode {
     private static TraceLine travel(NodeContext ctx, MedicalTreatmentAbroad claim, ConditionContext asked,
             int sequence) {
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = ctx.rule(RuleIds.PERQ_MEDABROAD_TRAVEL);
+        RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_MEDABROAD_TRAVEL);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         Optional<Condition> unmet = version.conditions().stream()
                 .filter(condition -> !condition.holds(asked))
@@ -106,7 +106,7 @@ public final class MedicalTreatmentAbroadNode implements ComputationNode {
         String bound = unmet.map(condition -> "not excluded, not met: " + condition.describe())
                 .orElse("excluded " + excluded + ", " + version.conditions().stream().map(Condition::describe)
                         .toList());
-        return TraceLine.of(sequence, NodeIds.SALARY_MEDICALTRAVEL, RuleIds.PERQ_MEDABROAD_TRAVEL, StepKind.INCOME,
+        return TraceLine.of(sequence, NodeIds.SALARY_MEDICALTRAVEL, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEDABROAD_TRAVEL), StepKind.INCOME,
                         MoneyValue.of(claim.travel()), MoneyValue.of(claim.travel().minus(excluded)),
                         version.provenance())
                 .withLimitedBy(bound);

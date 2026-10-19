@@ -8,9 +8,10 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -32,7 +33,7 @@ import java.util.Set;
  */
 final class SpecifiedSecurityPerquisite {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.PERQ_SPECIFIED_SECURITY, RuleIds.PERQ_SPECIFIED_DATE);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_SPECIFIED_SECURITY, RuleSetIds.RS_PERQ_SPECIFIED_DATE);
 
     private static final BaseId SECURITY_VALUE = new BaseId("SECURITY_VALUE");
 
@@ -51,12 +52,12 @@ final class SpecifiedSecurityPerquisite {
             }
             Money fairMarketValue = fairMarketValue(ctx, allotment);
             Money paid = allotment.pricePaidPerUnit().times(allotment.units());
-            Money value = TemporallyApportionedCap.apply(ctx.rule(RuleIds.PERQ_SPECIFIED_SECURITY), t,
+            Money value = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_SECURITY), t,
                     CapContext.of(SECURITY_VALUE, fairMarketValue.minus(paid).floorAtZero())).value();
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_PERQUISITES,
-                            RuleIds.PERQ_SPECIFIED_SECURITY, StepKind.INCOME, MoneyValue.of(fairMarketValue),
+                            ctx.ruleIdOf(RuleSetIds.RS_PERQ_SPECIFIED_SECURITY), StepKind.INCOME, MoneyValue.of(fairMarketValue),
                             MoneyValue.of(value), TemporallyApportionedCap.governingVersion(
-                                    ctx.rule(RuleIds.PERQ_SPECIFIED_SECURITY), t).provenance())
+                                    ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_SECURITY), t).provenance())
                     .withLimitedBy(allotment.units() + " at a fair market value of " + fairMarketValue + " in all, "
                             + describe(allotment.basis()) + ", less " + paid + " paid"));
         }
@@ -90,7 +91,7 @@ final class SpecifiedSecurityPerquisite {
     }
 
     private static DayWindow window(NodeContext ctx) {
-        RuleId ruleId = RuleIds.PERQ_SPECIFIED_DATE;
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_PERQ_SPECIFIED_DATE);
         return RuleDefinitions.require(ctx.rule(ruleId).versionAt(ctx.inputs().temporal()).definition(), DayWindow.class, ruleId);
     }
 

@@ -18,6 +18,8 @@ import java.util.Optional;
  *
  * @param rules every rule with all its versions, by id
  * @param regimes every regime, by code
+ * @param ruleSets {@code law/rule-sets.json} verbatim, where the timeline has one: the rule sets every year's pack
+ *     declares, each row naming its own (D-252). A shipped pack's rows are each in a set ({@code PackValidator})
  * @param ruleSources each rule's file verbatim — what a year's pack is compiled from, since the parsed
  *     row cannot be written back
  * @param regimeSources each regime's file verbatim, for the same reason
@@ -38,6 +40,7 @@ import java.util.Optional;
  */
 public record Timeline(
         Map<RuleId, RuleRow> rules,
+        Optional<String> ruleSets,
         Map<RegimeCode, RegimeSpec> regimes,
         Map<RuleId, String> ruleSources,
         Map<RegimeCode, String> regimeSources,
@@ -51,6 +54,7 @@ public record Timeline(
 
     public Timeline {
         rules = Map.copyOf(rules);
+        ruleSets = Objects.requireNonNull(ruleSets, "ruleSets: Optional.empty() where the timeline has none");
         regimes = Map.copyOf(regimes);
         ruleSources = Map.copyOf(ruleSources);
         regimeSources = Map.copyOf(regimeSources);

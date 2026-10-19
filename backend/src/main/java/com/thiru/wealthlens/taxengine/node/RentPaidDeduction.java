@@ -11,9 +11,9 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -36,7 +36,7 @@ import java.util.Set;
  */
 final class RentPaidDeduction {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.DED_RENT_PAID);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_RENT_PAID);
 
     private static final BaseId RENT_PAID = new BaseId("RENT_PAID");
     private static final BaseId TOTAL_INCOME = new BaseId("TOTAL_INCOME");
@@ -58,16 +58,16 @@ final class RentPaidDeduction {
         RentDeclaration declaration = claimed.get();
         requireMonthsOccupied(ctx, declaration);
         Money rent = rented(ctx).stream().map(Tenancy::rentPaid).reduce(Money.ZERO, Money::plus);
-        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.DED_RENT_PAID),
+        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_DED_RENT_PAID),
                 ctx.inputs().temporal());
         Optional<String> bar = bar(ctx, version, declaration);
         if (bar.isPresent()) {
-            return Optional.of(line(sequence, version, rent, Money.ZERO, bar.get()));
+            return Optional.of(line(ctx, sequence, version, rent, Money.ZERO, bar.get()));
         }
-        CapResult allowed = TemporallyApportionedCap.apply(ctx.rule(RuleIds.DED_RENT_PAID), ctx.inputs().temporal(),
+        CapResult allowed = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_DED_RENT_PAID), ctx.inputs().temporal(),
                 new CapContext(Map.of(RENT_PAID, rent, TOTAL_INCOME, totalIncomeBefore), Map.of(),
                         Map.of(MONTH, declaration.monthsOfStay())));
-        return Optional.of(line(sequence, version, rent, allowed.value(), allowed.limitedBy()
+        return Optional.of(line(ctx, sequence, version, rent, allowed.value(), allowed.limitedBy()
                 + ", on total income before this deduction " + totalIncomeBefore));
     }
 
@@ -78,8 +78,8 @@ final class RentPaidDeduction {
 
     /** The regime, then s.134(4) in its order: a home owned at the place, an occupied home elsewhere, HRA. */
     private static Optional<String> bar(NodeContext ctx, RuleVersion version, RentDeclaration declaration) {
-        if (!ctx.inRegime(RuleIds.DED_RENT_PAID, version).applies()) {
-            return Optional.of(ctx.inRegime(RuleIds.DED_RENT_PAID, version).whyNot());
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), version).applies()) {
+            return Optional.of(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), version).whyNot());
         }
         if (declaration.ownsHomeWhereResidesOrWorks()) {
             return Optional.of("a residential accommodation owned at the place of residence or work (s.134(4)(a)(i))");
@@ -124,8 +124,9 @@ final class RentPaidDeduction {
         return a.isBefore(b) ? a : b;
     }
 
-    private static TraceLine line(int sequence, RuleVersion version, Money rent, Money allowed, String limitedBy) {
-        return TraceLine.of(sequence, NodeIds.CHAPTERVIII, RuleIds.DED_RENT_PAID, StepKind.DEDUCTION,
+    private static TraceLine line(
+            NodeContext ctx, int sequence, RuleVersion version, Money rent, Money allowed, String limitedBy) {
+        return TraceLine.of(sequence, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), StepKind.DEDUCTION,
                         MoneyValue.of(rent), MoneyValue.of(allowed), version.provenance())
                 .withLimitedBy(limitedBy);
     }

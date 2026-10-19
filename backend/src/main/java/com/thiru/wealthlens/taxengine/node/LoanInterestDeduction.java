@@ -10,8 +10,9 @@ import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -30,8 +31,8 @@ import java.util.Set;
  */
 final class LoanInterestDeduction {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.DED_EDUCATION_LOAN, RuleIds.DED_HOUSE_LOAN_EARLIER,
-            RuleIds.DED_HOUSE_LOAN, RuleIds.DED_ELECTRIC_VEHICLE_LOAN);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_EDUCATION_LOAN, RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER,
+            RuleSetIds.RS_DED_HOUSE_LOAN, RuleSetIds.RS_DED_ELECTRIC_VEHICLE_LOAN);
 
     private LoanInterestDeduction() {
     }
@@ -58,29 +59,29 @@ final class LoanInterestDeduction {
 
     /** s.129: the whole interest, in the initial tax year and the span of years after it. */
     private static TraceLine education(NodeContext ctx, EducationLoanInterest loan, int sequence) {
-        RuleVersion version = version(ctx, RuleIds.DED_EDUCATION_LOAN);
+        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN));
         Money interest = loan.interestPaid();
-        if (!applies(ctx, RuleIds.DED_EDUCATION_LOAN, version)) {
-            return line(sequence, RuleIds.DED_EDUCATION_LOAN, version, interest, Money.ZERO,
-                    ctx.inRegime(RuleIds.DED_EDUCATION_LOAN, version).whyNot());
+        if (!applies(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version)) {
+            return line(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version, interest, Money.ZERO,
+                    ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version).whyNot());
         }
         TaxYearSpan span = RuleDefinitions.require(version.definition(), TaxYearSpan.class,
-                RuleIds.DED_EDUCATION_LOAN);
+                ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN));
         if (!span.holds(loan.initialTaxYear(), ctx.inputs().taxYear())) {
-            return line(sequence, RuleIds.DED_EDUCATION_LOAN, version, interest, Money.ZERO, "outside the initial"
+            return line(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version, interest, Money.ZERO, "outside the initial"
                     + " tax year " + loan.initialTaxYear().label() + " and the " + span.succeedingYears() + " after it");
         }
-        return line(sequence, RuleIds.DED_EDUCATION_LOAN, version, interest, interest, "the interest paid");
+        return line(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version, interest, interest, "the interest paid");
     }
 
     /** s.130–132: a house loan under s.130, else s.131; a vehicle loan under s.132. */
     private static TraceLine purpose(NodeContext ctx, PurposeLoanInterest loan, int sequence) {
         if (loan.purpose() == LoanPurpose.ELECTRIC_VEHICLE) {
-            return limited(ctx, loan, RuleIds.DED_ELECTRIC_VEHICLE_LOAN, sequence);
+            return limited(ctx, loan, ctx.ruleIdOf(RuleSetIds.RS_DED_ELECTRIC_VEHICLE_LOAN), sequence);
         }
-        Optional<String> earlier = failure(RuleDefinitions.require(version(ctx, RuleIds.DED_HOUSE_LOAN_EARLIER).definition(), SanctionedLoanLimit.class,
-                RuleIds.DED_HOUSE_LOAN_EARLIER), loan);
-        return limited(ctx, loan, earlier.isEmpty() ? RuleIds.DED_HOUSE_LOAN_EARLIER : RuleIds.DED_HOUSE_LOAN,
+        Optional<String> earlier = failure(RuleDefinitions.require(version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER)).definition(), SanctionedLoanLimit.class,
+                ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER)), loan);
+        return limited(ctx, loan, earlier.isEmpty() ? ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER) : ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN),
                 sequence);
     }
 

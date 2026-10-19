@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-DIVIDEND-INTEREST",
+  "ruleSet": "RS-OS-DIVIDEND-INTEREST",
   "_note": "The only deduction against dividend income and Mutual Fund or specified-company unit income is interest expense, at most twenty per cent of that income (TY 2025-26), and none at all from TY 2026-27 (D-194; rulebook OS-DIV-DED-2025/-2026). TY 2025-26: Income-tax Act, 1961 s.57 proviso, ins. by the Finance Act, 2020 s.30(b) (egazette 2020/218938 p.25): \"no deduction shall be allowed from the dividend income, or income in respect of units of a Mutual Fund … other than deduction on account of interest expense, and in any previous year such deduction shall not exceed twenty per cent. of the dividend income, or income in respect of such units, included in the total income for that year, without deduction under this section\" — so no banker's commission or other expense either. TY 2026-27: Income-tax Act, 2025 s.93(2) as substituted by the Finance Act, 2026 s.44(b) (p.43): \"in respect of any dividend income or income from units of a Mutual Fund … no deduction shall be allowed\". The cap is the allowance; the interest expense entered is deducted up to it. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

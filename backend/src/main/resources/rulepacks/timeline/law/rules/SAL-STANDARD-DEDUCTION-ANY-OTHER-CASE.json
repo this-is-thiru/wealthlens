@@ -1,5 +1,6 @@
 {
   "ruleId": "SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE",
+  "ruleSet": "RS-SAL-STANDARD-DEDUCTION",
   "_note": "The standard deduction in any regime other than the new one: the statutory amount or the salary, whichever is less (D-093; rulebook SAL-STDDED-002, -003). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 2(b) (p.41): \"₹ 50000 or the salary, whichever is less, in any other case\". Finance Act, 2026 (4 of 2026) searched in full: it does not amend s.19 or s.202. TY 2025-26: Income-tax Act, 1961 s.16(ia) (thc.nic.in p.140): \"a deduction of fifty thousand rupees or the amount of the salary, whichever is less\", \"fifty thousand\" substituted for \"forty thousand\" by Finance Act, 2019 (7 of 2019) s.3, w.e.f. 1-4-2020 (read in the Act's text, p.1 \"[21st February, 2019.]\"). Not searched: amendments to s.16(ia) other than Finance (No. 2) Act, 2024 s.10's proviso, which applies only in the new regime. CBDT ITR-1 Validation Rules for AY 2026-27 rule 112 (p.10) applies Rs 50000 in the old regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

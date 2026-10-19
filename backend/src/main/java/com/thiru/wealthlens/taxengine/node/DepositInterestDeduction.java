@@ -9,9 +9,10 @@ import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -34,8 +35,8 @@ import java.util.Set;
 final class DepositInterestDeduction {
 
     /** The rows, and the head's rows the net interest is read through. */
-    static final Set<RuleId> RULES = Set.of(RuleIds.DED_SAVINGS_INTEREST, RuleIds.DED_DEPOSIT_INTEREST_SENIOR,
-            RuleIds.OS_INTEREST, RuleIds.OS_BANKER_COMMISSION, RuleIds.OS_OTHER_EXPENDITURE);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_SAVINGS_INTEREST, RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR,
+            RuleSetIds.RS_OS_INTEREST, RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE);
 
     private static final BaseId INTEREST = new BaseId("INTEREST");
 
@@ -54,15 +55,15 @@ final class DepositInterestDeduction {
                 .filter(item -> item.kind() == OtherSourceKind.DEPOSIT_INTEREST).toList();
         List<TraceLine> lines = new ArrayList<>();
         if (isSenior(ctx)) {
-            add(ctx, RuleIds.DED_DEPOSIT_INTEREST_SENIOR, deposits, firstSequence, lines);
+            add(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR), deposits, firstSequence, lines);
             return lines;
         }
         Money other = included(ctx, depositItems);
         if (!savingsItems.isEmpty() && included(ctx, savingsItems).isGreaterThan(Money.ZERO)) {
-            add(ctx, RuleIds.DED_SAVINGS_INTEREST, savingsItems, firstSequence, lines);
+            add(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST), savingsItems, firstSequence, lines);
         }
         if (other.isGreaterThan(Money.ZERO)) {
-            lines.add(line(ctx, RuleIds.DED_SAVINGS_INTEREST, firstSequence + lines.size(), other, Money.ZERO,
+            lines.add(line(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST), firstSequence + lines.size(), other, Money.ZERO,
                     "s.153(2)(a) is savings-account interest only, time deposits excluded; deposit interest is"
                             + " deducted only for a senior citizen (s.153(2)(b); 1961 ss.80TTA, 80TTB)"));
         }
@@ -80,7 +81,7 @@ final class DepositInterestDeduction {
      */
     private static boolean isSenior(NodeContext ctx) {
         return ctx.inputs().assessee() instanceof Individual
-                && version(ctx, RuleIds.DED_DEPOSIT_INTEREST_SENIOR).conditions().stream()
+                && version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR)).conditions().stream()
                         .allMatch(condition -> condition.holds(ctx.conditions()));
     }
 

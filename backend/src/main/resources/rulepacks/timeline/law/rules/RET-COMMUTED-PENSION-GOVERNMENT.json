@@ -1,5 +1,6 @@
 {
   "ruleId": "RET-COMMUTED-PENSION-GOVERNMENT",
+  "ruleSet": "RS-RET-COMMUTED-PENSION-GOVERNMENT",
   "_note": "Commuted pension under the Civil Pensions (Commutation) Rules or a similar scheme for government, defence, all-India, State, local-authority or statutory-corporation service: deducted in full (D-103; rulebook RET-COMMUT-GOVT-001). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 7 (p.42), \"Payment in commutation of pension received— (a) under the Civil Pensions (Commutation) Rules of the Central Government; or (b) under any similar scheme applicable to … (v) the employees of a local authority or a corporation established by a Central Act or State Act or Provincial Act. — Entire amount.\" TY 2025-26: Income-tax Act, 1961 s.10(10A)(i) (thc.nic.in p.72), \"any payment in commutation of pension received under the Civil Pensions (Commutation) Rules of the Central Government or under any similar scheme … or a corporation established by a Central, State or Provincial Act\". Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

@@ -227,6 +227,17 @@ class GeneratedConstantsTest {
                 ConstantGenerator.ruleIds());
     }
 
+    private static Target ruleSetIds() {
+        return new Target(
+                "RuleSetIds",
+                "RuleSetId",
+                java.util.List.of(
+                        "Every rule set in every pack. A node names the set it evaluates, never a row,",
+                        "so a row added to a set is reached with no change to Java (D-252); a set renamed",
+                        "in the packs breaks its callers at compile time."),
+                ConstantGenerator.ruleSetIds());
+    }
+
     private static Target componentCodes() {
         return new Target(
                 "ComponentCodes",
@@ -290,6 +301,11 @@ class GeneratedConstantsTest {
         @Test
         void ruleIdsIsCurrent() {
             check(ruleIds());
+        }
+
+        @Test
+        void ruleSetIdsIsCurrent() {
+            check(ruleSetIds());
         }
 
         @Test

@@ -1,5 +1,6 @@
 {
   "ruleId": "SETOFF-CARRIED-DISALLOWED-PART",
+  "ruleSet": "RS-SETOFF-CARRIED-DISALLOWED-PART",
   "_note": "The part of a carried house-property loss attributable to a deduction the new regime disallows — set off as any carried loss in the old regime, and neither set off nor carried in the new: \"without set off of— (i) any loss carried forward … from any earlier tax year, if such loss … is attributable to any of the deductions referred to in clause (a)\" (Income-tax Act, 2025 s.202(2)(b)(i), pp.227–228), \"deemed to have been given full effect to\" (s.202(3)). Clause (a)(v) is s.22(1)(b) for an own residence (s.21(6)) — the interest the new regime disallows. TY 2025-26: Income-tax Act, 1961 s.115BAC(2)(ii)(a), (3), inserted by the Finance Act, 2020 s.53. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-SETOFF (D-218). The attributable figure is the ledger's (CarriedHousePropertyLoss), from the year the loss arose.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

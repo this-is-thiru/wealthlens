@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CAR-PARTLY-ELECTRIC",
+  "ruleSet": "RS-PERQ-CAR-PARTLY-ELECTRIC",
   "_note": "As PERQ-CAR-PARTLY-SMALL for an electric car, TY 2026-27 only: column C reads \"does not exceed 1.6 litres or the motor car is an electric vehicle\" (r.15(3) Table II, p.1542). The 1962 Table has no such words and an electric car has no cubic capacity, so no TY 2025-26 version exists and one is refused there (D-113 C5a). Every regime: a perquisite is salary. Valued only for a specified employee (D-113 C1a, OQ-10); MotorCarPerquisite in PerquisiteNode applies it.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

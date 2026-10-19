@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CAR-EMPLOYEE",
+  "ruleSet": "RS-PERQ-CAR-EMPLOYEE",
   "_note": "The employee's own car run at the employer's cost, used partly privately: \"the actual amount of expenditure incurred by the employer as reduced by the amount specified in Sl. No. (1)(c)(i)\" — or by a higher amount for official use, claimed on journey records and the employer's certificate (D-113). The (1)(c)(i) amount for the engine and the months, plus the chauffeur's add-on where the expenditure includes one, is computed from PERQ-CAR-PARTLY-* and PERQ-CAR-CHAUFFEUR and handed in as TABLE_OFFICIAL_USE. A perquisite for every employee: the employer meets the employee's obligation (S2 s.17(1)(f); 1961 s.17(2)(iv); D-113 C1a, OQ-10). TY 2026-27: r.15(3) Table II Sl. 2(b), (3)(c) (p.1543). TY 2025-26: r.3(2) Table II Sl. (2)(ii), clause (B) (consolidated rule 3, pp.2–3). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

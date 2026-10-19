@@ -1,0 +1,1001 @@
+{
+  "_note": "The rule sets (W-088m1, D-252): the rows a node evaluates together, and how one is chosen. Each rule row names its set in its own file (ruleSet; ruleSetPosition where the set takes every row in order). selection: EXACTLY_ONE (the only row, or the one that applies), AT_MOST_ONE (a row a year may not hold), ALL_THAT_APPLY (every row, in order). ground: what decides whether a row of several applies — REGIME (the row's regime applicability and the regime's disallowances), or REGIME_AND_CONDITIONS (its conditions too).",
+  "ruleSets": [
+    {
+      "id": "RS-DED-AGNIVEER-GOVERNMENT",
+      "_note": "One row: DED-AGNIVEER-GOVERNMENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-AGNIVEER-OWN",
+      "_note": "One row: DED-AGNIVEER-OWN",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DEPOSIT-INTEREST-SENIOR",
+      "_note": "One row: DED-DEPOSIT-INTEREST-SENIOR",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DISABILITY",
+      "_note": "One row: DED-DISABILITY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DISABILITY-SEVERE",
+      "_note": "One row: DED-DISABILITY-SEVERE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DISABLED-DEPENDANT",
+      "_note": "One row: DED-DISABLED-DEPENDANT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DISABLED-DEPENDANT-SEVERE",
+      "_note": "One row: DED-DISABLED-DEPENDANT-SEVERE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DONATION-CASH",
+      "_note": "One row: DED-DONATION-CASH",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DONATION-HALF",
+      "_note": "One row: DED-DONATION-HALF",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DONATION-QUALIFYING",
+      "_note": "One row: DED-DONATION-QUALIFYING",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-DONATION-WHOLE",
+      "_note": "One row: DED-DONATION-WHOLE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-EDUCATION-LOAN",
+      "_note": "One row: DED-EDUCATION-LOAN",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-ELECTRIC-VEHICLE-LOAN",
+      "_note": "One row: DED-ELECTRIC-VEHICLE-LOAN",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-CHECKUP",
+      "_note": "One row: DED-HEALTH-CHECKUP",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-FAMILY",
+      "_note": "One row: DED-HEALTH-FAMILY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-FAMILY-SENIOR",
+      "_note": "One row: DED-HEALTH-FAMILY-SENIOR",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-PARENTS",
+      "_note": "One row: DED-HEALTH-PARENTS",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-PARENTS-SENIOR",
+      "_note": "One row: DED-HEALTH-PARENTS-SENIOR",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HOUSE-LOAN",
+      "_note": "One row: DED-HOUSE-LOAN",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HOUSE-LOAN-EARLIER",
+      "_note": "One row: DED-HOUSE-LOAN-EARLIER",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-NPS-EMPLOYER",
+      "_note": "A non-Government employer's pension contribution: one row per regime. The Government employer's row is chosen by the employment (DED-NPS-EMPLOYER-GOVT's own set) until W-088m2",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-NPS-EMPLOYER-GOVT",
+      "_note": "One row: DED-NPS-EMPLOYER-GOVT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-NPS-OWN",
+      "_note": "One row: DED-NPS-OWN",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-PREMIUM-SHARE",
+      "_note": "One row: DED-PREMIUM-SHARE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-RENT-PAID",
+      "_note": "One row: DED-RENT-PAID",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-SAVINGS-INTEREST",
+      "_note": "One row: DED-SAVINGS-INTEREST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-SCHEDULE-XV",
+      "_note": "One row: DED-SCHEDULE-XV",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-SPECIFIED-DISEASE",
+      "_note": "One row: DED-SPECIFIED-DISEASE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-SPECIFIED-DISEASE-SENIOR",
+      "_note": "One row: DED-SPECIFIED-DISEASE-SENIOR",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-WITHIN-GROSS-TOTAL",
+      "_note": "One row: DED-WITHIN-GROSS-TOTAL",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-ANNUAL-VALUE",
+      "_note": "One row: HP-ANNUAL-VALUE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-ARREARS",
+      "_note": "One row: HP-ARREARS",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-INTEREST",
+      "_note": "One row: HP-INTEREST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-OWN-RESIDENCE",
+      "_note": "One row: HP-OWN-RESIDENCE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-OWN-RESIDENCE-INTEREST",
+      "_note": "One row: HP-OWN-RESIDENCE-INTEREST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-OWN-RESIDENCE-INTEREST-CAP",
+      "_note": "One row: HP-OWN-RESIDENCE-INTEREST-CAP",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
+      "_note": "One row: HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-PRE-CONSTRUCTION",
+      "_note": "One row: HP-PRE-CONSTRUCTION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-STANDARD-DEDUCTION",
+      "_note": "One row: HP-STANDARD-DEDUCTION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-HP-UNREALISED-RENT",
+      "_note": "One row: HP-UNREALISED-RENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-BANKER-COMMISSION",
+      "_note": "One row: OS-BANKER-COMMISSION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-BUSINESS-TRUST",
+      "_note": "One row: OS-BUSINESS-TRUST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-COMMUTED-PENSION",
+      "_note": "One row: OS-COMMUTED-PENSION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-COMPENSATION-INTEREST",
+      "_note": "One row: OS-COMPENSATION-INTEREST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-DEATH-GRATUITY",
+      "_note": "One row: OS-DEATH-GRATUITY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-DEEMED-DIVIDEND",
+      "_note": "One row: OS-DEEMED-DIVIDEND",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-DIVIDEND",
+      "_note": "One row: OS-DIVIDEND",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-DIVIDEND-INTEREST",
+      "_note": "One row: OS-DIVIDEND-INTEREST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-FAMILY-PENSION",
+      "_note": "The family-pension deduction: one row per regime — chosen by the rows' regime applicability",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-FORFEITED-ADVANCE",
+      "_note": "One row: OS-FORFEITED-ADVANCE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-GIFT",
+      "_note": "One row: OS-GIFT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-GIFT-COVID-DEATH",
+      "_note": "One row: OS-GIFT-COVID-DEATH; held in one shipped year only",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-INTEREST",
+      "_note": "One row: OS-INTEREST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-KEYMAN-POLICY",
+      "_note": "One row: OS-KEYMAN-POLICY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-LIFE-POLICY",
+      "_note": "One row: OS-LIFE-POLICY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-LIFE-POLICY-PREMIUM",
+      "_note": "One row: OS-LIFE-POLICY-PREMIUM",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-LIFE-POLICY-RATIO",
+      "_note": "One row: OS-LIFE-POLICY-RATIO",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-OTHER-EXPENDITURE",
+      "_note": "One row: OS-OTHER-EXPENDITURE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-PF-TAXABLE-INTEREST",
+      "_note": "One row: OS-PF-TAXABLE-INTEREST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-RESIDUAL",
+      "_note": "One row: OS-RESIDUAL",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-TERMINATION-COMPENSATION",
+      "_note": "One row: OS-TERMINATION-COMPENSATION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ACCOM-CONTINUED",
+      "_note": "One row: PERQ-ACCOM-CONTINUED",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ACCOM-FURNITURE",
+      "_note": "One row: PERQ-ACCOM-FURNITURE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ACCOM-GOVERNMENT",
+      "_note": "One row: PERQ-ACCOM-GOVERNMENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ACCOM-HOTEL",
+      "_note": "One row: PERQ-ACCOM-HOTEL",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ACCOM-LEASED",
+      "_note": "One row: PERQ-ACCOM-LEASED",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ACCOM-OWNED",
+      "_note": "One row: PERQ-ACCOM-OWNED",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ASSET-TRANSFER-CAR",
+      "_note": "One row: PERQ-ASSET-TRANSFER-CAR",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ASSET-TRANSFER-ELECTRONIC",
+      "_note": "One row: PERQ-ASSET-TRANSFER-ELECTRONIC",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ASSET-TRANSFER-OTHER",
+      "_note": "One row: PERQ-ASSET-TRANSFER-OTHER",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ASSET-USE",
+      "_note": "One row: PERQ-ASSET-USE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-ASSET-USE-EXCLUDED",
+      "_note": "One row: PERQ-ASSET-USE-EXCLUDED",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-CHAUFFEUR",
+      "_note": "One row: PERQ-CAR-CHAUFFEUR",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-CONVEYANCE",
+      "_note": "One row: PERQ-CAR-CONVEYANCE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-EMPLOYEE",
+      "_note": "One row: PERQ-CAR-EMPLOYEE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-OWNRUN-ELECTRIC",
+      "_note": "One row: PERQ-CAR-OWNRUN-ELECTRIC; a column of Table II, which a year may not have — MotorCarPerquisite refuses a car whose column the year lacks",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-OWNRUN-LARGE",
+      "_note": "One row: PERQ-CAR-OWNRUN-LARGE; a column of Table II, which a year may not have — MotorCarPerquisite refuses a car whose column the year lacks",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-OWNRUN-SMALL",
+      "_note": "One row: PERQ-CAR-OWNRUN-SMALL; a column of Table II, which a year may not have — MotorCarPerquisite refuses a car whose column the year lacks",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-PARTLY-ELECTRIC",
+      "_note": "One row: PERQ-CAR-PARTLY-ELECTRIC; a column of Table II, which a year may not have — MotorCarPerquisite refuses a car whose column the year lacks",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-PARTLY-LARGE",
+      "_note": "One row: PERQ-CAR-PARTLY-LARGE; a column of Table II, which a year may not have — MotorCarPerquisite refuses a car whose column the year lacks",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-PARTLY-SMALL",
+      "_note": "One row: PERQ-CAR-PARTLY-SMALL; a column of Table II, which a year may not have — MotorCarPerquisite refuses a car whose column the year lacks",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CAR-PRIVATE",
+      "_note": "One row: PERQ-CAR-PRIVATE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CARRIER-TRAVEL",
+      "_note": "One row: PERQ-CARRIER-TRAVEL",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CLUB",
+      "_note": "One row: PERQ-CLUB",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CLUB-BUSINESS",
+      "_note": "One row: PERQ-CLUB-BUSINESS; held in one shipped year only",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CLUB-BUSINESS-UNIFORM",
+      "_note": "One row: PERQ-CLUB-BUSINESS-UNIFORM; held in one shipped year only",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CLUB-UNIFORM",
+      "_note": "One row: PERQ-CLUB-UNIFORM; held in one shipped year only",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-CREDIT-CARD",
+      "_note": "One row: PERQ-CREDIT-CARD",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-EDUCATION",
+      "_note": "One row: PERQ-EDUCATION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-EDUCATION-FREE",
+      "_note": "One row: PERQ-EDUCATION-FREE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-EMPLOYER-ACCRETION",
+      "_note": "One row: PERQ-EMPLOYER-ACCRETION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-EMPLOYER-CONTRIBUTION",
+      "_note": "One row: PERQ-EMPLOYER-CONTRIBUTION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-GIFT",
+      "_note": "One row: PERQ-GIFT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-HOLIDAY",
+      "_note": "One row: PERQ-HOLIDAY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-LOAN",
+      "_note": "One row: PERQ-LOAN",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-LOAN-PETTY",
+      "_note": "One row: PERQ-LOAN-PETTY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-MEAL",
+      "_note": "One row: PERQ-MEAL",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-MEAL-AT-WORK",
+      "_note": "One row: PERQ-MEAL-AT-WORK",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-MEAL-VOUCHER",
+      "_note": "One row: PERQ-MEAL-VOUCHER",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-MEDABROAD-STAY",
+      "_note": "One row: PERQ-MEDABROAD-STAY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-MEDABROAD-TRAVEL",
+      "_note": "One row: PERQ-MEDABROAD-TRAVEL",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-OTHER-BENEFIT",
+      "_note": "One row: PERQ-OTHER-BENEFIT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-RPF-CONTRIBUTION",
+      "_note": "One row: PERQ-RPF-CONTRIBUTION; held in one shipped year only",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-RPF-INTEREST",
+      "_note": "One row: PERQ-RPF-INTEREST",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-SERVICES",
+      "_note": "One row: PERQ-SERVICES",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-SPECIFIED-DATE",
+      "_note": "One row: PERQ-SPECIFIED-DATE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-SPECIFIED-EMPLOYEE",
+      "_note": "One row: PERQ-SPECIFIED-EMPLOYEE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-SPECIFIED-SECURITY",
+      "_note": "One row: PERQ-SPECIFIED-SECURITY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-UTILITY",
+      "_note": "One row: PERQ-UTILITY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-CG-LONG-LISTED-EQUITY",
+      "_note": "One row: RATE-CG-LONG-LISTED-EQUITY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-CG-LONG-OTHER",
+      "_note": "One row: RATE-CG-LONG-OTHER",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-CG-SHORT-LISTED-EQUITY",
+      "_note": "One row: RATE-CG-SHORT-LISTED-EQUITY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-CG-SHORTFALL-ORDER",
+      "_note": "One row: RATE-CG-SHORTFALL-ORDER",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-COST-INFLATION-INDEX",
+      "_note": "One row: RATE-COST-INFLATION-INDEX",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-HEALTH-EDUCATION-CESS",
+      "_note": "One row: RATE-HEALTH-EDUCATION-CESS",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-ROUND-PAYABLE",
+      "_note": "One row: RATE-ROUND-PAYABLE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-ROUND-TOTAL-INCOME",
+      "_note": "One row: RATE-ROUND-TOTAL-INCOME",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-SLAB",
+      "_note": "The slab ladder: one per regime and person. The First Schedule's age ladders replace its own table for a resident of sixty or more; the replacement is stated as the rows' conditions (W-088m1 C4)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
+      "id": "RS-RATE-SUR",
+      "_note": "The surcharge ladder on total income: one per regime",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-SUR-CEILING",
+      "_note": "The surcharge ceiling: one per regime",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-SUR-EXCLUDING",
+      "_note": "The surcharge ladder on income excluding the special-rate parts: one per regime",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-SUR-LIMIT",
+      "_note": "The 15% limit on the surcharge on dividends and special-rate gains: one per regime (D-246)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-REBATE",
+      "_note": "The rebates, in trace order: the default regime's two, then the First Schedule's; each applies where its regime does",
+      "selection": "ALL_THAT_APPLY",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "_note": "One row: REG-NEW-TAX-REGIME-NO-EXEMPTION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-REG-NEW-TAX-REGIME-NO-SETOFF",
+      "_note": "One row: REG-NEW-TAX-REGIME-NO-SETOFF",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-COMMUTED-PENSION-FUND",
+      "_note": "One row: RET-COMMUTED-PENSION-FUND",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-COMMUTED-PENSION-GOVERNMENT",
+      "_note": "One row: RET-COMMUTED-PENSION-GOVERNMENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-COMMUTED-PENSION-OTHER",
+      "_note": "One row: RET-COMMUTED-PENSION-OTHER",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-GRATUITY-AGGREGATE",
+      "_note": "One row: RET-GRATUITY-AGGREGATE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-GRATUITY-GOVERNMENT",
+      "_note": "One row: RET-GRATUITY-GOVERNMENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-GRATUITY-OTHER",
+      "_note": "One row: RET-GRATUITY-OTHER",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-GRATUITY-STATUTORY",
+      "_note": "One row: RET-GRATUITY-STATUTORY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-LEAVE-ENCASHMENT-AGGREGATE",
+      "_note": "One row: RET-LEAVE-ENCASHMENT-AGGREGATE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-LEAVE-ENCASHMENT-GOVERNMENT",
+      "_note": "One row: RET-LEAVE-ENCASHMENT-GOVERNMENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-LEAVE-ENCASHMENT-OTHER",
+      "_note": "One row: RET-LEAVE-ENCASHMENT-OTHER",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-RETRENCHMENT",
+      "_note": "One row: RET-RETRENCHMENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-RETRENCHMENT-APPROVED-SCHEME",
+      "_note": "One row: RET-RETRENCHMENT-APPROVED-SCHEME",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RET-VOLUNTARY-RETIREMENT",
+      "_note": "One row: RET-VOLUNTARY-RETIREMENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-ALW-CHILDREN-EDUCATION",
+      "_note": "One row: SAL-ALW-CHILDREN-EDUCATION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-ALW-CONVEYANCE",
+      "_note": "One row: SAL-ALW-CONVEYANCE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-ALW-HOSTEL",
+      "_note": "One row: SAL-ALW-HOSTEL",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-ALW-TRANSPORT-DISABLED",
+      "_note": "One row: SAL-ALW-TRANSPORT-DISABLED",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-ALW-UNIFORM",
+      "_note": "One row: SAL-ALW-UNIFORM",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-ENTMT-ALLOWANCE",
+      "_note": "One row: SAL-ENTMT-ALLOWANCE; held in one shipped year only",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-HOUSE-RENT-ALLOWANCE",
+      "_note": "One row: SAL-HOUSE-RENT-ALLOWANCE",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-HOUSE-RENT-LANDLORD-PAN",
+      "_note": "One row: SAL-HOUSE-RENT-LANDLORD-PAN",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-LEAVE-TRAVEL-CHILDREN",
+      "_note": "One row: SAL-LEAVE-TRAVEL-CHILDREN",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-LEAVE-TRAVEL-CONCESSION",
+      "_note": "One row: SAL-LEAVE-TRAVEL-CONCESSION",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-LEAVE-TRAVEL-DISTANCE-RATE",
+      "_note": "One row: SAL-LEAVE-TRAVEL-DISTANCE-RATE; held in one shipped year only",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-LEAVE-TRAVEL-JOURNEYS",
+      "_note": "One row: SAL-LEAVE-TRAVEL-JOURNEYS",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-SALARY-FOR-ACCOM",
+      "_note": "One row: SAL-SALARY-FOR-ACCOM; a salary base, which SalaryBaseNode applies where the year holds it",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-SALARY-FOR-EMPLOYEE-PENSION",
+      "_note": "One row: SAL-SALARY-FOR-EMPLOYEE-PENSION; a salary base, which SalaryBaseNode applies where the year holds it",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-SALARY-FOR-EMPLOYER-PENSION",
+      "_note": "One row: SAL-SALARY-FOR-EMPLOYER-PENSION; a salary base, which SalaryBaseNode applies where the year holds it",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-SALARY-FOR-ENTMT",
+      "_note": "One row: SAL-SALARY-FOR-ENTMT; held in one shipped year only; a salary base, which SalaryBaseNode applies where the year holds it",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-SALARY-FOR-GRATUITY",
+      "_note": "One row: SAL-SALARY-FOR-GRATUITY; a salary base, which SalaryBaseNode applies where the year holds it",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-SALARY-FOR-HRA",
+      "_note": "One row: SAL-SALARY-FOR-HRA; a salary base, which SalaryBaseNode applies where the year holds it",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-SALARY-FOR-RPF",
+      "_note": "One row: SAL-SALARY-FOR-RPF; held in one shipped year only; a salary base, which SalaryBaseNode applies where the year holds it",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-SALARY-INCLUDES",
+      "_note": "One row: SAL-SALARY-INCLUDES",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-STANDARD-DEDUCTION",
+      "_note": "The standard deduction: one row per regime (S2 s.19(1) Table Sl. 2; 1961 s.16(ia), s.115BAC(1A)) — chosen by the rows' regime applicability",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SAL-TAX-ON-EMPLOYMENT",
+      "_note": "One row: SAL-TAX-ON-EMPLOYMENT",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SETOFF-ACROSS-HEADS",
+      "_note": "One row: SETOFF-ACROSS-HEADS",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SETOFF-CARRIED-CAPITAL-GAINS",
+      "_note": "One row: SETOFF-CARRIED-CAPITAL-GAINS",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SETOFF-CARRIED-DISALLOWED-PART",
+      "_note": "One row: SETOFF-CARRIED-DISALLOWED-PART",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SETOFF-CARRIED-HOUSE-PROPERTY",
+      "_note": "One row: SETOFF-CARRIED-HOUSE-PROPERTY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SETOFF-HOUSE-PROPERTY",
+      "_note": "One row: SETOFF-HOUSE-PROPERTY",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-SETOFF-WITHIN-CAPITAL-GAINS",
+      "_note": "One row: SETOFF-WITHIN-CAPITAL-GAINS",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    }
+  ]
+}

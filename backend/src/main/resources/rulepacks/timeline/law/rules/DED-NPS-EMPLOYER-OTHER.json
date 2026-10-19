@@ -1,5 +1,6 @@
 {
   "ruleId": "DED-NPS-EMPLOYER-OTHER",
+  "ruleSet": "RS-DED-NPS-EMPLOYER",
   "_note": "The same for \"(b) 10%, where such contribution is made by an employer other than an employer referred to in clause (a)\" (s.124(1)(b), p.160) — in the old regime; in the new regime s.124(2) reads it as 14% (DED-NPS-EMPLOYER-NEW-TAX-REGIME). Base SALARY (s.124(13)(b)). TY 2026-27 and TY 2025-26. rulebook DED-NPS-EMP-001(b). OQ-14. The 1961 counterpart, s.80CCD(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCD(2)(b) (F(No.2)A 2019 s.24, p.16): \"ten per cent., where such contribution is made by any other employer\" — in the old regime; under s.115BAC(1A) F(No.2)A 2024 s.25 reads it as fourteen (DED-NPS-EMPLOYER-NEW-TAX-REGIME). sources/2026-10-07-chapter-via.md B7, M2, M15. D-144.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

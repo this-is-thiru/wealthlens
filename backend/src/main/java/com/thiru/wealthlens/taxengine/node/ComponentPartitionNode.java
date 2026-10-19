@@ -10,7 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -41,7 +41,7 @@ public final class ComponentPartitionNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
+    public Set<RuleSetId> ruleSets() {
         return Set.of();
     }
 

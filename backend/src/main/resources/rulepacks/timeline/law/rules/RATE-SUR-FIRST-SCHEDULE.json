@@ -1,5 +1,6 @@
 {
   "ruleId": "RATE-SUR-FIRST-SCHEDULE",
+  "ruleSet": "RS-RATE-SUR",
   "_note": "FA 2026 First Schedule Part I-A (pp.82–83) and Part I-B (pp.86–87), Paragraph F Table 1 Sl. 1, for an individual: \"(i) Where the total income (including dividend income or capital gains under the provisions of sections 111A, 112 and 112A [I-B: 196, 197 and 198]) exceeds Rs. 50,00,000 but does not exceed Rs. 1,00,00,000, at the rate of 10 per cent.; (ii) … exceeds Rs. 1,00,00,000 but does not exceed Rs. 2,00,00,000, at the rate of 15 per cent.; … (v) where the total income (including …) exceeds Rs. 2,00,00,000 but is not covered in clauses (iii) and (iv), at the rate of 15 per cent.\" Clauses (ii) and (v) are the open-ended 15% band. The surcharge rate is not marginal: the band the income falls in sets one rate for the whole tax; W-056 looks the band up and takes the greater of this row's rate and the -EXCLUDING row's (D-084). The limit on the tax attributable to dividend income and the special gains (15%) is the -LIMIT row (rulebook RATE-SUR-SPLIT-001; W-088c, D-246); the excluding income is total income less dividend income and the special-rate capital gains. Spans TY 2025-26 (s.2, AY 2026-27) and TY 2026-27 (s.3): the same figures.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

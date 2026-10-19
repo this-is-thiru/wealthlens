@@ -11,10 +11,11 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -43,14 +44,14 @@ final class NotifiedRetirementLimits {
     private static final BaseId AVERAGE_MONTHLY_SALARY = new BaseId("AVERAGE_MONTHLY_SALARY");
     private static final int MONTHS_AVERAGED = 10;
 
-    private static final Map<RetirementEntry, RuleId> AGGREGATE_FOR_ENTRY = Map.of(
-            RetirementEntry.OTHER_GRATUITY, RuleIds.RET_GRATUITY_AGGREGATE,
-            RetirementEntry.OTHER_LEAVE_ENCASHMENT, RuleIds.RET_LEAVE_ENCASHMENT_AGGREGATE);
+    private static final Map<RetirementEntry, RuleSetId> AGGREGATE_FOR_ENTRY = Map.of(
+            RetirementEntry.OTHER_GRATUITY, RuleSetIds.RS_RET_GRATUITY_AGGREGATE,
+            RetirementEntry.OTHER_LEAVE_ENCASHMENT, RuleSetIds.RS_RET_LEAVE_ENCASHMENT_AGGREGATE);
 
     private NotifiedRetirementLimits() {
     }
 
-    static List<RuleId> aggregateRules() {
+    static List<RuleSetId> aggregateRules() {
         return List.copyOf(AGGREGATE_FOR_ENTRY.values());
     }
 
@@ -100,7 +101,7 @@ final class NotifiedRetirementLimits {
      * entry, in the order entered, come off it first; which payment absorbs the cut changes no tax (D-225).
      */
     static TraceLine capped(NodeContext ctx, RetirementEntry entry, Money allowedThisYear, TraceLine line) {
-        RuleId aggregateId = AGGREGATE_FOR_ENTRY.get(entry);
+        RuleId aggregateId = ctx.ruleIdOf(AGGREGATE_FOR_ENTRY.get(entry));
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(aggregateId), ctx.inputs().temporal());
         Money limit = TemporallyApportionedCap.apply(ctx.rule(aggregateId), ctx.inputs().temporal(),
                 new CapContext(Map.of())).value();
@@ -151,7 +152,8 @@ final class NotifiedRetirementLimits {
                     + " component");
         }
         return definition.salaryBaseFor().stream()
-                .filter(inclusion -> inclusion.rule().equals(RuleIds.SAL_SALARY_FOR_GRATUITY))
+                .filter(inclusion -> ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_GRATUITY).members()
+                        .contains(inclusion.rule()))
                 .findFirst()
                 .map(SalaryBaseInclusion::onlyWhereTermsProvide)
                 .map(onlyWhereTerms -> !onlyWhereTerms || employment.termsIncludeDearnessAllowance())

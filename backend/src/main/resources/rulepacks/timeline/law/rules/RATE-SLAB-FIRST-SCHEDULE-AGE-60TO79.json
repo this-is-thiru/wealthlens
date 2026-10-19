@@ -1,5 +1,6 @@
 {
   "ruleId": "RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79",
+  "ruleSet": "RS-RATE-SLAB",
   "_note": "FA 2026 First Schedule Part I-B Paragraph A item (II) (gazette p.85): \"every individual, being a resident in India, who is of the age of sixty years or more but less than eighty years at any time during the tax year\". Selected in place of RATE-SLAB-FIRST-SCHEDULE when its conditions hold (D-072). Spans TY 2025-26 (W-052c, D-082): FA 2026 First Schedule Part I-A Paragraph A (p.80), the 1961-Act rates for AY 2026-27, states the same bands, with \"previous year\" for Part I-B's \"tax year\". provision1961 corrected from \"Income-tax Act, 1961 First Schedule\": the 1961 Act does not state these rates.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

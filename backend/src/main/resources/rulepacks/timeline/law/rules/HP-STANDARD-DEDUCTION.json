@@ -1,5 +1,6 @@
 {
   "ruleId": "HP-STANDARD-DEDUCTION",
+  "ruleSet": "RS-HP-STANDARD-DEDUCTION",
   "_note": "Thirty per cent of the annual value is deducted from income from house property — a flat allowance, not actual expenses (D-155; rulebook HP-DED-30-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(a) \"30% of the annual value as determined under section 21\" (Gazette 265620, p.47). TY 2025-26: Income-tax Act, 1961 s.24(a) \"a sum equal to thirty per cent. of the annual value\" (thc p.147; s.24 subs. by Act 14 of 2001, s.15, w.e.f. 1-4-2002). Nil where the annual value is nil. Interest (s.22(1)(b), (c)) is W-078b. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

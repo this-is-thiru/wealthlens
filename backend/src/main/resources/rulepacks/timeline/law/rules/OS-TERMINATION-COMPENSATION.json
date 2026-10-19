@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-TERMINATION-COMPENSATION",
+  "ruleSet": "RS-OS-TERMINATION-COMPENSATION",
   "_note": "Compensation in connection with termination of employment or a change in its terms, from someone other than the employer or a former employer, under other sources, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(2)(j) \"any compensation or other payment, due to or received by any person, by whatever name called, in connection with the termination of his employment, or the modification of its terms and conditions\" (p.138); the employer's or former employer's is profits in lieu of salary (s.18(1)(a)), built as RETRENCHMENT_COMPENSATION / VRS_COMPENSATION / NOTICE_PAY. TY 2025-26: 1961 s.56(2)(xi) (FA 2018 s.23(B)), the employer's being s.17(3)(i). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

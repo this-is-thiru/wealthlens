@@ -180,7 +180,7 @@ class RoundingNodesTest {
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
         rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(toHundred),
                 row.midYearCombination(), row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
-        RulePack hundred = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules,
+        RulePack hundred = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
                 pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets());
 
         // When / Then

@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-OTHER-BENEFIT",
+  "ruleSet": "RS-PERQ-OTHER-BENEFIT",
   "_note": "Any other benefit, amenity, service, right or privilege: \"cost to the employer under an arm's length transaction as reduced by the employee's contribution\", \"except expenses on telephones, including a mobile phone\" — a telephone is a nil line citing this row (D-119; rulebook PERQ-OTHER-2026, PERQ-PHONE-2026). The arm's-length cost is entered. For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1547). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-LOAN-PETTY",
+  "ruleSet": "RS-PERQ-LOAN-PETTY",
   "_note": "No value is charged \"where the amount of loans is not exceeding\" the limit \"in the aggregate\" (D-118). Read as the amounts lent by one employer, added up, compared inclusively (D-118 C3a — a reading; the Rules define neither the amount nor the aggregate). TY 2026-27: \"₹2,00,000\" (r.15(5) Table IV Sl. 1 col. D (a), Gazette 271092, p.1545). TY 2025-26: \"petty not exceeding in the aggregate twenty thousand rupees\" (Rules 1962 r.3(7)(i) proviso, consolidated rule 3, p.3). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

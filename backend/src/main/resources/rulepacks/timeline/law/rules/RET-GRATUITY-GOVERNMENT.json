@@ -1,5 +1,6 @@
 {
   "ruleId": "RET-GRATUITY-GOVERNMENT",
+  "ruleSet": "RS-RET-GRATUITY-GOVERNMENT",
   "_note": "Death-cum-retirement gratuity under the government pension rules or a similar scheme, and a defence retiring gratuity: deducted in full (D-103; rulebook RET-GRAT-GOVT-001). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 3, \"Death-cum-retirement gratuity received as referred to in sub-section (2)(g). — Entire amount.\", and Sl. 4, \"Payment of retiring gratuity received under the Pension Code or Regulations applicable to the members of the defence services. — Entire amount.\" (p.41); s.19(2)(g) names the Central Civil Services (Pension) Rules, 2021 and similar schemes (p.46). TY 2025-26: Income-tax Act, 1961 s.10(10)(i) (thc.nic.in p.71), \"any death-cum-retirement gratuity received under the revised Pension Rules of the Central Government or, as the case may be, the Central Civil Services (Pension) Rules, 1972, or under any similar scheme … or any payment of retiring gratuity received under the Pension Code or Regulations applicable to the members of the defence services\". Neither s.202(2)(a) nor s.115BAC(2)(i) excludes it, so every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

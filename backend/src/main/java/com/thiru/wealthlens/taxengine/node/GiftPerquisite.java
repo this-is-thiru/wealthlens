@@ -5,7 +5,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -38,13 +38,13 @@ final class GiftPerquisite {
             byEmployer.merge(gift.employment(), gift.amount(), Money::plus);
         }
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = ctx.rule(RuleIds.PERQ_GIFT);
+        RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_GIFT);
         Money limit = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of())).value();
         List<TraceLine> lines = new ArrayList<>();
         for (Map.Entry<Integer, Money> employer : byEmployer.entrySet()) {
             Money given = employer.getValue();
             boolean belowTheLimit = given.isLessThan(limit);
-            lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_PERQUISITES, RuleIds.PERQ_GIFT,
+            lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_PERQUISITES, ctx.ruleIdOf(RuleSetIds.RS_PERQ_GIFT),
                             StepKind.INCOME, MoneyValue.of(given), MoneyValue.of(belowTheLimit ? Money.ZERO : given),
                             TemporallyApportionedCap.governingVersion(rule, t).provenance())
                     .withLimitedBy("employment " + employer.getKey() + "'s gifts " + given

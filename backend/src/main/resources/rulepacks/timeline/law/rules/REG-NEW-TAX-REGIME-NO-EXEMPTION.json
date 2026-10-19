@@ -1,5 +1,6 @@
 {
   "ruleId": "REG-NEW-TAX-REGIME-NO-EXEMPTION",
+  "ruleSet": "RS-REG-NEW-TAX-REGIME-NO-EXEMPTION",
   "_note": "The new regime's exemptions and deductions not allowed — the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-165; rulebook R2 REG-NEW-DISALLOW-001, renamed by D-069). TY 2026-27: Income-tax Act, 2025 s.202(2)(a) (p.227): \"(2) For the purposes of sub-section (1), the total income of the assessee shall be computed— (a) without any exemption or deduction under––\" followed by clauses (i)–(xii); (iii) omitted by Finance Act, 2026 s.56 (rulebook R2). TY 2025-26: Income-tax Act, 1961 s.115BAC(2)(i) as substituted by Finance Act, 2023 s.52(C)(a) from 1-4-2024 (p.33): \"(2) For the purposes of sub-section (1A), the total income of the person referred to therein, shall be computed— (i) without any exemption or deduction under the provisions of\" a list of clauses and sections. Defines no amount: it is cited by every explanation of a rule the set forbids (NodeContext.inRegime). Which rules the set lists is the set's file; W-078g2 moves the rest of the ExceptIn rows onto it.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

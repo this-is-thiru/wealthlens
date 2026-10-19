@@ -1,5 +1,6 @@
 {
   "ruleId": "RET-LEAVE-ENCASHMENT-GOVERNMENT",
+  "ruleSet": "RS-RET-LEAVE-ENCASHMENT-GOVERNMENT",
   "_note": "A Central or State Government employee's cash equivalent of leave salary for earned leave at retirement: deducted in full (D-103; rulebook RET-LEAVE-GOVT-001). Any other employee's (Sl. 14) is W-066c. TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 13 (p.43), \"Payment received by an employee of the Central Government or a State Government as the cash equivalent of the leave salary in respect of the period of earned leave at his credit at the time of his retirement whether on superannuation or otherwise. — Entire amount.\" TY 2025-26: Income-tax Act, 1961 s.10(10AA)(i) (thc.nic.in p.72), in the same words. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

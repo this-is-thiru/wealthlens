@@ -1,5 +1,6 @@
 {
   "ruleId": "SAL-SALARY-FOR-HRA",
+  "ruleSet": "RS-SAL-SALARY-FOR-HRA",
   "_note": "The salary that house rent allowance is measured against (D-092; rulebook SAL-DEF-HRA-001, H-4). TY 2026-27: Income-tax Rules, 2026 r.279(2)(b) (gazette p.1776): \"'salary' includes dearness allowance, if provided for under the terms of employment, but excludes all other allowances and perquisites.\" No commission in the text. TY 2025-26: Income-tax Rules, 1962 r.2A Explanation (i): \"'salary' shall have the meaning assigned to it in clause (h) of rule 2 of Part A of the Fourth Schedule\" (DoR compendium pp.347-348; also indiankanoon.org/doc/154865060) — and Income-tax Act, 1961, Fourth Schedule Part A r.2(h) (thc.nic.in copy, current to Act 7 of 2019, p.853): \"'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites.\" The compendium's annotations to r.2A cite Gestetner Duplicators v. CIT [1979] 117 ITR 1 (SC): commission on sales paid under the contract of employment is 'salary' — which components count is the registry's (W-064), not this row's.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

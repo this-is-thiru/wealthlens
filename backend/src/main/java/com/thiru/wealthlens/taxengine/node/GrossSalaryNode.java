@@ -11,10 +11,11 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -47,39 +48,40 @@ public final class GrossSalaryNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        return Set.of(RuleIds.SAL_SALARY_INCLUDES);
+    public Set<RuleSetId> ruleSets() {
+        return Set.of(RuleSetIds.RS_SAL_SALARY_INCLUDES);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
-        RuleVersion version = ctx.rule(RuleIds.SAL_SALARY_INCLUDES).versionAt(ctx.inputs().temporal());
+        RuleRow includes = ctx.ruleOf(RuleSetIds.RS_SAL_SALARY_INCLUDES);
+        RuleVersion version = includes.versionAt(ctx.inputs().temporal());
         HeadTotal total = salaryIncludes(ctx, version);
-        HeadTotalLines counted = HeadTotalLines.of(ctx, components, total, RuleIds.SAL_SALARY_INCLUDES);
+        HeadTotalLines counted = HeadTotalLines.of(ctx, components, total, includes.id());
         Money pay = counted.total();
-        TraceLine payLine = TraceLine.of(1, produces(), RuleIds.SAL_SALARY_INCLUDES, StepKind.INCOME,
+        TraceLine payLine = TraceLine.of(1, produces(), includes.id(), StepKind.INCOME,
                 counted.asComponentSet(total), MoneyValue.of(pay), version.provenance());
         List<TraceLine> lines = new ArrayList<>(List.of(payLine));
         Money gross = pay
-                .plus(added(lines, version, ctx.get(NodeIds.SALARY_PERQUISITES, MoneyValue.class).asMoney(),
+                .plus(added(lines, includes, version, ctx.get(NodeIds.SALARY_PERQUISITES, MoneyValue.class).asMoney(),
                         "perquisites, valued in salary.perquisites"))
-                .plus(added(lines, version, ctx.get(NodeIds.EMPLOYER_CONTRIB_CHARGES, MoneyValue.class).asMoney(),
+                .plus(added(lines, includes, version, ctx.get(NodeIds.EMPLOYER_CONTRIB_CHARGES, MoneyValue.class).asMoney(),
                         "employer retirement contributions beyond the limit, in employer.contrib.charges"))
-                .plus(added(lines, version, pensionContributions(ctx),
+                .plus(added(lines, includes, version, pensionContributions(ctx),
                         "the employer's contribution to the employee's pension-scheme account"))
-                .plus(added(lines, version, ctx.inputs().entered().agniveerCorpusFund()
+                .plus(added(lines, includes, version, ctx.inputs().entered().agniveerCorpusFund()
                                 .map(AgniveerCorpusFund::governmentContribution).orElse(Money.ZERO),
                         "the Central Government's contribution to the Agniveer Corpus Fund account"));
         return new NodeResult(MoneyValue.of(gross), lines);
     }
 
     /** An amount salary includes, on a line of its own where it is not nil; the amount added. */
-    private static Money added(List<TraceLine> lines, RuleVersion version, Money amount, String what) {
+    private static Money added(List<TraceLine> lines, RuleRow includes, RuleVersion version, Money amount, String what) {
         if (!amount.isGreaterThan(Money.ZERO)) {
             return Money.ZERO;
         }
-        lines.add(TraceLine.of(lines.size() + 1, NodeIds.SALARY_GROSS, RuleIds.SAL_SALARY_INCLUDES, StepKind.INCOME,
+        lines.add(TraceLine.of(lines.size() + 1, NodeIds.SALARY_GROSS, includes.id(), StepKind.INCOME,
                         MoneyValue.of(amount), MoneyValue.of(amount), version.provenance())
                 .withLimitedBy(what));
         return amount;
@@ -99,16 +101,16 @@ public final class GrossSalaryNode implements ComputationNode {
      * {@code inputs.components} and the rule.
      */
     static Money pay(NodeContext ctx) {
-        RuleVersion version = ctx.rule(RuleIds.SAL_SALARY_INCLUDES).versionAt(ctx.inputs().temporal());
+        RuleVersion version = ctx.ruleOf(RuleSetIds.RS_SAL_SALARY_INCLUDES).versionAt(ctx.inputs().temporal());
         return HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),
-                salaryIncludes(ctx, version), RuleIds.SAL_SALARY_INCLUDES).total();
+                salaryIncludes(ctx, version), ctx.ruleIdOf(RuleSetIds.RS_SAL_SALARY_INCLUDES)).total();
     }
 
     private static HeadTotal salaryIncludes(NodeContext ctx, RuleVersion version) {
-        if (!ctx.inRegime(RuleIds.SAL_SALARY_INCLUDES, version).applies()) {
-            throw new IllegalStateException(RuleIds.SAL_SALARY_INCLUDES + " does not apply in regime "
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_SALARY_INCLUDES), version).applies()) {
+            throw new IllegalStateException(ctx.ruleIdOf(RuleSetIds.RS_SAL_SALARY_INCLUDES) + " does not apply in regime "
                     + ctx.regime().code() + "; salary is defined in every regime, so the row is wrong");
         }
-        return RuleDefinitions.require(version.definition(), HeadTotal.class, RuleIds.SAL_SALARY_INCLUDES);
+        return RuleDefinitions.require(version.definition(), HeadTotal.class, ctx.ruleIdOf(RuleSetIds.RS_SAL_SALARY_INCLUDES));
     }
 }

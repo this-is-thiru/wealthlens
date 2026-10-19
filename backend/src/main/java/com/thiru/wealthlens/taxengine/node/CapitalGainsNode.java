@@ -12,12 +12,10 @@ import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrd
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
-import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
@@ -38,7 +36,7 @@ import java.util.Set;
  */
 public final class CapitalGainsNode implements ComputationNode {
 
-    private static final RuleId ROW = RuleIds.SETOFF_WITHIN_CAPITAL_GAINS;
+    private static final RuleSetId ROW = RuleSetIds.RS_SETOFF_WITHIN_CAPITAL_GAINS;
 
     @Override
     public NodeId produces() {
@@ -51,15 +49,15 @@ public final class CapitalGainsNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
+    public Set<RuleSetId> ruleSets() {
         return Set.of(ROW);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
-        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(ROW), ctx.inputs().temporal());
-        CapitalGainsAbsorptionOrder order = RuleDefinitions.require(version.definition(),
-                CapitalGainsAbsorptionOrder.class, ROW);
+        GoverningRow row = GoverningRow.of(ctx, ROW);
+        CapitalGainsAbsorptionOrder order = RuleDefinitions.require(row.version().definition(),
+                CapitalGainsAbsorptionOrder.class, row.id());
         Map<CapitalGainsPart, Money> net = new EnumMap<>(CapitalGainsPart.class);
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
             net.merge(partOf(bucket), bucket.gain(), Money::plus);
@@ -72,16 +70,16 @@ public final class CapitalGainsNode implements ComputationNode {
             Money amount = net.getOrDefault(part, Money.ZERO);
             if (amount.isLessThan(Money.ZERO)) {
                 Money loss = Money.ZERO.minus(amount);
-                lines.add(line(lines, version, StepKind.MEASURE, amount, Money.ZERO).withLimitedBy(part + ": a loss"));
+                lines.add(line(lines, row, StepKind.MEASURE, amount, Money.ZERO).withLimitedBy(part + ": a loss"));
                 longTermLoss = part.isLongTerm() ? longTermLoss.plus(loss) : longTermLoss;
                 shortTermLoss = part.isLongTerm() ? shortTermLoss : shortTermLoss.plus(loss);
             } else if (amount.isGreaterThan(Money.ZERO)) {
-                lines.add(line(lines, version, StepKind.INCOME, amount, amount).withLimitedBy(part.toString()));
+                lines.add(line(lines, row, StepKind.INCOME, amount, amount).withLimitedBy(part.toString()));
                 available.put(part, amount);
             }
         }
-        Money longTermLeft = setOff(longTermLoss, true, order, available, lines, version);
-        Money shortTermLeft = setOff(shortTermLoss, false, order, available, lines, version);
+        Money longTermLeft = setOff(longTermLoss, true, order, available, lines, row);
+        Money shortTermLeft = setOff(shortTermLoss, false, order, available, lines, row);
         CapitalGainsHead head = new CapitalGainsHead(available, shortTermLeft, longTermLeft);
         return new NodeResult(head, lines);
     }
@@ -91,7 +89,7 @@ public final class CapitalGainsNode implements ComputationNode {
      * Returns what is left, which is shown.
      */
     private static Money setOff(Money loss, boolean longTerm, CapitalGainsAbsorptionOrder order,
-            Map<CapitalGainsPart, Money> available, List<TraceLine> lines, RuleVersion version) {
+            Map<CapitalGainsPart, Money> available, List<TraceLine> lines, GoverningRow row) {
         Money remaining = loss;
         String which = longTerm ? "long-term" : "short-term";
         for (CapitalGainsPart part : order.parts()) {
@@ -103,11 +101,11 @@ public final class CapitalGainsNode implements ComputationNode {
             Money taken = Money.min(remaining, gain);
             available.put(part, gain.minus(taken));
             remaining = remaining.minus(taken);
-            lines.add(line(lines, version, StepKind.SET_OFF, gain, taken).withLimitedBy(which + " loss against " + part
+            lines.add(line(lines, row, StepKind.SET_OFF, gain, taken).withLimitedBy(which + " loss against " + part
                     + "; order " + order.parts() + ", the declared default: neither Act prescribes one (OQ-32)"));
         }
         if (remaining.isGreaterThan(Money.ZERO)) {
-            lines.add(line(lines, version, StepKind.MEASURE, loss, remaining).withLimitedBy(which + " loss not set off,"
+            lines.add(line(lines, row, StepKind.MEASURE, loss, remaining).withLimitedBy(which + " loss not set off,"
                     + " and not against another head (S2 s.109(2); 1961 s.71(3)); carried forward (S2 s.111(1); 1961 s.74(1))"));
         }
         return remaining;
@@ -133,8 +131,8 @@ public final class CapitalGainsNode implements ComputationNode {
         return part;
     }
 
-    private static TraceLine line(List<TraceLine> lines, RuleVersion version, StepKind kind, Money in, Money out) {
-        return TraceLine.of(lines.size() + 1, NodeIds.CAPITALGAINS_INCOME, ROW, kind, MoneyValue.of(in),
-                MoneyValue.of(out), version.provenance());
+    private static TraceLine line(List<TraceLine> lines, GoverningRow row, StepKind kind, Money in, Money out) {
+        return TraceLine.of(lines.size() + 1, NodeIds.CAPITALGAINS_INCOME, row.id(), kind, MoneyValue.of(in),
+                MoneyValue.of(out), row.version().provenance());
     }
 }

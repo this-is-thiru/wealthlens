@@ -104,7 +104,7 @@ class RuleStatusTest {
                 VerificationLevel.SOURCE_CHECKED);
         RuleRow row = new RuleRow(SLAB, TemporalAxis.TAX_YEAR, List.of(version), checked());
         return new RulePack(
-                TY, layers, new GoverningInstruments(act, act, act), Map.of(SLAB, row), null, null, null, null);
+                TY, layers, new GoverningInstruments(act, act, act), Map.of(SLAB, row), null, null, null, null, null);
     }
 
     @ParameterizedTest

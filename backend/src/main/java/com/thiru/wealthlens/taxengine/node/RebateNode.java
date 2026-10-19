@@ -8,10 +8,12 @@ import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefContext;
 import com.thiru.wealthlens.taxengine.rules.relief.ReliefResult;
 import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
@@ -39,12 +41,6 @@ import java.util.Set;
  */
 public final class RebateNode implements ComputationNode {
 
-    /** In trace order: the default regime's two, then the First Schedule's. */
-    private static final List<RuleId> REBATES = List.of(
-            RuleIds.REBATE_NEW_TAX_REGIME,
-            RuleIds.REBATE_NEW_TAX_REGIME_EXCESS,
-            RuleIds.REBATE_RESIDENT_INDIVIDUAL);
-
     @Override
     public NodeId produces() {
         return NodeIds.TAX_AFTERREBATE;
@@ -57,8 +53,8 @@ public final class RebateNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        return Set.copyOf(REBATES);
+    public Set<RuleSetId> ruleSets() {
+        return Set.of(RuleSetIds.RS_REBATE);
     }
 
     @Override
@@ -69,8 +65,10 @@ public final class RebateNode implements ComputationNode {
 
         List<TraceLine> lines = new ArrayList<>();
         Money rebated = Money.ZERO;
-        for (RuleId id : REBATES) {
-            RuleVersion version = ctx.rule(id).versionAt(ctx.inputs().temporal());
+        // In the set's order: the default regime's two, then the First Schedule's (D-252)
+        for (RuleRow row : ctx.rulesOf(RuleSetIds.RS_REBATE)) {
+            RuleId id = row.id();
+            RuleVersion version = row.versionAt(ctx.inputs().temporal());
             if (!ctx.inRegime(id, version).applies()) {
                 continue;
             }

@@ -1,5 +1,6 @@
 {
   "ruleId": "DED-WITHIN-GROSS-TOTAL",
+  "ruleSet": "RS-DED-WITHIN-GROSS-TOTAL",
   "_note": "\"The aggregate amount of the deductions under this Chapter shall not, in any case, exceed the gross total income of the assessee\" (s.122(2), p.158); \"gross total income\" is the total income before Chapter VIII (s.122(10), p.159). Every regime: what the new regime keeps of Chapter VIII is bound too. TY 2026-27 and TY 2025-26. rulebook DED-GTI-CAP-001, -DEF-001. Its 1961 counterpart, s.80A(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80A(2) (thc p.328): \"The aggregate amount of the deductions under this Chapter shall not, in any case, exceed the gross total income of the assessee\"; s.80B(5) (p.329): gross total income is total income \"before making any deduction under this Chapter\". sources/2026-10-07-chapter-via.md B1, B3. D-144.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

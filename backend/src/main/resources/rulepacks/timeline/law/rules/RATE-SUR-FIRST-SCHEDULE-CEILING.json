@@ -1,5 +1,6 @@
 {
   "ruleId": "RATE-SUR-FIRST-SCHEDULE-CEILING",
+  "ruleSet": "RS-RATE-SUR-CEILING",
   "_note": "FA 2026 First Schedule Part I-A (p.84) and Part I-B (p.88), Paragraph F: \"in respect of the persons mentioned in column B of the Table 2 below, having total income exceeding the amount as specified in column C of the said Table but does not exceed the amount specified in column D thereof, the total amount payable as income-tax and surcharge thereon shall not exceed the amount determined as per the following formula:— Wo = Uo + Vo\" [I-B: Wn = Un + Vn], U being \"the total amount payable as income-tax and surcharge, if applicable, on an amount as specified in column C\" and V \"the total income – amount as specified in column C\". Table 2 Sl. 1 (Table 1: Sl. No. 1.B), column C: Rs. 50,00,000; Rs. 1,00,00,000; Rs. 2,00,00,000; Rs. 5,00,00,000 (the last open-ended). No words limit it to slab-rate tax. The thresholds restate Table 2 rather than being derived from the RATE-SUR-* ladders: Table 2 tests total income against all four, while 2Cr and 5Cr sit on the -EXCLUDING ladder (D-085). Evaluated by W-056. Spans TY 2025-26 (Part I-A, AY 2026-27) and TY 2026-27 (Part I-B): the same figures.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

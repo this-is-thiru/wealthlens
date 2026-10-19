@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-BUSINESS-TRUST",
+  "ruleSet": "RS-OS-BUSINESS-TRUST",
   "_note": "A business trust's specified sum on a unit holder's units, under other sources, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(2)(k) \"specified sum = A-B-C (which shall be deemed to be zero, if the sum of B and C is greater than A)\" — A the aggregate distributed on the unit in the year or earlier, not Schedule V (Table: Sl. No. 3 or 4) income nor chargeable under s.223(2); B the issue amount; C the amount charged under this clause earlier (pp.138–139). TY 2025-26: 1961 s.56(2)(xii), the same formula, A excluding s.10(23FC), (23FCA) income and s.115UA(2) sums (FA 2023 s.32(b)). The formula is BusinessTrustUnits.specifiedSum; this row charges the whole of it. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-GIFT",
+  "ruleSet": "RS-PERQ-GIFT",
   "_note": "A gift, voucher or token (in lieu of a gift) from the employer, to the employee or a household member: \"the sum equal to the amount of such gift\", but \"'nil', if the value … is below\" the limit \"in aggregate during the tax year\" (D-117; rulebook PERQ-GIFT-2026, PERQ-GIFT-BOUNDARY-001). This row is the limit; the node aggregates per employer (D-117 C4a) and compares strictly below — at the limit the whole is salary, not the excess. TY 2026-27: \"₹ 15,000\" (r.15(5) Table IV Sl. 4, Gazette 271092, p.1546). TY 2025-26: \"five thousand rupees\" (Rules 1962 r.3(7)(iv) proviso, consolidated rule 3, p.4). For every employee. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

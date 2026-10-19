@@ -88,7 +88,9 @@ public final class RulePackCompiler {
                 .forEach(id -> nodes.add(MAPPER.readTree(timeline.pipelineNodes().get(id))));
 
         Map<String, String> files = new HashMap<>();
-        files.put("law/rates.json", render(object().set("rules", rules)));
+        ObjectNode rates = object().set("rules", rules);
+        timeline.ruleSets().ifPresent(sets -> rates.set("ruleSets", MAPPER.readTree(sets).path("ruleSets")));
+        files.put("law/rates.json", render(rates));
         files.put("law/regimes.json", render(object()
                 .<ObjectNode>set("regimes", regimes)
                 .<ObjectNode>set("disallowanceSets", disallowanceSets)

@@ -1,5 +1,6 @@
 {
   "ruleId": "REG-NEW-TAX-REGIME-NO-SETOFF",
+  "ruleSet": "RS-REG-NEW-TAX-REGIME-NO-SETOFF",
   "_note": "The new regime's set-off not allowed — the basis of DIS-NEW-TAX-REGIME-NO-SETOFF (D-217; rulebook SETOFF-NEW-001, -002). TY 2026-27: Income-tax Act, 2025 s.202(2)(b) (pp.227–228): total income computed \"without set off of— … (ii) any loss under the head \"Income from house property\" with any other head of income\"; s.202(3): \"The loss and depreciation referred to in sub-section (2)(b) shall be deemed to have been given full effect to and no further deduction for such loss or depreciation shall be allowed for any subsequent year.\" TY 2025-26: Income-tax Act, 1961 s.115BAC(2)(ii)(b) and (3), inserted by the Finance Act, 2020 s.53 (egazette 2020/218938 pp.33–34) and not amended since. s.202(2)(b)(i) / s.115BAC(2)(ii)(a), brought-forward loss, is W-081b's.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

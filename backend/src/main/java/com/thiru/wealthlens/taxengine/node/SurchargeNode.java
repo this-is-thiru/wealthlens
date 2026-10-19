@@ -12,10 +12,11 @@ import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -29,8 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * The surcharge on the tax after rebate, less its marginal relief (FA 2026 s.2(4)/(5), s.3(4)/(5), First
@@ -63,10 +62,6 @@ public final class SurchargeNode implements ComputationNode {
      * surcharge of the dividends' and special gains' tax (D-246).
      */
     private record SurchargeRows(RuleId onTotalIncome, RuleId onIncomeExcludingGains, RuleId ceiling, RuleId limit) {
-
-        Stream<RuleId> all() {
-            return Stream.of(onTotalIncome, onIncomeExcludingGains, ceiling, limit);
-        }
     }
 
     /**
@@ -104,12 +99,6 @@ public final class SurchargeNode implements ComputationNode {
     private static final Set<OtherSourceKind> DIVIDEND_KINDS = Set.of(OtherSourceKind.DIVIDEND,
             OtherSourceKind.DEEMED_DIVIDEND);
 
-    private static final List<SurchargeRows> ROWS = List.of(
-            new SurchargeRows(RuleIds.RATE_SUR_NEW_TAX_REGIME, RuleIds.RATE_SUR_NEW_TAX_REGIME_EXCLUDING,
-                    RuleIds.RATE_SUR_NEW_TAX_REGIME_CEILING, RuleIds.RATE_SUR_NEW_TAX_REGIME_LIMIT),
-            new SurchargeRows(RuleIds.RATE_SUR_FIRST_SCHEDULE, RuleIds.RATE_SUR_FIRST_SCHEDULE_EXCLUDING,
-                    RuleIds.RATE_SUR_FIRST_SCHEDULE_CEILING, RuleIds.RATE_SUR_FIRST_SCHEDULE_LIMIT));
-
     @Override
     public NodeId produces() {
         return NodeIds.TAX_SURCHARGE;
@@ -125,9 +114,9 @@ public final class SurchargeNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        return Stream.concat(ROWS.stream().flatMap(SurchargeRows::all), Stream.of(RuleIds.OS_DIVIDEND_INTEREST))
-                .collect(Collectors.toUnmodifiableSet());
+    public Set<RuleSetId> ruleSets() {
+        return Set.of(RuleSetIds.RS_RATE_SUR, RuleSetIds.RS_RATE_SUR_EXCLUDING, RuleSetIds.RS_RATE_SUR_CEILING,
+                RuleSetIds.RS_RATE_SUR_LIMIT, RuleSetIds.RS_OS_DIVIDEND_INTEREST);
     }
 
     @Override
@@ -250,16 +239,10 @@ public final class SurchargeNode implements ComputationNode {
         return income.minus(excluded).floorAtZero();
     }
 
-    /** The regime's rows: exactly one set applies, all three of its rows in this regime. */
+    /** The regime's rows, one of each role, as each role's rule set gives them (D-252). */
     private static SurchargeRows rowsFor(NodeContext ctx) {
-        List<SurchargeRows> applying = ROWS.stream()
-                .filter(rows -> rows.all().allMatch(id -> ctx.inRegime(id, version(ctx, id)).applies()))
-                .toList();
-        if (applying.size() != 1) {
-            throw new IllegalStateException("Regime " + ctx.regime().code() + " has " + applying.size()
-                    + " complete sets of surcharge rows; exactly one must apply: " + applying);
-        }
-        return applying.getFirst();
+        return new SurchargeRows(ctx.ruleIdOf(RuleSetIds.RS_RATE_SUR), ctx.ruleIdOf(RuleSetIds.RS_RATE_SUR_EXCLUDING),
+                ctx.ruleIdOf(RuleSetIds.RS_RATE_SUR_CEILING), ctx.ruleIdOf(RuleSetIds.RS_RATE_SUR_LIMIT));
     }
 
     /**

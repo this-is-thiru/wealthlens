@@ -15,10 +15,10 @@ import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.ParticularsThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -77,11 +77,11 @@ public final class ExemptionNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN,
-                RuleIds.SAL_LEAVE_TRAVEL_CHILDREN, RuleIds.SAL_LEAVE_TRAVEL_CONCESSION,
-                RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE,
-                RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS));
+    public Set<RuleSetId> ruleSets() {
+        Set<RuleSetId> rules = new HashSet<>(Set.of(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE, RuleSetIds.RS_SAL_HOUSE_RENT_LANDLORD_PAN,
+                RuleSetIds.RS_SAL_LEAVE_TRAVEL_CHILDREN, RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION,
+                RuleSetIds.RS_SAL_LEAVE_TRAVEL_DISTANCE_RATE,
+                RuleSetIds.RS_SAL_LEAVE_TRAVEL_JOURNEYS));
         rules.addAll(AllowanceExemption.rules());
         return Set.copyOf(rules);
     }
@@ -115,14 +115,14 @@ public final class ExemptionNode implements ComputationNode {
      */
     private static Optional<TraceAnnotation> landlordParticulars(NodeContext ctx, List<TraceLine> houseRent) {
         TemporalContext t = ctx.inputs().temporal();
-        RuleVersion allowance = TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.SAL_HOUSE_RENT_ALLOWANCE), t);
-        if (houseRent.isEmpty() || !ctx.inRegime(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, allowance).applies()) {
+        RuleVersion allowance = TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE), t);
+        if (houseRent.isEmpty() || !ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE), allowance).applies()) {
             return Optional.empty();
         }
         RuleVersion particulars =
-                TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN), t);
+                TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_SAL_HOUSE_RENT_LANDLORD_PAN), t);
         ParticularsThreshold threshold = RuleDefinitions.require(particulars.definition(), ParticularsThreshold.class,
-                RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN);
+                ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_LANDLORD_PAN));
         Money rentPaid = ctx.inputs().entered().tenancies().stream()
                 .filter(tenancy -> !tenancy.ownedByAssessee())
                 .map(Tenancy::rentPaid)
@@ -133,34 +133,34 @@ public final class ExemptionNode implements ComputationNode {
         return Optional.of(TraceAnnotation.of(houseRent.getFirst().sequence(), new Notice(Severity.ACTION_REQUIRED,
                 "Give your employer the landlord's name, address and PAN, and your relationship with the landlord if"
                         + " any — rent paid in the year is over the limit for these particulars.",
-                List.of(RuleIds.SAL_HOUSE_RENT_LANDLORD_PAN, RuleIds.SAL_HOUSE_RENT_ALLOWANCE))));
+                List.of(ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_LANDLORD_PAN), ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE)))));
     }
 
     /** HRA's lines, one per tenancy; none where the rule does not apply or no home is entered. */
     private static List<TraceLine> houseRentAllowance(NodeContext ctx, List<Employment> employments) {
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = ctx.rule(RuleIds.SAL_HOUSE_RENT_ALLOWANCE);
+        RuleRow rule = ctx.ruleOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         List<Tenancy> tenancies = ctx.inputs().entered().tenancies();
         if (tenancies.isEmpty()) {
             return List.of();
         }
         Money allowanceForYear = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),
-                new HeadTotal(HeadCode.SALARIES), RuleIds.SAL_HOUSE_RENT_ALLOWANCE).total();
-        if (!ctx.inRegime(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, version).applies()) {
+                new HeadTotal(HeadCode.SALARIES), ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE)).total();
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE), version).applies()) {
             List<TraceLine> nil = new ArrayList<>();
             for (Tenancy tenancy : tenancies) {
                 requireWithinYear(tenancy.occupied(), t);
                 Money allowance = BY_DAYS_OCCUPIED.apportion(allowanceForYear, t.taxYear(), tenancy.occupied());
-                nil.add(TraceLine.of(nil.size() + 1, NodeIds.SALARY_EXEMPTIONS, RuleIds.SAL_HOUSE_RENT_ALLOWANCE,
+                nil.add(TraceLine.of(nil.size() + 1, NodeIds.SALARY_EXEMPTIONS, ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE),
                                 StepKind.EXEMPTION, MoneyValue.of(allowance), MoneyValue.of(Money.ZERO),
                                 version.provenance())
-                        .withLimitedBy(ctx.inRegime(RuleIds.SAL_HOUSE_RENT_ALLOWANCE, version).whyNot()));
+                        .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE), version).whyNot()));
             }
             return nil;
         }
         Money salaryForYear = employments.isEmpty() ? Money.ZERO
-                : ctx.get(NodeIds.SALARY_BASE, SalaryBases.class).of(RuleIds.SAL_SALARY_FOR_HRA, 0);
+                : ctx.get(NodeIds.SALARY_BASE, SalaryBases.class).of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_HRA), 0);
         List<TraceLine> trace = new ArrayList<>();
         for (Tenancy tenancy : tenancies) {
             trace.add(period(rule, version, t, tenancy, allowanceForYear, salaryForYear, trace.size() + 1));
@@ -175,7 +175,7 @@ public final class ExemptionNode implements ComputationNode {
         requireWithinYear(tenancy.occupied(), t);
         Money allowance = BY_DAYS_OCCUPIED.apportion(allowanceForYear, year, tenancy.occupied());
         if (tenancy.ownedByAssessee() || !tenancy.rentPaid().isGreaterThan(Money.ZERO)) {
-            return TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, RuleIds.SAL_HOUSE_RENT_ALLOWANCE,
+            return TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, rule.id(),
                     StepKind.EXEMPTION, MoneyValue.of(allowance), MoneyValue.of(Money.ZERO), version.provenance())
                     .withLimitedBy("not rented: the home is owned or no rent was paid (Sch. III Table Sl. 11(c), (d))");
         }
@@ -183,7 +183,7 @@ public final class ExemptionNode implements ComputationNode {
         CapResult exempt = TemporallyApportionedCap.apply(rule, t, new CapContext(
                 Map.of(HRA_RECEIVED, allowance, RENT_PAID, tenancy.rentPaid(), SALARY, salary),
                 Map.of(), Map.of(), Map.of(LOCATION, tenancy.location())));
-        return TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, RuleIds.SAL_HOUSE_RENT_ALLOWANCE,
+        return TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, rule.id(),
                         StepKind.EXEMPTION, MoneyValue.of(allowance), MoneyValue.of(exempt.value()),
                         version.provenance())
                 .withLimitedBy(exempt.limitedBy());

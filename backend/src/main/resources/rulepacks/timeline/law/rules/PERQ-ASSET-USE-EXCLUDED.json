@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-ASSET-USE-EXCLUDED",
+  "ruleSet": "RS-PERQ-ASSET-USE-EXCLUDED",
   "_note": "The assets whose use is not valued (D-119 C4): TY 2025-26 \"other than laptops and computers\" (Rules 1962 r.3(7)(vii), consolidated rule 3, p.4); TY 2026-27 \"other than laptops, computers, tablets and mobile phones\" (r.15(5) Table IV Sl. 7, Gazette 271092, pp.1546–1547). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

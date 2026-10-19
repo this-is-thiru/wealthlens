@@ -1,5 +1,6 @@
 {
   "ruleId": "RET-GRATUITY-AGGREGATE",
+  "ruleSet": "RS-RET-GRATUITY-AGGREGATE",
   "_note": "The ceiling on other gratuity across employers and years (D-106; rulebook RET-GRAT-AGG-001): the aggregate deduction for the tax year may not exceed A − B, where A is the notified limit (this row's amount) and B the gratuity allowed in earlier years (LedgerSnapshot.gratuityAlreadyAllowed); the node forms A − B. TY 2026-27: Income-tax Act, 2025 s.19(2)(a) (p.44), \"if gratuity or gratuities was or were received from one or more than one employer in the same tax year (whether or not any gratuity or gratuities was or were received in any earlier tax year), the aggregate amount of deduction shall not exceed— A – B, where,— A = the limit specified by the Central Government, by notification; and B = the aggregate amount of gratuity or gratuities which was or were received in any one or more earlier tax years and allowed as an exemption or a deduction\". TY 2025-26: Income-tax Act, 1961 s.10(10)(iii) first and second provisos (thc.nic.in pp.71–72), to the same effect. A: S.O. 1213(E), twenty lakh rupees, the same notification as RET-GRATUITY-OTHER's limit. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

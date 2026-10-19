@@ -12,7 +12,7 @@ import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -64,7 +64,7 @@ class PipelineRecomputationTest {
         }
 
         @Override
-        public Set<RuleId> rules() {
+        public Set<RuleSetId> ruleSets() {
             return Set.of();
         }
 
@@ -88,7 +88,7 @@ class PipelineRecomputationTest {
         }
 
         @Override
-        public Set<RuleId> rules() {
+        public Set<RuleSetId> ruleSets() {
             return Set.of();
         }
 
@@ -112,7 +112,7 @@ class PipelineRecomputationTest {
         }
 
         @Override
-        public Set<RuleId> rules() {
+        public Set<RuleSetId> ruleSets() {
             return Set.of();
         }
 

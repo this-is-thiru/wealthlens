@@ -5,10 +5,12 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -27,9 +29,9 @@ import java.util.Set;
  */
 final class ExpenseBenefitPerquisite {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.PERQ_HOLIDAY, RuleIds.PERQ_CREDIT_CARD, RuleIds.PERQ_CLUB,
-            RuleIds.PERQ_CLUB_BUSINESS, RuleIds.PERQ_CLUB_UNIFORM, RuleIds.PERQ_CLUB_BUSINESS_UNIFORM,
-            RuleIds.PERQ_OTHER_BENEFIT);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_HOLIDAY, RuleSetIds.RS_PERQ_CREDIT_CARD, RuleSetIds.RS_PERQ_CLUB,
+            RuleSetIds.RS_PERQ_CLUB_BUSINESS, RuleSetIds.RS_PERQ_CLUB_UNIFORM, RuleSetIds.RS_PERQ_CLUB_BUSINESS_UNIFORM,
+            RuleSetIds.RS_PERQ_OTHER_BENEFIT);
 
     private static final BaseId BENEFIT_VALUE = new BaseId("BENEFIT_VALUE");
 
@@ -44,16 +46,16 @@ final class ExpenseBenefitPerquisite {
             int sequence = firstSequence + lines.size();
             lines.add(switch (benefit.kind()) {
                 case HOLIDAY, HOLIDAY_OWN_FACILITY_AT_PUBLIC_VALUE, FAMILY_ON_OFFICIAL_TOUR, TOUR_EXTENDED_AS_VACATION ->
-                        valued(ctx, RuleIds.PERQ_HOLIDAY, benefit, sequence, benefit.kind().name());
+                        valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_HOLIDAY), benefit, sequence, benefit.kind().name());
                 case CREDIT_CARD -> benefit.whollyForWork() && benefit.officialUse().journeysAndCertificateKept()
-                        ? nil(ctx, RuleIds.PERQ_CREDIT_CARD, benefit, sequence,
+                        ? nil(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CREDIT_CARD), benefit, sequence,
                                 "wholly for official purposes, with the employer's details and certificate")
-                        : valued(ctx, RuleIds.PERQ_CREDIT_CARD, benefit, sequence, "credit card");
+                        : valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CREDIT_CARD), benefit, sequence, "credit card");
                 case CLUB -> clubExclusion(ctx, benefit)
                         .map(ruleId -> nil(ctx, ruleId, benefit, sequence, "excluded by " + ruleId))
-                        .orElseGet(() -> valued(ctx, RuleIds.PERQ_CLUB, benefit, sequence, "club"));
-                case OTHER -> valued(ctx, RuleIds.PERQ_OTHER_BENEFIT, benefit, sequence, "at arm's-length cost");
-                case TELEPHONE -> nil(ctx, RuleIds.PERQ_OTHER_BENEFIT, benefit, sequence,
+                        .orElseGet(() -> valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CLUB), benefit, sequence, "club"));
+                case OTHER -> valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_OTHER_BENEFIT), benefit, sequence, "at arm's-length cost");
+                case TELEPHONE -> nil(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_OTHER_BENEFIT), benefit, sequence,
                         "expenses on telephones, a mobile phone's included, are excepted");
             });
         }
@@ -63,15 +65,17 @@ final class ExpenseBenefitPerquisite {
     /** The row whose facts make a club bill nil this year, if they hold — by which rows the year's pack carries. */
     private static Optional<RuleId> clubExclusion(NodeContext ctx, EmployerExpenseBenefit club) {
         boolean businessWithRecords = club.whollyForWork() && club.officialUse().journeysAndCertificateKept();
-        if (ctx.pack().rules().containsKey(RuleIds.PERQ_CLUB_BUSINESS_UNIFORM)) {
-            return businessWithRecords && club.healthClubUniformForAll()
-                    ? Optional.of(RuleIds.PERQ_CLUB_BUSINESS_UNIFORM) : Optional.empty();
+        Optional<RuleId> businessUniform = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CLUB_BUSINESS_UNIFORM).map(RuleRow::id);
+        if (businessUniform.isPresent()) {
+            return businessWithRecords && club.healthClubUniformForAll() ? businessUniform : Optional.empty();
         }
-        if (businessWithRecords && ctx.pack().rules().containsKey(RuleIds.PERQ_CLUB_BUSINESS)) {
-            return Optional.of(RuleIds.PERQ_CLUB_BUSINESS);
+        Optional<RuleId> business = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CLUB_BUSINESS).map(RuleRow::id);
+        if (businessWithRecords && business.isPresent()) {
+            return business;
         }
-        if (club.healthClubUniformForAll() && ctx.pack().rules().containsKey(RuleIds.PERQ_CLUB_UNIFORM)) {
-            return Optional.of(RuleIds.PERQ_CLUB_UNIFORM);
+        Optional<RuleId> uniform = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CLUB_UNIFORM).map(RuleRow::id);
+        if (club.healthClubUniformForAll() && uniform.isPresent()) {
+            return uniform;
         }
         return Optional.empty();
     }

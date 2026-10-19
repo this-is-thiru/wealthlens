@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-ACCOM-CONTINUED",
+  "ruleSet": "RS-PERQ-ACCOM-CONTINUED",
   "_note": "Owned or leased accommodation continued to the same employee for more than one tax year: \"the amount calculated in accordance with Table I: Sl. No. 2(a) or (b) shall not exceed the amount so calculated for the first tax year, as multiplied by\" the ratio of this year's Cost Inflation Index to the index for the year the accommodation was initially provided (D-115; rulebook PERQ-ACCOM-CAP-2026, alias PERQ-ACCOM-CONTINUED). The first tax year is 2023-24 or the year provided, whichever is later. PerquisiteNode scales the entered first-year amount (after rent, as the Table's column 3 ends \"as reduced by the rent\") by RATE-COST-INFLATION-INDEX and hands it in; this row is the cap. Accommodation first provided before 2023-24 is refused: which year's index divides is OQ-11. Furniture is outside the cap. TY 2026-27: Income-tax Rules, 2026 r.15(2)(d), (g) (Gazette 271092, p.1542). TY 2025-26: Income-tax Rules, 1962 r.3(1) third proviso and Explanation 2 as substituted by G.S.R. 615(E) (p.6), \"owned [or taken on lease or rent]\" by corrigendum G.S.R. 636(E) of 29-8-2023 (Gazette 248410, p.2). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

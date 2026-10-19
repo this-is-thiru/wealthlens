@@ -1,5 +1,6 @@
 {
   "ruleId": "RATE-CG-LONG-OTHER",
+  "ruleSet": "RS-RATE-CG-LONG-OTHER",
   "_note": "Long-term capital gains other than those of RATE-CG-LONG-LISTED-EQUITY, charged apart from total income (D-244). TY 2026-27: Income-tax Act, 2025 s.197(1)(b) (p.221): \"income-tax calculated on such long-term capital gains at the rate of 12.5%\". TY 2025-26: Income-tax Act, 1961 s.112(1)(a)(ii)(B) (a resident individual or HUF) and (d)(ii)(B) (any other resident) as substituted by the Finance (No. 2) Act, 2024 s.30 (pp.26–27): \"at the rate of twelve and one-half per cent. for any transfer which takes place on or after the 23rd day of July, 2024\". Not modelled: s.197(3) / the s.112(1)(a) second proviso (land or building acquired before 23-7-2024 — no input carries the asset kind; the adapter maps equity only) and s.197(4) / s.112(1)(c)(iii) (a non-resident's unlisted securities, how the gain is computed). The shortfall of s.197(2) / the s.112(1)(a) proviso is RATE-CG-SHORTFALL-ORDER's; Chapter VIII is kept off by s.197(5) / s.112(2). Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 17, 19.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

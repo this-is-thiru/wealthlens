@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-MEDABROAD-TRAVEL",
+  "ruleSet": "RS-PERQ-MEDABROAD-TRAVEL",
   "_note": "The employer's spending on travel abroad for medical treatment (of the employee, a family member, and one attendant) is excluded from the perquisite \"only in the case of an employee whose gross total income, as computed before including therein the said expenditure, does not exceed\" the prescribed amount; above it the travel is wholly salary (D-112; rulebook PERQ-MEDABROAD-001). The condition reads salary.incomebeforetravel: the salary head is the only head built, so it is the gross total income today; when another head lands the node must read their total (MedicalTreatmentAbroadNode). TY 2026-27: Income-tax Act, 2025 s.17(3)(b) (Gazette 265620, p.40); Income-tax Rules, 2026 r.19, \"₹ 800000\" (Gazette 271092, p.1550). TY 2025-26: Income-tax Act, 1961 s.17(2) proviso (vi) condition (B), where the Finance Act, 2025 s.9(b) replaced \"two lakh rupees\" with \"such amount as may be prescribed\" with effect from 1-4-2026 (assessment year 2026-27; Gazette 262125, p.20); Income-tax Rules, 1962 r.3D, \"eight lakh rupees\", inserted by G.S.R. 555(E) of 18-8-2025 and in force on publication (Gazette 265477, p.2). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

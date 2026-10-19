@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-RPF-CONTRIBUTION",
+  "ruleSet": "RS-PERQ-RPF-CONTRIBUTION",
   "_note": "The employer's contributions to an employee's account in a recognised provident fund in excess of twelve per cent of the employee's salary are deemed received and are salary, TY 2025-26 only (D-151; rulebook PF-RPF12-001): Income-tax Act, 1961 Sch. IV Pt A r.6(a) (thc.nic.in p.856), \"contributions made by the employer in excess of twelve per cent. of the salary of the employee\", charged by s.17(1)(vi) (p.140). Salary is SAL-SALARY-FOR-RPF. Measured per employment — each employer's contribution to its fund against that employer's salary. The Income-tax Act, 2025 as enacted had the same limb in Sch. XI Pt A para 6(a) (Gazette 265620, p.550); the Finance Act, 2026 s.127(a)(iii) substituted para 6 without it from 1-4-2026, the day the Act commenced (Gazette 271439, pp.70–71) — so the 2025 Act never charged it and there is no TY 2026-27 version. Separate from, and additional to, the aggregate beyond ₹7,50,000 (PERQ-EMPLOYER-CONTRIBUTION), as rulebook R13 states. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

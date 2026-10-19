@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-RESIDUAL",
+  "ruleSet": "RS-OS-RESIDUAL",
   "_note": "Income of every kind chargeable under other sources and under no other head, not one of the kinds named for the head, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(1) \"Income of every kind which is not to be excluded from the total income under this Act, shall be chargeable to income-tax under the head \"Income from other sources\", if it is not chargeable to income-tax under any of the heads specified in section 13(a) to (d)\" (p.137). TY 2025-26: 1961 s.56(1), \"under any of the heads specified in section 14, items A to E\", as enacted — its 1961 Gazette not found, as OS-INTEREST's and OS-OTHER-EXPENDITURE's. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

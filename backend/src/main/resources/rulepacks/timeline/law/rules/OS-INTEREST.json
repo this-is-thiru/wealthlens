@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-INTEREST",
+  "ruleSet": "RS-OS-INTEREST",
   "_note": "Interest is income from other sources unless it falls under another head — interest on securities by name, any other interest (deposits, savings) by the residual charge (D-194; rulebook OS-INT-001). The row states the whole as chargeable; relief for savings and deposit interest is Chapter VIII's (W-075c5). TY 2026-27: Income-tax Act, 2025 s.92(1) \"Income of every kind which is not to be excluded … shall be chargeable … under the head \"Income from other sources\", if it is not chargeable … under any of the heads specified in section 13(a) to (d)\" (p.137) and s.92(2)(e) \"any income by way of interest on securities\" (p.138). TY 2025-26: Income-tax Act, 1961 s.56(1) and (2)(id) (thc p.303). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

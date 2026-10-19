@@ -9,9 +9,10 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -31,8 +32,8 @@ import java.util.Set;
  */
 final class DonationDeduction {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.DED_DONATION_WHOLE, RuleIds.DED_DONATION_HALF,
-            RuleIds.DED_DONATION_QUALIFYING, RuleIds.DED_DONATION_CASH);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DONATION_WHOLE, RuleSetIds.RS_DED_DONATION_HALF,
+            RuleSetIds.RS_DED_DONATION_QUALIFYING, RuleSetIds.RS_DED_DONATION_CASH);
 
     private static final BaseId AMOUNT_PAID = new BaseId("AMOUNT_PAID");
     private static final BaseId ADJUSTED_GTI = new BaseId("ADJUSTED_GTI");
@@ -81,7 +82,7 @@ final class DonationDeduction {
                     + " are not (D-142)");
         }
         List<TraceLine> lines = new ArrayList<>();
-        if (!ctx.inRegime(RuleIds.DED_DONATION_WHOLE, version(ctx, RuleIds.DED_DONATION_WHOLE)).applies()) {
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE), version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE))).applies()) {
             notInRegime(ctx, donations, firstSequence, lines);
             return new Outcome(lines, false);
         }
@@ -89,21 +90,21 @@ final class DonationDeduction {
         boolean bound = false;
         Money limited = counted.limited();
         if (limited.isGreaterThan(Money.ZERO)) {
-            Money limit = apply(ctx, RuleIds.DED_DONATION_QUALIFYING, ADJUSTED_GTI, adjustedGrossTotal);
+            Money limit = apply(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_QUALIFYING), ADJUSTED_GTI, adjustedGrossTotal);
             if (limited.isGreaterThan(limit)) {
                 bound = true;
                 counted = withinLimit(counted, limit);
                 lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII,
-                                RuleIds.DED_DONATION_QUALIFYING, StepKind.MEASURE, MoneyValue.of(limited),
-                                MoneyValue.of(limit), version(ctx, RuleIds.DED_DONATION_QUALIFYING).provenance())
+                                ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_QUALIFYING), StepKind.MEASURE, MoneyValue.of(limited),
+                                MoneyValue.of(limit), version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_QUALIFYING)).provenance())
                         .withLimitedBy("10% of adjusted gross total income " + adjustedGrossTotal));
             }
         }
-        deduct(ctx, RuleIds.DED_DONATION_WHOLE, counted.whole(), "the whole, without limit", firstSequence, lines);
-        deduct(ctx, RuleIds.DED_DONATION_WHOLE, counted.wholeLimited(), "the whole, within the qualifying limit",
+        deduct(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE), counted.whole(), "the whole, without limit", firstSequence, lines);
+        deduct(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE), counted.wholeLimited(), "the whole, within the qualifying limit",
                 firstSequence, lines);
-        deduct(ctx, RuleIds.DED_DONATION_HALF, counted.half(), "half, without limit", firstSequence, lines);
-        deduct(ctx, RuleIds.DED_DONATION_HALF, counted.halfLimited(), "half, within the qualifying limit",
+        deduct(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF), counted.half(), "half, without limit", firstSequence, lines);
+        deduct(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF), counted.halfLimited(), "half, within the qualifying limit",
                 firstSequence, lines);
         return new Outcome(lines, bound);
     }
@@ -111,14 +112,14 @@ final class DonationDeduction {
     /** Sums each donation the bars let through into its group; a nil line for each one they stop. */
     private static Counted counted(NodeContext ctx, List<Donation> donations, int firstSequence,
             List<TraceLine> lines) {
-        CashPaymentLimit cash = RuleDefinitions.require(version(ctx, RuleIds.DED_DONATION_CASH).definition(),
-                CashPaymentLimit.class, RuleIds.DED_DONATION_CASH);
+        CashPaymentLimit cash = RuleDefinitions.require(version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_CASH)).definition(),
+                CashPaymentLimit.class, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_CASH));
         Money whole = Money.ZERO;
         Money wholeLimited = Money.ZERO;
         Money half = Money.ZERO;
         Money halfLimited = Money.ZERO;
         for (Donation donation : donations) {
-            Optional<Bar> bar = bar(donation, cash);
+            Optional<Bar> bar = bar(ctx, donation, cash);
             if (bar.isPresent()) {
                 lines.add(line(ctx, bar.get().row(), donation.amount(), Money.ZERO, bar.get().reason(),
                         firstSequence + lines.size()));
@@ -136,12 +137,12 @@ final class DonationDeduction {
     }
 
     /** s.133(5), then s.133(6): what stops a donation, if anything. */
-    private static Optional<Bar> bar(Donation donation, CashPaymentLimit cash) {
+    private static Optional<Bar> bar(NodeContext ctx, Donation donation, CashPaymentLimit cash) {
         if (!cash.allows(donation.amount(), donation.paidInCash())) {
-            return Optional.of(new Bar(RuleIds.DED_DONATION_CASH, "paid in cash over " + cash.atMost() + " (s.133(5))"));
+            return Optional.of(new Bar(ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_CASH), "paid in cash over " + cash.atMost() + " (s.133(5))"));
         }
         if (donation.clause() == DonationClause.CHARITABLE_INSTITUTION && !donation.reportedByDonee()) {
-            return Optional.of(new Bar(RuleIds.DED_DONATION_HALF, "not reported by the donee institution (s.133(6))"));
+            return Optional.of(new Bar(ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF), "not reported by the donee institution (s.133(6))"));
         }
         return Optional.empty();
     }
@@ -164,7 +165,7 @@ final class DonationDeduction {
             Money entered = donations.stream().filter(donation -> donation.clause().isWhole() == whole)
                     .map(Donation::amount).reduce(Money.ZERO, Money::plus);
             if (entered.isGreaterThan(Money.ZERO)) {
-                RuleId row = whole ? RuleIds.DED_DONATION_WHOLE : RuleIds.DED_DONATION_HALF;
+                RuleId row = whole ? ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE) : ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF);
                 lines.add(line(ctx, row, entered, Money.ZERO, ctx.inRegime(row, version(ctx, row)).whyNot(),
                         firstSequence + lines.size()));
             }

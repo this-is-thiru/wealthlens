@@ -49,7 +49,7 @@ class RegimeOffersTest {
         regimes.put(OLD, change.apply(PACK.regimes().get(OLD)));
         Map<ConditionSetId, ConditionSet> conditionSets = new HashMap<>(PACK.conditionSets());
         conditionSets.putAll(sets);
-        return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.components(),
+        return new RulePack(PACK.taxYear(), PACK.layers(), PACK.instruments(), PACK.rules(), PACK.ruleSets(), PACK.components(),
                 regimes, PACK.disallowanceSets(), conditionSets);
     }
 

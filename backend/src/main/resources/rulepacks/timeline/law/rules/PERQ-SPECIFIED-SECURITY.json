@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-SPECIFIED-SECURITY",
+  "ruleSet": "RS-PERQ-SPECIFIED-SECURITY",
   "_note": "A specified security or sweat equity shares allotted or transferred by the current or a former employer free or at a concession: \"the fair market value … on the date on which the option is exercised by the assessee, as reduced by the amount actually paid by, or recovered from, the assessee\" (S2 s.17(1)(d), (4)(h); 1961 s.17(2)(vi) and Explanation (c); D-121; rulebook PERQ-ESOP-001). The fair market value is the Rule's: a listed share's \"average of the opening price and closing price\" on the exercise date (on the highest-volume exchange where several); where it did not trade, the closing price on the closest preceding date; an unlisted share or another security, a merchant banker's value on the specified date (S4 r.15(6)–(7), Gazette 271092, pp.1547–1548; Rules 1962 r.3(8)–(9), consolidated rule 3, pp.4–5). The prices and valuation are entered; SpecifiedSecurityPerquisite computes the value and hands it in. Every employee; the income of the year of allotment. An eligible start-up's deferral (s.392(3); 1961 s.192(1C); PERQ-ESOP-002) changes when tax is paid, not this value — not modelled here (D-121 C3). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

@@ -7,7 +7,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import java.util.Set;
 
 /**
@@ -30,7 +30,7 @@ public final class GrossTotalIncomeNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
+    public Set<RuleSetId> ruleSets() {
         return Set.of();
     }
 

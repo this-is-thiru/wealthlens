@@ -12,14 +12,14 @@ import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
-import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -29,7 +29,6 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -64,33 +63,22 @@ public final class TaxByBasisNode implements ComputationNode {
         return Set.of(NodeIds.ROUND_TOTALINCOME, NodeIds.SETOFF);
     }
 
-    /**
-     * Every slab ladder in the pack: each regime's {@code rateTable}, and the conditional ladders
-     * that replace it for some assessees (D-072). A ladder not declared here is refused by
-     * {@link NodeContext#rule}.
-     */
-    private static final Set<RuleId> LADDERS = Set.of(
-            RuleIds.RATE_SLAB_NEW_TAX_REGIME,
-            RuleIds.RATE_SLAB_FIRST_SCHEDULE,
-            RuleIds.RATE_SLAB_FIRST_SCHEDULE_AGE_60TO79,
-            RuleIds.RATE_SLAB_FIRST_SCHEDULE_AGE_80);
-
     /** Each special-rate part and the row that charges it, in the order the trace shows them. */
-    private static final Map<CapitalGainsPart, RuleId> SPECIAL_RATES = specialRates();
+    private static final Map<CapitalGainsPart, RuleSetId> SPECIAL_RATES = specialRates();
 
     @Override
-    public Set<RuleId> rules() {
-        Set<RuleId> rules = new HashSet<>(LADDERS);
-        rules.addAll(SPECIAL_RATES.values());
-        rules.add(RuleIds.RATE_CG_SHORTFALL_ORDER);
+    public Set<RuleSetId> ruleSets() {
+        Set<RuleSetId> rules = new HashSet<>(SPECIAL_RATES.values());
+        rules.add(RuleSetIds.RS_RATE_SLAB);
+        rules.add(RuleSetIds.RS_RATE_CG_SHORTFALL_ORDER);
         return Set.copyOf(rules);
     }
 
-    private static Map<CapitalGainsPart, RuleId> specialRates() {
-        Map<CapitalGainsPart, RuleId> rates = new EnumMap<>(CapitalGainsPart.class);
-        rates.put(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, RuleIds.RATE_CG_SHORT_LISTED_EQUITY);
-        rates.put(CapitalGainsPart.LONG_TERM_OTHER, RuleIds.RATE_CG_LONG_OTHER);
-        rates.put(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, RuleIds.RATE_CG_LONG_LISTED_EQUITY);
+    private static Map<CapitalGainsPart, RuleSetId> specialRates() {
+        Map<CapitalGainsPart, RuleSetId> rates = new EnumMap<>(CapitalGainsPart.class);
+        rates.put(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, RuleSetIds.RS_RATE_CG_SHORT_LISTED_EQUITY);
+        rates.put(CapitalGainsPart.LONG_TERM_OTHER, RuleSetIds.RS_RATE_CG_LONG_OTHER);
+        rates.put(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, RuleSetIds.RS_RATE_CG_LONG_LISTED_EQUITY);
         return Collections.unmodifiableMap(rates);
     }
 
@@ -98,7 +86,8 @@ public final class TaxByBasisNode implements ComputationNode {
     public NodeResult evaluate(NodeContext ctx) {
         Money totalIncome = ctx.get(NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount();
         Map<CapitalGainsPart, Money> gains = specialRateGains(ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
-        RuleRow row = ladderFor(ctx);
+        // The slab ladder: each regime's own, unless an age ladder replaces it — the rows' conditions say which (D-252)
+        RuleRow row = ctx.ruleOf(RuleSetIds.RS_RATE_SLAB);
         RuleVersion version = TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal());
         if (!(version.cap() instanceof SlabLadder ladder)) {
             throw new IllegalStateException("Rate table " + row.id() + " for regime " + ctx.regime().code()
@@ -118,7 +107,7 @@ public final class TaxByBasisNode implements ComputationNode {
                         + atSpecialRates));
         Map<CapitalGainsPart, Money> charged = shiftShortfall(ctx, gains, nilBandCeiling(ladder).minus(atSlab), lines);
         for (Map.Entry<CapitalGainsPart, Money> part : charged.entrySet()) {
-            RuleId rate = SPECIAL_RATES.get(part.getKey());
+            RuleId rate = ctx.ruleIdOf(SPECIAL_RATES.get(part.getKey()));
             RuleVersion rateVersion = TemporallyApportionedCap.governingVersion(ctx.rule(rate), ctx.inputs().temporal());
             Money tax = TemporallyApportionedCap.apply(ctx.rule(rate), ctx.inputs().temporal(),
                     CapContext.of(((SlabLadder) rateVersion.cap()).base(), part.getValue())).value();
@@ -161,7 +150,7 @@ public final class TaxByBasisNode implements ComputationNode {
         if (!shifts || !shortfall.isGreaterThan(Money.ZERO)) {
             return gains;
         }
-        RuleRow orderRow = ctx.rule(RuleIds.RATE_CG_SHORTFALL_ORDER);
+        RuleRow orderRow = ctx.ruleOf(RuleSetIds.RS_RATE_CG_SHORTFALL_ORDER);
         RuleVersion version = TemporallyApportionedCap.governingVersion(orderRow, ctx.inputs().temporal());
         SpecialRateShortfallOrder order = RuleDefinitions.require(version.definition(), SpecialRateShortfallOrder.class,
                 orderRow.id());
@@ -195,31 +184,4 @@ public final class TaxByBasisNode implements ComputationNode {
         return ceiling;
     }
 
-    /**
-     * The regime's {@code rateTable}, unless a conditional ladder applies instead: one whose version
-     * in force applies in this regime and whose conditions all hold. Two holding at once is a pack
-     * defect, refused rather than resolved by picking one.
-     */
-    private static RuleRow ladderFor(NodeContext ctx) {
-        RuleId table = ctx.regime().rateTable();
-        ConditionContext conditions = ctx.conditions();
-        List<RuleRow> holding = LADDERS.stream()
-                .filter(id -> !id.equals(table))
-                .map(ctx::rule)
-                .filter(row -> replaces(ctx, row, conditions))
-                .sorted(Comparator.comparing(row -> row.id().value()))
-                .toList();
-        if (holding.size() > 1) {
-            throw new IllegalStateException("Slab ladders " + holding.stream().map(RuleRow::id).toList()
-                    + " all apply under regime " + ctx.regime().code() + "; exactly one may replace " + table);
-        }
-        return holding.isEmpty() ? ctx.rule(table) : holding.getFirst();
-    }
-
-    private static boolean replaces(NodeContext ctx, RuleRow row, ConditionContext conditions) {
-        RuleVersion version = TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal());
-        return ctx.inRegime(row.id(), version).applies()
-                && !version.conditions().isEmpty()
-                && version.conditions().stream().allMatch(condition -> condition.holds(conditions));
-    }
 }

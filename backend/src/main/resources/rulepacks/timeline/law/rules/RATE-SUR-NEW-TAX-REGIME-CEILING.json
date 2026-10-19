@@ -1,5 +1,6 @@
 {
   "ruleId": "RATE-SUR-NEW-TAX-REGIME-CEILING",
+  "ruleSet": "RS-RATE-SUR-CEILING",
   "_note": "FA 2026 s.2(5) (p.8) and s.3(5) (p.15): \"in respect of the persons mentioned in column B of the Table below, having total income chargeable to tax under sub-section (1A) of section 115BAC [s.3: section 202, 206(1) or 206(2)] … and such income exceeds the amount as specified in column C of the said Table but does not exceed the amount specified in column D thereof, the total amount payable as income-tax and surcharge thereon shall not exceed the amount determined as per the following formula:— To = Ro + So\" [s.3: Tn = Rn + Sn]. Table Sl. 6 (persons specified against Sl. Nos. 10 and 11), column C: Rs. 50,00,000; Rs. 1,00,00,000; Rs. 2,00,00,000 (the last open-ended). There is no Rs. 5,00,00,000 row, as there is no 37% rate (H-1). No words limit it to slab-rate tax. The thresholds restate the Table rather than being derived from the RATE-SUR-* ladders (D-085). Evaluated by W-056. Spans TY 2025-26 (s.2, AY 2026-27) and TY 2026-27 (s.3): the same figures.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

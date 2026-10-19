@@ -12,10 +12,10 @@ import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -66,9 +66,9 @@ public final class EmployerContributionNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        return Set.of(RuleIds.PERQ_EMPLOYER_CONTRIBUTION, RuleIds.PERQ_EMPLOYER_ACCRETION,
-                RuleIds.PERQ_RPF_CONTRIBUTION, RuleIds.PERQ_RPF_INTEREST);
+    public Set<RuleSetId> ruleSets() {
+        return Set.of(RuleSetIds.RS_PERQ_EMPLOYER_CONTRIBUTION, RuleSetIds.RS_PERQ_EMPLOYER_ACCRETION,
+                RuleSetIds.RS_PERQ_RPF_CONTRIBUTION, RuleSetIds.RS_PERQ_RPF_INTEREST);
     }
 
     @Override
@@ -98,10 +98,10 @@ public final class EmployerContributionNode implements ComputationNode {
                 PerquisiteNode.requireEnteredEmployment(ctx, contribution.employment(), "employer contribution");
                 aggregate = aggregate.plus(contribution.amount());
             }
-            RuleRow rule = ctx.rule(RuleIds.PERQ_EMPLOYER_CONTRIBUTION);
+            RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_EMPLOYER_CONTRIBUTION);
             CapResult capped = TemporallyApportionedCap.apply(rule, t, CapContext.of(CONTRIBUTIONS, aggregate));
             excess = capped.value();
-            lines.add(TraceLine.of(lines.size() + 1, produces(), RuleIds.PERQ_EMPLOYER_CONTRIBUTION, StepKind.INCOME,
+            lines.add(TraceLine.of(lines.size() + 1, produces(), ctx.ruleIdOf(RuleSetIds.RS_PERQ_EMPLOYER_CONTRIBUTION), StepKind.INCOME,
                             MoneyValue.of(aggregate), MoneyValue.of(excess),
                             TemporallyApportionedCap.governingVersion(rule, t).provenance())
                     .withLimitedBy(capped.limitedBy()));
@@ -114,10 +114,10 @@ public final class EmployerContributionNode implements ComputationNode {
                         + " the funds' income and balances for the year; enter the retirement fund history"));
         Money earlier = Money.min(fund.earlierExcessContributions().plus(fund.earlierTaxedAccretions()),
                 fund.openingBalance());
-        RuleRow rule = ctx.rule(RuleIds.PERQ_EMPLOYER_ACCRETION);
+        RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_EMPLOYER_ACCRETION);
         Money accretion = TemporallyApportionedCap.apply(rule, t,
                 CapContext.of(ACCRETION, accretion(excess, earlier, fund))).value();
-        lines.add(TraceLine.of(lines.size() + 1, produces(), RuleIds.PERQ_EMPLOYER_ACCRETION, StepKind.INCOME,
+        lines.add(TraceLine.of(lines.size() + 1, produces(), ctx.ruleIdOf(RuleSetIds.RS_PERQ_EMPLOYER_ACCRETION), StepKind.INCOME,
                         MoneyValue.of(fund.incomeAccrued()), MoneyValue.of(accretion),
                         TemporallyApportionedCap.governingVersion(rule, t).provenance())
                 .withLimitedBy("(PC " + excess + " ÷ 2 + PC1 + TP1 " + earlier + ") × I " + fund.incomeAccrued()
@@ -131,7 +131,8 @@ public final class EmployerContributionNode implements ComputationNode {
      * Act lost it to the Finance Act, 2026 s.127(a)(iii) before it commenced.
      */
     private Money recognisedFundContributions(NodeContext ctx, List<TraceLine> lines) {
-        if (!ctx.pack().rules().containsKey(RuleIds.PERQ_RPF_CONTRIBUTION)) {
+        Optional<RuleRow> row = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_RPF_CONTRIBUTION);
+        if (row.isEmpty()) {
             return Money.ZERO;
         }
         Map<Integer, Money> byEmployment = new TreeMap<>();
@@ -145,13 +146,13 @@ public final class EmployerContributionNode implements ComputationNode {
         }
         SalaryBases bases = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class);
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = ctx.rule(RuleIds.PERQ_RPF_CONTRIBUTION);
+        RuleRow rule = row.get();
         Money total = Money.ZERO;
         for (Map.Entry<Integer, Money> entry : byEmployment.entrySet()) {
-            Money salary = bases.of(RuleIds.SAL_SALARY_FOR_RPF, entry.getKey());
+            Money salary = bases.of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_RPF), entry.getKey());
             CapResult charged = TemporallyApportionedCap.apply(rule, t,
                     new CapContext(Map.of(CONTRIBUTION, entry.getValue(), SALARY, salary)));
-            lines.add(TraceLine.of(lines.size() + 1, produces(), RuleIds.PERQ_RPF_CONTRIBUTION, StepKind.INCOME,
+            lines.add(TraceLine.of(lines.size() + 1, produces(), rule.id(), StepKind.INCOME,
                             MoneyValue.of(entry.getValue()), MoneyValue.of(charged.value()),
                             TemporallyApportionedCap.governingVersion(rule, t).provenance())
                     .withLimitedBy(charged.limitedBy() + "; employment " + entry.getKey() + "'s salary " + salary));
@@ -178,10 +179,10 @@ public final class EmployerContributionNode implements ComputationNode {
                         + " rate of nil cannot be: enter the rate the fund allowed it at");
             }
             Money balance = interest.rateAllowed().baseYielding(interest.interestCredited());
-            RuleRow rule = ctx.rule(RuleIds.PERQ_RPF_INTEREST);
+            RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_RPF_INTEREST);
             CapResult charged = TemporallyApportionedCap.apply(rule, t,
                     new CapContext(Map.of(INTEREST, interest.interestCredited(), BALANCE, balance)));
-            lines.add(TraceLine.of(lines.size() + 1, produces(), RuleIds.PERQ_RPF_INTEREST, StepKind.INCOME,
+            lines.add(TraceLine.of(lines.size() + 1, produces(), ctx.ruleIdOf(RuleSetIds.RS_PERQ_RPF_INTEREST), StepKind.INCOME,
                             MoneyValue.of(interest.interestCredited()), MoneyValue.of(charged.value()),
                             TemporallyApportionedCap.governingVersion(rule, t).provenance())
                     .withLimitedBy(charged.limitedBy() + "; allowed at " + interest.rateAllowed().asPercentLabel()

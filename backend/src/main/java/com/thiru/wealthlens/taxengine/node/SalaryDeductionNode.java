@@ -16,10 +16,11 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -51,12 +52,8 @@ public final class SalaryDeductionNode implements ComputationNode {
     private static final BaseId SALARY = new BaseId("SALARY");
 
     /** The rules the deductions read — declared also by a node that applies them to another salary (D-113). */
-    static final Set<RuleId> RULES = Set.of(RuleIds.SAL_TAX_ON_EMPLOYMENT,
-            RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME, RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE,
-            RuleIds.SAL_ENTMT_ALLOWANCE);
-
-    private static final List<RuleId> STANDARD_DEDUCTIONS = List.of(
-            RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME, RuleIds.SAL_STANDARD_DEDUCTION_ANY_OTHER_CASE);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT,
+            RuleSetIds.RS_SAL_STANDARD_DEDUCTION, RuleSetIds.RS_SAL_ENTMT_ALLOWANCE);
 
     @Override
     public NodeId produces() {
@@ -69,7 +66,7 @@ public final class SalaryDeductionNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
+    public Set<RuleSetId> ruleSets() {
         return RULES;
     }
 
@@ -105,22 +102,22 @@ public final class SalaryDeductionNode implements ComputationNode {
      * for what was paid, naming the provision (D-165).
      */
     private static Optional<TraceLine> taxOnEmployment(NodeContext ctx) {
-        RuleVersion version = ctx.rule(RuleIds.SAL_TAX_ON_EMPLOYMENT).versionAt(ctx.inputs().temporal());
-        RegimeVerdict verdict = ctx.inRegime(RuleIds.SAL_TAX_ON_EMPLOYMENT, version);
+        RuleVersion version = ctx.ruleOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT).versionAt(ctx.inputs().temporal());
+        RegimeVerdict verdict = ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT), version);
         if (verdict instanceof RegimeVerdict.ExcludedByRow) {
             return Optional.empty();
         }
-        HeadTotal total = RuleDefinitions.require(version.definition(), HeadTotal.class, RuleIds.SAL_TAX_ON_EMPLOYMENT);
+        HeadTotal total = RuleDefinitions.require(version.definition(), HeadTotal.class, ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT));
         HeadTotalLines paid = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class), total,
-                RuleIds.SAL_TAX_ON_EMPLOYMENT);
+                ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT));
         if (verdict.applies()) {
-            return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, RuleIds.SAL_TAX_ON_EMPLOYMENT,
+            return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT),
                     StepKind.DEDUCTION, paid.asComponentSet(total), MoneyValue.of(paid.total()), version.provenance()));
         }
         if (!(verdict instanceof RegimeVerdict.Disallowed disallowed) || !paid.total().isGreaterThan(Money.ZERO)) {
             return Optional.empty();
         }
-        return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, RuleIds.SAL_TAX_ON_EMPLOYMENT,
+        return Optional.of(TraceLine.of(1, NodeIds.SALARY_DEDUCTIONS, ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT),
                         StepKind.DEDUCTION, paid.asComponentSet(total), MoneyValue.of(Money.ZERO), version.provenance())
                 .withLimitedBy(disallowed.whyNot()));
     }
@@ -132,12 +129,13 @@ public final class SalaryDeductionNode implements ComputationNode {
      * allowance; nil, naming the provision, where the regime forbids it (D-166).
      */
     private static Optional<TraceLine> entertainmentAllowance(NodeContext ctx, int sequence) {
-        RuleId ruleId = RuleIds.SAL_ENTMT_ALLOWANCE;
-        if (!ctx.pack().rules().containsKey(ruleId)) {
+        Optional<RuleRow> row = ctx.optionalRuleOf(RuleSetIds.RS_SAL_ENTMT_ALLOWANCE);
+        if (row.isEmpty()) {
             return Optional.empty();
         }
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = ctx.rule(ruleId);
+        RuleRow rule = row.get();
+        RuleId ruleId = rule.id();
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         RegimeVerdict verdict = ctx.inRegime(ruleId, version);
         if (verdict instanceof RegimeVerdict.ExcludedByRow) {
@@ -170,7 +168,7 @@ public final class SalaryDeductionNode implements ComputationNode {
                     .withLimitedBy(verdict.whyNot()));
         }
         Money salary = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class)
-                .of(RuleIds.SAL_SALARY_FOR_ENTMT, employment);
+                .of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_ENTMT), employment);
         CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(Map.of(SALARY, salary)));
         return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, ruleId, StepKind.DEDUCTION,
                         MoneyValue.of(paidByGovernment.get(employment)), MoneyValue.of(deducted.value()),
@@ -178,25 +176,15 @@ public final class SalaryDeductionNode implements ComputationNode {
                 .withLimitedBy(deducted.limitedBy()));
     }
 
-    /** The regime's standard deduction, capped at the salary; exactly one row may apply. */
+    /**
+     * The regime's standard deduction, capped at the salary. s.19(1) Table Sl. 2 gives every regime exactly one; which
+     * row is the regime's is the rule set's to say (D-252).
+     */
     private static TraceLine standardDeduction(NodeContext ctx, Money salary, int sequence) {
-        List<RuleVersion> applying = new ArrayList<>();
-        List<RuleId> rules = new ArrayList<>();
-        for (RuleId rule : STANDARD_DEDUCTIONS) {
-            RuleVersion version = ctx.rule(rule).versionAt(ctx.inputs().temporal());
-            if (ctx.inRegime(rule, version).applies()) {
-                applying.add(version);
-                rules.add(rule);
-            }
-        }
-        if (applying.size() != 1) {
-            throw new IllegalStateException("Regime " + ctx.regime().code() + " has " + rules
-                    + " as its standard deduction; s.19(1) Table Sl. 2 gives every regime exactly one");
-        }
-        RuleVersion version = applying.getFirst();
-        CapResult deduction = TemporallyApportionedCap.apply(
-                ctx.rule(rules.getFirst()), ctx.inputs().temporal(), CapContext.of(SALARY, salary));
-        return TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, rules.getFirst(), StepKind.DEDUCTION,
+        RuleRow row = ctx.ruleOf(RuleSetIds.RS_SAL_STANDARD_DEDUCTION);
+        RuleVersion version = row.versionAt(ctx.inputs().temporal());
+        CapResult deduction = TemporallyApportionedCap.apply(row, ctx.inputs().temporal(), CapContext.of(SALARY, salary));
+        return TraceLine.of(sequence, NodeIds.SALARY_DEDUCTIONS, row.id(), StepKind.DEDUCTION,
                         MoneyValue.of(salary), MoneyValue.of(deduction.value()), version.provenance())
                 .withLimitedBy(deduction.limitedBy());
     }

@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.ConditionSet;
 import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
 import com.thiru.wealthlens.taxengine.rules.pack.MidYearCombination;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSelection;
 import com.thiru.wealthlens.taxengine.rules.regime.BehaviourId;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
@@ -82,12 +83,37 @@ public final class PackValidator {
         checkYearIsCoveredWithoutGapOrOverlap(pack, problems);  // I13
         checkMidYearChangesAreDeclared(pack, problems);          // I14
         checkEveryVersionHasAnAmendment(pack, problems);         // I15
+        checkRequiredRuleSetsHoldARow(pack, problems);           // D-252
+        checkEveryRuleIsInARuleSet(pack, problems);              // D-252
 
         if (!problems.isEmpty()) {
             throw new PackValidationException(
                     "Pack " + pack.taxYear().label() + " has " + problems.size()
                             + " unresolved reference(s):\n  - " + String.join("\n  - ", problems));
         }
+    }
+
+    /** D-252 — a node reaches a row only through its set, so a row in none would be dead and silent about it. */
+    private static void checkEveryRuleIsInARuleSet(RulePack pack, List<String> problems) {
+        Set<RuleId> inASet = pack.membersOf(pack.ruleSets().keySet());
+        pack.rules().keySet().stream()
+                .filter(rule -> !inASet.contains(rule))
+                .map(rule -> "rule " + rule + " names no rule set; a node reaches a row only through its set")
+                .sorted()
+                .forEach(problems::add);
+    }
+
+    /**
+     * D-252 — a set that takes exactly one row holds one in this year: a node reads it unconditionally, so an empty
+     * one would fail at the first computation rather than here. A provision of one year only is {@code AT_MOST_ONE}.
+     */
+    private static void checkRequiredRuleSetsHoldARow(RulePack pack, List<String> problems) {
+        pack.ruleSets().values().stream()
+                .filter(set -> set.selection() == RuleSelection.EXACTLY_ONE && set.members().isEmpty())
+                .map(set -> "rule set " + set.id() + " takes exactly one row, and " + pack.taxYear().label()
+                        + " holds none of its rows")
+                .sorted()
+                .forEach(problems::add);
     }
 
     /**

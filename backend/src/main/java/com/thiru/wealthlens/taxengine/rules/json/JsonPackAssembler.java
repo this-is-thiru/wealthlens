@@ -59,6 +59,7 @@ public final class JsonPackAssembler implements PackAssembler {
                 layers,
                 instruments,
                 RuleJson.rules(rates, "law/rates.json"),
+                RuleSetJson.ruleSets(rates, "law/rates.json"),
                 RegistryJson.components(components, "exec/components.json"),
                 RegimeJson.regimes(regimes, "law/regimes.json"),
                 RegistryJson.disallowanceSets(regimes, "law/regimes.json"),

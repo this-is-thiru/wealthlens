@@ -18,10 +18,11 @@ import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -86,10 +87,10 @@ public final class SetOffNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        return Set.of(RuleIds.SETOFF_ACROSS_HEADS, RuleIds.SETOFF_HOUSE_PROPERTY, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
-                RuleIds.SETOFF_CARRIED_DISALLOWED_PART, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS,
-                RuleIds.SETOFF_CARRIED_CAPITAL_GAINS);
+    public Set<RuleSetId> ruleSets() {
+        return Set.of(RuleSetIds.RS_SETOFF_ACROSS_HEADS, RuleSetIds.RS_SETOFF_HOUSE_PROPERTY, RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY,
+                RuleSetIds.RS_SETOFF_CARRIED_DISALLOWED_PART, RuleSetIds.RS_SETOFF_WITHIN_CAPITAL_GAINS,
+                RuleSetIds.RS_SETOFF_CARRIED_CAPITAL_GAINS);
     }
 
     @Override
@@ -102,15 +103,15 @@ public final class SetOffNode implements ComputationNode {
         CapitalGainsHead capitalGains = ctx.get(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.class);
         Map<CapitalGainsPart, Money> parts = new EnumMap<>(capitalGains.parts());
         heads.put(HeadCode.CAPITAL_GAINS, capitalGains.total());
-        AbsorptionOrder declared = RuleDefinitions.require(version(ctx, t, RuleIds.SETOFF_ACROSS_HEADS).definition(),
-                AbsorptionOrder.class, RuleIds.SETOFF_ACROSS_HEADS);
+        AbsorptionOrder declared = RuleDefinitions.require(version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS)).definition(),
+                AbsorptionOrder.class, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS));
         Optional<List<HeadCode>> elected = ctx.inputs().entered().absorptionOrder();
         elected.ifPresent(stated -> requireSameHeads(stated, declared));
         OrderInUse order = new OrderInUse(elected.map(AbsorptionOrder::new).orElse(declared), elected.isPresent()
                 ? "elected (S2 s.109(1); 1961 s.71; D-221)"
                 : "the declared default: the Act prescribes none and none was elected (D-221)",
-                RuleDefinitions.require(version(ctx, t, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS).definition(),
-                        CapitalGainsAbsorptionOrder.class, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS));
+                RuleDefinitions.require(version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_WITHIN_CAPITAL_GAINS)).definition(),
+                        CapitalGainsAbsorptionOrder.class, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_WITHIN_CAPITAL_GAINS)));
         Map<HeadCode, Money> income = new EnumMap<>(HeadCode.class);
         heads.forEach((head, amount) -> income.put(head, Money.max(amount, Money.ZERO)));
         List<TraceLine> lines = new ArrayList<>();
@@ -130,7 +131,7 @@ public final class SetOffNode implements ComputationNode {
     private static void setOff(NodeContext ctx, TemporalContext t, OrderInUse order, HeadCode lossHead,
             Money loss, Absorbing into, List<TraceLine> lines) {
         boolean houseProperty = lossHead == HeadCode.HOUSE_PROPERTY;
-        RuleId row = houseProperty ? RuleIds.SETOFF_HOUSE_PROPERTY : RuleIds.SETOFF_ACROSS_HEADS;
+        RuleId row = houseProperty ? ctx.ruleIdOf(RuleSetIds.RS_SETOFF_HOUSE_PROPERTY) : ctx.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS);
         RuleVersion version = version(ctx, t, row);
         RegimeVerdict verdict = ctx.inRegime(row, version);
         if (!verdict.applies()) {
@@ -202,8 +203,8 @@ public final class SetOffNode implements ComputationNode {
     /** The carried house-property losses, oldest first, against the house-property income left (S2 s.110; 1961 s.71B). */
     private static void broughtForward(NodeContext ctx, TemporalContext t, Map<HeadCode, Money> income,
             List<TraceLine> lines) {
-        TaxYearSpan span = RuleDefinitions.require(version(ctx, t, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY).definition(),
-                TaxYearSpan.class, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY);
+        TaxYearSpan span = RuleDefinitions.require(version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY)).definition(),
+                TaxYearSpan.class, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY));
         TaxYearId thisYear = ctx.inputs().taxYear();
         Map<TaxYearId, CarriedHousePropertyLoss> byYear = new TreeMap<>(Comparator.comparingInt(TaxYearId::startYear));
         byYear.putAll(ctx.inputs().ledgers().housePropertyLossCarriedForward());
@@ -219,8 +220,8 @@ public final class SetOffNode implements ComputationNode {
                 continue;
             }
             if (!span.holds(arose, thisYear)) {
-                lines.add(line(lines, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
-                        version(ctx, t, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY), StepKind.MEASURE, remaining, remaining)
+                lines.add(line(lines, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY),
+                        version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY)), StepKind.MEASURE, remaining, remaining)
                         .withLimitedBy("loss of " + arose.label() + " expired: carried for no more than "
                                 + span.succeedingYears() + " tax years after it arose (S2 s.110(2); 1961 s.71B)"));
                 continue;
@@ -228,11 +229,11 @@ public final class SetOffNode implements ComputationNode {
             Money attributable = Money.max(carried.attributableToNewRegimeDisallowance().minus(carried.absorbedSince()),
                     Money.ZERO);
             Money left = useAttributable(ctx, t, arose, attributable, income, lines)
-                    .plus(use(ctx, t, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY, arose, remaining.minus(attributable),
+                    .plus(use(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY), arose, remaining.minus(attributable),
                             income, lines));
             if (left.isGreaterThan(Money.ZERO)) {
-                lines.add(line(lines, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
-                        version(ctx, t, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY), StepKind.MEASURE, remaining, left)
+                lines.add(line(lines, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY),
+                        version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY)), StepKind.MEASURE, remaining, left)
                         .withLimitedBy("loss of " + arose.label() + " still carried forward (S2 s.110; 1961 s.71B)"));
             }
         }
@@ -244,7 +245,7 @@ public final class SetOffNode implements ComputationNode {
         if (!attributable.isGreaterThan(Money.ZERO)) {
             return Money.ZERO;
         }
-        RuleId row = RuleIds.SETOFF_CARRIED_DISALLOWED_PART;
+        RuleId row = ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_DISALLOWED_PART);
         RuleVersion version = version(ctx, t, row);
         RegimeVerdict verdict = ctx.inRegime(row, version);
         if (!verdict.applies()) {

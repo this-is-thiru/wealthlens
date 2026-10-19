@@ -1,5 +1,6 @@
 {
   "ruleId": "HP-ANNUAL-VALUE",
+  "ruleSet": "RS-HP-ANNUAL-VALUE",
   "_note": "The annual value of a property let or not let (D-155; rulebook HP-AV-001, HP-AV-VACANCY-001, HP-AV-TAX-001). TY 2026-27: Income-tax Act, 2025 s.21(1) \"the higher of … (a) the sum for which it might reasonably be expected to let from year to year; or (b) the actual rent received or receivable by the owner, if the property or any part of it is let\"; (2) where let and vacant and owing to the vacancy the rent is less than (1)(a), \"the amount so received or receivable\"; (3) \"reduced by the taxes … levied by a local authority … actually paid during the tax year by the owner\" (Gazette 265620, p.47). TY 2025-26: Income-tax Act, 1961 s.23(1)(a)–(c) and its proviso (thc p.146) — the same three cases and the same reduction. HousePropertyNode works the higher of, the vacancy and the reduction and hands the annual value in; the row is cited on the line. Unrealised rent (s.21(4); 1961 s.23(1) Explanation) is W-078c. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

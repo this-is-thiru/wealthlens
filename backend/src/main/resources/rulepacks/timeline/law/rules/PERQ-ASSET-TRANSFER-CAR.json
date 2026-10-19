@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-ASSET-TRANSFER-CAR",
+  "ruleSet": "RS-PERQ-ASSET-TRANSFER-CAR",
   "_note": "Transfer of a movable asset: \"the actual cost of such assets to the employer as reduced by the cost of normal wear and tear\" and the price paid; for motor cars, wear and tear at 20% — \"20 % in the case of motor cars, by reducing balance method\" (r.15(5) Table IV Sl. 8, Gazette 271092, p.1547; TY 2025-26: Rules 1962 r.3(7)(viii) proviso, \"20 per cent\" by the reducing balance method, consolidated rule 3, p.4). This row is the rate; AssetPerquisite applies it (D-119 C5). For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1547). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

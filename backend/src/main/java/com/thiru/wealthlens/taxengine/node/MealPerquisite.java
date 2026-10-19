@@ -6,9 +6,10 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -31,7 +32,7 @@ import java.util.Set;
  */
 final class MealPerquisite {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.PERQ_MEAL, RuleIds.PERQ_MEAL_AT_WORK, RuleIds.PERQ_MEAL_VOUCHER);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_MEAL, RuleSetIds.RS_PERQ_MEAL_AT_WORK, RuleSetIds.RS_PERQ_MEAL_VOUCHER);
 
     private static final BaseId MEAL_VALUE = new BaseId("MEAL_VALUE");
     private static final BaseId MEAL = new BaseId("MEAL");
@@ -46,10 +47,10 @@ final class MealPerquisite {
             PerquisiteNode.requireEnteredEmployment(ctx, meals.employment(), "meals");
             int sequence = firstSequence + lines.size();
             lines.add(switch (meals.setting()) {
-                case AT_WORK -> beyondTheLimit(ctx, RuleIds.PERQ_MEAL_AT_WORK, meals, sequence);
-                case PAID_VOUCHER -> appliesInRegime(ctx, RuleIds.PERQ_MEAL_VOUCHER)
-                        ? beyondTheLimit(ctx, RuleIds.PERQ_MEAL_VOUCHER, meals, sequence)
-                        : inFull(ctx, meals, sequence, "paid vouchers: " + RuleIds.PERQ_MEAL_VOUCHER
+                case AT_WORK -> beyondTheLimit(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL_AT_WORK), meals, sequence);
+                case PAID_VOUCHER -> appliesInRegime(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL_VOUCHER))
+                        ? beyondTheLimit(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL_VOUCHER), meals, sequence)
+                        : inFull(ctx, meals, sequence, "paid vouchers: " + ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL_VOUCHER)
                                 + "'s limit does not apply in " + ctx.regime().code());
                 case TEA_OR_SNACKS_AT_WORK -> notSalary(ctx, meals, sequence, "tea or snacks during working hours");
                 case AT_WORK_REMOTE_OR_OFFSHORE -> notSalary(ctx, meals, sequence,
@@ -67,13 +68,13 @@ final class MealPerquisite {
     }
 
     private static TraceLine inFull(NodeContext ctx, EmployerMeals meals, int sequence, String why) {
-        CapResult valued = TemporallyApportionedCap.apply(ctx.rule(RuleIds.PERQ_MEAL), ctx.inputs().temporal(),
+        CapResult valued = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_MEAL), ctx.inputs().temporal(),
                 CapContext.of(MEAL_VALUE, total(meals)));
-        return line(ctx, RuleIds.PERQ_MEAL, meals, valued.value(), sequence, why);
+        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL), meals, valued.value(), sequence, why);
     }
 
     private static TraceLine notSalary(NodeContext ctx, EmployerMeals meals, int sequence, String why) {
-        return line(ctx, RuleIds.PERQ_MEAL, meals, Money.ZERO, sequence, "not a perquisite: " + why);
+        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL), meals, Money.ZERO, sequence, "not a perquisite: " + why);
     }
 
     private static boolean appliesInRegime(NodeContext ctx, RuleId ruleId) {

@@ -12,9 +12,10 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -39,9 +40,9 @@ import java.util.Set;
  */
 final class DisabilityDeduction {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.DED_DISABILITY, RuleIds.DED_DISABILITY_SEVERE,
-            RuleIds.DED_DISABLED_DEPENDANT, RuleIds.DED_DISABLED_DEPENDANT_SEVERE, RuleIds.DED_SPECIFIED_DISEASE,
-            RuleIds.DED_SPECIFIED_DISEASE_SENIOR);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DISABILITY, RuleSetIds.RS_DED_DISABILITY_SEVERE,
+            RuleSetIds.RS_DED_DISABLED_DEPENDANT, RuleSetIds.RS_DED_DISABLED_DEPENDANT_SEVERE, RuleSetIds.RS_DED_SPECIFIED_DISEASE,
+            RuleSetIds.RS_DED_SPECIFIED_DISEASE_SENIOR);
 
     private static final BaseId AMOUNT_CLAIMED = new BaseId("AMOUNT_CLAIMED");
 
@@ -63,7 +64,7 @@ final class DisabilityDeduction {
             return;
         }
         RuleId row = individual.disability().get() == DisabilitySeverity.SEVERE_DISABILITY
-                ? RuleIds.DED_DISABILITY_SEVERE : RuleIds.DED_DISABILITY;
+                ? ctx.ruleIdOf(RuleSetIds.RS_DED_DISABILITY_SEVERE) : ctx.ruleIdOf(RuleSetIds.RS_DED_DISABILITY);
         RuleVersion version = version(ctx, row);
         Optional<Condition> unmet = version.conditions().stream()
                 .filter(condition -> !condition.holds(ctx.conditions()))
@@ -102,7 +103,7 @@ final class DisabilityDeduction {
         DisabilitySeverity severity = member.disability().orElseThrow(() -> new IllegalArgumentException(
                 "Family member " + support.familyMember() + " has no certified disability (s.127(1))"));
         RuleId row = severity == DisabilitySeverity.SEVERE_DISABILITY
-                ? RuleIds.DED_DISABLED_DEPENDANT_SEVERE : RuleIds.DED_DISABLED_DEPENDANT;
+                ? ctx.ruleIdOf(RuleSetIds.RS_DED_DISABLED_DEPENDANT_SEVERE) : ctx.ruleIdOf(RuleSetIds.RS_DED_DISABLED_DEPENDANT);
         if (!support.spentOrDeposited().isGreaterThan(Money.ZERO)) {
             lines.add(line(ctx, firstSequence + lines.size(), row, version(ctx, row), Money.ZERO, Money.ZERO,
                     "nothing spent or deposited"));
@@ -117,7 +118,7 @@ final class DisabilityDeduction {
         if (treatments.isEmpty()) {
             return;
         }
-        RuleVersion seniorRow = version(ctx, RuleIds.DED_SPECIFIED_DISEASE_SENIOR);
+        RuleVersion seniorRow = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SPECIFIED_DISEASE_SENIOR));
         Money net = Money.ZERO;
         List<Boolean> seniors = new ArrayList<>();
         for (SpecifiedDiseaseTreatment treatment : treatments) {
@@ -131,7 +132,7 @@ final class DisabilityDeduction {
             throw new IllegalArgumentException("Specified-disease treatment for a senior citizen and someone who is not"
                     + " in one year: which limit applies is not settled (s.128(4); OQ-20), so it is refused");
         }
-        RuleId row = seniors.contains(true) ? RuleIds.DED_SPECIFIED_DISEASE_SENIOR : RuleIds.DED_SPECIFIED_DISEASE;
+        RuleId row = seniors.contains(true) ? ctx.ruleIdOf(RuleSetIds.RS_DED_SPECIFIED_DISEASE_SENIOR) : ctx.ruleIdOf(RuleSetIds.RS_DED_SPECIFIED_DISEASE);
         claimed(ctx, firstSequence, lines, row, net);
     }
 

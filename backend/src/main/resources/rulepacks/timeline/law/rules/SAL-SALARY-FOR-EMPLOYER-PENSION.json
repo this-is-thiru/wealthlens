@@ -1,5 +1,6 @@
 {
   "ruleId": "SAL-SALARY-FOR-EMPLOYER-PENSION",
+  "ruleSet": "RS-SAL-SALARY-FOR-EMPLOYER-PENSION",
   "_note": "The salary that the employer's contribution to the s.124 pension scheme is measured against (D-092; rulebook SAL-DEF-NPS-001). TY 2026-27: Income-tax Act, 2025 s.124(13)(b) (p.161): \"'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites\". Finance Act, 2026 (4 of 2026) searched in full: it contains no \"dearness\" or \"terms of employment\" and amends none of s.19, s.124 or Schedule XV. TY 2025-26: Income-tax Act, 1961 s.80CCD Explanation (thc p.339), inserted with the section by Finance (No. 2) Act, 2004 (23 of 2004) s.15 (Goa Official Gazette reprint, Series I No. 9, 2-6-2005, p.221): \"For the purposes of this section, 'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites.\" The Act was \"assented to by the President of India on 10-9-2004 and published in the Gazette of India, Extraordinary, Part II, Section 1, dated 10-9-2004\" and is in force from 1-4-2004 (thc footnote). Not searched: any amendment since Act 7 of 2019 to the provisions quoted from the thc.nic.in copy.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

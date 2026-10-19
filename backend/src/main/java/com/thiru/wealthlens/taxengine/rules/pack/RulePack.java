@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
@@ -11,8 +12,11 @@ import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.registry.GoverningInstruments;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +33,7 @@ import java.util.stream.Collectors;
  * @param layers each layer's version and checksum; all four required
  * @param instruments the Acts and Rules this pack was read from
  * @param rules by id
+ * @param ruleSets the rows nodes evaluate together, by id; every member a rule of this pack, none in two sets (D-252)
  * @param components the component registry
  * @param regimes by code
  * @param disallowanceSets shared disallowance lists, by id — the s.205(1) pattern
@@ -39,6 +44,7 @@ public record RulePack(
         Map<RulePackLayer, RulePackRef> layers,
         GoverningInstruments instruments,
         Map<RuleId, RuleRow> rules,
+        Map<RuleSetId, RuleSet> ruleSets,
         Map<ComponentCode, ComponentDefinition> components,
         Map<RegimeCode, RegimeSpec> regimes,
         Map<DisallowanceSetId, DisallowanceSet> disallowanceSets,
@@ -54,6 +60,7 @@ public record RulePack(
             throw new IllegalArgumentException(taxYear + " must name its governing instruments");
         }
         rules = rules == null ? Map.of() : Map.copyOf(rules);
+        ruleSets = ruleSets == null ? Map.of() : Map.copyOf(ruleSets);
         components = components == null ? Map.of() : Map.copyOf(components);
         regimes = regimes == null ? Map.of() : Map.copyOf(regimes);
         disallowanceSets = disallowanceSets == null ? Map.of() : Map.copyOf(disallowanceSets);
@@ -61,6 +68,7 @@ public record RulePack(
 
         requireRulesFiledUnderTheirOwnIds(taxYear, rules);
         requireOnlyPublishedVersions(taxYear, rules);
+        requireSetMembersAreRulesOfOneSet(taxYear, rules, ruleSets);
     }
 
     private static Map<RulePackLayer, RulePackRef> everyLayerVersioned(
@@ -90,6 +98,28 @@ public record RulePack(
      * status here means the pack was built wrong; it is refused rather than filtered, because
      * filtering belongs to the compiler (D-052).
      */
+    private static void requireSetMembersAreRulesOfOneSet(
+            TaxYearId taxYear, Map<RuleId, RuleRow> rules, Map<RuleSetId, RuleSet> ruleSets) {
+        Map<RuleId, RuleSetId> setOf = new HashMap<>();
+        for (Map.Entry<RuleSetId, RuleSet> entry : ruleSets.entrySet()) {
+            if (!entry.getKey().equals(entry.getValue().id())) {
+                throw new IllegalArgumentException(
+                        "Rule set filed under " + entry.getKey() + " calls itself " + entry.getValue().id());
+            }
+            for (RuleId member : entry.getValue().members()) {
+                if (!rules.containsKey(member)) {
+                    throw new IllegalArgumentException(taxYear + " rule set " + entry.getKey() + " lists " + member
+                            + ", which the pack does not hold");
+                }
+                RuleSetId earlier = setOf.put(member, entry.getKey());
+                if (earlier != null) {
+                    throw new IllegalArgumentException(taxYear + " rule " + member + " is in two rule sets, "
+                            + earlier + " and " + entry.getKey() + "; a row belongs to one");
+                }
+            }
+        }
+    }
+
     private static void requireOnlyPublishedVersions(TaxYearId taxYear, Map<RuleId, RuleRow> rules) {
         for (RuleRow row : rules.values()) {
             for (RuleVersion version : row.versions()) {
@@ -145,6 +175,20 @@ public record RulePack(
      * @throws IllegalArgumentException if the pack has no such rule — a reference the validator
      *     should have rejected at load (invariant I2)
      */
+    public RuleSet ruleSet(RuleSetId id) {
+        RuleSet set = ruleSets.get(id);
+        if (set == null) {
+            throw new IllegalArgumentException(
+                    "Pack " + taxYear + " has no rule set " + id + "; it holds " + ruleSets.size() + " sets");
+        }
+        return set;
+    }
+
+    /** Every row of {@code sets} the year holds — to recognise a row by its set, never to choose one (D-252). */
+    public Set<RuleId> membersOf(Collection<RuleSetId> sets) {
+        return sets.stream().flatMap(set -> ruleSet(set).members().stream()).collect(Collectors.toUnmodifiableSet());
+    }
+
     public RuleRow rule(RuleId id) {
         RuleRow row = rules.get(id);
         if (row == null) {

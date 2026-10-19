@@ -1,5 +1,6 @@
 {
   "ruleId": "HP-OWN-RESIDENCE-INTEREST",
+  "ruleSet": "RS-HP-OWN-RESIDENCE-INTEREST",
   "_note": "Interest payable on capital borrowed for an own residence (S2 s.21(6); 1961 s.23(2)) is deducted, within HP-OWN-RESIDENCE-INTEREST-CAP, except in the new tax regime (D-156; rulebook HP-DED-INT-001, HP-NEW-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(b) (Gazette 265620, p.47); s.202(2)(a)(v): the new regime's total income is computed without \"section 22(1)(b), in respect of properties referred to in section 21(6)\" (p.227); the Finance Act, 2026 amends s.202(2)(a) only by omitting (iii) (s.56, Gazette 271439, p.46). TY 2025-26: Income-tax Act, 1961 s.24(b) (thc p.147); s.115BAC(2)(i) as substituted by the Finance Act, 2023 s.52(C): computed without \"clause (b) of section 24 [in respect of the property referred to in sub-section (2) of section 23]\" (Gazette 244830, p.34). PercentOfBase 100 states the node's arithmetic. The same s.22(6) / s.25 and s.130–131 exclusions as HP-INTEREST. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

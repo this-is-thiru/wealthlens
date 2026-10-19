@@ -1,5 +1,7 @@
 {
   "ruleId": "REBATE-NEW-TAX-REGIME-EXCESS",
+  "ruleSet": "RS-REBATE",
+  "ruleSetPosition": 2,
   "_note": "S2 s.156(2)(b): \"the total income exceeds twelve lakh rupees and the income-tax payable on such total income exceeds the amount by which the total income is in excess of twelve lakh rupees, an amount equal to the amount by which the income-tax payable on such total income is in excess of the amount by which the total income exceeds twelve lakh rupees\". Limited by s.156(3). Not amended by FA 2026. 1961 counterpart: s.87A first proviso (b), as amended by FA 2025 s.20. TY 2025-26 (W-052c, D-082): FA 2025 s.20, w.e.f. 1st April, 2026, amends 1961 s.87A's first proviso (b) to \"twelve hundred thousand rupees\" / \"sixty thousand rupees\" and inserts the second proviso: \"the deduction under the first proviso, shall not exceed the amount of income-tax payable as per the rates provided in sub-section (1A) of section 115BAC\" — the same figures and limit. AY 2026-27 = TY 2025-26.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

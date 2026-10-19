@@ -13,10 +13,11 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -64,32 +65,32 @@ public final class PerquisiteNode implements ComputationNode {
     private static final BaseId SCALED_FIRST_YEAR_VALUE = new BaseId("SCALED_FIRST_YEAR_VALUE");
     private static final ProrationBasis BY_DAYS_OCCUPIED = new Days();
 
-    private static final Map<AccommodationProvider, RuleId> RULE_FOR_PROVIDER = providerRules();
+    private static final Map<AccommodationProvider, RuleSetId> RULE_FOR_PROVIDER = providerRules();
 
-    private static final Set<RuleId> RULES = rulesRead();
+    private static final Set<RuleSetId> RULES = rulesRead();
 
-    private static Set<RuleId> rulesRead() {
-        Set<RuleId> rules = new HashSet<>(MotorCarPerquisite.RULES);
+    private static Set<RuleSetId> rulesRead() {
+        Set<RuleSetId> rules = new HashSet<>(MotorCarPerquisite.RULES);
         rules.addAll(MealPerquisite.RULES);
-        rules.add(RuleIds.PERQ_GIFT);
+        rules.add(RuleSetIds.RS_PERQ_GIFT);
         rules.addAll(LoanPerquisite.RULES);
         rules.addAll(ExpenseBenefitPerquisite.RULES);
         rules.addAll(AssetPerquisite.RULES);
         rules.addAll(HouseholdBenefitPerquisite.RULES);
         rules.addAll(SpecifiedSecurityPerquisite.RULES);
-        rules.add(RuleIds.PERQ_SPECIFIED_EMPLOYEE);
-        rules.addAll(Set.of(RuleIds.PERQ_ACCOM_GOVERNMENT, RuleIds.PERQ_ACCOM_OWNED, RuleIds.PERQ_ACCOM_LEASED,
-                RuleIds.PERQ_ACCOM_HOTEL, RuleIds.PERQ_ACCOM_FURNITURE, RuleIds.PERQ_ACCOM_CONTINUED,
-                RuleIds.RATE_COST_INFLATION_INDEX));
+        rules.add(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE);
+        rules.addAll(Set.of(RuleSetIds.RS_PERQ_ACCOM_GOVERNMENT, RuleSetIds.RS_PERQ_ACCOM_OWNED, RuleSetIds.RS_PERQ_ACCOM_LEASED,
+                RuleSetIds.RS_PERQ_ACCOM_HOTEL, RuleSetIds.RS_PERQ_ACCOM_FURNITURE, RuleSetIds.RS_PERQ_ACCOM_CONTINUED,
+                RuleSetIds.RS_RATE_COST_INFLATION_INDEX));
         return Set.copyOf(rules);
     }
 
-    private static Map<AccommodationProvider, RuleId> providerRules() {
-        Map<AccommodationProvider, RuleId> rules = new EnumMap<>(AccommodationProvider.class);
-        rules.put(AccommodationProvider.GOVERNMENT, RuleIds.PERQ_ACCOM_GOVERNMENT);
-        rules.put(AccommodationProvider.EMPLOYER_OWNED, RuleIds.PERQ_ACCOM_OWNED);
-        rules.put(AccommodationProvider.EMPLOYER_LEASED, RuleIds.PERQ_ACCOM_LEASED);
-        rules.put(AccommodationProvider.HOTEL, RuleIds.PERQ_ACCOM_HOTEL);
+    private static Map<AccommodationProvider, RuleSetId> providerRules() {
+        Map<AccommodationProvider, RuleSetId> rules = new EnumMap<>(AccommodationProvider.class);
+        rules.put(AccommodationProvider.GOVERNMENT, RuleSetIds.RS_PERQ_ACCOM_GOVERNMENT);
+        rules.put(AccommodationProvider.EMPLOYER_OWNED, RuleSetIds.RS_PERQ_ACCOM_OWNED);
+        rules.put(AccommodationProvider.EMPLOYER_LEASED, RuleSetIds.RS_PERQ_ACCOM_LEASED);
+        rules.put(AccommodationProvider.HOTEL, RuleSetIds.RS_PERQ_ACCOM_HOTEL);
         return Map.copyOf(rules);
     }
 
@@ -104,7 +105,7 @@ public final class PerquisiteNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
+    public Set<RuleSetId> ruleSets() {
         return RULES;
     }
 
@@ -134,7 +135,7 @@ public final class PerquisiteNode implements ComputationNode {
     private static TraceLine accommodation(NodeContext ctx, EmployerAccommodation accommodation, int sequence) {
         TemporalContext t = ctx.inputs().temporal();
         requireWithinYear(accommodation.occupied(), t);
-        RuleId ruleId = RULE_FOR_PROVIDER.get(accommodation.provider());
+        RuleId ruleId = ctx.ruleIdOf(RULE_FOR_PROVIDER.get(accommodation.provider()));
         RuleRow rule = ctx.rule(ruleId);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         Money salary = salaryFor(ctx, accommodation, t);
@@ -183,12 +184,12 @@ public final class PerquisiteNode implements ComputationNode {
                     + " the first tax year's is not settled (OQ-11), so it cannot be valued yet (D-115)");
         }
         Money scaled = firstYearValue.scaledBy(index.of(t.taxYear()), index.of(accommodation.firstProvidedIn()));
-        return TemporallyApportionedCap.apply(ctx.rule(RuleIds.PERQ_ACCOM_CONTINUED), t,
+        return TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_ACCOM_CONTINUED), t,
                 CapContext.of(SCALED_FIRST_YEAR_VALUE, scaled)).value();
     }
 
     private static IndexByYear costInflationIndex(NodeContext ctx, TemporalContext t) {
-        RuleId ruleId = RuleIds.RATE_COST_INFLATION_INDEX;
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_RATE_COST_INFLATION_INDEX);
         return RuleDefinitions.require(ctx.rule(ruleId).versionAt(t).definition(), IndexByYear.class, ruleId);
     }
 
@@ -196,14 +197,14 @@ public final class PerquisiteNode implements ComputationNode {
     private static TraceLine furniture(NodeContext ctx, EmployerAccommodation accommodation, Furniture furniture,
             int sequence) {
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = ctx.rule(RuleIds.PERQ_ACCOM_FURNITURE);
+        RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_ACCOM_FURNITURE);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         Money charged = furniture.cost()
                 .map(cost -> BY_DAYS_OCCUPIED.apportion(TemporallyApportionedCap.apply(rule, t,
                         new CapContext(Map.of(FURNITURE_COST, cost))).value(), t.taxYear(), accommodation.occupied()))
                 .orElseGet(() -> furniture.hireCharges().orElseThrow());
         Money value = charged.minus(furniture.employeeCharges()).floorAtZero();
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, RuleIds.PERQ_ACCOM_FURNITURE, StepKind.INCOME,
+        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ACCOM_FURNITURE), StepKind.INCOME,
                         MoneyValue.of(charged), MoneyValue.of(value), version.provenance())
                 .withLimitedBy((furniture.cost().isPresent() ? "ten per cent a year of the cost" : "hire charges")
                         + ", less the employee's charges " + furniture.employeeCharges());
@@ -220,7 +221,7 @@ public final class PerquisiteNode implements ComputationNode {
                     + ", but " + ctx.inputs().entered().employments().size() + " were entered");
         }
         Money base = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class)
-                .of(RuleIds.SAL_SALARY_FOR_ACCOM, accommodation.employment());
+                .of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_ACCOM), accommodation.employment());
         Money exempt = ctx.get(NodeIds.SALARY_EXEMPTIONS, MoneyValue.class).asMoney();
         return BY_DAYS_OCCUPIED.apportion(base.minus(exempt).floorAtZero(), t.taxYear(), accommodation.occupied());
     }

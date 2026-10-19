@@ -5,7 +5,9 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.rounding.RuleRounding;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -19,13 +21,15 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
  * <p>The row states the step; the only method implemented is s.516's ₹10, so any other step is refused
  * rather than rounded to ten under a row that says otherwise.
  */
-record RoundingStep(NodeId produces, NodeId reads, RuleId rule) {
+record RoundingStep(NodeId produces, NodeId reads, RuleSetId ruleSet) {
 
     private static final Money SECTION_516_STEP = Money.TEN;
 
     NodeResult apply(NodeContext ctx) {
         Money amount = ctx.get(reads, MoneyValue.class).amount();
-        RuleVersion version = ctx.rule(rule).versionAt(ctx.inputs().temporal());
+        RuleRow row = ctx.ruleOf(ruleSet);
+        RuleId rule = row.id();
+        RuleVersion version = row.versionAt(ctx.inputs().temporal());
         RuleRounding rounding = version.rounding().orElseThrow(() -> new IllegalStateException(
                 "Rounding rule " + rule + " states no rounding"));
         if (!rounding.toNearest().equals(SECTION_516_STEP)) {

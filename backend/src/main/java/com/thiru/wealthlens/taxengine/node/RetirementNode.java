@@ -16,11 +16,12 @@ import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The retirement and termination deductions from salary (S2 s.19(1) Table Sl. 3–14 with s.19(2); 1961 s.10(10),
@@ -54,25 +56,25 @@ import java.util.Set;
  */
 public final class RetirementNode implements ComputationNode {
 
-    private static final Map<RetirementEntry, RuleId> RULE_FOR_ENTRY = entryRules();
+    private static final Map<RetirementEntry, RuleSetId> RULE_FOR_ENTRY = entryRules();
 
     private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
     private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
 
-    private static Map<RetirementEntry, RuleId> entryRules() {
-        Map<RetirementEntry, RuleId> rules = new EnumMap<>(RetirementEntry.class);
-        rules.put(RetirementEntry.GOVERNMENT_GRATUITY, RuleIds.RET_GRATUITY_GOVERNMENT);
-        rules.put(RetirementEntry.DEFENCE_RETIRING_GRATUITY, RuleIds.RET_GRATUITY_GOVERNMENT);
-        rules.put(RetirementEntry.GOVERNMENT_COMMUTATION, RuleIds.RET_COMMUTED_PENSION_GOVERNMENT);
-        rules.put(RetirementEntry.OTHER_EMPLOYER_COMMUTATION, RuleIds.RET_COMMUTED_PENSION_OTHER);
-        rules.put(RetirementEntry.FUND_COMMUTATION, RuleIds.RET_COMMUTED_PENSION_FUND);
-        rules.put(RetirementEntry.APPROVED_SCHEME_RETRENCHMENT, RuleIds.RET_RETRENCHMENT_APPROVED_SCHEME);
-        rules.put(RetirementEntry.VOLUNTARY_RETIREMENT, RuleIds.RET_VOLUNTARY_RETIREMENT);
-        rules.put(RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT, RuleIds.RET_LEAVE_ENCASHMENT_GOVERNMENT);
-        rules.put(RetirementEntry.OTHER_GRATUITY, RuleIds.RET_GRATUITY_OTHER);
-        rules.put(RetirementEntry.OTHER_LEAVE_ENCASHMENT, RuleIds.RET_LEAVE_ENCASHMENT_OTHER);
-        rules.put(RetirementEntry.STATUTORY_GRATUITY, RuleIds.RET_GRATUITY_STATUTORY);
-        rules.put(RetirementEntry.RETRENCHMENT, RuleIds.RET_RETRENCHMENT);
+    private static Map<RetirementEntry, RuleSetId> entryRules() {
+        Map<RetirementEntry, RuleSetId> rules = new EnumMap<>(RetirementEntry.class);
+        rules.put(RetirementEntry.GOVERNMENT_GRATUITY, RuleSetIds.RS_RET_GRATUITY_GOVERNMENT);
+        rules.put(RetirementEntry.DEFENCE_RETIRING_GRATUITY, RuleSetIds.RS_RET_GRATUITY_GOVERNMENT);
+        rules.put(RetirementEntry.GOVERNMENT_COMMUTATION, RuleSetIds.RS_RET_COMMUTED_PENSION_GOVERNMENT);
+        rules.put(RetirementEntry.OTHER_EMPLOYER_COMMUTATION, RuleSetIds.RS_RET_COMMUTED_PENSION_OTHER);
+        rules.put(RetirementEntry.FUND_COMMUTATION, RuleSetIds.RS_RET_COMMUTED_PENSION_FUND);
+        rules.put(RetirementEntry.APPROVED_SCHEME_RETRENCHMENT, RuleSetIds.RS_RET_RETRENCHMENT_APPROVED_SCHEME);
+        rules.put(RetirementEntry.VOLUNTARY_RETIREMENT, RuleSetIds.RS_RET_VOLUNTARY_RETIREMENT);
+        rules.put(RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT, RuleSetIds.RS_RET_LEAVE_ENCASHMENT_GOVERNMENT);
+        rules.put(RetirementEntry.OTHER_GRATUITY, RuleSetIds.RS_RET_GRATUITY_OTHER);
+        rules.put(RetirementEntry.OTHER_LEAVE_ENCASHMENT, RuleSetIds.RS_RET_LEAVE_ENCASHMENT_OTHER);
+        rules.put(RetirementEntry.STATUTORY_GRATUITY, RuleSetIds.RS_RET_GRATUITY_STATUTORY);
+        rules.put(RetirementEntry.RETRENCHMENT, RuleSetIds.RS_RET_RETRENCHMENT);
         return Map.copyOf(rules);
     }
 
@@ -87,8 +89,8 @@ public final class RetirementNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        Set<RuleId> rules = new HashSet<>(RULE_FOR_ENTRY.values());
+    public Set<RuleSetId> ruleSets() {
+        Set<RuleSetId> rules = new HashSet<>(RULE_FOR_ENTRY.values());
         rules.addAll(NotifiedRetirementLimits.aggregateRules());
         return Set.copyOf(rules);
     }
@@ -137,7 +139,7 @@ public final class RetirementNode implements ComputationNode {
                         + payment.employment() + "; enter one retirement payment per component per employment");
             }
         }
-        Set<RuleId> retirementRules = Set.copyOf(RULE_FOR_ENTRY.values());
+        Set<RuleId> retirementRules = RULE_FOR_ENTRY.values().stream().map(ctx::ruleIdOf).collect(Collectors.toSet());
         for (ComponentSet.Line line : components.in(HeadCode.SALARIES)) {
             ComponentDefinition definition = ctx.pack().components().get(line.code());
             boolean retirement = definition != null
@@ -152,7 +154,7 @@ public final class RetirementNode implements ComputationNode {
     /** One payment's line; none where its rule does not apply in the regime. */
     private static Optional<TraceLine> payment(NodeContext ctx, ComponentSet components, RetirementPayment payment,
             boolean gratuityReceived, Map<RetirementEntry, Money> allowedThisYear, int sequence) {
-        RuleId ruleId = RULE_FOR_ENTRY.get(payment.entry());
+        RuleId ruleId = ctx.ruleIdOf(RULE_FOR_ENTRY.get(payment.entry()));
         ComponentDefinition definition = ctx.pack().components().get(payment.component());
         if (definition == null || !definition.feedsInto().contains(ruleId)) {
             throw new IllegalArgumentException(payment.component() + " cannot be paid under " + payment.entry()
@@ -170,7 +172,7 @@ public final class RetirementNode implements ComputationNode {
             return Optional.of(line(sequence, ruleId, received, Money.ZERO, version).withLimitedBy(barred.get()));
         }
         if (payment.entry() == RetirementEntry.OTHER_EMPLOYER_COMMUTATION) {
-            Money limit = commutedPensionShare(version)
+            Money limit = commutedPensionShare(ctx, version)
                     .limit(payment.commutedValueOfWholePension().orElseThrow(), gratuityReceived);
             return Optional.of(line(sequence, ruleId, received, Money.min(received, limit), version)
                     .withLimitedBy(received.isLessThanOrEqual(limit) ? "payment received"
@@ -216,7 +218,7 @@ public final class RetirementNode implements ComputationNode {
                 ? together.limitedBy() + ", less the " + allowedThisYear + " allowed on this year's earlier voluntary"
                         + " retirement payments, in the order entered (one limit for the employee; D-227)"
                 : together.limitedBy();
-        return line(sequence, RuleIds.RET_VOLUNTARY_RETIREMENT, received, allowed, version).withLimitedBy(why);
+        return line(sequence, rule.id(), received, allowed, version).withLimitedBy(why);
     }
 
     /**
@@ -237,8 +239,8 @@ public final class RetirementNode implements ComputationNode {
                         + ", and it is allowed once only");
     }
 
-    private static CommutedPensionShare commutedPensionShare(RuleVersion version) {
-        RuleId ruleId = RuleIds.RET_COMMUTED_PENSION_OTHER;
+    private static CommutedPensionShare commutedPensionShare(NodeContext ctx, RuleVersion version) {
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_RET_COMMUTED_PENSION_OTHER);
         return RuleDefinitions.require(version.definition(), CommutedPensionShare.class, ruleId);
     }
 

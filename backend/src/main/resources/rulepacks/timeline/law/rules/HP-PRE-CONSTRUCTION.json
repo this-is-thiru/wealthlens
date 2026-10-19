@@ -1,5 +1,6 @@
 {
   "ruleId": "HP-PRE-CONSTRUCTION",
+  "ruleSet": "RS-HP-PRE-CONSTRUCTION",
   "_note": "Interest for the period before the tax year a house was acquired or constructed is deducted in five equal instalments, that tax year and the four after it, for a house other than an own residence (D-156; rulebook HP-DED-PRECON-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(c) \"the amount of any interest payable for the said prior period in five equal instalments for the said tax year and for each of the four immediately succeeding tax years\" (Gazette 265620, p.47); s.22(3): reduced by any amount already allowed under any other provision (p.48) — the entry is the reduced figure. TY 2025-26: Income-tax Act, 1961 s.24(b) Explanation, \"in equal instalments for the said previous year and for each of the four immediately succeeding previous years\", as reduced by any part allowed under any other provision (thc p.147). TaxYearSpan(4): the year of acquisition and four succeeding; five instalments is the span. An own residence's instalments are HP-OWN-RESIDENCE-PRE-CONSTRUCTION. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

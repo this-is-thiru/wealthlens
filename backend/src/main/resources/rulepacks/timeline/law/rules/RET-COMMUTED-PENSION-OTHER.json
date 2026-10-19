@@ -1,5 +1,6 @@
 {
   "ruleId": "RET-COMMUTED-PENSION-OTHER",
+  "ruleSet": "RS-RET-COMMUTED-PENSION-OTHER",
   "_note": "Commuted pension under a scheme of any other employer: deducted up to the commuted value of one-third of the pension where the employee also receives gratuity, one-half otherwise (D-103; rulebook RET-COMMUT-OTHER-001). The commuted value is \"determined having regard to the age of the recipient, the state of his health, the rate of interest and officially recognised tables of mortality\" — an actuarial figure the taxpayer states, as the employer computed it. The shares are unit fractions, carried as divisors (CommutedPensionShare), since a percentage cannot hold one-third exactly. TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 8 (pp.42–43), \"(a) where the employee has received gratuity, the commuted value of one-third of the pension, which he is normally entitled to receive; and (b) in any other case, the commuted value of one-half of such pension.\" TY 2025-26: Income-tax Act, 1961 s.10(10A)(ii) (thc.nic.in p.72), \"(a) in a case where the employee receives any gratuity, the commuted value of one-third of the pension which he is normally entitled to receive, and (b) in any other case, the commuted value of one-half of such pension\". Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-LIFE-POLICY",
+  "ruleSet": "RS-OS-LIFE-POLICY",
   "_note": "A life policy's sums not excluded by Schedule II Sl. 2, other than a unit linked policy's (capital gains, S2 s.67(5), W-088) or a Keyman policy's, under other sources (D-205). TY 2026-27: Income-tax Act, 2025 s.92(2)(l), \"the sum exceeding the aggregate of the premium paid, during the term of such life insurance policy, and not claimed as a deduction under this Act, computed in such manner, as may be prescribed\" (p.139), with S4 r.59: A − B in the first tax year a sum is received, C − D after, B and D the premium paid till the receipt, not claimed as a deduction nor counted in an earlier year (pp.1578–1579). \"The sum exceeding\": never below nil. TY 2025-26: 1961 s.56(2)(xiii) (FA 2023 s.32(b), w.e.f. 1-4-2024) with Rules 1962 r.11UACA (G.S.R. 604(E), 16-8-2023), the same formula. This row charges the whole of the computed sum. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-life-policies.md.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

@@ -1,5 +1,6 @@
 {
   "ruleId": "SAL-SALARY-FOR-ENTMT",
+  "ruleSet": "RS-SAL-SALARY-FOR-ENTMT",
   "_note": "The salary the entertainment allowance deduction is measured against, TY 2025-26 only (D-105): Income-tax Act, 1961 s.16(ii) (thc.nic.in p.140), \"his salary (exclusive of any allowance, benefit or other perquisite)\". Dearness allowance is an allowance, so it is not in it, whatever the terms of employment say — unlike the HRA and gratuity bases. Which pay lines count is each component's salaryBaseFor: BASIC outright; bonus and commission are left out pending OQ-5. The Income-tax Act, 2025 has no counterpart (SAL-ENTMT-ALLOWANCE).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

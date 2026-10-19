@@ -7,9 +7,10 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -31,8 +32,8 @@ import java.util.Set;
  */
 final class HouseholdBenefitPerquisite {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.PERQ_SERVICES, RuleIds.PERQ_UTILITY, RuleIds.PERQ_EDUCATION,
-            RuleIds.PERQ_EDUCATION_FREE, RuleIds.PERQ_CARRIER_TRAVEL);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_SERVICES, RuleSetIds.RS_PERQ_UTILITY, RuleSetIds.RS_PERQ_EDUCATION,
+            RuleSetIds.RS_PERQ_EDUCATION_FREE, RuleSetIds.RS_PERQ_CARRIER_TRAVEL);
 
     private static final BaseId BENEFIT_VALUE = new BaseId("BENEFIT_VALUE");
 
@@ -64,10 +65,10 @@ final class HouseholdBenefitPerquisite {
 
     private static TraceLine valued(NodeContext ctx, EmployerHouseholdBenefit benefit, int sequence) {
         RuleId ruleId = switch (benefit.kind()) {
-            case SERVICES -> RuleIds.PERQ_SERVICES;
-            case UTILITY_FROM_OUTSIDE_AGENCY, UTILITY_FROM_EMPLOYER_RESOURCES -> RuleIds.PERQ_UTILITY;
-            case EDUCATION_FEES -> RuleIds.PERQ_EDUCATION;
-            case CARRIER_TRAVEL -> RuleIds.PERQ_CARRIER_TRAVEL;
+            case SERVICES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_SERVICES);
+            case UTILITY_FROM_OUTSIDE_AGENCY, UTILITY_FROM_EMPLOYER_RESOURCES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_UTILITY);
+            case EDUCATION_FEES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION);
+            case CARRIER_TRAVEL -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_CARRIER_TRAVEL);
         };
         if (benefit.carrierIsAirlineOrRailways()) {
             throw new IllegalArgumentException("Free travel for an employee of an airline or the railways is outside"
@@ -82,15 +83,15 @@ final class HouseholdBenefitPerquisite {
     }
 
     private static TraceLine educated(NodeContext ctx, EmployerChildEducation child, int sequence) {
-        Money limit = TemporallyApportionedCap.apply(ctx.rule(RuleIds.PERQ_EDUCATION_FREE), ctx.inputs().temporal(),
+        Money limit = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), ctx.inputs().temporal(),
                 new CapContext(Map.of())).value();
         Money cost = child.similarInstitutionCostPerMonth();
         Money whole = cost.times(child.months());
         if (!cost.isGreaterThan(limit)) {
-            return line(ctx, RuleIds.PERQ_EDUCATION_FREE, whole, Money.ZERO, sequence,
+            return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), whole, Money.ZERO, sequence,
                     "not a perquisite: " + cost + " a month does not exceed " + limit + " per child");
         }
-        return line(ctx, RuleIds.PERQ_EDUCATION_FREE, whole, whole.minus(child.recovered()).floorAtZero(), sequence,
+        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), whole, whole.minus(child.recovered()).floorAtZero(), sequence,
                 cost + " a month exceeds " + limit + " per child, so the whole for " + child.months()
                         + " months, less the recovery " + child.recovered());
     }

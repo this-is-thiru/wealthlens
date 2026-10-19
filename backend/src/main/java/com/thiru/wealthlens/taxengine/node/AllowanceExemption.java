@@ -14,10 +14,11 @@ import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The allowance exemptions' lines for {@link ExemptionNode} (Sch. III Table Sl. 12–13 with Rules 2026 r.280;
@@ -52,9 +54,9 @@ import java.util.Set;
 final class AllowanceExemption {
 
     /** The allowances whose exemption is a limit per month per child, and so needs children and months. */
-    private static final Set<RuleId> PER_CHILD = Set.of(RuleIds.SAL_ALW_CHILDREN_EDUCATION, RuleIds.SAL_ALW_HOSTEL);
-    private static final Set<RuleId> ALLOWANCES = Set.of(RuleIds.SAL_ALW_UNIFORM, RuleIds.SAL_ALW_CONVEYANCE,
-            RuleIds.SAL_ALW_CHILDREN_EDUCATION, RuleIds.SAL_ALW_HOSTEL);
+    private static final Set<RuleSetId> PER_CHILD = Set.of(RuleSetIds.RS_SAL_ALW_CHILDREN_EDUCATION, RuleSetIds.RS_SAL_ALW_HOSTEL);
+    private static final Set<RuleSetId> ALLOWANCES = Set.of(RuleSetIds.RS_SAL_ALW_UNIFORM, RuleSetIds.RS_SAL_ALW_CONVEYANCE,
+            RuleSetIds.RS_SAL_ALW_CHILDREN_EDUCATION, RuleSetIds.RS_SAL_ALW_HOSTEL);
     private static final BaseId ALLOWANCE_RECEIVED = new BaseId("ALLOWANCE_RECEIVED");
     private static final BaseId AMOUNT_INCURRED = new BaseId("AMOUNT_INCURRED");
     private static final BaseId CHILD = new BaseId("CHILD");
@@ -63,9 +65,9 @@ final class AllowanceExemption {
     private AllowanceExemption() {
     }
 
-    static Set<RuleId> rules() {
-        Set<RuleId> rules = new HashSet<>(ALLOWANCES);
-        rules.add(RuleIds.SAL_ALW_TRANSPORT_DISABLED);
+    static Set<RuleSetId> rules() {
+        Set<RuleSetId> rules = new HashSet<>(ALLOWANCES);
+        rules.add(RuleSetIds.RS_SAL_ALW_TRANSPORT_DISABLED);
         return Set.copyOf(rules);
     }
 
@@ -91,7 +93,7 @@ final class AllowanceExemption {
                         .withLimitedBy(verdict.whyNot()));
                 continue;
             }
-            CapResult exempt = TemporallyApportionedCap.apply(rule, t, context(ruleId, use, received));
+            CapResult exempt = TemporallyApportionedCap.apply(rule, t, context(ctx, ruleId, use, received));
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_EXEMPTIONS, ruleId,
                             StepKind.EXEMPTION, MoneyValue.of(received), MoneyValue.of(exempt.value()),
                             version.provenance())
@@ -106,12 +108,12 @@ final class AllowanceExemption {
     /** The transport line: the least of what was paid and the limit for the months covered; nil where not listed. */
     private static Optional<TraceLine> transport(NodeContext ctx, ComponentSet components,
             DisabledTransportClaim claim, int sequence) {
-        RuleId ruleId = RuleIds.SAL_ALW_TRANSPORT_DISABLED;
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_SAL_ALW_TRANSPORT_DISABLED);
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal());
         if (!ctx.inRegime(ruleId, version).applies()) {
             return Optional.empty();
         }
-        DisabledTransportLimit limit = transportLimit(version);
+        DisabledTransportLimit limit = transportLimit(ctx, version);
         Money received = HeadTotalLines.of(ctx, components, new HeadTotal(HeadCode.SALARIES), ruleId).total();
         if (!limit.admits(claim.condition())) {
             return Optional.of(TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, ruleId, StepKind.EXEMPTION,
@@ -126,17 +128,20 @@ final class AllowanceExemption {
                 .withLimitedBy(received.isLessThanOrEqual(ceiling) ? "allowance received" : "limit per month"));
     }
 
-    private static DisabledTransportLimit transportLimit(RuleVersion version) {
-        RuleId ruleId = RuleIds.SAL_ALW_TRANSPORT_DISABLED;
+    private static DisabledTransportLimit transportLimit(NodeContext ctx, RuleVersion version) {
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_SAL_ALW_TRANSPORT_DISABLED);
         return RuleDefinitions.require(version.definition(), DisabledTransportLimit.class, ruleId);
     }
 
     /** The allowance rule a component feeds; refused where it feeds none, or more than one. */
     private static RuleId allowanceRule(NodeContext ctx, ComponentCode allowance) {
         ComponentDefinition definition = ctx.pack().components().get(allowance);
+        Set<RuleId> allowanceRows = ALLOWANCES.stream()
+                .flatMap(set -> ctx.pack().ruleSet(set).members().stream())
+                .collect(Collectors.toSet());
         List<RuleId> fed = definition == null ? List.of()
-                : definition.feedsInto().stream().filter(ALLOWANCES::contains).toList();
-        if (definition != null && definition.feedsInto().contains(RuleIds.SAL_ALW_TRANSPORT_DISABLED)) {
+                : definition.feedsInto().stream().filter(allowanceRows::contains).toList();
+        if (definition != null && definition.feedsInto().contains(ctx.ruleIdOf(RuleSetIds.RS_SAL_ALW_TRANSPORT_DISABLED))) {
             throw new IllegalArgumentException(allowance + " is exempt by the disability and the months covered;"
                     + " enter it as a disabled transport claim, not an allowance use");
         }
@@ -153,8 +158,8 @@ final class AllowanceExemption {
                 .reduce(Money.ZERO, Money::plus);
     }
 
-    private static CapContext context(RuleId rule, AllowanceUse use, Money received) {
-        if (PER_CHILD.contains(rule)) {
+    private static CapContext context(NodeContext ctx, RuleId rule, AllowanceUse use, Money received) {
+        if (ctx.pack().membersOf(PER_CHILD).contains(rule)) {
             if (use.childrenCovered().isEmpty()) {
                 throw new IllegalArgumentException(use.allowance() + " is exempt per month per child; enter the"
                         + " children and months it covered");

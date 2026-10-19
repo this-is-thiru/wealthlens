@@ -90,7 +90,7 @@ class SalaryBaseNodeTest {
                         component(shipped, DA, inEveryBase(true)),
                         component(shipped, HRA, Set.of()))
                 .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition));
-        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), registry,
+        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
                 shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
     }
 

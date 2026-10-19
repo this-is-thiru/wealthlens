@@ -77,7 +77,7 @@ class ComponentPartitionNodeTest {
                 new ComponentLifecycle(DateRange.fromOnwards(LocalDate.of(2025, 4, 1)), Optional.empty(),
                         new DeprecationPolicy.HistoricalOnly()),
                 shipped.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME).headProvenance()));
-        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), registry,
+        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
                 shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
     }
 

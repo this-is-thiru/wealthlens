@@ -76,7 +76,7 @@ class GrossSalaryNodeTest {
                         component(shipped, TAX_PAID, HeadCode.SALARIES, RuleIds.RATE_SLAB_NEW_TAX_REGIME),
                         component(shipped, INTEREST, HeadCode.OTHER_SOURCES, RuleIds.RATE_SLAB_NEW_TAX_REGIME))
                 .collect(Collectors.toMap(ComponentDefinition::code, definition -> definition));
-        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), registry,
+        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
                 shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
     }
 

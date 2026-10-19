@@ -7,7 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.PolicyPremiumLimits;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -54,8 +54,8 @@ final class LifePolicySums {
     /** What the year's receipts add to the head. */
     static Money income(NodeContext ctx, OtherSourcesNode.Lines lines, List<LifePolicyReceipt> receipts,
             List<ClaimedPolicy> claimed) {
-        PremiumShareBands bands = definition(ctx, RuleIds.OS_LIFE_POLICY_RATIO, PremiumShareBands.class);
-        PolicyPremiumLimits limits = definition(ctx, RuleIds.OS_LIFE_POLICY_PREMIUM, PolicyPremiumLimits.class);
+        PremiumShareBands bands = definition(ctx, ctx.ruleIdOf(RuleSetIds.RS_OS_LIFE_POLICY_RATIO), PremiumShareBands.class);
+        PolicyPremiumLimits limits = definition(ctx, ctx.ruleIdOf(RuleSetIds.RS_OS_LIFE_POLICY_PREMIUM), PolicyPremiumLimits.class);
         requireCapped(claimed, limits);
         List<Verdict> verdicts = new ArrayList<>();
         for (LifePolicyReceipt receipt : receipts) {
@@ -160,7 +160,7 @@ final class LifePolicySums {
     private static Money lineFor(OtherSourcesNode.Lines lines, String where, Verdict verdict) {
         LifePolicyReceipt receipt = verdict.receipt();
         if (verdict.excluded()) {
-            lines.add(RuleIds.OS_LIFE_POLICY_RATIO, StepKind.EXEMPTION, receipt.received(), receipt.received(),
+            lines.add(lines.row(RuleSetIds.RS_OS_LIFE_POLICY_RATIO), StepKind.EXEMPTION, receipt.received(), receipt.received(),
                     where + ": excluded, " + verdict.why());
             return Money.ZERO;
         }
@@ -170,8 +170,8 @@ final class LifePolicySums {
         }
         Money exceeding = receipt.received().minus(receipt.premiumsNotDeductedOrUsed());
         Money chargeable = exceeding.isLessThan(Money.ZERO) ? Money.ZERO : exceeding;
-        Money income = lines.applied(RuleIds.OS_LIFE_POLICY, LIFE_POLICY, chargeable);
-        lines.add(RuleIds.OS_LIFE_POLICY, StepKind.INCOME, receipt.received(), income, where + ": not excluded, "
+        Money income = lines.applied(lines.row(RuleSetIds.RS_OS_LIFE_POLICY), LIFE_POLICY, chargeable);
+        lines.add(lines.row(RuleSetIds.RS_OS_LIFE_POLICY), StepKind.INCOME, receipt.received(), income, where + ": not excluded, "
                 + verdict.why() + "; the sum exceeding " + receipt.premiumsNotDeductedOrUsed()
                 + " of premium not deducted or already counted");
         return income;

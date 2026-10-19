@@ -17,7 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SurvivingChildrenLimit;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -65,7 +65,7 @@ final class LeaveTravelExemption {
     /** One EXEMPTION line per journey, numbered from {@code firstSequence}; nil ones where the regime excludes it. */
     static List<TraceLine> lines(NodeContext ctx, int firstSequence) {
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow concession = ctx.rule(RuleIds.SAL_LEAVE_TRAVEL_CONCESSION);
+        RuleRow concession = ctx.ruleOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION);
         RuleVersion version = TemporallyApportionedCap.governingVersion(concession, t);
         List<Journey> journeys = ctx.inputs().entered().leaveTravel().stream()
                 .sorted(Comparator.comparing(Journey::startedOn))
@@ -73,23 +73,23 @@ final class LeaveTravelExemption {
         if (journeys.isEmpty()) {
             return List.of();
         }
-        if (!ctx.inRegime(RuleIds.SAL_LEAVE_TRAVEL_CONCESSION, version).applies()) {
+        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION), version).applies()) {
             List<TraceLine> nil = new ArrayList<>();
             for (Journey journey : journeys) {
-                nil.add(line(firstSequence + nil.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO, version)
-                        .withLimitedBy(ctx.inRegime(RuleIds.SAL_LEAVE_TRAVEL_CONCESSION, version).whyNot()));
+                nil.add(line(ctx, firstSequence + nil.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO, version)
+                        .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION), version).whyNot()));
             }
             return nil;
         }
         JourneysPerCalendarBlock blocks = blocks(ctx, t);
         Money remaining = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),
-                new HeadTotal(HeadCode.SALARIES), RuleIds.SAL_LEAVE_TRAVEL_CONCESSION).total();
+                new HeadTotal(HeadCode.SALARIES), ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION)).total();
         BlockTally tally = new BlockTally(blocks, ctx.inputs().ledgers());
         List<TraceLine> lines = new ArrayList<>();
         for (Journey journey : journeys) {
             requireWithinYear(journey, t);
             if (!tally.admit(journey.startedOn().getYear())) {
-                lines.add(line(firstSequence + lines.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO,
+                lines.add(line(ctx, firstSequence + lines.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO,
                         version).withLimitedBy("journeys in block: the Rules exempt " + blocks.journeys()
                                 + " in each block of " + blocks.calendarYears() + " calendar years"));
                 continue;
@@ -103,7 +103,7 @@ final class LeaveTravelExemption {
                     Map.of(AMOUNT_INCURRED, covered.amountIncurred(), FARE_ADMISSIBLE, fare)));
             Money allowed = Money.min(exempt.value(), remaining);
             remaining = remaining.minus(allowed);
-            lines.add(line(sequence, spent, allowed, version)
+            lines.add(line(ctx, sequence, spent, allowed, version)
                     .withLimitedBy(allowed.isLessThan(exempt.value()) ? "assistance received" : exempt.limitedBy()));
         }
         return lines;
@@ -119,9 +119,9 @@ final class LeaveTravelExemption {
      */
     private static Covered covered(NodeContext ctx, TemporalContext t, Journey journey, int firstSequence) {
         RuleVersion version =
-                TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.SAL_LEAVE_TRAVEL_CHILDREN), t);
+                TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CHILDREN), t);
         SurvivingChildrenLimit limit = RuleDefinitions.require(version.definition(), SurvivingChildrenLimit.class,
-                RuleIds.SAL_LEAVE_TRAVEL_CHILDREN);
+                ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CHILDREN));
         List<FamilySnapshot.Member> family = ctx.inputs().family().members();
         List<Integer> beyond = childrenBeyond(limit, family, journey.startedOn());
         if (beyond.isEmpty()) {
@@ -152,7 +152,7 @@ final class LeaveTravelExemption {
                             + " (r.278(1)(iii)(B); D-228)"
                     : "";
             leftOut.add(TraceLine.of(firstSequence + leftOut.size(), NodeIds.SALARY_EXEMPTIONS,
-                    RuleIds.SAL_LEAVE_TRAVEL_CHILDREN, StepKind.EXEMPTION, MoneyValue.of(traveller.amountIncurred()),
+                    ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CHILDREN), StepKind.EXEMPTION, MoneyValue.of(traveller.amountIncurred()),
                     MoneyValue.of(Money.ZERO), version.provenance()).withLimitedBy("family position " + position.get()
                     + ": a child beyond the " + limit.children() + " surviving children the concession covers"
                     + perKilometre));
@@ -185,19 +185,20 @@ final class LeaveTravelExemption {
 
     private static JourneysPerCalendarBlock blocks(NodeContext ctx, TemporalContext t) {
         RuleVersion version =
-                TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS), t);
-        return RuleDefinitions.require(version.definition(), JourneysPerCalendarBlock.class, RuleIds.SAL_LEAVE_TRAVEL_JOURNEYS);
+                TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_JOURNEYS), t);
+        return RuleDefinitions.require(version.definition(), JourneysPerCalendarBlock.class, ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_JOURNEYS));
     }
 
     /** The fare the Rules admit: r.278(1)(iii)(B)'s rate per kilometre where the year has one, else as entered. */
     private static Money fareFor(NodeContext ctx, TemporalContext t, Journey journey) {
+        Optional<RuleRow> distanceRate = ctx.optionalRuleOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_DISTANCE_RATE);
         boolean ratePerKilometre = journey.mode() == JourneyMode.NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT
-                && ctx.pack().rules().containsKey(RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE);
+                && distanceRate.isPresent();
         if (ratePerKilometre) {
             int km = journey.distanceKm().orElseThrow(() -> new IllegalArgumentException("A journey on "
                     + journey.startedOn() + " by road without public transport needs its distance; the Rules"
                     + " price it per kilometre"));
-            return TemporallyApportionedCap.apply(ctx.rule(RuleIds.SAL_LEAVE_TRAVEL_DISTANCE_RATE), t,
+            return TemporallyApportionedCap.apply(distanceRate.get(), t,
                     new CapContext(Map.of(), Map.of(), Map.of(KM, km))).value();
         }
         return journey.fareAdmissible().orElseThrow(() -> new IllegalArgumentException("A journey on "
@@ -212,8 +213,8 @@ final class LeaveTravelExemption {
         }
     }
 
-    private static TraceLine line(int sequence, MoneyValue spent, Money exempt, RuleVersion version) {
-        return TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, RuleIds.SAL_LEAVE_TRAVEL_CONCESSION,
+    private static TraceLine line(NodeContext ctx, int sequence, MoneyValue spent, Money exempt, RuleVersion version) {
+        return TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION),
                 StepKind.EXEMPTION, spent, MoneyValue.of(exempt), version.provenance());
     }
 

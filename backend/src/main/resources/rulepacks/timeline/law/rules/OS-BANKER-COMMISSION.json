@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-BANKER-COMMISSION",
+  "ruleSet": "RS-OS-BANKER-COMMISSION",
   "_note": "A reasonable sum paid to a banker or another person to realise interest on securities is deducted (D-194; rulebook OS-COLL-001 as corrected by the W-079b erratum: not against dividends in either year). TY 2025-26: Income-tax Act, 1961 s.57(i) (thc p.310; dividends excluded since 1-4-2021 by the s.57 proviso, FA 2020 s.30(b); clause (i) last amended by F(No.2)A 2024 s.24(a)). TY 2026-27: Income-tax Act, 2025 s.93(1)(a) as substituted by the Finance Act, 2026 s.44(a) (p.43): \"for interest on securities, any reasonable sum paid as commission or remuneration to a banker or any other person for the purpose of realising such interest on behalf of the assessee\". Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

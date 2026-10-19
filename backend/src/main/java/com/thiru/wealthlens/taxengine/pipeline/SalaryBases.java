@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,17 @@ public record SalaryBases(Map<RuleId, List<Money>> byRule) implements NodeValue 
                     + "; " + amounts.size() + " were entered");
         }
         return amounts.get(employment);
+    }
+
+    /**
+     * One base for one employment, named by its rule set — the row the set gave this year, which is the key the base was
+     * evaluated under (D-252). A reader names the set, not the row.
+     */
+    public Money of(RuleSet base, int employment) {
+        RuleId row = base.members().stream().filter(byRule::containsKey).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No salary base of " + base.id()
+                        + " was evaluated; the bases are " + byRule.keySet()));
+        return of(row, employment);
     }
 
     /** Every base added up — the trace's summary column only; it mixes bases, so nothing sums it. */

@@ -1,5 +1,6 @@
 {
   "ruleId": "OS-DIVIDEND",
+  "ruleSet": "RS-OS-DIVIDEND",
   "_note": "A dividend is income from other sources (D-194; rulebook OS-DIV-001), taxed at the slab rates with the rest of total income. TY 2026-27: Income-tax Act, 2025 s.92(2)(a) \"any dividend\" (p.138). TY 2025-26: Income-tax Act, 1961 s.56(2)(i) \"dividends\" (thc p.303). Deductions against it: OS-DIVIDEND-INTEREST, OS-DEEMED-DIVIDEND. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

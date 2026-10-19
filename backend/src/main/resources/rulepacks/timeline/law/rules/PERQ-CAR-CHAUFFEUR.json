@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CAR-CHAUFFEUR",
+  "ruleSet": "RS-PERQ-CAR-CHAUFFEUR",
   "_note": "The add-on per calendar month where the employer also provides a chauffeur for a car used partly privately, the same in both columns (D-113). TY 2026-27: r.15(3) Table II Sl. 1(c)(i)–(ii), \"plus ₹3000, if chauffeur is also provided\" (pp.1542–1543). TY 2025-26: r.3(2) Table II Sl. (1)(c)(i)–(ii), \"plus Rs. 900, if chauffeur is also provided\" (consolidated rule 3, p.2). Added to Sl. 2(b)'s reduction only where the entered expenditure includes a chauffeur's pay (D-113). Every regime: a perquisite is salary. Valued only for a specified employee (D-113 C1a, OQ-10); MotorCarPerquisite in PerquisiteNode applies it.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

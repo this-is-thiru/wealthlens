@@ -5,9 +5,10 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -24,7 +25,7 @@ import java.util.Set;
  */
 final class AgniveerDeduction {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.DED_AGNIVEER_OWN, RuleIds.DED_AGNIVEER_GOVERNMENT);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_AGNIVEER_OWN, RuleSetIds.RS_DED_AGNIVEER_GOVERNMENT);
 
     private static final BaseId AMOUNT_PAID = new BaseId("AMOUNT_PAID");
 
@@ -35,8 +36,8 @@ final class AgniveerDeduction {
     static List<TraceLine> lines(NodeContext ctx, int firstSequence) {
         List<TraceLine> lines = new ArrayList<>();
         ctx.inputs().entered().agniveerCorpusFund().ifPresent(fund -> {
-            add(ctx, RuleIds.DED_AGNIVEER_OWN, fund.ownSubscription(), firstSequence, lines);
-            add(ctx, RuleIds.DED_AGNIVEER_GOVERNMENT, fund.governmentContribution(), firstSequence, lines);
+            add(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_AGNIVEER_OWN), fund.ownSubscription(), firstSequence, lines);
+            add(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_AGNIVEER_GOVERNMENT), fund.governmentContribution(), firstSequence, lines);
         });
         return lines;
     }

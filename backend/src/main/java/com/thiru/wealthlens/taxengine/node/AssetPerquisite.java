@@ -10,9 +10,10 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -35,15 +36,15 @@ import java.util.Set;
  */
 final class AssetPerquisite {
 
-    static final Set<RuleId> RULES = Set.of(RuleIds.PERQ_ASSET_USE, RuleIds.PERQ_ASSET_USE_EXCLUDED,
-            RuleIds.PERQ_ASSET_TRANSFER_ELECTRONIC, RuleIds.PERQ_ASSET_TRANSFER_CAR,
-            RuleIds.PERQ_ASSET_TRANSFER_OTHER);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_ASSET_USE, RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED,
+            RuleSetIds.RS_PERQ_ASSET_TRANSFER_ELECTRONIC, RuleSetIds.RS_PERQ_ASSET_TRANSFER_CAR,
+            RuleSetIds.RS_PERQ_ASSET_TRANSFER_OTHER);
 
     private static final BaseId ASSET_COST = new BaseId("ASSET_COST");
-    private static final Map<TransferredAssetKind, RuleId> WEAR_AND_TEAR = Map.of(
-            TransferredAssetKind.COMPUTER_OR_ELECTRONIC, RuleIds.PERQ_ASSET_TRANSFER_ELECTRONIC,
-            TransferredAssetKind.MOTOR_CAR, RuleIds.PERQ_ASSET_TRANSFER_CAR,
-            TransferredAssetKind.OTHER, RuleIds.PERQ_ASSET_TRANSFER_OTHER);
+    private static final Map<TransferredAssetKind, RuleSetId> WEAR_AND_TEAR = Map.of(
+            TransferredAssetKind.COMPUTER_OR_ELECTRONIC, RuleSetIds.RS_PERQ_ASSET_TRANSFER_ELECTRONIC,
+            TransferredAssetKind.MOTOR_CAR, RuleSetIds.RS_PERQ_ASSET_TRANSFER_CAR,
+            TransferredAssetKind.OTHER, RuleSetIds.RS_PERQ_ASSET_TRANSFER_OTHER);
 
     private AssetPerquisite() {
     }
@@ -65,21 +66,21 @@ final class AssetPerquisite {
     private static TraceLine used(NodeContext ctx, EmployerAssetUse use, int sequence) {
         TemporalContext t = ctx.inputs().temporal();
         if (excludedAssets(ctx, t).excludes(use.kind())) {
-            return line(ctx, RuleIds.PERQ_ASSET_USE_EXCLUDED, use.cost().or(use::rentPaid).orElseThrow(), Money.ZERO,
+            return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED), use.cost().or(use::rentPaid).orElseThrow(), Money.ZERO,
                     sequence, "not a perquisite: the use of a " + use.kind() + " is excluded this year");
         }
         Money charged = use.cost()
-                .map(cost -> TemporallyApportionedCap.apply(ctx.rule(RuleIds.PERQ_ASSET_USE), t,
+                .map(cost -> TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_ASSET_USE), t,
                         CapContext.of(ASSET_COST, cost.apportioned(use.months(), 12))).value())
                 .orElseGet(() -> use.rentPaid().orElseThrow());
         Money value = charged.minus(use.recovered()).floorAtZero();
-        return line(ctx, RuleIds.PERQ_ASSET_USE, use.cost().or(use::rentPaid).orElseThrow(), value, sequence,
+        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_USE), use.cost().or(use::rentPaid).orElseThrow(), value, sequence,
                 (use.cost().isPresent() ? "ten per cent a year of the cost for " + use.months() + " months"
                         : "the rent paid") + ", less the recovery " + use.recovered());
     }
 
     private static TraceLine transferred(NodeContext ctx, EmployerAssetTransfer transfer, int sequence) {
-        RuleId ruleId = WEAR_AND_TEAR.get(transfer.kind());
+        RuleId ruleId = ctx.ruleIdOf(WEAR_AND_TEAR.get(transfer.kind()));
         Rate rate = rateOf(ctx, ruleId);
         Money written = transfer.kind() == TransferredAssetKind.OTHER
                 ? transfer.cost().minus(rate.ofShare(transfer.cost(), transfer.completedYears(), 1)).floorAtZero()
@@ -101,7 +102,7 @@ final class AssetPerquisite {
     }
 
     private static ExcludedAssets excludedAssets(NodeContext ctx, TemporalContext t) {
-        RuleId ruleId = RuleIds.PERQ_ASSET_USE_EXCLUDED;
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED);
         return RuleDefinitions.require(ctx.rule(ruleId).versionAt(t).definition(), ExcludedAssets.class, ruleId);
     }
 

@@ -1,5 +1,6 @@
 {
   "ruleId": "SAL-SALARY-FOR-RPF",
+  "ruleSet": "RS-SAL-SALARY-FOR-RPF",
   "_note": "The salary the employer's contribution to a recognised provident fund is measured against for the twelve per cent limb, TY 2025-26 only (D-151; rulebook SAL-DEF-RPF-001): Income-tax Act, 1961 Sch. IV Pt A r.2(h) (thc.nic.in p.853), \"'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites\". The Income-tax Act, 2025 has the same words in Sch. XI Pt A para 2(i) (Gazette 265620, p.547), but from 1-4-2026 nothing measures against them: the Finance Act, 2026 s.127(a)(iii) substituted para 6 without the twelve per cent limb (Gazette 271439, pp.70–71) — so there is no TY 2026-27 version. Which pay lines count is each component's salaryBaseFor: BASIC outright, DEARNESS_ALLOWANCE only where the terms provide.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

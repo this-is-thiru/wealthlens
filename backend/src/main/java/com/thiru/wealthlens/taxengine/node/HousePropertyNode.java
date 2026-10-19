@@ -10,10 +10,11 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -53,9 +54,9 @@ public final class HousePropertyNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
-        Set<RuleId> rules = new HashSet<>(Set.of(RuleIds.HP_ANNUAL_VALUE, RuleIds.HP_OWN_RESIDENCE,
-                RuleIds.HP_STANDARD_DEDUCTION, RuleIds.HP_ARREARS, RuleIds.HP_UNREALISED_RENT));
+    public Set<RuleSetId> ruleSets() {
+        Set<RuleSetId> rules = new HashSet<>(Set.of(RuleSetIds.RS_HP_ANNUAL_VALUE, RuleSetIds.RS_HP_OWN_RESIDENCE,
+                RuleSetIds.RS_HP_STANDARD_DEDUCTION, RuleSetIds.RS_HP_ARREARS, RuleSetIds.RS_HP_UNREALISED_RENT));
         rules.addAll(HousePropertyInterest.RULES);
         return Set.copyOf(rules);
     }
@@ -84,15 +85,15 @@ public final class HousePropertyNode implements ComputationNode {
     private static Money income(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
             List<TraceLine> lines) {
         Money annualValue = annualValue(ctx, t, position, property, lines);
-        Money allowance = TemporallyApportionedCap.apply(ctx.rule(RuleIds.HP_STANDARD_DEDUCTION), t,
+        Money allowance = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_HP_STANDARD_DEDUCTION), t,
                 CapContext.of(ANNUAL_VALUE, annualValue)).value();
-        lines.add(line(ctx, t, lines, RuleIds.HP_STANDARD_DEDUCTION, StepKind.DEDUCTION, annualValue, allowance)
+        lines.add(line(ctx, t, lines, ctx.ruleIdOf(RuleSetIds.RS_HP_STANDARD_DEDUCTION), StepKind.DEDUCTION, annualValue, allowance)
                 .withLimitedBy("property " + position));
         Money income = annualValue.minus(allowance);
         if (property.arrearsReceived().isGreaterThan(Money.ZERO)) {
-            Money deduction = TemporallyApportionedCap.apply(ctx.rule(RuleIds.HP_ARREARS), t,
+            Money deduction = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_HP_ARREARS), t,
                     CapContext.of(ARREARS, property.arrearsReceived())).value();
-            lines.add(line(ctx, t, lines, RuleIds.HP_ARREARS, StepKind.INCOME, property.arrearsReceived(),
+            lines.add(line(ctx, t, lines, ctx.ruleIdOf(RuleSetIds.RS_HP_ARREARS), StepKind.INCOME, property.arrearsReceived(),
                             property.arrearsReceived().minus(deduction))
                     .withLimitedBy("property " + position + ": arrears less " + deduction));
             income = income.plus(property.arrearsReceived().minus(deduction));
@@ -108,7 +109,7 @@ public final class HousePropertyNode implements ComputationNode {
     private static Money annualValue(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
             List<TraceLine> lines) {
         if (property.occupancy() == HouseOccupancy.OWN_RESIDENCE) {
-            lines.add(line(ctx, t, lines, RuleIds.HP_OWN_RESIDENCE, StepKind.MEASURE, property.expectedLettingValue(),
+            lines.add(line(ctx, t, lines, ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE), StepKind.MEASURE, property.expectedLettingValue(),
                             Money.ZERO)
                     .withLimitedBy("property " + position + ": the owner's own residence, nil"));
             return Money.ZERO;
@@ -123,9 +124,9 @@ public final class HousePropertyNode implements ComputationNode {
             throw new IllegalArgumentException("Property " + position + ": local taxes of " + property.localTaxesPaid()
                     + " exceed its value of " + gross + "; a negative annual value waits on set-off (W-081)");
         }
-        Money value = TemporallyApportionedCap.apply(ctx.rule(RuleIds.HP_ANNUAL_VALUE), t,
+        Money value = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_HP_ANNUAL_VALUE), t,
                 CapContext.of(ANNUAL_VALUE, annualValue)).value();
-        lines.add(line(ctx, t, lines, RuleIds.HP_ANNUAL_VALUE, StepKind.INCOME, gross, value)
+        lines.add(line(ctx, t, lines, ctx.ruleIdOf(RuleSetIds.RS_HP_ANNUAL_VALUE), StepKind.INCOME, gross, value)
                 .withLimitedBy("property " + position + ": " + (let ? "let, rent " + rent : "not let")
                         + ", expected " + expected + ", less local taxes " + property.localTaxesPaid()));
         return value;
@@ -137,10 +138,10 @@ public final class HousePropertyNode implements ComputationNode {
         if (property.unrealisedRent().equals(Money.ZERO)) {
             return property.rentReceivable();
         }
-        Money unrealised = TemporallyApportionedCap.apply(ctx.rule(RuleIds.HP_UNREALISED_RENT), t,
+        Money unrealised = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_HP_UNREALISED_RENT), t,
                 CapContext.of(UNREALISED_RENT, property.unrealisedRent())).value();
         Money rent = property.rentReceivable().minus(unrealised);
-        lines.add(line(ctx, t, lines, RuleIds.HP_UNREALISED_RENT, StepKind.MEASURE, property.rentReceivable(), rent)
+        lines.add(line(ctx, t, lines, ctx.ruleIdOf(RuleSetIds.RS_HP_UNREALISED_RENT), StepKind.MEASURE, property.rentReceivable(), rent)
                 .withLimitedBy("property " + position + ": less unrealised rent " + unrealised));
         return rent;
     }
@@ -148,8 +149,8 @@ public final class HousePropertyNode implements ComputationNode {
     /** S2 s.21(7)(a); 1961 s.23(4)(a): only as many own residences as the row allows, until the election chooses. */
     private static void requireOwnResidencesWithinLimit(NodeContext ctx, TemporalContext t,
             List<HouseProperty> properties) {
-        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(RuleIds.HP_OWN_RESIDENCE), t);
-        int limit = RuleDefinitions.require(version.definition(), OwnResidenceHouses.class, RuleIds.HP_OWN_RESIDENCE)
+        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_HP_OWN_RESIDENCE), t);
+        int limit = RuleDefinitions.require(version.definition(), OwnResidenceHouses.class, ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE))
                 .houses();
         long ownResidences = properties.stream()
                 .filter(property -> property.occupancy() == HouseOccupancy.OWN_RESIDENCE)

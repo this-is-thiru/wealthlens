@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CLUB",
+  "ruleSet": "RS-PERQ-CLUB",
   "_note": "Club expenditure, annual or periodical fees included, a corporate membership's initial fee not: the actual expenditure less recoveries (D-119). Which facts make it nil is by year — PERQ-CLUB-BUSINESS and PERQ-CLUB-UNIFORM in TY 2025-26, PERQ-CLUB-BUSINESS-UNIFORM in TY 2026-27 (OQ-12). For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1546). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

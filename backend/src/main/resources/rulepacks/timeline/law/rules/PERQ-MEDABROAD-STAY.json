@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-MEDABROAD-STAY",
+  "ruleSet": "RS-PERQ-MEDABROAD-STAY",
   "_note": "The part of an employer's spending on medical treatment and stay abroad (of the employee, a family member, and one attendant) that is excluded from the perquisite: the spending, but \"only to the extent permitted by the Reserve Bank of India\" (D-112; rulebook PERQ-MEDABROAD-001). The Reserve Bank sets no figure the Act names, so the permitted amount is entered. TY 2026-27: Income-tax Act, 2025 s.17(2)(f), s.17(3)(a) (Gazette 265620, pp.39–40). TY 2025-26: Income-tax Act, 1961 s.17(2) proviso (vi) condition (A), and clause (vii) for a reimbursement (thc.nic.in pp.144–145). MedicalTreatmentAbroadNode takes the excluded amount off the spending; the rest is salary. Every regime: a perquisite is salary.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

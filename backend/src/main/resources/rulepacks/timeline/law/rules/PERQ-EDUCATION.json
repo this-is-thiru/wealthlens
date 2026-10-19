@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-EDUCATION",
+  "ruleSet": "RS-PERQ-EDUCATION",
   "_note": "Free or concessional education for a household member: \"the amount of expenditure incurred by the employer in this regard, as reduced by any amount paid or recovered from the employee\" (Table III Sl. 3(a); r.3(5)); no limit applies (D-120; rulebook PERQ-EDU-2026). Provided by the employer, a benefit or amenity — salary only for a specified employee (s.17(1)(c)); meeting the employee's own obligation, salary for everyone (s.17(1)(f)) — D-120 C1a, OQ-10. TY 2026-27: Income-tax Rules, 2026 r.15(4) Table III (Gazette 271092, p.1544). TY 2025-26: Income-tax Rules, 1962 r.3(3)–(6) (consolidated rule 3, p.3). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

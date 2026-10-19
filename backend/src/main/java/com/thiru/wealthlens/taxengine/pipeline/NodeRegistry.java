@@ -2,8 +2,10 @@ package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -73,10 +75,10 @@ public final class NodeRegistry {
                     "Node " + node.produces() + " must state what it requires, even if nothing;"
                             + " the evaluation order is derived from that set");
         }
-        if (node.rules() == null) {
+        if (node.ruleSets() == null) {
             throw new IllegalArgumentException(
-                    "Node " + node.produces() + " must state the rules it evaluates, even if none;"
-                            + " reachability (invariant I3) is computed from that set");
+                    "Node " + node.produces() + " must state the rule sets it evaluates, even if none;"
+                            + " reachability (invariant I3) is computed from them");
         }
         if (node.requires().contains(node.produces())) {
             throw new IllegalArgumentException(
@@ -118,7 +120,7 @@ public final class NodeRegistry {
      *
      * <p>{@code 02-TECH-SPEC.md} T5 words I3 as "every {@code RuleId} in the pack is reachable from
      * some pipeline", and {@code W-029} deferred it here because reachability means <b>evaluated by
-     * some node</b>, and the node-to-rule mapping is {@link ComputationNode#rules()} — engine-side.
+     * some node</b>, and the node-to-rule mapping is {@link ComputationNode#ruleSets()} — engine-side.
      * A version computed from the pack alone would have to count a rule as reachable because some
      * component mentions it, which passes exactly the dead rule {@code O-19} describes: a deduction
      * present in the pack, absent from every answer, and silent about it.
@@ -130,14 +132,18 @@ public final class NodeRegistry {
      * (decision <b>D-029</b>).
      *
      * @param packRuleIds every rule the pack declares
+     * @param ruleSets the pack's rule sets, whose members a node evaluates by naming the set (D-252)
      * @return those no node evaluates, sorted, so the message is stable and diffable
      */
-    public Set<RuleId> rulesNotEvaluatedByAnyNode(Collection<RuleId> packRuleIds) {
-        if (packRuleIds == null) {
-            throw new IllegalArgumentException("Cannot check reachability against a null rule set");
+    public Set<RuleId> rulesNotEvaluatedByAnyNode(Collection<RuleId> packRuleIds, Map<RuleSetId, RuleSet> ruleSets) {
+        if (packRuleIds == null || ruleSets == null) {
+            throw new IllegalArgumentException("Cannot check reachability against a null rule or rule-set map");
         }
         Set<RuleId> evaluated = new LinkedHashSet<>();
-        byProduces.values().forEach(node -> evaluated.addAll(node.rules()));
+        byProduces.values().forEach(node -> node.ruleSets().stream()
+                .map(ruleSets::get)
+                .filter(Objects::nonNull)
+                .forEach(set -> evaluated.addAll(set.members())));
 
         Set<RuleId> unreachable = new TreeSet<>(java.util.Comparator.comparing(RuleId::value));
         packRuleIds.stream().filter(id -> !evaluated.contains(id)).forEach(unreachable::add);
@@ -145,7 +151,7 @@ public final class NodeRegistry {
     }
 
     /**
-     * I3 against a whole pack: as {@link #rulesNotEvaluatedByAnyNode(Collection)}, with a disallowance set's basis
+     * I3 against a whole pack: as {@link #rulesNotEvaluatedByAnyNode(Collection, Map)}, with a disallowance set's basis
      * counted as evaluated wherever a regime references the set. No node computes with the basis, but every
      * explanation of a rule the set forbids cites it ({@link NodeContext#inRegime}, D-165) — it is in every answer
      * that set touches, which is the opposite of dead.
@@ -160,6 +166,6 @@ public final class NodeRegistry {
                 .map(DisallowanceSet::basis)
                 .collect(Collectors.toSet());
         return rulesNotEvaluatedByAnyNode(
-                pack.rules().keySet().stream().filter(id -> !cited.contains(id)).toList());
+                pack.rules().keySet().stream().filter(id -> !cited.contains(id)).toList(), pack.ruleSets());
     }
 }

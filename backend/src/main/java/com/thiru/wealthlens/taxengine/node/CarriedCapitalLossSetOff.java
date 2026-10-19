@@ -9,12 +9,10 @@ import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
-import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.Comparator;
@@ -35,7 +33,7 @@ import java.util.TreeMap;
  */
 final class CarriedCapitalLossSetOff {
 
-    private static final RuleId ROW = RuleIds.SETOFF_CARRIED_CAPITAL_GAINS;
+    private static final RuleSetId ROW = RuleSetIds.RS_SETOFF_CARRIED_CAPITAL_GAINS;
 
     private CarriedCapitalLossSetOff() {
     }
@@ -43,8 +41,8 @@ final class CarriedCapitalLossSetOff {
     /** Sets the ledger's capital losses off against {@code parts}, lowering them and the head's income. */
     static void apply(NodeContext ctx, CapitalGainsAbsorptionOrder order, Map<HeadCode, Money> income,
             Map<CapitalGainsPart, Money> parts, List<TraceLine> lines) {
-        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(ROW), ctx.inputs().temporal());
-        TaxYearSpan span = RuleDefinitions.require(version.definition(), TaxYearSpan.class, ROW);
+        GoverningRow row = GoverningRow.of(ctx, ROW);
+        TaxYearSpan span = RuleDefinitions.require(row.version().definition(), TaxYearSpan.class, row.id());
         TaxYearId thisYear = ctx.inputs().taxYear();
         Map<TaxYearId, CarriedCapitalLoss> byYear = new TreeMap<>(Comparator.comparingInt(TaxYearId::startYear));
         byYear.putAll(ctx.inputs().ledgers().capitalLossCarriedForward());
@@ -60,30 +58,30 @@ final class CarriedCapitalLossSetOff {
                 continue;
             }
             if (!carried.determinedInReturnFiledInTime()) {
-                lines.add(line(lines, version, StepKind.MEASURE, remaining, Money.ZERO).withLimitedBy("loss of "
+                lines.add(line(lines, row, StepKind.MEASURE, remaining, Money.ZERO).withLimitedBy("loss of "
                         + arose.label() + " not carried forward: not determined in a return filed in time (S2 s.121;"
                         + " 1961 s.80)"));
                 continue;
             }
             if (!span.holds(arose, thisYear)) {
-                lines.add(line(lines, version, StepKind.MEASURE, remaining, remaining).withLimitedBy("loss of "
+                lines.add(line(lines, row, StepKind.MEASURE, remaining, remaining).withLimitedBy("loss of "
                         + arose.label() + " expired: carried for no more than " + span.succeedingYears()
                         + " tax years after it arose (S2 s.111(2), s.536(2)(n); 1961 s.74(2))"));
                 continue;
             }
-            Money left = use(version, order, arose, carried.longTermRemaining(), true, parts, lines)
-                    .plus(use(version, order, arose, carried.shortTermRemaining(), false, parts, lines));
+            Money left = use(row, order, arose, carried.longTermRemaining(), true, parts, lines)
+                    .plus(use(row, order, arose, carried.shortTermRemaining(), false, parts, lines));
             Money taken = remaining.minus(left);
             income.put(HeadCode.CAPITAL_GAINS, income.getOrDefault(HeadCode.CAPITAL_GAINS, Money.ZERO).minus(taken));
             if (left.isGreaterThan(Money.ZERO)) {
-                lines.add(line(lines, version, StepKind.MEASURE, remaining, left).withLimitedBy("loss of "
+                lines.add(line(lines, row, StepKind.MEASURE, remaining, left).withLimitedBy("loss of "
                         + arose.label() + " still carried forward (S2 s.111(1)(b); 1961 s.74(1)(c))"));
             }
         }
     }
 
     /** One term of one year's loss against the parts it may take, in order; returns what is left of it. */
-    private static Money use(RuleVersion version, CapitalGainsAbsorptionOrder order, TaxYearId arose, Money loss,
+    private static Money use(GoverningRow row, CapitalGainsAbsorptionOrder order, TaxYearId arose, Money loss,
             boolean longTerm, Map<CapitalGainsPart, Money> parts, List<TraceLine> lines) {
         Money remaining = loss;
         for (CapitalGainsPart part : order.parts()) {
@@ -95,7 +93,7 @@ final class CarriedCapitalLossSetOff {
             Money taken = Money.min(remaining, available);
             parts.put(part, available.minus(taken));
             remaining = remaining.minus(taken);
-            lines.add(line(lines, version, StepKind.SET_OFF, available, taken).withLimitedBy((longTerm ? "long" : "short")
+            lines.add(line(lines, row, StepKind.SET_OFF, available, taken).withLimitedBy((longTerm ? "long" : "short")
                     + "-term loss of " + arose.label() + " against " + part + "; order: this year's set-off first, then"
                     + " the oldest year, its long-term loss first, the parts " + order.parts() + " — the declared"
                     + " default, the Acts prescribing none (D-247)"));
@@ -103,8 +101,8 @@ final class CarriedCapitalLossSetOff {
         return remaining;
     }
 
-    private static TraceLine line(List<TraceLine> lines, RuleVersion version, StepKind kind, Money in, Money out) {
-        return TraceLine.of(lines.size() + 1, NodeIds.SETOFF, ROW, kind, MoneyValue.of(in), MoneyValue.of(out),
-                version.provenance());
+    private static TraceLine line(List<TraceLine> lines, GoverningRow row, StepKind kind, Money in, Money out) {
+        return TraceLine.of(lines.size() + 1, NodeIds.SETOFF, row.id(), kind, MoneyValue.of(in), MoneyValue.of(out),
+                row.version().provenance());
     }
 }

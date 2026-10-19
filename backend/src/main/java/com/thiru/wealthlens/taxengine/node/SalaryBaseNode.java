@@ -12,10 +12,12 @@ import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -46,14 +48,14 @@ import java.util.Set;
 public final class SalaryBaseNode implements ComputationNode {
 
     /** In the order they are traced. */
-    private static final List<RuleId> BASES = List.of(
-            RuleIds.SAL_SALARY_FOR_HRA,
-            RuleIds.SAL_SALARY_FOR_GRATUITY,
-            RuleIds.SAL_SALARY_FOR_EMPLOYER_PENSION,
-            RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION,
-            RuleIds.SAL_SALARY_FOR_ENTMT,
-            RuleIds.SAL_SALARY_FOR_ACCOM,
-            RuleIds.SAL_SALARY_FOR_RPF);
+    private static final List<RuleSetId> BASES = List.of(
+            RuleSetIds.RS_SAL_SALARY_FOR_HRA,
+            RuleSetIds.RS_SAL_SALARY_FOR_GRATUITY,
+            RuleSetIds.RS_SAL_SALARY_FOR_EMPLOYER_PENSION,
+            RuleSetIds.RS_SAL_SALARY_FOR_EMPLOYEE_PENSION,
+            RuleSetIds.RS_SAL_SALARY_FOR_ENTMT,
+            RuleSetIds.RS_SAL_SALARY_FOR_ACCOM,
+            RuleSetIds.RS_SAL_SALARY_FOR_RPF);
 
     @Override
     public NodeId produces() {
@@ -66,7 +68,7 @@ public final class SalaryBaseNode implements ComputationNode {
     }
 
     @Override
-    public Set<RuleId> rules() {
+    public Set<RuleSetId> ruleSets() {
         return new LinkedHashSet<>(BASES);
     }
 
@@ -76,10 +78,12 @@ public final class SalaryBaseNode implements ComputationNode {
         List<Employment> employments = ctx.inputs().entered().employments();
         Map<RuleId, List<Money>> byRule = new LinkedHashMap<>();
         List<TraceLine> trace = new ArrayList<>();
-        for (RuleId rule : BASES) {
-            if (!ctx.pack().rules().containsKey(rule)) {
+        for (RuleSetId base : BASES) {
+            Optional<RuleRow> row = ctx.optionalRuleOf(base);
+            if (row.isEmpty()) {
                 continue;
             }
+            RuleId rule = row.get().id();
             RuleVersion version = definingVersion(ctx, rule);
             DearnessAllowanceTest dearnessAllowance = ((SalaryBase) version.definition().orElseThrow())
                     .dearnessAllowance();

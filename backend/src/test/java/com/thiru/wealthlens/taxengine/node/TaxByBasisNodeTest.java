@@ -262,7 +262,7 @@ class TaxByBasisNodeTest {
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
         rules.put(eighty.id(), new RuleRow(eighty.id(), eighty.axis(), List.of(overlapping),
                 eighty.midYearCombination(), eighty.midYearCombinationRule(), eighty.prorationBasis(), eighty.headProvenance()));
-        RulePack overlap = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules,
+        RulePack overlap = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
                 pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets());
 
         // When / Then
@@ -289,7 +289,7 @@ class TaxByBasisNodeTest {
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
         rules.put(ladder.id(), new RuleRow(ladder.id(), ladder.axis(), List.of(first, second),
                 MidYearCombination.PRORATE_PER_SEGMENT, null, Optional.of(new Days()), ladder.headProvenance()));
-        RulePack split = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules,
+        RulePack split = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
                 pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets());
 
         // When / Then — a ladder's bands cannot be apportioned, so the node refuses rather than use year-end

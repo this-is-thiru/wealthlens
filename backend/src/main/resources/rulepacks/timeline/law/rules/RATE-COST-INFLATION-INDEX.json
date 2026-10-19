@@ -1,5 +1,6 @@
 {
   "ruleId": "RATE-COST-INFLATION-INDEX",
+  "ruleSet": "RS-RATE-COST-INFLATION-INDEX",
   "_note": "The Cost Inflation Index for each financial year, as notified (D-115). Read here only by the accommodation cap (PERQ-ACCOM-CONTINUED; S4 r.15(2)(d), (g); Rules 1962 r.3(1) third proviso, Explanation 2), which needs 2023-24 onward; capital gains are not built. TY 2025-26: the index \"notified … under clause (v) of Explanation to section 48\" — the table of S.O. 1790(E) of 5-6-2017 as amended: 2023-24 \"348\" by S.O. 2571(E), Notification No. 39/2023, 12-6-2023 (Gazette 246459, p.2; it re-inserted the figure first inserted by S.O. 1692(E) of 10-4-2023); 2024-25 \"363\" by S.O. 2103(E), 24-5-2024 (Gazette 254329, p.2); 2025-26 \"376\" by S.O. 2954(E), Notification No. 70/2025, 1-7-2025 (Gazette 264279, p.2). TY 2026-27: the index \"notified … under section 72(8)(a)\" — 2026-27 \"384\" by S.O. 3889(E), 15-7-2026 (Gazette 274522, p.2), which lists 2026-27 alone; the earlier years carry over under 2025 Act s.536(2)(j), which keeps a 1961 notification in force as if made under the corresponding provision. A year the table does not hold is refused. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",

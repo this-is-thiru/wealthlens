@@ -1,5 +1,6 @@
 {
   "ruleId": "PERQ-CLUB-UNIFORM",
+  "ruleSet": "RS-PERQ-CLUB-UNIFORM",
   "_note": "TY 2025-26 only: \"Nothing contained in this clause shall apply for use of health club, sports and similar facilities provided uniformly to all employees by the employer\" (Rules 1962 r.3(7)(vi)(C), consolidated rule 3, p.4) — a nil, separate from PERQ-CLUB-BUSINESS (D-119 C2a, OQ-12). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
