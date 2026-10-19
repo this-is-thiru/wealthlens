@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (W-088d DONE; between items)
-Stage           : between items
+Item            : — (between items)
+Stage           : W-088e done (D-248); next in order W-088f (waits on OQ-31)
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's pick. Next in order: W-088e (the capital-gains chapter's coverage close-out, 57 pointers, content only), then W-088f (OQ-31), W-088g, W-088h, W-089. Open OQs: OQ-31, OQ-32, OQ-33
+Next step       : WAIT for the owner's next instruction ("take W-088f" or another order)
 Last verify     : unit -Punit (clean) → 2989 run, 0 fail, 0 Checkstyle; integration 252/0 (W-088d, 2026-10-18)
-Waiting on      : the owner — next pick
-Files touched   : none
-Last item commit: taxplanning W-088d: carry a capital loss forward eight years from the tax ledger, long-term only against long-term gains — the input's brought-forward field removed, the order declared (D-247)
-Updated         : 2026-10-18, session 21 — W-088d committed
+Waiting on      : the owner — next item; OQ-31 – OQ-33 open
+Files touched   : —
+Last item commit: taxplanning W-088e: close out the capital-gains chapter's coverage — S2 s.67 / 1961 s.45 modelled with a catalogue entry, s.86 / s.54F to W-088i, the rest deferred, 1961 ss.54E–54EE spent (D-248)
+Updated         : 2026-10-19, session 22 — W-088e committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
