@@ -1,6 +1,6 @@
 {
   "ruleId": "RET-VOLUNTARY-RETIREMENT",
-  "ruleSet": "RS-RET-VOLUNTARY-RETIREMENT",
+  "ruleSet": "RS-RET-ENTRY",
   "_note": "An amount on voluntary retirement or termination under a scheme, for an employee of the employers the Acts list: deducted up to the least of the amount received and five lakh rupees, once only, and not where relief for arrears was allowed on it (D-103; rulebook RET-VRS-001, -002). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 12 (p.43), \"Minimum of— (a) compensation received; and (b) ₹ 500000.\"; s.19(2)(e)(ii) \"where deduction has been allowed to an employee in respect of the said item for any tax year, no deduction thereunder shall be allowed to him in relation to any other tax year\", (iii) \"where any relief under section 157 has been allowed … such amount shall not be allowed as a deduction\"; (h) the employers (pp.45–46). TY 2025-26: Income-tax Act, 1961 s.10(10C) (thc.nic.in pp.74–75), \"to the extent such amount does not exceed five lakh rupees\"; second proviso, once only; third proviso (Act 33 of 2009 s.4, w.e.f. 1-4-2010), none after relief under s.89. The scheme's conformity to the prescribed guidelines is not checked. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
@@ -44,7 +44,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "VOLUNTARY_RETIREMENT"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10) to (10C), so the entry applies in every regime",
         "gazetteRef": "CG-DL-E-31032023-244830",
@@ -101,7 +107,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "VOLUNTARY_RETIREMENT"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 12, with s.19(2)(e), (h)",
         "gazetteRef": "CG-DL-E-22082025-265620",

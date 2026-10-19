@@ -20,6 +20,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
@@ -27,6 +28,7 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -74,10 +76,10 @@ public final class ChapterEightNode implements ComputationNode {
     private static final BaseId GROSS_TOTAL_INCOME = new BaseId("GROSS_TOTAL_INCOME");
     private static final Set<RuleSetId> PAYMENT_ROWS = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV, RuleSetIds.RS_DED_NPS_OWN);
     private static final Set<RuleSetId> INVESTMENT_RULES = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV,
-            RuleSetIds.RS_DED_NPS_OWN, RuleSetIds.RS_DED_NPS_EMPLOYER_GOVT, RuleSetIds.RS_DED_NPS_EMPLOYER,
+            RuleSetIds.RS_DED_NPS_OWN, RuleSetIds.RS_DED_NPS_EMPLOYER,
             RuleSetIds.RS_DED_PREMIUM_SHARE);
-    private static final Set<RuleSetId> SPECIAL_RATE_ROWS = Set.of(RuleSetIds.RS_RATE_CG_SHORT_LISTED_EQUITY,
-            RuleSetIds.RS_RATE_CG_LONG_OTHER, RuleSetIds.RS_RATE_CG_LONG_LISTED_EQUITY);
+    /** What an employer pension contribution's row is chosen by, with the regime (D-253). */
+    private static final ItemFactId EMPLOYER_KIND = new ItemFactId("employer.kind");
 
     @Override
     public NodeId produces() {
@@ -93,7 +95,7 @@ public final class ChapterEightNode implements ComputationNode {
     public Set<RuleSetId> ruleSets() {
         Set<RuleSetId> rules = new HashSet<>(INVESTMENT_RULES);
         rules.add(RuleSetIds.RS_DED_WITHIN_GROSS_TOTAL);
-        rules.addAll(SPECIAL_RATE_ROWS);
+        rules.add(RuleSetIds.RS_RATE_CG_SPECIAL);
         rules.addAll(HealthInsuranceDeduction.RULES);
         rules.addAll(DisabilityDeduction.RULES);
         rules.addAll(LoanInterestDeduction.RULES);
@@ -355,14 +357,12 @@ public final class ChapterEightNode implements ComputationNode {
     }
 
     /**
-     * A Government employer's row in every regime; any other employer's, the row its rule set gives the regime
-     * (s.124(1)(b), (2); D-252). Which employer is the employment's fact, chosen here until W-088m2.
+     * A Government employer's row in every regime; any other employer's, the row for the regime (s.124(1)(b), (2)) —
+     * the rows' conditions on the employment's employer kind and their regimes say which (D-252, D-253).
      */
     private static RuleId employerRow(NodeContext ctx, int employment) {
-        if (ctx.inputs().entered().employments().get(employment).employerKind() == EmployerKind.GOVERNMENT) {
-            return ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_EMPLOYER_GOVT);
-        }
-        return ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_EMPLOYER);
+        EmployerKind kind = ctx.inputs().entered().employments().get(employment).employerKind();
+        return ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_EMPLOYER, ItemFacts.of(EMPLOYER_KIND, kind.name()));
     }
 
     /**
@@ -412,14 +412,15 @@ public final class ChapterEightNode implements ComputationNode {
     }
 
     private static Money specialRateGains(NodeContext ctx) {
-        return TaxByBasisNode.atSpecialRates(ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
+        return TaxByBasisNode.atSpecialRates(ctx, ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
     }
 
     private static String grossTotalLabel(NodeContext ctx, Money grossTotal) {
         Money special = specialRateGains(ctx);
         return special.isGreaterThan(Money.ZERO)
                 ? "gross total income less the capital gains at special rates (" + special + ", "
-                        + SPECIAL_RATE_ROWS.stream().map(set -> ctx.ruleIdOf(set).value()).sorted().toList() + ") "
+                        + ctx.pack().ruleSet(RuleSetIds.RS_RATE_CG_SPECIAL).members().stream().map(RuleId::value)
+                                .sorted().toList() + ") "
                         + grossTotal
                 : "gross total income " + grossTotal;
     }

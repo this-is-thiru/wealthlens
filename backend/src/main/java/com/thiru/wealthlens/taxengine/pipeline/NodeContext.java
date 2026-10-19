@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -189,10 +190,20 @@ public final class NodeContext {
      *     several of its rows apply
      */
     public RuleRow ruleOf(RuleSetId id) {
-        List<RuleRow> chosen = chosen(id, RuleSelection.EXACTLY_ONE);
+        return ruleOf(id, ItemFacts.NONE);
+    }
+
+    /**
+     * The row of an {@link RuleSelection#EXACTLY_ONE} set for one item: the row whose conditions the item's facts meet
+     * (W-088m2, D-253).
+     *
+     * @throws IllegalStateException as {@link #ruleOf(RuleSetId)}, and where no row is for the item
+     */
+    public RuleRow ruleOf(RuleSetId id, ItemFacts item) {
+        List<RuleRow> chosen = chosen(id, RuleSelection.EXACTLY_ONE, item);
         if (chosen.isEmpty()) {
             throw new IllegalStateException("Pack " + pack.taxYear().label() + " holds no row of rule set " + id
-                    + ", which takes exactly one");
+                    + " for " + item.codes() + ", which takes exactly one");
         }
         return chosen.getFirst();
     }
@@ -202,9 +213,19 @@ public final class NodeContext {
         return ruleOf(id).id();
     }
 
+    /** The id of the row for one item. */
+    public RuleId ruleIdOf(RuleSetId id, ItemFacts item) {
+        return ruleOf(id, item).id();
+    }
+
     /** The row of an {@link RuleSelection#AT_MOST_ONE} set, where the year holds one (D-252). */
     public Optional<RuleRow> optionalRuleOf(RuleSetId id) {
-        return chosen(id, RuleSelection.AT_MOST_ONE).stream().findFirst();
+        return optionalRuleOf(id, ItemFacts.NONE);
+    }
+
+    /** The row of an {@link RuleSelection#AT_MOST_ONE} set for one item, where the year holds one for it (D-253). */
+    public Optional<RuleRow> optionalRuleOf(RuleSetId id, ItemFacts item) {
+        return chosen(id, RuleSelection.AT_MOST_ONE, item).stream().findFirst();
     }
 
     /**
@@ -251,23 +272,27 @@ public final class NodeContext {
         return set.members().stream().map(pack::rule).toList();
     }
 
-    /** The set's only row, or the one of several that applies on the set's ground; never several. */
-    private List<RuleRow> chosen(RuleSetId id, RuleSelection expected) {
+    /**
+     * The set's only row, or the one of several that applies on the set's ground; never several. A set chosen on
+     * conditions tests even a lone row: its row may be for another item (D-253).
+     */
+    private List<RuleRow> chosen(RuleSetId id, RuleSelection expected, ItemFacts item) {
         RuleSet set = declared(id, expected);
         List<RuleRow> rows = rowsOf(set);
-        if (rows.size() <= 1) {
+        if (rows.size() <= 1 && set.ground() == SelectionGround.REGIME) {
             return rows;
         }
-        List<RuleRow> applying = rows.stream().filter(row -> appliesHere(row, set.ground())).toList();
-        if (applying.size() != 1) {
+        List<RuleRow> applying = rows.stream().filter(row -> appliesHere(row, set.ground(), item)).toList();
+        if (applying.size() > 1 || (applying.isEmpty() && expected == RuleSelection.EXACTLY_ONE)) {
             throw new IllegalStateException("Rule set " + id + " has " + applying.size() + " of its rows "
                     + rows.stream().map(RuleRow::id).toList() + " applying in regime " + regime.code() + " for "
-                    + pack.taxYear().label() + "; exactly one must");
+                    + pack.taxYear().label() + (item.codes().isEmpty() ? "" : " to the item " + item.codes())
+                    + (expected == RuleSelection.EXACTLY_ONE ? "; exactly one must" : "; at most one may"));
         }
         return applying;
     }
 
-    private boolean appliesHere(RuleRow row, SelectionGround ground) {
+    private boolean appliesHere(RuleRow row, SelectionGround ground, ItemFacts item) {
         RuleVersion version = row.versionAt(inputs.temporal());
         if (!inRegime(row.id(), version).applies()) {
             return false;
@@ -275,7 +300,7 @@ public final class NodeContext {
         if (ground == SelectionGround.REGIME) {
             return true;
         }
-        ConditionContext facts = conditions();
+        ConditionContext facts = conditions().about(item);
         return version.conditions().stream().allMatch(condition -> condition.holds(facts));
     }
 

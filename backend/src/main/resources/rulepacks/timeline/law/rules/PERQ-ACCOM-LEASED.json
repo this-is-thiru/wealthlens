@@ -1,6 +1,6 @@
 {
   "ruleId": "PERQ-ACCOM-LEASED",
-  "ruleSet": "RS-PERQ-ACCOM-LEASED",
+  "ruleSet": "RS-PERQ-ACCOM",
   "_note": "Accommodation any other employer takes on lease or rent: the lower of the lease rental and ten per cent of salary for the period, less the rent the employee paid (D-111). TY 2026-27: Income-tax Rules, 2026 r.15(2) Table I Sl. 2(b) (p.1541), \"Actual amount of lease rental paid or payable by the employer or 10% of salary, in respect of the period during which the said accommodation was occupied by the employee during the tax year, whichever is lower, as reduced by the rent, if any, actually paid by the employee\". TY 2025-26: Income-tax Rules, 1962 r.3(1) Table I Sl. 2(b) as substituted by G.S.R. 615(E) (p.5), to the same effect. The Cost Inflation Index cap covers leased accommodation in TY 2026-27 (r.15(2)(d), \"owned or taken on lease or rent\") but only owned in TY 2025-26 (r.3(1) third proviso); continued accommodation is refused in both until the index is read (D-111 C5a). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
@@ -45,7 +45,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "accommodation.provider",
+          "code": "EMPLOYER_LEASED"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E), Notification No. 65/2023 — Income-tax Rules, 1962 r.3(1) substituted",
         "gazetteRef": "CG-DL-E-18082023-248178",
@@ -103,7 +109,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "accommodation.provider",
+          "code": "EMPLOYER_LEASED"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(2)",
         "gazetteRef": "CG-DL-E-20032026-271092",

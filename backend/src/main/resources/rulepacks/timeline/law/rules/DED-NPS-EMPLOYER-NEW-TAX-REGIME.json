@@ -32,7 +32,16 @@
         "percent": "14",
         "base": "SALARY"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "Not",
+          "condition": {
+            "type": "ItemFactIs",
+            "fact": "employer.kind",
+            "code": "GOVERNMENT"
+          }
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.25 — the proviso reading \"ten per cent.\" in s.80CCD(2)(b) as \"fourteen per cent.\" where the total income is chargeable under s.115BAC(1A)",
         "gazetteRef": "CG-DL-E-16082024-256436",
@@ -78,7 +87,16 @@
         "percent": "14",
         "base": "SALARY"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "Not",
+          "condition": {
+            "type": "ItemFactIs",
+            "fact": "employer.kind",
+            "code": "GOVERNMENT"
+          }
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.124(1)(b) with s.124(2)",
         "gazetteRef": "CG-DL-E-22082025-265620",

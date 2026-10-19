@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.Map;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.Test;
  * <p>W-021b and W-021c extend this class with the amount, structure and composition predicates.
  */
 class ConditionTest {
+
+    private static final ItemFactId VEHICLE_ENGINE = new ItemFactId("vehicle.engine");
 
     private static ConditionContext resident(int age) {
         return ConditionContext.residentIndividualAged(age);
@@ -211,7 +214,8 @@ class ConditionTest {
                 heads,
                 components,
                 evidence,
-                nonCash);
+                nonCash,
+                ItemFacts.NONE);
     }
 
     private static ConditionContext withIncome(String totalIncome) {
@@ -550,12 +554,56 @@ class ConditionTest {
     }
 
     @Nested
+    @DisplayName("ItemFactIs")
+    class ItemFact {
+
+        private ConditionContext aboutCar(String engine) {
+            return resident(40).about(ItemFacts.of(VEHICLE_ENGINE, engine));
+        }
+
+        @Test
+        void holds_whenTheItemHasTheCode_isTrue() {
+            // Given
+            Condition small = new ItemFactIs(VEHICLE_ENGINE, "UP_TO_1600_CC");
+
+            // When / Then
+            assertThat(small.holds(aboutCar("UP_TO_1600_CC"))).isTrue();
+        }
+
+        @Test
+        void holds_whenTheItemHasAnotherCode_isFalse() {
+            // Given
+            Condition small = new ItemFactIs(VEHICLE_ENGINE, "UP_TO_1600_CC");
+
+            // When / Then
+            assertThat(small.holds(aboutCar("ABOVE_1600_CC"))).isFalse();
+        }
+
+        @Test
+        void holds_whenTheItemLacksTheFact_throwsRatherThanChoosingAnotherRow() {
+            // Given
+            Condition small = new ItemFactIs(VEHICLE_ENGINE, "UP_TO_1600_CC");
+
+            // When / Then
+            assertThatThrownBy(() -> small.holds(resident(40)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("vehicle.engine");
+        }
+
+        @Test
+        void construct_whenCodeBlank_isRefused() {
+            assertThatThrownBy(() -> new ItemFactIs(VEHICLE_ENGINE, " "))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
     @DisplayName("the algebra is closed")
     class SealedFamily {
 
         /**
-         * An exhaustive switch with no {@code default} over all thirteen predicates. This does not
-         * merely pass — it <b>compiles</b>, and that is the assertion. A fourteenth {@code Condition}
+         * An exhaustive switch with no {@code default} over all fourteen predicates. This does not
+         * merely pass — it <b>compiles</b>, and that is the assertion. A fifteenth {@code Condition}
          * breaks this line, which is the whole reason the interface is sealed.
          *
          * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
@@ -575,6 +623,7 @@ class ConditionTest {
                     new ComponentPresent(HRA),
                     new EvidenceRecorded(EvidenceType.LANDLORD_PAN),
                     new PaidOtherThanInCash(),
+                    new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC"),
                     AllOf.of(new IsResident()),
                     AnyOf.of(new IsResident()),
                     new Not(new IsResident()));
@@ -591,6 +640,7 @@ class ConditionTest {
                     case ComponentPresent ignored -> "structure";
                     case EvidenceRecorded ignored -> "structure";
                     case PaidOtherThanInCash ignored -> "structure";
+                    case ItemFactIs ignored -> "item";
                     case AllOf ignored -> "composition";
                     case AnyOf ignored -> "composition";
                     case Not ignored -> "composition";
@@ -598,8 +648,8 @@ class ConditionTest {
                 assertThat(group).isNotBlank();
             }
 
-            // Part E's list, after the W-021 erratum: 13, not the 16 the backlog claimed
-            assertThat(all).hasSize(13);
+            // Part E's list, after the W-021 erratum: 13, not the 16 the backlog claimed; and W-088m2's item fact
+            assertThat(all).hasSize(14);
         }
     }
 }

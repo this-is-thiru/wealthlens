@@ -10,11 +10,13 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -30,7 +32,6 @@ import com.thiru.wealthlens.taxengine.rules.temporal.proration.ProrationBasis;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -65,7 +66,8 @@ public final class PerquisiteNode implements ComputationNode {
     private static final BaseId SCALED_FIRST_YEAR_VALUE = new BaseId("SCALED_FIRST_YEAR_VALUE");
     private static final ProrationBasis BY_DAYS_OCCUPIED = new Days();
 
-    private static final Map<AccommodationProvider, RuleSetId> RULE_FOR_PROVIDER = providerRules();
+    /** What an accommodation's Table I row is chosen by (D-253). */
+    private static final ItemFactId ACCOMMODATION_PROVIDER = new ItemFactId("accommodation.provider");
 
     private static final Set<RuleSetId> RULES = rulesRead();
 
@@ -79,19 +81,9 @@ public final class PerquisiteNode implements ComputationNode {
         rules.addAll(HouseholdBenefitPerquisite.RULES);
         rules.addAll(SpecifiedSecurityPerquisite.RULES);
         rules.add(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE);
-        rules.addAll(Set.of(RuleSetIds.RS_PERQ_ACCOM_GOVERNMENT, RuleSetIds.RS_PERQ_ACCOM_OWNED, RuleSetIds.RS_PERQ_ACCOM_LEASED,
-                RuleSetIds.RS_PERQ_ACCOM_HOTEL, RuleSetIds.RS_PERQ_ACCOM_FURNITURE, RuleSetIds.RS_PERQ_ACCOM_CONTINUED,
-                RuleSetIds.RS_RATE_COST_INFLATION_INDEX));
+        rules.addAll(Set.of(RuleSetIds.RS_PERQ_ACCOM, RuleSetIds.RS_PERQ_ACCOM_FURNITURE,
+                RuleSetIds.RS_PERQ_ACCOM_CONTINUED, RuleSetIds.RS_RATE_COST_INFLATION_INDEX));
         return Set.copyOf(rules);
-    }
-
-    private static Map<AccommodationProvider, RuleSetId> providerRules() {
-        Map<AccommodationProvider, RuleSetId> rules = new EnumMap<>(AccommodationProvider.class);
-        rules.put(AccommodationProvider.GOVERNMENT, RuleSetIds.RS_PERQ_ACCOM_GOVERNMENT);
-        rules.put(AccommodationProvider.EMPLOYER_OWNED, RuleSetIds.RS_PERQ_ACCOM_OWNED);
-        rules.put(AccommodationProvider.EMPLOYER_LEASED, RuleSetIds.RS_PERQ_ACCOM_LEASED);
-        rules.put(AccommodationProvider.HOTEL, RuleSetIds.RS_PERQ_ACCOM_HOTEL);
-        return Map.copyOf(rules);
     }
 
     @Override
@@ -135,7 +127,8 @@ public final class PerquisiteNode implements ComputationNode {
     private static TraceLine accommodation(NodeContext ctx, EmployerAccommodation accommodation, int sequence) {
         TemporalContext t = ctx.inputs().temporal();
         requireWithinYear(accommodation.occupied(), t);
-        RuleId ruleId = ctx.ruleIdOf(RULE_FOR_PROVIDER.get(accommodation.provider()));
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_PERQ_ACCOM,
+                ItemFacts.of(ACCOMMODATION_PROVIDER, accommodation.provider().name()));
         RuleRow rule = ctx.rule(ruleId);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         Money salary = salaryFor(ctx, accommodation, t);

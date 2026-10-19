@@ -7,11 +7,13 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -23,7 +25,6 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -37,14 +38,12 @@ import java.util.Set;
 final class AssetPerquisite {
 
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_ASSET_USE, RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED,
-            RuleSetIds.RS_PERQ_ASSET_TRANSFER_ELECTRONIC, RuleSetIds.RS_PERQ_ASSET_TRANSFER_CAR,
-            RuleSetIds.RS_PERQ_ASSET_TRANSFER_OTHER);
+            RuleSetIds.RS_PERQ_ASSET_TRANSFER);
 
     private static final BaseId ASSET_COST = new BaseId("ASSET_COST");
-    private static final Map<TransferredAssetKind, RuleSetId> WEAR_AND_TEAR = Map.of(
-            TransferredAssetKind.COMPUTER_OR_ELECTRONIC, RuleSetIds.RS_PERQ_ASSET_TRANSFER_ELECTRONIC,
-            TransferredAssetKind.MOTOR_CAR, RuleSetIds.RS_PERQ_ASSET_TRANSFER_CAR,
-            TransferredAssetKind.OTHER, RuleSetIds.RS_PERQ_ASSET_TRANSFER_OTHER);
+
+    /** What a transferred asset's wear-and-tear row is chosen by (D-253). */
+    private static final ItemFactId ASSET_KIND = new ItemFactId("asset.kind");
 
     private AssetPerquisite() {
     }
@@ -80,7 +79,7 @@ final class AssetPerquisite {
     }
 
     private static TraceLine transferred(NodeContext ctx, EmployerAssetTransfer transfer, int sequence) {
-        RuleId ruleId = ctx.ruleIdOf(WEAR_AND_TEAR.get(transfer.kind()));
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_TRANSFER, ItemFacts.of(ASSET_KIND, transfer.kind().name()));
         Rate rate = rateOf(ctx, ruleId);
         Money written = transfer.kind() == TransferredAssetKind.OTHER
                 ? transfer.cost().minus(rate.ofShare(transfer.cost(), transfer.completedYears(), 1)).floorAtZero()

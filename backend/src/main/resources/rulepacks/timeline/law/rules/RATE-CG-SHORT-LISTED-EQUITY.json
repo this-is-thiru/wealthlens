@@ -1,6 +1,6 @@
 {
   "ruleId": "RATE-CG-SHORT-LISTED-EQUITY",
-  "ruleSet": "RS-RATE-CG-SHORT-LISTED-EQUITY",
+  "ruleSet": "RS-RATE-CG-SPECIAL",
   "_note": "Short-term gains on equity shares, equity-oriented fund units and business-trust units sold with securities transaction tax, charged apart from total income (D-244). TY 2026-27: Income-tax Act, 2025 s.196(1)(i) (p.220): \"income-tax calculated on such short-term capital gains at the rate of 20%\"; (1)(ii) the balance of total income taxed as if it were the total income. TY 2025-26: Income-tax Act, 1961 s.111A(1)(i)(b) as substituted by the Finance (No. 2) Act, 2024 s.29 (p.26): \"at the rate of twenty per cent. for any transfer which takes place on or after the 23rd day of July, 2024\" — every transfer of TY 2025-26. The shortfall of s.196(2) / the s.111A(1) first proviso is RATE-CG-SHORTFALL-ORDER's; Chapter VIII is kept off these gains by s.196(4) / s.111A(2) (ChapterEightNode). Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 16, 19.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
@@ -35,7 +35,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.part",
+          "code": "SHORT_TERM_LISTED_EQUITY"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.29 — Income-tax Act, 1961 s.111A(1)(i) (fifteen per cent. before 23-7-2024, twenty per cent. on or after), deemed substituted w.e.f. 23-7-2024",
         "gazetteRef": "CG-DL-E-16082024-256436",
@@ -83,7 +89,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.part",
+          "code": "SHORT_TERM_LISTED_EQUITY"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.196(1)",
         "gazetteRef": "CG-DL-E-22082025-265620",

@@ -32,7 +32,16 @@
         "percent": "10",
         "base": "SALARY"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "Not",
+          "condition": {
+            "type": "ItemFactIs",
+            "fact": "employer.kind",
+            "code": "GOVERNMENT"
+          }
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance (No. 2) Act, 2019 (23 of 2019), s.24 — \"(b) ten per cent., where such contribution is made by any other employer\"",
         "gazetteRef": "egazette 2019/209695 (the CG-DL-E ID string is not in the extracted text)",
@@ -78,7 +87,16 @@
         "percent": "10",
         "base": "SALARY"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "Not",
+          "condition": {
+            "type": "ItemFactIs",
+            "fact": "employer.kind",
+            "code": "GOVERNMENT"
+          }
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.124(1)(b)",
         "gazetteRef": "CG-DL-E-22082025-265620",

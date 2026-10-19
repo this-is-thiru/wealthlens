@@ -1,6 +1,6 @@
 {
   "ruleId": "RET-COMMUTED-PENSION-FUND",
-  "ruleSet": "RS-RET-COMMUTED-PENSION-FUND",
+  "ruleSet": "RS-RET-ENTRY",
   "_note": "Commuted pension from a pension fund: deducted in full (D-103; rulebook RET-COMMUT-GOVT-001). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 9 (p.43), \"Payment in commutation of pension received from a fund as specified in Schedule VII (Table: Sl. No. 3). — Entire amount.\" TY 2025-26: Income-tax Act, 1961 s.10(10A)(iii) (thc.nic.in p.72; inserted by Act 33 of 1996 s.4, w.e.f. 1-4-1997), \"any payment in commutation of pension received from a fund under clause (23AAB)\". Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "PAYMENT_RECEIVED"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "FUND_COMMUTATION"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10) to (10C), so the entry applies in every regime",
         "gazetteRef": "CG-DL-E-31032023-244830",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "PAYMENT_RECEIVED"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "FUND_COMMUTATION"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 9",
         "gazetteRef": "CG-DL-E-22082025-265620",

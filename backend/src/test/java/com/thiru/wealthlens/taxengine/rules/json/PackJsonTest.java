@@ -371,7 +371,7 @@ class PackJsonTest {
     // -------------------------------------------------------------- W-033b
 
     @Nested
-    @DisplayName("Condition — all thirteen")
+    @DisplayName("Condition — all fourteen")
     class Conditions {
 
         static com.thiru.wealthlens.taxengine.rules.condition.ConditionContext taxpayer() {
@@ -388,7 +388,9 @@ class PackJsonTest {
                     java.util.Set.of(com.thiru.wealthlens.taxengine.rules.condition.HeadCode.SALARIES),
                     java.util.Set.of(new ComponentCode("HRA")),
                     java.util.Set.of(com.thiru.wealthlens.taxengine.rules.condition.EvidenceType.LANDLORD_PAN),
-                    java.util.Optional.of(true));
+                    java.util.Optional.of(true),
+                    com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.of(
+                            new com.thiru.wealthlens.taxengine.rules.id.ItemFactId("vehicle.engine"), "ELECTRIC"));
         }
 
         private static boolean holds(String raw) {
@@ -460,11 +462,34 @@ class PackJsonTest {
         }
 
         @Test
-        void anUnknownTagListsAllThirteen() {
+        void itemFactIs_whenReadFromJson_testsTheItemsCode() {
+            // Given
+            var electric = ConditionJson.condition(
+                    json("{\"type\": \"ItemFactIs\", \"fact\": \"vehicle.engine\", \"code\": \"ELECTRIC\"}"), "c");
+            var small = ConditionJson.condition(
+                    json("{\"type\": \"ItemFactIs\", \"fact\": \"vehicle.engine\", \"code\": \"UP_TO_1600_CC\"}"), "c");
+
+            // When / Then
+            assertThat(electric.holds(taxpayer())).isTrue();
+            assertThat(small.holds(taxpayer())).isFalse();
+            assertThat(electric.describe()).isEqualTo("vehicle.engine is ELECTRIC");
+        }
+
+        @Test
+        void itemFactIs_whenCodeMissing_isRefused() {
+            assertThatThrownBy(() -> ConditionJson.condition(
+                            json("{\"type\": \"ItemFactIs\", \"fact\": \"vehicle.engine\"}"), "c"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("code");
+        }
+
+        @Test
+        void anUnknownTagListsAllFourteen() {
             assertThatThrownBy(() -> ConditionJson.condition(json("{\"type\": \"IsRich\"}"), "c"))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("IsResident")
                     .hasMessageContaining("PaidOtherThanInCash")
+                    .hasMessageContaining("ItemFactIs")
                     .hasMessageContaining("IsRich");
         }
     }

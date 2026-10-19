@@ -1,6 +1,6 @@
 {
   "ruleId": "RET-LEAVE-ENCASHMENT-GOVERNMENT",
-  "ruleSet": "RS-RET-LEAVE-ENCASHMENT-GOVERNMENT",
+  "ruleSet": "RS-RET-ENTRY",
   "_note": "A Central or State Government employee's cash equivalent of leave salary for earned leave at retirement: deducted in full (D-103; rulebook RET-LEAVE-GOVT-001). Any other employee's (Sl. 14) is W-066c. TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 13 (p.43), \"Payment received by an employee of the Central Government or a State Government as the cash equivalent of the leave salary in respect of the period of earned leave at his credit at the time of his retirement whether on superannuation or otherwise. — Entire amount.\" TY 2025-26: Income-tax Act, 1961 s.10(10AA)(i) (thc.nic.in p.72), in the same words. Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "PAYMENT_RECEIVED"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "GOVERNMENT_LEAVE_ENCASHMENT"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10) to (10C), so the entry applies in every regime",
         "gazetteRef": "CG-DL-E-31032023-244830",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "PAYMENT_RECEIVED"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "GOVERNMENT_LEAVE_ENCASHMENT"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 13",
         "gazetteRef": "CG-DL-E-22082025-265620",

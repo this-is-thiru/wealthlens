@@ -116,14 +116,14 @@ public final class SurchargeNode implements ComputationNode {
     @Override
     public Set<RuleSetId> ruleSets() {
         return Set.of(RuleSetIds.RS_RATE_SUR, RuleSetIds.RS_RATE_SUR_EXCLUDING, RuleSetIds.RS_RATE_SUR_CEILING,
-                RuleSetIds.RS_RATE_SUR_LIMIT, RuleSetIds.RS_OS_DIVIDEND_INTEREST);
+                RuleSetIds.RS_RATE_SUR_LIMIT, RuleSetIds.RS_OS_DIVIDEND_INTEREST, RuleSetIds.RS_RATE_CG_SPECIAL);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         Money totalIncome = ctx.get(NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount();
         TaxByBasis afterRebate = ctx.get(NodeIds.TAX_AFTERREBATE, TaxByBasis.class);
-        Money specialGains = TaxByBasisNode.atSpecialRates(ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
+        Money specialGains = TaxByBasisNode.atSpecialRates(ctx, ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
         SurchargeRows rows = rowsFor(ctx);
         Money dividends = excludingRate(ctx, rows, totalIncome, specialGains).compareTo(Rate.ZERO) > 0
                 ? dividendIncome(ctx)

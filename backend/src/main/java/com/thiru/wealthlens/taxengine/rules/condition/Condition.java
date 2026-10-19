@@ -26,7 +26,9 @@ package com.thiru.wealthlens.taxengine.rules.condition;
  * <p><b>The clause is complete.</b> All thirteen predicates of {@code 15-review-findings.md} Part E
  * exist — four person facts, two amounts, four structure, three composition — so the algebra is
  * closed as designed: a switch over a condition that misses a case does not compile. A fourteenth
- * predicate is a new class and a new permit, never an edit to an existing one.
+ * predicate is a new class and a new permit, never an edit to an existing one. The fourteenth is
+ * {@link ItemFactIs}: a fact of the item a node is computing, so the row for a car or a payment is chosen in data
+ * (W-088m2, D-253).
  */
 public sealed interface Condition
         permits IsResident,
@@ -39,6 +41,7 @@ public sealed interface Condition
                 ComponentPresent,
                 EvidenceRecorded,
                 PaidOtherThanInCash,
+                ItemFactIs,
                 AllOf,
                 AnyOf,
                 Not {

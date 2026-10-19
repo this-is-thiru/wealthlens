@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -106,7 +107,7 @@ class TaxYear2025RulePackTest {
         // for a person having income from business or profession; (b) in the return for one not having it
         ElectionProtocol optOut = pack().regimes().get(FIRST_SCHEDULE_RATES).election();
         ConditionContext taxpayer = new ConditionContext(true, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, 40),
-                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), Optional.empty());
+                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), Optional.empty(), ItemFacts.NONE);
 
         // When
         VehicleRoute route = optOut.vehicleFor(taxpayer);
@@ -126,7 +127,7 @@ class TaxYear2025RulePackTest {
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
         assertThat(pack.rules()).hasSize(174);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.73");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.74");
     }
 
     @Test

@@ -249,7 +249,8 @@ class RegimeLifecycleTest {
                 java.util.Set.of(heads),
                 java.util.Set.of(),
                 java.util.Set.of(),
-                java.util.Optional.empty());
+                java.util.Optional.empty(),
+                com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.NONE);
     }
 
     /**

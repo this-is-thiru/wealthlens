@@ -15,7 +15,6 @@ import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -44,19 +43,12 @@ final class NotifiedRetirementLimits {
     private static final BaseId AVERAGE_MONTHLY_SALARY = new BaseId("AVERAGE_MONTHLY_SALARY");
     private static final int MONTHS_AVERAGED = 10;
 
-    private static final Map<RetirementEntry, RuleSetId> AGGREGATE_FOR_ENTRY = Map.of(
-            RetirementEntry.OTHER_GRATUITY, RuleSetIds.RS_RET_GRATUITY_AGGREGATE,
-            RetirementEntry.OTHER_LEAVE_ENCASHMENT, RuleSetIds.RS_RET_LEAVE_ENCASHMENT_AGGREGATE);
-
     private NotifiedRetirementLimits() {
     }
 
-    static List<RuleSetId> aggregateRules() {
-        return List.copyOf(AGGREGATE_FOR_ENTRY.values());
-    }
-
-    static boolean isNotified(RetirementEntry entry) {
-        return AGGREGATE_FOR_ENTRY.containsKey(entry);
+    /** Whether the payment's entry is capped by notification: whether the aggregate set has a row for it (D-253). */
+    static boolean isNotified(NodeContext ctx, RetirementPayment payment) {
+        return ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.entry(payment)).isPresent();
     }
 
     /** Refuses an employment's gratuity and leave encashment that name different days: one employment ends once. */
@@ -100,8 +92,10 @@ final class NotifiedRetirementLimits {
      * year's total from every employer (S2 s.19(2)(a), (f); 1961 provisos), so this year's earlier payments of the
      * entry, in the order entered, come off it first; which payment absorbs the cut changes no tax (D-225).
      */
-    static TraceLine capped(NodeContext ctx, RetirementEntry entry, Money allowedThisYear, TraceLine line) {
-        RuleId aggregateId = ctx.ruleIdOf(AGGREGATE_FOR_ENTRY.get(entry));
+    static TraceLine capped(NodeContext ctx, RetirementPayment payment, Money allowedThisYear, TraceLine line) {
+        RetirementEntry entry = payment.entry();
+        RuleId aggregateId = ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.entry(payment))
+                .orElseThrow().id();
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(aggregateId), ctx.inputs().temporal());
         Money limit = TemporallyApportionedCap.apply(ctx.rule(aggregateId), ctx.inputs().temporal(),
                 new CapContext(Map.of())).value();

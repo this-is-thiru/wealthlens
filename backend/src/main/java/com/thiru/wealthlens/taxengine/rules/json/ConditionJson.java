@@ -16,10 +16,12 @@ import com.thiru.wealthlens.taxengine.rules.condition.IncomeAtLeast;
 import com.thiru.wealthlens.taxengine.rules.condition.IncomeAtMost;
 import com.thiru.wealthlens.taxengine.rules.condition.IsCertifiedDisabled;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFactIs;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
 import com.thiru.wealthlens.taxengine.rules.condition.PaidOtherThanInCash;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
@@ -29,7 +31,7 @@ import java.util.Set;
 import tools.jackson.databind.JsonNode;
 
 /**
- * All thirteen predicates of the condition algebra.
+ * All fourteen predicates of the condition algebra.
  *
  * <p>Each JSON field is named for the record component it fills, with one exception forced by the
  * format: {@link EvidenceRecorded}'s component is called {@code type}, which is also the
@@ -49,6 +51,7 @@ public final class ConditionJson {
         "ComponentPresent",
         "EvidenceRecorded",
         "PaidOtherThanInCash",
+        "ItemFactIs",
         "AllOf",
         "AnyOf",
         "Not"
@@ -66,6 +69,8 @@ public final class ConditionJson {
                             personFact(tag, node, path);
                     case "IncomeAtMost", "IncomeAtLeast", "HasIncomeUnderHead", "ComponentPresent",
                             "EvidenceRecorded", "PaidOtherThanInCash" -> amountOrStructure(tag, node, path);
+                    case "ItemFactIs" -> new ItemFactIs(
+                            new ItemFactId(PackJson.text(node, "fact", path)), PackJson.text(node, "code", path));
                     case "AllOf", "AnyOf", "Not" -> composition(tag, node, path);
                     default -> throw unhandled(tag, path);
                 });

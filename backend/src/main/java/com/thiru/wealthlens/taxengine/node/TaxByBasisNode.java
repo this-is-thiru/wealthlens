@@ -12,11 +12,13 @@ import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -28,9 +30,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,29 +63,18 @@ public final class TaxByBasisNode implements ComputationNode {
         return Set.of(NodeIds.ROUND_TOTALINCOME, NodeIds.SETOFF);
     }
 
-    /** Each special-rate part and the row that charges it, in the order the trace shows them. */
-    private static final Map<CapitalGainsPart, RuleSetId> SPECIAL_RATES = specialRates();
+    /** What a capital-gains part's special-rate row is chosen by; a part with no row is charged at slab rates (D-253). */
+    private static final ItemFactId CAPITAL_GAINS_PART = new ItemFactId("capitalgains.part");
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        Set<RuleSetId> rules = new HashSet<>(SPECIAL_RATES.values());
-        rules.add(RuleSetIds.RS_RATE_SLAB);
-        rules.add(RuleSetIds.RS_RATE_CG_SHORTFALL_ORDER);
-        return Set.copyOf(rules);
-    }
-
-    private static Map<CapitalGainsPart, RuleSetId> specialRates() {
-        Map<CapitalGainsPart, RuleSetId> rates = new EnumMap<>(CapitalGainsPart.class);
-        rates.put(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, RuleSetIds.RS_RATE_CG_SHORT_LISTED_EQUITY);
-        rates.put(CapitalGainsPart.LONG_TERM_OTHER, RuleSetIds.RS_RATE_CG_LONG_OTHER);
-        rates.put(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, RuleSetIds.RS_RATE_CG_LONG_LISTED_EQUITY);
-        return Collections.unmodifiableMap(rates);
+        return Set.of(RuleSetIds.RS_RATE_CG_SPECIAL, RuleSetIds.RS_RATE_SLAB, RuleSetIds.RS_RATE_CG_SHORTFALL_ORDER);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         Money totalIncome = ctx.get(NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount();
-        Map<CapitalGainsPart, Money> gains = specialRateGains(ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
+        Map<CapitalGainsPart, Money> gains = specialRateGains(ctx, ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
         // The slab ladder: each regime's own, unless an age ladder replaces it — the rows' conditions say which (D-252)
         RuleRow row = ctx.ruleOf(RuleSetIds.RS_RATE_SLAB);
         RuleVersion version = TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal());
@@ -107,7 +96,7 @@ public final class TaxByBasisNode implements ComputationNode {
                         + atSpecialRates));
         Map<CapitalGainsPart, Money> charged = shiftShortfall(ctx, gains, nilBandCeiling(ladder).minus(atSlab), lines);
         for (Map.Entry<CapitalGainsPart, Money> part : charged.entrySet()) {
-            RuleId rate = ctx.ruleIdOf(SPECIAL_RATES.get(part.getKey()));
+            RuleId rate = specialRate(ctx, part.getKey()).orElseThrow().id();
             RuleVersion rateVersion = TemporallyApportionedCap.governingVersion(ctx.rule(rate), ctx.inputs().temporal());
             Money tax = TemporallyApportionedCap.apply(ctx.rule(rate), ctx.inputs().temporal(),
                     CapContext.of(((SlabLadder) rateVersion.cap()).base(), part.getValue())).value();
@@ -120,21 +109,26 @@ public final class TaxByBasisNode implements ComputationNode {
 
     /**
      * The capital gains charged at special rates, which Chapter VIII may not reach (S2 s.196(4), s.197(5), s.198(6);
-     * 1961 ss.111A(2), 112(2), 112A(5); D-244).
+     * 1961 ss.111A(2), 112(2), 112A(5); D-244). The caller's node declares {@code RS-RATE-CG-SPECIAL}.
      */
-    static Money atSpecialRates(HeadsAfterSetOff heads) {
-        return specialRateGains(heads).values().stream().reduce(Money.ZERO, Money::plus);
+    static Money atSpecialRates(NodeContext ctx, HeadsAfterSetOff heads) {
+        return specialRateGains(ctx, heads).values().stream().reduce(Money.ZERO, Money::plus);
     }
 
-    /** The special-rate parts holding a gain after set-off, in the order the rows are shown. */
-    private static Map<CapitalGainsPart, Money> specialRateGains(HeadsAfterSetOff heads) {
+    /** The parts holding a gain after set-off that a special-rate row charges, in the parts' order. */
+    private static Map<CapitalGainsPart, Money> specialRateGains(NodeContext ctx, HeadsAfterSetOff heads) {
         Map<CapitalGainsPart, Money> gains = new EnumMap<>(CapitalGainsPart.class);
-        SPECIAL_RATES.keySet().forEach(part -> {
-            if (heads.capitalGains(part).isGreaterThan(Money.ZERO)) {
+        for (CapitalGainsPart part : CapitalGainsPart.values()) {
+            if (heads.capitalGains(part).isGreaterThan(Money.ZERO) && specialRate(ctx, part).isPresent()) {
                 gains.put(part, heads.capitalGains(part));
             }
-        });
+        }
         return gains;
+    }
+
+    /** The row charging a part at a special rate, as the rows' conditions say; none for a part taxed at slab rates. */
+    private static Optional<RuleRow> specialRate(NodeContext ctx, CapitalGainsPart part) {
+        return ctx.optionalRuleOf(RuleSetIds.RS_RATE_CG_SPECIAL, ItemFacts.of(CAPITAL_GAINS_PART, part.name()));
     }
 
     /**

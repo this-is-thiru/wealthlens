@@ -36,6 +36,7 @@ import java.util.Set;
  * @param evidenceRecorded the artefacts furnished for the claim this context describes
  * @param paidOtherThanInCash how the payment under this claim was made; empty where the claim
  *     involves no payment, so a rule asking about payment mode fails rather than guessing
+ * @param item the facts of the item a node is choosing a row for; {@link ItemFacts#NONE} where it chooses for none
  */
 public record ConditionContext(
         boolean resident,
@@ -46,7 +47,8 @@ public record ConditionContext(
         Set<HeadCode> headsWithIncome,
         Set<ComponentCode> componentsPresent,
         Set<EvidenceType> evidenceRecorded,
-        Optional<Boolean> paidOtherThanInCash) {
+        Optional<Boolean> paidOtherThanInCash,
+        ItemFacts item) {
 
     public ConditionContext {
         if (personType == null) {
@@ -56,7 +58,7 @@ public record ConditionContext(
             throw new IllegalArgumentException("ConditionContext maps may not be null");
         }
         if (nodeValues == null || headsWithIncome == null || componentsPresent == null
-                || evidenceRecorded == null || paidOtherThanInCash == null) {
+                || evidenceRecorded == null || paidOtherThanInCash == null || item == null) {
             throw new IllegalArgumentException("ConditionContext collections may not be null");
         }
         ages = Map.copyOf(ages);
@@ -74,7 +76,13 @@ public record ConditionContext(
             Map<AgeSubject, Integer> ages,
             Map<AgeSubject, DisabilitySeverity> disabilities) {
         this(resident, personType, ages, disabilities,
-                Map.of(), Set.of(), Set.of(), Set.of(), Optional.empty());
+                Map.of(), Set.of(), Set.of(), Set.of(), Optional.empty(), ItemFacts.NONE);
+    }
+
+    /** The same facts, about the given item. */
+    public ConditionContext about(ItemFacts facts) {
+        return new ConditionContext(resident, personType, ages, disabilities, nodeValues, headsWithIncome,
+                componentsPresent, evidenceRecorded, paidOtherThanInCash, facts);
     }
 
     /** A resident individual of the given age, with nothing else recorded. */

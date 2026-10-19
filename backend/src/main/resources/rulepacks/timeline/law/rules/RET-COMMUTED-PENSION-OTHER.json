@@ -1,6 +1,6 @@
 {
   "ruleId": "RET-COMMUTED-PENSION-OTHER",
-  "ruleSet": "RS-RET-COMMUTED-PENSION-OTHER",
+  "ruleSet": "RS-RET-ENTRY",
   "_note": "Commuted pension under a scheme of any other employer: deducted up to the commuted value of one-third of the pension where the employee also receives gratuity, one-half otherwise (D-103; rulebook RET-COMMUT-OTHER-001). The commuted value is \"determined having regard to the age of the recipient, the state of his health, the rate of interest and officially recognised tables of mortality\" — an actuarial figure the taxpayer states, as the employer computed it. The shares are unit fractions, carried as divisors (CommutedPensionShare), since a percentage cannot hold one-third exactly. TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 8 (pp.42–43), \"(a) where the employee has received gratuity, the commuted value of one-third of the pension, which he is normally entitled to receive; and (b) in any other case, the commuted value of one-half of such pension.\" TY 2025-26: Income-tax Act, 1961 s.10(10A)(ii) (thc.nic.in p.72), \"(a) in a case where the employee receives any gratuity, the commuted value of one-third of the pension which he is normally entitled to receive, and (b) in any other case, the commuted value of one-half of such pension\". Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
@@ -29,7 +29,13 @@
         "oneOverWhereGratuityReceived": 3,
         "oneOverOtherwise": 2
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "OTHER_EMPLOYER_COMMUTATION"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10) to (10C), so the entry applies in every regime",
         "gazetteRef": "CG-DL-E-31032023-244830",
@@ -71,7 +77,13 @@
         "oneOverWhereGratuityReceived": 3,
         "oneOverOtherwise": 2
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "OTHER_EMPLOYER_COMMUTATION"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 8",
         "gazetteRef": "CG-DL-E-22082025-265620",

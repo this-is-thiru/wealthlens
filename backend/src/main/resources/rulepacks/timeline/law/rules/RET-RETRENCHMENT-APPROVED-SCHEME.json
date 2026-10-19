@@ -1,6 +1,6 @@
 {
   "ruleId": "RET-RETRENCHMENT-APPROVED-SCHEME",
-  "ruleSet": "RS-RET-RETRENCHMENT-APPROVED-SCHEME",
+  "ruleSet": "RS-RET-ENTRY",
   "_note": "A workman's retrenchment compensation under a scheme the Central Government approved: deducted in full (D-103; rulebook RET-RETRENCH-SCHEME-001). Other retrenchment compensation (Sl. 10) is W-066d. TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 11 (p.43), \"In case of compensation referred to in Sl. No. 10, where such compensation received is in accordance with any scheme which the Central Government may approve in this behalf … — Compensation received.\"; s.19(2)(c) deems closure and some transfers to be retrenchment, and (d) takes \"employer\" and \"workman\" from the Industrial Disputes Act, 1947 (p.45). TY 2025-26: Income-tax Act, 1961 s.10(10B) second proviso (thc.nic.in p.73), \"the preceding proviso shall not apply in respect of any compensation received by a workman in accordance with any scheme which the Central Government may … approve in this behalf\". Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "PAYMENT_RECEIVED"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "APPROVED_SCHEME_RETRENCHMENT"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10) to (10C), so the entry applies in every regime",
         "gazetteRef": "CG-DL-E-31032023-244830",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "PAYMENT_RECEIVED"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "APPROVED_SCHEME_RETRENCHMENT"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.19(1) Table Sl. 11, with s.19(2)(c), (d)",
         "gazetteRef": "CG-DL-E-22082025-265620",
