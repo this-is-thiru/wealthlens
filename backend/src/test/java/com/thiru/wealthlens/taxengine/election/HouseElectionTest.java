@@ -6,6 +6,8 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.HouseOccupancy;
 import com.thiru.wealthlens.taxengine.input.HouseProperty;
+import com.thiru.wealthlens.taxengine.node.HousePropertyNode;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -32,6 +34,11 @@ class HouseElectionTest {
                 Rate.percent("100"), Money.ZERO, Optional.empty(), List.of());
     }
 
+    /** The rules as the house election reads them: through its node, {@code houseproperty.income} (D-255). */
+    private static NodeContext rules(EngineInputs inputs) {
+        return NodeContext.forRun(PACK, PACK.regimes().get(inputs.regime()), inputs).forNode(new HousePropertyNode());
+    }
+
     private static EngineInputs entering(HouseOccupancy... occupancies) {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         return new EngineInputs(plain.taxYear(), plain.regime(), plain.temporal(),
@@ -46,7 +53,7 @@ class HouseElectionTest {
                 HouseOccupancy.NOT_LET, HouseOccupancy.LET);
 
         // When
-        List<List<Integer>> candidates = new HouseElection().candidates(inputs, PACK);
+        List<List<Integer>> candidates = new HouseElection().candidates(rules(inputs));
 
         // Then — C(3,2) + C(3,1) + C(3,0) = 7; the let house (index 3) in none
         assertThat(candidates).containsExactly(List.of(0, 1), List.of(0, 2), List.of(1, 2), List.of(0), List.of(1),
@@ -60,7 +67,7 @@ class HouseElectionTest {
                 HouseOccupancy.OWN_RESIDENCE);
 
         // When
-        List<List<Integer>> candidates = new HouseElection().candidates(inputs, PACK);
+        List<List<Integer>> candidates = new HouseElection().candidates(rules(inputs));
 
         // Then
         assertThat(candidates).hasSize(7).first().isEqualTo(List.of(0, 1));

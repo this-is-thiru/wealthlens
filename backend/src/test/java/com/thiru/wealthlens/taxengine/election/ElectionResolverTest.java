@@ -7,6 +7,8 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.HouseOccupancy;
 import com.thiru.wealthlens.taxengine.input.HouseProperty;
+import com.thiru.wealthlens.taxengine.node.HousePropertyNode;
+import com.thiru.wealthlens.taxengine.node.SetOffNode;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
@@ -87,7 +89,8 @@ class ElectionResolverTest {
                 base.provision2025(), base.appliesTo(), base.rateTable(), base.disallowances(), base.eligibility(),
                 base.election(), base.lifecycle(), base.isDefault(), new PipelineSpec(List.of(NodeIds.TAX_NETPAYABLE)),
                 base.behaviour(), base.provenance());
-        NodeRegistry registry = NodeRegistry.of(List.of(new PricedByOrder(prices, Money.of("200"))));
+        // The election reads its rule through its node (D-255): registered, never run — the pipeline is the stub alone
+        NodeRegistry registry = NodeRegistry.of(List.of(new PricedByOrder(prices, Money.of("200")), new SetOffNode()));
         return ElectionResolver.resolve(new SetOffOrderElection(), registry, PACK, regime, inputs);
     }
 
@@ -99,7 +102,9 @@ class ElectionResolverTest {
     @Test
     void candidates_whenTheRowDeclaresThreeHeads_areEveryOrderTheDeclaredOneFirst() {
         // When
-        List<List<HeadCode>> candidates = new SetOffOrderElection().candidates(NodeHarness.plainTaxpayer(), PACK);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        List<List<HeadCode>> candidates = new SetOffOrderElection().candidates(
+                NodeContext.forRun(PACK, PACK.regimes().get(plain.regime()), plain).forNode(new SetOffNode()));
 
         // Then — 4! = 24 orders, each once, SALARIES / HOUSE_PROPERTY / OTHER_SOURCES / CAPITAL_GAINS first (D-243)
         assertThat(candidates).hasSize(24).doesNotHaveDuplicates().first().isEqualTo(DEFAULT);
@@ -174,6 +179,40 @@ class ElectionResolverTest {
                 .containsExactly(new PricedAlternative<>(DEFAULT, Money.of("200")));
         assertThat(resolution.run().trace()).singleElement()
                 .satisfies(line -> assertThat(line.limitedBy().orElseThrow()).contains("stated by the assessee"));
+    }
+
+    @Test
+    void resolve_whenTheElectionsNodeDeclaresNotItsSet_isRefused() {
+        // Given — a set-off node that evaluates no rule set: the election may read none (D-255)
+        RegimeSpec regime = PACK.regimes().get(NodeHarness.plainTaxpayer().regime());
+        ComputationNode bareSetOff = new ComputationNode() {
+            @Override
+            public NodeId produces() {
+                return NodeIds.SETOFF;
+            }
+
+            @Override
+            public Set<NodeId> requires() {
+                return Set.of();
+            }
+
+            @Override
+            public Set<RuleSetId> ruleSets() {
+                return Set.of();
+            }
+
+            @Override
+            public NodeResult evaluate(NodeContext ctx) {
+                throw new UnsupportedOperationException("never run");
+            }
+        };
+        NodeRegistry registry = NodeRegistry.of(List.of(new PricedByOrder(Map.of(), Money.of("200")), bareSetOff));
+
+        // When / Then
+        assertThatThrownBy(() -> ElectionResolver.resolve(new SetOffOrderElection(), registry, PACK, regime,
+                        NodeHarness.plainTaxpayer()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("did not declare rule set RS-SETOFF-ACROSS-HEADS");
     }
 
     @Test
@@ -267,7 +306,8 @@ class ElectionResolverTest {
                     base.provision2025(), base.appliesTo(), base.rateTable(), base.disallowances(), base.eligibility(),
                     base.election(), base.lifecycle(), base.isDefault(),
                     new PipelineSpec(List.of(NodeIds.TAX_NETPAYABLE)), base.behaviour(), base.provenance());
-            NodeRegistry registry = NodeRegistry.of(List.of(new PricedByHousesAndOrder(prices)));
+            NodeRegistry registry = NodeRegistry.of(List.of(new PricedByHousesAndOrder(prices), new SetOffNode(),
+                    new HousePropertyNode()));
             return ElectionResolver.resolveTogether(List.of(new HouseElection(), new SetOffOrderElection()),
                     registry, PACK, regime, inputs);
         }

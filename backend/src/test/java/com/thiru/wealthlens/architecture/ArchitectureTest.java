@@ -255,19 +255,20 @@ class ArchitectureTest {
                     .because("NodeContext.inRegime also applies the regime's disallowance sets (D-165)");
 
     /**
-     * A node names a rule set, never a row: the set's data chooses the row, by regime, person or item (D-252, D-253).
+     * A node or an election names a rule set, never a row: the set's data chooses the row, by regime, person or item
+     * (D-252, D-253); an election reads it through its node (D-255).
      *
      * <p>A row named in Java is one a new regime's or a new item's row cannot replace without a code edit, which is
-     * what W-088m1 and W-088m2 removed. Both ways to name one are closed: the generated {@code RuleIds}, and a
+     * what W-088m1, W-088m2 and W-088m4 removed. Both ways to name one are closed: the generated {@code RuleIds}, and a
      * {@code RuleId} built from its text (D-254).
      */
     @ArchTest
-    static final ArchRule nodes_reach_rules_through_rule_sets =
+    static final ArchRule nodes_and_elections_reach_rules_through_rule_sets =
             noClasses()
-                    .that().resideInAPackage("..taxengine.node..")
+                    .that().resideInAnyPackage("..taxengine.node..", "..taxengine.election..")
                     .should().dependOnClassesThat().belongToAnyOf(RuleIds.class)
                     .orShould().callConstructor(RuleId.class, String.class)
-                    .because("a node names a RuleSetId and the pack's data chooses the row (D-252, D-253, D-254)");
+                    .because("a node or election names a RuleSetId and the pack's data chooses the row (D-252 – D-255)");
 
     /**
      * Money is {@code Money}, and rates are {@code Rate}.

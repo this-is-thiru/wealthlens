@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.election;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -23,8 +24,8 @@ import java.util.stream.Collectors;
 public final class RegimeElection implements Election<RegimeCode> {
 
     @Override
-    public RuleId basis(RegimeCode choice, RulePack pack) {
-        return regime(choice, pack).rateTable();
+    public RuleId basis(RegimeCode choice, NodeContext rules) {
+        return regime(choice, rules.pack()).rateTable();
     }
 
     @Override
@@ -36,8 +37,9 @@ public final class RegimeElection implements Election<RegimeCode> {
      * @throws IllegalArgumentException if no regime is open to the assessee, with every reason
      */
     @Override
-    public List<RegimeCode> candidates(EngineInputs inputs, RulePack pack) {
-        List<RegimeOffer> offers = RegimeOffers.of(pack, inputs);
+    public List<RegimeCode> candidates(NodeContext rules) {
+        EngineInputs inputs = rules.inputs();
+        List<RegimeOffer> offers = RegimeOffers.of(rules.pack(), inputs);
         List<RegimeCode> available = offers.stream()
                 .filter(RegimeOffer.Available.class::isInstance)
                 .map(RegimeOffer::code)

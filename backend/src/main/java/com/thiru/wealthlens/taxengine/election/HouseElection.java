@@ -3,13 +3,15 @@ package com.thiru.wealthlens.taxengine.election;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.HouseOccupancy;
 import com.thiru.wealthlens.taxengine.input.HouseProperty;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.ArrayList;
@@ -31,8 +33,8 @@ import java.util.stream.IntStream;
 public final class HouseElection implements Election<List<Integer>> {
 
     @Override
-    public RuleId basis(List<Integer> choice, RulePack pack) {
-        return RuleIds.HP_OWN_RESIDENCE;
+    public RuleId basis(List<Integer> choice, NodeContext rules) {
+        return rules.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE);
     }
 
     @Override
@@ -41,11 +43,12 @@ public final class HouseElection implements Election<List<Integer>> {
     }
 
     @Override
-    public List<List<Integer>> candidates(EngineInputs inputs, RulePack pack) {
+    public List<List<Integer>> candidates(NodeContext rules) {
+        RuleRow ownResidence = rules.ruleOf(RuleSetIds.RS_HP_OWN_RESIDENCE);
         int limit = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(
-                pack.rule(RuleIds.HP_OWN_RESIDENCE), inputs.temporal()).definition(), OwnResidenceHouses.class,
-                RuleIds.HP_OWN_RESIDENCE).houses();
-        List<HouseProperty> houses = inputs.entered().houseProperties();
+                ownResidence, rules.inputs().temporal()).definition(), OwnResidenceHouses.class,
+                ownResidence.id()).houses();
+        List<HouseProperty> houses = rules.inputs().entered().houseProperties();
         List<Integer> qualifying = IntStream.range(0, houses.size())
                 .filter(i -> houses.get(i).occupancy() != HouseOccupancy.LET).boxed().toList();
         List<Integer> entered = IntStream.range(0, houses.size())

@@ -5,16 +5,16 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : — (between items)
-Stage           : W-088m3 done (D-254); next in order W-088m4 (elections name rule sets)
+Stage           : W-088m4 done (D-255); next in order W-088n (input facts, not legal bands)
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's next instruction ("take W-088m4" or another order)
-Last verify     : unit -Punit (clean, Checkstyle on) → 3038 run, 0 fail; integration 252/0 (DOCKER_HOST=OrbStack socket) (2026-10-19)
+Next step       : WAIT for the owner's next instruction ("take W-088n" or another order)
+Last verify     : unit -Punit (clean, Checkstyle on) → 3039 run, 0 fail; integration 252/0 (DOCKER_HOST=OrbStack socket) (2026-10-19)
 Waiting on      : the owner — next item; OQ-32, OQ-33 open
 Files touched   : —
-Last item commit: taxplanning W-088m3: fail the build when a node names a rule row — no RuleIds, no RuleId from text, no map to a rule set in taxengine.node; the elections placed as W-088m4 (D-254)
-Updated         : 2026-10-19, session 23 — W-088m3 committed
+Last item commit: taxplanning W-088m4: let elections read their rule through their node's rule sets — Election.basis and candidates take the node's context, no RuleIds left in taxengine.election, the guard widened (D-255)
+Updated         : 2026-10-19, session 23 — W-088m4 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -6,10 +6,14 @@ import com.thiru.wealthlens.taxengine.election.ElectionMode;
 import com.thiru.wealthlens.taxengine.election.ElectionResolver;
 import com.thiru.wealthlens.taxengine.election.PricedAlternative;
 import com.thiru.wealthlens.taxengine.election.SetOffOrderElection;
+import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.node.SetOffNode;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -48,8 +52,11 @@ class RegimeElectionPipelineTest {
         assertThat(resolution.outcomes().get(0).chosen()).isEqualTo(NEW);
         assertThat(List.<Object>copyOf(resolution.outcomes().get(0).alternatives())).containsExactly(
                 new PricedAlternative<>(NEW, Money.of("18954000")), new PricedAlternative<>(OLD, Money.of("19256250")));
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        RulePack pack = RUNNER.pack(TaxYearId.of(2026));
         assertThat(resolution.outcomes().get(1).chosen()).isEqualTo(new SetOffOrderElection().candidates(
-                NodeHarness.plainTaxpayer(), RUNNER.pack(TaxYearId.of(2026))).getFirst());
+                NodeContext.forRun(pack, pack.regimes().get(plain.regime()), plain).forNode(new SetOffNode()))
+                .getFirst());
         assertThat(resolution.run().valueOf(NodeIds.ROUND_NETPAYABLE).asMoney()).isEqualTo(Money.of("18954000"));
     }
 

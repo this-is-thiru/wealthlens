@@ -1,14 +1,16 @@
 package com.thiru.wealthlens.taxengine.election;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
-import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.ArrayList;
@@ -27,8 +29,8 @@ import java.util.Optional;
 public final class SetOffOrderElection implements Election<List<HeadCode>> {
 
     @Override
-    public RuleId basis(List<HeadCode> choice, RulePack pack) {
-        return RuleIds.SETOFF_ACROSS_HEADS;
+    public RuleId basis(List<HeadCode> choice, NodeContext rules) {
+        return rules.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS);
     }
 
     @Override
@@ -37,10 +39,10 @@ public final class SetOffOrderElection implements Election<List<HeadCode>> {
     }
 
     @Override
-    public List<List<HeadCode>> candidates(EngineInputs inputs, RulePack pack) {
+    public List<List<HeadCode>> candidates(NodeContext rules) {
+        RuleRow acrossHeads = rules.ruleOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS);
         AbsorptionOrder declared = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(
-                pack.rule(RuleIds.SETOFF_ACROSS_HEADS), inputs.temporal()).definition(), AbsorptionOrder.class,
-                RuleIds.SETOFF_ACROSS_HEADS);
+                acrossHeads, rules.inputs().temporal()).definition(), AbsorptionOrder.class, acrossHeads.id());
         List<List<HeadCode>> orders = new ArrayList<>();
         permute(List.of(), declared.heads(), orders);
         return List.copyOf(orders);

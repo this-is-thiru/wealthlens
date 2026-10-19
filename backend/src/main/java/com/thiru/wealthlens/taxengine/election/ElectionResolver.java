@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.election;
 
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -85,8 +86,9 @@ public final class ElectionResolver {
             throw new IllegalArgumentException("Resolving an election needs the election, a registry, a pack, a regime"
                     + " and the inputs; the engine fetches none of them for itself");
         }
+        NodeContext rules = rulesFor(election, registry, pack, regime, inputs);
         Optional<T> stated = election.stated(inputs);
-        List<T> choices = stated.map(List::of).orElseGet(() -> election.candidates(inputs, pack));
+        List<T> choices = stated.map(List::of).orElseGet(() -> election.candidates(rules));
         if (choices.isEmpty()) {
             throw new IllegalArgumentException(election.getClass().getSimpleName() + " offers no choice to price");
         }
@@ -105,7 +107,7 @@ public final class ElectionResolver {
         }
         ElectionMode mode = stated.isPresent() ? ElectionMode.USER_SPECIFIED : ElectionMode.AUTO_OPTIMISE;
         ElectionOutcome<T> outcome = new ElectionOutcome<>(chosen, mode, priced);
-        return new Resolution<>(outcome, withAlternatives(cheapest, election, outcome, pack, inputs));
+        return new Resolution<>(outcome, withAlternatives(cheapest, election, outcome, rules));
     }
 
     /**
@@ -121,7 +123,8 @@ public final class ElectionResolver {
             List<Election<?>> elections, NodeRegistry registry, RulePack pack, RegimeSpec regime, EngineInputs inputs) {
         requireJointlyResolvable(elections, registry, pack, regime, inputs);
         List<Choices<?>> all = IntStream.range(0, elections.size())
-                .<Choices<?>>mapToObj(i -> Choices.of(elections.get(i), i, inputs, pack))
+                .<Choices<?>>mapToObj(i -> Choices.of(elections.get(i), i,
+                        rulesFor(elections.get(i), registry, pack, regime, inputs)))
                 .toList();
         int[] radix = all.stream().mapToInt(Choices::size).toArray();
         int combinations = Arrays.stream(radix).reduce(1, Math::multiplyExact);
@@ -140,7 +143,7 @@ public final class ElectionResolver {
         List<TraceLine> trace = new ArrayList<>(cheapest.trace());
         List<ElectionOutcome<?>> outcomes = new ArrayList<>(all.size());
         for (int i = 0; i < all.size(); i++) {
-            outcomes.add(all.get(i).outcome(chosen[i], trace, all, combinations, pack, inputs));
+            outcomes.add(all.get(i).outcome(chosen[i], trace, all, combinations, pack));
         }
         return new JointResolution(outcomes, withTrace(cheapest, trace));
     }
@@ -156,6 +159,15 @@ public final class ElectionResolver {
                     + " was given " + elections.stream().map(e -> e.getClass().getSimpleName()).toList()
                     + "; resolve one alone");
         }
+    }
+
+    /**
+     * The rules as the election's node reads them, in the computing regime: an election reaches a row only through a
+     * set its node declares, chosen as the node chooses (D-255).
+     */
+    private static NodeContext rulesFor(Election<?> election, NodeRegistry registry, RulePack pack, RegimeSpec regime,
+            EngineInputs inputs) {
+        return NodeContext.forRun(pack, regime, inputs).forNode(registry.producing(election.node()));
     }
 
     /** One combination's whole run: every choice made, under the regime the choices name. */
@@ -188,14 +200,16 @@ public final class ElectionResolver {
     private static final class Choices<T> {
 
         private final Election<T> election;
+        private final NodeContext rules;
         private final int position;
         private final List<T> choices;
         private final boolean stated;
         private final List<Money> best;
         private final List<int[]> bestPicks;
 
-        private Choices(Election<T> election, int position, List<T> choices, boolean stated) {
+        private Choices(Election<T> election, NodeContext rules, int position, List<T> choices, boolean stated) {
             this.election = election;
+            this.rules = rules;
             this.position = position;
             this.choices = choices;
             this.stated = stated;
@@ -203,13 +217,13 @@ public final class ElectionResolver {
             this.bestPicks = new ArrayList<>(Collections.nCopies(choices.size(), null));
         }
 
-        static <T> Choices<T> of(Election<T> election, int position, EngineInputs inputs, RulePack pack) {
-            Optional<T> stated = election.stated(inputs);
-            List<T> choices = stated.map(List::of).orElseGet(() -> election.candidates(inputs, pack));
+        static <T> Choices<T> of(Election<T> election, int position, NodeContext rules) {
+            Optional<T> stated = election.stated(rules.inputs());
+            List<T> choices = stated.map(List::of).orElseGet(() -> election.candidates(rules));
             if (choices.isEmpty()) {
                 throw new IllegalArgumentException(election.getClass().getSimpleName() + " offers no choice to price");
             }
-            return new Choices<>(election, position, List.copyOf(choices), stated.isPresent());
+            return new Choices<>(election, rules, position, List.copyOf(choices), stated.isPresent());
         }
 
         int size() {
@@ -239,7 +253,7 @@ public final class ElectionResolver {
 
         /** The outcome, its lines appended to {@code trace}: one per choice, at its best combination. */
         ElectionOutcome<T> outcome(int chosen, List<TraceLine> trace, List<Choices<?>> all, int combinations,
-                RulePack pack, EngineInputs inputs) {
+                RulePack pack) {
             List<PricedAlternative<T>> priced = new ArrayList<>(choices.size());
             for (int pick = 0; pick < choices.size(); pick++) {
                 priced.add(new PricedAlternative<>(choices.get(pick), best.get(pick)));
@@ -249,7 +263,7 @@ public final class ElectionResolver {
             for (int pick = 0; pick < choices.size(); pick++) {
                 String why = stated ? why(election, outcome, priced.get(pick), pack)
                         : jointly(pick, chosen, all, combinations, pack);
-                trace.add(line(trace.size() + 1, election, priced.get(pick), why, pack, inputs));
+                trace.add(line(trace.size() + 1, election, priced.get(pick), why, rules));
             }
             return outcome;
         }
@@ -270,21 +284,21 @@ public final class ElectionResolver {
 
     /** The run, its trace ending in one line per alternative priced. */
     private static <T> PipelineRunner.Result withAlternatives(PipelineRunner.Result run, Election<T> election,
-            ElectionOutcome<T> outcome, RulePack pack, EngineInputs inputs) {
+            ElectionOutcome<T> outcome, NodeContext rules) {
         List<TraceLine> trace = new ArrayList<>(run.trace());
         for (PricedAlternative<T> alternative : outcome.alternatives()) {
-            trace.add(line(trace.size() + 1, election, alternative, why(election, outcome, alternative, pack), pack,
-                    inputs));
+            trace.add(line(trace.size() + 1, election, alternative, why(election, outcome, alternative, rules.pack()),
+                    rules));
         }
         return withTrace(run, trace);
     }
 
     /** An alternative's MEASURE line: its net payable, under the election's node, citing the choice's basis. */
     private static <T> TraceLine line(int sequence, Election<T> election, PricedAlternative<T> alternative, String why,
-            RulePack pack, EngineInputs inputs) {
-        RuleId basis = election.basis(alternative.choice(), pack);
-        Provenance provenance =
-                TemporallyApportionedCap.governingVersion(pack.rule(basis), inputs.temporal()).provenance();
+            NodeContext rules) {
+        RuleId basis = election.basis(alternative.choice(), rules);
+        Provenance provenance = TemporallyApportionedCap.governingVersion(rules.pack().rule(basis),
+                rules.inputs().temporal()).provenance();
         MoneyValue netPayable = MoneyValue.of(alternative.netPayable());
         return TraceLine.of(sequence, election.node(), basis, StepKind.MEASURE, netPayable, netPayable, provenance)
                 .withLimitedBy(why);
