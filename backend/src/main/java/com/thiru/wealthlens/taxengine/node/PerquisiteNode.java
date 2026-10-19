@@ -61,7 +61,7 @@ public final class PerquisiteNode implements ComputationNode {
 
     private static final BaseId SALARY = new BaseId("SALARY");
     private static final BaseId EMPLOYER_COST = new BaseId("EMPLOYER_COST");
-    private static final BaseId LOCATION = new BaseId("LOCATION");
+    private static final BaseId POPULATION = new BaseId("POPULATION");
     private static final BaseId FURNITURE_COST = new BaseId("FURNITURE_COST");
     private static final BaseId SCALED_FIRST_YEAR_VALUE = new BaseId("SCALED_FIRST_YEAR_VALUE");
     private static final ProrationBasis BY_DAYS_OCCUPIED = new Days();
@@ -134,11 +134,11 @@ public final class PerquisiteNode implements ComputationNode {
         Money salary = salaryFor(ctx, accommodation, t);
         Map<BaseId, Money> bases = new HashMap<>(Map.of(SALARY, salary));
         accommodation.employerCost().ifPresent(cost -> bases.put(EMPLOYER_COST, cost));
-        Map<BaseId, String> locations = accommodation.band()
-                .map(band -> Map.of(LOCATION, band.name()))
+        Map<BaseId, Integer> population = accommodation.cityPopulation()
+                .map(people -> Map.of(POPULATION, people))
                 .orElse(Map.of());
         CapResult valued = TemporallyApportionedCap.apply(rule, t,
-                new CapContext(Map.copyOf(bases), Map.of(), Map.of(), locations));
+                new CapContext(Map.copyOf(bases), Map.of(), population));
         Money value = valued.value().minus(accommodation.rentPaid()).floorAtZero();
         String bound = valued.limitedBy() + ", less the rent paid " + accommodation.rentPaid();
         if (isContinued(accommodation, t.taxYear())) {

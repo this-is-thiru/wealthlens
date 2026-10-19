@@ -5,16 +5,16 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : — (between items)
-Stage           : W-088n1 done (D-257); next in order W-088n2 (the city's population)
+Stage           : W-088n2 done (D-258); next in order W-088o (rate bases as rule data)
 Plan            : —
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's next instruction ("take W-088n2" or another order)
-Last verify     : unit -Punit (clean, Checkstyle on) → 3051 run, 0 fail; integration 252/0 (DOCKER_HOST=OrbStack socket) (2026-10-19)
+Next step       : WAIT for the owner's next instruction ("take W-088o" or another order)
+Last verify     : unit -Punit (clean, Checkstyle on) → 3062 run, 0 fail; integration 252/0 (DOCKER_HOST=OrbStack socket) (2026-10-19)
 Waiting on      : the owner — next item; OQ-32, OQ-33 open
 Files touched   : —
-Last item commit: taxplanning W-088n1: describe a car by its facts, electric or its capacity in cc — the 1.6-litre column as ItemFactAtMost conditions on the car rows, CarEngine no longer a legal band; W-088n split (D-256, D-257)
-Updated         : 2026-10-19, session 23 — W-088n1 committed
+Last item commit: taxplanning W-088n2: value owned accommodation by the city's population — Table I's forty- and fifteen-lakh bands as a PercentOfBaseByPopulation cap, PopulationBand removed from the inputs (D-258)
+Updated         : 2026-10-19, session 23 — W-088n2 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

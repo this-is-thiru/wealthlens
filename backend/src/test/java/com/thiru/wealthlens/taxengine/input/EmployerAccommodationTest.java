@@ -16,19 +16,19 @@ class EmployerAccommodationTest {
     private static final DateRange YEAR = DateRange.between(LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31));
 
     @Test
-    void construct_whenOwnedWithItsBand_carriesIt() {
+    void construct_whenOwnedWithItsCityPopulation_carriesIt() {
         // When
         EmployerAccommodation owned = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, YEAR,
-                Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.of("24000"), Optional.empty(),
+                Optional.of(5_000_000), Optional.empty(), Money.of("24000"), Optional.empty(),
                 TaxYearId.of(2026), Optional.empty());
 
         // Then
-        assertThat(owned.band()).contains(PopulationBand.ABOVE_FORTY_LAKH);
+        assertThat(owned.cityPopulation()).contains(5_000_000);
         assertThat(owned.rentPaid()).isEqualTo(Money.of("24000"));
     }
 
     @Test
-    void construct_whenOwnedWithoutItsBand_isRefused() {
+    void construct_whenOwnedWithoutItsCityPopulation_isRefused() {
         // Table I Sl. 2(a): the percentage turns on the city's 2011-census population
         assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, YEAR,
                         Optional.empty(), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026), Optional.empty()))
@@ -45,12 +45,21 @@ class EmployerAccommodationTest {
     }
 
     @Test
-    void construct_whenABandIsGivenForLeasedAccommodation_isRefusedRatherThanIgnored() {
+    void construct_whenAPopulationIsGivenForLeasedAccommodation_isRefusedRatherThanIgnored() {
         assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_LEASED, YEAR,
-                        Optional.of(PopulationBand.ANY_OTHER_PLACE), Optional.of(Money.of("180000")), Money.ZERO,
+                        Optional.of(1_000_000), Optional.of(Money.of("180000")), Money.ZERO,
                         Optional.empty(), TaxYearId.of(2026), Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("band");
+                .hasMessageContaining("population");
+    }
+
+    @Test
+    void construct_whenTheCityPopulationIsNotPositive_isRefused() {
+        assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, YEAR,
+                        Optional.of(0), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026),
+                        Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("positive");
     }
 
     @Test

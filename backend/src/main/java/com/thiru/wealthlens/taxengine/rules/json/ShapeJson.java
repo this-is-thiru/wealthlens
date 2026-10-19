@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
 import com.thiru.wealthlens.taxengine.rules.cap.PerUnitPerPeriod;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
+import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByPopulation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
@@ -135,7 +136,8 @@ public final class ShapeJson {
                 "AggregateWithCeiling",
                 "PerUnitPerPeriod",
                 "AmountInExcess",
-                "PercentOfBaseByLocation");
+                "PercentOfBaseByLocation",
+                "PercentOfBaseByPopulation");
         return PackJson.construct(path, () ->
         switch (tag) {
                     case "Fixed" -> new Fixed(money(node, "amount", path));
@@ -148,6 +150,7 @@ public final class ShapeJson {
                     case "AmountInExcess" -> new AmountInExcess(new BaseId(PackJson.text(node, "amount", path)),
                             cap(PackJson.object(node, "threshold", path), path + ".threshold"));
                     case "PercentOfBaseByLocation" -> percentByLocation(node, path);
+                    case "PercentOfBaseByPopulation" -> percentByPopulation(node, path);
                     default -> throw unreachable(tag, path);
                 });
     }
@@ -180,6 +183,14 @@ public final class ShapeJson {
                         rate(element.node(), "percent", element.path())));
         return new PercentOfBaseByLocation(new BaseId(PackJson.text(node, "base", path)),
                 new BaseId(PackJson.text(node, "location", path)), bands, rate(node, "otherwise", path));
+    }
+
+    private static PercentOfBaseByPopulation percentByPopulation(JsonNode node, String path) {
+        List<PercentOfBaseByPopulation.Band> bands = PackJson.array(node, "bands", path, element ->
+                new PercentOfBaseByPopulation.Band(PackJson.integer(element.node(), "exceeding", element.path()),
+                        rate(element.node(), "percent", element.path())));
+        return new PercentOfBaseByPopulation(new BaseId(PackJson.text(node, "base", path)),
+                new BaseId(PackJson.text(node, "population", path)), bands, rate(node, "otherwise", path));
     }
 
     private static AggregateWithCeiling aggregate(JsonNode node, String path) {

@@ -18,7 +18,7 @@ package com.thiru.wealthlens.taxengine.rules.cap;
  */
 public sealed interface CapShape
         permits Fixed, PercentOfBase, SlabLadder, LeastOf, AggregateWithCeiling, PerUnitPerPeriod, AmountInExcess,
-                PercentOfBaseByLocation {
+                PercentOfBaseByLocation, PercentOfBaseByPopulation {
 
     /** Applies the cap to the amounts this rule declares it reads. */
     CapResult apply(CapContext ctx);

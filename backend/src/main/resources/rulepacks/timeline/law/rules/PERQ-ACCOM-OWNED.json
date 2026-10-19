@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-ACCOM-OWNED",
   "ruleSet": "RS-PERQ-ACCOM",
-  "_note": "Accommodation any other employer owns: a percentage of the accommodation \"salary\" for the period occupied, by the city's 2011-census population, less the rent the employee paid (D-111). TY 2026-27: Income-tax Rules, 2026 r.15(2) Table I Sl. 2(a) (p.1541), \"(i) 10% of salary in cities having population exceeding forty lakhs as per 2011 census … (ii) 7.5% of salary in cities having population exceeding fifteen lakhs but not exceeding forty lakhs as per 2011 census …; and (iii) 5% of salary in other areas\", each \"in respect of the period during which the said accommodation was occupied … as reduced by the rent, if any, actually paid\". TY 2025-26: Income-tax Rules, 1962 r.3(1) Table I Sl. 2(a) as substituted by G.S.R. 615(E) (pp.4–5), the same percentages and bands. The band is the taxpayer's (PopulationBand): the Rules name no cities. The salary is SAL-SALARY-FOR-ACCOM less exempt allowances, apportioned to the period by days. The Cost Inflation Index cap for accommodation continued from an earlier year (r.15(2)(d); r.3(1) third proviso) is not built until the index is read: such accommodation is refused (D-111 C5a). Every regime.",
+  "_note": "Accommodation any other employer owns: a percentage of the accommodation \"salary\" for the period occupied, by the city's 2011-census population, less the rent the employee paid (D-111). TY 2026-27: Income-tax Rules, 2026 r.15(2) Table I Sl. 2(a) (p.1541), \"(i) 10% of salary in cities having population exceeding forty lakhs as per 2011 census … (ii) 7.5% of salary in cities having population exceeding fifteen lakhs but not exceeding forty lakhs as per 2011 census …; and (iii) 5% of salary in other areas\", each \"in respect of the period during which the said accommodation was occupied … as reduced by the rent, if any, actually paid\". TY 2025-26: Income-tax Rules, 1962 r.3(1) Table I Sl. 2(a) as substituted by G.S.R. 615(E) (pp.4–5), the same percentages and bands. The population is the taxpayer's (EmployerAccommodation.cityPopulation, as the 2011 census counts it), the bands the row's: forty lakh = 40,00,000, fifteen lakh = 15,00,000, \"exceeding\" strict (PercentOfBaseByPopulation; W-088n2, D-258). The Rules name no cities. The salary is SAL-SALARY-FOR-ACCOM less exempt allowances, apportioned to the period by days. The Cost Inflation Index cap for accommodation continued from an earlier year (r.15(2)(d); r.3(1) third proviso) is not built until the index is read: such accommodation is refused (D-111 C5a). Every regime.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -25,20 +25,16 @@
         "presence": "PRESENT"
       },
       "cap": {
-        "type": "PercentOfBaseByLocation",
+        "type": "PercentOfBaseByPopulation",
         "base": "SALARY",
-        "location": "LOCATION",
+        "population": "POPULATION",
         "bands": [
           {
-            "locations": [
-              "ABOVE_FORTY_LAKH"
-            ],
+            "exceeding": 4000000,
             "percent": "10"
           },
           {
-            "locations": [
-              "FIFTEEN_TO_FORTY_LAKH"
-            ],
+            "exceeding": 1500000,
             "percent": "7.5"
           }
         ],
@@ -88,20 +84,16 @@
         "presence": "PRESENT"
       },
       "cap": {
-        "type": "PercentOfBaseByLocation",
+        "type": "PercentOfBaseByPopulation",
         "base": "SALARY",
-        "location": "LOCATION",
+        "population": "POPULATION",
         "bands": [
           {
-            "locations": [
-              "ABOVE_FORTY_LAKH"
-            ],
+            "exceeding": 4000000,
             "percent": "10"
           },
           {
-            "locations": [
-              "FIFTEEN_TO_FORTY_LAKH"
-            ],
+            "exceeding": 1500000,
             "percent": "7.5"
           }
         ],

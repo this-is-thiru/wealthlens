@@ -19,7 +19,6 @@ import com.thiru.wealthlens.taxengine.input.JourneyMode;
 import com.thiru.wealthlens.taxengine.input.LeaveAtRetirement;
 import com.thiru.wealthlens.taxengine.input.MedicalTreatmentAbroad;
 import com.thiru.wealthlens.taxengine.input.OfficialUseRecord;
-import com.thiru.wealthlens.taxengine.input.PopulationBand;
 import com.thiru.wealthlens.taxengine.input.RetirementEntry;
 import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
 import com.thiru.wealthlens.taxengine.input.RetirementPayment;
@@ -391,7 +390,7 @@ class SalaryHeadPipelineTest {
         // Given — owned, city above forty lakh, all year, rent 24,000 paid (D-111)
         EmployerAccommodation home = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
                 DateRange.between(LocalDate.of(year, 4, 1), LocalDate.of(year + 1, 3, 31)),
-                Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.of("24000"), Optional.empty(),
+                Optional.of(5_000_000), Optional.empty(), Money.of("24000"), Optional.empty(),
                 TaxYearId.of(year), Optional.empty());
 
         // When

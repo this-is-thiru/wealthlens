@@ -376,7 +376,7 @@ class InputsFingerprintTest {
                     List.of(new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
                             com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
                                     java.time.LocalDate.of(2026, 4, 1), java.time.LocalDate.of(2027, 3, 31)),
-                            Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(),
+                            Optional.of(5_000_000), Optional.empty(),
                             com.thiru.wealthlens.taxengine.rules.money.Money.of(rentPaid), Optional.empty(),
                             com.thiru.wealthlens.taxengine.rules.id.TaxYearId.of(2026), Optional.empty())), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
         }

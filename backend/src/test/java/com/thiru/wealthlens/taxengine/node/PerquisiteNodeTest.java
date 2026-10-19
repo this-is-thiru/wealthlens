@@ -10,7 +10,6 @@ import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.Furniture;
-import com.thiru.wealthlens.taxengine.input.PopulationBand;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
@@ -52,8 +51,8 @@ class PerquisiteNodeTest {
         return DateRange.between(LocalDate.of(year, 4, 1), LocalDate.of(year + 1, 3, 31));
     }
 
-    private static EmployerAccommodation owned(int year, PopulationBand band, String rent) {
-        return new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, wholeYear(year), Optional.of(band),
+    private static EmployerAccommodation owned(int year, int cityPopulation, String rent) {
+        return new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, wholeYear(year), Optional.of(cityPopulation),
                 Optional.empty(), Money.of(rent), Optional.empty(), TaxYearId.of(year), Optional.empty());
     }
 
@@ -91,7 +90,7 @@ class PerquisiteNodeTest {
     void evaluate_whenOwnedInACityAboveFortyLakh_valuesItAtTenPercentLessRent(int year) {
         // When — 10% × 12,00,000 = 1,20,000, less 24,000 rent
         NodeResult result = run(year, FIRST_SCHEDULE_RATES, "1200000", "0",
-                List.of(owned(year, PopulationBand.ABOVE_FORTY_LAKH, "24000")));
+                List.of(owned(year, 5_000_000, "24000")));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("96000")));
@@ -103,12 +102,23 @@ class PerquisiteNodeTest {
     }
 
     @Test
+    void evaluate_whenOwnedInACityOfExactlyFortyLakh_valuesItAtSevenAndAHalfPercent() {
+        // When — "exceeding forty lakhs" is strict: 40,00,000 is the middle band, 7.5% × 12,00,000 = 90,000 (D-258)
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(owned(2026, 4_000_000, "0")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("90000")));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.PERQ_ACCOM_OWNED));
+    }
+
+    @Test
     void evaluate_whenOwnedInTheOtherBands_valuesItAtSevenAndAHalfAndFivePercent() {
         // When — 7.5% and 5% of 12,00,000
         NodeResult middle = run(2026, FIRST_SCHEDULE_RATES, "1200000", "0",
-                List.of(owned(2026, PopulationBand.FIFTEEN_TO_FORTY_LAKH, "0")));
+                List.of(owned(2026, 2_000_000, "0")));
         NodeResult other = run(2026, FIRST_SCHEDULE_RATES, "1200000", "0",
-                List.of(owned(2026, PopulationBand.ANY_OTHER_PLACE, "0")));
+                List.of(owned(2026, 1_000_000, "0")));
 
         // Then
         assertThat(middle.value()).isEqualTo(MoneyValue.of(Money.of("90000")));
@@ -142,7 +152,7 @@ class PerquisiteNodeTest {
     void evaluate_whenFurnished_addsTenPercentAYearOfTheFurnituresCost() {
         // Given — owned, above forty lakh, furniture costing 2,00,000
         EmployerAccommodation furnished = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
-                wholeYear(2026), Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.of("24000"),
+                wholeYear(2026), Optional.of(5_000_000), Optional.empty(), Money.of("24000"),
                 Optional.of(Furniture.owned(Money.of("200000"), Money.ZERO)), TaxYearId.of(2026), Optional.empty());
 
         // When
@@ -158,7 +168,7 @@ class PerquisiteNodeTest {
     void evaluate_whenAllowancesWereExempt_leavesThemOutOfTheSalary() {
         // When — r.15(8)(k)(iii): 12,00,000 less 50,000 exempt = 11,50,000; 10% = 1,15,000
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES, "1200000", "50000",
-                List.of(owned(2026, PopulationBand.ABOVE_FORTY_LAKH, "0")));
+                List.of(owned(2026, 5_000_000, "0")));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("115000")));
@@ -178,7 +188,7 @@ class PerquisiteNodeTest {
     void evaluate_whenInTheNewRegime_isStillSalary() {
         // When — a perquisite is salary in every regime
         NodeResult result = run(2026, NEW_TAX_REGIME, "1200000", "0",
-                List.of(owned(2026, PopulationBand.ABOVE_FORTY_LAKH, "24000")));
+                List.of(owned(2026, 5_000_000, "24000")));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("96000")));
@@ -187,7 +197,7 @@ class PerquisiteNodeTest {
     private static EmployerAccommodation continued(int year, AccommodationProvider provider, int firstProvidedIn,
             Optional<String> cost, Optional<String> firstYearValue) {
         return new EmployerAccommodation(0, provider, wholeYear(year),
-                provider == AccommodationProvider.EMPLOYER_OWNED ? Optional.of(PopulationBand.ABOVE_FORTY_LAKH)
+                provider == AccommodationProvider.EMPLOYER_OWNED ? Optional.of(5_000_000)
                         : Optional.empty(),
                 cost.map(Money::of), Money.ZERO, Optional.empty(), TaxYearId.of(firstProvidedIn),
                 firstYearValue.map(Money::of));
@@ -227,7 +237,7 @@ class PerquisiteNodeTest {
     void evaluate_whenRentIsPaidOnContinuedAccommodation_capsTheValueAfterRent() {
         // Given — the Sl. 2(a) amount is "as reduced by the rent" (D-115 C3): 1,20,000 − 24,000 = 96,000
         EmployerAccommodation home = new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
-                wholeYear(2026), Optional.of(PopulationBand.ABOVE_FORTY_LAKH), Optional.empty(), Money.of("24000"),
+                wholeYear(2026), Optional.of(5_000_000), Optional.empty(), Money.of("24000"),
                 Optional.empty(), TaxYearId.of(2023), Optional.of(Money.of("100000")));
 
         // When

@@ -196,7 +196,11 @@ class PerUnitPerPeriodTest {
                     new PercentOfBaseByLocation(new BaseId("SALARY"), new BaseId("LOCATION"),
                             java.util.List.of(new PercentOfBaseByLocation.Band(java.util.Set.of("MUMBAI"),
                                     com.thiru.wealthlens.taxengine.rules.money.Rate.percent("50"))),
-                            com.thiru.wealthlens.taxengine.rules.money.Rate.percent("40")));
+                            com.thiru.wealthlens.taxengine.rules.money.Rate.percent("40")),
+                    new PercentOfBaseByPopulation(new BaseId("SALARY"), new BaseId("POPULATION"),
+                            java.util.List.of(new PercentOfBaseByPopulation.Band(4_000_000,
+                                    com.thiru.wealthlens.taxengine.rules.money.Rate.percent("10"))),
+                            com.thiru.wealthlens.taxengine.rules.money.Rate.percent("5")));
 
             for (CapShape shape : all) {
                 String kind = switch (shape) {
@@ -208,11 +212,12 @@ class PerUnitPerPeriodTest {
                     case PerUnitPerPeriod ignored -> "perUnit";
                     case AmountInExcess ignored -> "excess";
                     case PercentOfBaseByLocation ignored -> "byLocation";
+                    case PercentOfBaseByPopulation ignored -> "byPopulation";
                 };
                 assertThat(kind).isNotBlank();
             }
 
-            assertThat(all).hasSize(8);
+            assertThat(all).hasSize(9);
         }
     }
 }
