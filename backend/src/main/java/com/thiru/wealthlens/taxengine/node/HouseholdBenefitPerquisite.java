@@ -3,10 +3,8 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.BenefitArrangement;
 import com.thiru.wealthlens.taxengine.input.EmployerChildEducation;
 import com.thiru.wealthlens.taxengine.input.EmployerHouseholdBenefit;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -78,8 +76,9 @@ final class HouseholdBenefitPerquisite {
         Money net = benefit.amount().minus(benefit.recovered()).floorAtZero();
         Money value = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
                 CapContext.of(BENEFIT_VALUE, net)).value();
-        return line(ctx, ruleId, benefit.amount(), value, sequence,
-                benefit.kind() + " (" + benefit.arrangement() + "), less the recovery " + benefit.recovered());
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, benefit.amount(), value)
+                .withLimitedBy(benefit.kind() + " (" + benefit.arrangement() + "), less the recovery "
+                        + benefit.recovered());
     }
 
     private static TraceLine educated(NodeContext ctx, EmployerChildEducation child, int sequence) {
@@ -88,19 +87,14 @@ final class HouseholdBenefitPerquisite {
         Money cost = child.similarInstitutionCostPerMonth();
         Money whole = cost.times(child.months());
         if (!cost.isGreaterThan(limit)) {
-            return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), whole, Money.ZERO, sequence,
-                    "not a perquisite: " + cost + " a month does not exceed " + limit + " per child");
+            return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), StepKind.INCOME,
+                            whole, Money.ZERO)
+                    .withLimitedBy("not a perquisite: " + cost + " a month does not exceed " + limit + " per child");
         }
-        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), whole, whole.minus(child.recovered()).floorAtZero(), sequence,
-                cost + " a month exceeds " + limit + " per child, so the whole for " + child.months()
+        return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION_FREE), StepKind.INCOME,
+                        whole, whole.minus(child.recovered()).floorAtZero())
+                .withLimitedBy(cost + " a month exceeds " + limit + " per child, so the whole for " + child.months()
                         + " months, less the recovery " + child.recovered());
     }
 
-    private static TraceLine line(NodeContext ctx, RuleId ruleId, Money in, Money value, int sequence, String bound) {
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ruleId, StepKind.INCOME, MoneyValue.of(in),
-                        MoneyValue.of(value),
-                        TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal())
-                                .provenance())
-                .withLimitedBy(bound);
-    }
 }

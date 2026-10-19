@@ -1,18 +1,15 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.EmployerMeals;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
-import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -64,17 +61,21 @@ final class MealPerquisite {
     private static TraceLine beyondTheLimit(NodeContext ctx, RuleId ruleId, EmployerMeals meals, int sequence) {
         CapResult valued = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
                 new CapContext(Map.of(MEAL_VALUE, total(meals)), Map.of(), Map.of(MEAL, meals.meals())));
-        return line(ctx, ruleId, meals, valued.value(), sequence, valued.limitedBy());
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, total(meals), valued.value())
+                .withLimitedBy(counted(valued.limitedBy(), meals));
     }
 
     private static TraceLine inFull(NodeContext ctx, EmployerMeals meals, int sequence, String why) {
         CapResult valued = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_MEAL), ctx.inputs().temporal(),
                 CapContext.of(MEAL_VALUE, total(meals)));
-        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL), meals, valued.value(), sequence, why);
+        return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL), StepKind.INCOME,
+                        total(meals), valued.value())
+                .withLimitedBy(counted(why, meals));
     }
 
     private static TraceLine notSalary(NodeContext ctx, EmployerMeals meals, int sequence, String why) {
-        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL), meals, Money.ZERO, sequence, "not a perquisite: " + why);
+        return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_MEAL), StepKind.INCOME, total(meals), Money.ZERO)
+                .withLimitedBy(counted("not a perquisite: " + why, meals));
     }
 
     private static boolean appliesInRegime(NodeContext ctx, RuleId ruleId) {
@@ -86,11 +87,9 @@ final class MealPerquisite {
         return meals.valuePerMeal().times(meals.meals());
     }
 
-    private static TraceLine line(NodeContext ctx, RuleId ruleId, EmployerMeals meals, Money value, int sequence,
-            String bound) {
-        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal());
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ruleId, StepKind.INCOME,
-                        MoneyValue.of(total(meals)), MoneyValue.of(value), version.provenance())
-                .withLimitedBy(bound + " (" + meals.meals() + " meals at " + meals.valuePerMeal() + ")");
+
+    /** The limit text with the meals it valued, as every meal line states them. */
+    private static String counted(String bound, EmployerMeals meals) {
+        return bound + " (" + meals.meals() + " meals at " + meals.valuePerMeal() + ")";
     }
 }

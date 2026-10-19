@@ -3,12 +3,10 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -63,9 +61,11 @@ final class DepositInterestDeduction {
             add(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST), savingsItems, firstSequence, lines);
         }
         if (other.isGreaterThan(Money.ZERO)) {
-            lines.add(line(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST), firstSequence + lines.size(), other, Money.ZERO,
-                    "s.153(2)(a) is savings-account interest only, time deposits excluded; deposit interest is"
-                            + " deducted only for a senior citizen (s.153(2)(b); 1961 ss.80TTA, 80TTB)"));
+            lines.add(ctx.traceLine(firstSequence + lines.size(), ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST),
+                            StepKind.DEDUCTION, other, Money.ZERO)
+                    .withLimitedBy("s.153(2)(a) is savings-account interest only, time deposits excluded;"
+                            + " deposit interest is deducted only for a senior citizen (s.153(2)(b); 1961 ss.80TTA,"
+                            + " 80TTB)"));
         }
         return lines;
     }
@@ -90,27 +90,22 @@ final class DepositInterestDeduction {
         Money interest = included(ctx, items);
         RegimeVerdict verdict = ctx.inRegime(row, version(ctx, row));
         if (!verdict.applies()) {
-            lines.add(line(ctx, row, firstSequence + lines.size(), interest, Money.ZERO, verdict.whyNot()));
+            lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, interest, Money.ZERO)
+                    .withLimitedBy(verdict.whyNot()));
             return;
         }
         CapResult allowed = TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),
                 CapContext.of(INTEREST, interest));
         String why = interest.isLessThan(received(items)) ? allowed.limitedBy() + "; interest net of the expenditure"
                 + " deducted against it (S2 s.93(1)(e); 1961 s.57(iii); D-228)" : allowed.limitedBy();
-        lines.add(line(ctx, row, firstSequence + lines.size(), interest, allowed.value(), why));
+        lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, interest, allowed.value())
+                .withLimitedBy(why));
     }
 
     /** What gross total income includes of these items: each net of its expenditure, together floored at nil. */
     private static Money included(NodeContext ctx, List<OtherSourceItem> items) {
         return items.stream().map(item -> OtherSourcesNode.interestIncluded(ctx, item)).reduce(Money.ZERO, Money::plus)
                 .floorAtZero();
-    }
-
-    private static TraceLine line(NodeContext ctx, RuleId row, int sequence, Money interest, Money allowed,
-            String limitedBy) {
-        return TraceLine.of(sequence, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION, MoneyValue.of(interest),
-                        MoneyValue.of(allowed), version(ctx, row).provenance())
-                .withLimitedBy(limitedBy);
     }
 
     private static List<OtherSourceItem> deposits(NodeContext ctx) {

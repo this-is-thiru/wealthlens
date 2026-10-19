@@ -10,15 +10,19 @@ import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleSelection;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
 import com.thiru.wealthlens.taxengine.rules.pack.SelectionGround;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.Period;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -60,8 +64,20 @@ public final class NodeContext {
     /** Shared across every context of one run; written by the runner, read by the nodes. */
     private final Map<NodeId, NodeValue> computed;
 
-    private final Set<NodeId> declaredRequires;
-    private final Set<RuleSetId> declaredRuleSets;
+    /**
+     * What the node this context serves declared: its slot, what it reads, the rule sets it evaluates. The run's own
+     * context serves no node and declares nothing.
+     */
+    private record Declared(Optional<NodeId> node, Set<NodeId> requires, Set<RuleSetId> ruleSets) {
+
+        static final Declared NOTHING = new Declared(Optional.empty(), Set.of(), Set.of());
+
+        static Declared by(ComputationNode node) {
+            return new Declared(Optional.of(node.produces()), Set.copyOf(node.requires()), Set.copyOf(node.ruleSets()));
+        }
+    }
+
+    private final Declared declared;
 
     /** How this run recomputes a slot at another value; one that cannot says so when asked. */
     private final Recomputation recomputation;
@@ -71,15 +87,13 @@ public final class NodeContext {
             RegimeSpec regime,
             EngineInputs inputs,
             Map<NodeId, NodeValue> computed,
-            Set<NodeId> declaredRequires,
-            Set<RuleSetId> declaredRuleSets,
+            Declared declared,
             Recomputation recomputation) {
         this.pack = pack;
         this.regime = regime;
         this.inputs = inputs;
         this.computed = computed;
-        this.declaredRequires = declaredRequires;
-        this.declaredRuleSets = declaredRuleSets;
+        this.declared = declared;
         this.recomputation = recomputation;
     }
 
@@ -101,7 +115,7 @@ public final class NodeContext {
                     "A NodeContext needs a pack, a regime, the inputs and a recomputation; the engine fetches none"
                             + " of them for itself");
         }
-        return new NodeContext(pack, regime, inputs, new LinkedHashMap<>(), Set.of(), Set.of(), recomputation);
+        return new NodeContext(pack, regime, inputs, new LinkedHashMap<>(), Declared.NOTHING, recomputation);
     }
 
     /** This node's view: the same values, restricted to what it declared. */
@@ -109,9 +123,7 @@ public final class NodeContext {
         if (node == null) {
             throw new IllegalArgumentException("Cannot scope a NodeContext to a null node");
         }
-        return new NodeContext(
-                pack, regime, inputs, computed, Set.copyOf(node.requires()),
-                Set.copyOf(node.ruleSets()), recomputation);
+        return new NodeContext(pack, regime, inputs, computed, Declared.by(node), recomputation);
     }
 
     /** Record a node's output. The runner's call, after {@code evaluate}. */
@@ -174,10 +186,10 @@ public final class NodeContext {
     }
 
     private void requireDeclared(NodeId node) {
-        if (!declaredRequires.contains(node)) {
+        if (!declared.requires().contains(node)) {
             throw new IllegalStateException(
                     "This node did not declare " + node + " in requires(), so it may not read it."
-                            + " It declared " + declaredRequires + ". Add it to requires() -- the"
+                            + " It declared " + declared.requires() + ". Add it to requires() -- the"
                             + " evaluation order is derived from that set, so reading outside it"
                             + " would work only by luck of ordering");
         }
@@ -242,13 +254,13 @@ public final class NodeContext {
      * @throws IllegalStateException if no set the node declared holds the row
      */
     public RuleRow rule(RuleId id) {
-        boolean declared = declaredRuleSets.stream()
+        boolean held = declared.ruleSets().stream()
                 .map(set -> pack.ruleSets().get(set))
                 .anyMatch(set -> set != null && set.members().contains(id));
-        if (!declared) {
+        if (!held) {
             throw new IllegalStateException(
                     "This node declared no rule set holding " + id + ", so it may not evaluate it."
-                            + " It declared " + declaredRuleSets + ". Reachability (invariant I3) is"
+                            + " It declared " + declared.ruleSets() + ". Reachability (invariant I3) is"
                             + " computed from those sets, so an undeclared rule would look dead while"
                             + " being applied");
         }
@@ -256,9 +268,9 @@ public final class NodeContext {
     }
 
     private RuleSet declared(RuleSetId id, RuleSelection expected) {
-        if (!declaredRuleSets.contains(id)) {
+        if (!declared.ruleSets().contains(id)) {
             throw new IllegalStateException("This node did not declare rule set " + id + " in ruleSets(), so it may"
-                    + " not evaluate it. It declared " + declaredRuleSets);
+                    + " not evaluate it. It declared " + declared.ruleSets());
         }
         RuleSet set = pack.ruleSet(id);
         if (set.selection() != expected) {
@@ -325,6 +337,20 @@ public final class NodeContext {
         }
         boolean resident = assessee.residence() != Assessee.ResidentialStatus.NON_RESIDENT;
         return new ConditionContext(resident, assessee.type(), ages, disabilities);
+    }
+
+    /**
+     * A line of this node's trace: a rule's step from {@code in} to {@code out}, under this node, with the provenance of
+     * the rule's version that governs the run (D-261). The limit text, if any, is added by {@code withLimitedBy}.
+     *
+     * @throws IllegalStateException if this is the run's own context, which serves no node, or the node declared no
+     *     set holding the rule
+     */
+    public TraceLine traceLine(int sequence, RuleId rule, StepKind kind, Money in, Money out) {
+        NodeId node = declared.node().orElseThrow(() -> new IllegalStateException(
+                "The run's own context serves no node, so it writes no trace line; a node's context does"));
+        RuleVersion version = TemporallyApportionedCap.governingVersion(rule(rule), inputs.temporal());
+        return TraceLine.of(sequence, node, rule, kind, MoneyValue.of(in), MoneyValue.of(out), version.provenance());
     }
 
     /**

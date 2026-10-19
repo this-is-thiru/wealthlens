@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : — (between items)
-Stage           : W-088n2 done (D-258); next in order W-088o (rate bases as rule data)
-Plan            : —
+Item            : W-088p2 — the other long parameter lists
+Stage           : READY — not started
+Plan            : plans/W-088p.md (split); plans/W-088p2.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : WAIT for the owner's next instruction ("take W-088o" or another order)
-Last verify     : unit -Punit (clean, Checkstyle on) → 3062 run, 0 fail; integration 252/0 (DOCKER_HOST=OrbStack socket) (2026-10-19)
-Waiting on      : the owner — next item; OQ-32, OQ-33 open
-Files touched   : —
-Last item commit: taxplanning W-088n2: value owned accommodation by the city's population — Table I's forty- and fifteen-lakh bands as a PercentOfBaseByPopulation cap, PopulationBand removed from the inputs (D-258)
-Updated         : 2026-10-19, session 23 — W-088n2 committed
+Next step       : on "take W-088p2" / "start W-088p2": read, write plans/W-088p2.md, STOP
+Last verify     : unit -Punit 3065 run, 0 fail; integration 252/0 (2026-10-19, W-088p1)
+Waiting on      : the owner — "start W-088p2"; OQ-32, OQ-33 open
+Files touched   : (none)
+Last item commit: taxplanning W-088p1: write trace lines from the node's context — NodeContext.traceLine under the context's own node with the governing version's provenance, the 13 node line(...) helpers removed; W-088o moved, W-088p split (D-259, D-260, D-261)
+Updated         : 2026-10-19, session 23 — W-088p1 approved and committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

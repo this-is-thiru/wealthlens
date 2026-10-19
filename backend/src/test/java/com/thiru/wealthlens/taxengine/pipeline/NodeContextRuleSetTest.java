@@ -23,16 +23,20 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleSelection;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -394,6 +398,54 @@ class NodeContextRuleSetTest {
                         item("employer.kind", EmployerKind.OTHER))).contains(RuleIds.DED_NPS_EMPLOYER_OTHER);
             }
         }
+    }
+
+    @Test
+    void traceLine_whenANodeWritesOne_isUnderItsNodeWithTheGoverningVersionsProvenance() {
+        // Given
+        RulePack pack = shipped();
+        EngineInputs inputs = NodeHarness.plainTaxpayer();
+        NodeContext ctx = reading(pack, NEW_TAX_REGIME, inputs, RuleSetIds.RS_REBATE);
+
+        // When
+        TraceLine line = ctx.traceLine(3, RuleIds.REBATE_NEW_TAX_REGIME, StepKind.RELIEF, Money.of("100"),
+                Money.of("40"));
+
+        // Then — the provenance as the run's governing version gives it (D-261)
+        assertThat(line.sequence()).isEqualTo(3);
+        assertThat(line.node()).isEqualTo(new NodeId("test.reading"));
+        assertThat(line.rule()).isEqualTo(RuleIds.REBATE_NEW_TAX_REGIME);
+        assertThat(line.kind()).isEqualTo(StepKind.RELIEF);
+        assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("100")));
+        assertThat(line.out()).isEqualTo(MoneyValue.of(Money.of("40")));
+        assertThat(line.limitedBy()).isEmpty();
+        assertThat(line.provenance()).isEqualTo(TemporallyApportionedCap.governingVersion(
+                pack.rule(RuleIds.REBATE_NEW_TAX_REGIME), inputs.temporal()).provenance());
+    }
+
+    @Test
+    void traceLine_whenTheContextIsTheRunsOwn_isRefused() {
+        // Given
+        RulePack pack = shipped();
+        NodeContext run = NodeContext.forRun(pack, pack.regimes().get(NEW_TAX_REGIME), NodeHarness.plainTaxpayer());
+
+        // When / Then — it serves no node, so no line can be under one
+        assertThatThrownBy(() -> run.traceLine(1, RuleIds.REBATE_NEW_TAX_REGIME, StepKind.RELIEF, Money.ZERO,
+                        Money.ZERO))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("serves no node");
+    }
+
+    @Test
+    void traceLine_whenTheNodeDeclaredNoSetHoldingTheRule_isRefused() {
+        // Given
+        NodeContext ctx = reading(shipped(), NEW_TAX_REGIME, NodeHarness.plainTaxpayer(), RuleSetIds.RS_REBATE);
+
+        // When / Then — reachability (I3) is computed from the declared sets
+        assertThatThrownBy(() -> ctx.traceLine(1, RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME, StepKind.DEDUCTION,
+                        Money.ZERO, Money.ZERO))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("declared no rule set holding");
     }
 
     @Test

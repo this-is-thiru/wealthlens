@@ -1,17 +1,13 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.EmployerLoan;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
-import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
@@ -53,7 +49,9 @@ final class LoanPerquisite {
             int sequence = firstSequence + lines.size();
             Money lent = lentByEmployer.get(loan.employment());
             lines.add(lent.isLessThanOrEqual(pettyLimit)
-                    ? line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_LOAN_PETTY), sequence, loan, Money.ZERO, "employment " + loan.employment()
+                    ? ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_LOAN_PETTY), StepKind.INCOME,
+                                    loan.amountLent(), Money.ZERO)
+                            .withLimitedBy("employment " + loan.employment()
                             + "'s loans lent " + lent + " do not exceed " + pettyLimit)
                     : valued(ctx, loan, sequence));
         }
@@ -64,14 +62,16 @@ final class LoanPerquisite {
         List<Money> balances = valuedBalances(loan);
         Money total = balances.stream().reduce(Money.ZERO, Money::plus);
         if (!total.isGreaterThan(Money.ZERO) && loan.forListedDisease()) {
-            return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_LOAN), sequence, loan, Money.ZERO,
-                    "not a perquisite: for treatment of a disease the year's rule lists");
+            return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_LOAN), StepKind.INCOME,
+                            loan.amountLent(), Money.ZERO)
+                    .withLimitedBy("not a perquisite: for treatment of a disease the year's rule lists");
         }
         Money interest = loan.stateBankRate().ofShare(total, 1, 12);
         Money atBankRate = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_LOAN), ctx.inputs().temporal(),
                 CapContext.of(INTEREST_AT_BANK_RATE, interest)).value();
         Money value = atBankRate.minus(loan.interestPaid()).floorAtZero();
-        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_LOAN), sequence, loan, value, "interest at " + loan.stateBankRate() + " a year on "
+        return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_LOAN), StepKind.INCOME, loan.amountLent(), value)
+                .withLimitedBy("interest at " + loan.stateBankRate() + " a year on "
                 + balances.size() + " month-end balances totalling " + total + ", " + atBankRate + ", less "
                 + loan.interestPaid() + " paid" + (loan.forListedDisease() ? " — the part a medical insurance scheme"
                 + " reimbursed" : ""));
@@ -95,12 +95,4 @@ final class LoanPerquisite {
         return valued;
     }
 
-    private static TraceLine line(NodeContext ctx, RuleId ruleId, int sequence, EmployerLoan loan, Money value,
-            String bound) {
-        TemporalContext t = ctx.inputs().temporal();
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ruleId, StepKind.INCOME,
-                        MoneyValue.of(loan.amountLent()), MoneyValue.of(value),
-                        TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), t).provenance())
-                .withLimitedBy(bound);
-    }
 }

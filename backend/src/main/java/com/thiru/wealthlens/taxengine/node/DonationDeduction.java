@@ -121,8 +121,9 @@ final class DonationDeduction {
         for (Donation donation : donations) {
             Optional<Bar> bar = bar(ctx, donation, cash);
             if (bar.isPresent()) {
-                lines.add(line(ctx, bar.get().row(), donation.amount(), Money.ZERO, bar.get().reason(),
-                        firstSequence + lines.size()));
+                lines.add(ctx.traceLine(firstSequence + lines.size(), bar.get().row(), StepKind.DEDUCTION,
+                                donation.amount(), Money.ZERO)
+                        .withLimitedBy(bar.get().reason()));
                 continue;
             }
             Money amount = donation.amount();
@@ -166,8 +167,8 @@ final class DonationDeduction {
                     .map(Donation::amount).reduce(Money.ZERO, Money::plus);
             if (entered.isGreaterThan(Money.ZERO)) {
                 RuleId row = whole ? ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE) : ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF);
-                lines.add(line(ctx, row, entered, Money.ZERO, ctx.inRegime(row, version(ctx, row)).whyNot(),
-                        firstSequence + lines.size()));
+                lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, entered, Money.ZERO)
+                        .withLimitedBy(ctx.inRegime(row, version(ctx, row)).whyNot()));
             }
         }
     }
@@ -175,20 +176,15 @@ final class DonationDeduction {
     private static void deduct(NodeContext ctx, RuleId row, Money counted, String group, int firstSequence,
             List<TraceLine> lines) {
         if (counted.isGreaterThan(Money.ZERO)) {
-            lines.add(line(ctx, row, counted, apply(ctx, row, AMOUNT_PAID, counted), group,
-                    firstSequence + lines.size()));
+            lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION,
+                            counted, apply(ctx, row, AMOUNT_PAID, counted))
+                    .withLimitedBy(group));
         }
     }
 
     private static Money apply(NodeContext ctx, RuleId row, BaseId base, Money amount) {
         return TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(), CapContext.of(base, amount))
                 .value();
-    }
-
-    private static TraceLine line(NodeContext ctx, RuleId row, Money in, Money out, String limitedBy, int sequence) {
-        return TraceLine.of(sequence, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION, MoneyValue.of(in),
-                        MoneyValue.of(out), version(ctx, row).provenance())
-                .withLimitedBy(limitedBy);
     }
 
     private static RuleVersion version(NodeContext ctx, RuleId row) {

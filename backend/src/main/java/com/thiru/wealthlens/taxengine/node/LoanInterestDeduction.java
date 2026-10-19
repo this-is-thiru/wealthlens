@@ -4,12 +4,10 @@ import com.thiru.wealthlens.taxengine.input.EducationLoanInterest;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LoanPurpose;
 import com.thiru.wealthlens.taxengine.input.PurposeLoanInterest;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -62,16 +60,21 @@ final class LoanInterestDeduction {
         RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN));
         Money interest = loan.interestPaid();
         if (!applies(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version)) {
-            return line(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version, interest, Money.ZERO,
-                    ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version).whyNot());
+            return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
+                            interest, Money.ZERO)
+                    .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version).whyNot());
         }
         TaxYearSpan span = RuleDefinitions.require(version.definition(), TaxYearSpan.class,
                 ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN));
         if (!span.holds(loan.initialTaxYear(), ctx.inputs().taxYear())) {
-            return line(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version, interest, Money.ZERO, "outside the initial"
+            return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
+                            interest, Money.ZERO)
+                    .withLimitedBy("outside the initial"
                     + " tax year " + loan.initialTaxYear().label() + " and the " + span.succeedingYears() + " after it");
         }
-        return line(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version, interest, interest, "the interest paid");
+        return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
+                        interest, interest)
+                .withLimitedBy("the interest paid");
     }
 
     /** s.130–132: a house loan under s.130, else s.131; a vehicle loan under s.132. */
@@ -89,16 +92,17 @@ final class LoanInterestDeduction {
         RuleVersion version = version(ctx, row);
         Money interest = loan.interestPayable();
         if (!applies(ctx, row, version)) {
-            return line(sequence, row, version, interest, Money.ZERO, ctx.inRegime(row, version).whyNot());
+            return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, Money.ZERO)
+                    .withLimitedBy(ctx.inRegime(row, version).whyNot());
         }
         SanctionedLoanLimit limit = RuleDefinitions.require(version.definition(), SanctionedLoanLimit.class, row);
         Optional<String> failed = failure(limit, loan);
         if (failed.isPresent()) {
-            return line(sequence, row, version, interest, Money.ZERO, failed.get());
+            return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, Money.ZERO).withLimitedBy(failed.get());
         }
         Money allowed = Money.min(interest, limit.limit());
-        return line(sequence, row, version, interest, allowed,
-                allowed.isLessThan(interest) ? "the limit " + limit.limit() : "the interest payable");
+        return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, allowed)
+                .withLimitedBy(allowed.isLessThan(interest) ? "the limit " + limit.limit() : "the interest payable");
     }
 
     /** The first of the loan's conditions that fails, if any. */
@@ -139,13 +143,6 @@ final class LoanInterestDeduction {
 
     private static boolean applies(NodeContext ctx, RuleId row, RuleVersion version) {
         return ctx.inRegime(row, version).applies();
-    }
-
-    private static TraceLine line(int sequence, RuleId row, RuleVersion version, Money in, Money out,
-            String limitedBy) {
-        return TraceLine.of(sequence, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION, MoneyValue.of(in),
-                        MoneyValue.of(out), version.provenance())
-                .withLimitedBy(limitedBy);
     }
 
     private static RuleVersion version(NodeContext ctx, RuleId row) {

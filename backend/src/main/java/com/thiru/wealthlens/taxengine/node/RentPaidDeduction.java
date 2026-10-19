@@ -4,7 +4,6 @@ import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.RentDeclaration;
 import com.thiru.wealthlens.taxengine.input.Tenancy;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
@@ -62,12 +61,16 @@ final class RentPaidDeduction {
                 ctx.inputs().temporal());
         Optional<String> bar = bar(ctx, version, declaration);
         if (bar.isPresent()) {
-            return Optional.of(line(ctx, sequence, version, rent, Money.ZERO, bar.get()));
+            return Optional.of(ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), StepKind.DEDUCTION,
+                            rent, Money.ZERO)
+                    .withLimitedBy(bar.get()));
         }
         CapResult allowed = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_DED_RENT_PAID), ctx.inputs().temporal(),
                 new CapContext(Map.of(RENT_PAID, rent, TOTAL_INCOME, totalIncomeBefore), Map.of(),
                         Map.of(MONTH, declaration.monthsOfStay())));
-        return Optional.of(line(ctx, sequence, version, rent, allowed.value(), allowed.limitedBy()
+        return Optional.of(ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), StepKind.DEDUCTION,
+                        rent, allowed.value())
+                .withLimitedBy(allowed.limitedBy()
                 + ", on total income before this deduction " + totalIncomeBefore));
     }
 
@@ -122,13 +125,6 @@ final class RentPaidDeduction {
 
     private static LocalDate earlier(LocalDate a, LocalDate b) {
         return a.isBefore(b) ? a : b;
-    }
-
-    private static TraceLine line(
-            NodeContext ctx, int sequence, RuleVersion version, Money rent, Money allowed, String limitedBy) {
-        return TraceLine.of(sequence, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_RENT_PAID), StepKind.DEDUCTION,
-                        MoneyValue.of(rent), MoneyValue.of(allowed), version.provenance())
-                .withLimitedBy(limitedBy);
     }
 
     /** The tenancies that are rented: a home the assessee owns pays no rent. */

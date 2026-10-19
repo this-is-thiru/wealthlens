@@ -135,8 +135,10 @@ public final class SetOffNode implements ComputationNode {
         RuleVersion version = version(ctx, t, row);
         RegimeVerdict verdict = ctx.inRegime(row, version);
         if (!verdict.applies()) {
-            lines.add(line(lines, row, version, StepKind.SET_OFF, loss, Money.ZERO).withLimitedBy(verdict.whyNot()));
-            lines.add(line(lines, row, version, StepKind.MEASURE, loss, loss).withLimitedBy("deemed to have been given"
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, loss, Money.ZERO)
+                    .withLimitedBy(verdict.whyNot()));
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, loss)
+                    .withLimitedBy("deemed to have been given"
                     + " full effect to, and not carried forward (S2 s.202(3); 1961 s.115BAC(3)): " + verdict.whyNot()));
             return;
         }
@@ -144,12 +146,13 @@ public final class SetOffNode implements ComputationNode {
         if (houseProperty) {
             CapResult limit = TemporallyApportionedCap.apply(ctx.rule(row), t, CapContext.of(LOSS, loss));
             allowed = limit.value();
-            lines.add(line(lines, row, version, StepKind.MEASURE, loss, allowed).withLimitedBy(limit.limitedBy()));
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, allowed)
+                    .withLimitedBy(limit.limitedBy()));
         }
-        Money setOff = absorb(order, lossHead, allowed, into, lines, row, version);
+        Money setOff = absorb(ctx, order, lossHead, allowed, into, lines, row);
         Money left = loss.minus(setOff);
         if (left.isGreaterThan(Money.ZERO)) {
-            lines.add(line(lines, row, version, StepKind.MEASURE, loss, left).withLimitedBy(houseProperty
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, left).withLimitedBy(houseProperty
                     ? "not set off: carried forward against income from house property (S2 s.110; 1961 s.71B) — W-081b"
                     : "not set off, and not carried forward: S2 ss.110–115 carry no loss under other sources"));
         }
@@ -160,8 +163,8 @@ public final class SetOffNode implements ComputationNode {
     }
 
     /** The other heads absorb up to {@code allowed} of the loss, in order; returns how much they took. */
-    private static Money absorb(OrderInUse order, HeadCode lossHead, Money allowed, Absorbing into,
-            List<TraceLine> lines, RuleId row, RuleVersion version) {
+    private static Money absorb(NodeContext ctx, OrderInUse order, HeadCode lossHead, Money allowed, Absorbing into,
+            List<TraceLine> lines, RuleId row) {
         Money remaining = allowed;
         for (HeadCode head : order.order().heads()) {
             Money available = into.income().getOrDefault(head, Money.ZERO);
@@ -169,12 +172,13 @@ public final class SetOffNode implements ComputationNode {
                 continue;
             }
             Money taken = head == HeadCode.CAPITAL_GAINS
-                    ? absorbCapitalGains(order, lossHead, remaining, into.parts(), lines, row, version)
+                    ? absorbCapitalGains(ctx, order, lossHead, remaining, into.parts(), lines, row)
                     : Money.min(remaining, available);
             into.income().put(head, available.minus(taken));
             remaining = remaining.minus(taken);
             if (head != HeadCode.CAPITAL_GAINS) {
-                lines.add(line(lines, row, version, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
+                lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, available, taken)
+                        .withLimitedBy(lossHead
                         + " loss against " + head + "; order " + order.order().heads() + ", " + order.basis()));
             }
         }
@@ -182,8 +186,8 @@ public final class SetOffNode implements ComputationNode {
     }
 
     /** The capital-gains parts absorb up to {@code loss}, in their order, a line each; returns how much they took. */
-    private static Money absorbCapitalGains(OrderInUse order, HeadCode lossHead, Money loss,
-            Map<CapitalGainsPart, Money> parts, List<TraceLine> lines, RuleId row, RuleVersion version) {
+    private static Money absorbCapitalGains(NodeContext ctx, OrderInUse order, HeadCode lossHead, Money loss,
+            Map<CapitalGainsPart, Money> parts, List<TraceLine> lines, RuleId row) {
         Money remaining = loss;
         for (CapitalGainsPart part : order.capitalGainsOrder().parts()) {
             Money available = parts.getOrDefault(part, Money.ZERO);
@@ -193,7 +197,7 @@ public final class SetOffNode implements ComputationNode {
             Money taken = Money.min(remaining, available);
             parts.put(part, available.minus(taken));
             remaining = remaining.minus(taken);
-            lines.add(line(lines, row, version, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
                     + " loss against CAPITAL_GAINS " + part + "; order " + order.order().heads() + ", " + order.basis()
                     + "; within capital gains " + order.capitalGainsOrder().parts() + ", the declared default (OQ-32)"));
         }
@@ -220,8 +224,8 @@ public final class SetOffNode implements ComputationNode {
                 continue;
             }
             if (!span.holds(arose, thisYear)) {
-                lines.add(line(lines, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY),
-                        version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY)), StepKind.MEASURE, remaining, remaining)
+                lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY),
+                                StepKind.MEASURE, remaining, remaining)
                         .withLimitedBy("loss of " + arose.label() + " expired: carried for no more than "
                                 + span.succeedingYears() + " tax years after it arose (S2 s.110(2); 1961 s.71B)"));
                 continue;
@@ -232,8 +236,8 @@ public final class SetOffNode implements ComputationNode {
                     .plus(use(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY), arose, remaining.minus(attributable),
                             income, lines));
             if (left.isGreaterThan(Money.ZERO)) {
-                lines.add(line(lines, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY),
-                        version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY)), StepKind.MEASURE, remaining, left)
+                lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY),
+                                StepKind.MEASURE, remaining, left)
                         .withLimitedBy("loss of " + arose.label() + " still carried forward (S2 s.110; 1961 s.71B)"));
             }
         }
@@ -249,9 +253,10 @@ public final class SetOffNode implements ComputationNode {
         RuleVersion version = version(ctx, t, row);
         RegimeVerdict verdict = ctx.inRegime(row, version);
         if (!verdict.applies()) {
-            lines.add(line(lines, row, version, StepKind.SET_OFF, attributable, Money.ZERO)
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, attributable, Money.ZERO)
                     .withLimitedBy("loss of " + arose.label() + ": " + verdict.whyNot()));
-            lines.add(line(lines, row, version, StepKind.MEASURE, attributable, attributable).withLimitedBy("loss of "
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, attributable, attributable)
+                    .withLimitedBy("loss of "
                     + arose.label() + " deemed to have been given full effect to, and not carried forward (S2 s.202(3);"
                     + " 1961 s.115BAC(3))"));
             return Money.ZERO;
@@ -266,7 +271,7 @@ public final class SetOffNode implements ComputationNode {
         Money taken = Money.min(amount, available);
         if (taken.isGreaterThan(Money.ZERO)) {
             income.put(HeadCode.HOUSE_PROPERTY, available.minus(taken));
-            lines.add(line(lines, row, version(ctx, t, row), StepKind.SET_OFF, available, taken).withLimitedBy("loss of "
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, available, taken).withLimitedBy("loss of "
                     + arose.label() + " against HOUSE_PROPERTY; order: this year's set-off first (ITR-2 Schedule BFLA),"
                     + " then the oldest year, the attributable part first — the declared default, the Acts prescribing"
                     + " none (D-221)"));
@@ -286,9 +291,4 @@ public final class SetOffNode implements ComputationNode {
         return TemporallyApportionedCap.governingVersion(ctx.rule(row), t);
     }
 
-    private static TraceLine line(List<TraceLine> lines, RuleId row, RuleVersion version, StepKind kind, Money in,
-            Money out) {
-        return TraceLine.of(lines.size() + 1, NodeIds.SETOFF, row, kind, MoneyValue.of(in), MoneyValue.of(out),
-                version.provenance());
-    }
 }

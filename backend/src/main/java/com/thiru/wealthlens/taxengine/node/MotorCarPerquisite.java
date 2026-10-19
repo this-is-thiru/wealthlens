@@ -4,12 +4,10 @@ import com.thiru.wealthlens.taxengine.input.CarEngine;
 import com.thiru.wealthlens.taxengine.input.EmployerVehicle;
 import com.thiru.wealthlens.taxengine.input.VehicleOwner;
 import com.thiru.wealthlens.taxengine.input.VehicleUse;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
@@ -108,7 +106,7 @@ final class MotorCarPerquisite {
             value = value.plus(perMonth(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_CHAUFFEUR), car.months()));
             bound += ", plus the chauffeur's amount";
         }
-        return line(ctx, ruleId, sequence, car.runningExpenditure(), value, bound);
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, car.runningExpenditure(), value).withLimitedBy(bound);
     }
 
     /** Sl. 1(b): the running, plus wear and tear on the cost for the months, less the charge. */
@@ -119,8 +117,10 @@ final class MotorCarPerquisite {
         CapResult wearAndTear = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_CAR_PRIVATE), t,
                 CapContext.of(CAR_COST, cost.apportioned(car.months(), 12)));
         Money value = car.runningExpenditure().plus(wearAndTear.value()).minus(car.chargedToEmployee()).floorAtZero();
-        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_PRIVATE), sequence, car.runningExpenditure(), value,
-                "running plus wear and tear " + wearAndTear.value() + " (" + wearAndTear.limitedBy() + " for "
+        return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_PRIVATE), StepKind.INCOME,
+                        car.runningExpenditure(), value)
+                .withLimitedBy("running plus wear and tear " + wearAndTear.value() + " (" + wearAndTear.limitedBy()
+                        + " for "
                         + car.months() + " months), less the charge " + car.chargedToEmployee());
     }
 
@@ -132,7 +132,8 @@ final class MotorCarPerquisite {
                 tableOfficialUse, CLAIMED_OFFICIAL_USE, vehicle.officialUse().higherOfficialUse().orElse(Money.ZERO)),
                 Map.of(), Map.of(MONTH, vehicle.months()));
         CapResult valued = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(), bases);
-        return line(ctx, ruleId, sequence, vehicle.runningExpenditure(), valued.value(), valued.limitedBy());
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, vehicle.runningExpenditure(), valued.value())
+                .withLimitedBy(valued.limitedBy());
     }
 
     /** The Sl. 1(c)(i) amount an employee's own car's expenditure is reduced by, with a chauffeur's if paid. */
@@ -180,14 +181,6 @@ final class MotorCarPerquisite {
     private static Money perMonth(NodeContext ctx, RuleId ruleId, int months) {
         return TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
                 new CapContext(Map.of(), Map.of(), Map.of(MONTH, months))).value();
-    }
-
-    private static TraceLine line(NodeContext ctx, RuleId ruleId, int sequence, Money in, Money value, String bound) {
-        RuleRow rule = ctx.rule(ruleId);
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ruleId, StepKind.INCOME, MoneyValue.of(in),
-                        MoneyValue.of(value),
-                        TemporallyApportionedCap.governingVersion(rule, ctx.inputs().temporal()).provenance())
-                .withLimitedBy(bound);
     }
 
     private static void requireOfficialRecords(EmployerVehicle vehicle) {

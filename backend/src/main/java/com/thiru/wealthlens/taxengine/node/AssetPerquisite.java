@@ -3,14 +3,12 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.EmployerAssetTransfer;
 import com.thiru.wealthlens.taxengine.input.EmployerAssetUse;
 import com.thiru.wealthlens.taxengine.input.TransferredAssetKind;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
@@ -65,16 +63,19 @@ final class AssetPerquisite {
     private static TraceLine used(NodeContext ctx, EmployerAssetUse use, int sequence) {
         TemporalContext t = ctx.inputs().temporal();
         if (excludedAssets(ctx, t).excludes(use.kind())) {
-            return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED), use.cost().or(use::rentPaid).orElseThrow(), Money.ZERO,
-                    sequence, "not a perquisite: the use of a " + use.kind() + " is excluded this year");
+            return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_USE_EXCLUDED), StepKind.INCOME,
+                            use.cost().or(use::rentPaid).orElseThrow(), Money.ZERO)
+                    .withLimitedBy("not a perquisite: the use of a " + use.kind() + " is excluded this year");
         }
         Money charged = use.cost()
                 .map(cost -> TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_ASSET_USE), t,
                         CapContext.of(ASSET_COST, cost.apportioned(use.months(), 12))).value())
                 .orElseGet(() -> use.rentPaid().orElseThrow());
         Money value = charged.minus(use.recovered()).floorAtZero();
-        return line(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_USE), use.cost().or(use::rentPaid).orElseThrow(), value, sequence,
-                (use.cost().isPresent() ? "ten per cent a year of the cost for " + use.months() + " months"
+        return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_USE), StepKind.INCOME,
+                        use.cost().or(use::rentPaid).orElseThrow(), value)
+                .withLimitedBy((use.cost().isPresent() ? "ten per cent a year of the cost for " + use.months()
+                        + " months"
                         : "the rent paid") + ", less the recovery " + use.recovered());
     }
 
@@ -85,7 +86,8 @@ final class AssetPerquisite {
                 ? transfer.cost().minus(rate.ofShare(transfer.cost(), transfer.completedYears(), 1)).floorAtZero()
                 : rate.leftAfter(transfer.cost(), transfer.completedYears());
         Money value = written.minus(transfer.pricePaid()).floorAtZero();
-        return line(ctx, ruleId, transfer.cost(), value, sequence, "written down to " + written + " after "
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, transfer.cost(), value)
+                .withLimitedBy("written down to " + written + " after "
                 + transfer.completedYears() + " completed years at " + rate
                 + (transfer.kind() == TransferredAssetKind.OTHER ? " of the cost" : " on the reducing balance")
                 + ", less the price " + transfer.pricePaid());
@@ -105,11 +107,4 @@ final class AssetPerquisite {
         return RuleDefinitions.require(ctx.rule(ruleId).versionAt(t).definition(), ExcludedAssets.class, ruleId);
     }
 
-    private static TraceLine line(NodeContext ctx, RuleId ruleId, Money in, Money value, int sequence, String bound) {
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ruleId, StepKind.INCOME, MoneyValue.of(in),
-                        MoneyValue.of(value),
-                        TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal())
-                                .provenance())
-                .withLimitedBy(bound);
-    }
 }

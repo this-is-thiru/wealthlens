@@ -1,10 +1,8 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.EmployerExpenseBenefit;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -85,20 +83,14 @@ final class ExpenseBenefitPerquisite {
         Money net = benefit.amount().minus(benefit.recovered()).floorAtZero();
         Money value = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
                 CapContext.of(BENEFIT_VALUE, net)).value();
-        return line(ctx, ruleId, benefit, value, sequence, what + ", less the recovery " + benefit.recovered());
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, benefit.amount(), value)
+                .withLimitedBy(what + ", less the recovery " + benefit.recovered());
     }
 
     private static TraceLine nil(NodeContext ctx, RuleId ruleId, EmployerExpenseBenefit benefit, int sequence,
             String why) {
-        return line(ctx, ruleId, benefit, Money.ZERO, sequence, "not a perquisite: " + why);
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, benefit.amount(), Money.ZERO)
+                .withLimitedBy("not a perquisite: " + why);
     }
 
-    private static TraceLine line(NodeContext ctx, RuleId ruleId, EmployerExpenseBenefit benefit, Money value,
-            int sequence, String bound) {
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ruleId, StepKind.INCOME,
-                        MoneyValue.of(benefit.amount()), MoneyValue.of(value),
-                        TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal())
-                                .provenance())
-                .withLimitedBy(bound);
-    }
 }

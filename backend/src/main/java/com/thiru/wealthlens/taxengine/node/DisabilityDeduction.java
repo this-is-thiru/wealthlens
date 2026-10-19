@@ -5,13 +5,11 @@ import com.thiru.wealthlens.taxengine.input.DisabledDependantSupport;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.SpecifiedDiseaseTreatment;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
-import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -70,13 +68,14 @@ final class DisabilityDeduction {
                 .filter(condition -> !condition.holds(ctx.conditions()))
                 .findFirst();
         if (unmet.isPresent()) {
-            lines.add(line(ctx, firstSequence + lines.size(), row, version, Money.ZERO, Money.ZERO,
-                    "not met: " + unmet.get().describe()));
+            lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, Money.ZERO, Money.ZERO)
+                    .withLimitedBy("not met: " + unmet.get().describe()));
             return;
         }
         Money amount = limit(ctx, row);
         lines.add(applies(ctx, row, version)
-                ? line(ctx, firstSequence + lines.size(), row, version, amount, amount, "certified")
+                ? ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, amount, amount)
+                        .withLimitedBy("certified")
                 : nil(ctx, firstSequence + lines.size(), row, version, amount));
     }
 
@@ -105,8 +104,8 @@ final class DisabilityDeduction {
         RuleId row = severity == DisabilitySeverity.SEVERE_DISABILITY
                 ? ctx.ruleIdOf(RuleSetIds.RS_DED_DISABLED_DEPENDANT_SEVERE) : ctx.ruleIdOf(RuleSetIds.RS_DED_DISABLED_DEPENDANT);
         if (!support.spentOrDeposited().isGreaterThan(Money.ZERO)) {
-            lines.add(line(ctx, firstSequence + lines.size(), row, version(ctx, row), Money.ZERO, Money.ZERO,
-                    "nothing spent or deposited"));
+            lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, Money.ZERO, Money.ZERO)
+                    .withLimitedBy("nothing spent or deposited"));
             return;
         }
         claimed(ctx, firstSequence, lines, row, support.spentOrDeposited());
@@ -141,8 +140,8 @@ final class DisabilityDeduction {
         individual(ctx);
         RuleVersion version = version(ctx, row);
         if (!resident(ctx)) {
-            lines.add(line(ctx, firstSequence + lines.size(), row, version, entered, Money.ZERO,
-                    "the assessee is not resident in India"));
+            lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, entered, Money.ZERO)
+                    .withLimitedBy("the assessee is not resident in India"));
             return;
         }
         if (!applies(ctx, row, version)) {
@@ -151,7 +150,8 @@ final class DisabilityDeduction {
         }
         CapResult allowed = TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),
                 CapContext.of(AMOUNT_CLAIMED, entered));
-        lines.add(line(ctx, firstSequence + lines.size(), row, version, entered, allowed.value(), allowed.limitedBy()));
+        lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, entered, allowed.value())
+                .withLimitedBy(allowed.limitedBy()));
     }
 
     private static FamilySnapshot.Member dependantMember(NodeContext ctx, int position, String section) {
@@ -197,14 +197,8 @@ final class DisabilityDeduction {
     }
 
     private static TraceLine nil(NodeContext ctx, int sequence, RuleId row, RuleVersion version, Money entered) {
-        return line(ctx, sequence, row, version, entered, Money.ZERO, ctx.inRegime(row, version).whyNot());
-    }
-
-    private static TraceLine line(NodeContext ctx, int sequence, RuleId row, RuleVersion version, Money in, Money out,
-            String limitedBy) {
-        return TraceLine.of(sequence, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
-                        MoneyValue.of(in), MoneyValue.of(out), version.provenance())
-                .withLimitedBy(limitedBy);
+        return ctx.traceLine(sequence, row, StepKind.DEDUCTION, entered, Money.ZERO)
+                .withLimitedBy(ctx.inRegime(row, version).whyNot());
     }
 
     private static RuleVersion version(NodeContext ctx, RuleId row) {
