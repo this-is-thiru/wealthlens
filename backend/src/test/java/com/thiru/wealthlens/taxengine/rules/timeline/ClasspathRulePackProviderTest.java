@@ -161,6 +161,45 @@ class ClasspathRulePackProviderTest {
         }
     }
 
+    /** The shipped years, declared in a manifest beside the locks rather than scanned (W-088s, D-268). */
+    @Nested
+    @DisplayName("shipped years")
+    class ShippedYears {
+
+        @Test
+        void shippedYears_whenTheManifestListsTwoYears_readsThem() {
+            // When
+            Set<TaxYearId> years = ClasspathRulePackProvider.shippedYears("rulepacks");
+
+            // Then — rulepacks/shipped-years.json lists "2025-26" and "2026-27"
+            assertThat(years).containsExactlyInAnyOrder(new TaxYearId(2025), new TaxYearId(2026));
+        }
+
+        @Test
+        void shippedYears_whenALabelIsNotATaxYear_isRefusedNamingIt() {
+            assertThatThrownBy(() -> ClasspathRulePackProvider.shippedYears("rulepacks-broken/manifest-not-a-tax-year"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("2025-27")
+                    .hasMessageContaining("not a tax year");
+        }
+
+        @Test
+        void shippedYears_whenAYearIsListedTwice_isRefused() {
+            assertThatThrownBy(() -> ClasspathRulePackProvider.shippedYears("rulepacks-broken/manifest-listed-twice"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("2026-27")
+                    .hasMessageContaining("twice");
+        }
+
+        @Test
+        void shippedYears_whenThereIsNoManifest_isRefused() {
+            assertThatThrownBy(() -> ClasspathRulePackProvider.shippedYears("no-such-root"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("no-such-root/shipped-years.json")
+                    .hasMessageContaining("not on the classpath");
+        }
+    }
+
     /**
      * The application runs from a JAR, where the timeline is an archive entry, not a directory (D-210). The
      * shipped timeline is zipped as a plain JAR lays it out; the Spring Boot JAR's own nested filesystem is

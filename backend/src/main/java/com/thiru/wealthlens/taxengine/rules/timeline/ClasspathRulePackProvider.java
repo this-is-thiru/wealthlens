@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.PackJson;
 import com.thiru.wealthlens.taxengine.rules.pack.PackAssembler;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackProvider;
@@ -16,9 +17,13 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Serves each tax year compiled from the timeline on the classpath, refused unless it matches that
@@ -32,6 +37,8 @@ import java.util.TreeSet;
  * rule row looks like.
  */
 public final class ClasspathRulePackProvider implements RulePackProvider {
+
+    private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
     private final String root;
     private final Set<TaxYearId> years;
@@ -118,6 +125,42 @@ public final class ClasspathRulePackProvider implements RulePackProvider {
                 throw new UncheckedIOException("Could not open the archive holding the timeline at " + uri, e);
             }
         }
+    }
+
+    /**
+     * The tax years shipped under the classpath directory {@code root}, as its {@code shipped-years.json} declares
+     * them: declared rather than scanned, because a year that silently fails to appear is worse than one that fails
+     * to load (D-210, D-268). Each is written as its label, as the locks name it.
+     */
+    public static Set<TaxYearId> shippedYears(String root) {
+        String path = root + "/shipped-years.json";
+        JsonNode manifest;
+        try {
+            manifest = MAPPER.readTree(read(path));
+        } catch (JacksonException e) {
+            throw new PackValidationException(path + ": not well-formed JSON — " + e.getOriginalMessage(), e);
+        }
+        Set<TaxYearId> years = new LinkedHashSet<>();
+        for (PackJson.Element label : PackJson.array(manifest, "taxYears", path, element -> element)) {
+            TaxYearId year = taxYear(label.node().asString(), label.path());
+            if (!years.add(year)) {
+                throw new PackValidationException(label.path() + ": " + year.label() + " is listed twice");
+            }
+        }
+        return Set.copyOf(years);
+    }
+
+    /** The year a label names, refused unless the label is that year's own ("2026-27"). */
+    private static TaxYearId taxYear(String label, String path) {
+        if (label.length() < 4 || !label.substring(0, 4).chars().allMatch(Character::isDigit)) {
+            throw new PackValidationException(path + ": \"" + label + "\" is not a tax year");
+        }
+        TaxYearId year = TaxYearId.of(Integer.parseInt(label.substring(0, 4)));
+        if (!year.label().equals(label)) {
+            throw new PackValidationException(path + ": \"" + label + "\" is not a tax year; did you mean "
+                    + year.label() + "?");
+        }
+        return year;
     }
 
     /** The lock for {@code year} under the classpath directory {@code root}. */

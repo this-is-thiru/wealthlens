@@ -112,7 +112,8 @@ final class GoldenCaseRunner {
     /** Fixed, so two runs of one case project to computations that may differ in nothing (T23-4). */
     private static final ComputationId ID = new ComputationId("00000000-0000-4000-8000-0000000000a1");
 
-    private static final Set<TaxYearId> SHIPPED_YEARS = Set.of(TaxYearId.of(2025), TaxYearId.of(2026));
+    /** The years the application ships, from the manifest beside the locks (D-268). */
+    private static final Set<TaxYearId> SHIPPED_YEARS = ClasspathRulePackProvider.shippedYears("rulepacks");
 
     private final Map<TaxYearId, RulePack> packs = new ConcurrentHashMap<>();
 

@@ -1,8 +1,7 @@
 package com.thiru.wealthlens.taxengine.config;
 
-import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
-import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,13 +17,14 @@ import org.springframework.context.annotation.Configuration;
 public class TaxEngineConfig {
 
     /**
-     * Declared rather than scanned: a year that silently fails to appear is worse than one that fails to load. A
-     * test ties this set to the locks shipped.
+     * The classpath directory of the shipped packs. Its {@code shipped-years.json} declares the years, rather than
+     * a scan finding them: a year that silently fails to appear is worse than one that fails to load. A test ties
+     * the manifest to the locks shipped (D-268).
      */
-    static final Set<TaxYearId> SHIPPED_YEARS = Set.of(TaxYearId.of(2025), TaxYearId.of(2026));
+    static final String ROOT = "rulepacks";
 
     @Bean
     public ShippedRulePacks shippedRulePacks() {
-        return ShippedRulePacks.compile("rulepacks", SHIPPED_YEARS);
+        return ShippedRulePacks.compile(ROOT, ClasspathRulePackProvider.shippedYears(ROOT));
     }
 }

@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.timeline.ShippedRulePacks;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,8 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 /**
- * The startup wiring (D-210): the context compiles the shipped packs as it starts, and the years it ships are
- * exactly the years a lock is shipped for.
+ * The startup wiring (D-210): the context compiles the shipped packs as it starts, and the years its manifest ships
+ * are exactly the years a lock is shipped for (D-268).
  */
 @SpringJUnitConfig(TaxEngineConfig.class)
 class TaxEngineConfigTest {
@@ -41,7 +42,9 @@ class TaxEngineConfigTest {
         }
 
         // When
-        Set<String> shipped = TaxEngineConfig.SHIPPED_YEARS.stream().map(TaxYearId::label).collect(Collectors.toSet());
+        Set<String> shipped = ClasspathRulePackProvider.shippedYears(TaxEngineConfig.ROOT).stream()
+                .map(TaxYearId::label)
+                .collect(Collectors.toSet());
 
         // Then
         assertThat(shipped).isEqualTo(locked);

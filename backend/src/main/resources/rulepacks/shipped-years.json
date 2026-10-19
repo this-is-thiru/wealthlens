@@ -1,0 +1,4 @@
+{
+  "_note": "The tax years the application ships, each with a lock beside this file. Declared, not scanned (D-210, D-268): a year that silently fails to appear is worse than one that fails to load. Shipping a year is a lock and a line here.",
+  "taxYears": ["2025-26", "2026-27"]
+}

@@ -192,6 +192,7 @@ backend/src/main/resources/rulepacks/
     content/acts/<Act>.json            ✅ each Act's section list, parsed from its gazette (2025 Act as amended by FA 2026: 537 numbers, 535 in force, W-045o/W-045o3; 1961 Act: 951 numbers, 820 in force for AY 2026-27, W-045o2); not compiled into year packs
     content/coverage.json              ✅ the coverage register (W-045j; the timeline's 2 cited sections `MODELLED`, + 3 `PLANNED` the catalogue cites, W-045k2; W-045o completes it); not compiled into year packs
   2025-26.lock.json  2026-27.lock.json  the compiled rule pack's identity: version ids + per-layer checksums + the year's instruments (2025-26: W-052c)
+  shipped-years.json                 the years shipped, by label — declared, not scanned (✅ W-088s, D-268)
 ```
 
 `RulePackCompiler` (✅ `W-045g`) builds a year's rule pack from every **`PUBLISHED`** version whose
@@ -199,7 +200,7 @@ validity touches that year, plus `PUBLISHED` pending-notification versions, and 
 refuses a mismatch naming each rule that moved. Checksums are over canonical JSON — keys sorted, no
 whitespace, `_` note fields dropped (D-054). `ClasspathRulePackProvider` loads every year this way (✅ `W-045g2`);
 `ShippedRulePacks` compiles every shipped year at startup (✅ `W-079a`, D-210), from the JAR when the application
-runs from one. Packs are compiled at startup only, never on a request path.
+runs from one; the years are those `shipped-years.json` declares (`ClasspathRulePackProvider.shippedYears`, ✅ `W-088s`). Packs are compiled at startup only, never on a request path.
 
 A rule version carries a `cap`, a `relief`, a `rounding` or `conditions` — at least one, and at most one of
 cap, relief and rounding (the `RuleVersion` constructor refuses two). Each of `cap`, `relief`, `rounding` and `definition` is an
@@ -551,6 +552,7 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-10-19 | T6: `setoff`'s carried losses through one mechanism, `node/CarriedLossSetOff` (portions under their rows, read by the row's `LossCarryForward`), and `node/CapitalGainsAbsorption` (the parts in declared order, also `SetOffNode.absorbCapitalGains`); `CarriedCapitalLossSetOff` removed; traces identical | `W-088q2`, D-265 |
 | 2026-10-19 | T6: `SetOffNode.SetOffContext` replaces `Absorbing` (`setOff` / `absorb` / `absorbCapitalGains` 3–4 parameters); `CapitalGainsNode.setOff` on `CapitalGainsAbsorption` (with `order()`), its `line` helper → `ctx.traceLine`; traces identical | `W-088q3`, D-266 |
 | 2026-10-19 | T1/T2: `RuleVersion.cap` is `Optional<CapShape>`, a null refused like its siblings; `RuleJson.cap` in place of `capOrNull`; the readers unwrap it (no message changed) | `W-088r`, D-267 |
+| 2026-10-19 | T4: `rulepacks/shipped-years.json` declares the shipped years by label; `ClasspathRulePackProvider.shippedYears(root)` reads it (a label must be its year's own, none twice); `TaxEngineConfig.SHIPPED_YEARS` removed, the bean and `GoldenCaseRunner` read the manifest | `W-088s`, D-268 |
 | 2026-10-19 | T2 `node/`, `election/`: no public signature changed. Private types for long parameter lists — `DonationDeduction.Group`, `OtherSourcesNode.KindRow` (was `InFullRow`) with `WHOLE_DEDUCTED`, `ElectionResolver.Combination`; `RetirementNode`'s and `ExemptionNode`'s HRA lines through `NodeContext.traceLine` | `W-088p2`, D-262 |
 | 2026-10-19 | T3 `pipeline`: `NodeContext.traceLine(sequence, rule, kind, in, out)` — a line under the context's own node with the rule's governing-version provenance; a run-level context refuses; the node-local `line(...)` helpers of 13 nodes removed | `W-088p1`, D-261 |
 | 2026-10-19 | T1 `cap/`: `PercentOfBaseByPopulation` (bands by a strict "exceeding" threshold over a count). T3 input: `EmployerAccommodation.cityPopulation` replaces `band`; `PopulationBand` removed. T4 pack: `PERQ-ACCOM-OWNED` on the new shape, 40,00,000 / 15,00,000 | `W-088n2`, D-258 |
