@@ -89,7 +89,7 @@ class RulePackLoadTest {
             // Classpath bytes to a tax figure, with nothing stubbed. T2-1: ₹50,00,000 → ₹10,80,000
             RulePack pack = load("rulepacks", TY_2026);
 
-            var slab = pack.rule(new RuleId("RATE-SLAB-NEW-TAX-REGIME")).versions().getFirst().cap();
+            var slab = pack.rule(new RuleId("RATE-SLAB-NEW-TAX-REGIME")).versions().getFirst().cap().orElseThrow();
             var ctx = CapContext.of(new BaseId("ROUNDED_TOTAL_INCOME"), Money.of("5000000"));
 
             assertThat(slab.apply(ctx).value()).isEqualTo(Money.of("1080000"));

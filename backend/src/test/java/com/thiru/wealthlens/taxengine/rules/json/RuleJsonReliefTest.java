@@ -57,7 +57,7 @@ class RuleJsonReliefTest {
         // Then
         assertThat(version.relief()).contains(new RuleRelief(
                 new FlatWithCeiling(Money.of("60000"), Money.of("1200000")), true));
-        assertThat(version.cap()).isNull();
+        assertThat(version.cap()).isEmpty();
     }
 
     @Test

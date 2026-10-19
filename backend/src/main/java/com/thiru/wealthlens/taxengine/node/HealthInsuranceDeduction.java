@@ -231,7 +231,7 @@ final class HealthInsuranceDeduction {
                 : ComponentCodes.HEALTH_INSURANCE_PARENTS;
         ComponentCode medical = family ? ComponentCodes.MEDICAL_EXPENDITURE_FAMILY
                 : ComponentCodes.MEDICAL_EXPENDITURE_PARENTS;
-        AggregateOutcome outcome = ((AggregateWithCeiling) version.cap()).applyDetailed(
+        AggregateOutcome outcome = ((AggregateWithCeiling) version.cap().orElseThrow()).applyDetailed(
                 CapContext.ofContributions(Map.of(insurance, paid.insurance, medical, paid.medical)));
         lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
                         MoneyValue.of(outcome.aggregate()), MoneyValue.of(outcome.allowed()), version.provenance())

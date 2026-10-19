@@ -115,15 +115,15 @@ class PackValidatorTest {
     }
 
     private static RuleRow rule(RuleId id, CapShape cap) {
-        return rule(id, cap, Optional.empty());
+        return rule(id, Optional.of(cap), Optional.empty());
     }
 
     /** A disallowance set's basis row: a {@link DisallowanceBasis} naming the set (D-165). */
     private static RuleRow basis(RuleId id, DisallowanceSetId set) {
-        return rule(id, null, Optional.of(new DisallowanceBasis(set)));
+        return rule(id, Optional.empty(), Optional.of(new DisallowanceBasis(set)));
     }
 
-    private static RuleRow rule(RuleId id, CapShape cap, Optional<RuleDefinition> definition) {
+    private static RuleRow rule(RuleId id, Optional<CapShape> cap, Optional<RuleDefinition> definition) {
         return new RuleRow(
                 id,
                 TemporalAxis.TAX_YEAR,
@@ -379,7 +379,7 @@ class PackValidatorTest {
                                             "the pre-amendment exemption continues",
                                             provenance()),
                                     new RegimeApplicability.AllRegimes(),
-                                    new Fixed(Money.ZERO),
+                                    Optional.of(new Fixed(Money.ZERO)),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -580,7 +580,7 @@ class PackValidatorTest {
             return new RuleVersion(
                     new Validity.Between(from, Optional.ofNullable(to)),
                     new RegimeApplicability.AllRegimes(),
-                    new Fixed(Money.ZERO),
+                    Optional.of(new Fixed(Money.ZERO)),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
@@ -669,7 +669,7 @@ class PackValidatorTest {
                                     new Validity.Between(
                                             LocalDate.of(2026, 4, 1), Optional.of(LocalDate.of(2026, 8, 31))),
                                     new RegimeApplicability.AllRegimes(),
-                                    new Fixed(Money.ZERO),
+                                    Optional.of(new Fixed(Money.ZERO)),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -683,7 +683,7 @@ class PackValidatorTest {
                             new RuleVersion(
                                     Validity.Between.fromOnwards(LocalDate.of(2026, 9, 1)),
                                     new RegimeApplicability.AllRegimes(),
-                                    new Fixed(Money.of("1")),
+                                    Optional.of(new Fixed(Money.of("1"))),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -763,7 +763,7 @@ class PackValidatorTest {
                             List.of(new RuleVersion(
                                     Validity.Between.fromOnwards(LocalDate.of(2026, 4, 1)),
                                     new RegimeApplicability.AllRegimes(),
-                                    new Fixed(Money.ZERO),
+                                    Optional.of(new Fixed(Money.ZERO)),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),

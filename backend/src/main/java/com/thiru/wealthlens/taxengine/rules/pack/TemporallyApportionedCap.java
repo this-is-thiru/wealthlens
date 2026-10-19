@@ -97,10 +97,8 @@ public final class TemporallyApportionedCap {
     }
 
     private static CapShape capOf(RuleRow rule, RuleVersion version) {
-        if (version.cap() == null) {
-            throw new IllegalStateException("Rule " + rule.id() + " has a version with no cap to apply");
-        }
-        return version.cap();
+        return version.cap().orElseThrow(
+                () -> new IllegalStateException("Rule " + rule.id() + " has a version with no cap to apply"));
     }
 
     private static IllegalStateException statutoryNotBuilt(RuleRow rule) {

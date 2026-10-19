@@ -96,7 +96,7 @@ final class AssetPerquisite {
     /** A wear-and-tear row's rate — the row states it as a percentage of the cost. */
     private static Rate rateOf(NodeContext ctx, RuleId ruleId) {
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal());
-        if (version.cap() instanceof PercentOfBase percent) {
+        if (version.cap().isPresent() && version.cap().get() instanceof PercentOfBase percent) {
             return percent.percent();
         }
         throw new IllegalStateException(ruleId + " must state its wear and tear as a percentage of the cost");

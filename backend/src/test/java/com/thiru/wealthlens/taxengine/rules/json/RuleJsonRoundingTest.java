@@ -52,7 +52,7 @@ class RuleJsonRoundingTest {
 
         // Then
         assertThat(version.rounding()).contains(new RuleRounding(Money.of("10")));
-        assertThat(version.cap()).isNull();
+        assertThat(version.cap()).isEmpty();
         assertThat(version.relief()).isEmpty();
     }
 

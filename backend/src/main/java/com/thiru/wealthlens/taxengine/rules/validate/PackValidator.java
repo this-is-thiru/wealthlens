@@ -251,7 +251,7 @@ public final class PackValidator {
 
         for (Map.Entry<RuleId, com.thiru.wealthlens.taxengine.rules.pack.RuleRow> entry : pack.rules().entrySet()) {
             for (RuleVersion version : entry.getValue().versions()) {
-                if (version.cap()
+                if (version.cap().isPresent() && version.cap().get()
                         instanceof com.thiru.wealthlens.taxengine.rules.cap.AggregateWithCeiling aggregate) {
                     for (ComponentCode code : aggregate.contributors()) {
                         if (!known.contains(code)) {

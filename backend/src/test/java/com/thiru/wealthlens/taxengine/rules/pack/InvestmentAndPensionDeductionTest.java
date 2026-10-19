@@ -48,7 +48,7 @@ class InvestmentAndPensionDeductionTest {
     }
 
     private static AggregateOutcome aggregate(RuleId rule, Map<ComponentCode, Money> entered, Money salary) {
-        AggregateWithCeiling cap = (AggregateWithCeiling) PACK.rule(rule).versionAt(DURING_THE_YEAR).cap();
+        AggregateWithCeiling cap = (AggregateWithCeiling) PACK.rule(rule).versionAt(DURING_THE_YEAR).cap().orElseThrow();
         Map<ComponentCode, Money> contributions = new HashMap<>();
         cap.contributors().forEach(code -> contributions.put(code, Money.ZERO));
         contributions.putAll(entered);

@@ -68,7 +68,7 @@ class RuleStatusTest {
         return new RuleVersion(
                 validity,
                 new RegimeApplicability.AllRegimes(),
-                new Fixed(Money.of("60000")),
+                Optional.of(new Fixed(Money.of("60000"))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),

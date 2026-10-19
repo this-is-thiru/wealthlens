@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
@@ -16,6 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -49,9 +51,10 @@ public final class CessNode implements ComputationNode {
                 .asMoney()
                 .plus(ctx.get(NodeIds.TAX_SURCHARGE, MoneyValue.class).amount());
         RuleVersion version = ctx.ruleOf(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS).versionAt(ctx.inputs().temporal());
-        if (!(version.cap() instanceof PercentOfBase rate)) {
+        Optional<CapShape> shape = version.cap();
+        if (!(shape.isPresent() && shape.get() instanceof PercentOfBase rate)) {
             throw new IllegalStateException("Cess rule " + ctx.ruleIdOf(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS) + " is "
-                    + (version.cap() == null ? "not a rate" : "a " + version.cap().shapeName())
+                    + shape.map(cap -> "a " + cap.shapeName()).orElse("not a rate")
                     + ", not a percentage of the tax");
         }
         Money cess = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_RATE_HEALTH_EDUCATION_CESS),

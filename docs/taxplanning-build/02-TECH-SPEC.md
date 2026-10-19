@@ -202,7 +202,8 @@ whitespace, `_` note fields dropped (D-054). `ClasspathRulePackProvider` loads e
 runs from one. Packs are compiled at startup only, never on a request path.
 
 A rule version carries a `cap`, a `relief`, a `rounding` or `conditions` — at least one, and at most one of
-cap, relief and rounding (the `RuleVersion` constructor refuses two). `relief` is tagged like a cap — `FlatWithCeiling
+cap, relief and rounding (the `RuleVersion` constructor refuses two). Each of `cap`, `relief`, `rounding` and `definition` is an
+`Optional`, empty where the rule states none — never null (`W-088r`). `relief` is tagged like a cap — `FlatWithCeiling
 {maximum, incomeCeiling}`, `ExcessOverThreshold {threshold}`, `ThresholdLadderCeiling {thresholds}`,
 `NoRelief {}` — and always states `limitedToSlabRateTax` (s.156(3)); absent is refused (`W-049a`, D-075). `rounding` is untagged, `{toNearest: "10"}` (`W-050a`, D-078).
 
@@ -549,6 +550,7 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-10-19 | T1 `definition/`: `LossCarryForward(absorbedBy, span, requiresReturnFiledInTime)`, the 25th definition. T4 pack: `SETOFF-CARRIED-HOUSE-PROPERTY` (`HOUSE_PROPERTY`, 8, false) and `SETOFF-CARRIED-CAPITAL-GAINS` (`CAPITAL_GAINS`, 8, true) on it in place of `TaxYearSpan`; relocked law 2025-26.77 / 2026-27.81. T6: `setoff` reads the head and the return condition from those rows, and refuses a row its path cannot follow | `W-088q1`, D-264 |
 | 2026-10-19 | T6: `setoff`'s carried losses through one mechanism, `node/CarriedLossSetOff` (portions under their rows, read by the row's `LossCarryForward`), and `node/CapitalGainsAbsorption` (the parts in declared order, also `SetOffNode.absorbCapitalGains`); `CarriedCapitalLossSetOff` removed; traces identical | `W-088q2`, D-265 |
 | 2026-10-19 | T6: `SetOffNode.SetOffContext` replaces `Absorbing` (`setOff` / `absorb` / `absorbCapitalGains` 3–4 parameters); `CapitalGainsNode.setOff` on `CapitalGainsAbsorption` (with `order()`), its `line` helper → `ctx.traceLine`; traces identical | `W-088q3`, D-266 |
+| 2026-10-19 | T1/T2: `RuleVersion.cap` is `Optional<CapShape>`, a null refused like its siblings; `RuleJson.cap` in place of `capOrNull`; the readers unwrap it (no message changed) | `W-088r`, D-267 |
 | 2026-10-19 | T2 `node/`, `election/`: no public signature changed. Private types for long parameter lists — `DonationDeduction.Group`, `OtherSourcesNode.KindRow` (was `InFullRow`) with `WHOLE_DEDUCTED`, `ElectionResolver.Combination`; `RetirementNode`'s and `ExemptionNode`'s HRA lines through `NodeContext.traceLine` | `W-088p2`, D-262 |
 | 2026-10-19 | T3 `pipeline`: `NodeContext.traceLine(sequence, rule, kind, in, out)` — a line under the context's own node with the rule's governing-version provenance; a run-level context refuses; the node-local `line(...)` helpers of 13 nodes removed | `W-088p1`, D-261 |
 | 2026-10-19 | T1 `cap/`: `PercentOfBaseByPopulation` (bands by a strict "exceeding" threshold over a count). T3 input: `EmployerAccommodation.cityPopulation` replaces `band`; `PopulationBand` removed. T4 pack: `PERQ-ACCOM-OWNED` on the new shape, 40,00,000 / 15,00,000 | `W-088n2`, D-258 |

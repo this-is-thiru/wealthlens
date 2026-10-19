@@ -63,7 +63,7 @@ class RuleRowTest {
         return new RuleVersion(
                 validity,
                 new RegimeApplicability.AllRegimes(),
-                new Fixed(Money.of(amount)),
+                Optional.of(new Fixed(Money.of(amount))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -104,13 +104,13 @@ class RuleRowTest {
         @Test
         void picksTheVersionInForceAtYearEnd() {
             // TY 2026-27 ends 31 March 2027, so the ₹75,000 version applies
-            assertThat(twoVersions().versionAt(at(2026)).cap()).isEqualTo(new Fixed(Money.of("75000")));
+            assertThat(twoVersions().versionAt(at(2026)).cap()).contains(new Fixed(Money.of("75000")));
         }
 
         @Test
         void picksTheEarlierVersionForAnEarlierYear() {
             // TY 2025-26 ends 31 March 2026 — the last day the ₹50,000 version was in force
-            assertThat(twoVersions().versionAt(at(2025)).cap()).isEqualTo(new Fixed(Money.of("50000")));
+            assertThat(twoVersions().versionAt(at(2025)).cap()).contains(new Fixed(Money.of("50000")));
         }
 
         @Test
@@ -262,7 +262,7 @@ class RuleRowTest {
                             new RuleVersion(
                                     Validity.Between.fromOnwards(LocalDate.of(2020, 4, 1)),
                                     new RegimeApplicability.AllRegimes(),
-                                    new Fixed(Money.ZERO),
+                                    Optional.of(new Fixed(Money.ZERO)),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -275,6 +275,29 @@ class RuleRowTest {
                                     provenance()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("both Acts");
+        }
+
+        @Test
+        void aVersionsCapIsEmptyNotNull() {
+            // "no cap" is Optional.empty(), as for a relief, rounding or definition — never a null across the
+            // boundary (W-088r)
+            assertThatThrownBy(() ->
+                            new RuleVersion(
+                                    Validity.Between.fromOnwards(LocalDate.of(2020, 4, 1)),
+                                    new RegimeApplicability.AllRegimes(),
+                                    null,
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    List.of(),
+                                    Provision.present("Income-tax Act, 1961", "s.16"),
+                                    Provision.present("Income-tax Act, 2025", "s.19"),
+                                    amendment(LocalDate.of(2026, 4, 1), LocalDate.of(2026, 3, 31)),
+                                    LegalStatus.IN_FORCE,
+                                    PublicationStatus.PUBLISHED,
+                                    provenance()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("cap is Optional.empty()");
         }
 
         @Test

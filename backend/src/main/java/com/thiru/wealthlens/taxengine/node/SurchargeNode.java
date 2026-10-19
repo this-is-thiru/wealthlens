@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
+import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -189,7 +190,8 @@ public final class SurchargeNode implements ComputationNode {
 
     /** The limit row's rate: its cap is a percentage of the limited part's tax. */
     private static Rate limitOf(NodeContext ctx, SurchargeRows rows) {
-        if (!(version(ctx, rows.limit()).cap() instanceof PercentOfBase limit)
+        Optional<CapShape> shape = version(ctx, rows.limit()).cap();
+        if (!(shape.isPresent() && shape.get() instanceof PercentOfBase limit)
                 || !limit.base().equals(LIMITED_PART_TAX)) {
             throw new IllegalStateException("Surcharge limit " + rows.limit() + " is not a percentage of "
                     + LIMITED_PART_TAX.value());
@@ -267,9 +269,10 @@ public final class SurchargeNode implements ComputationNode {
 
     /** The rate of the band the income falls in; an income of nil is in no band and bears none. */
     private static Rate bandRate(RuleId id, RuleVersion version, Money income) {
-        if (!(version.cap() instanceof SlabLadder ladder)) {
+        Optional<CapShape> shape = version.cap();
+        if (!(shape.isPresent() && shape.get() instanceof SlabLadder ladder)) {
             throw new IllegalStateException("Surcharge rule " + id + " is "
-                    + (version.cap() == null ? "not a ladder" : "a " + version.cap().shapeName()) + ", not a slab ladder");
+                    + shape.map(cap -> "a " + cap.shapeName()).orElse("not a ladder") + ", not a slab ladder");
         }
         return ladder.bandFor(income).map(SlabLadder.Band::rate).orElse(Rate.ZERO);
     }

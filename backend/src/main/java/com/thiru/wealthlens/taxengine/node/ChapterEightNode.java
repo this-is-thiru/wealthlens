@@ -258,7 +258,7 @@ public final class ChapterEightNode implements ComputationNode {
     /** s.123: the Schedule XV sums under one ceiling; returns what the pension sub-cap left, for s.124(3). */
     private static Money scheduleXv(NodeContext ctx, Map<ComponentCode, Money> paid, List<TraceLine> lines) {
         RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV));
-        AggregateWithCeiling cap = (AggregateWithCeiling) version.cap();
+        AggregateWithCeiling cap = (AggregateWithCeiling) version.cap().orElseThrow();
         Map<ComponentCode, Money> contributions = new LinkedHashMap<>();
         cap.contributors().forEach(code -> contributions.put(code, paid.getOrDefault(code, Money.ZERO)));
         Money entered = contributions.values().stream().reduce(Money.ZERO, Money::plus);
@@ -319,7 +319,7 @@ public final class ChapterEightNode implements ComputationNode {
             lines.add(nilLine(ctx, lines, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), version, entered));
             return;
         }
-        AggregateOutcome outcome = ((AggregateWithCeiling) version.cap()).applyDetailed(CapContext.ofContributions(
+        AggregateOutcome outcome = ((AggregateWithCeiling) version.cap().orElseThrow()).applyDetailed(CapContext.ofContributions(
                 Map.of(ComponentCodes.EMPLOYEE_NPS, residue, ComponentCodes.NPS_MINOR_DEPOSIT, minorDeposit)));
         lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), StepKind.DEDUCTION,
                         MoneyValue.of(entered), MoneyValue.of(outcome.allowed()), version.provenance())

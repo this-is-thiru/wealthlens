@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -185,7 +186,7 @@ class CessNodeTest {
         RulePack pack = pack();
         RuleRow row = pack.rule(RuleIds.RATE_HEALTH_EDUCATION_CESS);
         RuleVersion v = row.versions().getFirst();
-        RuleVersion fixed = new RuleVersion(v.validity(), v.regimes(), new Fixed(Money.of("100")), v.relief(),
+        RuleVersion fixed = new RuleVersion(v.validity(), v.regimes(), Optional.of(new Fixed(Money.of("100"))), v.relief(),
                 v.rounding(), v.definition(), v.conditions(), v.provision1961(), v.provision2025(), v.introducedBy(),
                 v.legalStatus(), v.publicationStatus(), v.provenance());
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());

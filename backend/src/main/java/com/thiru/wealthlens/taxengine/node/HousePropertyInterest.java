@@ -140,7 +140,7 @@ final class HousePropertyInterest {
             return Money.ZERO;
         }
         // The instalment rows define a span and limit nothing; the year's-interest rows state the whole as a cap.
-        Money allowed = version.cap() == null ? amount
+        Money allowed = version.cap().isEmpty() ? amount
                 : TemporallyApportionedCap.apply(ctx.rule(row), ctx.inputs().temporal(),
                         CapContext.of(INTEREST, amount)).value();
         lines.add(line(row, version, amount, allowed).withLimitedBy(where));

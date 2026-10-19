@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
@@ -78,9 +79,10 @@ public final class TaxByBasisNode implements ComputationNode {
         // The slab ladder: each regime's own, unless an age ladder replaces it — the rows' conditions say which (D-252)
         RuleRow row = ctx.ruleOf(RuleSetIds.RS_RATE_SLAB);
         RuleVersion version = TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal());
-        if (!(version.cap() instanceof SlabLadder ladder)) {
+        Optional<CapShape> shape = version.cap();
+        if (!(shape.isPresent() && shape.get() instanceof SlabLadder ladder)) {
             throw new IllegalStateException("Rate table " + row.id() + " for regime " + ctx.regime().code()
-                    + " is a " + version.cap().shapeName() + ", not a slab ladder");
+                    + " is " + shape.map(cap -> "a " + cap.shapeName()).orElse("not a ladder") + ", not a slab ladder");
         }
         if (gains.isEmpty()) {
             TaxByBasis value = TaxByBasis.atSlabRatesOnly(ladder.apply(CapContext.of(ladder.base(), totalIncome)).value());
@@ -99,7 +101,7 @@ public final class TaxByBasisNode implements ComputationNode {
             RuleId rate = specialRate(ctx, part.getKey()).orElseThrow().id();
             RuleVersion rateVersion = TemporallyApportionedCap.governingVersion(ctx.rule(rate), ctx.inputs().temporal());
             Money tax = TemporallyApportionedCap.apply(ctx.rule(rate), ctx.inputs().temporal(),
-                    CapContext.of(((SlabLadder) rateVersion.cap()).base(), part.getValue())).value();
+                    CapContext.of(((SlabLadder) rateVersion.cap().orElseThrow()).base(), part.getValue())).value();
             value = value.plusSpecialRate(new SpecialRateId(rate.value().replace('-', '_')), tax);
             lines.add(TraceLine.of(lines.size() + 1, produces(), rate, StepKind.TAX, MoneyValue.of(part.getValue()),
                     MoneyValue.of(tax), rateVersion.provenance()).withLimitedBy(part.getKey().toString()));

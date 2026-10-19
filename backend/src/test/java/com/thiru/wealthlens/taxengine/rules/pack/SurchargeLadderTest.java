@@ -56,8 +56,8 @@ class SurchargeLadderTest {
     }
 
     private static SlabLadder ladder(RuleVersion version) {
-        assertThat(version.cap()).isInstanceOf(SlabLadder.class);
-        return (SlabLadder) version.cap();
+        assertThat(version.cap()).containsInstanceOf(SlabLadder.class);
+        return (SlabLadder) version.cap().orElseThrow();
     }
 
     @ParameterizedTest(name = "TY {0}")

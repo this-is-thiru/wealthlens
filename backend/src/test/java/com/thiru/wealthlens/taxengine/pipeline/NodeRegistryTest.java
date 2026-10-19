@@ -405,7 +405,7 @@ class NodeRegistryTest {
                 List.of(new RuleVersion(
                         Validity.Between.fromOnwards(LocalDate.of(2026, 4, 1)),
                         new RegimeApplicability.AllRegimes(),
-                        new Fixed(Money.ZERO),
+                        Optional.of(new Fixed(Money.ZERO)),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),

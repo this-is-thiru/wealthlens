@@ -819,7 +819,7 @@ class PackJsonTest {
                                     "exec/components.json", resource("exec/components.json")));
 
             var slab = pack.rule(new com.thiru.wealthlens.taxengine.rules.id.RuleId("RATE-SLAB-NEW-TAX-REGIME"));
-            var cap = slab.versions().getFirst().cap();
+            var cap = slab.versions().getFirst().cap().orElseThrow();
             var ctx = CapContext.of(new BaseId("ROUNDED_TOTAL_INCOME"), Money.of("5000000"));
 
             assertThat(cap.apply(ctx).value()).isEqualTo(Money.of("1080000"));

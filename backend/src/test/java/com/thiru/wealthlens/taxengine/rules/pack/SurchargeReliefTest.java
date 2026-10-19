@@ -67,7 +67,7 @@ class SurchargeReliefTest {
     /** The lower bounds at which either ladder starts to charge; the drift guard's other side (D-085). */
     private static Set<Money> ladderEntryPoints(RulePack pack, int year, String... ladders) {
         return Stream.of(ladders)
-                .map(rule -> (SlabLadder) inForce(pack, year, rule).cap())
+                .map(rule -> (SlabLadder) inForce(pack, year, rule).cap().orElseThrow())
                 .flatMap(ladder -> ladder.bands().stream())
                 .map(Band::lowerExclusive)
                 .filter(lower -> lower.isGreaterThan(Money.ZERO))

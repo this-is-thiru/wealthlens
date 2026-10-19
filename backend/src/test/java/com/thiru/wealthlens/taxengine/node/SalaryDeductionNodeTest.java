@@ -175,11 +175,11 @@ class SalaryDeductionNodeTest {
         RuleVersion v = row.versions().getFirst();
         RuleVersion first = new RuleVersion(
                 new Validity.Between(LocalDate.of(2026, 4, 1), Optional.of(LocalDate.of(2026, 9, 30))), v.regimes(),
-                new Fixed(Money.of("50000")), v.relief(), v.rounding(), v.definition(), v.conditions(),
+                Optional.of(new Fixed(Money.of("50000"))), v.relief(), v.rounding(), v.definition(), v.conditions(),
                 v.provision1961(), v.provision2025(), v.introducedBy(), v.legalStatus(), v.publicationStatus(),
                 v.provenance());
         RuleVersion second = new RuleVersion(Validity.Between.fromOnwards(LocalDate.of(2026, 10, 1)), v.regimes(),
-                new Fixed(Money.of("60000")), v.relief(), v.rounding(), v.definition(), v.conditions(),
+                Optional.of(new Fixed(Money.of("60000"))), v.relief(), v.rounding(), v.definition(), v.conditions(),
                 v.provision1961(), v.provision2025(), v.introducedBy(), v.legalStatus(), v.publicationStatus(),
                 v.provenance());
         Map<RuleId, RuleRow> rules = new HashMap<>(shipped.rules());

@@ -26,7 +26,8 @@ import java.util.Optional;
  *
  * @param validity when this version was in force
  * @param regimes which regimes it applies in
- * @param cap the limit it imposes; may be null where the rule states a condition and no amount
+ * @param cap the limit it imposes; empty where the rule states a condition, relief, rounding or definition and
+ *     limits nothing
  * @param relief the relief it grants; never beside a cap, because a rule either limits an amount or
  *     takes one off the tax, and one that did both would leave its reader to guess the order
  * @param rounding the step it rounds an amount to; never beside a cap or a relief, for the same reason
@@ -44,7 +45,7 @@ import java.util.Optional;
 public record RuleVersion(
         Validity validity,
         RegimeApplicability regimes,
-        CapShape cap,
+        Optional<CapShape> cap,
         Optional<RuleRelief> relief,
         Optional<RuleRounding> rounding,
         Optional<RuleDefinition> definition,
@@ -75,19 +76,21 @@ public record RuleVersion(
             throw new IllegalArgumentException(
                     "A rule version must state its legal status and its publication status");
         }
-        if (relief == null) {
-            throw new IllegalArgumentException("A rule version's relief is Optional.empty() when it grants none");
-        }
-        if (rounding == null) {
-            throw new IllegalArgumentException("A rule version's rounding is Optional.empty() when it states none");
-        }
-        if (definition == null) {
-            throw new IllegalArgumentException(
-                    "A rule version's definition is Optional.empty() when it states none");
-        }
+        requireStatedOrEmpty(cap, "cap", "states none");
+        requireStatedOrEmpty(relief, "relief", "grants none");
+        requireStatedOrEmpty(rounding, "rounding", "states none");
+        requireStatedOrEmpty(definition, "definition", "states none");
         requireAtMostOneOf(cap, relief, rounding, definition);
         requirePendingNotificationStatedTwiceAlike(validity, legalStatus);
         conditions = conditions == null ? List.of() : List.copyOf(conditions);
+    }
+
+    /** What a version may leave out is {@code Optional.empty()}, never a null passed across the boundary. */
+    private static void requireStatedOrEmpty(Optional<?> value, String what, String whenAbsent) {
+        if (value == null) {
+            throw new IllegalArgumentException(
+                    "A rule version's " + what + " is Optional.empty() when it " + whenAbsent);
+        }
     }
 
     /**
@@ -95,14 +98,12 @@ public record RuleVersion(
      * reader to guess the order.
      */
     private static void requireAtMostOneOf(
-            CapShape cap,
+            Optional<CapShape> cap,
             Optional<RuleRelief> relief,
             Optional<RuleRounding> rounding,
             Optional<RuleDefinition> definition) {
         List<String> stated = new ArrayList<>();
-        if (cap != null) {
-            stated.add("a cap");
-        }
+        cap.ifPresent(present -> stated.add("a cap"));
         relief.ifPresent(present -> stated.add("a relief"));
         rounding.ifPresent(present -> stated.add("a rounding"));
         definition.ifPresent(present -> stated.add("a definition"));

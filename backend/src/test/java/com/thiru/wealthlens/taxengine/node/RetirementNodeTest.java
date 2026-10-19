@@ -438,7 +438,7 @@ class RetirementNodeTest {
 
     private static Money limb(RulePack pack, com.thiru.wealthlens.taxengine.rules.id.RuleId rule, String name,
             TemporalContext t) {
-        LeastOf leastOf = (LeastOf) pack.rule(rule).versionAt(t).cap();
+        LeastOf leastOf = (LeastOf) pack.rule(rule).versionAt(t).cap().orElseThrow();
         return leastOf.limbs().stream().filter(limb -> limb.name().equals(name)).findFirst().orElseThrow()
                 .shape().apply(new CapContext(Map.of())).value();
     }

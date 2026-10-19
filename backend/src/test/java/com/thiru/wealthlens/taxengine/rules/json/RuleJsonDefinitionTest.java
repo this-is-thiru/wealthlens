@@ -66,7 +66,7 @@ class RuleJsonDefinitionTest {
 
         // Then
         assertThat(version.definition()).contains(new HeadTotal(HeadCode.SALARIES));
-        assertThat(version.cap()).isNull();
+        assertThat(version.cap()).isEmpty();
         assertThat(version.relief()).isEmpty();
         assertThat(version.rounding()).isEmpty();
     }
@@ -79,7 +79,7 @@ class RuleJsonDefinitionTest {
 
         // Then
         assertThat(version.definition()).contains(new SalaryBase(DearnessAllowanceTest.WHERE_TERMS_PROVIDE));
-        assertThat(version.cap()).isNull();
+        assertThat(version.cap()).isEmpty();
     }
 
     @Test

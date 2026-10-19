@@ -47,7 +47,7 @@ class TemporallyApportionedCapTest {
     }
 
     private static RuleVersion version(Validity validity, String amount) {
-        return new RuleVersion(validity, new RegimeApplicability.AllRegimes(), new Fixed(Money.of(amount)),
+        return new RuleVersion(validity, new RegimeApplicability.AllRegimes(), Optional.of(new Fixed(Money.of(amount))),
                 Optional.empty(), Optional.empty(), Optional.empty(), List.of(),
                 Provision.present("Income-tax Act, 1961", "s.16"), Provision.present("Income-tax Act, 2025", "s.19"),
                 new AmendmentRef("fixture instrument", "fixture gazette", LocalDate.of(2025, 3, 31),
@@ -155,11 +155,11 @@ class TemporallyApportionedCapTest {
         assertThat(TemporallyApportionedCap.governingVersion(
                         changing(MidYearCombination.LATEST_VERSION_GOVERNS, Optional.empty(), null), TY_2025)
                 .cap())
-                .isEqualTo(new Fixed(Money.of("24000")));
+                .contains(new Fixed(Money.of("24000")));
         assertThat(TemporallyApportionedCap.governingVersion(
                         changing(MidYearCombination.EARLIEST_VERSION_GOVERNS, Optional.empty(), null), TY_2025)
                 .cap())
-                .isEqualTo(new Fixed(Money.of("12000")));
+                .contains(new Fixed(Money.of("12000")));
     }
 
     @Test

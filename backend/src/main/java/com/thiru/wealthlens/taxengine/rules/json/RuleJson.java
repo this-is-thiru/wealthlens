@@ -92,7 +92,7 @@ public final class RuleJson {
                         ShapeJson.validity(
                                 PackJson.object(node, "validity", path), path + ".validity", provenance),
                         ShapeJson.regimes(PackJson.object(node, "regimes", path), path + ".regimes"),
-                        capOrNull(node, path),
+                        cap(node, path),
                         relief(node, path),
                         rounding(node, path),
                         definition(node, path),
@@ -109,14 +109,14 @@ public final class RuleJson {
     }
 
     /**
-     * The cap, which may legitimately be absent.
+     * The cap, empty where the rule limits nothing.
      *
      * <p>A rule can state a condition and no amount — {@code SAL-HRA-002}'s "the accommodation is not
      * owned by the assessee" limits nothing by itself — or grant a relief, state a rounding or define an
      * amount and limit nothing. A rule with no cap, relief, rounding, definition or condition is a different
      * matter, and is refused: it would load, evaluate, and mean nothing.
      */
-    private static com.thiru.wealthlens.taxengine.rules.cap.CapShape capOrNull(JsonNode node, String path) {
+    private static Optional<com.thiru.wealthlens.taxengine.rules.cap.CapShape> cap(JsonNode node, String path) {
         var cap = PackJson.optionalObject(node, "cap", path);
         if (cap.isEmpty()) {
             List<com.thiru.wealthlens.taxengine.rules.condition.Condition> conditions =
@@ -129,9 +129,9 @@ public final class RuleJson {
                         path + " has no cap, relief, rounding, definition or conditions; it would load,"
                                 + " evaluate, and mean nothing");
             }
-            return null;
+            return Optional.empty();
         }
-        return ShapeJson.cap(cap.get(), path + ".cap");
+        return Optional.of(ShapeJson.cap(cap.get(), path + ".cap"));
     }
 
     private static Optional<RuleRelief> relief(JsonNode node, String path) {
