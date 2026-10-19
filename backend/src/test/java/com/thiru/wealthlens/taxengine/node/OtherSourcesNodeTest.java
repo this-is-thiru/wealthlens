@@ -641,6 +641,18 @@ class OtherSourcesNodeTest {
                 .hasMessageContaining("s.92(3) has no such exclusion");
     }
 
+    @Test
+    void evaluate_whenTaxYear2025ClaimsTheCovidDeathGroundForProperty_isRefused() {
+        // Given — property, not a sum, claimed on 1961 proviso (XIII)(B), which reaches sums of money only
+        GiftReceived property = new GiftReceived(GiftKind.OTHER_PROPERTY, Money.ZERO, Money.of("100000"),
+                Optional.of(GiftExclusion.COVID_DEATH_FROM_OTHERS));
+
+        // When / Then
+        assertThatThrownBy(() -> runGifts(2025, property))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("excludes sums of money only, not OTHER_PROPERTY");
+    }
+
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenGiftsSitBesideInterest_addsBoth(int year) {

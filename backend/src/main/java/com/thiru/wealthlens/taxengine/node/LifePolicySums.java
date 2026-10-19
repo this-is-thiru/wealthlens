@@ -52,7 +52,7 @@ final class LifePolicySums {
     }
 
     /** What the year's receipts add to the head. */
-    static Money income(NodeContext ctx, OtherSourcesNode.Lines lines, List<LifePolicyReceipt> receipts,
+    static Money income(NodeContext ctx, OtherSourcesLines lines, List<LifePolicyReceipt> receipts,
             List<ClaimedPolicy> claimed) {
         PremiumShareBands bands = definition(ctx, ctx.ruleIdOf(RuleSetIds.RS_OS_LIFE_POLICY_RATIO), PremiumShareBands.class);
         PolicyPremiumLimits limits = definition(ctx, ctx.ruleIdOf(RuleSetIds.RS_OS_LIFE_POLICY_PREMIUM), PolicyPremiumLimits.class);
@@ -157,7 +157,7 @@ final class LifePolicySums {
         return Optional.empty();
     }
 
-    private static Money lineFor(OtherSourcesNode.Lines lines, String where, Verdict verdict) {
+    private static Money lineFor(OtherSourcesLines lines, String where, Verdict verdict) {
         LifePolicyReceipt receipt = verdict.receipt();
         if (verdict.excluded()) {
             lines.add(lines.row(RuleSetIds.RS_OS_LIFE_POLICY_RATIO), StepKind.EXEMPTION, receipt.received(), receipt.received(),

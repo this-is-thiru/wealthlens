@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088u — size and SRP (review S4)
+Item            : W-088u2 — ChapterEightNode per concern (W-088u split, D-270)
 Stage           : READY — not started
-Plan            : none yet; WI row W-088u
+Plan            : plans/W-088u.md (split); plans/W-088u2.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088u": read, write plans/W-088u.md, STOP
-Last verify     : unit clean -Punit 3083 run, 0 fail; integration 252/0 (2026-10-19, W-088t)
-Waiting on      : the owner — "start W-088u"; OQ-32, OQ-33 open
+Next step       : on "start W-088u2": read, write plans/W-088u2.md, STOP
+Last verify     : unit clean -Punit 3084 run, 0 fail; integration 252/0 (2026-10-19, W-088u1)
+Waiting on      : the owner — "start W-088u2"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088t: derive a date's tax year in one place — TaxYearId.containing from the type's own boundaries, HousePropertyInterest's inline April rule removed (D-269)
-Updated         : 2026-10-19, session 24 — W-088t approved and committed
+Last item commit: taxplanning W-088u1: split OtherSourcesNode per concern — gifts to GiftIncome, the s.93 allowance to DividendInterestAllowance, the trace writer to OtherSourcesLines; W-088u split (D-270, D-271)
+Updated         : 2026-10-19, session 24 — W-088u1 approved and committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

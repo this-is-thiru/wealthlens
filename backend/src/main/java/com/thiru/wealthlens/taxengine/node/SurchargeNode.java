@@ -2,7 +2,7 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
-import com.thiru.wealthlens.taxengine.node.OtherSourcesNode.DividendInterest;
+import com.thiru.wealthlens.taxengine.node.DividendInterestAllowance.DividendInterest;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
@@ -212,7 +212,7 @@ public final class SurchargeNode implements ComputationNode {
         if (received.equals(Money.ZERO)) {
             return Money.ZERO;
         }
-        return received.minus(interestAllowedOnDividends(OtherSourcesNode.dividendInterest(ctx, items)));
+        return received.minus(interestAllowedOnDividends(DividendInterestAllowance.of(ctx, items)));
     }
 
     /**
