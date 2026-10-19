@@ -180,6 +180,37 @@ class IdentifierTest {
         }
 
         @Test
+        void containing_whenTheDateIsTheFirstOfApril_isTheYearThatStarts() {
+            // 1 April 2026 begins TY 2026-27
+            assertThat(TaxYearId.containing(LocalDate.of(2026, 4, 1))).isEqualTo(TaxYearId.of(2026));
+        }
+
+        @Test
+        void containing_whenTheDateIsTheThirtyFirstOfMarch_isTheYearThatEnds() {
+            // 31 March 2027 ends TY 2026-27
+            assertThat(TaxYearId.containing(LocalDate.of(2027, 3, 31))).isEqualTo(TaxYearId.of(2026));
+        }
+
+        @Test
+        void containing_whenTheDateIsTheDayBeforeAYearStarts_isTheEarlierYear() {
+            // 31 March 2026 is the last day of TY 2025-26
+            assertThat(TaxYearId.containing(LocalDate.of(2026, 3, 31))).isEqualTo(TaxYearId.of(2025));
+        }
+
+        @Test
+        void containing_whenTheDateIsInJanuary_isTheYearThatBeganTheAprilBefore() {
+            // 15 January 2027 is after 1 April 2026 and before 1 April 2027
+            assertThat(TaxYearId.containing(LocalDate.of(2027, 1, 15))).isEqualTo(TaxYearId.of(2026));
+        }
+
+        @Test
+        void containing_whenNull_isRefused() {
+            assertThatThrownBy(() -> TaxYearId.containing(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("date");
+        }
+
+        @Test
         void contains_whenDateIsOnEitherBoundary_isTrue() {
             TaxYearId ty = TaxYearId.of(2026);
 

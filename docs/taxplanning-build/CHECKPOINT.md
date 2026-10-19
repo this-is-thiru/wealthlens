@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088t — one tax-year derivation (review E7)
+Item            : W-088u — size and SRP (review S4)
 Stage           : READY — not started
-Plan            : none yet; WI row W-088t
+Plan            : none yet; WI row W-088u
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088t": read, write plans/W-088t.md, STOP
-Last verify     : unit clean -Punit 3078 run, 0 fail; integration 252/0 (2026-10-19, W-088s)
-Waiting on      : the owner — "start W-088t"; OQ-32, OQ-33 open
+Next step       : on "start W-088u": read, write plans/W-088u.md, STOP
+Last verify     : unit clean -Punit 3083 run, 0 fail; integration 252/0 (2026-10-19, W-088t)
+Waiting on      : the owner — "start W-088u"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088s: declare the shipped tax years in a manifest beside the locks — rulepacks/shipped-years.json read by ClasspathRulePackProvider.shippedYears, TaxEngineConfig.SHIPPED_YEARS removed (D-268)
-Updated         : 2026-10-19, session 24 — W-088s approved and committed
+Last item commit: taxplanning W-088t: derive a date's tax year in one place — TaxYearId.containing from the type's own boundaries, HousePropertyInterest's inline April rule removed (D-269)
+Updated         : 2026-10-19, session 24 — W-088t approved and committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

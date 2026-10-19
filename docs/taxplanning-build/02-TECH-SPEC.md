@@ -151,7 +151,7 @@ The source is the reference. These are the contracts a change must keep.
 | `ComponentCode`, `BaseId` | `^[A-Z][A-Z0-9_]{1,63}$` |
 | `RegimeCode` | `^[A-Z][A-Z0-9_]{1,31}$` |
 | `ItrFormCode`, `ScheduleCode` | `^[A-Z0-9-]{3,16}$` |
-| `TaxYearId(int startYear)` | `label()` = `"%d-%02d"` (TY 2099 → `"2099-00"`); `startsOn()` 1 April; `endsOn()` 31 March |
+| `TaxYearId(int startYear)` | `label()` = `"%d-%02d"` (TY 2099 → `"2099-00"`); `startsOn()` 1 April; `endsOn()` 31 March; `containing(date)` the year a date falls in — the one derivation (✅ `W-088t`) |
 
 **Naming of identity values** (D-035, D-046 B4): a `RuleId` or `RegimeCode` names the **concept** —
 no year, no "old/new", no section number. The year lives in the version, the section in the
@@ -553,6 +553,7 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-10-19 | T6: `SetOffNode.SetOffContext` replaces `Absorbing` (`setOff` / `absorb` / `absorbCapitalGains` 3–4 parameters); `CapitalGainsNode.setOff` on `CapitalGainsAbsorption` (with `order()`), its `line` helper → `ctx.traceLine`; traces identical | `W-088q3`, D-266 |
 | 2026-10-19 | T1/T2: `RuleVersion.cap` is `Optional<CapShape>`, a null refused like its siblings; `RuleJson.cap` in place of `capOrNull`; the readers unwrap it (no message changed) | `W-088r`, D-267 |
 | 2026-10-19 | T4: `rulepacks/shipped-years.json` declares the shipped years by label; `ClasspathRulePackProvider.shippedYears(root)` reads it (a label must be its year's own, none twice); `TaxEngineConfig.SHIPPED_YEARS` removed, the bean and `GoldenCaseRunner` read the manifest | `W-088s`, D-268 |
+| 2026-10-19 | T3: `TaxYearId.containing(LocalDate)`, from the type's own boundaries; `HousePropertyInterest`'s inline April rule removed | `W-088t`, D-269 |
 | 2026-10-19 | T2 `node/`, `election/`: no public signature changed. Private types for long parameter lists — `DonationDeduction.Group`, `OtherSourcesNode.KindRow` (was `InFullRow`) with `WHOLE_DEDUCTED`, `ElectionResolver.Combination`; `RetirementNode`'s and `ExemptionNode`'s HRA lines through `NodeContext.traceLine` | `W-088p2`, D-262 |
 | 2026-10-19 | T3 `pipeline`: `NodeContext.traceLine(sequence, rule, kind, in, out)` — a line under the context's own node with the rule's governing-version provenance; a run-level context refuses; the node-local `line(...)` helpers of 13 nodes removed | `W-088p1`, D-261 |
 | 2026-10-19 | T1 `cap/`: `PercentOfBaseByPopulation` (bands by a strict "exceeding" threshold over a count). T3 input: `EmployerAccommodation.cityPopulation` replaces `band`; `PopulationBand` removed. T4 pack: `PERQ-ACCOM-OWNED` on the new shape, 40,00,000 / 15,00,000 | `W-088n2`, D-258 |

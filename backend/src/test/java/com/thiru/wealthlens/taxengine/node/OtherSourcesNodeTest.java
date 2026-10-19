@@ -763,7 +763,7 @@ class OtherSourcesNodeTest {
 
     /** The tax year a policy issued on {@code issuedOn} first pays premium in. */
     private static TaxYearId years(LocalDate issuedOn) {
-        return TaxYearId.of(issuedOn.getMonthValue() >= 4 ? issuedOn.getYear() : issuedOn.getYear() - 1);
+        return TaxYearId.containing(issuedOn);
     }
 
     private static NodeResult runPolicies(int year, LifePolicyReceipt... policies) {

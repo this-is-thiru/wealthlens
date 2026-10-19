@@ -164,7 +164,7 @@ final class HousePropertyInterest {
         RuleId row = property.occupancy() == HouseOccupancy.OWN_RESIDENCE
                 ? ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION) : ctx.ruleIdOf(RuleSetIds.RS_HP_PRE_CONSTRUCTION);
         TaxYearSpan span = RuleDefinitions.require(version(row).definition(), TaxYearSpan.class, row);
-        if (!span.holds(taxYearOf(acquiredOn(property)), ctx.inputs().taxYear())) {
+        if (!span.holds(TaxYearId.containing(acquiredOn(property)), ctx.inputs().taxYear())) {
             return Money.ZERO;
         }
         int instalments = span.succeedingYears() + 1;
@@ -184,7 +184,7 @@ final class HousePropertyInterest {
         if (limit.borrowedOnOrAfter().filter(earliest -> loan.borrowedOn().isBefore(earliest)).isPresent()) {
             return false;
         }
-        LocalDate completeBy = taxYearOf(loan.borrowedOn()).endsOn()
+        LocalDate completeBy = TaxYearId.containing(loan.borrowedOn()).endsOn()
                 .plusYears(limit.completionYearsAfterBorrowingYear());
         return !acquiredOn(property).isAfter(completeBy);
     }
@@ -198,10 +198,6 @@ final class HousePropertyInterest {
                     + " (S2 s.22(1)(c))");
         }
         return acquired;
-    }
-
-    private static TaxYearId taxYearOf(LocalDate date) {
-        return TaxYearId.of(date.getMonthValue() >= 4 ? date.getYear() : date.getYear() - 1);
     }
 
     private OwnResidenceInterestLimit limit(RuleVersion version) {

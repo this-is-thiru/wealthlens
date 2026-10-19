@@ -21,6 +21,18 @@ public record TaxYearId(int startYear) {
     }
 
     /**
+     * The tax year {@code date} falls in — the one place a date becomes a tax year (W-088t), read from this type's own
+     * {@link #startsOn()} / {@link #endsOn()} so the year's boundary is stated once.
+     */
+    public static TaxYearId containing(LocalDate date) {
+        if (date == null) {
+            throw new IllegalArgumentException("The tax year containing a date needs the date");
+        }
+        TaxYearId startingThatCalendarYear = of(date.getYear());
+        return startingThatCalendarYear.contains(date) ? startingThatCalendarYear : of(date.getYear() - 1);
+    }
+
+    /**
      * The conventional label, e.g. {@code "2026-27"}.
      *
      * <p>The ending year is zero-padded, so the tax year beginning in 2099 is {@code "2099-00"} and
