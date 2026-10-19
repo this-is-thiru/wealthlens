@@ -5,7 +5,6 @@ import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.RateBasisHint;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
-import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
@@ -14,6 +13,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -23,6 +23,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Income under "Capital gains", part by part, after the head's own losses (S2 s.108(2); 1961 s.70(2), (3); D-243).
@@ -70,16 +71,19 @@ public final class CapitalGainsNode implements ComputationNode {
             Money amount = net.getOrDefault(part, Money.ZERO);
             if (amount.isLessThan(Money.ZERO)) {
                 Money loss = Money.ZERO.minus(amount);
-                lines.add(line(lines, row, StepKind.MEASURE, amount, Money.ZERO).withLimitedBy(part + ": a loss"));
+                lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, amount, Money.ZERO)
+                        .withLimitedBy(part + ": a loss"));
                 longTermLoss = part.isLongTerm() ? longTermLoss.plus(loss) : longTermLoss;
                 shortTermLoss = part.isLongTerm() ? shortTermLoss : shortTermLoss.plus(loss);
             } else if (amount.isGreaterThan(Money.ZERO)) {
-                lines.add(line(lines, row, StepKind.INCOME, amount, amount).withLimitedBy(part.toString()));
+                lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.INCOME, amount, amount)
+                        .withLimitedBy(part.toString()));
                 available.put(part, amount);
             }
         }
-        Money longTermLeft = setOff(longTermLoss, true, order, available, lines, row);
-        Money shortTermLeft = setOff(shortTermLoss, false, order, available, lines, row);
+        CapitalGainsAbsorption parts = new CapitalGainsAbsorption(order, available);
+        Money longTermLeft = setOff(ctx, parts, longTermLoss, true, lines);
+        Money shortTermLeft = setOff(ctx, parts, shortTermLoss, false, lines);
         CapitalGainsHead head = new CapitalGainsHead(available, shortTermLeft, longTermLeft);
         return new NodeResult(head, lines);
     }
@@ -88,25 +92,19 @@ public final class CapitalGainsNode implements ComputationNode {
      * The parts absorb up to {@code loss}, in order — only the long-term parts for a long-term loss (S2 s.108(2)(b)).
      * Returns what is left, which is shown.
      */
-    private static Money setOff(Money loss, boolean longTerm, CapitalGainsAbsorptionOrder order,
-            Map<CapitalGainsPart, Money> available, List<TraceLine> lines, GoverningRow row) {
-        Money remaining = loss;
+    private static Money setOff(NodeContext ctx, CapitalGainsAbsorption parts, Money loss, boolean longTerm,
+            List<TraceLine> lines) {
+        RuleId row = ctx.ruleIdOf(ROW);
         String which = longTerm ? "long-term" : "short-term";
-        for (CapitalGainsPart part : order.parts()) {
-            Money gain = available.getOrDefault(part, Money.ZERO);
-            if ((longTerm && !part.isLongTerm()) || !remaining.isGreaterThan(Money.ZERO)
-                    || !gain.isGreaterThan(Money.ZERO)) {
-                continue;
-            }
-            Money taken = Money.min(remaining, gain);
-            available.put(part, gain.minus(taken));
-            remaining = remaining.minus(taken);
-            lines.add(line(lines, row, StepKind.SET_OFF, gain, taken).withLimitedBy(which + " loss against " + part
-                    + "; order " + order.parts() + ", the declared default: neither Act prescribes one (OQ-32)"));
-        }
+        Predicate<CapitalGainsPart> reaches = longTerm ? CapitalGainsPart::isLongTerm : part -> true;
+        Money remaining = loss.minus(parts.absorb(loss, reaches, lines, (sequence, part, gain, taken) -> ctx
+                .traceLine(sequence, row, StepKind.SET_OFF, gain, taken).withLimitedBy(which + " loss against " + part
+                        + "; order " + parts.order().parts()
+                        + ", the declared default: neither Act prescribes one (OQ-32)")));
         if (remaining.isGreaterThan(Money.ZERO)) {
-            lines.add(line(lines, row, StepKind.MEASURE, loss, remaining).withLimitedBy(which + " loss not set off,"
-                    + " and not against another head (S2 s.109(2); 1961 s.71(3)); carried forward (S2 s.111(1); 1961 s.74(1))"));
+            lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, remaining).withLimitedBy(which
+                    + " loss not set off, and not against another head (S2 s.109(2); 1961 s.71(3)); carried forward"
+                    + " (S2 s.111(1); 1961 s.74(1))"));
         }
         return remaining;
     }
@@ -129,10 +127,5 @@ public final class CapitalGainsNode implements ComputationNode {
                     + " provision: only " + expected + " gains are charged on it (S2 ss.196–198)");
         }
         return part;
-    }
-
-    private static TraceLine line(List<TraceLine> lines, GoverningRow row, StepKind kind, Money in, Money out) {
-        return TraceLine.of(lines.size() + 1, NodeIds.CAPITALGAINS_INCOME, row.id(), kind, MoneyValue.of(in),
-                MoneyValue.of(out), row.version().provenance());
     }
 }

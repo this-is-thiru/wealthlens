@@ -30,6 +30,11 @@ final class CapitalGainsAbsorption {
         this.parts = parts;
     }
 
+    /** The declared order, which a caller's lines name. */
+    CapitalGainsAbsorptionOrder order() {
+        return order;
+    }
+
     /**
      * The parts {@code reaches} accepts absorb up to {@code loss}, in order, a line each; returns how much they took.
      */

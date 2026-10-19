@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088q3 — the set-off context
+Item            : W-088r — no null across a boundary
 Stage           : READY — not started
-Plan            : plans/W-088q.md (split); plans/W-088q3.md not yet written
+Plan            : none yet; WI row W-088r (review S3)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088q3": read, write plans/W-088q3.md, STOP
-Last verify     : unit clean -Punit 3073 run, 0 fail; integration 252/0 (2026-10-19, W-088q2)
-Waiting on      : the owner — "start W-088q3"; OQ-32, OQ-33 open
+Next step       : on "start W-088r": read, write plans/W-088r.md, STOP
+Last verify     : unit clean -Punit 3073 run, 0 fail; integration 252/0 (2026-10-19, W-088q3)
+Waiting on      : the owner — "start W-088r"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088q2: set off every carried loss by one mechanism — CarriedLossSetOff over each ledger's portions, CapitalGainsAbsorption for the parts in order; CarriedCapitalLossSetOff removed (D-265)
-Updated         : 2026-10-19, session 24 — W-088q2 approved and committed
+Last item commit: taxplanning W-088q3: give this year's set-offs one context and the head's own set-off the shared absorption — SetOffContext in place of seven-parameter lists, CapitalGainsNode on CapitalGainsAbsorption and ctx.traceLine (D-266)
+Updated         : 2026-10-19, session 24 — W-088q3 approved and committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

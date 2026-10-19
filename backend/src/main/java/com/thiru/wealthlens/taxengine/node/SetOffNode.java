@@ -114,23 +114,26 @@ public final class SetOffNode implements ComputationNode {
         Map<HeadCode, Money> income = new EnumMap<>(HeadCode.class);
         heads.forEach((head, amount) -> income.put(head, Money.max(amount, Money.ZERO)));
         List<TraceLine> lines = new ArrayList<>();
-        CapitalGainsAbsorption absorbing = new CapitalGainsAbsorption(order.capitalGainsOrder(), parts);
+        SetOffContext run = new SetOffContext(ctx, order, income,
+                new CapitalGainsAbsorption(order.capitalGainsOrder(), parts), lines);
         for (HeadCode lossHead : order.order().heads()) {
             Money loss = Money.ZERO.minus(heads.getOrDefault(lossHead, Money.ZERO));
             if (loss.isGreaterThan(Money.ZERO)) {
-                setOff(ctx, t, order, lossHead, loss, new Absorbing(income, absorbing), lines);
+                setOff(run, lossHead, loss);
             }
         }
-        CarriedLossSetOff.apply(ctx, carriedHousePropertyLosses(ctx, t), income, absorbing, lines);
-        CarriedLossSetOff.apply(ctx, carriedCapitalLosses(ctx, t, order.capitalGainsOrder()), income, absorbing,
+        CarriedLossSetOff.apply(ctx, carriedHousePropertyLosses(ctx, t), income, run.parts(), lines);
+        CarriedLossSetOff.apply(ctx, carriedCapitalLosses(ctx, t, order.capitalGainsOrder()), income, run.parts(),
                 lines);
         Money total = income.values().stream().reduce(Money.ZERO, Money::plus);
         return new NodeResult(new HeadsAfterSetOff(total, parts), lines);
     }
 
     /** One head's loss: what may be set off, set off against the others in order, and what is left. */
-    private static void setOff(NodeContext ctx, TemporalContext t, OrderInUse order, HeadCode lossHead,
-            Money loss, Absorbing into, List<TraceLine> lines) {
+    private static void setOff(SetOffContext run, HeadCode lossHead, Money loss) {
+        NodeContext ctx = run.ctx();
+        TemporalContext t = ctx.inputs().temporal();
+        List<TraceLine> lines = run.lines();
         boolean houseProperty = lossHead == HeadCode.HOUSE_PROPERTY;
         RuleId row = houseProperty ? ctx.ruleIdOf(RuleSetIds.RS_SETOFF_HOUSE_PROPERTY) : ctx.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS);
         RuleVersion version = version(ctx, t, row);
@@ -150,7 +153,7 @@ public final class SetOffNode implements ComputationNode {
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, allowed)
                     .withLimitedBy(limit.limitedBy()));
         }
-        Money setOff = absorb(ctx, order, lossHead, allowed, into, lines, row);
+        Money setOff = absorb(run, lossHead, allowed, row);
         Money left = loss.minus(setOff);
         if (left.isGreaterThan(Money.ZERO)) {
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, loss, left).withLimitedBy(houseProperty
@@ -159,26 +162,31 @@ public final class SetOffNode implements ComputationNode {
         }
     }
 
-    /** The heads' income and the capital-gains parts, both reduced as a loss is absorbed. */
-    private record Absorbing(Map<HeadCode, Money> income, CapitalGainsAbsorption parts) {
+    /**
+     * What one run's set-offs share: the order in use, and the heads' income and capital-gains parts, both lowered in
+     * place as each loss is absorbed, with the lines written so far (D-263).
+     */
+    private record SetOffContext(NodeContext ctx, OrderInUse order, Map<HeadCode, Money> income,
+            CapitalGainsAbsorption parts, List<TraceLine> lines) {
     }
 
     /** The other heads absorb up to {@code allowed} of the loss, in order; returns how much they took. */
-    private static Money absorb(NodeContext ctx, OrderInUse order, HeadCode lossHead, Money allowed, Absorbing into,
-            List<TraceLine> lines, RuleId row) {
+    private static Money absorb(SetOffContext run, HeadCode lossHead, Money allowed, RuleId row) {
+        OrderInUse order = run.order();
+        List<TraceLine> lines = run.lines();
         Money remaining = allowed;
         for (HeadCode head : order.order().heads()) {
-            Money available = into.income().getOrDefault(head, Money.ZERO);
+            Money available = run.income().getOrDefault(head, Money.ZERO);
             if (head == lossHead || !remaining.isGreaterThan(Money.ZERO) || !available.isGreaterThan(Money.ZERO)) {
                 continue;
             }
             Money taken = head == HeadCode.CAPITAL_GAINS
-                    ? absorbCapitalGains(ctx, order, lossHead, remaining, into.parts(), lines, row)
+                    ? absorbCapitalGains(run, lossHead, remaining, row)
                     : Money.min(remaining, available);
-            into.income().put(head, available.minus(taken));
+            run.income().put(head, available.minus(taken));
             remaining = remaining.minus(taken);
             if (head != HeadCode.CAPITAL_GAINS) {
-                lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, available, taken)
+                lines.add(run.ctx().traceLine(lines.size() + 1, row, StepKind.SET_OFF, available, taken)
                         .withLimitedBy(lossHead
                         + " loss against " + head + "; order " + order.order().heads() + ", " + order.basis()));
             }
@@ -187,12 +195,13 @@ public final class SetOffNode implements ComputationNode {
     }
 
     /** The capital-gains parts absorb up to {@code loss}, in their order, a line each; returns how much they took. */
-    private static Money absorbCapitalGains(NodeContext ctx, OrderInUse order, HeadCode lossHead, Money loss,
-            CapitalGainsAbsorption parts, List<TraceLine> lines, RuleId row) {
-        return parts.absorb(loss, part -> true, lines, (sequence, part, available, taken) -> ctx.traceLine(sequence,
-                row, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead + " loss against CAPITAL_GAINS " + part
-                + "; order " + order.order().heads() + ", " + order.basis() + "; within capital gains "
-                + order.capitalGainsOrder().parts() + ", the declared default (OQ-32)"));
+    private static Money absorbCapitalGains(SetOffContext run, HeadCode lossHead, Money loss, RuleId row) {
+        OrderInUse order = run.order();
+        return run.parts().absorb(loss, part -> true, run.lines(), (sequence, part, available, taken) -> run.ctx()
+                .traceLine(sequence, row, StepKind.SET_OFF, available, taken).withLimitedBy(lossHead
+                        + " loss against CAPITAL_GAINS " + part + "; order " + order.order().heads() + ", "
+                        + order.basis() + "; within capital gains " + order.capitalGainsOrder().parts()
+                        + ", the declared default (OQ-32)"));
     }
 
     /**
