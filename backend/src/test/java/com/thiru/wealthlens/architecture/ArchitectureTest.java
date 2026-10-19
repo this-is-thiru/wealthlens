@@ -8,7 +8,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -252,6 +255,21 @@ class ArchitectureTest {
                     .because("NodeContext.inRegime also applies the regime's disallowance sets (D-165)");
 
     /**
+     * A node names a rule set, never a row: the set's data chooses the row, by regime, person or item (D-252, D-253).
+     *
+     * <p>A row named in Java is one a new regime's or a new item's row cannot replace without a code edit, which is
+     * what W-088m1 and W-088m2 removed. Both ways to name one are closed: the generated {@code RuleIds}, and a
+     * {@code RuleId} built from its text (D-254).
+     */
+    @ArchTest
+    static final ArchRule nodes_reach_rules_through_rule_sets =
+            noClasses()
+                    .that().resideInAPackage("..taxengine.node..")
+                    .should().dependOnClassesThat().belongToAnyOf(RuleIds.class)
+                    .orShould().callConstructor(RuleId.class, String.class)
+                    .because("a node names a RuleSetId and the pack's data chooses the row (D-252, D-253, D-254)");
+
+    /**
      * Money is {@code Money}, and rates are {@code Rate}.
      *
      * <p>Expressed as a dependency rule rather than a field rule because {@code taxengine} has no
@@ -327,6 +345,38 @@ class ArchitectureTest {
                 throw new AssertionError(
                         "Withdrawn names (name → replacement: " + withdrawn + ") still appear in: " + offenders);
             }
+        }
+    }
+
+    /**
+     * No node maps a category to a rule set — the pattern W-088m2 replaced with conditions on the item, so a new
+     * category is a row, not a map entry (review E1; D-254).
+     *
+     * <p>A source scan, because ArchUnit reads erased bytecode and cannot see a map's value type; the shape is the
+     * withdrawn-name gate above.
+     */
+    @Test
+    void nodes_hold_no_map_to_a_rule_set() throws IOException {
+        Pattern mapToRuleSet = Pattern.compile("Map<[^;=()]*,\\s*([\\w.]+\\.)?RuleSetId>");
+        Path root = Path.of("src/main/java/com/thiru/wealthlens/taxengine/node");
+        try (Stream<Path> paths = Files.walk(root)) {
+            List<String> offenders = paths
+                    .filter(Files::isRegularFile)
+                    .filter(f -> f.toString().endsWith(".java"))
+                    .filter(f -> {
+                        try {
+                            return mapToRuleSet.matcher(Files.readString(f)).find();
+                        } catch (IOException e) {
+                            throw new IllegalStateException("could not read " + f, e);
+                        }
+                    })
+                    .map(Path::toString)
+                    .sorted()
+                    .toList();
+            assertThat(offenders)
+                    .as("A node chooses a row by the item's facts in the set's rows (ItemFactIs), never by a map to a"
+                            + " rule set (D-253, D-254)")
+                    .isEmpty();
         }
     }
 

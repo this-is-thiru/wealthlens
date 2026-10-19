@@ -421,6 +421,8 @@ public enum TaxError {                     //  http  retryable  class
 | no generic class suffixes; unique simple class names | `classes_have_no_generic_suffix`, `simple_class_names_are_unique` | ✅ `W-045a` |
 | Checkstyle rule set; legacy baseline only shrinks | `checkstyle.xml`, `CheckstyleBaselineTest` | ✅ `W-045a` |
 | formatting | `spotless:check` on `validate` | ✅ `W-045a` |
+| a `taxengine.node` class names no rule row: no `RuleIds`, no `new RuleId(String)` — it names a `RuleSetId` | `nodes_reach_rules_through_rule_sets` | ✅ `W-088m3` |
+| no `taxengine/node` source declares a `Map<…, RuleSetId>` (an item is chosen by `ItemFactIs`) | `ArchitectureTest.nodes_hold_no_map_to_a_rule_set` (plain test) | ✅ `W-088m3` |
 | every `ComputationNode` implementation is referenced by some pack pipeline | `ArchitectureTest` | ○ `W-053` (with I3) |
 | every `@RequestBody` carries `@Valid`; no controller returns an `@Document` type | `ArchitectureTest` | ○ `W-095` |
 
@@ -544,6 +546,7 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-10-18 | T2: `portfolio`'s `CapitalGainsSummaryService` publishes it; `CapitalGainsAdapter` joins `MoneyBridge` in W-087 | `W-086`, D-238 |
 | 2026-10-18 | T2: `taxplanning/portfolio/MoneyBridge`; `CapitalGainsAdapter` split to W-087b | `W-087`, D-240 |
 | 2026-10-18 | T2: `CapitalGainsAdapter`; `RateBasisHint` moved `rules.component` → `input`; the read-model bucket gains `sttOnAcquisition`, `sttOnTransfer` | `W-087b`, D-241 |
+| 2026-10-19 | T10: `nodes_reach_rules_through_rule_sets` (no `RuleIds`, no `new RuleId(String)` in `taxengine.node`) and `nodes_hold_no_map_to_a_rule_set` (source scan); no baseline — none owed | `W-088m3`, D-254 |
 | 2026-10-19 | T3 `pipeline`: `NodeContext.ruleOf` / `ruleIdOf` / `optionalRuleOf` take an item's `ItemFacts`; a set chosen on conditions tests even a lone row; `AT_MOST_ONE` covers an item no row is for. T1 `condition/`: `ItemFactIs` (the 14th predicate), `ItemFacts`, `ConditionContext.item` / `about`; `id/`: `ItemFactId`. T4 pack: seven item sets (`RS-PERQ-CAR-PARTLY`, `-OWNRUN`, `RS-PERQ-ACCOM`, `RS-RET-ENTRY`, `RS-RET-AGGREGATE`, `RS-PERQ-ASSET-TRANSFER`, `RS-RATE-CG-SPECIAL`) and `RS-DED-NPS-EMPLOYER` on `REGIME_AND_CONDITIONS`, their rows' `ItemFactIs` conditions (`vehicle.engine`, `accommodation.provider`, `retirement.entry`, `asset.kind`, `capitalgains.part`, `employer.kind`); 143 sets | `W-088m2`, D-253 |
 | 2026-10-19 | T3 `pipeline`: `ComputationNode.ruleSets()` replaces `rules()`; `NodeContext.ruleOf` / `ruleIdOf` / `optionalRuleOf` / `rulesOf` choose a set's row by the set's declared selection (`EXACTLY_ONE`, `AT_MOST_ONE`, `ALL_THAT_APPLY`) and ground (`REGIME`, `REGIME_AND_CONDITIONS`); I3 counts set members. T4 pack: `law/rule-sets.json`, each rule row's `ruleSet` (and `ruleSetPosition` for an ordered set); `RulePack.ruleSets`, `RuleSet`, `RuleSetId`, generated `RuleSetIds`; `PackValidator` refuses a row in no set and an empty `EXACTLY_ONE` set; `SalaryBases.of(RuleSet, …)` | `W-088m1`, D-252 |
 | 2026-10-19 | T2: `portfolio`'s read-model bucket gains `acquisition` (`Acquisition`: `AcquisitionMode` + the `CorporateActionType`) and `acquiredOn` — facts only; `trade_outcomes.acquisition_mode`, `acquisition_corporate_action` | `W-088f`, D-249 |
