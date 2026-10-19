@@ -417,13 +417,13 @@
     },
     {
       "id": "RS-PERQ-CAR-OWNRUN",
-      "_note": "Table II Sl. 1(c)(ii): an employer's car used partly privately, the employee meeting the private running; the row is chosen by the car's engine (vehicle.engine, W-088m2). A year may lack a column (electric)",
+      "_note": "Table II Sl. 1(c)(ii): an employer's car used partly privately, the employee meeting the private running; the row is chosen by the car's engine — whether electric (vehicle.engine.electric), else its capacity in cc against the Table's 1.6 litres (vehicle.engine.cc; W-088m2, W-088n1). A year may lack a column (electric)",
       "selection": "AT_MOST_ONE",
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
       "id": "RS-PERQ-CAR-PARTLY",
-      "_note": "Table II Sl. 1(c)(i): an employer's car used partly privately, the employer meeting the running; the row is chosen by the car's engine (vehicle.engine, W-088m2). A year may lack a column (electric) — MotorCarPerquisite refuses a car whose column the year lacks",
+      "_note": "Table II Sl. 1(c)(i): an employer's car used partly privately, the employer meeting the running; the row is chosen by the car's engine — whether electric (vehicle.engine.electric), else its capacity in cc against the Table's 1.6 litres (vehicle.engine.cc; W-088m2, W-088n1). A year may lack a column (electric) — MotorCarPerquisite refuses a car whose column the year lacks",
       "selection": "AT_MOST_ONE",
       "ground": "REGIME_AND_CONDITIONS"
     },

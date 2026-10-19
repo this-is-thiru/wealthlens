@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 class ConditionTest {
 
     private static final ItemFactId VEHICLE_ENGINE = new ItemFactId("vehicle.engine");
+    private static final ItemFactId ENGINE_CC = new ItemFactId("vehicle.engine.cc");
 
     private static ConditionContext resident(int age) {
         return ConditionContext.residentIndividualAged(age);
@@ -598,12 +599,41 @@ class ConditionTest {
     }
 
     @Nested
+    @DisplayName("ItemFactAtMost")
+    class ItemQuantity {
+
+        // Table II's lower column: "does not exceed 1.6 litres" — 1600 cc (DR 01 PERQ-CAR-2026)
+        private final Condition upTo1600 = new ItemFactAtMost(ENGINE_CC, 1600);
+
+        private ConditionContext aboutCapacity(long cc) {
+            return resident(40).about(new ItemFacts(Map.of(), Map.of(ENGINE_CC, cc)));
+        }
+
+        @Test
+        void holds_whenTheQuantityIsTheLimit_isTrue() {
+            assertThat(upTo1600.holds(aboutCapacity(1600))).isTrue();
+        }
+
+        @Test
+        void holds_whenTheQuantityIsOneAboveTheLimit_isFalse() {
+            assertThat(upTo1600.holds(aboutCapacity(1601))).isFalse();
+        }
+
+        @Test
+        void holds_whenTheItemLacksTheQuantity_throwsRatherThanChoosingAnotherRow() {
+            assertThatThrownBy(() -> upTo1600.holds(resident(40)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("vehicle.engine.cc");
+        }
+    }
+
+    @Nested
     @DisplayName("the algebra is closed")
     class SealedFamily {
 
         /**
-         * An exhaustive switch with no {@code default} over all fourteen predicates. This does not
-         * merely pass — it <b>compiles</b>, and that is the assertion. A fifteenth {@code Condition}
+         * An exhaustive switch with no {@code default} over all fifteen predicates. This does not
+         * merely pass — it <b>compiles</b>, and that is the assertion. A sixteenth {@code Condition}
          * breaks this line, which is the whole reason the interface is sealed.
          *
          * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
@@ -624,6 +654,7 @@ class ConditionTest {
                     new EvidenceRecorded(EvidenceType.LANDLORD_PAN),
                     new PaidOtherThanInCash(),
                     new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC"),
+                    new ItemFactAtMost(ENGINE_CC, 1600),
                     AllOf.of(new IsResident()),
                     AnyOf.of(new IsResident()),
                     new Not(new IsResident()));
@@ -641,6 +672,7 @@ class ConditionTest {
                     case EvidenceRecorded ignored -> "structure";
                     case PaidOtherThanInCash ignored -> "structure";
                     case ItemFactIs ignored -> "item";
+                    case ItemFactAtMost ignored -> "item";
                     case AllOf ignored -> "composition";
                     case AnyOf ignored -> "composition";
                     case Not ignored -> "composition";
@@ -648,8 +680,8 @@ class ConditionTest {
                 assertThat(group).isNotBlank();
             }
 
-            // Part E's list, after the W-021 erratum: 13, not the 16 the backlog claimed; and W-088m2's item fact
-            assertThat(all).hasSize(14);
+            // Part E's list, after the W-021 erratum: 13, not the 16 the backlog claimed; and the two item facts
+            assertThat(all).hasSize(15);
         }
     }
 }

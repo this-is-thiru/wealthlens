@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.AccommodationProvider;
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
-import com.thiru.wealthlens.taxengine.input.CarEngine;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.Individual;
@@ -93,6 +92,16 @@ class NodeContextRuleSetTest {
 
     private static ItemFacts item(String fact, Enum<?> code) {
         return ItemFacts.of(new ItemFactId(fact), code.name());
+    }
+
+    /** A car that is not electric, of the given capacity — the facts MotorCarPerquisite supplies (D-257). */
+    private static ItemFacts carOf(long cubicCapacityCc) {
+        return new ItemFacts(Map.of(new ItemFactId("vehicle.engine.electric"), "false"),
+                Map.of(new ItemFactId("vehicle.engine.cc"), cubicCapacityCc));
+    }
+
+    private static ItemFacts electricCar() {
+        return new ItemFacts(Map.of(new ItemFactId("vehicle.engine.electric"), "true"), Map.of());
     }
 
     private static NodeContext reading(RulePack pack, RegimeCode regime, EngineInputs inputs, RuleSetId... sets) {
@@ -251,9 +260,8 @@ class NodeContextRuleSetTest {
         NodeContext ctx = reading(small, NEW_TAX_REGIME, NodeHarness.plainTaxpayer(), RuleSetIds.RS_PERQ_CAR_PARTLY);
 
         // When / Then
-        assertThat(ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CAR_PARTLY, item("vehicle.engine", CarEngine.ELECTRIC)))
-                .isEmpty();
-        assertThat(ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CAR_PARTLY, item("vehicle.engine", CarEngine.UP_TO_1600_CC)))
+        assertThat(ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CAR_PARTLY, electricCar())).isEmpty();
+        assertThat(ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CAR_PARTLY, carOf(1500)))
                 .map(RuleRow::id).contains(RuleIds.PERQ_CAR_PARTLY_SMALL);
     }
 
@@ -350,9 +358,9 @@ class NodeContextRuleSetTest {
             // Given — TY 2025-26's Table II has no electric column; TY 2026-27's does (D-113 C5a)
             TaxYearId earlier = TaxYearId.of(2025);
             TaxYearId later = TaxYearId.of(2026);
-            ItemFacts small = item("vehicle.engine", CarEngine.UP_TO_1600_CC);
-            ItemFacts large = item("vehicle.engine", CarEngine.ABOVE_1600_CC);
-            ItemFacts electric = item("vehicle.engine", CarEngine.ELECTRIC);
+            ItemFacts small = carOf(1500);
+            ItemFacts large = carOf(2000);
+            ItemFacts electric = electricCar();
 
             // When / Then
             for (TaxYearId year : YEARS) {

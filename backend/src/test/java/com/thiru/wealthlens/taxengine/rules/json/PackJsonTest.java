@@ -371,7 +371,7 @@ class PackJsonTest {
     // -------------------------------------------------------------- W-033b
 
     @Nested
-    @DisplayName("Condition — all fourteen")
+    @DisplayName("Condition — all fifteen")
     class Conditions {
 
         static com.thiru.wealthlens.taxengine.rules.condition.ConditionContext taxpayer() {
@@ -476,6 +476,23 @@ class PackJsonTest {
         }
 
         @Test
+        void itemFactAtMost_whenReadFromJson_testsTheItemsQuantityInclusively() {
+            // Given
+            var upTo1600 = ConditionJson.condition(
+                    json("{\"type\": \"ItemFactAtMost\", \"fact\": \"vehicle.engine.cc\", \"limit\": 1600}"), "c");
+            var cc = new com.thiru.wealthlens.taxengine.rules.id.ItemFactId("vehicle.engine.cc");
+
+            // When / Then
+            assertThat(upTo1600.holds(taxpayer().about(
+                    new com.thiru.wealthlens.taxengine.rules.condition.ItemFacts(Map.of(), Map.of(cc, 1600L)))))
+                    .isTrue();
+            assertThat(upTo1600.holds(taxpayer().about(
+                    new com.thiru.wealthlens.taxengine.rules.condition.ItemFacts(Map.of(), Map.of(cc, 1601L)))))
+                    .isFalse();
+            assertThat(upTo1600.describe()).isEqualTo("vehicle.engine.cc is at most 1600");
+        }
+
+        @Test
         void itemFactIs_whenCodeMissing_isRefused() {
             assertThatThrownBy(() -> ConditionJson.condition(
                             json("{\"type\": \"ItemFactIs\", \"fact\": \"vehicle.engine\"}"), "c"))
@@ -484,12 +501,13 @@ class PackJsonTest {
         }
 
         @Test
-        void anUnknownTagListsAllFourteen() {
+        void anUnknownTagListsAllFifteen() {
             assertThatThrownBy(() -> ConditionJson.condition(json("{\"type\": \"IsRich\"}"), "c"))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("IsResident")
                     .hasMessageContaining("PaidOtherThanInCash")
                     .hasMessageContaining("ItemFactIs")
+                    .hasMessageContaining("ItemFactAtMost")
                     .hasMessageContaining("IsRich");
         }
     }

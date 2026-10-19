@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
+import com.thiru.wealthlens.taxengine.input.CarEngine;
 import com.thiru.wealthlens.taxengine.input.EmployerVehicle;
 import com.thiru.wealthlens.taxengine.input.VehicleOwner;
 import com.thiru.wealthlens.taxengine.input.VehicleUse;
@@ -43,8 +44,9 @@ final class MotorCarPerquisite {
             RuleSetIds.RS_PERQ_CAR_CHAUFFEUR, RuleSetIds.RS_PERQ_CAR_PRIVATE, RuleSetIds.RS_PERQ_CAR_EMPLOYEE,
             RuleSetIds.RS_PERQ_CAR_CONVEYANCE);
 
-    /** What a Table II column's rows are chosen by (D-253). */
-    private static final ItemFactId VEHICLE_ENGINE = new ItemFactId("vehicle.engine");
+    /** What a Table II column's rows are chosen by: whether the car is electric, and otherwise its capacity (D-257). */
+    private static final ItemFactId ELECTRIC = new ItemFactId("vehicle.engine.electric");
+    private static final ItemFactId CUBIC_CAPACITY_CC = new ItemFactId("vehicle.engine.cc");
 
     private static final BaseId MONTH = new BaseId("MONTH");
     private static final BaseId CAR_COST = new BaseId("CAR_COST");
@@ -157,11 +159,22 @@ final class MotorCarPerquisite {
      * whose Table names it (D-113 C5a).
      */
     private static RuleId rowFor(NodeContext ctx, RuleSetId column, EmployerVehicle car) {
-        ItemFacts engine = ItemFacts.of(VEHICLE_ENGINE, car.engine().orElseThrow().name());
-        return ctx.optionalRuleOf(column, engine).map(RuleRow::id)
-                .orElseThrow(() -> new IllegalArgumentException("Table II for "
-                        + ctx.inputs().temporal().taxYear().label() + " has no column for an electric car, which has"
-                        + " no cubic capacity (Rules 1962 r.3(2)); it cannot be valued for this year (D-113)"));
+        CarEngine engine = car.engine().orElseThrow();
+        String year = ctx.inputs().temporal().taxYear().label();
+        return ctx.optionalRuleOf(column, engineFacts(engine)).map(RuleRow::id)
+                .orElseThrow(() -> new IllegalArgumentException(engine.electric()
+                        ? "Table II for " + year + " has no column for an electric car, which has no cubic capacity"
+                                + " (Rules 1962 r.3(2)); it cannot be valued for this year (D-113)"
+                        : "No row of " + column + " for " + year + " covers a car of " + engine.cubicCapacityCc().get()
+                                + " cc; the year's columns are a pack defect (D-257)"));
+    }
+
+    /** The engine's facts as the rows' conditions read them; an electric car has no capacity to state. */
+    private static ItemFacts engineFacts(CarEngine engine) {
+        Map<ItemFactId, Long> capacity = engine.cubicCapacityCc()
+                .map(cc -> Map.of(CUBIC_CAPACITY_CC, (long) cc))
+                .orElse(Map.of());
+        return new ItemFacts(Map.of(ELECTRIC, Boolean.toString(engine.electric())), capacity);
     }
 
     private static Money perMonth(NodeContext ctx, RuleId ruleId, int months) {

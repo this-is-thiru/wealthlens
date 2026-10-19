@@ -28,7 +28,7 @@ package com.thiru.wealthlens.taxengine.rules.condition;
  * closed as designed: a switch over a condition that misses a case does not compile. A fourteenth
  * predicate is a new class and a new permit, never an edit to an existing one. The fourteenth is
  * {@link ItemFactIs}: a fact of the item a node is computing, so the row for a car or a payment is chosen in data
- * (W-088m2, D-253).
+ * (W-088m2, D-253); the fifteenth, {@link ItemFactAtMost}, its counted facts (W-088n1, D-257).
  */
 public sealed interface Condition
         permits IsResident,
@@ -42,6 +42,7 @@ public sealed interface Condition
                 EvidenceRecorded,
                 PaidOtherThanInCash,
                 ItemFactIs,
+                ItemFactAtMost,
                 AllOf,
                 AnyOf,
                 Not {

@@ -32,9 +32,19 @@
       },
       "conditions": [
         {
-          "type": "ItemFactIs",
-          "fact": "vehicle.engine",
-          "code": "UP_TO_1600_CC"
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "vehicle.engine.electric",
+              "code": "false"
+            },
+            {
+              "type": "ItemFactAtMost",
+              "fact": "vehicle.engine.cc",
+              "limit": 1600
+            }
+          ]
         }
       ],
       "introducedBy": {
@@ -81,9 +91,19 @@
       },
       "conditions": [
         {
-          "type": "ItemFactIs",
-          "fact": "vehicle.engine",
-          "code": "UP_TO_1600_CC"
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "vehicle.engine.electric",
+              "code": "false"
+            },
+            {
+              "type": "ItemFactAtMost",
+              "fact": "vehicle.engine.cc",
+              "limit": 1600
+            }
+          ]
         }
       ],
       "introducedBy": {

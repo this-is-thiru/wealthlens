@@ -18,17 +18,21 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleSet;
 import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,12 +69,20 @@ class MotorCarPerquisiteTest {
                 Optional.empty(), Money.ZERO, record);
     }
 
-    private static NodeResult run(int year, String monetaryIncome, Optional<CompanyEmployer> company,
-            List<EmployerVehicle> vehicles) {
-        TaxYearId taxYear = TaxYearId.of(year);
-        RulePack pack = new ClasspathRulePackProvider(
+    private static RulePack shipped(TaxYearId taxYear) {
+        return new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
+    }
+
+    private static NodeResult run(int year, String monetaryIncome, Optional<CompanyEmployer> company,
+            List<EmployerVehicle> vehicles) {
+        return runOn(shipped(TaxYearId.of(year)), year, monetaryIncome, company, vehicles);
+    }
+
+    private static NodeResult runOn(RulePack pack, int year, String monetaryIncome, Optional<CompanyEmployer> company,
+            List<EmployerVehicle> vehicles) {
+        TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, NEW_TAX_REGIME,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
@@ -95,7 +107,7 @@ class MotorCarPerquisiteTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenPartlyOfficialSmallCarWithChauffeur_isTheMonthlyAmountsForTwelveMonths(int year) {
         // When
-        NodeResult result = run(year, List.of(partly(CarEngine.UP_TO_1600_CC, true, 12)));
+        NodeResult result = run(year, List.of(partly(CarEngine.ofCapacity(1500), true, 12)));
 
         // Then — TY 2026-27 (5,000 + 3,000) × 12 = 96,000; TY 2025-26 (1,800 + 900) × 12 = 32,400
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(year == 2026 ? "96000" : "32400")));
@@ -109,7 +121,7 @@ class MotorCarPerquisiteTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenTheEmployeeMeetsPrivateRunningOfALargeCar_isTheLowerMonthlyAmount(int year) {
         // Given
-        EmployerVehicle car = employerCar(VehicleUse.PARTLY_OFFICIAL, CarEngine.ABOVE_1600_CC, true, "0", Optional.empty(), "0");
+        EmployerVehicle car = employerCar(VehicleUse.PARTLY_OFFICIAL, CarEngine.ofCapacity(2000), true, "0", Optional.empty(), "0");
 
         // When
         NodeResult result = run(year, List.of(car));
@@ -118,10 +130,51 @@ class MotorCarPerquisiteTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(year == 2026 ? "36000" : "10800")));
     }
 
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheEngineIsExactly1600Cc_takesTheLowerColumn(int year) {
+        // When — "does not exceed 1.6 litres": 1,600 cc does not exceed it (DR 01 PERQ-CAR-2026)
+        NodeResult result = run(year, List.of(partly(CarEngine.ofCapacity(1600), false, 12)));
+
+        // Then
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.PERQ_CAR_PARTLY_SMALL));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheEngineIs1601Cc_takesTheHigherColumn(int year) {
+        // When — one cc over 1.6 litres exceeds it
+        NodeResult result = run(year, List.of(partly(CarEngine.ofCapacity(1601), false, 12)));
+
+        // Then
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.PERQ_CAR_PARTLY_LARGE));
+    }
+
+    @Test
+    void evaluate_whenNoColumnCoversACarThatIsNotElectric_isRefusedNamingItsCapacity() {
+        // Given — TY 2026-27's Sl. 1(c)(i) cut down to its electric row: no row covers a 1,500 cc car
+        RulePack shipped = shipped(TaxYearId.of(2026));
+        Map<RuleSetId, RuleSet> sets = new HashMap<>(shipped.ruleSets());
+        RuleSet partly = sets.get(RuleSetIds.RS_PERQ_CAR_PARTLY);
+        sets.put(partly.id(), new RuleSet(partly.id(), partly.selection(), partly.ground(),
+                List.of(RuleIds.PERQ_CAR_PARTLY_ELECTRIC)));
+        RulePack gap = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), sets,
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+
+        // When / Then — a pack defect, said as one, not as the electric car's refusal
+        assertThatThrownBy(() -> runOn(gap, 2026, ABOVE_THRESHOLD, Optional.empty(),
+                        List.of(partly(CarEngine.ofCapacity(1500), false, 12))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("covers a car of 1500 cc")
+                .hasMessageNotContaining("electric");
+    }
+
     @Test
     void evaluate_whenProvidedForSixMonths_countsSixMonths() {
         // When — 5,000 × 6
-        NodeResult result = run(2026, List.of(partly(CarEngine.UP_TO_1600_CC, false, 6)));
+        NodeResult result = run(2026, List.of(partly(CarEngine.ofCapacity(1500), false, 6)));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("30000")));
@@ -131,7 +184,7 @@ class MotorCarPerquisiteTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenWhollyPrivate_isRunningPlusWearAndTearLessTheCharge(int year) {
         // Given
-        EmployerVehicle car = employerCar(VehicleUse.WHOLLY_PRIVATE, CarEngine.ABOVE_1600_CC, false, "120000", Optional.of(Money.of("800000")), "12000");
+        EmployerVehicle car = employerCar(VehicleUse.WHOLLY_PRIVATE, CarEngine.ofCapacity(2000), false, "120000", Optional.of(Money.of("800000")), "12000");
 
         // When
         NodeResult result = run(year, List.of(car));
@@ -146,7 +199,7 @@ class MotorCarPerquisiteTest {
     void evaluate_whenTheEmployeesOwnLargeCarIsRunPartlyPrivately_isTheExpenditureLessTheTableAmount(int year) {
         // When — below the threshold: the employee's own car is salary for everyone
         NodeResult result = run(year, "300000", Optional.empty(), List.of(ownVehicle(VehicleOwner.EMPLOYEE_CAR,
-                Optional.of(CarEngine.ABOVE_1600_CC), "150000", OfficialUseRecord.none())));
+                Optional.of(CarEngine.ofCapacity(2000)), "150000", OfficialUseRecord.none())));
 
         // Then — 1,50,000 − 7,000 × 12 = 66,000; 1,50,000 − 2,400 × 12 = 1,21,200
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(year == 2026 ? "66000" : "121200")));
@@ -159,7 +212,7 @@ class MotorCarPerquisiteTest {
 
         // When
         NodeResult result = run(2026, List.of(ownVehicle(VehicleOwner.EMPLOYEE_CAR,
-                Optional.of(CarEngine.ABOVE_1600_CC), "150000", records)));
+                Optional.of(CarEngine.ofCapacity(2000)), "150000", records)));
 
         // Then — least of 1,50,000 − 84,000 = 66,000 and 1,50,000 − 1,20,000 = 30,000
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("30000")));
@@ -180,10 +233,10 @@ class MotorCarPerquisiteTest {
     @Test
     void evaluate_whenTwoEmployerCarsAreUsedPrivately_valuesTheFirstAtTheFixedAmountAndTheOtherAtCost() {
         // Given
-        EmployerVehicle second = employerCar(VehicleUse.PARTLY_OFFICIAL, CarEngine.ABOVE_1600_CC, false, "100000", Optional.of(Money.of("1000000")), "0");
+        EmployerVehicle second = employerCar(VehicleUse.PARTLY_OFFICIAL, CarEngine.ofCapacity(2000), false, "100000", Optional.of(Money.of("1000000")), "0");
 
         // When
-        NodeResult result = run(2026, List.of(partly(CarEngine.UP_TO_1600_CC, false, 12), second));
+        NodeResult result = run(2026, List.of(partly(CarEngine.ofCapacity(1500), false, 12), second));
 
         // Then — 5,000 × 12 = 60,000, plus 1,00,000 + 10% × 10,00,000 = 2,00,000: 2,60,000
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("260000")));
@@ -194,7 +247,7 @@ class MotorCarPerquisiteTest {
     @Test
     void evaluate_whenMonetarySalaryIsExactlyTheThreshold_theEmployersCarIsNotAPerquisite() {
         // When — 4,00,000 does not "exceed" 4,00,000
-        NodeResult result = run(2026, "400000", Optional.empty(), List.of(partly(CarEngine.UP_TO_1600_CC, false, 12)));
+        NodeResult result = run(2026, "400000", Optional.empty(), List.of(partly(CarEngine.ofCapacity(1500), false, 12)));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
@@ -206,7 +259,7 @@ class MotorCarPerquisiteTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenMonetarySalaryExceedsTheThresholdByOneRupee_theEmployersCarIsValued(int year) {
         // When
-        NodeResult result = run(year, "400001", Optional.empty(), List.of(partly(CarEngine.UP_TO_1600_CC, false, 12)));
+        NodeResult result = run(year, "400001", Optional.empty(), List.of(partly(CarEngine.ofCapacity(1500), false, 12)));
 
         // Then — 5,000 × 12; 1,800 × 12
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(year == 2026 ? "60000" : "21600")));
@@ -216,7 +269,7 @@ class MotorCarPerquisiteTest {
     void evaluate_whenADirectorOfTheCompanyEarnsLittle_theEmployersCarIsStillValued() {
         // When
         NodeResult result = run(2026, "100000", Optional.of(new CompanyEmployer(true, false)),
-                List.of(partly(CarEngine.UP_TO_1600_CC, false, 12)));
+                List.of(partly(CarEngine.ofCapacity(1500), false, 12)));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("60000")));
@@ -225,7 +278,7 @@ class MotorCarPerquisiteTest {
     @Test
     void evaluate_whenAnElectricCarInTaxYear2026_isValuedInTheLowerColumn() {
         // When — "or the motor car is an electric vehicle": 5,000 × 12
-        NodeResult result = run(2026, List.of(partly(CarEngine.ELECTRIC, false, 12)));
+        NodeResult result = run(2026, List.of(partly(CarEngine.electricVehicle(), false, 12)));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("60000")));
@@ -234,7 +287,7 @@ class MotorCarPerquisiteTest {
     @Test
     void evaluate_whenAnElectricCarInTaxYear2025_isRefused() {
         // When / Then — the 1962 Table has no electric column (D-113 C5a)
-        assertThatThrownBy(() -> run(2025, List.of(partly(CarEngine.ELECTRIC, false, 12))))
+        assertThatThrownBy(() -> run(2025, List.of(partly(CarEngine.electricVehicle(), false, 12))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("electric");
     }
@@ -243,7 +296,7 @@ class MotorCarPerquisiteTest {
     void evaluate_whenWhollyOfficialWithRecords_hasNoValueAndNoLine() {
         // Given
         EmployerVehicle car = new EmployerVehicle(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.WHOLLY_OFFICIAL,
-                Optional.of(CarEngine.UP_TO_1600_CC), false, false, 12, Money.ZERO, Optional.empty(), Money.ZERO,
+                Optional.of(CarEngine.ofCapacity(1500)), false, false, 12, Money.ZERO, Optional.empty(), Money.ZERO,
                 new OfficialUseRecord(true, Optional.empty()));
 
         // When
@@ -258,7 +311,7 @@ class MotorCarPerquisiteTest {
     void evaluate_whenWhollyOfficialWithoutRecords_isRefused() {
         // Given
         EmployerVehicle car = new EmployerVehicle(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.WHOLLY_OFFICIAL,
-                Optional.of(CarEngine.UP_TO_1600_CC), false, false, 12, Money.ZERO, Optional.empty(), Money.ZERO,
+                Optional.of(CarEngine.ofCapacity(1500)), false, false, 12, Money.ZERO, Optional.empty(), Money.ZERO,
                 OfficialUseRecord.none());
 
         // When / Then
@@ -270,7 +323,7 @@ class MotorCarPerquisiteTest {
     @Test
     void evaluate_whenAChargeIsEnteredForAFixedAmountRow_isRefused() {
         // Given
-        EmployerVehicle car = employerCar(VehicleUse.PARTLY_OFFICIAL, CarEngine.UP_TO_1600_CC, false, "0", Optional.empty(), "1000");
+        EmployerVehicle car = employerCar(VehicleUse.PARTLY_OFFICIAL, CarEngine.ofCapacity(1500), false, "0", Optional.empty(), "1000");
 
         // When / Then
         assertThatThrownBy(() -> run(2026, List.of(car)))

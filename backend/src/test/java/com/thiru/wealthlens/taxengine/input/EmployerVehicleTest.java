@@ -20,7 +20,7 @@ class EmployerVehicleTest {
     void construct_whenAnEmployerCarForTwelveMonths_isAccepted() {
         // When
         EmployerVehicle car = vehicle(VehicleOwner.EMPLOYER_CAR, VehicleUse.PARTLY_OFFICIAL,
-                Optional.of(CarEngine.UP_TO_1600_CC), true, true, 12, Optional.empty());
+                Optional.of(CarEngine.ofCapacity(1500)), true, true, 12, Optional.empty());
 
         // Then
         assertThat(car.months()).isEqualTo(12);
@@ -30,7 +30,7 @@ class EmployerVehicleTest {
     void construct_whenThirteenMonths_isRefused() {
         // When / Then
         assertThatThrownBy(() -> vehicle(VehicleOwner.EMPLOYER_CAR, VehicleUse.PARTLY_OFFICIAL,
-                        Optional.of(CarEngine.UP_TO_1600_CC), false, false, 13, Optional.empty()))
+                        Optional.of(CarEngine.ofCapacity(1500)), false, false, 13, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("13");
     }
@@ -48,7 +48,7 @@ class EmployerVehicleTest {
     void construct_whenTheEmployeesOwnCarIsWhollyPrivate_isRefused() {
         // When / Then
         assertThatThrownBy(() -> vehicle(VehicleOwner.EMPLOYEE_CAR, VehicleUse.WHOLLY_PRIVATE,
-                        Optional.of(CarEngine.UP_TO_1600_CC), false, false, 12, Optional.empty()))
+                        Optional.of(CarEngine.ofCapacity(1500)), false, false, 12, Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("wholly private");
     }
@@ -57,7 +57,7 @@ class EmployerVehicleTest {
     void construct_whenACostIsEnteredForTheEmployeesVehicle_isRefused() {
         // When / Then
         assertThatThrownBy(() -> vehicle(VehicleOwner.EMPLOYEE_CAR, VehicleUse.PARTLY_OFFICIAL,
-                        Optional.of(CarEngine.UP_TO_1600_CC), false, false, 12, Optional.of(Money.of("500000"))))
+                        Optional.of(CarEngine.ofCapacity(1500)), false, false, 12, Optional.of(Money.of("500000"))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("cost");
     }
@@ -68,5 +68,29 @@ class EmployerVehicleTest {
         assertThatThrownBy(() -> new OfficialUseRecord(false, Optional.of(Money.of("10000"))))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("certificate");
+    }
+
+    @Test
+    void carEngine_whenElectricWithACapacity_isRefused() {
+        // When / Then — an electric car has no cubic capacity (D-113 C5a)
+        assertThatThrownBy(() -> new CarEngine(true, Optional.of(1500)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("electric");
+    }
+
+    @Test
+    void carEngine_whenNotElectricWithoutACapacity_isRefused() {
+        // When / Then — the column turns on it (D-257)
+        assertThatThrownBy(() -> new CarEngine(false, Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("cubic capacity");
+    }
+
+    @Test
+    void carEngine_whenTheCapacityIsNotPositive_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> CarEngine.ofCapacity(0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("positive");
     }
 }

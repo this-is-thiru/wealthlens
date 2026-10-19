@@ -465,7 +465,7 @@ class SalaryHeadPipelineTest {
     void run_whenTheEmployerProvidesACar_grossSalaryRisesByItsValueInEveryRegime(int year) {
         // Given — partly official, not over 1.6 litres, employer runs it, with a chauffeur, all year (D-113)
         EmployerVehicle car = new EmployerVehicle(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.PARTLY_OFFICIAL,
-                Optional.of(CarEngine.UP_TO_1600_CC), true, false, 12, Money.ZERO, Optional.empty(), Money.ZERO,
+                Optional.of(CarEngine.ofCapacity(1500)), true, false, 12, Money.ZERO, Optional.empty(), Money.ZERO,
                 OfficialUseRecord.none());
 
         // When

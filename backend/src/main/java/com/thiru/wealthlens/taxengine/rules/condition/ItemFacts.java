@@ -4,28 +4,31 @@ import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import java.util.Map;
 
 /**
- * The facts of the one item a node is computing, as codes — what an {@link ItemFactIs} reads (W-088m2, D-253).
+ * The facts of the one item a node is computing — codes an {@link ItemFactIs} reads, quantities an
+ * {@link ItemFactAtMost} reads (W-088m2, W-088n1; D-253, D-257).
  *
  * <p>A fact the item does not carry <b>throws</b> when asked for, as every lookup in {@link ConditionContext} does:
  * answering "no" would silently choose another row for the item.
  *
- * @param codes each fact's code, such as {@code vehicle.engine} → {@code UP_TO_1600_CC}
+ * @param codes each categorical fact's code, such as {@code accommodation.provider} → {@code HOTEL}
+ * @param quantities each counted fact, such as {@code vehicle.engine.cc} → {@code 1500}
  */
-public record ItemFacts(Map<ItemFactId, String> codes) {
+public record ItemFacts(Map<ItemFactId, String> codes, Map<ItemFactId, Long> quantities) {
 
     /** No item — a condition evaluated about the person and the computation only. */
-    public static final ItemFacts NONE = new ItemFacts(Map.of());
+    public static final ItemFacts NONE = new ItemFacts(Map.of(), Map.of());
 
     public ItemFacts {
-        if (codes == null) {
-            throw new IllegalArgumentException("ItemFacts needs its codes, empty for none");
+        if (codes == null || quantities == null) {
+            throw new IllegalArgumentException("ItemFacts needs its codes and quantities, empty for none");
         }
         codes = Map.copyOf(codes);
+        quantities = Map.copyOf(quantities);
     }
 
-    /** An item with one fact. */
+    /** An item with one categorical fact. */
     public static ItemFacts of(ItemFactId fact, String code) {
-        return new ItemFacts(Map.of(fact, code));
+        return new ItemFacts(Map.of(fact, code), Map.of());
     }
 
     /**
@@ -39,5 +42,19 @@ public record ItemFacts(Map<ItemFactId, String> codes) {
             throw new IllegalArgumentException("The item carries no fact " + fact + "; it carries " + codes.keySet());
         }
         return code;
+    }
+
+    /**
+     * The item's quantity for a fact.
+     *
+     * @throws IllegalArgumentException if the item does not carry that quantity
+     */
+    public long quantity(ItemFactId fact) {
+        Long quantity = quantities.get(fact);
+        if (quantity == null) {
+            throw new IllegalArgumentException("The item carries no quantity " + fact + "; it carries "
+                    + quantities.keySet());
+        }
+        return quantity;
     }
 }

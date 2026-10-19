@@ -32,8 +32,8 @@
       "conditions": [
         {
           "type": "ItemFactIs",
-          "fact": "vehicle.engine",
-          "code": "ELECTRIC"
+          "fact": "vehicle.engine.electric",
+          "code": "true"
         }
       ],
       "introducedBy": {
