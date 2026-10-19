@@ -26,6 +26,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceInterestLimit;
@@ -255,7 +256,7 @@ public final class ShapeJson {
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
-                "SpecialRateShortfallOrder");
+                "SpecialRateShortfallOrder", "LossCarryForward");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -328,8 +329,8 @@ public final class ShapeJson {
     }
 
     /**
-     * The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243), and the
-     * special-rate parts the unused basic exemption (D-244).
+     * The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243), how a loss is
+     * carried forward (D-263), and the special-rate parts the unused basic exemption (D-244).
      */
     private static RuleDefinition setOffDefinition(String tag, JsonNode node, String path) {
         return switch (tag) {
@@ -342,6 +343,12 @@ public final class ShapeJson {
                 List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,
                         e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
                 yield PackJson.construct(path, () -> new CapitalGainsAbsorptionOrder(parts));
+            }
+            case "LossCarryForward" -> {
+                HeadCode absorbedBy = PackJson.enumValue(node, "absorbedBy", path, HeadCode.class);
+                yield PackJson.construct(path, () -> new LossCarryForward(absorbedBy,
+                        new TaxYearSpan(PackJson.integer(node, "succeedingYears", path)),
+                        PackJson.bool(node, "requiresReturnFiledInTime", path)));
             }
             case "SpecialRateShortfallOrder" -> {
                 List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,

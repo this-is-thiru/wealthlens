@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -42,7 +43,12 @@ final class CarriedCapitalLossSetOff {
     static void apply(NodeContext ctx, CapitalGainsAbsorptionOrder order, Map<HeadCode, Money> income,
             Map<CapitalGainsPart, Money> parts, List<TraceLine> lines) {
         GoverningRow row = GoverningRow.of(ctx, ROW);
-        TaxYearSpan span = RuleDefinitions.require(row.version().definition(), TaxYearSpan.class, row.id());
+        LossCarryForward carry = RuleDefinitions.require(row.version().definition(), LossCarryForward.class, row.id());
+        if (carry.absorbedBy() != HeadCode.CAPITAL_GAINS) {
+            throw new IllegalArgumentException(row.id() + " carries a capital loss against " + carry.absorbedBy()
+                    + ", but this set-off works on the capital-gains parts; the row is a pack defect (D-263)");
+        }
+        TaxYearSpan span = carry.span();
         TaxYearId thisYear = ctx.inputs().taxYear();
         Map<TaxYearId, CarriedCapitalLoss> byYear = new TreeMap<>(Comparator.comparingInt(TaxYearId::startYear));
         byYear.putAll(ctx.inputs().ledgers().capitalLossCarriedForward());
@@ -57,7 +63,7 @@ final class CarriedCapitalLossSetOff {
             if (!remaining.isGreaterThan(Money.ZERO)) {
                 continue;
             }
-            if (!carried.determinedInReturnFiledInTime()) {
+            if (carry.requiresReturnFiledInTime() && !carried.determinedInReturnFiledInTime()) {
                 lines.add(line(lines, row, StepKind.MEASURE, remaining, Money.ZERO).withLimitedBy("loss of "
                         + arose.label() + " not carried forward: not determined in a return filed in time (S2 s.121;"
                         + " 1961 s.80)"));
@@ -72,7 +78,7 @@ final class CarriedCapitalLossSetOff {
             Money left = use(row, order, arose, carried.longTermRemaining(), true, parts, lines)
                     .plus(use(row, order, arose, carried.shortTermRemaining(), false, parts, lines));
             Money taken = remaining.minus(left);
-            income.put(HeadCode.CAPITAL_GAINS, income.getOrDefault(HeadCode.CAPITAL_GAINS, Money.ZERO).minus(taken));
+            income.put(carry.absorbedBy(), income.getOrDefault(carry.absorbedBy(), Money.ZERO).minus(taken));
             if (left.isGreaterThan(Money.ZERO)) {
                 lines.add(line(lines, row, StepKind.MEASURE, remaining, left).withLimitedBy("loss of "
                         + arose.label() + " still carried forward (S2 s.111(1)(b); 1961 s.74(1)(c))"));

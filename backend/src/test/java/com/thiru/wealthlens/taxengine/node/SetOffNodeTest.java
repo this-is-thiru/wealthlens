@@ -15,13 +15,19 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
+import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -29,8 +35,10 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -388,6 +396,12 @@ class SetOffNodeTest {
     /** TY {@code year}, with capital-gains parts and the capital losses carried in (D-247); the other heads nil. */
     private static NodeResult runWithCarriedCapitalLoss(int year, RegimeCode regime, Map<CapitalGainsPart, Money> parts,
             Map<TaxYearId, CarriedCapitalLoss> carried) {
+        return runWithCarriedCapitalLoss(pack(year), regime, parts, carried);
+    }
+
+    private static NodeResult runWithCarriedCapitalLoss(RulePack pack, RegimeCode regime,
+            Map<CapitalGainsPart, Money> parts, Map<TaxYearId, CarriedCapitalLoss> carried) {
+        int year = pack.taxYear().startYear();
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         LedgerSnapshot empty = LedgerSnapshot.empty();
@@ -397,12 +411,28 @@ class SetOffNodeTest {
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)), plain.entered(), plain.assessee(),
                 plain.family(), ledgers, plain.elections(), plain.capitalGains(), plain.filing());
-        return NodeHarness.with(pack(year)).regime(regime).inputs(inputs)
+        return NodeHarness.with(pack).regime(regime).inputs(inputs)
                 .given(NodeIds.SALARY_INCOME, Money.ZERO)
                 .given(NodeIds.HOUSEPROPERTY_INCOME, Money.ZERO)
                 .given(NodeIds.OTHERSOURCES_INCOME, Money.ZERO)
                 .given(NodeIds.CAPITALGAINS_INCOME, new CapitalGainsHead(parts, Money.ZERO, Money.ZERO))
                 .run(new SetOffNode());
+    }
+
+    /** TY {@code year}'s shipped pack with every version of {@code row} defined as {@code carry} instead. */
+    private static RulePack withCarryForward(int year, RuleId row, LossCarryForward carry) {
+        RulePack shipped = pack(year);
+        RuleRow rule = shipped.rules().get(row);
+        List<RuleVersion> versions = rule.versions().stream()
+                .map(v -> new RuleVersion(v.validity(), v.regimes(), v.cap(), v.relief(), v.rounding(),
+                        Optional.<RuleDefinition>of(carry), v.conditions(), v.provision1961(), v.provision2025(),
+                        v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance()))
+                .toList();
+        Map<RuleId, RuleRow> rules = new HashMap<>(shipped.rules());
+        rules.put(row, new RuleRow(rule.id(), rule.axis(), versions, rule.midYearCombination(),
+                rule.midYearCombinationRule(), rule.prorationBasis(), rule.headProvenance()));
+        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules, shipped.ruleSets(),
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
     }
 
     private static CarriedCapitalLoss capitalLoss(String shortTerm, String longTerm, String longTermAbsorbed,
@@ -506,6 +536,55 @@ class SetOffNodeTest {
         assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("70000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
                 .satisfies(line -> assertThat(line.limitedBy().orElseThrow()).contains("s.121"));
+    }
+
+    @Test
+    void evaluate_whenTheRowDoesNotRequireAReturnFiledInTime_carriesALateLoss() {
+        // Given — the capital-loss row stating no return condition
+        RulePack pack = withCarryForward(2026, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS,
+                new LossCarryForward(HeadCode.CAPITAL_GAINS, new TaxYearSpan(8), false));
+
+        // When — D's ledger: TY 2024-25's loss from a late return
+        NodeResult result = runWithCarriedCapitalLoss(pack, OLD, caseAGains(), caseALedger(2023, false));
+
+        // Then — set off as if in time: case A's figures
+        assertCaseA(result);
+    }
+
+    @Test
+    void evaluate_whenTheHousePropertyRowRequiresAReturnFiledInTime_isRefused() {
+        // Given
+        RulePack pack = withCarryForward(2026, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
+                new LossCarryForward(HeadCode.HOUSE_PROPERTY, new TaxYearSpan(8), true));
+
+        // When / Then — the house-property ledger states no return fact to test
+        assertThatThrownBy(() -> runWithCarriedCapitalLoss(pack, OLD, caseAGains(), Map.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("return filed in time");
+    }
+
+    @Test
+    void evaluate_whenTheHousePropertyRowNamesCapitalGains_isRefused() {
+        // Given
+        RulePack pack = withCarryForward(2026, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
+                new LossCarryForward(HeadCode.CAPITAL_GAINS, new TaxYearSpan(8), false));
+
+        // When / Then
+        assertThatThrownBy(() -> runWithCarriedCapitalLoss(pack, OLD, caseAGains(), Map.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not the capital-gains parts");
+    }
+
+    @Test
+    void evaluate_whenTheCapitalLossRowNamesAnotherHead_isRefused() {
+        // Given
+        RulePack pack = withCarryForward(2026, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS,
+                new LossCarryForward(HeadCode.HOUSE_PROPERTY, new TaxYearSpan(8), true));
+
+        // When / Then
+        assertThatThrownBy(() -> runWithCarriedCapitalLoss(pack, OLD, caseAGains(), Map.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("works on the capital-gains parts");
     }
 
     @Test

@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -207,8 +208,11 @@ public final class SetOffNode implements ComputationNode {
     /** The carried house-property losses, oldest first, against the house-property income left (S2 s.110; 1961 s.71B). */
     private static void broughtForward(NodeContext ctx, TemporalContext t, Map<HeadCode, Money> income,
             List<TraceLine> lines) {
-        TaxYearSpan span = RuleDefinitions.require(version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY)).definition(),
-                TaxYearSpan.class, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY));
+        RuleId carriedRow = ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY);
+        LossCarryForward carry = RuleDefinitions.require(version(ctx, t, carriedRow).definition(),
+                LossCarryForward.class, carriedRow);
+        requireAgainstAHead(carry, carriedRow);
+        TaxYearSpan span = carry.span();
         TaxYearId thisYear = ctx.inputs().taxYear();
         Map<TaxYearId, CarriedHousePropertyLoss> byYear = new TreeMap<>(Comparator.comparingInt(TaxYearId::startYear));
         byYear.putAll(ctx.inputs().ledgers().housePropertyLossCarriedForward());
@@ -232,9 +236,9 @@ public final class SetOffNode implements ComputationNode {
             }
             Money attributable = Money.max(carried.attributableToNewRegimeDisallowance().minus(carried.absorbedSince()),
                     Money.ZERO);
-            Money left = useAttributable(ctx, t, arose, attributable, income, lines)
-                    .plus(use(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY), arose, remaining.minus(attributable),
-                            income, lines));
+            Money left = useAttributable(ctx, carry.absorbedBy(), arose, attributable, income, lines)
+                    .plus(use(ctx, carry.absorbedBy(), carriedRow, arose, remaining.minus(attributable), income,
+                            lines));
             if (left.isGreaterThan(Money.ZERO)) {
                 lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY),
                                 StepKind.MEASURE, remaining, left)
@@ -244,13 +248,13 @@ public final class SetOffNode implements ComputationNode {
     }
 
     /** The attributable part: used like the rest, or, where the regime forbids it, gone. Returns what is still carried. */
-    private static Money useAttributable(NodeContext ctx, TemporalContext t, TaxYearId arose, Money attributable,
+    private static Money useAttributable(NodeContext ctx, HeadCode absorbedBy, TaxYearId arose, Money attributable,
             Map<HeadCode, Money> income, List<TraceLine> lines) {
         if (!attributable.isGreaterThan(Money.ZERO)) {
             return Money.ZERO;
         }
         RuleId row = ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_DISALLOWED_PART);
-        RuleVersion version = version(ctx, t, row);
+        RuleVersion version = version(ctx, ctx.inputs().temporal(), row);
         RegimeVerdict verdict = ctx.inRegime(row, version);
         if (!verdict.applies()) {
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, attributable, Money.ZERO)
@@ -261,22 +265,41 @@ public final class SetOffNode implements ComputationNode {
                     + " 1961 s.115BAC(3))"));
             return Money.ZERO;
         }
-        return use(ctx, t, row, arose, attributable, income, lines);
+        return use(ctx, absorbedBy, row, arose, attributable, income, lines);
     }
 
-    /** Sets off up to {@code amount} of one year's loss against the house-property income left; returns the rest. */
-    private static Money use(NodeContext ctx, TemporalContext t, RuleId row, TaxYearId arose, Money amount,
+    /** Sets off up to {@code amount} of one year's loss against the income left under the row's head; returns the rest.
+     */
+    private static Money use(NodeContext ctx, HeadCode absorbedBy, RuleId row, TaxYearId arose, Money amount,
             Map<HeadCode, Money> income, List<TraceLine> lines) {
-        Money available = income.getOrDefault(HeadCode.HOUSE_PROPERTY, Money.ZERO);
+        Money available = income.getOrDefault(absorbedBy, Money.ZERO);
         Money taken = Money.min(amount, available);
         if (taken.isGreaterThan(Money.ZERO)) {
-            income.put(HeadCode.HOUSE_PROPERTY, available.minus(taken));
+            income.put(absorbedBy, available.minus(taken));
             lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.SET_OFF, available, taken).withLimitedBy("loss of "
-                    + arose.label() + " against HOUSE_PROPERTY; order: this year's set-off first (ITR-2 Schedule BFLA),"
-                    + " then the oldest year, the attributable part first — the declared default, the Acts prescribing"
+                    + arose.label() + " against " + absorbedBy
+                    + "; order: this year's set-off first (ITR-2 Schedule BFLA), then the oldest year, the attributable"
+                    + " part first — the declared default, the Acts prescribing"
                     + " none (D-221)"));
         }
         return amount.minus(taken);
+    }
+
+    /**
+     * Refuses a row this path cannot follow: it lowers one head's income, not the capital-gains parts, and the
+     * house-property ledger states no return fact for a return condition to test (S2 s.121 and 1961 s.80 do not reach
+     * s.110 / s.71B; D-263).
+     */
+    private static void requireAgainstAHead(LossCarryForward carry, RuleId row) {
+        if (carry.absorbedBy() == HeadCode.CAPITAL_GAINS) {
+            throw new IllegalArgumentException(row + " carries a loss against CAPITAL_GAINS, but the house-property loss"
+                    + " is set off against one head's income, not the capital-gains parts; the row is a pack defect"
+                    + " (D-263)");
+        }
+        if (carry.requiresReturnFiledInTime()) {
+            throw new IllegalArgumentException(row + " requires a return filed in time, but the house-property ledger"
+                    + " states no such fact to test; the row is a pack defect (D-263)");
+        }
     }
 
     /** Refuses an elected order that leaves out a head or adds one: every head's loss is taken in the order. */

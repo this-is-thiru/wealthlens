@@ -11,8 +11,10 @@ import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
+import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -150,6 +152,28 @@ class RuleJsonDefinitionTest {
                         "definition": { "type": "ExcludedAssets", "kinds": [ "TELEVISION" ] }"""))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("MOBILE_PHONE");
+    }
+
+    @Test
+    void version_whenALossCarryForward_readsItsHeadSpanAndCondition() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "LossCarryForward", "absorbedBy": "CAPITAL_GAINS", "succeedingYears": 8,
+                  "requiresReturnFiledInTime": true }""");
+
+        // Then
+        assertThat(version.definition())
+                .contains(new LossCarryForward(HeadCode.CAPITAL_GAINS, new TaxYearSpan(8), true));
+    }
+
+    @Test
+    void version_whenALossCarryForwardNamesAnUnknownHead_isRefusedListingTheKnown() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "LossCarryForward", "absorbedBy": "BUSINESS_INCOME",
+                          "succeedingYears": 8, "requiresReturnFiledInTime": false }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("HOUSE_PROPERTY");
     }
 
     @Test
