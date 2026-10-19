@@ -63,6 +63,17 @@ final class DonationDeduction {
         }
     }
 
+    /** One of s.133's four groups: the row set that deducts it, and what its line calls it. */
+    private record Group(RuleSetId set, String what) {
+
+        static final Group WHOLE = new Group(RuleSetIds.RS_DED_DONATION_WHOLE, "the whole, without limit");
+        static final Group WHOLE_LIMITED =
+                new Group(RuleSetIds.RS_DED_DONATION_WHOLE, "the whole, within the qualifying limit");
+        static final Group HALF = new Group(RuleSetIds.RS_DED_DONATION_HALF, "half, without limit");
+        static final Group HALF_LIMITED =
+                new Group(RuleSetIds.RS_DED_DONATION_HALF, "half, within the qualifying limit");
+    }
+
     private DonationDeduction() {
     }
 
@@ -100,12 +111,10 @@ final class DonationDeduction {
                         .withLimitedBy("10% of adjusted gross total income " + adjustedGrossTotal));
             }
         }
-        deduct(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE), counted.whole(), "the whole, without limit", firstSequence, lines);
-        deduct(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE), counted.wholeLimited(), "the whole, within the qualifying limit",
-                firstSequence, lines);
-        deduct(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF), counted.half(), "half, without limit", firstSequence, lines);
-        deduct(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF), counted.halfLimited(), "half, within the qualifying limit",
-                firstSequence, lines);
+        deduct(ctx, Group.WHOLE, counted.whole(), firstSequence, lines);
+        deduct(ctx, Group.WHOLE_LIMITED, counted.wholeLimited(), firstSequence, lines);
+        deduct(ctx, Group.HALF, counted.half(), firstSequence, lines);
+        deduct(ctx, Group.HALF_LIMITED, counted.halfLimited(), firstSequence, lines);
         return new Outcome(lines, bound);
     }
 
@@ -173,12 +182,12 @@ final class DonationDeduction {
         }
     }
 
-    private static void deduct(NodeContext ctx, RuleId row, Money counted, String group, int firstSequence,
-            List<TraceLine> lines) {
+    private static void deduct(NodeContext ctx, Group group, Money counted, int firstSequence, List<TraceLine> lines) {
         if (counted.isGreaterThan(Money.ZERO)) {
+            RuleId row = ctx.ruleIdOf(group.set());
             lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION,
                             counted, apply(ctx, row, AMOUNT_PAID, counted))
-                    .withLimitedBy(group));
+                    .withLimitedBy(group.what()));
         }
     }
 

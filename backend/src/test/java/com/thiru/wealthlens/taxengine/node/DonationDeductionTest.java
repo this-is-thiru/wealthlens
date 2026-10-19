@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.input.AgniveerCorpusFund;
 import com.thiru.wealthlens.taxengine.input.Assessee;
@@ -180,6 +181,25 @@ class DonationDeductionTest {
 
         // Then
         assertThat(result.value()).isEqualTo(rupees("30000"));
+    }
+
+    @Test
+    void evaluate_whenEveryGroupIsGiven_namesEachGroupOnItsLine() {
+        // Given — s.133(1): 10,000 to each group; the limited 20,000 is under the limit of 1,00,000
+        Case c = Case.of(donation(DonationClause.NAMED_FUND, "10000"), donation(DonationClause.FAMILY_PLANNING, "10000"),
+                donation(DonationClause.DROUGHT_RELIEF_FUND, "10000"),
+                donation(DonationClause.CHARITABLE_INSTITUTION, "10000"));
+
+        // When
+        NodeResult result = run(c);
+
+        // Then — the whole groups 10,000 each; the half groups 5,000 each
+        assertThat(lines(result, RuleIds.DED_DONATION_WHOLE)).extracting(TraceLine::out, TraceLine::limitedBy)
+                .containsExactly(tuple(rupees("10000"), Optional.of("the whole, without limit")),
+                        tuple(rupees("10000"), Optional.of("the whole, within the qualifying limit")));
+        assertThat(lines(result, RuleIds.DED_DONATION_HALF)).extracting(TraceLine::out, TraceLine::limitedBy)
+                .containsExactly(tuple(rupees("5000"), Optional.of("half, without limit")),
+                        tuple(rupees("5000"), Optional.of("half, within the qualifying limit")));
     }
 
     @Test

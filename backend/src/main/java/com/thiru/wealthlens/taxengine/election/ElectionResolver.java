@@ -132,7 +132,8 @@ public final class ElectionResolver {
         int[] chosen = null;
         for (int combination = 0; combination < combinations; combination++) {
             int[] picks = digits(combination, radix);
-            PipelineRunner.Result run = runChoosing(all, picks, registry, pack, regime, inputs);
+            Combination folded = combination(all, picks, regime, inputs, pack);
+            PipelineRunner.Result run = PipelineRunner.run(registry, pack, folded.regime(), folded.inputs());
             Money netPayable = run.valueOf(NodeIds.TAX_NETPAYABLE).asMoney();
             all.forEach(choices -> choices.price(picks, netPayable));
             if (cheapest == null || netPayable.isLessThan(cheapest.valueOf(NodeIds.TAX_NETPAYABLE).asMoney())) {
@@ -170,16 +171,20 @@ public final class ElectionResolver {
         return NodeContext.forRun(pack, regime, inputs).forNode(registry.producing(election.node()));
     }
 
-    /** One combination's whole run: every choice made, under the regime the choices name. */
-    private static PipelineRunner.Result runChoosing(List<Choices<?>> all, int[] picks, NodeRegistry registry,
-            RulePack pack, RegimeSpec regime, EngineInputs inputs) {
+    /** The regime one combination of choices names, and the inputs with every choice made. */
+    private record Combination(RegimeSpec regime, EngineInputs inputs) {
+    }
+
+    /** One combination folded: each election's pick applied in turn to the inputs and the regime. */
+    private static Combination combination(List<Choices<?>> all, int[] picks, RegimeSpec regime, EngineInputs inputs,
+            RulePack pack) {
         EngineInputs choosing = inputs;
         RegimeSpec computing = regime;
         for (int i = 0; i < all.size(); i++) {
             choosing = all.get(i).choosing(picks[i], choosing);
             computing = all.get(i).regimeFor(picks[i], computing, pack);
         }
-        return PipelineRunner.run(registry, pack, computing, choosing);
+        return new Combination(computing, choosing);
     }
 
     /** {@code combination}'s choice index for each election, the last election's varying fastest. */

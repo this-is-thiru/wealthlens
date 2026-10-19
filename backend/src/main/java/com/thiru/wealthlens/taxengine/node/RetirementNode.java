@@ -84,13 +84,10 @@ public final class RetirementNode implements ComputationNode {
         List<RetirementPayment> payments = ctx.inputs().entered().retirementPayments();
         requireEachRetirementComponentEntered(ctx, components, payments);
         NotifiedRetirementLimits.requireOneDay(payments);
-        // Any employer's gratuity: "the employee has received gratuity" (S2 s.19(1) Table Sl. 8); "receives any
-        // gratuity" (1961 s.10(10A)(ii)) — neither names the employer (D-226)
-        boolean gratuityReceived = paid(components, ComponentCodes.GRATUITY).isGreaterThan(Money.ZERO);
         List<TraceLine> trace = new ArrayList<>();
         Map<RetirementEntry, Money> allowedThisYear = new EnumMap<>(RetirementEntry.class);
         for (RetirementPayment payment : payments) {
-            payment(ctx, components, payment, gratuityReceived, allowedThisYear, trace.size() + 1).ifPresent(line -> {
+            payment(ctx, components, payment, allowedThisYear, trace.size() + 1).ifPresent(line -> {
                 trace.add(line);
                 allowedThisYear.merge(payment.entry(), line.out().asMoney(), Money::plus);
             });
@@ -136,7 +133,7 @@ public final class RetirementNode implements ComputationNode {
 
     /** One payment's line; none where its rule does not apply in the regime. */
     private static Optional<TraceLine> payment(NodeContext ctx, ComponentSet components, RetirementPayment payment,
-            boolean gratuityReceived, Map<RetirementEntry, Money> allowedThisYear, int sequence) {
+            Map<RetirementEntry, Money> allowedThisYear, int sequence) {
         RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_RET_ENTRY, entry(payment));
         ComponentDefinition definition = ctx.pack().components().get(payment.component());
         if (definition == null || !definition.feedsInto().contains(ruleId)) {
@@ -152,12 +149,16 @@ public final class RetirementNode implements ComputationNode {
         Money received = paid(components, payment);
         Optional<String> barred = voluntaryRetirementBar(ctx, payment);
         if (barred.isPresent()) {
-            return Optional.of(line(sequence, ruleId, received, Money.ZERO, version).withLimitedBy(barred.get()));
+            return Optional.of(ctx.traceLine(sequence, ruleId, StepKind.DEDUCTION, received, Money.ZERO)
+                    .withLimitedBy(barred.get()));
         }
         if (payment.entry() == RetirementEntry.OTHER_EMPLOYER_COMMUTATION) {
+            // Any employer's gratuity: "the employee has received gratuity" (S2 s.19(1) Table Sl. 8); "receives any
+            // gratuity" (1961 s.10(10A)(ii)) — neither names the employer (D-226)
+            boolean gratuityReceived = paid(components, ComponentCodes.GRATUITY).isGreaterThan(Money.ZERO);
             Money limit = commutedPensionShare(ruleId, version)
                     .limit(payment.commutedValueOfWholePension().orElseThrow(), gratuityReceived);
-            return Optional.of(line(sequence, ruleId, received, Money.min(received, limit), version)
+            return Optional.of(ctx.traceLine(sequence, ruleId, StepKind.DEDUCTION, received, Money.min(received, limit))
                     .withLimitedBy(received.isLessThanOrEqual(limit) ? "payment received"
                             : gratuityReceived ? "one-third of the pension's commuted value, gratuity also received"
                                     : "one-half of the pension's commuted value"));
@@ -168,21 +169,22 @@ public final class RetirementNode implements ComputationNode {
                     NotifiedRetirementLimits.context(ctx, payment, version, paidIn));
             return Optional.of(NotifiedRetirementLimits.capped(ctx, payment,
                     allowedThisYear.getOrDefault(payment.entry(), Money.ZERO),
-                    line(sequence, ruleId, received, deducted.value(), version).withLimitedBy(deducted.limitedBy())));
+                    ctx.traceLine(sequence, ruleId, StepKind.DEDUCTION, received, deducted.value())
+                            .withLimitedBy(deducted.limitedBy())));
         }
         if (payment.statutory().isPresent()) {
             StatutoryEntitlement entitlement = payment.statutory().get();
             CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(
                     Map.of(PAYMENT_RECEIVED, received, AMOUNT_UNDER_STATUTE, entitlement.amountUnderStatute())));
-            return Optional.of(line(sequence, ruleId, received, deducted.value(), version).withLimitedBy(
-                    deducted.limitedBy() + "; separation on " + entitlement.separatedOn()));
+            return Optional.of(ctx.traceLine(sequence, ruleId, StepKind.DEDUCTION, received, deducted.value())
+                    .withLimitedBy(deducted.limitedBy() + "; separation on " + entitlement.separatedOn()));
         }
         if (payment.entry() == RetirementEntry.VOLUNTARY_RETIREMENT) {
-            return Optional.of(voluntaryRetirement(rule, t, received,
-                    allowedThisYear.getOrDefault(payment.entry(), Money.ZERO), sequence, version));
+            return Optional.of(voluntaryRetirement(ctx, ruleId, received,
+                    allowedThisYear.getOrDefault(payment.entry(), Money.ZERO), sequence));
         }
         CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(paidIn));
-        return Optional.of(line(sequence, ruleId, received, deducted.value(), version)
+        return Optional.of(ctx.traceLine(sequence, ruleId, StepKind.DEDUCTION, received, deducted.value())
                 .withLimitedBy(deducted.limitedBy()));
     }
 
@@ -192,16 +194,16 @@ public final class RetirementNode implements ComputationNode {
      * s.19(1) Table Sl. 12; 1961 s.10(10C)). Statutory gratuity, retrenchment and commutation are limited per payment
      * (D-226, D-227); other gratuity and leave encashment are capped on the year's total by notification (D-225).
      */
-    private static TraceLine voluntaryRetirement(RuleRow rule, TemporalContext t, Money received, Money allowedThisYear,
-            int sequence, RuleVersion version) {
-        CapResult together = TemporallyApportionedCap.apply(rule, t,
+    private static TraceLine voluntaryRetirement(NodeContext ctx, RuleId ruleId, Money received, Money allowedThisYear,
+            int sequence) {
+        CapResult together = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
                 new CapContext(Map.of(PAYMENT_RECEIVED, allowedThisYear.plus(received))));
         Money allowed = together.value().minus(allowedThisYear);
         String why = allowedThisYear.isGreaterThan(Money.ZERO) && allowed.isLessThan(received)
                 ? together.limitedBy() + ", less the " + allowedThisYear + " allowed on this year's earlier voluntary"
                         + " retirement payments, in the order entered (one limit for the employee; D-227)"
                 : together.limitedBy();
-        return line(sequence, rule.id(), received, allowed, version).withLimitedBy(why);
+        return ctx.traceLine(sequence, ruleId, StepKind.DEDUCTION, received, allowed).withLimitedBy(why);
     }
 
     /**
@@ -229,11 +231,6 @@ public final class RetirementNode implements ComputationNode {
 
     private static CommutedPensionShare commutedPensionShare(RuleId ruleId, RuleVersion version) {
         return RuleDefinitions.require(version.definition(), CommutedPensionShare.class, ruleId);
-    }
-
-    private static TraceLine line(int sequence, RuleId ruleId, Money received, Money deducted, RuleVersion version) {
-        return TraceLine.of(sequence, NodeIds.SALARY_RETIREMENT, ruleId, StepKind.DEDUCTION, MoneyValue.of(received),
-                MoneyValue.of(deducted), version.provenance());
     }
 
     /** What the payment's own employment paid of its component. */

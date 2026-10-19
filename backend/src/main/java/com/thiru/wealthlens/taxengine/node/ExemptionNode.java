@@ -152,9 +152,8 @@ public final class ExemptionNode implements ComputationNode {
             for (Tenancy tenancy : tenancies) {
                 requireWithinYear(tenancy.occupied(), t);
                 Money allowance = BY_DAYS_OCCUPIED.apportion(allowanceForYear, t.taxYear(), tenancy.occupied());
-                nil.add(TraceLine.of(nil.size() + 1, NodeIds.SALARY_EXEMPTIONS, ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE),
-                                StepKind.EXEMPTION, MoneyValue.of(allowance), MoneyValue.of(Money.ZERO),
-                                version.provenance())
+                nil.add(ctx.traceLine(nil.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE),
+                                StepKind.EXEMPTION, allowance, Money.ZERO)
                         .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE), version).whyNot()));
             }
             return nil;
@@ -163,29 +162,28 @@ public final class ExemptionNode implements ComputationNode {
                 : ctx.get(NodeIds.SALARY_BASE, SalaryBases.class).of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_HRA), 0);
         List<TraceLine> trace = new ArrayList<>();
         for (Tenancy tenancy : tenancies) {
-            trace.add(period(rule, version, t, tenancy, allowanceForYear, salaryForYear, trace.size() + 1));
+            trace.add(period(ctx, tenancy, allowanceForYear, salaryForYear, trace.size() + 1));
         }
         return trace;
     }
 
     /** One period of occupation: its least-of, or nil with the reason where the home is not rented. */
-    private static TraceLine period(RuleRow rule, RuleVersion version, TemporalContext t, Tenancy tenancy,
-            Money allowanceForYear, Money salaryForYear, int sequence) {
+    private static TraceLine period(NodeContext ctx, Tenancy tenancy, Money allowanceForYear, Money salaryForYear,
+            int sequence) {
+        TemporalContext t = ctx.inputs().temporal();
+        RuleRow rule = ctx.ruleOf(RuleSetIds.RS_SAL_HOUSE_RENT_ALLOWANCE);
         TaxYearId year = t.taxYear();
         requireWithinYear(tenancy.occupied(), t);
         Money allowance = BY_DAYS_OCCUPIED.apportion(allowanceForYear, year, tenancy.occupied());
         if (tenancy.ownedByAssessee() || !tenancy.rentPaid().isGreaterThan(Money.ZERO)) {
-            return TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, rule.id(),
-                    StepKind.EXEMPTION, MoneyValue.of(allowance), MoneyValue.of(Money.ZERO), version.provenance())
+            return ctx.traceLine(sequence, rule.id(), StepKind.EXEMPTION, allowance, Money.ZERO)
                     .withLimitedBy("not rented: the home is owned or no rent was paid (Sch. III Table Sl. 11(c), (d))");
         }
         Money salary = BY_DAYS_OCCUPIED.apportion(salaryForYear, year, tenancy.occupied());
         CapResult exempt = TemporallyApportionedCap.apply(rule, t, new CapContext(
                 Map.of(HRA_RECEIVED, allowance, RENT_PAID, tenancy.rentPaid(), SALARY, salary),
                 Map.of(), Map.of(), Map.of(LOCATION, tenancy.location())));
-        return TraceLine.of(sequence, NodeIds.SALARY_EXEMPTIONS, rule.id(),
-                        StepKind.EXEMPTION, MoneyValue.of(allowance), MoneyValue.of(exempt.value()),
-                        version.provenance())
+        return ctx.traceLine(sequence, rule.id(), StepKind.EXEMPTION, allowance, exempt.value())
                 .withLimitedBy(exempt.limitedBy());
     }
 

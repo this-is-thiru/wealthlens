@@ -78,19 +78,24 @@ public final class OtherSourcesNode implements ComputationNode {
     private static final BaseId GIFT = new BaseId("GIFT");
     private static final BaseId BUSINESS_TRUST = new BaseId("BUSINESS_TRUST");
 
-    /** The rule set, its base and the trace's words for each kind received in full (D-203, D-252). */
-    private record InFullRow(RuleSetId ruleSet, BaseId base, String what) {
+    /** The rule set, its base and the trace's words for a kind received in full or deducted whole (D-203, D-252). */
+    private record KindRow(RuleSetId ruleSet, BaseId base, String what) {
     }
 
-    private static final Map<OtherSourceKind, InFullRow> IN_FULL = Map.of(
-            OtherSourceKind.KEYMAN_POLICY, new InFullRow(RuleSetIds.RS_OS_KEYMAN_POLICY, new BaseId("KEYMAN"),
+    private static final Map<OtherSourceKind, KindRow> IN_FULL = Map.of(
+            OtherSourceKind.KEYMAN_POLICY, new KindRow(RuleSetIds.RS_OS_KEYMAN_POLICY, new BaseId("KEYMAN"),
                     "Keyman policy sums"),
-            OtherSourceKind.FORFEITED_ADVANCE, new InFullRow(RuleSetIds.RS_OS_FORFEITED_ADVANCE, new BaseId("ADVANCE"),
+            OtherSourceKind.FORFEITED_ADVANCE, new KindRow(RuleSetIds.RS_OS_FORFEITED_ADVANCE, new BaseId("ADVANCE"),
                     "advance forfeited"),
-            OtherSourceKind.TERMINATION_COMPENSATION, new InFullRow(RuleSetIds.RS_OS_TERMINATION_COMPENSATION,
+            OtherSourceKind.TERMINATION_COMPENSATION, new KindRow(RuleSetIds.RS_OS_TERMINATION_COMPENSATION,
                     new BaseId("COMPENSATION"), "compensation on termination, not from the employer"),
-            OtherSourceKind.OTHER, new InFullRow(RuleSetIds.RS_OS_RESIDUAL, new BaseId("RESIDUAL"),
+            OtherSourceKind.OTHER, new KindRow(RuleSetIds.RS_OS_RESIDUAL, new BaseId("RESIDUAL"),
                     "other income under the head"));
+    private static final Map<OtherSourceKind, KindRow> WHOLE_DEDUCTED = Map.of(
+            OtherSourceKind.COMMUTED_FUND_PENSION, new KindRow(RuleSetIds.RS_OS_COMMUTED_PENSION, COMMUTED_PENSION,
+                    "commutation of a fund pension"),
+            OtherSourceKind.DEATH_GRATUITY, new KindRow(RuleSetIds.RS_OS_DEATH_GRATUITY, GRATUITY,
+                    "gratuity received on the employee's death"));
     private static final Set<OtherSourceKind> BUSINESS_HEAD_KINDS = Set.of(OtherSourceKind.EMPLOYEE_CONTRIBUTIONS,
             OtherSourceKind.MACHINERY_LETTING, OtherSourceKind.MACHINERY_AND_BUILDING_LETTING);
     private static final Set<GiftExclusion> COVID_GROUNDS = Set.of(GiftExclusion.COVID_TREATMENT,
@@ -164,10 +169,7 @@ public final class OtherSourcesNode implements ComputationNode {
                     "nothing is deducted against a deemed dividend");
             case INTEREST_ON_COMPENSATION -> compensationInterest(lines, where, item);
             case FAMILY_PENSION -> familyPension(lines, where, item);
-            case COMMUTED_FUND_PENSION -> wholeDeducted(lines, where, item, lines.row(RuleSetIds.RS_OS_COMMUTED_PENSION), COMMUTED_PENSION,
-                    "commutation of a fund pension");
-            case DEATH_GRATUITY -> wholeDeducted(lines, where, item, lines.row(RuleSetIds.RS_OS_DEATH_GRATUITY), GRATUITY,
-                    "gratuity received on the employee's death");
+            case COMMUTED_FUND_PENSION, DEATH_GRATUITY -> wholeDeducted(lines, where, item);
             case KEYMAN_POLICY, FORFEITED_ADVANCE, TERMINATION_COMPENSATION, OTHER -> inFull(lines, where, item);
             case WINNINGS, EMPLOYEE_CONTRIBUTIONS, MACHINERY_LETTING, MACHINERY_AND_BUILDING_LETTING ->
                     throw new IllegalStateException(item.kind() + " passed requireBuiltKinds");
@@ -259,7 +261,7 @@ public final class OtherSourcesNode implements ComputationNode {
      * expenditure laid out for it (D-203).
      */
     private static Money inFull(Lines lines, String where, OtherSourceItem item) {
-        InFullRow kind = IN_FULL.get(item.kind());
+        KindRow kind = IN_FULL.get(item.kind());
         RuleId row = lines.row(kind.ruleSet());
         Money income = lines.applied(row, kind.base(), item.received());
         lines.add(row, StepKind.INCOME, item.received(), income, where + ": " + kind.what());
@@ -291,11 +293,12 @@ public final class OtherSourcesNode implements ComputationNode {
     }
 
     /** S2 s.93(1)(g), (h); 1961 s.10(10A)(iii), s.10(10)(i): the entire amount, so nothing is left to bear an expense. */
-    private static Money wholeDeducted(Lines lines, String where, OtherSourceItem item, RuleId row, BaseId base,
-            String what) {
-        Money deduction = lines.applied(row, base, item.received());
+    private static Money wholeDeducted(Lines lines, String where, OtherSourceItem item) {
+        KindRow kind = WHOLE_DEDUCTED.get(item.kind());
+        RuleId row = lines.row(kind.ruleSet());
+        Money deduction = lines.applied(row, kind.base(), item.received());
         Money income = item.received().minus(deduction);
-        lines.add(row, StepKind.INCOME, item.received(), income, where + ": " + what + " less " + deduction);
+        lines.add(row, StepKind.INCOME, item.received(), income, where + ": " + kind.what() + " less " + deduction);
         Money refused = item.bankerCommission().plus(item.interestExpense()).plus(item.otherExpenditure());
         if (refused.isGreaterThan(Money.ZERO)) {
             lines.nil(row, refused, where + ": the entire amount is deducted already");

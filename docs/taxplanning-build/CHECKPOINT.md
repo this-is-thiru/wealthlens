@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088p2 — the other long parameter lists
+Item            : W-088q — one carried-loss mechanism (gains the set-off context, D-260)
 Stage           : READY — not started
-Plan            : plans/W-088p.md (split); plans/W-088p2.md not yet written
+Plan            : not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "take W-088p2" / "start W-088p2": read, write plans/W-088p2.md, STOP
-Last verify     : unit -Punit 3065 run, 0 fail; integration 252/0 (2026-10-19, W-088p1)
-Waiting on      : the owner — "start W-088p2"; OQ-32, OQ-33 open
+Next step       : on "start W-088q": read, write plans/W-088q.md, STOP
+Last verify     : unit clean -Punit 3067 run, 0 fail; integration 252/0 (2026-10-19, W-088p2)
+Waiting on      : the owner — "start W-088q"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088p1: write trace lines from the node's context — NodeContext.traceLine under the context's own node with the governing version's provenance, the 13 node line(...) helpers removed; W-088o moved, W-088p split (D-259, D-260, D-261)
-Updated         : 2026-10-19, session 23 — W-088p1 approved and committed
+Last item commit: taxplanning W-088p2: give the six remaining long parameter lists their types — s.133's donation groups, the node's context for HRA and retirement, KindRow for whole-deducted items, a Combination for joint elections (D-262)
+Updated         : 2026-10-19, session 23 — W-088p2 approved and committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

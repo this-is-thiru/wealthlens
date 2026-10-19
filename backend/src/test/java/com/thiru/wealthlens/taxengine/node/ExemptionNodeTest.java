@@ -97,6 +97,21 @@ class ExemptionNodeTest {
     }
 
     @Test
+    void evaluate_whenTheAllowanceIsTheLeast_exemptsTheAllowanceReceived() {
+        // Given — R9's home and salary, but HRA of 2,00,000
+        List<Tenancy> bengaluru =
+                List.of(new Tenancy(between("2026-04-01", "2027-03-31"), "BENGALURU", false, Money.of("360000")));
+
+        // When
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, List.of(oneEmployment()), bengaluru, "200000", "1320000");
+
+        // Then — least of 2,00,000; 3,60,000 − 1,32,000 = 2,28,000; 50% × 13,20,000 = 6,60,000
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("200000"))));
+    }
+
+    @Test
     void evaluate_whenTheTaxpayerMovesMidYear_worksEachPeriodWithItsOwnPercentageAndLimb() {
         // Given — Pune 1 Apr – 30 Sep 2026 (183 days), Nashik 1 Oct 2026 – 31 Mar 2027 (182 days); HRA 9,00,000,
         // salary 13,20,000 for the year
