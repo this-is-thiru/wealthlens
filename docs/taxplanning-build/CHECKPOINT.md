@@ -14,7 +14,7 @@ Last verify     : unit clean -Punit 3183 run, 0 fail; integration 269/0 (2026-10
 Waiting on      : the owner — "start W-088j2d"; OQ-32, OQ-33 open
 Files touched   : (none)
 Last item commit: taxplanning W-088j2c2: decide STT chargeability in the engine for a side with no breakdown — RS-STT-CHARGEABLE rows for s.98 Sl. 1–3 on NSE and BSE, the part rows accepting CHARGEABLE per s.196, s.198 and S.O. 5054(E) (D-298)
-Updated         : 2026-10-20, session 26 — W-088j2c2 done (D-298), W-088j2c closed; next W-088j2d
+Updated         : 2026-10-20, session 26 — PAUSED at the session limit, everything committed (resume at W-088j2d)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
