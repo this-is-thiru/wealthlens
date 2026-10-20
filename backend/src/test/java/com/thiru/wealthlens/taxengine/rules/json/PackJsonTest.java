@@ -371,7 +371,7 @@ class PackJsonTest {
     // -------------------------------------------------------------- W-033b
 
     @Nested
-    @DisplayName("Condition — all fifteen")
+    @DisplayName("Condition — all sixteen")
     class Conditions {
 
         static com.thiru.wealthlens.taxengine.rules.condition.ConditionContext taxpayer() {
@@ -484,12 +484,35 @@ class PackJsonTest {
 
             // When / Then
             assertThat(upTo1600.holds(taxpayer().about(
-                    new com.thiru.wealthlens.taxengine.rules.condition.ItemFacts(Map.of(), Map.of(cc, 1600L)))))
+                    new com.thiru.wealthlens.taxengine.rules.condition.ItemFacts(Map.of(), Map.of(cc, 1600L), Map.of()))))
                     .isTrue();
             assertThat(upTo1600.holds(taxpayer().about(
-                    new com.thiru.wealthlens.taxengine.rules.condition.ItemFacts(Map.of(), Map.of(cc, 1601L)))))
+                    new com.thiru.wealthlens.taxengine.rules.condition.ItemFacts(Map.of(), Map.of(cc, 1601L), Map.of()))))
                     .isFalse();
             assertThat(upTo1600.describe()).isEqualTo("vehicle.engine.cc is at most 1600");
+        }
+
+        @Test
+        void itemDateBefore_whenReadFromJson_testsTheItemsDateStrictly() {
+            // Given — S.O. 5054(E) clause (I): "before the 1st day of October, 2004"
+            var before = ConditionJson.condition(json("{\"type\": \"ItemDateBefore\", \"fact\":"
+                    + " \"capitalgains.acquired.on\", \"date\": \"2004-10-01\"}"), "c");
+            var acquiredOn = new com.thiru.wealthlens.taxengine.rules.id.ItemFactId("capitalgains.acquired.on");
+
+            // When / Then
+            assertThat(before.holds(taxpayer().about(new com.thiru.wealthlens.taxengine.rules.condition.ItemFacts(
+                    Map.of(), Map.of(), Map.of(acquiredOn, java.time.LocalDate.of(2004, 9, 30)))))).isTrue();
+            assertThat(before.holds(taxpayer().about(new com.thiru.wealthlens.taxengine.rules.condition.ItemFacts(
+                    Map.of(), Map.of(), Map.of(acquiredOn, java.time.LocalDate.of(2004, 10, 1)))))).isFalse();
+            assertThat(before.describe()).isEqualTo("capitalgains.acquired.on is before 2004-10-01");
+        }
+
+        @Test
+        void itemDateBefore_whenTheDateIsNotADate_isRefusedNamingThePath() {
+            assertThatThrownBy(() -> ConditionJson.condition(json("{\"type\": \"ItemDateBefore\", \"fact\":"
+                            + " \"capitalgains.acquired.on\", \"date\": \"1-10-2004\"}"), "c"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("c.date");
         }
 
         @Test
@@ -501,13 +524,14 @@ class PackJsonTest {
         }
 
         @Test
-        void anUnknownTagListsAllFifteen() {
+        void anUnknownTagListsAllSixteen() {
             assertThatThrownBy(() -> ConditionJson.condition(json("{\"type\": \"IsRich\"}"), "c"))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("IsResident")
                     .hasMessageContaining("PaidOtherThanInCash")
                     .hasMessageContaining("ItemFactIs")
                     .hasMessageContaining("ItemFactAtMost")
+                    .hasMessageContaining("ItemDateBefore")
                     .hasMessageContaining("IsRich");
         }
     }
@@ -799,7 +823,7 @@ class PackJsonTest {
                                     "law/regimes.json", resource("law/regimes.json"),
                                     "exec/components.json", resource("exec/components.json")));
 
-            assertThat(pack.rules()).hasSize(175);
+            assertThat(pack.rules()).hasSize(176);
             assertThat(pack.regimes()).hasSize(2);
             assertThat(pack.disallowanceSets()).containsOnlyKeys(new DisallowanceSetId("DIS-NEW-TAX-REGIME-NO-EXEMPTION"),
                     new DisallowanceSetId("DIS-NEW-TAX-REGIME-NO-SETOFF"));
@@ -901,7 +925,7 @@ class PackJsonTest {
         @Test
         void theShippedPackStillParses() {
             // So a mutation test that passed because everything fails would be caught
-            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(175);
+            assertThat(RuleJson.rules(json(realRates()), "law/rates.json")).hasSize(176);
         }
 
         @Test

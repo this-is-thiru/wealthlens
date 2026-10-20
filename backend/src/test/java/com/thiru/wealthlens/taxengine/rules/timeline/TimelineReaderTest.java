@@ -42,6 +42,7 @@ class TimelineReaderTest {
             new RuleId("CG-PART-SHORT-SLAB"),
             new RuleId("CG-PART-LONG-LISTED"),
             new RuleId("CG-PART-LONG-OTHER"),
+            new RuleId("CG-PART-LONG-NOTIFIED"),
             new RuleId("RATE-SLAB-NEW-TAX-REGIME"),
             new RuleId("RATE-SLAB-FIRST-SCHEDULE"),
             new RuleId("RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79"),

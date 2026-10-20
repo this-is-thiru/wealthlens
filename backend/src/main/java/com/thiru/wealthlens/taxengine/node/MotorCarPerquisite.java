@@ -175,7 +175,7 @@ final class MotorCarPerquisite {
         Map<ItemFactId, Long> capacity = engine.cubicCapacityCc()
                 .map(cc -> Map.of(CUBIC_CAPACITY_CC, (long) cc))
                 .orElse(Map.of());
-        return new ItemFacts(Map.of(ELECTRIC, Boolean.toString(engine.electric())), capacity);
+        return new ItemFacts(Map.of(ELECTRIC, Boolean.toString(engine.electric())), capacity, Map.of());
     }
 
     private static Money perMonth(NodeContext ctx, RuleId ruleId, int months) {

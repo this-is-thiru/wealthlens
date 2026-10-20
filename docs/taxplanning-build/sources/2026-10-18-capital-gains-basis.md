@@ -68,4 +68,9 @@ W-088's. Read in session 21 with pypdf 6.14.0 from the official copies below.
 basis if the share was acquired before 1-10-2004, or allotted by the company (a bonus; a demerger — clause (b)(i),
 and (b)(ix) for a s.47 mode). A purchase since then keeps it unless it was off-market, a preferential issue in an
 infrequently traded share, or made while the company was delisted. The reading is recorded here; the waiver is
-applied from rule data (W-088f2), not from code — until then the case is refused (D-249).
+applied from rule data (`CG-PART-LONG-NOTIFIED`, W-088f2b, D-291), not from code — clause (I) by the acquisition date,
+clause (II) for a bonus or demerger allotment (D-289 C3(a)); a purchase on or after 1-10-2004 stays refused, since
+`portfolio` records none of (a)–(c). Re-read 2026-10-20 for that row: the header (*"PART II—Section 3—Sub-section (ii)
+… No. 3875] NEW DELHI, MONDAY, OCTOBER 1, 2018"*) and para 2 (*"This notification shall come into force with effect
+from the 1st day of April, 2019 and shall accordingly apply in relation to the assessment year 2019-20 and subsequent
+assessment years"*).

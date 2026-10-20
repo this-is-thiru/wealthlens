@@ -61,6 +61,13 @@ class CapitalGainsNodeTest {
         return new CapitalGainsInput.Bucket(Money.of(gain), term, facts, Optional.empty());
     }
 
+    /** Long-term equity sold with STT and bought without it, acquired as stated — S.O. 5054(E)'s question. */
+    private static CapitalGainsInput.Bucket boughtWithoutStt(String mode, String corporateAction, String acquiredOn) {
+        BucketFacts facts = new BucketFacts("EQUITY", NOT_PAID, PAID, mode, Optional.ofNullable(corporateAction),
+                LocalDate.parse(acquiredOn));
+        return new CapitalGainsInput.Bucket(Money.of("1000"), Term.LONG_TERM, facts, Optional.empty());
+    }
+
     private static CapitalGainsHead run(int year, CapitalGainsInput.Bucket... buckets) {
         return (CapitalGainsHead) result(year, buckets).value();
     }
@@ -178,14 +185,55 @@ class CapitalGainsNodeTest {
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenLongTermEquityWasBoughtWithoutStt_isRefusedNamingItsFacts(int year) {
-        // When / Then — case 6: s.198(1)(c)(i) / s.112A(1)(iii)(a) unmet on the buy; S.O. 5054(E)'s waiver is not yet
-        // a row (W-088f2b), so no row covers the bucket
+        // When / Then — case 6 (G): s.198(1)(c)(i) / s.112A(1)(iii)(a) unmet on the buy, and a purchase after
+        // 1-10-2004 is outside what CG-PART-LONG-NOTIFIED can tell (S.O. 5054(E) (a)–(c)), so no row covers it
         assertThatThrownBy(() -> run(year, bucket("1000", Term.LONG_TERM, NOT_PAID, PAID)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no row of RS-CG-PART")
                 .hasMessageContaining("sttOnAcquisition=false")
                 .hasMessageContaining("acquisitionMode=PURCHASE")
                 .hasMessageContaining("2020-06-01");
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1} {2} on {3}")
+    @CsvSource({
+        "2025, PURCHASE, , 2004-09-30",
+        "2025, CORPORATE_ACTION, BONUS, 2020-01-10",
+        "2025, CORPORATE_ACTION, DEMERGER, 2020-01-10",
+        "2025, UNRECORDED, , 2003-06-01",
+        "2026, PURCHASE, , 2004-09-30",
+        "2026, CORPORATE_ACTION, BONUS, 2020-01-10",
+        "2026, CORPORATE_ACTION, DEMERGER, 2020-01-10",
+        "2026, UNRECORDED, , 2003-06-01"
+    })
+    void evaluate_whenSoNotified_isTheListedLongTermPartDespiteNoSttOnTheBuy(int year, String mode,
+            String corporateAction, String acquiredOn) {
+        // When — cases A, C, D, F: S.O. 5054(E) clause (I) "before the 1st day of October, 2004", or (II) an
+        // allotment by the company, proviso (i) (and (ix) for a demerger); D-289 C3(a)
+        CapitalGainsHead head = run(year, boughtWithoutStt(mode, corporateAction, acquiredOn));
+
+        // Then
+        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
+        assertThat(head.total()).isEqualTo(Money.of("1000"));
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1} {2} on {3}")
+    @CsvSource({
+        "2025, PURCHASE, , 2004-10-01",
+        "2025, CORPORATE_ACTION, RIGHTS_ISSUANCE, 2020-01-10",
+        "2025, UNRECORDED, , 2004-10-01",
+        "2026, PURCHASE, , 2004-10-01",
+        "2026, CORPORATE_ACTION, RIGHTS_ISSUANCE, 2020-01-10",
+        "2026, UNRECORDED, , 2004-10-01"
+    })
+    void evaluate_whenNotSoNotified_isRefusedNamingItsFacts(int year, String mode, String corporateAction,
+            String acquiredOn) {
+        // When / Then — cases B, E: on or after 1-10-2004 a purchase turns on (a)–(c), which portfolio does not
+        // record, and a rights allotment is not in the row's list; neither is covered
+        assertThatThrownBy(() -> run(year, boughtWithoutStt(mode, corporateAction, acquiredOn)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no row of RS-CG-PART")
+                .hasMessageContaining(acquiredOn);
     }
 
     @Test

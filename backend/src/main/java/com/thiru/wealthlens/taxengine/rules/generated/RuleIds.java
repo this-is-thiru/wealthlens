@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 public final class RuleIds {
 
     public static final RuleId CG_PART_LONG_LISTED = new RuleId("CG-PART-LONG-LISTED");
+    public static final RuleId CG_PART_LONG_NOTIFIED = new RuleId("CG-PART-LONG-NOTIFIED");
     public static final RuleId CG_PART_LONG_OTHER = new RuleId("CG-PART-LONG-OTHER");
     public static final RuleId CG_PART_SHORT_LISTED = new RuleId("CG-PART-SHORT-LISTED");
     public static final RuleId CG_PART_SHORT_SLAB = new RuleId("CG-PART-SHORT-SLAB");

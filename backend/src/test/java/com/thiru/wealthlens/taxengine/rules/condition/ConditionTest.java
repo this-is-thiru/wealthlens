@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -24,6 +25,7 @@ class ConditionTest {
 
     private static final ItemFactId VEHICLE_ENGINE = new ItemFactId("vehicle.engine");
     private static final ItemFactId ENGINE_CC = new ItemFactId("vehicle.engine.cc");
+    private static final ItemFactId ACQUIRED_ON = new ItemFactId("capitalgains.acquired.on");
 
     private static ConditionContext resident(int age) {
         return ConditionContext.residentIndividualAged(age);
@@ -606,7 +608,7 @@ class ConditionTest {
         private final Condition upTo1600 = new ItemFactAtMost(ENGINE_CC, 1600);
 
         private ConditionContext aboutCapacity(long cc) {
-            return resident(40).about(new ItemFacts(Map.of(), Map.of(ENGINE_CC, cc)));
+            return resident(40).about(new ItemFacts(Map.of(), Map.of(ENGINE_CC, cc), Map.of()));
         }
 
         @Test
@@ -628,12 +630,42 @@ class ConditionTest {
     }
 
     @Nested
+    @DisplayName("ItemDateBefore")
+    class ItemDate {
+
+        // S.O. 5054(E) clause (I): "before the 1st day of October, 2004" (egazette 2018/190360 p.3)
+        private final Condition beforeOctober2004 = new ItemDateBefore(ACQUIRED_ON, LocalDate.of(2004, 10, 1));
+
+        private ConditionContext acquiredOn(LocalDate date) {
+            return resident(40).about(new ItemFacts(Map.of(), Map.of(), Map.of(ACQUIRED_ON, date)));
+        }
+
+        @Test
+        void holds_whenTheDateIsTheDayBefore_isTrue() {
+            assertThat(beforeOctober2004.holds(acquiredOn(LocalDate.of(2004, 9, 30)))).isTrue();
+        }
+
+        @Test
+        void holds_whenTheDateIsTheDayItself_isFalse() {
+            // "before" is strict: 1-10-2004 is clause (II)
+            assertThat(beforeOctober2004.holds(acquiredOn(LocalDate.of(2004, 10, 1)))).isFalse();
+        }
+
+        @Test
+        void holds_whenTheItemLacksTheDate_throwsRatherThanChoosingAnotherRow() {
+            assertThatThrownBy(() -> beforeOctober2004.holds(resident(40)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("capitalgains.acquired.on");
+        }
+    }
+
+    @Nested
     @DisplayName("the algebra is closed")
     class SealedFamily {
 
         /**
-         * An exhaustive switch with no {@code default} over all fifteen predicates. This does not
-         * merely pass — it <b>compiles</b>, and that is the assertion. A sixteenth {@code Condition}
+         * An exhaustive switch with no {@code default} over all sixteen predicates. This does not
+         * merely pass — it <b>compiles</b>, and that is the assertion. A seventeenth {@code Condition}
          * breaks this line, which is the whole reason the interface is sealed.
          *
          * <p>{@code EffectiveBetween} is deliberately absent: withdrawn by 18-temporal-versioning
@@ -655,6 +687,7 @@ class ConditionTest {
                     new PaidOtherThanInCash(),
                     new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC"),
                     new ItemFactAtMost(ENGINE_CC, 1600),
+                    new ItemDateBefore(ACQUIRED_ON, LocalDate.of(2004, 10, 1)),
                     AllOf.of(new IsResident()),
                     AnyOf.of(new IsResident()),
                     new Not(new IsResident()));
@@ -673,6 +706,7 @@ class ConditionTest {
                     case PaidOtherThanInCash ignored -> "structure";
                     case ItemFactIs ignored -> "item";
                     case ItemFactAtMost ignored -> "item";
+                    case ItemDateBefore ignored -> "item";
                     case AllOf ignored -> "composition";
                     case AnyOf ignored -> "composition";
                     case Not ignored -> "composition";
@@ -680,8 +714,8 @@ class ConditionTest {
                 assertThat(group).isNotBlank();
             }
 
-            // Part E's list, after the W-021 erratum: 13, not the 16 the backlog claimed; and the two item facts
-            assertThat(all).hasSize(15);
+            // Part E's list, after the W-021 erratum: 13, not the 16 the backlog claimed; and the three item facts
+            assertThat(all).hasSize(16);
         }
     }
 }

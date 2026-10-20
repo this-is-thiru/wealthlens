@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088f2b — S.O. 5054(E)'s waiver as rule data (D-289)
+Item            : W-088j — STT evidence in three states (D-249)
 Stage           : READY — not started
-Plan            : plans/W-088f2b.md not yet written (outline in plans/W-088f2.md)
+Plan            : plans/W-088j.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088f2b": read the WI row, D-289, plans/W-088f2.md (f2b outline, C3), sources row 26, ItemFacts / ConditionJson / AllOf; write plans/W-088f2b.md (R15: "Post-deployment actions"), STOP
-Last verify     : unit clean -Punit 3114 run, 0 fail; integration 269/0 (2026-10-20, W-088f2a)
-Waiting on      : the owner — "start W-088f2b"; OQ-32, OQ-33 open
+Next step       : on "start W-088j": read the WI row, D-249 F1, plans/W-088f.md F1, D-290/D-291 (stt.* facts PAID / NOT_PAID in RS-CG-PART), CapitalGainsSummaryService.boreStt, TradeOutcomeRecorder; write plans/W-088j.md (R15: "Post-deployment actions"), STOP
+Last verify     : unit clean -Punit 3133 run, 0 fail; integration 269/0 (2026-10-20, W-088f2b)
+Waiting on      : the owner — "start W-088j"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088f2a: choose the capital-gains part from rule rows on the bucket's facts — D-241's STT mapping moved out of Java into RS-CG-PART, RateBasisHint deleted, every case unchanged (D-289, D-290)
-Updated         : 2026-10-20, session 26 — W-088f2a done (D-290); next W-088f2b
+Last item commit: taxplanning W-088f2b: apply S.O. 5054(E)'s waiver from a rule row — acquisitions before 1-10-2004 and bonus or demerger allotments keep the listed-equity rate without STT on the buy; ItemDateBefore added (D-291)
+Updated         : 2026-10-20, session 26 — W-088f2b done (D-291), W-088f2 closed; next W-088j
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

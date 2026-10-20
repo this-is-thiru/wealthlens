@@ -59,6 +59,8 @@ public final class CapitalGainsNode implements ComputationNode {
 
     private static final ItemFactId CORPORATE_ACTION = new ItemFactId("capitalgains.corporate.action");
 
+    private static final ItemFactId ACQUIRED_ON = new ItemFactId("capitalgains.acquired.on");
+
     @Override
     public NodeId produces() {
         return NodeIds.CAPITALGAINS_INCOME;
@@ -143,7 +145,10 @@ public final class CapitalGainsNode implements ComputationNode {
                         + ctx.pack().taxYear().label() + ", so no provision is known to charge them"));
     }
 
-    /** The bucket's facts as the rows test them; the corporate action only where the lot came from one. */
+    /**
+     * The bucket's facts as the rows test them, its acquisition date among them; the corporate action only where the lot
+     * came from one.
+     */
     private static ItemFacts factsOf(CapitalGainsInput.Bucket bucket) {
         BucketFacts facts = bucket.facts();
         Map<ItemFactId, String> codes = new HashMap<>();
@@ -153,7 +158,7 @@ public final class CapitalGainsNode implements ComputationNode {
         codes.put(STT_ON_TRANSFER, sttCode(facts.sttOnTransfer()));
         codes.put(ACQUISITION, facts.acquisitionMode());
         facts.corporateAction().ifPresent(action -> codes.put(CORPORATE_ACTION, action));
-        return new ItemFacts(codes, Map.of());
+        return new ItemFacts(codes, Map.of(), Map.of(ACQUIRED_ON, facts.acquiredOn()));
     }
 
     private static String sttCode(boolean paid) {

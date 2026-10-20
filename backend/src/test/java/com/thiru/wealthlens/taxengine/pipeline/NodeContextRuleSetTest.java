@@ -101,11 +101,11 @@ class NodeContextRuleSetTest {
     /** A car that is not electric, of the given capacity — the facts MotorCarPerquisite supplies (D-257). */
     private static ItemFacts carOf(long cubicCapacityCc) {
         return new ItemFacts(Map.of(new ItemFactId("vehicle.engine.electric"), "false"),
-                Map.of(new ItemFactId("vehicle.engine.cc"), cubicCapacityCc));
+                Map.of(new ItemFactId("vehicle.engine.cc"), cubicCapacityCc), Map.of());
     }
 
     private static ItemFacts electricCar() {
-        return new ItemFacts(Map.of(new ItemFactId("vehicle.engine.electric"), "true"), Map.of());
+        return new ItemFacts(Map.of(new ItemFactId("vehicle.engine.electric"), "true"), Map.of(), Map.of());
     }
 
     private static NodeContext reading(RulePack pack, RegimeCode regime, EngineInputs inputs, RuleSetId... sets) {

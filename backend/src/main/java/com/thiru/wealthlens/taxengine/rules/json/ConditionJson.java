@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.IncomeAtLeast;
 import com.thiru.wealthlens.taxengine.rules.condition.IncomeAtMost;
 import com.thiru.wealthlens.taxengine.rules.condition.IsCertifiedDisabled;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemDateBefore;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFactAtMost;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFactIs;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
@@ -53,6 +54,7 @@ public final class ConditionJson {
         "PaidOtherThanInCash",
         "ItemFactIs",
         "ItemFactAtMost",
+        "ItemDateBefore",
         "AllOf",
         "AnyOf",
         "Not"
@@ -74,6 +76,8 @@ public final class ConditionJson {
                             new ItemFactId(PackJson.text(node, "fact", path)), PackJson.text(node, "code", path));
                     case "ItemFactAtMost" -> new ItemFactAtMost(
                             new ItemFactId(PackJson.text(node, "fact", path)), PackJson.integer(node, "limit", path));
+                    case "ItemDateBefore" -> new ItemDateBefore(
+                            new ItemFactId(PackJson.text(node, "fact", path)), PackJson.date(node, "date", path));
                     case "AllOf", "AnyOf", "Not" -> composition(tag, node, path);
                     default -> throw unhandled(tag, path);
                 });

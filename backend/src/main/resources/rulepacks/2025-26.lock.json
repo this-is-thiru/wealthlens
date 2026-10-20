@@ -3,8 +3,8 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.78",
-      "checksum": "sha256:f95ad752b0cb49f27a3b2b24bb7becd7ed69145e4a5b5615145eaa42e06b40c5"
+      "version": "2025-26.law.79",
+      "checksum": "sha256:4eda2d21e262d40df21a6ac8699097f251cee3179ef7b4577c626ab7913c72d2"
     },
     "exec": {
       "version": "2025-26.exec.27",
@@ -21,6 +21,7 @@
   },
   "rules": {
     "CG-PART-LONG-LISTED": "sha256:af98f1c94bbad478683ab8877f3d3667c000c0dcb33dccf6ef9cf07f1256ec9c",
+    "CG-PART-LONG-NOTIFIED": "sha256:966949d796429c774b6e6d4c3e69a79f14c2296fe14db820025a23edc1b31b0d",
     "CG-PART-LONG-OTHER": "sha256:354176a386c67b7ecfa0cf35a4304f2bad164d8722dcb60680e893e333ca83e7",
     "CG-PART-SHORT-LISTED": "sha256:1f6b3125f63597bd89fbe10d450fc0a5cd242a3a2e93cc54d6e948a6a4fba789",
     "CG-PART-SHORT-SLAB": "sha256:71f4ecc174eb23699354e397efd9dc94e8700af2cd2bb97538f8cb39e86e3248",
