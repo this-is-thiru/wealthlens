@@ -115,26 +115,13 @@ public class TradeOutcomeRecorder {
         double buyShare = lot.originalQuantity() > 0 ? lot.quantity() / lot.originalQuantity() : 0.0;
 
         Map<String, Double> buyBreakup = share(buyBreakupFor(userMail, asset), buyShare);
-
-        // The lumped total is derived from this row's own allocated lines rather than computed
-        // separately, so "the total equals the sum of the columns beside it" holds per row as well
-        // as across rows. Two figures that must agree come from one.
-        double sellCharges = TMoney.sum(sellBreakup.values());
-        double buyCharges = LotChargeAllocator.deductBroker(asset, lot.quantity(), lot.originalQuantity());
-        double buyMiscCharges = LotChargeAllocator.deductMisc(asset, lot.quantity(), lot.originalQuantity());
-        // Misc charges stay user-entered -- the engine does not produce them, so there is no
-        // computed figure to prefer over this one, unlike the broker charge above.
-        double sellMiscCharges = TMoney.scale(sell.getMiscCharges() * sellShare);
+        TradeFigures figures = rowFigures(sell, lot, sellBreakup, sellShare);
 
         TradeClassification classification = tradeClassifier.classify(new TradeClassificationQuery(
                 sell.getStockCode(), sell.getAssetType(), sell.getSegment(),
                 asset.getTransactionDate(), sell.getTransactionDate()));
 
-        double totalBuyValue = TMoney.scale((asset.getPrice() * lot.quantity()) + buyCharges + buyMiscCharges);
-        double totalSellValue = TMoney.scale((sell.getPrice() * lot.quantity()) - sellCharges - sellMiscCharges);
-        double netProfit = TMoney.scale(totalSellValue - totalBuyValue);
-
-        return TradeOutcomeContext.builder()
+        TradeOutcomeContext.TradeOutcomeContextBuilder row = TradeOutcomeContext.builder()
                 .email(userMail.getEmail())
                 .stockCode(sell.getStockCode())
                 .stockName(sell.getStockName())
@@ -143,38 +130,74 @@ public class TradeOutcomeRecorder {
                 .assetType(sell.getAssetType())
                 .accountType(sell.getAccountType())
                 .accountHolder(sell.getAccountHolder())
-                .segment(sell.getSegment())
-                .originalBuyPrice(originalBuyPriceOf(asset))
-                .corporateActionAdjustedBuyPrice(asset.getPrice())
-                .buyQuantity(lot.quantity())
-                .buyDate(asset.getTransactionDate())
-                .buyBrokerCharges(buyCharges)
-                .buyMiscCharges(buyMiscCharges)
-                .buyChargeBreakup(buyBreakup)
-                .deductibleBuyCharges(chargeDeductibilityService.deductibleTotal(buyBreakup))
-                .sellPrice(sell.getPrice())
-                .sellQuantity(lot.quantity())
-                .sellDate(sell.getTransactionDate())
-                .sellBrokerCharges(sellCharges)
-                .sellMiscCharges(sellMiscCharges)
-                .sellChargeBreakup(sellBreakup)
-                .deductibleSellCharges(chargeDeductibilityService.deductibleTotal(sellBreakup))
-                .totalBuyValue(totalBuyValue)
-                .totalSellValue(totalSellValue)
-                .netProfit(netProfit)
-                .profitPercentage(totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0)
+                .segment(sell.getSegment());
+        buySide(row, lot, buyBreakup, figures);
+        sellSide(row, sell, lot.quantity(), sellBreakup, figures);
+        return row
+                .totalBuyValue(figures.totalBuyValue())
+                .totalSellValue(figures.totalSellValue())
+                .netProfit(figures.netProfit())
+                .profitPercentage(figures.profitPercentage())
                 .holdingPeriodDays(ChronoUnit.DAYS.between(asset.getTransactionDate(), sell.getTransactionDate()))
                 .capitalGainsType(classification.capitalGainsType())
                 .instrumentSubClass(classification.subClass())
                 .classificationReason(classification.reason())
                 .financialYear(TLocalDate.financialYear(sell.getTransactionDate()))
                 .sourceSellTransactionId(sellTransactionId)
+                .build();
+    }
+
+    /**
+     * The row's charges and values, each scaled to the paisa. The lumped sell total is derived from this row's own
+     * allocated lines rather than computed separately, so "the total equals the sum of the columns beside it" holds
+     * per row as well as across rows. Two figures that must agree come from one.
+     */
+    private static TradeFigures rowFigures(AssetRequest sell, MatchedLot lot, Map<String, Double> sellBreakup,
+                                           double sellShare) {
+        AssetEntity asset = lot.asset();
+        double sellCharges = TMoney.sum(sellBreakup.values());
+        double buyCharges = LotChargeAllocator.deductBroker(asset, lot.quantity(), lot.originalQuantity());
+        double buyMiscCharges = LotChargeAllocator.deductMisc(asset, lot.quantity(), lot.originalQuantity());
+        // Misc charges stay user-entered -- the engine does not produce them, so there is no
+        // computed figure to prefer over this one, unlike the broker charge above.
+        double sellMiscCharges = TMoney.scale(sell.getMiscCharges() * sellShare);
+
+        double totalBuyValue = TMoney.scale((asset.getPrice() * lot.quantity()) + buyCharges + buyMiscCharges);
+        double totalSellValue = TMoney.scale((sell.getPrice() * lot.quantity()) - sellCharges - sellMiscCharges);
+        double netProfit = TMoney.scale(totalSellValue - totalBuyValue);
+        return new TradeFigures(buyCharges, buyMiscCharges, sellCharges, sellMiscCharges, totalBuyValue,
+                totalSellValue, netProfit, totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0);
+    }
+
+    /** The lot's side of the row: what was bought, when, at what price and charge, and how it was acquired. */
+    private void buySide(TradeOutcomeContext.TradeOutcomeContextBuilder row, MatchedLot lot,
+                         Map<String, Double> buyBreakup, TradeFigures figures) {
+        AssetEntity asset = lot.asset();
+        row.originalBuyPrice(originalBuyPriceOf(asset))
+                .corporateActionAdjustedBuyPrice(asset.getPrice())
+                .buyQuantity(lot.quantity())
+                .buyDate(asset.getTransactionDate())
+                .buyBrokerCharges(figures.buyBrokerCharges())
+                .buyMiscCharges(figures.buyMiscCharges())
+                .buyChargeBreakup(buyBreakup)
+                .deductibleBuyCharges(chargeDeductibilityService.deductibleTotal(buyBreakup))
                 .sourceBuyLotId(asset.getId())
                 .corporateActionDerived(asset.getCorporateActionType() != null)
                 .appliedCorporateActions(asset.getCorporateActions())
                 .acquisitionMode(Acquisition.of(asset.getCorporateActionType()).mode())
-                .acquisitionCorporateAction(asset.getCorporateActionType())
-                .build();
+                .acquisitionCorporateAction(asset.getCorporateActionType());
+    }
+
+    /** The sell's side of the row: the price, date, quantity and this lot's share of the sell's charges. */
+    private void sellSide(TradeOutcomeContext.TradeOutcomeContextBuilder row, AssetRequest sell, double quantity,
+                          Map<String, Double> sellBreakup, TradeFigures figures) {
+        row.sellPrice(sell.getPrice())
+                .sellQuantity(quantity)
+                .sellDate(sell.getTransactionDate())
+                .sellBrokerCharges(figures.sellBrokerCharges())
+                .sellMiscCharges(figures.sellMiscCharges())
+                .sellChargeBreakup(sellBreakup)
+                .deductibleSellCharges(chargeDeductibilityService.deductibleTotal(sellBreakup));
     }
 
     /**

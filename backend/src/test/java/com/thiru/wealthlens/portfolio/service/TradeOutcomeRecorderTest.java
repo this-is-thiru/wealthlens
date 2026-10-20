@@ -23,10 +23,12 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolution;
 import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
@@ -417,5 +419,89 @@ class TradeOutcomeRecorderTest {
         assertEquals(CorporateActionType.DEMERGER, rows.get(0).getAcquisitionCorporateAction());
         assertEquals(AcquisitionMode.PURCHASE, rows.get(1).getAcquisitionMode());
         assertNull(rows.get(1).getAcquisitionCorporateAction());
+    }
+
+    @Test
+    void record_whenOneLot_writesEveryFieldOfTheRow() {
+        // Given -- 3 of a 4-unit lot (bought @ 95, now @ 100 after an adjustment; broker 10, misc 2, buy breakup
+        // BROKERAGE 8 / STT 2), sold @ 200 with misc 1 and an engine breakup of BROKERAGE 20 / STT 6
+        AssetEntity asset = lot("buy-1", 1.0, 100.0, 10.0);
+        asset.setStockName("Lot Co");
+        asset.setExchangeName("BSE");
+        asset.setBrokerName(BrokerName.UPSTOX);
+        asset.setMiscCharges(2.0);
+        TransactionEntity bought = new TransactionEntity();
+        bought.setPrice(95.0);
+        when(transactionRepository.findById("buy-1")).thenReturn(Optional.of(bought));
+        UserChargeEntity buyCharges = new UserChargeEntity();
+        buyCharges.setAmountByCode(new LinkedHashMap<>(Map.of("BROKERAGE", 8.0, "STT", 2.0)));
+        when(userChargeService.findOptionalForTransaction(EMAIL, "buy-1")).thenReturn(Optional.of(buyCharges));
+        // A stand-in rule that makes each map's figure visible: the deductible part is its STT
+        when(chargeDeductibilityService.deductibleTotal(any())).thenAnswer(
+                invocation -> invocation.<Map<String, Double>>getArgument(0).getOrDefault("STT", 0.0));
+        AssetRequest sell = sell(3.0, 200.0, TradeSegment.DELIVERY);
+        sell.setStockName("Sell Co");
+        sell.setAccountType(AccountType.OUTSOURCED);
+        sell.setAccountHolder("main");
+        sell.setMiscCharges(1.0);
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell, "sell-1",
+                List.of(new TradeOutcomeRecorder.MatchedLot(asset, 3.0, 4.0)),
+                Optional.of(computation(new LinkedHashMap<>(Map.of("BROKERAGE", 20.0, "STT", 6.0)))));
+
+        // Then
+        TradeOutcomeContext row = captureSaved(1).getFirst();
+        assertRowIdentity(row);
+        assertRowFigures(row);
+    }
+
+    /** The fields the row takes from the sell, the lot and the classification. */
+    private static void assertRowIdentity(TradeOutcomeContext row) {
+        assertEquals(EMAIL, row.getEmail());
+        assertEquals("INFY", row.getStockCode());
+        assertEquals("Sell Co", row.getStockName());
+        assertEquals("NSE", row.getExchangeName());
+        assertEquals(BrokerName.ZERODHA, row.getBrokerName());
+        assertEquals(AssetType.EQUITY, row.getAssetType());
+        assertEquals(AccountType.OUTSOURCED, row.getAccountType());
+        assertEquals("main", row.getAccountHolder());
+        assertEquals(TradeSegment.DELIVERY, row.getSegment());
+        assertEquals(BUY_DATE, row.getBuyDate());
+        assertEquals(SELL_DATE, row.getSellDate());
+        // 2024-01-10 -> 2025-01-10 is 366 days (leap year); then 21+28+31+30+31+10 = 151
+        assertEquals(517L, row.getHoldingPeriodDays());
+        assertEquals(CapitalGainsType.LONG_TERM, row.getCapitalGainsType());
+        assertNull(row.getInstrumentSubClass());
+        assertEquals("held beyond 12 months", row.getClassificationReason());
+        assertEquals("2025-2026", row.getFinancialYear());
+        assertEquals("sell-1", row.getSourceSellTransactionId());
+        assertEquals("asset-buy-1", row.getSourceBuyLotId());
+        assertEquals(Boolean.FALSE, row.getCorporateActionDerived());
+        assertEquals(List.of(), row.getAppliedCorporateActions());
+        assertEquals(AcquisitionMode.PURCHASE, row.getAcquisitionMode());
+        assertNull(row.getAcquisitionCorporateAction());
+    }
+
+    private static void assertRowFigures(TradeOutcomeContext row) {
+        MoneyAssert.assertMoney(95.0, row.getOriginalBuyPrice());
+        MoneyAssert.assertMoney(100.0, row.getCorporateActionAdjustedBuyPrice());
+        assertEquals(3.0, row.getBuyQuantity(), 0.0);
+        assertEquals(3.0, row.getSellQuantity(), 0.0);
+        MoneyAssert.assertMoney(7.5, row.getBuyBrokerCharges());     // LotChargeAllocator: 10 × 3 ÷ 4
+        MoneyAssert.assertMoney(1.5, row.getBuyMiscCharges());       // 2 × 3 ÷ 4
+        // The buy breakup's share, 3 of 4: BROKERAGE 8 × 0.75 = 6, STT 2 × 0.75 = 1.5
+        MoneyAssert.assertBreakdown(Map.of("BROKERAGE", 6.0, "STT", 1.5), row.getBuyChargeBreakup());
+        MoneyAssert.assertMoney(1.5, row.getDeductibleBuyCharges());
+        MoneyAssert.assertMoney(200.0, row.getSellPrice());
+        // One lot takes the whole sell breakup: 20 + 6 = 26
+        MoneyAssert.assertBreakdown(Map.of("BROKERAGE", 20.0, "STT", 6.0), row.getSellChargeBreakup());
+        MoneyAssert.assertMoney(26.0, row.getSellBrokerCharges());
+        MoneyAssert.assertMoney(6.0, row.getDeductibleSellCharges());
+        MoneyAssert.assertMoney(1.0, row.getSellMiscCharges());      // 1 × the whole sell
+        MoneyAssert.assertMoney(309.0, row.getTotalBuyValue());      // 100 × 3 + 7.5 + 1.5
+        MoneyAssert.assertMoney(573.0, row.getTotalSellValue());     // 200 × 3 − 26 − 1
+        MoneyAssert.assertMoney(264.0, row.getNetProfit());
+        assertEquals(264.0 / 309.0 * 100, row.getProfitPercentage(), 1e-9);
     }
 }

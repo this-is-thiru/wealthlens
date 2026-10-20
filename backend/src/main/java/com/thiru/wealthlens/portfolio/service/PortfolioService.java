@@ -13,7 +13,6 @@ import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.HoldingType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
@@ -697,47 +696,9 @@ public class PortfolioService {
 
         LocalDate buyDate = assetEntity.getTransactionDate();
         LocalDate sellDate = assetRequest.getTransactionDate();
+        TradeFigures figures = v1Figures(assetEntity, assetRequest, sellQuantity, buyBrokerCharges, buyMiscCharges);
 
-        // Pro-rate buy-side charges based on sell quantity
-        double assetQuantity = assetEntity.getQuantity() != null ? assetEntity.getQuantity() : 1.0;
-
-        // Pro-rate sell-side charges based on sell quantity
-        double sellReqQuantity = assetRequest.getQuantity() != null ? assetRequest.getQuantity() : 1.0;
-        double sellBrokerCharges = (assetRequest.getBrokerCharges() / sellReqQuantity) * sellQuantity;
-        double sellMiscCharges = (assetRequest.getMiscCharges() / sellReqQuantity) * sellQuantity;
-
-        // Buy side values
-        double corporateActionAdjustedBuyPrice = assetEntity.getPrice();
-        double originalBuyPrice = corporateActionAdjustedBuyPrice; // Will improve later with source transaction data
-        double buyQty = sellQuantity;
-
-        // Sell side values
-        double sellPrice = assetRequest.getPrice();
-        double sellQty = sellQuantity;
-
-        // Computed values
-        double totalBuyValue = (corporateActionAdjustedBuyPrice * sellQuantity) + buyBrokerCharges + buyMiscCharges;
-        double totalSellValue = (sellPrice * sellQuantity) - sellBrokerCharges - sellMiscCharges;
-        double netProfit = totalSellValue - totalBuyValue;
-        double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
-
-        // Holding period and capital gains type
-        long holdingPeriodDays = ChronoUnit.DAYS.between(buyDate, sellDate);
-        // Resolved rather than counted. For listed equity this is the same answer 365 days gave; for
-        // every other asset type it is the first correct one.
-        CapitalGainsType capitalGainsType = holdingPeriodService
-                .classify(assetRequest.getAssetType(), null, buyDate, sellDate)
-                .capitalGainsType();
-
-        // Financial year derivation (Indian FY: April - March)
-        String financialYear = deriveFinancialYear(sellDate);
-
-        // Check if CA-derived (bonus stock or price=0)
-        boolean corporateActionDerived = (assetEntity.getCorporateActions() != null && !assetEntity.getCorporateActions().isEmpty())
-                || (assetEntity.getPrice() == 0 && assetEntity.getCorporateActionType() != null);
-
-        // Build context
-        TradeOutcomeContext context = TradeOutcomeContext.builder()
+        TradeOutcomeContext.TradeOutcomeContextBuilder row = TradeOutcomeContext.builder()
                 .email(email)
                 .stockCode(assetEntity.getStockCode())
                 .stockName(assetEntity.getStockName())
@@ -745,34 +706,68 @@ public class PortfolioService {
                 .brokerName(assetEntity.getBrokerName())
                 .assetType(assetEntity.getAssetType())
                 .accountType(assetRequest.getAccountType())
-                .accountHolder(assetRequest.getAccountHolder())
-                .originalBuyPrice(originalBuyPrice)
-                .corporateActionAdjustedBuyPrice(corporateActionAdjustedBuyPrice)
-                .buyQuantity(buyQty)
-                .buyDate(buyDate)
-                .buyBrokerCharges(buyBrokerCharges)
-                .buyMiscCharges(buyMiscCharges)
-                .sellPrice(sellPrice)
-                .sellQuantity(sellQty)
+                .accountHolder(assetRequest.getAccountHolder());
+        v1BuySide(row, assetEntity, sellQuantity, figures);
+        return row
+                .sellPrice(assetRequest.getPrice())
+                .sellQuantity(sellQuantity)
                 .sellDate(sellDate)
-                .sellBrokerCharges(sellBrokerCharges)
-                .sellMiscCharges(sellMiscCharges)
-                .totalBuyValue(totalBuyValue)
-                .totalSellValue(totalSellValue)
-                .netProfit(netProfit)
-                .profitPercentage(profitPercentage)
-                .holdingPeriodDays(holdingPeriodDays)
-                .capitalGainsType(capitalGainsType)
-                .financialYear(financialYear)
+                .sellBrokerCharges(figures.sellBrokerCharges())
+                .sellMiscCharges(figures.sellMiscCharges())
+                .totalBuyValue(figures.totalBuyValue())
+                .totalSellValue(figures.totalSellValue())
+                .netProfit(figures.netProfit())
+                .profitPercentage(figures.profitPercentage())
+                .holdingPeriodDays(ChronoUnit.DAYS.between(buyDate, sellDate))
+                // Resolved rather than counted. For listed equity this is the same answer 365 days gave; for
+                // every other asset type it is the first correct one.
+                .capitalGainsType(holdingPeriodService
+                        .classify(assetRequest.getAssetType(), null, buyDate, sellDate)
+                        .capitalGainsType())
+                .financialYear(deriveFinancialYear(sellDate))
                 .sourceSellTransactionId(transactionId)
+                .build();
+    }
+
+    /** V1's lot side of the row: the lot's price, date, charges and how it was acquired. */
+    private static void v1BuySide(TradeOutcomeContext.TradeOutcomeContextBuilder row, AssetEntity assetEntity,
+                                  double sellQuantity, TradeFigures figures) {
+        // The original is the adjusted price until V1 reads its source transaction
+        row.originalBuyPrice(assetEntity.getPrice())
+                .corporateActionAdjustedBuyPrice(assetEntity.getPrice())
+                .buyQuantity(sellQuantity)
+                .buyDate(assetEntity.getTransactionDate())
+                .buyBrokerCharges(figures.buyBrokerCharges())
+                .buyMiscCharges(figures.buyMiscCharges())
                 .sourceBuyLotId(assetEntity.getId())
-                .corporateActionDerived(corporateActionDerived)
+                .corporateActionDerived(isCorporateActionDerived(assetEntity))
                 .appliedCorporateActions(assetEntity.getCorporateActions())
                 .acquisitionMode(Acquisition.of(assetEntity.getCorporateActionType()).mode())
-                .acquisitionCorporateAction(assetEntity.getCorporateActionType())
-                .build();
+                .acquisitionCorporateAction(assetEntity.getCorporateActionType());
+    }
 
-        return context;
+    /** V1's figures: the buy charges as handed in, the sell charges pro-rated to the quantity sold. */
+    private static TradeFigures v1Figures(AssetEntity assetEntity, AssetRequest assetRequest, double sellQuantity,
+                                          double buyBrokerCharges, double buyMiscCharges) {
+        // Pro-rate sell-side charges based on sell quantity
+        double sellReqQuantity = assetRequest.getQuantity() != null ? assetRequest.getQuantity() : 1.0;
+        double sellBrokerCharges = (assetRequest.getBrokerCharges() / sellReqQuantity) * sellQuantity;
+        double sellMiscCharges = (assetRequest.getMiscCharges() / sellReqQuantity) * sellQuantity;
+
+        double corporateActionAdjustedBuyPrice = assetEntity.getPrice();
+        double sellPrice = assetRequest.getPrice();
+        double totalBuyValue = (corporateActionAdjustedBuyPrice * sellQuantity) + buyBrokerCharges + buyMiscCharges;
+        double totalSellValue = (sellPrice * sellQuantity) - sellBrokerCharges - sellMiscCharges;
+        double netProfit = totalSellValue - totalBuyValue;
+        double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
+        return new TradeFigures(buyBrokerCharges, buyMiscCharges, sellBrokerCharges, sellMiscCharges,
+                totalBuyValue, totalSellValue, netProfit, profitPercentage);
+    }
+
+    /** A lot carrying corporate actions, or a zero-price lot a corporate action created (a bonus). */
+    private static boolean isCorporateActionDerived(AssetEntity assetEntity) {
+        return (assetEntity.getCorporateActions() != null && !assetEntity.getCorporateActions().isEmpty())
+                || (assetEntity.getPrice() == 0 && assetEntity.getCorporateActionType() != null);
     }
 
     /**

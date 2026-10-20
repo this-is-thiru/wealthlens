@@ -690,6 +690,80 @@ class PortfolioServiceTest {
     }
 
     @Test
+    void sellStock_v1_writesEveryFieldOfTheOutcome() {
+        // Given -- a lot of 4 @ 100 (broker 10, misc 2) at Upstox on BSE; 3 sold @ 200 (broker 6, misc 1.5)
+        AssetEntity asset = sellableLot("buy-1", 4.0, 100.0, LocalDate.of(2024, 1, 10));
+        asset.setStockName("Lot Co");
+        asset.setExchangeName("BSE");
+        asset.setBrokerName(BrokerName.UPSTOX);
+        asset.setBrokerCharges(10.0);
+        asset.setMiscCharges(2.0);
+        when(portfolioRepository
+                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
+                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setAccountType(AccountType.OUTSOURCED);
+        sell.setAccountHolder("main");
+        sell.setQuantity(3.0);
+        sell.setPrice(200.0);
+        sell.setBrokerCharges(6.0);
+        sell.setMiscCharges(1.5);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        TradeOutcomeContext row = captor.getValue();
+        assertV1Identity(row);
+        assertV1Figures(row);
+    }
+
+    /** The fields V1 takes from the lot (stock, exchange, broker, asset type) and from the request (account). */
+    private void assertV1Identity(TradeOutcomeContext row) {
+        assertEquals(userMail.getEmail(), row.getEmail());
+        assertEquals("STOCK1", row.getStockCode());
+        assertEquals("Lot Co", row.getStockName());
+        assertEquals("BSE", row.getExchangeName());
+        assertEquals(BrokerName.UPSTOX, row.getBrokerName());
+        assertEquals(AssetType.EQUITY, row.getAssetType());
+        assertEquals(AccountType.OUTSOURCED, row.getAccountType());
+        assertEquals("main", row.getAccountHolder());
+        assertEquals(LocalDate.of(2024, 1, 10), row.getBuyDate());
+        assertEquals(LocalDate.of(2025, 8, 10), row.getSellDate());
+        // 2024-01-10 -> 2025-01-10 is 366 days (leap year); then 21+28+31+30+31+30+31+10 = 212
+        assertEquals(578L, row.getHoldingPeriodDays());
+        assertEquals(CapitalGainsType.LONG_TERM, row.getCapitalGainsType());
+        assertEquals("2025-2026", row.getFinancialYear());
+        assertEquals("sell-1", row.getSourceSellTransactionId());
+        assertEquals("asset-buy-1", row.getSourceBuyLotId());
+        assertEquals(Boolean.FALSE, row.getCorporateActionDerived());
+        assertEquals(List.of(), row.getAppliedCorporateActions());
+        assertEquals(AcquisitionMode.PURCHASE, row.getAcquisitionMode());
+        assertNull(row.getAcquisitionCorporateAction());
+    }
+
+    private static void assertV1Figures(TradeOutcomeContext row) {
+        MoneyAssert.assertMoney(100.0, row.getOriginalBuyPrice());
+        MoneyAssert.assertMoney(100.0, row.getCorporateActionAdjustedBuyPrice());
+        assertEquals(3.0, row.getBuyQuantity(), 0.0);
+        assertEquals(3.0, row.getSellQuantity(), 0.0);
+        MoneyAssert.assertMoney(7.5, row.getBuyBrokerCharges());   // LotChargeAllocator: 10 × 3 ÷ 4, nothing allocated before
+        MoneyAssert.assertMoney(1.5, row.getBuyMiscCharges());     // 2 × 3 ÷ 4
+        MoneyAssert.assertMoney(200.0, row.getSellPrice());
+        MoneyAssert.assertMoney(6.0, row.getSellBrokerCharges());  // 6 ÷ 3 × 3
+        MoneyAssert.assertMoney(1.5, row.getSellMiscCharges());    // 1.5 ÷ 3 × 3
+        MoneyAssert.assertMoney(309.0, row.getTotalBuyValue());    // 100 × 3 + 7.5 + 1.5
+        MoneyAssert.assertMoney(592.5, row.getTotalSellValue());   // 200 × 3 − 6 − 1.5
+        MoneyAssert.assertMoney(283.5, row.getNetProfit());
+        assertEquals(283.5 / 309.0 * 100, row.getProfitPercentage(), 1e-9);
+    }
+
+    @Test
     void sellStock_v1_whenTheLotWasABonusAllotment_recordsItsAcquisition() {
         // Given -- the lot's own record says how it was acquired; S.O. 5054(E) turns on it (W-088f)
         AssetEntity asset = sellableLot("buy-1", 3.0, 0.0, LocalDate.of(2020, 1, 10));
