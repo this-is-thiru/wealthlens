@@ -57,6 +57,17 @@ override convenience. Where the build enforces one, the enforcing check is named
 - A test must be able to fail: a new guard or rule is proven by a deliberate violation, then reverted.
 - Every behaviour change has a test that fails without it. Never weaken or delete an assertion to make a build pass.
 
+### 6. Operations — every one-time action is written down
+
+- **One list:** `docs/operations/post-deployment-runbook.md` holds, in order, everything a database needs because of
+  a change: prechecks before a deploy, startup runners to confirm, seed calls, data corrections, flags, and
+  recurring operations.
+- **Same commit:** a change that needs any of these adds its entry there in the same commit, or it is not done.
+  Each entry gives when, who, the exact command, a read-only check before and after, whether a second run is safe,
+  and the way back (backup first for any write to stored data).
+- **The owner runs it:** a Claude Code session never runs anything against a real database. It writes the command;
+  the owner runs it and the result goes into the runbook's run log.
+
 ## Commands
 
 ```bash

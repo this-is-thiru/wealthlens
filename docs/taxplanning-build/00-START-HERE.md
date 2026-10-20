@@ -85,6 +85,9 @@ Write this, then **stop**. Do not write any code.
 **How I will verify:**
 <the item's Verify command, verbatim>
 
+**Post-deployment actions (R15):** <"none", or each runbook entry this item adds to
+docs/operations/post-deployment-runbook.md: when, who, command, read-only check before and after>
+
 **Risks or ambiguities I noticed:**
 ```
 
@@ -138,6 +141,7 @@ These override any instinct, any shortcut, and anything else in this repository.
 | **R12** | **Explain before you code.** No exceptions. |
 | **R13** | **If the approved plan turns out to be wrong while coding, stop.** Revert what you wrote, set the item back to `EXPLAINED`, write a revised plan saying what you found, and wait for approval again. Never improvise past an approved plan. |
 | **R14** | **Approval must be explicit.** Only a message that names the item and says *approved* (or *changes requested*) counts. Silence, "ok", "looks good", or a new unrelated instruction are **not** approval — ask. |
+| **R15** | **Every one-time or per-deploy action goes in `docs/operations/post-deployment-runbook.md`, in the item's own commit** — a seed call, a data correction, a flag, a precheck before an index or constraint, a startup runner whose result must be confirmed: when, who, the exact command, a read-only check before and after, whether a second run is safe, the way back. The plan names them under "Post-deployment actions"; the report repeats them. A session never runs them against a real database — the owner does, and the result goes into the runbook's run log (D-278). |
 
 > **R7 amended (D-046 B1, 2026-09-23):** `docs/taxplanning-design/00-BRIEF.md` is the one design
 > document edited **in place**, with its own Changes log — like `01-PRD.md` and `02-TECH-SPEC.md`. The
@@ -305,7 +309,7 @@ Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-d
 | `B-00n` | a blocker | `STATE.md` | `B-002` |
 | `D-0nn` | a build decision (three digits) | `STATE.md` | `D-046` |
 | `B1`, `B2` | backlog rules (B1: an item carries its own test; B2: a `permits` clause lists only what exists) | `03-WORK-ITEMS.md` | `WI rule B2` |
-| `R1`–`R14` | the absolute rules | this file §4 | `START-HERE R7` |
+| `R1`–`R15` | the absolute rules | this file §4 | `START-HERE R7` |
 | `P0`–`P11`, `P1-quick` | prompts | `04-PROMPTS.md` | `prompt P11` |
 | `F1`–`F41` | product features; `F2.9` = a criterion | `01-PRD.md` | `PRD F2.9` |
 | `N1`–`N12` | non-functional requirements | `01-PRD.md` | `PRD N12` |
@@ -333,7 +337,7 @@ Added by `W-045b` (2026-09-23), from a scan of every file in `docs/taxplanning-d
 | `D-WORD` (`D-PURE`, `D-NOSILENT`, `D-TEMPORALKEY` …) | design rules | `02-lessons.md` and later | — |
 | `D-1`–`D-18` | defects found by the third pass | `15-review-findings.md` | `D-001`… (`D-17` ≠ `D-017`) |
 | `S1`–`S11` | sources (the documents that were opened) | `01-rulebook.md` | `16-getting-started.md` S1, S2 sections |
-| `R1`–`R24` | rulebook groups | `01-rulebook.md` | START-HERE `R1`–`R14` |
+| `R1`–`R24` | rulebook groups | `01-rulebook.md` | START-HERE `R1`–`R15` |
 | `H-1`–`H-16` | hypotheses about the placeholder | `01-rulebook.md` R24 | — |
 | `O-1`–`O-36` | observations of the placeholder's mistakes | `02-lessons.md` (from the context pack) | `14-operational-design.md` `O1`–`O5` sections |
 | `L1`, `L2` | lessons sections | `02-lessons.md` | `17-regime-lifecycle.md` `L1`–`L5` |
