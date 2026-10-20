@@ -214,6 +214,25 @@ public class TradeOutcomeEntity implements AuditableEntity {
     @Field("acquisition_corporate_action")
     private CorporateActionType acquisitionCorporateAction;
 
+    /**
+     * The exchange the lot's buy was recorded on, from the lot's own record — not {@link #exchangeName}, which the
+     * writers take from different sides; absent on rows written before W-088j2b (D-295).
+     */
+    @Field("buy_exchange_name")
+    private String buyExchangeName;
+
+    /** The segment the lot's buy was recorded in; absent on rows written before W-088j2b. */
+    @Field(name = "buy_segment", targetType = FieldType.STRING)
+    private TradeSegment buySegment;
+
+    /** The exchange the sale was recorded on; absent on rows written before W-088j2b. */
+    @Field("sell_exchange_name")
+    private String sellExchangeName;
+
+    /** The segment the sale was recorded in; absent on rows written before W-088j2b. */
+    @Field(name = "sell_segment", targetType = FieldType.STRING)
+    private TradeSegment sellSegment;
+
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
 }

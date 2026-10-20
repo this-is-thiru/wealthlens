@@ -39,12 +39,13 @@ public record CapitalGainsSummary(
         Set<List<Object>> keys = new HashSet<>();
         for (CapitalGainsBucket bucket : buckets) {
             if (!keys.add(List.of(bucket.classification(), bucket.assetType(), bucket.instrumentSubClass(),
-                    bucket.sttOnAcquisition(), bucket.sttOnTransfer(), bucket.acquisition(),
+                    bucket.sttOnAcquisition(), bucket.sttOnTransfer(), bucket.acquisitionVenue(),
+                    bucket.transferVenue(), bucket.acquisition(),
                     bucket.acquiredOn()))) {
                 throw new IllegalArgumentException("Two capital-gains buckets are " + bucket.classification() + " "
                         + bucket.assetType() + " " + bucket.instrumentSubClass().orElse("without a sub-class")
-                        + " with the same STT and acquisition; publish one per classification, asset type, sub-class,"
-                        + " STT and acquisition");
+                        + " with the same STT, venues and acquisition; publish one per classification, asset type,"
+                        + " sub-class, STT, venues and acquisition");
             }
         }
     }

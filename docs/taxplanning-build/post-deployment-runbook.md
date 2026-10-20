@@ -244,6 +244,7 @@ Any repair would be a new work item with its own section-2 entry.
 | 3.1 | **W-086** (D-238 C2a) | `CapitalGainsSummaryService` **refuses** a user's summary if any of their disposals carries broker charges with no breakdown ("record those trades again"). The rebuild's rows never have one | Count below |
 | 3.2 | **W-088f** (D-249 C4a, "no backfill") | Rows written before W-088f have no `acquisition_mode`; they read as `UNRECORDED` (`Acquisition.stored` maps a missing mode to it) | `db.trade_outcomes.countDocuments({ acquisition_mode: { $exists: false } })` |
 | 3.3 | **W-088j** (D-292) | A side of a disposal with no charge breakdown says nothing of STT, so it reads as `UNKNOWN`, not "no STT". An equity gain whose rate turns on an `UNKNOWN` side is **refused** by the tax engine (`RS-CG-PART` has no row for it): every sale with no breakdown, and a long-term sale with STT whose buy has none unless S.O. 5054(E)'s own facts settle it. With the charge flags off, this may be most rows. Remedy: W-088j2 | Count below |
+| 3.4 | **W-088j2b** (D-295, "no backfill") | `trade_outcomes` rows written before W-088j2b have no per-side venue (`buy_exchange_name`, `buy_segment`, `sell_exchange_name`, `sell_segment`); they read as `TradeVenue.UNRECORDED`. The old `exchange_name` / `segment` are **not** read for tax (V1 took the exchange from the buy, V2 and the rebuild from the sale). Remedy for a user: §2.2's per-user rebuild, which writes the new fields. The segment is published as recorded: `DELIVERY` is also the entry default (D-295) | Count and values below |
 
 ```js
 // 3.1 — rows, and users, whose summary would be refused
@@ -254,6 +255,10 @@ db.trade_outcomes.aggregate([
   { $group: { _id: "$email", rows: { $sum: 1 } } },
   { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
 ])
+
+// 3.4 — rows without per-side venues (W-088j2b, D-295), and the exchange strings and segments trades hold
+db.trade_outcomes.countDocuments({ sell_exchange_name: { $exists: false } })
+db.transactions.aggregate([{ $group: { _id: { exchange: "$exchange_name", segment: "$segment" }, n: { $sum: 1 } } }])
 
 // 3.3 — equity disposals whose STT is UNKNOWN on the buy or the sale (W-088j, D-292)
 db.trade_outcomes.aggregate([

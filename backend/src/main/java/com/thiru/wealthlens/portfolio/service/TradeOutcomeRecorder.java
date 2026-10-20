@@ -185,7 +185,9 @@ public class TradeOutcomeRecorder {
                 .corporateActionDerived(asset.getCorporateActionType() != null)
                 .appliedCorporateActions(asset.getCorporateActions())
                 .acquisitionMode(Acquisition.of(asset.getCorporateActionType()).mode())
-                .acquisitionCorporateAction(asset.getCorporateActionType());
+                .acquisitionCorporateAction(asset.getCorporateActionType())
+                .buyExchangeName(asset.getExchangeName())
+                .buySegment(asset.getSegment());
     }
 
     /** The sell's side of the row: the price, date, quantity and this lot's share of the sell's charges. */
@@ -197,7 +199,9 @@ public class TradeOutcomeRecorder {
                 .sellBrokerCharges(figures.sellBrokerCharges())
                 .sellMiscCharges(figures.sellMiscCharges())
                 .sellChargeBreakup(sellBreakup)
-                .deductibleSellCharges(chargeDeductibilityService.deductibleTotal(sellBreakup));
+                .deductibleSellCharges(chargeDeductibilityService.deductibleTotal(sellBreakup))
+                .sellExchangeName(sell.getExchangeName())
+                .sellSegment(sell.getSegment());
     }
 
     /**

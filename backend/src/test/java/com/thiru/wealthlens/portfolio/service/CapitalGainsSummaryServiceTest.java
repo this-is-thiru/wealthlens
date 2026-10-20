@@ -13,10 +13,12 @@ import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
+import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import java.time.LocalDate;
@@ -321,5 +323,55 @@ class CapitalGainsSummaryServiceTest {
         // Then
         assertThat(again).isEqualTo(before);
         assertThat(after).isNotEqualTo(before);
+    }
+
+    @Test
+    void summaryFor_whenARowRecordsEachSidesVenue_publishesThemApart() {
+        // Given -- bought on BSE for delivery, sold on NSE for delivery (D-295)
+        TradeOutcomeEntity row = soldWithStt(row("V", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1));
+        row.setBuyExchangeName("BSE");
+        row.setBuySegment(TradeSegment.DELIVERY);
+        row.setSellExchangeName("NSE");
+        row.setSellSegment(TradeSegment.DELIVERY);
+
+        // When
+        CapitalGainsBucket only = summaryOf(List.of(row)).buckets().getFirst();
+
+        // Then
+        assertThat(only.acquisitionVenue()).isEqualTo(new TradeVenue(Optional.of("BSE"),
+                Optional.of(TradeSegment.DELIVERY)));
+        assertThat(only.transferVenue()).isEqualTo(new TradeVenue(Optional.of("NSE"),
+                Optional.of(TradeSegment.DELIVERY)));
+    }
+
+    @Test
+    void summaryFor_whenARowPredatesTheVenues_publishesThemUnrecorded() {
+        // Given -- a row written before W-088j2b: no per-side venue, though the old exchange_name is set
+        TradeOutcomeEntity row = soldWithStt(row("W", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1));
+        row.setExchangeName("NSE");
+
+        // When
+        CapitalGainsBucket only = summaryOf(List.of(row)).buckets().getFirst();
+
+        // Then -- the old field is not read for tax: which side it described depended on the writer
+        assertThat(only.acquisitionVenue()).isEqualTo(TradeVenue.UNRECORDED);
+        assertThat(only.transferVenue()).isEqualTo(TradeVenue.UNRECORDED);
+    }
+
+    @Test
+    void summaryFor_whenRowsDifferOnlyInTheSalesExchange_publishesThemApart() {
+        // Given -- one key but for where the sale was entered into
+        TradeOutcomeEntity onNse = soldWithStt(row("X", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 110, 100, 1));
+        onNse.setSellExchangeName("NSE");
+        TradeOutcomeEntity offMarket = soldWithStt(row("Y", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 130, 100, 1));
+
+        // When
+        CapitalGainsSummary summary = summaryOf(List.of(onNse, offMarket));
+
+        // Then -- two buckets: 10 and 30 by hand
+        assertThat(summary.buckets()).extracting(b -> b.transferVenue().exchange())
+                .containsExactly(Optional.of("NSE"), Optional.empty());
+        assertCanonical(10.00, summary.buckets().get(0).gainRupees());
+        assertCanonical(30.00, summary.buckets().get(1).gainRupees());
     }
 }

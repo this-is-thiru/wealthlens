@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.lenient;
 
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
@@ -8,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.HoldingPeriodPolicyEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -853,5 +855,49 @@ class TradeMatchingServiceTest {
 
         // Then
         assertEquals(List.of(Acquisition.UNRECORDED), acquisitions);
+    }
+
+    @Test
+    void toTradeOutcomeEntity_whenTheLotAndTheSaleWereTradedApart_recordsEachSidesVenue() {
+        // Given -- one buy on BSE for delivery; the sale on NSE intraday (D-295)
+        TransactionEntity buy = infy("buy-1", LocalDate.of(2021, 1, 10), 10, 100, null);
+        buy.setExchangeName("BSE");
+        buy.setSegment(TradeSegment.DELIVERY);
+        TransactionEntity sell = infy("sell-1", LocalDate.of(2025, 1, 10), 10, 150, null);
+        sell.setExchangeName("NSE");
+        sell.setSegment(TradeSegment.INTRADAY);
+
+        // When
+        TradeOutcomeEntity row = rowsOf(List.of(buy), sell).getFirst();
+
+        // Then
+        assertEquals("BSE", row.getBuyExchangeName());
+        assertEquals(TradeSegment.DELIVERY, row.getBuySegment());
+        assertEquals("NSE", row.getSellExchangeName());
+        assertEquals(TradeSegment.INTRADAY, row.getSellSegment());
+    }
+
+    @Test
+    void toTradeOutcomeEntity_whenSameDayBuysWereOnDifferentExchanges_recordsNoExchangeForTheLot() {
+        // Given -- two same-day buys merged into one lot, one on NSE and one on BSE, both delivery
+        TransactionEntity first = infy("buy-1", LocalDate.of(2021, 1, 10), 5, 100, null);
+        first.setExchangeName("NSE");
+        TransactionEntity second = infy("buy-2", LocalDate.of(2021, 1, 10), 5, 100, null);
+        second.setExchangeName("BSE");
+        TransactionEntity sell = infy("sell-1", LocalDate.of(2025, 1, 10), 10, 150, null);
+
+        // When
+        TradeOutcomeEntity row = rowsOf(List.of(first, second), sell).getFirst();
+
+        // Then -- the exchange they disagree on is not recorded; the segment they share is
+        assertNull(row.getBuyExchangeName());
+        assertEquals(TradeSegment.DELIVERY, row.getBuySegment());
+    }
+
+    private List<TradeOutcomeEntity> rowsOf(List<TransactionEntity> buys, TransactionEntity sell) {
+        List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(buys);
+        return tradeMatchingService.matchSellToLots(tradeMatchingService.toSellRequest(sell), lots).stream()
+                .map(tradeMatchingService::toTradeOutcomeEntity)
+                .toList();
     }
 }

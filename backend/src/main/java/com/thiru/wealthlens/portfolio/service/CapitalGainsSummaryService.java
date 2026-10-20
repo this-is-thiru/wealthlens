@@ -3,6 +3,7 @@ package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
+import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
@@ -112,21 +113,24 @@ public class CapitalGainsSummaryService {
         return TMoney.scale(sale - cost - row.getDeductibleBuyCharges() - row.getDeductibleSellCharges());
     }
 
-    /** What a bucket is one of: the rows a bucket sums share all seven. */
+    /** What a bucket is one of: the rows a bucket sums share all nine. */
     private record BucketKey(CapitalGainsType classification, AssetType assetType, Optional<String> subClass,
-            SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, Acquisition acquisition, LocalDate acquiredOn) {
+            SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, TradeVenue acquisitionVenue,
+            TradeVenue transferVenue, Acquisition acquisition, LocalDate acquiredOn) {
 
         static BucketKey of(TradeOutcomeEntity row) {
             return new BucketKey(row.getCapitalGainsType(), row.getAssetType(),
                     Optional.ofNullable(row.getInstrumentSubClass()), sttEvidenceOf(row.getBuyChargeBreakup()),
                     sttEvidenceOf(row.getSellChargeBreakup()),
+                    TradeVenue.stored(row.getBuyExchangeName(), row.getBuySegment()),
+                    TradeVenue.stored(row.getSellExchangeName(), row.getSellSegment()),
                     Acquisition.stored(row.getAcquisitionMode(), row.getAcquisitionCorporateAction()),
                     acquiredOnOf(row));
         }
 
         CapitalGainsBucket bucket(double gainRupees) {
             return new CapitalGainsBucket(classification, assetType, subClass, sttOnAcquisition, sttOnTransfer,
-                    acquisition, acquiredOn, gainRupees);
+                    acquisitionVenue, transferVenue, acquisition, acquiredOn, gainRupees);
         }
 
         private static LocalDate acquiredOnOf(TradeOutcomeEntity row) {

@@ -16,6 +16,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -786,5 +787,35 @@ class PortfolioServiceTest {
         verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
         assertEquals(AcquisitionMode.CORPORATE_ACTION, captor.getValue().getAcquisitionMode());
         assertEquals(CorporateActionType.BONUS, captor.getValue().getAcquisitionCorporateAction());
+    }
+
+    @Test
+    void sellStock_v1_whenTheLotAndTheSaleWereTradedApart_recordsEachSidesVenue() {
+        // Given -- the lot on BSE for delivery, the sale on NSE intraday; V1's exchange_name is the lot's (D-295)
+        AssetEntity asset = sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10));
+        asset.setExchangeName("BSE");
+        asset.setSegment(TradeSegment.DELIVERY);
+        when(portfolioRepository
+                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
+                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(1.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+        sell.setExchangeName("NSE");
+        sell.setSegment(TradeSegment.INTRADAY);
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        assertEquals("BSE", captor.getValue().getBuyExchangeName());
+        assertEquals(TradeSegment.DELIVERY, captor.getValue().getBuySegment());
+        assertEquals("NSE", captor.getValue().getSellExchangeName());
+        assertEquals(TradeSegment.INTRADAY, captor.getValue().getSellSegment());
     }
 }

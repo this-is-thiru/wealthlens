@@ -726,6 +726,8 @@ public class PortfolioService {
                         .capitalGainsType())
                 .financialYear(deriveFinancialYear(sellDate))
                 .sourceSellTransactionId(transactionId)
+                .sellExchangeName(assetRequest.getExchangeName())
+                .sellSegment(assetRequest.getSegment())
                 .build();
     }
 
@@ -743,7 +745,9 @@ public class PortfolioService {
                 .corporateActionDerived(isCorporateActionDerived(assetEntity))
                 .appliedCorporateActions(assetEntity.getCorporateActions())
                 .acquisitionMode(Acquisition.of(assetEntity.getCorporateActionType()).mode())
-                .acquisitionCorporateAction(assetEntity.getCorporateActionType());
+                .acquisitionCorporateAction(assetEntity.getCorporateActionType())
+                .buyExchangeName(assetEntity.getExchangeName())
+                .buySegment(assetEntity.getSegment());
     }
 
     /** V1's figures: the buy charges as handed in, the sell charges pro-rated to the quantity sold. */

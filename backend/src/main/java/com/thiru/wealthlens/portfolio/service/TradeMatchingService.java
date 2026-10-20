@@ -1,10 +1,12 @@
 package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
+import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
@@ -83,6 +85,7 @@ public class TradeMatchingService {
                 .corporateActions(merged.corporateActions.isEmpty() ? null : merged.corporateActions)
                 .corporateActionDerived(merged.corporateActionDerived)
                 .acquisition(Acquisition.common(merged.acquisitions))
+                .venue(TradeVenue.common(merged.venues))
                 .build();
     }
 
@@ -95,6 +98,7 @@ public class TradeMatchingService {
         private final List<String> buyTransactionIds = new ArrayList<>();
         private boolean corporateActionDerived = false;
         private final List<Acquisition> acquisitions = new ArrayList<>();
+        private final List<TradeVenue> venues = new ArrayList<>();
         private final List<CorporateActionEntity> corporateActions = new ArrayList<>();
 
         void add(TransactionEntity txn) {
@@ -109,6 +113,7 @@ public class TradeMatchingService {
             totalMiscCharges += miscCharges;
             buyTransactionIds.add(txn.getId());
             acquisitions.add(Acquisition.of(txn.getCorporateActionType()));
+            venues.add(TradeVenue.stored(txn.getExchangeName(), txn.getSegment()));
 
             // Check if CA-derived
             if (txn.getCorporateActionType() != null || price == 0) {
@@ -207,6 +212,8 @@ public class TradeMatchingService {
                 .corporateActionDerived(lot.isCorporateActionDerived())
                 .appliedCorporateActions(lot.getCorporateActions())
                 .acquisition(lot.getAcquisition())
+                .buyVenue(lot.getVenue())
+                .sellVenue(TradeVenue.stored(sell.getExchangeName(), sell.getSegment()))
                 .build();
     }
 
@@ -272,6 +279,10 @@ public class TradeMatchingService {
                 .appliedCorporateActions(trade.getAppliedCorporateActions())
                 .acquisitionMode(trade.getAcquisition().mode())
                 .acquisitionCorporateAction(trade.getAcquisition().corporateAction().orElse(null))
+                .buyExchangeName(trade.getBuyVenue().exchange().orElse(null))
+                .buySegment(trade.getBuyVenue().segment().orElse(null))
+                .sellExchangeName(trade.getSellVenue().exchange().orElse(null))
+                .sellSegment(trade.getSellVenue().segment().orElse(null))
                 .build();
     }
 
@@ -313,6 +324,10 @@ public class TradeMatchingService {
         entity.setAppliedCorporateActions(trade.getAppliedCorporateActions());
         entity.setAcquisitionMode(trade.getAcquisition().mode());
         entity.setAcquisitionCorporateAction(trade.getAcquisition().corporateAction().orElse(null));
+        entity.setBuyExchangeName(trade.getBuyVenue().exchange().orElse(null));
+        entity.setBuySegment(trade.getBuyVenue().segment().orElse(null));
+        entity.setSellExchangeName(trade.getSellVenue().exchange().orElse(null));
+        entity.setSellSegment(trade.getSellVenue().segment().orElse(null));
 
 
         return entity;
@@ -328,6 +343,7 @@ public class TradeMatchingService {
                 .stockCode(sellTxn.getStockCode())
                 .stockName(sellTxn.getStockName())
                 .exchangeName(sellTxn.getExchangeName())
+                .segment(sellTxn.getSegment())
                 .brokerName(sellTxn.getBrokerName())
                 .assetType(sellTxn.getAssetType())
                 .accountType(sellTxn.getAccountType())
@@ -363,6 +379,9 @@ public class TradeMatchingService {
         /** How the lot was acquired; a lot built without saying is unrecorded. */
         @Builder.Default
         private Acquisition acquisition = Acquisition.UNRECORDED;
+        /** Where and how the lot's buys were traded; a lot built without saying is unrecorded (D-295). */
+        @Builder.Default
+        private TradeVenue venue = TradeVenue.UNRECORDED;
         /** What earlier sells have already charged of {@code brokerCharges} ({@link LotChargeAllocator}). */
         private double allocatedBrokerCharges;
         /** What earlier sells have already charged of {@code miscCharges}. */
@@ -386,6 +405,8 @@ public class TradeMatchingService {
         private double brokerCharges;
         private double miscCharges;
         private LocalDate sellDate;
+        /** The segment the sale was recorded in; absent where a request does not say. */
+        private TradeSegment segment;
     }
 
     @Data
@@ -428,5 +449,11 @@ public class TradeMatchingService {
         /** How the lot was acquired; a lot built without saying is unrecorded. */
         @Builder.Default
         private Acquisition acquisition = Acquisition.UNRECORDED;
+        /** Where and how the lot's buys were traded; unrecorded unless said (D-295). */
+        @Builder.Default
+        private TradeVenue buyVenue = TradeVenue.UNRECORDED;
+        /** Where and how the sale was traded; unrecorded unless said. */
+        @Builder.Default
+        private TradeVenue sellVenue = TradeVenue.UNRECORDED;
     }
 }

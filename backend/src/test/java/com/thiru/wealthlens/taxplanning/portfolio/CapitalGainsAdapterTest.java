@@ -10,6 +10,7 @@ import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
+import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
@@ -50,13 +51,14 @@ class CapitalGainsAdapterTest {
     private static CapitalGainsBucket bucket(CapitalGainsType classification, AssetType assetType,
             SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, double gainRupees) {
         return new CapitalGainsBucket(classification, assetType, Optional.empty(), sttOnAcquisition, sttOnTransfer,
+                TradeVenue.UNRECORDED, TradeVenue.UNRECORDED,
                 Acquisition.of(null), ACQUIRED_ON, gainRupees);
     }
 
     /** Long-term equity sold with STT, its buy without, acquired as stated. */
     private static CapitalGainsBucket boughtWithoutStt(Acquisition acquisition, LocalDate acquiredOn) {
         return new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY, Optional.empty(),
-                SttEvidence.NOT_PAID, SttEvidence.PAID, acquisition, acquiredOn, 1000.50);
+                SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, acquisition, acquiredOn, 1000.50);
     }
 
     private CapitalGainsInput inputOf(CapitalGainsBucket... buckets) {

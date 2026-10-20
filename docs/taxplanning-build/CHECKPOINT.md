@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088j2b — venue facts on the capital-gains read-model (D-293)
+Item            : W-088j2c — STT chargeability decided on the tax side from rule rows (D-293)
 Stage           : READY — not started
-Plan            : plans/W-088j2b.md not yet written
+Plan            : plans/W-088j2c.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088j2b": read the WI row, D-293 (D2a), D-294 + sources row 8 (what chargeability needs: exchange, delivery, s.113A IFSC/NPS), TradeOutcomeEntity exchange_name/segment/broker per side, the three writers, CapitalGainsBucket/BucketKey; write plans/W-088j2b.md (incl. a read-only distinct count of exchange_name/segment for the owner; R15), STOP
-Last verify     : unit clean -Punit 3154 run, 0 fail; integration 269/0 (2026-10-20, W-088j)
-Waiting on      : the owner — "start W-088j2b"; OQ-32, OQ-33 open
+Next step       : on "start W-088j2c": read the WI row, D-294 + sources row 8 (Sl. 1–3 conditions, s.113A, Q1), D-295 (TradeVenue), CapitalGainsNode / RS-CG-PART rows, BucketFacts, the adapter; design the engine step deriving each side's STT state from rule rows (not a condition repeated in every part row) and the exchange-string mapping as data; write plans/W-088j2c.md (likely a split; R15), STOP
+Last verify     : unit clean -Punit 3161 run, 0 fail; integration 269/0 (2026-10-20, W-088j2b)
+Waiting on      : the owner — "start W-088j2c"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088j2a: source the Finance (No. 2) Act, 2004, Chapter VII — 2019–2026 amendments read, the base text accepted as reported, and an exchange delivery trade's STT ruled paid for s.198 (D-293, D-294)
-Updated         : 2026-10-20, session 26 — W-088j2a done (D-294); next W-088j2b
+Last item commit: taxplanning W-088j2b: record where and how each side of a disposal was traded — per-side exchange and segment on trade_outcomes from all three writers, a TradeVenue per side on the capital-gains read-model (D-295)
+Updated         : 2026-10-20, session 26 — W-088j2b done (D-295); next W-088j2c
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -504,4 +504,23 @@ class TradeOutcomeRecorderTest {
         MoneyAssert.assertMoney(264.0, row.getNetProfit());
         assertEquals(264.0 / 309.0 * 100, row.getProfitPercentage(), 1e-9);
     }
+
+    @Test
+    void record_whenTheLotAndTheSaleWereTradedApart_recordsEachSidesVenue() {
+        // Given -- the lot bought on BSE for delivery, the sale recorded on NSE intraday: each side its own (D-295)
+        AssetEntity asset = lot("buy-1", 1.0, 100.0, 10.0);
+        asset.setExchangeName("BSE");
+        AssetRequest sell = sell(1.0, 200.0, TradeSegment.INTRADAY);
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell, "sell-1",
+                List.of(new TradeOutcomeRecorder.MatchedLot(asset, 1.0, 1.0)), Optional.empty());
+
+        // Then
+        TradeOutcomeContext row = captureSaved(1).getFirst();
+        assertEquals("BSE", row.getBuyExchangeName());
+        assertEquals(TradeSegment.DELIVERY, row.getBuySegment());
+        assertEquals("NSE", row.getSellExchangeName());
+        assertEquals(TradeSegment.INTRADAY, row.getSellSegment());
+    }
 }

@@ -71,4 +71,10 @@ public class TradeOutcomeContext {
     private List<CorporateActionEntity> appliedCorporateActions;
     private AcquisitionMode acquisitionMode;
     private CorporateActionType acquisitionCorporateAction;
+
+    // Venue per side (W-088j2b)
+    private String buyExchangeName;
+    private TradeSegment buySegment;
+    private String sellExchangeName;
+    private TradeSegment sellSegment;
 }
