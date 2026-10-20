@@ -3,6 +3,8 @@
 import re,sys,os
 # Counts each method's lines from its signature to the matching closing brace at the same indent. The indent is
 # exact, so a nested class's members are each measured; a one-line body ({}) is not a method to measure (W-088u4).
+# It does NOT see a record's compact constructor (no parentheses) — EnteredFacts' 53 lines were missed so. Checkstyle's
+# MethodLength (60, D-288) is the gate; this is a quick report only.
 sig=re.compile(r'^( {4}| {8})(?=\S)(?:(?:public|private|protected|static|final|synchronized|abstract|default)\s+)*(?:<[^>]+>\s+)?[\w<>\[\], .?]+\s+(\w+)\s*\([^;]*$')
 out=[]
 for root in sys.argv[2:]:

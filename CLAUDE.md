@@ -39,7 +39,7 @@ override convenience. Where the build enforces one, the enforcing check is named
 
 ### 4. Design
 
-- Small units: a method fits on a screen (~40 lines), a class has one reason to change, more than ~5 parameters means a missing type.
+- Small units: a method is at most 60 lines, a class has one reason to change, more than 7 parameters means a missing type — the same limits Checkstyle enforces (`MethodLength` 60, `ParameterNumber` 7; D-288).
 - Immutable by default: records for values, `private final` fields, defensive copies of collections.
 - Fail fast and loudly at the boundary; validate once, on the way in.
 - Dependencies point one way; a new cross-module import needs the `allowedDependencies` change and a reason.
