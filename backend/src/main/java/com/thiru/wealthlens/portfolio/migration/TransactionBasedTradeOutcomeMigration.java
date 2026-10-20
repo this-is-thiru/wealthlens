@@ -78,18 +78,35 @@ public class TransactionBasedTradeOutcomeMigration {
     }
 
     private int migrateUser(String email) {
+        List<TradeOutcomeEntity> tradeOutcomes = rebuiltRows(email);
+
+        // Batch save
+        if (!tradeOutcomes.isEmpty()) {
+            tradeOutcomeRepository.saveAll(tradeOutcomes);
+            log.debug("Saved {} trade outcomes for user {}", tradeOutcomes.size(), email);
+        }
+
+        return tradeOutcomes.size();
+    }
+
+    /**
+     * The rows the rebuild makes for one user from their transactions, unsaved: every SELL matched FIFO against lots
+     * built from every BUY. Also how {@link RebuildBuyChargeCorrection} recomputes rows the rebuild once wrote, so the
+     * two cannot disagree on how a row is made.
+     */
+    public List<TradeOutcomeEntity> rebuiltRows(String email) {
         // Step 2a: Read all BUY transactions for this user
         List<TransactionEntity> buyTransactions = findByEmailAndTransactionType(email, TransactionType.BUY);
         if (buyTransactions.isEmpty()) {
             log.debug("No BUY transactions for user {}, skipping", email);
-            return 0;
+            return List.of();
         }
 
         // Step 2b: Read all SELL transactions for this user
         List<TransactionEntity> sellTransactions = findByEmailAndTransactionType(email, TransactionType.SELL);
         if (sellTransactions.isEmpty()) {
             log.debug("No SELL transactions for user {}, skipping", email);
-            return 0;
+            return List.of();
         }
 
         // Sort sells by date
@@ -99,27 +116,14 @@ public class TransactionBasedTradeOutcomeMigration {
         List<BuyLot> buyLots = tradeMatchingService.buildLotsFromBuys(buyTransactions);
 
         // Step 2d: For each SELL, match against lots
-        int tradeCount = 0;
         List<TradeOutcomeEntity> tradeOutcomes = new ArrayList<>();
-
         for (TransactionEntity sellTxn : sellTransactions) {
             SellRequest sellRequest = tradeMatchingService.toSellRequest(sellTxn);
-            List<MatchedTrade> matchedTrades = tradeMatchingService.matchSellToLots(sellRequest, buyLots);
-
-            for (MatchedTrade matchedTrade : matchedTrades) {
-                TradeOutcomeEntity outcome = tradeMatchingService.toTradeOutcomeEntity(matchedTrade);
-                tradeOutcomes.add(outcome);
-                tradeCount++;
+            for (MatchedTrade matchedTrade : tradeMatchingService.matchSellToLots(sellRequest, buyLots)) {
+                tradeOutcomes.add(tradeMatchingService.toTradeOutcomeEntity(matchedTrade));
             }
         }
-
-        // Batch save
-        if (!tradeOutcomes.isEmpty()) {
-            tradeOutcomeRepository.saveAll(tradeOutcomes);
-            log.debug("Saved {} trade outcomes for user {}", tradeOutcomes.size(), email);
-        }
-
-        return tradeCount;
+        return tradeOutcomes;
     }
 
     private Set<String> getDistinctEmails() {
