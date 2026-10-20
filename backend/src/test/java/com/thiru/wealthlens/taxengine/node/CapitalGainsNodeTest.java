@@ -45,17 +45,19 @@ class CapitalGainsNodeTest {
                 new JsonPackAssembler(LockedInstruments.of(taxYear))).load(taxYear);
     }
 
-    private static final boolean PAID = true;
+    private static final String PAID = "PAID";
 
-    private static final boolean NOT_PAID = false;
+    private static final String NOT_PAID = "NOT_PAID";
+
+    private static final String UNKNOWN = "UNKNOWN";
 
     /** An equity purchase with the given STT on record for the buy and the sale. */
-    private static CapitalGainsInput.Bucket bucket(String gain, Term term, boolean sttOnBuy, boolean sttOnSale) {
+    private static CapitalGainsInput.Bucket bucket(String gain, Term term, String sttOnBuy, String sttOnSale) {
         return bucket(gain, term, "EQUITY", sttOnBuy, sttOnSale);
     }
 
-    private static CapitalGainsInput.Bucket bucket(String gain, Term term, String asset, boolean sttOnBuy,
-            boolean sttOnSale) {
+    private static CapitalGainsInput.Bucket bucket(String gain, Term term, String asset, String sttOnBuy,
+            String sttOnSale) {
         BucketFacts facts = new BucketFacts(asset, sttOnBuy, sttOnSale, "PURCHASE", Optional.empty(),
                 LocalDate.parse("2020-06-01"));
         return new CapitalGainsInput.Bucket(Money.of(gain), term, facts, Optional.empty());
@@ -63,7 +65,13 @@ class CapitalGainsNodeTest {
 
     /** Long-term equity sold with STT and bought without it, acquired as stated — S.O. 5054(E)'s question. */
     private static CapitalGainsInput.Bucket boughtWithoutStt(String mode, String corporateAction, String acquiredOn) {
-        BucketFacts facts = new BucketFacts("EQUITY", NOT_PAID, PAID, mode, Optional.ofNullable(corporateAction),
+        return soldWithStt(NOT_PAID, mode, corporateAction, acquiredOn);
+    }
+
+    /** Long-term equity sold with STT, the buy's STT as stated, acquired as stated. */
+    private static CapitalGainsInput.Bucket soldWithStt(String sttOnBuy, String mode, String corporateAction,
+            String acquiredOn) {
+        BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, PAID, mode, Optional.ofNullable(corporateAction),
                 LocalDate.parse(acquiredOn));
         return new CapitalGainsInput.Bucket(Money.of("1000"), Term.LONG_TERM, facts, Optional.empty());
     }
@@ -160,19 +168,19 @@ class CapitalGainsNodeTest {
 
     @ParameterizedTest(name = "TY {0}: {1}, STT buy {2}, sale {3} → {4}")
     @CsvSource({
-        "2025, SHORT_TERM, false, true, SHORT_TERM_LISTED_EQUITY",
-        "2025, SHORT_TERM, true, false, SHORT_TERM_SLAB",
-        "2025, LONG_TERM, true, true, LONG_TERM_LISTED_EQUITY",
-        "2025, LONG_TERM, true, false, LONG_TERM_OTHER",
-        "2025, LONG_TERM, false, false, LONG_TERM_OTHER",
-        "2026, SHORT_TERM, false, true, SHORT_TERM_LISTED_EQUITY",
-        "2026, SHORT_TERM, true, false, SHORT_TERM_SLAB",
-        "2026, LONG_TERM, true, true, LONG_TERM_LISTED_EQUITY",
-        "2026, LONG_TERM, true, false, LONG_TERM_OTHER",
-        "2026, LONG_TERM, false, false, LONG_TERM_OTHER"
+        "2025, SHORT_TERM, NOT_PAID, PAID, SHORT_TERM_LISTED_EQUITY",
+        "2025, SHORT_TERM, PAID, NOT_PAID, SHORT_TERM_SLAB",
+        "2025, LONG_TERM, PAID, PAID, LONG_TERM_LISTED_EQUITY",
+        "2025, LONG_TERM, PAID, NOT_PAID, LONG_TERM_OTHER",
+        "2025, LONG_TERM, NOT_PAID, NOT_PAID, LONG_TERM_OTHER",
+        "2026, SHORT_TERM, NOT_PAID, PAID, SHORT_TERM_LISTED_EQUITY",
+        "2026, SHORT_TERM, PAID, NOT_PAID, SHORT_TERM_SLAB",
+        "2026, LONG_TERM, PAID, PAID, LONG_TERM_LISTED_EQUITY",
+        "2026, LONG_TERM, PAID, NOT_PAID, LONG_TERM_OTHER",
+        "2026, LONG_TERM, NOT_PAID, NOT_PAID, LONG_TERM_OTHER"
     })
-    void evaluate_whenAnEquityBucketMeetsARow_isInThePartTheRowNames(int year, Term term, boolean sttOnBuy,
-            boolean sttOnSale, CapitalGainsPart expected) {
+    void evaluate_whenAnEquityBucketMeetsARow_isInThePartTheRowNames(int year, Term term, String sttOnBuy,
+            String sttOnSale, CapitalGainsPart expected) {
         // When — cases 1–5: s.196(1)(b) / s.111A(1)(b) STT on the sale; s.198(1)(c)(i) / s.112A(1)(iii)(a) on both;
         // s.197(1) / s.112(1) any other long-term gain
         CapitalGainsHead head = run(year, bucket("1000", term, sttOnBuy, sttOnSale));
@@ -190,7 +198,7 @@ class CapitalGainsNodeTest {
         assertThatThrownBy(() -> run(year, bucket("1000", Term.LONG_TERM, NOT_PAID, PAID)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no row of RS-CG-PART")
-                .hasMessageContaining("sttOnAcquisition=false")
+                .hasMessageContaining("sttOnAcquisition=NOT_PAID")
                 .hasMessageContaining("acquisitionMode=PURCHASE")
                 .hasMessageContaining("2020-06-01");
     }
@@ -234,6 +242,67 @@ class CapitalGainsNodeTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no row of RS-CG-PART")
                 .hasMessageContaining(acquiredOn);
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1}, STT buy {2}, sale {3} → {4}")
+    @CsvSource({
+        "2025, SHORT_TERM, UNKNOWN, PAID, SHORT_TERM_LISTED_EQUITY",
+        "2025, SHORT_TERM, UNKNOWN, NOT_PAID, SHORT_TERM_SLAB",
+        "2025, LONG_TERM, UNKNOWN, NOT_PAID, LONG_TERM_OTHER",
+        "2026, SHORT_TERM, UNKNOWN, PAID, SHORT_TERM_LISTED_EQUITY",
+        "2026, SHORT_TERM, UNKNOWN, NOT_PAID, SHORT_TERM_SLAB",
+        "2026, LONG_TERM, UNKNOWN, NOT_PAID, LONG_TERM_OTHER"
+    })
+    void evaluate_whenTheBuysSttIsUnknownButNoRowAsksIt_isInThePartTheSaleDecides(int year, Term term,
+            String sttOnBuy, String sttOnSale, CapitalGainsPart expected) {
+        // When — s.196(1)(b) / s.111A(1)(b) turn on the sale only; s.197 / s.112 has no STT condition (D-292)
+        CapitalGainsHead head = run(year, bucket("1000", term, sttOnBuy, sttOnSale));
+
+        // Then
+        assertThat(head.part(expected)).isEqualTo(Money.of("1000"));
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1}, STT buy {2}")
+    @CsvSource({
+        "2025, SHORT_TERM, PAID",
+        "2025, LONG_TERM, PAID",
+        "2025, LONG_TERM, UNKNOWN",
+        "2026, SHORT_TERM, PAID",
+        "2026, LONG_TERM, PAID",
+        "2026, LONG_TERM, UNKNOWN"
+    })
+    void evaluate_whenTheSalesSttIsUnknown_isRefusedNamingIt(int year, Term term, String sttOnBuy) {
+        // When / Then — every special rate turns on the sale's STT, and no row accepts UNKNOWN there (D-292)
+        assertThatThrownBy(() -> run(year, bucket("1000", term, sttOnBuy, UNKNOWN)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no row of RS-CG-PART")
+                .hasMessageContaining("sttOnTransfer=UNKNOWN");
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1} {2} on {3}")
+    @CsvSource({
+        "2025, PURCHASE, , 2003-06-01",
+        "2025, CORPORATE_ACTION, BONUS, 2020-01-10",
+        "2026, PURCHASE, , 2003-06-01",
+        "2026, CORPORATE_ACTION, BONUS, 2020-01-10"
+    })
+    void evaluate_whenTheBuysSttIsUnknownAndTheWaiverSettlesIt_isTheListedLongTermPart(int year, String mode,
+            String corporateAction, String acquiredOn) {
+        // When — S.O. 5054(E): before 1-10-2004 no STT existed, and an allotment is not chargeable to it, so the
+        // waiver's own facts decide (D-292 C2(a))
+        CapitalGainsHead head = run(year, soldWithStt(UNKNOWN, mode, corporateAction, acquiredOn));
+
+        // Then
+        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAPurchaseSince2004HasAnUnknownBuy_isRefused(int year) {
+        // When / Then — s.198(1)(c)(i) turns on the buy, and the waiver cannot settle a purchase
+        assertThatThrownBy(() -> run(year, soldWithStt(UNKNOWN, "PURCHASE", null, "2020-06-01")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("sttOnAcquisition=UNKNOWN");
     }
 
     @Test

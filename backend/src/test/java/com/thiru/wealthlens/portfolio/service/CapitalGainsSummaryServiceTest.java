@@ -16,6 +16,7 @@ import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import java.time.LocalDate;
@@ -135,12 +136,57 @@ class CapitalGainsSummaryServiceTest {
         // When
         CapitalGainsSummary summary = summaryOf(List.of(rowsAtoC().getFirst(), d));
 
-        // Then — two short-term equity buckets, apart by STT on the buy (D-241)
+        // Then — two short-term equity buckets, apart by STT on the buy (D-241); A's buy breakdown holds only
+        // brokerage, so it records none (D-292)
         assertThat(summary.buckets()).hasSize(2);
-        assertThat(summary.buckets().get(0).sttOnAcquisition()).isFalse();
-        assertThat(summary.buckets().get(0).sttOnTransfer()).isTrue();
-        assertThat(summary.buckets().get(1).sttOnAcquisition()).isTrue();
-        assertThat(summary.buckets().get(1).sttOnTransfer()).isTrue();
+        assertThat(summary.buckets().get(0).sttOnAcquisition()).isEqualTo(SttEvidence.NOT_PAID);
+        assertThat(summary.buckets().get(0).sttOnTransfer()).isEqualTo(SttEvidence.PAID);
+        assertThat(summary.buckets().get(1).sttOnAcquisition()).isEqualTo(SttEvidence.PAID);
+        assertThat(summary.buckets().get(1).sttOnTransfer()).isEqualTo(SttEvidence.PAID);
+    }
+
+    @Test
+    void summaryFor_whenNeitherSideHasABreakdown_recordsSttAsUnknownOnBoth() {
+        // Given — a V1 sell with nil charges: nothing on record either side, which F1 read as no STT
+        TradeOutcomeEntity v1 = row("V", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 120, 100, 1);
+
+        // When
+        CapitalGainsBucket only = summaryOf(List.of(v1)).buckets().getFirst();
+
+        // Then — unknown, never NOT_PAID (D-292)
+        assertThat(only.sttOnAcquisition()).isEqualTo(SttEvidence.UNKNOWN);
+        assertThat(only.sttOnTransfer()).isEqualTo(SttEvidence.UNKNOWN);
+    }
+
+    @Test
+    void summaryFor_whenOnlyTheBuyHasNoBreakdown_recordsEachSideAsItStands() {
+        // Given — the buy predates the charge engine; the sale's breakdown levied STT
+        TradeOutcomeEntity row = soldWithStt(row("W", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1));
+
+        // When
+        CapitalGainsBucket only = summaryOf(List.of(row)).buckets().getFirst();
+
+        // Then
+        assertThat(only.sttOnAcquisition()).isEqualTo(SttEvidence.UNKNOWN);
+        assertThat(only.sttOnTransfer()).isEqualTo(SttEvidence.PAID);
+    }
+
+    @Test
+    void summaryFor_whenRowsDifferOnlyInWhetherTheBuysSttIsKnown_publishesThemApart() {
+        // Given — one key but for the buy's evidence: PAID on X, nothing on record on Y
+        TradeOutcomeEntity known = soldWithStt(row("X", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 110, 100, 1));
+        known.setBuyChargeBreakup(Map.of("STT", 0.10));
+        known.setBuyBrokerCharges(0.10);
+        TradeOutcomeEntity unknown = soldWithStt(row("Y", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 130, 100, 1));
+
+        // When
+        CapitalGainsSummary summary = summaryOf(List.of(known, unknown));
+
+        // Then — two buckets; 10 and 30 by hand, before the deductible charges this test leaves nil
+        assertThat(summary.buckets()).extracting(CapitalGainsBucket::sttOnAcquisition)
+                .containsExactly(SttEvidence.PAID, SttEvidence.UNKNOWN);
+        assertCanonical(10.00, summary.buckets().get(0).gainRupees());
+        assertCanonical(30.00, summary.buckets().get(1).gainRupees());
     }
 
     @Test

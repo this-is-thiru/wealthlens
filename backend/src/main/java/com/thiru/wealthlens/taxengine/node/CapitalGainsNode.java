@@ -154,14 +154,10 @@ public final class CapitalGainsNode implements ComputationNode {
         Map<ItemFactId, String> codes = new HashMap<>();
         codes.put(TERM, bucket.term().name());
         codes.put(ASSET, facts.assetKind());
-        codes.put(STT_ON_ACQUISITION, sttCode(facts.sttOnAcquisition()));
-        codes.put(STT_ON_TRANSFER, sttCode(facts.sttOnTransfer()));
+        codes.put(STT_ON_ACQUISITION, facts.sttOnAcquisition());
+        codes.put(STT_ON_TRANSFER, facts.sttOnTransfer());
         codes.put(ACQUISITION, facts.acquisitionMode());
         facts.corporateAction().ifPresent(action -> codes.put(CORPORATE_ACTION, action));
         return new ItemFacts(codes, Map.of(), Map.of(ACQUIRED_ON, facts.acquiredOn()));
-    }
-
-    private static String sttCode(boolean paid) {
-        return paid ? "PAID" : "NOT_PAID";
     }
 }

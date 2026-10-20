@@ -163,7 +163,7 @@ class RegimeElectionSnapshotTest {
     @DisplayName("CapitalGainsInput — gross buckets with their facts, never a tax")
     class CapitalGains {
 
-        private static final BucketFacts FACTS = new BucketFacts("EQUITY", true, true, "PURCHASE", Optional.empty(),
+        private static final BucketFacts FACTS = new BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE", Optional.empty(),
                 LocalDate.of(2020, 6, 1));
 
         @Test
@@ -187,11 +187,11 @@ class RegimeElectionSnapshotTest {
         @Test
         void aCorporateActionIsNamedExactlyWhenTheLotCameFromOne() {
             // A fact a row tests may not be half-present: the action without the mode, or the mode without it
-            assertThatThrownBy(() -> new BucketFacts("EQUITY", false, true, "PURCHASE", Optional.of("BONUS"),
+            assertThatThrownBy(() -> new BucketFacts("EQUITY", "NOT_PAID", "PAID", "PURCHASE", Optional.of("BONUS"),
                             LocalDate.of(2020, 6, 1)))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("exactly when");
-            assertThatThrownBy(() -> new BucketFacts("EQUITY", false, true, "CORPORATE_ACTION", Optional.empty(),
+            assertThatThrownBy(() -> new BucketFacts("EQUITY", "NOT_PAID", "PAID", "CORPORATE_ACTION", Optional.empty(),
                             LocalDate.of(2020, 6, 1)))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("exactly when");

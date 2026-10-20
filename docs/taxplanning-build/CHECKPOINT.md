@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088j — STT evidence in three states (D-249)
+Item            : W-088j2 — establishing STT for a disposal with no breakdown (D-292)
 Stage           : READY — not started
-Plan            : plans/W-088j.md not yet written
+Plan            : plans/W-088j2.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088j": read the WI row, D-249 F1, plans/W-088f.md F1, D-290/D-291 (stt.* facts PAID / NOT_PAID in RS-CG-PART), CapitalGainsSummaryService.boreStt, TradeOutcomeRecorder; write plans/W-088j.md (R15: "Post-deployment actions"), STOP
-Last verify     : unit clean -Punit 3133 run, 0 fail; integration 269/0 (2026-10-20, W-088f2b)
-Waiting on      : the owner — "start W-088j"; OQ-32, OQ-33 open
+Next step       : on "start W-088j2": read the WI row, D-292, plans/W-088j.md C4, runbook §3.3, W-088u8b (rebuild), the charge engine's pricing path and user_charges; write plans/W-088j2.md (a design item: options, recommended first; R15), STOP
+Last verify     : unit clean -Punit 3154 run, 0 fail; integration 269/0 (2026-10-20, W-088j)
+Waiting on      : the owner — "start W-088j2"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088f2b: apply S.O. 5054(E)'s waiver from a rule row — acquisitions before 1-10-2004 and bonus or demerger allotments keep the listed-equity rate without STT on the buy; ItemDateBefore added (D-291)
-Updated         : 2026-10-20, session 26 — W-088f2b done (D-291), W-088f2 closed; next W-088j
+Last item commit: taxplanning W-088j: record STT as paid, not paid or unknown on each side of a disposal — no breakdown is unknown, not "no STT", so the engine refuses a gain that turns on it instead of charging slab rates (D-292)
+Updated         : 2026-10-20, session 26 — W-088j done (D-292); next W-088j2
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

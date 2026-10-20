@@ -96,8 +96,9 @@ public record CapitalGainsInput(
      * kind it learns later must reach the rule data unchanged rather than be collapsed here.
      *
      * @param assetKind the kind of asset, such as {@code EQUITY}
-     * @param sttOnAcquisition whether securities transaction tax is on record for the buy
-     * @param sttOnTransfer whether it is on record for the sale
+     * @param sttOnAcquisition what the records say of securities transaction tax on the buy, such as {@code PAID},
+     *     {@code NOT_PAID} or {@code UNKNOWN}
+     * @param sttOnTransfer what they say of it on the sale
      * @param acquisitionMode how the lot was acquired, such as {@code PURCHASE} or {@code CORPORATE_ACTION}
      * @param corporateAction the corporate action that created the lot; present exactly when the mode is
      *     {@code CORPORATE_ACTION}
@@ -105,8 +106,8 @@ public record CapitalGainsInput(
      */
     public record BucketFacts(
             String assetKind,
-            boolean sttOnAcquisition,
-            boolean sttOnTransfer,
+            String sttOnAcquisition,
+            String sttOnTransfer,
             String acquisitionMode,
             Optional<String> corporateAction,
             LocalDate acquiredOn) {
@@ -114,15 +115,19 @@ public record CapitalGainsInput(
         private static final String CORPORATE_ACTION = "CORPORATE_ACTION";
 
         public BucketFacts {
-            if (assetKind == null || assetKind.isBlank() || acquisitionMode == null || acquisitionMode.isBlank()
+            if (isBlank(assetKind) || isBlank(sttOnAcquisition) || isBlank(sttOnTransfer) || isBlank(acquisitionMode)
                     || corporateAction == null || acquiredOn == null) {
-                throw new IllegalArgumentException("A bucket's facts need its asset kind, acquisition mode and"
-                        + " acquisition date; pass Optional.empty() for no corporate action");
+                throw new IllegalArgumentException("A bucket's facts need its asset kind, STT evidence on both sides,"
+                        + " acquisition mode and acquisition date; pass Optional.empty() for no corporate action");
             }
             if (corporateAction.isPresent() != CORPORATE_ACTION.equals(acquisitionMode)) {
                 throw new IllegalArgumentException("A corporate action is named exactly when the lot was acquired by"
                         + " one, but the mode was " + acquisitionMode + " and the corporate action " + corporateAction);
             }
+        }
+
+        private static boolean isBlank(String code) {
+            return code == null || code.isBlank();
         }
     }
 

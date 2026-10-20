@@ -12,6 +12,7 @@ import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
@@ -47,15 +48,15 @@ class CapitalGainsAdapterTest {
     private CapitalGainsAdapter adapter;
 
     private static CapitalGainsBucket bucket(CapitalGainsType classification, AssetType assetType,
-            boolean sttOnAcquisition, boolean sttOnTransfer, double gainRupees) {
+            SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, double gainRupees) {
         return new CapitalGainsBucket(classification, assetType, Optional.empty(), sttOnAcquisition, sttOnTransfer,
                 Acquisition.of(null), ACQUIRED_ON, gainRupees);
     }
 
     /** Long-term equity sold with STT, its buy without, acquired as stated. */
     private static CapitalGainsBucket boughtWithoutStt(Acquisition acquisition, LocalDate acquiredOn) {
-        return new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY, Optional.empty(), false, true,
-                acquisition, acquiredOn, 1000.50);
+        return new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY, Optional.empty(),
+                SttEvidence.NOT_PAID, SttEvidence.PAID, acquisition, acquiredOn, 1000.50);
     }
 
     private CapitalGainsInput inputOf(CapitalGainsBucket... buckets) {
@@ -83,14 +84,14 @@ class CapitalGainsAdapterTest {
 
     @Test
     void inputFor_whenEquityWasPurchased_passesItsFactsThrough() {
-        // When — STT on the buy only, so a read of the wrong side fails
-        CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY, true,
-                false, 1000.50));
+        // When — STT paid on the buy, nothing on record for the sale, so a read of the wrong side fails
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY,
+                SttEvidence.PAID, SttEvidence.UNKNOWN, 1000.50));
 
         // Then
         assertThat(bucket.gain()).isEqualTo(Money.of("1000.50"));
         assertThat(bucket.term()).isEqualTo(Term.SHORT_TERM);
-        assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", true, false, "PURCHASE", Optional.empty(),
+        assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", "PAID", "UNKNOWN", "PURCHASE", Optional.empty(),
                 ACQUIRED_ON));
     }
 
@@ -102,7 +103,7 @@ class CapitalGainsAdapterTest {
 
         // Then
         assertThat(bucket.term()).isEqualTo(Term.LONG_TERM);
-        assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", false, true, "CORPORATE_ACTION",
+        assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", "NOT_PAID", "PAID", "CORPORATE_ACTION",
                 Optional.of("BONUS"), LocalDate.of(2020, 1, 10)));
     }
 
@@ -122,7 +123,7 @@ class CapitalGainsAdapterTest {
     void inputFor_whenAFundHasACapitalGainsClassification_passesTheAssetThrough() {
         // When — no row covers a fund unit yet; the engine refuses it, not the adapter
         CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.MUTUAL_FUND,
-                false, true, 10));
+                SttEvidence.NOT_PAID, SttEvidence.PAID, 10));
 
         // Then
         assertThat(bucket.facts().assetKind()).isEqualTo("MUTUAL_FUND");
@@ -131,7 +132,7 @@ class CapitalGainsAdapterTest {
     @Test
     void inputFor_whenAGainIsUnclassified_isRefused() {
         // When / Then — X1.3: never defaulted either way
-        assertThatThrownBy(() -> inputOf(bucket(CapitalGainsType.UNCLASSIFIED, AssetType.BOND, false, false, 10)))
+        assertThatThrownBy(() -> inputOf(bucket(CapitalGainsType.UNCLASSIFIED, AssetType.BOND, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 10)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("unclassified");
     }
@@ -139,7 +140,7 @@ class CapitalGainsAdapterTest {
     @Test
     void inputFor_whenAnUnclassifiedBucketIsNil_leavesItOut() {
         // When
-        CapitalGainsInput input = inputOf(bucket(CapitalGainsType.UNCLASSIFIED, AssetType.BOND, false, false, 0));
+        CapitalGainsInput input = inputOf(bucket(CapitalGainsType.UNCLASSIFIED, AssetType.BOND, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 0));
 
         // Then
         assertThat(input.buckets()).isEmpty();
@@ -148,7 +149,7 @@ class CapitalGainsAdapterTest {
     @Test
     void inputFor_whenAGainIsSpeculative_isRefused() {
         // When / Then — business income, which this engine does not compute
-        assertThatThrownBy(() -> inputOf(bucket(CapitalGainsType.SPECULATIVE, AssetType.EQUITY, true, true, 5)))
+        assertThatThrownBy(() -> inputOf(bucket(CapitalGainsType.SPECULATIVE, AssetType.EQUITY, SttEvidence.PAID, SttEvidence.PAID, 5)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("speculative business income");
     }
@@ -156,7 +157,7 @@ class CapitalGainsAdapterTest {
     @Test
     void inputFor_whenTheIncomeIsDepositInterest_leavesItOut() {
         // When — other-sources income, entered there
-        CapitalGainsInput input = inputOf(bucket(CapitalGainsType.NOT_CAPITAL_GAINS, AssetType.FD, false, false, 900));
+        CapitalGainsInput input = inputOf(bucket(CapitalGainsType.NOT_CAPITAL_GAINS, AssetType.FD, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 900));
 
         // Then
         assertThat(input.buckets()).isEmpty();

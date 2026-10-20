@@ -243,6 +243,7 @@ Any repair would be a new work item with its own section-2 entry.
 |---|---|---|---|
 | 3.1 | **W-086** (D-238 C2a) | `CapitalGainsSummaryService` **refuses** a user's summary if any of their disposals carries broker charges with no breakdown ("record those trades again"). The rebuild's rows never have one | Count below |
 | 3.2 | **W-088f** (D-249 C4a, "no backfill") | Rows written before W-088f have no `acquisition_mode`; they read as `UNRECORDED` (`Acquisition.stored` maps a missing mode to it) | `db.trade_outcomes.countDocuments({ acquisition_mode: { $exists: false } })` |
+| 3.3 | **W-088j** (D-292) | A side of a disposal with no charge breakdown says nothing of STT, so it reads as `UNKNOWN`, not "no STT". An equity gain whose rate turns on an `UNKNOWN` side is **refused** by the tax engine (`RS-CG-PART` has no row for it): every sale with no breakdown, and a long-term sale with STT whose buy has none unless S.O. 5054(E)'s own facts settle it. With the charge flags off, this may be most rows. Remedy: W-088j2 | Count below |
 
 ```js
 // 3.1 — rows, and users, whose summary would be refused
@@ -250,6 +251,15 @@ db.trade_outcomes.aggregate([
   { $match: { $or: [
       { buy_broker_charges: { $ne: 0 }, $or: [ { buy_charge_breakup: { $exists: false } }, { buy_charge_breakup: {} } ] },
       { sell_broker_charges: { $ne: 0 }, $or: [ { sell_charge_breakup: { $exists: false } }, { sell_charge_breakup: {} } ] } ] } },
+  { $group: { _id: "$email", rows: { $sum: 1 } } },
+  { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
+])
+
+// 3.3 — equity disposals whose STT is UNKNOWN on the buy or the sale (W-088j, D-292)
+db.trade_outcomes.aggregate([
+  { $match: { asset_type: "EQUITY", $or: [
+      { buy_charge_breakup: { $exists: false } }, { buy_charge_breakup: {} },
+      { sell_charge_breakup: { $exists: false } }, { sell_charge_breakup: {} } ] } },
   { $group: { _id: "$email", rows: { $sum: 1 } } },
   { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
 ])

@@ -165,7 +165,7 @@ class InputsFingerprintTest {
                                     List.of(new Bucket(
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of("50000"),
                                             Term.LONG_TERM,
-                                            new BucketFacts("EQUITY", true, true, "PURCHASE", Optional.empty(),
+                                            new BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE", Optional.empty(),
                                                     LocalDate.of(2020, 6, 1)),
                                             Optional.empty())),
                                     PF_AS_OF,

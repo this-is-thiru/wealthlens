@@ -64,8 +64,8 @@ public class CapitalGainsAdapter {
     }
 
     private static CapitalGainsInput.Bucket engineBucket(CapitalGainsBucket bucket, Term term) {
-        BucketFacts facts = new BucketFacts(bucket.assetType().name(), bucket.sttOnAcquisition(),
-                bucket.sttOnTransfer(), bucket.acquisition().mode().name(),
+        BucketFacts facts = new BucketFacts(bucket.assetType().name(), bucket.sttOnAcquisition().name(),
+                bucket.sttOnTransfer().name(), bucket.acquisition().mode().name(),
                 bucket.acquisition().corporateAction().map(Enum::name), bucket.acquiredOn());
         return new CapitalGainsInput.Bucket(MoneyBridge.fromTMoney(bucket.gainRupees()), term, facts,
                 Optional.empty());

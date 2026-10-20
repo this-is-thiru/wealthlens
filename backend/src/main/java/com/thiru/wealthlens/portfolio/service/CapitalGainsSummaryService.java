@@ -5,6 +5,7 @@ import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.shared.util.money.TMoney;
@@ -31,7 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
  * A row's gain is its sale value less its adjusted cost less the charges the catalogue marks deductible for capital
  * gains — not {@code netProfit}, which deducts every charge, STT included. User-entered misc charges carry no code,
  * so nothing says they are deductible, and they are not deducted. A row that bore broker charges but kept no
- * breakdown of them cannot be quantified at all, and refuses the year rather than overstating its gain.
+ * breakdown of them cannot be quantified at all, and refuses the year rather than overstating its gain. A row with no
+ * breakdown on a side says nothing of securities transaction tax there, so that side's STT is {@code UNKNOWN}, never
+ * {@code NOT_PAID} (D-292).
  *
  * <p>Rows are chosen by sell date, not by their stored year, which is written in two forms (W-086a).
  */
@@ -111,12 +114,12 @@ public class CapitalGainsSummaryService {
 
     /** What a bucket is one of: the rows a bucket sums share all seven. */
     private record BucketKey(CapitalGainsType classification, AssetType assetType, Optional<String> subClass,
-            boolean sttOnAcquisition, boolean sttOnTransfer, Acquisition acquisition, LocalDate acquiredOn) {
+            SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, Acquisition acquisition, LocalDate acquiredOn) {
 
         static BucketKey of(TradeOutcomeEntity row) {
             return new BucketKey(row.getCapitalGainsType(), row.getAssetType(),
-                    Optional.ofNullable(row.getInstrumentSubClass()), boreStt(row.getBuyChargeBreakup()),
-                    boreStt(row.getSellChargeBreakup()),
+                    Optional.ofNullable(row.getInstrumentSubClass()), sttEvidenceOf(row.getBuyChargeBreakup()),
+                    sttEvidenceOf(row.getSellChargeBreakup()),
                     Acquisition.stored(row.getAcquisitionMode(), row.getAcquisitionCorporateAction()),
                     acquiredOnOf(row));
         }
@@ -135,9 +138,16 @@ public class CapitalGainsSummaryService {
         }
     }
 
-    /** Whether a breakdown levied securities transaction tax — the condition S2 ss.196 and 198 turn on (D-241). */
-    private static boolean boreStt(Map<String, Double> breakup) {
-        return breakup != null && breakup.getOrDefault(STT, 0.0) > 0;
+    /**
+     * What a side's breakdown says of securities transaction tax — the condition S2 ss.196 and 198 turn on (D-241). The
+     * charge engine writes a line for each charge it levied, so a breakdown without one records none; no breakdown
+     * records nothing (D-292).
+     */
+    private static SttEvidence sttEvidenceOf(Map<String, Double> breakup) {
+        if (breakup == null || breakup.isEmpty()) {
+            return SttEvidence.UNKNOWN;
+        }
+        return breakup.getOrDefault(STT, 0.0) > 0 ? SttEvidence.PAID : SttEvidence.NOT_PAID;
     }
 
     /** {@code trade_outcomes:} and a digest of the rows read, so a later read of changed rows names another run. */
