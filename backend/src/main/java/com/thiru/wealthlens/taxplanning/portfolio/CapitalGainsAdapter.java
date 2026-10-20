@@ -2,10 +2,12 @@ package com.thiru.wealthlens.taxplanning.portfolio;
 
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
+import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import java.util.List;
@@ -66,8 +68,13 @@ public class CapitalGainsAdapter {
     private static CapitalGainsInput.Bucket engineBucket(CapitalGainsBucket bucket, Term term) {
         BucketFacts facts = new BucketFacts(bucket.assetType().name(), bucket.sttOnAcquisition().name(),
                 bucket.sttOnTransfer().name(), bucket.acquisition().mode().name(),
-                bucket.acquisition().corporateAction().map(Enum::name), bucket.acquiredOn());
+                bucket.acquisition().corporateAction().map(Enum::name), bucket.acquiredOn(),
+                sideVenueOf(bucket.acquisitionVenue()), sideVenueOf(bucket.transferVenue()));
         return new CapitalGainsInput.Bucket(MoneyBridge.fromTMoney(bucket.gainRupees()), term, facts,
                 Optional.empty());
+    }
+
+    private static SideVenue sideVenueOf(TradeVenue venue) {
+        return new SideVenue(venue.exchange(), venue.segment().map(Enum::name));
     }
 }

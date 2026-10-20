@@ -216,7 +216,10 @@ class GeneratedConstantsTest {
             "SETOFF-CARRIED-DISALLOWED-PART",
             "SETOFF-CARRIED-HOUSE-PROPERTY",
             "SETOFF-HOUSE-PROPERTY",
-            "SETOFF-WITHIN-CAPITAL-GAINS");
+            "SETOFF-WITHIN-CAPITAL-GAINS",
+            "STT-PURCHASE-DELIVERY",
+            "STT-SALE-DELIVERY",
+            "STT-SALE-NONDELIVERY");
 
     private record Target(
             String className, String valueType, java.util.List<String> purpose, TreeSet<String> values) {}

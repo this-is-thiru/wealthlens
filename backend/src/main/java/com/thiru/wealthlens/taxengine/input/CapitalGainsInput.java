@@ -103,6 +103,9 @@ public record CapitalGainsInput(
      * @param corporateAction the corporate action that created the lot; present exactly when the mode is
      *     {@code CORPORATE_ACTION}
      * @param acquiredOn when the lot was acquired
+     * @param acquisitionVenue where and how the buy was traded, as recorded — what decides whether its STT was
+     *     chargeable where the evidence is unknown (D-298)
+     * @param transferVenue where and how the sale was traded, as recorded
      */
     public record BucketFacts(
             String assetKind,
@@ -110,15 +113,19 @@ public record CapitalGainsInput(
             String sttOnTransfer,
             String acquisitionMode,
             Optional<String> corporateAction,
-            LocalDate acquiredOn) {
+            LocalDate acquiredOn,
+            SideVenue acquisitionVenue,
+            SideVenue transferVenue) {
 
         private static final String CORPORATE_ACTION = "CORPORATE_ACTION";
 
         public BucketFacts {
             if (isBlank(assetKind) || isBlank(sttOnAcquisition) || isBlank(sttOnTransfer) || isBlank(acquisitionMode)
-                    || corporateAction == null || acquiredOn == null) {
+                    || corporateAction == null || acquiredOn == null || acquisitionVenue == null
+                    || transferVenue == null) {
                 throw new IllegalArgumentException("A bucket's facts need its asset kind, STT evidence on both sides,"
-                        + " acquisition mode and acquisition date; pass Optional.empty() for no corporate action");
+                        + " acquisition mode, acquisition date and both venues; pass Optional.empty() for no corporate"
+                        + " action and SideVenue.UNRECORDED for no venue");
             }
             if (corporateAction.isPresent() != CORPORATE_ACTION.equals(acquisitionMode)) {
                 throw new IllegalArgumentException("A corporate action is named exactly when the lot was acquired by"
@@ -128,6 +135,26 @@ public record CapitalGainsInput(
 
         private static boolean isBlank(String code) {
             return code == null || code.isBlank();
+        }
+    }
+
+    /**
+     * Where and how one side of a disposal was traded, as {@code portfolio} recorded it: the exchange string and the
+     * segment's name, passed as is (D-295, D-298). Which exchanges are recognised is the rule data's.
+     *
+     * @param exchange the exchange the side was recorded on; empty where not recorded
+     * @param segment the segment it was recorded in, such as {@code DELIVERY}; empty where not recorded
+     */
+    public record SideVenue(Optional<String> exchange, Optional<String> segment) {
+
+        /** A side whose record says nothing of where or how it was traded. */
+        public static final SideVenue UNRECORDED = new SideVenue(Optional.empty(), Optional.empty());
+
+        public SideVenue {
+            if (exchange == null || segment == null) {
+                throw new IllegalArgumentException("A side venue needs its exchange and segment; pass Optional.empty()"
+                        + " for one not recorded");
+            }
         }
     }
 

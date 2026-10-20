@@ -14,9 +14,11 @@ import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -94,7 +96,7 @@ class CapitalGainsAdapterTest {
         assertThat(bucket.gain()).isEqualTo(Money.of("1000.50"));
         assertThat(bucket.term()).isEqualTo(Term.SHORT_TERM);
         assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", "PAID", "UNKNOWN", "PURCHASE", Optional.empty(),
-                ACQUIRED_ON));
+                ACQUIRED_ON, SideVenue.UNRECORDED, SideVenue.UNRECORDED));
     }
 
     @Test
@@ -106,7 +108,7 @@ class CapitalGainsAdapterTest {
         // Then
         assertThat(bucket.term()).isEqualTo(Term.LONG_TERM);
         assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", "NOT_PAID", "PAID", "CORPORATE_ACTION",
-                Optional.of("BONUS"), LocalDate.of(2020, 1, 10)));
+                Optional.of("BONUS"), LocalDate.of(2020, 1, 10), SideVenue.UNRECORDED, SideVenue.UNRECORDED));
     }
 
     @Test
@@ -163,5 +165,22 @@ class CapitalGainsAdapterTest {
 
         // Then
         assertThat(input.buckets()).isEmpty();
+    }
+
+    @Test
+    void inputFor_whenTheBucketRecordsItsVenues_passesThemThrough() {
+        // When — bought on BSE for delivery, sold on NSE intraday; the segment as its name (D-298)
+        CapitalGainsBucket recorded = new CapitalGainsBucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY,
+                Optional.empty(), SttEvidence.UNKNOWN, SttEvidence.UNKNOWN,
+                new TradeVenue(Optional.of("BSE"), Optional.of(TradeSegment.DELIVERY)),
+                new TradeVenue(Optional.of("NSE"), Optional.of(TradeSegment.INTRADAY)), Acquisition.of(null),
+                ACQUIRED_ON, 10);
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(recorded);
+
+        // Then
+        assertThat(bucket.facts().acquisitionVenue()).isEqualTo(new SideVenue(Optional.of("BSE"),
+                Optional.of("DELIVERY")));
+        assertThat(bucket.facts().transferVenue()).isEqualTo(new SideVenue(Optional.of("NSE"),
+                Optional.of("INTRADAY")));
     }
 }

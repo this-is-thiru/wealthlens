@@ -159,6 +159,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_SETOFF_CARRIED_HOUSE_PROPERTY = new RuleSetId("RS-SETOFF-CARRIED-HOUSE-PROPERTY");
     public static final RuleSetId RS_SETOFF_HOUSE_PROPERTY = new RuleSetId("RS-SETOFF-HOUSE-PROPERTY");
     public static final RuleSetId RS_SETOFF_WITHIN_CAPITAL_GAINS = new RuleSetId("RS-SETOFF-WITHIN-CAPITAL-GAINS");
+    public static final RuleSetId RS_STT_CHARGEABLE = new RuleSetId("RS-STT-CHARGEABLE");
 
     private RuleSetIds() {
     }

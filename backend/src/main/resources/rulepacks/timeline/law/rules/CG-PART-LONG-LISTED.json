@@ -1,7 +1,7 @@
 {
   "ruleId": "CG-PART-LONG-LISTED",
   "ruleSet": "RS-CG-PART",
-  "_note": "A long-term gain on an equity share bought and sold with securities transaction tax is the listed-equity long-term part (D-289). TY 2026-27: Income-tax Act, 2025 s.198(1) (p.222): \"(c) securities transaction tax … has— (i) in a case where the long-term capital asset is in the nature of an equity share in a company, been paid on acquisition and transfer of such capital asset\". TY 2025-26: Income-tax Act, 1961 s.112A(1)(iii)(a), the same condition (thc copy p.464). A share bought without it waits on S.O. 5054(E)'s row (s.198(5) / s.112A(4); W-088f2b) and is refused until then. The TY 2025-26 version cites the rate row's amending Act (Finance (No. 2) Act, 2024 s.31); the condition itself is unchanged since the thc copy. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 3, 4–9, 26–28.",
+  "_note": "A long-term gain on an equity share bought and sold with securities transaction tax is the listed-equity long-term part (D-289). TY 2026-27: Income-tax Act, 2025 s.198(1) (p.222): \"(c) securities transaction tax … has— (i) in a case where the long-term capital asset is in the nature of an equity share in a company, been paid on acquisition and transfer of such capital asset\". TY 2025-26: Income-tax Act, 1961 s.112A(1)(iii)(a), the same condition (thc copy p.464). A share bought without it waits on S.O. 5054(E)'s row (s.198(5) / s.112A(4); W-088f2b) and is refused until then. The TY 2025-26 version cites the rate row's amending Act (Finance (No. 2) Act, 2024 s.31); the condition itself is unchanged since the thc copy. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 3, 4–9, 26–28. Each side's STT is PAID on record or CHARGEABLE where no record shows it (RS-STT-CHARGEABLE, D-298): s.198(1)(c)(i) / s.112A(1)(iii)(a) ask whether it \"has … been paid\", and a chargeable exchange-delivery side counts as paid by the owner's ruling (D-294 Q1: s.100(1), (4) — the exchange collects it, or is liable for it).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -43,14 +43,34 @@
               "code": "EQUITY"
             },
             {
-              "type": "ItemFactIs",
-              "fact": "capitalgains.stt.acquisition",
-              "code": "PAID"
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.acquisition",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.acquisition",
+                  "code": "CHARGEABLE"
+                }
+              ]
             },
             {
-              "type": "ItemFactIs",
-              "fact": "capitalgains.stt.transfer",
-              "code": "PAID"
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "CHARGEABLE"
+                }
+              ]
             }
           ]
         }
@@ -110,14 +130,34 @@
               "code": "EQUITY"
             },
             {
-              "type": "ItemFactIs",
-              "fact": "capitalgains.stt.acquisition",
-              "code": "PAID"
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.acquisition",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.acquisition",
+                  "code": "CHARGEABLE"
+                }
+              ]
             },
             {
-              "type": "ItemFactIs",
-              "fact": "capitalgains.stt.transfer",
-              "code": "PAID"
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "CHARGEABLE"
+                }
+              ]
             }
           ]
         }

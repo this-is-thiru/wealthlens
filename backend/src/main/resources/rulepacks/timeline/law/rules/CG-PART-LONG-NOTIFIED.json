@@ -1,7 +1,7 @@
 {
   "ruleId": "CG-PART-LONG-NOTIFIED",
   "ruleSet": "RS-CG-PART",
-  "_note": "A long-term gain on an equity share whose sale bore securities transaction tax but whose buy did not keeps the listed-equity long-term part where S.O. 5054(E) waives the buy-side condition (D-291). TY 2025-26: Income-tax Act, 1961 s.112A(4); S.O. 5054(E), 1-10-2018 (egazette 2018/190360 p.3): it \"notifies the transactions of acquisition of equity share entered into (I) before the 1st day of October, 2004; or (II) on or after the 1st day of October, 2004 which are not chargeable to securities transaction tax under Chapter VII of the Finance (No. 2) Act, 2004 (23 of 2004), other than the following\" — (a) a preferential issue in an infrequently traded share, (b) existing listed shares acquired not through a recognised stock exchange (proviso (i) \"through an issue of share by a company\", (ix) \"by mode of transfer referred to in section 47\"), (c) while delisted; para 2: in force from 1-4-2019, AY 2019-20 onwards. TY 2026-27: Income-tax Act, 2025 s.198(5), the notification continued by s.536(2)(j). Applied: acquired before 1-10-2004 (\"before\" is strict), or allotted by a bonus or a demerger (proviso (i), and (ix) for a demerger; D-289 C3(a)). A purchase, an unrecorded acquisition or another corporate action on or after 1-10-2004 is not covered and is refused: portfolio records none of (a)–(c). The acquisition mode is tested before the corporate action, which a purchase does not carry. The buy's STT need only not be PAID: under clause (I) no STT existed and under (II) an allotment is not chargeable to it, so a buy with no breakdown on record (UNKNOWN, D-292) is settled by the waiver's own facts; a buy with STT paid is CG-PART-LONG-LISTED's. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 26–28.",
+  "_note": "A long-term gain on an equity share whose sale bore securities transaction tax but whose buy did not keeps the listed-equity long-term part where S.O. 5054(E) waives the buy-side condition (D-291). TY 2025-26: Income-tax Act, 1961 s.112A(4); S.O. 5054(E), 1-10-2018 (egazette 2018/190360 p.3): it \"notifies the transactions of acquisition of equity share entered into (I) before the 1st day of October, 2004; or (II) on or after the 1st day of October, 2004 which are not chargeable to securities transaction tax under Chapter VII of the Finance (No. 2) Act, 2004 (23 of 2004), other than the following\" — (a) a preferential issue in an infrequently traded share, (b) existing listed shares acquired not through a recognised stock exchange (proviso (i) \"through an issue of share by a company\", (ix) \"by mode of transfer referred to in section 47\"), (c) while delisted; para 2: in force from 1-4-2019, AY 2019-20 onwards. TY 2026-27: Income-tax Act, 2025 s.198(5), the notification continued by s.536(2)(j). Applied: acquired before 1-10-2004 (\"before\" is strict), or allotted by a bonus or a demerger (proviso (i), and (ix) for a demerger; D-289 C3(a)). A purchase, an unrecorded acquisition or another corporate action on or after 1-10-2004 is not covered and is refused: portfolio records none of (a)–(c). The acquisition mode is tested before the corporate action, which a purchase does not carry. The buy's STT need only not be PAID: under clause (I) no STT existed and under (II) an allotment is not chargeable to it, so a buy with no breakdown on record (UNKNOWN, D-292) is settled by the waiver's own facts; a buy with STT paid is CG-PART-LONG-LISTED's. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 26–28. The sale's STT is PAID or CHARGEABLE (D-298); the buy's neither — S.O. 5054(E)(II) reaches acquisitions \"not chargeable\", and a chargeable buy is CG-PART-LONG-LISTED's.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -43,16 +43,36 @@
               "code": "EQUITY"
             },
             {
-              "type": "ItemFactIs",
-              "fact": "capitalgains.stt.transfer",
-              "code": "PAID"
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "CHARGEABLE"
+                }
+              ]
             },
             {
               "type": "Not",
               "condition": {
-                "type": "ItemFactIs",
-                "fact": "capitalgains.stt.acquisition",
-                "code": "PAID"
+                "type": "AnyOf",
+                "any": [
+                  {
+                    "type": "ItemFactIs",
+                    "fact": "capitalgains.stt.acquisition",
+                    "code": "PAID"
+                  },
+                  {
+                    "type": "ItemFactIs",
+                    "fact": "capitalgains.stt.acquisition",
+                    "code": "CHARGEABLE"
+                  }
+                ]
               }
             },
             {
@@ -148,16 +168,36 @@
               "code": "EQUITY"
             },
             {
-              "type": "ItemFactIs",
-              "fact": "capitalgains.stt.transfer",
-              "code": "PAID"
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "CHARGEABLE"
+                }
+              ]
             },
             {
               "type": "Not",
               "condition": {
-                "type": "ItemFactIs",
-                "fact": "capitalgains.stt.acquisition",
-                "code": "PAID"
+                "type": "AnyOf",
+                "any": [
+                  {
+                    "type": "ItemFactIs",
+                    "fact": "capitalgains.stt.acquisition",
+                    "code": "PAID"
+                  },
+                  {
+                    "type": "ItemFactIs",
+                    "fact": "capitalgains.stt.acquisition",
+                    "code": "CHARGEABLE"
+                  }
+                ]
               }
             },
             {

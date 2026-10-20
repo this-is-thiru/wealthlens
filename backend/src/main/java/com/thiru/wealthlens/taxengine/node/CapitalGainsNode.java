@@ -33,7 +33,7 @@ import java.util.function.Predicate;
  * Income under "Capital gains", part by part, after the head's own losses (S2 s.108(2); 1961 s.70(2), (3); D-243).
  *
  * <p>Each bucket of {@link CapitalGainsInput} belongs to the {@link CapitalGainsPart} the row of {@code RS-CG-PART} its
- * facts meet names (D-289): which gains a special rate charges is the rule data's, and a bucket no row covers is refused
+ * facts meet names (D-289), its STT read through {@link CapitalGainsStt} (D-298): which gains a special rate charges is the rule data's, and a bucket no row covers is refused
  * rather than charged with total income. A
  * part whose buckets net to a loss contributes that loss: a long-term loss is set off only against the long-term
  * parts, a short-term loss against any part. The long-term loss goes first, because it can use fewer parts; each loss
@@ -73,7 +73,7 @@ public final class CapitalGainsNode implements ComputationNode {
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(ROW, PARTS);
+        return Set.of(ROW, PARTS, CapitalGainsStt.CHARGEABILITY);
     }
 
     @Override
@@ -82,10 +82,10 @@ public final class CapitalGainsNode implements ComputationNode {
         CapitalGainsAbsorptionOrder order = RuleDefinitions.require(row.version().definition(),
                 CapitalGainsAbsorptionOrder.class, row.id());
         Map<CapitalGainsPart, Money> net = new EnumMap<>(CapitalGainsPart.class);
-        for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
-            net.merge(partOf(ctx, bucket), bucket.gain(), Money::plus);
-        }
         List<TraceLine> lines = new ArrayList<>();
+        for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
+            net.merge(partOf(ctx, bucket, CapitalGainsStt.of(ctx, bucket, lines)), bucket.gain(), Money::plus);
+        }
         Map<CapitalGainsPart, Money> available = new EnumMap<>(CapitalGainsPart.class);
         Money longTermLoss = Money.ZERO;
         Money shortTermLoss = Money.ZERO;
@@ -136,12 +136,14 @@ public final class CapitalGainsNode implements ComputationNode {
      *
      * @throws IllegalArgumentException if no row covers the bucket — its facts are named, so the gap can be read
      */
-    private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket) {
-        return ctx.optionalRuleOf(PARTS, factsOf(bucket))
+    private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket,
+            CapitalGainsStt.Sides stt) {
+        return ctx.optionalRuleOf(PARTS, factsOf(bucket, stt))
                 .map(row -> RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row,
                         ctx.inputs().temporal()).definition(), BucketPart.class, row.id()).part())
                 .orElseThrow(() -> new IllegalArgumentException("Capital gains of " + bucket.gain() + " ("
-                        + bucket.term() + ", " + bucket.facts() + ") fall in no row of " + PARTS + " for "
+                        + bucket.term() + ", " + bucket.facts() + ", STT as read " + stt + ") fall in no row of "
+                        + PARTS + " for "
                         + ctx.pack().taxYear().label() + ", so no provision is known to charge them"));
     }
 
@@ -149,13 +151,13 @@ public final class CapitalGainsNode implements ComputationNode {
      * The bucket's facts as the rows test them, its acquisition date among them; the corporate action only where the lot
      * came from one.
      */
-    private static ItemFacts factsOf(CapitalGainsInput.Bucket bucket) {
+    private static ItemFacts factsOf(CapitalGainsInput.Bucket bucket, CapitalGainsStt.Sides stt) {
         BucketFacts facts = bucket.facts();
         Map<ItemFactId, String> codes = new HashMap<>();
         codes.put(TERM, bucket.term().name());
         codes.put(ASSET, facts.assetKind());
-        codes.put(STT_ON_ACQUISITION, facts.sttOnAcquisition());
-        codes.put(STT_ON_TRANSFER, facts.sttOnTransfer());
+        codes.put(STT_ON_ACQUISITION, stt.acquisition());
+        codes.put(STT_ON_TRANSFER, stt.transfer());
         codes.put(ACQUISITION, facts.acquisitionMode());
         facts.corporateAction().ifPresent(action -> codes.put(CORPORATE_ACTION, action));
         return new ItemFacts(codes, Map.of(), Map.of(ACQUIRED_ON, facts.acquiredOn()));

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
@@ -59,7 +60,7 @@ class CapitalGainsNodeTest {
     private static CapitalGainsInput.Bucket bucket(String gain, Term term, String asset, String sttOnBuy,
             String sttOnSale) {
         BucketFacts facts = new BucketFacts(asset, sttOnBuy, sttOnSale, "PURCHASE", Optional.empty(),
-                LocalDate.parse("2020-06-01"));
+                LocalDate.parse("2020-06-01"), SideVenue.UNRECORDED, SideVenue.UNRECORDED);
         return new CapitalGainsInput.Bucket(Money.of(gain), term, facts, Optional.empty());
     }
 
@@ -72,8 +73,24 @@ class CapitalGainsNodeTest {
     private static CapitalGainsInput.Bucket soldWithStt(String sttOnBuy, String mode, String corporateAction,
             String acquiredOn) {
         BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, PAID, mode, Optional.ofNullable(corporateAction),
-                LocalDate.parse(acquiredOn));
+                LocalDate.parse(acquiredOn), SideVenue.UNRECORDED, SideVenue.UNRECORDED);
         return new CapitalGainsInput.Bucket(Money.of("1000"), Term.LONG_TERM, facts, Optional.empty());
+    }
+
+    /** An equity bucket of 1000 with each side's STT and venue ("NSE/DELIVERY", or "-" for none on record). */
+    private static CapitalGainsInput.Bucket traded(Term term, String sttOnBuy, String buyVenue, String sttOnSale,
+            String saleVenue, String mode, String acquiredOn) {
+        BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, sttOnSale, mode, Optional.empty(),
+                LocalDate.parse(acquiredOn), venue(buyVenue), venue(saleVenue));
+        return new CapitalGainsInput.Bucket(Money.of("1000"), term, facts, Optional.empty());
+    }
+
+    private static SideVenue venue(String recorded) {
+        if (recorded.equals("-")) {
+            return SideVenue.UNRECORDED;
+        }
+        String[] parts = recorded.split("/");
+        return new SideVenue(Optional.of(parts[0]), Optional.of(parts[1]));
     }
 
     private static CapitalGainsHead run(int year, CapitalGainsInput.Bucket... buckets) {
@@ -312,5 +329,79 @@ class CapitalGainsNodeTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("assetKind=MUTUAL_FUND")
                 .hasMessageContaining("no row of RS-CG-PART");
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1}, buy {2}, sale {3} → {6}")
+    @CsvSource({
+        "2025, LONG_TERM, UNKNOWN@NSE/DELIVERY, PAID@-, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2025, LONG_TERM, UNKNOWN@BSE/DELIVERY, PAID@-, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2025, LONG_TERM, PAID@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2025, SHORT_TERM, UNKNOWN@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
+        "2025, SHORT_TERM, PAID@-, UNKNOWN@NSE/INTRADAY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
+        "2025, LONG_TERM, UNKNOWN@NSE/DELIVERY, UNKNOWN@NSE/DELIVERY, UNRECORDED, 2003-06-01, LONG_TERM_LISTED_EQUITY",
+        "2026, LONG_TERM, UNKNOWN@NSE/DELIVERY, PAID@-, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2026, LONG_TERM, UNKNOWN@BSE/DELIVERY, PAID@-, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2026, LONG_TERM, PAID@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2026, SHORT_TERM, UNKNOWN@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
+        "2026, SHORT_TERM, PAID@-, UNKNOWN@NSE/INTRADAY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
+        "2026, LONG_TERM, UNKNOWN@NSE/DELIVERY, UNKNOWN@NSE/DELIVERY, UNRECORDED, 2003-06-01, LONG_TERM_LISTED_EQUITY"
+    })
+    void evaluate_whenAnUnknownSideWasChargeable_isInThePartTheLawGives(int year, Term term, String buy, String sale,
+            String mode, String acquiredOn, CapitalGainsPart expected) {
+        // When — cases 1, 2, 6, 7, 8, 9 (each side "evidence@venue"): Chapter VII s.98 Sl. 1–3 on NSE / BSE (D-297);
+        // s.196 "chargeable"; s.198 "paid" by the owner's ruling D-294 (D-298)
+        String[] b = buy.split("@");
+        String[] s = sale.split("@");
+        CapitalGainsHead head = run(year, traded(term, b[0], b[1], s[0], s[1], mode, acquiredOn));
+
+        // Then
+        assertThat(head.part(expected)).isEqualTo(Money.of("1000"));
+    }
+
+    @ParameterizedTest(name = "TY {0}: buy {1} {2}")
+    @CsvSource({
+        "2025, UNKNOWN, -",
+        "2025, UNKNOWN, NSE IFSC Limited/DELIVERY",
+        "2025, NOT_PAID, NSE/DELIVERY",
+        "2026, UNKNOWN, -",
+        "2026, UNKNOWN, NSE IFSC Limited/DELIVERY",
+        "2026, NOT_PAID, NSE/DELIVERY"
+    })
+    void evaluate_whenTheBuysSttIsNotShownChargeable_isRefused(int year, String sttOnBuy, String buyVenue) {
+        // When / Then — cases 3, 4, 5: no venue; an exchange not on the recognised list; a record that says
+        // NOT_PAID stands (D-298 C2a) — and a 2020 purchase is outside S.O. 5054(E)
+        assertThatThrownBy(() -> run(year, traded(Term.LONG_TERM, sttOnBuy, buyVenue, PAID, "-", "PURCHASE",
+                "2020-01-10")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no row of RS-CG-PART");
+    }
+
+    @Test
+    void evaluate_whenALongTermBuysSttIsDerived_tracesTheRowAndTheRuling() {
+        // When — case 1
+        NodeResult result = result(2026, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "-", "PURCHASE",
+                "2020-01-10"));
+
+        // Then
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.STT_PURCHASE_DELIVERY))
+                .singleElement()
+                .satisfies(line -> {
+                    assertThat(line.kind()).isEqualTo(StepKind.MEASURE);
+                    assertThat(line.limitedBy().orElseThrow()).startsWith("STT on the buy: CHARGEABLE (NSE, DELIVERY)")
+                            .contains("by the owner's ruling D-294");
+                });
+    }
+
+    @Test
+    void evaluate_whenAShortTermSalesSttIsDerived_tracesTheRowWithoutTheRuling() {
+        // When — case 7: s.196 asks for "chargeable" itself, so no ruling is needed
+        NodeResult result = result(2026, traded(Term.SHORT_TERM, UNKNOWN, "-", UNKNOWN, "NSE/DELIVERY", "PURCHASE",
+                "2025-01-10"));
+
+        // Then
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.STT_SALE_DELIVERY))
+                .singleElement()
+                .satisfies(line -> assertThat(line.limitedBy().orElseThrow())
+                        .isEqualTo("STT on the sale: CHARGEABLE (NSE, DELIVERY)"));
     }
 }

@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -195,6 +196,16 @@ class RuleJsonDefinitionTest {
                         "definition": { "type": "BucketPart", "part": "LONG_TERM_SLAB" }"""))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("LONG_TERM_LISTED_EQUITY");
+    }
+
+    @Test
+    void version_whenAnSttChargeability_readsTheCode() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "SttChargeability", "code": "CHARGEABLE" }""");
+
+        // Then
+        assertThat(version.definition()).contains(new SttChargeability("CHARGEABLE"));
     }
 
     @Test

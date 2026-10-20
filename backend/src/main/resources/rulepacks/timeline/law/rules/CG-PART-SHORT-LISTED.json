@@ -1,7 +1,7 @@
 {
   "ruleId": "CG-PART-SHORT-LISTED",
   "ruleSet": "RS-CG-PART",
-  "_note": "A short-term gain on an equity share whose sale bore securities transaction tax is the listed-equity short-term part (D-289). TY 2026-27: Income-tax Act, 2025 s.196(1) (p.220): \"arising from the transfer of a short-term capital asset–– (a) being an equity share in a company or a unit of an equity oriented fund or a unit of a business trust; and (b) the transaction of sale of such equity share or unit is chargeable to securities transaction tax under Chapter VII of the Finance (No. 2) Act, 2004\". TY 2025-26: Income-tax Act, 1961 s.111A(1), the same condition (thc copy p.461). Equity shares only: a fund or business-trust unit has no row until the instrument registry classifies it, so it is refused. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 1, 4–9.",
+  "_note": "A short-term gain on an equity share whose sale bore securities transaction tax is the listed-equity short-term part (D-289). TY 2026-27: Income-tax Act, 2025 s.196(1) (p.220): \"arising from the transfer of a short-term capital asset–– (a) being an equity share in a company or a unit of an equity oriented fund or a unit of a business trust; and (b) the transaction of sale of such equity share or unit is chargeable to securities transaction tax under Chapter VII of the Finance (No. 2) Act, 2004\". TY 2025-26: Income-tax Act, 1961 s.111A(1), the same condition (thc copy p.461). Equity shares only: a fund or business-trust unit has no row until the instrument registry classifies it, so it is refused. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 1, 4–9. The sale's STT is PAID on record or CHARGEABLE where no record shows it (RS-STT-CHARGEABLE, D-298): s.196(1)(b) / s.111A(1)(b) ask whether the sale is \"chargeable\".",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -43,9 +43,19 @@
               "code": "EQUITY"
             },
             {
-              "type": "ItemFactIs",
-              "fact": "capitalgains.stt.transfer",
-              "code": "PAID"
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "CHARGEABLE"
+                }
+              ]
             }
           ]
         }
@@ -105,9 +115,19 @@
               "code": "EQUITY"
             },
             {
-              "type": "ItemFactIs",
-              "fact": "capitalgains.stt.transfer",
-              "code": "PAID"
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "CHARGEABLE"
+                }
+              ]
             }
           ]
         }

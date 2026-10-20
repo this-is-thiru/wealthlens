@@ -1,0 +1,170 @@
+{
+  "ruleId": "STT-SALE-NONDELIVERY",
+  "ruleSet": "RS-STT-CHARGEABLE",
+  "_note": "A side of an equity disposal whose STT no breakdown records is chargeable to securities transaction tax when the Finance (No. 2) Act, 2004, s.98 Table says so (D-298). Sl. 3: \"Sale of an equity share in a company or a unit of an equity oriented fund, where— (a) the transaction of such sale is entered into in a recognised stock exchange; and (b) the contract for the sale of such share or unit is settled otherwise than by the actual delivery or transfer of such share or unit\" — payable by the Seller; INTRADAY is portfolio's segment for a trade settled otherwise than by delivery. \"Recognised stock exchange\" is SCRA 1956 s.2(f) (s.97(10)); the recognised exchanges listed are NSE and BSE, permanent on SEBI's list, accepted for both years (D-297); any other string, or none, matches no row and the side stays UNKNOWN. Chapter VII does not apply under s.113A (the NPS Trust; an IFSC exchange with foreign-currency consideration) — no IFSC exchange is on the list (D-298 C2). The same text both years: Sl. 1–3 unamended 2013–2026, and S2 s.196(1)(b) still cites Chapter VII. Sources: docs/taxplanning-build/sources/2026-10-20-securities-transaction-tax.md rows 1a–1g, 2–8; docs/taxplanning-build/sources/2026-10-20-recognised-exchanges.md.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.111A(1)(b) and s.112A(1)(iii), with the Finance (No. 2) Act, 2004 s.98 Sl. 3",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.196(1)(b) and s.198(1)(c), with the Finance (No. 2) Act, 2004 s.98 Sl. 3",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SttChargeability",
+        "code": "CHARGEABLE"
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "stt.side",
+              "code": "TRANSFER"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "trade.exchange",
+                  "code": "NSE"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "trade.exchange",
+                  "code": "BSE"
+                }
+              ]
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "trade.segment",
+              "code": "INTRADAY"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2013 (17 of 2013), s.135 — the Finance (No. 2) Act, 2004 (23 of 2004), Chapter VII, s.98 Table as amended w.e.f. 1-6-2013",
+        "gazetteRef": "Act 17 of 2013, assented 10-5-2013 per the print read — an itatonline.org print hosted on thc.nic.in, the Gazette issue not read; the Finance (No. 2) Act, 2004 s.98 Table text REPORTED (ChatGPT share t_6ad74fc833888191a95c5978c7985bc3; sooperkanoon consolidation) and accepted by the owner (D-294)",
+        "notifiedOn": "2013-05-10",
+        "effectiveFrom": "2013-06-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Finance%20Act%2C%202013.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Finance%20Act%2C%202013.pdf",
+        "sourceDescription": "Finance (No. 2) Act, 2004 s.98 Table as REPORTED and accepted (D-294; docs/taxplanning-build/sources/2026-10-20-securities-transaction-tax.md rows 1a, 1b, 8); Finance Act, 2013 s.135 (row 1d); unamended for Sl. 1–3 by the Acts of 2019–2026 (rows 2–7); the recognised stock exchanges NSE and BSE on SEBI's list, accepted for both years (D-297; docs/taxplanning-build/sources/2026-10-20-recognised-exchanges.md row 2)",
+        "accessedOn": "2026-10-20",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.111A(1)(b) and s.112A(1)(iii), with the Finance (No. 2) Act, 2004 s.98 Sl. 3",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.196(1)(b) and s.198(1)(c), with the Finance (No. 2) Act, 2004 s.98 Sl. 3",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SttChargeability",
+        "code": "CHARGEABLE"
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "stt.side",
+              "code": "TRANSFER"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "trade.exchange",
+                  "code": "NSE"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "trade.exchange",
+                  "code": "BSE"
+                }
+              ]
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "trade.segment",
+              "code": "INTRADAY"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2013 (17 of 2013), s.135 — the Finance (No. 2) Act, 2004 (23 of 2004), Chapter VII, s.98 Table as amended w.e.f. 1-6-2013",
+        "gazetteRef": "Act 17 of 2013, assented 10-5-2013 per the print read — an itatonline.org print hosted on thc.nic.in, the Gazette issue not read; the Finance (No. 2) Act, 2004 s.98 Table text REPORTED (ChatGPT share t_6ad74fc833888191a95c5978c7985bc3; sooperkanoon consolidation) and accepted by the owner (D-294)",
+        "notifiedOn": "2013-05-10",
+        "effectiveFrom": "2013-06-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Finance%20Act%2C%202013.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Finance%20Act%2C%202013.pdf",
+        "sourceDescription": "Finance (No. 2) Act, 2004 s.98 Table as REPORTED and accepted (D-294; docs/taxplanning-build/sources/2026-10-20-securities-transaction-tax.md rows 1a, 1b, 8); Finance Act, 2013 s.135 (row 1d); unamended for Sl. 1–3 by the Acts of 2019–2026 (rows 2–7); the recognised stock exchanges NSE and BSE on SEBI's list, accepted for both years (D-297; docs/taxplanning-build/sources/2026-10-20-recognised-exchanges.md row 2)",
+        "accessedOn": "2026-10-20",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Finance%20Act%2C%202013.pdf",
+    "sourceDescription": "Finance (No. 2) Act, 2004 s.98 Table as REPORTED and accepted (D-294; docs/taxplanning-build/sources/2026-10-20-securities-transaction-tax.md rows 1a, 1b, 8); Finance Act, 2013 s.135 (row 1d); unamended for Sl. 1–3 by the Acts of 2019–2026 (rows 2–7); the recognised stock exchanges NSE and BSE on SEBI's list, accepted for both years (D-297; docs/taxplanning-build/sources/2026-10-20-recognised-exchanges.md row 2)",
+    "accessedOn": "2026-10-20",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

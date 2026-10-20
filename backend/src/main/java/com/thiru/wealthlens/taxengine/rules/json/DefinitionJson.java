@@ -30,6 +30,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
+import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.definition.SurvivingChildrenLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
@@ -61,7 +62,7 @@ public final class DefinitionJson {
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
-                "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart");
+                "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -136,7 +137,7 @@ public final class DefinitionJson {
     /**
      * The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243), how a loss is
      * carried forward (D-263), the special-rate parts the unused basic exemption (D-244), and the part a capital-gains
-     * bucket falls in (D-289).
+     * bucket falls in (D-289), and whether a side's STT was chargeable (D-298).
      */
     private static RuleDefinition setOffDefinition(String tag, JsonNode node, String path) {
         return switch (tag) {
@@ -163,6 +164,8 @@ public final class DefinitionJson {
             }
             case "BucketPart" -> PackJson.construct(path, () -> new BucketPart(
                     PackJson.enumValue(node, "part", path, CapitalGainsPart.class)));
+            case "SttChargeability" -> PackJson.construct(path, () -> new SttChargeability(
+                    PackJson.text(node, "code", path)));
             default -> throw unreachable(tag, path);
         };
     }

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -164,7 +165,7 @@ class RegimeElectionSnapshotTest {
     class CapitalGains {
 
         private static final BucketFacts FACTS = new BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE", Optional.empty(),
-                LocalDate.of(2020, 6, 1));
+                LocalDate.of(2020, 6, 1), SideVenue.UNRECORDED, SideVenue.UNRECORDED);
 
         @Test
         void aBucketWithoutItsFactsIsRejectedRatherThanFallingBackToSlab() {
@@ -188,11 +189,11 @@ class RegimeElectionSnapshotTest {
         void aCorporateActionIsNamedExactlyWhenTheLotCameFromOne() {
             // A fact a row tests may not be half-present: the action without the mode, or the mode without it
             assertThatThrownBy(() -> new BucketFacts("EQUITY", "NOT_PAID", "PAID", "PURCHASE", Optional.of("BONUS"),
-                            LocalDate.of(2020, 6, 1)))
+                            LocalDate.of(2020, 6, 1), SideVenue.UNRECORDED, SideVenue.UNRECORDED))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("exactly when");
             assertThatThrownBy(() -> new BucketFacts("EQUITY", "NOT_PAID", "PAID", "CORPORATE_ACTION", Optional.empty(),
-                            LocalDate.of(2020, 6, 1)))
+                            LocalDate.of(2020, 6, 1), SideVenue.UNRECORDED, SideVenue.UNRECORDED))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("exactly when");
         }

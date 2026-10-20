@@ -198,6 +198,9 @@ public final class RuleIds {
     public static final RuleId SETOFF_CARRIED_HOUSE_PROPERTY = new RuleId("SETOFF-CARRIED-HOUSE-PROPERTY");
     public static final RuleId SETOFF_HOUSE_PROPERTY = new RuleId("SETOFF-HOUSE-PROPERTY");
     public static final RuleId SETOFF_WITHIN_CAPITAL_GAINS = new RuleId("SETOFF-WITHIN-CAPITAL-GAINS");
+    public static final RuleId STT_PURCHASE_DELIVERY = new RuleId("STT-PURCHASE-DELIVERY");
+    public static final RuleId STT_SALE_DELIVERY = new RuleId("STT-SALE-DELIVERY");
+    public static final RuleId STT_SALE_NONDELIVERY = new RuleId("STT-SALE-NONDELIVERY");
 
     private RuleIds() {
     }

@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088j2c2 — the engine decides STT chargeability (D-296)
+Item            : W-088j2d — the user declares STT for a trade, or in bulk (D-293)
 Stage           : READY — not started
-Plan            : plans/W-088j2c2.md not yet written (design in plans/W-088j2c.md)
+Plan            : plans/W-088j2d.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088j2c2": read the WI row, D-296, D-297 + sources/2026-10-20-recognised-exchanges.md (NSE, BSE; IFSC names), sources/2026-10-20-securities-transaction-tax.md row 8, CapitalGainsNode/BucketFacts/adapter, RS-CG-PART rows; write plans/W-088j2c2.md (rows, codes, trace, tests, bite probes; R15), STOP
-Last verify     : unit clean -Punit 3161 run, 0 fail; integration 269/0 (2026-10-20, W-088j2b)
-Waiting on      : the owner — "start W-088j2c2"; OQ-32, OQ-33 open
+Next step       : on "start W-088j2d": read the WI row ("its plan may propose closing it if j2a – j2c leave too little"), D-293 D1, D-298, runbook §3.3/§3.4; judge what UNKNOWN remains after j2c (no venue; non-NSE/BSE strings; pre-2004 lots) and whether a declaration is worth building; write plans/W-088j2d.md (build or close with a D-row), STOP
+Last verify     : unit clean -Punit 3183 run, 0 fail; integration 269/0 (2026-10-20, W-088j2c2)
+Waiting on      : the owner — "start W-088j2d"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088j2c1: source the recognised stock exchanges and the IFSC exchanges — SCRA s.2(f), s.4, s.5, s.29-B read; NSE and BSE accepted as recognised for both years; India INX and NSE IFSC in IFSC (D-296, D-297)
-Updated         : 2026-10-20, session 26 — W-088j2c1 done (D-297); next W-088j2c2
+Last item commit: taxplanning W-088j2c2: decide STT chargeability in the engine for a side with no breakdown — RS-STT-CHARGEABLE rows for s.98 Sl. 1–3 on NSE and BSE, the part rows accepting CHARGEABLE per s.196, s.198 and S.O. 5054(E) (D-298)
+Updated         : 2026-10-20, session 26 — W-088j2c2 done (D-298), W-088j2c closed; next W-088j2d
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
