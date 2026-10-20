@@ -16,7 +16,7 @@ import com.thiru.wealthlens.shared.util.money.TMoney;
  * by arithmetic rather than by a special case: when the sell consumes the whole remaining quantity
  * the share is the whole remainder.
  *
- * <p><b>One implementation on purpose.</b> V1 and V2 both allocate, and a second copy is how two
+ * <p><b>One implementation on purpose.</b> V1, V2 and the {@code trade_outcomes} rebuild all allocate, and a second copy is how two
  * of them eventually disagree — the same reasoning that collapsed three copies of paise rounding
  * into {@code TMoney}.
  *
@@ -43,6 +43,20 @@ public final class LotChargeAllocator {
     public static double deductMisc(AssetEntity lot, double sellQuantity, double remainingQuantity) {
         double share = shareOf(lot.getMiscCharges(), lot.getAllocatedBuyMiscCharges(), sellQuantity, remainingQuantity);
         lot.setAllocatedBuyMiscCharges(TMoney.add(lot.getAllocatedBuyMiscCharges(), share));
+        return share;
+    }
+
+    /** As {@link #deductBroker(AssetEntity, double, double)}, for a lot the {@code trade_outcomes} rebuild built. */
+    public static double deductBroker(TradeMatchingService.BuyLot lot, double sellQuantity, double remainingQuantity) {
+        double share = shareOf(lot.getBrokerCharges(), lot.getAllocatedBrokerCharges(), sellQuantity, remainingQuantity);
+        lot.setAllocatedBrokerCharges(TMoney.add(lot.getAllocatedBrokerCharges(), share));
+        return share;
+    }
+
+    /** As {@link #deductMisc(AssetEntity, double, double)}, for a lot the {@code trade_outcomes} rebuild built. */
+    public static double deductMisc(TradeMatchingService.BuyLot lot, double sellQuantity, double remainingQuantity) {
+        double share = shareOf(lot.getMiscCharges(), lot.getAllocatedMiscCharges(), sellQuantity, remainingQuantity);
+        lot.setAllocatedMiscCharges(TMoney.add(lot.getAllocatedMiscCharges(), share));
         return share;
     }
 

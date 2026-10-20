@@ -608,6 +608,65 @@ class TradeMatchingServiceTest {
         return transaction;
     }
 
+    @Test
+    void matchSellToLots_whenALotIsSoldInTwoSells_chargesItsBuyChargesOnce() {
+        // Given — one lot of 10 @ 100 carrying broker 10 and misc 4; sold 5, then 5
+        List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(List.of(createBuyTransaction("test@example.com",
+                "RELIANCE", "Reliance Industries", BrokerName.ZERODHA, AccountType.SELF, "main", 100.0, 10.0, 10.0,
+                4.0, LocalDate.of(2024, 1, 15))));
+
+        // When
+        MatchedTrade firstSell = tradeMatchingService.matchSellToLots(sellOf("sell-1", 5.0, LocalDate.of(2025, 2, 3)),
+                lots).getFirst();
+        MatchedTrade secondSell = tradeMatchingService.matchSellToLots(sellOf("sell-2", 5.0, LocalDate.of(2025, 3, 3)),
+                lots).getFirst();
+
+        // Then — 10 × 5 ÷ 10 = 5, then (10 − 5) × 5 ÷ 5 = 5: the ₹10 paid, once (misc 2 + 2 = 4)
+        MoneyAssert.assertMoney(5.0, firstSell.getBuyBrokerCharges());
+        MoneyAssert.assertMoney(5.0, secondSell.getBuyBrokerCharges());
+        MoneyAssert.assertMoney(2.0, firstSell.getBuyMiscCharges());
+        MoneyAssert.assertMoney(2.0, secondSell.getBuyMiscCharges());
+        MoneyAssert.assertMoney(507.0, secondSell.getTotalBuyValue());  // 100 × 5 + 5 + 2
+    }
+
+    @Test
+    void matchSellToLots_whenAThreeUnitLotIsSoldOneAtATime_chargesExactlyWhatWasPaid() {
+        // Given — B-8's example: a lot of 3 carrying broker ₹10, sold one unit at a time
+        List<BuyLot> lots = tradeMatchingService.buildLotsFromBuys(List.of(createBuyTransaction("test@example.com",
+                "RELIANCE", "Reliance Industries", BrokerName.ZERODHA, AccountType.SELF, "main", 100.0, 3.0, 10.0,
+                0.0, LocalDate.of(2024, 1, 15))));
+
+        // When
+        double charged = 0;
+        for (int day = 1; day <= 3; day++) {
+            charged += tradeMatchingService.matchSellToLots(sellOf("sell-" + day, 1.0, LocalDate.of(2025, 2, day)),
+                    lots).getFirst().getBuyBrokerCharges();
+        }
+
+        // Then — each sell a share of what is left, the last the remainder: ₹10.00, not 3.33 + 5.00 + 10.00
+        MoneyAssert.assertCanonical("the lot's broker charge across its sells", 10.00, charged);
+    }
+
+    /** A sell of {@code quantity} RELIANCE at Zerodha, with no charges of its own. */
+    private static SellRequest sellOf(String id, double quantity, LocalDate sellDate) {
+        return SellRequest.builder()
+                .id(id)
+                .email("test@example.com")
+                .stockCode("RELIANCE")
+                .stockName("Reliance Industries")
+                .exchangeName("NSE")
+                .brokerName(BrokerName.ZERODHA)
+                .assetType(AssetType.EQUITY)
+                .accountType(AccountType.SELF)
+                .accountHolder("main")
+                .sellPrice(150.0)
+                .quantity(quantity)
+                .brokerCharges(0.0)
+                .miscCharges(0.0)
+                .sellDate(sellDate)
+                .build();
+    }
+
     private static SellRequest sellOfFive(String id, LocalDate sellDate) {
         return SellRequest.builder()
                 .id(id)

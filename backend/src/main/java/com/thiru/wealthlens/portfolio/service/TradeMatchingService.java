@@ -149,7 +149,10 @@ public class TradeMatchingService {
             if (lotRemainingQty <= 0) continue;
 
             double matchedQty = Math.min(lotRemainingQty, sellRemaining);
-            matchedTrades.add(matchedTrade(sell, lot, matchedQty));
+            // Deducted once per match, from what earlier sells left (B-8), before the quantity falls
+            double buyBrokerCharges = LotChargeAllocator.deductBroker(lot, matchedQty, lotRemainingQty);
+            double buyMiscCharges = LotChargeAllocator.deductMisc(lot, matchedQty, lotRemainingQty);
+            matchedTrades.add(matchedTrade(sell, lot, matchedQty, buyBrokerCharges, buyMiscCharges));
 
             // Update lot remaining quantity
             lot.setQuantity(lot.getQuantity() - matchedQty);
@@ -171,8 +174,9 @@ public class TradeMatchingService {
     }
 
     /** One matched portion: the identity from the sell, the buy side from the lot. */
-    private MatchedTrade matchedTrade(SellRequest sell, BuyLot lot, double matchedQty) {
-        TradeFigures figures = figures(sell, lot, matchedQty);
+    private MatchedTrade matchedTrade(SellRequest sell, BuyLot lot, double matchedQty, double buyBrokerCharges,
+            double buyMiscCharges) {
+        TradeFigures figures = figures(sell, lot, matchedQty, buyBrokerCharges, buyMiscCharges);
         return MatchedTrade.builder()
                 .email(sell.getEmail())
                 .stockCode(sell.getStockCode())
@@ -218,12 +222,9 @@ public class TradeMatchingService {
                 .capitalGainsType();
     }
 
-    /** Both sides' charges pro-rated to the matched quantity, and the portion's values. */
-    private static TradeFigures figures(SellRequest sell, BuyLot lot, double matchedQty) {
-        // Pro-rate buy charges
-        double buyBrokerCharges = (lot.getBrokerCharges() / lot.getQuantity()) * matchedQty;
-        double buyMiscCharges = (lot.getMiscCharges() / lot.getQuantity()) * matchedQty;
-
+    /** The buy charges as allocated, the sell's pro-rated to the matched quantity, and the portion's values. */
+    private static TradeFigures figures(SellRequest sell, BuyLot lot, double matchedQty, double buyBrokerCharges,
+            double buyMiscCharges) {
         // Pro-rate sell charges
         double sellBrokerCharges = (sell.getBrokerCharges() / sell.getQuantity()) * matchedQty;
         double sellMiscCharges = (sell.getMiscCharges() / sell.getQuantity()) * matchedQty;
@@ -375,6 +376,10 @@ public class TradeMatchingService {
         /** How the lot was acquired; a lot built without saying is unrecorded. */
         @Builder.Default
         private Acquisition acquisition = Acquisition.UNRECORDED;
+        /** What earlier sells have already charged of {@code brokerCharges} ({@link LotChargeAllocator}). */
+        private double allocatedBrokerCharges;
+        /** What earlier sells have already charged of {@code miscCharges}. */
+        private double allocatedMiscCharges;
     }
 
     @Data
