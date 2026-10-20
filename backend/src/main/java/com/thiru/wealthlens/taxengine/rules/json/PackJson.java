@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxengine.rules.json;
 
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -164,6 +166,41 @@ public final class PackJson {
                 throw malformed(path + "." + field, "a date as yyyy-MM-dd", raw);
             }
         });
+    }
+
+    /** A required rupee amount, written as a string so no binary fraction reaches it. */
+    public static Money money(JsonNode parent, String field, String path) {
+        String raw = PackJson.text(parent, field, path);
+        try {
+            return Money.of(raw);
+        } catch (NumberFormatException e) {
+            throw new PackValidationException(
+                    path + "." + field + " must be a rupee amount as a string, but was \"" + raw + "\"");
+        }
+    }
+
+    /** A rupee amount that may be absent or null, written as a string. */
+    public static Optional<Money> optionalMoney(JsonNode parent, String field, String path) {
+        return PackJson.optionalText(parent, field, path).map(raw -> {
+            try {
+                return Money.of(raw);
+            } catch (NumberFormatException e) {
+                throw new PackValidationException(
+                        path + "." + field + " must be a rupee amount as a string, but was \"" + raw + "\"");
+            }
+        });
+    }
+
+    /** A required percentage, written as the statute states it. */
+    public static Rate rate(JsonNode parent, String field, String path) {
+        String raw = PackJson.text(parent, field, path);
+        try {
+            return Rate.percent(raw);
+        } catch (NumberFormatException e) {
+            throw new PackValidationException(
+                    path + "." + field + " must be a percentage as the statute states it, e.g. \"30\","
+                            + " but was \"" + raw + "\"");
+        }
     }
 
     /** A required absolute URI. */

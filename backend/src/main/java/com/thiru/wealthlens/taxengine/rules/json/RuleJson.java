@@ -141,7 +141,7 @@ public final class RuleJson {
 
     private static Optional<RuleDefinition> definition(JsonNode node, String path) {
         return PackJson.optionalObject(node, "definition", path)
-                .map(definition -> ShapeJson.definition(definition, path + ".definition"));
+                .map(definition -> DefinitionJson.definition(definition, path + ".definition"));
     }
 
     private static Optional<RuleRounding> rounding(JsonNode node, String path) {

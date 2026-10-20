@@ -10,47 +10,12 @@ import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByPopulation;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
-import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
-import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
-import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
-import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
-import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
-import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.DisallowanceBasis;
-import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
-import com.thiru.wealthlens.taxengine.rules.definition.FamilyPensionShare;
-import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
-import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
-import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
-import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
-import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
-import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
-import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
-import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceInterestLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.ParticularsThreshold;
-import com.thiru.wealthlens.taxengine.rules.definition.PolicyIssueWindow;
-import com.thiru.wealthlens.taxengine.rules.definition.PolicyPremiumLimits;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.ProvidentFundThreshold;
-import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
-import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
-import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
-import com.thiru.wealthlens.taxengine.rules.definition.SurvivingChildrenLimit;
-import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
-import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
-import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
-import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
 import com.thiru.wealthlens.taxengine.rules.relief.ExcessOverThreshold;
 import com.thiru.wealthlens.taxengine.rules.relief.FlatWithCeiling;
@@ -76,6 +41,8 @@ import tools.jackson.databind.JsonNode;
  * <p>Each family is a tagged union keyed on {@code "type"}, and an unrecognised tag fails with the
  * permitted tags listed — because the reader of that message is a pack author choosing between
  * {@code "SlabLadder"} and {@code "SlabLadder "} with a trailing space, not a Java developer.
+ *
+ * <p>What a version defines is read by {@link DefinitionJson}.
  */
 public final class ShapeJson {
 
@@ -141,9 +108,9 @@ public final class ShapeJson {
                 "PercentOfBaseByPopulation");
         return PackJson.construct(path, () ->
         switch (tag) {
-                    case "Fixed" -> new Fixed(money(node, "amount", path));
+                    case "Fixed" -> new Fixed(PackJson.money(node, "amount", path));
                     case "PercentOfBase" -> new PercentOfBase(
-                            rate(node, "percent", path), new BaseId(PackJson.text(node, "base", path)));
+                            PackJson.rate(node, "percent", path), new BaseId(PackJson.text(node, "base", path)));
                     case "SlabLadder" -> slabLadder(node, path);
                     case "LeastOf" -> leastOf(node, path);
                     case "AggregateWithCeiling" -> aggregate(node, path);
@@ -160,9 +127,9 @@ public final class ShapeJson {
         List<SlabLadder.Band> bands = PackJson.array(node, "bands", path, element -> {
             JsonNode band = element.node();
             return new SlabLadder.Band(
-                    money(band, "lowerExclusive", element.path()),
-                    optionalMoney(band, "upperInclusive", element.path()),
-                    rate(band, "rate", element.path()));
+                    PackJson.money(band, "lowerExclusive", element.path()),
+                    PackJson.optionalMoney(band, "upperInclusive", element.path()),
+                    PackJson.rate(band, "rate", element.path()));
         });
         SlabLadder ladder =
                 new SlabLadder(bands, new BaseId(PackJson.text(node, "base", path)));
@@ -181,17 +148,17 @@ public final class ShapeJson {
                 new PercentOfBaseByLocation.Band(
                         new java.util.LinkedHashSet<>(PackJson.array(element.node(), "locations", element.path(),
                                 e -> e.node().asString())),
-                        rate(element.node(), "percent", element.path())));
+                        PackJson.rate(element.node(), "percent", element.path())));
         return new PercentOfBaseByLocation(new BaseId(PackJson.text(node, "base", path)),
-                new BaseId(PackJson.text(node, "location", path)), bands, rate(node, "otherwise", path));
+                new BaseId(PackJson.text(node, "location", path)), bands, PackJson.rate(node, "otherwise", path));
     }
 
     private static PercentOfBaseByPopulation percentByPopulation(JsonNode node, String path) {
         List<PercentOfBaseByPopulation.Band> bands = PackJson.array(node, "bands", path, element ->
                 new PercentOfBaseByPopulation.Band(PackJson.integer(element.node(), "exceeding", element.path()),
-                        rate(element.node(), "percent", element.path())));
+                        PackJson.rate(element.node(), "percent", element.path())));
         return new PercentOfBaseByPopulation(new BaseId(PackJson.text(node, "base", path)),
-                new BaseId(PackJson.text(node, "population", path)), bands, rate(node, "otherwise", path));
+                new BaseId(PackJson.text(node, "population", path)), bands, PackJson.rate(node, "otherwise", path));
     }
 
     private static AggregateWithCeiling aggregate(JsonNode node, String path) {
@@ -206,13 +173,13 @@ public final class ShapeJson {
                         cap(caps.get(code), path + ".subCaps." + code));
             }
         });
-        return new AggregateWithCeiling(contributors, money(node, "ceiling", path), subCaps);
+        return new AggregateWithCeiling(contributors, PackJson.money(node, "ceiling", path), subCaps);
     }
 
     private static PerUnitPerPeriod perUnitPerPeriod(JsonNode node, String path) {
         Optional<String> unit = PackJson.optionalText(node, "unit", path);
         return new PerUnitPerPeriod(
-                money(node, "amount", path),
+                PackJson.money(node, "amount", path),
                 unit.map(BaseId::new),
                 unit.isPresent() ? PackJson.integer(node, "maxUnits", path) : 1,
                 new BaseId(PackJson.text(node, "period", path)));
@@ -231,8 +198,8 @@ public final class ShapeJson {
         return PackJson.construct(path, () -> {
             ReliefShape shape = switch (tag) {
                 case "FlatWithCeiling" -> new FlatWithCeiling(
-                        money(node, "maximum", path), money(node, "incomeCeiling", path));
-                case "ExcessOverThreshold" -> new ExcessOverThreshold(money(node, "threshold", path));
+                        PackJson.money(node, "maximum", path), PackJson.money(node, "incomeCeiling", path));
+                case "ExcessOverThreshold" -> new ExcessOverThreshold(PackJson.money(node, "threshold", path));
                 case "ThresholdLadderCeiling" -> new ThresholdLadderCeiling(PackJson.array(
                         node, "thresholds", path, e -> moneyElement(e.node(), e.path())));
                 case "NoRelief" -> new NoRelief();
@@ -248,203 +215,12 @@ public final class ShapeJson {
      * The step an amount is rounded to. Untagged: rounding is one kind, not a family, so a
      * {@code type} would be a choice with a single option (D-078).
      */
-    /** A rule's definition (D-091): what it says an amount is. */
-    public static RuleDefinition definition(JsonNode node, String path) {
-        String tag = PackJson.tag(
-                node, path, "HeadTotal", "SalaryBase", "JourneysPerCalendarBlock", "DisabledTransportLimit",
-                "CommutedPensionShare", "IndexByYear", "ExcludedAssets", "DayWindow", "PremiumShareBands", "TaxYearSpan", "SanctionedLoanLimit",
-                "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
-                "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
-                "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
-                "SpecialRateShortfallOrder", "LossCarryForward");
-        return switch (tag) {
-            case "HeadTotal" -> {
-                HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
-                yield PackJson.construct(path, () -> new HeadTotal(head));
-            }
-            case "SalaryBase" -> PackJson.construct(path, () -> new SalaryBase(
-                    PackJson.enumValue(node, "dearnessAllowance", path, DearnessAllowanceTest.class)));
-            case "JourneysPerCalendarBlock" -> PackJson.construct(path, () -> new JourneysPerCalendarBlock(
-                    PackJson.integer(node, "journeys", path), PackJson.integer(node, "calendarYears", path),
-                    PackJson.integer(node, "blocksCommence", path)));
-            case "DisabledTransportLimit" -> disabledTransportLimit(node, path);
-            case "CommutedPensionShare" -> PackJson.construct(path, () -> new CommutedPensionShare(
-                    PackJson.integer(node, "oneOverWhereGratuityReceived", path),
-                    PackJson.integer(node, "oneOverOtherwise", path)));
-            case "FamilyPensionShare" -> PackJson.construct(path, () -> new FamilyPensionShare(
-                    PackJson.integer(node, "oneOver", path), money(node, "limit", path)));
-            case "ProvidentFundThreshold" -> PackJson.construct(path, () -> new ProvidentFundThreshold(
-                    money(node, "withoutEmployerContribution", path), money(node, "otherwise", path)));
-            case "IndexByYear" -> indexByYear(node, path);
-            case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
-            case "DisallowanceBasis" -> PackJson.construct(path, () -> new DisallowanceBasis(
-                    new DisallowanceSetId(PackJson.text(node, "set", path))));
-            case "ExcludedAssets" -> {
-                List<MovableAssetKind> kinds = PackJson.array(node, "kinds", path,
-                        e -> movableAssetKind(e.node().asString(), e.path()));
-                yield PackJson.construct(path, () -> new ExcludedAssets(Set.copyOf(kinds)));
-            }
-            default -> chapterEightDefinition(tag, node, path);
-        };
-    }
-
-    /**
-     * The Chapter VIII deductions' definitions, other sources' gift and life-policy limits and the leave travel
-     * concession's children limit — apart only to keep each switch within the complexity limit.
-     */
-    private static RuleDefinition chapterEightDefinition(String tag, JsonNode node, String path) {
-        return switch (tag) {
-            case "PremiumShareBands" -> PackJson.construct(path, () -> new PremiumShareBands(PackJson.array(
-                    node, "bands", path, band -> new PremiumShareBands.Band(new PolicyIssueWindow(
-                            PackJson.optionalDate(band.node(), "from", path),
-                            PackJson.optionalDate(band.node(), "to", path),
-                            PackJson.bool(band.node(), "onlyCoveringDisabilityOrDisease", path)),
-                            rate(band.node(), "percent", path)))));
-            case "GiftThreshold" -> PackJson.construct(path, () -> new GiftThreshold(money(node, "exceeds", path),
-                    rate(node, "considerationSharePercent", path)));
-            case "PolicyPremiumLimits" -> PackJson.construct(path, () -> new PolicyPremiumLimits(
-                    PackJson.date(node, "unitLinkedFrom", path), money(node, "unitLinkedLimit", path),
-                    PackJson.date(node, "otherFrom", path), money(node, "otherLimit", path),
-                    PackJson.optionalDate(node, "ifscIssuedFrom", path)));
-            case "SurvivingChildrenLimit" -> PackJson.construct(path, () -> new SurvivingChildrenLimit(
-                    PackJson.integer(node, "children", path), PackJson.date(node, "exceptBornBefore", path)));
-            case "TaxYearSpan" -> PackJson.construct(path, () -> new TaxYearSpan(
-                    PackJson.integer(node, "succeedingYears", path)));
-            case "SanctionedLoanLimit" -> PackJson.construct(path, () -> new SanctionedLoanLimit(
-                    money(node, "limit", path), PackJson.date(node, "sanctionedFrom", path),
-                    PackJson.date(node, "sanctionedTo", path), optionalMoney(node, "maxAmountSanctioned", path),
-                    optionalMoney(node, "maxPropertyValue", path), optionalMoney(node, "maxStampDutyValue", path),
-                    PackJson.bool(node, "requiresNoHouseOwned", path)));
-            case "CashPaymentLimit" -> PackJson.construct(path, () -> new CashPaymentLimit(money(node, "atMost", path)));
-            case "ParticularsThreshold" -> PackJson.construct(path, () -> new ParticularsThreshold(
-                    money(node, "exceeds", path)));
-            case "OwnResidenceHouses" -> PackJson.construct(path, () -> new OwnResidenceHouses(
-                    PackJson.integer(node, "houses", path)));
-            case "OwnResidenceInterestLimit" -> PackJson.construct(path, () -> new OwnResidenceInterestLimit(
-                    money(node, "conditionsMet", path), money(node, "anyOtherCase", path),
-                    money(node, "aggregate", path), PackJson.integer(node, "completionYearsAfterBorrowingYear", path),
-                    PackJson.optionalDate(node, "borrowedOnOrAfter", path)));
-            default -> setOffDefinition(tag, node, path);
-        };
-    }
-
-    /**
-     * The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243), how a loss is
-     * carried forward (D-263), and the special-rate parts the unused basic exemption (D-244).
-     */
-    private static RuleDefinition setOffDefinition(String tag, JsonNode node, String path) {
-        return switch (tag) {
-            case "AbsorptionOrder" -> {
-                List<HeadCode> heads = PackJson.array(node, "heads", path,
-                        e -> constant(e.node().asString(), e.path(), HeadCode.class));
-                yield PackJson.construct(path, () -> new AbsorptionOrder(heads));
-            }
-            case "CapitalGainsAbsorptionOrder" -> {
-                List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,
-                        e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
-                yield PackJson.construct(path, () -> new CapitalGainsAbsorptionOrder(parts));
-            }
-            case "LossCarryForward" -> {
-                HeadCode absorbedBy = PackJson.enumValue(node, "absorbedBy", path, HeadCode.class);
-                yield PackJson.construct(path, () -> new LossCarryForward(absorbedBy,
-                        new TaxYearSpan(PackJson.integer(node, "succeedingYears", path)),
-                        PackJson.bool(node, "requiresReturnFiledInTime", path)));
-            }
-            case "SpecialRateShortfallOrder" -> {
-                List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,
-                        e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
-                yield PackJson.construct(path, () -> new SpecialRateShortfallOrder(parts));
-            }
-            default -> throw unreachable(tag, path);
-        };
-    }
-
-    /** Each entry names its financial year as a label, {@code "2023-24"}, so the table reads as the notification. */
-    private static IndexByYear indexByYear(JsonNode node, String path) {
-        List<Map.Entry<TaxYearId, Integer>> entries = PackJson.array(node, "years", path,
-                e -> Map.entry(financialYear(PackJson.text(e.node(), "financialYear", e.path()), e.path()),
-                        PackJson.integer(e.node(), "index", e.path())));
-        Map<TaxYearId, Integer> table = new LinkedHashMap<>();
-        for (Map.Entry<TaxYearId, Integer> entry : entries) {
-            if (table.put(entry.getKey(), entry.getValue()) != null) {
-                throw new PackValidationException(path + ".years lists " + entry.getKey().label() + " twice");
-            }
-        }
-        return PackJson.construct(path, () -> new IndexByYear(table));
-    }
-
-    private static TaxYearId financialYear(String label, String path) {
-        TaxYearId year;
-        try {
-            year = TaxYearId.of(Integer.parseInt(label.substring(0, Math.min(4, label.length()))));
-        } catch (NumberFormatException e) {
-            throw new PackValidationException(path + ".financialYear must read like \"2023-24\", but was \"" + label
-                    + "\"");
-        }
-        if (!year.label().equals(label)) {
-            throw new PackValidationException(path + ".financialYear must read like \"2023-24\", but was \"" + label
-                    + "\"");
-        }
-        return year;
-    }
-
-    private static DisabledTransportLimit disabledTransportLimit(JsonNode node, String path) {
-        List<TransportDisability> conditions =
-                PackJson.array(node, "conditions", path, e -> transportDisability(e.node().asString(), e.path()));
-        Money perMonth = money(node, "perMonth", path);
-        Optional<Money> perMonthInOtherCities = optionalMoney(node, "perMonthInOtherCities", path);
-        boolean plusDearnessAllowance = PackJson.bool(node, "plusDearnessAllowanceThereon", path);
-        return PackJson.construct(path, () -> new DisabledTransportLimit(
-                Set.copyOf(conditions), perMonth, perMonthInOtherCities, plusDearnessAllowance));
-    }
-
-    /** A head in an absorption order, named in the failure with the heads there are. */
-    private static <E extends Enum<E>> E constant(String raw, String path, Class<E> type) {
-        for (E candidate : type.getEnumConstants()) {
-            if (candidate.name().equals(raw)) {
-                return candidate;
-            }
-        }
-        throw new PackValidationException(path + " must be one of "
-                + java.util.Arrays.toString(type.getEnumConstants()) + ", but was \"" + raw + "\"");
-    }
-
-    private static MovableAssetKind movableAssetKind(String raw, String path) {
-        for (MovableAssetKind candidate : MovableAssetKind.values()) {
-            if (candidate.name().equals(raw)) {
-                return candidate;
-            }
-        }
-        throw new PackValidationException(path + " must be one of "
-                + java.util.Arrays.toString(MovableAssetKind.values()) + ", but was \"" + raw + "\"");
-    }
-
-    private static TransportDisability transportDisability(String raw, String path) {
-        for (TransportDisability candidate : TransportDisability.values()) {
-            if (candidate.name().equals(raw)) {
-                return candidate;
-            }
-        }
-        throw new PackValidationException(path + " must be one of "
-                + java.util.Arrays.toString(TransportDisability.values()) + ", but was \"" + raw + "\"");
-    }
-
     public static RuleRounding rounding(JsonNode node, String path) {
-        Money toNearest = money(node, "toNearest", path);
+        Money toNearest = PackJson.money(node, "toNearest", path);
         return PackJson.construct(path, () -> new RuleRounding(toNearest));
     }
 
     // ---------------------------------------------------------------- money
-
-    private static Money money(JsonNode parent, String field, String path) {
-        String raw = PackJson.text(parent, field, path);
-        try {
-            return Money.of(raw);
-        } catch (NumberFormatException e) {
-            throw new PackValidationException(
-                    path + "." + field + " must be a rupee amount as a string, but was \"" + raw + "\"");
-        }
-    }
 
     private static Money moneyElement(JsonNode element, String path) {
         String raw = element.asString();
@@ -453,28 +229,6 @@ public final class ShapeJson {
         } catch (NumberFormatException e) {
             throw new PackValidationException(
                     path + " must be a rupee amount as a string, but was \"" + raw + "\"");
-        }
-    }
-
-    private static Optional<Money> optionalMoney(JsonNode parent, String field, String path) {
-        return PackJson.optionalText(parent, field, path).map(raw -> {
-            try {
-                return Money.of(raw);
-            } catch (NumberFormatException e) {
-                throw new PackValidationException(
-                        path + "." + field + " must be a rupee amount as a string, but was \"" + raw + "\"");
-            }
-        });
-    }
-
-    private static Rate rate(JsonNode parent, String field, String path) {
-        String raw = PackJson.text(parent, field, path);
-        try {
-            return Rate.percent(raw);
-        } catch (NumberFormatException e) {
-            throw new PackValidationException(
-                    path + "." + field + " must be a percentage as the statute states it, e.g. \"30\","
-                            + " but was \"" + raw + "\"");
         }
     }
 

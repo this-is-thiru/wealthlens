@@ -24,7 +24,6 @@ import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -98,9 +97,9 @@ public final class ConditionJson {
     private static Condition amountOrStructure(String tag, JsonNode node, String path) {
         return switch (tag) {
             case "IncomeAtMost" -> new IncomeAtMost(
-                    new NodeId(PackJson.text(node, "node", path)), money(node, "limit", path));
+                    new NodeId(PackJson.text(node, "node", path)), PackJson.money(node, "limit", path));
             case "IncomeAtLeast" -> new IncomeAtLeast(
-                    new NodeId(PackJson.text(node, "node", path)), money(node, "threshold", path));
+                    new NodeId(PackJson.text(node, "node", path)), PackJson.money(node, "threshold", path));
             case "HasIncomeUnderHead" -> new HasIncomeUnderHead(
                     PackJson.enumValue(node, "head", path, HeadCode.class));
             case "ComponentPresent" -> new ComponentPresent(
@@ -156,15 +155,5 @@ public final class ConditionJson {
             }
         }
         return types;
-    }
-
-    private static Money money(JsonNode parent, String field, String path) {
-        String raw = PackJson.text(parent, field, path);
-        try {
-            return Money.of(raw);
-        } catch (NumberFormatException e) {
-            throw new PackValidationException(
-                    path + "." + field + " must be a rupee amount as a string, but was \"" + raw + "\"");
-        }
     }
 }
