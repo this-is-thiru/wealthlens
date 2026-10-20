@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088j2c — STT chargeability decided on the tax side from rule rows (D-293)
+Item            : W-088j2c2 — the engine decides STT chargeability (D-296)
 Stage           : READY — not started
-Plan            : plans/W-088j2c.md not yet written
+Plan            : plans/W-088j2c2.md not yet written (design in plans/W-088j2c.md)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088j2c": read the WI row, D-294 + sources row 8 (Sl. 1–3 conditions, s.113A, Q1), D-295 (TradeVenue), CapitalGainsNode / RS-CG-PART rows, BucketFacts, the adapter; design the engine step deriving each side's STT state from rule rows (not a condition repeated in every part row) and the exchange-string mapping as data; write plans/W-088j2c.md (likely a split; R15), STOP
+Next step       : on "start W-088j2c2": read the WI row, D-296, D-297 + sources/2026-10-20-recognised-exchanges.md (NSE, BSE; IFSC names), sources/2026-10-20-securities-transaction-tax.md row 8, CapitalGainsNode/BucketFacts/adapter, RS-CG-PART rows; write plans/W-088j2c2.md (rows, codes, trace, tests, bite probes; R15), STOP
 Last verify     : unit clean -Punit 3161 run, 0 fail; integration 269/0 (2026-10-20, W-088j2b)
-Waiting on      : the owner — "start W-088j2c"; OQ-32, OQ-33 open
+Waiting on      : the owner — "start W-088j2c2"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088j2b: record where and how each side of a disposal was traded — per-side exchange and segment on trade_outcomes from all three writers, a TradeVenue per side on the capital-gains read-model (D-295)
-Updated         : 2026-10-20, session 26 — W-088j2b done (D-295); next W-088j2c
+Last item commit: taxplanning W-088j2c1: source the recognised stock exchanges and the IFSC exchanges — SCRA s.2(f), s.4, s.5, s.29-B read; NSE and BSE accepted as recognised for both years; India INX and NSE IFSC in IFSC (D-296, D-297)
+Updated         : 2026-10-20, session 26 — W-088j2c1 done (D-297); next W-088j2c2
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
