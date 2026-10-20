@@ -23,7 +23,8 @@ goes into the run log.
 
 **Every operation here is idempotent (D-282).** A second run, including one after a run that failed part-way, either
 completes the work or changes nothing, and a test proves it. **A one-time operation is removed after use:** each has
-a child under W-088u9 (YouTrack parent **WL-28**), done once its run is logged below for every database. Operations from work unrelated to tax planning (the charges engine's own, the trade
+a row in **Phase 15 — Post-deployment cleanup** of the backlog (YouTrack parent **WL-28**), outside the build order
+and taken once its run is logged below for every database it applies to (D-286). Operations from work unrelated to tax planning (the charges engine's own, the trade
 ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-engine/production-runbook.md).
 
 **Databases** (from the profile yamls, host and database name only):
@@ -53,9 +54,9 @@ ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-eng
 
 ## 2. Once per database, by hand — in this order
 
-> **Deploy prod only from a build at or after W-088u8c** (D-285). Prod's build predates W-086a, and its 163
-> `FY`-form rows are rewritten by §2.3, by hand. A build from before W-088u8c still has the boot runner, which would
-> rewrite them unattended.
+> **There is one deploy, after Phases 0 – 14 are complete** (owner, D-287); nothing is deployed before then. Every
+> step in this section runs at that deploy, in order, on each database. Take each step's "count before" again at that
+> time: the figures recorded here (2026-10-20) are from today's databases.
 
 ### 2.0 W-088u8a (D-281, D-282) — seed the TY 2025-26 tax policies · `SUPER_USER` · **required on a fresh database**
 
@@ -107,7 +108,7 @@ load is an error naming it; the files before it stay seeded.
 
 **Way back:** delete the documents this step wrote, by `audit_metadata.createdBy` and `createdAt`.
 
-**Removed after use:** W-088u9b / WL-30, once this step is logged for every database.
+**Removed after use:** W-148 / WL-30, once this step is logged for every database.
 
 ### 2.1 W-088u7 (D-277) — correct the rebuild's double-counted buy charges · **prod only · outstanding**
 
@@ -164,6 +165,8 @@ and `AnalyticsService`.
 
 **Second run:** safe, it changes nothing. **Way back:** `mongoimport --mode upsert` of the step-2 file. Detail:
 `plans/W-088u7.md`.
+
+**Removed after use:** W-147 / WL-29, once this is logged for prod.
 
 ### 2.2 W-088u8b (D-284) — rebuild `trade_outcomes` from raw transactions · `SUPER_USER` · **when needed, not once**
 
@@ -227,7 +230,7 @@ so the old form misleads only whoever reads the field. This makes the stored yea
 
 **Second run:** safe; nothing is left to rewrite. **Way back:** `mongoimport --mode upsert` of the step-3 file.
 
-**Removed after use:** W-088u9d, YouTrack WL-32, once this is logged for prod.
+**Removed after use:** W-149 / WL-32, once this is logged for prod.
 
 ---
 

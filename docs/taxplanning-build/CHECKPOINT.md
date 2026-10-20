@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088u9a / u9b / u9d — remove the one-time operations — BLOCKED on the owner's logged runs; next unblocked: W-088v
-Stage           : BLOCKED (u9a: runbook §2.1 prod; u9b: §2.0 on every database; u9d: §2.3 prod)
-Plan            : — (each written when its run is logged)
+Item            : W-088v — enforce the written limits (Checkstyle MethodLength 40, ParameterNumber 5, a shrinking baseline) (D-250; review S5)
+Stage           : READY — not started (next in the build order)
+Plan            : plans/W-088v.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : the owner either logs a run (then "start W-088u9a/b/d") or says "start W-088v" (Checkstyle limits; plans/W-088v.md not yet written). Do not pick W-088v without that word (R6)
+Next step       : on "start W-088v": read checkstyle.xml / checkstyle-suppressions.xml / CheckstyleBaselineTest, measure what MethodLength 40 and ParameterNumber 5 flag repo-wide (tools/method_lengths.py), write plans/W-088v.md, STOP. Phase 15 (W-147 – W-149) follows the one deploy after Phase 14
 Last verify     : unit clean -Punit 3103 run, 0 fail; integration 269/0 (2026-10-20, W-088u8c)
-Waiting on      : the owner — deploy prod from this build or later; runbook §2.0 dry runs (staging, prod), §2.1 and §2.3 on prod, each logged; then the matching removal; OQ-32, OQ-33 open
+Waiting on      : the owner — "start W-088v"; OQ-32, OQ-33 open. No deploy until Phases 0–14 are done (D-287): do not ask for runbook runs before then
 Files touched   : (none)
 Last item commit: taxplanning W-088u8c: retire the last two startup runners — the temporary-transaction move deleted, the W-086a FY rewrite a SUPER_USER operation for prod's 163 rows; W-088u9d placed (D-285)
-Updated         : 2026-10-20, session 25 — W-088u8 closed
+Updated         : 2026-10-20, session 25 — Phase 15 created (D-286)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
