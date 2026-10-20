@@ -2,6 +2,12 @@
   "_note": "The rule sets (W-088m1, D-252): the rows a node evaluates together, and how one is chosen. Each rule row names its set in its own file (ruleSet; ruleSetPosition where the set takes every row in order). selection: EXACTLY_ONE (the only row, or the one that applies), AT_MOST_ONE (a row a year may not hold), ALL_THAT_APPLY (every row, in order). ground: what decides whether a row of several applies — REGIME (the row's regime applicability and the regime's disallowances), or REGIME_AND_CONDITIONS (its conditions too).",
   "ruleSets": [
     {
+      "id": "RS-CG-PART",
+      "_note": "The part of the capital-gains head a bucket falls in, chosen by its facts (S2 ss.196-198; 1961 ss.111A, 112, 112A; D-289): term, asset, securities transaction tax on the buy and the sale, how the lot was acquired (capitalgains.*). A bucket no row covers is refused, never charged with total income",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-DED-AGNIVEER-GOVERNMENT",
       "_note": "One row: DED-AGNIVEER-GOVERNMENT",
       "selection": "EXACTLY_ONE",

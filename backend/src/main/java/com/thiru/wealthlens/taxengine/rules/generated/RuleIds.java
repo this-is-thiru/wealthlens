@@ -15,6 +15,10 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId CG_PART_LONG_LISTED = new RuleId("CG-PART-LONG-LISTED");
+    public static final RuleId CG_PART_LONG_OTHER = new RuleId("CG-PART-LONG-OTHER");
+    public static final RuleId CG_PART_SHORT_LISTED = new RuleId("CG-PART-SHORT-LISTED");
+    public static final RuleId CG_PART_SHORT_SLAB = new RuleId("CG-PART-SHORT-SLAB");
     public static final RuleId DED_AGNIVEER_GOVERNMENT = new RuleId("DED-AGNIVEER-GOVERNMENT");
     public static final RuleId DED_AGNIVEER_OWN = new RuleId("DED-AGNIVEER-OWN");
     public static final RuleId DED_DEPOSIT_INTEREST_SENIOR = new RuleId("DED-DEPOSIT-INTEREST-SENIOR");

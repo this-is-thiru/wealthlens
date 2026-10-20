@@ -1,0 +1,140 @@
+{
+  "ruleId": "CG-PART-SHORT-LISTED",
+  "ruleSet": "RS-CG-PART",
+  "_note": "A short-term gain on an equity share whose sale bore securities transaction tax is the listed-equity short-term part (D-289). TY 2026-27: Income-tax Act, 2025 s.196(1) (p.220): \"arising from the transfer of a short-term capital asset–– (a) being an equity share in a company or a unit of an equity oriented fund or a unit of a business trust; and (b) the transaction of sale of such equity share or unit is chargeable to securities transaction tax under Chapter VII of the Finance (No. 2) Act, 2004\". TY 2025-26: Income-tax Act, 1961 s.111A(1), the same condition (thc copy p.461). Equity shares only: a fund or business-trust unit has no row until the instrument registry classifies it, so it is refused. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 1, 4–9.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.111A(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.196(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "BucketPart",
+        "part": "SHORT_TERM_LISTED_EQUITY"
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.term",
+              "code": "SHORT_TERM"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.stt.transfer",
+              "code": "PAID"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.29 — Income-tax Act, 1961 s.111A(1)(i) (fifteen per cent. before 23-7-2024, twenty per cent. on or after), deemed substituted w.e.f. 23-7-2024",
+        "gazetteRef": "CG-DL-E-16082024-256436",
+        "notifiedOn": "2024-08-16",
+        "effectiveFrom": "2024-07-23",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.29, p.26; Income-tax Act, 1961 s.111A, thc.nic.in copy pp.461; no later amendment of s.111A in the Acts of 2025–2026 (operative words searched; docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md row 9)",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.111A(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.196(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "BucketPart",
+        "part": "SHORT_TERM_LISTED_EQUITY"
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.term",
+              "code": "SHORT_TERM"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.stt.transfer",
+              "code": "PAID"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.196(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.196(1), p.220; not amended by the Finance Act, 2026 or the Taxation Laws (Amendment) Act, 2025",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.196, pp.220–221",
+    "accessedOn": "2026-10-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

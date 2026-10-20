@@ -1,0 +1,150 @@
+{
+  "ruleId": "CG-PART-LONG-LISTED",
+  "ruleSet": "RS-CG-PART",
+  "_note": "A long-term gain on an equity share bought and sold with securities transaction tax is the listed-equity long-term part (D-289). TY 2026-27: Income-tax Act, 2025 s.198(1) (p.222): \"(c) securities transaction tax … has— (i) in a case where the long-term capital asset is in the nature of an equity share in a company, been paid on acquisition and transfer of such capital asset\". TY 2025-26: Income-tax Act, 1961 s.112A(1)(iii)(a), the same condition (thc copy p.464). A share bought without it waits on S.O. 5054(E)'s row (s.198(5) / s.112A(4); W-088f2b) and is refused until then. The TY 2025-26 version cites the rate row's amending Act (Finance (No. 2) Act, 2024 s.31); the condition itself is unchanged since the thc copy. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 3, 4–9, 26–28.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.112A(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.198(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "BucketPart",
+        "part": "LONG_TERM_LISTED_EQUITY"
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.term",
+              "code": "LONG_TERM"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.stt.acquisition",
+              "code": "PAID"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.stt.transfer",
+              "code": "PAID"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.31 — Income-tax Act, 1961 s.112A(2)(i) (ten per cent. before 23-7-2024, twelve and one-half per cent. on or after, above one lakh twenty-five thousand rupees), deemed substituted w.e.f. 23-7-2024",
+        "gazetteRef": "CG-DL-E-16082024-256436",
+        "notifiedOn": "2024-08-16",
+        "effectiveFrom": "2024-07-23",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.31, pp.27–28; Income-tax Act, 1961 s.112A, thc.nic.in copy pp.463–464; no later amendment of s.112A in the Acts of 2025–2026 (operative words searched; docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md row 9)",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.112A(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.198(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "BucketPart",
+        "part": "LONG_TERM_LISTED_EQUITY"
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.term",
+              "code": "LONG_TERM"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.stt.acquisition",
+              "code": "PAID"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.stt.transfer",
+              "code": "PAID"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.198(2)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.198(2), (3), pp.222–223; not amended by the Finance Act, 2026 or the Taxation Laws (Amendment) Act, 2025",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.198, pp.222–223",
+    "accessedOn": "2026-10-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

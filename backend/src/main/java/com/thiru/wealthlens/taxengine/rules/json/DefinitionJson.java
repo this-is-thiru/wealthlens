@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.rules.json;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
+import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
@@ -60,7 +61,7 @@ public final class DefinitionJson {
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
-                "SpecialRateShortfallOrder", "LossCarryForward");
+                "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -134,7 +135,8 @@ public final class DefinitionJson {
 
     /**
      * The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243), how a loss is
-     * carried forward (D-263), and the special-rate parts the unused basic exemption (D-244).
+     * carried forward (D-263), the special-rate parts the unused basic exemption (D-244), and the part a capital-gains
+     * bucket falls in (D-289).
      */
     private static RuleDefinition setOffDefinition(String tag, JsonNode node, String path) {
         return switch (tag) {
@@ -159,6 +161,8 @@ public final class DefinitionJson {
                         e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
                 yield PackJson.construct(path, () -> new SpecialRateShortfallOrder(parts));
             }
+            case "BucketPart" -> PackJson.construct(path, () -> new BucketPart(
+                    PackJson.enumValue(node, "part", path, CapitalGainsPart.class)));
             default -> throw unreachable(tag, path);
         };
     }

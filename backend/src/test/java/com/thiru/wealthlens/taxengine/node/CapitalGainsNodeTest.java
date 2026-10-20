@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
-import com.thiru.wealthlens.taxengine.input.RateBasisHint;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
@@ -22,16 +22,20 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * The capital-gains head by part, after its own losses (S2 s.108(2); 1961 s.70(2), (3); D-243): the declared order is
- * short-term slab, short-term listed equity, long-term other, long-term listed equity.
+ * short-term slab, short-term listed equity, long-term other, long-term listed equity. Each bucket's part is the one the
+ * row of {@code RS-CG-PART} its facts meet names (D-289); the expected parts are S2 ss.196–198 and 1961 ss.111A, 112,
+ * 112A's conditions, worked by hand in {@code plans/W-088f2a.md}.
  */
 class CapitalGainsNodeTest {
 
@@ -41,8 +45,20 @@ class CapitalGainsNodeTest {
                 new JsonPackAssembler(LockedInstruments.of(taxYear))).load(taxYear);
     }
 
-    private static CapitalGainsInput.Bucket bucket(String gain, Term term, RateBasisHint basis) {
-        return new CapitalGainsInput.Bucket(Money.of(gain), term, basis, Optional.empty());
+    private static final boolean PAID = true;
+
+    private static final boolean NOT_PAID = false;
+
+    /** An equity purchase with the given STT on record for the buy and the sale. */
+    private static CapitalGainsInput.Bucket bucket(String gain, Term term, boolean sttOnBuy, boolean sttOnSale) {
+        return bucket(gain, term, "EQUITY", sttOnBuy, sttOnSale);
+    }
+
+    private static CapitalGainsInput.Bucket bucket(String gain, Term term, String asset, boolean sttOnBuy,
+            boolean sttOnSale) {
+        BucketFacts facts = new BucketFacts(asset, sttOnBuy, sttOnSale, "PURCHASE", Optional.empty(),
+                LocalDate.parse("2020-06-01"));
+        return new CapitalGainsInput.Bucket(Money.of(gain), term, facts, Optional.empty());
     }
 
     private static CapitalGainsHead run(int year, CapitalGainsInput.Bucket... buckets) {
@@ -64,9 +80,9 @@ class CapitalGainsNodeTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenAShortTermLossMeetsGainsOnSeveralParts_takesTheSlabPartFirst(int year) {
         // When — A: short-term slab 50,000; short-term listed −30,000; long-term listed 40,000
-        CapitalGainsHead head = run(year, bucket("50000", Term.SHORT_TERM, RateBasisHint.SLAB),
-                bucket("-30000", Term.SHORT_TERM, RateBasisHint.SPECIAL_RATE_LISTED_EQUITY),
-                bucket("40000", Term.LONG_TERM, RateBasisHint.SPECIAL_RATE_LISTED_EQUITY));
+        CapitalGainsHead head = run(year, bucket("50000", Term.SHORT_TERM, PAID, NOT_PAID),
+                bucket("-30000", Term.SHORT_TERM, NOT_PAID, PAID),
+                bucket("40000", Term.LONG_TERM, PAID, PAID));
 
         // Then — 50,000 − 30,000 = 20,000 slab; the listed long-term part untouched
         assertThat(head.part(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.of("20000"));
@@ -80,9 +96,9 @@ class CapitalGainsNodeTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenALongTermLossMeetsAShortTermGain_leavesTheShortTermGainAlone(int year) {
         // When — B: long-term other −10,000; short-term slab 25,000; long-term listed 15,000
-        CapitalGainsHead head = run(year, bucket("-10000", Term.LONG_TERM, RateBasisHint.SPECIAL_RATE_OTHER),
-                bucket("25000", Term.SHORT_TERM, RateBasisHint.SLAB),
-                bucket("15000", Term.LONG_TERM, RateBasisHint.SPECIAL_RATE_LISTED_EQUITY));
+        CapitalGainsHead head = run(year, bucket("-10000", Term.LONG_TERM, PAID, NOT_PAID),
+                bucket("25000", Term.SHORT_TERM, PAID, NOT_PAID),
+                bucket("15000", Term.LONG_TERM, PAID, PAID));
 
         // Then — "against … any other long-term capital asset" (S2 s.108(2)(b)): 15,000 − 10,000
         assertThat(head.part(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.of("25000"));
@@ -93,8 +109,8 @@ class CapitalGainsNodeTest {
     @Test
     void evaluate_whenTheHeadHasOnlyLosses_isNilAndShowsWhatIsLeft() {
         // When — C: short-term −5,000; long-term −8,000; nothing else
-        NodeResult result = result(2026, bucket("-5000", Term.SHORT_TERM, RateBasisHint.SPECIAL_RATE_LISTED_EQUITY),
-                bucket("-8000", Term.LONG_TERM, RateBasisHint.SPECIAL_RATE_OTHER));
+        NodeResult result = result(2026, bucket("-5000", Term.SHORT_TERM, NOT_PAID, PAID),
+                bucket("-8000", Term.LONG_TERM, PAID, NOT_PAID));
         CapitalGainsHead head = (CapitalGainsHead) result.value();
 
         // Then — not set off against any other head (S2 s.109(2)); carried forward (S2 s.111; D-247)
@@ -111,9 +127,9 @@ class CapitalGainsNodeTest {
     @Test
     void evaluate_whenThereAreBothLosses_setsTheLongTermOneOffFirst() {
         // Given — short-term −20,000, long-term −10,000; long-term other 25,000 the only gain
-        NodeResult result = result(2026, bucket("-20000", Term.SHORT_TERM, RateBasisHint.SLAB),
-                bucket("-10000", Term.LONG_TERM, RateBasisHint.SPECIAL_RATE_LISTED_EQUITY),
-                bucket("25000", Term.LONG_TERM, RateBasisHint.SPECIAL_RATE_OTHER));
+        NodeResult result = result(2026, bucket("-20000", Term.SHORT_TERM, PAID, NOT_PAID),
+                bucket("-10000", Term.LONG_TERM, PAID, PAID),
+                bucket("25000", Term.LONG_TERM, PAID, NOT_PAID));
         CapitalGainsHead head = (CapitalGainsHead) result.value();
 
         // Then — the long-term loss can use only this part, so it goes first: 25,000 − 10,000 − 15,000 = 0, and
@@ -135,11 +151,49 @@ class CapitalGainsNodeTest {
         assertThat(head).isEqualTo(CapitalGainsHead.none());
     }
 
-    @Test
-    void evaluate_whenAShortTermGainIsOnTheOtherSpecialRate_isRefused() {
-        // When / Then — S2 s.197 charges only long-term gains
-        assertThatThrownBy(() -> run(2026, bucket("100", Term.SHORT_TERM, RateBasisHint.SPECIAL_RATE_OTHER)))
+    @ParameterizedTest(name = "TY {0}: {1}, STT buy {2}, sale {3} → {4}")
+    @CsvSource({
+        "2025, SHORT_TERM, false, true, SHORT_TERM_LISTED_EQUITY",
+        "2025, SHORT_TERM, true, false, SHORT_TERM_SLAB",
+        "2025, LONG_TERM, true, true, LONG_TERM_LISTED_EQUITY",
+        "2025, LONG_TERM, true, false, LONG_TERM_OTHER",
+        "2025, LONG_TERM, false, false, LONG_TERM_OTHER",
+        "2026, SHORT_TERM, false, true, SHORT_TERM_LISTED_EQUITY",
+        "2026, SHORT_TERM, true, false, SHORT_TERM_SLAB",
+        "2026, LONG_TERM, true, true, LONG_TERM_LISTED_EQUITY",
+        "2026, LONG_TERM, true, false, LONG_TERM_OTHER",
+        "2026, LONG_TERM, false, false, LONG_TERM_OTHER"
+    })
+    void evaluate_whenAnEquityBucketMeetsARow_isInThePartTheRowNames(int year, Term term, boolean sttOnBuy,
+            boolean sttOnSale, CapitalGainsPart expected) {
+        // When — cases 1–5: s.196(1)(b) / s.111A(1)(b) STT on the sale; s.198(1)(c)(i) / s.112A(1)(iii)(a) on both;
+        // s.197(1) / s.112(1) any other long-term gain
+        CapitalGainsHead head = run(year, bucket("1000", term, sttOnBuy, sttOnSale));
+
+        // Then
+        assertThat(head.part(expected)).isEqualTo(Money.of("1000"));
+        assertThat(head.total()).isEqualTo(Money.of("1000"));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenLongTermEquityWasBoughtWithoutStt_isRefusedNamingItsFacts(int year) {
+        // When / Then — case 6: s.198(1)(c)(i) / s.112A(1)(iii)(a) unmet on the buy; S.O. 5054(E)'s waiver is not yet
+        // a row (W-088f2b), so no row covers the bucket
+        assertThatThrownBy(() -> run(year, bucket("1000", Term.LONG_TERM, NOT_PAID, PAID)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("falls under no provision");
+                .hasMessageContaining("no row of RS-CG-PART")
+                .hasMessageContaining("sttOnAcquisition=false")
+                .hasMessageContaining("acquisitionMode=PURCHASE")
+                .hasMessageContaining("2020-06-01");
+    }
+
+    @Test
+    void evaluate_whenTheAssetIsNotEquity_isRefused() {
+        // When / Then — case 7: only equity has rows; a fund unit waits on the instrument registry
+        assertThatThrownBy(() -> run(2026, bucket("1000", Term.SHORT_TERM, "MUTUAL_FUND", NOT_PAID, PAID)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("assetKind=MUTUAL_FUND")
+                .hasMessageContaining("no row of RS-CG-PART");
     }
 }

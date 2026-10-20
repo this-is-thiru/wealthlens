@@ -1,25 +1,29 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
-import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
-import com.thiru.wealthlens.taxengine.input.RateBasisHint;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
+import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +32,9 @@ import java.util.function.Predicate;
 /**
  * Income under "Capital gains", part by part, after the head's own losses (S2 s.108(2); 1961 s.70(2), (3); D-243).
  *
- * <p>Each bucket of {@link CapitalGainsInput} belongs to one {@link CapitalGainsPart} by its term and rate basis. A
+ * <p>Each bucket of {@link CapitalGainsInput} belongs to the {@link CapitalGainsPart} the row of {@code RS-CG-PART} its
+ * facts meet names (D-289): which gains a special rate charges is the rule data's, and a bucket no row covers is refused
+ * rather than charged with total income. A
  * part whose buckets net to a loss contributes that loss: a long-term loss is set off only against the long-term
  * parts, a short-term loss against any part. The long-term loss goes first, because it can use fewer parts; each loss
  * takes the parts in {@code SETOFF-WITHIN-CAPITAL-GAINS}'s declared order, which neither Act prescribes (OQ-32), and
@@ -38,6 +44,20 @@ import java.util.function.Predicate;
 public final class CapitalGainsNode implements ComputationNode {
 
     private static final RuleSetId ROW = RuleSetIds.RS_SETOFF_WITHIN_CAPITAL_GAINS;
+
+    private static final RuleSetId PARTS = RuleSetIds.RS_CG_PART;
+
+    private static final ItemFactId TERM = new ItemFactId("capitalgains.term");
+
+    private static final ItemFactId ASSET = new ItemFactId("capitalgains.asset");
+
+    private static final ItemFactId STT_ON_ACQUISITION = new ItemFactId("capitalgains.stt.acquisition");
+
+    private static final ItemFactId STT_ON_TRANSFER = new ItemFactId("capitalgains.stt.transfer");
+
+    private static final ItemFactId ACQUISITION = new ItemFactId("capitalgains.acquisition");
+
+    private static final ItemFactId CORPORATE_ACTION = new ItemFactId("capitalgains.corporate.action");
 
     @Override
     public NodeId produces() {
@@ -51,7 +71,7 @@ public final class CapitalGainsNode implements ComputationNode {
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(ROW);
+        return Set.of(ROW, PARTS);
     }
 
     @Override
@@ -61,7 +81,7 @@ public final class CapitalGainsNode implements ComputationNode {
                 CapitalGainsAbsorptionOrder.class, row.id());
         Map<CapitalGainsPart, Money> net = new EnumMap<>(CapitalGainsPart.class);
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
-            net.merge(partOf(bucket), bucket.gain(), Money::plus);
+            net.merge(partOf(ctx, bucket), bucket.gain(), Money::plus);
         }
         List<TraceLine> lines = new ArrayList<>();
         Map<CapitalGainsPart, Money> available = new EnumMap<>(CapitalGainsPart.class);
@@ -109,23 +129,34 @@ public final class CapitalGainsNode implements ComputationNode {
         return remaining;
     }
 
-    /** The part a bucket's term and basis make (D-243); the two pairings no provision makes are refused. */
-    private static CapitalGainsPart partOf(CapitalGainsInput.Bucket bucket) {
-        Term term = bucket.term();
-        RateBasisHint basis = bucket.basis();
-        return switch (basis) {
-            case SPECIAL_RATE_LISTED_EQUITY -> term == Term.SHORT_TERM ? CapitalGainsPart.SHORT_TERM_LISTED_EQUITY
-                    : CapitalGainsPart.LONG_TERM_LISTED_EQUITY;
-            case SLAB -> requireTerm(term, Term.SHORT_TERM, basis, CapitalGainsPart.SHORT_TERM_SLAB);
-            case SPECIAL_RATE_OTHER -> requireTerm(term, Term.LONG_TERM, basis, CapitalGainsPart.LONG_TERM_OTHER);
-        };
+    /**
+     * The part the one row of {@code RS-CG-PART} the bucket's facts meet names (D-289).
+     *
+     * @throws IllegalArgumentException if no row covers the bucket — its facts are named, so the gap can be read
+     */
+    private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket) {
+        return ctx.optionalRuleOf(PARTS, factsOf(bucket))
+                .map(row -> RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row,
+                        ctx.inputs().temporal()).definition(), BucketPart.class, row.id()).part())
+                .orElseThrow(() -> new IllegalArgumentException("Capital gains of " + bucket.gain() + " ("
+                        + bucket.term() + ", " + bucket.facts() + ") fall in no row of " + PARTS + " for "
+                        + ctx.pack().taxYear().label() + ", so no provision is known to charge them"));
     }
 
-    private static CapitalGainsPart requireTerm(Term term, Term expected, RateBasisHint basis, CapitalGainsPart part) {
-        if (term != expected) {
-            throw new IllegalArgumentException("A " + term + " capital gain on the " + basis + " basis falls under no"
-                    + " provision: only " + expected + " gains are charged on it (S2 ss.196–198)");
-        }
-        return part;
+    /** The bucket's facts as the rows test them; the corporate action only where the lot came from one. */
+    private static ItemFacts factsOf(CapitalGainsInput.Bucket bucket) {
+        BucketFacts facts = bucket.facts();
+        Map<ItemFactId, String> codes = new HashMap<>();
+        codes.put(TERM, bucket.term().name());
+        codes.put(ASSET, facts.assetKind());
+        codes.put(STT_ON_ACQUISITION, sttCode(facts.sttOnAcquisition()));
+        codes.put(STT_ON_TRANSFER, sttCode(facts.sttOnTransfer()));
+        codes.put(ACQUISITION, facts.acquisitionMode());
+        facts.corporateAction().ifPresent(action -> codes.put(CORPORATE_ACTION, action));
+        return new ItemFacts(codes, Map.of());
+    }
+
+    private static String sttCode(boolean paid) {
+        return paid ? "PAID" : "NOT_PAID";
     }
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -159,38 +160,16 @@ class RegimeElectionSnapshotTest {
     }
 
     @Nested
-    @DisplayName("CapitalGainsInput — gross buckets with a hint, never a tax")
+    @DisplayName("CapitalGainsInput — gross buckets with their facts, never a tax")
     class CapitalGains {
 
-        private static CapitalGainsInput withBuckets() {
-            return new CapitalGainsInput(
-                    List.of(
-                            new Bucket(
-                                    Money.of("300000"),
-                                    Term.LONG_TERM,
-                                    RateBasisHint.SPECIAL_RATE_LISTED_EQUITY,
-                                    Optional.empty()),
-                            new Bucket(
-                                    Money.of("100000"),
-                                    Term.SHORT_TERM,
-                                    RateBasisHint.SLAB,
-                                    Optional.of("PF-FIFO-001"))),
-                    AS_OF,
-                    "pf-run-77");
-        }
+        private static final BucketFacts FACTS = new BucketFacts("EQUITY", true, true, "PURCHASE", Optional.empty(),
+                LocalDate.of(2020, 6, 1));
 
         @Test
-        void gainIsSummedPerRateBasis() {
-            assertThat(withBuckets().grossGainOn(RateBasisHint.SPECIAL_RATE_LISTED_EQUITY))
-                    .isEqualTo(Money.of("300000"));
-            assertThat(withBuckets().grossGainOn(RateBasisHint.SPECIAL_RATE_OTHER))
-                    .isEqualTo(Money.ZERO);
-        }
-
-        @Test
-        void aBucketWithoutARateBasisIsRejectedRatherThanFallingBackToSlab() {
-            // R-10 and 13-edge-cases row 67: a basis the pack does not recognise is a blocking
-            // error. Defaulting to slab produces a plausible number that is wrong.
+        void aBucketWithoutItsFactsIsRejectedRatherThanFallingBackToSlab() {
+            // R-10 and 13-edge-cases row 67: a bucket no rule can place is a blocking error.
+            // Defaulting to slab produces a plausible number that is wrong.
             assertThatThrownBy(() -> new Bucket(
                             Money.of("1"), Term.LONG_TERM, null, Optional.empty()))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -200,21 +179,34 @@ class RegimeElectionSnapshotTest {
         @Test
         void aBucketWithoutATermIsRejected() {
             assertThatThrownBy(() -> new Bucket(
-                            Money.of("1"), null, RateBasisHint.SLAB, Optional.empty()))
+                            Money.of("1"), null, FACTS, Optional.empty()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("s.108(2)");
+        }
+
+        @Test
+        void aCorporateActionIsNamedExactlyWhenTheLotCameFromOne() {
+            // A fact a row tests may not be half-present: the action without the mode, or the mode without it
+            assertThatThrownBy(() -> new BucketFacts("EQUITY", false, true, "PURCHASE", Optional.of("BONUS"),
+                            LocalDate.of(2020, 6, 1)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("exactly when");
+            assertThatThrownBy(() -> new BucketFacts("EQUITY", false, true, "CORPORATE_ACTION", Optional.empty(),
+                            LocalDate.of(2020, 6, 1)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("exactly when");
         }
 
         @Test
         void bothListsAreDefensivelyCopied() {
             List<Bucket> buckets = new ArrayList<>();
             buckets.add(new Bucket(
-                    Money.of("100"), Term.LONG_TERM, RateBasisHint.SLAB, Optional.empty()));
+                    Money.of("100"), Term.LONG_TERM, FACTS, Optional.empty()));
             CapitalGainsInput input =
                     new CapitalGainsInput(buckets, AS_OF, "pf-run-1");
 
             buckets.add(new Bucket(
-                    Money.of("999999"), Term.SHORT_TERM, RateBasisHint.SLAB, Optional.empty()));
+                    Money.of("999999"), Term.SHORT_TERM, FACTS, Optional.empty()));
 
             assertThat(input.buckets()).hasSize(1);
         }

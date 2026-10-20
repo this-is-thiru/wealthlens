@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Member;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
@@ -164,7 +165,8 @@ class InputsFingerprintTest {
                                     List.of(new Bucket(
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of("50000"),
                                             Term.LONG_TERM,
-                                            RateBasisHint.SPECIAL_RATE_LISTED_EQUITY,
+                                            new BucketFacts("EQUITY", true, true, "PURCHASE", Optional.empty(),
+                                                    LocalDate.of(2020, 6, 1)),
                                             Optional.empty())),
                                     PF_AS_OF,
                                     "pf-run-1")))),

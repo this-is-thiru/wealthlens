@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
@@ -174,6 +176,25 @@ class RuleJsonDefinitionTest {
                           "succeedingYears": 8, "requiresReturnFiledInTime": false }"""))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("HOUSE_PROPERTY");
+    }
+
+    @Test
+    void version_whenABucketPart_readsThePart() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "BucketPart", "part": "LONG_TERM_OTHER" }""");
+
+        // Then
+        assertThat(version.definition()).contains(new BucketPart(CapitalGainsPart.LONG_TERM_OTHER));
+    }
+
+    @Test
+    void version_whenABucketPartNamesAnUnknownPart_isRefusedListingTheKnown() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "BucketPart", "part": "LONG_TERM_SLAB" }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("LONG_TERM_LISTED_EQUITY");
     }
 
     @Test

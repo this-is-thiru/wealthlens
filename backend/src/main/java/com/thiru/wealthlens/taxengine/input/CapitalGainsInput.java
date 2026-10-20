@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.input;
 
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,7 +14,8 @@ import java.util.Optional;
  * <p>{@code 13-edge-cases.md} R-10 and {@code 15-review-findings.md} F5. {@code portfolio} owns
  * which disposals happened, their dates, the FIFO cost basis and the amount of gain; the tax side
  * owns the rate basis, ss.196/197/198, the surcharge split and s.108(2) set-off. So every figure
- * here is a <b>gross amount with a hint</b>, and no figure here is a tax.
+ * here is a <b>gross amount with the facts the law turns on</b>, and no figure here is a tax: which part of the head a
+ * bucket falls in is the rule data's (D-289).
  *
  * <p>Losses carried in from earlier years are not here: what earlier returns absorbed is the tax side's history,
  * held in {@link LedgerSnapshot#capitalLossCarriedForward} (D-247).
@@ -60,12 +62,12 @@ public record CapitalGainsInput(
      *
      * @param gain the gross amount; never a tax
      * @param term long or short, for s.108(2)
-     * @param basis which rate basis applies — an unrecognised one is a blocking error, never a
+     * @param facts what the special-rate provisions turn on; a bucket no rule covers is a blocking error, never a
      *     fallback to slab (R-10)
      * @param portfolioRuleRef the portfolio's own rule reference, where it has one
      */
     public record Bucket(
-            Money gain, Term term, RateBasisHint basis, Optional<String> portfolioRuleRef) {
+            Money gain, Term term, BucketFacts facts, Optional<String> portfolioRuleRef) {
 
         public Bucket {
             if (gain == null) {
@@ -76,14 +78,50 @@ public record CapitalGainsInput(
                         "A capital-gains bucket must state its term; s.108(2) sets off short-term"
                                 + " and long-term losses differently");
             }
-            if (basis == null) {
+            if (facts == null) {
                 throw new IllegalArgumentException(
-                        "A capital-gains bucket must state a rate basis; an absent basis is a"
-                                + " blocking error, not a fallback to the slab ladder");
+                        "A capital-gains bucket must carry its facts; without them no rule can place it, and an"
+                                + " unplaced bucket is a blocking error, not a fallback to the slab ladder");
             }
             if (portfolioRuleRef == null) {
                 throw new IllegalArgumentException(
                         "Bucket.portfolioRuleRef may not be null; pass Optional.empty()");
+            }
+        }
+    }
+
+    /**
+     * The facts of a bucket the special-rate provisions turn on, as {@code portfolio} recorded them (D-249, D-289).
+     * Categories are {@code portfolio}'s own names, passed through: the engine may not see that module's enums, and a
+     * kind it learns later must reach the rule data unchanged rather than be collapsed here.
+     *
+     * @param assetKind the kind of asset, such as {@code EQUITY}
+     * @param sttOnAcquisition whether securities transaction tax is on record for the buy
+     * @param sttOnTransfer whether it is on record for the sale
+     * @param acquisitionMode how the lot was acquired, such as {@code PURCHASE} or {@code CORPORATE_ACTION}
+     * @param corporateAction the corporate action that created the lot; present exactly when the mode is
+     *     {@code CORPORATE_ACTION}
+     * @param acquiredOn when the lot was acquired
+     */
+    public record BucketFacts(
+            String assetKind,
+            boolean sttOnAcquisition,
+            boolean sttOnTransfer,
+            String acquisitionMode,
+            Optional<String> corporateAction,
+            LocalDate acquiredOn) {
+
+        private static final String CORPORATE_ACTION = "CORPORATE_ACTION";
+
+        public BucketFacts {
+            if (assetKind == null || assetKind.isBlank() || acquisitionMode == null || acquisitionMode.isBlank()
+                    || corporateAction == null || acquiredOn == null) {
+                throw new IllegalArgumentException("A bucket's facts need its asset kind, acquisition mode and"
+                        + " acquisition date; pass Optional.empty() for no corporate action");
+            }
+            if (corporateAction.isPresent() != CORPORATE_ACTION.equals(acquisitionMode)) {
+                throw new IllegalArgumentException("A corporate action is named exactly when the lot was acquired by"
+                        + " one, but the mode was " + acquisitionMode + " and the corporate action " + corporateAction);
             }
         }
     }
@@ -110,13 +148,5 @@ public record CapitalGainsInput(
     /** No capital gains at all, pinned to a run that found none. */
     public static CapitalGainsInput none(Instant asOf, String portfolioComputationRef) {
         return new CapitalGainsInput(List.of(), asOf, portfolioComputationRef);
-    }
-
-    /** Gross gain on one rate basis — the input to the surcharge split. */
-    public Money grossGainOn(RateBasisHint basis) {
-        return buckets.stream()
-                .filter(b -> b.basis() == basis)
-                .map(Bucket::gain)
-                .reduce(Money.ZERO, Money::plus);
     }
 }

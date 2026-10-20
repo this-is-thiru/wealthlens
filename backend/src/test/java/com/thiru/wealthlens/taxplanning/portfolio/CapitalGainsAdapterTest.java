@@ -14,8 +14,8 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
-import com.thiru.wealthlens.taxengine.input.RateBasisHint;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.Instant;
@@ -29,8 +29,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * Each read-model bucket's term and rate basis, from the conditions of S2 ss.196–198 and 1961 ss.111A, 112, 112A
- * (D-241; {@code sources/2026-10-18-capital-gains-basis.md}), and for equity bought without STT, S.O. 5054(E) (D-249).
+ * Each read-model bucket's term and the facts the special-rate provisions turn on, passed to the engine as
+ * {@code portfolio} recorded them; which part they make is the rule data's ({@code CapitalGainsNodeTest}; D-289).
  */
 @ExtendWith(MockitoExtension.class)
 class CapitalGainsAdapterTest {
@@ -58,11 +58,6 @@ class CapitalGainsAdapterTest {
                 acquisition, acquiredOn, 1000.50);
     }
 
-    private static CapitalGainsBucket equity(CapitalGainsType classification, boolean sttOnAcquisition,
-            boolean sttOnTransfer) {
-        return bucket(classification, AssetType.EQUITY, sttOnAcquisition, sttOnTransfer, 1000.50);
-    }
-
     private CapitalGainsInput inputOf(CapitalGainsBucket... buckets) {
         when(capitalGainsSummaryService.summaryFor(anyString(), anyString()))
                 .thenReturn(new CapitalGainsSummary(EMAIL, "2025-2026", List.of(buckets), AS_OF, "trade_outcomes:ref"));
@@ -87,71 +82,50 @@ class CapitalGainsAdapterTest {
     }
 
     @Test
-    void inputFor_whenShortTermEquityWasSoldWithStt_isTheListedEquityBasis() {
-        // When — S2 s.196(1); 1961 s.111A(1)
-        CapitalGainsInput.Bucket bucket = onlyBucketOf(equity(CapitalGainsType.SHORT_TERM, true, true));
+    void inputFor_whenEquityWasPurchased_passesItsFactsThrough() {
+        // When — STT on the buy only, so a read of the wrong side fails
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY, true,
+                false, 1000.50));
 
         // Then
         assertThat(bucket.gain()).isEqualTo(Money.of("1000.50"));
         assertThat(bucket.term()).isEqualTo(Term.SHORT_TERM);
-        assertThat(bucket.basis()).isEqualTo(RateBasisHint.SPECIAL_RATE_LISTED_EQUITY);
+        assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", true, false, "PURCHASE", Optional.empty(),
+                ACQUIRED_ON));
     }
 
     @Test
-    void inputFor_whenShortTermEquityWasSoldWithoutStt_isTheSlab() {
-        // When — no special provision charges it
-        CapitalGainsInput.Bucket bucket = onlyBucketOf(equity(CapitalGainsType.SHORT_TERM, true, false));
-
-        // Then
-        assertThat(bucket.term()).isEqualTo(Term.SHORT_TERM);
-        assertThat(bucket.basis()).isEqualTo(RateBasisHint.SLAB);
-    }
-
-    @Test
-    void inputFor_whenLongTermEquityWasBoughtAndSoldWithStt_isTheListedEquityBasis() {
-        // When — S2 s.198(1); 1961 s.112A(1)
-        CapitalGainsInput.Bucket bucket = onlyBucketOf(equity(CapitalGainsType.LONG_TERM, true, true));
+    void inputFor_whenLongTermEquityWasABonusAllotment_passesTheCorporateActionThrough() {
+        // When — STT on the sale only; whether S.O. 5054(E) waives the buy's is the rule data's (W-088f2b)
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(boughtWithoutStt(Acquisition.of(CorporateActionType.BONUS),
+                LocalDate.of(2020, 1, 10)));
 
         // Then
         assertThat(bucket.term()).isEqualTo(Term.LONG_TERM);
-        assertThat(bucket.basis()).isEqualTo(RateBasisHint.SPECIAL_RATE_LISTED_EQUITY);
+        assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", false, true, "CORPORATE_ACTION",
+                Optional.of("BONUS"), LocalDate.of(2020, 1, 10)));
     }
 
     @Test
-    void inputFor_whenLongTermEquityWasSoldWithoutStt_isTheOtherSpecialRate() {
-        // When — S2 s.197(1); 1961 s.112(1)
-        CapitalGainsInput.Bucket bucket = onlyBucketOf(equity(CapitalGainsType.LONG_TERM, false, false));
+    void inputFor_whenTheAcquisitionWasNotRecorded_saysSo() {
+        // When — a row written before the acquisition was kept
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(boughtWithoutStt(Acquisition.UNRECORDED,
+                LocalDate.of(2003, 6, 1)));
 
         // Then
-        assertThat(bucket.term()).isEqualTo(Term.LONG_TERM);
-        assertThat(bucket.basis()).isEqualTo(RateBasisHint.SPECIAL_RATE_OTHER);
+        assertThat(bucket.facts().acquisitionMode()).isEqualTo("UNRECORDED");
+        assertThat(bucket.facts().corporateAction()).isEmpty();
+        assertThat(bucket.facts().acquiredOn()).isEqualTo(LocalDate.of(2003, 6, 1));
     }
 
     @Test
-    void inputFor_whenLongTermEquityWithoutSttWasABonusAllotment_isRefusedWithTheFactsTheWaiverNeeds() {
-        // When / Then — S.O. 5054(E)'s waiver is rule data, not code (W-088f2); the refusal names the facts
-        assertThatThrownBy(() -> inputOf(boughtWithoutStt(Acquisition.of(CorporateActionType.BONUS),
-                LocalDate.of(2020, 1, 10))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("acquired CORPORATE_ACTION BONUS on 2020-01-10")
-                .hasMessageContaining("S.O. 5054(E)")
-                .hasMessageContaining("W-088f2");
-    }
+    void inputFor_whenAFundHasACapitalGainsClassification_passesTheAssetThrough() {
+        // When — no row covers a fund unit yet; the engine refuses it, not the adapter
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.MUTUAL_FUND,
+                false, true, 10));
 
-    @Test
-    void inputFor_whenLongTermEquityWithoutSttHasNoRecordedAcquisition_isRefused() {
-        // When / Then — a row written before the acquisition was kept
-        assertThatThrownBy(() -> inputOf(boughtWithoutStt(Acquisition.UNRECORDED, LocalDate.of(2003, 6, 1))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("acquired UNRECORDED on 2003-06-01");
-    }
-
-    @Test
-    void inputFor_whenAFundHasACapitalGainsClassification_isRefused() {
-        // When / Then
-        assertThatThrownBy(() -> inputOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.MUTUAL_FUND, false, true, 10)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("MUTUAL_FUND have no rate-basis rule");
+        // Then
+        assertThat(bucket.facts().assetKind()).isEqualTo("MUTUAL_FUND");
     }
 
     @Test
