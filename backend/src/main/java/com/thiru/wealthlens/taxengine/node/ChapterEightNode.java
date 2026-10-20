@@ -2,8 +2,6 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
-import com.thiru.wealthlens.taxengine.input.EmployerKind;
-import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
 import com.thiru.wealthlens.taxengine.input.QualifyingPayment;
@@ -13,29 +11,21 @@ import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
-import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
-import com.thiru.wealthlens.taxengine.rules.cap.AggregateOutcome;
-import com.thiru.wealthlens.taxengine.rules.cap.AggregateWithCeiling;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
-import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
-import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
-import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
-import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
-import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
@@ -45,12 +35,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * The Chapter VIII deductions built so far: the s.123 family and the pension scheme (S2 ss.122–124, Schedule XV;
- * {@code DR 06} G2.2; D-130, D-132).
+ * The Chapter VIII deductions built so far: the s.123 family ({@link ScheduleXvDeduction}) and the pension scheme
+ * ({@link PensionDeduction}) (S2 ss.122–124, Schedule XV; {@code DR 06} G2.2; D-130, D-132).
  *
  * <p>In order, because each reads the one before: each life policy's premium within its share of the sum assured
  * (Schedule XV para 2), as a measure; the Schedule XV sums under one ceiling, the employee's pension
@@ -71,15 +60,11 @@ import java.util.stream.Stream;
  */
 public final class ChapterEightNode implements ComputationNode {
 
-    private static final BaseId SALARY = new BaseId("SALARY");
-    private static final BaseId GOVERNMENT_SALARY = new BaseId("GOVERNMENT_SALARY");
     private static final BaseId GROSS_TOTAL_INCOME = new BaseId("GROSS_TOTAL_INCOME");
     private static final Set<RuleSetId> PAYMENT_ROWS = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV, RuleSetIds.RS_DED_NPS_OWN);
     private static final Set<RuleSetId> INVESTMENT_RULES = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV,
             RuleSetIds.RS_DED_NPS_OWN, RuleSetIds.RS_DED_NPS_EMPLOYER,
             RuleSetIds.RS_DED_PREMIUM_SHARE);
-    /** What an employer pension contribution's row is chosen by, with the regime (D-253). */
-    private static final ItemFactId EMPLOYER_KIND = new ItemFactId("employer.kind");
 
     @Override
     public NodeId produces() {
@@ -120,13 +105,12 @@ public final class ChapterEightNode implements ComputationNode {
             return NodeResult.untraced(MoneyValue.of(Money.ZERO));
         }
         requireRowsThisYear(ctx, investmentsEntered);
-        requireGovernmentEmployment(ctx, payLines);
+        ScheduleXvDeduction.requireGovernmentEmployment(ctx, payLines);
         Map<ComponentCode, Money> paid = paid(ctx, payLines, payments);
         List<TraceLine> lines = new ArrayList<>();
-        premiums(ctx, policies, paid, lines);
-        Money residue = scheduleXv(ctx, paid, lines);
-        ownPension(ctx, residue, paid.getOrDefault(ComponentCodes.NPS_MINOR_DEPOSIT, Money.ZERO), lines);
-        employerPension(ctx, employerPension, lines);
+        Money residue = ScheduleXvDeduction.lines(ctx, policies, paid, lines);
+        PensionDeduction.lines(ctx, residue, paid.getOrDefault(ComponentCodes.NPS_MINOR_DEPOSIT, Money.ZERO),
+                employerPension, lines);
         lines.addAll(HealthInsuranceDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(DisabilityDeduction.lines(ctx, lines.size() + 1));
         lines.addAll(LoanInterestDeduction.lines(ctx, lines.size() + 1));
@@ -222,150 +206,6 @@ public final class ChapterEightNode implements ComputationNode {
     }
 
     /**
-     * Schedule XV para 2: each policy's premium counts up to its band's share of the actual capital sum assured — a
-     * measure line per policy; the qualifying total is the life insurance contribution to s.123. In a regime the row
-     * does not apply in, the premiums go to s.123 as paid, for its nil line.
-     */
-    private static void premiums(NodeContext ctx, List<LifeInsurancePolicy> policies, Map<ComponentCode, Money> paid,
-            List<TraceLine> lines) {
-        if (policies.isEmpty()) {
-            return;
-        }
-        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE));
-        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE), version).applies()) {
-            policies.forEach(policy -> paid.merge(ComponentCodes.LIFE_INSURANCE_PREMIUM, policy.premiumPaid(),
-                    Money::plus));
-            return;
-        }
-        PremiumShareBands bands = bands(ctx, version);
-        for (LifeInsurancePolicy policy : policies) {
-            PremiumShareBands.Band band = bands.bandFor(policy.issuedOn(), policy.coversDisabilityOrSpecifiedDisease());
-            Money share = band.share().of(policy.actualCapitalSumAssured());
-            Money counted = Money.min(policy.premiumPaid(), share);
-            lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE), StepKind.MEASURE,
-                            MoneyValue.of(policy.premiumPaid()), MoneyValue.of(counted), version.provenance())
-                    .withLimitedBy(band.share().asPercentLabel() + " of the sum assured " + policy.actualCapitalSumAssured()
-                            + ", a policy issued " + policy.issuedOn()));
-            paid.merge(ComponentCodes.LIFE_INSURANCE_PREMIUM, counted, Money::plus);
-        }
-    }
-
-    private static PremiumShareBands bands(NodeContext ctx, RuleVersion version) {
-        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_DED_PREMIUM_SHARE);
-        return RuleDefinitions.require(version.definition(), PremiumShareBands.class, ruleId);
-    }
-
-    /** s.123: the Schedule XV sums under one ceiling; returns what the pension sub-cap left, for s.124(3). */
-    private static Money scheduleXv(NodeContext ctx, Map<ComponentCode, Money> paid, List<TraceLine> lines) {
-        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV));
-        AggregateWithCeiling cap = (AggregateWithCeiling) version.cap().orElseThrow();
-        Map<ComponentCode, Money> contributions = new LinkedHashMap<>();
-        cap.contributors().forEach(code -> contributions.put(code, paid.getOrDefault(code, Money.ZERO)));
-        Money entered = contributions.values().stream().reduce(Money.ZERO, Money::plus);
-        if (!entered.isGreaterThan(Money.ZERO)) {
-            return Money.ZERO;
-        }
-        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), version).applies()) {
-            lines.add(nilLine(ctx, lines, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), version, entered));
-            return Money.ZERO;
-        }
-        SalaryBases bases = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class);
-        Money salary = Money.ZERO;
-        for (int employment = 0; employment < ctx.inputs().entered().employments().size(); employment++) {
-            salary = salary.plus(bases.of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_EMPLOYEE_PENSION), employment));
-        }
-        AggregateOutcome outcome = cap.applyDetailed(new CapContext(
-                Map.of(SALARY, salary, GOVERNMENT_SALARY, governmentSalary(ctx)), contributions, Map.of()));
-        lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV), StepKind.DEDUCTION,
-                        MoneyValue.of(outcome.aggregate()), MoneyValue.of(outcome.allowed()), version.provenance())
-                .withLimitedBy(outcome.limitedBy()));
-        return outcome.subCapResidue().getOrDefault(ComponentCodes.EMPLOYEE_NPS, Money.ZERO);
-    }
-
-    /**
-     * The salary Schedule XV para 1(c)'s twenty per cent is measured on: what the Government employments pay in money
-     * under "Salaries" — their pay lines, not perquisites (OQ-16; D-154).
-     */
-    private static Money governmentSalary(NodeContext ctx) {
-        List<Employment> employments = ctx.inputs().entered().employments();
-        return ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class).in(HeadCode.SALARIES).stream()
-                .filter(line -> employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT)
-                .filter(line -> ctx.pack().components().get(line.code()).kind() == ComponentKind.SALARY)
-                .map(ComponentSet.Line::amount)
-                .reduce(Money.ZERO, Money::plus);
-    }
-
-    /** Schedule XV para 1(c) is a deduction from salary "payable by or on behalf of the Government" (D-154). */
-    private static void requireGovernmentEmployment(NodeContext ctx, List<ComponentSet.Line> payLines) {
-        List<Employment> employments = ctx.inputs().entered().employments();
-        for (ComponentSet.Line line : payLines) {
-            if (line.code().equals(ComponentCodes.GOVERNMENT_DEFERRED_ANNUITY)
-                    && employments.get(line.employment()).employerKind() != EmployerKind.GOVERNMENT) {
-                throw new IllegalArgumentException("A sum deducted for a deferred annuity under Schedule XV para 1(c)"
-                        + " must come from salary payable by the Government; employment " + line.employment()
-                        + " is " + employments.get(line.employment()).employerKind() + " (D-154)");
-            }
-        }
-    }
-
-    /** s.124(3)–(4): the pension contribution s.123 did not allow, with a minor's deposit, under one ceiling. */
-    private static void ownPension(NodeContext ctx, Money residue, Money minorDeposit, List<TraceLine> lines) {
-        Money entered = residue.plus(minorDeposit);
-        if (!entered.isGreaterThan(Money.ZERO)) {
-            return;
-        }
-        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN));
-        if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), version).applies()) {
-            lines.add(nilLine(ctx, lines, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), version, entered));
-            return;
-        }
-        AggregateOutcome outcome = ((AggregateWithCeiling) version.cap().orElseThrow()).applyDetailed(CapContext.ofContributions(
-                Map.of(ComponentCodes.EMPLOYEE_NPS, residue, ComponentCodes.NPS_MINOR_DEPOSIT, minorDeposit)));
-        lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_OWN), StepKind.DEDUCTION,
-                        MoneyValue.of(entered), MoneyValue.of(outcome.allowed()), version.provenance())
-                .withLimitedBy(outcome.limitedBy()));
-    }
-
-    /** s.124(1)–(2): the employer's pension contribution, up to the row's share of the employer-pension salary. */
-    private static void employerPension(NodeContext ctx, List<EmployerFundContribution> contributions,
-            List<TraceLine> lines) {
-        if (contributions.isEmpty()) {
-            return;
-        }
-        Set<Integer> employments = contributions.stream().map(EmployerFundContribution::employment)
-                .collect(Collectors.toSet());
-        if (employments.size() > 1) {
-            throw new IllegalArgumentException("Employer pension contributions from " + employments.size()
-                    + " employments: whether each is measured against that employer's salary or the year's is not"
-                    + " settled (s.124(1); OQ-15), so it is refused rather than guessed (D-132)");
-        }
-        int employment = employments.iterator().next();
-        PerquisiteNode.requireEnteredEmployment(ctx, employment, "employer pension contribution");
-        Money contributed = contributions.stream().map(EmployerFundContribution::amount)
-                .reduce(Money.ZERO, Money::plus);
-        RuleId row = employerRow(ctx, employment);
-        TemporalContext t = ctx.inputs().temporal();
-        Money salary = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class)
-                .of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_EMPLOYER_PENSION), employment);
-        Money limit = TemporallyApportionedCap.apply(ctx.rule(row), t, CapContext.of(SALARY, salary)).value();
-        Money allowed = Money.min(contributed, limit);
-        lines.add(TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION,
-                        MoneyValue.of(contributed), MoneyValue.of(allowed), version(ctx, row).provenance())
-                .withLimitedBy(allowed.isLessThan(contributed)
-                        ? "the share of the employer-pension salary " + salary + ", " + limit
-                        : "the contribution"));
-    }
-
-    /**
-     * A Government employer's row in every regime; any other employer's, the row for the regime (s.124(1)(b), (2)) —
-     * the rows' conditions on the employment's employer kind and their regimes say which (D-252, D-253).
-     */
-    private static RuleId employerRow(NodeContext ctx, int employment) {
-        EmployerKind kind = ctx.inputs().entered().employments().get(employment).employerKind();
-        return ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_EMPLOYER, ItemFacts.of(EMPLOYER_KIND, kind.name()));
-    }
-
-    /**
      * Gross total income less the deductions so far, held within it — s.133(7)(a)'s adjusted gross total income
      * before s.133, s.134(5)'s total income before s.134 after it.
      */
@@ -423,13 +263,6 @@ public final class ChapterEightNode implements ComputationNode {
                                 .sorted().toList() + ") "
                         + grossTotal
                 : "gross total income " + grossTotal;
-    }
-
-    private static TraceLine nilLine(NodeContext ctx, List<TraceLine> lines, RuleId row, RuleVersion version,
-            Money entered) {
-        return TraceLine.of(lines.size() + 1, NodeIds.CHAPTERVIII, row, StepKind.DEDUCTION, MoneyValue.of(entered),
-                        MoneyValue.of(Money.ZERO), version.provenance())
-                .withLimitedBy(ctx.inRegime(row, version).whyNot());
     }
 
     private static RuleVersion version(NodeContext ctx, RuleId row) {
