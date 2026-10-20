@@ -137,10 +137,12 @@ Then, by case:
   recompute-from-transactions tool for `profit_and_loss` or `assets`** — see the note below — so the
   affected period has to be corrected by hand or accepted.
 
-**`trade_outcomes` is the one thing that rebuilds itself.** Drop the collection and restart:
-`TradeOutcomeMigrationRunner` repopulates it from raw transactions when it finds the collection
-empty. Do that *after* the duplicate `transactions` rows are gone, so the rebuild does not reproduce
-them.
+**`trade_outcomes` is the one thing that can be recomputed.** *After* the duplicate `transactions`
+rows are gone, back up and delete **that user's** `trade_outcomes` rows, then call
+`POST /trade-outcomes/rebuild` (`SUPER_USER`, a dry run by default; `?dryRun=false` to write). It
+rebuilds every user with transactions and no rows, and skips everyone else (W-088u8b, D-284; the
+tax-planning runbook §2.2). Rebuild one user, not the whole collection: rebuilt rows carry no charge
+breakdown. The old startup runner that rebuilt an empty collection is gone (D-280).
 
 ### Duplicate `{email, financial_year}` in `profit_and_loss`
 
@@ -165,7 +167,7 @@ and nothing recomputes them.
 ### The gap this exposes
 
 `profit_and_loss` and `assets` are **derived** state with no way to rebuild them from `transactions`,
-which is the source of truth. `trade_outcomes` has exactly that (`TradeOutcomeMigrationRunner`), and
+which is the source of truth. `trade_outcomes` has exactly that (`POST /trade-outcomes/rebuild`), and
 it is why that collection is the easy one here. A recompute for the other two would make every
 correction above a one-liner instead of a careful manual edit.
 

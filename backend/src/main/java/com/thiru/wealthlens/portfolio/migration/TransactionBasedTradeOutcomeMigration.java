@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.portfolio.migration;
 
+import com.thiru.wealthlens.portfolio.dto.TradeOutcomeRebuildReport;
+import com.thiru.wealthlens.portfolio.dto.TradeOutcomeRebuildReport.SkippedUser;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
@@ -8,17 +10,16 @@ import com.thiru.wealthlens.portfolio.service.TradeMatchingService;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.BuyLot;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.MatchedTrade;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.SellRequest;
-import com.thiru.wealthlens.shared.config.TradeOutcomeMigrationRunner;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -26,12 +27,16 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 /**
- * Transaction-based migration that rebuilds TradeOutcomeEntity directly from
- * TransactionEntity BUY/SELL records via FIFO matching.
- * <p>
- * Triggered on app startup via {@link TradeOutcomeMigrationRunner} (CommandLineRunner).
- * Runs once only when 'trade_outcomes' collection is empty.
- * Do NOT trigger from client-facing code.
+ * Rebuilds {@code trade_outcomes} from raw transactions — every SELL matched FIFO against lots built from every BUY —
+ * when a {@code SUPER_USER} asks ({@code POST /trade-outcomes/rebuild}).
+ *
+ * <p>An operation, not a startup hook (D-280): at boot it rebuilt whenever the collection was empty, as nobody, and a
+ * user who failed was only logged. It stays because it is how {@code trade_outcomes} is recomputed after a correction
+ * to {@code transactions} ({@code docs/trade-ledger/migration.md} §3a; D-284, so not one-time).
+ *
+ * <p>Idempotent per user (D-282): a user with any row, whichever writer made it, is skipped and listed, so V1 and V2
+ * rows are never duplicated, a run after one that failed part-way completes the rest, and a run after a complete one
+ * writes nothing. The rows record the caller through the auditing.
  */
 @Service
 @Slf4j
@@ -42,51 +47,38 @@ public class TransactionBasedTradeOutcomeMigration {
     private final TradeOutcomeRepository tradeOutcomeRepository;
     private final TradeMatchingService tradeMatchingService;
 
-    public void migrateTransactionsToTradeOutcomes() {
-        log.info("Starting transaction-based migration to TradeOutcomeEntity");
-        LocalDateTime startTime = LocalDateTime.now();
-
-        // Step 1: Get all distinct emails from transactions
-        Set<String> distinctEmails = getDistinctEmails();
-        log.info("Found {} distinct users with transactions", distinctEmails.size());
-
-        int totalUsers = 0;
-        int totalTradesCreated = 0;
-        int skippedUsers = 0;
-
-        for (String email : distinctEmails) {
-            try {
-                int tradesCreated = migrateUser(email);
-                totalTradesCreated += tradesCreated;
-                totalUsers++;
-
-                if (totalUsers % 100 == 0) {
-                    log.info("Migration progress: processed {} users, created {} trade outcomes",
-                            totalUsers, totalTradesCreated);
-                }
-            } catch (Exception e) {
-                log.error("Failed to migrate user {}: {}", email, e.getMessage(), e);
-                skippedUsers++;
+    /** Rebuild every user with transactions and no rows, unless {@code dryRun}; {@code auditor} is who asked. */
+    public TradeOutcomeRebuildReport rebuild(boolean dryRun, String auditor) {
+        Set<String> users = new TreeSet<>(getDistinctEmails());
+        List<SkippedUser> skipped = new ArrayList<>();
+        int usersRebuilt = 0;
+        int rowsWritten = 0;
+        for (String email : users) {
+            long existing = tradeOutcomeRepository.countByEmail(email);
+            if (existing > 0) {
+                skipped.add(new SkippedUser(email, existing));
+                continue;
             }
+            rowsWritten += rebuildUser(email, dryRun);
+            usersRebuilt++;
         }
-
-        LocalDateTime endTime = LocalDateTime.now();
-        long durationSeconds = ChronoUnit.SECONDS.between(startTime, endTime);
-
-        log.info("Migration completed: users={}, tradeOutcomes={}, skippedUsers={}, duration={}s",
-                totalUsers, totalTradesCreated, skippedUsers, durationSeconds);
+        log.info("trade_outcomes rebuild (dryRun={}, by {}): {} users, {} rebuilt, {} rows, {} skipped", dryRun,
+                auditor, users.size(), usersRebuilt, rowsWritten, skipped.size());
+        return new TradeOutcomeRebuildReport(dryRun, auditor, users.size(), usersRebuilt, rowsWritten, skipped);
     }
 
-    private int migrateUser(String email) {
-        List<TradeOutcomeEntity> tradeOutcomes = rebuiltRows(email);
-
-        // Batch save
-        if (!tradeOutcomes.isEmpty()) {
-            tradeOutcomeRepository.saveAll(tradeOutcomes);
-            log.debug("Saved {} trade outcomes for user {}", tradeOutcomes.size(), email);
+    /** One user's rows, saved unless {@code dryRun}; a failure names the user, the users before stay written. */
+    private int rebuildUser(String email, boolean dryRun) {
+        try {
+            List<TradeOutcomeEntity> rows = rebuiltRows(email);
+            if (!dryRun && !rows.isEmpty()) {
+                tradeOutcomeRepository.saveAll(rows);
+            }
+            return rows.size();
+        } catch (IllegalArgumentException | IllegalStateException | DataAccessException e) {
+            throw new IllegalStateException("user " + email + ": " + e.getMessage() + " — the users before are"
+                    + " written; fix and rebuild again", e);
         }
-
-        return tradeOutcomes.size();
     }
 
     /**

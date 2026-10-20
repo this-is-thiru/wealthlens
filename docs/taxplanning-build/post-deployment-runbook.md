@@ -47,7 +47,7 @@ ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-eng
 | 1.1 | **W-079a** (D-210), **W-088s** (D-268) | `TaxEngineConfig` compiles every year in `rulepacks/shipped-years.json` (**2025-26, 2026-27**) and verifies each against its lock (`rulepacks/<year>.lock.json`) | The app starts. There is no database step: the rule packs ship in the JAR | **The boot stops** with a lock mismatch. Nothing reaches a database. Deploy the previous build; never edit a lock in place |
 | 1.2 | **W-088u8a** (D-281, D-282) | **Nothing.** Tax policies are no longer seeded at boot: see §2.0 | — | — |
 | 1.3 | **W-086a** (D-239) | `TradeOutcomeFinancialYearMigrationRunner` rewrites any `trade_outcomes` row with an `FY2025-26`-form year into `2025-2026`-form, from its sell date | `db.trade_outcomes.countDocuments({ financial_year: /^FY/ })` → **0** | It refuses an `FY` row with no sell date, naming its id; correct that row by hand |
-| 1.4 | **W-088u6** (D-276) | Nothing on a database that already has `trade_outcomes`. The rebuild runner only runs on an empty collection, and then allocates buy charges once | Log `already has data — skipping` | — |
+| 1.4 | **W-088u8b** (D-284) | **Nothing.** `trade_outcomes` is no longer rebuilt at boot when empty: see §2.2 | — | — |
 
 ---
 
@@ -160,6 +160,40 @@ and `AnalyticsService`.
 
 **Second run:** safe, it changes nothing. **Way back:** `mongoimport --mode upsert` of the step-2 file. Detail:
 `plans/W-088u7.md`.
+
+### 2.2 W-088u8b (D-284) — rebuild `trade_outcomes` from raw transactions · `SUPER_USER` · **when needed, not once**
+
+**Why.** `trade_outcomes` is derived from `transactions`; this recomputes it. It is a **standing operation, not a
+one-time one** (D-284). The trade-ledger correction procedure needs it (`docs/trade-ledger/migration.md` §3a), so
+it is not removed after use. It is never automatic (D-280).
+
+**When:**
+- on a new database whose `transactions` came from elsewhere;
+- after a correction to a user's `transactions`, with that user's `trade_outcomes` rows backed up and deleted first.
+
+**Per user, idempotent.** A user with **any** `trade_outcomes` row, from any writer, is skipped and listed, so V1 /
+V2 rows are never duplicated. A re-run after a failure completes the rest; a re-run after a full run writes nothing.
+A failing user is an error naming them; the users before stay written.
+
+1. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/trade-outcomes/rebuild" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   **Read `usersRebuilt` and `rowsWritten` before writing.** Only users with transactions and no rows at all should
+   be in it. On staging and prod as they stand, that is users who never sold, giving 0 rows, plus any user whose
+   rows were deleted.
+2. **Write:** the same call with `?dryRun=false`.
+3. **Verify:** for each rebuilt user, `db.trade_outcomes.countDocuments({ email: "<user>" })` equals the rows the
+   report gave for them, and each row's `audit_metadata.createdBy` is the caller. A second call reports
+   `rowsWritten` 0.
+
+**Know this:** rebuilt rows carry no charge breakdown, so the capital-gains summary refuses a user whose rebuilt rows
+have broker charges (D-238 C2a; §3.1). Rebuild one user at a time (delete only that user's rows), never the whole
+collection.
+
+**Way back:** delete the rows this run wrote (`audit_metadata.createdBy` = the caller, `createdAt` = the run).
 
 ---
 

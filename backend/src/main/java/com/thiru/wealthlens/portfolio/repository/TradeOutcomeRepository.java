@@ -28,4 +28,6 @@ public interface TradeOutcomeRepository extends MongoRepository<TradeOutcomeEnti
     List<TradeOutcomeEntity> findByEmailAndSourceBuyLotIdIn(String email, Collection<String> sourceBuyLotIds);
 
     void deleteByEmail(String email);
+
+    long countByEmail(String email);
 }

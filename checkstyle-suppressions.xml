@@ -29,7 +29,6 @@
     <suppress checks="ParameterNumber" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]dto[\\/]context[\\/]ProfitLossContext\.java$"/>
     <suppress checks="StaticVariableName" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]entity[\\/]AssetEntity\.java$"/>
     <suppress checks="TodoComment" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]entity[\\/]AssetEntity\.java$"/>
-    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]migration[\\/]TransactionBasedTradeOutcomeMigration\.java$"/>
     <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]AnalyticsService\.java$"/>
     <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]AnalyticsService\.java$"/>
     <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]portfolio[\\/]service[\\/]PortfolioService\.java$"/>

@@ -9,10 +9,8 @@ import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -316,7 +314,6 @@ public class TradeMatchingService {
         entity.setAcquisitionMode(trade.getAcquisition().mode());
         entity.setAcquisitionCorporateAction(trade.getAcquisition().corporateAction().orElse(null));
 
-        entity.setAuditMetadata(buildAuditMetadata());
 
         return entity;
     }
@@ -341,16 +338,6 @@ public class TradeMatchingService {
                 .miscCharges(sellTxn.getMiscCharges())
                 .sellDate(sellTxn.getTransactionDate())
                 .build();
-    }
-
-    private AuditMetadata buildAuditMetadata() {
-        LocalDateTime now = LocalDateTime.now();
-        AuditMetadata metadata = new AuditMetadata();
-        metadata.setCreatedBy("TransactionBasedTradeOutcomeMigration");
-        metadata.setCreatedAt(now);
-        metadata.setUpdatedBy("TransactionBasedTradeOutcomeMigration@" + now);
-        metadata.setUpdatedAt(now);
-        return metadata;
     }
 
     @Data
