@@ -68,6 +68,10 @@ override convenience. Where the build enforces one, the enforcing check is named
   and the way back (backup first for any write to stored data).
 - **The owner runs it:** a Claude Code session never runs anything against a real database. It writes the command;
   the owner runs it and the result goes into the runbook's run log.
+- **Idempotent, and removed after use:** every such operation can be run again — including after a run that failed
+  part-way — and either completes the work or changes nothing, proven by a test. One meant to run once gets a
+  removal ticket (backlog row and tracker issue) when it is introduced, done once its run is logged for every
+  database.
 
 ## Commands
 

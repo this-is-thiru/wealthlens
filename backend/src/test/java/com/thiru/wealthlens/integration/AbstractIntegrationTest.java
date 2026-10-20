@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.integration;
 
+import com.thiru.wealthlens.taxplanning.policy.service.PolicySeederService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.restassured.RestAssured;
@@ -13,6 +14,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.parallel.Isolated;
@@ -35,8 +37,8 @@ public abstract class AbstractIntegrationTest {
     private static final int JWT_EXPIRATION_SECONDS = 60 * 30;
 
     /**
-     * Collections seeded once per Spring context (PolicySeederService runs at @PostConstruct)
-     * and shared read-only by every test. Everything else is per-test state and is cleared
+     * Collections the tax-policy seed fills ({@link #seedTaxPolicies()}, before every test — idempotent, so after
+     * the first it writes nothing) and shared read-only by every test. Everything else is per-test state and is cleared
      * after each test. Anything not listed here is wiped, so a new collection needs no
      * change to this class — which is the point.
      */
@@ -90,10 +92,19 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected MongoTemplate mongoTemplate;
 
+    @Autowired
+    private PolicySeederService policySeederService;
+
     @BeforeAll
     void setUpRestAssured() {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
+    }
+
+    /** The policies the application no longer seeds at boot (D-280): tests that compute tax need them on file. */
+    @BeforeEach
+    void seedTaxPolicies() {
+        policySeederService.seed(false, "integration-test");
     }
 
     /**

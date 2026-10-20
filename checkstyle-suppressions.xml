@@ -63,7 +63,6 @@
     <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]OldRegimeTaxEngine\.java$"/>
     <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]engine[\\/]OldRegimeTaxEngine\.java$"/>
     <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]policy[\\/]service[\\/]AllowanceResolutionService\.java$"/>
-    <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]policy[\\/]service[\\/]PolicySeederService\.java$"/>
     <suppress checks="CyclomaticComplexity" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]recommendation[\\/]RestructuringEngine\.java$"/>
     <suppress checks="IllegalCatch" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]recommendation[\\/]RestructuringEngine\.java$"/>
     <suppress checks="MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]thiru[\\/]wealthlens[\\/]taxplanning[\\/]recommendation[\\/]RestructuringEngine\.java$"/>

@@ -531,4 +531,67 @@ public class TaxPlanningControllerIntegrationTest extends AbstractIntegrationTes
 
         assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatusCode().value());
     }
+
+    // ============================================================
+    // W-088u8a: the tax-policy seed, a SUPER_USER operation
+    // ============================================================
+
+    private static final List<String> POLICY_COLLECTIONS =
+            List.of("tax_slab_policies", "perquisite_policies", "allowance_catalogue", "allowance_limits");
+
+    private void emptyThePolicies() {
+        POLICY_COLLECTIONS.forEach(name -> mongoTemplate.getCollection(name).deleteMany(new org.bson.Document()));
+    }
+
+    private List<Long> policyCounts() {
+        return POLICY_COLLECTIONS.stream().map(name -> mongoTemplate.getCollection(name).countDocuments()).toList();
+    }
+
+    @Test
+    void seedPolicies_whenADryRunOnAnEmptyDatabase_reportsAndWritesNothing() {
+        // Given
+        emptyThePolicies();
+
+        // When / Then — dryRun defaults to true
+        RestAssured.given().header("Authorization", "Bearer " + generateToken(USER_A, "SUPER_USER"))
+                .post("/tax-planning/admin/policies/seed")
+                .then().statusCode(200).body("dryRun", equalTo(true))
+                .body("parts.newDocuments", equalTo(List.of(1, 1, 1, 39, 14)));
+        assertEquals(List.of(0L, 0L, 0L, 0L), policyCounts());
+    }
+
+    @Test
+    void seedPolicies_whenWritten_recordsTheCallerAndASecondRunWritesNothing() {
+        // Given
+        emptyThePolicies();
+        String token = generateToken(USER_A, "SUPER_USER");
+
+        // When
+        RestAssured.given().header("Authorization", "Bearer " + token)
+                .post("/tax-planning/admin/policies/seed?dryRun=false").then().statusCode(200);
+
+        // Then — 2 slabs, 1 perquisite, 39 catalogue entries, 14 limits, each by the caller
+        assertEquals(List.of(2L, 1L, 39L, 14L), policyCounts());
+        POLICY_COLLECTIONS.forEach(name -> {
+            org.bson.Document stored = mongoTemplate.getCollection(name).find().first();
+            org.bson.Document audit = stored.get("audit_metadata", org.bson.Document.class);
+            assertNotNull(audit, name + " has no audit_metadata; keys " + stored.keySet());
+            assertEquals(USER_A, audit.getString("createdBy"), name);
+        });
+        RestAssured.given().header("Authorization", "Bearer " + token)
+                .post("/tax-planning/admin/policies/seed?dryRun=false")
+                .then().statusCode(200).body("parts.newDocuments", equalTo(List.of(0, 0, 0, 0, 0)));
+        assertEquals(List.of(2L, 1L, 39L, 14L), policyCounts());
+    }
+
+    @Test
+    void seedPolicies_whenNotASuperUser_isForbidden() {
+        // Given
+        emptyThePolicies();
+
+        // When / Then
+        RestAssured.given().header("Authorization", "Bearer " + generateToken(USER_A))
+                .post("/tax-planning/admin/policies/seed?dryRun=false").then().statusCode(403);
+        assertEquals(List.of(0L, 0L, 0L, 0L), policyCounts());
+    }
 }

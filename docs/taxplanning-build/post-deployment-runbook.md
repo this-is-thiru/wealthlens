@@ -19,7 +19,11 @@ entry here **in its own commit**, whichever module the change sits in, and its p
 - a precheck before a constraint is applied.
 
 A session never runs any of it against a real database. It writes the command; the owner runs it and the result
-goes into the run log. Operations from work unrelated to tax planning (the charges engine's own, the trade
+goes into the run log.
+
+**Every operation here is idempotent (D-282).** A second run, including one after a run that failed part-way, either
+completes the work or changes nothing, and a test proves it. **A one-time operation is removed after use:** each has
+a child under W-088u9 (YouTrack parent **WL-28**), done once its run is logged below for every database. Operations from work unrelated to tax planning (the charges engine's own, the trade
 ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-engine/production-runbook.md).
 
 **Databases** (from the profile yamls, host and database name only):
@@ -41,27 +45,65 @@ ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-eng
 | # | Item / decision | What happens at startup | Check | If it fails |
 |---|---|---|---|---|
 | 1.1 | **W-079a** (D-210), **W-088s** (D-268) | `TaxEngineConfig` compiles every year in `rulepacks/shipped-years.json` (**2025-26, 2026-27**) and verifies each against its lock (`rulepacks/<year>.lock.json`) | The app starts. There is no database step: the rule packs ship in the JAR | **The boot stops** with a lock mismatch. Nothing reaches a database. Deploy the previous build; never edit a lock in place |
-| 1.2 | Tax-policy seeding (`PolicySeederService`, before the W-items) | Seeds **TY 2025-26 only**, into `tax_slab_policies`, `perquisite_policies`, `allowance_catalogue` and `allowance_limits`, from `data/tax-policies/*.json`. **Each part only when no `ACTIVE` document exists for 2025-26** | Log `Tax policy seeding completed`, and **no** `Failed to seed`. The counts below | A failed part is **logged and skipped; the app still starts**. The checks below are the only signal |
+| 1.2 | **W-088u8a** (D-281, D-282) | **Nothing.** Tax policies are no longer seeded at boot: see §2.0 | — | — |
 | 1.3 | **W-086a** (D-239) | `TradeOutcomeFinancialYearMigrationRunner` rewrites any `trade_outcomes` row with an `FY2025-26`-form year into `2025-2026`-form, from its sell date | `db.trade_outcomes.countDocuments({ financial_year: /^FY/ })` → **0** | It refuses an `FY` row with no sell date, naming its id; correct that row by hand |
 | 1.4 | **W-088u6** (D-276) | Nothing on a database that already has `trade_outcomes`. The rebuild runner only runs on an empty collection, and then allocates buy charges once | Log `already has data — skipping` | — |
-
-**Check for 1.2** (read-only; expected counts as shipped, which an edited database may exceed):
-
-```js
-db.tax_slab_policies.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })     // 2  (NEW_REGIME, OLD_REGIME)
-db.perquisite_policies.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })   // 1
-db.allowance_catalogue.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })   // 39
-db.allowance_limits.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })      // 14
-```
-
-**Know this about 1.2.** Because seeding is skipped when an `ACTIVE` document exists, **a changed file under
-`data/tax-policies/` never reaches a database that already holds 2025-26 policies.** Such a change needs its own
-entry in section 2, with the update spelled out. TY 2026-27's figures are not here: they live in the engine's rule
-packs (1.1).
 
 ---
 
 ## 2. Once per database, by hand — in this order
+
+### 2.0 W-088u8a (D-281, D-282) — seed the TY 2025-26 tax policies · `SUPER_USER` · **required on a fresh database**
+
+**Why.** The tax engines read the slab, perquisite and allowance policies. They are seeded only when a `SUPER_USER`
+asks (D-280), never at boot.
+
+**Needs** a deploy carrying W-088u8a. On staging and prod, which the old boot seeder already filled, the dry run
+should report everything already present, so there is nothing to write.
+
+1. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/tax-planning/admin/policies/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Expect, per part (`SLAB_NEW_REGIME`, `SLAB_OLD_REGIME`, `PERQUISITE`, `ALLOWANCE_CATALOGUE`, `ALLOWANCE_LIMITS`):
+   - **fresh database:** `newDocuments` 1 / 1 / 1 / 39 / 14;
+   - **existing database:** `newDocuments` all 0, `alreadyPresent` 1 / 1 / 1 / 39 / 14. If not, report it before
+     writing.
+2. **Write** (only if the dry run showed something to write): the same call with `?dryRun=false`.
+3. **Verify** (read-only):
+
+   ```bash
+   curl -sS "$BASE/tax-planning/admin/policies?taxYear=2025-26" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   ```js
+   db.tax_slab_policies.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })     // 2
+   db.perquisite_policies.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })   // 1
+   db.allowance_catalogue.countDocuments({ tax_year: "2025-26" })                    // 39
+   db.allowance_limits.countDocuments({ tax_year: "2025-26" })                       // 14
+   // each document written by this step carries audit_metadata.createdBy = the caller
+   ```
+
+**Idempotent, per document.** A document is skipped when one with its key is on file:
+- slab: tax year, regime, active;
+- perquisite: tax year, active;
+- catalogue: code, tax year, regime;
+- limits: allowance code, tax year, regime, employer type.
+
+So a second run, including one after a run that failed part-way, seeds only what is missing. A file that fails to
+load is an error naming it; the files before it stay seeded.
+
+**Know this:**
+- A changed file under `data/tax-policies/` does not replace a document already on file. Changing a seeded policy
+  needs its own entry in this section.
+- **Policies the old boot seeder wrote carry no `audit_metadata` at all.** Jackson 3 built them through the
+  all-arguments constructor, leaving it null. Their author is unrecorded; nothing re-seeds them.
+
+**Way back:** delete the documents this step wrote, by `audit_metadata.createdBy` and `createdAt`.
+
+**Removed after use:** W-088u9b / WL-30, once this step is logged for every database.
 
 ### 2.1 W-088u7 (D-277) — correct the rebuild's double-counted buy charges · **prod only · outstanding**
 
@@ -157,7 +199,7 @@ files outside `taxplanning`, `taxengine`, `taxrules` (`taxengine.rules`' former 
   its correction, and the FY runner. Sections 1 – 3 cover all of them.
 - No such commit added an index. W-086's query by email and sell date uses the existing `trade_outcome_user_idx`.
 - No such commit changed a `taxplanning` entity or `data/tax-policies/`. Their last changes are the module's own
-  PRs (#58, #59), before this build, so nothing in 1.2 needs a correction.
+  PRs (#58, #59), before this build, so nothing in §2.0's files needs a correction.
 
 ---
 
@@ -168,5 +210,5 @@ files outside `taxplanning`, `taxengine`, `taxrules` (`taxengine.rules`' former 
 | 2026-10-20 | prod `Cluster0` | 2.1 count | owner | `rebuildRows` 163, `lots` 146, `lotsSoldMoreThanOnce` 12, `rowsOnThoseLots` 29, `chargedOnThoseLots` 68.99166666666666 |
 | 2026-10-20 | staging | 2.1 count | owner | no rebuild rows, so 2.1 not needed |
 
-**Not yet in this log:** the section 1 checks (1.2's counts and 1.3's 0) and the section 3 counts, for each
-database.
+**Not yet in this log:** §2.0 for each database (expected on staging and prod: all already present), 1.3's 0 and
+the section 3 counts, for each database.
