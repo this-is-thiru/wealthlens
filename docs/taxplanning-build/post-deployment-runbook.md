@@ -1,0 +1,172 @@
+# WealthLens tax planning — post-deployment runbook
+
+**What a database needs because of the tax-planning build, and how to check it, in deploy order.** It covers
+everything related to tax planning, past and future: `taxplanning` and `taxengine`, and **any other module touched
+because of them**, such as `portfolio` (W-085 – W-088u7) and `shared`. Each entry is keyed to the work item and
+decision that introduced it, and says:
+- when it runs, and who runs it;
+- the exact command, with a read-only check before and after;
+- whether a second run is safe, and the way back.
+
+The **run log** at the end records every run, per database.
+
+**The rule (R15, D-278, D-279, CLAUDE.md §6).** Any migration or setup that tax-planning work causes adds its
+entry here **in its own commit**, whichever module the change sits in, and its plan names it under
+"Post-deployment actions". This covers:
+- a seed or a data correction;
+- a startup runner whose outcome must be checked;
+- a flag to set;
+- a precheck before a constraint is applied.
+
+A session never runs any of it against a real database. It writes the command; the owner runs it and the result
+goes into the run log. Operations from work unrelated to tax planning (the charges engine's own, the trade
+ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-engine/production-runbook.md).
+
+**Databases** (from the profile yamls, host and database name only):
+
+| Profile | Host | Database |
+|---|---|---|
+| default, `staging` | `it-staging.6fu8nvy.mongodb.net` | `it-staging` |
+| `prod` | `cluster0.x6trgen.mongodb.net` | `Cluster0` |
+
+> **Open question.** The owner sees `Cluster0.trade_outcomes` for both staging and prod, while
+> `application-staging.yaml` names `it-staging`. Run each step in the database each deployed app actually writes to.
+
+`$BASE` is the app's base URL and `$ADMIN_TOKEN` a `SUPER_USER` JWT. `mongosh` steps run against the named database.
+
+---
+
+## 1. On every deploy — startup, automatic; confirm in the log
+
+| # | Item / decision | What happens at startup | Check | If it fails |
+|---|---|---|---|---|
+| 1.1 | **W-079a** (D-210), **W-088s** (D-268) | `TaxEngineConfig` compiles every year in `rulepacks/shipped-years.json` (**2025-26, 2026-27**) and verifies each against its lock (`rulepacks/<year>.lock.json`) | The app starts. There is no database step: the rule packs ship in the JAR | **The boot stops** with a lock mismatch. Nothing reaches a database. Deploy the previous build; never edit a lock in place |
+| 1.2 | Tax-policy seeding (`PolicySeederService`, before the W-items) | Seeds **TY 2025-26 only**, into `tax_slab_policies`, `perquisite_policies`, `allowance_catalogue` and `allowance_limits`, from `data/tax-policies/*.json`. **Each part only when no `ACTIVE` document exists for 2025-26** | Log `Tax policy seeding completed`, and **no** `Failed to seed`. The counts below | A failed part is **logged and skipped; the app still starts**. The checks below are the only signal |
+| 1.3 | **W-086a** (D-239) | `TradeOutcomeFinancialYearMigrationRunner` rewrites any `trade_outcomes` row with an `FY2025-26`-form year into `2025-2026`-form, from its sell date | `db.trade_outcomes.countDocuments({ financial_year: /^FY/ })` → **0** | It refuses an `FY` row with no sell date, naming its id; correct that row by hand |
+| 1.4 | **W-088u6** (D-276) | Nothing on a database that already has `trade_outcomes`. The rebuild runner only runs on an empty collection, and then allocates buy charges once | Log `already has data — skipping` | — |
+
+**Check for 1.2** (read-only; expected counts as shipped, which an edited database may exceed):
+
+```js
+db.tax_slab_policies.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })     // 2  (NEW_REGIME, OLD_REGIME)
+db.perquisite_policies.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })   // 1
+db.allowance_catalogue.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })   // 39
+db.allowance_limits.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })      // 14
+```
+
+**Know this about 1.2.** Because seeding is skipped when an `ACTIVE` document exists, **a changed file under
+`data/tax-policies/` never reaches a database that already holds 2025-26 policies.** Such a change needs its own
+entry in section 2, with the update spelled out. TY 2026-27's figures are not here: they live in the engine's rule
+packs (1.1).
+
+---
+
+## 2. Once per database, by hand — in this order
+
+### 2.1 W-088u7 (D-277) — correct the rebuild's double-counted buy charges · **prod only · outstanding**
+
+**Why.** The startup rebuild (`TransactionBasedTradeOutcomeMigration`) once charged a lot's buy charge again on
+each later sell (found in W-088u5, fixed in W-088u6). Those rows feed the capital-gains read-model (W-085 / W-086)
+and `AnalyticsService`.
+
+**Count already taken** (owner, 2026-10-20):
+- **prod:** 163 rebuild rows, 146 lots, **12 lots sold more than once, 29 rows on them** (so at most 17 inflated),
+  ₹68.99 charged on them;
+- **staging:** none, so nothing to do there.
+
+**Needs** a deploy carrying commit `725bf436` or later.
+
+1. **Count before** (read-only):
+
+   ```js
+   db.trade_outcomes.aggregate([
+     { $match: { source_buy_lot_id: /^lot-/ } },
+     { $group: {
+         _id: { e: "$email", b: "$broker_name", h: "$account_holder", l: "$source_buy_lot_id" },
+         rows: { $sum: 1 },
+         charged: { $sum: { $add: [ { $ifNull: ["$buy_broker_charges", 0] }, { $ifNull: ["$buy_misc_charges", 0] } ] } } } },
+     { $group: {
+         _id: null,
+         rebuildRows: { $sum: "$rows" },
+         lots: { $sum: 1 },
+         lotsSoldMoreThanOnce: { $sum: { $cond: [ { $gt: ["$rows", 1] }, 1, 0 ] } },
+         rowsOnThoseLots: { $sum: { $cond: [ { $gt: ["$rows", 1] }, "$rows", 0 ] } },
+         chargedOnThoseLots: { $sum: { $cond: [ { $gt: ["$rows", 1] }, "$charged", 0 ] } } } }
+   ])
+   ```
+
+2. **Back up** the rebuild rows (163 documents expected):
+
+   ```bash
+   mongoexport --uri "<prod uri>" --db Cluster0 --collection trade_outcomes \
+     --query '{"source_buy_lot_id":{"$regex":"^lot-"}}' --out trade_outcomes-rebuild-rows-backup.json
+   ```
+
+3. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/trade-outcomes/rebuild-charges/correct" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Expect `rowsExamined` ≤ 29 and `rowsCorrected` ≤ 17. Read every entry in `skipped`; a skipped user is left
+   untouched.
+4. **Write:** the same call with `?dryRun=false`.
+5. **Count after:**
+   - `chargedOnThoseLots` falls by exactly the dry run's `buyChargesBefore − buyChargesAfter`, and the other counts
+     are unchanged;
+   - a second `?dryRun=false` reports `rowsCorrected` 0.
+
+**Second run:** safe, it changes nothing. **Way back:** `mongoimport --mode upsert` of the step-2 file. Detail:
+`plans/W-088u7.md`.
+
+---
+
+## 3. Standing data conditions — read-only checks, no action defined
+
+These are states the build decided to **refuse or leave**, rather than repair. Run the check to know their size.
+Any repair would be a new work item with its own section-2 entry.
+
+| # | Item / decision | Condition | Read-only check |
+|---|---|---|---|
+| 3.1 | **W-086** (D-238 C2a) | `CapitalGainsSummaryService` **refuses** a user's summary if any of their disposals carries broker charges with no breakdown ("record those trades again"). The rebuild's rows never have one | Count below |
+| 3.2 | **W-088f** (D-249 C4a, "no backfill") | Rows written before W-088f have no `acquisition_mode`; they read as `UNRECORDED` (`Acquisition.stored` maps a missing mode to it) | `db.trade_outcomes.countDocuments({ acquisition_mode: { $exists: false } })` |
+
+```js
+// 3.1 — rows, and users, whose summary would be refused
+db.trade_outcomes.aggregate([
+  { $match: { $or: [
+      { buy_broker_charges: { $ne: 0 }, $or: [ { buy_charge_breakup: { $exists: false } }, { buy_charge_breakup: {} } ] },
+      { sell_broker_charges: { $ne: 0 }, $or: [ { sell_charge_breakup: { $exists: false } }, { sell_charge_breakup: {} } ] } ] } },
+  { $group: { _id: "$email", rows: { $sum: 1 } } },
+  { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
+])
+```
+
+---
+
+## 4. Items with no deploy action — and how the past was checked
+
+Every other tax-planning item changes only code or the rule data shipped in the JAR (`rulepacks/`): the rules,
+nodes, tax years, catalogue and coverage, W-001 – W-088u5. Those reach a database only through the startup checks
+in section 1. `tax_year_registry` has an entity and a repository, but no code reads or writes it, so it needs
+nothing.
+
+**The audit behind this list** (D-279, 2026-10-20). Every commit whose subject starts `taxplanning` was read for
+files outside `taxplanning`, `taxengine`, `taxrules` (`taxengine.rules`' former home) and `rulepacks`:
+- Each one is in `portfolio` or `shared`: the capital-gains read-model, the trade-outcome writers, the rebuild and
+  its correction, and the FY runner. Sections 1 – 3 cover all of them.
+- No such commit added an index. W-086's query by email and sell date uses the existing `trade_outcome_user_idx`.
+- No such commit changed a `taxplanning` entity or `data/tax-policies/`. Their last changes are the module's own
+  PRs (#58, #59), before this build, so nothing in 1.2 needs a correction.
+
+---
+
+## Run log — one line per run, per database
+
+| Date | Database | Step | Run by | Result |
+|---|---|---|---|---|
+| 2026-10-20 | prod `Cluster0` | 2.1 count | owner | `rebuildRows` 163, `lots` 146, `lotsSoldMoreThanOnce` 12, `rowsOnThoseLots` 29, `chargedOnThoseLots` 68.99166666666666 |
+| 2026-10-20 | staging | 2.1 count | owner | no rebuild rows, so 2.1 not needed |
+
+**Not yet in this log:** the section 1 checks (1.2's counts and 1.3's 0) and the section 3 counts, for each
+database.

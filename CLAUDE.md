@@ -59,9 +59,10 @@ override convenience. Where the build enforces one, the enforcing check is named
 
 ### 6. Operations — every one-time action is written down
 
-- **One list:** `docs/operations/post-deployment-runbook.md` holds, in order, everything a database needs because of
-  a change: prechecks before a deploy, startup runners to confirm, seed calls, data corrections, flags, and
-  recurring operations.
+- **Where:** everything caused by tax-planning work, past and future, in any module it touches (`taxplanning`,
+  `taxengine`, `portfolio`, `shared`, …), in `docs/taxplanning-build/post-deployment-runbook.md`; work unrelated to
+  tax planning in `docs/charges-engine/production-runbook.md`. Each holds, in order, what a database needs because of a change:
+  prechecks, startup runners to confirm, seed calls, data corrections, flags, recurring operations.
 - **Same commit:** a change that needs any of these adds its entry there in the same commit, or it is not done.
   Each entry gives when, who, the exact command, a read-only check before and after, whether a second run is safe,
   and the way back (backup first for any write to stored data).

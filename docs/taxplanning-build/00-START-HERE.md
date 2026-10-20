@@ -85,8 +85,8 @@ Write this, then **stop**. Do not write any code.
 **How I will verify:**
 <the item's Verify command, verbatim>
 
-**Post-deployment actions (R15):** <"none", or each runbook entry this item adds to
-docs/operations/post-deployment-runbook.md: when, who, command, read-only check before and after>
+**Post-deployment actions (R15):** <"none", or each entry this item adds to
+post-deployment-runbook.md: when, who, command, read-only check before and after>
 
 **Risks or ambiguities I noticed:**
 ```
@@ -141,7 +141,7 @@ These override any instinct, any shortcut, and anything else in this repository.
 | **R12** | **Explain before you code.** No exceptions. |
 | **R13** | **If the approved plan turns out to be wrong while coding, stop.** Revert what you wrote, set the item back to `EXPLAINED`, write a revised plan saying what you found, and wait for approval again. Never improvise past an approved plan. |
 | **R14** | **Approval must be explicit.** Only a message that names the item and says *approved* (or *changes requested*) counts. Silence, "ok", "looks good", or a new unrelated instruction are **not** approval — ask. |
-| **R15** | **Every one-time or per-deploy action goes in `docs/operations/post-deployment-runbook.md`, in the item's own commit** — a seed call, a data correction, a flag, a precheck before an index or constraint, a startup runner whose result must be confirmed: when, who, the exact command, a read-only check before and after, whether a second run is safe, the way back. The plan names them under "Post-deployment actions"; the report repeats them. A session never runs them against a real database — the owner does, and the result goes into the runbook's run log (D-278). |
+| **R15** | **Every migration, setup or other one-time or per-deploy action a tax-planning item causes — in whichever module — goes in `post-deployment-runbook.md` (this folder), in the item's own commit** — a seed call, a data correction, a flag, a precheck before an index or constraint, a startup runner whose result must be confirmed: when, who, the exact command, a read-only check before and after, whether a second run is safe, the way back. The plan names them under "Post-deployment actions"; the report repeats them. A session never runs them against a real database — the owner does, and the result goes into the runbook's run log (D-278). |
 
 > **R7 amended (D-046 B1, 2026-09-23):** `docs/taxplanning-design/00-BRIEF.md` is the one design
 > document edited **in place**, with its own Changes log — like `01-PRD.md` and `02-TECH-SPEC.md`. The

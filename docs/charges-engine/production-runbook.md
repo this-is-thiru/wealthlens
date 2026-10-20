@@ -1,8 +1,9 @@
 # Charges Engine — production runbook
 
-> **The master list of every post-deployment action, across all modules and in order, is
-> [`../operations/post-deployment-runbook.md`](../operations/post-deployment-runbook.md) (D-278).** This file keeps
-> the charges engine's detail; steps here appear there as A1–A4, C1–C3 and D1–D4.
+> **Every migration or setup caused by tax-planning work — in any module, `portfolio` included — is in
+> [`../taxplanning-build/post-deployment-runbook.md`](../taxplanning-build/post-deployment-runbook.md) (D-278, D-279).**
+> This file stays the place for work unrelated to tax planning: the charges engine's own and the trade ledger's
+> (CLAUDE.md §6).
 
 **Every step that has to be run by hand, in the order it has to be run.** Nothing here happens
 automatically, and nothing here is optional.
