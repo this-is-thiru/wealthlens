@@ -64,28 +64,10 @@ public final class RulePackCompiler {
             rules.add(rule);
             ruleChecksums.put(id, RulePackRef.checksumOf(MAPPER.writeValueAsString(rule)));
         }
-        ArrayNode regimes = MAPPER.createArrayNode();
-        for (RegimeCode code : sorted(timeline.regimes().keySet(), RegimeCode::value)) {
-            if (timeline.regimes().get(code).lifecycle().inForceWindow().overlapsTaxYear(taxYear)) {
-                regimes.add(RegimeElections.forTaxYear(MAPPER.readTree(timeline.regimeSources().get(code)), taxYear,
-                        "law/regimes/" + code.value() + ".json"));
-            }
-        }
-        ArrayNode disallowanceSets = MAPPER.createArrayNode();
-        for (DisallowanceSetId id : sorted(timeline.disallowanceSetSources().keySet(), DisallowanceSetId::value)) {
-            DisallowanceSetVersions.forTaxYear(MAPPER.readTree(timeline.disallowanceSetSources().get(id)), taxYear,
-                    "law/disallowances/" + id.value() + ".json").ifPresent(disallowanceSets::add);
-        }
-        ArrayNode components = MAPPER.createArrayNode();
-        for (ComponentCode code : sorted(timeline.components().keySet(), ComponentCode::value)) {
-            if (timeline.components().get(code).lifecycle().isLiveIn(taxYear)) {
-                components.add(canonical(projected(MAPPER.readTree(timeline.componentSources().get(code)),
-                        ruleChecksums.keySet())));
-            }
-        }
-        ArrayNode nodes = MAPPER.createArrayNode();
-        sorted(timeline.pipelineNodes().keySet(), NodeId::value)
-                .forEach(id -> nodes.add(MAPPER.readTree(timeline.pipelineNodes().get(id))));
+        ArrayNode regimes = regimes(timeline, taxYear);
+        ArrayNode disallowanceSets = disallowanceSets(timeline, taxYear);
+        ArrayNode components = components(timeline, taxYear, ruleChecksums.keySet());
+        ArrayNode nodes = nodes(timeline);
 
         Map<String, String> files = new HashMap<>();
         ObjectNode rates = object().set("rules", rules);
@@ -102,6 +84,47 @@ public final class RulePackCompiler {
         files.put("forms/itr-forms.json", render(object().set("forms", MAPPER.createArrayNode())));
         files.put("content/explanations.json", render(object().set("explanations", MAPPER.createArrayNode())));
         return new CompiledPack(taxYear, files, ruleChecksums);
+    }
+
+    /** The regimes in force at some time in the year, each with the election version for the year. */
+    private static ArrayNode regimes(Timeline timeline, TaxYearId taxYear) {
+        ArrayNode regimes = MAPPER.createArrayNode();
+        for (RegimeCode code : sorted(timeline.regimes().keySet(), RegimeCode::value)) {
+            if (timeline.regimes().get(code).lifecycle().inForceWindow().overlapsTaxYear(taxYear)) {
+                regimes.add(RegimeElections.forTaxYear(MAPPER.readTree(timeline.regimeSources().get(code)), taxYear,
+                        "law/regimes/" + code.value() + ".json"));
+            }
+        }
+        return regimes;
+    }
+
+    /** Each disallowance set's version for the year, where it has one. */
+    private static ArrayNode disallowanceSets(Timeline timeline, TaxYearId taxYear) {
+        ArrayNode disallowanceSets = MAPPER.createArrayNode();
+        for (DisallowanceSetId id : sorted(timeline.disallowanceSetSources().keySet(), DisallowanceSetId::value)) {
+            DisallowanceSetVersions.forTaxYear(MAPPER.readTree(timeline.disallowanceSetSources().get(id)), taxYear,
+                    "law/disallowances/" + id.value() + ".json").ifPresent(disallowanceSets::add);
+        }
+        return disallowanceSets;
+    }
+
+    /** The components live in the year, each projected onto the rules the year's pack holds. */
+    private static ArrayNode components(Timeline timeline, TaxYearId taxYear, Set<RuleId> rules) {
+        ArrayNode components = MAPPER.createArrayNode();
+        for (ComponentCode code : sorted(timeline.components().keySet(), ComponentCode::value)) {
+            if (timeline.components().get(code).lifecycle().isLiveIn(taxYear)) {
+                components.add(canonical(projected(MAPPER.readTree(timeline.componentSources().get(code)),
+                        rules)));
+            }
+        }
+        return components;
+    }
+
+    private static ArrayNode nodes(Timeline timeline) {
+        ArrayNode nodes = MAPPER.createArrayNode();
+        sorted(timeline.pipelineNodes().keySet(), NodeId::value)
+                .forEach(id -> nodes.add(MAPPER.readTree(timeline.pipelineNodes().get(id))));
+        return nodes;
     }
 
     private static void requireComponentReferencesOnTheTimeline(Timeline timeline) {

@@ -1,8 +1,9 @@
 # Lists methods longer than N lines (signature to closing brace) under the given source roots; nested types it
 # also catches are to be ignored by eye (W-088u, D-270). Use: python3 method_lengths.py 40 <root>...
 import re,sys,os
-# Counts each method's lines from its signature to the matching closing brace at the same indent.
-sig=re.compile(r'^( {4}| {8})(?:(?:public|private|protected|static|final|synchronized|abstract|default)\s+)*(?:<[^>]+>\s+)?[\w<>\[\], .?]+\s+(\w+)\s*\([^;]*$')
+# Counts each method's lines from its signature to the matching closing brace at the same indent. The indent is
+# exact, so a nested class's members are each measured; a one-line body ({}) is not a method to measure (W-088u4).
+sig=re.compile(r'^( {4}| {8})(?=\S)(?:(?:public|private|protected|static|final|synchronized|abstract|default)\s+)*(?:<[^>]+>\s+)?[\w<>\[\], .?]+\s+(\w+)\s*\([^;]*$')
 out=[]
 for root in sys.argv[2:]:
     for d,_,fs in os.walk(root):
@@ -15,7 +16,7 @@ for root in sys.argv[2:]:
                 if m and not L[i].strip().startswith(('return','new ','if','for','while','else','case','throw')):
                     ind=m.group(1); j=i
                     while j<len(L) and not L[j].rstrip().endswith('{'):
-                        if L[j].rstrip().endswith(';'): break
+                        if L[j].rstrip().endswith((';', '}')): break
                         j+=1
                     if j<len(L) and L[j].rstrip().endswith('{'):
                         k=j+1

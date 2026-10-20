@@ -199,6 +199,20 @@ class RetirementNodeTest {
                 .satisfies(line -> assertThat(line.limitedBy()).contains("payment received"));
     }
 
+    @Test
+    void evaluate_whenAnOtherEmployerCommutesWithoutGratuityBeyondHalf_deductsHalfTheCommutedValue() {
+        // When — least of 5,00,000 and 9,00,000 ÷ 2 = 4,50,000 (RET-COMMUTED-PENSION-OTHER, oneOverOtherwise 2)
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.COMMUTED_PENSION, "500000")),
+                List.of(RetirementPayment.otherEmployerCommutation(0, ComponentCodes.COMMUTED_PENSION,
+                        Money.of("900000"))));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("450000")));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.limitedBy()).contains("one-half of the pension's commuted value"));
+    }
+
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenInTheNewRegime_stillDeducts(int year) {

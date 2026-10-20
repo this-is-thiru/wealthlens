@@ -273,6 +273,47 @@ class TimelineReaderTest {
     }
 
     @Test
+    void read_whenARuleFileIsNamedForAnotherId_isRefused() throws IOException {
+        // Given — the slab rule's file renamed, its contents unchanged
+        Path root = realCopy();
+        Files.move(root.resolve(SLAB_FILE), root.resolve("law/rules/RATE-SLAB-OTHER.json"));
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("law/rules/RATE-SLAB-OTHER.json: holds RATE-SLAB-NEW-TAX-REGIME; a timeline file is"
+                        + " named for the one identity it holds");
+    }
+
+    @Test
+    void read_whenASectionFileIsNamedForAnotherKey_isRefused() throws IOException {
+        // Given
+        Path root = realCopy();
+        Files.move(root.resolve("content/sections/SEC-ANNUAL-VALUE.json"),
+                root.resolve("content/sections/SEC-OTHER-VALUE.json"));
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("content/sections/SEC-OTHER-VALUE.json: holds SEC-ANNUAL-VALUE; a timeline file is"
+                        + " named for the one identity it holds");
+    }
+
+    @Test
+    void read_whenAnActFileIsNamedForAnotherAct_isRefused() throws IOException {
+        // Given
+        Path root = realCopy();
+        Files.move(root.resolve("content/acts/INCOME_TAX_ACT_2025.json"),
+                root.resolve("content/acts/INCOME_TAX_ACT_2026.json"));
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("content/acts/INCOME_TAX_ACT_2026.json: holds INCOME_TAX_ACT_2025; a timeline file is"
+                        + " named for the one identity it holds");
+    }
+
+    @Test
     void read_whenAFileIsMalformed_isRefusedNamingIt() throws IOException {
         // Given
         Path root = realCopy();

@@ -74,12 +74,7 @@ final class LeaveTravelExemption {
             return List.of();
         }
         if (!ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION), version).applies()) {
-            List<TraceLine> nil = new ArrayList<>();
-            for (Journey journey : journeys) {
-                nil.add(line(ctx, firstSequence + nil.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO, version)
-                        .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION), version).whyNot()));
-            }
-            return nil;
+            return nilLines(ctx, journeys, firstSequence, version);
         }
         JourneysPerCalendarBlock blocks = blocks(ctx, t);
         Money remaining = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class),
@@ -109,6 +104,17 @@ final class LeaveTravelExemption {
         return lines;
     }
 
+    /** A nil line per journey, naming why the regime excludes the concession. */
+    private static List<TraceLine> nilLines(NodeContext ctx, List<Journey> journeys, int firstSequence,
+            RuleVersion version) {
+        List<TraceLine> nil = new ArrayList<>();
+        for (Journey journey : journeys) {
+            nil.add(line(ctx, firstSequence + nil.size(), MoneyValue.of(journey.amountIncurred()), Money.ZERO, version)
+                    .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_CONCESSION), version).whyNot()));
+        }
+        return nil;
+    }
+
     /** A journey's travel the concession covers, and a nil line for each child it leaves out. */
     private record Covered(Money amountIncurred, Optional<Money> fareAdmissible, List<TraceLine> leftOut) {
     }
@@ -127,21 +133,13 @@ final class LeaveTravelExemption {
         if (beyond.isEmpty()) {
             return new Covered(journey.amountIncurred(), journey.fareAdmissible(), List.of());
         }
-        if (journey.travellers().isEmpty()) {
-            throw new IllegalArgumentException("The family has children beyond the " + limit.children()
-                    + " surviving children the concession covers (family positions " + beyond + "); enter who"
-                    + " travelled on the journey of " + journey.startedOn() + ", with each person's amount and fare"
-                    + " (S4 r.278(5)–(6); Rules 1962 r.2B(4))");
-        }
+        requireTravellersEntered(limit, beyond, journey);
         Money spent = Money.ZERO;
         Money fares = Money.ZERO;
         List<TraceLine> leftOut = new ArrayList<>();
         for (JourneyTraveller traveller : journey.travellers()) {
             Optional<Integer> position = traveller.familyMember();
-            position.filter(member -> member >= family.size()).ifPresent(member -> {
-                throw new IllegalArgumentException("A traveller on the journey of " + journey.startedOn()
-                        + " is family position " + member + ", but the family has " + family.size() + " members");
-            });
+            requireInFamily(journey, traveller, family);
             if (position.filter(beyond::contains).isEmpty()) {
                 spent = spent.plus(traveller.amountIncurred());
                 fares = fares.plus(traveller.fareAdmissible().orElse(Money.ZERO));
@@ -159,6 +157,24 @@ final class LeaveTravelExemption {
         }
         Money admitted = fares;
         return new Covered(spent, journey.fareAdmissible().map(whole -> admitted), List.copyOf(leftOut));
+    }
+
+    /** With children beyond the limit, the journey must say who travelled, so the children's share can be left out. */
+    private static void requireTravellersEntered(SurvivingChildrenLimit limit, List<Integer> beyond, Journey journey) {
+        if (journey.travellers().isEmpty()) {
+            throw new IllegalArgumentException("The family has children beyond the " + limit.children()
+                    + " surviving children the concession covers (family positions " + beyond + "); enter who"
+                    + " travelled on the journey of " + journey.startedOn() + ", with each person's amount and fare"
+                    + " (S4 r.278(5)–(6); Rules 1962 r.2B(4))");
+        }
+    }
+
+    private static void requireInFamily(Journey journey, JourneyTraveller traveller,
+            List<FamilySnapshot.Member> family) {
+        traveller.familyMember().filter(member -> member >= family.size()).ifPresent(member -> {
+            throw new IllegalArgumentException("A traveller on the journey of " + journey.startedOn()
+                    + " is family position " + member + ", but the family has " + family.size() + " members");
+        });
     }
 
     /**

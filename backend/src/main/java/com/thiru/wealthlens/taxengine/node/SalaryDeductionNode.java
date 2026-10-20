@@ -141,17 +141,7 @@ public final class SalaryDeductionNode implements ComputationNode {
         if (verdict instanceof RegimeVerdict.ExcludedByRow) {
             return Optional.empty();
         }
-        ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
-        List<Employment> employments = ctx.inputs().entered().employments();
-        Map<Integer, Money> paidByGovernment = new TreeMap<>();
-        for (ComponentSet.Line line : components.in(HeadCode.SALARIES)) {
-            ComponentDefinition definition = ctx.pack().components().get(line.code());
-            boolean allowance = definition != null && definition.feedsInto().contains(ruleId);
-            if (allowance && employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT) {
-                paidByGovernment.merge(line.employment(), line.amount(), Money::plus);
-            }
-        }
-        paidByGovernment.values().removeIf(amount -> !amount.isGreaterThan(Money.ZERO));
+        Map<Integer, Money> paidByGovernment = paidByGovernment(ctx, ruleId);
         if (paidByGovernment.isEmpty()) {
             return Optional.empty();
         }
@@ -174,6 +164,22 @@ public final class SalaryDeductionNode implements ComputationNode {
                         MoneyValue.of(paidByGovernment.get(employment)), MoneyValue.of(deducted.value()),
                         version.provenance())
                 .withLimitedBy(deducted.limitedBy()));
+    }
+
+    /** The entertainment allowance each Government employment paid, by employment; none that paid nothing. */
+    private static Map<Integer, Money> paidByGovernment(NodeContext ctx, RuleId ruleId) {
+        ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
+        List<Employment> employments = ctx.inputs().entered().employments();
+        Map<Integer, Money> paidByGovernment = new TreeMap<>();
+        for (ComponentSet.Line line : components.in(HeadCode.SALARIES)) {
+            ComponentDefinition definition = ctx.pack().components().get(line.code());
+            boolean allowance = definition != null && definition.feedsInto().contains(ruleId);
+            if (allowance && employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT) {
+                paidByGovernment.merge(line.employment(), line.amount(), Money::plus);
+            }
+        }
+        paidByGovernment.values().removeIf(amount -> !amount.isGreaterThan(Money.ZERO));
+        return paidByGovernment;
     }
 
     /**

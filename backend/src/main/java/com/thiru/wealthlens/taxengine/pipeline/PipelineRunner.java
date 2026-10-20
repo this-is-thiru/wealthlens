@@ -119,13 +119,7 @@ public final class PipelineRunner {
             context.put(node.produces(), result.value());
             order.add(node.produces());
             values.put(node.produces(), result.value());
-            Map<Integer, Integer> globalByLocal = new HashMap<>();
-            for (TraceLine line : result.trace()) {
-                globalByLocal.put(line.sequence(), trace.size() + 1);
-                trace.add(renumbered(line, trace.size() + 1));
-            }
-            result.annotations().forEach(annotation -> annotations.add(
-                    new TraceAnnotation(globalByLocal.get(annotation.sequence()), annotation.notices())));
+            appendTrace(result, trace, annotations);
         }
 
         return new Result(
@@ -135,6 +129,17 @@ public final class PipelineRunner {
                 annotations,
                 InputsFingerprint.of(inputs),
                 computationLayersOf(pack));
+    }
+
+    /** A node's lines joined to the run's running sequence, each annotation moved with the line it is about. */
+    private static void appendTrace(NodeResult result, List<TraceLine> trace, List<TraceAnnotation> annotations) {
+        Map<Integer, Integer> globalByLocal = new HashMap<>();
+        for (TraceLine line : result.trace()) {
+            globalByLocal.put(line.sequence(), trace.size() + 1);
+            trace.add(renumbered(line, trace.size() + 1));
+        }
+        result.annotations().forEach(annotation -> annotations.add(
+                new TraceAnnotation(globalByLocal.get(annotation.sequence()), annotation.notices())));
     }
 
     /**

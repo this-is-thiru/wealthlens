@@ -121,54 +121,68 @@ public final class TimelineReader {
 
         void add(String directory, String path, String stem, JsonNode node, String content) {
             switch (directory) {
-                case RULES -> {
-                    RuleRow row = RuleJson.rule(node, path);
-                    requireNamedFor(path, stem, row.id().value());
-                    requireNoOverlap(path, row);
-                    rules.put(row.id(), row);
-                    ruleSources.put(row.id(), content);
-                }
-                case REGIMES -> {
-                    // Each election version is read once; the timeline keeps the last for code and lifecycle
-                    RegimeSpec regime = RegimeElections.everyVersion(node, path).stream()
-                            .map(version -> RegimeJson.regime(version, path))
-                            .reduce((earlier, later) -> later)
-                            .orElseThrow(() -> new PackValidationException(
-                                    path + ": a regime needs at least one election version"));
-                    requireNamedFor(path, stem, regime.code().value());
-                    regimes.put(regime.code(), regime);
-                    regimeSources.put(regime.code(), content);
-                }
-                case DISALLOWANCES -> {
-                    DisallowanceSetId id = PackJson.construct(path,
-                            () -> new DisallowanceSetId(PackJson.text(node, "id", path)));
-                    requireNamedFor(path, stem, id.value());
-                    DisallowanceSetVersions.everyVersion(node, path);
-                    disallowanceSetSources.put(id, content);
-                }
-                case PIPELINES -> {
-                    NodeId id = PackJson.construct(path, () -> new NodeId(PackJson.text(node, "nodeId", path)));
-                    requireNamedFor(path, stem, id.value());
-                    pipelineNodes.put(id, content);
-                }
-                case COMPONENTS -> {
-                    ComponentDefinition component = RegistryJson.component(node, path);
-                    requireNamedFor(path, stem, component.code().value());
-                    components.put(component.code(), component);
-                    componentSources.put(component.code(), content);
-                }
-                case SECTIONS -> {
-                    String key = PackJson.text(node, "key", path);
-                    requireNamedFor(path, stem, key);
-                    sections.put(key, content);
-                }
-                case ACTS -> {
-                    String act = PackJson.text(node, "act", path);
-                    requireNamedFor(path, stem, act);
-                    acts.put(act, content);
-                }
+                case RULES -> addRule(path, stem, node, content);
+                case REGIMES -> addRegime(path, stem, node, content);
+                case DISALLOWANCES -> addDisallowanceSet(path, stem, node, content);
+                case PIPELINES -> addPipelineNode(path, stem, node, content);
+                case COMPONENTS -> addComponent(path, stem, node, content);
+                case SECTIONS -> addSection(path, stem, node, content);
+                case ACTS -> addAct(path, stem, node, content);
                 default -> throw new IllegalStateException(directory + " is a known directory with no reader");
             }
+        }
+
+        private void addRule(String path, String stem, JsonNode node, String content) {
+            RuleRow row = RuleJson.rule(node, path);
+            requireNamedFor(path, stem, row.id().value());
+            requireNoOverlap(path, row);
+            rules.put(row.id(), row);
+            ruleSources.put(row.id(), content);
+        }
+
+        private void addRegime(String path, String stem, JsonNode node, String content) {
+            // Each election version is read once; the timeline keeps the last for code and lifecycle
+            RegimeSpec regime = RegimeElections.everyVersion(node, path).stream()
+                    .map(version -> RegimeJson.regime(version, path))
+                    .reduce((earlier, later) -> later)
+                    .orElseThrow(() -> new PackValidationException(
+                            path + ": a regime needs at least one election version"));
+            requireNamedFor(path, stem, regime.code().value());
+            regimes.put(regime.code(), regime);
+            regimeSources.put(regime.code(), content);
+        }
+
+        private void addDisallowanceSet(String path, String stem, JsonNode node, String content) {
+            DisallowanceSetId id = PackJson.construct(path,
+                    () -> new DisallowanceSetId(PackJson.text(node, "id", path)));
+            requireNamedFor(path, stem, id.value());
+            DisallowanceSetVersions.everyVersion(node, path);
+            disallowanceSetSources.put(id, content);
+        }
+
+        private void addPipelineNode(String path, String stem, JsonNode node, String content) {
+            NodeId id = PackJson.construct(path, () -> new NodeId(PackJson.text(node, "nodeId", path)));
+            requireNamedFor(path, stem, id.value());
+            pipelineNodes.put(id, content);
+        }
+
+        private void addComponent(String path, String stem, JsonNode node, String content) {
+            ComponentDefinition component = RegistryJson.component(node, path);
+            requireNamedFor(path, stem, component.code().value());
+            components.put(component.code(), component);
+            componentSources.put(component.code(), content);
+        }
+
+        private void addSection(String path, String stem, JsonNode node, String content) {
+            String key = PackJson.text(node, "key", path);
+            requireNamedFor(path, stem, key);
+            sections.put(key, content);
+        }
+
+        private void addAct(String path, String stem, JsonNode node, String content) {
+            String act = PackJson.text(node, "act", path);
+            requireNamedFor(path, stem, act);
+            acts.put(act, content);
         }
 
         Timeline timeline() {
