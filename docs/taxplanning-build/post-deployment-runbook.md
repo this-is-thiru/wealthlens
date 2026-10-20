@@ -46,12 +46,16 @@ ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-eng
 |---|---|---|---|---|
 | 1.1 | **W-079a** (D-210), **W-088s** (D-268) | `TaxEngineConfig` compiles every year in `rulepacks/shipped-years.json` (**2025-26, 2026-27**) and verifies each against its lock (`rulepacks/<year>.lock.json`) | The app starts. There is no database step: the rule packs ship in the JAR | **The boot stops** with a lock mismatch. Nothing reaches a database. Deploy the previous build; never edit a lock in place |
 | 1.2 | **W-088u8a** (D-281, D-282) | **Nothing.** Tax policies are no longer seeded at boot: see §2.0 | — | — |
-| 1.3 | **W-086a** (D-239) | `TradeOutcomeFinancialYearMigrationRunner` rewrites any `trade_outcomes` row with an `FY2025-26`-form year into `2025-2026`-form, from its sell date | `db.trade_outcomes.countDocuments({ financial_year: /^FY/ })` → **0** | It refuses an `FY` row with no sell date, naming its id; correct that row by hand |
+| 1.3 | **W-088u8c** (D-285) | **Nothing.** The W-086a financial-year rewrite no longer runs at boot: see §2.3. No `CommandLineRunner` remains | — | — |
 | 1.4 | **W-088u8b** (D-284) | **Nothing.** `trade_outcomes` is no longer rebuilt at boot when empty: see §2.2 | — | — |
 
 ---
 
 ## 2. Once per database, by hand — in this order
+
+> **Deploy prod only from a build at or after W-088u8c** (D-285). Prod's build predates W-086a, and its 163
+> `FY`-form rows are rewritten by §2.3, by hand. A build from before W-088u8c still has the boot runner, which would
+> rewrite them unattended.
 
 ### 2.0 W-088u8a (D-281, D-282) — seed the TY 2025-26 tax policies · `SUPER_USER` · **required on a fresh database**
 
@@ -195,6 +199,36 @@ collection.
 
 **Way back:** delete the rows this run wrote (`audit_metadata.createdBy` = the caller, `createdAt` = the run).
 
+### 2.3 W-088u8c (D-285) — rewrite the `FY`-form financial years · `SUPER_USER` · **prod only · once · outstanding**
+
+**Why.** W-086a (D-239) moved `trade_outcomes` to one financial-year form, `2025-2026`. Its startup rewrite never ran
+on prod: the owner's check (2026-10-20) found **163** `FY2025-26`-form rows there, the rebuild's rows, and none on
+staging. Nothing queries `trade_outcomes` by financial year (D-239; the capital-gains summary selects by sell date),
+so the old form misleads only whoever reads the field. This makes the stored year consistent.
+
+1. **Count before** (read-only): `db.trade_outcomes.countDocuments({ financial_year: /^FY/ })`. Expect 163.
+2. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/trade-outcomes/financial-years/rewrite" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Expect `rows` 163. A row with no sell date is refused by id here, before any write; correct it by hand first.
+3. **Back up** the rows:
+
+   ```bash
+   mongoexport --uri "<prod uri>" --db Cluster0 --collection trade_outcomes \
+     --query '{"financial_year":{"$regex":"^FY"}}' --out trade_outcomes-fy-rows-backup.json
+   ```
+
+4. **Write:** the same call with `?dryRun=false`. Each row's year comes from its own sell date, and
+   `audit_metadata.updatedBy` is set to the caller.
+5. **Verify:** the count from step 1 is 0, and a second call reports `rows` 0.
+
+**Second run:** safe; nothing is left to rewrite. **Way back:** `mongoimport --mode upsert` of the step-3 file.
+
+**Removed after use:** W-088u9d, YouTrack WL-32, once this is logged for prod.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
@@ -243,6 +277,8 @@ files outside `taxplanning`, `taxengine`, `taxrules` (`taxengine.rules`' former 
 |---|---|---|---|---|
 | 2026-10-20 | prod `Cluster0` | 2.1 count | owner | `rebuildRows` 163, `lots` 146, `lotsSoldMoreThanOnce` 12, `rowsOnThoseLots` 29, `chargedOnThoseLots` 68.99166666666666 |
 | 2026-10-20 | staging | 2.1 count | owner | no rebuild rows, so 2.1 not needed |
+| 2026-10-20 | staging | W-088u8c checks | owner | `FY` rows 0; `temporary_transactions` absent |
+| 2026-10-20 | prod `Cluster0` | W-088u8c checks | owner | `FY` rows **163** (W-086a's rewrite never ran here: prod predates `91359d35`); `temporary_transactions` absent |
 
 **Not yet in this log:** §2.0 for each database (expected on staging and prod: all already present), 1.3's 0 and
 the section 3 counts, for each database.

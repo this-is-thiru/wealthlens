@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088u8c — retire the FY and temporary-transaction runners; the runbook's final rewrite (W-088u8 split, D-281)
-Stage           : BLOCKED — waits on the owner's two read-only checks from both databases
-Plan            : plans/W-088u8.md (split); plans/W-088u8c.md not yet written
+Item            : W-088u9a / u9b / u9d — remove the one-time operations — BLOCKED on the owner's logged runs; next unblocked: W-088v
+Stage           : BLOCKED (u9a: runbook §2.1 prod; u9b: §2.0 on every database; u9d: §2.3 prod)
+Plan            : — (each written when its run is logged)
 Approved        : —
 Steps done      : —
-Next step       : when the owner pastes both checks (FY rows count; temporary_transactions present?) for staging and prod: record them, write plans/W-088u8c.md (delete runner(s) with nothing left; else a one-time SUPER_USER run first + WL child), STOP. Until then nothing in order can start (R4); W-088u9a/b wait on logged runs
-Last verify     : unit clean -Punit 3103 run, 0 fail; integration 266/0 (2026-10-20, W-088u8b)
-Waiting on      : the owner — the two read-only checks; the W-088u7 prod run (§2.1); after deploy, §2.0's dry run; OQ-32, OQ-33 open
+Next step       : the owner either logs a run (then "start W-088u9a/b/d") or says "start W-088v" (Checkstyle limits; plans/W-088v.md not yet written). Do not pick W-088v without that word (R6)
+Last verify     : unit clean -Punit 3103 run, 0 fail; integration 269/0 (2026-10-20, W-088u8c)
+Waiting on      : the owner — deploy prod from this build or later; runbook §2.0 dry runs (staging, prod), §2.1 and §2.3 on prod, each logged; then the matching removal; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088u8b: rebuild trade_outcomes only when a SUPER_USER asks — dry run first, idempotent per user, the caller recorded; kept as a standing operation, W-088u9c closed (D-284)
-Updated         : 2026-10-20, session 25 — W-088u8b done; W-088u8c blocked on the owner
+Last item commit: taxplanning W-088u8c: retire the last two startup runners — the temporary-transaction move deleted, the W-086a FY rewrite a SUPER_USER operation for prod's 163 rows; W-088u9d placed (D-285)
+Updated         : 2026-10-20, session 25 — W-088u8 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
