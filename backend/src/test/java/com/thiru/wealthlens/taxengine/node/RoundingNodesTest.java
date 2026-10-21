@@ -169,13 +169,13 @@ class RoundingNodesTest {
     // -- what the nodes accept -------------------------------------------------------------------
 
     @Test
-    void evaluate_whenTheRowRoundsToAnythingButTen_isRefused() {
-        // Given — the Acts state one method, s.516's; a pack asking for another is not guessed at
+    void evaluate_whenTheRowRoundsToAHundredFromFifty_roundsAsTheRowStates() {
+        // Given — the step and round-up point are the row's (D-316; D-076's refusal of any other step reversed)
         RulePack pack = pack();
         RuleRow row = pack.rule(RuleIds.RATE_ROUND_TOTAL_INCOME);
         RuleVersion v = row.versions().getFirst();
         RuleVersion toHundred = new RuleVersion(v.validity(), v.regimes(), v.cap(), v.relief(),
-                Optional.of(new RuleRounding(Money.of("100"))), v.definition(), v.conditions(), v.provision1961(),
+                Optional.of(new RuleRounding(Money.of("100"), Money.of("50"))), v.definition(), v.conditions(), v.provision1961(),
                 v.provision2025(), v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance());
         Map<RuleId, RuleRow> rules = new HashMap<>(pack.rules());
         rules.put(row.id(), new RuleRow(row.id(), row.axis(), List.of(toHundred),
@@ -183,11 +183,11 @@ class RoundingNodesTest {
         RulePack hundred = new RulePack(pack.taxYear(), pack.layers(), pack.instruments(), rules, pack.ruleSets(),
                 pack.components(), pack.regimes(), pack.disallowanceSets(), pack.conditionSets());
 
-        // When / Then
-        assertThatThrownBy(() -> run(hundred, new RoundTotalIncomeNode(), NodeIds.TOTALINCOME, "1200000"))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining(RuleIds.RATE_ROUND_TOTAL_INCOME.value())
-                .hasMessageContaining("100");
+        // When — 12,34,567 leaves 67 over a multiple of 100, at or above 50
+        NodeResult result = run(hundred, new RoundTotalIncomeNode(), NodeIds.TOTALINCOME, "1234567");
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1234600")));
     }
 
     @Test

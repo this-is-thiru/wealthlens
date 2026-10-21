@@ -388,7 +388,7 @@ class RuleJsonDefinitionTest {
     void version_whenRoundingAndDefinition_isRefusedNamingThePath() {
         // Given
         String both = """
-                "rounding": { "toNearest": "10" },
+                "rounding": { "toNearest": "10", "roundsUpFrom": "5" },
                 """ + SALARIES_TOTAL;
 
         // When / Then

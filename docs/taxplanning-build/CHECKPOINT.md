@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-151 — s.516 rounding as rule data (D-313; audit P1)
+Item            : W-152 — the averaging period as rule data (D-313; audit P2)
 Stage           : READY — not started
-Plan            : written when taken (plans/W-151.md)
+Plan            : written when taken (plans/W-152.md)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-151": read its WI row, the audit file § W-088l1 P1, node/RoundingStep, rules/money/Money.roundToNearestTenPerSection516, rules/rounding/RuleRounding, the rounding rows (ROUND-*) and their notes; write plans/W-151.md, STOP
-Last verify     : targeted 443/0; unit -Punit 3242/0; integration 281/0 (2026-10-21, W-088o2)
-Waiting on      : the owner — "start W-151"; OQ-32, OQ-33 open
+Next step       : on "start W-152": read its WI row, the audit file § W-088l1 P2, input/Separation.java:23, node/NotifiedRetirementLimits.java:44 and their readers, the retirement rows (RS-RET-*) and their notes, and sources/ for the 10-month average (the law is not identified yet — source it or BLOCK); write plans/W-152.md, STOP
+Last verify     : targeted 171/0; unit -Punit 3249/0; integration 281/0 (2026-10-21, W-151)
+Waiting on      : the owner — "start W-152"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088l3: audit portfolio, corporate, brokercharges, shared and the rest for law in code — eight findings placed as W-160 – W-167, CLAUDE.md §4 names the audit file; W-088l closed (D-315)
-Updated         : 2026-10-21, session 28 — W-088l3 committed, W-088l closed
+Last item commit: taxplanning W-151: state s.516 rounding as rule data — the rows give the multiple and the round-up point and the rounding step applies them, so the ₹10 pin in Java goes (D-076's refusal reversed, D-316)
+Updated         : 2026-10-21, session 28 — W-151 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

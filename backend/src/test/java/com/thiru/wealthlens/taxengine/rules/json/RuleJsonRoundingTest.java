@@ -39,7 +39,7 @@ class RuleJsonRoundingTest {
               "accessedOn": "2026-09-25", "verificationLevel": "SOURCE_CHECKED" }""";
 
     private static final String TO_TEN = """
-            "rounding": { "toNearest": "10" }""";
+            "rounding": { "toNearest": "10", "roundsUpFrom": "5" }""";
 
     private static RuleVersion versionWith(String extra) {
         return RuleJson.version(PackJsonTest.json("{ " + extra + ", " + REST + " }"), PATH);
@@ -51,7 +51,7 @@ class RuleJsonRoundingTest {
         RuleVersion version = versionWith(TO_TEN);
 
         // Then
-        assertThat(version.rounding()).contains(new RuleRounding(Money.of("10")));
+        assertThat(version.rounding()).contains(new RuleRounding(Money.of("10"), Money.of("5")));
         assertThat(version.cap()).isEmpty();
         assertThat(version.relief()).isEmpty();
     }
@@ -117,9 +117,9 @@ class RuleJsonRoundingTest {
     @ParameterizedTest
     @ValueSource(strings = {"0", "-10", "10.50"})
     void version_whenToNearestIsNotAPositiveWholeRupeeAmount_isRefused(String step) {
-        // When / Then
+        // When / Then — a valid round-up point, so the step alone is wrong
         assertThatThrownBy(() -> versionWith("""
-                        "rounding": { "toNearest": "%s" }""".formatted(step)))
+                        "rounding": { "toNearest": "%s", "roundsUpFrom": "5" }""".formatted(step)))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageStartingWith(PATH)
                 .hasMessageContaining("positive whole number of rupees");
@@ -132,5 +132,25 @@ class RuleJsonRoundingTest {
                         "conditions": []"""))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("has no cap, relief, rounding, definition or conditions");
+    }
+
+    @ParameterizedTest(name = "roundsUpFrom {0}")
+    @ValueSource(strings = {"0", "11", "4.50"})
+    void version_whenTheRoundUpPointIsNotAWholeRupeeWithinTheStep_isRefusedNamingThePath(String upFrom) {
+        // When / Then — nil, above the ₹10 step, or with paise (D-316)
+        assertThatThrownBy(() -> versionWith("""
+                        "rounding": { "toNearest": "10", "roundsUpFrom": "%s" }""".formatted(upFrom)))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageStartingWith(PATH)
+                .hasMessageContaining("round-up point");
+    }
+
+    @Test
+    void version_whenTheRoundUpPointIsMissing_isRefusedNamingTheField() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                        "rounding": { "toNearest": "10" }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("roundsUpFrom");
     }
 }

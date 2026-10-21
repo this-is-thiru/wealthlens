@@ -152,23 +152,23 @@ public record Money(BigDecimal amountInRupees) implements Comparable<Money> {
     }
 
     /**
-     * Rounds to the nearest ten rupees, as section 516 of the Income-tax Act 2025 requires of a
-     * total income and of an amount payable or refundable.
+     * Rounds to a multiple of {@code step}: paise ignored, then up to the next multiple if what is left over is
+     * {@code upFrom} or more, down otherwise — s.516's method when the step is ₹10 and the round-up point ₹5, which
+     * the rounding row states (D-316). So with those, 1,234.99 rounds to 1,230, not to 1,240.
      *
-     * <p>The section is drafted in two steps and the order matters: <i>ignore any part of a rupee
-     * consisting of paise</i>, and only then round the whole rupees &mdash; up if the last figure is
-     * five or more, down if less. So 1,234.99 rounds to 1,230, not to 1,240.
+     * <p>Applied to the magnitude with the sign restored. The section is written for a positive amount, and "increased
+     * to the next higher" is ambiguous for a refund; rule ROUND-NEG-001 is recorded as STATUS UNCLEAR and this is the
+     * reading it states.
      *
-     * <p>Applied to the magnitude with the sign restored. The section is written for a positive
-     * amount, and "increased to the next higher" is ambiguous for a refund; rule ROUND-NEG-001 is
-     * recorded as STATUS UNCLEAR and this is the reading it states.
+     * @param step a positive whole number of rupees
+     * @param upFrom a positive whole number of rupees, at most {@code step}
      */
-    public Money roundToNearestTenPerSection516() {
+    public Money roundToMultiple(Money step, Money upFrom) {
         BigDecimal wholeRupees = amountInRupees.abs().setScale(0, RoundingMode.DOWN);
-        BigDecimal lastFigure = wholeRupees.remainder(BigDecimal.TEN);
-        BigDecimal rounded = lastFigure.compareTo(BigDecimal.valueOf(5)) >= 0
-                ? wholeRupees.subtract(lastFigure).add(BigDecimal.TEN)
-                : wholeRupees.subtract(lastFigure);
+        BigDecimal leftOver = wholeRupees.remainder(step.amountInRupees);
+        BigDecimal rounded = leftOver.compareTo(upFrom.amountInRupees) >= 0
+                ? wholeRupees.subtract(leftOver).add(step.amountInRupees)
+                : wholeRupees.subtract(leftOver);
         return new Money(amountInRupees.signum() < 0 ? rounded.negate() : rounded);
     }
 

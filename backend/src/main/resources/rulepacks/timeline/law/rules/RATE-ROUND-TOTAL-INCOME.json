@@ -1,7 +1,7 @@
 {
   "ruleId": "RATE-ROUND-TOTAL-INCOME",
   "ruleSet": "RS-RATE-ROUND-TOTAL-INCOME",
-  "_note": "S2 s.516: \"The amount of total income computed or any amount payable or refundable under this Act, shall be rounded off to the nearest multiple of ₹10 ignoring any part of a rupee consisting of paise and thereafter if such amount is not a multiple of ten, then— (a) such amount shall be increased to the next higher amount which is a multiple of ten, if the last figure in that amount is five or more; or (b) such amount shall be reduced to the next lower amount which is a multiple of ten, if the last figure is less than five\". Not amended by FA 2026. Applied by Money.roundToNearestTenPerSection516; the node refuses any other step (D-076). This row: the total income (1961 counterpart s.288A, unamended to FA 2026, SOURCE_CHECKED for TY 2025-26 — W-050, D-076). TY 2025-26 (W-052c, D-082): 1961 s.288A — the same method as s.516. introducedBy names the 1961 Act (assent and commencement read, p.30 and s.1(3)); the section's insertion and substitution are in its citation from the footnotes, whose Acts' own dates were not read. Unamended from F(No.2)A 2019 to FA 2026 (W-045o2 chain).",
+  "_note": "S2 s.516: \"The amount of total income computed or any amount payable or refundable under this Act, shall be rounded off to the nearest multiple of ₹10 ignoring any part of a rupee consisting of paise and thereafter if such amount is not a multiple of ten, then— (a) such amount shall be increased to the next higher amount which is a multiple of ten, if the last figure in that amount is five or more; or (b) such amount shall be reduced to the next lower amount which is a multiple of ten, if the last figure is less than five\". Not amended by FA 2026. The row states both elements: toNearest 10 (the multiple) and roundsUpFrom 5 (\"the last figure … is five or more\"); paise are ignored first, which with a whole-rupee roundsUpFrom changes no result (D-316). This row: the total income (1961 counterpart s.288A, unamended to FA 2026, SOURCE_CHECKED for TY 2025-26 — W-050, D-076). TY 2025-26 (W-052c, D-082): 1961 s.288A — the same method as s.516. introducedBy names the 1961 Act (assent and commencement read, p.30 and s.1(3)); the section's insertion and substitution are in its citation from the footnotes, whose Acts' own dates were not read. Unamended from F(No.2)A 2019 to FA 2026 (W-045o2 chain).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -25,7 +25,8 @@
         "presence": "PRESENT"
       },
       "rounding": {
-        "toNearest": "10"
+        "toNearest": "10",
+        "roundsUpFrom": "5"
       },
       "conditions": [],
       "introducedBy": {
@@ -65,7 +66,8 @@
         "presence": "PRESENT"
       },
       "rounding": {
-        "toNearest": "10"
+        "toNearest": "10",
+        "roundsUpFrom": "5"
       },
       "conditions": [],
       "introducedBy": {

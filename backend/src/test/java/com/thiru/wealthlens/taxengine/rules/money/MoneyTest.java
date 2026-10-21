@@ -138,26 +138,31 @@ class MoneyTest {
     @DisplayName("section 516 rounding")
     class Section516Rounding {
 
+        /** s.516's multiple and round-up point, as the rounding rows state them (D-316). */
+        private static final Money TEN = Money.of("10");
+
+        private static final Money FIVE = Money.of("5");
+
         @Test
         void roundToNearestTen_whenLastFigureIsBelowFive_roundsDown() {
             // RATE-ROUND-002: last figure 4, so reduced to the next lower multiple of ten.
-            assertThat(Money.of("1234").roundToNearestTenPerSection516()).isEqualTo(Money.of("1230"));
+            assertThat(Money.of("1234").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("1230"));
         }
 
         @Test
         void roundToNearestTen_whenLastFigureIsExactlyFive_roundsUp() {
             // RATE-ROUND-002: "five or more" is increased, so 5 goes up, not to the even neighbour.
-            assertThat(Money.of("1235").roundToNearestTenPerSection516()).isEqualTo(Money.of("1240"));
+            assertThat(Money.of("1235").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("1240"));
         }
 
         @Test
         void roundToNearestTen_whenLastFigureIsNine_roundsUp() {
-            assertThat(Money.of("1239").roundToNearestTenPerSection516()).isEqualTo(Money.of("1240"));
+            assertThat(Money.of("1239").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("1240"));
         }
 
         @Test
         void roundToNearestTen_whenAlreadyAMultipleOfTen_isUnchanged() {
-            assertThat(Money.of("1230").roundToNearestTenPerSection516()).isEqualTo(Money.of("1230"));
+            assertThat(Money.of("1230").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("1230"));
         }
 
         /**
@@ -169,12 +174,12 @@ class MoneyTest {
          */
         @Test
         void roundToNearestTen_whenPaiseWouldCarry_discardsThemFirst() {
-            assertThat(Money.of("1234.99").roundToNearestTenPerSection516()).isEqualTo(Money.of("1230"));
+            assertThat(Money.of("1234.99").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("1230"));
         }
 
         @Test
         void roundToNearestTen_whenZero_isZero() {
-            assertThat(Money.ZERO.roundToNearestTenPerSection516()).isEqualTo(Money.ZERO);
+            assertThat(Money.ZERO.roundToMultiple(TEN, FIVE)).isEqualTo(Money.ZERO);
         }
 
         /**
@@ -186,9 +191,34 @@ class MoneyTest {
          */
         @Test
         void roundToNearestTen_whenNegative_roundsTheMagnitudeAndRestoresTheSign() {
-            assertThat(Money.of("-1234").roundToNearestTenPerSection516()).isEqualTo(Money.of("-1230"));
-            assertThat(Money.of("-1235").roundToNearestTenPerSection516()).isEqualTo(Money.of("-1240"));
-            assertThat(Money.of("-1234.99").roundToNearestTenPerSection516()).isEqualTo(Money.of("-1230"));
+            assertThat(Money.of("-1234").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("-1230"));
+            assertThat(Money.of("-1235").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("-1240"));
+            assertThat(Money.of("-1234.99").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("-1230"));
+        }
+
+        @Test
+        void roundToMultiple_whenPaiseFollowAWholeRupeeAtOrAboveTheRoundUpPoint_roundsUp() {
+            // 1,235.40 → 1,235, last figure 5; 1,239.99 → 1,239, last figure 9
+            assertThat(Money.of("1235.40").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("1240"));
+            assertThat(Money.of("1239.99").roundToMultiple(TEN, FIVE)).isEqualTo(Money.of("1240"));
+        }
+
+        @Test
+        void roundToMultiple_whenTheRowStatesAHundredFromFifty_roundsToTheNearestHundred() {
+            // 1,249 leaves 49 → down; 1,250 leaves 50 → up; 1,299.99 → 1,299 leaves 99 → up (D-316)
+            Money hundred = Money.of("100");
+            Money fifty = Money.of("50");
+            assertThat(Money.of("1249").roundToMultiple(hundred, fifty)).isEqualTo(Money.of("1200"));
+            assertThat(Money.of("1250").roundToMultiple(hundred, fifty)).isEqualTo(Money.of("1300"));
+            assertThat(Money.of("1299.99").roundToMultiple(hundred, fifty)).isEqualTo(Money.of("1300"));
+        }
+
+        @Test
+        void roundToMultiple_whenTheRoundUpPointIsNotHalf_usesThePointTheRowStates() {
+            // ₹10 from ₹7: 1,236 leaves 6 → down; 1,237 leaves 7 → up
+            Money seven = Money.of("7");
+            assertThat(Money.of("1236").roundToMultiple(TEN, seven)).isEqualTo(Money.of("1230"));
+            assertThat(Money.of("1237").roundToMultiple(TEN, seven)).isEqualTo(Money.of("1240"));
         }
     }
 

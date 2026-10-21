@@ -212,12 +212,13 @@ public final class ShapeJson {
     // ---------------------------------------------------------------- RuleRounding
 
     /**
-     * The step an amount is rounded to. Untagged: rounding is one kind, not a family, so a
-     * {@code type} would be a choice with a single option (D-078).
+     * The step an amount is rounded to and the remainder from which it rounds up (D-316). Untagged: rounding is one
+     * kind, not a family, so a {@code type} would be a choice with a single option (D-078).
      */
     public static RuleRounding rounding(JsonNode node, String path) {
         Money toNearest = PackJson.money(node, "toNearest", path);
-        return PackJson.construct(path, () -> new RuleRounding(toNearest));
+        Money roundsUpFrom = PackJson.money(node, "roundsUpFrom", path);
+        return PackJson.construct(path, () -> new RuleRounding(toNearest, roundsUpFrom));
     }
 
     // ---------------------------------------------------------------- money

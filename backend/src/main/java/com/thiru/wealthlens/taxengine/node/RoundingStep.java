@@ -18,12 +18,9 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
  * in one line (D-076). Shared by {@link RoundTotalIncomeNode} and {@link RoundNetPayableNode}, which
  * differ only in what they read and which row they cite.
  *
- * <p>The row states the step; the only method implemented is s.516's ₹10, so any other step is refused
- * rather than rounded to ten under a row that says otherwise.
+ * <p>The row states the step and the round-up point (D-316); this applies whichever it states.
  */
 record RoundingStep(NodeId produces, NodeId reads, RuleSetId ruleSet) {
-
-    private static final Money SECTION_516_STEP = Money.TEN;
 
     NodeResult apply(NodeContext ctx) {
         Money amount = ctx.get(reads, MoneyValue.class).amount();
@@ -32,11 +29,7 @@ record RoundingStep(NodeId produces, NodeId reads, RuleSetId ruleSet) {
         RuleVersion version = row.versionAt(ctx.inputs().temporal());
         RuleRounding rounding = version.rounding().orElseThrow(() -> new IllegalStateException(
                 "Rounding rule " + rule + " states no rounding"));
-        if (!rounding.toNearest().equals(SECTION_516_STEP)) {
-            throw new IllegalStateException("Rounding rule " + rule + " rounds to " + rounding.toNearest()
-                    + "; only s.516's step of " + SECTION_516_STEP + " is implemented");
-        }
-        MoneyValue rounded = MoneyValue.of(amount.roundToNearestTenPerSection516());
+        MoneyValue rounded = MoneyValue.of(amount.roundToMultiple(rounding.toNearest(), rounding.roundsUpFrom()));
         return NodeResult.of(rounded, TraceLine.of(
                 1, produces, rule, StepKind.ROUNDING, MoneyValue.of(amount), rounded, version.provenance()));
     }
