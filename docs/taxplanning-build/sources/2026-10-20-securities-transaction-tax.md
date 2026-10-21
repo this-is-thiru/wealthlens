@@ -63,3 +63,22 @@ Those rest on the pre-2019 text (row 1): REPORTED (1a, 1b, alike) and corroborat
 - Both tax years have the same conditions: Sl. 1–3 and s.100 are unamended from 2013 to 2026 (rows 2–7), and S2
   s.196(1)(b) still cites Chapter VII.
 - No rate is needed.
+
+## The commencement of Chapter VII (W-088j2f, 2026-10-21; owner ruling D-301)
+
+Asked of ChatGPT share `t_6ad8bac467548191a21a5b31a1b07182` (decoded 2026-10-21). Every link it cited was fetched
+here. incometaxindia.gov.in (`/w/section-96-56`, `/w/section-1-76`, Circular 5/2004) answered 403; India Code and
+bombayhighcourt.nic.in timed out; archive.org holds only weekly (`W_…`) Gazette issues for those weeks, not the
+Extraordinary of 28-9-2004.
+
+| # | Source | Status | What it says |
+|---|---|---|---|
+| 9a | Lok Sabha Debates, 14th Lok Sabha, Session III, 10-12-2004, "Papers laid on the Table" — Sansad eLibrary item `70a71317-9839-4e0b-b022-a13df4fff54b` (handle 123456789/426044), file `964.pdf` p.12 (a re-typeset page image of the record, ReportLab, 2024-01-18) | **READ** (the official parliamentary record, not the Gazette) | P. Chidambaram's papers, item (18): *"A copy of the Notification No. S.O. 1058 (E)(Hindi and English versions) published in Gazette of India dated the 28th September, 2004 together with an explanatory memorandum appointing the 1st October, 2004 as the date on which the Chapter VII of the Finance (No. 2) Act, 2004 shall come into force, issued under sub-section (2) of section 96 of the said Act. (Placed in Library. See No. LT − 1054/04)"*. Item (19): the STT Rules, S.O. 1059(E), same date, LT − 1055/04 |
+| 9b | S.O. 1058(E), 28-9-2004 (Notification No. 247 of 2004, F.No. 142/23/2004-TPL) — taxguru.in transcription | REPORTED | *"In exercise of the power conferred by sub-section (2) of section 96 of the Finance (No.2) Act, 2004 (23 of 2004), the Central Government hereby appoints the 1st October, 2004 as the date on which Chapter VII of the said Act shall come into force."* Agrees with 9a |
+| 9c | Finance (No. 2) Act, 2004 s.96(2), (3) — the share, relaying the Department's section page (403 here) | REPORTED | *"(2) It shall come into force on such date as the Central Government may, by notification in the Official Gazette, appoint. (3) It shall apply to taxable securities transactions entered into on or after the commencement of this Chapter."* 9a names s.96(2) as the power used |
+| 9d | Securities Transaction Tax Rules, 2004, S.O. 1059(E), 28-9-2004 — Sansad eLibrary LT − 1055/04 scan (`LTS-1055-04.pdf`, 13 pp., OCR'd) and indiankanoon.org/doc/35003869/ | READ (corroboration only) | r.1(2): *"They shall come into force on the 1st day of October, 2004"* — the Rules' own commencement, not Chapter VII's |
+| 9e | Income-tax Act, 1961 s.10(38)(a), s.111A(1)(a) — thc copy | READ | *"entered into on or after the date on which Chapter VII of the Finance (No. 2) Act, 2004 comes into force"* — names the date without giving it |
+
+**Ruling (D-301):** Chapter VII came into force on **1-10-2004**, accepted on 9a (READ) with 9b's words (REPORTED),
+like D-294 / D-185; the Gazette page of S.O. 1058(E) itself was not reached. Under s.96(3) a purchase entered into
+before that day is not a taxable securities transaction.

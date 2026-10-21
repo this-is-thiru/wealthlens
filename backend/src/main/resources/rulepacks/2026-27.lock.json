@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.86",
-      "checksum": "sha256:d31363a77d540ce21d2366f44568234f0c7281353d33db5116b816312fc1a62a"
+      "version": "2026-27.law.87",
+      "checksum": "sha256:44177bcccf75d29ed9cb3ae86923483e72c541730984688e02adf3709d4a26c4"
     },
     "exec": {
       "version": "2026-27.exec.29",
@@ -196,7 +196,7 @@
     "SETOFF-CARRIED-HOUSE-PROPERTY": "sha256:9747979c3ae93d78067a40cec341c477af660e1386902763df5eeb5653444031",
     "SETOFF-HOUSE-PROPERTY": "sha256:74ac739ae8955c46e5a72cf21fd6c2f19907158a404c64d8b9cb8db1fddbbed1",
     "SETOFF-WITHIN-CAPITAL-GAINS": "sha256:6296672db6232176b9fc9f0b30ea7cd389897ff46356ca2dcf68bbe662bfa9c6",
-    "STT-PURCHASE-DELIVERY": "sha256:8563c2c25283159fc1dfa2ea78b4c3cc8051da1ee691285e0b5e90a05e50c207",
+    "STT-PURCHASE-DELIVERY": "sha256:71fc301b23afbd6cc82f546f96602d18d3ad9f35b97d8bef74c56bc23f73f409",
     "STT-SALE-DELIVERY": "sha256:5f93fcd75271cc4dc62dcd47f0f1b87f1be586f3da745aa85a1582bbd0f9ed26",
     "STT-SALE-NONDELIVERY": "sha256:78fbe4f4b2eb98cd9967fbec0cd51c47a0430e6f10f4aa09b8f3abf0a96d35dd"
   },

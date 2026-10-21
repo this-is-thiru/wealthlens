@@ -445,4 +445,27 @@ class CapitalGainsNodeTest {
                 .hasMessageContaining("no row of RS-CG-PART")
                 .hasMessageContaining("acquisitionMode=" + mode.split("/")[0]);
     }
+
+    @ParameterizedTest(name = "TY {0}: a purchase on {1} → Sl. 1 traced {2}")
+    @CsvSource({
+        "2025, 2003-06-01, false",
+        "2025, 2004-09-30, false",
+        "2025, 2004-10-01, true",
+        "2026, 2003-06-01, false",
+        "2026, 2004-09-30, false",
+        "2026, 2004-10-01, true"
+    })
+    void evaluate_whenAPurchaseOnAnExchangeVenuePredatesChapterVii_isListedUnderTheNotificationNotSl1(int year,
+            String acquiredOn, boolean tracedUnderSl1) {
+        // When — W-088j2f cases 1–3: Chapter VII came into force on 1-10-2004 (S.O. 1058(E), D-301) and applies to
+        // transactions entered into on or after it (s.96(3)); before it, S.O. 5054(E) clause (I) settles the buy
+        NodeResult result = result(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "-", "PURCHASE",
+                acquiredOn));
+
+        // Then
+        assertThat(((CapitalGainsHead) result.value()).part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY))
+                .isEqualTo(Money.of("1000"));
+        assertThat(result.trace().stream().anyMatch(line -> line.rule().equals(RuleIds.STT_PURCHASE_DELIVERY)))
+                .isEqualTo(tracedUnderSl1);
+    }
 }

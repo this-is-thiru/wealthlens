@@ -23,8 +23,8 @@ import java.util.Optional;
  *
  * <p>What the records show stands. Only a side whose evidence is {@code UNKNOWN} — no charge breakdown on record — is
  * put to {@code RS-STT-CHARGEABLE}, which says from the side's recorded exchange and segment whether the transaction
- * was chargeable under the Finance (No. 2) Act, 2004, Chapter VII, and from how the lot was acquired, since Sl. 1
- * charges a purchase only (D-300). A side no row covers stays {@code UNKNOWN}, and the part rows refuse it. Every state
+ * was chargeable under the Finance (No. 2) Act, 2004, Chapter VII, and from how and when the lot was acquired, since
+ * Sl. 1 charges a purchase only (D-300) and Chapter VII applies from its commencement (D-301). A side no row covers stays {@code UNKNOWN}, and the part rows refuse it. Every state
  * so derived is a trace line naming its row.
  */
 final class CapitalGainsStt {
@@ -40,6 +40,8 @@ final class CapitalGainsStt {
     private static final ItemFactId ASSET = new ItemFactId("capitalgains.asset");
 
     private static final ItemFactId ACQUISITION = new ItemFactId("capitalgains.acquisition");
+
+    private static final ItemFactId ACQUIRED_ON = new ItemFactId("capitalgains.acquired.on");
 
     private static final ItemFactId EXCHANGE = new ItemFactId("trade.exchange");
 
@@ -69,7 +71,7 @@ final class CapitalGainsStt {
         String segment = venue.segment().orElse(UNRECORDED);
         Optional<RuleRow> row = ctx.optionalRuleOf(CHARGEABILITY, new ItemFacts(Map.of(SIDE, side.name(), ASSET,
                 bucket.facts().assetKind(), ACQUISITION, bucket.facts().acquisitionMode(), EXCHANGE, exchange, SEGMENT,
-                segment), Map.of(), Map.of()));
+                segment), Map.of(), Map.of(ACQUIRED_ON, bucket.facts().acquiredOn())));
         if (row.isEmpty()) {
             return evidence;
         }
