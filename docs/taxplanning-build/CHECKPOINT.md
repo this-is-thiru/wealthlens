@@ -14,7 +14,7 @@ Last verify     : unit clean -Punit 3218 run, 0 fail; integration 281/0 (2026-10
 Waiting on      : the owner — "start W-088o"; OQ-32, OQ-33 open
 Files touched   : (none)
 Last item commit: taxplanning W-088k4b: correct the bonus lots processed before W-088k4a — a one-time SUPER_USER call records each owner-supplied allotment date and re-dates the lots, transactions and their sales from the ex-date; runbook §2.4, W-150 / WL-34 (D-308)
-Updated         : 2026-10-21, session 27 — W-088k4b done
+Updated         : 2026-10-21, session 27 — PAUSED at the session limit, everything committed (resume at W-088o)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
