@@ -105,7 +105,45 @@ All of D-253's list is still present: `RetirementNode:153`, `:208`, `:240`; `Not
 
 ## W-088l2 — `taxplanning`
 
-*Not yet audited.*
+**Status: audited and placed (session 28, D-314): Q1 is W-159, after W-158.** G1 – G8 by the triage script over `taxplanning/` (119 hits,
+`reviews/law-in-code/l2-hits.txt`), G9 (1, `l2-g9-boolean-facts.txt`), G10 (0); every hit given a verdict. Read whole:
+`enums/` (9), `portfolio/` (2), `recommendation/RegimeAdvisor`; `RestructuringEngine:180–250`. The rest of `engine/`,
+`recommendation/` and `policy/service/` was read by its hits only: under C2a the legacy compute path is one finding,
+so a line-by-line read would add places to it, not rows.
+
+| Grep | Hits | Verdicted |
+|---|---|---|
+| G1 date literals / G3 money and rate makers | 0 / 0 | — |
+| G2 numeric literals | 36 | 36 |
+| G4 `switch` / `case` | 15 | 15 |
+| G5 sets and maps | 1 | 1 |
+| G6 enum comparisons | 10 | 10 |
+| G7 constants | 12 | 12 |
+| G8 quoted codes | 45 | 45 |
+| G9 boolean-fact tests / G10 classifying enum methods | 1 / 0 | 1 |
+
+### The finding — the legacy compute path holds the law a second time, and no placed row removes it
+
+| Proposed row | Places (all under `taxplanning/`) | Kind | Direction | Owned already? |
+|---|---|---|---|---|
+| **Q1 retire the legacy compute path** | **Law as data outside the packs:** the five `resources/data/tax-policies/*-2025-26*.json` (one tax year), seeded by `policy/service/PolicySeederService.java:44–49` (`TAX_YEAR = "2025-26"` and the file names in Java). **Law in Java:** `engine/PerquisiteValuationService.java:29–54`, `:66`, `:116–147`, `:161`, `:183` (fallback figures when a policy field is absent — car, driver, meal, gift); `engine/NewRegimeTaxEngine.java:112` (meal fallback); `engine/AbstractTaxEngine.java:202` (cess fallback 4 %); `engine/HraExemptionCalculator.java:14–16` (`METRO_CITIES`, a 30-day month), `:57` (rent above 1,00,000), `:62–67`, `:112–115` (50 % / 40 % / 10 %); `salary/dto/SalaryProfileResponse.java:53` (a second `METRO_CITIES`); `recommendation/RegimeAdvisor.java:32–34` (80C 1,50,000, a 30 % rate), `:43` (80D 25,000), `:69` (30 %), and its prose on which deductions each regime allows; `recommendation/RestructuringEngine.java:240`, `:248` (30 % fallback marginal rate), `:229–233` (perquisite by allowance code). **Closed legal categories:** `enums/CarEngineSize` (`LEQ_1600CC_OR_EV`), `enums/CityTier` (`METRO_8`), `enums/RegimeType` (two regimes). **Also against §4:** money as `long` / `double` throughout `engine/` and `recommendation/`. The response already says "this calculator is being replaced and its results are known to be wrong" (`salary/dto/KnownErrorsComputation.java:16`) | L6, L1, L2 | delete it, as `03-WORK-ITEMS.md` Appendix E group **L2** lists ("the compute path, together"), once `taxengine` serves what it serves; D-063: "remove it when the replacement passes its golden tests (`09-build-plan.md` B2)" | **none found.** Appendix E proposed `W-109b` or `W-045m` for L2, "waits on OQ-3"; D-063 answered OQ-3 (warn now, remove later) and W-045m built the warning, but no row was added for the removal (`grep` of WI rows for the classes, the JSON and "legacy" finds only W-078i, W-088u8 and W-088l2) |
+
+N6 (`RestructuringEngine.java:195–200`, the allowance ranking by string `switch`) is still present. It ranks advice —
+a product choice, not law — so it is **S**, and it goes with Q1, since `recommendation/**` is in Appendix E's L2 group.
+
+### Not findings
+
+| Hits | Reason |
+|---|---|
+| `portfolio/CapitalGainsAdapter.java:57–63` (refuses `UNCLASSIFIED` and `SPECULATIVE`) | routes on `portfolio`'s classification; the classes are `TradeClassifier`'s — **N4, audited in W-088l3**. The adapter's `TLocalDate.financialYear` call (`:44`) is **N2, W-088l3** |
+| `portfolio/MoneyBridge.java` (`PAISE_PLACES`, `BigDecimal.valueOf`; `toTMoney` refuses by design, TL-8 §7, tested) | conversion, a deliberate guard |
+| `engine/TaxEngineFactory.java:17–19`, `engine/FormulaEvaluator.java:50`, `NewRegimeTaxEngine:196` / `OldRegimeTaxEngine:257` (slab regime match), `policy/service/PolicyService.java:50`, `RestructuringEngine:79` (`ACTIVE`), `:166–168`, `:263–267` (action text), `salary/service/SalaryProfileService.java:81` (`NOT_DECIDED`), `KnownErrorsComputation.NOTICE`, the G8 component and part codes (`"BASIC"`, `"EMPLOYER_PF"`, `"PERQUISITE"` …) | inside Q1 (the legacy path's own dispatch and codes) or the code's own states; no separate row |
+
+### Summary for placement
+
+One proposed row, Q1: the removal Appendix E planned and D-063 decided, never placed. Every law-in-code place in the
+module is inside it. If it should not wait for the whole replacement, the alternative is to fix the places in Java now,
+which the module's own notice says is code being replaced.
 
 ## W-088l3 — `portfolio`, `corporate`, `brokercharges`, `shared`, the rest
 

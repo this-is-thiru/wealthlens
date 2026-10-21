@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088l2 — law-in-code audit, taxplanning (D-312)
+Item            : W-088l3 — law-in-code audit, portfolio, corporate, brokercharges, shared and a pass over the rest (D-312)
 Stage           : READY — not started
-Plan            : written when taken (plans/W-088l2.md), on W-088l1's method (tools/law_in_code_triage.py, G1–G10)
+Plan            : written when taken (plans/W-088l3.md), on W-088l1's method
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088l2": read its WI row, plans/W-088l.md, the audit file (criteria, N6), plans/W-088l1.md (method, its G9/G10 deviation); write plans/W-088l2.md, STOP
+Next step       : on "start W-088l3": read its WI row, the audit file (criteria, N2–N5, N7, N8), plans/W-088l1.md and W-088l2.md (method); write plans/W-088l3.md incl. C3a (CLAUDE.md §4 pointer), STOP
 Last verify     : targeted 443/0; unit -Punit 3242/0; integration 281/0 (2026-10-21, W-088o2)
-Waiting on      : the owner — "start W-088l2"; OQ-32, OQ-33 open
+Waiting on      : the owner — "start W-088l3"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088l1: audit taxengine for law in code — every hit of ten greps given a verdict, eight findings placed as W-151 – W-158 after the audit; W-088l split l1 – l3 (D-312, D-313)
-Updated         : 2026-10-21, session 28 — W-088l1 committed
+Last item commit: taxplanning W-088l2: audit taxplanning for law in code — the legacy compute path holds the law a second time and no row removed it; placed as W-159 (D-314)
+Updated         : 2026-10-21, session 28 — W-088l2 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
