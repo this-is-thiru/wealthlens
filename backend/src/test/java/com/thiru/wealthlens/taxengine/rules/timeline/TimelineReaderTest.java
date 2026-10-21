@@ -98,6 +98,7 @@ class TimelineReaderTest {
             new RuleId("SAL-SALARY-FOR-ENTMT"),
             new RuleId("RET-GRATUITY-OTHER"),
             new RuleId("RET-GRATUITY-AGGREGATE"),
+            new RuleId("RET-GRATUITY-AVERAGING"),
             new RuleId("RET-LEAVE-ENCASHMENT-OTHER"),
             new RuleId("RET-LEAVE-ENCASHMENT-AGGREGATE"),
             new RuleId("RET-GRATUITY-STATUTORY"),

@@ -710,6 +710,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-RET-GRATUITY-AVERAGING",
+      "_note": "One row: RET-GRATUITY-AVERAGING",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-RET-ENTRY",
       "_note": "The retirement and termination entries of S2 s.19(1) Table Sl. 3-14 (1961 s.10(10)-(10C)): the row chosen by the entry the taxpayer says the payment falls under (retirement.entry, W-088m2)",
       "selection": "EXACTLY_ONE",

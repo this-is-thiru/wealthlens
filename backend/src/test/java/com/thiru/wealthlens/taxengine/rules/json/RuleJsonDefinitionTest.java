@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
+import com.thiru.wealthlens.taxengine.rules.definition.SalaryAveragingPeriod;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.ShortTermHoldingPeriod;
 import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
@@ -272,6 +273,25 @@ class RuleJsonDefinitionTest {
                           { "part": "SHORT_TERM_SLAB", "term": " ", "canAbsorbLongTermLoss": false } ] }"""))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("definition.parts[0].term must be a non-empty string");
+    }
+
+    @Test
+    void version_whenASalaryAveragingPeriod_readsTheMonths() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "SalaryAveragingPeriod", "months": 10 }""");
+
+        // Then
+        assertThat(version.definition()).contains(new SalaryAveragingPeriod(10));
+    }
+
+    @Test
+    void version_whenASalaryAveragingPeriodHasNoMonths_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "SalaryAveragingPeriod", "months": 0 }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("positive number of months");
     }
 
     @Test

@@ -75,7 +75,7 @@ public final class RetirementNode implements ComputationNode {
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(RuleSetIds.RS_RET_ENTRY, RuleSetIds.RS_RET_AGGREGATE);
+        return Set.of(RuleSetIds.RS_RET_ENTRY, RuleSetIds.RS_RET_AGGREGATE, RuleSetIds.RS_RET_GRATUITY_AVERAGING);
     }
 
     @Override

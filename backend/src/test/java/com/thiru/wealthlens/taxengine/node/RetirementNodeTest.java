@@ -71,10 +71,20 @@ class RetirementNodeTest {
 
     private static NodeResult run(int year, RegimeCode regime, List<Paid> paid, List<RetirementPayment> payments,
             LedgerSnapshot ledgers, boolean termsIncludeDearnessAllowance) {
+        return run(shipped(year), regime, paid, payments, ledgers, termsIncludeDearnessAllowance);
+    }
+
+    private static RulePack shipped(int year) {
         TaxYearId taxYear = TaxYearId.of(year);
-        RulePack pack = new ClasspathRulePackProvider(
+        return new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
+    }
+
+    private static NodeResult run(RulePack pack, RegimeCode regime, List<Paid> paid, List<RetirementPayment> payments,
+            LedgerSnapshot ledgers, boolean termsIncludeDearnessAllowance) {
+        TaxYearId taxYear = pack.taxYear();
+        int year = taxYear.startYear();
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, regime,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
@@ -304,6 +314,50 @@ class RetirementNodeTest {
             assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_OTHER);
             assertThat(line.limitedBy()).contains("half a month's salary for each completed year");
         });
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenNineMonthsAreEnteredForTheGratuity_isRefusedNamingTheAveragingRow(int year) {
+        // Given — RET-GRATUITY-AVERAGING names ten months; a 30-6 event's are August of the year before to May
+        Separation nine = retiringInJuneAfter(year, 25, 9, "100000");
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY, nine)), NOTHING_BEFORE))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(RuleIds.RET_GRATUITY_AVERAGING.value())
+                .hasMessageContaining("10 months")
+                .hasMessageContaining((year - 1) + "-08 to " + year + "-05");
+    }
+
+    @Test
+    void evaluate_whenTheAveragingRowNamesTwelveMonths_averagesOverTwelve() {
+        // Given — a pack whose RET-GRATUITY-AVERAGING says 12; twelve months of 60,000 basic, 10 completed years
+        RulePack shipped = shipped(2026);
+        com.thiru.wealthlens.taxengine.rules.pack.RuleRow row = shipped.rule(RuleIds.RET_GRATUITY_AVERAGING);
+        List<com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion> versions = row.versions().stream()
+                .map(v -> new com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion(v.validity(), v.regimes(),
+                        v.cap(), v.relief(), v.rounding(),
+                        Optional.of(new com.thiru.wealthlens.taxengine.rules.definition.SalaryAveragingPeriod(12)),
+                        v.conditions(), v.provision1961(), v.provision2025(), v.introducedBy(), v.legalStatus(),
+                        v.publicationStatus(), v.provenance()))
+                .toList();
+        Map<com.thiru.wealthlens.taxengine.rules.id.RuleId, com.thiru.wealthlens.taxengine.rules.pack.RuleRow> rules =
+                new java.util.HashMap<>(shipped.rules());
+        rules.put(row.id(), new com.thiru.wealthlens.taxengine.rules.pack.RuleRow(row.id(), row.axis(), versions,
+                row.midYearCombination(), row.midYearCombinationRule(), row.prorationBasis(), row.headProvenance()));
+        RulePack twelve = new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules,
+                shipped.ruleSets(), shipped.components(), shipped.regimes(), shipped.disallowanceSets(),
+                shipped.conditionSets());
+
+        // When — least of 15,00,000, 20,00,000 and 1/2 × (12 × 60,000 / 12) × 10 = 3,00,000
+        NodeResult result = run(twelve, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY,
+                        retiringInJuneAfter(2026, 10, 12, "60000"))), NOTHING_BEFORE, false);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("300000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -540,9 +594,14 @@ class RetirementNodeTest {
 
     /** A separation on 30 June after {@code years} completed years, each of the ten months paying {@code basic}. */
     private static Separation retiringInJuneAfter(int year, int years, String basic) {
+        return retiringInJuneAfter(year, years, 10, basic);
+    }
+
+    /** As above, with {@code count} months entered before June. */
+    private static Separation retiringInJuneAfter(int year, int years, int count, String basic) {
         LocalDate separatedOn = LocalDate.of(year, 6, 30);
         List<MonthOfPay> months = new ArrayList<>();
-        for (int back = 10; back >= 1; back--) {
+        for (int back = count; back >= 1; back--) {
             months.add(new MonthOfPay(java.time.YearMonth.from(separatedOn).minusMonths(back),
                     Map.of(ComponentCodes.BASIC, Money.of(basic))));
         }

@@ -162,6 +162,7 @@ public final class RuleIds {
     public static final RuleId RET_COMMUTED_PENSION_GOVERNMENT = new RuleId("RET-COMMUTED-PENSION-GOVERNMENT");
     public static final RuleId RET_COMMUTED_PENSION_OTHER = new RuleId("RET-COMMUTED-PENSION-OTHER");
     public static final RuleId RET_GRATUITY_AGGREGATE = new RuleId("RET-GRATUITY-AGGREGATE");
+    public static final RuleId RET_GRATUITY_AVERAGING = new RuleId("RET-GRATUITY-AVERAGING");
     public static final RuleId RET_GRATUITY_GOVERNMENT = new RuleId("RET-GRATUITY-GOVERNMENT");
     public static final RuleId RET_GRATUITY_OTHER = new RuleId("RET-GRATUITY-OTHER");
     public static final RuleId RET_GRATUITY_STATUTORY = new RuleId("RET-GRATUITY-STATUTORY");

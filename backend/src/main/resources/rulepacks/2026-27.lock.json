@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.90",
-      "checksum": "sha256:0702a4131b7fc0ff026e19aa53d744f390b31251169e4edc2e8b2a844ecdb579"
+      "version": "2026-27.law.91",
+      "checksum": "sha256:7a455625bbd0471039e8ec2ee4780d57d922a9b5c1ff2c8e6e681993c127e63f"
     },
     "exec": {
       "version": "2026-27.exec.29",
@@ -163,6 +163,7 @@
     "RET-COMMUTED-PENSION-GOVERNMENT": "sha256:f7e3764ffe6fb57942664c6fd6728fa71ab0e5fa67f48502a4014aedfcd9bd6d",
     "RET-COMMUTED-PENSION-OTHER": "sha256:7dbd025979895616cef7ae3021a366f537f8c2ff84cfa1432da61782283df3c3",
     "RET-GRATUITY-AGGREGATE": "sha256:3c95709919c8ee1e429f8c7e63286661254ad9926ff15c7a3d1c934ed5fb5be6",
+    "RET-GRATUITY-AVERAGING": "sha256:31d5be08a6de3dd73bba467fcb3b863c42fc5de7a1848a74752d1ffcd654d331",
     "RET-GRATUITY-GOVERNMENT": "sha256:6987ebed08d894d8909eeca2f754c7cd055024183f8a748498f05365481f545a",
     "RET-GRATUITY-OTHER": "sha256:9ac84e52c0ad46eff8c88e8a5937d62e55ab9fe1eb26def51bd8169f18716ec9",
     "RET-GRATUITY-STATUTORY": "sha256:8d1a58855d99a13067ff7a62efefa0c05b7eebe802ad41c76530b856b32ef35c",

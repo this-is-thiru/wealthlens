@@ -37,23 +37,38 @@ class SeparationTest {
     }
 
     @Test
-    void construct_whenTheMonthsAreNotTheTenBeforeTheEventsMonth_isRefused() {
-        // Given — "ten months immediately preceding the month when any such event occurs": Aug 2024 – May 2025
+    void construct_whenAMonthIsTheEventsOwnMonth_isRefused() {
+        // Given — the months "immediately preceding the month" of a 30-6-2025 event; these run Sep 2024 – Jun 2025
         List<MonthOfPay> shifted = tenMonthsBefore(LocalDate.of(2025, 7, 31), "100000");
 
-        // When / Then
+        // When / Then — how many months the law averages is RET-GRATUITY-AVERAGING's, checked by the node (D-317)
         assertThatThrownBy(() -> new Separation(LocalDate.of(2000, 4, 1), LocalDate.of(2025, 6, 30), shifted))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("2024-08");
+                .hasMessageContaining("precede 2025-06");
     }
 
     @Test
-    void construct_whenFewerThanTenMonths_isRefused() {
+    void construct_whenAMonthIsEnteredTwice_isRefused() {
+        // Given
+        List<MonthOfPay> twice = new ArrayList<>(tenMonthsBefore(LocalDate.of(2025, 6, 30), "100000"));
+        twice.add(twice.getFirst());
+
+        // When / Then
+        assertThatThrownBy(() -> new Separation(LocalDate.of(2000, 4, 1), LocalDate.of(2025, 6, 30), twice))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("entered once");
+    }
+
+    @Test
+    void construct_whenNineMonthsAreEntered_isAccepted() {
+        // Given — whether nine are enough is the averaging row's question, asked by the node (D-317)
         List<MonthOfPay> nine = tenMonthsBefore(LocalDate.of(2025, 6, 30), "100000").subList(1, 10);
 
-        assertThatThrownBy(() -> new Separation(LocalDate.of(2000, 4, 1), LocalDate.of(2025, 6, 30), nine))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("ten");
+        // When
+        Separation separation = new Separation(LocalDate.of(2000, 4, 1), LocalDate.of(2025, 6, 30), nine);
+
+        // Then
+        assertThat(separation.monthsBefore()).hasSize(9);
     }
 
     @Test

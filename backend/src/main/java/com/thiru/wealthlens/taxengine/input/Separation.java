@@ -4,41 +4,37 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.Set;
 
 /**
  * The end of an employment a gratuity is measured on (S2 s.19(1) Table Sl. 6; 1961 s.10(10)(iii); D-106): when the
- * service began, the day of the event — retirement, incapacity, death or termination — and what each of the ten
- * months "immediately preceding the month when any such event occurs" paid.
+ * service began, the day of the event — retirement, incapacity, death or termination — and what each month
+ * "immediately preceding the month when any such event occurs" paid. How many months the law averages is
+ * {@code RET-GRATUITY-AVERAGING}'s, so the node, not this record, checks the months entered are those (D-317).
  *
  * <p>The months are entered rather than taken from the year's pay lines because they straddle tax years: the ten
  * months before a June retirement fall mostly in the previous one.
  *
  * @param serviceBegan the first day of service with the employer
  * @param separatedOn the day of the event
- * @param monthsBefore the ten calendar months before the event's month, each with what it paid
+ * @param monthsBefore calendar months before the event's month, each once, with what it paid
  */
 public record Separation(LocalDate serviceBegan, LocalDate separatedOn, List<MonthOfPay> monthsBefore) {
 
-    private static final int MONTHS = 10;
-
     public Separation {
         if (serviceBegan == null || separatedOn == null || monthsBefore == null) {
-            throw new IllegalArgumentException("A separation needs when service began, the event's day and the ten"
+            throw new IllegalArgumentException("A separation needs when service began, the event's day and the"
                     + " months before it");
         }
         if (!serviceBegan.isBefore(separatedOn)) {
             throw new IllegalArgumentException("Service began on " + serviceBegan + ", not before the event on "
                     + separatedOn);
         }
-        List<YearMonth> expected = IntStream.rangeClosed(1, MONTHS)
-                .mapToObj(back -> YearMonth.from(separatedOn).minusMonths(MONTHS + 1L - back))
-                .toList();
+        YearMonth eventMonth = YearMonth.from(separatedOn);
         List<YearMonth> entered = monthsBefore.stream().map(MonthOfPay::month).sorted().toList();
-        if (!entered.equals(expected)) {
-            throw new IllegalArgumentException("The ten months immediately preceding the month of the event on "
-                    + separatedOn + " are " + expected.getFirst() + " to " + expected.getLast() + ", but "
-                    + entered + " were entered");
+        if (Set.copyOf(entered).size() != entered.size() || entered.stream().anyMatch(m -> !m.isBefore(eventMonth))) {
+            throw new IllegalArgumentException("The months before the event on " + separatedOn + " must each be"
+                    + " entered once and precede " + eventMonth + ", but " + entered + " were entered");
         }
         monthsBefore = List.copyOf(monthsBefore);
     }

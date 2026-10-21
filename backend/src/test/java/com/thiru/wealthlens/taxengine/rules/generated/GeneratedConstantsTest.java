@@ -181,6 +181,7 @@ class GeneratedConstantsTest {
             "RET-COMMUTED-PENSION-GOVERNMENT",
             "RET-COMMUTED-PENSION-OTHER",
             "RET-GRATUITY-AGGREGATE",
+            "RET-GRATUITY-AVERAGING",
             "RET-GRATUITY-GOVERNMENT",
             "RET-GRATUITY-OTHER",
             "RET-GRATUITY-STATUTORY",

@@ -11,6 +11,8 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
+import com.thiru.wealthlens.taxengine.rules.definition.SalaryAveragingPeriod;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -20,17 +22,19 @@ import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 /**
  * The retirement limits the Central Government sets by notification, for {@link RetirementNode} (S2 s.19(1) Table
  * Sl. 6, 14 and s.19(2)(a), (b), (f); 1961 s.10(10)(iii), (10AA)(ii) and their provisos; D-106).
  *
- * <p>Other gratuity is measured on half a month's salary for each completed year, the salary averaged over the ten
- * months before the event's month by {@code SAL-SALARY-FOR-GRATUITY}'s own inclusions, so DA counts only where the
+ * <p>Other gratuity is measured on half a month's salary for each completed year, the salary averaged over the months
+ * {@code RET-GRATUITY-AVERAGING} names before the event's month by {@code SAL-SALARY-FOR-GRATUITY}'s own inclusions, so DA counts only where the
  * terms provide. Other leave encashment reads the employer's figures. Each notification covers events from a day —
  * the version's {@code introducedBy.effectiveFrom} — and an earlier event is refused, its limit being another
  * notification. Across employers and years each is capped at A − B, the notified limit less what earlier years
@@ -41,7 +45,6 @@ final class NotifiedRetirementLimits {
     private static final BaseId AVERAGE_SALARY_BY_COMPLETED_YEARS = new BaseId("AVERAGE_SALARY_BY_COMPLETED_YEARS");
     private static final BaseId LEAVE_SALARY_AT_CREDIT = new BaseId("LEAVE_SALARY_AT_CREDIT");
     private static final BaseId AVERAGE_MONTHLY_SALARY = new BaseId("AVERAGE_MONTHLY_SALARY");
-    private static final int MONTHS_AVERAGED = 10;
 
     private NotifiedRetirementLimits() {
     }
@@ -75,7 +78,7 @@ final class NotifiedRetirementLimits {
         if (payment.entry() == RetirementEntry.OTHER_GRATUITY) {
             Separation separation = payment.separation().orElseThrow();
             requireCovered(version, separation.separatedOn(), payment);
-            Money average = tenMonthAverage(ctx, separation, ctx.inputs().entered().employments().get(payment.employment()));
+            Money average = averageSalary(ctx, separation, ctx.inputs().entered().employments().get(payment.employment()));
             bases.put(AVERAGE_SALARY_BY_COMPLETED_YEARS, average.times(separation.completedYears()));
         } else {
             LeaveAtRetirement leave = payment.leave().orElseThrow();
@@ -126,8 +129,24 @@ final class NotifiedRetirementLimits {
         }
     }
 
-    /** "Average salary for ten months immediately preceding the month when any such event occurs". */
-    private static Money tenMonthAverage(NodeContext ctx, Separation separation, Employment employment) {
+    /**
+     * The salary averaged over the months {@code RET-GRATUITY-AVERAGING} names, immediately preceding the event's month
+     * (S2 s.19(1) Table Sl. 6; 1961 s.10(10)(iii); D-317).
+     *
+     * @throws IllegalArgumentException if the months entered are not exactly those months
+     */
+    private static Money averageSalary(NodeContext ctx, Separation separation, Employment employment) {
+        GoverningRow row = GoverningRow.of(ctx, RuleSetIds.RS_RET_GRATUITY_AVERAGING);
+        int months = RuleDefinitions.require(row.version().definition(), SalaryAveragingPeriod.class, row.id()).months();
+        YearMonth eventMonth = YearMonth.from(separation.separatedOn());
+        List<YearMonth> expected = IntStream.rangeClosed(1, months)
+                .mapToObj(back -> eventMonth.minusMonths(months + 1L - back)).toList();
+        List<YearMonth> entered = separation.monthsBefore().stream().map(MonthOfPay::month).sorted().toList();
+        if (!entered.equals(expected)) {
+            throw new IllegalArgumentException(row.id() + " averages the " + months + " months immediately preceding"
+                    + " the month of the event on " + separation.separatedOn() + ", " + expected.getFirst() + " to "
+                    + expected.getLast() + ", but " + entered + " were entered");
+        }
         Money total = Money.ZERO;
         for (MonthOfPay month : separation.monthsBefore()) {
             for (Map.Entry<ComponentCode, Money> line : month.amounts().entrySet()) {
@@ -136,13 +155,13 @@ final class NotifiedRetirementLimits {
                 }
             }
         }
-        return total.apportioned(1, MONTHS_AVERAGED);
+        return total.apportioned(1, months);
     }
 
     private static boolean inGratuityBase(NodeContext ctx, ComponentCode code, Employment employment) {
         ComponentDefinition definition = ctx.pack().components().get(code);
         if (definition == null) {
-            throw new IllegalArgumentException(code + " in the ten months before the separation is not a known pay"
+            throw new IllegalArgumentException(code + " in the months averaged before the separation is not a known pay"
                     + " component");
         }
         return definition.salaryBaseFor().stream()
