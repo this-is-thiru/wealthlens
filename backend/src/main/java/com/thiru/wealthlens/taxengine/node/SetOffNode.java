@@ -89,7 +89,7 @@ public final class SetOffNode implements ComputationNode {
     public Set<RuleSetId> ruleSets() {
         return Set.of(RuleSetIds.RS_SETOFF_ACROSS_HEADS, RuleSetIds.RS_SETOFF_HOUSE_PROPERTY, RuleSetIds.RS_SETOFF_CARRIED_HOUSE_PROPERTY,
                 RuleSetIds.RS_SETOFF_CARRIED_DISALLOWED_PART, RuleSetIds.RS_SETOFF_WITHIN_CAPITAL_GAINS,
-                RuleSetIds.RS_SETOFF_CARRIED_CAPITAL_GAINS);
+                RuleSetIds.RS_SETOFF_CARRIED_CAPITAL_GAINS, DeclaredCapitalGainsParts.PARTS);
     }
 
     @Override
@@ -123,8 +123,8 @@ public final class SetOffNode implements ComputationNode {
             }
         }
         CarriedLossSetOff.apply(ctx, carriedHousePropertyLosses(ctx, t), income, run.parts(), lines);
-        CarriedLossSetOff.apply(ctx, carriedCapitalLosses(ctx, t, order.capitalGainsOrder()), income, run.parts(),
-                lines);
+        CarriedLossSetOff.apply(ctx, carriedCapitalLosses(ctx, t, order.capitalGainsOrder(),
+                DeclaredCapitalGainsParts.of(ctx)), income, run.parts(), lines);
         Money total = income.values().stream().reduce(Money.ZERO, Money::plus);
         return new NodeResult(new HeadsAfterSetOff(total, parts), lines);
     }
@@ -234,11 +234,12 @@ public final class SetOffNode implements ComputationNode {
     }
 
     /**
-     * The capital-loss ledger's losses: the long-term loss, which only the long-term parts may take, before the
-     * short-term, each against the parts in {@code order} (S2 s.111, s.121, s.536(2)(n); 1961 s.74, s.80; D-247).
+     * The capital-loss ledger's losses: the long-term loss, which only the parts {@code declared} lets it reach may
+     * take, before the short-term, each against the parts in {@code order} (S2 s.111, s.121, s.536(2)(n); 1961 s.74,
+     * s.80; D-247, D-309).
      */
     private static CarriedLosses carriedCapitalLosses(NodeContext ctx, TemporalContext t,
-            CapitalGainsAbsorptionOrder order) {
+            CapitalGainsAbsorptionOrder order, DeclaredCapitalGainsParts declared) {
         RuleId row = ctx.ruleIdOf(RuleSetIds.RS_SETOFF_CARRIED_CAPITAL_GAINS);
         LossCarryForward carry = RuleDefinitions.require(version(ctx, t, row).definition(), LossCarryForward.class, row);
         if (carry.absorbedBy() != HeadCode.CAPITAL_GAINS) {
@@ -248,7 +249,7 @@ public final class SetOffNode implements ComputationNode {
         List<CarriedLoss> years = new ArrayList<>();
         ctx.inputs().ledgers().capitalLossCarriedForward().forEach((arose, carried) -> years.add(new CarriedLoss(arose,
                 Optional.of(carried.determinedInReturnFiledInTime()), List.of(
-                        new Portion(carried.longTermRemaining(), row, CapitalGainsPart::isLongTerm,
+                        new Portion(carried.longTermRemaining(), row, declared::canAbsorbLongTermLoss,
                                 capitalLossText("long", arose, order)),
                         new Portion(carried.shortTermRemaining(), row, part -> true,
                                 capitalLossText("short", arose, order))))));

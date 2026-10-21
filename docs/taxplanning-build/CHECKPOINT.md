@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088o — capital-gains parts as rule data (D-250, narrowed by D-259)
+Item            : W-088o2 — CapitalGainsPart an open code (D-309)
 Stage           : READY — not started
-Plan            : plans/W-088o.md holds the sequencing plan; the build plan is written when taken
+Plan            : plans/W-088o.md build plan, row W-088o2; its own plan written when taken
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088o": read its WI row (D-259: CapitalGainsPart only — parts as versioned rule data stating the bucket facts each collects and whether a long-term loss may reach it, s.108(2)(b)), plans/W-088o.md, reviews/2026-10-19-branch-extendability-review.md E3, CapitalGainsPart and its readers (CapitalGainsNode, CapitalGainsAbsorption, RS-CG-PART BucketPart, rate rows), D-289 – D-305; write the build plan (a split if > §7), STOP
-Last verify     : unit clean -Punit 3218 run, 0 fail; integration 281/0 (2026-10-21, W-088k4b)
-Waiting on      : the owner — "start W-088o"; OQ-32, OQ-33 open
+Next step       : on "start W-088o2": read its WI row, plans/W-088o.md (build plan, W-088o2; risks 1–2), D-309, D-310, the readers of CapitalGainsPart (EnumMap / values() in CapitalGainsHead, HeadsAfterSetOff, TaxByBasisNode; the two orders; DefinitionJson) and PackValidator's window walk; write plans/W-088o2.md, STOP
+Last verify     : targeted 308/0; unit -Punit 3228/0; integration 281/0 (2026-10-21, W-088o1)
+Waiting on      : the owner — "start W-088o2"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088k4b: correct the bonus lots processed before W-088k4a — a one-time SUPER_USER call records each owner-supplied allotment date and re-dates the lots, transactions and their sales from the ex-date; runbook §2.4, W-150 / WL-34 (D-308)
-Updated         : 2026-10-21, session 27 — PAUSED at the session limit, everything committed (resume at W-088o)
+Last item commit: taxplanning W-088o1: declare the capital-gains parts as rule data — CG-PARTS states each part's term and whether a long-term loss may reach it (s.108(2)(b)), so the set-offs read the row and isLongTerm() is gone; W-088o split o1 / o2 (D-309, D-310)
+Updated         : 2026-10-21, session 28 — W-088o1 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

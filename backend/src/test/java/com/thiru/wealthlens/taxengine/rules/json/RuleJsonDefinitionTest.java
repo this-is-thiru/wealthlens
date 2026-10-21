@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
@@ -25,6 +26,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -226,6 +228,41 @@ class RuleJsonDefinitionTest {
                         "definition": { "type": "ShortTermHoldingPeriod", "months": 0 }"""))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("positive number of months");
+    }
+
+    @Test
+    void version_whenCapitalGainsParts_readsEachPartInOrder() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "CapitalGainsParts", "parts": [
+                  { "part": "SHORT_TERM_SLAB", "term": "SHORT_TERM", "canAbsorbLongTermLoss": false },
+                  { "part": "LONG_TERM_OTHER", "term": "LONG_TERM", "canAbsorbLongTermLoss": true } ] }""");
+
+        // Then
+        assertThat(version.definition()).contains(new CapitalGainsParts(List.of(
+                new CapitalGainsParts.Declared(CapitalGainsPart.SHORT_TERM_SLAB, "SHORT_TERM", false),
+                new CapitalGainsParts.Declared(CapitalGainsPart.LONG_TERM_OTHER, "LONG_TERM", true))));
+    }
+
+    @Test
+    void version_whenCapitalGainsPartsNameAPartTwice_isRefused() {
+        // When / Then — two terms for one part would make its loss's term depend on which is read
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "CapitalGainsParts", "parts": [
+                          { "part": "LONG_TERM_OTHER", "term": "LONG_TERM", "canAbsorbLongTermLoss": true },
+                          { "part": "LONG_TERM_OTHER", "term": "SHORT_TERM", "canAbsorbLongTermLoss": false } ] }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("LONG_TERM_OTHER twice");
+    }
+
+    @Test
+    void version_whenACapitalGainsPartHasABlankTerm_isRefusedNamingThePath() {
+        // When / Then — read as text, which refuses a blank before the part is built
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "CapitalGainsParts", "parts": [
+                          { "part": "SHORT_TERM_SLAB", "term": " ", "canAbsorbLongTermLoss": false } ] }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("definition.parts[0].term must be a non-empty string");
     }
 
     @Test

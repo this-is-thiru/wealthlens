@@ -39,6 +39,7 @@ class GeneratedConstantsTest {
             "CG-PART-LONG-OTHER",
             "CG-PART-SHORT-LISTED",
             "CG-PART-SHORT-SLAB",
+            "CG-PARTS",
             "CG-TERM-LISTED-SECURITY",
             "DED-AGNIVEER-GOVERNMENT",
             "DED-AGNIVEER-OWN",

@@ -36,8 +36,8 @@ import java.util.function.Predicate;
  * <p>Each bucket of {@link CapitalGainsInput} belongs to the {@link CapitalGainsPart} the row of {@code RS-CG-PART} its
  * facts meet names (D-289), its STT read through {@link CapitalGainsStt} (D-298): which gains a special rate charges is the rule data's, and a bucket no row covers is refused
  * rather than charged with total income. A
- * part whose buckets net to a loss contributes that loss: a long-term loss is set off only against the long-term
- * parts, a short-term loss against any part. The long-term loss goes first, because it can use fewer parts; each loss
+ * part whose buckets net to a loss contributes that loss, of the term {@code CG-PARTS} declares for the part: a
+ * long-term loss is set off only against the parts that row lets it reach, a short-term loss against any part (D-309). The long-term loss goes first, because it can use fewer parts; each loss
  * takes the parts in {@code SETOFF-WITHIN-CAPITAL-GAINS}'s declared order, which neither Act prescribes (OQ-32), and
  * every set-off line names it. What no part absorbs is shown and stays in the head — a capital-gains loss is not set
  * off against another head (S2 s.109(2); 1961 s.71(3)); it is carried forward (S2 s.111; 1961 s.74; D-247).
@@ -74,7 +74,8 @@ public final class CapitalGainsNode implements ComputationNode {
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(ROW, PARTS, CapitalGainsStt.CHARGEABILITY, CapitalGainsTerm.HOLDING_PERIOD);
+        return Set.of(ROW, PARTS, DeclaredCapitalGainsParts.PARTS, CapitalGainsStt.CHARGEABILITY,
+                CapitalGainsTerm.HOLDING_PERIOD);
     }
 
     @Override
@@ -89,6 +90,7 @@ public final class CapitalGainsNode implements ComputationNode {
             net.merge(partOf(ctx, bucket, term, CapitalGainsStt.of(ctx, bucket, term, lines)), bucket.gain(),
                     Money::plus);
         }
+        DeclaredCapitalGainsParts declared = DeclaredCapitalGainsParts.of(ctx);
         Map<CapitalGainsPart, Money> available = new EnumMap<>(CapitalGainsPart.class);
         Money longTermLoss = Money.ZERO;
         Money shortTermLoss = Money.ZERO;
@@ -98,30 +100,32 @@ public final class CapitalGainsNode implements ComputationNode {
                 Money loss = Money.ZERO.minus(amount);
                 lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, amount, Money.ZERO)
                         .withLimitedBy(part + ": a loss"));
-                longTermLoss = part.isLongTerm() ? longTermLoss.plus(loss) : longTermLoss;
-                shortTermLoss = part.isLongTerm() ? shortTermLoss : shortTermLoss.plus(loss);
+                boolean longTerm = declared.collectsLongTerm(part);
+                longTermLoss = longTerm ? longTermLoss.plus(loss) : longTermLoss;
+                shortTermLoss = longTerm ? shortTermLoss : shortTermLoss.plus(loss);
             } else if (amount.isGreaterThan(Money.ZERO)) {
+                declared.requireDeclared(part);
                 lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.INCOME, amount, amount)
                         .withLimitedBy(part.toString()));
                 available.put(part, amount);
             }
         }
         CapitalGainsAbsorption parts = new CapitalGainsAbsorption(order, available);
-        Money longTermLeft = setOff(ctx, parts, longTermLoss, true, lines);
-        Money shortTermLeft = setOff(ctx, parts, shortTermLoss, false, lines);
+        Money longTermLeft = setOff(ctx, parts, longTermLoss, true, declared, lines);
+        Money shortTermLeft = setOff(ctx, parts, shortTermLoss, false, declared, lines);
         CapitalGainsHead head = new CapitalGainsHead(available, shortTermLeft, longTermLeft);
         return new NodeResult(head, lines);
     }
 
     /**
-     * The parts absorb up to {@code loss}, in order — only the long-term parts for a long-term loss (S2 s.108(2)(b)).
-     * Returns what is left, which is shown.
+     * The parts absorb up to {@code loss}, in order — for a long-term loss only those {@code declared} lets it reach
+     * (S2 s.108(2)(b)). Returns what is left, which is shown.
      */
     private static Money setOff(NodeContext ctx, CapitalGainsAbsorption parts, Money loss, boolean longTerm,
-            List<TraceLine> lines) {
+            DeclaredCapitalGainsParts declared, List<TraceLine> lines) {
         RuleId row = ctx.ruleIdOf(ROW);
         String which = longTerm ? "long-term" : "short-term";
-        Predicate<CapitalGainsPart> reaches = longTerm ? CapitalGainsPart::isLongTerm : part -> true;
+        Predicate<CapitalGainsPart> reaches = longTerm ? declared::canAbsorbLongTermLoss : part -> true;
         Money remaining = loss.minus(parts.absorb(loss, reaches, lines, (sequence, part, gain, taken) -> ctx
                 .traceLine(sequence, row, StepKind.SET_OFF, gain, taken).withLimitedBy(which + " loss against " + part
                         + "; order " + parts.order().parts()

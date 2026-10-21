@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.88",
-      "checksum": "sha256:e6fcc015e2cd36fddcb5b6a6579ce0b6e6e876638cf41455bb10219faec24320"
+      "version": "2026-27.law.89",
+      "checksum": "sha256:0f2f605b9a0cb45ad41b3cb87648a9b72d181e1a74349fff08a8ef771b3a4fd2"
     },
     "exec": {
       "version": "2026-27.exec.29",
@@ -25,6 +25,7 @@
     "CG-PART-LONG-OTHER": "sha256:9126d103264c870d072adfa9cb05d68648c79a9ad419f947deb78149a68f6d3b",
     "CG-PART-SHORT-LISTED": "sha256:cf79596cb5381d68367064a70411558142b5021d4134060cb75cde94f48d599f",
     "CG-PART-SHORT-SLAB": "sha256:95248c2b2f8ef76409eba6c17de569e45f3d1ae2d373adc40a0bf6bc21f2c84f",
+    "CG-PARTS": "sha256:acee7b73a505a0454338acc286daeed8778973619cc3cd350f536c314194afe0",
     "CG-TERM-LISTED-SECURITY": "sha256:4f52ea9b7408c7fa80e4af11f80dbeb4aa821466d5d59d19bc53e024b9a91943",
     "DED-AGNIVEER-GOVERNMENT": "sha256:c879cebcf268eb0010d60e4ec11b7b6e94cb13821b6ed697c1212b4dd76a1975",
     "DED-AGNIVEER-OWN": "sha256:041287834dd9c47179d5130f8dbad30a7d7aab0fce4b352b38d026b9306638d1",

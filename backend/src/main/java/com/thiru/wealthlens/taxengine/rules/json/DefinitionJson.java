@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
@@ -63,7 +64,8 @@ public final class DefinitionJson {
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
-                "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod");
+                "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod",
+                "CapitalGainsParts");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -138,7 +140,7 @@ public final class DefinitionJson {
     /**
      * The orders in which heads, and the parts of the capital-gains head, absorb a loss (D-217, D-243), how a loss is
      * carried forward (D-263), the special-rate parts the unused basic exemption (D-244), and the part a capital-gains
-     * bucket falls in (D-289), and whether a side's STT was chargeable (D-298).
+     * bucket falls in (D-289), whether a side's STT was chargeable (D-298) and the parts themselves (D-309).
      */
     private static RuleDefinition setOffDefinition(String tag, JsonNode node, String path) {
         return switch (tag) {
@@ -169,6 +171,14 @@ public final class DefinitionJson {
                     PackJson.text(node, "code", path)));
             case "ShortTermHoldingPeriod" -> PackJson.construct(path, () -> new ShortTermHoldingPeriod(
                     PackJson.integer(node, "months", path)));
+            case "CapitalGainsParts" -> {
+                List<CapitalGainsParts.Declared> parts = PackJson.array(node, "parts", path,
+                        e -> PackJson.construct(e.path(), () -> new CapitalGainsParts.Declared(
+                                PackJson.enumValue(e.node(), "part", e.path(), CapitalGainsPart.class),
+                                PackJson.text(e.node(), "term", e.path()),
+                                PackJson.bool(e.node(), "canAbsorbLongTermLoss", e.path()))));
+                yield PackJson.construct(path, () -> new CapitalGainsParts(parts));
+            }
             default -> throw unreachable(tag, path);
         };
     }

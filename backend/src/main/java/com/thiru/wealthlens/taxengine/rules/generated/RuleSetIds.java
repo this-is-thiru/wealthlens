@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 public final class RuleSetIds {
 
     public static final RuleSetId RS_CG_PART = new RuleSetId("RS-CG-PART");
+    public static final RuleSetId RS_CG_PARTS = new RuleSetId("RS-CG-PARTS");
     public static final RuleSetId RS_CG_TERM = new RuleSetId("RS-CG-TERM");
     public static final RuleSetId RS_DED_AGNIVEER_GOVERNMENT = new RuleSetId("RS-DED-AGNIVEER-GOVERNMENT");
     public static final RuleSetId RS_DED_AGNIVEER_OWN = new RuleSetId("RS-DED-AGNIVEER-OWN");

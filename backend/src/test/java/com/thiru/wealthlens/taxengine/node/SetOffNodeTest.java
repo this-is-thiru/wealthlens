@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
@@ -419,13 +420,13 @@ class SetOffNodeTest {
                 .run(new SetOffNode());
     }
 
-    /** TY {@code year}'s shipped pack with every version of {@code row} defined as {@code carry} instead. */
-    private static RulePack withCarryForward(int year, RuleId row, LossCarryForward carry) {
+    /** TY {@code year}'s shipped pack with every version of {@code row} defined as {@code definition} instead. */
+    private static RulePack withDefinition(int year, RuleId row, RuleDefinition definition) {
         RulePack shipped = pack(year);
         RuleRow rule = shipped.rules().get(row);
         List<RuleVersion> versions = rule.versions().stream()
                 .map(v -> new RuleVersion(v.validity(), v.regimes(), v.cap(), v.relief(), v.rounding(),
-                        Optional.<RuleDefinition>of(carry), v.conditions(), v.provision1961(), v.provision2025(),
+                        Optional.of(definition), v.conditions(), v.provision1961(), v.provision2025(),
                         v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance()))
                 .toList();
         Map<RuleId, RuleRow> rules = new HashMap<>(shipped.rules());
@@ -527,6 +528,29 @@ class SetOffNodeTest {
     }
 
     @Test
+    void evaluate_whenTheDeclaredPartsLetALongTermLossReachAShortTermPart_setsTheCarriedLossOffAgainstIt() {
+        // Given — case C, but CG-PARTS declares that a long-term loss may reach the short-term listed part (D-309)
+        RulePack pack = withDefinition(2026, RuleIds.CG_PARTS, new CapitalGainsParts(List.of(
+                new CapitalGainsParts.Declared(CapitalGainsPart.SHORT_TERM_SLAB, "SHORT_TERM", false),
+                new CapitalGainsParts.Declared(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", true),
+                new CapitalGainsParts.Declared(CapitalGainsPart.LONG_TERM_OTHER, "LONG_TERM", true),
+                new CapitalGainsParts.Declared(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, "LONG_TERM", true))));
+
+        // When — a long-term loss of 1,00,000 brought in; only short-term listed gains of 50,000
+        NodeResult result = runWithCarriedCapitalLoss(pack, OLD,
+                Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("50000")),
+                Map.of(TaxYearId.of(2024), capitalLoss("0", "100000", "0", true)));
+
+        // Then — the row, not the part, says what the loss reaches: 50,000 − 50,000 = 0; 1,00,000 − 50,000 carried
+        HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
+        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.ZERO);
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.SET_OFF)).singleElement()
+                .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("50000")));
+        assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
+                .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("50000")));
+    }
+
+    @Test
     void evaluate_whenALossWasNotDeterminedInAReturnFiledInTime_doesNotCarryIt() {
         // When — D: A's ledger with TY 2024-25's loss from a late return
         NodeResult result = runWithCarriedCapitalLoss(2026, OLD, caseAGains(), caseALedger(2023, false));
@@ -541,7 +565,7 @@ class SetOffNodeTest {
     @Test
     void evaluate_whenTheRowDoesNotRequireAReturnFiledInTime_carriesALateLoss() {
         // Given — the capital-loss row stating no return condition
-        RulePack pack = withCarryForward(2026, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS,
+        RulePack pack = withDefinition(2026, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS,
                 new LossCarryForward(HeadCode.CAPITAL_GAINS, new TaxYearSpan(8), false));
 
         // When — D's ledger: TY 2024-25's loss from a late return
@@ -554,7 +578,7 @@ class SetOffNodeTest {
     @Test
     void evaluate_whenTheHousePropertyRowRequiresAReturnFiledInTime_isRefused() {
         // Given
-        RulePack pack = withCarryForward(2026, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
+        RulePack pack = withDefinition(2026, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
                 new LossCarryForward(HeadCode.HOUSE_PROPERTY, new TaxYearSpan(8), true));
 
         // When / Then — the house-property ledger states no return fact to test
@@ -566,7 +590,7 @@ class SetOffNodeTest {
     @Test
     void evaluate_whenTheHousePropertyRowNamesCapitalGains_isRefused() {
         // Given
-        RulePack pack = withCarryForward(2026, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
+        RulePack pack = withDefinition(2026, RuleIds.SETOFF_CARRIED_HOUSE_PROPERTY,
                 new LossCarryForward(HeadCode.CAPITAL_GAINS, new TaxYearSpan(8), false));
 
         // When / Then
@@ -578,7 +602,7 @@ class SetOffNodeTest {
     @Test
     void evaluate_whenTheCapitalLossRowNamesAnotherHead_isRefused() {
         // Given
-        RulePack pack = withCarryForward(2026, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS,
+        RulePack pack = withDefinition(2026, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS,
                 new LossCarryForward(HeadCode.HOUSE_PROPERTY, new TaxYearSpan(8), true));
 
         // When / Then

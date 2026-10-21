@@ -20,6 +20,7 @@ public final class RuleIds {
     public static final RuleId CG_PART_LONG_OTHER = new RuleId("CG-PART-LONG-OTHER");
     public static final RuleId CG_PART_SHORT_LISTED = new RuleId("CG-PART-SHORT-LISTED");
     public static final RuleId CG_PART_SHORT_SLAB = new RuleId("CG-PART-SHORT-SLAB");
+    public static final RuleId CG_PARTS = new RuleId("CG-PARTS");
     public static final RuleId CG_TERM_LISTED_SECURITY = new RuleId("CG-TERM-LISTED-SECURITY");
     public static final RuleId DED_AGNIVEER_GOVERNMENT = new RuleId("DED-AGNIVEER-GOVERNMENT");
     public static final RuleId DED_AGNIVEER_OWN = new RuleId("DED-AGNIVEER-OWN");
