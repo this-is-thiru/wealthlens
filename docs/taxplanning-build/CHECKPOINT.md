@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088j2d — the user declares STT for a trade, or in bulk (D-293)
+Item            : W-088j2e — STT-PURCHASE-DELIVERY (s.98 Sl. 1 "Purchase") applies only to a buy by purchase (D-299 C3)
 Stage           : READY — not started
-Plan            : plans/W-088j2d.md not yet written
+Plan            : plans/W-088j2e.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088j2d": read the WI row ("its plan may propose closing it if j2a – j2c leave too little"), D-293 D1, D-298, runbook §3.3/§3.4; judge what UNKNOWN remains after j2c (no venue; non-NSE/BSE strings; pre-2004 lots) and whether a declaration is worth building; write plans/W-088j2d.md (build or close with a D-row), STOP
-Last verify     : unit clean -Punit 3183 run, 0 fail; integration 269/0 (2026-10-20, W-088j2c2)
-Waiting on      : the owner — "start W-088j2d"; OQ-32, OQ-33 open
+Next step       : on "start W-088j2e": read its WI row, D-299 C3, plans/W-088j2d.md C3, STT-PURCHASE-DELIVERY.json, CapitalGainsStt, CG-PART-LONG-NOTIFIED; decide the acquisition-mode limb (the fact name the engine already has) and whether Chapter VII's commencement date can be sourced for a date limb; write plans/W-088j2e.md, STOP
+Last verify     : unit clean -Punit 3183 run, 0 fail (2026-10-21, W-088j2d); integration 269/0 (2026-10-20)
+Waiting on      : the owner — "start W-088j2e"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088j2c2: decide STT chargeability in the engine for a side with no breakdown — RS-STT-CHARGEABLE rows for s.98 Sl. 1–3 on NSE and BSE, the part rows accepting CHARGEABLE per s.196, s.198 and S.O. 5054(E) (D-298)
-Updated         : 2026-10-20, session 26 — PAUSED at the session limit, everything committed (resume at W-088j2d)
+Last item commit: taxplanning W-088j2d: close the user declaration of STT without code — the UNKNOWN left after j2c is a missing or unmatched exchange string or a trade off an exchange; runbook §3.3 counts it, W-088j2e placed (D-299)
+Updated         : 2026-10-21, session 27 — W-088j2d done
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
