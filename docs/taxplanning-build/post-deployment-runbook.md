@@ -232,6 +232,50 @@ so the old form misleads only whoever reads the field. This makes the stored yea
 
 **Removed after use:** W-149 / WL-32, once this is logged for prod.
 
+### 2.4 W-088k4b (D-308) — date the bonus lots processed before W-088k4a from their allotment · `SUPER_USER` · **every database with bonus actions · once · outstanding**
+
+**Why.** A bonus share's holding period runs from its allotment (1961 Explanation 1(i)(f) to s.2(42A); 2025
+s.2(101)(c)(C)(IV)). Before W-088k4a a bonus lot, its transaction and the disposals of it were dated at the action's
+ex-date. The tax engine counts the term from that date, so a sale within days of the twelve-month anniversary can fall
+in the wrong term. This moves them to the allotment date **you supply**, read from each company's announcement.
+
+1. **Count before** (read-only): the bonus actions, and those without an allotment date (§3.6):
+   `db.corporate_action.find({ type: "BONUS" }, { stock_code: 1, record_date: 1, ex_date: 1, allotment_date: 1 })`.
+   For each, look up its allotment date.
+2. **Write the request** to `allotment-dates.json`: `[{ "corporateActionId": "<_id>", "allotmentDate": "yyyy-MM-dd" }, …]`.
+3. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/corporate-actions/bonus/allotment-dates/correct" -H "Authorization: Bearer $ADMIN_TOKEN" \
+     -H "Content-Type: application/json" --data @allotment-dates.json | jq '.data'
+   ```
+
+   Expect, per action, `assets` = `transactions` = the users holding it at the record date, and `tradeOutcomes` = the
+   sales of those bonus lots. An entry that is not a bonus, names no action, is repeated, or disagrees with an
+   allotment date already held is refused (400) **before anything is written**. **Compare `assets` with
+   `tradeOutcomes`:** disposals are matched by stock code, so a stock renamed since its bonus shows `tradeOutcomes` 0
+   while it was sold. Fix those rows by hand (step 5's backup first).
+4. **Back up** the four collections for the stocks named:
+
+   ```bash
+   for c in corporate_action assets transactions trade_outcomes; do
+     mongoexport --uri "<uri>" --db <db> --collection $c --query '{"stock_code":{"$in":["<STOCK1>","<STOCK2>"]}}' \
+       --out bonus-allotment-$c-backup.json
+   done
+   ```
+
+5. **Write:** the same call with `?dryRun=false`. Each action gets `allotment_date`. Its bonus lots and transactions
+   still at the ex-date move to the allotment date. Each disposal of them gets `buy_date`, `holding_period_days` and
+   `portfolio`'s own `capital_gains_type` / `classification_reason` recomputed. `audit_metadata.updatedBy` is the
+   caller.
+6. **Verify:** a second call (dry run) reports `0` for every count, and step 1 shows every bonus with its
+   `allotment_date`.
+
+**Second run:** safe, including after a run that failed part-way: only documents still at an ex-date are matched, and
+an equal allotment date is a no-op. **Way back:** `mongoimport --mode upsert` of the step-4 files.
+
+**Removed after use:** W-150 / WL-34, once this is logged for every database with bonus actions.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined

@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088k4b — correct bonus lots processed before W-088k4a (D-306 C2a)
+Item            : W-088o — capital-gains parts as rule data (D-250, narrowed by D-259)
 Stage           : READY — not started
-Plan            : plans/W-088k4b.md not yet written
+Plan            : plans/W-088o.md holds the sequencing plan; the build plan is written when taken
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088k4b": read its WI row, D-306, D-307, runbook §2 entries and their endpoints (W-088u7/u8c pattern: SUPER_USER, dryRun default, idempotent, integration test), D-280, D-286 (Phase 15 removal row, YouTrack child under WL-28), how an existing action gets its allotment_date (endpoint vs runbook command), which lots/transactions belong to a bonus action (corporate_actions list, corporate_action_type BONUS, ex-date); write plans/W-088k4b.md, STOP
-Last verify     : unit clean -Punit 3218 run, 0 fail; integration 273/0 (2026-10-21, W-088k4a)
-Waiting on      : the owner — "start W-088k4b"; OQ-32, OQ-33 open
+Next step       : on "start W-088o": read its WI row (D-259: CapitalGainsPart only — parts as versioned rule data stating the bucket facts each collects and whether a long-term loss may reach it, s.108(2)(b)), plans/W-088o.md, reviews/2026-10-19-branch-extendability-review.md E3, CapitalGainsPart and its readers (CapitalGainsNode, CapitalGainsAbsorption, RS-CG-PART BucketPart, rate rows), D-289 – D-305; write the build plan (a split if > §7), STOP
+Last verify     : unit clean -Punit 3218 run, 0 fail; integration 281/0 (2026-10-21, W-088k4b)
+Waiting on      : the owner — "start W-088o"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088k4a: date a bonus lot from its allotment — corporate_action.allotment_date, performing a bonus without it refused, the engine's caveat narrowed to older lots; W-088k4 split k4a/k4b (D-306, D-307)
-Updated         : 2026-10-21, session 27 — W-088k4a done
+Last item commit: taxplanning W-088k4b: correct the bonus lots processed before W-088k4a — a one-time SUPER_USER call records each owner-supplied allotment date and re-dates the lots, transactions and their sales from the ex-date; runbook §2.4, W-150 / WL-34 (D-308)
+Updated         : 2026-10-21, session 27 — W-088k4b done
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
