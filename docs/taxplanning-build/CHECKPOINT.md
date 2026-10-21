@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088l — repo-wide audit: law in code and rule-derived fields (D-249)
+Item            : W-088l2 — law-in-code audit, taxplanning (D-312)
 Stage           : READY — not started
-Plan            : written when taken (plans/W-088l.md)
+Plan            : written when taken (plans/W-088l2.md), on W-088l1's method (tools/law_in_code_triage.py, G1–G10)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088l": read its WI row and every note placed for it (D-302 D2a HoldingPeriodService, D-306 CorporateActionDto.date, review 'Out of scope' RestructuringEngine:198–200, W-088o1's coverage placement of SETOFF-WITHIN-CAPITAL-GAINS); write plans/W-088l.md (a split if > §7), STOP
+Next step       : on "start W-088l2": read its WI row, plans/W-088l.md, the audit file (criteria, N6), plans/W-088l1.md (method, its G9/G10 deviation); write plans/W-088l2.md, STOP
 Last verify     : targeted 443/0; unit -Punit 3242/0; integration 281/0 (2026-10-21, W-088o2)
-Waiting on      : the owner — "start W-088l"; OQ-32, OQ-33 open
+Waiting on      : the owner — "start W-088l2"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088o2: make CapitalGainsPart an open code — the parts are only what CG-PARTS declares, checked by the build's pack validation, so a new special-rate part is rule data alone; W-088o closed (D-311)
-Updated         : 2026-10-21, session 28 — W-088o2 committed
+Last item commit: taxplanning W-088l1: audit taxengine for law in code — every hit of ten greps given a verdict, eight findings placed as W-151 – W-158 after the audit; W-088l split l1 – l3 (D-312, D-313)
+Updated         : 2026-10-21, session 28 — W-088l1 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
