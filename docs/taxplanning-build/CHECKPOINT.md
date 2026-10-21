@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088k4 — a bonus lot dated from its allotment (D-304 C2)
+Item            : W-088k4b — correct bonus lots processed before W-088k4a (D-306 C2a)
 Stage           : READY — not started
-Plan            : plans/W-088k4.md not yet written
+Plan            : plans/W-088k4b.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088k4": read its WI row, D-304, D-305, sources/2026-10-21-holding-period.md (bonus-date gap), CorporateActionEntity (record_date, ex_date, date), CorporateActionService:353–390 (bonus lot and transaction dated at ex_date), the corporate-action seed/entry path, all three trade_outcomes writers; design where the allotment date comes from and the runbook entry for existing actions; write plans/W-088k4.md, STOP
-Last verify     : unit clean -Punit 3218 run, 0 fail; integration 269/0 (2026-10-21, W-088k3)
-Waiting on      : the owner — "start W-088k4"; OQ-32, OQ-33 open
+Next step       : on "start W-088k4b": read its WI row, D-306, D-307, runbook §2 entries and their endpoints (W-088u7/u8c pattern: SUPER_USER, dryRun default, idempotent, integration test), D-280, D-286 (Phase 15 removal row, YouTrack child under WL-28), how an existing action gets its allotment_date (endpoint vs runbook command), which lots/transactions belong to a bonus action (corporate_actions list, corporate_action_type BONUS, ex-date); write plans/W-088k4b.md, STOP
+Last verify     : unit clean -Punit 3218 run, 0 fail; integration 273/0 (2026-10-21, W-088k4a)
+Waiting on      : the owner — "start W-088k4b"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088k3: decide short-term or long-term in the engine — RS-CG-TERM's twelve-month row for equity sold on NSE or BSE, counted in calendar months; the input no longer carries portfolio's term (D-305)
-Updated         : 2026-10-21, session 27 — W-088k3 done
+Last item commit: taxplanning W-088k4a: date a bonus lot from its allotment — corporate_action.allotment_date, performing a bonus without it refused, the engine's caveat narrowed to older lots; W-088k4 split k4a/k4b (D-306, D-307)
+Updated         : 2026-10-21, session 27 — W-088k4a done
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

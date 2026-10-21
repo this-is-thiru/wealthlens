@@ -59,7 +59,8 @@ final class CapitalGainsTerm {
                         + (longTerm ? "more than " : "not more than ") + months + " months, " + term
                         + " (calendar months, D-303)"
                         + (facts.corporateAction().equals(Optional.of("BONUS"))
-                                ? "; a bonus lot is dated at its ex-date, not its allotment (W-088k4)" : "")));
+                                ? "; a bonus lot processed before W-088k4a may be dated at its ex-date (W-088k4b)"
+                                : "")));
         return term;
     }
 }

@@ -65,6 +65,8 @@ corporateAction.getExDate())`). A demerged lot keeps the parent lot's date (`:57
 entity.getTransactionDate())`), which is row 4(g) / row 8 (B)(III)'s rule as recorded. The gap is W-088k2's to
 decide: a fact to add, or an approximation stated in the row.
 
+**Since W-088k4a (D-307):** a bonus action carries `corporate_action.allotment_date`; performing a `BONUS` without it is refused, and the bonus lot and its transaction are dated by it. Lots processed earlier keep the ex-date until W-088k4b corrects them.
+
 ## For W-088k3
 
 - **Both years, equity shares listed on a recognised exchange:** short-term if held for not more than **twelve

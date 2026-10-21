@@ -562,8 +562,9 @@ class CapitalGainsNodeTest {
     }
 
     @Test
-    void evaluate_whenABonusLotIsHeld_tracesTheExDateApproximation() {
-        // When — case 6: a bonus lot is dated at its ex-date until W-088k4 (Explanation 1(i)(f))
+    void evaluate_whenABonusLotIsHeld_tracesThatOldLotsMayBeExDated() {
+        // When — W-088k3 case 6: the engine cannot tell an ex-dated lot from an allotment-dated one, so it says which
+        // lots may be ex-dated (Explanation 1(i)(f); W-088k4a, D-307)
         NodeResult result = result(2026, held("2024-06-05", "2025-06-06", "NSE", "CORPORATE_ACTION/BONUS"));
 
         // Then
@@ -572,6 +573,6 @@ class CapitalGainsNodeTest {
         assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_TERM_LISTED_SECURITY))
                 .singleElement()
                 .satisfies(line -> assertThat(line.limitedBy().orElseThrow())
-                        .endsWith("; a bonus lot is dated at its ex-date, not its allotment (W-088k4)"));
+                        .endsWith("; a bonus lot processed before W-088k4a may be dated at its ex-date (W-088k4b)"));
     }
 }
