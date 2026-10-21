@@ -42,6 +42,8 @@ class CapitalGainsAdapterTest {
     private static final String EMAIL = "user@example.com";
     private static final TaxYearId YEAR = TaxYearId.of(2025);
     private static final LocalDate ACQUIRED_ON = LocalDate.of(2023, 4, 3);
+
+    private static final LocalDate TRANSFERRED_ON = LocalDate.of(2025, 6, 10);
     private static final Instant AS_OF = Instant.parse("2026-04-15T10:00:00Z");
 
     @Mock
@@ -54,13 +56,13 @@ class CapitalGainsAdapterTest {
             SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, double gainRupees) {
         return new CapitalGainsBucket(classification, assetType, Optional.empty(), sttOnAcquisition, sttOnTransfer,
                 TradeVenue.UNRECORDED, TradeVenue.UNRECORDED,
-                Acquisition.of(null), ACQUIRED_ON, gainRupees);
+                Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, gainRupees);
     }
 
     /** Long-term equity sold with STT, its buy without, acquired as stated. */
     private static CapitalGainsBucket boughtWithoutStt(Acquisition acquisition, LocalDate acquiredOn) {
         return new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY, Optional.empty(),
-                SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, acquisition, acquiredOn, 1000.50);
+                SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, acquisition, acquiredOn, TRANSFERRED_ON, 1000.50);
     }
 
     private CapitalGainsInput inputOf(CapitalGainsBucket... buckets) {
@@ -174,7 +176,7 @@ class CapitalGainsAdapterTest {
                 Optional.empty(), SttEvidence.UNKNOWN, SttEvidence.UNKNOWN,
                 new TradeVenue(Optional.of("BSE"), Optional.of(TradeSegment.DELIVERY)),
                 new TradeVenue(Optional.of("NSE"), Optional.of(TradeSegment.INTRADAY)), Acquisition.of(null),
-                ACQUIRED_ON, 10);
+                ACQUIRED_ON, TRANSFERRED_ON, 10);
         CapitalGainsInput.Bucket bucket = onlyBucketOf(recorded);
 
         // Then

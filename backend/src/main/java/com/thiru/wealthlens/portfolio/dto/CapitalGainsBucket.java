@@ -31,6 +31,8 @@ import java.util.Optional;
  * @param transferVenue where and how the sales were traded, as recorded
  * @param acquisition how the lots these gains came from were acquired; {@code UNRECORDED} where no row says
  * @param acquiredOn the date those lots were acquired
+ * @param transferredOn the date the disposals in this bucket were made — with {@code acquiredOn}, what the holding
+ *         period is counted from and to on the tax side (W-088k2, D-304)
  * @param gainRupees the gross gain, a loss negative, canonical to paise
  */
 public record CapitalGainsBucket(
@@ -43,14 +45,15 @@ public record CapitalGainsBucket(
         TradeVenue transferVenue,
         Acquisition acquisition,
         LocalDate acquiredOn,
+        LocalDate transferredOn,
         double gainRupees) {
 
     public CapitalGainsBucket {
         if (classification == null || assetType == null || instrumentSubClass == null || sttOnAcquisition == null
                 || sttOnTransfer == null || acquisitionVenue == null || transferVenue == null || acquisition == null
-                || acquiredOn == null) {
+                || acquiredOn == null || transferredOn == null) {
             throw new IllegalArgumentException("A capital-gains bucket needs its classification, asset type, STT"
-                    + " evidence, venues, acquisition and acquisition date; pass Optional.empty() for an instrument"
+                    + " evidence, venues, acquisition, acquisition date and transfer date; pass Optional.empty() for an instrument"
                     + " without a sub-class, UNKNOWN for STT with no record and TradeVenue.UNRECORDED for no venue");
         }
         gainRupees = TMoney.scale(gainRupees);

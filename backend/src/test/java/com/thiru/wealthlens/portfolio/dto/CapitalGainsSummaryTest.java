@@ -19,12 +19,14 @@ import org.junit.jupiter.api.Test;
 class CapitalGainsSummaryTest {
 
     private static final LocalDate ACQUIRED_ON = LocalDate.of(2023, 4, 3);
+
+    private static final LocalDate TRANSFERRED_ON = LocalDate.of(2025, 6, 10);
     private static final Instant AS_OF = Instant.parse("2026-04-15T10:00:00Z");
 
     private static CapitalGainsBucket equity(CapitalGainsType classification, double gainRupees) {
         return new CapitalGainsBucket(classification, AssetType.EQUITY, Optional.empty(), SttEvidence.PAID, SttEvidence.PAID,
                 TradeVenue.UNRECORDED, TradeVenue.UNRECORDED,
-                Acquisition.of(null), ACQUIRED_ON, gainRupees);
+                Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, gainRupees);
     }
 
     private static CapitalGainsSummary summary(List<CapitalGainsBucket> buckets) {
@@ -61,7 +63,7 @@ class CapitalGainsSummaryTest {
     void capitalGainsBucket_whenTheSubClassIsNull_isRefused() {
         // When / Then
         assertThatThrownBy(() -> new CapitalGainsBucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY, null, SttEvidence.PAID,
-                SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON, 100))
+                SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, 100))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Optional.empty()");
     }
@@ -92,7 +94,7 @@ class CapitalGainsSummaryTest {
     void capitalGainsSummary_whenOneClassificationSpansTwoAssets_keepsBoth() {
         // Given — the rate depends on the asset, so equity and a mutual fund stay apart
         CapitalGainsBucket fund = new CapitalGainsBucket(CapitalGainsType.UNCLASSIFIED, AssetType.MUTUAL_FUND,
-                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON, 400);
+                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, 400);
 
         // When
         CapitalGainsSummary summary = summary(List.of(equity(CapitalGainsType.UNCLASSIFIED, 300), fund));
@@ -105,7 +107,7 @@ class CapitalGainsSummaryTest {
     void capitalGainsSummary_whenTwoBucketsDifferOnlyInStt_keepsBoth() {
         // Given — the special rates turn on STT (S2 ss.196, 198), so a sale with and one without stay apart (D-241)
         CapitalGainsBucket withoutStt = new CapitalGainsBucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY,
-                Optional.empty(), SttEvidence.PAID, SttEvidence.NOT_PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON, 50);
+                Optional.empty(), SttEvidence.PAID, SttEvidence.NOT_PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, 50);
 
         // When
         CapitalGainsSummary summary = summary(List.of(equity(CapitalGainsType.SHORT_TERM, 100), withoutStt));
@@ -118,11 +120,11 @@ class CapitalGainsSummaryTest {
     void capitalGainsSummary_whenTwoBucketsDifferOnlyInHowOrWhenAcquired_keepsThemApart() {
         // Given — the facts a waiver of the STT condition turns on (S.O. 5054(E)), so none is summed away
         CapitalGainsBucket bonus = new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
-                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(CorporateActionType.BONUS), ACQUIRED_ON, 50);
+                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(CorporateActionType.BONUS), ACQUIRED_ON, TRANSFERRED_ON, 50);
         CapitalGainsBucket purchase = new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
-                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON, 60);
+                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, 60);
         CapitalGainsBucket purchaseLater = new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
-                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON.plusDays(1), 70);
+                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON.plusDays(1), TRANSFERRED_ON, 70);
 
         // When
         CapitalGainsSummary summary = summary(List.of(bonus, purchase, purchaseLater));
@@ -132,10 +134,37 @@ class CapitalGainsSummaryTest {
     }
 
     @Test
+    void capitalGainsSummary_whenTwoBucketsDifferOnlyInWhenSold_keepsThemApart() {
+        // Given -- W-088k2 case 4: the holding period runs to each sale date (D-304)
+        CapitalGainsBucket sold = new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
+                Optional.empty(), SttEvidence.PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED,
+                Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, 50);
+        CapitalGainsBucket soldNextDay = new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
+                Optional.empty(), SttEvidence.PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED,
+                Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON.plusDays(1), 60);
+
+        // When
+        CapitalGainsSummary summary = summary(List.of(sold, soldNextDay));
+
+        // Then
+        assertThat(summary.buckets()).hasSize(2);
+    }
+
+    @Test
+    void capitalGainsBucket_whenTheTransferDateIsNull_isRefused() {
+        // When / Then
+        assertThatThrownBy(() -> new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
+                Optional.empty(), SttEvidence.PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED,
+                Acquisition.of(null), ACQUIRED_ON, null, 100))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("transfer date");
+    }
+
+    @Test
     void capitalGainsBucket_whenTheAcquisitionDateIsNull_isRefused() {
         // When / Then
         assertThatThrownBy(() -> new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
-                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), null, 100))
+                Optional.empty(), SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), null, TRANSFERRED_ON, 100))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("acquisition date");
     }

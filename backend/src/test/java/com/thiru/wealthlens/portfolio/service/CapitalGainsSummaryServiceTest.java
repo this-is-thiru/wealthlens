@@ -232,6 +232,37 @@ class CapitalGainsSummaryServiceTest {
     }
 
     @Test
+    void summaryFor_whenRowsDifferOnlyInWhenSold_publishesEachSaleDateApart() {
+        // Given -- W-088k2 cases 1, 2: two sales of one lot on 2-6-2025 and one on 3-6-2025; the engine counts the
+        // holding period to each date (D-304)
+        TradeOutcomeEntity first = row("K", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1);
+        TradeOutcomeEntity sameDay = row("L", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 130, 100, 1);
+        TradeOutcomeEntity nextDay = row("M", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 140, 100, 1);
+        nextDay.setSellDate(LocalDate.of(2025, 6, 3));
+
+        // When
+        CapitalGainsSummary summary = summaryOf(List.of(first, sameDay, nextDay));
+
+        // Then -- 20 + 30 on 2-6-2025, 40 on 3-6-2025, by hand
+        assertThat(summary.buckets()).extracting(CapitalGainsBucket::transferredOn)
+                .containsExactly(LocalDate.of(2025, 6, 2), LocalDate.of(2025, 6, 3));
+        assertCanonical(50.00, summary.buckets().get(0).gainRupees());
+        assertCanonical(40.00, summary.buckets().get(1).gainRupees());
+    }
+
+    @Test
+    void summaryFor_whenARowHasNoSellDate_isRefusedNamingIt() {
+        // Given -- W-088k2 case 3
+        TradeOutcomeEntity undated = row("N", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1);
+        undated.setSellDate(null);
+
+        // When / Then
+        assertThatThrownBy(() -> summaryOf(List.of(undated)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("The disposal N has no sell date");
+    }
+
+    @Test
     void summaryFor_whenARowHasMiscCharges_doesNotDeductThem() {
         // When — row B's user-entered misc charge of 10 has no code, so nothing says it is deductible
         CapitalGainsSummary summary = summaryOf(List.of(rowsAtoC().get(1)));

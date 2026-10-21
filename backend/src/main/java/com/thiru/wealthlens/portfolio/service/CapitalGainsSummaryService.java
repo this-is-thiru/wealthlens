@@ -64,8 +64,10 @@ public class CapitalGainsSummaryService {
                 LocalDate.of(startYear, 3, 31), LocalDate.of(startYear + 1, 4, 1));
         requireQuantifiable(rows);
         Map<BucketKey, Double> gainByKey = new LinkedHashMap<>();
+        // Nulls sort first so a row without a sell date reaches BucketKey's refusal, which names it.
         rows.stream()
-                .sorted(Comparator.comparing(TradeOutcomeEntity::getSellDate).thenComparing(TradeOutcomeEntity::getId))
+                .sorted(Comparator.comparing(TradeOutcomeEntity::getSellDate,
+                        Comparator.nullsFirst(Comparator.naturalOrder())).thenComparing(TradeOutcomeEntity::getId))
                 .forEach(row -> gainByKey.merge(BucketKey.of(row), gainOf(row), TMoney::add));
         List<CapitalGainsBucket> buckets = gainByKey.entrySet().stream()
                 .map(entry -> entry.getKey().bucket(entry.getValue()))
@@ -113,10 +115,11 @@ public class CapitalGainsSummaryService {
         return TMoney.scale(sale - cost - row.getDeductibleBuyCharges() - row.getDeductibleSellCharges());
     }
 
-    /** What a bucket is one of: the rows a bucket sums share all nine. */
+    /** What a bucket is one of: the rows a bucket sums share all ten. */
     private record BucketKey(CapitalGainsType classification, AssetType assetType, Optional<String> subClass,
             SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, TradeVenue acquisitionVenue,
-            TradeVenue transferVenue, Acquisition acquisition, LocalDate acquiredOn) {
+            TradeVenue transferVenue, Acquisition acquisition, LocalDate acquiredOn,
+            LocalDate transferredOn) {
 
         static BucketKey of(TradeOutcomeEntity row) {
             return new BucketKey(row.getCapitalGainsType(), row.getAssetType(),
@@ -125,12 +128,12 @@ public class CapitalGainsSummaryService {
                     TradeVenue.stored(row.getBuyExchangeName(), row.getBuySegment()),
                     TradeVenue.stored(row.getSellExchangeName(), row.getSellSegment()),
                     Acquisition.stored(row.getAcquisitionMode(), row.getAcquisitionCorporateAction()),
-                    acquiredOnOf(row));
+                    acquiredOnOf(row), transferredOnOf(row));
         }
 
         CapitalGainsBucket bucket(double gainRupees) {
             return new CapitalGainsBucket(classification, assetType, subClass, sttOnAcquisition, sttOnTransfer,
-                    acquisitionVenue, transferVenue, acquisition, acquiredOn, gainRupees);
+                    acquisitionVenue, transferVenue, acquisition, acquiredOn, transferredOn, gainRupees);
         }
 
         private static LocalDate acquiredOnOf(TradeOutcomeEntity row) {
@@ -139,6 +142,14 @@ public class CapitalGainsSummaryService {
                         + " acquired is unknown");
             }
             return row.getBuyDate();
+        }
+
+        private static LocalDate transferredOnOf(TradeOutcomeEntity row) {
+            if (row.getSellDate() == null) {
+                throw new IllegalArgumentException("The disposal " + row.getId() + " has no sell date, so when it was"
+                        + " transferred is unknown");
+            }
+            return row.getSellDate();
         }
     }
 
