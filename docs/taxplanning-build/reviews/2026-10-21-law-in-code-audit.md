@@ -147,4 +147,47 @@ which the module's own notice says is code being replaced.
 
 ## W-088l3 — `portfolio`, `corporate`, `brokercharges`, `shared`, the rest
 
-*Not yet audited.*
+**Status: audited and placed (session 28, D-315): T1 – T8 are W-160 – W-167 (in the order T1, T2, T4, T3, T5, T8, T6, T7), after W-159.** G1 – G8 per module (`reviews/law-in-code/l3-<module>-hits.txt`;
+`insurance` had none), G9 (9, `l3-g9-boolean-facts.txt`), G10 (1); every hit given a verdict. Read whole:
+`shared/util/time/TLocalDate`, `shared/util/collection/TJsonMapper` (its `return null`s), `ChargeDeductibilityService`,
+`CapitalGainsType`; the holding-period JSON and a rate card (`zerodha-equity-delivery-2025-04-01.json`); `holding/`,
+`corporate/service/` by their hits.
+
+| Module | G1 | G2 | G4 | G5 | G6 | G7 | G8 | Verdicted |
+|---|---|---|---|---|---|---|---|---|
+| `portfolio` | 2 | 45 | 36 | 13 | 15 | 23 | 3 | 137 |
+| `brokercharges` | 1 | 24 | 20 | 13 | 7 | 26 | 0 | 91 |
+| `shared` | 1 | 15 | 12 | 0 | 0 | 40 | 6 | 74 |
+| `corporate` | 5 | 2 | 10 | 1 | 0 | 3 | 0 | 21 |
+| `finance` | 0 | 16 | 11 | 0 | 0 | 0 | 0 | 27 |
+| `auth` | 0 | 1 | 0 | 4 | 0 | 3 | 3 | 11 |
+| `helper` | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 |
+
+### Findings, grouped into proposed rows
+
+| Proposed row | Places | Kind | Direction | Owned already? |
+|---|---|---|---|---|
+| **T1 `portfolio`'s holding-period law and classes** (N3, N4) | `resources/data/holding-periods/holding-period-policies.json` with `portfolio/holding/HoldingPeriodResolver.java:97–104` and `HoldingPeriodService.java:52–60` (the law a second time beside `RS-CG-TERM`); `holding/TradeClassifier.java:47–55` (intraday equity speculative, futures and options unclassified — segment-decided classes); `dto/enums/CapitalGainsType.java:36–38` (`countsAsCapitalGains`, G10); the stored `trade_outcomes.capital_gains_type` (a field derived from today's law); its readers `ProfitAndLossService:136`, `:425`; `service/PortfolioService.java:817–821` (holdings long-term after one year for every asset, from `LocalDate.now()`) | L6, L2, L4 | `portfolio` publishes the facts, the tax side decides; whether `portfolio`'s own reports keep a term (read from the engine, or none) is the product change D-302 D2a left to this audit | — |
+| **T2 the April – March year outside `TaxYearId`** (N2) | `shared/util/time/TLocalDate.java:61–66` (`financialYear`, 8 callers incl. `taxplanning/portfolio/CapitalGainsAdapter:44`); `portfolio/service/CapitalGainsSummaryService.java:48`, `:64` (the year's window built again); `brokercharges/entity/model/YearlyChargeSummary.java:42` (April as month 0) | L1 | one derivation: `TaxYearId.containing` needs `shared → taxengine :: id` (D-269); or a `shared` type the two sides agree on — for placement | — |
+| **T3 statutory charges on each broker's card** (C1a) | `resources/data/charges/*-equity-*.json`: `STT` (0.1 % delivery), `STAMP_DUTY` (0.015 %, buy), `GST` (18 % on a listed base), `SEBI_FEE`, repeated on every broker's card, windowed by the card | L6 | a shared statutory card the broker cards reference; or accepted, the cards modelling the contract note's bill — for placement | — |
+| **T4 deductibility as a flag on the charge catalogue** | `brokercharges/entity/ChargeCatalogueEntity.java:69–70` (`deductible_for_capital_gains`, not versioned by year); read by `service/ChargeDeductibilityService` (an unknown or unflagged code excluded with a warning) | L4 | which charges reduce a gain (s.48) as tax-side rule data, by year; the catalogue keeps the charge's facts | — |
+| **T5 a Gold Bond's maturity defaulted** | `portfolio/service/parser/AssetRequestParser.java:179` (`transactionDate.plusYears(8)` when none is given) | L1 (law not identified), and a default in place of a missing fact | require the date, or take it from instrument data | — |
+| **T6 dead weight** (N5, and one found here) | `corporate/dto/CorporateActionDto.java:40` (`date`, accepted, never saved — D-306); `portfolio/service/ProfitAndLossService.java:54` (`MARCH`, unused) | S | remove | — |
+| **T7 `TJsonMapper`'s silent `null`** (N7) | `shared/util/collection/TJsonMapper.java:31`, `:38`, `:46`, `:66`, `:83` | S (CLAUDE.md §2 "nothing silent") | `Optional` or a thrown failure, callers adjusted | — |
+| **T8 coverage placement** (N8) | `content/coverage.json:70` (2025 s.67) and `:644` (1961 s.45) list `SETOFF-WITHIN-CAPITAL-GAINS` and `CG-PARTS`, while `:111` (2025 s.108) and `:692` (1961 s.70) list `HP-ANNUAL-VALUE`, `HP-INTEREST`, `HP-OWN-RESIDENCE-INTEREST`. The repo's own act index (`content/acts/INCOME_TAX_ACT_2025.json`) gives s.67 as "Capital gains" (the charging section, p.104) and s.108 as the set-off section (p.147), which the set-off row itself cites | S (register data) | move each row to the section it cites; check the house-property rows' sections | — |
+
+### Not findings
+
+| Hits | Reason |
+|---|---|
+| `corporate/service/CorporateActionService.java:41–42`, `:164–169` (quarter windows), `:219–240` (action dispatch), `:562`, `:586` (the demerger's announced price percentage); `CorporateActionType.FILTERABLE_CORPORATE_ACTIONS` | the product's processing cycle and blocking; the percentage is the action's own fact |
+| `finance/**` (EMI, SIP solving), `auth/**` (role hierarchy, token expiry), `helper` (a sample package id) | no law |
+| `shared/util/calculator/XirrCalculator`, `TMoney`, `ExcelHeaders`, `ExcelParser`, `QueryBuilder`, `SafeExpressions` | arithmetic and plumbing |
+| `portfolio` arithmetic, analytics, parsers and exports (G2, G4 rest); `CapitalGainsSummaryService:165` (STT evidence from a breakdown, D-292); `ProfitAndLossService:58` (`FORTNIGHT_BOUNDARY`, the P&L's half-month buckets); `Acquisition:26`, `TradeVenue`, `TemporaryTransactionService:115` | the code's own states, reporting choices, decided facts |
+| `brokercharges` engine and calculators (rates read from the card), `ChargeScheduleResolver:49–52` (specificity weights), `ChargeScheduleService:54` (a card's verification age), `ChargeRecordingGatewayImpl:52`, `ChargeEngine:113`, `:174`, `:257`, `:264` (flags from the card) | the rules engine's machinery; values come from data |
+
+### Summary for placement
+
+Eight proposed rows. T1 is the substantial one — `portfolio` still classifies capital gains by today's law beside the
+engine. T3 and T4 are the charge side's law (rates, deductibility). T2 closes N2. T5 – T8 are small. With W-088l1 and
+W-088l2, the audit is complete.

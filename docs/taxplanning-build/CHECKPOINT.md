@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088l3 — law-in-code audit, portfolio, corporate, brokercharges, shared and a pass over the rest (D-312)
+Item            : W-151 — s.516 rounding as rule data (D-313; audit P1)
 Stage           : READY — not started
-Plan            : written when taken (plans/W-088l3.md), on W-088l1's method
+Plan            : written when taken (plans/W-151.md)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088l3": read its WI row, the audit file (criteria, N2–N5, N7, N8), plans/W-088l1.md and W-088l2.md (method); write plans/W-088l3.md incl. C3a (CLAUDE.md §4 pointer), STOP
+Next step       : on "start W-151": read its WI row, the audit file § W-088l1 P1, node/RoundingStep, rules/money/Money.roundToNearestTenPerSection516, rules/rounding/RuleRounding, the rounding rows (ROUND-*) and their notes; write plans/W-151.md, STOP
 Last verify     : targeted 443/0; unit -Punit 3242/0; integration 281/0 (2026-10-21, W-088o2)
-Waiting on      : the owner — "start W-088l3"; OQ-32, OQ-33 open
+Waiting on      : the owner — "start W-151"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088l2: audit taxplanning for law in code — the legacy compute path holds the law a second time and no row removed it; placed as W-159 (D-314)
-Updated         : 2026-10-21, session 28 — W-088l2 committed
+Last item commit: taxplanning W-088l3: audit portfolio, corporate, brokercharges, shared and the rest for law in code — eight findings placed as W-160 – W-167, CLAUDE.md §4 names the audit file; W-088l closed (D-315)
+Updated         : 2026-10-21, session 28 — W-088l3 committed, W-088l closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

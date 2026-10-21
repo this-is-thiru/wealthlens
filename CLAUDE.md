@@ -49,7 +49,8 @@ override convenience. Where the build enforces one, the enforcing check is named
   threshold). Every legal date, boundary, rate or qualifying list is tax-year-versioned rule data on the tax side,
   never a Java constant, `if` or `switch`, so a law that changes, lapses and returns is new data, not new code. Open
   categories pass through as themselves (carry the `CorporateActionType`, don't collapse it into a catch-all).
-  Existing violations are listed by `W-088l`; a new one is a defect.
+  Existing violations are listed in `docs/taxplanning-build/reviews/2026-10-21-law-in-code-audit.md`
+  (`W-088l`), each placed as a row; a new one is a defect.
 
 ### 5. Tests
 

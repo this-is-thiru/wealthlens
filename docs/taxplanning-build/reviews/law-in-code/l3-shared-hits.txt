@@ -1,0 +1,79 @@
+## G1 1
+util/time/TLocalDate.java:63: return date.getMonthValue() <= Month.MARCH.getValue()
+## G2 15
+util/calculator/XirrCalculator.java:11: private static final int MAX_ITERATIONS = 100;
+util/calculator/XirrCalculator.java:12: private static final double INITIAL_GUESS = 0.1;
+util/calculator/XirrCalculator.java:47: .mapToDouble(cf -> cf.getAmount() / Math.pow(1 + r, daysBetween(baseDate, cf.getDate()) / 365.0))
+util/calculator/XirrCalculator.java:54: double days = daysBetween(baseDate, cf.getDate()) / 365.0;
+util/calculator/XirrCalculator.java:61: double low = -0.9999;
+util/calculator/XirrCalculator.java:62: double high = 10.0;
+util/calculator/XirrCalculator.java:63: double mid = 0.0;
+util/calculator/XirrCalculator.java:65: for (int i = 0; i < 100; i++) {
+util/calculator/XirrCalculator.java:66: mid = (low + high) / 2.0;
+util/calculator/XirrCalculator.java:90: return 0.0;
+util/calculator/XirrCalculator.java:92: return Math.pow(totalValue / totalInvestment, 365.0 / days) - 1;
+util/parser/ExcelColumn.java:50: return TMoney.scale(amount == null ? 0.0 : amount);
+util/money/TMoney.java:35: return BigDecimal.valueOf(finite(amount)).setScale(PAISE_SCALE, RoundingMode.HALF_UP).doubleValue();
+util/money/TMoney.java:60: return scaled(BigDecimal.valueOf(finite(left)).add(BigDecimal.valueOf(finite(right))));
+util/money/TMoney.java:73: total = total.add(amount == null ? BigDecimal.ZERO : BigDecimal.valueOf(finite(amount)));
+## G4 12
+util/parser/ExcelSheet.java:48: switch (value) {
+entity/query/QueryBuilder.java:36: switch (operation) {
+entity/query/QueryBuilder.java:37: case EQUALS -> criteria.is(queryFilter.getValue());
+entity/query/QueryBuilder.java:38: case NOT_EQUALS -> criteria.ne(queryFilter.getValue());
+entity/query/QueryBuilder.java:39: case GREATER_THAN -> criteria.gt(queryFilter.getValue());
+entity/query/QueryBuilder.java:40: case LESSER_THAN -> criteria.lt(queryFilter.getValue());
+entity/query/QueryBuilder.java:41: case GREATER_THAN_OR_EQUAL_TO -> criteria.gte(queryFilter.getValue());
+entity/query/QueryBuilder.java:42: case LESSER_THAN_OR_EQUAL_TO -> criteria.lte(queryFilter.getValue());
+entity/query/QueryBuilder.java:43: case STARTS_WITH -> criteria.regex(queryFilter.getValue().toString());
+entity/query/QueryBuilder.java:44: case CONTAINS -> criteria.in(queryFilter.getValues());
+entity/query/QueryBuilder.java:45: case IS_NULL -> criteria.is(NULL);
+entity/query/QueryBuilder.java:46: case IS_NOT_NULL -> criteria.ne(NULL);
+## G7 40
+util/transaction/ExcelHeaders.java:5: public static final String EMAIL = "EMAIL";
+util/transaction/ExcelHeaders.java:6: public static final String STOCK_CODE = "STOCK CODE";
+util/transaction/ExcelHeaders.java:7: public static final String STOCK_NAME = "STOCK NAME";
+util/transaction/ExcelHeaders.java:8: public static final String ORDER_ID = "ORDER ID";
+util/transaction/ExcelHeaders.java:9: public static final String ORDER_EXECUTION_TIME = "ORDER EXECUTION TIME";
+util/transaction/ExcelHeaders.java:10: public static final String TIME_ZONE = "TIME ZONE";
+util/transaction/ExcelHeaders.java:11: public static final String EXCHANGE_NAME = "EXCHANGE NAME";
+util/transaction/ExcelHeaders.java:12: public static final String BROKER_NAME = "BROKER NAME";
+util/transaction/ExcelHeaders.java:13: public static final String ASSET_TYPE = "ASSET TYPE";
+util/transaction/ExcelHeaders.java:14: public static final String MATURITY_DATE = "MATURITY DATE";
+util/transaction/ExcelHeaders.java:15: public static final String PRICE = "PRICE";
+util/transaction/ExcelHeaders.java:16: public static final String TOTAL_VALUE = "TOTAL VALUE";
+util/transaction/ExcelHeaders.java:17: public static final String QUANTITY = "QUANTITY";
+util/transaction/ExcelHeaders.java:18: public static final String TOTAL_QUANTITY = "TOTAL QUANTITY";
+util/transaction/ExcelHeaders.java:19: public static final String TRANSACTION_TYPE = "TRANSACTION TYPE";
+util/transaction/ExcelHeaders.java:20: public static final String TRANSACTION_DATE = "TRANSACTION DATE";
+util/transaction/ExcelHeaders.java:21: public static final String BROKER_CHARGES = "BROKER CHARGES";
+util/transaction/ExcelHeaders.java:22: public static final String MISC_CHARGES = "MISC CHARGES";
+util/transaction/ExcelHeaders.java:23: public static final String COMMENTS = "COMMENTS";
+util/transaction/ExcelHeaders.java:26: public static final String COMPUTED_BUY_CHARGES = "COMPUTED BUY CHARGES";
+util/transaction/ExcelHeaders.java:27: public static final String COMPUTED_SELL_CHARGES = "COMPUTED SELL CHARGES";
+util/transaction/ExcelHeaders.java:28: public static final String TOTAL_COMPUTED_CHARGES = "TOTAL COMPUTED CHARGES";
+util/collection/TJsonMapper.java:13: private static final JsonMapper JSON_MAPPER = getJsonMapper();
+util/collection/TJsonMapper.java:14: private static final JsonMapper JSON_MAPPER_SAFE = safeJsonMapper();
+util/collection/TCollectionUtil.java:20: public static final String DATE_FORMAT = "yyyy-MM-dd";
+util/collection/TCollectionUtil.java:21: public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+util/calculator/XirrCalculator.java:10: private static final double EPSILON = 1e-7;
+util/calculator/XirrCalculator.java:11: private static final int MAX_ITERATIONS = 100;
+util/calculator/XirrCalculator.java:12: private static final double INITIAL_GUESS = 0.1;
+util/parser/ExcelParser.java:8: private static final String EXCEL_TYPE = "text/xls";
+util/parser/ExcelParser.java:10: public static final String ASSETS = "ASSETS";
+util/parser/ExcelParser.java:11: public static final String TRANSACTIONS = "TRANSACTIONS";
+util/parser/ExcelParser.java:12: public static final String PORTFOLIO_FILE_NAME = "portfolio.xlsx";
+util/parser/ExcelParser.java:13: public static final String TRANSACTION_FILE_NAME = "transactions.xlsx";
+util/parser/ExcelParser.java:14: public static final String HOLDINGS_FILE_NAME = "holdings.xlsx";
+util/math/DoubleUtil.java:4: private static final double EPSILON = 1e-9;
+util/time/TLocalDateTime.java:14: public static final String COMPLETE_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+util/money/TMoney.java:28: public static final int PAISE_SCALE = 2;
+util/expression/SafeExpressions.java:40: private static final Pattern UNSAFE = Pattern.compile("\\bT\\s*\\(|\\bnew\\s+[A-Za-z_$]|@[A-Za-z_$]");
+entity/query/QueryBuilder.java:14: private static final Object NULL = null;
+## G8 6
+util/transaction/ExcelHeaders.java:5: public static final String EMAIL = "EMAIL";
+util/transaction/ExcelHeaders.java:15: public static final String PRICE = "PRICE";
+util/transaction/ExcelHeaders.java:17: public static final String QUANTITY = "QUANTITY";
+util/transaction/ExcelHeaders.java:23: public static final String COMMENTS = "COMMENTS";
+util/parser/ExcelParser.java:10: public static final String ASSETS = "ASSETS";
+util/parser/ExcelParser.java:11: public static final String TRANSACTIONS = "TRANSACTIONS";
