@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
-import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -165,35 +164,38 @@ class RegimeElectionSnapshotTest {
     class CapitalGains {
 
         private static final BucketFacts FACTS = new BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE", Optional.empty(),
-                LocalDate.of(2020, 6, 1), SideVenue.UNRECORDED, SideVenue.UNRECORDED);
+                LocalDate.of(2020, 6, 1), LocalDate.of(2025, 6, 10), SideVenue.UNRECORDED, SideVenue.UNRECORDED);
 
         @Test
         void aBucketWithoutItsFactsIsRejectedRatherThanFallingBackToSlab() {
             // R-10 and 13-edge-cases row 67: a bucket no rule can place is a blocking error.
             // Defaulting to slab produces a plausible number that is wrong.
             assertThatThrownBy(() -> new Bucket(
-                            Money.of("1"), Term.LONG_TERM, null, Optional.empty()))
+                            Money.of("1"), null, Optional.empty()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not a fallback to the slab ladder");
         }
 
         @Test
-        void aBucketWithoutATermIsRejected() {
-            assertThatThrownBy(() -> new Bucket(
-                            Money.of("1"), null, FACTS, Optional.empty()))
+        void factsWithoutATransferDateAreRejected() {
+            // The engine counts the term from the acquisition to the transfer (D-305); without the date it cannot
+            assertThatThrownBy(() -> new BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE", Optional.empty(),
+                            LocalDate.of(2020, 6, 1), null, SideVenue.UNRECORDED, SideVenue.UNRECORDED))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("s.108(2)");
+                    .hasMessageContaining("transfer dates");
         }
 
         @Test
         void aCorporateActionIsNamedExactlyWhenTheLotCameFromOne() {
             // A fact a row tests may not be half-present: the action without the mode, or the mode without it
             assertThatThrownBy(() -> new BucketFacts("EQUITY", "NOT_PAID", "PAID", "PURCHASE", Optional.of("BONUS"),
-                            LocalDate.of(2020, 6, 1), SideVenue.UNRECORDED, SideVenue.UNRECORDED))
+                            LocalDate.of(2020, 6, 1), LocalDate.of(2025, 6, 10), SideVenue.UNRECORDED,
+                            SideVenue.UNRECORDED))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("exactly when");
             assertThatThrownBy(() -> new BucketFacts("EQUITY", "NOT_PAID", "PAID", "CORPORATE_ACTION", Optional.empty(),
-                            LocalDate.of(2020, 6, 1), SideVenue.UNRECORDED, SideVenue.UNRECORDED))
+                            LocalDate.of(2020, 6, 1), LocalDate.of(2025, 6, 10), SideVenue.UNRECORDED,
+                            SideVenue.UNRECORDED))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("exactly when");
         }
@@ -202,12 +204,12 @@ class RegimeElectionSnapshotTest {
         void bothListsAreDefensivelyCopied() {
             List<Bucket> buckets = new ArrayList<>();
             buckets.add(new Bucket(
-                    Money.of("100"), Term.LONG_TERM, FACTS, Optional.empty()));
+                    Money.of("100"), FACTS, Optional.empty()));
             CapitalGainsInput input =
                     new CapitalGainsInput(buckets, AS_OF, "pf-run-1");
 
             buckets.add(new Bucket(
-                    Money.of("999999"), Term.SHORT_TERM, FACTS, Optional.empty()));
+                    Money.of("999999"), FACTS, Optional.empty()));
 
             assertThat(input.buckets()).hasSize(1);
         }

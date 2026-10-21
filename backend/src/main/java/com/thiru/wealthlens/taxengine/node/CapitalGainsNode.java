@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
@@ -73,7 +74,7 @@ public final class CapitalGainsNode implements ComputationNode {
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(ROW, PARTS, CapitalGainsStt.CHARGEABILITY);
+        return Set.of(ROW, PARTS, CapitalGainsStt.CHARGEABILITY, CapitalGainsTerm.HOLDING_PERIOD);
     }
 
     @Override
@@ -84,7 +85,9 @@ public final class CapitalGainsNode implements ComputationNode {
         Map<CapitalGainsPart, Money> net = new EnumMap<>(CapitalGainsPart.class);
         List<TraceLine> lines = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
-            net.merge(partOf(ctx, bucket, CapitalGainsStt.of(ctx, bucket, lines)), bucket.gain(), Money::plus);
+            Term term = CapitalGainsTerm.of(ctx, bucket, lines);
+            net.merge(partOf(ctx, bucket, term, CapitalGainsStt.of(ctx, bucket, term, lines)), bucket.gain(),
+                    Money::plus);
         }
         Map<CapitalGainsPart, Money> available = new EnumMap<>(CapitalGainsPart.class);
         Money longTermLoss = Money.ZERO;
@@ -136,13 +139,13 @@ public final class CapitalGainsNode implements ComputationNode {
      *
      * @throws IllegalArgumentException if no row covers the bucket — its facts are named, so the gap can be read
      */
-    private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket,
+    private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Term term,
             CapitalGainsStt.Sides stt) {
-        return ctx.optionalRuleOf(PARTS, factsOf(bucket, stt))
+        return ctx.optionalRuleOf(PARTS, factsOf(bucket, term, stt))
                 .map(row -> RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row,
                         ctx.inputs().temporal()).definition(), BucketPart.class, row.id()).part())
                 .orElseThrow(() -> new IllegalArgumentException("Capital gains of " + bucket.gain() + " ("
-                        + bucket.term() + ", " + bucket.facts() + ", STT as read " + stt + ") fall in no row of "
+                        + term + ", " + bucket.facts() + ", STT as read " + stt + ") fall in no row of "
                         + PARTS + " for "
                         + ctx.pack().taxYear().label() + ", so no provision is known to charge them"));
     }
@@ -151,10 +154,10 @@ public final class CapitalGainsNode implements ComputationNode {
      * The bucket's facts as the rows test them, its acquisition date among them; the corporate action only where the lot
      * came from one.
      */
-    private static ItemFacts factsOf(CapitalGainsInput.Bucket bucket, CapitalGainsStt.Sides stt) {
+    private static ItemFacts factsOf(CapitalGainsInput.Bucket bucket, Term term, CapitalGainsStt.Sides stt) {
         BucketFacts facts = bucket.facts();
         Map<ItemFactId, String> codes = new HashMap<>();
-        codes.put(TERM, bucket.term().name());
+        codes.put(TERM, term.name());
         codes.put(ASSET, facts.assetKind());
         codes.put(STT_ON_ACQUISITION, stt.acquisition());
         codes.put(STT_ON_TRANSFER, stt.transfer());

@@ -8,7 +8,6 @@ import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
-import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import java.util.List;
 import java.util.Optional;
@@ -19,9 +18,11 @@ import org.springframework.stereotype.Component;
  * Turns {@code portfolio}'s capital-gains read-model into the engine's {@link CapitalGainsInput} ({@code 13-edge-cases.md}
  * R-10; {@code 07-architecture.md} X1.3; D-241).
  *
- * <p>It carries each bucket's term and the facts the special-rate provisions turn on — the asset, STT on the buy and the
- * sale, how and when the lot was acquired — as {@code portfolio} recorded them. Which part of the head a bucket falls
- * in is the rule data's (S2 ss.196–198; 1961 ss.111A, 112, 112A; S.O. 5054(E); D-289), not this class's.
+ * <p>It carries the facts the term and the special-rate provisions turn on — the asset, STT on the buy and the sale,
+ * where each side was traded, how and when the lot was acquired and when it was sold — as {@code portfolio} recorded
+ * them. Whether a bucket is short-term or long-term (1961 s.2(42A); 2025 s.2(101); D-305) and which part of the head it
+ * falls in (S2 ss.196–198; 1961 ss.111A, 112, 112A; S.O. 5054(E); D-289) are the rule data's, not this class's;
+ * {@code portfolio}'s own short-term / long-term classification only says the disposal is a capital gain.
  *
  * <p>Nothing is defaulted. An unclassified gain blocks, as does speculative business income, which this engine does
  * not compute. Fixed-deposit interest ({@code NOT_CAPITAL_GAINS}) is other-sources income, entered there, and is left out.
@@ -54,8 +55,7 @@ public class CapitalGainsAdapter {
             return Optional.empty();
         }
         return switch (bucket.classification()) {
-            case SHORT_TERM -> Optional.of(engineBucket(bucket, Term.SHORT_TERM));
-            case LONG_TERM -> Optional.of(engineBucket(bucket, Term.LONG_TERM));
+            case SHORT_TERM, LONG_TERM -> Optional.of(engineBucket(bucket));
             case NOT_CAPITAL_GAINS -> Optional.empty();
             case UNCLASSIFIED -> throw new IllegalArgumentException("Realised gains of " + bucket.gainRupees() + " on "
                     + bucket.assetType() + " are unclassified — a fund or bond awaiting the instrument registry, or a"
@@ -65,13 +65,13 @@ public class CapitalGainsAdapter {
         };
     }
 
-    private static CapitalGainsInput.Bucket engineBucket(CapitalGainsBucket bucket, Term term) {
+    /** The bucket as the engine reads it; portfolio's own term is not passed — the engine decides it (D-305). */
+    private static CapitalGainsInput.Bucket engineBucket(CapitalGainsBucket bucket) {
         BucketFacts facts = new BucketFacts(bucket.assetType().name(), bucket.sttOnAcquisition().name(),
                 bucket.sttOnTransfer().name(), bucket.acquisition().mode().name(),
-                bucket.acquisition().corporateAction().map(Enum::name), bucket.acquiredOn(),
+                bucket.acquisition().corporateAction().map(Enum::name), bucket.acquiredOn(), bucket.transferredOn(),
                 sideVenueOf(bucket.acquisitionVenue()), sideVenueOf(bucket.transferVenue()));
-        return new CapitalGainsInput.Bucket(MoneyBridge.fromTMoney(bucket.gainRupees()), term, facts,
-                Optional.empty());
+        return new CapitalGainsInput.Bucket(MoneyBridge.fromTMoney(bucket.gainRupees()), facts, Optional.empty());
     }
 
     private static SideVenue sideVenueOf(TradeVenue venue) {

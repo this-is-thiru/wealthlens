@@ -14,5 +14,5 @@ public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPe
         OwnResidenceInterestLimit, DisallowanceBasis, ParticularsThreshold, FamilyPensionShare,
         ProvidentFundThreshold, GiftThreshold, PolicyPremiumLimits, SurvivingChildrenLimit,
         AbsorptionOrder, CapitalGainsAbsorptionOrder, SpecialRateShortfallOrder, LossCarryForward, BucketPart,
-        SttChargeability {
+        SttChargeability, ShortTermHoldingPeriod {
 }

@@ -40,6 +40,7 @@ class TimelineReaderTest {
     private static final Set<RuleId> SHIPPED_RULES = Set.of(
             new RuleId("CG-PART-SHORT-LISTED"),
             new RuleId("CG-PART-SHORT-SLAB"),
+            new RuleId("CG-TERM-LISTED-SECURITY"),
             new RuleId("CG-PART-LONG-LISTED"),
             new RuleId("CG-PART-LONG-OTHER"),
             new RuleId("CG-PART-LONG-NOTIFIED"),

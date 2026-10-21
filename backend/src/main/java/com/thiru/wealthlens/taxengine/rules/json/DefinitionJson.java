@@ -29,6 +29,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ProvidentFundThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
 import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ShortTermHoldingPeriod;
 import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.definition.SurvivingChildrenLimit;
@@ -62,7 +63,7 @@ public final class DefinitionJson {
                 "CashPaymentLimit", "OwnResidenceHouses", "OwnResidenceInterestLimit", "DisallowanceBasis",
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
-                "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability");
+                "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -166,6 +167,8 @@ public final class DefinitionJson {
                     PackJson.enumValue(node, "part", path, CapitalGainsPart.class)));
             case "SttChargeability" -> PackJson.construct(path, () -> new SttChargeability(
                     PackJson.text(node, "code", path)));
+            case "ShortTermHoldingPeriod" -> PackJson.construct(path, () -> new ShortTermHoldingPeriod(
+                    PackJson.integer(node, "months", path)));
             default -> throw unreachable(tag, path);
         };
     }

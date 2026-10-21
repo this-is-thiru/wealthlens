@@ -8,6 +8,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-CG-TERM",
+      "_note": "Whether a capital-gains bucket is short-term or long-term, chosen by its facts (1961 s.2(42A); 2025 s.2(101); D-305): capitalgains.asset and trade.transfer.exchange (UNRECORDED where absent). The row's period is counted from capitalgains.acquired.on to the transfer in calendar months (D-303). A bucket no row covers is refused. Not shipped yet: the twenty-four-month period of other assets (s.2(42A) / s.2(101)(a)) — nothing recorded shows an equity share unlisted, and no fund or bond part exists — and the deemed short-term assets of 1961 s.50AA / 2025 s.76 (D-305 C2)",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-STT-CHARGEABLE",
       "_note": "Whether a side of an equity disposal whose STT no breakdown records was chargeable to securities transaction tax (Finance (No. 2) Act, 2004, Chapter VII, s.98 Sl. 1-3; D-298), asked only for a side whose evidence is UNKNOWN; a side no row covers keeps its evidence. Facts: stt.side, capitalgains.asset, trade.exchange and trade.segment (UNRECORDED where absent). s.113A (the NPS Trust; an IFSC exchange with foreign-currency consideration) has no row yet: no IFSC exchange is on the recognised list, and no record holds the currency (D-298 C2)",
       "selection": "AT_MOST_ONE",

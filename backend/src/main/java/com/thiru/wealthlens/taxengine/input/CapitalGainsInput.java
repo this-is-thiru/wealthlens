@@ -47,10 +47,10 @@ public record CapitalGainsInput(
     /**
      * Long-term or short-term.
      *
-     * <p>The engine needs this and cannot derive it, because {@code SETOFF-INTRA-CG-001}
-     * ({@code 01-rulebook.md:952}, s.108(2)(a),(b)) is <b>asymmetric</b>: a short-term loss may be
-     * set against income from <i>any</i> other capital asset, a long-term loss <i>only</i> against
-     * long-term capital gains. Lose the term and the set-off silently over-allows.
+     * <p>The engine derives it per bucket from the bucket's dates and rule set {@code RS-CG-TERM} (1961 s.2(42A); 2025
+     * s.2(101); W-088k3, D-305) — never taken from {@code portfolio}. It matters twice: the part rows test it, and
+     * {@code SETOFF-INTRA-CG-001} (s.108(2)(a),(b)) is <b>asymmetric</b> — a short-term loss may be set against income
+     * from <i>any</i> other capital asset, a long-term loss <i>only</i> against long-term capital gains.
      */
     public enum Term {
         SHORT_TERM,
@@ -61,22 +61,16 @@ public record CapitalGainsInput(
      * One bucket of gross gain.
      *
      * @param gain the gross amount; never a tax
-     * @param term long or short, for s.108(2)
      * @param facts what the special-rate provisions turn on; a bucket no rule covers is a blocking error, never a
      *     fallback to slab (R-10)
      * @param portfolioRuleRef the portfolio's own rule reference, where it has one
      */
     public record Bucket(
-            Money gain, Term term, BucketFacts facts, Optional<String> portfolioRuleRef) {
+            Money gain, BucketFacts facts, Optional<String> portfolioRuleRef) {
 
         public Bucket {
             if (gain == null) {
                 throw new IllegalArgumentException("A capital-gains bucket must carry a gain");
-            }
-            if (term == null) {
-                throw new IllegalArgumentException(
-                        "A capital-gains bucket must state its term; s.108(2) sets off short-term"
-                                + " and long-term losses differently");
             }
             if (facts == null) {
                 throw new IllegalArgumentException(
@@ -103,6 +97,8 @@ public record CapitalGainsInput(
      * @param corporateAction the corporate action that created the lot; present exactly when the mode is
      *     {@code CORPORATE_ACTION}
      * @param acquiredOn when the lot was acquired
+     * @param transferredOn when the disposals were made — with {@code acquiredOn}, what the term is counted from and
+     *     to
      * @param acquisitionVenue where and how the buy was traded, as recorded — what decides whether its STT was
      *     chargeable where the evidence is unknown (D-298)
      * @param transferVenue where and how the sale was traded, as recorded
@@ -114,6 +110,7 @@ public record CapitalGainsInput(
             String acquisitionMode,
             Optional<String> corporateAction,
             LocalDate acquiredOn,
+            LocalDate transferredOn,
             SideVenue acquisitionVenue,
             SideVenue transferVenue) {
 
@@ -121,11 +118,11 @@ public record CapitalGainsInput(
 
         public BucketFacts {
             if (isBlank(assetKind) || isBlank(sttOnAcquisition) || isBlank(sttOnTransfer) || isBlank(acquisitionMode)
-                    || corporateAction == null || acquiredOn == null || acquisitionVenue == null
-                    || transferVenue == null) {
+                    || corporateAction == null || acquiredOn == null || transferredOn == null
+                    || acquisitionVenue == null || transferVenue == null) {
                 throw new IllegalArgumentException("A bucket's facts need its asset kind, STT evidence on both sides,"
-                        + " acquisition mode, acquisition date and both venues; pass Optional.empty() for no corporate"
-                        + " action and SideVenue.UNRECORDED for no venue");
+                        + " acquisition mode, acquisition and transfer dates and both venues; pass Optional.empty() for"
+                        + " no corporate action and SideVenue.UNRECORDED for no venue");
             }
             if (corporateAction.isPresent() != CORPORATE_ACTION.equals(acquisitionMode)) {
                 throw new IllegalArgumentException("A corporate action is named exactly when the lot was acquired by"

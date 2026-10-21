@@ -19,7 +19,6 @@ import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
-import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.Instant;
@@ -96,9 +95,8 @@ class CapitalGainsAdapterTest {
 
         // Then
         assertThat(bucket.gain()).isEqualTo(Money.of("1000.50"));
-        assertThat(bucket.term()).isEqualTo(Term.SHORT_TERM);
         assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", "PAID", "UNKNOWN", "PURCHASE", Optional.empty(),
-                ACQUIRED_ON, SideVenue.UNRECORDED, SideVenue.UNRECORDED));
+                ACQUIRED_ON, TRANSFERRED_ON, SideVenue.UNRECORDED, SideVenue.UNRECORDED));
     }
 
     @Test
@@ -108,9 +106,23 @@ class CapitalGainsAdapterTest {
                 LocalDate.of(2020, 1, 10)));
 
         // Then
-        assertThat(bucket.term()).isEqualTo(Term.LONG_TERM);
         assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", "NOT_PAID", "PAID", "CORPORATE_ACTION",
-                Optional.of("BONUS"), LocalDate.of(2020, 1, 10), SideVenue.UNRECORDED, SideVenue.UNRECORDED));
+                Optional.of("BONUS"), LocalDate.of(2020, 1, 10), TRANSFERRED_ON, SideVenue.UNRECORDED,
+                SideVenue.UNRECORDED));
+    }
+
+    @Test
+    void inputFor_whenPortfolioClassifiesTheSameFactsShortOrLong_passesTheSameBucket() {
+        // When — the engine decides the term from the dates (D-305); portfolio's classification only says the
+        // disposal is a capital gain, so it cannot reach the engine
+        CapitalGainsInput.Bucket asShort = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY,
+                SttEvidence.PAID, SttEvidence.PAID, 100));
+        CapitalGainsInput.Bucket asLong = onlyBucketOf(bucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
+                SttEvidence.PAID, SttEvidence.PAID, 100));
+
+        // Then
+        assertThat(asShort).isEqualTo(asLong);
+        assertThat(asShort.facts().transferredOn()).isEqualTo(TRANSFERRED_ON);
     }
 
     @Test

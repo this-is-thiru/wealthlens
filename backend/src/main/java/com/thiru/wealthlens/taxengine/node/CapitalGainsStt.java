@@ -54,16 +54,16 @@ final class CapitalGainsStt {
     record Sides(String acquisition, String transfer) {
     }
 
-    /** The bucket's sides, each derived state added to {@code lines}. */
-    static Sides of(NodeContext ctx, CapitalGainsInput.Bucket bucket, List<TraceLine> lines) {
-        CapitalGainsInput.BucketFacts facts = bucket.facts();
-        return new Sides(
-                codeOf(ctx, bucket, Side.ACQUISITION, facts.sttOnAcquisition(), facts.acquisitionVenue(), lines),
-                codeOf(ctx, bucket, Side.TRANSFER, facts.sttOnTransfer(), facts.transferVenue(), lines));
+    /** The bucket's sides, each derived state added to {@code lines}; the term only words the trace. */
+    static Sides of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Term term, List<TraceLine> lines) {
+        return new Sides(codeOf(ctx, bucket, term, Side.ACQUISITION, lines),
+                codeOf(ctx, bucket, term, Side.TRANSFER, lines));
     }
 
-    private static String codeOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Side side, String evidence,
-            SideVenue venue, List<TraceLine> lines) {
+    private static String codeOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Term term, Side side,
+            List<TraceLine> lines) {
+        String evidence = side.evidenceOf(bucket.facts());
+        SideVenue venue = side.venueOf(bucket.facts());
         if (!UNKNOWN.equals(evidence)) {
             return evidence;
         }
@@ -79,7 +79,7 @@ final class CapitalGainsStt {
                 ctx.inputs().temporal()).definition(), SttChargeability.class, row.get().id()).code();
         lines.add(ctx.traceLine(lines.size() + 1, row.get().id(), StepKind.MEASURE, bucket.gain(), bucket.gain())
                 .withLimitedBy("STT on the " + side.label + ": " + code + " (" + exchange + ", " + segment + ")"
-                        + (bucket.term() == Term.LONG_TERM ? "; S2 s.198 / 1961 s.112A count a chargeable side as"
+                        + (term == Term.LONG_TERM ? "; S2 s.198 / 1961 s.112A count a chargeable side as"
                                 + " paid by the owner's ruling D-294" : "")));
         return code;
     }
@@ -93,6 +93,14 @@ final class CapitalGainsStt {
 
         Side(String label) {
             this.label = label;
+        }
+
+        String evidenceOf(CapitalGainsInput.BucketFacts facts) {
+            return this == ACQUISITION ? facts.sttOnAcquisition() : facts.sttOnTransfer();
+        }
+
+        SideVenue venueOf(CapitalGainsInput.BucketFacts facts) {
+            return this == ACQUISITION ? facts.acquisitionVenue() : facts.transferVenue();
         }
     }
 }

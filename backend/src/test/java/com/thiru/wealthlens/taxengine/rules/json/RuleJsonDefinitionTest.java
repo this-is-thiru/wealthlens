@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryBase;
+import com.thiru.wealthlens.taxengine.rules.definition.ShortTermHoldingPeriod;
 import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
@@ -206,6 +207,25 @@ class RuleJsonDefinitionTest {
 
         // Then
         assertThat(version.definition()).contains(new SttChargeability("CHARGEABLE"));
+    }
+
+    @Test
+    void version_whenAShortTermHoldingPeriod_readsTheMonths() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "ShortTermHoldingPeriod", "months": 12 }""");
+
+        // Then
+        assertThat(version.definition()).contains(new ShortTermHoldingPeriod(12));
+    }
+
+    @Test
+    void version_whenAShortTermHoldingPeriodHasNoMonths_isRefused() {
+        // When / Then — a period of none would make every holding long-term
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "ShortTermHoldingPeriod", "months": 0 }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("positive number of months");
     }
 
     @Test

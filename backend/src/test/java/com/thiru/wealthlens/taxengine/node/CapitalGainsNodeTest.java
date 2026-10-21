@@ -52,6 +52,17 @@ class CapitalGainsNodeTest {
 
     private static final String UNKNOWN = "UNKNOWN";
 
+    /**
+     * A sale recorded on NSE with no segment: what shows the share listed for {@code RS-CG-TERM} (D-305 C1), and no
+     * more — with no segment, no STT is derived from it (D-298), so a case's STT reads as it states.
+     */
+    private static final SideVenue SOLD_ON_NSE = new SideVenue(Optional.of("NSE"), Optional.empty());
+
+    /** When a lot acquired on {@code acquiredOn} is sold so that the engine finds {@code term}: six months or two years on. */
+    private static LocalDate soldFor(Term term, LocalDate acquiredOn) {
+        return term == Term.LONG_TERM ? acquiredOn.plusYears(2) : acquiredOn.plusMonths(6);
+    }
+
     /** An equity purchase with the given STT on record for the buy and the sale. */
     private static CapitalGainsInput.Bucket bucket(String gain, Term term, String sttOnBuy, String sttOnSale) {
         return bucket(gain, term, "EQUITY", sttOnBuy, sttOnSale);
@@ -59,9 +70,10 @@ class CapitalGainsNodeTest {
 
     private static CapitalGainsInput.Bucket bucket(String gain, Term term, String asset, String sttOnBuy,
             String sttOnSale) {
-        BucketFacts facts = new BucketFacts(asset, sttOnBuy, sttOnSale, "PURCHASE", Optional.empty(),
-                LocalDate.parse("2020-06-01"), SideVenue.UNRECORDED, SideVenue.UNRECORDED);
-        return new CapitalGainsInput.Bucket(Money.of(gain), term, facts, Optional.empty());
+        LocalDate acquiredOn = LocalDate.parse("2020-06-01");
+        BucketFacts facts = new BucketFacts(asset, sttOnBuy, sttOnSale, "PURCHASE", Optional.empty(), acquiredOn,
+                soldFor(term, acquiredOn), SideVenue.UNRECORDED, SOLD_ON_NSE);
+        return new CapitalGainsInput.Bucket(Money.of(gain), facts, Optional.empty());
     }
 
     /** Long-term equity sold with STT and bought without it, acquired as stated — S.O. 5054(E)'s question. */
@@ -72,22 +84,38 @@ class CapitalGainsNodeTest {
     /** Long-term equity sold with STT, the buy's STT as stated, acquired as stated. */
     private static CapitalGainsInput.Bucket soldWithStt(String sttOnBuy, String mode, String corporateAction,
             String acquiredOn) {
+        LocalDate acquired = LocalDate.parse(acquiredOn);
         BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, PAID, mode, Optional.ofNullable(corporateAction),
-                LocalDate.parse(acquiredOn), SideVenue.UNRECORDED, SideVenue.UNRECORDED);
-        return new CapitalGainsInput.Bucket(Money.of("1000"), Term.LONG_TERM, facts, Optional.empty());
+                acquired, soldFor(Term.LONG_TERM, acquired), SideVenue.UNRECORDED, SOLD_ON_NSE);
+        return new CapitalGainsInput.Bucket(Money.of("1000"), facts, Optional.empty());
     }
 
     /**
-     * An equity bucket of 1000 with each side's STT and venue ("NSE/DELIVERY", or "-" for none on record), acquired by
-     * the mode given ("PURCHASE", or "CORPORATE_ACTION/BONUS" with its action).
+     * An equity bucket of 1000 with each side's STT and venue ("NSE/DELIVERY", "NSE" for an exchange with no segment,
+     * or "-" for none on record), acquired by the mode given ("PURCHASE", or "CORPORATE_ACTION/BONUS" with its
+     * action) and sold so that the term is {@code term}.
      */
     private static CapitalGainsInput.Bucket traded(Term term, String sttOnBuy, String buyVenue, String sttOnSale,
             String saleVenue, String mode, String acquiredOn) {
         String[] acquisition = mode.split("/");
+        LocalDate acquired = LocalDate.parse(acquiredOn);
         BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, sttOnSale, acquisition[0],
+                acquisition.length == 2 ? Optional.of(acquisition[1]) : Optional.empty(), acquired,
+                soldFor(term, acquired), venue(buyVenue), venue(saleVenue));
+        return new CapitalGainsInput.Bucket(Money.of("1000"), facts, Optional.empty());
+    }
+
+    /**
+     * Equity of 1000 bought and sold with STT on record, acquired and transferred on the dates given, the sale on the
+     * venue given ("NSE", "-" for none), acquired by the mode given — what {@code RS-CG-TERM} decides from (D-305).
+     */
+    private static CapitalGainsInput.Bucket held(String acquiredOn, String transferredOn, String saleVenue,
+            String mode) {
+        String[] acquisition = mode.split("/");
+        BucketFacts facts = new BucketFacts("EQUITY", acquisition.length == 2 ? NOT_PAID : PAID, PAID, acquisition[0],
                 acquisition.length == 2 ? Optional.of(acquisition[1]) : Optional.empty(), LocalDate.parse(acquiredOn),
-                venue(buyVenue), venue(saleVenue));
-        return new CapitalGainsInput.Bucket(Money.of("1000"), term, facts, Optional.empty());
+                LocalDate.parse(transferredOn), SideVenue.UNRECORDED, venue(saleVenue));
+        return new CapitalGainsInput.Bucket(Money.of("1000"), facts, Optional.empty());
     }
 
     private static SideVenue venue(String recorded) {
@@ -95,7 +123,7 @@ class CapitalGainsNodeTest {
             return SideVenue.UNRECORDED;
         }
         String[] parts = recorded.split("/");
-        return new SideVenue(Optional.of(parts[0]), Optional.of(parts[1]));
+        return new SideVenue(Optional.of(parts[0]), parts.length == 2 ? Optional.of(parts[1]) : Optional.empty());
     }
 
     private static CapitalGainsHead run(int year, CapitalGainsInput.Bucket... buckets) {
@@ -329,23 +357,24 @@ class CapitalGainsNodeTest {
 
     @Test
     void evaluate_whenTheAssetIsNotEquity_isRefused() {
-        // When / Then — case 7: only equity has rows; a fund unit waits on the instrument registry
+        // When / Then — case 7: only equity has rows; a fund unit waits on the instrument registry, and since W-088k3
+        // its term is refused first — no holding period is shipped for a fund (D-305 C2)
         assertThatThrownBy(() -> run(2026, bucket("1000", Term.SHORT_TERM, "MUTUAL_FUND", NOT_PAID, PAID)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("assetKind=MUTUAL_FUND")
-                .hasMessageContaining("no row of RS-CG-PART");
+                .hasMessageContaining("no row of RS-CG-TERM");
     }
 
     @ParameterizedTest(name = "TY {0}: {1}, buy {2}, sale {3} → {6}")
     @CsvSource({
-        "2025, LONG_TERM, UNKNOWN@NSE/DELIVERY, PAID@-, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
-        "2025, LONG_TERM, UNKNOWN@BSE/DELIVERY, PAID@-, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2025, LONG_TERM, UNKNOWN@NSE/DELIVERY, PAID@NSE, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2025, LONG_TERM, UNKNOWN@BSE/DELIVERY, PAID@NSE, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2025, LONG_TERM, PAID@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2025, SHORT_TERM, UNKNOWN@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
         "2025, SHORT_TERM, PAID@-, UNKNOWN@NSE/INTRADAY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
         "2025, LONG_TERM, UNKNOWN@NSE/DELIVERY, UNKNOWN@NSE/DELIVERY, UNRECORDED, 2003-06-01, LONG_TERM_LISTED_EQUITY",
-        "2026, LONG_TERM, UNKNOWN@NSE/DELIVERY, PAID@-, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
-        "2026, LONG_TERM, UNKNOWN@BSE/DELIVERY, PAID@-, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2026, LONG_TERM, UNKNOWN@NSE/DELIVERY, PAID@NSE, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
+        "2026, LONG_TERM, UNKNOWN@BSE/DELIVERY, PAID@NSE, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2026, LONG_TERM, PAID@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2026, SHORT_TERM, UNKNOWN@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
         "2026, SHORT_TERM, PAID@-, UNKNOWN@NSE/INTRADAY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
@@ -375,7 +404,7 @@ class CapitalGainsNodeTest {
     void evaluate_whenTheBuysSttIsNotShownChargeable_isRefused(int year, String sttOnBuy, String buyVenue) {
         // When / Then — cases 3, 4, 5: no venue; an exchange not on the recognised list; a record that says
         // NOT_PAID stands (D-298 C2a) — and a 2020 purchase is outside S.O. 5054(E)
-        assertThatThrownBy(() -> run(year, traded(Term.LONG_TERM, sttOnBuy, buyVenue, PAID, "-", "PURCHASE",
+        assertThatThrownBy(() -> run(year, traded(Term.LONG_TERM, sttOnBuy, buyVenue, PAID, "NSE", "PURCHASE",
                 "2020-01-10")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no row of RS-CG-PART");
@@ -384,7 +413,7 @@ class CapitalGainsNodeTest {
     @Test
     void evaluate_whenALongTermBuysSttIsDerived_tracesTheRowAndTheRuling() {
         // When — case 1
-        NodeResult result = result(2026, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "-", "PURCHASE",
+        NodeResult result = result(2026, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "NSE", "PURCHASE",
                 "2020-01-10"));
 
         // Then
@@ -420,7 +449,7 @@ class CapitalGainsNodeTest {
     void evaluate_whenAnAllotmentIsOnAnExchangeVenue_isListedUnderTheNotificationNotSl1(int year, String mode) {
         // When — W-088j2e cases 2, 3: an allotment inherits its parent's exchange and the DELIVERY default, but Sl. 1
         // charges a "Purchase" only (D-300); S.O. 5054(E) proviso (i), (ix) settles it instead
-        NodeResult result = result(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "-", mode,
+        NodeResult result = result(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "NSE", mode,
                 "2020-01-10"));
 
         // Then
@@ -439,7 +468,7 @@ class CapitalGainsNodeTest {
     void evaluate_whenABuyOnAnExchangeVenueIsNotShownAPurchase_isRefusedNamingTheMode(int year, String mode) {
         // When / Then — W-088j2e cases 4, 5: neither Sl. 1 (not shown a purchase, D-300) nor S.O. 5054(E) as applied
         // (a 2020 lot that is not a bonus or demerger allotment) covers the buy
-        assertThatThrownBy(() -> run(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "-", mode,
+        assertThatThrownBy(() -> run(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "NSE", mode,
                 "2020-01-10")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no row of RS-CG-PART")
@@ -459,7 +488,7 @@ class CapitalGainsNodeTest {
             String acquiredOn, boolean tracedUnderSl1) {
         // When — W-088j2f cases 1–3: Chapter VII came into force on 1-10-2004 (S.O. 1058(E), D-301) and applies to
         // transactions entered into on or after it (s.96(3)); before it, S.O. 5054(E) clause (I) settles the buy
-        NodeResult result = result(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "-", "PURCHASE",
+        NodeResult result = result(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "NSE", "PURCHASE",
                 acquiredOn));
 
         // Then
@@ -467,5 +496,82 @@ class CapitalGainsNodeTest {
                 .isEqualTo(Money.of("1000"));
         assertThat(result.trace().stream().anyMatch(line -> line.rule().equals(RuleIds.STT_PURCHASE_DELIVERY)))
                 .isEqualTo(tracedUnderSl1);
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1} → {2} on {3} → {4}")
+    @CsvSource({
+        "2025, 2024-04-10, 2025-04-10, NSE, SHORT_TERM_LISTED_EQUITY",
+        "2025, 2024-04-10, 2025-04-11, NSE, LONG_TERM_LISTED_EQUITY",
+        "2025, 2023-03-01, 2024-03-01, BSE, SHORT_TERM_LISTED_EQUITY",
+        "2026, 2024-04-10, 2025-04-10, NSE, SHORT_TERM_LISTED_EQUITY",
+        "2026, 2024-04-10, 2025-04-11, NSE, LONG_TERM_LISTED_EQUITY",
+        "2026, 2023-03-01, 2024-03-01, BSE, SHORT_TERM_LISTED_EQUITY"
+    })
+    void evaluate_whenAListedShareIsHeld_isLongTermOnlyAfterTheSameDateTwelveMonthsOn(int year, String acquiredOn,
+            String transferredOn, String saleVenue, CapitalGainsPart expected) {
+        // When — W-088k3 cases 1–3: 1961 s.2(42A) first proviso / 2025 s.2(101)(b)(i), twelve months, counted in
+        // calendar months (D-303): exactly twelve months is "not more than", so short-term; 1-3-2023 → 1-3-2024 is
+        // 366 days but twelve months
+        CapitalGainsHead head = run(year, held(acquiredOn, transferredOn, saleVenue, "PURCHASE"));
+
+        // Then
+        assertThat(head.part(expected)).isEqualTo(Money.of("1000"));
+        assertThat(head.total()).isEqualTo(Money.of("1000"));
+    }
+
+    @ParameterizedTest(name = "TY {0}: sold on {1}")
+    @CsvSource({
+        "2025, -",
+        "2025, NSE IFSC Limited",
+        "2026, -",
+        "2026, NSE IFSC Limited"
+    })
+    void evaluate_whenTheSaleIsNotShownOnARecognisedExchange_isRefusedForTheTerm(int year, String saleVenue) {
+        // When / Then — W-088k3 cases 4, 5: nothing shows the share listed (D-305 C1a), and no row gives another
+        // period (C2a)
+        assertThatThrownBy(() -> run(year, held("2023-04-03", "2025-06-10", saleVenue, "PURCHASE")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no row of RS-CG-TERM");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTwoSalesFallEitherSideOfTheBoundary_placesEachInItsOwnTerm(int year) {
+        // When — W-088k3 case 8: one lot, sold on the anniversary and the day after
+        CapitalGainsHead head = run(year, held("2024-04-10", "2025-04-10", "NSE", "PURCHASE"),
+                held("2024-04-10", "2025-04-11", "NSE", "PURCHASE"));
+
+        // Then
+        assertThat(head.part(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
+        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
+    }
+
+    @Test
+    void evaluate_whenTheTermIsDecided_tracesTheRowAndTheBoundary() {
+        // When — case 2
+        NodeResult result = result(2026, held("2024-04-10", "2025-04-11", "NSE", "PURCHASE"));
+
+        // Then
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_TERM_LISTED_SECURITY))
+                .singleElement()
+                .satisfies(line -> {
+                    assertThat(line.kind()).isEqualTo(StepKind.MEASURE);
+                    assertThat(line.limitedBy().orElseThrow()).isEqualTo(
+                            "Held 2024-04-10 → 2025-04-11: more than 12 months, LONG_TERM (calendar months, D-303)");
+                });
+    }
+
+    @Test
+    void evaluate_whenABonusLotIsHeld_tracesTheExDateApproximation() {
+        // When — case 6: a bonus lot is dated at its ex-date until W-088k4 (Explanation 1(i)(f))
+        NodeResult result = result(2026, held("2024-06-05", "2025-06-06", "NSE", "CORPORATE_ACTION/BONUS"));
+
+        // Then
+        assertThat(((CapitalGainsHead) result.value()).part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY))
+                .isEqualTo(Money.of("1000"));
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_TERM_LISTED_SECURITY))
+                .singleElement()
+                .satisfies(line -> assertThat(line.limitedBy().orElseThrow())
+                        .endsWith("; a bonus lot is dated at its ex-date, not its allotment (W-088k4)"));
     }
 }
