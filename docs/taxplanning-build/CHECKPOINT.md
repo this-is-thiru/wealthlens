@@ -14,7 +14,7 @@ Last verify     : targeted 283/0; unit -Punit 3255/0; integration 281/0 (2026-10
 Waiting on      : the owner — "start W-153"; OQ-32, OQ-33 open
 Files touched   : (none)
 Last item commit: taxplanning W-152: state the gratuity's ten-month averaging period as rule data — RET-GRATUITY-AVERAGING, its TY 2025-26 instrument sourced (Act 4 of 1988 s.6), so neither Separation nor the node holds the 10 (D-317)
-Updated         : 2026-10-21, session 28 — W-152 committed
+Updated         : 2026-10-21, session 28 — PAUSED at the session limit, everything committed (resume at W-153)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
