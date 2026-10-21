@@ -12,11 +12,18 @@ import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentLifecycle;
 import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
+import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFactIs;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.DisallowanceBasis;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
+import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -65,6 +72,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
 import com.thiru.wealthlens.taxengine.rules.temporal.proration.Days;
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -124,6 +132,11 @@ class PackValidatorTest {
     }
 
     private static RuleRow rule(RuleId id, Optional<CapShape> cap, Optional<RuleDefinition> definition) {
+        return rule(id, cap, definition, List.of());
+    }
+
+    private static RuleRow rule(RuleId id, Optional<CapShape> cap, Optional<RuleDefinition> definition,
+            List<Condition> conditions) {
         return new RuleRow(
                 id,
                 TemporalAxis.TAX_YEAR,
@@ -134,7 +147,7 @@ class PackValidatorTest {
                         Optional.empty(),
                         Optional.empty(),
                         definition,
-                        List.of(),
+                        conditions,
                         Provision.notYetVerified("Income-tax Act, 1961"),
                         Provision.present("Income-tax Act, 2025", "s.202(1)"),
                         introducedByFinanceAct(),
@@ -845,6 +858,135 @@ class PackValidatorTest {
             assertThatCode(() ->
                             PackValidator.validate(validPack().build(), RegimeBehaviourRegistry.empty()))
                     .doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
+    @DisplayName("D-309 — every capital-gains part named is one CG-PARTS declares")
+    class CapitalGainsPartNames {
+
+        private static final RuleId PARTS = new RuleId("CG-PARTS");
+        private static final RuleId BUCKET = new RuleId("CG-PART-LONG-OTHER");
+        private static final RuleId ABSORPTION = new RuleId("SETOFF-WITHIN-CAPITAL-GAINS");
+        private static final RuleId RATE_OTHER = new RuleId("RATE-CG-LONG-OTHER");
+        private static final RuleId RATE_LISTED = new RuleId("RATE-CG-LONG-LISTED-EQUITY");
+        private static final RuleId SHORTFALL = new RuleId("RATE-CG-SHORTFALL-ORDER");
+        private static final CapitalGainsPart SHORT_SLAB = new CapitalGainsPart("SHORT_TERM_SLAB");
+        private static final CapitalGainsPart LONG_OTHER = new CapitalGainsPart("LONG_TERM_OTHER");
+        private static final CapitalGainsPart LONG_LISTED = new CapitalGainsPart("LONG_TERM_LISTED_EQUITY");
+
+        private static RuleRow defined(RuleId id, RuleDefinition definition) {
+            return rule(id, Optional.empty(), Optional.of(definition));
+        }
+
+        private static RuleRow rateFor(RuleId id, String part) {
+            return rule(id, Optional.of(new Fixed(Money.ZERO)), Optional.empty(),
+                    List.of(new ItemFactIs(CapitalGainsPart.FACT, part)));
+        }
+
+        /** Three parts declared, a bucket row, both orders and a special-rate row for each long-term part. */
+        private static PackBuilder withCapitalGains() {
+            PackBuilder pack = validPack();
+            pack.rules.put(PARTS, defined(PARTS, new CapitalGainsParts(
+                    List.of(declared(SHORT_SLAB, "SHORT_TERM", false), declared(LONG_OTHER, "LONG_TERM", true),
+                            declared(LONG_LISTED, "LONG_TERM", true)))));
+            pack.rules.put(BUCKET, defined(BUCKET, new BucketPart(LONG_OTHER)));
+            pack.rules.put(ABSORPTION, defined(ABSORPTION,
+                    new CapitalGainsAbsorptionOrder(List.of(SHORT_SLAB, LONG_OTHER, LONG_LISTED))));
+            pack.rules.put(RATE_OTHER, rateFor(RATE_OTHER, "LONG_TERM_OTHER"));
+            pack.rules.put(RATE_LISTED, rateFor(RATE_LISTED, "LONG_TERM_LISTED_EQUITY"));
+            pack.rules.put(SHORTFALL, defined(SHORTFALL, new SpecialRateShortfallOrder(List.of(LONG_OTHER, LONG_LISTED))));
+            return pack;
+        }
+
+        private static CapitalGainsParts.Declared declared(
+                CapitalGainsPart part, String term, boolean canAbsorbLongTermLoss) {
+            return new CapitalGainsParts.Declared(part, term,
+                    canAbsorbLongTermLoss);
+        }
+
+        private static List<String> problems(PackBuilder pack) {
+            List<String> problems = new ArrayList<>();
+            CapitalGainsPartReferences.check(pack.build(), problems);
+            return problems;
+        }
+
+        @Test
+        void check_whenEveryPartNamedIsDeclared_findsNothing() {
+            // When / Then
+            assertThat(problems(withCapitalGains())).isEmpty();
+        }
+
+        @Test
+        void validate_whenABucketRowNamesAPartNotDeclared_isRefusedNamingRowPartAndYear() {
+            // Given
+            PackBuilder pack = withCapitalGains();
+            pack.rules.put(BUCKET, defined(BUCKET, new BucketPart(new CapitalGainsPart("LONG_TERM_EQUITY"))));
+
+            // When / Then — through the validator, so the check is wired in
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("rule CG-PART-LONG-OTHER (version")
+                    .hasMessageContaining("names capital-gains part LONG_TERM_EQUITY, which CG-PARTS for 2026-27"
+                            + " does not declare");
+        }
+
+        @Test
+        void check_whenTheAbsorptionOrderLeavesOutADeclaredPart_reportsIt() {
+            // Given
+            PackBuilder pack = withCapitalGains();
+            pack.rules.put(ABSORPTION, defined(ABSORPTION, new CapitalGainsAbsorptionOrder(List.of(SHORT_SLAB,
+                    LONG_LISTED))));
+
+            // When / Then
+            assertThat(problems(pack)).singleElement().asString()
+                    .contains("rule SETOFF-WITHIN-CAPITAL-GAINS")
+                    .contains("the absorption order names every declared part once");
+        }
+
+        @Test
+        void check_whenTheShortfallOrderLeavesOutASpecialRatePart_reportsIt() {
+            // Given
+            PackBuilder pack = withCapitalGains();
+            pack.rules.put(SHORTFALL, defined(SHORTFALL, new SpecialRateShortfallOrder(List.of(LONG_LISTED))));
+
+            // When / Then
+            assertThat(problems(pack)).singleElement().asString()
+                    .contains("rule RATE-CG-SHORTFALL-ORDER")
+                    .contains("the shortfall order names each once");
+        }
+
+        @Test
+        void check_whenTheShortfallOrderNamesAPartNoSpecialRateCharges_reportsIt() {
+            // Given — the slab part is declared but no row charges it at a special rate
+            PackBuilder pack = withCapitalGains();
+            pack.rules.put(SHORTFALL, defined(SHORTFALL, new SpecialRateShortfallOrder(List.of(LONG_OTHER, LONG_LISTED,
+                    SHORT_SLAB))));
+
+            // When / Then
+            assertThat(problems(pack)).singleElement().asString().contains("the shortfall order names each once");
+        }
+
+        @Test
+        void check_whenARateRowNamesAPartNotDeclared_reportsTheRowAndTheCode() {
+            // Given — a misspelt code, which would otherwise leave the part at slab rates
+            PackBuilder pack = withCapitalGains();
+            pack.rules.put(RATE_OTHER, rateFor(RATE_OTHER, "LONG_TERM_OTHERS"));
+
+            // When / Then — the shortfall order no longer matches what the rows charge, either
+            assertThat(problems(pack)).anySatisfy(problem -> assertThat(problem)
+                    .contains("rule RATE-CG-LONG-OTHER")
+                    .contains("names capital-gains part LONG_TERM_OTHERS, which CG-PARTS for 2026-27 does not declare"));
+        }
+
+        @Test
+        void check_whenNoRowDeclaresTheParts_reportsIt() {
+            // Given
+            PackBuilder pack = withCapitalGains();
+            pack.rules.remove(PARTS);
+
+            // When / Then
+            assertThat(problems(pack)).singleElement().asString().contains("no row declares them");
         }
     }
 }

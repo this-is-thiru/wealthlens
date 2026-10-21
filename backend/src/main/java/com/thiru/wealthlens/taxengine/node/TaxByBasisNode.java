@@ -19,7 +19,6 @@ import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
-import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -31,7 +30,6 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,18 +62,17 @@ public final class TaxByBasisNode implements ComputationNode {
         return Set.of(NodeIds.ROUND_TOTALINCOME, NodeIds.SETOFF);
     }
 
-    /** What a capital-gains part's special-rate row is chosen by; a part with no row is charged at slab rates (D-253). */
-    private static final ItemFactId CAPITAL_GAINS_PART = new ItemFactId("capitalgains.part");
-
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(RuleSetIds.RS_RATE_CG_SPECIAL, RuleSetIds.RS_RATE_SLAB, RuleSetIds.RS_RATE_CG_SHORTFALL_ORDER);
+        return Set.of(RuleSetIds.RS_RATE_CG_SPECIAL, RuleSetIds.RS_RATE_SLAB, RuleSetIds.RS_RATE_CG_SHORTFALL_ORDER,
+                DeclaredCapitalGainsParts.PARTS);
     }
 
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         Money totalIncome = ctx.get(NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount();
-        Map<CapitalGainsPart, Money> gains = specialRateGains(ctx, ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
+        Map<CapitalGainsPart, Money> gains = specialRateGains(ctx, ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class),
+                DeclaredCapitalGainsParts.of(ctx).parts());
         // The slab ladder: each regime's own, unless an age ladder replaces it — the rows' conditions say which (D-252)
         RuleRow row = ctx.ruleOf(RuleSetIds.RS_RATE_SLAB);
         RuleVersion version = TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal());
@@ -114,13 +111,15 @@ public final class TaxByBasisNode implements ComputationNode {
      * 1961 ss.111A(2), 112(2), 112A(5); D-244). The caller's node declares {@code RS-RATE-CG-SPECIAL}.
      */
     static Money atSpecialRates(NodeContext ctx, HeadsAfterSetOff heads) {
-        return specialRateGains(ctx, heads).values().stream().reduce(Money.ZERO, Money::plus);
+        return specialRateGains(ctx, heads, List.copyOf(heads.capitalGains().keySet())).values().stream()
+                .reduce(Money.ZERO, Money::plus);
     }
 
-    /** The parts holding a gain after set-off that a special-rate row charges, in the parts' order. */
-    private static Map<CapitalGainsPart, Money> specialRateGains(NodeContext ctx, HeadsAfterSetOff heads) {
-        Map<CapitalGainsPart, Money> gains = new EnumMap<>(CapitalGainsPart.class);
-        for (CapitalGainsPart part : CapitalGainsPart.values()) {
+    /** The parts holding a gain after set-off that a special-rate row charges, in the order of {@code parts}. */
+    private static Map<CapitalGainsPart, Money> specialRateGains(NodeContext ctx, HeadsAfterSetOff heads,
+            List<CapitalGainsPart> parts) {
+        Map<CapitalGainsPart, Money> gains = new LinkedHashMap<>();
+        for (CapitalGainsPart part : parts) {
             if (heads.capitalGains(part).isGreaterThan(Money.ZERO) && specialRate(ctx, part).isPresent()) {
                 gains.put(part, heads.capitalGains(part));
             }
@@ -130,7 +129,7 @@ public final class TaxByBasisNode implements ComputationNode {
 
     /** The row charging a part at a special rate, as the rows' conditions say; none for a part taxed at slab rates. */
     private static Optional<RuleRow> specialRate(NodeContext ctx, CapitalGainsPart part) {
-        return ctx.optionalRuleOf(RuleSetIds.RS_RATE_CG_SPECIAL, ItemFacts.of(CAPITAL_GAINS_PART, part.name()));
+        return ctx.optionalRuleOf(RuleSetIds.RS_RATE_CG_SPECIAL, ItemFacts.of(CapitalGainsPart.FACT, part.value()));
     }
 
     /**

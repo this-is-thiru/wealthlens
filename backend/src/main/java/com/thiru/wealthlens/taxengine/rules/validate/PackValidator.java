@@ -85,6 +85,7 @@ public final class PackValidator {
         checkEveryVersionHasAnAmendment(pack, problems);         // I15
         checkRequiredRuleSetsHoldARow(pack, problems);           // D-252
         checkEveryRuleIsInARuleSet(pack, problems);              // D-252
+        CapitalGainsPartReferences.check(pack, problems);        // D-309
 
         if (!problems.isEmpty()) {
             throw new PackValidationException(
@@ -345,7 +346,7 @@ public final class PackValidator {
         }
     }
 
-    private static boolean coversAnyOf(RuleVersion version, LocalDate start, LocalDate end) {
+    static boolean coversAnyOf(RuleVersion version, LocalDate start, LocalDate end) {
         return version.validity().contains(start)
                 || version.validity().contains(end)
                 || windowStartsInside(version, start, end);

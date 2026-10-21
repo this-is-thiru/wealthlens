@@ -1,23 +1,36 @@
 package com.thiru.wealthlens.taxengine.rules.definition;
 
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
+import java.util.regex.Pattern;
+
 /**
- * A part of the capital-gains head that losses are set off against and that is taxed on its own basis (D-243): the
- * term the gain arose over and the rate it is charged at.
+ * A part of the capital-gains head that losses are set off against and that is taxed on its own basis (D-243), such as
+ * {@code LONG_TERM_LISTED_EQUITY}.
  *
- * <p>Four, because the special-rate provisions make four: a short-term gain on equity sold with securities
- * transaction tax (S2 s.196; 1961 s.111A) and any other short-term gain, charged with total income; a long-term gain on
- * equity bought and sold with it (S2 s.198; 1961 s.112A) and any other long-term gain (S2 s.197; 1961 s.112).
+ * <p>A code, not a closed set (D-309): which parts there are is {@code CG-PARTS}' to declare, by tax year, with each
+ * part's term and whether a long-term loss may be set off against it ({@link CapitalGainsParts}); which bucket falls in
+ * which part is {@code RS-CG-PART}'s, and which part a special rate charges the rate rows'. A part another provision
+ * makes is new data; a row naming a part {@code CG-PARTS} does not declare fails the pack validation the build runs over
+ * the shipped packs ({@code PackValidator}).
  *
- * <p>Each part's term and whether a long-term loss may be set off against it are {@code CG-PARTS}'s, by tax year
- * ({@link CapitalGainsParts}; D-309).
+ * @param value the code, upper-case with underscores
  */
-public enum CapitalGainsPart {
+public record CapitalGainsPart(String value) {
 
-    SHORT_TERM_SLAB,
+    /** The item fact a row names a part by — how a special-rate row says which part it charges (D-253). */
+    public static final ItemFactId FACT = new ItemFactId("capitalgains.part");
 
-    SHORT_TERM_LISTED_EQUITY,
+    private static final Pattern PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]{1,63}$");
 
-    LONG_TERM_OTHER,
+    public CapitalGainsPart {
+        if (value == null || !PATTERN.matcher(value).matches()) {
+            throw new IllegalArgumentException("CapitalGainsPart must be upper-case with underscores, 2-64 characters,"
+                    + " e.g. LONG_TERM_LISTED_EQUITY, but was " + (value == null ? "null" : "\"" + value + "\""));
+        }
+    }
 
-    LONG_TERM_LISTED_EQUITY
+    @Override
+    public String toString() {
+        return value;
+    }
 }

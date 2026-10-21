@@ -151,7 +151,7 @@ public final class DefinitionJson {
             }
             case "CapitalGainsAbsorptionOrder" -> {
                 List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,
-                        e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
+                        e -> PackJson.construct(e.path(), () -> new CapitalGainsPart(e.node().asString())));
                 yield PackJson.construct(path, () -> new CapitalGainsAbsorptionOrder(parts));
             }
             case "LossCarryForward" -> {
@@ -162,11 +162,11 @@ public final class DefinitionJson {
             }
             case "SpecialRateShortfallOrder" -> {
                 List<CapitalGainsPart> parts = PackJson.array(node, "parts", path,
-                        e -> constant(e.node().asString(), e.path(), CapitalGainsPart.class));
+                        e -> PackJson.construct(e.path(), () -> new CapitalGainsPart(e.node().asString())));
                 yield PackJson.construct(path, () -> new SpecialRateShortfallOrder(parts));
             }
             case "BucketPart" -> PackJson.construct(path, () -> new BucketPart(
-                    PackJson.enumValue(node, "part", path, CapitalGainsPart.class)));
+                    new CapitalGainsPart(PackJson.text(node, "part", path))));
             case "SttChargeability" -> PackJson.construct(path, () -> new SttChargeability(
                     PackJson.text(node, "code", path)));
             case "ShortTermHoldingPeriod" -> PackJson.construct(path, () -> new ShortTermHoldingPeriod(
@@ -174,7 +174,7 @@ public final class DefinitionJson {
             case "CapitalGainsParts" -> {
                 List<CapitalGainsParts.Declared> parts = PackJson.array(node, "parts", path,
                         e -> PackJson.construct(e.path(), () -> new CapitalGainsParts.Declared(
-                                PackJson.enumValue(e.node(), "part", e.path(), CapitalGainsPart.class),
+                                new CapitalGainsPart(PackJson.text(e.node(), "part", e.path())),
                                 PackJson.text(e.node(), "term", e.path()),
                                 PackJson.bool(e.node(), "canAbsorbLongTermLoss", e.path()))));
                 yield PackJson.construct(path, () -> new CapitalGainsParts(parts));

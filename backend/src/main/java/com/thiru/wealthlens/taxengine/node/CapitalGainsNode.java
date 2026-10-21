@@ -23,7 +23,6 @@ import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +82,7 @@ public final class CapitalGainsNode implements ComputationNode {
         GoverningRow row = GoverningRow.of(ctx, ROW);
         CapitalGainsAbsorptionOrder order = RuleDefinitions.require(row.version().definition(),
                 CapitalGainsAbsorptionOrder.class, row.id());
-        Map<CapitalGainsPart, Money> net = new EnumMap<>(CapitalGainsPart.class);
+        Map<CapitalGainsPart, Money> net = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
             Term term = CapitalGainsTerm.of(ctx, bucket, lines);
@@ -91,7 +90,7 @@ public final class CapitalGainsNode implements ComputationNode {
                     Money::plus);
         }
         DeclaredCapitalGainsParts declared = DeclaredCapitalGainsParts.of(ctx);
-        Map<CapitalGainsPart, Money> available = new EnumMap<>(CapitalGainsPart.class);
+        Map<CapitalGainsPart, Money> available = new HashMap<>();
         Money longTermLoss = Money.ZERO;
         Money shortTermLoss = Money.ZERO;
         for (CapitalGainsPart part : order.parts()) {

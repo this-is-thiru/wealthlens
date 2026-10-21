@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import java.util.EnumMap;
 import java.util.Map;
 
 /**
@@ -13,7 +12,7 @@ import java.util.Map;
  * its own turn. A loss left is not set off against any other head (S2 s.109(2); 1961 s.71(3)); it is carried forward
  * (S2 s.111; 1961 s.74; D-247).
  *
- * @param parts every part's surviving gain, nil or more
+ * @param parts the surviving gain of each part that holds one, nil or more; a part not held is nil
  * @param shortTermLossLeft the year's short-term loss no part absorbed
  * @param longTermLossLeft the year's long-term loss no long-term part absorbed
  */
@@ -24,16 +23,13 @@ public record CapitalGainsHead(Map<CapitalGainsPart, Money> parts, Money shortTe
         if (parts == null || shortTermLossLeft == null || longTermLossLeft == null) {
             throw new IllegalArgumentException("A capital-gains head needs its parts and the losses left");
         }
-        Map<CapitalGainsPart, Money> every = new EnumMap<>(CapitalGainsPart.class);
-        for (CapitalGainsPart part : CapitalGainsPart.values()) {
-            Money amount = parts.getOrDefault(part, Money.ZERO);
+        parts.forEach((part, amount) -> {
             if (amount.isLessThan(Money.ZERO)) {
                 throw new IllegalArgumentException("A part surviving set-off is nil or more, but " + part + " was "
                         + amount);
             }
-            every.put(part, amount);
-        }
-        parts = Map.copyOf(every);
+        });
+        parts = Map.copyOf(parts);
     }
 
     /** No capital gains at all. */
@@ -41,9 +37,9 @@ public record CapitalGainsHead(Map<CapitalGainsPart, Money> parts, Money shortTe
         return new CapitalGainsHead(Map.of(), Money.ZERO, Money.ZERO);
     }
 
-    /** One part's surviving gain. */
+    /** One part's surviving gain; nil for a part the head does not hold. */
     public Money part(CapitalGainsPart part) {
-        return parts.get(part);
+        return parts.getOrDefault(part, Money.ZERO);
     }
 
     /** The head's income: every part's surviving gain. */

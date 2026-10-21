@@ -35,6 +35,7 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -100,7 +101,7 @@ public final class SetOffNode implements ComputationNode {
         heads.put(HeadCode.HOUSE_PROPERTY, ctx.get(NodeIds.HOUSEPROPERTY_INCOME, MoneyValue.class).asMoney());
         heads.put(HeadCode.OTHER_SOURCES, ctx.get(NodeIds.OTHERSOURCES_INCOME, MoneyValue.class).asMoney());
         CapitalGainsHead capitalGains = ctx.get(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.class);
-        Map<CapitalGainsPart, Money> parts = new EnumMap<>(capitalGains.parts());
+        Map<CapitalGainsPart, Money> parts = new HashMap<>(capitalGains.parts());
         heads.put(HeadCode.CAPITAL_GAINS, capitalGains.total());
         AbsorptionOrder declared = RuleDefinitions.require(version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS)).definition(),
                 AbsorptionOrder.class, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS));

@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
-import java.util.EnumMap;
 import java.util.Map;
 
 /**
@@ -10,7 +9,7 @@ import java.util.Map;
  * holds — the special-rate parts are taxed on their own basis, so the total alone would lose them.
  *
  * @param total every head's income after set-off, which gross total income is
- * @param capitalGains each capital-gains part after other heads' losses, nil or more
+ * @param capitalGains each capital-gains part held, after other heads' losses, nil or more; a part not held is nil
  */
 public record HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capitalGains) implements NodeValue {
 
@@ -18,16 +17,12 @@ public record HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capital
         if (total == null || capitalGains == null) {
             throw new IllegalArgumentException("Heads after set-off need the total and the capital-gains parts");
         }
-        Map<CapitalGainsPart, Money> every = new EnumMap<>(CapitalGainsPart.class);
-        for (CapitalGainsPart part : CapitalGainsPart.values()) {
-            every.put(part, capitalGains.getOrDefault(part, Money.ZERO));
-        }
-        capitalGains = Map.copyOf(every);
+        capitalGains = Map.copyOf(capitalGains);
     }
 
-    /** One capital-gains part after set-off. */
+    /** One capital-gains part after set-off; nil for a part not held. */
     public Money capitalGains(CapitalGainsPart part) {
-        return capitalGains.get(part);
+        return capitalGains.getOrDefault(part, Money.ZERO);
     }
 
     @Override

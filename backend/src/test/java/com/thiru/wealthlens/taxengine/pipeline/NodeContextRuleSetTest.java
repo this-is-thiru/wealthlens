@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFactIs;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
@@ -248,7 +249,7 @@ class NodeContextRuleSetTest {
 
         // When / Then
         assertThat(ctx.optionalRuleOf(RuleSetIds.RS_RATE_CG_SPECIAL,
-                item("capitalgains.part", CapitalGainsPart.SHORT_TERM_SLAB))).isEmpty();
+                ItemFacts.of(CapitalGainsPart.FACT, "SHORT_TERM_SLAB"))).isEmpty();
     }
 
     @Test
@@ -349,12 +350,23 @@ class NodeContextRuleSetTest {
 
         @Test
         void specialRates_onlyTheThreeSpecialParts_haveARow() {
-            assertChooses(RuleSetIds.RS_RATE_CG_SPECIAL, "capitalgains.part", Map.of(
-                    CapitalGainsPart.SHORT_TERM_SLAB, Optional.empty(),
-                    CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Optional.of(RuleIds.RATE_CG_SHORT_LISTED_EQUITY),
-                    CapitalGainsPart.LONG_TERM_OTHER, Optional.of(RuleIds.RATE_CG_LONG_OTHER),
-                    CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Optional.of(RuleIds.RATE_CG_LONG_LISTED_EQUITY)),
-                    CapitalGainsPart.values());
+            // Given — every part the year's CG-PARTS declares (D-309)
+            Map<String, Optional<RuleId>> expected = Map.of(
+                    "SHORT_TERM_SLAB", Optional.empty(),
+                    "SHORT_TERM_LISTED_EQUITY", Optional.of(RuleIds.RATE_CG_SHORT_LISTED_EQUITY),
+                    "LONG_TERM_OTHER", Optional.of(RuleIds.RATE_CG_LONG_OTHER),
+                    "LONG_TERM_LISTED_EQUITY", Optional.of(RuleIds.RATE_CG_LONG_LISTED_EQUITY));
+            for (TaxYearId year : YEARS) {
+                CapitalGainsParts declared = (CapitalGainsParts) shipped(year).rule(RuleIds.CG_PARTS).versions()
+                        .stream().filter(v -> v.validity().contains(year.startsOn())).findFirst().orElseThrow()
+                        .definition().orElseThrow();
+                assertThat(declared.parts()).extracting(part -> part.part().value())
+                        .containsExactlyInAnyOrderElementsOf(expected.keySet());
+
+                // When / Then
+                expected.forEach((code, row) -> assertThat(rowFor(year, NEW_TAX_REGIME, RuleSetIds.RS_RATE_CG_SPECIAL,
+                        ItemFacts.of(CapitalGainsPart.FACT, code))).as(year.label() + " " + code).isEqualTo(row));
+            }
         }
 
         @Test

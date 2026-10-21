@@ -49,6 +49,6 @@ public record CapitalGainsParts(List<Declared> parts) implements RuleDefinition 
 
     /** The part as declared; empty if the row does not declare it. */
     public Optional<Declared> of(CapitalGainsPart part) {
-        return parts.stream().filter(declared -> declared.part() == part).findFirst();
+        return parts.stream().filter(declared -> declared.part().equals(part)).findFirst();
     }
 }

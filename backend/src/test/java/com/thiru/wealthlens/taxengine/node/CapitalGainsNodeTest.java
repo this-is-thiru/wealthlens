@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
@@ -10,6 +11,8 @@ import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
@@ -23,6 +26,7 @@ import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
+import com.thiru.wealthlens.taxengine.rules.validate.PackValidator;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -46,6 +50,14 @@ import org.junit.jupiter.params.provider.ValueSource;
  * 112A's conditions, worked by hand in {@code plans/W-088f2a.md}.
  */
 class CapitalGainsNodeTest {
+
+    private static final CapitalGainsPart SHORT_TERM_SLAB = new CapitalGainsPart("SHORT_TERM_SLAB");
+
+    private static final CapitalGainsPart SHORT_TERM_LISTED_EQUITY = new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY");
+
+    private static final CapitalGainsPart LONG_TERM_OTHER = new CapitalGainsPart("LONG_TERM_OTHER");
+
+    private static final CapitalGainsPart LONG_TERM_LISTED_EQUITY = new CapitalGainsPart("LONG_TERM_LISTED_EQUITY");
 
     private static RulePack pack(int year) {
         TaxYearId taxYear = TaxYearId.of(year);
@@ -161,9 +173,9 @@ class CapitalGainsNodeTest {
                 bucket("40000", Term.LONG_TERM, PAID, PAID));
 
         // Then — 50,000 − 30,000 = 20,000 slab; the listed long-term part untouched
-        assertThat(head.part(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.of("20000"));
-        assertThat(head.part(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.ZERO);
-        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("40000"));
+        assertThat(head.part(SHORT_TERM_SLAB)).isEqualTo(Money.of("20000"));
+        assertThat(head.part(SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.ZERO);
+        assertThat(head.part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("40000"));
         assertThat(head.total()).isEqualTo(Money.of("60000"));
         assertThat(head.shortTermLossLeft()).isEqualTo(Money.ZERO);
     }
@@ -177,8 +189,8 @@ class CapitalGainsNodeTest {
                 bucket("15000", Term.LONG_TERM, PAID, PAID));
 
         // Then — "against … any other long-term capital asset" (S2 s.108(2)(b)): 15,000 − 10,000
-        assertThat(head.part(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.of("25000"));
-        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("5000"));
+        assertThat(head.part(SHORT_TERM_SLAB)).isEqualTo(Money.of("25000"));
+        assertThat(head.part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("5000"));
         assertThat(head.longTermLossLeft()).isEqualTo(Money.ZERO);
     }
 
@@ -210,7 +222,7 @@ class CapitalGainsNodeTest {
 
         // Then — the long-term loss can use only this part, so it goes first: 25,000 − 10,000 − 15,000 = 0, and
         // 5,000 of the short-term loss is left; the other way round 10,000 of the long-term loss would be left
-        assertThat(head.part(CapitalGainsPart.LONG_TERM_OTHER)).isEqualTo(Money.ZERO);
+        assertThat(head.part(LONG_TERM_OTHER)).isEqualTo(Money.ZERO);
         assertThat(head.longTermLossLeft()).isEqualTo(Money.ZERO);
         assertThat(head.shortTermLossLeft()).isEqualTo(Money.of("5000"));
         List<TraceLine> setOff = result.trace().stream().filter(line -> line.kind() == StepKind.SET_OFF).toList();
@@ -220,13 +232,16 @@ class CapitalGainsNodeTest {
 
     /** TY {@code year}'s shipped pack with every version of {@code CG-PARTS} declaring {@code parts} instead (D-309). */
     private static RulePack withParts(int year, CapitalGainsParts.Declared... parts) {
-        RulePack shipped = pack(year);
-        RuleRow rule = shipped.rules().get(RuleIds.CG_PARTS);
+        return withDefinition(pack(year), RuleIds.CG_PARTS, new CapitalGainsParts(List.of(parts)));
+    }
+
+    /** {@code shipped} with every version of {@code row} defined as {@code definition} instead. */
+    private static RulePack withDefinition(RulePack shipped, RuleId row, RuleDefinition definition) {
+        RuleRow rule = shipped.rules().get(row);
         List<RuleVersion> versions = rule.versions().stream()
                 .map(v -> new RuleVersion(v.validity(), v.regimes(), v.cap(), v.relief(), v.rounding(),
-                        Optional.<RuleDefinition>of(new CapitalGainsParts(List.of(parts))), v.conditions(),
-                        v.provision1961(), v.provision2025(), v.introducedBy(), v.legalStatus(),
-                        v.publicationStatus(), v.provenance()))
+                        Optional.of(definition), v.conditions(), v.provision1961(), v.provision2025(),
+                        v.introducedBy(), v.legalStatus(), v.publicationStatus(), v.provenance()))
                 .toList();
         Map<RuleId, RuleRow> rules = new HashMap<>(shipped.rules());
         rules.put(rule.id(), new RuleRow(rule.id(), rule.axis(), versions, rule.midYearCombination(),
@@ -243,10 +258,10 @@ class CapitalGainsNodeTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenTheDeclaredPartsLetALongTermLossReachTheSlabPart_setsItOffThereFirst(int year) {
         // Given — the shipped declaration but for the slab part, which a long-term loss may now reach (D-309)
-        RulePack pack = withParts(year, part(CapitalGainsPart.SHORT_TERM_SLAB, "SHORT_TERM", true),
-                part(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
-                part(CapitalGainsPart.LONG_TERM_OTHER, "LONG_TERM", true),
-                part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
+        RulePack pack = withParts(year, part(SHORT_TERM_SLAB, "SHORT_TERM", true),
+                part(SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
+                part(LONG_TERM_OTHER, "LONG_TERM", true),
+                part(LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
 
         // When — B's buckets: long-term other −10,000; short-term slab 25,000; long-term listed 15,000
         CapitalGainsHead head = (CapitalGainsHead) result(pack, bucket("-10000", Term.LONG_TERM, PAID, NOT_PAID),
@@ -254,8 +269,8 @@ class CapitalGainsNodeTest {
                 bucket("15000", Term.LONG_TERM, PAID, PAID)).value();
 
         // Then — the order takes the slab part first: 25,000 − 10,000; the listed part untouched (shipped: 25,000, 5,000)
-        assertThat(head.part(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.of("15000"));
-        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("15000"));
+        assertThat(head.part(SHORT_TERM_SLAB)).isEqualTo(Money.of("15000"));
+        assertThat(head.part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("15000"));
         assertThat(head.longTermLossLeft()).isEqualTo(Money.ZERO);
     }
 
@@ -263,27 +278,56 @@ class CapitalGainsNodeTest {
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenThePartsDeclareALongTermPartShortTerm_countsItsLossShortTerm(int year) {
         // Given — long-term other declared short-term, with no long-term loss reaching it
-        RulePack pack = withParts(year, part(CapitalGainsPart.SHORT_TERM_SLAB, "SHORT_TERM", false),
-                part(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
-                part(CapitalGainsPart.LONG_TERM_OTHER, "SHORT_TERM", false),
-                part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
+        RulePack pack = withParts(year, part(SHORT_TERM_SLAB, "SHORT_TERM", false),
+                part(SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
+                part(LONG_TERM_OTHER, "SHORT_TERM", false),
+                part(LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
 
         // When — long-term other −10,000; short-term listed 25,000
         CapitalGainsHead head = (CapitalGainsHead) result(pack, bucket("-10000", Term.LONG_TERM, PAID, NOT_PAID),
                 bucket("25000", Term.SHORT_TERM, PAID, PAID)).value();
 
         // Then — a short-term loss may reach any part: 25,000 − 10,000 (shipped: 25,000 kept, 10,000 long-term left)
-        assertThat(head.part(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("15000"));
+        assertThat(head.part(SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("15000"));
         assertThat(head.shortTermLossLeft()).isEqualTo(Money.ZERO);
         assertThat(head.longTermLossLeft()).isEqualTo(Money.ZERO);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAFifthPartIsDeclaredInDataOnly_collectsItsBucketsAndSetsLossesOffAgainstIt(int year) {
+        // Given — a part no Java names: declared in CG-PARTS, the slab row re-pointed at it, first in the order (D-309)
+        CapitalGainsPart fifth = new CapitalGainsPart("SHORT_TERM_OTHER_RATE");
+        RulePack pack = withParts(year, part(fifth, "SHORT_TERM", false),
+                part(SHORT_TERM_SLAB, "SHORT_TERM", false),
+                part(SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
+                part(LONG_TERM_OTHER, "LONG_TERM", true),
+                part(LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
+        pack = withDefinition(pack, RuleIds.CG_PART_SHORT_SLAB, new BucketPart(fifth));
+        pack = withDefinition(pack, RuleIds.SETOFF_WITHIN_CAPITAL_GAINS, new CapitalGainsAbsorptionOrder(List.of(fifth,
+                SHORT_TERM_SLAB, SHORT_TERM_LISTED_EQUITY, LONG_TERM_OTHER, LONG_TERM_LISTED_EQUITY)));
+        RulePack withFifth = pack;
+        assertThatCode(() -> PackValidator.validate(withFifth)).doesNotThrowAnyException();
+
+        // When — short-term sold without STT 25,000 (the slab row's facts); short-term listed −10,000
+        NodeResult result = result(withFifth, bucket("25000", Term.SHORT_TERM, PAID, NOT_PAID),
+                bucket("-10000", Term.SHORT_TERM, PAID, PAID));
+        CapitalGainsHead head = (CapitalGainsHead) result.value();
+
+        // Then — the fifth part holds the gain and, first in the order, takes the loss: 25,000 − 10,000
+        assertThat(head.part(fifth)).isEqualTo(Money.of("15000"));
+        assertThat(head.part(SHORT_TERM_SLAB)).isEqualTo(Money.ZERO);
+        assertThat(head.shortTermLossLeft()).isEqualTo(Money.ZERO);
+        assertThat(result.trace()).filteredOn(line -> line.kind() == StepKind.INCOME)
+                .singleElement().satisfies(line -> assertThat(line.limitedBy()).contains("SHORT_TERM_OTHER_RATE"));
     }
 
     @Test
     void evaluate_whenThePartsOmitAPartHoldingAGain_isRefusedNamingTheRow() {
         // Given — long-term other not declared
-        RulePack pack = withParts(2026, part(CapitalGainsPart.SHORT_TERM_SLAB, "SHORT_TERM", false),
-                part(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
-                part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
+        RulePack pack = withParts(2026, part(SHORT_TERM_SLAB, "SHORT_TERM", false),
+                part(SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
+                part(LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
 
         // When / Then — a gain of 1,000 in long-term other
         assertThatThrownBy(() -> result(pack, bucket("1000", Term.LONG_TERM, PAID, NOT_PAID)))
@@ -294,10 +338,10 @@ class CapitalGainsNodeTest {
     @Test
     void evaluate_whenThePartsDeclareATermTheEngineDoesNotKnow_isRefusedNamingIt() {
         // Given — long-term other declared with a term that is neither code
-        RulePack pack = withParts(2026, part(CapitalGainsPart.SHORT_TERM_SLAB, "SHORT_TERM", false),
-                part(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
-                part(CapitalGainsPart.LONG_TERM_OTHER, "MEDIUM_TERM", true),
-                part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
+        RulePack pack = withParts(2026, part(SHORT_TERM_SLAB, "SHORT_TERM", false),
+                part(SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", false),
+                part(LONG_TERM_OTHER, "MEDIUM_TERM", true),
+                part(LONG_TERM_LISTED_EQUITY, "LONG_TERM", true));
 
         // When / Then — a loss of 1,000 in long-term other
         assertThatThrownBy(() -> result(pack, bucket("-1000", Term.LONG_TERM, PAID, NOT_PAID)))
@@ -369,7 +413,7 @@ class CapitalGainsNodeTest {
         CapitalGainsHead head = run(year, boughtWithoutStt(mode, corporateAction, acquiredOn));
 
         // Then
-        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
+        assertThat(head.part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
         assertThat(head.total()).isEqualTo(Money.of("1000"));
     }
 
@@ -441,7 +485,7 @@ class CapitalGainsNodeTest {
         CapitalGainsHead head = run(year, soldWithStt(UNKNOWN, mode, corporateAction, acquiredOn));
 
         // Then
-        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
+        assertThat(head.part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -551,7 +595,7 @@ class CapitalGainsNodeTest {
                 "2020-01-10"));
 
         // Then
-        assertThat(((CapitalGainsHead) result.value()).part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY))
+        assertThat(((CapitalGainsHead) result.value()).part(LONG_TERM_LISTED_EQUITY))
                 .isEqualTo(Money.of("1000"));
         assertThat(result.trace()).noneMatch(line -> line.rule().equals(RuleIds.STT_PURCHASE_DELIVERY));
     }
@@ -590,7 +634,7 @@ class CapitalGainsNodeTest {
                 acquiredOn));
 
         // Then
-        assertThat(((CapitalGainsHead) result.value()).part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY))
+        assertThat(((CapitalGainsHead) result.value()).part(LONG_TERM_LISTED_EQUITY))
                 .isEqualTo(Money.of("1000"));
         assertThat(result.trace().stream().anyMatch(line -> line.rule().equals(RuleIds.STT_PURCHASE_DELIVERY)))
                 .isEqualTo(tracedUnderSl1);
@@ -640,8 +684,8 @@ class CapitalGainsNodeTest {
                 held("2024-04-10", "2025-04-11", "NSE", "PURCHASE"));
 
         // Then
-        assertThat(head.part(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
-        assertThat(head.part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
+        assertThat(head.part(SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
+        assertThat(head.part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1000"));
     }
 
     @Test
@@ -666,7 +710,7 @@ class CapitalGainsNodeTest {
         NodeResult result = result(2026, held("2024-06-05", "2025-06-06", "NSE", "CORPORATE_ACTION/BONUS"));
 
         // Then
-        assertThat(((CapitalGainsHead) result.value()).part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY))
+        assertThat(((CapitalGainsHead) result.value()).part(LONG_TERM_LISTED_EQUITY))
                 .isEqualTo(Money.of("1000"));
         assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_TERM_LISTED_SECURITY))
                 .singleElement()

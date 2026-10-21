@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
+import java.util.List;
 
 /**
  * The capital-gains parts as {@code CG-PARTS} declares them for the year (D-309): the term of a part's loss, and whether
@@ -32,6 +33,11 @@ final class DeclaredCapitalGainsParts {
         GoverningRow governing = GoverningRow.of(ctx, PARTS);
         return new DeclaredCapitalGainsParts(governing.id(),
                 RuleDefinitions.require(governing.version().definition(), CapitalGainsParts.class, governing.id()));
+    }
+
+    /** Every part the row declares, in its order. */
+    List<CapitalGainsPart> parts() {
+        return parts.parts().stream().map(CapitalGainsParts.Declared::part).toList();
     }
 
     /**

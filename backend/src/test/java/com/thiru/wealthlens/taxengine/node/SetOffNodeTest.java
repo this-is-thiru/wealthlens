@@ -51,6 +51,14 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class SetOffNodeTest {
 
+    private static final CapitalGainsPart SHORT_TERM_SLAB = new CapitalGainsPart("SHORT_TERM_SLAB");
+
+    private static final CapitalGainsPart SHORT_TERM_LISTED_EQUITY = new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY");
+
+    private static final CapitalGainsPart LONG_TERM_OTHER = new CapitalGainsPart("LONG_TERM_OTHER");
+
+    private static final CapitalGainsPart LONG_TERM_LISTED_EQUITY = new CapitalGainsPart("LONG_TERM_LISTED_EQUITY");
+
     private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
 
@@ -369,13 +377,13 @@ class SetOffNodeTest {
     @Test
     void evaluate_whenAHousePropertyLossMeetsOnlyCapitalGains_takesTheirPartsInOrder() {
         // When — a 60,000 house-property loss; short-term slab 30,000, long-term listed 50,000; nothing else
-        NodeResult result = runWithCapitalGains("0", "-60000", "0", Map.of(CapitalGainsPart.SHORT_TERM_SLAB,
-                Money.of("30000"), CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("50000")));
+        NodeResult result = runWithCapitalGains("0", "-60000", "0", Map.of(SHORT_TERM_SLAB,
+                Money.of("30000"), LONG_TERM_LISTED_EQUITY, Money.of("50000")));
 
         // Then — S2 s.109(1) "including 'Capital gains'": 30,000 slab, then 30,000 of the listed part; 20,000 left
         HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
-        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.ZERO);
-        assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("20000"));
+        assertThat(heads.capitalGains(SHORT_TERM_SLAB)).isEqualTo(Money.ZERO);
+        assertThat(heads.capitalGains(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("20000"));
         assertThat(heads.total()).isEqualTo(Money.of("20000"));
         assertThat(lines(result, StepKind.SET_OFF)).hasSize(2).allSatisfy(line ->
                 assertThat(line.limitedBy().orElseThrow()).contains("CAPITAL_GAINS").contains("OQ-32"));
@@ -384,13 +392,13 @@ class SetOffNodeTest {
     @Test
     void evaluate_whenAnotherHeadHasIncome_setsOffAgainstItBeforeCapitalGains() {
         // When — the same, with other sources 40,000: capital gains are last in the declared order (D-243)
-        NodeResult result = runWithCapitalGains("0", "-60000", "40000", Map.of(CapitalGainsPart.SHORT_TERM_SLAB,
-                Money.of("30000"), CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("50000")));
+        NodeResult result = runWithCapitalGains("0", "-60000", "40000", Map.of(SHORT_TERM_SLAB,
+                Money.of("30000"), LONG_TERM_LISTED_EQUITY, Money.of("50000")));
 
         // Then — 40,000 from other sources, 20,000 from the slab part; the listed part untouched
         HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
-        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_SLAB)).isEqualTo(Money.of("10000"));
-        assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("50000"));
+        assertThat(heads.capitalGains(SHORT_TERM_SLAB)).isEqualTo(Money.of("10000"));
+        assertThat(heads.capitalGains(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("50000"));
         assertThat(heads.total()).isEqualTo(Money.of("60000"));
     }
 
@@ -444,8 +452,8 @@ class SetOffNodeTest {
 
     /** Case A's gains: short-term listed 1,00,000, long-term listed 3,00,000. */
     private static Map<CapitalGainsPart, Money> caseAGains() {
-        return Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("100000"),
-                CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("300000"));
+        return Map.of(SHORT_TERM_LISTED_EQUITY, Money.of("100000"),
+                LONG_TERM_LISTED_EQUITY, Money.of("300000"));
     }
 
     /** Case A's ledger, by the first of its two years of origin: long-term 2,00,000 (50,000 absorbed) and short-term
@@ -459,8 +467,8 @@ class SetOffNodeTest {
         // long-term 1,50,000 off long-term listed → 1,50,000; short-term 30,000 then 40,000 off short-term listed
         // (the slab part being nil) → 30,000; the head down 2,20,000 from 4,00,000
         HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
-        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("30000"));
-        assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("150000"));
+        assertThat(heads.capitalGains(SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("30000"));
+        assertThat(heads.capitalGains(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("150000"));
         assertThat(heads.total()).isEqualTo(Money.of("180000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.SET_OFF))
                 .extracting(TraceLine::out)
@@ -501,13 +509,13 @@ class SetOffNodeTest {
     void evaluate_whenACapitalLossIsInItsNinthYear_hasExpiredButTheEighthIsUsed() {
         // When — B: TY 2026-27; 10,000 short-term from TY 2018-19 (the eighth year after) and from TY 2017-18
         NodeResult result = runWithCarriedCapitalLoss(2026, OLD,
-                Map.of(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("100000")),
+                Map.of(LONG_TERM_LISTED_EQUITY, Money.of("100000")),
                 Map.of(TaxYearId.of(2017), capitalLoss("10000", "0", "0", true),
                         TaxYearId.of(2018), capitalLoss("10000", "0", "0", true)));
 
         // Then — only TY 2018-19's is set off
         HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
-        assertThat(heads.capitalGains(CapitalGainsPart.LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("90000"));
+        assertThat(heads.capitalGains(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("90000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
                 .satisfies(line -> assertThat(line.limitedBy().orElseThrow()).contains("2017-18").contains("expired"));
     }
@@ -516,12 +524,12 @@ class SetOffNodeTest {
     void evaluate_whenOnlyShortTermGainsMeetACarriedLongTermLoss_carriesItAll() {
         // When — C: a long-term loss of 1,00,000 brought in; only short-term listed gains of 50,000
         NodeResult result = runWithCarriedCapitalLoss(2026, OLD,
-                Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("50000")),
+                Map.of(SHORT_TERM_LISTED_EQUITY, Money.of("50000")),
                 Map.of(TaxYearId.of(2024), capitalLoss("0", "100000", "0", true)));
 
         // Then — S2 s.111(1)(a)(ii): only against long-term gains
         HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
-        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("50000"));
+        assertThat(heads.capitalGains(SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("50000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.SET_OFF)).isEmpty();
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
                 .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("100000")));
@@ -531,19 +539,19 @@ class SetOffNodeTest {
     void evaluate_whenTheDeclaredPartsLetALongTermLossReachAShortTermPart_setsTheCarriedLossOffAgainstIt() {
         // Given — case C, but CG-PARTS declares that a long-term loss may reach the short-term listed part (D-309)
         RulePack pack = withDefinition(2026, RuleIds.CG_PARTS, new CapitalGainsParts(List.of(
-                new CapitalGainsParts.Declared(CapitalGainsPart.SHORT_TERM_SLAB, "SHORT_TERM", false),
-                new CapitalGainsParts.Declared(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", true),
-                new CapitalGainsParts.Declared(CapitalGainsPart.LONG_TERM_OTHER, "LONG_TERM", true),
-                new CapitalGainsParts.Declared(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, "LONG_TERM", true))));
+                new CapitalGainsParts.Declared(SHORT_TERM_SLAB, "SHORT_TERM", false),
+                new CapitalGainsParts.Declared(SHORT_TERM_LISTED_EQUITY, "SHORT_TERM", true),
+                new CapitalGainsParts.Declared(LONG_TERM_OTHER, "LONG_TERM", true),
+                new CapitalGainsParts.Declared(LONG_TERM_LISTED_EQUITY, "LONG_TERM", true))));
 
         // When — a long-term loss of 1,00,000 brought in; only short-term listed gains of 50,000
         NodeResult result = runWithCarriedCapitalLoss(pack, OLD,
-                Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("50000")),
+                Map.of(SHORT_TERM_LISTED_EQUITY, Money.of("50000")),
                 Map.of(TaxYearId.of(2024), capitalLoss("0", "100000", "0", true)));
 
         // Then — the row, not the part, says what the loss reaches: 50,000 − 50,000 = 0; 1,00,000 − 50,000 carried
         HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
-        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.ZERO);
+        assertThat(heads.capitalGains(SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.ZERO);
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.SET_OFF)).singleElement()
                 .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("50000")));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
@@ -557,7 +565,7 @@ class SetOffNodeTest {
 
         // Then — its 40,000 is not set off: short-term listed 70,000; the line names s.121
         HeadsAfterSetOff heads = (HeadsAfterSetOff) result.value();
-        assertThat(heads.capitalGains(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("70000"));
+        assertThat(heads.capitalGains(SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("70000"));
         assertThat(lines(result, RuleIds.SETOFF_CARRIED_CAPITAL_GAINS, StepKind.MEASURE)).singleElement()
                 .satisfies(line -> assertThat(line.limitedBy().orElseThrow()).contains("s.121"));
     }

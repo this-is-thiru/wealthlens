@@ -16,6 +16,8 @@ import com.thiru.wealthlens.taxengine.rules.condition.AgeAtLeast;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.IsResident;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinition;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
@@ -53,6 +55,12 @@ import org.junit.jupiter.api.Test;
  * {@code plans/W-046.md}, not taken from a run.
  */
 class TaxByBasisNodeTest {
+
+    private static final CapitalGainsPart SHORT_TERM_LISTED_EQUITY = new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY");
+
+    private static final CapitalGainsPart LONG_TERM_OTHER = new CapitalGainsPart("LONG_TERM_OTHER");
+
+    private static final CapitalGainsPart LONG_TERM_LISTED_EQUITY = new CapitalGainsPart("LONG_TERM_LISTED_EQUITY");
 
     private static final RegimeCode NEW_TAX_REGIME = new RegimeCode("NEW_TAX_REGIME");
     private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
@@ -319,10 +327,19 @@ class TaxByBasisNodeTest {
 
     private static NodeResult runWithGains(int year, RegimeCode regime, ResidentialStatus residence,
             String roundedTotalIncome, Map<CapitalGainsPart, Money> gains) {
+        return runWithGains(shippedPack(year), regime, residence, roundedTotalIncome, gains);
+    }
+
+    private static RulePack shippedPack(int year) {
         TaxYearId taxYear = TaxYearId.of(year);
-        RulePack pack = new ClasspathRulePackProvider(
+        return new ClasspathRulePackProvider(
                         "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
                 .load(taxYear);
+    }
+
+    private static NodeResult runWithGains(RulePack pack, RegimeCode regime, ResidentialStatus residence,
+            String roundedTotalIncome, Map<CapitalGainsPart, Money> gains) {
+        TaxYearId taxYear = pack.taxYear();
         EngineInputs plain = NodeHarness.plainTaxpayer();
         Individual person = new Individual(taxYear.endsOn().minusYears(40).minusMonths(6), residence,
                 Optional.empty(), Optional.empty());
@@ -336,9 +353,9 @@ class TaxByBasisNodeTest {
     }
 
     private static Map<CapitalGainsPart, Money> caseAGains() {
-        return Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("50000"),
-                CapitalGainsPart.LONG_TERM_OTHER, Money.of("80000"),
-                CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("200000"));
+        return Map.of(SHORT_TERM_LISTED_EQUITY, Money.of("50000"),
+                LONG_TERM_OTHER, Money.of("80000"),
+                LONG_TERM_LISTED_EQUITY, Money.of("200000"));
     }
 
     @Test
@@ -363,6 +380,74 @@ class TaxByBasisNodeTest {
                                 MoneyValue.of(Money.of("80000")), MoneyValue.of(Money.of("30000"))));
     }
 
+    /** TY 2026-27's shipped pack with every version of {@code CG-PARTS} declaring the parts in {@code order} (D-309). */
+    private static RulePack withPartsInOrder(CapitalGainsPart... order) {
+        RulePack shipped = shippedPack(2026);
+        RuleRow rule = shipped.rules().get(RuleIds.CG_PARTS);
+        List<RuleVersion> versions = rule.versions().stream()
+                .map(v -> new RuleVersion(v.validity(), v.regimes(), v.cap(), v.relief(), v.rounding(),
+                        Optional.of(reordered((CapitalGainsParts) v.definition().orElseThrow(), order)),
+                        v.conditions(), v.provision1961(), v.provision2025(), v.introducedBy(), v.legalStatus(),
+                        v.publicationStatus(), v.provenance()))
+                .toList();
+        Map<RuleId, RuleRow> rules = new HashMap<>(shipped.rules());
+        rules.put(rule.id(), new RuleRow(rule.id(), rule.axis(), versions, rule.midYearCombination(),
+                rule.midYearCombinationRule(), rule.prorationBasis(), rule.headProvenance()));
+        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), rules, shipped.ruleSets(),
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+    }
+
+    private static RuleDefinition reordered(CapitalGainsParts declared, CapitalGainsPart... order) {
+        return new CapitalGainsParts(List.of(order).stream()
+                .map(part -> declared.of(part).orElseThrow()).toList());
+    }
+
+    /** The special-rate tax lines' rows, in the order the node wrote them (the first tax line is the slab ladder's). */
+    private static List<RuleId> specialRateRows(NodeResult result) {
+        List<RuleId> rows = result.trace().stream().filter(line -> line.kind() == StepKind.TAX)
+                .map(TraceLine::rule).toList();
+        return rows.subList(1, rows.size());
+    }
+
+    @Test
+    void evaluate_whenThePartsAreDeclaredInTheirOrder_writesTheSpecialRateLinesInThatOrder() {
+        // Given — A's three special-rate gains; a non-resident, so no shortfall shifts them
+        // When
+        NodeResult result = runWithGains(shippedPack(2026), FIRST_SCHEDULE_RATES, ResidentialStatus.NON_RESIDENT,
+                "480000", caseAGains());
+
+        // Then — CG-PARTS' order: short-term listed, long-term other, long-term listed
+        assertThat(specialRateRows(result)).containsExactly(RuleIds.RATE_CG_SHORT_LISTED_EQUITY,
+                RuleIds.RATE_CG_LONG_OTHER, RuleIds.RATE_CG_LONG_LISTED_EQUITY);
+    }
+
+    @Test
+    void evaluate_whenThePartsAreDeclaredInAnotherOrder_writesTheSpecialRateLinesInThatOrderInstead() {
+        // Given — the same gains, CG-PARTS declaring the parts the other way round
+        RulePack pack = withPartsInOrder(LONG_TERM_LISTED_EQUITY, LONG_TERM_OTHER, SHORT_TERM_LISTED_EQUITY,
+                new CapitalGainsPart("SHORT_TERM_SLAB"));
+
+        // When
+        NodeResult result = runWithGains(pack, FIRST_SCHEDULE_RATES, ResidentialStatus.NON_RESIDENT, "480000",
+                caseAGains());
+
+        // Then — the order is the row's, not the head's map's
+        assertThat(specialRateRows(result)).containsExactly(RuleIds.RATE_CG_LONG_LISTED_EQUITY,
+                RuleIds.RATE_CG_LONG_OTHER, RuleIds.RATE_CG_SHORT_LISTED_EQUITY);
+    }
+
+    @Test
+    void evaluate_whenAPartNoSpecialRateRowNames_chargesItWithTotalIncomeAtSlabRates() {
+        // Given — a part code no Java names and no RS-RATE-CG-SPECIAL row charges (D-309); TY 2026-27, new regime,
+        // total income 12,00,000 of which 3,00,000 is that part: 4L–8L at 5% = 20,000; 8L–12L at 10% = 40,000
+        // When
+        NodeResult result = runWithGains(2026, NEW_TAX_REGIME, ResidentialStatus.RESIDENT, "1200000",
+                Map.of(new CapitalGainsPart("SHORT_TERM_OTHER_RATE"), Money.of("300000")));
+
+        // Then — no special-rate line; the whole of total income at the slab rates
+        assertThat(result.value()).isEqualTo(TaxByBasis.atSlabRatesOnly(Money.of("60000")));
+    }
+
     @Test
     void evaluate_whenTheAssesseeIsNonResident_shiftsNothing() {
         // Given — B: case A's figures, non-resident: s.111A 50,000 × 20% = 10,000; s.112 80,000 × 12.5% = 10,000;
@@ -384,7 +469,7 @@ class TaxByBasisNodeTest {
         // default: the 1,25,000 survives the shift)
         // When
         NodeResult result = runWithGains(2026, NEW_TAX_REGIME, ResidentialStatus.RESIDENT, "1200000",
-                Map.of(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("1100000")));
+                Map.of(LONG_TERM_LISTED_EQUITY, Money.of("1100000")));
 
         // Then
         assertThat(result.value()).isEqualTo(new TaxByBasis(Money.ZERO, Map.of(LONG_LISTED, Money.of("84375"))));

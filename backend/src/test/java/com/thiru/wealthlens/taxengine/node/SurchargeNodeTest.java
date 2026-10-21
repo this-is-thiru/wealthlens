@@ -47,6 +47,8 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class SurchargeNodeTest {
 
+    private static final CapitalGainsPart LONG_TERM_LISTED_EQUITY = new CapitalGainsPart("LONG_TERM_LISTED_EQUITY");
+
     private static final RegimeCode NEW_TAX_REGIME = new RegimeCode("NEW_TAX_REGIME");
     private static final RegimeCode FIRST_SCHEDULE_RATES = new RegimeCode("FIRST_SCHEDULE_RATES");
 
@@ -69,7 +71,7 @@ class SurchargeNodeTest {
      * At 2,00,00,000 with the gains held: slab 1,50,00,000 → 43,12,500.
      */
     private static final Map<CapitalGainsPart, Money> FIFTY_LAKH_LISTED =
-            Map.of(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("5000000"));
+            Map.of(LONG_TERM_LISTED_EQUITY, Money.of("5000000"));
     private static final Map<Money, TaxByBasis> FIRST_SCHEDULE_AT_TWO_CRORE_WITH_GAINS = Map.of(Money.of("20000000"),
             new TaxByBasis(Money.of("4312500"), Map.of(LONG_LISTED, Money.of("609375"))));
 
@@ -194,7 +196,7 @@ class SurchargeNodeTest {
 
         // When — U at 2,00,00,000: slab tax on 1,91,75,000 = 53,32,500, with the gains' 87,500
         NodeResult result = runWithGains(year, NEW_TAX_REGIME, "50000000", tax, Map.of(
-                CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("825000")), Map.of(Money.of("20000000"),
+                LONG_TERM_LISTED_EQUITY, Money.of("825000")), Map.of(Money.of("20000000"),
                 new TaxByBasis(Money.of("5332500"), Map.of(LONG_LISTED, Money.of("87500")))));
 
         // Then — excluding 4,91,75,000: 25% × 1,43,32,500 = 35,83,125; 15% × 87,500 = 13,125 (D-246); relief nil

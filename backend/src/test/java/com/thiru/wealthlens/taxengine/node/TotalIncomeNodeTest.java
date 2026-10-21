@@ -26,6 +26,10 @@ import org.junit.jupiter.api.Test;
  */
 class TotalIncomeNodeTest {
 
+    private static final CapitalGainsPart SHORT_TERM_SLAB = new CapitalGainsPart("SHORT_TERM_SLAB");
+
+    private static final CapitalGainsPart SHORT_TERM_LISTED_EQUITY = new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY");
+
     private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final TaxYearId TY_2026 = TaxYearId.of(2026);
     private static final RulePack PACK = new ClasspathRulePackProvider(
@@ -104,7 +108,7 @@ class TotalIncomeNodeTest {
         // When — 10,000 of listed short-term gains in the total; tax.bybasis charges them at their own rate (D-244)
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("110000"),
-                        Map.of(CapitalGainsPart.SHORT_TERM_LISTED_EQUITY, Money.of("10000"))))
+                        Map.of(SHORT_TERM_LISTED_EQUITY, Money.of("10000"))))
                 .run(new GrossTotalIncomeNode());
 
         // Then
@@ -116,7 +120,7 @@ class TotalIncomeNodeTest {
         // When — 10,000 of short-term gains charged with total income
         NodeResult result = NodeHarness.with(PACK).regime(OLD)
                 .given(NodeIds.SETOFF, new HeadsAfterSetOff(Money.of("110000"),
-                        Map.of(CapitalGainsPart.SHORT_TERM_SLAB, Money.of("10000"))))
+                        Map.of(SHORT_TERM_SLAB, Money.of("10000"))))
                 .run(new GrossTotalIncomeNode());
 
         // Then

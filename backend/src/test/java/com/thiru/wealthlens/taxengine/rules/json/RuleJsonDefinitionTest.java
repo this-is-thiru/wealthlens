@@ -31,12 +31,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * A rule version stating a definition (D-091, D-092): read like a rounding, at most one of cap, relief, rounding
  * and definition, and a head the engine knows. The values are parse inputs checked for round-trip, not law.
  */
 class RuleJsonDefinitionTest {
+
+    private static final CapitalGainsPart SHORT_TERM_SLAB = new CapitalGainsPart("SHORT_TERM_SLAB");
+
+    private static final CapitalGainsPart LONG_TERM_OTHER = new CapitalGainsPart("LONG_TERM_OTHER");
 
     private static final String PATH = "law/rules/X.json.versions[0]";
 
@@ -189,16 +195,19 @@ class RuleJsonDefinitionTest {
                 "definition": { "type": "BucketPart", "part": "LONG_TERM_OTHER" }""");
 
         // Then
-        assertThat(version.definition()).contains(new BucketPart(CapitalGainsPart.LONG_TERM_OTHER));
+        assertThat(version.definition()).contains(new BucketPart(LONG_TERM_OTHER));
     }
 
-    @Test
-    void version_whenABucketPartNamesAnUnknownPart_isRefusedListingTheKnown() {
-        // When / Then
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"long_term_slab", "X", "LONG-TERM"})
+    void version_whenABucketPartNamesAPartNotShapedLikeOne_isRefusedNamingThePath(String code) {
+        // When / Then — whether a well-shaped part exists is CG-PARTS' to say, by the build's pack validation
+        // (D-309); its shape is checked here
         assertThatThrownBy(() -> versionWith("""
-                        "definition": { "type": "BucketPart", "part": "LONG_TERM_SLAB" }"""))
+                        "definition": { "type": "BucketPart", "part": "%s" }""".formatted(code)))
                 .isInstanceOf(PackValidationException.class)
-                .hasMessageContaining("LONG_TERM_LISTED_EQUITY");
+                .hasMessageContaining("definition")
+                .hasMessageContaining("upper-case with underscores");
     }
 
     @Test
@@ -240,8 +249,8 @@ class RuleJsonDefinitionTest {
 
         // Then
         assertThat(version.definition()).contains(new CapitalGainsParts(List.of(
-                new CapitalGainsParts.Declared(CapitalGainsPart.SHORT_TERM_SLAB, "SHORT_TERM", false),
-                new CapitalGainsParts.Declared(CapitalGainsPart.LONG_TERM_OTHER, "LONG_TERM", true))));
+                new CapitalGainsParts.Declared(SHORT_TERM_SLAB, "SHORT_TERM", false),
+                new CapitalGainsParts.Declared(LONG_TERM_OTHER, "LONG_TERM", true))));
     }
 
     @Test

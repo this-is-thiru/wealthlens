@@ -50,6 +50,8 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class ChapterEightNodeTest {
 
+    private static final CapitalGainsPart LONG_TERM_LISTED_EQUITY = new CapitalGainsPart("LONG_TERM_LISTED_EQUITY");
+
     private static final RegimeCode OLD = new RegimeCode("FIRST_SCHEDULE_RATES");
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
 
@@ -219,7 +221,7 @@ class ChapterEightNodeTest {
 
         // When
         NodeResult result = run(entered, List.of(),
-                Map.of(CapitalGainsPart.LONG_TERM_LISTED_EQUITY, Money.of("500000")));
+                Map.of(LONG_TERM_LISTED_EQUITY, Money.of("500000")));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
