@@ -77,11 +77,16 @@ class CapitalGainsNodeTest {
         return new CapitalGainsInput.Bucket(Money.of("1000"), Term.LONG_TERM, facts, Optional.empty());
     }
 
-    /** An equity bucket of 1000 with each side's STT and venue ("NSE/DELIVERY", or "-" for none on record). */
+    /**
+     * An equity bucket of 1000 with each side's STT and venue ("NSE/DELIVERY", or "-" for none on record), acquired by
+     * the mode given ("PURCHASE", or "CORPORATE_ACTION/BONUS" with its action).
+     */
     private static CapitalGainsInput.Bucket traded(Term term, String sttOnBuy, String buyVenue, String sttOnSale,
             String saleVenue, String mode, String acquiredOn) {
-        BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, sttOnSale, mode, Optional.empty(),
-                LocalDate.parse(acquiredOn), venue(buyVenue), venue(saleVenue));
+        String[] acquisition = mode.split("/");
+        BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, sttOnSale, acquisition[0],
+                acquisition.length == 2 ? Optional.of(acquisition[1]) : Optional.empty(), LocalDate.parse(acquiredOn),
+                venue(buyVenue), venue(saleVenue));
         return new CapitalGainsInput.Bucket(Money.of("1000"), term, facts, Optional.empty());
     }
 
@@ -403,5 +408,41 @@ class CapitalGainsNodeTest {
                 .singleElement()
                 .satisfies(line -> assertThat(line.limitedBy().orElseThrow())
                         .isEqualTo("STT on the sale: CHARGEABLE (NSE, DELIVERY)"));
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1}")
+    @CsvSource({
+        "2025, CORPORATE_ACTION/BONUS",
+        "2025, CORPORATE_ACTION/DEMERGER",
+        "2026, CORPORATE_ACTION/BONUS",
+        "2026, CORPORATE_ACTION/DEMERGER"
+    })
+    void evaluate_whenAnAllotmentIsOnAnExchangeVenue_isListedUnderTheNotificationNotSl1(int year, String mode) {
+        // When — W-088j2e cases 2, 3: an allotment inherits its parent's exchange and the DELIVERY default, but Sl. 1
+        // charges a "Purchase" only (D-300); S.O. 5054(E) proviso (i), (ix) settles it instead
+        NodeResult result = result(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "-", mode,
+                "2020-01-10"));
+
+        // Then
+        assertThat(((CapitalGainsHead) result.value()).part(CapitalGainsPart.LONG_TERM_LISTED_EQUITY))
+                .isEqualTo(Money.of("1000"));
+        assertThat(result.trace()).noneMatch(line -> line.rule().equals(RuleIds.STT_PURCHASE_DELIVERY));
+    }
+
+    @ParameterizedTest(name = "TY {0}: {1}")
+    @CsvSource({
+        "2025, CORPORATE_ACTION/RIGHTS_ISSUANCE",
+        "2025, UNRECORDED",
+        "2026, CORPORATE_ACTION/RIGHTS_ISSUANCE",
+        "2026, UNRECORDED"
+    })
+    void evaluate_whenABuyOnAnExchangeVenueIsNotShownAPurchase_isRefusedNamingTheMode(int year, String mode) {
+        // When / Then — W-088j2e cases 4, 5: neither Sl. 1 (not shown a purchase, D-300) nor S.O. 5054(E) as applied
+        // (a 2020 lot that is not a bonus or demerger allotment) covers the buy
+        assertThatThrownBy(() -> run(year, traded(Term.LONG_TERM, UNKNOWN, "NSE/DELIVERY", PAID, "-", mode,
+                "2020-01-10")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no row of RS-CG-PART")
+                .hasMessageContaining("acquisitionMode=" + mode.split("/")[0]);
     }
 }

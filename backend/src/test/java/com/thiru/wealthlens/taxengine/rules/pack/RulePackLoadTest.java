@@ -101,7 +101,7 @@ class RulePackLoadTest {
 
             assertThat(pack.computationCacheKey())
                     .startsWith("2026-27|")
-                    .contains("law=2026-27.law.85")
+                    .contains("law=2026-27.law.86")
                     .doesNotContain("content=");
         }
 

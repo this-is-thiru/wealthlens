@@ -243,7 +243,7 @@ Any repair would be a new work item with its own section-2 entry.
 |---|---|---|---|
 | 3.1 | **W-086** (D-238 C2a) | `CapitalGainsSummaryService` **refuses** a user's summary if any of their disposals carries broker charges with no breakdown ("record those trades again"). The rebuild's rows never have one | Count below |
 | 3.2 | **W-088f** (D-249 C4a, "no backfill") | Rows written before W-088f have no `acquisition_mode`; they read as `UNRECORDED` (`Acquisition.stored` maps a missing mode to it) | `db.trade_outcomes.countDocuments({ acquisition_mode: { $exists: false } })` |
-| 3.3 | **W-088j** (D-292), narrowed by **W-088j2c2** (D-298) and **W-088j2d** (D-299) | A side of a disposal with no charge breakdown says nothing of STT, so it reads as `UNKNOWN`, not "no STT". Since D-298 the engine settles such a side from its recorded venue: an equity side on `NSE` or `BSE` in `DELIVERY` (and a sale in `INTRADAY`) is chargeable under Chapter VII s.98 Sl. 1–3, and a long-term buy acquired before 1-10-2004 or by a bonus or demerger is settled by S.O. 5054(E) (`CG-PART-LONG-NOTIFIED`). What is still **refused** by the tax engine: a side with nil charges and no breakdown whose exchange is not recorded, is spelt other than exactly `NSE` / `BSE`, or is genuinely off an exchange (a side with charges and no breakdown is refused earlier, §3.1). No user declaration was built (D-299); a repair, if the count is not nil, is a new work item — the exchange string is the fault for most rows, and §2.2's rebuild fills a row's missing venue from `transactions` | Count below (an upper bound) |
+| 3.3 | **W-088j** (D-292), narrowed by **W-088j2c2** (D-298), **W-088j2d** (D-299) and **W-088j2e** (D-300) | A side of a disposal with no charge breakdown says nothing of STT, so it reads as `UNKNOWN`, not "no STT". Since D-298 the engine settles such a side from its recorded venue: an equity side on `NSE` or `BSE` in `DELIVERY` (and a sale in `INTRADAY`) is chargeable under Chapter VII s.98 Sl. 1–3 — a buy only when the lot was acquired by purchase (Sl. 1 "Purchase", D-300), and a long-term buy acquired before 1-10-2004 or by a bonus or demerger is settled by S.O. 5054(E) (`CG-PART-LONG-NOTIFIED`). What is still **refused** by the tax engine: a side with nil charges and no breakdown whose exchange is not recorded, is spelt other than exactly `NSE` / `BSE`, or is genuinely off an exchange, and a long-term buy on `NSE` / `BSE` that is not shown to be a purchase and is not a bonus or demerger allotment — a rights allotment, or an unrecorded mode (D-300) (a side with charges and no breakdown is refused earlier, §3.1). No user declaration was built (D-299); a repair, if the count is not nil, is a new work item — the exchange string is the fault for most rows, and §2.2's rebuild fills a row's missing venue from `transactions` | Count below (an upper bound) |
 | 3.4 | **W-088j2b** (D-295, "no backfill") | `trade_outcomes` rows written before W-088j2b have no per-side venue (`buy_exchange_name`, `buy_segment`, `sell_exchange_name`, `sell_segment`); they read as `TradeVenue.UNRECORDED`. The old `exchange_name` / `segment` are **not** read for tax (V1 took the exchange from the buy, V2 and the rebuild from the sale). Remedy for a user: §2.2's per-user rebuild, which writes the new fields. The segment is published as recorded: `DELIVERY` is also the entry default (D-295) | Count and values below |
 
 ```js
@@ -260,7 +260,7 @@ db.trade_outcomes.aggregate([
 db.trade_outcomes.countDocuments({ sell_exchange_name: { $exists: false } })
 db.transactions.aggregate([{ $group: { _id: { exchange: "$exchange_name", segment: "$segment" }, n: { $sum: 1 } } }])
 
-// 3.3 — equity disposals the engine still refuses for STT after W-088j2c (D-298, D-299): a side with nil charges and no
+// 3.3 — equity disposals the engine still refuses for STT after W-088j2c (D-298, D-299, D-300): a side with nil charges and no
 // breakdown that no RS-STT-CHARGEABLE row settles. An upper bound: a long-term buy by purchase before 1-10-2004 is
 // settled by CG-PART-LONG-NOTIFIED but is counted here.
 db.trade_outcomes.aggregate([
@@ -272,10 +272,11 @@ db.trade_outcomes.aggregate([
                    { sell_segment: { $nin: ["DELIVERY", "INTRADAY"] } } ] } ] },
       { $and: [
           { capital_gains_type: "LONG_TERM" },
-          { acquisition_mode: { $ne: "CORPORATE_ACTION" } },
+          { acquisition_corporate_action: { $nin: ["BONUS", "DEMERGER"] } },
           { $or: [ { buy_charge_breakup: { $exists: false } }, { buy_charge_breakup: {} } ] },
           { buy_broker_charges: { $in: [0, null] } },
-          { $or: [ { buy_exchange_name: { $nin: ["NSE", "BSE"] } }, { buy_segment: { $ne: "DELIVERY" } } ] } ] } ] } },
+          { $or: [ { acquisition_mode: { $ne: "PURCHASE" } },
+                   { buy_exchange_name: { $nin: ["NSE", "BSE"] } }, { buy_segment: { $ne: "DELIVERY" } } ] } ] } ] } },
   { $group: { _id: "$email", rows: { $sum: 1 } } },
   { $group: { _id: null, users: { $sum: 1 }, rows: { $sum: "$rows" } } }
 ])
