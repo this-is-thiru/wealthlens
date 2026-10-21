@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088k — the term decided on the tax side (D-249)
+Item            : W-088k2 — portfolio publishes each capital-gains bucket's transfer date (D-302)
 Stage           : READY — not started
-Plan            : plans/W-088k.md not yet written
+Plan            : plans/W-088k2.md not yet written
 Approved        : —
 Steps done      : —
-Next step       : on "start W-088k": read its WI row, plans/W-088f.md Revision 1 F2, D-249, D-237 / R-10, portfolio HoldingPeriodService and capital_gains_type writers, CapitalGainsAdapter, CapitalGainsInput.Term; source the holding-period law for both years (S2 / 1961 s.2(42A) and its provisos) before any rule row; write plans/W-088k.md (a split if mis-sized), STOP
-Last verify     : unit clean -Punit 3197 run, 0 fail; integration 269/0 (2026-10-21, W-088j2f)
-Waiting on      : the owner — "start W-088k"; OQ-32, OQ-33 open
+Next step       : on "start W-088k2": read its WI row, D-302, D-303 (sources/2026-10-21-holding-period.md "For W-088k2": the bonus ex-date gap), CapitalGainsBucket, CapitalGainsSummaryService.BucketKey, the adapter, TradeOutcomeEntity sell_date; decide which asset facts k3 needs (listing for equity) and the bonus-date choice (fact vs stated approximation); write plans/W-088k2.md, STOP
+Last verify     : unit clean -Punit 3197 run, 0 fail (2026-10-21, W-088k1); integration 269/0 (W-088j2f)
+Waiting on      : the owner — "start W-088k2"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-088j2f: derive Sl. 1 only for a purchase on or after Chapter VII's commencement — 1-10-2004 under S.O. 1058(E), sourced from the Lok Sabha record and accepted; a pre-commencement purchase settles under S.O. 5054(E) (D-301)
-Updated         : 2026-10-21, session 27 — W-088j2f done
+Last item commit: taxplanning W-088k1: source the holding-period law for both years — 1961 s.2(42A) as amended by FA (No. 2) 2024, s.50AA, the 2025 Act s.2(101) and s.76; the boundary ruled calendar months; W-088k split k1–k3 (D-302, D-303)
+Updated         : 2026-10-21, session 27 — W-088k1 done
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
