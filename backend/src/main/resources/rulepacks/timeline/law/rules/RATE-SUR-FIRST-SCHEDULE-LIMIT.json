@@ -1,7 +1,7 @@
 {
   "ruleId": "RATE-SUR-FIRST-SCHEDULE-LIMIT",
   "ruleSet": "RS-RATE-SUR-LIMIT",
-  "_note": "FA 2026 First Schedule Part I-A Para F Table 1 Sl. 1 (vi) (p.83): \"where the total income includes any dividend income or capital gains under the provisions of sections 111A, 112 and 112A of the said Act, the rate of surcharge on the amount of income-tax computed in respect of that part of income shall not exceed 15 per cent. and the provisions of clause (i) or (ii), as the case may be, shall apply accordingly\"; Part I-B (vi) (p.87) the same with ss.196, 197 and 198 and \"15%\". The limited tax is the tax at the special rates (TaxByBasis) plus the dividends' share of the slab tax — the slab tax after rebate × dividend income ÷ aggregate income (total income less the income at special rates, ITR-2 Part B-TI row 15), the Department's ITR-2 utility AY 2026-27 method (V300, E332), ruled by D-229 C1; dividend income excludes unit income (S2 s.2(40); D-200 C2a, D-245). The limited tax bears the total-income ladder's rate (clause (i) or (ii)), this row its ceiling; the rest of the tax the greater of the two ladders (D-246; rulebook RATE-SUR-SPLIT-001). Spans TY 2025-26 and TY 2026-27: the same words.",
+  "_note": "FA 2026 First Schedule Part I-A Para F Table 1 Sl. 1 (vi) (p.83): \"where the total income includes any dividend income or capital gains under the provisions of sections 111A, 112 and 112A of the said Act, the rate of surcharge on the amount of income-tax computed in respect of that part of income shall not exceed 15 per cent. and the provisions of clause (i) or (ii), as the case may be, shall apply accordingly\"; Part I-B (vi) (p.87) the same with ss.196, 197 and 198 and \"15%\". The limited tax is the tax at the special rates (TaxByBasis) plus the dividends' share of the slab tax — the slab tax after rebate × dividend income ÷ aggregate income (total income less the income at special rates, ITR-2 Part B-TI row 15), the Department's ITR-2 utility AY 2026-27 method (V300, E332), ruled by D-229 C1; dividend income excludes unit income (S2 s.2(40); D-200 C2a, D-245). The limited tax bears the total-income ladder's rate (clause (i) or (ii)), this row its ceiling; the rest of the tax the greater of the two ladders (D-246; rulebook RATE-SUR-SPLIT-001). Spans TY 2025-26 and TY 2026-27: the same words. Which items are \"dividend income\" is this row's condition on othersources.kind: dividends and deemed dividends — S2 s.2(40) (a) – (f), (f) a company's purchase of its own shares (Gazette pp.10–11), and 1961 s.2(22) with (f) inserted by the Finance (No. 2) Act, 2024 (thc p.39) — not unit income (D-245; sources/2026-10-22-unit-income.md U3, U5; D-324).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -31,7 +31,23 @@
         "percent": "15",
         "base": "LIMITED_PART_TAX"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DIVIDEND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEEMED_DIVIDEND"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2026 (4 of 2026), ss.2(4), 3(4); First Schedule Parts I-A and I-B, Paragraph F",
         "gazetteRef": "CG-DL-E-31032026-271439",

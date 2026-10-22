@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.Recomputation;
 import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
@@ -16,6 +17,7 @@ import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
@@ -28,6 +30,7 @@ import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -497,5 +500,39 @@ class SurchargeNodeTest {
         // 14,92,756.02. Relief binds: U at 2,00,00,000 = 58,12,500 × 1.15 = 66,84,375 (one rate there, so the whole
         // tax is charged at it); W = 74,84,375 against 75,45,256.02 → relief 60,881.02; surcharge 14,31,875
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1431875")));
+    }
+
+    /**
+     * {@code plans/W-153d.md} case 2, by hand from S2 s.2(40) / 1961 s.2(22) and D-245: the regime's surcharge-limit
+     * row reaches dividends and deemed dividends as "dividend income", and no other kind, unit income included.
+     */
+    private static Stream<Arguments> dividendIncomeByKind() {
+        Set<OtherSourceKind> dividendIncome = Set.of(OtherSourceKind.DIVIDEND, OtherSourceKind.DEEMED_DIVIDEND);
+        return Stream.of(2025, 2026).flatMap(year -> Stream.of(FIRST_SCHEDULE_RATES, NEW_TAX_REGIME).flatMap(regime ->
+                Arrays.stream(OtherSourceKind.values()).map(kind -> Arguments.of(year, regime, kind,
+                        dividendIncome.contains(kind)))));
+    }
+
+    @ParameterizedTest(name = "TY {0} {1} {2}")
+    @MethodSource("dividendIncomeByKind")
+    void limitRow_whenAnItemOfTheKindIsEntered_reachesOnlyDividendIncome(int year, RegimeCode regime,
+            OtherSourceKind kind, boolean expected) {
+        // Given
+        TaxYearId taxYear = TaxYearId.of(year);
+        RulePack pack = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        EngineInputs inputs = new EngineInputs(taxYear, regime, TemporalContext.forTaxYear(taxYear,
+                LocalDate.of(year, 9, 21)), EnteredFacts.none(), plain.assessee(), plain.family(), plain.ledgers(),
+                plain.elections(), plain.capitalGains(), plain.filing());
+        NodeContext ctx = NodeContext.forRun(pack, pack.regimes().get(regime), inputs).forNode(new SurchargeNode());
+
+        // When
+        boolean reached = OtherSourcesNode.reaches(ctx, ctx.ruleIdOf(RuleSetIds.RS_RATE_SUR_LIMIT),
+                new OtherSourceItem(kind, Money.of("1000"), Money.ZERO, Money.ZERO, Money.ZERO, false));
+
+        // Then
+        assertThat(reached).isEqualTo(expected);
     }
 }

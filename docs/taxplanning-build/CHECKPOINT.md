@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-153d — dividend income for the surcharge by rule data (D-318; K4)
+Item            : W-154 — perquisite paths by rule data (D-313; audit P4; N1)
 Stage           : READY — not started
-Plan            : written when taken (plans/W-153d.md)
+Plan            : written when taken (plans/W-154.md; likely a split, as W-153)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-153d": read its WI row, SurchargeNode:100 (DIVIDEND_KINDS) and dividendIncome / interestAllowedOnDividends, DividendInterestAllowance:78 (receivedOnDividends), D-200, D-229, D-234, OQ-30 (units in the 15% pool?); source S2 s.2(40) (Gazette pp.10–11 read in W-153c) and the surcharge provision's "dividend" words; write plans/W-153d.md, STOP
-Last verify     : targeted 523/0; unit -Punit 3398/0; integration 281/0 (2026-10-22, W-153c2)
-Waiting on      : the owner — "start W-153d"; OQ-32, OQ-33 open
+Next step       : on "start W-154": read its WI row, the audit file § W-088l1 P4 and N1 (PerquisiteNode, MotorCarPerquisite, AssetPerquisite, household / meal / expense benefit, accommodation, specified security paths), W-153's pattern (plans/W-153*.md: item facts, reach rows, isAboutItem), write plans/W-154.md (a split if > §7), STOP
+Last verify     : targeted 573/0; unit -Punit 3474/0; integration 281/0 (2026-10-22, W-153d)
+Waiting on      : the owner — "start W-154"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-153c2: deduct each other-sources item's share by the row reaching its kind — RS-OS-SHARE, every item income line then share then reached expenses, the kind switch and paths gone, OS-DEEMED-DIVIDEND folded into the reach rows (D-323; W-153c closed)
-Updated         : 2026-10-22, session 29 — W-153c2 committed, W-153c closed
+Last item commit: taxplanning W-153d: state which items are dividend income for the surcharge's 15% limit as rule data — the RATE-SUR-*-LIMIT rows' othersources.kind condition, so SurchargeNode and DividendInterestAllowance hold no kind test (D-324; W-153 closed)
+Updated         : 2026-10-22, session 29 — W-153d committed, W-153 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

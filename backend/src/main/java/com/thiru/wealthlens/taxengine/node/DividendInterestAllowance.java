@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
-import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
@@ -45,19 +44,16 @@ final class DividendInterestAllowance {
     }
 
     /**
-     * The year's interest expense against dividend and unit income (S2 s.93(2); 1961 s.57 proviso): what was claimed,
-     * how much of it on dividend items, and the limit on what is allowed. Computed once, here, for this head and for
-     * the surcharge's dividend income (D-200).
+     * The year's interest expense against dividend and unit income (S2 s.93(2); 1961 s.57 proviso): what was claimed
+     * and the limit on what is allowed. Computed once, here, for this head and for the surcharge's dividend income,
+     * which takes the dividends' part by its own row (D-200, D-324).
      *
      * @param base the year's dividend and unit income, which the limit is a share of
-     * @param receivedOnDividends the part of {@code base} received as dividends
      * @param claimed the interest expense claimed against dividend and unit items
-     * @param claimedOnDividends the part of {@code claimed} entered against dividend items
      * @param limit the row's share of {@code base}
      * @param untaxedAbroad whether any of it is payable outside India untaxed, which bars all of it
      */
-    record DividendInterest(Money base, Money receivedOnDividends, Money claimed, Money claimedOnDividends, Money limit,
-            boolean untaxedAbroad) {
+    record DividendInterest(Money base, Money claimed, Money limit, boolean untaxedAbroad) {
 
         /** The interest allowed: nil where barred, else the claim within the limit. */
         Money allowed() {
@@ -68,9 +64,7 @@ final class DividendInterestAllowance {
     /** The year's figures over the items the row reaches — its conditions on the item (W-153b, D-320). */
     static DividendInterest of(NodeContext ctx, List<OtherSourceItem> items) {
         Money base = Money.ZERO;
-        Money receivedOnDividends = Money.ZERO;
         Money claimed = Money.ZERO;
-        Money claimedOnDividends = Money.ZERO;
         boolean untaxedAbroad = false;
         RuleId row = ctx.ruleIdOf(RuleSetIds.RS_OS_DIVIDEND_INTEREST);
         for (OtherSourceItem item : items) {
@@ -78,14 +72,10 @@ final class DividendInterestAllowance {
                 base = base.plus(item.received());
                 claimed = claimed.plus(item.interestExpense());
                 untaxedAbroad |= item.payableOutsideIndiaUntaxed() && item.interestExpense().isGreaterThan(Money.ZERO);
-                if (item.kind() == OtherSourceKind.DIVIDEND) {
-                    receivedOnDividends = receivedOnDividends.plus(item.received());
-                    claimedOnDividends = claimedOnDividends.plus(item.interestExpense());
-                }
             }
         }
         Money limit = TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_OS_DIVIDEND_INTEREST), ctx.inputs().temporal(),
                 CapContext.of(DIVIDEND, base)).value();
-        return new DividendInterest(base, receivedOnDividends, claimed, claimedOnDividends, limit, untaxedAbroad);
+        return new DividendInterest(base, claimed, limit, untaxedAbroad);
     }
 }

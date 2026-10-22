@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
-import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.node.DividendInterestAllowance.DividendInterest;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
@@ -31,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * The surcharge on the tax after rebate, less its marginal relief (FA 2026 s.2(4)/(5), s.3(4)/(5), First
@@ -97,8 +97,6 @@ public final class SurchargeNode implements ComputationNode {
     private record ChosenRate(Rate rate, RuleId rule, RuleVersion version, Optional<String> over) {
     }
 
-    private static final Set<OtherSourceKind> DIVIDEND_KINDS = Set.of(OtherSourceKind.DIVIDEND,
-            OtherSourceKind.DEEMED_DIVIDEND);
 
     @Override
     public NodeId produces() {
@@ -127,7 +125,7 @@ public final class SurchargeNode implements ComputationNode {
         Money specialGains = TaxByBasisNode.atSpecialRates(ctx, ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class));
         SurchargeRows rows = rowsFor(ctx);
         Money dividends = excludingRate(ctx, rows, totalIncome, specialGains).compareTo(Rate.ZERO) > 0
-                ? dividendIncome(ctx)
+                ? dividendIncome(ctx, rows.limit())
                 : Money.ZERO;
         Money excluded = dividends.plus(specialGains);
 
@@ -200,19 +198,29 @@ public final class SurchargeNode implements ComputationNode {
     }
 
     /**
-     * The dividend income the total income includes (S2 s.2(40); D-200): dividends and deemed dividends received, less
-     * the interest the head allows against the dividend items. Unit income is not dividend.
+     * The dividend income the total income includes (S2 s.2(40); D-200): the items the limit row reaches — its
+     * condition on their kind, dividends and deemed dividends, not unit income (D-245, D-324) — less the interest the
+     * head allows against them.
      */
-    private static Money dividendIncome(NodeContext ctx) {
+    private static Money dividendIncome(NodeContext ctx, RuleId limitRow) {
         List<OtherSourceItem> items = ctx.inputs().entered().otherSourceItems();
-        Money received = items.stream()
-                .filter(item -> DIVIDEND_KINDS.contains(item.kind()))
-                .map(OtherSourceItem::received)
-                .reduce(Money.ZERO, Money::plus);
+        List<OtherSourceItem> dividends = items.stream()
+                .filter(item -> OtherSourcesNode.reaches(ctx, limitRow, item))
+                .toList();
+        Money received = sum(dividends, OtherSourceItem::received);
         if (received.equals(Money.ZERO)) {
             return Money.ZERO;
         }
-        return received.minus(interestAllowedOnDividends(DividendInterestAllowance.of(ctx, items)));
+        RuleId interestRow = ctx.ruleIdOf(RuleSetIds.RS_OS_DIVIDEND_INTEREST);
+        List<OtherSourceItem> bearingTheLimit = dividends.stream()
+                .filter(item -> OtherSourcesNode.reaches(ctx, interestRow, item))
+                .toList();
+        return received.minus(interestAllowedOnDividends(DividendInterestAllowance.of(ctx, items),
+                sum(bearingTheLimit, OtherSourceItem::received), sum(bearingTheLimit, OtherSourceItem::interestExpense)));
+    }
+
+    private static Money sum(List<OtherSourceItem> items, Function<OtherSourceItem, Money> figure) {
+        return items.stream().map(figure).reduce(Money.ZERO, Money::plus);
     }
 
     /**
@@ -221,14 +229,15 @@ public final class SurchargeNode implements ComputationNode {
      * them, since the head deducts no item more than its own expense (D-234). Where the limit does not bind each side
      * keeps its own claim; where only one side claimed, it takes all that is allowed.
      */
-    private static Money interestAllowedOnDividends(DividendInterest interest) {
+    private static Money interestAllowedOnDividends(DividendInterest interest, Money receivedOnDividends,
+            Money claimedOnDividends) {
         Money allowed = interest.allowed();
         if (allowed.equals(Money.ZERO)) {
             return Money.ZERO;
         }
-        Money proportional = allowed.scaledBy(interest.receivedOnDividends(), interest.base());
-        Money claimedOnUnits = interest.claimed().minus(interest.claimedOnDividends());
-        return Money.min(interest.claimedOnDividends(), Money.max(allowed.minus(claimedOnUnits), proportional));
+        Money proportional = allowed.scaledBy(receivedOnDividends, interest.base());
+        Money claimedOnUnits = interest.claimed().minus(claimedOnDividends);
+        return Money.min(claimedOnDividends, Money.max(allowed.minus(claimedOnUnits), proportional));
     }
 
     /** The excluding ladder's rate at the income less what it excludes, never below nil. */
