@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-DIVIDEND",
-  "ruleSet": "RS-OS-DIVIDEND",
-  "_note": "A dividend is income from other sources (D-194; rulebook OS-DIV-001), taxed at the slab rates with the rest of total income. TY 2026-27: Income-tax Act, 2025 s.92(2)(a) \"any dividend\" (p.138). TY 2025-26: Income-tax Act, 1961 s.56(2)(i) \"dividends\" (thc p.303). Deductions against it: OS-DIVIDEND-INTEREST, OS-DEEMED-DIVIDEND. Every regime.",
+  "ruleSet": "RS-OS-INCOME",
+  "_note": "A dividend is income from other sources (D-194; rulebook OS-DIV-001), taxed at the slab rates with the rest of total income. TY 2026-27: Income-tax Act, 2025 s.92(2)(a) \"any dividend\" (p.138). TY 2025-26: Income-tax Act, 1961 s.56(2)(i) \"dividends\" (thc p.303). Deductions against it: OS-DIVIDEND-INTEREST, OS-DEEMED-DIVIDEND. Every regime. In RS-OS-INCOME, it charges dividends and deemed dividends by othersources.kind; income from Mutual Fund units is not a dividend — S2 s.2(40) and 1961 s.2(22) are distributions by a company — and is OS-RESIDUAL's (sources/2026-10-22-unit-income.md; D-321).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,23 @@
         "percent": "100",
         "base": "DIVIDEND"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DIVIDEND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEEMED_DIVIDEND"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.56(2)(i) as enacted",
         "gazetteRef": "Act 43 of 1961 (assent 13-9-1961) s.56(2)(i) as enacted: read in Acts of the Parliament of India, 1961 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.308 (PDF p.320); the Gazette of India issue itself not read (D-215)",
@@ -71,7 +87,23 @@
         "percent": "100",
         "base": "DIVIDEND"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DIVIDEND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEEMED_DIVIDEND"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(2)(a)",
         "gazetteRef": "CG-DL-E-22082025-265620",

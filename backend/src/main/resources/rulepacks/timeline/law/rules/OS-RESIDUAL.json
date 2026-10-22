@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-RESIDUAL",
-  "ruleSet": "RS-OS-RESIDUAL",
-  "_note": "Income of every kind chargeable under other sources and under no other head, not one of the kinds named for the head, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(1) \"Income of every kind which is not to be excluded from the total income under this Act, shall be chargeable to income-tax under the head \"Income from other sources\", if it is not chargeable to income-tax under any of the heads specified in section 13(a) to (d)\" (p.137). TY 2025-26: 1961 s.56(1), \"under any of the heads specified in section 14, items A to E\", as enacted — its 1961 Gazette not found, as OS-INTEREST's and OS-OTHER-EXPENDITURE's. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
+  "ruleSet": "RS-OS-INCOME",
+  "_note": "Income of every kind chargeable under other sources and under no other head, not one of the kinds named for the head, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(1) \"Income of every kind which is not to be excluded from the total income under this Act, shall be chargeable to income-tax under the head \"Income from other sources\", if it is not chargeable to income-tax under any of the heads specified in section 13(a) to (d)\" (p.137). TY 2025-26: 1961 s.56(1), \"under any of the heads specified in section 14, items A to E\", as enacted — its 1961 Gazette not found, as OS-INTEREST's and OS-OTHER-EXPENDITURE's. Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md. In RS-OS-INCOME, by othersources.kind, it also charges income from Mutual Fund units, family pension, commuted fund pension and a death gratuity received under this head: no clause of s.92(2) or 1961 s.56(2) names them, so s.92(1) / s.56(1) does; their deductions are OS-FAMILY-PENSION, OS-COMMUTED-PENSION and OS-DEATH-GRATUITY (sources/2026-10-22-unit-income.md U1 – U11; D-321).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,38 @@
         "percent": "100",
         "base": "RESIDUAL"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "OTHER"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "UNIT_INCOME"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "FAMILY_PENSION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "COMMUTED_FUND_PENSION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEATH_GRATUITY"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.56(1) as enacted",
         "gazetteRef": "Act 43 of 1961 (assent 13-9-1961) s.56(1) as enacted: read in Acts of the Parliament of India, 1961 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.307 (PDF p.319); the Gazette of India issue itself not read (D-215)",
@@ -71,7 +102,38 @@
         "percent": "100",
         "base": "RESIDUAL"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "OTHER"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "UNIT_INCOME"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "FAMILY_PENSION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "COMMUTED_FUND_PENSION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEATH_GRATUITY"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(1)",
         "gazetteRef": "CG-DL-E-22082025-265620",

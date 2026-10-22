@@ -181,6 +181,7 @@ class TimelineReaderTest {
             new RuleId("OS-BANKER-COMMISSION"),
             new RuleId("OS-OTHER-EXPENDITURE"),
             new RuleId("OS-COMPENSATION-INTEREST"),
+            new RuleId("OS-COMPENSATION-INTEREST-INCOME"),
             new RuleId("OS-FAMILY-PENSION"),
             new RuleId("OS-FAMILY-PENSION-NEW-TAX-REGIME"),
             new RuleId("OS-COMMUTED-PENSION"),

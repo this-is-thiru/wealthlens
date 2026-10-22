@@ -16,15 +16,18 @@ import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
@@ -34,7 +37,10 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -42,7 +48,6 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -336,23 +341,87 @@ class OtherSourcesNodeTest {
         return MoneyValue.of(Money.of(amount));
     }
 
-    @Test
-    void evaluate_whenWinningsAreEntered_refusesThem() {
-        // When / Then — their rate is deferred in the coverage register
-        assertThatThrownBy(() -> run(2026, List.of(item(OtherSourceKind.WINNINGS, "100000", "0", "0", "0"))))
+    /**
+     * Winnings (their rate deferred in the coverage register) and the kinds whose deductions are the business head's
+     * (S2 s.93(1)(b), (c); D-202): no row of {@code RS-OS-INCOME} charges them, so they are refused by name (D-321).
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("uncharged")
+    void evaluate_whenNoIncomeRowChargesTheKind_refusesItNamingKindSetAndYear(int year, OtherSourceKind kind) {
+        // When / Then
+        assertThatThrownBy(() -> run(year, List.of(item(kind, "100000", "0", "0", "0"))))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("s.115BB");
+                .hasMessageContaining("no row of RS-OS-INCOME charges " + kind + " in TY " + year + "-");
     }
 
-    @ParameterizedTest(name = "{0}")
-    @EnumSource(value = OtherSourceKind.class, names = {"EMPLOYEE_CONTRIBUTIONS", "MACHINERY_LETTING",
-        "MACHINERY_AND_BUILDING_LETTING"})
-    void evaluate_whenAKindTakesTheBusinessHeadsDeductions_refusesItNamingThem(OtherSourceKind kind) {
-        // When / Then — S2 s.93(1)(b), (c) send these to ss.28, 29(1)(e), 33, deferred with the business head (D-202)
-        assertThatThrownBy(() -> run(2026, List.of(item(kind, "100000", "0", "0", "0"))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("business head")
-                .hasMessageContaining("D-202");
+    private static Stream<Arguments> uncharged() {
+        return Stream.of(2025, 2026).flatMap(year -> Stream.of(OtherSourceKind.WINNINGS,
+                OtherSourceKind.EMPLOYEE_CONTRIBUTIONS, OtherSourceKind.MACHINERY_LETTING,
+                OtherSourceKind.MACHINERY_AND_BUILDING_LETTING).map(kind -> Arguments.of(year, kind)));
+    }
+
+    /**
+     * {@code plans/W-153c1.md} case 2, by hand from the statute ({@code sources/2026-10-22-unit-income.md}): the row
+     * of {@code RS-OS-INCOME} an item's kind selects — s.92(2)(e) interest, (a) dividends, (i) interest on
+     * compensation, (d), (h), (j) their own rows, and s.92(1) the residue, unit income, family pension, commuted fund
+     * pension and death gratuity; empty for the four uncharged kinds.
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("incomeRowByKind")
+    void incomeRow_whenAnItemOfTheKindIsCharged_isTheRowItsKindSelects(int year, OtherSourceKind kind,
+            Optional<RuleId> expected) {
+        // When
+        NodeContext ctx = contextFor(year);
+        Optional<RuleId> chosen = ctx.optionalRuleOf(RuleSetIds.RS_OS_INCOME,
+                OtherSourcesNode.factsOf(item(kind, "1000", "0", "0", "0"))).map(RuleRow::id);
+
+        // Then
+        assertThat(chosen).isEqualTo(expected);
+    }
+
+    /** The node's view in the year, the person the plain taxpayer, under the old regime. */
+    private static NodeContext contextFor(int year) {
+        TaxYearId taxYear = TaxYearId.of(year);
+        RulePack pack = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        EngineInputs inputs = new EngineInputs(taxYear, OLD, TemporalContext.forTaxYear(taxYear,
+                LocalDate.of(year, 9, 21)), EnteredFacts.none(), plain.assessee(), plain.family(), plain.ledgers(),
+                plain.elections(), plain.capitalGains(), plain.filing());
+        return NodeContext.forRun(pack, pack.regimes().get(OLD), inputs).forNode(new OtherSourcesNode());
+    }
+
+    private static Stream<Arguments> incomeRowByKind() {
+        Map<OtherSourceKind, RuleId> rows = new EnumMap<>(OtherSourceKind.class);
+        List.of(OtherSourceKind.INTEREST_ON_SECURITIES, OtherSourceKind.SAVINGS_DEPOSIT_INTEREST,
+                OtherSourceKind.DEPOSIT_INTEREST, OtherSourceKind.OTHER_INTEREST)
+                .forEach(kind -> rows.put(kind, RuleIds.OS_INTEREST));
+        rows.put(OtherSourceKind.DIVIDEND, RuleIds.OS_DIVIDEND);
+        rows.put(OtherSourceKind.DEEMED_DIVIDEND, RuleIds.OS_DIVIDEND);
+        rows.put(OtherSourceKind.INTEREST_ON_COMPENSATION, RuleIds.OS_COMPENSATION_INTEREST_INCOME);
+        rows.put(OtherSourceKind.KEYMAN_POLICY, RuleIds.OS_KEYMAN_POLICY);
+        rows.put(OtherSourceKind.FORFEITED_ADVANCE, RuleIds.OS_FORFEITED_ADVANCE);
+        rows.put(OtherSourceKind.TERMINATION_COMPENSATION, RuleIds.OS_TERMINATION_COMPENSATION);
+        List.of(OtherSourceKind.OTHER, OtherSourceKind.UNIT_INCOME, OtherSourceKind.FAMILY_PENSION,
+                OtherSourceKind.COMMUTED_FUND_PENSION, OtherSourceKind.DEATH_GRATUITY)
+                .forEach(kind -> rows.put(kind, RuleIds.OS_RESIDUAL));
+        return Stream.of(2025, 2026).flatMap(year -> Arrays.stream(OtherSourceKind.values())
+                .map(kind -> Arguments.of(year, kind, Optional.ofNullable(rows.get(kind)))));
+    }
+
+    @Test
+    void evaluate_whenUnitIncomeBearsInterestInTaxYear2025_chargesItOnTheResidualRow() {
+        // Given — unit income of 1,00,000 with 10,000 of interest
+        List<OtherSourceItem> items = List.of(item(OtherSourceKind.UNIT_INCOME, "100000", "0", "10000", "0"));
+
+        // When
+        NodeResult result = run(2025, items);
+
+        // Then — s.92(1) / s.56(1) charges it (not "any dividend"); 20% of 1,00,000 = 20,000 ≥ 10,000
+        assertThat(result.value()).isEqualTo(money("90000"));
+        assertThat(result.trace().getFirst().rule()).isEqualTo(RuleIds.OS_RESIDUAL);
+        assertThat(result.trace().getFirst().out()).isEqualTo(money("100000"));
     }
 
     @Test

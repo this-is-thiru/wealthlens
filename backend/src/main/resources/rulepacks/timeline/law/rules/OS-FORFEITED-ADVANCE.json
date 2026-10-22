@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-FORFEITED-ADVANCE",
-  "ruleSet": "RS-OS-FORFEITED-ADVANCE",
-  "_note": "An advance forfeited when negotiations for a capital asset's transfer fail, under other sources, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(2)(h) \"any sum of money received as an advance or otherwise during negotiations for the transfer of a capital asset, if–– (i) such sum is forfeited; and (ii) the negotiations do not result in transfer of such capital asset\" (p.138). TY 2025-26: 1961 s.56(2)(ix), the same words (F(No.2)A 2014 s.25). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md.",
+  "ruleSet": "RS-OS-INCOME",
+  "_note": "An advance forfeited when negotiations for a capital asset's transfer fail, under other sources, in full (D-203). TY 2026-27: Income-tax Act, 2025 s.92(2)(h) \"any sum of money received as an advance or otherwise during negotiations for the transfer of a capital asset, if–– (i) such sum is forfeited; and (ii) the negotiations do not result in transfer of such capital asset\" (p.138). TY 2025-26: 1961 s.56(2)(ix), the same words (F(No.2)A 2014 s.25). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-other-sources-rest.md. In RS-OS-INCOME, by othersources.kind (D-321).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "ADVANCE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "FORFEITED_ADVANCE"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance (No. 2) Act, 2014 (25 of 2014), s.25 — s.56(2)(ix) of the Income-tax Act, 1961 inserted (w.e.f. 1-4-2015)",
         "gazetteRef": "Act 25 of 2014: Gazette of India, Extraordinary, Part II, Section 1, No. 29, 6-8-2014 (egazette 2014/160514), p.14",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "ADVANCE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "FORFEITED_ADVANCE"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(2)(h)",
         "gazetteRef": "CG-DL-E-22082025-265620",

@@ -296,12 +296,6 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-OS-DIVIDEND",
-      "_note": "One row: OS-DIVIDEND",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
       "id": "RS-OS-DIVIDEND-INTEREST",
       "_note": "One row: OS-DIVIDEND-INTEREST",
       "selection": "EXACTLY_ONE",
@@ -314,33 +308,21 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-OS-FORFEITED-ADVANCE",
-      "_note": "One row: OS-FORFEITED-ADVANCE",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
       "id": "RS-OS-GIFT",
       "_note": "One row: OS-GIFT",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },
     {
+      "id": "RS-OS-INCOME",
+      "_note": "The row that charges an item of income from other sources, chosen by its othersources.kind (S2 s.92; 1961 s.56; D-321): OS-INTEREST, OS-DIVIDEND, OS-COMPENSATION-INTEREST-INCOME, OS-KEYMAN-POLICY, OS-FORFEITED-ADVANCE, OS-TERMINATION-COMPENSATION, OS-RESIDUAL. An item no row charges is refused, never charged as something else",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-OS-GIFT-COVID-DEATH",
       "_note": "One row: OS-GIFT-COVID-DEATH; held in one shipped year only",
       "selection": "AT_MOST_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-OS-INTEREST",
-      "_note": "One row: OS-INTEREST",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-OS-KEYMAN-POLICY",
-      "_note": "One row: OS-KEYMAN-POLICY",
-      "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },
     {
@@ -370,18 +352,6 @@
     {
       "id": "RS-OS-PF-TAXABLE-INTEREST",
       "_note": "One row: OS-PF-TAXABLE-INTEREST",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-OS-RESIDUAL",
-      "_note": "One row: OS-RESIDUAL",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-OS-TERMINATION-COMPENSATION",
-      "_note": "One row: OS-TERMINATION-COMPENSATION",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },

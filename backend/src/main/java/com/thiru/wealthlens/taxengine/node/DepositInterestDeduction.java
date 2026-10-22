@@ -37,7 +37,7 @@ final class DepositInterestDeduction {
 
     /** The rows, and the head's rows the net interest is read through. */
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_SAVINGS_INTEREST, RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR,
-            RuleSetIds.RS_OS_INTEREST, RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE,
+            RuleSetIds.RS_OS_INCOME, RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE,
             RuleSetIds.RS_OS_DIVIDEND_INTEREST);
 
     private static final BaseId INTEREST = new BaseId("INTEREST");

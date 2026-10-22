@@ -86,6 +86,7 @@ class GeneratedConstantsTest {
             "OS-BUSINESS-TRUST",
             "OS-COMMUTED-PENSION",
             "OS-COMPENSATION-INTEREST",
+            "OS-COMPENSATION-INTEREST-INCOME",
             "OS-DEATH-GRATUITY",
             "OS-DEEMED-DIVIDEND",
             "OS-DIVIDEND",

@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-INTEREST",
-  "ruleSet": "RS-OS-INTEREST",
-  "_note": "Interest is income from other sources unless it falls under another head — interest on securities by name, any other interest (deposits, savings) by the residual charge (D-194; rulebook OS-INT-001). The row states the whole as chargeable; relief for savings and deposit interest is Chapter VIII's (W-075c5). TY 2026-27: Income-tax Act, 2025 s.92(1) \"Income of every kind which is not to be excluded … shall be chargeable … under the head \"Income from other sources\", if it is not chargeable … under any of the heads specified in section 13(a) to (d)\" (p.137) and s.92(2)(e) \"any income by way of interest on securities\" (p.138). TY 2025-26: Income-tax Act, 1961 s.56(1) and (2)(id) (thc p.303). Every regime.",
+  "ruleSet": "RS-OS-INCOME",
+  "_note": "Interest is income from other sources unless it falls under another head — interest on securities by name, any other interest (deposits, savings) by the residual charge (D-194; rulebook OS-INT-001). The row states the whole as chargeable; relief for savings and deposit interest is Chapter VIII's (W-075c5). TY 2026-27: Income-tax Act, 2025 s.92(1) \"Income of every kind which is not to be excluded … shall be chargeable … under the head \"Income from other sources\", if it is not chargeable … under any of the heads specified in section 13(a) to (d)\" (p.137) and s.92(2)(e) \"any income by way of interest on securities\" (p.138). TY 2025-26: Income-tax Act, 1961 s.56(1) and (2)(id) (thc p.303). Every regime. In RS-OS-INCOME, it charges the items whose othersources.kind is one of the four interest kinds (D-321).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,33 @@
         "percent": "100",
         "base": "INTEREST"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "INTEREST_ON_SECURITIES"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "SAVINGS_DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "OTHER_INTEREST"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.56(1) as enacted; s.56(2)(id) ins. by the Finance Act, 1988 (26 of 1988), s.18 (w.e.f. 1-4-1989)",
         "gazetteRef": "Act 26 of 1988: Gazette of India, Extraordinary, Part II, Section 1, 13-5-1988 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 10, 6-6-2002, pp.142–143; s.56(1): Act 43 of 1961 (assent 13-9-1961), as enacted, read in Acts of the Parliament of India, 1961 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.307 (PDF p.319); the Gazette of India issue itself not read (D-215)",
@@ -71,7 +97,33 @@
         "percent": "100",
         "base": "INTEREST"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "INTEREST_ON_SECURITIES"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "SAVINGS_DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "OTHER_INTEREST"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(1), (2)(e)",
         "gazetteRef": "CG-DL-E-22082025-265620",

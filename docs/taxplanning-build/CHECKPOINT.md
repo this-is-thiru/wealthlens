@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-153c — the charging row and path per kind by rule data (D-318; K1, K1r)
+Item            : W-153c2 — share deductions as reach rows (s.93) (D-321)
 Stage           : READY — not started
-Plan            : written when taken (plans/W-153c.md; may propose c1 / c2)
+Plan            : written when taken (plans/W-153c2.md)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-153c": read its WI row, plans/W-153.md, W-153a/b plans, OtherSourcesNode:75–97 (IN_FULL, WHOLE_DEDUCTED, BUSINESS_HEAD_KINDS), the kind switch, dividend()/compensationInterest()/wholeDeducted() outright refusals, requireBuiltKinds, the charging OS-* rows, RS-CG-PART's BucketPart pattern; decide UNIT_INCOME's charging row from the statute (OS-DIVIDEND _note cites "any dividend" only); write plans/W-153c.md (a split if > §7), STOP
-Last verify     : targeted 412/0; unit -Punit 3293/0; integration 281/0 (2026-10-22, W-153b)
-Waiting on      : the owner — "start W-153c"; OQ-32, OQ-33 open
+Next step       : on "start W-153c2": read its WI row, plans/W-153c.md, W-153c1.md, OtherSourcesNode's switch arms (dividend, compensationInterest, familyPension, wholeDeducted, KindRow/WHOLE_DEDUCTED), the rows OS-COMPENSATION-INTEREST, -COMMUTED-PENSION, -DEATH-GRATUITY, -FAMILY-PENSION(+NTR), -DEEMED-DIVIDEND, OS-DIVIDEND-INTEREST's refusal role, LifePolicySums/GiftIncome untouched; list trace readers (D-321 exception); write plans/W-153c2.md, STOP
+Last verify     : targeted 461/0; unit -Punit 3336/0; integration 281/0 (2026-10-22, W-153c1)
+Waiting on      : the owner — "start W-153c2"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-153b: state which items the head's deduction rows reach as rule data — othersources.kind conditions on OS-BANKER-COMMISSION, OS-DIVIDEND-INTEREST and OS-OTHER-EXPENDITURE, so OtherSourcesNode and DividendInterestAllowance hold no kind test for them (D-320)
-Updated         : 2026-10-22, session 29 — W-153b committed
+Last item commit: taxplanning W-153c1: choose the row that charges each other-sources item by its kind in rule data — RS-OS-INCOME, unit income charged by s.92(1) / s.56(1) not as a dividend, each base read from its row, an uncharged kind refused generically (W-153c split D-321; D-322)
+Updated         : 2026-10-22, session 29 — W-153c1 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

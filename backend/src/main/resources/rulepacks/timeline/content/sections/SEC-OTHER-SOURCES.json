@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-208). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: 1961 s.56 / 2025 s.92 (coverage MODELLED, D-208). summary: S2 s.92(1), (2); 1961 s.56(1), (2). routes: OS-INTEREST (s.92(2)(e)), OS-DIVIDEND ((a)), OS-KEYMAN-POLICY ((d)), OS-FORFEITED-ADVANCE ((h)), OS-TERMINATION-COMPENSATION ((j)), OS-BUSINESS-TRUST ((k)), OS-LIFE-POLICY ((l), with Schedule II Sl. 2 and OS-LIFE-POLICY-RATIO / -PREMIUM), OS-GIFT ((m), (3); 1961 also OS-GIFT-COVID-DEATH), OS-RESIDUAL ((1)). disqualifiers[0]: s.92(2)(b) winnings, 1961 s.115BB DEFERRED (D-193). disqualifiers[1]: s.92(2)(c), (f), (g), deductions in the business head, DEFERRED (D-202). disqualifiers[2]: s.18(1)(a), (c)(iii) — employer compensation and an employee's Keyman sums are salary (D-203). disqualifiers[3]: Schedule II Sl. 2 excludes life-policy sums meeting its conditions (OS-LIFE-POLICY-RATIO; D-205, D-207). disqualifiers[4]: s.67(5) — a ULIP's sums not excluded are capital gains, W-088. disqualifiers[5]: s.92(3) gift exclusions (GiftExclusion; D-201).",
+  "_sources": "provisions: 1961 s.56 / 2025 s.92 (coverage MODELLED, D-208). summary: S2 s.92(1), (2); 1961 s.56(1), (2). routes: OS-INTEREST (s.92(2)(e)), OS-DIVIDEND ((a)), OS-KEYMAN-POLICY ((d)), OS-FORFEITED-ADVANCE ((h)), OS-TERMINATION-COMPENSATION ((j)), OS-BUSINESS-TRUST ((k)), OS-LIFE-POLICY ((l), with Schedule II Sl. 2 and OS-LIFE-POLICY-RATIO / -PREMIUM), OS-GIFT ((m), (3); 1961 also OS-GIFT-COVID-DEATH), OS-RESIDUAL ((1); also unit income, sources/2026-10-22-unit-income.md, D-321). OS-COMPENSATION-INTEREST-INCOME ((2)(i)) charges interest on compensation, deducted under SEC-OTHER-SOURCES-DEDUCTIONS. disqualifiers[0]: s.92(2)(b) winnings, 1961 s.115BB DEFERRED (D-193). disqualifiers[1]: s.92(2)(c), (f), (g), deductions in the business head, DEFERRED (D-202). disqualifiers[2]: s.18(1)(a), (c)(iii) — employer compensation and an employee's Keyman sums are salary (D-203). disqualifiers[3]: Schedule II Sl. 2 excludes life-policy sums meeting its conditions (OS-LIFE-POLICY-RATIO; D-205, D-207). disqualifiers[4]: s.67(5) — a ULIP's sums not excluded are capital gains, W-088. disqualifiers[5]: s.92(3) gift exclusions (GiftExclusion; D-201).",
   "key": "SEC-OTHER-SOURCES",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -27,7 +27,7 @@
     },
     {
       "name": "Dividends",
-      "description": "Dividends, and income from mutual fund units.",
+      "description": "Dividends.",
       "conditions": [
         {
           "type": "ByRule",
@@ -105,7 +105,7 @@
     },
     {
       "name": "Any other income",
-      "description": "Income that fits no other head and none of the kinds above.",
+      "description": "Income from mutual fund units, and income that fits no other head and none of the kinds above.",
       "conditions": [
         {
           "type": "ByRule",
