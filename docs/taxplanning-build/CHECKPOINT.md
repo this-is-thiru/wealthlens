@@ -14,7 +14,7 @@ Last verify     : targeted 573/0; unit -Punit 3474/0; integration 281/0 (2026-10
 Waiting on      : the owner — "start W-154"; OQ-32, OQ-33 open
 Files touched   : (none)
 Last item commit: taxplanning W-153d: state which items are dividend income for the surcharge's 15% limit as rule data — the RATE-SUR-*-LIMIT rows' othersources.kind condition, so SurchargeNode and DividendInterestAllowance hold no kind test (D-324; W-153 closed)
-Updated         : 2026-10-22, session 29 — W-153d committed, W-153 closed
+Updated         : 2026-10-22, session 29 — PAUSED at the session limit, everything committed (resume at W-154)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
