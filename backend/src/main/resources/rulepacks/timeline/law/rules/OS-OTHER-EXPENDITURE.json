@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-OTHER-EXPENDITURE",
   "ruleSet": "RS-OS-OTHER-EXPENDITURE",
-  "_note": "Any other expenditure, not capital, laid out wholly and exclusively for making or earning the income is deducted (D-194; rulebook OS-GENERAL-001) — but never personal expenses, nor interest or salary payable outside India untaxed (OS-NODED-001: a nil line), nor anything against dividends or unit income (OS-DIVIDEND-INTEREST) or interest on compensation (OS-COMPENSATION-INTEREST). TY 2026-27: Income-tax Act, 2025 s.93(1)(e) (p.142), s.94(1) (p.142). TY 2025-26: Income-tax Act, 1961 s.57(iii), s.58(1)(a) (thc p.310). Every regime.",
+  "_note": "Any other expenditure, not capital, laid out wholly and exclusively for making or earning the income is deducted (D-194; rulebook OS-GENERAL-001) — but never personal expenses, nor interest or salary payable outside India untaxed (OS-NODED-001: a nil line), nor anything against dividends or unit income (OS-DIVIDEND-INTEREST) or interest on compensation (OS-COMPENSATION-INTEREST). TY 2026-27: Income-tax Act, 2025 s.93(1)(e) (p.142), s.94(1) (p.142). TY 2025-26: Income-tax Act, 1961 s.57(iii), s.58(1)(a) (thc p.310). Every regime. Which items it reaches is its condition on othersources.kind: the interest kinds, family pension and the kinds charged in full — not dividends, unit income, interest on compensation or the kinds whose entire amount is deducted, and not the kinds refused as unbuilt (D-202, D-193) (D-320).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,58 @@
         "percent": "100",
         "base": "EXPENDITURE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "INTEREST_ON_SECURITIES"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "SAVINGS_DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "OTHER_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "FAMILY_PENSION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "KEYMAN_POLICY"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "FORFEITED_ADVANCE"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "TERMINATION_COMPENSATION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "OTHER"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.57(iii) as enacted",
         "gazetteRef": "Act 43 of 1961 (assent 13-9-1961) s.57(iii) as enacted: read in Acts of the Parliament of India, 1961 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.308 (PDF p.320); the Gazette of India issue itself not read (D-215)",
@@ -71,7 +122,58 @@
         "percent": "100",
         "base": "EXPENDITURE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "INTEREST_ON_SECURITIES"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "SAVINGS_DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "OTHER_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "FAMILY_PENSION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "KEYMAN_POLICY"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "FORFEITED_ADVANCE"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "TERMINATION_COMPENSATION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "OTHER"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.93(1)(e)",
         "gazetteRef": "CG-DL-E-22082025-265620",

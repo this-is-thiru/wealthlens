@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-DIVIDEND-INTEREST",
   "ruleSet": "RS-OS-DIVIDEND-INTEREST",
-  "_note": "The only deduction against dividend income and Mutual Fund or specified-company unit income is interest expense, at most twenty per cent of that income (TY 2025-26), and none at all from TY 2026-27 (D-194; rulebook OS-DIV-DED-2025/-2026). TY 2025-26: Income-tax Act, 1961 s.57 proviso, ins. by the Finance Act, 2020 s.30(b) (egazette 2020/218938 p.25): \"no deduction shall be allowed from the dividend income, or income in respect of units of a Mutual Fund … other than deduction on account of interest expense, and in any previous year such deduction shall not exceed twenty per cent. of the dividend income, or income in respect of such units, included in the total income for that year, without deduction under this section\" — so no banker's commission or other expense either. TY 2026-27: Income-tax Act, 2025 s.93(2) as substituted by the Finance Act, 2026 s.44(b) (p.43): \"in respect of any dividend income or income from units of a Mutual Fund … no deduction shall be allowed\". The cap is the allowance; the interest expense entered is deducted up to it. Every regime.",
+  "_note": "The only deduction against dividend income and Mutual Fund or specified-company unit income is interest expense, at most twenty per cent of that income (TY 2025-26), and none at all from TY 2026-27 (D-194; rulebook OS-DIV-DED-2025/-2026). TY 2025-26: Income-tax Act, 1961 s.57 proviso, ins. by the Finance Act, 2020 s.30(b) (egazette 2020/218938 p.25): \"no deduction shall be allowed from the dividend income, or income in respect of units of a Mutual Fund … other than deduction on account of interest expense, and in any previous year such deduction shall not exceed twenty per cent. of the dividend income, or income in respect of such units, included in the total income for that year, without deduction under this section\" — so no banker's commission or other expense either. TY 2026-27: Income-tax Act, 2025 s.93(2) as substituted by the Finance Act, 2026 s.44(b) (p.43): \"in respect of any dividend income or income from units of a Mutual Fund … no deduction shall be allowed\". The cap is the allowance; the interest expense entered is deducted up to it. Every regime. Which items it reaches — whose interest expense goes to the year's limit and whose income is the limit's base — is its condition on othersources.kind: dividends other than deemed ones (W-079b's report: a deemed dividend is outside it; OS-DEEMED-DIVIDEND) and unit income (D-320).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,23 @@
         "percent": "20",
         "base": "DIVIDEND"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DIVIDEND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "UNIT_INCOME"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.30(b) — the proviso to s.57 of the Income-tax Act, 1961 (w.e.f. 1-4-2021)",
         "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, No. 20, 27-3-2020 (egazette 2020/218938), p.25",
@@ -71,7 +87,23 @@
         "percent": "0",
         "base": "DIVIDEND"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DIVIDEND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "UNIT_INCOME"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2026 (4 of 2026), s.44(b) — s.93(2) of the Income-tax Act, 2025 substituted (in force 1-4-2026 by s.1(2)(a))",
         "gazetteRef": "CG-DL-E-31032026-271439",

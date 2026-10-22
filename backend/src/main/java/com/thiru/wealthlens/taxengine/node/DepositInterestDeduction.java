@@ -6,7 +6,6 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
-import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -38,7 +37,8 @@ final class DepositInterestDeduction {
 
     /** The rows, and the head's rows the net interest is read through. */
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_SAVINGS_INTEREST, RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR,
-            RuleSetIds.RS_OS_INTEREST, RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE);
+            RuleSetIds.RS_OS_INTEREST, RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE,
+            RuleSetIds.RS_OS_DIVIDEND_INTEREST);
 
     private static final BaseId INTEREST = new BaseId("INTEREST");
 
@@ -55,12 +55,12 @@ final class DepositInterestDeduction {
         List<TraceLine> lines = new ArrayList<>();
         if (isSenior(ctx)) {
             RuleId seniorRow = ctx.ruleIdOf(RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR);
-            add(ctx, seniorRow, deposits.stream().filter(item -> reaches(ctx, seniorRow, item)).toList(), firstSequence,
+            add(ctx, seniorRow, deposits.stream().filter(item -> OtherSourcesNode.reaches(ctx, seniorRow, item)).toList(), firstSequence,
                     lines);
             return lines;
         }
-        List<OtherSourceItem> savingsItems = deposits.stream().filter(item -> reaches(ctx, savingsRow, item)).toList();
-        Money other = included(ctx, deposits.stream().filter(item -> !reaches(ctx, savingsRow, item)).toList());
+        List<OtherSourceItem> savingsItems = deposits.stream().filter(item -> OtherSourcesNode.reaches(ctx, savingsRow, item)).toList();
+        Money other = included(ctx, deposits.stream().filter(item -> !OtherSourcesNode.reaches(ctx, savingsRow, item)).toList());
         if (!savingsItems.isEmpty() && included(ctx, savingsItems).isGreaterThan(Money.ZERO)) {
             add(ctx, savingsRow, savingsItems, firstSequence, lines);
         }
@@ -89,12 +89,6 @@ final class DepositInterestDeduction {
                         .allMatch(condition -> condition.holds(ctx.conditions()));
     }
 
-    /** Whether the row's conditions about the item hold for this one. */
-    private static boolean reaches(NodeContext ctx, RuleId row, OtherSourceItem item) {
-        return version(ctx, row).conditions().stream()
-                .filter(Condition::isAboutItem)
-                .allMatch(condition -> condition.holds(ctx.conditions().about(OtherSourcesNode.factsOf(item))));
-    }
 
     private static void add(NodeContext ctx, RuleId row, List<OtherSourceItem> items, int firstSequence,
             List<TraceLine> lines) {
@@ -124,7 +118,7 @@ final class DepositInterestDeduction {
         RuleId savingsRow = ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST);
         RuleId seniorRow = ctx.ruleIdOf(RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR);
         return ctx.inputs().entered().otherSourceItems().stream()
-                .filter(item -> reaches(ctx, savingsRow, item) || reaches(ctx, seniorRow, item))
+                .filter(item -> OtherSourcesNode.reaches(ctx, savingsRow, item) || OtherSourcesNode.reaches(ctx, seniorRow, item))
                 .toList();
     }
 

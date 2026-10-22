@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-BANKER-COMMISSION",
   "ruleSet": "RS-OS-BANKER-COMMISSION",
-  "_note": "A reasonable sum paid to a banker or another person to realise interest on securities is deducted (D-194; rulebook OS-COLL-001 as corrected by the W-079b erratum: not against dividends in either year). TY 2025-26: Income-tax Act, 1961 s.57(i) (thc p.310; dividends excluded since 1-4-2021 by the s.57 proviso, FA 2020 s.30(b); clause (i) last amended by F(No.2)A 2024 s.24(a)). TY 2026-27: Income-tax Act, 2025 s.93(1)(a) as substituted by the Finance Act, 2026 s.44(a) (p.43): \"for interest on securities, any reasonable sum paid as commission or remuneration to a banker or any other person for the purpose of realising such interest on behalf of the assessee\". Every regime.",
+  "_note": "A reasonable sum paid to a banker or another person to realise interest on securities is deducted (D-194; rulebook OS-COLL-001 as corrected by the W-079b erratum: not against dividends in either year). TY 2025-26: Income-tax Act, 1961 s.57(i) (thc p.310; dividends excluded since 1-4-2021 by the s.57 proviso, FA 2020 s.30(b); clause (i) last amended by F(No.2)A 2024 s.24(a)). TY 2026-27: Income-tax Act, 2025 s.93(1)(a) as substituted by the Finance Act, 2026 s.44(a) (p.43): \"for interest on securities, any reasonable sum paid as commission or remuneration to a banker or any other person for the purpose of realising such interest on behalf of the assessee\". Every regime. Which items it reaches is its condition on othersources.kind: interest on securities (D-320).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "COMMISSION"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "INTEREST_ON_SECURITIES"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.24(a) — s.57(i) of the Income-tax Act, 1961 as last amended (w.e.f. 1-10-2024)",
         "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, No. 18, 16-8-2024 (egazette 2024/256436), p.24",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "COMMISSION"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "INTEREST_ON_SECURITIES"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2026 (4 of 2026), s.44(a) — s.93(1)(a) of the Income-tax Act, 2025 substituted (in force 1-4-2026 by s.1(2)(a))",
         "gazetteRef": "CG-DL-E-31032026-271439",

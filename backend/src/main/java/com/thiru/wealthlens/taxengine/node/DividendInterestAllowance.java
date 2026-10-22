@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -64,14 +65,16 @@ final class DividendInterestAllowance {
         }
     }
 
+    /** The year's figures over the items the row reaches — its conditions on the item (W-153b, D-320). */
     static DividendInterest of(NodeContext ctx, List<OtherSourceItem> items) {
         Money base = Money.ZERO;
         Money receivedOnDividends = Money.ZERO;
         Money claimed = Money.ZERO;
         Money claimedOnDividends = Money.ZERO;
         boolean untaxedAbroad = false;
+        RuleId row = ctx.ruleIdOf(RuleSetIds.RS_OS_DIVIDEND_INTEREST);
         for (OtherSourceItem item : items) {
-            if (item.kind() == OtherSourceKind.DIVIDEND || item.kind() == OtherSourceKind.UNIT_INCOME) {
+            if (OtherSourcesNode.reaches(ctx, row, item)) {
                 base = base.plus(item.received());
                 claimed = claimed.plus(item.interestExpense());
                 untaxedAbroad |= item.payableOutsideIndiaUntaxed() && item.interestExpense().isGreaterThan(Money.ZERO);

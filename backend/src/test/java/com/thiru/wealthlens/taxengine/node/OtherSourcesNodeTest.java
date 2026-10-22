@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.node;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.input.BusinessTrustUnits;
 import com.thiru.wealthlens.taxengine.input.ClaimedPolicy;
@@ -19,6 +20,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -31,12 +33,17 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -253,6 +260,80 @@ class OtherSourcesNodeTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("100000")));
         assertThat(result.trace().getLast().limitedBy()).hasValueSatisfying(
                 why -> assertThat(why).contains("payable outside India untaxed"));
+    }
+
+    @Test
+    void evaluate_whenEveryExpenseOnSecuritiesIsPayableOutsideIndiaUntaxed_nilsBothRows() {
+        // Given — the commission row and the expenditure row both reach interest on securities
+        OtherSourceItem untaxed = new OtherSourceItem(OtherSourceKind.INTEREST_ON_SECURITIES, Money.of("10000"),
+                Money.of("100"), Money.of("200"), Money.of("400"), true);
+
+        // When
+        NodeResult result = run(2026, List.of(untaxed));
+
+        // Then — S2 s.94(1)(b), (c): 100 and 200 + 400 each a nil line on its own row
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("10000")));
+        assertThat(rowLines(result, RuleIds.OS_BANKER_COMMISSION)).extracting(TraceLine::in, TraceLine::out)
+                .containsExactly(tuple(money("100"), money("0")));
+        assertThat(rowLines(result, RuleIds.OS_OTHER_EXPENDITURE)).extracting(TraceLine::in, TraceLine::out)
+                .containsExactly(tuple(money("600"), money("0")));
+        assertThat(result.trace()).filteredOn(line -> !line.rule().equals(RuleIds.OS_INTEREST))
+                .allSatisfy(line -> assertThat(line.limitedBy().orElseThrow()).contains("payable outside India untaxed"));
+    }
+
+    /**
+     * {@code plans/W-153b.md} case 2, by hand from the rows' notes: an item of 10,000 bearing a commission of 100,
+     * interest of 200 and other expenditure of 400 — distinct, so a row reaching the wrong kind changes a figure. Each
+     * list is the (in, out) of that row's lines: the commission row reaches interest on securities (S2 s.93(1)(a)); the
+     * expenditure row the interest kinds, family pension and the in-full kinds (s.93(1)(e)); the dividend-interest row
+     * dividends and unit income, after the path's nil line for their commission and other expenditure (500), at 20% of
+     * 10,000 in TY 2025-26 and nil in TY 2026-27 (1961 s.57 proviso; s.93(2)). The others reach none of the three.
+     */
+    private static Stream<Arguments> reachByKind() {
+        List<OtherSourceKind> bearingExpenditureOnly = List.of(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST,
+                OtherSourceKind.DEPOSIT_INTEREST, OtherSourceKind.OTHER_INTEREST, OtherSourceKind.FAMILY_PENSION,
+                OtherSourceKind.KEYMAN_POLICY, OtherSourceKind.FORFEITED_ADVANCE,
+                OtherSourceKind.TERMINATION_COMPENSATION, OtherSourceKind.OTHER);
+        List<OtherSourceKind> reachingNone = List.of(OtherSourceKind.DEEMED_DIVIDEND,
+                OtherSourceKind.INTEREST_ON_COMPENSATION, OtherSourceKind.COMMUTED_FUND_PENSION,
+                OtherSourceKind.DEATH_GRATUITY);
+        List<Arguments> cases = new ArrayList<>();
+        for (int year : new int[] {2025, 2026}) {
+            List<Tuple> limited = List.of(tuple(money("500"), money("0")),
+                    tuple(money("200"), money(year == 2025 ? "200" : "0")));
+            cases.add(Arguments.of(year, OtherSourceKind.INTEREST_ON_SECURITIES,
+                    List.of(tuple(money("100"), money("100"))), List.of(tuple(money("600"), money("600"))), List.of()));
+            bearingExpenditureOnly.forEach(kind -> cases.add(Arguments.of(year, kind,
+                    List.of(tuple(money("100"), money("0"))), List.of(tuple(money("600"), money("600"))), List.of())));
+            cases.add(Arguments.of(year, OtherSourceKind.DIVIDEND, List.of(), List.of(), limited));
+            cases.add(Arguments.of(year, OtherSourceKind.UNIT_INCOME, List.of(), List.of(), limited));
+            reachingNone.forEach(kind -> cases.add(Arguments.of(year, kind, List.of(), List.of(), List.of())));
+        }
+        return cases.stream();
+    }
+
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("reachByKind")
+    void evaluate_whenAnItemBearsEveryExpense_eachRowReachesOnlyItsKinds(int year, OtherSourceKind kind,
+            List<Tuple> commission, List<Tuple> expenditure, List<Tuple> dividendInterest) {
+        // When
+        NodeResult result = run(year, List.of(item(kind, "10000", "100", "200", "400")));
+
+        // Then
+        assertThat(rowLines(result, RuleIds.OS_BANKER_COMMISSION)).extracting(TraceLine::in, TraceLine::out)
+                .containsExactlyElementsOf(commission);
+        assertThat(rowLines(result, RuleIds.OS_OTHER_EXPENDITURE)).extracting(TraceLine::in, TraceLine::out)
+                .containsExactlyElementsOf(expenditure);
+        assertThat(rowLines(result, RuleIds.OS_DIVIDEND_INTEREST)).extracting(TraceLine::in, TraceLine::out)
+                .containsExactlyElementsOf(dividendInterest);
+    }
+
+    private static List<TraceLine> rowLines(NodeResult result, RuleId rule) {
+        return result.trace().stream().filter(line -> line.rule().equals(rule)).toList();
+    }
+
+    private static MoneyValue money(String amount) {
+        return MoneyValue.of(Money.of(amount));
     }
 
     @Test
