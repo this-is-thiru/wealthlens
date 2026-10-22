@@ -55,4 +55,20 @@ public sealed interface Condition
 
     /** How this condition names itself when it is the reason a claim was refused. */
     String describe();
+
+    /**
+     * Whether this condition reads the item a node is computing — so a node can test a row's conditions about the
+     * person once and its conditions about the item per item, the item's tested with no item throwing (W-153a, D-319).
+     * A composition reads the item where any limb does.
+     */
+    default boolean isAboutItem() {
+        return switch (this) {
+            case ItemFactIs _, ItemFactAtMost _, ItemDateBefore _ -> true;
+            case AllOf all -> all.all().stream().anyMatch(Condition::isAboutItem);
+            case AnyOf any -> any.any().stream().anyMatch(Condition::isAboutItem);
+            case Not not -> not.condition().isAboutItem();
+            case IsResident _, AgeAtLeast _, HasPersonType _, IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
+                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, PaidOtherThanInCash _ -> false;
+        };
+    }
 }

@@ -2,11 +2,11 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
-import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.RegimeVerdict;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
+import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -29,6 +29,10 @@ import java.util.Set;
  *
  * <p>The interest is what gross total income includes — each item net of the expenditure the head deducted against
  * it ({@link OtherSourcesNode#interestIncluded}), the items together floored at nil (OQ-25, D-228, D-231).
+ *
+ * <p>Which items each row reaches is the row's: its conditions about the item ({@code othersources.kind}), tested per
+ * item, apart from its conditions about the person (W-153a, D-319). An item either row reaches is deposit interest;
+ * one the savings row does not reach is a nil line for anyone but a senior citizen.
  */
 final class DepositInterestDeduction {
 
@@ -47,22 +51,21 @@ final class DepositInterestDeduction {
         if (deposits.isEmpty()) {
             return List.of();
         }
-        List<OtherSourceItem> savingsItems = deposits.stream()
-                .filter(item -> item.kind() == OtherSourceKind.SAVINGS_DEPOSIT_INTEREST).toList();
-        List<OtherSourceItem> depositItems = deposits.stream()
-                .filter(item -> item.kind() == OtherSourceKind.DEPOSIT_INTEREST).toList();
+        RuleId savingsRow = ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST);
         List<TraceLine> lines = new ArrayList<>();
         if (isSenior(ctx)) {
-            add(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR), deposits, firstSequence, lines);
+            RuleId seniorRow = ctx.ruleIdOf(RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR);
+            add(ctx, seniorRow, deposits.stream().filter(item -> reaches(ctx, seniorRow, item)).toList(), firstSequence,
+                    lines);
             return lines;
         }
-        Money other = included(ctx, depositItems);
+        List<OtherSourceItem> savingsItems = deposits.stream().filter(item -> reaches(ctx, savingsRow, item)).toList();
+        Money other = included(ctx, deposits.stream().filter(item -> !reaches(ctx, savingsRow, item)).toList());
         if (!savingsItems.isEmpty() && included(ctx, savingsItems).isGreaterThan(Money.ZERO)) {
-            add(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST), savingsItems, firstSequence, lines);
+            add(ctx, savingsRow, savingsItems, firstSequence, lines);
         }
         if (other.isGreaterThan(Money.ZERO)) {
-            lines.add(ctx.traceLine(firstSequence + lines.size(), ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST),
-                            StepKind.DEDUCTION, other, Money.ZERO)
+            lines.add(ctx.traceLine(firstSequence + lines.size(), savingsRow, StepKind.DEDUCTION, other, Money.ZERO)
                     .withLimitedBy("s.153(2)(a) is savings-account interest only, time deposits excluded;"
                             + " deposit interest is deducted only for a senior citizen (s.153(2)(b); 1961 ss.80TTA,"
                             + " 80TTB)"));
@@ -77,12 +80,20 @@ final class DepositInterestDeduction {
 
     /**
      * A senior citizen: an individual resident in India of sixty or more at any time in the year (S2 s.2(100); 1961
-     * s.80TTB Explanation) — the senior row's conditions. A HUF has no age, so it is never one.
+     * s.80TTB Explanation) — the senior row's conditions about the person. A HUF has no age, so it is never one.
      */
     private static boolean isSenior(NodeContext ctx) {
         return ctx.inputs().assessee() instanceof Individual
                 && version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR)).conditions().stream()
+                        .filter(condition -> !condition.isAboutItem())
                         .allMatch(condition -> condition.holds(ctx.conditions()));
+    }
+
+    /** Whether the row's conditions about the item hold for this one. */
+    private static boolean reaches(NodeContext ctx, RuleId row, OtherSourceItem item) {
+        return version(ctx, row).conditions().stream()
+                .filter(Condition::isAboutItem)
+                .allMatch(condition -> condition.holds(ctx.conditions().about(OtherSourcesNode.factsOf(item))));
     }
 
     private static void add(NodeContext ctx, RuleId row, List<OtherSourceItem> items, int firstSequence,
@@ -108,10 +119,12 @@ final class DepositInterestDeduction {
                 .floorAtZero();
     }
 
+    /** The items either row reaches: interest on deposits with a bank, a co-operative bank or a Post Office. */
     private static List<OtherSourceItem> deposits(NodeContext ctx) {
+        RuleId savingsRow = ctx.ruleIdOf(RuleSetIds.RS_DED_SAVINGS_INTEREST);
+        RuleId seniorRow = ctx.ruleIdOf(RuleSetIds.RS_DED_DEPOSIT_INTEREST_SENIOR);
         return ctx.inputs().entered().otherSourceItems().stream()
-                .filter(item -> item.kind() == OtherSourceKind.SAVINGS_DEPOSIT_INTEREST
-                        || item.kind() == OtherSourceKind.DEPOSIT_INTEREST)
+                .filter(item -> reaches(ctx, savingsRow, item) || reaches(ctx, seniorRow, item))
                 .toList();
     }
 

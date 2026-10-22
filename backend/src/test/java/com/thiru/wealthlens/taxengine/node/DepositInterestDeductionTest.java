@@ -32,6 +32,7 @@ import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -180,6 +181,44 @@ class DepositInterestDeductionTest {
         assertThat(result.value()).isEqualTo(rupees("30000"));
         assertThat(lines(result, RuleIds.DED_DEPOSIT_INTEREST_SENIOR)).singleElement()
                 .satisfies(line -> assertThat(line.out()).isEqualTo(rupees("30000")));
+    }
+
+    /**
+     * One item of every kind, each of a different amount — 1,000 times its place in {@link OtherSourceKind} plus one,
+     * so savings-account interest is 2,000 and deposit interest 3,000 — the kinds the rows do not reach must not count
+     * as deposit interest, and a row reaching the wrong kind shows in the amounts.
+     */
+    private static List<OtherSourceItem> oneOfEveryKind() {
+        return Arrays.stream(OtherSourceKind.values())
+                .map(kind -> interest(kind, String.valueOf((kind.ordinal() + 1) * 1000)))
+                .toList();
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenEveryKindIsEnteredUnderSixty_reachesOnlySavingsThenNilsTheDeposit(int year) {
+        // When — the rows' othersources.kind conditions (D-319), expected from s.153(2)(a): "deposits in a savings
+        // account, excluding time deposits", with s.153(1)'s deposits being the two bank / Post Office kinds
+        NodeResult result = run(year, OLD, UNDER_SIXTY, oneOfEveryKind());
+
+        // Then — the savings item 2,000 → 2,000, under 10,000; the deposit item a nil line 3,000 → 0; nothing else
+        assertThat(result.value()).isEqualTo(rupees("2000"));
+        assertThat(lines(result, RuleIds.DED_SAVINGS_INTEREST)).extracting(TraceLine::in, TraceLine::out)
+                .containsExactly(tuple(rupees("2000"), rupees("2000")), tuple(rupees("3000"), rupees("0")));
+        assertThat(lines(result, RuleIds.DED_DEPOSIT_INTEREST_SENIOR)).isEmpty();
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenEveryKindIsEnteredAtSixtySeven_reachesSavingsAndDepositOnly(int year) {
+        // When — s.153(2)(b): "deposits in any account, including time deposits"
+        NodeResult result = run(year, OLD, SIXTY_SEVEN, oneOfEveryKind());
+
+        // Then — 2,000 + 3,000, under 50,000; no savings line
+        assertThat(result.value()).isEqualTo(rupees("5000"));
+        assertThat(lines(result, RuleIds.DED_DEPOSIT_INTEREST_SENIOR)).extracting(TraceLine::in, TraceLine::out)
+                .containsExactly(tuple(rupees("5000"), rupees("5000")));
+        assertThat(lines(result, RuleIds.DED_SAVINGS_INTEREST)).isEmpty();
     }
 
     @ParameterizedTest(name = "TY {0}")

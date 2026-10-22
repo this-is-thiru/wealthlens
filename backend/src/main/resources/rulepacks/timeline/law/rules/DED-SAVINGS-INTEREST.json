@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-SAVINGS-INTEREST",
   "ruleSet": "RS-DED-SAVINGS-INTEREST",
-  "_note": "Savings-account interest — \"in case of an assessee mentioned in sub-section (1)(a) or (c), the whole of the interest up to a maximum amount of ₹ 10000 on deposits in a savings account, excluding time deposits\" (s.153(2)(a), p.185), for \"(a) an individual, not being a senior citizen; or … (c) a Hindu undivided family\" whose gross total income \"includes income by way of interest on deposits with\" a bank, a co-operative bank or a Post Office (s.153(1)); time deposits are \"repayable on expiry of fixed periods\" (s.153(5)). The deposit-taker and account are the entered kind (OtherSourceKind.SAVINGS_DEPOSIT_INTEREST); a senior citizen takes DED-DEPOSIT-INTEREST-SENIOR instead; an expense entered against the interest is refused (OQ-25). rulebook DED-80TTA-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2025-26: Income-tax Act, 1961 s.80TTA(1) (thc pp.424–425) — an individual or HUF \"(other than the assessee referred to in section 80TTB)\", interest \"(not being time deposits) in a savings account\", \"ten thousand rupees\" in the aggregate; its Post Office is the Indian Post Office Act, 1898's, repealed by the Post Office Act, 2023, which changes no figure. sources/2026-10-16-deposit-interest.md. D-195. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-166).",
+  "_note": "Savings-account interest — \"in case of an assessee mentioned in sub-section (1)(a) or (c), the whole of the interest up to a maximum amount of ₹ 10000 on deposits in a savings account, excluding time deposits\" (s.153(2)(a), p.185), for \"(a) an individual, not being a senior citizen; or … (c) a Hindu undivided family\" whose gross total income \"includes income by way of interest on deposits with\" a bank, a co-operative bank or a Post Office (s.153(1)); time deposits are \"repayable on expiry of fixed periods\" (s.153(5)). The deposit-taker and account are the entered kind, and the row reaches the items whose othersources.kind is SAVINGS_DEPOSIT_INTEREST — its condition, tested per item (D-319); a senior citizen takes DED-DEPOSIT-INTEREST-SENIOR instead; an expense entered against the interest is refused (OQ-25). rulebook DED-80TTA-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2025-26: Income-tax Act, 1961 s.80TTA(1) (thc pp.424–425) — an individual or HUF \"(other than the assessee referred to in section 80TTB)\", interest \"(not being time deposits) in a savings account\", \"ten thousand rupees\" in the aggregate; its Post Office is the Indian Post Office Act, 1898's, repealed by the Post Office Act, 2023, which changes no figure. sources/2026-10-16-deposit-interest.md. D-195. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -44,7 +44,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "SAVINGS_DEPOSIT_INTEREST"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80TTA — ins. by Act 23 of 2012, s.31 (w.e.f. 1-4-2013); the words \"(other than the assessee referred to in section 80TTB)\" ins. by Act 13 of 2018, s.31 (w.e.f. 1-4-2019)",
         "gazetteRef": "Act 23 of 2012: Gazette of India, Extraordinary, Part II, Section 1, 28-5-2012 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 23-5-2013, p.507; Act 13 of 2018: Gazette of India, Extraordinary, Part II, Section 1, No. 17, 29-3-2018 (egazette 2018/184302), p.17",
@@ -102,7 +108,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "SAVINGS_DEPOSIT_INTEREST"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.153(1)(a), (c), (2)(a), (5)",
         "gazetteRef": "CG-DL-E-22082025-265620",

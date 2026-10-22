@@ -11,9 +11,11 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -58,6 +60,9 @@ import java.util.Set;
  * against the other heads (D-217).
  */
 public final class OtherSourcesNode implements ComputationNode {
+
+    /** The item fact a row tests for which kinds of the head's income it reaches: the kind's constant name (D-318). */
+    static final ItemFactId KIND = new ItemFactId("othersources.kind");
 
     private static final BaseId INTEREST = new BaseId("INTEREST");
     private static final BaseId DIVIDEND = new BaseId("DIVIDEND");
@@ -159,6 +164,11 @@ public final class OtherSourcesNode implements ComputationNode {
             case WINNINGS, EMPLOYEE_CONTRIBUTIONS, MACHINERY_LETTING, MACHINERY_AND_BUILDING_LETTING ->
                     throw new IllegalStateException(item.kind() + " passed requireBuiltKinds");
         };
+    }
+
+    /** The facts a row's conditions read about one item. */
+    static ItemFacts factsOf(OtherSourceItem item) {
+        return ItemFacts.of(KIND, item.kind().name());
     }
 
     /** S2 s.92(1), (2)(e), s.93(1)(a), (e); 1961 s.56(1), (2)(id), s.57(i), (iii). */

@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-DEPOSIT-INTEREST-SENIOR",
   "ruleSet": "RS-DED-DEPOSIT-INTEREST-SENIOR",
-  "_note": "Deposit interest of a senior citizen — \"in case of an assessee mentioned in sub-section (1)(b), the whole of the interest up to a maximum amount of ₹ 50000 on deposits in any account, including time deposits\" (s.153(2)(b), p.185), for \"(b) an individual, being a senior citizen\" (s.153(1)); \"senior citizen\" means \"an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year\" (s.2(100), p.20) — this row's conditions, tested on the assessee's age on the last day of the year (NodeContext.conditions). The interest is the entered SAVINGS_DEPOSIT_INTEREST and DEPOSIT_INTEREST together; an expense entered against it is refused (OQ-25). rulebook DED-80TTB-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2025-26: Income-tax Act, 1961 s.80TTB(1) and Explanation (thc p.425) — \"fifty thousand rupees\" in the aggregate, the same definition for \"the relevant previous year\". sources/2026-10-16-deposit-interest.md. D-195. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-166).",
+  "_note": "Deposit interest of a senior citizen — \"in case of an assessee mentioned in sub-section (1)(b), the whole of the interest up to a maximum amount of ₹ 50000 on deposits in any account, including time deposits\" (s.153(2)(b), p.185), for \"(b) an individual, being a senior citizen\" (s.153(1)); \"senior citizen\" means \"an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year\" (s.2(100), p.20) — this row's conditions, tested on the assessee's age on the last day of the year (NodeContext.conditions). The interest is the entered SAVINGS_DEPOSIT_INTEREST and DEPOSIT_INTEREST together — the row's condition on othersources.kind, tested per item and apart from its conditions about the person (D-319); an expense entered against it is refused (OQ-25). rulebook DED-80TTB-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2025-26: Income-tax Act, 1961 s.80TTB(1) and Explanation (thc p.425) — \"fifty thousand rupees\" in the aggregate, the same definition for \"the relevant previous year\". sources/2026-10-16-deposit-interest.md. D-195. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION (D-166).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -52,6 +52,21 @@
           "type": "AgeAtLeast",
           "years": 60,
           "subject": "SELF"
+        },
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "SAVINGS_DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEPOSIT_INTEREST"
+            }
+          ]
         }
       ],
       "introducedBy": {
@@ -119,6 +134,21 @@
           "type": "AgeAtLeast",
           "years": 60,
           "subject": "SELF"
+        },
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "SAVINGS_DEPOSIT_INTEREST"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "othersources.kind",
+              "code": "DEPOSIT_INTEREST"
+            }
+          ]
         }
       ],
       "introducedBy": {

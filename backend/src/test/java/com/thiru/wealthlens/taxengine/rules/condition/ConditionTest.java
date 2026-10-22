@@ -660,6 +660,34 @@ class ConditionTest {
     }
 
     @Nested
+    @DisplayName("isAboutItem")
+    class AboutItem {
+
+        @Test
+        void isAboutItem_whenAnItemPredicate_isTrue() {
+            // Then
+            assertThat(new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC").isAboutItem()).isTrue();
+            assertThat(new ItemFactAtMost(ENGINE_CC, 1600).isAboutItem()).isTrue();
+            assertThat(new ItemDateBefore(ACQUIRED_ON, LocalDate.of(2004, 10, 1)).isAboutItem()).isTrue();
+        }
+
+        @Test
+        void isAboutItem_whenOnlyAboutThePerson_isFalse() {
+            // Then
+            assertThat(new IsResident().isAboutItem()).isFalse();
+            assertThat(new AgeAtLeast(60, AgeSubject.SELF).isAboutItem()).isFalse();
+            assertThat(AnyOf.of(new IsResident(), new HasPersonType(Set.of(PersonType.HUF))).isAboutItem()).isFalse();
+        }
+
+        @Test
+        void isAboutItem_whenACompositionHasAnItemLimb_isTrue() {
+            // Then — a mixed limb is about the item: tested with the item, the person's facts are there too
+            assertThat(AllOf.of(new IsResident(), new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC")).isAboutItem()).isTrue();
+            assertThat(new Not(new ItemFactAtMost(ENGINE_CC, 1600)).isAboutItem()).isTrue();
+        }
+    }
+
+    @Nested
     @DisplayName("the algebra is closed")
     class SealedFamily {
 
