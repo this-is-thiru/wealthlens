@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-208). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: 1961 s.57 / 2025 s.93 (coverage MODELLED, D-208). summary: S2 s.93(1), (2) as substituted by FA 2026 s.44; 1961 s.57. routes: OS-BANKER-COMMISSION ((1)(a)), OS-OTHER-EXPENDITURE ((1)(e)), OS-FAMILY-PENSION / -NEW-TAX-REGIME ((1)(d)), OS-COMPENSATION-INTEREST ((1)(f)), OS-COMMUTED-PENSION ((1)(g)), OS-DEATH-GRATUITY ((1)(h)), OS-DIVIDEND-INTEREST and OS-DEEMED-DIVIDEND ((2)). disqualifiers[0]: s.93(1)(b), (c) — business-head deductions, DEFERRED (D-202). disqualifiers[1]: a banker's commission only against interest on securities (FA 2026 s.44(a); 1961 FA 2020 s.30), the row's othersources.kind condition (D-320). disqualifiers[2]: s.93(2) — no deduction against dividends from TY 2026-27; deemed dividends never. disqualifiers[3]: s.94(1)(b), (c), SEC-OTHER-SOURCES-NOT-DEDUCTIBLE.",
+  "_sources": "provisions: 1961 s.57 / 2025 s.93 (coverage MODELLED, D-208). summary: S2 s.93(1), (2) as substituted by FA 2026 s.44; 1961 s.57. routes: OS-BANKER-COMMISSION ((1)(a)), OS-OTHER-EXPENDITURE ((1)(e)), OS-FAMILY-PENSION / -NEW-TAX-REGIME ((1)(d)), OS-COMPENSATION-INTEREST ((1)(f)), OS-COMMUTED-PENSION ((1)(g)), OS-DEATH-GRATUITY ((1)(h)), OS-DIVIDEND-INTEREST ((2)); a deemed dividend is reached by no deduction row (D-323). disqualifiers[0]: s.93(1)(b), (c) — business-head deductions, DEFERRED (D-202). disqualifiers[1]: a banker's commission only against interest on securities (FA 2026 s.44(a); 1961 FA 2020 s.30), the row's othersources.kind condition (D-320). disqualifiers[2]: s.93(2) — no deduction against dividends from TY 2026-27; deemed dividends never — no deduction row reaches them, enforced by OS-DIVIDEND-INTEREST's and OS-OTHER-EXPENDITURE's conditions (D-323). disqualifiers[3]: s.94(1)(b), (c), SEC-OTHER-SOURCES-NOT-DEDUCTIBLE.",
   "key": "SEC-OTHER-SOURCES-DEDUCTIONS",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -106,7 +106,7 @@
       "description": "Nothing is deducted against a deemed dividend.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "OS-DEEMED-DIVIDEND"
+        "rule": "OS-DIVIDEND-INTEREST"
       }
     },
     {

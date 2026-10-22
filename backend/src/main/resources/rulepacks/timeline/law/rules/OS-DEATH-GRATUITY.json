@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-DEATH-GRATUITY",
-  "ruleSet": "RS-OS-DEATH-GRATUITY",
-  "_note": "A Government death-cum-retirement gratuity received on the employee's death, under other sources: deducted in full (D-196; rulebook OS-GRATUITY-DEATH-001). TY 2026-27: Income-tax Act, 2025 s.93(1)(h) \"for income in the nature of gratuity as referred in section 19(2)(g), received on the death of the employee, the entire amount\" (p.142); s.19(2)(g): the gratuity \"received under the revised pension rules of the Central Government, or the Central Civil Services (Pension) Rules, 2021; or … any similar scheme\" for Union, all-India, State and local-authority services (p.46). Another employer's gratuity paid on a death has no clause and is OtherSourceKind.OTHER (W-079g). The salary head's counterpart is RET-GRATUITY-GOVERNMENT. TY 2025-26: Income-tax Act, 1961 s.10(10)(i) \"any death-cum-retirement gratuity received under the revised Pension Rules of the Central Government … or under any similar scheme …\" (thc p.71) — an exemption reaching the same gratuity; its introducedBy as RET-GRATUITY-GOVERNMENT's. Every regime.",
+  "ruleSet": "RS-OS-SHARE",
+  "_note": "A Government death-cum-retirement gratuity received on the employee's death, under other sources: deducted in full (D-196; rulebook OS-GRATUITY-DEATH-001). TY 2026-27: Income-tax Act, 2025 s.93(1)(h) \"for income in the nature of gratuity as referred in section 19(2)(g), received on the death of the employee, the entire amount\" (p.142); s.19(2)(g): the gratuity \"received under the revised pension rules of the Central Government, or the Central Civil Services (Pension) Rules, 2021; or … any similar scheme\" for Union, all-India, State and local-authority services (p.46). Another employer's gratuity paid on a death has no clause and is OtherSourceKind.OTHER (W-079g). The salary head's counterpart is RET-GRATUITY-GOVERNMENT. TY 2025-26: Income-tax Act, 1961 s.10(10)(i) \"any death-cum-retirement gratuity received under the revised Pension Rules of the Central Government … or under any similar scheme …\" (thc p.71) — an exemption reaching the same gratuity; its introducedBy as RET-GRATUITY-GOVERNMENT's. Every regime. In RS-OS-SHARE, the share deducted from the item's income line reaches the items whose othersources.kind is DEATH_GRATUITY; the income itself is charged by its RS-OS-INCOME row (D-321, D-323).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "GRATUITY"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "DEATH_GRATUITY"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10) to (10C), so the entry applies in every regime",
         "gazetteRef": "CG-DL-E-31032023-244830",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "GRATUITY"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "DEATH_GRATUITY"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.93(1)(h), with s.19(2)(g)",
         "gazetteRef": "CG-DL-E-22082025-265620",

@@ -69,7 +69,6 @@ public final class RuleIds {
     public static final RuleId OS_COMPENSATION_INTEREST = new RuleId("OS-COMPENSATION-INTEREST");
     public static final RuleId OS_COMPENSATION_INTEREST_INCOME = new RuleId("OS-COMPENSATION-INTEREST-INCOME");
     public static final RuleId OS_DEATH_GRATUITY = new RuleId("OS-DEATH-GRATUITY");
-    public static final RuleId OS_DEEMED_DIVIDEND = new RuleId("OS-DEEMED-DIVIDEND");
     public static final RuleId OS_DIVIDEND = new RuleId("OS-DIVIDEND");
     public static final RuleId OS_DIVIDEND_INTEREST = new RuleId("OS-DIVIDEND-INTEREST");
     public static final RuleId OS_FAMILY_PENSION = new RuleId("OS-FAMILY-PENSION");

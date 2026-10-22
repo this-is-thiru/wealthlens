@@ -4,7 +4,6 @@ import com.thiru.wealthlens.taxengine.input.BusinessTrustUnits;
 import com.thiru.wealthlens.taxengine.input.GiftReceived;
 import com.thiru.wealthlens.taxengine.input.LifePolicyReceipt;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
-import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.ProvidentFundAccount;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
@@ -29,7 +28,6 @@ import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -60,6 +58,9 @@ import java.util.Set;
  * business trust's specified sums and the residue are income in full, the first four and the residue bearing other
  * expenditure (D-203). A life policy's sums are excluded or charged by {@link LifePolicySums} (D-205).
  *
+ * <p>Each item is its income row's charge, less the share the {@code RS-OS-SHARE} row reaching its kind deducts, less the
+ * expenses the expense rows reach — every choice a row's condition on the kind (D-320 – D-323).
+ *
  * <p>Which row charges an item is its kind's row in {@code RS-OS-INCOME}; a kind no row charges — winnings, whose rate
  * is deferred in the coverage register, and employee contributions and the letting of machinery, plant or furniture,
  * whose deductions are the business head's (D-202) — is refused (D-321). The head below nil is a loss, which {@link SetOffNode} sets off
@@ -72,20 +73,7 @@ public final class OtherSourcesNode implements ComputationNode {
 
     private static final BaseId COMMISSION = new BaseId("COMMISSION");
     private static final BaseId EXPENDITURE = new BaseId("EXPENDITURE");
-    private static final BaseId COMPENSATION_INTEREST = new BaseId("COMPENSATION_INTEREST");
-    private static final BaseId COMMUTED_PENSION = new BaseId("COMMUTED_PENSION");
-    private static final BaseId GRATUITY = new BaseId("GRATUITY");
     private static final BaseId BUSINESS_TRUST = new BaseId("BUSINESS_TRUST");
-
-    /** The rule set, its base and the trace's words for a kind deducted whole (D-203, D-252), until W-153c2. */
-    private record KindRow(RuleSetId ruleSet, BaseId base, String what) {
-    }
-
-    private static final Map<OtherSourceKind, KindRow> WHOLE_DEDUCTED = Map.of(
-            OtherSourceKind.COMMUTED_FUND_PENSION, new KindRow(RuleSetIds.RS_OS_COMMUTED_PENSION, COMMUTED_PENSION,
-                    "commutation of a fund pension"),
-            OtherSourceKind.DEATH_GRATUITY, new KindRow(RuleSetIds.RS_OS_DEATH_GRATUITY, GRATUITY,
-                    "gratuity received on the employee's death"));
 
     @Override
     public NodeId produces() {
@@ -99,10 +87,9 @@ public final class OtherSourcesNode implements ComputationNode {
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(RuleSetIds.RS_OS_INCOME, RuleSetIds.RS_OS_DIVIDEND_INTEREST,
-                RuleSetIds.RS_OS_DEEMED_DIVIDEND, RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE,
-                RuleSetIds.RS_OS_COMPENSATION_INTEREST, RuleSetIds.RS_OS_FAMILY_PENSION,
-                RuleSetIds.RS_OS_COMMUTED_PENSION, RuleSetIds.RS_OS_DEATH_GRATUITY, RuleSetIds.RS_OS_PF_TAXABLE_INTEREST, RuleSetIds.RS_OS_GIFT,
+        return Set.of(RuleSetIds.RS_OS_INCOME, RuleSetIds.RS_OS_SHARE, RuleSetIds.RS_OS_DIVIDEND_INTEREST,
+                RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE,
+                RuleSetIds.RS_OS_PF_TAXABLE_INTEREST, RuleSetIds.RS_OS_GIFT,
                 RuleSetIds.RS_OS_GIFT_COVID_DEATH, RuleSetIds.RS_OS_BUSINESS_TRUST,
                 RuleSetIds.RS_OS_LIFE_POLICY_RATIO, RuleSetIds.RS_OS_LIFE_POLICY_PREMIUM, RuleSetIds.RS_OS_LIFE_POLICY);
     }
@@ -140,22 +127,31 @@ public final class OtherSourcesNode implements ComputationNode {
     }
 
     /**
-     * One item's income less what is allowed against it; dividends' interest expense is the year's, below. The arms
-     * are the paths W-153c2 replaces with deduction rows reaching the kind (D-321); every other kind is charged by its
-     * income row and bears what the expense rows reach.
+     * One item: its income line, the share its kind's row deducts, then the expenses the expense rows reach; dividends'
+     * interest expense is the year's, below. Every choice is a row's, by the item's kind (D-320 – D-323).
      */
     private static Money itemIncome(OtherSourcesLines lines, int position, OtherSourceItem item) {
         String where = "item " + position;
-        return switch (item.kind()) {
-            case DIVIDEND, UNIT_INCOME -> dividend(lines, where, item, lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST),
-                    "only interest expense is deducted against dividend and unit income, within the year's limit");
-            case DEEMED_DIVIDEND -> dividend(lines, where, item, lines.row(RuleSetIds.RS_OS_DEEMED_DIVIDEND),
-                    "nothing is deducted against a deemed dividend");
-            case INTEREST_ON_COMPENSATION -> compensationInterest(lines, where, item);
-            case FAMILY_PENSION -> familyPension(lines, where, item);
-            case COMMUTED_FUND_PENSION, DEATH_GRATUITY -> wholeDeducted(lines, where, item);
-            default -> charged(lines, where, item);
-        };
+        Money income = incomeLine(lines, where, item);
+        return income.minus(share(lines, where, item)).minus(otherExpenditure(lines, where, item));
+    }
+
+    /**
+     * S2 s.93(1)(d), (f), (g), (h); 1961 s.57(iia), (iv), s.10(10A)(iii), s.10(10)(i): the share of the item's income
+     * the row of {@code RS-OS-SHARE} reaching its kind deducts — a percentage of its base, or the family pension's
+     * share; nil where no row reaches it (D-196, D-323).
+     */
+    private static Money share(OtherSourcesLines lines, String where, OtherSourceItem item) {
+        Optional<RuleRow> row = lines.ctx().optionalRuleOf(RuleSetIds.RS_OS_SHARE, factsOf(item));
+        if (row.isEmpty()) {
+            return Money.ZERO;
+        }
+        RuleId id = row.get().id();
+        Money share = lines.version(id).definition().isPresent()
+                ? lines.familyPensionShare(id).deduction(item.received())
+                : lines.applied(id, baseOf(lines.ctx(), row.get()), item.received());
+        lines.add(id, StepKind.DEDUCTION, item.received(), share, where + ": deducted against " + item.kind());
+        return share;
     }
 
     /** The row of {@code RS-OS-INCOME} that charges the item, chosen by its kind (S2 s.92; 1961 s.56; D-321). */
@@ -184,15 +180,6 @@ public final class OtherSourcesNode implements ComputationNode {
         return income;
     }
 
-    /**
-     * S2 s.92, s.93(1)(a), (e); 1961 s.56, s.57(i), (iii): the item as its income row charges it, less what the expense
-     * rows reach (D-203, D-320, D-321).
-     */
-    private static Money charged(OtherSourcesLines lines, String where, OtherSourceItem item) {
-        Money income = incomeLine(lines, where, item);
-        return income.minus(otherExpenditure(lines, where, item));
-    }
-
     /** The facts a row's conditions read about one item. */
     static ItemFacts factsOf(OtherSourceItem item) {
         return ItemFacts.of(KIND, item.kind().name());
@@ -212,7 +199,7 @@ public final class OtherSourcesNode implements ComputationNode {
     /**
      * An interest item's income as the head includes it — the interest less the banker's commission and the
      * expenditure, each where its row reaches the item, nothing where payable outside India untaxed — the figure s.153
-     * is worked on (D-228, D-231). {@link #charged} traces the same arithmetic.
+     * is worked on (D-228, D-231). {@link #itemIncome} traces the same arithmetic.
      */
     static Money interestIncluded(NodeContext ctx, OtherSourceItem item) {
         TemporalContext t = ctx.inputs().temporal();
@@ -237,44 +224,6 @@ public final class OtherSourcesNode implements ComputationNode {
 
     private static Money applied(NodeContext ctx, TemporalContext t, RuleId rule, BaseId base, Money amount) {
         return TemporallyApportionedCap.apply(ctx.rule(rule), t, CapContext.of(base, amount)).value();
-    }
-
-    /** S2 s.92, s.93(2); 1961 s.56, s.57 provisos: the income, with every expense but interest refused. */
-    private static Money dividend(OtherSourcesLines lines, String where, OtherSourceItem item, RuleId refusingRow, String why) {
-        Money income = incomeLine(lines, where, item);
-        Money refused = item.bankerCommission().plus(item.otherExpenditure());
-        if (!reaches(lines.ctx(), lines.row(RuleSetIds.RS_OS_DIVIDEND_INTEREST), item)) {
-            refused = refused.plus(item.interestExpense());
-        }
-        if (refused.isGreaterThan(Money.ZERO)) {
-            lines.nil(refusingRow, refused, where + ": " + why);
-        }
-        return income;
-    }
-
-    /** S2 s.92(2)(i), s.93(1)(f); 1961 s.56(2)(viii), s.57(iv): half deducted, and no other deduction. */
-    private static Money compensationInterest(OtherSourcesLines lines, String where, OtherSourceItem item) {
-        Money deduction = lines.applied(lines.row(RuleSetIds.RS_OS_COMPENSATION_INTEREST), COMPENSATION_INTEREST, item.received());
-        Money income = item.received().minus(deduction);
-        lines.add(lines.row(RuleSetIds.RS_OS_COMPENSATION_INTEREST), StepKind.INCOME, item.received(), income,
-                where + ": interest on compensation less " + deduction);
-        Money refused = item.bankerCommission().plus(item.interestExpense()).plus(item.otherExpenditure());
-        if (refused.isGreaterThan(Money.ZERO)) {
-            lines.nil(lines.row(RuleSetIds.RS_OS_COMPENSATION_INTEREST), refused, where + ": no other deduction is allowed");
-        }
-        return income;
-    }
-
-    /**
-     * S2 s.93(1)(d), (e); 1961 s.57(iia), (iii): one-third of the pension within the regime's limit, then other
-     * expenditure; a banker's commission is for interest on securities only.
-     */
-    private static Money familyPension(OtherSourcesLines lines, String where, OtherSourceItem item) {
-        RuleId row = lines.row(RuleSetIds.RS_OS_FAMILY_PENSION);
-        Money share = lines.familyPensionShare(row).deduction(item.received());
-        Money income = item.received().minus(share);
-        lines.add(row, StepKind.INCOME, item.received(), income, where + ": family pension less " + share);
-        return income.minus(otherExpenditure(lines, where, item));
     }
 
     /**
@@ -306,20 +255,6 @@ public final class OtherSourcesNode implements ComputationNode {
         lines.add(lines.row(RuleSetIds.RS_OS_BUSINESS_TRUST), StepKind.INCOME, units.distributed(), income, "business trust holding "
                 + position + ": " + units.distributed() + " distributed less " + units.issuedAt() + " issued and "
                 + units.chargedEarlier() + " charged earlier, never below nil");
-        return income;
-    }
-
-    /** S2 s.93(1)(g), (h); 1961 s.10(10A)(iii), s.10(10)(i): the entire amount, so nothing is left to bear an expense. */
-    private static Money wholeDeducted(OtherSourcesLines lines, String where, OtherSourceItem item) {
-        KindRow kind = WHOLE_DEDUCTED.get(item.kind());
-        RuleId row = lines.row(kind.ruleSet());
-        Money deduction = lines.applied(row, kind.base(), item.received());
-        Money income = item.received().minus(deduction);
-        lines.add(row, StepKind.INCOME, item.received(), income, where + ": " + kind.what() + " less " + deduction);
-        Money refused = item.bankerCommission().plus(item.interestExpense()).plus(item.otherExpenditure());
-        if (refused.isGreaterThan(Money.ZERO)) {
-            lines.nil(row, refused, where + ": the entire amount is deducted already");
-        }
         return income;
     }
 

@@ -217,7 +217,7 @@ class OtherSourcesNodeTest {
         // Then — the 1961 s.57 proviso (FA 2020 s.30(b)) and S2 s.93(2): only interest expense, never commission
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
-                .containsExactly(RuleIds.OS_DIVIDEND, RuleIds.OS_DIVIDEND_INTEREST);
+                .containsExactly(RuleIds.OS_DIVIDEND, RuleIds.OS_BANKER_COMMISSION);
         assertThat(result.trace().getLast().out()).isEqualTo(MoneyValue.of(Money.ZERO));
     }
 
@@ -234,7 +234,9 @@ class OtherSourcesNodeTest {
         // Then — nothing against the deemed one (F(No.2)A 2024 s.24(c)); the 20% is of 1,00,000 only = 20,000;
         // 2,00,000 + 1,00,000 − 20,000
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("280000")));
-        assertThat(result.trace()).extracting(TraceLine::rule).contains(RuleIds.OS_DEEMED_DIVIDEND);
+        // — the deemed dividend's 50,000 a nil line on the expenditure row, which does not reach it (D-323)
+        assertThat(rowLines(result, RuleIds.OS_OTHER_EXPENDITURE)).extracting(TraceLine::in, TraceLine::out)
+                .containsExactly(tuple(money("50000"), money("0")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -291,28 +293,33 @@ class OtherSourcesNodeTest {
      * interest of 200 and other expenditure of 400 — distinct, so a row reaching the wrong kind changes a figure. Each
      * list is the (in, out) of that row's lines: the commission row reaches interest on securities (S2 s.93(1)(a)); the
      * expenditure row the interest kinds, family pension and the in-full kinds (s.93(1)(e)); the dividend-interest row
-     * dividends and unit income, after the path's nil line for their commission and other expenditure (500), at 20% of
-     * 10,000 in TY 2025-26 and nil in TY 2026-27 (1961 s.57 proviso; s.93(2)). The others reach none of the three.
+     * dividends and unit income, at 20% of 10,000 in TY 2025-26 and nil in TY 2026-27 (1961 s.57 proviso; s.93(2)). An
+     * expense no row reaches is a nil line on the row it misses (W-153c2, D-323): the commission on the commission
+     * row; interest and other expenditure on the expenditure row — for dividends and unit income other expenditure
+     * only (400), their interest going to the year's limit.
      */
     private static Stream<Arguments> reachByKind() {
         List<OtherSourceKind> bearingExpenditureOnly = List.of(OtherSourceKind.SAVINGS_DEPOSIT_INTEREST,
                 OtherSourceKind.DEPOSIT_INTEREST, OtherSourceKind.OTHER_INTEREST, OtherSourceKind.FAMILY_PENSION,
                 OtherSourceKind.KEYMAN_POLICY, OtherSourceKind.FORFEITED_ADVANCE,
                 OtherSourceKind.TERMINATION_COMPENSATION, OtherSourceKind.OTHER);
-        List<OtherSourceKind> reachingNone = List.of(OtherSourceKind.DEEMED_DIVIDEND,
+        List<OtherSourceKind> bearingNothing = List.of(OtherSourceKind.DEEMED_DIVIDEND,
                 OtherSourceKind.INTEREST_ON_COMPENSATION, OtherSourceKind.COMMUTED_FUND_PENSION,
                 OtherSourceKind.DEATH_GRATUITY);
         List<Arguments> cases = new ArrayList<>();
         for (int year : new int[] {2025, 2026}) {
-            List<Tuple> limited = List.of(tuple(money("500"), money("0")),
-                    tuple(money("200"), money(year == 2025 ? "200" : "0")));
+            List<Tuple> commissionRefused = List.of(tuple(money("100"), money("0")));
+            List<Tuple> limited = List.of(tuple(money("200"), money(year == 2025 ? "200" : "0")));
             cases.add(Arguments.of(year, OtherSourceKind.INTEREST_ON_SECURITIES,
                     List.of(tuple(money("100"), money("100"))), List.of(tuple(money("600"), money("600"))), List.of()));
             bearingExpenditureOnly.forEach(kind -> cases.add(Arguments.of(year, kind,
                     List.of(tuple(money("100"), money("0"))), List.of(tuple(money("600"), money("600"))), List.of())));
-            cases.add(Arguments.of(year, OtherSourceKind.DIVIDEND, List.of(), List.of(), limited));
-            cases.add(Arguments.of(year, OtherSourceKind.UNIT_INCOME, List.of(), List.of(), limited));
-            reachingNone.forEach(kind -> cases.add(Arguments.of(year, kind, List.of(), List.of(), List.of())));
+            for (OtherSourceKind kind : List.of(OtherSourceKind.DIVIDEND, OtherSourceKind.UNIT_INCOME)) {
+                cases.add(Arguments.of(year, kind, commissionRefused, List.of(tuple(money("400"), money("0"))),
+                        limited));
+            }
+            bearingNothing.forEach(kind -> cases.add(Arguments.of(year, kind, commissionRefused,
+                    List.of(tuple(money("600"), money("0"))), List.of())));
         }
         return cases.stream();
     }
@@ -339,6 +346,59 @@ class OtherSourcesNodeTest {
 
     private static MoneyValue money(String amount) {
         return MoneyValue.of(Money.of(amount));
+    }
+
+    /**
+     * {@code plans/W-153c2.md} case 3, by hand from the rows: the {@code RS-OS-SHARE} row an item of 10,000 meets and
+     * what it deducts — half of interest on compensation (S2 s.93(1)(f)), the entire commuted pension or gratuity
+     * ((g), (h)), the family pension's third under either regime's limit ((d)) rounded once to paise; no share for
+     * any other built kind.
+     */
+    private static Stream<Arguments> shareByKind() {
+        Map<OtherSourceKind, Tuple> shares = new EnumMap<>(OtherSourceKind.class);
+        shares.put(OtherSourceKind.INTEREST_ON_COMPENSATION, tuple(RuleIds.OS_COMPENSATION_INTEREST, money("5000")));
+        shares.put(OtherSourceKind.COMMUTED_FUND_PENSION, tuple(RuleIds.OS_COMMUTED_PENSION, money("10000")));
+        shares.put(OtherSourceKind.DEATH_GRATUITY, tuple(RuleIds.OS_DEATH_GRATUITY, money("10000")));
+        List<OtherSourceKind> built = Arrays.stream(OtherSourceKind.values()).filter(kind -> !List.of(
+                OtherSourceKind.WINNINGS, OtherSourceKind.EMPLOYEE_CONTRIBUTIONS, OtherSourceKind.MACHINERY_LETTING,
+                OtherSourceKind.MACHINERY_AND_BUILDING_LETTING).contains(kind)).toList();
+        List<Arguments> cases = new ArrayList<>();
+        for (int year : new int[] {2025, 2026}) {
+            for (RegimeCode regime : List.of(OLD, NEW)) {
+                Tuple pension = tuple(regime.equals(OLD) ? RuleIds.OS_FAMILY_PENSION
+                        : RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME, money("3333.33"));
+                built.forEach(kind -> cases.add(Arguments.of(year, regime, kind, kind == OtherSourceKind.FAMILY_PENSION
+                        ? List.of(pension) : Optional.ofNullable(shares.get(kind)).map(List::of).orElse(List.of()))));
+            }
+        }
+        return cases.stream();
+    }
+
+    @ParameterizedTest(name = "TY {0} {1} {2}")
+    @MethodSource("shareByKind")
+    void evaluate_whenAnItemIsCharged_deductsOnlyTheShareItsKindsRowStates(int year, RegimeCode regime,
+            OtherSourceKind kind, List<Tuple> expected) {
+        // When
+        NodeResult result = run(year, regime, List.of(item(kind, "10000", "0", "0", "0")));
+
+        // Then — the DEDUCTION lines with no expense entered are the share's alone
+        assertThat(result.trace()).filteredOn(line -> line.kind() == StepKind.DEDUCTION)
+                .extracting(TraceLine::rule, TraceLine::out).containsExactlyElementsOf(expected);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenInterestOnCompensationBearsCommission_chargesItThenDeductsHalfAndNilsTheCommission(int year) {
+        // When — 2,00,000 of interest on compensation, 1,000 to the banker
+        NodeResult result = run(year, List.of(item(OtherSourceKind.INTEREST_ON_COMPENSATION, "200000", "1000", "0",
+                "0")));
+
+        // Then — charged in full by s.92(2)(i), half deducted by s.93(1)(f), the commission no row reaches
+        assertThat(result.value()).isEqualTo(money("100000"));
+        assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::out).containsExactly(
+                tuple(RuleIds.OS_COMPENSATION_INTEREST_INCOME, money("200000")),
+                tuple(RuleIds.OS_COMPENSATION_INTEREST, money("100000")),
+                tuple(RuleIds.OS_BANKER_COMMISSION, money("0")));
     }
 
     /**
@@ -469,7 +529,8 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("20000")));
-        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_FAMILY_PENSION);
+        assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::out).containsExactly(
+                tuple(RuleIds.OS_RESIDUAL, money("30000")), tuple(RuleIds.OS_FAMILY_PENSION, money("10000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -490,8 +551,9 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
-        assertThat(result.trace()).extracting(TraceLine::rule)
-                .containsExactly(RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME);
+        assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::out).containsExactly(
+                tuple(RuleIds.OS_RESIDUAL, money("60000")),
+                tuple(RuleIds.OS_FAMILY_PENSION_NEW_TAX_REGIME, money("20000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -524,7 +586,7 @@ class OtherSourcesNodeTest {
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("44000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
-                .containsExactly(RuleIds.OS_FAMILY_PENSION, RuleIds.OS_OTHER_EXPENDITURE);
+                .containsExactly(RuleIds.OS_RESIDUAL, RuleIds.OS_FAMILY_PENSION, RuleIds.OS_OTHER_EXPENDITURE);
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -536,10 +598,9 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).singleElement().satisfies(line -> {
-            assertThat(line.rule()).isEqualTo(RuleIds.OS_COMMUTED_PENSION);
-            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("500000")));
-        });
+        assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::in, TraceLine::out).containsExactly(
+                tuple(RuleIds.OS_RESIDUAL, money("500000"), money("500000")),
+                tuple(RuleIds.OS_COMMUTED_PENSION, money("500000"), money("500000")));
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -550,19 +611,22 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_DEATH_GRATUITY);
+        assertThat(result.trace()).extracting(TraceLine::rule)
+                .containsExactly(RuleIds.OS_RESIDUAL, RuleIds.OS_DEATH_GRATUITY);
     }
 
     @Test
     void evaluate_whenAnExpenseIsEnteredAgainstADeathGratuity_isANilLine() {
-        // When — the entire amount is deducted already, so the 2,000 has nothing to bear against
+        // When — the entire amount is deducted already, and no expense row reaches a gratuity (D-320, D-323)
         NodeResult result = run(2026, OLD, List.of(item(OtherSourceKind.DEATH_GRATUITY, "1000000", "0", "0", "2000")));
 
-        // Then
+        // Then — income 10,00,000, its share 10,00,000, the 2,000 a nil line on the expenditure row
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).extracting(TraceLine::out)
-                .containsExactly(MoneyValue.of(Money.ZERO), MoneyValue.of(Money.ZERO));
-        assertThat(result.trace().get(1).limitedBy().orElseThrow()).contains("entire amount");
+        assertThat(result.trace()).extracting(TraceLine::rule, TraceLine::out).containsExactly(
+                tuple(RuleIds.OS_RESIDUAL, money("1000000")), tuple(RuleIds.OS_DEATH_GRATUITY, money("1000000")),
+                tuple(RuleIds.OS_OTHER_EXPENDITURE, money("0")));
+        assertThat(result.trace().getLast().limitedBy().orElseThrow())
+                .contains("expenditure is not deducted against DEATH_GRATUITY");
     }
 
     private static ProvidentFundAccount fund(String contributed, boolean employerContributes, String interest) {

@@ -177,7 +177,6 @@ class TimelineReaderTest {
             new RuleId("OS-INTEREST"),
             new RuleId("OS-DIVIDEND"),
             new RuleId("OS-DIVIDEND-INTEREST"),
-            new RuleId("OS-DEEMED-DIVIDEND"),
             new RuleId("OS-BANKER-COMMISSION"),
             new RuleId("OS-OTHER-EXPENDITURE"),
             new RuleId("OS-COMPENSATION-INTEREST"),

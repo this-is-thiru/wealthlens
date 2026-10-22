@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-FAMILY-PENSION",
-  "ruleSet": "RS-OS-FAMILY-PENSION",
-  "_note": "The family-pension deduction (D-196; rulebook OS-FAMPEN-001, -002): \"for income in the nature of family pension (a regular monthly amount payable by the employer to a family member of an employee upon the death of such employee),–– (i) an amount equal to one-third of such income or ₹ 25000, whichever is less, where income-tax is computed under section 202(1); and (ii) an amount equal to one-third of such income or ₹ 15000, whichever is less, in any other case\" (S2 s.93(1)(d), p.141). TY 2025-26: Income-tax Act, 1961 s.57(iia) \"a deduction of a sum equal to thirty-three and one-third per cent of such income or fifteen thousand rupees, whichever is less\" (thc p.310) — the same fraction, held as the divisor 3 (FamilyPensionShare) so neither year rounds a percentage — and the proviso of F(No.2)A 2024 s.24(b): where tax is computed under s.115BAC(1A)(ii), \"twenty-five thousand rupees\" for \"fifteen thousand rupees\" (egazette 2024/256436 p.24, w.e.f. 1-4-2025). The family pensions excluded from total income (S2 Schedule III Sl. 15, 16; 1961 s.10(18)(ii), (19)) are not entered (OtherSourceKind.FAMILY_PENSION). This row is the \"any other case\" limb, outside the new regime; OS-FAMILY-PENSION-NEW-TAX-REGIME is the other.",
+  "ruleSet": "RS-OS-SHARE",
+  "_note": "The family-pension deduction (D-196; rulebook OS-FAMPEN-001, -002): \"for income in the nature of family pension (a regular monthly amount payable by the employer to a family member of an employee upon the death of such employee),–– (i) an amount equal to one-third of such income or ₹ 25000, whichever is less, where income-tax is computed under section 202(1); and (ii) an amount equal to one-third of such income or ₹ 15000, whichever is less, in any other case\" (S2 s.93(1)(d), p.141). TY 2025-26: Income-tax Act, 1961 s.57(iia) \"a deduction of a sum equal to thirty-three and one-third per cent of such income or fifteen thousand rupees, whichever is less\" (thc p.310) — the same fraction, held as the divisor 3 (FamilyPensionShare) so neither year rounds a percentage — and the proviso of F(No.2)A 2024 s.24(b): where tax is computed under s.115BAC(1A)(ii), \"twenty-five thousand rupees\" for \"fifteen thousand rupees\" (egazette 2024/256436 p.24, w.e.f. 1-4-2025). The family pensions excluded from total income (S2 Schedule III Sl. 15, 16; 1961 s.10(18)(ii), (19)) are not entered (OtherSourceKind.FAMILY_PENSION). This row is the \"any other case\" limb, outside the new regime; OS-FAMILY-PENSION-NEW-TAX-REGIME is the other. In RS-OS-SHARE, the share deducted from the item's income line reaches the items whose othersources.kind is FAMILY_PENSION; the income itself is charged by its RS-OS-INCOME row (D-321, D-323).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -32,7 +32,13 @@
         "oneOver": 3,
         "limit": "15000"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "FAMILY_PENSION"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.57(iia) — ins. by the Finance Act, 1989 (13 of 1989), s.13 (w.e.f. 1-4-1990), \"twelve thousand rupees\"; \"fifteen thousand rupees\" subs. by the Finance Act, 1997 (26 of 1997), s.20 (w.e.f. 1-4-1998)",
         "gazetteRef": "Act 13 of 1989 (12-5-1989): s.13 read in the Legislative Department's annual compilation 'Acts of the Parliament of India, 1989', p.139, via Wikimedia Commons (D-197); Act 26 of 1997: Gazette issue not found; s.20 read in the LegitQuest transcription of the Act, the Act's date (14-5-1997) in the thc.nic.in compilation, p.762 (D-185, D-197)",
@@ -77,7 +83,13 @@
         "oneOver": 3,
         "limit": "15000"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "FAMILY_PENSION"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.93(1)(d)(ii)",
         "gazetteRef": "CG-DL-E-22082025-265620",

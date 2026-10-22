@@ -272,38 +272,8 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-OS-COMMUTED-PENSION",
-      "_note": "One row: OS-COMMUTED-PENSION",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-OS-COMPENSATION-INTEREST",
-      "_note": "One row: OS-COMPENSATION-INTEREST",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-OS-DEATH-GRATUITY",
-      "_note": "One row: OS-DEATH-GRATUITY",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-OS-DEEMED-DIVIDEND",
-      "_note": "One row: OS-DEEMED-DIVIDEND",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
       "id": "RS-OS-DIVIDEND-INTEREST",
       "_note": "One row: OS-DIVIDEND-INTEREST",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-OS-FAMILY-PENSION",
-      "_note": "The family-pension deduction: one row per regime — chosen by the rows' regime applicability",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },
@@ -354,6 +324,12 @@
       "_note": "One row: OS-PF-TAXABLE-INTEREST",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-SHARE",
+      "_note": "The share deducted from an item's income, chosen by its othersources.kind and the regime (S2 s.93(1)(d), (f), (g), (h); 1961 s.57(iia), (iv), s.10(10A)(iii), s.10(10)(i); D-323): OS-COMPENSATION-INTEREST, OS-COMMUTED-PENSION, OS-DEATH-GRATUITY, OS-FAMILY-PENSION, OS-FAMILY-PENSION-NEW-TAX-REGIME. At most one reaches an item",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
     },
     {
       "id": "RS-PERQ-ACCOM",

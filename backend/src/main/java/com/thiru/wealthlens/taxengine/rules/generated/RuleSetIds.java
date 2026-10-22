@@ -59,12 +59,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_HP_UNREALISED_RENT = new RuleSetId("RS-HP-UNREALISED-RENT");
     public static final RuleSetId RS_OS_BANKER_COMMISSION = new RuleSetId("RS-OS-BANKER-COMMISSION");
     public static final RuleSetId RS_OS_BUSINESS_TRUST = new RuleSetId("RS-OS-BUSINESS-TRUST");
-    public static final RuleSetId RS_OS_COMMUTED_PENSION = new RuleSetId("RS-OS-COMMUTED-PENSION");
-    public static final RuleSetId RS_OS_COMPENSATION_INTEREST = new RuleSetId("RS-OS-COMPENSATION-INTEREST");
-    public static final RuleSetId RS_OS_DEATH_GRATUITY = new RuleSetId("RS-OS-DEATH-GRATUITY");
-    public static final RuleSetId RS_OS_DEEMED_DIVIDEND = new RuleSetId("RS-OS-DEEMED-DIVIDEND");
     public static final RuleSetId RS_OS_DIVIDEND_INTEREST = new RuleSetId("RS-OS-DIVIDEND-INTEREST");
-    public static final RuleSetId RS_OS_FAMILY_PENSION = new RuleSetId("RS-OS-FAMILY-PENSION");
     public static final RuleSetId RS_OS_GIFT = new RuleSetId("RS-OS-GIFT");
     public static final RuleSetId RS_OS_GIFT_COVID_DEATH = new RuleSetId("RS-OS-GIFT-COVID-DEATH");
     public static final RuleSetId RS_OS_INCOME = new RuleSetId("RS-OS-INCOME");
@@ -73,6 +68,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_OS_LIFE_POLICY_RATIO = new RuleSetId("RS-OS-LIFE-POLICY-RATIO");
     public static final RuleSetId RS_OS_OTHER_EXPENDITURE = new RuleSetId("RS-OS-OTHER-EXPENDITURE");
     public static final RuleSetId RS_OS_PF_TAXABLE_INTEREST = new RuleSetId("RS-OS-PF-TAXABLE-INTEREST");
+    public static final RuleSetId RS_OS_SHARE = new RuleSetId("RS-OS-SHARE");
     public static final RuleSetId RS_PERQ_ACCOM = new RuleSetId("RS-PERQ-ACCOM");
     public static final RuleSetId RS_PERQ_ACCOM_CONTINUED = new RuleSetId("RS-PERQ-ACCOM-CONTINUED");
     public static final RuleSetId RS_PERQ_ACCOM_FURNITURE = new RuleSetId("RS-PERQ-ACCOM-FURNITURE");

@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-153c2 — share deductions as reach rows (s.93) (D-321)
+Item            : W-153d — dividend income for the surcharge by rule data (D-318; K4)
 Stage           : READY — not started
-Plan            : written when taken (plans/W-153c2.md)
+Plan            : written when taken (plans/W-153d.md)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-153c2": read its WI row, plans/W-153c.md, W-153c1.md, OtherSourcesNode's switch arms (dividend, compensationInterest, familyPension, wholeDeducted, KindRow/WHOLE_DEDUCTED), the rows OS-COMPENSATION-INTEREST, -COMMUTED-PENSION, -DEATH-GRATUITY, -FAMILY-PENSION(+NTR), -DEEMED-DIVIDEND, OS-DIVIDEND-INTEREST's refusal role, LifePolicySums/GiftIncome untouched; list trace readers (D-321 exception); write plans/W-153c2.md, STOP
-Last verify     : targeted 461/0; unit -Punit 3336/0; integration 281/0 (2026-10-22, W-153c1)
-Waiting on      : the owner — "start W-153c2"; OQ-32, OQ-33 open
+Next step       : on "start W-153d": read its WI row, SurchargeNode:100 (DIVIDEND_KINDS) and dividendIncome / interestAllowedOnDividends, DividendInterestAllowance:78 (receivedOnDividends), D-200, D-229, D-234, OQ-30 (units in the 15% pool?); source S2 s.2(40) (Gazette pp.10–11 read in W-153c) and the surcharge provision's "dividend" words; write plans/W-153d.md, STOP
+Last verify     : targeted 523/0; unit -Punit 3398/0; integration 281/0 (2026-10-22, W-153c2)
+Waiting on      : the owner — "start W-153d"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-153c1: choose the row that charges each other-sources item by its kind in rule data — RS-OS-INCOME, unit income charged by s.92(1) / s.56(1) not as a dividend, each base read from its row, an uncharged kind refused generically (W-153c split D-321; D-322)
-Updated         : 2026-10-22, session 29 — W-153c1 committed
+Last item commit: taxplanning W-153c2: deduct each other-sources item's share by the row reaching its kind — RS-OS-SHARE, every item income line then share then reached expenses, the kind switch and paths gone, OS-DEEMED-DIVIDEND folded into the reach rows (D-323; W-153c closed)
+Updated         : 2026-10-22, session 29 — W-153c2 committed, W-153c closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

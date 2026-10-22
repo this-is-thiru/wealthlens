@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-COMPENSATION-INTEREST",
-  "ruleSet": "RS-OS-COMPENSATION-INTEREST",
-  "_note": "Half of the interest received on compensation or enhanced compensation is deducted, and nothing else (D-194; the W-079b erratum under rulebook R17). TY 2026-27: Income-tax Act, 2025 s.92(2)(i) (p.138) and s.93(1)(f) \"an amount equal to 50% of such income and no other deduction shall be allowed under this section\" (p.142). TY 2025-26: Income-tax Act, 1961 s.56(2)(viii) (thc p.308; its cross-reference amended by F(No.2)A 2019 s.21(ii), deemed from 1-4-2017) and s.57(iv) \"a deduction of a sum equal to fifty per cent of such income and no deduction shall be allowed under any other clause\" (thc p.310), both ins. by the Finance (No. 2) Act, 2009 ss.26, 27. Every regime.",
+  "ruleSet": "RS-OS-SHARE",
+  "_note": "Half of the interest received on compensation or enhanced compensation is deducted, and nothing else (D-194; the W-079b erratum under rulebook R17). TY 2026-27: Income-tax Act, 2025 s.92(2)(i) (p.138) and s.93(1)(f) \"an amount equal to 50% of such income and no other deduction shall be allowed under this section\" (p.142). TY 2025-26: Income-tax Act, 1961 s.56(2)(viii) (thc p.308; its cross-reference amended by F(No.2)A 2019 s.21(ii), deemed from 1-4-2017) and s.57(iv) \"a deduction of a sum equal to fifty per cent of such income and no deduction shall be allowed under any other clause\" (thc p.310), both ins. by the Finance (No. 2) Act, 2009 ss.26, 27. Every regime. In RS-OS-SHARE, the share deducted from the item's income line reaches the items whose othersources.kind is INTEREST_ON_COMPENSATION; the income itself is charged by its RS-OS-INCOME row (D-321, D-323).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,13 @@
         "percent": "50",
         "base": "COMPENSATION_INTEREST"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "INTEREST_ON_COMPENSATION"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance (No. 2) Act, 2009 (33 of 2009), ss.26, 27 — s.56(2)(viii) and s.57(iv) of the Income-tax Act, 1961 inserted (w.e.f. 1-4-2010)",
         "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, 19-8-2009 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 5, 29-4-2010, pp.104–105",
@@ -71,7 +77,13 @@
         "percent": "50",
         "base": "COMPENSATION_INTEREST"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "INTEREST_ON_COMPENSATION"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(2)(i), s.93(1)(f)",
         "gazetteRef": "CG-DL-E-22082025-265620",
