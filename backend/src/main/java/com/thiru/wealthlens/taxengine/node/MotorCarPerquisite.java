@@ -32,9 +32,10 @@ import java.util.Set;
  * or amenity" — salary only for a director or substantial-interest holder of a company employer, or an employee whose
  * salary by way of monetary payment exceeds the prescribed amount (S2 s.17(1)(c); 1961 s.17(2)(iii)); the employer
  * running the employee's own vehicle meets the employee's obligation, salary for everyone (s.17(1)(f); 1961
- * s.17(2)(iv)). A wholly official vehicle has no value only with the employer's records, and is refused without them
- * (D-113 C7). Where the employer lets one employee use several of its cars otherwise than wholly officially, the
- * first entered is valued at Sl. 1(c)(i) and the rest at Sl. 1(b) (r.15(3)(b); r.3(2) proviso).
+ * s.17(2)(iv)) — {@code PERQ-SPECIFIED-EMPLOYEE}'s condition on the vehicle's arrangement (W-154e1). A wholly
+ * official vehicle has no value only with the employer's records, and is refused without them (D-113 C7). Where the
+ * employer lets one employee use several of its cars otherwise than wholly officially, the first entered is valued at
+ * Sl. 1(c)(i) and the rest at Sl. 1(b) (r.15(3)(b); r.3(2) proviso).
  */
 final class MotorCarPerquisite {
 
@@ -67,6 +68,12 @@ final class MotorCarPerquisite {
                 continue;
             }
             int sequence = firstSequence + lines.size();
+            if (SpecifiedEmployee.gates(ctx, ItemFacts.of(SpecifiedEmployee.ARRANGEMENT,
+                            vehicle.owner().arrangement().name()))
+                    && !SpecifiedEmployee.holdsFor(ctx, vehicle.employment())) {
+                lines.add(SpecifiedEmployee.notSpecifiedLine(ctx, sequence));
+                continue;
+            }
             lines.add(switch (vehicle.owner()) {
                 case EMPLOYER_CAR -> employerCar(ctx, vehicles, i, sequence);
                 case EMPLOYEE_CAR -> ownVehicle(ctx, vehicle, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CAR_EMPLOYEE),
@@ -78,12 +85,9 @@ final class MotorCarPerquisite {
         return lines;
     }
 
-    /** Sl. 1: nil for an employee who is not a specified one; else by use, or by the several-cars proviso. */
+    /** Sl. 1: by use, or by the several-cars proviso. */
     private static TraceLine employerCar(NodeContext ctx, List<EmployerVehicle> vehicles, int index, int sequence) {
         EmployerVehicle car = vehicles.get(index);
-        if (!SpecifiedEmployee.holdsFor(ctx, car.employment())) {
-            return SpecifiedEmployee.notSpecifiedLine(ctx, sequence);
-        }
         List<Integer> sharing = carsNotWhollyOfficial(vehicles, car.employment());
         if (sharing.size() > 1) {
             return sharing.getFirst() == index ? partly(ctx, car, RuleSetIds.RS_PERQ_CAR_PARTLY, sequence)

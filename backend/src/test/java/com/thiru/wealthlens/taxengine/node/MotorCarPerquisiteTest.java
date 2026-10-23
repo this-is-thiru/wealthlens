@@ -20,6 +20,7 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
@@ -37,8 +38,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -263,6 +267,42 @@ class MotorCarPerquisiteTest {
 
         // Then — 5,000 × 12; 1,800 × 12
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(year == 2026 ? "60000" : "21600")));
+    }
+
+    /**
+     * An employee who is not specified (monetary salary 4,00,000, not over 4,00,000), each owner used partly officially
+     * for 12 months: the employer's car is nil on PERQ-SPECIFIED-EMPLOYEE (s.17(1)(c)); the employee's own car and other
+     * conveyance meet the employee's obligation and are valued for anyone (s.17(1)(f)) — 1,00,000 less 7,000 × 12 =
+     * 16,000, or less 2,400 × 12 = 71,200; 50,000 less 3,000 × 12 = 14,000, or less 900 × 12 = 39,200 (W-154e1).
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("ownersForOneWhoIsNotSpecified")
+    void evaluate_whenTheEmployeeIsNotSpecified_onlyTheEmployersOwnCarIsNil(int year, VehicleOwner owner,
+            RuleId expectedRow, String expected) {
+        // Given
+        EmployerVehicle vehicle = switch (owner) {
+            case EMPLOYER_CAR -> partly(CarEngine.ofCapacity(1500), false, 12);
+            case EMPLOYEE_CAR -> ownVehicle(owner, Optional.of(CarEngine.ofCapacity(2000)), "100000",
+                    OfficialUseRecord.none());
+            case EMPLOYEE_OTHER_CONVEYANCE -> ownVehicle(owner, Optional.empty(), "50000", OfficialUseRecord.none());
+        };
+
+        // When
+        NodeResult result = run(year, "400000", Optional.empty(), List.of(vehicle));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.rule()).isEqualTo(expectedRow));
+    }
+
+    private static Stream<Arguments> ownersForOneWhoIsNotSpecified() {
+        return Stream.of(
+                Arguments.of(2025, VehicleOwner.EMPLOYER_CAR, RuleIds.PERQ_SPECIFIED_EMPLOYEE, "0"),
+                Arguments.of(2026, VehicleOwner.EMPLOYER_CAR, RuleIds.PERQ_SPECIFIED_EMPLOYEE, "0"),
+                Arguments.of(2025, VehicleOwner.EMPLOYEE_CAR, RuleIds.PERQ_CAR_EMPLOYEE, "71200"),
+                Arguments.of(2026, VehicleOwner.EMPLOYEE_CAR, RuleIds.PERQ_CAR_EMPLOYEE, "16000"),
+                Arguments.of(2025, VehicleOwner.EMPLOYEE_OTHER_CONVEYANCE, RuleIds.PERQ_CAR_CONVEYANCE, "39200"),
+                Arguments.of(2026, VehicleOwner.EMPLOYEE_OTHER_CONVEYANCE, RuleIds.PERQ_CAR_CONVEYANCE, "14000"));
     }
 
     @Test
