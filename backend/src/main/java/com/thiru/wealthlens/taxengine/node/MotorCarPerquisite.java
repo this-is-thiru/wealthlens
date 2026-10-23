@@ -41,8 +41,9 @@ import java.util.stream.Collectors;
  * computation values a vehicle is the {@link VehiclePath} of the row of {@code RS-PERQ-CAR-PATH} its facts select
  * (W-154e2): a wholly official vehicle is nil only with the employer's records, and with none no row selects it, so it
  * is refused (D-113 C7). Where the
- * employer lets one employee use several of its cars otherwise than wholly officially, the first entered is valued at
- * Sl. 1(c)(i) and the rest at Sl. 1(b) (r.15(3)(b); r.3(2) proviso).
+ * employer lets one employee use several of its cars otherwise than wholly officially, the path rows' conditions on the
+ * cars' count and position value the first entered at Sl. 1(c)(i) and the rest at Sl. 1(b) (r.15(3)(b); r.3(2)
+ * proviso; W-154e3).
  */
 final class MotorCarPerquisite {
 
@@ -57,6 +58,8 @@ final class MotorCarPerquisite {
             "vehicle.employee.meets.private.running");
     private static final ItemFactId JOURNEYS_AND_CERTIFICATE_KEPT = new ItemFactId(
             "vehicle.journeys.and.certificate.kept");
+    private static final ItemFactId CARS_SHARED = new ItemFactId("vehicle.employer.cars.shared");
+    private static final ItemFactId CAR_POSITION = new ItemFactId("vehicle.employer.cars.position");
 
     /** What a Table II column's rows are chosen by: whether the car is electric, and otherwise its capacity (D-257). */
     private static final ItemFactId ELECTRIC = new ItemFactId("vehicle.engine.electric");
@@ -80,7 +83,7 @@ final class MotorCarPerquisite {
             requireEnteredEmployment(ctx, vehicle);
             int sequence = firstSequence + lines.size();
             int position = i + 1;
-            ItemFacts facts = factsOf(vehicle);
+            ItemFacts facts = factsOf(vehicles, i);
             RuleRow path = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CAR_PATH, facts)
                     .orElseThrow(() -> unvalued(ctx, position, facts));
             VehicleComputation computation = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(path,
@@ -96,7 +99,7 @@ final class MotorCarPerquisite {
                 lines.add(SpecifiedEmployee.notSpecifiedLine(ctx, sequence));
                 continue;
             }
-            lines.add(valued(ctx, vehicle, severalCars(vehicles, i, computation), sequence));
+            lines.add(valued(ctx, vehicle, computation, sequence));
         }
         return lines;
     }
@@ -118,31 +121,22 @@ final class MotorCarPerquisite {
     }
 
     /**
-     * The several-cars proviso, until W-154e3 states it as data (D-330 C2a of W-154e2): where more than one of an
-     * employment's employer cars is used otherwise than wholly officially, the first entered is valued per month with
-     * the employer running it and the rest at running and wear and tear, whatever their own path.
+     * The vehicle's facts as the path rows and the engine columns read them, with the several-cars counts (D-330 C3a):
+     * how many of its employment's employer cars are used otherwise than wholly officially, and its place among them
+     * from 1, or 0 where it is not one of them.
      */
-    private static VehicleComputation severalCars(List<EmployerVehicle> vehicles, int index,
-            VehicleComputation computation) {
-        boolean employerComputation = computation == VehicleComputation.PER_MONTH_EMPLOYER_RUNNING
-                || computation == VehicleComputation.PER_MONTH_EMPLOYEE_RUNNING
-                || computation == VehicleComputation.RUNNING_AND_WEAR_LESS_CHARGE;
-        List<Integer> sharing = carsNotWhollyOfficial(vehicles, vehicles.get(index).employment());
-        if (!employerComputation || sharing.size() <= 1) {
-            return computation;
-        }
-        return sharing.getFirst() == index ? VehicleComputation.PER_MONTH_EMPLOYER_RUNNING
-                : VehicleComputation.RUNNING_AND_WEAR_LESS_CHARGE;
-    }
-
-    /** The vehicle's facts as the path rows and the engine columns read them. */
-    private static ItemFacts factsOf(EmployerVehicle vehicle) {
+    private static ItemFacts factsOf(List<EmployerVehicle> vehicles, int index) {
+        EmployerVehicle vehicle = vehicles.get(index);
         Map<ItemFactId, String> codes = new HashMap<>(Map.of(OWNER, vehicle.owner().name(), USE, vehicle.use().name(),
                 EMPLOYEE_MEETS_PRIVATE_RUNNING, Boolean.toString(vehicle.employeeMeetsPrivateRunning()),
                 JOURNEYS_AND_CERTIFICATE_KEPT, Boolean.toString(vehicle.officialUse().journeysAndCertificateKept())));
         vehicle.engine().ifPresent(engine -> codes.putAll(engineFacts(engine).codes()));
-        Map<ItemFactId, Long> quantities = vehicle.engine().map(engine -> engineFacts(engine).quantities())
-                .orElse(Map.of());
+        Map<ItemFactId, Long> quantities = new HashMap<>(vehicle.engine()
+                .map(engine -> engineFacts(engine).quantities())
+                .orElse(Map.of()));
+        List<Integer> shared = carsNotWhollyOfficial(vehicles, vehicle.employment());
+        quantities.put(CARS_SHARED, (long) shared.size());
+        quantities.put(CAR_POSITION, (long) (shared.indexOf(index) + 1));
         return new ItemFacts(codes, quantities, Map.of());
     }
 

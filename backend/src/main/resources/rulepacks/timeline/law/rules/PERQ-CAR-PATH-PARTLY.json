@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-CAR-PATH-PARTLY",
   "ruleSet": "RS-PERQ-CAR-PATH",
-  "_note": "The employer's own or hired car used partly officially, the employer meeting the running: Table II Sl. 1(c)(i), a monthly amount by engine from RS-PERQ-CAR-PARTLY, plus the chauffeur's (D-113). Provisions, introduction and provenance are PERQ-CAR-PARTLY-SMALL's (W-154e2). Every regime.",
+  "_note": "The employer's own or hired car used partly officially, the employer meeting the running: Table II Sl. 1(c)(i), a monthly amount by engine from RS-PERQ-CAR-PARTLY, plus the chauffeur's (D-113). Provisions, introduction and provenance are PERQ-CAR-PARTLY-SMALL's (W-154e2). Every regime. Where the employment lets the employee use more than one of its cars otherwise than wholly officially (vehicle.employer.cars.shared over 1), the one car valued here is the first entered (vehicle.employer.cars.position 1), whatever its own use: r.15(3)(b); r.3(2) proviso; rulebook PERQ-CAR-MULTI-001 — the Rule does not say which car, and the first entered is D-113's reading (W-154e3).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -35,14 +35,55 @@
           "code": "EMPLOYER_CAR"
         },
         {
-          "type": "ItemFactIs",
-          "fact": "vehicle.use",
-          "code": "PARTLY_OFFICIAL"
-        },
-        {
-          "type": "ItemFactIs",
-          "fact": "vehicle.employee.meets.private.running",
-          "code": "false"
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "AllOf",
+              "all": [
+                {
+                  "type": "ItemFactAtMost",
+                  "fact": "vehicle.employer.cars.shared",
+                  "limit": 1
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "vehicle.use",
+                  "code": "PARTLY_OFFICIAL"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "vehicle.employee.meets.private.running",
+                  "code": "false"
+                }
+              ]
+            },
+            {
+              "type": "AllOf",
+              "all": [
+                {
+                  "type": "Not",
+                  "condition": {
+                    "type": "ItemFactAtMost",
+                    "fact": "vehicle.employer.cars.shared",
+                    "limit": 1
+                  }
+                },
+                {
+                  "type": "Not",
+                  "condition": {
+                    "type": "ItemFactIs",
+                    "fact": "vehicle.use",
+                    "code": "WHOLLY_OFFICIAL"
+                  }
+                },
+                {
+                  "type": "ItemFactAtMost",
+                  "fact": "vehicle.employer.cars.position",
+                  "limit": 1
+                }
+              ]
+            }
+          ]
         }
       ],
       "introducedBy": {
@@ -92,14 +133,55 @@
           "code": "EMPLOYER_CAR"
         },
         {
-          "type": "ItemFactIs",
-          "fact": "vehicle.use",
-          "code": "PARTLY_OFFICIAL"
-        },
-        {
-          "type": "ItemFactIs",
-          "fact": "vehicle.employee.meets.private.running",
-          "code": "false"
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "AllOf",
+              "all": [
+                {
+                  "type": "ItemFactAtMost",
+                  "fact": "vehicle.employer.cars.shared",
+                  "limit": 1
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "vehicle.use",
+                  "code": "PARTLY_OFFICIAL"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "vehicle.employee.meets.private.running",
+                  "code": "false"
+                }
+              ]
+            },
+            {
+              "type": "AllOf",
+              "all": [
+                {
+                  "type": "Not",
+                  "condition": {
+                    "type": "ItemFactAtMost",
+                    "fact": "vehicle.employer.cars.shared",
+                    "limit": 1
+                  }
+                },
+                {
+                  "type": "Not",
+                  "condition": {
+                    "type": "ItemFactIs",
+                    "fact": "vehicle.use",
+                    "code": "WHOLLY_OFFICIAL"
+                  }
+                },
+                {
+                  "type": "ItemFactAtMost",
+                  "fact": "vehicle.employer.cars.position",
+                  "limit": 1
+                }
+              ]
+            }
+          ]
         }
       ],
       "introducedBy": {

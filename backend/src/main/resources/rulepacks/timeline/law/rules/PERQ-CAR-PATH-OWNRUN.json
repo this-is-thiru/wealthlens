@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-CAR-PATH-OWNRUN",
   "ruleSet": "RS-PERQ-CAR-PATH",
-  "_note": "The employer's own or hired car used partly officially, the employee meeting the private running: Table II Sl. 1(c)(ii), a monthly amount by engine from RS-PERQ-CAR-OWNRUN, plus the chauffeur's (D-113). Provisions, introduction and provenance are PERQ-CAR-OWNRUN-SMALL's (W-154e2). Every regime.",
+  "_note": "The employer's own or hired car used partly officially, the employee meeting the private running: Table II Sl. 1(c)(ii), a monthly amount by engine from RS-PERQ-CAR-OWNRUN, plus the chauffeur's (D-113). Provisions, introduction and provenance are PERQ-CAR-OWNRUN-SMALL's (W-154e2). Every regime. Only a car alone (vehicle.employer.cars.shared at most 1); among several, the proviso values one per month on PERQ-CAR-PATH-PARTLY and the rest on PERQ-CAR-PATH-PRIVATE (W-154e3).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -43,6 +43,11 @@
           "type": "ItemFactIs",
           "fact": "vehicle.employee.meets.private.running",
           "code": "true"
+        },
+        {
+          "type": "ItemFactAtMost",
+          "fact": "vehicle.employer.cars.shared",
+          "limit": 1
         }
       ],
       "introducedBy": {
@@ -100,6 +105,11 @@
           "type": "ItemFactIs",
           "fact": "vehicle.employee.meets.private.running",
           "code": "true"
+        },
+        {
+          "type": "ItemFactAtMost",
+          "fact": "vehicle.employer.cars.shared",
+          "limit": 1
         }
       ],
       "introducedBy": {

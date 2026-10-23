@@ -33,6 +33,7 @@ import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,8 @@ class MotorCarPerquisiteTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(taxYear, NEW_TAX_REGIME,
                 TemporalContext.forTaxYear(taxYear, LocalDate.of(year, 9, 21)),
-                new EnteredFacts(List.of(new Employment(List.of(), true, EmployerKind.OTHER, false, company)),
+                new EnteredFacts(Collections.nCopies(employmentsNamed(vehicles),
+                        new Employment(List.of(), true, EmployerKind.OTHER, false, company)),
                         List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), vehicles, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
@@ -101,6 +103,11 @@ class MotorCarPerquisiteTest {
                 .given(NodeIds.SALARY_EXEMPTIONS, MoneyValue.of(Money.ZERO))
                 .given(NodeIds.SALARY_MONETARYINCOME, MoneyValue.of(Money.of(monetaryIncome)))
                 .run(new PerquisiteNode());
+    }
+
+    /** As many employments as the vehicles name, so a case can spread cars over employments. */
+    private static int employmentsNamed(List<EmployerVehicle> vehicles) {
+        return vehicles.stream().mapToInt(EmployerVehicle::employment).max().orElse(0) + 1;
     }
 
     private static NodeResult run(int year, List<EmployerVehicle> vehicles) {
@@ -246,6 +253,79 @@ class MotorCarPerquisiteTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("260000")));
         assertThat(result.trace()).extracting(line -> line.rule())
                 .containsExactly(RuleIds.PERQ_CAR_PARTLY_SMALL, RuleIds.PERQ_CAR_PRIVATE);
+    }
+
+    private static EmployerVehicle employerCarIn(int employment, VehicleUse use, int cc, String running,
+            Optional<Money> cost, OfficialUseRecord record) {
+        return new EmployerVehicle(employment, VehicleOwner.EMPLOYER_CAR, use, Optional.of(CarEngine.ofCapacity(cc)),
+                false, false, 12, Money.of(running), cost, Money.ZERO, record);
+    }
+
+    /**
+     * Three employer cars, one employment (r.15(3)(b); r.3(2) proviso; PERQ-CAR-MULTI-001): the first entered of the two
+     * not wholly official per month whatever its own use — 5,000 / 1,800 × 12 — the other at running and wear, 1,00,000
+     * + 10% × 10,00,000 = 2,00,000; the wholly official one nil and not counted (W-154e3).
+     */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenSeveralCarsOneWhollyOfficial_valuesTheFirstSharedPerMonthAndTheOtherAtCost(int year) {
+        // Given
+        EmployerVehicle first = employerCarIn(0, VehicleUse.WHOLLY_PRIVATE, 1500, "0", Optional.empty(),
+                OfficialUseRecord.none());
+        EmployerVehicle second = employerCarIn(0, VehicleUse.PARTLY_OFFICIAL, 2000, "100000",
+                Optional.of(Money.of("1000000")), OfficialUseRecord.none());
+        EmployerVehicle official = employerCarIn(0, VehicleUse.WHOLLY_OFFICIAL, 1500, "0", Optional.empty(),
+                new OfficialUseRecord(true, Optional.empty()));
+
+        // When
+        NodeResult result = run(year, List.of(first, second, official));
+
+        // Then
+        assertThat(result.trace()).extracting(line -> line.rule()).containsExactly(RuleIds.PERQ_CAR_PARTLY_SMALL,
+                RuleIds.PERQ_CAR_PRIVATE, RuleIds.PERQ_CAR_PATH_OFFICIAL);
+        assertThat(result.trace()).extracting(line -> line.out()).containsExactly(
+                MoneyValue.of(Money.of(year == 2026 ? "60000" : "21600")), MoneyValue.of(Money.of("200000")),
+                MoneyValue.of(Money.ZERO));
+    }
+
+    /** One car in each of two employments: each alone, so each per month (W-154e3). */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenEachEmploymentHasOneCar_eachIsValuedAlone(int year) {
+        // Given
+        List<EmployerVehicle> cars = List.of(
+                employerCarIn(0, VehicleUse.PARTLY_OFFICIAL, 1500, "0", Optional.empty(), OfficialUseRecord.none()),
+                employerCarIn(1, VehicleUse.PARTLY_OFFICIAL, 1500, "0", Optional.empty(), OfficialUseRecord.none()));
+
+        // When
+        NodeResult result = run(year, cars);
+
+        // Then — 5,000 / 1,800 × 12 each
+        String each = year == 2026 ? "60000" : "21600";
+        assertThat(result.trace()).extracting(line -> line.rule())
+                .containsExactly(RuleIds.PERQ_CAR_PARTLY_SMALL, RuleIds.PERQ_CAR_PARTLY_SMALL);
+        assertThat(result.trace()).extracting(line -> line.out())
+                .containsExactly(MoneyValue.of(Money.of(each)), MoneyValue.of(Money.of(each)));
+    }
+
+    /** The employee's own car is not one of the employer's cars, so the employer's car stays alone (W-154e3). */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAnEmployersCarAndTheEmployeesOwn_theEmployersIsAlone(int year) {
+        // Given
+        List<EmployerVehicle> vehicles = List.of(partly(CarEngine.ofCapacity(1500), false, 12),
+                ownVehicle(VehicleOwner.EMPLOYEE_CAR, Optional.of(CarEngine.ofCapacity(2000)), "150000",
+                        OfficialUseRecord.none()));
+
+        // When
+        NodeResult result = run(year, vehicles);
+
+        // Then — 5,000 / 1,800 × 12; 1,50,000 less 7,000 / 2,400 × 12
+        assertThat(result.trace()).extracting(line -> line.rule())
+                .containsExactly(RuleIds.PERQ_CAR_PARTLY_SMALL, RuleIds.PERQ_CAR_EMPLOYEE);
+        assertThat(result.trace()).extracting(line -> line.out()).containsExactly(
+                MoneyValue.of(Money.of(year == 2026 ? "60000" : "21600")),
+                MoneyValue.of(Money.of(year == 2026 ? "66000" : "121200")));
     }
 
     @Test
