@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-HEALTH-CHECKUP",
   "ruleSet": "RS-DED-HEALTH-CHECKUP",
-  "_note": "\"The deduction in respect of amounts referred to in sub-section (2)(a) or (2)(b), which are paid on account of preventive health check-up, shall be allowed up to ₹ 5000 in aggregate\" (s.126(3), p.161). Applied before the two buckets, the allowed amount split between them in the ratio claimed — DR 06 G2.3's reading (INFERENCE; the section does not say how the ₹5000 is allocated). Cash is allowed for a check-up (s.126(9)(a)). Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80D, is the TY 2025-26 version (W-075d2). D-136. TY 2025-26: Income-tax Act, 1961 s.80D(2A) (thc p.341): \"Where the amounts referred to in clauses (a) and (b) of sub-section (2) are paid on account of preventive health check-up, the deduction for such amounts shall be allowed to the extent it does not exceed in the aggregate five thousand rupees\"; (2B) \"(i) any mode, including cash\" for a check-up, \"(ii) any mode other than cash\" otherwise. The same row. sources/2026-10-07-chapter-via.md B12. D-145. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "_note": "\"The deduction in respect of amounts referred to in sub-section (2)(a) or (2)(b), which are paid on account of preventive health check-up, shall be allowed up to ₹ 5000 in aggregate\" (s.126(3), p.161). Applied before the two buckets, the allowed amount split between them in the ratio claimed — DR 06 G2.3's reading (INFERENCE; the section does not say how the ₹5000 is allocated). Cash is allowed for a check-up (s.126(9)(a)). Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80D, is the TY 2025-26 version (W-075d2). D-136. TY 2025-26: Income-tax Act, 1961 s.80D(2A) (thc p.341): \"Where the amounts referred to in clauses (a) and (b) of sub-section (2) are paid on account of preventive health check-up, the deduction for such amounts shall be allowed to the extent it does not exceed in the aggregate five thousand rupees\"; (2B) \"(i) any mode, including cash\" for a check-up, \"(ii) any mode other than cash\" otherwise. The same row. sources/2026-10-07-chapter-via.md B12. D-145. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches the kinds of health payment counted within its limit by health.kind: a preventive check-up (W-156b2, D-347).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -28,7 +28,13 @@
         "type": "Fixed",
         "amount": "5000"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "health.kind",
+          "code": "PREVENTIVE_CHECKUP"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80D(2A), (2B) — ins. by Act 23 of 2012, s.26 (w.e.f. 1-4-2013)",
         "gazetteRef": "Act 23 of 2012: Gazette of India, Extraordinary, Part II, Section 1, 28-5-2012 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 23-5-2013, p.506",
@@ -70,7 +76,13 @@
         "type": "Fixed",
         "amount": "5000"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "health.kind",
+          "code": "PREVENTIVE_CHECKUP"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.126(3)",
         "gazetteRef": "CG-DL-E-22082025-265620",

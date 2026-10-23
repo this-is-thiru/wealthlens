@@ -32,11 +32,16 @@ public final class RuleSetIds {
     public static final RuleSetId RS_DED_DONATION_WHOLE = new RuleSetId("RS-DED-DONATION-WHOLE");
     public static final RuleSetId RS_DED_EDUCATION_LOAN = new RuleSetId("RS-DED-EDUCATION-LOAN");
     public static final RuleSetId RS_DED_ELECTRIC_VEHICLE_LOAN = new RuleSetId("RS-DED-ELECTRIC-VEHICLE-LOAN");
+    public static final RuleSetId RS_DED_HEALTH_CASH_PERMITTED = new RuleSetId("RS-DED-HEALTH-CASH-PERMITTED");
     public static final RuleSetId RS_DED_HEALTH_CHECKUP = new RuleSetId("RS-DED-HEALTH-CHECKUP");
     public static final RuleSetId RS_DED_HEALTH_FAMILY = new RuleSetId("RS-DED-HEALTH-FAMILY");
     public static final RuleSetId RS_DED_HEALTH_FAMILY_SENIOR = new RuleSetId("RS-DED-HEALTH-FAMILY-SENIOR");
+    public static final RuleSetId RS_DED_HEALTH_INSURANCE_LIMB = new RuleSetId("RS-DED-HEALTH-INSURANCE-LIMB");
+    public static final RuleSetId RS_DED_HEALTH_INSURANCE_PAID = new RuleSetId("RS-DED-HEALTH-INSURANCE-PAID");
+    public static final RuleSetId RS_DED_HEALTH_MEDICAL_LIMB = new RuleSetId("RS-DED-HEALTH-MEDICAL-LIMB");
     public static final RuleSetId RS_DED_HEALTH_PARENTS = new RuleSetId("RS-DED-HEALTH-PARENTS");
     public static final RuleSetId RS_DED_HEALTH_PARENTS_SENIOR = new RuleSetId("RS-DED-HEALTH-PARENTS-SENIOR");
+    public static final RuleSetId RS_DED_HEALTH_SPREAD = new RuleSetId("RS-DED-HEALTH-SPREAD");
     public static final RuleSetId RS_DED_HOUSE_LOAN = new RuleSetId("RS-DED-HOUSE-LOAN");
     public static final RuleSetId RS_DED_HOUSE_LOAN_EARLIER = new RuleSetId("RS-DED-HOUSE-LOAN-EARLIER");
     public static final RuleSetId RS_DED_NPS_EMPLOYER = new RuleSetId("RS-DED-NPS-EMPLOYER");

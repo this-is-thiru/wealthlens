@@ -110,6 +110,36 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-DED-HEALTH-CASH-PERMITTED",
+      "_note": "One row: DED-HEALTH-CASH-PERMITTED, reached by the payment's health.kind (W-156b2, D-347)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-SPREAD",
+      "_note": "One row: DED-HEALTH-SPREAD, reached by the payment's health.kind (W-156b2, D-347)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-INSURANCE-PAID",
+      "_note": "One row: DED-HEALTH-INSURANCE-PAID, reached by the payment's health.kind (W-156b2, D-347)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-INSURANCE-LIMB",
+      "_note": "One row: DED-HEALTH-INSURANCE-LIMB, reached by the payment's health.kind (W-156b2, D-347)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-DED-HEALTH-MEDICAL-LIMB",
+      "_note": "One row: DED-HEALTH-MEDICAL-LIMB, reached by the payment's health.kind (W-156b2, D-347)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-DED-HEALTH-CHECKUP",
       "_note": "One row: DED-HEALTH-CHECKUP",
       "selection": "EXACTLY_ONE",

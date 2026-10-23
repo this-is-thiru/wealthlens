@@ -208,7 +208,7 @@ class HealthInsuranceDeductionTest {
         assertThatThrownBy(() -> run(OLD, forMembers(HealthPaymentKind.INSURANCE_PREMIUM, "45000", 0),
                         forMembers(HealthPaymentKind.MEDICAL_EXPENDITURE, "10000", 0)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("s.126(7)");
+                .hasMessageContaining(RuleIds.DED_HEALTH_INSURANCE_PAID.value());
     }
 
     @Test
@@ -240,7 +240,27 @@ class HealthInsuranceDeductionTest {
                         new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), Money.of("10000"), true,
                                 1)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("s.126(9)");
+                .hasMessageContaining(RuleIds.DED_HEALTH_CASH_PERMITTED.value());
+    }
+
+    @Test
+    void evaluate_whenMedicalExpenditureIsPaidInCash_isRefusedNamingTheCashRow() {
+        // When / Then — s.126(9)(a): cash for a check-up only (W-156b2)
+        assertThatThrownBy(() -> run(OLD,
+                        new HealthPayment(HealthPaymentKind.MEDICAL_EXPENDITURE, true, List.of(), Money.of("10000"),
+                                true, 1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(RuleIds.DED_HEALTH_CASH_PERMITTED.value());
+    }
+
+    @Test
+    void evaluate_whenASchemeContributionIsSpreadOverTwoYears_isRefusedNamingTheSpreadRow() {
+        // When / Then — s.126(8)(b): only a premium paid in a lump sum is spread (W-156b2)
+        assertThatThrownBy(() -> run(OLD,
+                        new HealthPayment(HealthPaymentKind.GOVERNMENT_HEALTH_SCHEME, true, List.of(), Money.of("20000"),
+                                false, 2)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(RuleIds.DED_HEALTH_SPREAD.value());
     }
 
     @Test

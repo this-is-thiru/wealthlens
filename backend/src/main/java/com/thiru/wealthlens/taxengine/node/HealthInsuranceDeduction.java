@@ -3,7 +3,6 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.Assessee;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
 import com.thiru.wealthlens.taxengine.input.HealthPayment;
-import com.thiru.wealthlens.taxengine.input.HealthPaymentKind;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
@@ -22,6 +21,7 @@ import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -50,7 +50,10 @@ import java.util.Set;
 final class HealthInsuranceDeduction {
 
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_HEALTH_FAMILY, RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR,
-            RuleSetIds.RS_DED_HEALTH_PARENTS, RuleSetIds.RS_DED_HEALTH_PARENTS_SENIOR, RuleSetIds.RS_DED_HEALTH_CHECKUP);
+            RuleSetIds.RS_DED_HEALTH_PARENTS, RuleSetIds.RS_DED_HEALTH_PARENTS_SENIOR, RuleSetIds.RS_DED_HEALTH_CHECKUP,
+            RuleSetIds.RS_DED_HEALTH_CASH_PERMITTED, RuleSetIds.RS_DED_HEALTH_SPREAD,
+            RuleSetIds.RS_DED_HEALTH_INSURANCE_PAID, RuleSetIds.RS_DED_HEALTH_INSURANCE_LIMB,
+            RuleSetIds.RS_DED_HEALTH_MEDICAL_LIMB);
 
     /** Who a payment covers, one person at a time — the relationship, or {@link #SELF} (W-156b1, D-346). */
     static final ItemFactId COVERED_RELATIONSHIP = new ItemFactId("health.covered.relationship");
@@ -72,6 +75,22 @@ final class HealthInsuranceDeduction {
         private final RuleSetId row;
 
         Bucket(RuleSetId row) {
+            this.row = row;
+        }
+    }
+
+    /**
+     * Where a payment's amount accumulates in its bucket — s.126(2)'s insurance or medical limb, or s.126(3)'s check-up
+     * limit — each by the set of the row that says which kinds fill it (W-156b2, D-347).
+     */
+    private enum Limb {
+        INSURANCE(RuleSetIds.RS_DED_HEALTH_INSURANCE_LIMB),
+        CHECKUP(RuleSetIds.RS_DED_HEALTH_CHECKUP),
+        MEDICAL(RuleSetIds.RS_DED_HEALTH_MEDICAL_LIMB);
+
+        private final RuleSetId row;
+
+        Limb(RuleSetId row) {
             this.row = row;
         }
     }
@@ -112,32 +131,59 @@ final class HealthInsuranceDeduction {
 
     private static void record(NodeContext ctx, HealthPayment payment, List<HealthPayment> all,
             Map<Bucket, Paid> buckets) {
-        if (payment.paidInCash() && payment.kind() != HealthPaymentKind.PREVENTIVE_CHECKUP) {
-            throw new IllegalArgumentException("Only a preventive health check-up may be paid in cash (s.126(9)); a "
-                    + payment.kind() + " of " + payment.amount() + " was");
+        if (payment.paidInCash()) {
+            requireReached(ctx, RuleSetIds.RS_DED_HEALTH_CASH_PERMITTED, payment, "paid in cash");
         }
-        if (payment.relevantTaxYears() > 1 && payment.kind() != HealthPaymentKind.INSURANCE_PREMIUM) {
-            throw new IllegalArgumentException("Only a health insurance premium is spread over the years it keeps the"
-                    + " insurance in force (s.126(8)(b))");
+        if (payment.relevantTaxYears() > 1) {
+            requireReached(ctx, RuleSetIds.RS_DED_HEALTH_SPREAD, payment,
+                    "spread over " + payment.relevantTaxYears() + " tax years");
         }
         Bucket bucket = bucketOf(ctx, payment);
         Paid paid = buckets.get(bucket);
-        switch (payment.kind()) {
-            case INSURANCE_PREMIUM -> {
+        switch (limbOf(ctx, payment)) {
+            case INSURANCE -> {
                 paid.insurance = paid.insurance.plus(payment.amount().apportioned(1, payment.relevantTaxYears()));
-                paid.coversSenior |= coversSenior(ctx, payment, bucket);
+                paid.coversSenior |= insurancePaid(ctx, payment) && coversSenior(ctx, payment, bucket);
             }
-            case GOVERNMENT_HEALTH_SCHEME -> {
-                // The senior citizen's limit is for a sum paid for health insurance (s.126(8); 1961 s.80D(4)), so a
-                // scheme contribution never raises it.
-                paid.insurance = paid.insurance.plus(payment.amount());
-            }
-            case PREVENTIVE_CHECKUP -> paid.checkups = paid.checkups.plus(payment.amount());
-            case MEDICAL_EXPENDITURE -> {
+            case CHECKUP -> paid.checkups = paid.checkups.plus(payment.amount());
+            case MEDICAL -> {
                 requireNotInsuredSenior(ctx, payment, all);
                 paid.medical = paid.medical.plus(payment.amount());
             }
         }
+    }
+
+    /** Refuses a payment whose kind the row does not reach for what was done with it (s.126(8)(b), (9)). */
+    private static void requireReached(NodeContext ctx, RuleSetId set, HealthPayment payment, String what) {
+        RuleRow row = ctx.ruleOf(set);
+        if (!RowReach.holdsFor(ctx, row, kindOf(payment))) {
+            throw new IllegalArgumentException("A " + payment.kind() + " of " + payment.amount() + " was " + what
+                    + ", which " + row.id() + " does not allow for it");
+        }
+    }
+
+    /** The limb whose row reaches the payment's kind; exactly one must. */
+    private static Limb limbOf(NodeContext ctx, HealthPayment payment) {
+        List<Limb> reaching = Arrays.stream(Limb.values())
+                .filter(limb -> RowReach.holdsFor(ctx, ctx.ruleOf(limb.row), kindOf(payment)))
+                .toList();
+        if (reaching.size() != 1) {
+            throw new IllegalStateException("A " + payment.kind() + " is reached by " + reaching + " of the limb rows;"
+                    + " exactly one must take it");
+        }
+        return reaching.getFirst();
+    }
+
+    /**
+     * Whether the payment is one "paid to effect or to keep in force the health insurance" of a person — what raises a
+     * bucket to its senior row and bars that senior's medical expenditure (s.126(7), (8)(a); W-156b2, D-347).
+     */
+    private static boolean insurancePaid(NodeContext ctx, HealthPayment payment) {
+        return RowReach.holdsFor(ctx, ctx.ruleOf(RuleSetIds.RS_DED_HEALTH_INSURANCE_PAID), kindOf(payment));
+    }
+
+    private static ItemFacts kindOf(HealthPayment payment) {
+        return ItemFacts.of(KIND, payment.kind().name());
     }
 
     /**
@@ -200,19 +246,20 @@ final class HealthInsuranceDeduction {
     private static void requireNotInsuredSenior(NodeContext ctx, HealthPayment medical, List<HealthPayment> all) {
         RuleVersion familySenior = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR));
         List<HealthPayment> premiums = all.stream()
-                .filter(payment -> payment.kind() == HealthPaymentKind.INSURANCE_PREMIUM)
+                .filter(payment -> insurancePaid(ctx, payment))
                 .toList();
         if (medical.coversAssessee() && isSenior(ctx, familySenior, assesseeBirth(ctx),
                 resident(ctx.inputs().assessee())) && premiums.stream().anyMatch(HealthPayment::coversAssessee)) {
             throw new IllegalArgumentException("Medical expenditure on the assessee, a senior citizen insured in the"
-                    + " year, is not deductible (s.126(7))");
+                    + " year, is not deductible (" + ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_INSURANCE_PAID) + ")");
         }
         for (int position : medical.familyMembers()) {
             FamilySnapshot.Member member = member(ctx, position);
             if (isSenior(ctx, familySenior, member.dateOfBirth(), member.residentInIndia())
                     && premiums.stream().anyMatch(premium -> premium.familyMembers().contains(position))) {
                 throw new IllegalArgumentException("Medical expenditure on family member " + position + ", a senior"
-                        + " citizen insured in the year, is not deductible (s.126(7))");
+                        + " citizen insured in the year, is not deductible ("
+                        + ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_INSURANCE_PAID) + ")");
             }
         }
     }

@@ -36,11 +36,16 @@ public final class RuleIds {
     public static final RuleId DED_DONATION_WHOLE = new RuleId("DED-DONATION-WHOLE");
     public static final RuleId DED_EDUCATION_LOAN = new RuleId("DED-EDUCATION-LOAN");
     public static final RuleId DED_ELECTRIC_VEHICLE_LOAN = new RuleId("DED-ELECTRIC-VEHICLE-LOAN");
+    public static final RuleId DED_HEALTH_CASH_PERMITTED = new RuleId("DED-HEALTH-CASH-PERMITTED");
     public static final RuleId DED_HEALTH_CHECKUP = new RuleId("DED-HEALTH-CHECKUP");
     public static final RuleId DED_HEALTH_FAMILY = new RuleId("DED-HEALTH-FAMILY");
     public static final RuleId DED_HEALTH_FAMILY_SENIOR = new RuleId("DED-HEALTH-FAMILY-SENIOR");
+    public static final RuleId DED_HEALTH_INSURANCE_LIMB = new RuleId("DED-HEALTH-INSURANCE-LIMB");
+    public static final RuleId DED_HEALTH_INSURANCE_PAID = new RuleId("DED-HEALTH-INSURANCE-PAID");
+    public static final RuleId DED_HEALTH_MEDICAL_LIMB = new RuleId("DED-HEALTH-MEDICAL-LIMB");
     public static final RuleId DED_HEALTH_PARENTS = new RuleId("DED-HEALTH-PARENTS");
     public static final RuleId DED_HEALTH_PARENTS_SENIOR = new RuleId("DED-HEALTH-PARENTS-SENIOR");
+    public static final RuleId DED_HEALTH_SPREAD = new RuleId("DED-HEALTH-SPREAD");
     public static final RuleId DED_HOUSE_LOAN = new RuleId("DED-HOUSE-LOAN");
     public static final RuleId DED_HOUSE_LOAN_EARLIER = new RuleId("DED-HOUSE-LOAN-EARLIER");
     public static final RuleId DED_NPS_EMPLOYER_GOVT = new RuleId("DED-NPS-EMPLOYER-GOVT");
