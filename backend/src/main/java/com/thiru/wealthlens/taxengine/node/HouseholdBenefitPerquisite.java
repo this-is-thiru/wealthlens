@@ -1,15 +1,16 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.BenefitArrangement;
 import com.thiru.wealthlens.taxengine.input.EmployerChildEducation;
 import com.thiru.wealthlens.taxengine.input.EmployerHouseholdBenefit;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
@@ -17,23 +18,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Household services, gas, electricity and water, education, and a carrier's journeys, for {@link PerquisiteNode}
  * (S4 r.15(4) Table III; Rules 1962 r.3(3)–(6); D-120).
  *
- * <p>Each is its amount less the recovery. What the employer provides itself is a benefit or amenity, salary only for
- * a specified employee; what meets the employee's own obligation is salary for everyone (OQ-10). A child's education
- * in the employer's institution, or free by reason of the employment, is nil while its cost per month is within the
- * limit, and salary in full above it (D-120 C3). An airline's or the railways' employee's journey is refused: the
- * Rule "shall not apply" and says nothing of what does.
+ * <p>Each is its amount less the recovery, on the row of {@code RS-PERQ-HOUSEHOLD} its facts select; one no row
+ * values is refused (W-154b). Whether a benefit needs a specified employee is {@code PERQ-SPECIFIED-EMPLOYEE}'s
+ * condition on its arrangement (OQ-10). A child's education in the employer's institution, or free by reason of the
+ * employment, is provided by the employer; it is nil while its cost per month is within the limit, and salary in full
+ * above it (D-120 C3).
  */
 final class HouseholdBenefitPerquisite {
 
-    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_SERVICES, RuleSetIds.RS_PERQ_UTILITY, RuleSetIds.RS_PERQ_EDUCATION,
-            RuleSetIds.RS_PERQ_EDUCATION_FREE, RuleSetIds.RS_PERQ_CARRIER_TRAVEL);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_HOUSEHOLD, RuleSetIds.RS_PERQ_EDUCATION_FREE);
 
     private static final BaseId BENEFIT_VALUE = new BaseId("BENEFIT_VALUE");
+
+    /** What a Table III row is chosen by: the benefit's kind, and for a carrier's journey who the carrier is (D-325). */
+    private static final ItemFactId KIND = new ItemFactId("household.kind");
+    private static final ItemFactId CARRIER_IS_AIRLINE_OR_RAILWAYS = new ItemFactId(
+            "household.carrier.airline.or.railways");
+
+    /** A child's education as the specified-employee row reads it: provided by the employer, by the input's definition. */
+    private static final ItemFacts CHILD_EDUCATION = ItemFacts.of(SpecifiedEmployee.ARRANGEMENT, "EMPLOYER_PROVIDED");
 
     private HouseholdBenefitPerquisite() {
     }
@@ -41,42 +50,54 @@ final class HouseholdBenefitPerquisite {
     /** One line per benefit, then one per child's education, numbered from {@code firstSequence}. */
     static List<TraceLine> lines(NodeContext ctx, int firstSequence) {
         List<TraceLine> lines = new ArrayList<>();
-        for (EmployerHouseholdBenefit benefit : ctx.inputs().entered().householdBenefits()) {
+        List<EmployerHouseholdBenefit> benefits = ctx.inputs().entered().householdBenefits();
+        for (int i = 0; i < benefits.size(); i++) {
+            EmployerHouseholdBenefit benefit = benefits.get(i);
             PerquisiteNode.requireEnteredEmployment(ctx, benefit.employment(), "household benefit");
+            ItemFacts facts = factsOf(benefit);
+            int position = i + 1;
+            RuleRow row = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_HOUSEHOLD, facts)
+                    .orElseThrow(() -> unvalued(ctx, position, facts));
             int sequence = firstSequence + lines.size();
-            if (benefit.arrangement() == BenefitArrangement.EMPLOYER_PROVIDED
-                    && !SpecifiedEmployee.holdsFor(ctx, benefit.employment())) {
-                lines.add(SpecifiedEmployee.notSpecifiedLine(ctx, sequence));
-                continue;
-            }
-            lines.add(valued(ctx, benefit, sequence));
+            lines.add(SpecifiedEmployee.gates(ctx, facts)
+                            && !SpecifiedEmployee.holdsFor(ctx, benefit.employment())
+                    ? SpecifiedEmployee.notSpecifiedLine(ctx, sequence)
+                    : valued(ctx, row, benefit, sequence));
         }
         for (EmployerChildEducation child : ctx.inputs().entered().childEducation()) {
             PerquisiteNode.requireEnteredEmployment(ctx, child.employment(), "child's education");
             int sequence = firstSequence + lines.size();
-            lines.add(SpecifiedEmployee.holdsFor(ctx, child.employment())
-                    ? educated(ctx, child, sequence)
-                    : SpecifiedEmployee.notSpecifiedLine(ctx, sequence));
+            lines.add(SpecifiedEmployee.gates(ctx, CHILD_EDUCATION)
+                            && !SpecifiedEmployee.holdsFor(ctx, child.employment())
+                    ? SpecifiedEmployee.notSpecifiedLine(ctx, sequence)
+                    : educated(ctx, child, sequence));
         }
         return lines;
     }
 
-    private static TraceLine valued(NodeContext ctx, EmployerHouseholdBenefit benefit, int sequence) {
-        RuleId ruleId = switch (benefit.kind()) {
-            case SERVICES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_SERVICES);
-            case UTILITY_FROM_OUTSIDE_AGENCY, UTILITY_FROM_EMPLOYER_RESOURCES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_UTILITY);
-            case EDUCATION_FEES -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_EDUCATION);
-            case CARRIER_TRAVEL -> ctx.ruleIdOf(RuleSetIds.RS_PERQ_CARRIER_TRAVEL);
-        };
-        if (benefit.carrierIsAirlineOrRailways()) {
-            throw new IllegalArgumentException("Free travel for an employee of an airline or the railways is outside"
-                    + " Table III Sl. 4 / Rules 1962 r.3(6), and neither says how it is valued; it cannot be valued"
-                    + " (D-120 C4a)");
-        }
+    /** The benefit's facts as the rows' conditions read them. */
+    private static ItemFacts factsOf(EmployerHouseholdBenefit benefit) {
+        return new ItemFacts(Map.of(KIND, benefit.kind().name(), CARRIER_IS_AIRLINE_OR_RAILWAYS,
+                Boolean.toString(benefit.carrierIsAirlineOrRailways()), SpecifiedEmployee.ARRANGEMENT,
+                benefit.arrangement().name()), Map.of(), Map.of());
+    }
+
+    /** A benefit no row of the year values — the reason is the rows' (the carrier's row's note, for one). */
+    private static IllegalArgumentException unvalued(NodeContext ctx, int position, ItemFacts facts) {
+        String described = facts.codes().entrySet().stream()
+                .map(fact -> fact.getKey() + "=" + fact.getValue())
+                .sorted()
+                .collect(Collectors.joining(", ", "{", "}"));
+        return new IllegalArgumentException("Household benefit " + position + ": no row of "
+                + RuleSetIds.RS_PERQ_HOUSEHOLD + " values it in TY " + ctx.inputs().taxYear().label()
+                + " — its facts " + described);
+    }
+
+    private static TraceLine valued(NodeContext ctx, RuleRow row, EmployerHouseholdBenefit benefit, int sequence) {
         Money net = benefit.amount().minus(benefit.recovered()).floorAtZero();
-        Money value = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
+        Money value = TemporallyApportionedCap.apply(row, ctx.inputs().temporal(),
                 CapContext.of(BENEFIT_VALUE, net)).value();
-        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, benefit.amount(), value)
+        return ctx.traceLine(sequence, row.id(), StepKind.INCOME, benefit.amount(), value)
                 .withLimitedBy(benefit.kind() + " (" + benefit.arrangement() + "), less the recovery "
                         + benefit.recovered());
     }

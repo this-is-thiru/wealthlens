@@ -404,12 +404,6 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-PERQ-CARRIER-TRAVEL",
-      "_note": "One row: PERQ-CARRIER-TRAVEL",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
       "id": "RS-PERQ-CLUB",
       "_note": "One row: PERQ-CLUB",
       "selection": "EXACTLY_ONE",
@@ -436,12 +430,6 @@
     {
       "id": "RS-PERQ-CREDIT-CARD",
       "_note": "One row: PERQ-CREDIT-CARD",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-PERQ-EDUCATION",
-      "_note": "One row: PERQ-EDUCATION",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },
@@ -474,6 +462,12 @@
       "_note": "One row: PERQ-HOLIDAY",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
+    },
+    {
+      "id": "RS-PERQ-HOUSEHOLD",
+      "_note": "Table III: the row valuing a household benefit, chosen by its kind (household.kind) — a carrier's journey only where the carrier is not an airline or the railways (household.carrier.airline.or.railways); a benefit no row values is refused (W-154b)",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
     },
     {
       "id": "RS-PERQ-LOAN",
@@ -536,12 +530,6 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-PERQ-SERVICES",
-      "_note": "One row: PERQ-SERVICES",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
       "id": "RS-PERQ-SPECIFIED-DATE",
       "_note": "One row: PERQ-SPECIFIED-DATE",
       "selection": "EXACTLY_ONE",
@@ -556,12 +544,6 @@
     {
       "id": "RS-PERQ-SPECIFIED-SECURITY",
       "_note": "One row: PERQ-SPECIFIED-SECURITY",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-PERQ-UTILITY",
-      "_note": "One row: PERQ-UTILITY",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },

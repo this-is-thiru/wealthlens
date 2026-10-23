@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-SPECIFIED-EMPLOYEE",
   "ruleSet": "RS-PERQ-SPECIFIED-EMPLOYEE",
-  "_note": "The prescribed amount a specified employee's income under \"Salaries\" by way of monetary payment, from one or more employers, must exceed; a benefit or amenity is a perquisite only for a specified employee, or a director or substantial-interest holder of a company employer (S2 s.17(1)(c); 1961 s.17(2)(iii); D-113; rulebook PERQ-SPECEMP-001). The measure is salary.monetaryincome; MotorCarPerquisite tests \"exceeds\" against this amount, strictly. TY 2026-27: Income-tax Rules, 2026 r.17, \"₹ 400000\" (Gazette 271092, p.1549). TY 2025-26: Income-tax Rules, 1962 r.3C, \"four lakh rupees\", inserted by G.S.R. 555(E) of 18-8-2025 in force on publication, after the Finance Act, 2025 s.9(a) made the amount prescribed from 1-4-2026 (assessment year 2026-27). Every regime.",
+  "_note": "The prescribed amount a specified employee's income under \"Salaries\" by way of monetary payment, from one or more employers, must exceed; a benefit or amenity is a perquisite only for a specified employee, or a director or substantial-interest holder of a company employer (S2 s.17(1)(c); 1961 s.17(2)(iii); D-113; rulebook PERQ-SPECEMP-001). The measure is salary.monetaryincome; the perquisite nodes test \"exceeds\" against this amount, strictly. TY 2026-27: Income-tax Rules, 2026 r.17, \"₹ 400000\" (Gazette 271092, p.1549). TY 2025-26: Income-tax Rules, 1962 r.3C, \"four lakh rupees\", inserted by G.S.R. 555(E) of 18-8-2025 in force on publication, after the Finance Act, 2025 s.9(a) made the amount prescribed from 1-4-2026 (assessment year 2026-27). Every regime. The row gates the items whose perquisite.arrangement is EMPLOYER_PROVIDED — the s.17(1)(c) benefit or amenity — tested per item; the threshold is read with no item (W-154b).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -28,7 +28,13 @@
         "type": "Fixed",
         "amount": "400000"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "perquisite.arrangement",
+          "code": "EMPLOYER_PROVIDED"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax (Twenty Second Amendment) Rules, 2025, G.S.R. 555(E), Notification No. 133/2025 — Income-tax Rules, 1962 r.3C inserted: \"the prescribed income under the head \"Salaries\" shall be four lakh rupees\"",
         "gazetteRef": "CG-DL-E-18082025-265477",
@@ -69,7 +75,13 @@
         "type": "Fixed",
         "amount": "400000"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "perquisite.arrangement",
+          "code": "EMPLOYER_PROVIDED"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 17",
         "gazetteRef": "CG-DL-E-20032026-271092",

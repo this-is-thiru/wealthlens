@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-SERVICES",
-  "ruleSet": "RS-PERQ-SERVICES",
-  "_note": "A sweeper, gardener, watchman or personal attendant: \"the total amount of salary paid or payable by the employer or any other person on his behalf for such services as reduced by any amount paid by the employee\" (D-120; rulebook PERQ-SERVANT-2026, alias PERQ-SERVICES). Provided by the employer, a benefit or amenity — salary only for a specified employee (s.17(1)(c)); meeting the employee's own obligation, salary for everyone (s.17(1)(f)) — D-120 C1a, OQ-10. TY 2026-27: Income-tax Rules, 2026 r.15(4) Table III (Gazette 271092, p.1544). TY 2025-26: Income-tax Rules, 1962 r.3(3)–(6) (consolidated rule 3, p.3). Every regime.",
+  "ruleSet": "RS-PERQ-HOUSEHOLD",
+  "_note": "A sweeper, gardener, watchman or personal attendant: \"the total amount of salary paid or payable by the employer or any other person on his behalf for such services as reduced by any amount paid by the employee\" (D-120; rulebook PERQ-SERVANT-2026, alias PERQ-SERVICES). Provided by the employer, a benefit or amenity — salary only for a specified employee (s.17(1)(c)); meeting the employee's own obligation, salary for everyone (s.17(1)(f)) — D-120 C1a, OQ-10. TY 2026-27: Income-tax Rules, 2026 r.15(4) Table III (Gazette 271092, p.1544). TY 2025-26: Income-tax Rules, 1962 r.3(3)–(6) (consolidated rule 3, p.3). Every regime. The row reaches household.kind SERVICES (W-154b).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "BENEFIT_VALUE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "household.kind",
+          "code": "SERVICES"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(3)–(6) stand as in the rule in force from 1-4-2009 (r.3(10))",
         "gazetteRef": "CG-DL-E-18082023-248178",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "BENEFIT_VALUE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "household.kind",
+          "code": "SERVICES"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(4)",
         "gazetteRef": "CG-DL-E-20032026-271092",

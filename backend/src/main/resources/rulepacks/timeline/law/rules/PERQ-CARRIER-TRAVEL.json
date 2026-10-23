@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-CARRIER-TRAVEL",
-  "ruleSet": "RS-PERQ-CARRIER-TRAVEL",
-  "_note": "A carrier's free or concessional personal journey for the employee or a household member: \"the value at which such benefit or amenity is offered by such employer to the public\", less recoveries (D-120). Not for an employee of an airline or the railways — Table III Sl. 4 and r.3(6) \"shall not apply\" and neither says what does, so such a journey is refused (D-120 C4a). Provided by the employer, so salary only for a specified employee (OQ-10). Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(4) Table III (Gazette 271092, p.1544). TY 2025-26: Income-tax Rules, 1962 r.3(3)–(6) (consolidated rule 3, p.3). Every regime.",
+  "ruleSet": "RS-PERQ-HOUSEHOLD",
+  "_note": "A carrier's free or concessional personal journey for the employee or a household member: \"the value at which such benefit or amenity is offered by such employer to the public\", less recoveries (D-120). Not for an employee of an airline or the railways — Table III Sl. 4 and r.3(6) \"shall not apply\" and neither says what does, so such a journey is refused (D-120 C4a). Provided by the employer, so salary only for a specified employee (OQ-10). Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(4) Table III (Gazette 271092, p.1544). TY 2025-26: Income-tax Rules, 1962 r.3(3)–(6) (consolidated rule 3, p.3). Every regime. The row reaches household.kind CARRIER_TRAVEL where household.carrier.airline.or.railways is not true; the airline or railways journey no row values is refused (W-154b).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,21 @@
         "percent": "100",
         "base": "BENEFIT_VALUE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "household.kind",
+          "code": "CARRIER_TRAVEL"
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "ItemFactIs",
+            "fact": "household.carrier.airline.or.railways",
+            "code": "true"
+          }
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(3)–(6) stand as in the rule in force from 1-4-2009 (r.3(10))",
         "gazetteRef": "CG-DL-E-18082023-248178",
@@ -71,7 +85,21 @@
         "percent": "100",
         "base": "BENEFIT_VALUE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "household.kind",
+          "code": "CARRIER_TRAVEL"
+        },
+        {
+          "type": "Not",
+          "condition": {
+            "type": "ItemFactIs",
+            "fact": "household.carrier.airline.or.railways",
+            "code": "true"
+          }
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(4)",
         "gazetteRef": "CG-DL-E-20032026-271092",

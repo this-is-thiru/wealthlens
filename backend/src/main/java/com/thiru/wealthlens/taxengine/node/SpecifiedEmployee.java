@@ -4,8 +4,12 @@ import com.thiru.wealthlens.taxengine.input.CompanyEmployer;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.condition.Condition;
+import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -22,7 +26,25 @@ import java.util.Map;
  */
 final class SpecifiedEmployee {
 
+    /**
+     * Whether the employer provided a perquisite itself or met the employee's own obligation — what
+     * {@code PERQ-SPECIFIED-EMPLOYEE}'s condition reads, the {@code BenefitArrangement} constant name (D-325).
+     */
+    static final ItemFactId ARRANGEMENT = new ItemFactId("perquisite.arrangement");
+
     private SpecifiedEmployee() {
+    }
+
+    /**
+     * Whether the specified-employee test reaches the item: the row's conditions about the item hold for it, so the
+     * item is a perquisite only for a specified employee (W-154b).
+     */
+    static boolean gates(NodeContext ctx, ItemFacts item) {
+        ConditionContext about = ctx.conditions().about(item);
+        return TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE),
+                        ctx.inputs().temporal()).conditions().stream()
+                .filter(Condition::isAboutItem)
+                .allMatch(condition -> condition.holds(about));
     }
 
     /** Whether the employee of this employment is a specified employee. */

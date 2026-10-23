@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -31,8 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -176,16 +180,75 @@ class HouseholdBenefitPerquisiteTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("8000")));
     }
 
-    @Test
-    void evaluate_whenAnAirlinesEmployeeTravelsFree_isRefused() {
-        // Given
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAnAirlinesEmployeeTravelsFree_isRefusedAsNoRowValuesIt(int year) {
+        // Given — PERQ-CARRIER-TRAVEL reaches a carrier that is not an airline or the railways (D-120 C4a, W-154b)
         EmployerHouseholdBenefit airline = new EmployerHouseholdBenefit(0, HouseholdBenefitKind.CARRIER_TRAVEL,
                 BenefitArrangement.EMPLOYER_PROVIDED, Money.of("8000"), Money.ZERO, true);
 
         // When / Then
-        assertThatThrownBy(() -> run(2026, SPECIFIED, List.of(airline), List.of()))
+        assertThatThrownBy(() -> run(year, SPECIFIED, List.of(airline), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("airline or the railways");
+                .hasMessageContaining("no row of RS-PERQ-HOUSEHOLD")
+                .hasMessageContaining("household.carrier.airline.or.railways=true");
+    }
+
+    /**
+     * Every kind with every arrangement the input allows, at 10,000 with nothing recovered, both years. The row is
+     * Table III's serial for the kind (Sl. 1 services, Sl. 2 both utilities, Sl. 3(a) education fees, Sl. 4 a
+     * carrier's journey). Employer-provided is a benefit or amenity, nil for an employee who is not specified, on
+     * PERQ-SPECIFIED-EMPLOYEE; the employee's obligation met is salary for everyone (s.17(1)(c), (f); OQ-10).
+     */
+    @ParameterizedTest(name = "TY {0} {1} {2} monetary {3}")
+    @MethodSource("householdPartition")
+    void evaluate_whenEachKindAndArrangement_isValuedOnItsRowOrNilWhereTheEmployeeIsNotSpecified(int year,
+            HouseholdBenefitKind kind, BenefitArrangement arrangement, String monetaryIncome, RuleId expectedRow,
+            String expected) {
+        // When
+        NodeResult result = run(year, monetaryIncome, List.of(benefit(kind, arrangement, "10000", "0")), List.of());
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.rule()).isEqualTo(expectedRow));
+    }
+
+    private static Stream<Arguments> householdPartition() {
+        Map<HouseholdBenefitKind, RuleId> rowByKind = Map.of(
+                HouseholdBenefitKind.SERVICES, RuleIds.PERQ_SERVICES,
+                HouseholdBenefitKind.UTILITY_FROM_OUTSIDE_AGENCY, RuleIds.PERQ_UTILITY,
+                HouseholdBenefitKind.UTILITY_FROM_EMPLOYER_RESOURCES, RuleIds.PERQ_UTILITY,
+                HouseholdBenefitKind.EDUCATION_FEES, RuleIds.PERQ_EDUCATION,
+                HouseholdBenefitKind.CARRIER_TRAVEL, RuleIds.PERQ_CARRIER_TRAVEL);
+        Set<HouseholdBenefitKind> employerOnly = Set.of(HouseholdBenefitKind.UTILITY_FROM_EMPLOYER_RESOURCES,
+                HouseholdBenefitKind.CARRIER_TRAVEL);
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            for (HouseholdBenefitKind kind : HouseholdBenefitKind.values()) {
+                for (BenefitArrangement arrangement : BenefitArrangement.values()) {
+                    if (employerOnly.contains(kind) && arrangement == BenefitArrangement.EMPLOYEE_OBLIGATION_MET) {
+                        continue;
+                    }
+                    boolean gated = arrangement == BenefitArrangement.EMPLOYER_PROVIDED;
+                    cases.add(Arguments.of(year, kind, arrangement, SPECIFIED, rowByKind.get(kind), "10000"));
+                    cases.add(Arguments.of(year, kind, arrangement, NOT_SPECIFIED,
+                            gated ? RuleIds.PERQ_SPECIFIED_EMPLOYEE : rowByKind.get(kind), gated ? "0" : "10000"));
+                }
+            }
+        }
+        return cases.build();
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAChildStudiesAtTheEmployersSchoolAndTheEmployeeIsNotSpecified_isNil(int year) {
+        // When — ₹2,500 a month for 12 months, an employee whose monetary salary does not exceed 4,00,000
+        NodeResult result = run(year, NOT_SPECIFIED, List.of(), List.of(child("2500")));
+
+        // Then — provided by the employer, so gated (W-154b)
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.PERQ_SPECIFIED_EMPLOYEE));
     }
 
     @Test
