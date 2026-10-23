@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-154g — specified-security fair market value (D-325; Q11)
-Stage           : READ — W-154f committed; plan for W-154g being written
-Plan            : plans/W-154g.md (to write)
+Item            : W-155 — retirement paths by rule data (D-313; audit P5; N1)
+Stage           : READY — not started (W-154 closed, D-335)
+Plan            : written when taken (plans/W-155.md; likely a split, as W-153 / W-154)
 Approved        : —
 Steps done      : —
-Next step       : read W-154g WI row, plans/W-154.md C3a, SpecifiedSecurityPerquisite, FairMarketValueBasis, PERQ-SPECIFIED-SECURITY / -DATE rows and their sources (r.15(8); r.3(8)); write plans/W-154g.md; STOP
-Last verify     : targeted 301/0; unit -Punit 3619/0; integration 281/0 (2026-10-23, W-154f)
-Waiting on      : — (writing W-154g plan); OQ-32, OQ-33 open
+Next step       : on "start W-155": read its WI row, the audit § W-088l1 P5 and N1 (RetirementNode :153, :208, :240, :243; NotifiedRetirementLimits :75, :102; RetirementPayment :50–60), the W-154 pattern (plans/W-154*.md: path rows with a definition, nil rows, facts dot-separated), write plans/W-155.md (a split if > §7), STOP
+Last verify     : unit -Punit 3619/0 (2026-10-23, W-154g); last full: targeted 301/0, integration 281/0 (W-154f)
+Waiting on      : the owner — "start W-155"; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-154f: state each transferred asset's wear-and-tear method as rule data — a WearAndTear definition (rate and method) on the RS-PERQ-ASSET-TRANSFER rows, so AssetPerquisite holds no kind test and reads no cap as a rate (D-334)
-Updated         : 2026-10-23, session 30 — W-154f done and committed
+Last item commit: taxplanning W-154g: record the specified-security fair market value as not a finding — dispatch by FairMarketValueBasis's sealed shape, each record carrying only its method's prices, so rows would restate it (D-335; W-154 closed)
+Updated         : 2026-10-23, session 30 — W-154 closed (a – g); W-155 next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
