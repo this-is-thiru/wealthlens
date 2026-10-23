@@ -222,6 +222,7 @@ class GeneratedConstantsTest {
             "SAL-ENTMT-ALLOWANCE",
             "SAL-HOUSE-RENT-ALLOWANCE",
             "SAL-HOUSE-RENT-LANDLORD-PAN",
+            "SAL-INCLUDES-PENSION-CONTRIBUTION",
             "SAL-LEAVE-TRAVEL-CHILDREN",
             "SAL-LEAVE-TRAVEL-CONCESSION",
             "SAL-LEAVE-TRAVEL-DISTANCE-RATE",

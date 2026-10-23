@@ -1,7 +1,7 @@
 {
   "ruleId": "SAL-ENTMT-ALLOWANCE",
   "ruleSet": "RS-SAL-ENTMT-ALLOWANCE",
-  "_note": "The entertainment allowance deduction for an employee paid by the Government, TY 2025-26 only, outside the new regime (D-105; rulebook SAL-ENTMT-001). Income-tax Act, 1961 s.16(ii) (thc.nic.in p.140): \"a deduction in respect of any allowance in the nature of an entertainment allowance specifically granted by an employer to the assessee who is in receipt of a salary from the Government, a sum equal to one-fifth of his salary (exclusive of any allowance, benefit or other perquisite) or five thousand rupees, whichever is less\" — two limits, not capped at the allowance received (the words do not say so). Not in the new regime: s.115BAC(2)(i) as substituted by Finance Act, 2023 s.52 lists \"clause (ii) or clause (iii) of section 16\" (p.34). TY 2026-27: the Income-tax Act, 2025 has no counterpart — s.19(1) Table Sl. 1–14 has no such entry and a full-text search of the gazette finds no \"entertainment allowance\" (rulebook SAL-ENTMT-001) — so the rule has no TY 2026-27 version and the allowance is ordinary salary. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "_note": "The entertainment allowance deduction for an employee paid by the Government, TY 2025-26 only, outside the new regime (D-105; rulebook SAL-ENTMT-001). Income-tax Act, 1961 s.16(ii) (thc.nic.in p.140): \"a deduction in respect of any allowance in the nature of an entertainment allowance specifically granted by an employer to the assessee who is in receipt of a salary from the Government, a sum equal to one-fifth of his salary (exclusive of any allowance, benefit or other perquisite) or five thousand rupees, whichever is less\" — two limits, not capped at the allowance received (the words do not say so). Not in the new regime: s.115BAC(2)(i) as substituted by Finance Act, 2023 s.52 lists \"clause (ii) or clause (iii) of section 16\" (p.34). TY 2026-27: the Income-tax Act, 2025 has no counterpart — s.19(1) Table Sl. 1–14 has no such entry and a full-text search of the gazette finds no \"entertainment allowance\" (rulebook SAL-ENTMT-001) — so the rule has no TY 2026-27 version and the allowance is ordinary salary. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches an employment whose employer is the Central or a State Government only (employer.kind = GOVERNMENT): s.16(ii)'s \"in receipt of a salary from the Government\" (W-156e, D-350).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -43,7 +43,13 @@
           }
         ]
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.kind",
+          "code": "GOVERNMENT"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), computed without the deduction under s.16(ii) (s.115BAC(2)(i))",
         "gazetteRef": "CG-DL-E-31032023-244830",

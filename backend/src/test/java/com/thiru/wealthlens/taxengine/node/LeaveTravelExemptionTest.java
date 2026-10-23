@@ -133,6 +133,19 @@ class LeaveTravelExemptionTest {
     }
 
     @Test
+    void evaluate_whenAnAirJourneyIn2026HasOnlyADistance_isRefused() {
+        // Given — 1,000 km by air, no fare entered; r.278(1)(iii)(B)'s rate is for places not connected by rail
+        // without public transport, so the air fare must be entered rather than priced per kilometre (W-156e)
+        Journey air = new Journey(LocalDate.parse("2026-05-10"), JourneyMode.AIR, Money.of("40000"),
+                Optional.empty(), Optional.of(1000), List.of());
+
+        // When / Then
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES, List.of(air), PREVIOUS_BLOCK_USED, "50000"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("fare");
+    }
+
+    @Test
     void evaluate_whenNoRailAndNoPublicTransportIn2025WithOnlyADistance_isRefused() {
         // Given — r.2B(1)(iii)(B) states a rail-fare equivalent, not a rate: the fare must be entered
         Journey road = new Journey(LocalDate.parse("2025-05-10"), JourneyMode.NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT,

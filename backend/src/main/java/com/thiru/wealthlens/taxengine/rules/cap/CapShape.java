@@ -51,4 +51,23 @@ public sealed interface CapShape
                     .flatMap(subCap -> subCap.amountsRead().stream()).collect(Collectors.toUnmodifiableSet());
         };
     }
+
+    /**
+     * The ids whose counts this cap reads from {@link CapContext#counts} — so a node can tell which quantities a row
+     * needs entered, such as children and months, without restating the rows that need them (W-156e, D-350). A
+     * composition reads what its parts read.
+     */
+    default Set<BaseId> countsRead() {
+        return switch (this) {
+            case Fixed _, PercentOfBase _, SlabLadder _, PercentOfBaseByLocation _ -> Set.of();
+            case PerUnitPerPeriod perUnit -> Stream.concat(perUnit.unit().stream(), Stream.of(perUnit.period()))
+                    .collect(Collectors.toUnmodifiableSet());
+            case PercentOfBaseByPopulation byPopulation -> Set.of(byPopulation.population());
+            case AmountInExcess excess -> excess.threshold().countsRead();
+            case LeastOf least -> least.limbs().stream().flatMap(limb -> limb.shape().countsRead().stream())
+                    .collect(Collectors.toUnmodifiableSet());
+            case AggregateWithCeiling aggregate -> aggregate.subCaps().values().stream()
+                    .flatMap(subCap -> subCap.countsRead().stream()).collect(Collectors.toUnmodifiableSet());
+        };
+    }
 }

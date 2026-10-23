@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-156e — salary kinds by rule data (D-343; R7)
-Stage           : EXPLAINED — plan written and committed (pause commit), awaiting the owner's approval
-Plan            : plans/W-156e.md (C1a employer.fund on PERQ-RPF-CONTRIBUTION; SAL-INCLUDES-PENSION-CONTRIBUTION reach row (s.16(k), OQ-14 quote); employer.kind on SAL-ENTMT-ALLOWANCE; journey.mode on SAL-LEAVE-TRAVEL-DISTANCE-RATE; C2a per-child a finding via CapShape.countsRead; no assertion changes)
-Approved        : W-156 split (D-343); W-156a – d done (D-344 – D-349)
+Item            : W-156f — gift kinds by rule data (D-343; R8)
+Stage           : NOT_STARTED — W-156e done and committed (D-350)
+Plan            : plans/W-156f.md (to write)
+Approved        : W-156 split (D-343); W-156a – e done (D-344 – D-350)
 Steps done      : —
-Next step       : ask the owner for W-156e's approval and C2's verdict (do NOT code); on "W-156e approved …": record it, Steps 1 – 5 of plans/W-156e.md; D-350; report; STOP. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding (STATE Notes for resume, session 31)
-Last verify     : targeted 204/0 (+ NodeContextRuleSetTest 20/0); unit -Punit 3642/0; integration 281/0 (2026-10-23, W-156d)
-Waiting on      : the owner — W-156e approval (C1 – C3, C2's verdict); placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
+Next step       : on the owner's go: READ W-156f (03-WORK-ITEMS.md, plans/W-156.md R8), write plans/W-156f.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding (STATE Notes for resume, session 31)
+Last verify     : targeted 307/0; LeaveTravelExemptionTest 25/0 after case 3; unit -Punit 3653/0; integration 281/0 (2026-10-23, W-156e)
+Waiting on      : the owner — go for W-156f; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-156d: take Chapter VIII's employer fund, Government salary and loan purpose from rows — employer.fund and loan.purpose conditions and DED-SCHEDULE-XV-GOVERNMENT-SALARY, so the nodes hold no fund, employer-kind or purpose test (D-349)
-Updated         : 2026-10-23, session 31 — PAUSED at the session limit, everything committed (resume at W-156e approval)
+Last item commit: taxplanning W-156e: take salary's employer fund, employer kind, journey mode and per-child allowances from rows — employer.fund, employer.kind and journey.mode conditions, SAL-INCLUDES-PENSION-CONTRIBUTION and CapShape.countsRead, so the salary nodes hold no kind test (D-350)
+Updated         : 2026-10-23, session 32 — W-156e committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

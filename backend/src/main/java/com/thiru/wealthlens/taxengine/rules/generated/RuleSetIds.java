@@ -137,6 +137,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_SAL_ENTMT_ALLOWANCE = new RuleSetId("RS-SAL-ENTMT-ALLOWANCE");
     public static final RuleSetId RS_SAL_HOUSE_RENT_ALLOWANCE = new RuleSetId("RS-SAL-HOUSE-RENT-ALLOWANCE");
     public static final RuleSetId RS_SAL_HOUSE_RENT_LANDLORD_PAN = new RuleSetId("RS-SAL-HOUSE-RENT-LANDLORD-PAN");
+    public static final RuleSetId RS_SAL_INCLUDES_PENSION_CONTRIBUTION = new RuleSetId("RS-SAL-INCLUDES-PENSION-CONTRIBUTION");
     public static final RuleSetId RS_SAL_LEAVE_TRAVEL_CHILDREN = new RuleSetId("RS-SAL-LEAVE-TRAVEL-CHILDREN");
     public static final RuleSetId RS_SAL_LEAVE_TRAVEL_CONCESSION = new RuleSetId("RS-SAL-LEAVE-TRAVEL-CONCESSION");
     public static final RuleSetId RS_SAL_LEAVE_TRAVEL_DISTANCE_RATE = new RuleSetId("RS-SAL-LEAVE-TRAVEL-DISTANCE-RATE");

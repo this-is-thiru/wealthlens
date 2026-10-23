@@ -1,17 +1,18 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.AgniveerCorpusFund;
-import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -37,6 +38,9 @@ import java.util.Set;
  */
 public final class GrossSalaryNode implements ComputationNode {
 
+    /** The fund an employer contribution went to — what {@code SAL-INCLUDES-PENSION-CONTRIBUTION} reads (W-156e, D-350). */
+    private static final ItemFactId EMPLOYER_FUND = new ItemFactId("employer.fund");
+
     @Override
     public NodeId produces() {
         return NodeIds.SALARY_GROSS;
@@ -49,7 +53,7 @@ public final class GrossSalaryNode implements ComputationNode {
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(RuleSetIds.RS_SAL_SALARY_INCLUDES);
+        return Set.of(RuleSetIds.RS_SAL_SALARY_INCLUDES, RuleSetIds.RS_SAL_INCLUDES_PENSION_CONTRIBUTION);
     }
 
     @Override
@@ -87,10 +91,15 @@ public final class GrossSalaryNode implements ComputationNode {
         return amount;
     }
 
-    /** The employers' contributions to the employee's pension-scheme account — salary (S2 s.16(k); 1961 s.17(1)(viii)). */
+    /**
+     * The employers' contributions to the employee's pension-scheme account — salary (S2 s.16(k); 1961 s.17(1)(viii)):
+     * those {@code SAL-INCLUDES-PENSION-CONTRIBUTION} reaches by their fund (W-156e, D-350).
+     */
     private static Money pensionContributions(NodeContext ctx) {
+        RuleRow pension = ctx.ruleOf(RuleSetIds.RS_SAL_INCLUDES_PENSION_CONTRIBUTION);
         return ctx.inputs().entered().employerContributions().stream()
-                .filter(contribution -> contribution.fund() == EmployerFund.NOTIFIED_PENSION_SCHEME)
+                .filter(contribution -> RowReach.holdsFor(ctx, pension,
+                        ItemFacts.of(EMPLOYER_FUND, contribution.fund().name())))
                 .map(EmployerFundContribution::amount)
                 .reduce(Money.ZERO, Money::plus);
     }

@@ -1,7 +1,7 @@
 {
   "ruleId": "SAL-LEAVE-TRAVEL-DISTANCE-RATE",
   "ruleSet": "RS-SAL-LEAVE-TRAVEL-DISTANCE-RATE",
-  "_note": "The rate the Rules state for a journey between places not connected by rail, where no recognised public transport system exists (D-100): Income-tax Rules, 2026 r.278(1)(iii)(B) (p.1776): \"an amount calculated at the rate of ₹30 per kilometre, for the distance of the journey by the shortest route shall be admissible\". TY 2026-27 only: Rules 1962 r.2B(1)(iii)(B) states no rate — \"an amount equivalent to the air-conditioned first class rail fare … as if the journey had been performed by rail\" — so for TY 2025-26 that fare is entered like any other. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "_note": "The rate the Rules state for a journey between places not connected by rail, where no recognised public transport system exists (D-100): Income-tax Rules, 2026 r.278(1)(iii)(B) (p.1776): \"an amount calculated at the rate of ₹30 per kilometre, for the distance of the journey by the shortest route shall be admissible\". TY 2026-27 only: Rules 1962 r.2B(1)(iii)(B) states no rate — \"an amount equivalent to the air-conditioned first class rail fare … as if the journey had been performed by rail\" — so for TY 2025-26 that fare is entered like any other. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches a journey between places not connected by rail, with no recognised public transport system, only (journey.mode = NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT): r.278(1)(iii)(B)'s \"where no recognised public transport system exists\" (W-156e, D-350).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -27,7 +27,13 @@
         "amount": "30",
         "period": "KM"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "journey.mode",
+          "code": "NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 278",
         "gazetteRef": "CG-DL-E-20032026-271092",

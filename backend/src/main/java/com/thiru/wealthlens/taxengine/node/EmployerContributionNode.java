@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.RecognisedFundInterest;
 import com.thiru.wealthlens.taxengine.input.RetirementFundHistory;
@@ -11,9 +10,11 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -54,6 +55,9 @@ public final class EmployerContributionNode implements ComputationNode {
     private static final BaseId SALARY = new BaseId("SALARY");
     private static final BaseId INTEREST = new BaseId("INTEREST");
     private static final BaseId BALANCE = new BaseId("BALANCE");
+
+    /** The fund an employer contribution went to — what {@code PERQ-RPF-CONTRIBUTION} reads (W-156e, D-350). */
+    private static final ItemFactId EMPLOYER_FUND = new ItemFactId("employer.fund");
 
     @Override
     public NodeId produces() {
@@ -127,17 +131,19 @@ public final class EmployerContributionNode implements ComputationNode {
 
     /**
      * Each employment's contribution to its recognised provident fund beyond the share of that employment's salary
-     * the year's row allows (1961 Sch. IV Pt A r.6(a)). A year whose pack has no such row has no such charge: the 2025
-     * Act lost it to the Finance Act, 2026 s.127(a)(iii) before it commenced.
+     * the year's row allows (1961 Sch. IV Pt A r.6(a)); which contributions are to a recognised fund is the row's to
+     * say (W-156e, D-350). A year whose pack has no such row has no such charge: the 2025 Act lost it to the Finance
+     * Act, 2026 s.127(a)(iii) before it commenced.
      */
     private Money recognisedFundContributions(NodeContext ctx, List<TraceLine> lines) {
         Optional<RuleRow> row = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_RPF_CONTRIBUTION);
         if (row.isEmpty()) {
             return Money.ZERO;
         }
+        RuleRow rule = row.get();
         Map<Integer, Money> byEmployment = new TreeMap<>();
         for (EmployerFundContribution contribution : ctx.inputs().entered().employerContributions()) {
-            if (contribution.fund() == EmployerFund.RECOGNISED_PROVIDENT_FUND) {
+            if (RowReach.holdsFor(ctx, rule, ItemFacts.of(EMPLOYER_FUND, contribution.fund().name()))) {
                 byEmployment.merge(contribution.employment(), contribution.amount(), Money::plus);
             }
         }
@@ -146,7 +152,6 @@ public final class EmployerContributionNode implements ComputationNode {
         }
         SalaryBases bases = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class);
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = row.get();
         Money total = Money.ZERO;
         for (Map.Entry<Integer, Money> entry : byEmployment.entrySet()) {
             Money salary = bases.of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_RPF), entry.getKey());

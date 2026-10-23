@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
 import com.thiru.wealthlens.taxengine.input.Journey;
-import com.thiru.wealthlens.taxengine.input.JourneyMode;
 import com.thiru.wealthlens.taxengine.input.JourneyTraveller;
 import com.thiru.wealthlens.taxengine.input.LeaveTravelBlock;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
@@ -12,6 +11,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
@@ -19,6 +19,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.SurvivingChildrenLimit;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -58,6 +59,9 @@ final class LeaveTravelExemption {
     private static final BaseId AMOUNT_INCURRED = new BaseId("AMOUNT_INCURRED");
     private static final BaseId FARE_ADMISSIBLE = new BaseId("FARE_ADMISSIBLE");
     private static final BaseId KM = new BaseId("KM");
+
+    /** How a journey was made — what {@code SAL-LEAVE-TRAVEL-DISTANCE-RATE} reads (W-156e, D-350). */
+    private static final ItemFactId JOURNEY_MODE = new ItemFactId("journey.mode");
 
     private LeaveTravelExemption() {
     }
@@ -205,11 +209,15 @@ final class LeaveTravelExemption {
         return RuleDefinitions.require(version.definition(), JourneysPerCalendarBlock.class, ctx.ruleIdOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_JOURNEYS));
     }
 
-    /** The fare the Rules admit: r.278(1)(iii)(B)'s rate per kilometre where the year has one, else as entered. */
+    /**
+     * The fare the Rules admit: r.278(1)(iii)(B)'s rate per kilometre for a journey the year's row reaches by its mode,
+     * else as entered (W-156e, D-350).
+     */
     private static Money fareFor(NodeContext ctx, TemporalContext t, Journey journey) {
         Optional<RuleRow> distanceRate = ctx.optionalRuleOf(RuleSetIds.RS_SAL_LEAVE_TRAVEL_DISTANCE_RATE);
-        boolean ratePerKilometre = journey.mode() == JourneyMode.NOT_RAIL_CONNECTED_WITHOUT_PUBLIC_TRANSPORT
-                && distanceRate.isPresent();
+        boolean ratePerKilometre = distanceRate
+                .filter(row -> RowReach.holdsFor(ctx, row, ItemFacts.of(JOURNEY_MODE, journey.mode().name())))
+                .isPresent();
         if (ratePerKilometre) {
             int km = journey.distanceKm().orElseThrow(() -> new IllegalArgumentException("A journey on "
                     + journey.startedOn() + " by road without public transport needs its distance; the Rules"

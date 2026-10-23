@@ -740,6 +740,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-SAL-INCLUDES-PENSION-CONTRIBUTION",
+      "_note": "One row: SAL-INCLUDES-PENSION-CONTRIBUTION, which employer contributions are the pension-scheme contribution salary includes (W-156e, D-350)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-SAL-LEAVE-TRAVEL-CHILDREN",
       "_note": "One row: SAL-LEAVE-TRAVEL-CHILDREN",
       "selection": "EXACTLY_ONE",

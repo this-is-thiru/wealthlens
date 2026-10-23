@@ -213,6 +213,7 @@ class TimelineReaderTest {
             new RuleId("OS-LIFE-POLICY"),
             new RuleId("DED-SCHEDULE-XV"),
             new RuleId("DED-SCHEDULE-XV-GOVERNMENT-SALARY"),
+            new RuleId("SAL-INCLUDES-PENSION-CONTRIBUTION"),
             new RuleId("DED-NPS-EMPLOYER-GOVT"),
             new RuleId("DED-NPS-EMPLOYER-OTHER"),
             new RuleId("DED-NPS-EMPLOYER-NEW-TAX-REGIME"),

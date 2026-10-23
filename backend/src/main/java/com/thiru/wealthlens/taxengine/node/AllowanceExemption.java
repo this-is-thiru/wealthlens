@@ -53,8 +53,6 @@ import java.util.stream.Collectors;
  */
 final class AllowanceExemption {
 
-    /** The allowances whose exemption is a limit per month per child, and so needs children and months. */
-    private static final Set<RuleSetId> PER_CHILD = Set.of(RuleSetIds.RS_SAL_ALW_CHILDREN_EDUCATION, RuleSetIds.RS_SAL_ALW_HOSTEL);
     private static final Set<RuleSetId> ALLOWANCES = Set.of(RuleSetIds.RS_SAL_ALW_UNIFORM, RuleSetIds.RS_SAL_ALW_CONVEYANCE,
             RuleSetIds.RS_SAL_ALW_CHILDREN_EDUCATION, RuleSetIds.RS_SAL_ALW_HOSTEL);
     private static final BaseId ALLOWANCE_RECEIVED = new BaseId("ALLOWANCE_RECEIVED");
@@ -93,7 +91,7 @@ final class AllowanceExemption {
                         .withLimitedBy(verdict.whyNot()));
                 continue;
             }
-            CapResult exempt = TemporallyApportionedCap.apply(rule, t, context(ctx, ruleId, use, received));
+            CapResult exempt = TemporallyApportionedCap.apply(rule, t, context(version, use, received));
             lines.add(TraceLine.of(firstSequence + lines.size(), NodeIds.SALARY_EXEMPTIONS, ruleId,
                             StepKind.EXEMPTION, MoneyValue.of(received), MoneyValue.of(exempt.value()),
                             version.provenance())
@@ -158,8 +156,12 @@ final class AllowanceExemption {
                 .reduce(Money.ZERO, Money::plus);
     }
 
-    private static CapContext context(NodeContext ctx, RuleId rule, AllowanceUse use, Money received) {
-        if (ctx.pack().membersOf(PER_CHILD).contains(rule)) {
+    /**
+     * What the allowance's cap reads: children and months where it reads a count of children — the Rules' limit per
+     * month per child, which the row's own cap states (W-156e, D-350) — else the amount actually incurred.
+     */
+    private static CapContext context(RuleVersion version, AllowanceUse use, Money received) {
+        if (version.cap().map(cap -> cap.countsRead().contains(CHILD)).orElse(false)) {
             if (use.childrenCovered().isEmpty()) {
                 throw new IllegalArgumentException(use.allowance() + " is exempt per month per child; enter the"
                         + " children and months it covered");

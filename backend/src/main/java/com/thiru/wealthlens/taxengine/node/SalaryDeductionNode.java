@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
@@ -13,11 +12,13 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -50,6 +51,9 @@ public final class SalaryDeductionNode implements ComputationNode {
 
     /** The base the standard deduction's "salary" limb reads: gross salary; the entertainment limb, its own base. */
     private static final BaseId SALARY = new BaseId("SALARY");
+
+    /** The employment's employer kind — what {@code SAL-ENTMT-ALLOWANCE} reads (W-156e, D-350). */
+    private static final ItemFactId EMPLOYER_KIND = new ItemFactId("employer.kind");
 
     /** The rules the deductions read — declared also by a node that applies them to another salary (D-113). */
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT,
@@ -141,7 +145,7 @@ public final class SalaryDeductionNode implements ComputationNode {
         if (verdict instanceof RegimeVerdict.ExcludedByRow) {
             return Optional.empty();
         }
-        Map<Integer, Money> paidByGovernment = paidByGovernment(ctx, ruleId);
+        Map<Integer, Money> paidByGovernment = paidByGovernment(ctx, rule);
         if (paidByGovernment.isEmpty()) {
             return Optional.empty();
         }
@@ -166,15 +170,19 @@ public final class SalaryDeductionNode implements ComputationNode {
                 .withLimitedBy(deducted.limitedBy()));
     }
 
-    /** The entertainment allowance each Government employment paid, by employment; none that paid nothing. */
-    private static Map<Integer, Money> paidByGovernment(NodeContext ctx, RuleId ruleId) {
+    /**
+     * The entertainment allowance each employment the row reaches paid, by employment; none that paid nothing. Which
+     * employments are the Government's is the row's to say (W-156e, D-350).
+     */
+    private static Map<Integer, Money> paidByGovernment(NodeContext ctx, RuleRow rule) {
         ComponentSet components = ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class);
         List<Employment> employments = ctx.inputs().entered().employments();
         Map<Integer, Money> paidByGovernment = new TreeMap<>();
         for (ComponentSet.Line line : components.in(HeadCode.SALARIES)) {
             ComponentDefinition definition = ctx.pack().components().get(line.code());
-            boolean allowance = definition != null && definition.feedsInto().contains(ruleId);
-            if (allowance && employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT) {
+            boolean allowance = definition != null && definition.feedsInto().contains(rule.id());
+            if (allowance && RowReach.holdsFor(ctx, rule,
+                    ItemFacts.of(EMPLOYER_KIND, employments.get(line.employment()).employerKind().name()))) {
                 paidByGovernment.merge(line.employment(), line.amount(), Money::plus);
             }
         }

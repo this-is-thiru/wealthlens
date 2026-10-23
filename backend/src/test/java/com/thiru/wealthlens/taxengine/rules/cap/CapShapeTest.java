@@ -266,4 +266,101 @@ class CapShapeTest {
             assertThat(byPopulation.amountsRead()).containsExactly(SALARY);
         }
     }
+
+    /** {@link CapShape#countsRead}: the ids a shape looks up with {@code ctx.count(…)} only (W-156e). */
+    @Nested
+    @DisplayName("countsRead")
+    class CountsRead {
+
+        private static final BaseId PAYMENT = new BaseId("PAYMENT_RECEIVED");
+        private static final BaseId SALARY = new BaseId("SALARY");
+        private static final BaseId PLACE = new BaseId("PLACE");
+        private static final BaseId MONTH = new BaseId("MONTH");
+        private static final BaseId CHILD = new BaseId("CHILD");
+
+        @Test
+        void countsRead_whenFixed_isEmpty() {
+            assertThat(new Fixed(Money.of("75000")).countsRead()).isEmpty();
+        }
+
+        @Test
+        void countsRead_whenPercentOfBase_isEmpty() {
+            assertThat(new PercentOfBase(Rate.percent("30"), ANNUAL_VALUE).countsRead()).isEmpty();
+        }
+
+        @Test
+        void countsRead_whenSlabLadder_isEmpty() {
+            // Given
+            SlabLadder ladder = new SlabLadder(List.of(new SlabLadder.Band(Money.ZERO, Optional.empty(),
+                    Rate.percent("10"))), SALARY);
+
+            // When / Then
+            assertThat(ladder.countsRead()).isEmpty();
+        }
+
+        @Test
+        void countsRead_whenPerUnitPerPeriod_isItsUnitAndItsPeriod() {
+            assertThat(new PerUnitPerPeriod(Money.of("3000"), Optional.of(CHILD), 2, MONTH).countsRead())
+                    .containsExactlyInAnyOrder(CHILD, MONTH);
+        }
+
+        @Test
+        void countsRead_whenPerPeriodOnly_isItsPeriod() {
+            assertThat(PerUnitPerPeriod.perPeriod(Money.of("5000"), MONTH).countsRead()).containsExactly(MONTH);
+        }
+
+        @Test
+        void countsRead_whenLeastOf_isEveryLimbsCounts() {
+            // Given — SAL-ALW-CHILDREN-EDUCATION's shape: received, and an amount per month per child
+            LeastOf least = new LeastOf(List.of(
+                    new LeastOf.Limb("received", new PercentOfBase(Rate.percent("100"), PAYMENT)),
+                    new LeastOf.Limb("per child", new PerUnitPerPeriod(Money.of("3000"), Optional.of(CHILD), 2,
+                            MONTH))));
+
+            // When / Then
+            assertThat(least.countsRead()).containsExactlyInAnyOrder(CHILD, MONTH);
+        }
+
+        @Test
+        void countsRead_whenAggregateWithCeiling_isItsSubCapsCounts() {
+            // Given
+            ComponentCode allowance = new ComponentCode("CHILDREN_EDUCATION");
+            AggregateWithCeiling aggregate = new AggregateWithCeiling(List.of(allowance,
+                    new ComponentCode("EMPLOYEE_PF")), Money.of("150000"),
+                    Map.of(allowance, PerUnitPerPeriod.perPeriod(Money.of("3000"), MONTH)));
+
+            // When / Then
+            assertThat(aggregate.countsRead()).containsExactly(MONTH);
+        }
+
+        @Test
+        void countsRead_whenAmountInExcess_isItsThresholdsCounts() {
+            // Given
+            AmountInExcess excess = new AmountInExcess(PAYMENT, PerUnitPerPeriod.perPeriod(Money.of("5000"), MONTH));
+
+            // When / Then
+            assertThat(excess.countsRead()).containsExactly(MONTH);
+        }
+
+        @Test
+        void countsRead_whenPercentOfBaseByLocation_isEmpty() {
+            // Given
+            PercentOfBaseByLocation byCity = new PercentOfBaseByLocation(SALARY, PLACE,
+                    List.of(new PercentOfBaseByLocation.Band(Set.of("MUMBAI"), Rate.percent("50"))),
+                    Rate.percent("40"));
+
+            // When / Then
+            assertThat(byCity.countsRead()).isEmpty();
+        }
+
+        @Test
+        void countsRead_whenPercentOfBaseByPopulation_isItsPopulation() {
+            // Given
+            PercentOfBaseByPopulation byPopulation = new PercentOfBaseByPopulation(SALARY, PLACE,
+                    List.of(new PercentOfBaseByPopulation.Band(1_500_000, Rate.percent("7.5"))), Rate.percent("5"));
+
+            // When / Then
+            assertThat(byPopulation.countsRead()).containsExactly(PLACE);
+        }
+    }
 }
