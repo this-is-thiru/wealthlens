@@ -118,6 +118,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_RET_AGGREGATE = new RuleSetId("RS-RET-AGGREGATE");
     public static final RuleSetId RS_RET_ENTRY = new RuleSetId("RS-RET-ENTRY");
     public static final RuleSetId RS_RET_GRATUITY_AVERAGING = new RuleSetId("RS-RET-GRATUITY-AVERAGING");
+    public static final RuleSetId RS_RET_YEAR_LIMIT = new RuleSetId("RS-RET-YEAR-LIMIT");
     public static final RuleSetId RS_SAL_ALW_CHILDREN_EDUCATION = new RuleSetId("RS-SAL-ALW-CHILDREN-EDUCATION");
     public static final RuleSetId RS_SAL_ALW_CONVEYANCE = new RuleSetId("RS-SAL-ALW-CONVEYANCE");
     public static final RuleSetId RS_SAL_ALW_HOSTEL = new RuleSetId("RS-SAL-ALW-HOSTEL");

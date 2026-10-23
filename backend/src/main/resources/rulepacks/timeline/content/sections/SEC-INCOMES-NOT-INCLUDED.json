@@ -120,6 +120,10 @@
         {
           "type": "ByRule",
           "rule": "RET-VOLUNTARY-RETIREMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT"
         }
       ]
     }

@@ -201,6 +201,7 @@ class GeneratedConstantsTest {
             "RET-RETRENCHMENT",
             "RET-RETRENCHMENT-APPROVED-SCHEME",
             "RET-VOLUNTARY-RETIREMENT",
+            "RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT",
             "SAL-ALW-CHILDREN-EDUCATION",
             "SAL-ALW-CONVEYANCE",
             "SAL-ALW-HOSTEL",

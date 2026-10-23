@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-155 — retirement paths by rule data (D-313; audit P5; N1)
-Stage           : READY — not started (W-154 closed, D-335)
-Plan            : written when taken (plans/W-155.md; likely a split, as W-153 / W-154)
+Item            : W-155b — the voluntary-retirement bars by rule data (D-336; R3)
+Stage           : READ — W-155a committed; plan for W-155b being written
+Plan            : plans/W-155b.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-155": read its WI row, the audit § W-088l1 P5 and N1 (RetirementNode :153, :208, :240, :243; NotifiedRetirementLimits :75, :102; RetirementPayment :50–60), the W-154 pattern (plans/W-154*.md: path rows with a definition, nil rows, facts dot-separated), write plans/W-155.md (a split if > §7), STOP
-Last verify     : unit -Punit 3619/0 (2026-10-23, W-154g); last full: targeted 301/0, integration 281/0 (W-154f)
-Waiting on      : the owner — "start W-155"; OQ-32, OQ-33 open
+Next step       : check whether InputsFingerprint is stored anywhere (receipts, taxplanning); read RetirementNode:239–250, LedgerSnapshot, RET-VOLUNTARY-RETIREMENT; write plans/W-155b.md; STOP
+Last verify     : targeted 208/0; unit -Punit 3619/0; integration 281/0 (2026-10-23, W-155a)
+Waiting on      : — (writing W-155b plan); the owner — where to place the unused REG basis sets finding (RS-REG-NEW-TAX-REGIME-NO-EXEMPTION / -NO-SETOFF, raised session 30); OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-154g: record the specified-security fair market value as not a finding — dispatch by FairMarketValueBasis's sealed shape, each record carrying only its method's prices, so rows would restate it (D-335; W-154 closed)
-Updated         : 2026-10-23, session 30 — W-154 closed (a – g); W-155 next
+Last item commit: taxplanning W-155a: choose the commutation and voluntary-retirement computations by the rows' shape — the entry row's CommutedPensionShare, and RS-RET-YEAR-LIMIT's conditions-only reach row, so RetirementNode holds no entry test for them (W-155 split D-336; D-337)
+Updated         : 2026-10-23, session 30 — W-155a done and committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

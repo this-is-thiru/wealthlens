@@ -182,6 +182,7 @@ public final class RuleIds {
     public static final RuleId RET_RETRENCHMENT = new RuleId("RET-RETRENCHMENT");
     public static final RuleId RET_RETRENCHMENT_APPROVED_SCHEME = new RuleId("RET-RETRENCHMENT-APPROVED-SCHEME");
     public static final RuleId RET_VOLUNTARY_RETIREMENT = new RuleId("RET-VOLUNTARY-RETIREMENT");
+    public static final RuleId RET_YEAR_LIMIT_VOLUNTARY_RETIREMENT = new RuleId("RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT");
     public static final RuleId SAL_ALW_CHILDREN_EDUCATION = new RuleId("SAL-ALW-CHILDREN-EDUCATION");
     public static final RuleId SAL_ALW_CONVEYANCE = new RuleId("SAL-ALW-CONVEYANCE");
     public static final RuleId SAL_ALW_HOSTEL = new RuleId("SAL-ALW-HOSTEL");

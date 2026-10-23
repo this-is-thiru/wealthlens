@@ -75,7 +75,8 @@ public final class RetirementNode implements ComputationNode {
 
     @Override
     public Set<RuleSetId> ruleSets() {
-        return Set.of(RuleSetIds.RS_RET_ENTRY, RuleSetIds.RS_RET_AGGREGATE, RuleSetIds.RS_RET_GRATUITY_AVERAGING);
+        return Set.of(RuleSetIds.RS_RET_ENTRY, RuleSetIds.RS_RET_AGGREGATE, RuleSetIds.RS_RET_GRATUITY_AVERAGING,
+                RuleSetIds.RS_RET_YEAR_LIMIT);
     }
 
     @Override
@@ -150,7 +151,7 @@ public final class RetirementNode implements ComputationNode {
         }
         Claim claim = new Claim(payment, received, sequence);
         GoverningRow row = new GoverningRow(ruleId, version);
-        if (payment.entry() == RetirementEntry.OTHER_EMPLOYER_COMMUTATION) {
+        if (version.definition().filter(CommutedPensionShare.class::isInstance).isPresent()) {
             return Optional.of(commutation(ctx, components, claim, row));
         }
         return Optional.of(limited(ctx, claim, row, allowedThisYear));
@@ -205,7 +206,7 @@ public final class RetirementNode implements ComputationNode {
             return ctx.traceLine(claim.sequence(), row.id(), StepKind.DEDUCTION, received, deducted.value())
                     .withLimitedBy(deducted.limitedBy() + "; separation on " + entitlement.separatedOn());
         }
-        if (payment.entry() == RetirementEntry.VOLUNTARY_RETIREMENT) {
+        if (ctx.optionalRuleOf(RuleSetIds.RS_RET_YEAR_LIMIT, entry(payment)).isPresent()) {
             return voluntaryRetirement(ctx, row.id(), received,
                     allowedThisYear.getOrDefault(payment.entry(), Money.ZERO), claim.sequence());
         }

@@ -626,6 +626,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-RET-YEAR-LIMIT",
+      "_note": "The retirement entries limited once for the employee's year across all payments, not per payment (S2 s.19(1) Table Sl. 12, \"any scheme or schemes\"; D-227): an entry the set reaches by retirement.entry takes one limit for the year (W-155a)",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-SAL-ALW-CHILDREN-EDUCATION",
       "_note": "One row: SAL-ALW-CHILDREN-EDUCATION",
       "selection": "EXACTLY_ONE",
