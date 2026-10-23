@@ -135,8 +135,8 @@ class RetirementNodeTest {
     @Test
     void evaluate_whenVoluntaryRetirementWasAllowedInAnotherYear_givesANilLineNamingIt() {
         // Given — s.19(2)(e)(ii): once only
-        LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2021)), Money.ZERO,
-                Money.ZERO, Map.of(), Optional.empty(), Map.of());
+        LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2021)), Map.of(),
+                Map.of(), Optional.empty(), Map.of());
 
         // When
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
@@ -152,8 +152,8 @@ class RetirementNodeTest {
     @Test
     void evaluate_whenVoluntaryRetirementWasAllowedInThisYear_isStillDeducted() {
         // Given — a recomputation of the year the deduction was allowed in
-        LedgerSnapshot thisYear = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2026)), Money.ZERO,
-                Money.ZERO, Map.of(), Optional.empty(), Map.of());
+        LedgerSnapshot thisYear = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2026)), Map.of(),
+                Map.of(), Optional.empty(), Map.of());
 
         // When
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
@@ -181,7 +181,7 @@ class RetirementNodeTest {
     void evaluate_whenBothBarsReachTheVoluntaryRetirementAmount_namesTheFirstInTheSetsOrder() {
         // Given — arrears relief allowed on the amount, and a deduction under the entry allowed in 2021-22
         LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.VOLUNTARY_RETIREMENT,
-                TaxYearId.of(2021)), Money.ZERO, Money.ZERO, Map.of(), Optional.empty(), Map.of());
+                TaxYearId.of(2021)), Map.of(), Map.of(), Optional.empty(), Map.of());
 
         // When
         NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
@@ -199,9 +199,9 @@ class RetirementNodeTest {
 
     @Test
     void evaluate_whenOtherGratuityWasAllowedInAnotherYear_isNotBarred() {
-        // Given — no RS-RET-BAR row reaches other gratuity; its earlier years count only through gratuityAlreadyAllowed
+        // Given — no RS-RET-BAR row reaches other gratuity; its earlier years count only through retirementAllowedBefore
         LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.OTHER_GRATUITY,
-                TaxYearId.of(2021)), Money.ZERO, Money.ZERO, Map.of(), Optional.empty(), Map.of());
+                TaxYearId.of(2021)), Map.of(), Map.of(), Optional.empty(), Map.of());
 
         // When — 25 completed years on an average of 1,00,000: least of 15,00,000, 20,00,000 and
         // 1/2 × 1,00,000 × 25 = 12,50,000
@@ -334,9 +334,14 @@ class RetirementNodeTest {
         return new Separation(separatedOn.minusYears(25).minusMonths(3), separatedOn, months);
     }
 
+    private static LedgerSnapshot earlier(RetirementEntry entry, String allowed) {
+        return new LedgerSnapshot(Map.of(), Map.of(), Map.of(entry, Money.of(allowed)), Map.of(), Optional.empty(),
+                Map.of());
+    }
+
     private static LedgerSnapshot allowedBefore(String gratuity, String leave) {
-        return new LedgerSnapshot(Map.of(), Map.of(), Money.of(gratuity), Money.of(leave), Map.of(),
-                Optional.empty(), Map.of());
+        return new LedgerSnapshot(Map.of(), Map.of(), Map.of(RetirementEntry.OTHER_GRATUITY, Money.of(gratuity),
+                RetirementEntry.OTHER_LEAVE_ENCASHMENT, Money.of(leave)), Map.of(), Optional.empty(), Map.of());
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -469,6 +474,53 @@ class RetirementNodeTest {
                 allowedBefore("0", "2000000"));
 
         // Then — and in the new regime too
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.RET_LEAVE_ENCASHMENT_AGGREGATE));
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenEarlierYearsAllowedStatutoryGratuity_countsItInTheAggregatesB(int year) {
+        // When — s.19(2)(a)'s B is "gratuity or gratuities … allowed" (D-339 C3a): 12,50,000 on Sl. 6 (25 years on
+        // 1,00,000), but A − B = 20,00,000 − 10,00,000 = 10,00,000
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY,
+                        retiringInJune(year, Map.of(ComponentCodes.BASIC, Money.of("100000"))))),
+                earlier(RetirementEntry.STATUTORY_GRATUITY, "1000000"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_AGGREGATE);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("1250000")));
+        });
+    }
+
+    @Test
+    void evaluate_whenEarlierYearsAllowedOnlyAnotherKindOfPayment_leavesTheGratuityAggregateWhole() {
+        // When — no RS-RET-AGGREGATE-HISTORY row counts voluntary retirement towards gratuity's B: 12,50,000 stands
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY,
+                        retiringInJune(2026, Map.of(ComponentCodes.BASIC, Money.of("100000"))))),
+                earlier(RetirementEntry.VOLUNTARY_RETIREMENT, "1000000"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1250000")));
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_OTHER));
+    }
+
+    @Test
+    void evaluate_whenEarlierYearsAllowedGovernmentLeaveEncashment_countsItInTheAggregatesB() {
+        // When — s.19(2)(f)'s B is "payment or payments … allowed" (D-339 C3a): least of 8,00,000, 9,00,000,
+        // 10 × 1,00,000 and 25,00,000 is 8,00,000, but A − B = 25,00,000 − 20,00,000 = 5,00,000
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.LEAVE_ENCASHMENT, "800000")),
+                List.of(RetirementPayment.otherLeaveEncashment(0, ComponentCodes.LEAVE_ENCASHMENT,
+                        new LeaveAtRetirement(LocalDate.of(2026, 6, 30), Money.of("900000"), Money.of("100000")))),
+                earlier(RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT, "2000000"));
+
+        // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("500000")));
         assertThat(result.trace()).singleElement()
                 .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.RET_LEAVE_ENCASHMENT_AGGREGATE));

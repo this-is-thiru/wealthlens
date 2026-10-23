@@ -620,6 +620,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-RET-AGGREGATE-HISTORY",
+      "_note": "Which earlier retirement deductions form an aggregate's B (S2 s.19(2)(a), (f); 1961 s.10(10)(iii), (10AA)(ii) provisos): a row reached by the payment's entry and an earlier entry the ledger holds counts that entry's earlier amount towards the B of the payment's aggregate (W-155c1, D-339)",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-RET-BAR",
       "_note": "The bars on a retirement deduction, in the order tried: the first row whose conditions reach the payment bars it, and the payment is a nil line on its entry row naming that row (S2 s.19(2)(e)(ii)–(iii); 1961 s.10(10C) second and third provisos; W-155b, D-336)",
       "selection": "ALL_THAT_APPLY",

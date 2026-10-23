@@ -11,11 +11,13 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SalaryAveragingPeriod;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
@@ -46,6 +48,9 @@ final class NotifiedRetirementLimits {
     private static final BaseId LEAVE_SALARY_AT_CREDIT = new BaseId("LEAVE_SALARY_AT_CREDIT");
     private static final BaseId AVERAGE_MONTHLY_SALARY = new BaseId("AVERAGE_MONTHLY_SALARY");
 
+    /** An entry the ledger holds earlier amounts for — what {@code RS-RET-AGGREGATE-HISTORY}'s rows read (D-339). */
+    private static final ItemFactId EARLIER_ENTRY = new ItemFactId("retirement.earlier.entry");
+
     private NotifiedRetirementLimits() {
     }
 
@@ -71,21 +76,23 @@ final class NotifiedRetirementLimits {
         });
     }
 
-    /** The amounts the entry's least-of reads, after refusing an event its notification does not cover. */
+    /**
+     * The amounts the entry's least-of reads, from the facts the payment carries, after refusing an event its
+     * notification does not cover. Which of them the row reads is its cap's to say (W-155c1).
+     */
     static CapContext context(NodeContext ctx, RetirementPayment payment,
             RuleVersion version, Map<BaseId, Money> received) {
         Map<BaseId, Money> bases = new HashMap<>(received);
-        if (payment.entry() == RetirementEntry.OTHER_GRATUITY) {
-            Separation separation = payment.separation().orElseThrow();
+        payment.separation().ifPresent(separation -> {
             requireCovered(version, separation.separatedOn(), payment);
             Money average = averageSalary(ctx, separation, ctx.inputs().entered().employments().get(payment.employment()));
             bases.put(AVERAGE_SALARY_BY_COMPLETED_YEARS, average.times(separation.completedYears()));
-        } else {
-            LeaveAtRetirement leave = payment.leave().orElseThrow();
+        });
+        payment.leave().ifPresent(leave -> {
             requireCovered(version, leave.retiredOn(), payment);
             bases.put(LEAVE_SALARY_AT_CREDIT, leave.leaveSalaryAtCredit());
             bases.put(AVERAGE_MONTHLY_SALARY, leave.averageMonthlySalary());
-        }
+        });
         return new CapContext(Map.copyOf(bases));
     }
 
@@ -96,15 +103,12 @@ final class NotifiedRetirementLimits {
      * entry, in the order entered, come off it first; which payment absorbs the cut changes no tax (D-225).
      */
     static TraceLine capped(NodeContext ctx, RetirementPayment payment, Money allowedThisYear, TraceLine line) {
-        RetirementEntry entry = payment.entry();
         RuleId aggregateId = ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.factsOf(ctx, payment))
                 .orElseThrow().id();
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(aggregateId), ctx.inputs().temporal());
         Money limit = TemporallyApportionedCap.apply(ctx.rule(aggregateId), ctx.inputs().temporal(),
                 new CapContext(Map.of())).value();
-        Money allowedBefore = entry == RetirementEntry.OTHER_GRATUITY
-                ? ctx.inputs().ledgers().gratuityAlreadyAllowed()
-                : ctx.inputs().ledgers().leaveEncashmentAlreadyAllowed();
+        Money allowedBefore = allowedBefore(ctx, payment);
         Money remaining = limit.minus(allowedBefore).floorAtZero().minus(allowedThisYear).floorAtZero();
         Money allowed = line.out().asMoney();
         if (allowed.isLessThanOrEqual(remaining)) {
@@ -118,6 +122,25 @@ final class NotifiedRetirementLimits {
         return TraceLine.of(line.sequence(), line.node(), aggregateId, line.kind(), MoneyValue.of(allowed),
                         MoneyValue.of(remaining), version.provenance())
                 .withLimitedBy(why);
+    }
+
+    /**
+     * The aggregate's B: what earlier years allowed under each entry an {@code RS-RET-AGGREGATE-HISTORY} row counts
+     * towards the payment's aggregate (S2 s.19(2)(a), (f); D-339). Which entries count is the rows' to say.
+     */
+    private static Money allowedBefore(NodeContext ctx, RetirementPayment payment) {
+        ItemFacts facts = RetirementNode.factsOf(ctx, payment);
+        return ctx.inputs().ledgers().retirementAllowedBefore().entrySet().stream()
+                .filter(earlier -> ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE_HISTORY,
+                        withEarlierEntry(facts, earlier.getKey())).isPresent())
+                .map(Map.Entry::getValue)
+                .reduce(Money.ZERO, Money::plus);
+    }
+
+    private static ItemFacts withEarlierEntry(ItemFacts facts, RetirementEntry earlier) {
+        Map<ItemFactId, String> codes = new HashMap<>(facts.codes());
+        codes.put(EARLIER_ENTRY, earlier.name());
+        return new ItemFacts(codes, facts.quantities(), facts.dates());
     }
 
     private static void requireCovered(RuleVersion version, LocalDate event, RetirementPayment payment) {

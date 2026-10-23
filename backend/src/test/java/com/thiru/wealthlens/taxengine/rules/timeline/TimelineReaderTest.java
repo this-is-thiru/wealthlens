@@ -97,6 +97,8 @@ class TimelineReaderTest {
             new RuleId("RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT"),
             new RuleId("RET-BAR-ARREARS-RELIEF"),
             new RuleId("RET-BAR-ONCE-ONLY"),
+            new RuleId("RET-AGGREGATE-HISTORY-GRATUITY"),
+            new RuleId("RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT"),
             new RuleId("SAL-ENTMT-ALLOWANCE"),
             new RuleId("SAL-SALARY-FOR-ENTMT"),
             new RuleId("RET-GRATUITY-OTHER"),

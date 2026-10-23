@@ -87,6 +87,10 @@
         },
         {
           "type": "ByRule",
+          "rule": "RET-AGGREGATE-HISTORY-GRATUITY"
+        },
+        {
+          "type": "ByRule",
           "rule": "RET-COMMUTED-PENSION-GOVERNMENT"
         },
         {
@@ -108,6 +112,10 @@
         {
           "type": "ByRule",
           "rule": "RET-LEAVE-ENCASHMENT-AGGREGATE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT"
         },
         {
           "type": "ByRule",

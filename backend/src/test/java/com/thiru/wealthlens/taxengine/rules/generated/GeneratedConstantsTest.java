@@ -187,6 +187,8 @@ class GeneratedConstantsTest {
             "REBATE-RESIDENT-INDIVIDUAL",
             "REG-NEW-TAX-REGIME-NO-EXEMPTION",
             "REG-NEW-TAX-REGIME-NO-SETOFF",
+            "RET-AGGREGATE-HISTORY-GRATUITY",
+            "RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT",
             "RET-BAR-ARREARS-RELIEF",
             "RET-BAR-ONCE-ONLY",
             "RET-COMMUTED-PENSION-FUND",

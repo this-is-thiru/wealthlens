@@ -146,12 +146,11 @@ class InputsFingerprintTest {
                                             Optional.empty(),
                                             false, true)))))),
                     Arguments.of(
-                            "ledgers.gratuityAlreadyAllowed",
+                            "ledgers.retirementAllowedBefore",
                             mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(
                                     Map.of(),
                                     Map.of(),
-                                    com.thiru.wealthlens.taxengine.rules.money.Money.of("100000"),
-                                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                                    Map.of(RetirementEntry.OTHER_GRATUITY, com.thiru.wealthlens.taxengine.rules.money.Money.of("100000")),
                                     Map.of(),
                                     Optional.empty(), Map.of())))),
                     Arguments.of(
@@ -179,8 +178,7 @@ class InputsFingerprintTest {
                             mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(
                                     Map.of(),
                                     Map.of(),
-                                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
-                                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                                    Map.of(),
                                     Map.of(),
                                     Optional.empty(),
                                     Map.of(TaxYearId.of(2024), new CarriedCapitalLoss(
@@ -285,8 +283,7 @@ class InputsFingerprintTest {
             // Given — D-100: journeys already claimed in block 2022-2025
             EngineInputs claimed = copy(baseline(), r -> r.ledgers = new LedgerSnapshot(
                     Map.of(2022, new LeaveTravelBlock(1, false)), Map.of(),
-                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
-                    com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, Map.of(), Optional.empty(), Map.of()));
+                    Map.of(), Map.of(), Optional.empty(), Map.of()));
 
             // When / Then
             assertThat(hashOf(claimed)).isNotEqualTo(hashOf(baseline()));

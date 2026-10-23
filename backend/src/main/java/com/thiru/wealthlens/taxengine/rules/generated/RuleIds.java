@@ -168,6 +168,8 @@ public final class RuleIds {
     public static final RuleId REBATE_RESIDENT_INDIVIDUAL = new RuleId("REBATE-RESIDENT-INDIVIDUAL");
     public static final RuleId REG_NEW_TAX_REGIME_NO_EXEMPTION = new RuleId("REG-NEW-TAX-REGIME-NO-EXEMPTION");
     public static final RuleId REG_NEW_TAX_REGIME_NO_SETOFF = new RuleId("REG-NEW-TAX-REGIME-NO-SETOFF");
+    public static final RuleId RET_AGGREGATE_HISTORY_GRATUITY = new RuleId("RET-AGGREGATE-HISTORY-GRATUITY");
+    public static final RuleId RET_AGGREGATE_HISTORY_LEAVE_ENCASHMENT = new RuleId("RET-AGGREGATE-HISTORY-LEAVE-ENCASHMENT");
     public static final RuleId RET_BAR_ARREARS_RELIEF = new RuleId("RET-BAR-ARREARS-RELIEF");
     public static final RuleId RET_BAR_ONCE_ONLY = new RuleId("RET-BAR-ONCE-ONLY");
     public static final RuleId RET_COMMUTED_PENSION_FUND = new RuleId("RET-COMMUTED-PENSION-FUND");

@@ -232,8 +232,7 @@ class AssesseeTest {
             LedgerSnapshot ledgers = new LedgerSnapshot(
                     Map.of(),
                     Map.of(),
-                    Money.ZERO,
-                    Money.ZERO,
+                    Map.of(),
                     mutable,
                     Optional.empty(), Map.of());
 
@@ -251,12 +250,12 @@ class AssesseeTest {
             LedgerSnapshot ledgers = new LedgerSnapshot(
                     Map.of(2022, new LeaveTravelBlock(2, true)),
                     Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2020)),
-                    Money.of("500000"),
-                    Money.of("300000"),
+                    Map.of(RetirementEntry.OTHER_GRATUITY, Money.of("500000"),
+                            RetirementEntry.OTHER_LEAVE_ENCASHMENT, Money.of("300000")),
                     Map.of(),
                     Optional.of(TaxYearId.of(2022)), Map.of());
 
-            assertThat(ledgers.gratuityAlreadyAllowed()).isEqualTo(Money.of("500000"));
+            assertThat(ledgers.retirementAllowedBefore()).containsEntry(RetirementEntry.OTHER_GRATUITY, Money.of("500000"));
             assertThat(ledgers.leaveTravelBlock(2022)).isEqualTo(new LeaveTravelBlock(2, true));
         }
 
@@ -270,8 +269,7 @@ class AssesseeTest {
             LedgerSnapshot claimed = new LedgerSnapshot(
                     Map.of(),
                     mutable,
-                    Money.ZERO,
-                    Money.ZERO,
+                    Map.of(),
                     Map.of(),
                     Optional.empty(), Map.of());
             mutable.put(RetirementEntry.OTHER_GRATUITY, TaxYearId.of(2020));
@@ -288,11 +286,23 @@ class AssesseeTest {
                             Map.of(),
                             Map.of(),
                             null,
-                            Money.ZERO,
                             Map.of(),
                             Optional.empty(), Map.of()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("different ceilings");
+        }
+
+        @Test
+        void retirementAllowedBefore_whenAnAmountIsNegative_isRefused() {
+            // When / Then — an amount allowed is a fact of history, never below nil
+            assertThatThrownBy(() -> new LedgerSnapshot(
+                            Map.of(),
+                            Map.of(),
+                            Map.of(RetirementEntry.OTHER_GRATUITY, Money.of("-1")),
+                            Map.of(),
+                            Optional.empty(), Map.of()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("never negative");
         }
 
         @Test
@@ -326,7 +336,7 @@ class AssesseeTest {
         void anEmptyLedgerIsAFirstReturn() {
             LedgerSnapshot empty = LedgerSnapshot.empty();
 
-            assertThat(empty.gratuityAlreadyAllowed()).isEqualTo(Money.ZERO);
+            assertThat(empty.retirementAllowedBefore()).isEmpty();
             assertThat(empty.housePropertyLossCarriedForward()).isEmpty();
             assertThat(empty.leaveTravelByBlock()).isEmpty();
         }

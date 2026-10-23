@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-155c — the notified entries' bases, B, and each entry's facts by rule data (D-336; R4 – R6)
+Item            : W-155c2 — which facts a retirement payment may carry, from its rows (D-339; R6)
 Stage           : NOT STARTED — plan to write
-Plan            : (none yet) — W-155b's proposals to weigh: RetirementPayment:62 (R6), SEC-SALARY-RETIREMENT disqualifier enforcedBy, OtherSourcesNode.reaches onto RowReach
-Approved        : W-155 split (D-336); W-155a (D-337), W-155b (D-338) done
+Plan            : (none yet) — R6: a CapShape base walk (nine shapes), the CommutedPensionShare definition, RS-RET-BAR's item facts; RetirementPayment:50–65 and :62; the nine RetirementPaymentTest refusals move to the node
+Approved        : W-155c split (D-339); W-155c1 done (D-340)
 Steps done      : —
-Next step       : read W-155c's row and D-336, write plans/W-155c.md, explain it, ask approval (do NOT code). Also still open: where to place the REG basis-set finding (STATE Notes for resume, session 30)
-Last verify     : targeted 454/0; unit -Punit 3621/0; integration 281/0 (2026-10-23, W-155b)
+Next step       : read W-155c2's row and plans/W-155c.md, write plans/W-155c2.md, explain it, ask approval (do NOT code). Also still open: where to place the REG basis-set finding (STATE Notes for resume, session 30)
+Last verify     : targeted 352/0; unit -Punit 3626/0; integration 281/0 (2026-10-23, W-155c1)
 Waiting on      : the owner — placement of the REG basis-set finding; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-155b: state the voluntary-retirement bars as rule data — RS-RET-BAR's ordered conditions-only rows, reached by the payment's facts and the ledger's year per entry, so RetirementNode holds no entry test for them (D-338)
-Updated         : 2026-10-23, session 31 — W-155b approved and committed; next W-155c
+Last item commit: taxplanning W-155c1: take the notified entries' bases from the facts given and B from rows — RS-RET-AGGREGATE-HISTORY's conditions-only rows over a per-entry ledger, so NotifiedRetirementLimits holds no entry test (W-155c split D-339; D-340)
+Updated         : 2026-10-23, session 31 — W-155c1 approved and committed; next W-155c2
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

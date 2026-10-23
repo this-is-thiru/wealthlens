@@ -30,8 +30,10 @@ import java.util.Optional;
  * @param deductionAllowedIn the tax year a deduction under each retirement entry was allowed, where one was. Keyed by
  *     entry, not held for voluntary retirement alone, because which entries are allowed once only is the
  *     {@code RS-RET-BAR} rows' to say, not this record's (W-155b; D-336)
- * @param gratuityAlreadyAllowed the {@code B} of {@code RET-GRAT-AGG-001}'s {@code A − B}
- * @param leaveEncashmentAlreadyAllowed the {@code B} of {@code RET-LEAVE-AGG-001}'s {@code A − B}
+ * @param retirementAllowedBefore what each retirement entry allowed in earlier tax years, from every employer. A fact
+ *     per entry, not an aggregate's {@code B}: which entries form the {@code B} of {@code RET-GRATUITY-AGGREGATE}'s
+ *     and {@code RET-LEAVE-ENCASHMENT-AGGREGATE}'s {@code A − B} is the {@code RS-RET-AGGREGATE-HISTORY} rows' to say
+ *     (S2 s.19(2)(a), (f); W-155c1, D-339)
  * @param housePropertyLossCarriedForward each carried house-property loss by the year it arose, so the
  *     eight-year expiry is computable (S2 s.110; 1961 s.71B; D-218). The part attributable to a deduction
  *     the new regime disallows is <b>destroyed, not deferred,</b> in a new-regime year (S2 s.202(3);
@@ -43,8 +45,7 @@ import java.util.Optional;
 public record LedgerSnapshot(
         Map<Integer, LeaveTravelBlock> leaveTravelByBlock,
         Map<RetirementEntry, TaxYearId> deductionAllowedIn,
-        Money gratuityAlreadyAllowed,
-        Money leaveEncashmentAlreadyAllowed,
+        Map<RetirementEntry, Money> retirementAllowedBefore,
         Map<TaxYearId, CarriedHousePropertyLoss> housePropertyLossCarriedForward,
         Optional<TaxYearId> educationLoanInterestFirstYear,
         Map<TaxYearId, CarriedCapitalLoss> capitalLossCarriedForward) {
@@ -55,12 +56,19 @@ public record LedgerSnapshot(
                     "LedgerSnapshot.leaveTravelByBlock may not be null; pass an empty map where nothing was claimed");
         }
         leaveTravelByBlock = Map.copyOf(leaveTravelByBlock);
-        if (gratuityAlreadyAllowed == null || leaveEncashmentAlreadyAllowed == null) {
+        if (retirementAllowedBefore == null) {
             throw new IllegalArgumentException(
-                    "LedgerSnapshot aggregate figures may not be null; pass Money.ZERO where"
+                    "LedgerSnapshot.retirementAllowedBefore may not be null; pass an empty map where"
                             + " nothing has been allowed, because 'nothing yet' and 'never asked'"
                             + " give different ceilings");
         }
+        retirementAllowedBefore.forEach((entry, allowed) -> {
+            if (allowed.isLessThan(Money.ZERO)) {
+                throw new IllegalArgumentException("LedgerSnapshot.retirementAllowedBefore: " + entry + " allowed "
+                        + allowed + " in earlier years; an amount allowed is never negative");
+            }
+        });
+        retirementAllowedBefore = Map.copyOf(retirementAllowedBefore);
         if (deductionAllowedIn == null) {
             throw new IllegalArgumentException(
                     "LedgerSnapshot.deductionAllowedIn may not be null; pass an empty map where no retirement deduction"
@@ -91,8 +99,7 @@ public record LedgerSnapshot(
         return new LedgerSnapshot(
                 Map.of(),
                 Map.of(),
-                Money.ZERO,
-                Money.ZERO,
+                Map.of(),
                 Map.of(),
                 Optional.empty(),
                 Map.of());

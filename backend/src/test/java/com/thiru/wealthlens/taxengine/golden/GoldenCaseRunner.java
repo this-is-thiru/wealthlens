@@ -280,8 +280,8 @@ final class GoldenCaseRunner {
     /** A first return, but for the journeys earlier years claimed in each LTA block. */
     private static LedgerSnapshot ledger(SalaryGoldenCase.Salary salary) {
         LedgerSnapshot empty = LedgerSnapshot.empty();
-        return new LedgerSnapshot(salary.leaveTravelLedger(), empty.deductionAllowedIn(), empty.gratuityAlreadyAllowed(),
-                empty.leaveEncashmentAlreadyAllowed(),
+        return new LedgerSnapshot(salary.leaveTravelLedger(), empty.deductionAllowedIn(),
+                empty.retirementAllowedBefore(),
                 empty.housePropertyLossCarriedForward(), empty.educationLoanInterestFirstYear(), Map.of());
     }
 
