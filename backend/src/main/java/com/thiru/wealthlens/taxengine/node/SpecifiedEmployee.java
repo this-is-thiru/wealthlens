@@ -4,8 +4,6 @@ import com.thiru.wealthlens.taxengine.input.CompanyEmployer;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
-import com.thiru.wealthlens.taxengine.rules.condition.Condition;
-import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
@@ -40,11 +38,7 @@ final class SpecifiedEmployee {
      * item is a perquisite only for a specified employee (W-154b).
      */
     static boolean gates(NodeContext ctx, ItemFacts item) {
-        ConditionContext about = ctx.conditions().about(item);
-        return TemporallyApportionedCap.governingVersion(ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE),
-                        ctx.inputs().temporal()).conditions().stream()
-                .filter(Condition::isAboutItem)
-                .allMatch(condition -> condition.holds(about));
+        return RowReach.holdsFor(ctx, ctx.ruleOf(RuleSetIds.RS_PERQ_SPECIFIED_EMPLOYEE), item);
     }
 
     /** Whether the employee of this employment is a specified employee. */

@@ -51,7 +51,7 @@ final class NotifiedRetirementLimits {
 
     /** Whether the payment's entry is capped by notification: whether the aggregate set has a row for it (D-253). */
     static boolean isNotified(NodeContext ctx, RetirementPayment payment) {
-        return ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.entry(payment)).isPresent();
+        return ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.factsOf(ctx, payment)).isPresent();
     }
 
     /** Refuses an employment's gratuity and leave encashment that name different days: one employment ends once. */
@@ -97,7 +97,7 @@ final class NotifiedRetirementLimits {
      */
     static TraceLine capped(NodeContext ctx, RetirementPayment payment, Money allowedThisYear, TraceLine line) {
         RetirementEntry entry = payment.entry();
-        RuleId aggregateId = ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.entry(payment))
+        RuleId aggregateId = ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.factsOf(ctx, payment))
                 .orElseThrow().id();
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(aggregateId), ctx.inputs().temporal());
         Money limit = TemporallyApportionedCap.apply(ctx.rule(aggregateId), ctx.inputs().temporal(),

@@ -231,7 +231,7 @@ class AssesseeTest {
             mutable.put(TaxYearId.of(2024), new CarriedHousePropertyLoss(Money.of("200000"), Money.ZERO, Money.ZERO));
             LedgerSnapshot ledgers = new LedgerSnapshot(
                     Map.of(),
-                    Optional.empty(),
+                    Map.of(),
                     Money.ZERO,
                     Money.ZERO,
                     mutable,
@@ -250,7 +250,7 @@ class AssesseeTest {
             // a past year's answer.
             LedgerSnapshot ledgers = new LedgerSnapshot(
                     Map.of(2022, new LeaveTravelBlock(2, true)),
-                    Optional.of(TaxYearId.of(2020)),
+                    Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2020)),
                     Money.of("500000"),
                     Money.of("300000"),
                     Map.of(),
@@ -261,25 +261,32 @@ class AssesseeTest {
         }
 
         @Test
-        void vrsIsOnceInALifetimeAndTheLedgerSaysWhether() {
-            assertThat(LedgerSnapshot.empty().vrsAlreadyClaimed()).isFalse();
+        void deductionAllowedIn_whenAnEntryWasAllowed_holdsItsYearAndIsDefensivelyCopied() {
+            // Given — W-155b: the year per entry; which entries are once only is RS-RET-BAR's to say
+            Map<RetirementEntry, TaxYearId> mutable = new HashMap<>();
+            mutable.put(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2019));
 
+            // When
             LedgerSnapshot claimed = new LedgerSnapshot(
                     Map.of(),
-                    Optional.of(TaxYearId.of(2019)),
+                    mutable,
                     Money.ZERO,
                     Money.ZERO,
                     Map.of(),
                     Optional.empty(), Map.of());
+            mutable.put(RetirementEntry.OTHER_GRATUITY, TaxYearId.of(2020));
 
-            assertThat(claimed.vrsAlreadyClaimed()).isTrue();
+            // Then
+            assertThat(LedgerSnapshot.empty().deductionAllowedIn()).isEmpty();
+            assertThat(claimed.deductionAllowedIn())
+                    .containsExactly(Map.entry(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2019)));
         }
 
         @Test
         void aNullAggregateIsRejectedBecauseNothingYetDiffersFromNeverAsked() {
             assertThatThrownBy(() -> new LedgerSnapshot(
                             Map.of(),
-                            Optional.empty(),
+                            Map.of(),
                             null,
                             Money.ZERO,
                             Map.of(),

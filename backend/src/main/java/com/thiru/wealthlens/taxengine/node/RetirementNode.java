@@ -60,6 +60,15 @@ public final class RetirementNode implements ComputationNode {
     /** What a retirement payment's row is chosen by: the entry the taxpayer says it falls under (D-253). */
     static final ItemFactId RETIREMENT_ENTRY = new ItemFactId("retirement.entry");
 
+    /** Whether relief for arrears was allowed on the payment's amount — what {@code RET-BAR-ARREARS-RELIEF} reads. */
+    static final ItemFactId ARREARS_RELIEF_ALLOWED = new ItemFactId("retirement.arrears.relief.allowed");
+
+    /**
+     * Whether the ledger holds a deduction under the payment's entry allowed in a tax year other than this one — what
+     * {@code RET-BAR-ONCE-ONLY} reads. This year's own is not another year's, so recomputing it is not barred.
+     */
+    static final ItemFactId ALLOWED_IN_ANOTHER_YEAR = new ItemFactId("retirement.allowed.in.another.year");
+
     private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
     private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
 
@@ -76,7 +85,7 @@ public final class RetirementNode implements ComputationNode {
     @Override
     public Set<RuleSetId> ruleSets() {
         return Set.of(RuleSetIds.RS_RET_ENTRY, RuleSetIds.RS_RET_AGGREGATE, RuleSetIds.RS_RET_GRATUITY_AVERAGING,
-                RuleSetIds.RS_RET_YEAR_LIMIT);
+                RuleSetIds.RS_RET_YEAR_LIMIT, RuleSetIds.RS_RET_BAR);
     }
 
     @Override
@@ -135,7 +144,7 @@ public final class RetirementNode implements ComputationNode {
     /** One payment's line; none where its rule does not apply in the regime. */
     private static Optional<TraceLine> payment(NodeContext ctx, ComponentSet components, RetirementPayment payment,
             Map<RetirementEntry, Money> allowedThisYear, int sequence) {
-        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_RET_ENTRY, entry(payment));
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_RET_ENTRY, factsOf(ctx, payment));
         requireFeeds(ctx, payment, ruleId);
         TemporalContext t = ctx.inputs().temporal();
         RuleRow rule = ctx.rule(ruleId);
@@ -144,10 +153,10 @@ public final class RetirementNode implements ComputationNode {
             return Optional.empty();
         }
         Money received = paid(components, payment);
-        Optional<String> barred = voluntaryRetirementBar(ctx, payment);
-        if (barred.isPresent()) {
+        Optional<RuleRow> bar = bar(ctx, payment);
+        if (bar.isPresent()) {
             return Optional.of(ctx.traceLine(sequence, ruleId, StepKind.DEDUCTION, received, Money.ZERO)
-                    .withLimitedBy(barred.get()));
+                    .withLimitedBy(barredBy(ctx, bar.get(), payment)));
         }
         Claim claim = new Claim(payment, received, sequence);
         GoverningRow row = new GoverningRow(ruleId, version);
@@ -206,7 +215,7 @@ public final class RetirementNode implements ComputationNode {
             return ctx.traceLine(claim.sequence(), row.id(), StepKind.DEDUCTION, received, deducted.value())
                     .withLimitedBy(deducted.limitedBy() + "; separation on " + entitlement.separatedOn());
         }
-        if (ctx.optionalRuleOf(RuleSetIds.RS_RET_YEAR_LIMIT, entry(payment)).isPresent()) {
+        if (ctx.optionalRuleOf(RuleSetIds.RS_RET_YEAR_LIMIT, factsOf(ctx, payment)).isPresent()) {
             return voluntaryRetirement(ctx, row.id(), received,
                     allowedThisYear.getOrDefault(payment.entry(), Money.ZERO), claim.sequence());
         }
@@ -234,26 +243,37 @@ public final class RetirementNode implements ComputationNode {
     }
 
     /**
-     * Why a voluntary retirement deduction is barred, if it is: allowed once only, and never after relief for arrears
-     * on the amount (s.19(2)(e)(ii)–(iii); 1961 s.10(10C) second and third provisos).
+     * The row barring the payment's deduction, if one does: the first {@code RS-RET-BAR} row, in the set's order, that
+     * applies in the regime and reaches the payment (s.19(2)(e)(ii)–(iii); 1961 s.10(10C) second and third provisos;
+     * W-155b). Which entries a bar reaches, and which bar is named where several do, are the rows' to say.
      */
-    private static Optional<String> voluntaryRetirementBar(NodeContext ctx, RetirementPayment payment) {
-        if (payment.entry() != RetirementEntry.VOLUNTARY_RETIREMENT) {
-            return Optional.empty();
-        }
-        if (payment.arrearsReliefAllowed()) {
-            return Optional.of("barred: relief for arrears was allowed on the amount");
-        }
-        TaxYearId year = ctx.inputs().taxYear();
-        return ctx.inputs().ledgers().vrsClaimedIn()
-                .filter(claimed -> !claimed.equals(year))
-                .map(claimed -> "barred: a voluntary retirement deduction was allowed in " + claimed
-                        + ", and it is allowed once only");
+    private static Optional<RuleRow> bar(NodeContext ctx, RetirementPayment payment) {
+        ItemFacts facts = factsOf(ctx, payment);
+        TemporalContext t = ctx.inputs().temporal();
+        return ctx.rulesOf(RuleSetIds.RS_RET_BAR).stream()
+                .filter(row -> ctx.inRegime(row.id(), TemporallyApportionedCap.governingVersion(row, t)).applies())
+                .filter(row -> RowReach.holdsFor(ctx, row, facts))
+                .findFirst();
     }
 
-    /** The facts a retirement payment's row is chosen by. */
-    static ItemFacts entry(RetirementPayment payment) {
-        return ItemFacts.of(RETIREMENT_ENTRY, payment.entry().name());
+    /** The bar's words: the row, and the year the ledger holds for the entry where it holds one, as a fact. */
+    private static String barredBy(NodeContext ctx, RuleRow bar, RetirementPayment payment) {
+        return "barred by " + bar.id() + Optional.ofNullable(ctx.inputs().ledgers().deductionAllowedIn()
+                        .get(payment.entry()))
+                .map(year -> "; a deduction under this entry was allowed in " + year)
+                .orElse("");
+    }
+
+    /** The facts a retirement payment's rows are chosen by: its entry, and what bars a deduction under it. */
+    static ItemFacts factsOf(NodeContext ctx, RetirementPayment payment) {
+        TaxYearId year = ctx.inputs().taxYear();
+        boolean allowedInAnotherYear = Optional.ofNullable(ctx.inputs().ledgers().deductionAllowedIn()
+                        .get(payment.entry()))
+                .filter(allowed -> !allowed.equals(year))
+                .isPresent();
+        return new ItemFacts(Map.of(RETIREMENT_ENTRY, payment.entry().name(),
+                ARREARS_RELIEF_ALLOWED, Boolean.toString(payment.arrearsReliefAllowed()),
+                ALLOWED_IN_ANOTHER_YEAR, Boolean.toString(allowedInAnotherYear)), Map.of(), Map.of());
     }
 
     private static CommutedPensionShare commutedPensionShare(RuleId ruleId, RuleVersion version) {

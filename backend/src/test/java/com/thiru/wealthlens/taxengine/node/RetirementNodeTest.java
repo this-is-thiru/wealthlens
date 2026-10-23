@@ -135,7 +135,7 @@ class RetirementNodeTest {
     @Test
     void evaluate_whenVoluntaryRetirementWasAllowedInAnotherYear_givesANilLineNamingIt() {
         // Given — s.19(2)(e)(ii): once only
-        LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Optional.of(TaxYearId.of(2021)), Money.ZERO,
+        LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2021)), Money.ZERO,
                 Money.ZERO, Map.of(), Optional.empty(), Map.of());
 
         // When
@@ -146,13 +146,13 @@ class RetirementNodeTest {
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.limitedBy())
-                .hasValueSatisfying(why -> assertThat(why).contains("2021-22")));
+                .hasValueSatisfying(why -> assertThat(why).contains("RET-BAR-ONCE-ONLY").contains("2021-22")));
     }
 
     @Test
     void evaluate_whenVoluntaryRetirementWasAllowedInThisYear_isStillDeducted() {
         // Given — a recomputation of the year the deduction was allowed in
-        LedgerSnapshot thisYear = new LedgerSnapshot(Map.of(), Optional.of(TaxYearId.of(2026)), Money.ZERO,
+        LedgerSnapshot thisYear = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2026)), Money.ZERO,
                 Money.ZERO, Map.of(), Optional.empty(), Map.of());
 
         // When
@@ -174,7 +174,48 @@ class RetirementNodeTest {
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.limitedBy())
-                .hasValueSatisfying(why -> assertThat(why).contains("relief")));
+                .hasValueSatisfying(why -> assertThat(why).contains("RET-BAR-ARREARS-RELIEF")));
+    }
+
+    @Test
+    void evaluate_whenBothBarsReachTheVoluntaryRetirementAmount_namesTheFirstInTheSetsOrder() {
+        // Given — arrears relief allowed on the amount, and a deduction under the entry allowed in 2021-22
+        LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.VOLUNTARY_RETIREMENT,
+                TaxYearId.of(2021)), Money.ZERO, Money.ZERO, Map.of(), Optional.empty(), Map.of());
+
+        // When
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES,
+                List.of(new Paid(ComponentCodes.VRS_COMPENSATION, "300000")),
+                List.of(RetirementPayment.voluntaryRetirement(0, ComponentCodes.VRS_COMPENSATION, true)), claimed);
+
+        // Then — RS-RET-BAR places RET-BAR-ARREARS-RELIEF first; the ledger's year is stated as a fact
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_VOLUNTARY_RETIREMENT);
+            assertThat(line.limitedBy()).hasValueSatisfying(why -> assertThat(why)
+                    .contains("RET-BAR-ARREARS-RELIEF").doesNotContain("RET-BAR-ONCE-ONLY").contains("2021-22"));
+        });
+    }
+
+    @Test
+    void evaluate_whenOtherGratuityWasAllowedInAnotherYear_isNotBarred() {
+        // Given — no RS-RET-BAR row reaches other gratuity; its earlier years count only through gratuityAlreadyAllowed
+        LedgerSnapshot claimed = new LedgerSnapshot(Map.of(), Map.of(RetirementEntry.OTHER_GRATUITY,
+                TaxYearId.of(2021)), Money.ZERO, Money.ZERO, Map.of(), Optional.empty(), Map.of());
+
+        // When — 25 completed years on an average of 1,00,000: least of 15,00,000, 20,00,000 and
+        // 1/2 × 1,00,000 × 25 = 12,50,000
+        NodeResult result = run(2026, FIRST_SCHEDULE_RATES, List.of(new Paid(ComponentCodes.GRATUITY, "1500000")),
+                List.of(RetirementPayment.otherGratuity(0, ComponentCodes.GRATUITY,
+                        retiringInJune(2026, Map.of(ComponentCodes.BASIC, Money.of("100000"))))),
+                claimed);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("1250000")));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.RET_GRATUITY_OTHER);
+            assertThat(line.limitedBy()).hasValueSatisfying(why -> assertThat(why).doesNotContain("barred"));
+        });
     }
 
     @ParameterizedTest(name = "TY {0}")
@@ -294,7 +335,7 @@ class RetirementNodeTest {
     }
 
     private static LedgerSnapshot allowedBefore(String gratuity, String leave) {
-        return new LedgerSnapshot(Map.of(), Optional.empty(), Money.of(gratuity), Money.of(leave), Map.of(),
+        return new LedgerSnapshot(Map.of(), Map.of(), Money.of(gratuity), Money.of(leave), Map.of(),
                 Optional.empty(), Map.of());
     }
 

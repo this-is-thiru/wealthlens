@@ -267,7 +267,7 @@ class NodeHarnessTest {
 
             assertThat(plain.family().members()).isEmpty();
             assertThat(plain.capitalGains().buckets()).isEmpty();
-            assertThat(plain.ledgers().vrsAlreadyClaimed()).isFalse();
+            assertThat(plain.ledgers().deductionAllowedIn()).isEmpty();
             assertThat(plain.filing().furnishedLate()).isFalse();
             assertThat(plain.elections().stateByRegime()).isEmpty();
         }

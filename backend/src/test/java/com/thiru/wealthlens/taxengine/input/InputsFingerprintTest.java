@@ -149,7 +149,7 @@ class InputsFingerprintTest {
                             "ledgers.gratuityAlreadyAllowed",
                             mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(
                                     Map.of(),
-                                    Optional.empty(),
+                                    Map.of(),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.of("100000"),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
                                     Map.of(),
@@ -178,7 +178,7 @@ class InputsFingerprintTest {
                             "ledgers.capitalLossCarriedForward",
                             mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(
                                     Map.of(),
-                                    Optional.empty(),
+                                    Map.of(),
                                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
                                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
                                     Map.of(),
@@ -284,7 +284,7 @@ class InputsFingerprintTest {
         void ledgers_whenOnlyABlocksJourneysDiffer_movesTheHash() {
             // Given — D-100: journeys already claimed in block 2022-2025
             EngineInputs claimed = copy(baseline(), r -> r.ledgers = new LedgerSnapshot(
-                    Map.of(2022, new LeaveTravelBlock(1, false)), Optional.empty(),
+                    Map.of(2022, new LeaveTravelBlock(1, false)), Map.of(),
                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
                     com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, Map.of(), Optional.empty(), Map.of()));
 

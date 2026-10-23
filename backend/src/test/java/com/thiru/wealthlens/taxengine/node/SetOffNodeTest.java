@@ -84,7 +84,7 @@ class SetOffNodeTest {
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         LedgerSnapshot empty = LedgerSnapshot.empty();
-        LedgerSnapshot ledgers = new LedgerSnapshot(empty.leaveTravelByBlock(), empty.vrsClaimedIn(),
+        LedgerSnapshot ledgers = new LedgerSnapshot(empty.leaveTravelByBlock(), empty.deductionAllowedIn(),
                 empty.gratuityAlreadyAllowed(), empty.leaveEncashmentAlreadyAllowed(), carried,
                 empty.educationLoanInterestFirstYear(), Map.of());
         EngineInputs inputs = new EngineInputs(taxYear, regime,
@@ -414,7 +414,7 @@ class SetOffNodeTest {
         TaxYearId taxYear = TaxYearId.of(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
         LedgerSnapshot empty = LedgerSnapshot.empty();
-        LedgerSnapshot ledgers = new LedgerSnapshot(empty.leaveTravelByBlock(), empty.vrsClaimedIn(),
+        LedgerSnapshot ledgers = new LedgerSnapshot(empty.leaveTravelByBlock(), empty.deductionAllowedIn(),
                 empty.gratuityAlreadyAllowed(), empty.leaveEncashmentAlreadyAllowed(),
                 empty.housePropertyLossCarriedForward(), empty.educationLoanInterestFirstYear(), carried);
         EngineInputs inputs = new EngineInputs(taxYear, regime,

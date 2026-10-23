@@ -27,8 +27,9 @@ import java.util.Optional;
  * @param leaveTravelByBlock what each four-calendar-year LTA block already holds, keyed by the block's first
  *     calendar year ({@code SAL-LTA-BLOCK-001}, {@code SAL-LTA-CARRY-001}). By block, not as one current block,
  *     because a tax year spans two calendar blocks ({@code DR 13} R-12; D-100)
- * @param vrsClaimedIn the tax year VRS was claimed, if ever. Once in a lifetime, and mutually
- *     exclusive with s.157 relief on the same amount ({@code RET-VRS-002})
+ * @param deductionAllowedIn the tax year a deduction under each retirement entry was allowed, where one was. Keyed by
+ *     entry, not held for voluntary retirement alone, because which entries are allowed once only is the
+ *     {@code RS-RET-BAR} rows' to say, not this record's (W-155b; D-336)
  * @param gratuityAlreadyAllowed the {@code B} of {@code RET-GRAT-AGG-001}'s {@code A − B}
  * @param leaveEncashmentAlreadyAllowed the {@code B} of {@code RET-LEAVE-AGG-001}'s {@code A − B}
  * @param housePropertyLossCarriedForward each carried house-property loss by the year it arose, so the
@@ -41,7 +42,7 @@ import java.util.Optional;
  */
 public record LedgerSnapshot(
         Map<Integer, LeaveTravelBlock> leaveTravelByBlock,
-        Optional<TaxYearId> vrsClaimedIn,
+        Map<RetirementEntry, TaxYearId> deductionAllowedIn,
         Money gratuityAlreadyAllowed,
         Money leaveEncashmentAlreadyAllowed,
         Map<TaxYearId, CarriedHousePropertyLoss> housePropertyLossCarriedForward,
@@ -60,9 +61,15 @@ public record LedgerSnapshot(
                             + " nothing has been allowed, because 'nothing yet' and 'never asked'"
                             + " give different ceilings");
         }
-        if (vrsClaimedIn == null || educationLoanInterestFirstYear == null) {
+        if (deductionAllowedIn == null) {
             throw new IllegalArgumentException(
-                    "LedgerSnapshot optionals may not be null; pass Optional.empty() where the"
+                    "LedgerSnapshot.deductionAllowedIn may not be null; pass an empty map where no retirement deduction"
+                            + " was allowed");
+        }
+        deductionAllowedIn = Map.copyOf(deductionAllowedIn);
+        if (educationLoanInterestFirstYear == null) {
+            throw new IllegalArgumentException(
+                    "LedgerSnapshot.educationLoanInterestFirstYear may not be null; pass Optional.empty() where the"
                             + " event has not happened");
         }
         if (housePropertyLossCarriedForward == null) {
@@ -83,17 +90,12 @@ public record LedgerSnapshot(
     public static LedgerSnapshot empty() {
         return new LedgerSnapshot(
                 Map.of(),
-                Optional.empty(),
+                Map.of(),
                 Money.ZERO,
                 Money.ZERO,
                 Map.of(),
                 Optional.empty(),
                 Map.of());
-    }
-
-    /** Whether VRS has ever been claimed — {@code RET-VRS-002}'s once-in-a-lifetime test. */
-    public boolean vrsAlreadyClaimed() {
-        return vrsClaimedIn.isPresent();
     }
 
     /** What one LTA block, by its first calendar year, already holds — nothing where nothing was claimed. */

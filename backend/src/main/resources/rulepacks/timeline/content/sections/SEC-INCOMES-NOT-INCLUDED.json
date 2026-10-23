@@ -124,6 +124,14 @@
         {
           "type": "ByRule",
           "rule": "RET-YEAR-LIMIT-VOLUNTARY-RETIREMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-BAR-ARREARS-RELIEF"
+        },
+        {
+          "type": "ByRule",
+          "rule": "RET-BAR-ONCE-ONLY"
         }
       ]
     }
