@@ -46,14 +46,15 @@ class HealthInsuranceDeductionTest {
 
     /**
      * 0 father, 66 by 31-3-2027 and resident; 1 mother, 56; 2 a child not dependant; 3 father, 71, non-resident;
-     * 4 spouse, 66 by 31-3-2027 and resident.
+     * 4 spouse, 66 by 31-3-2027 and resident; 5 a dependant sibling.
      */
     private static final FamilySnapshot FAMILY = new FamilySnapshot(List.of(
             member(Relationship.PARENT, LocalDate.of(1960, 5, 1), false, true),
             member(Relationship.PARENT, LocalDate.of(1970, 5, 1), false, true),
             member(Relationship.CHILD, LocalDate.of(2000, 5, 1), false, true),
             member(Relationship.PARENT, LocalDate.of(1955, 5, 1), false, false),
-            member(Relationship.SPOUSE, LocalDate.of(1960, 6, 1), false, true)));
+            member(Relationship.SPOUSE, LocalDate.of(1960, 6, 1), false, true),
+            member(Relationship.SIBLING, LocalDate.of(1990, 5, 1), true, true)));
 
     private static Member member(Relationship relationship, LocalDate born, boolean dependant, boolean resident) {
         return new Member(relationship, born, dependant, Optional.empty(), Optional.empty(), false, resident);
@@ -126,10 +127,30 @@ class HealthInsuranceDeductionTest {
 
     @Test
     void evaluate_whenAGovernmentSchemeContributionCoversAParent_refuses() {
-        // When / Then — s.126(2)(b) (1961 s.80D(2)(b)): a parent's sum is insurance or a check-up, no scheme (D-145)
+        // When / Then — s.126(2)(b) (1961 s.80D(2)(b)): a parent's sum is insurance or a check-up, no scheme (D-145);
+        // DED-HEALTH-PARENTS does not reach a scheme contribution (W-156b1)
         assertThatThrownBy(() -> run(OLD, forMembers(HealthPaymentKind.GOVERNMENT_HEALTH_SCHEME, "20000", 0)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("s.126(2)(b)");
+                .hasMessageContaining(RuleIds.DED_HEALTH_PARENTS.value());
+    }
+
+    @Test
+    void evaluate_whenAPremiumCoversASibling_isRefusedNamingBothBucketRows() {
+        // When / Then — s.126(10)(b): family is the spouse and dependant children; a sibling is in neither bucket
+        assertThatThrownBy(() -> run(OLD, forMembers(HealthPaymentKind.INSURANCE_PREMIUM, "10000", 5)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(RuleIds.DED_HEALTH_FAMILY.value())
+                .hasMessageContaining(RuleIds.DED_HEALTH_PARENTS.value());
+    }
+
+    @Test
+    void evaluate_whenAGovernmentSchemeContributionCoversTheAssessee_fillsTheFamilysInsuranceLimb() {
+        // When — s.126(2)(a): 30,000 against the family's insurance limit of 25,000
+        NodeResult result = run(OLD, self(HealthPaymentKind.GOVERNMENT_HEALTH_SCHEME, "30000"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("25000")));
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.DED_HEALTH_FAMILY);
     }
 
     @Test

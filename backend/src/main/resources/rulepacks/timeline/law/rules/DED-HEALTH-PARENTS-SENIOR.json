@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-HEALTH-PARENTS-SENIOR",
   "ruleSet": "RS-DED-HEALTH-PARENTS-SENIOR",
-  "_note": "80D for the parents: insurance and preventive check-ups (not a notified health scheme — s.126(2)(b) names none; corrected by W-075d2, D-145) up to ₹50000 — the senior citizen's substitution, \"such person is a senior citizen, the amount of sum as provided in such clauses, shall be substituted with ₹50000 for ₹25000\" (s.126(8)(a), p.162); medical expenditure up to ₹50000 (s.126(2)(d)); together \"The amount of sum referred to in sub-section (2) shall not exceed ₹ 50000 in aggregate of the sum specified under sub-section (2)(a) and (c) or aggregate of the sum specified under sub-section (2)(b) and (d)\" (s.126(4), p.162). Medical expenditure on a senior citizen only \"if no amount has been paid to effect or to keep in force the health insurance of such person\" (s.126(7)); a senior citizen is \"an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year\" (s.2(100), p.20). The age is this row's condition, AgeAtLeast 60 of the INSURED_PERSON at any time in the year; the person's residence in India is the node's check. ChapterEightNode uses this row where any premium or scheme payment in the bucket covers a senior citizen (separate policies for a senior and a non-senior parent take the senior limit — the node's reading); a floater covering a senior and a non-senior is refused (OQ-18). Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80D, is the TY 2025-26 version (W-075d2). D-136. TY 2025-26: Income-tax Act, 1961 s.80D(4) (thc p.342), the senior citizen's fifty thousand rupees for an insurance on a senior parent; \"senior citizen\" as in the Explanation (p.343). The same row. sources/2026-10-07-chapter-via.md B13. D-145. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "_note": "80D for the parents: insurance and preventive check-ups (not a notified health scheme — s.126(2)(b) names none; corrected by W-075d2, D-145) up to ₹50000 — the senior citizen's substitution, \"such person is a senior citizen, the amount of sum as provided in such clauses, shall be substituted with ₹50000 for ₹25000\" (s.126(8)(a), p.162); medical expenditure up to ₹50000 (s.126(2)(d)); together \"The amount of sum referred to in sub-section (2) shall not exceed ₹ 50000 in aggregate of the sum specified under sub-section (2)(a) and (c) or aggregate of the sum specified under sub-section (2)(b) and (d)\" (s.126(4), p.162). Medical expenditure on a senior citizen only \"if no amount has been paid to effect or to keep in force the health insurance of such person\" (s.126(7)); a senior citizen is \"an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year\" (s.2(100), p.20). The age is this row's condition, AgeAtLeast 60 of the INSURED_PERSON at any time in the year; the person's residence in India is the node's check. ChapterEightNode uses this row where any premium or scheme payment in the bucket covers a senior citizen (separate policies for a senior and a non-senior parent take the senior limit — the node's reading); a floater covering a senior and a non-senior is refused (OQ-18). Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80D, is the TY 2025-26 version (W-075d2). D-136. TY 2025-26: Income-tax Act, 1961 s.80D(4) (thc p.342), the senior citizen's fifty thousand rupees for an insurance on a senior parent; \"senior citizen\" as in the Explanation (p.343). The same row. sources/2026-10-07-chapter-via.md B13. D-145. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches each person a payment covers by health.covered.relationship (PARENT) and health.kind: a premium, a preventive check-up or medical expenditure, not a notified health scheme, which s.126(2)(b) names none of (D-145) (W-156b1, D-346).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -47,6 +47,31 @@
           "type": "AgeAtLeast",
           "years": 60,
           "subject": "INSURED_PERSON"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "health.covered.relationship",
+          "code": "PARENT"
+        },
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "health.kind",
+              "code": "INSURANCE_PREMIUM"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "health.kind",
+              "code": "PREVENTIVE_CHECKUP"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "health.kind",
+              "code": "MEDICAL_EXPENDITURE"
+            }
+          ]
         }
       ],
       "introducedBy": {
@@ -109,6 +134,31 @@
           "type": "AgeAtLeast",
           "years": 60,
           "subject": "INSURED_PERSON"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "health.covered.relationship",
+          "code": "PARENT"
+        },
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "health.kind",
+              "code": "INSURANCE_PREMIUM"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "health.kind",
+              "code": "PREVENTIVE_CHECKUP"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "health.kind",
+              "code": "MEDICAL_EXPENDITURE"
+            }
+          ]
         }
       ],
       "introducedBy": {

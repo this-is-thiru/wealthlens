@@ -12,11 +12,13 @@ import com.thiru.wealthlens.taxengine.rules.cap.AggregateWithCeiling;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
 import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -27,6 +29,7 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,7 +52,29 @@ final class HealthInsuranceDeduction {
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_HEALTH_FAMILY, RuleSetIds.RS_DED_HEALTH_FAMILY_SENIOR,
             RuleSetIds.RS_DED_HEALTH_PARENTS, RuleSetIds.RS_DED_HEALTH_PARENTS_SENIOR, RuleSetIds.RS_DED_HEALTH_CHECKUP);
 
-    private enum Bucket { FAMILY, PARENTS }
+    /** Who a payment covers, one person at a time — the relationship, or {@link #SELF} (W-156b1, D-346). */
+    static final ItemFactId COVERED_RELATIONSHIP = new ItemFactId("health.covered.relationship");
+
+    /** Whether the covered person is a dependant. */
+    static final ItemFactId COVERED_DEPENDANT = new ItemFactId("health.covered.dependant");
+
+    /** What the payment is for — the {@code HealthPaymentKind} constant name. */
+    static final ItemFactId KIND = new ItemFactId("health.kind");
+
+    /** The relationship code the bucket rows read for the assessee, who is not a family member. */
+    private static final String SELF = "SELF";
+
+    /** s.126(2)'s two aggregates, each by the set of its row without the senior substitution. */
+    private enum Bucket {
+        FAMILY(RuleSetIds.RS_DED_HEALTH_FAMILY),
+        PARENTS(RuleSetIds.RS_DED_HEALTH_PARENTS);
+
+        private final RuleSetId row;
+
+        Bucket(RuleSetId row) {
+            this.row = row;
+        }
+    }
 
     /** What one bucket was paid, by limb, this year. */
     private static final class Paid {
@@ -103,11 +128,6 @@ final class HealthInsuranceDeduction {
                 paid.coversSenior |= coversSenior(ctx, payment, bucket);
             }
             case GOVERNMENT_HEALTH_SCHEME -> {
-                if (bucket == Bucket.PARENTS) {
-                    throw new IllegalArgumentException("A health scheme contribution counts for the assessee or the"
-                            + " family only; a parent's sum is insurance or a preventive check-up (s.126(2)(b); 1961"
-                            + " s.80D(2)(b); D-145)");
-                }
                 // The senior citizen's limit is for a sum paid for health insurance (s.126(8); 1961 s.80D(4)), so a
                 // scheme contribution never raises it.
                 paid.insurance = paid.insurance.plus(payment.amount());
@@ -120,33 +140,42 @@ final class HealthInsuranceDeduction {
         }
     }
 
-    /** Family is the spouse and dependant children (s.126(10)(b)); parents are apart; nobody else is either. */
+    /**
+     * The bucket whose row reaches every person the payment covers — which people and which kinds each takes is the
+     * rows' to say (s.126(2), (10)(b); W-156b1, D-346).
+     */
     private static Bucket bucketOf(NodeContext ctx, HealthPayment payment) {
         Set<Bucket> covered = new HashSet<>();
         if (payment.coversAssessee()) {
-            covered.add(Bucket.FAMILY);
+            covered.add(bucketReaching(ctx, "the assessee", person(SELF, false, payment)));
         }
         for (int position : payment.familyMembers()) {
             FamilySnapshot.Member member = member(ctx, position);
-            switch (member.relationship()) {
-                case SPOUSE -> covered.add(Bucket.FAMILY);
-                case CHILD -> {
-                    if (!member.dependant()) {
-                        throw new IllegalArgumentException("Family member " + position + " is a child who is not a"
-                                + " dependant; s.126's family is the spouse and dependant children (s.126(10)(b))");
-                    }
-                    covered.add(Bucket.FAMILY);
-                }
-                case PARENT -> covered.add(Bucket.PARENTS);
-                case SIBLING, DEPENDANT_OTHER -> throw new IllegalArgumentException("Family member " + position
-                        + " is a " + member.relationship() + ", neither family nor a parent under s.126");
-            }
+            covered.add(bucketReaching(ctx, "family member " + position,
+                    person(member.relationship().name(), member.dependant(), payment)));
         }
         if (covered.size() != 1) {
             throw new IllegalArgumentException("A health payment covers both the family and a parent; s.126(2) limits"
                     + " them apart, so enter each part separately");
         }
         return covered.iterator().next();
+    }
+
+    private static Bucket bucketReaching(NodeContext ctx, String who, ItemFacts person) {
+        List<Bucket> reaching = Arrays.stream(Bucket.values())
+                .filter(bucket -> RowReach.holdsFor(ctx, ctx.ruleOf(bucket.row), person))
+                .toList();
+        if (reaching.size() != 1) {
+            throw new IllegalArgumentException("A health payment for " + who + " " + person.codes() + " is reached by "
+                    + reaching.size() + " of the bucket rows " + Arrays.stream(Bucket.values())
+                            .map(bucket -> ctx.ruleIdOf(bucket.row)).toList() + "; exactly one must take it");
+        }
+        return reaching.getFirst();
+    }
+
+    private static ItemFacts person(String relationship, boolean dependant, HealthPayment payment) {
+        return new ItemFacts(Map.of(COVERED_RELATIONSHIP, relationship, COVERED_DEPENDANT, Boolean.toString(dependant),
+                KIND, payment.kind().name()), Map.of(), Map.of());
     }
 
     private static boolean coversSenior(NodeContext ctx, HealthPayment payment, Bucket bucket) {
@@ -238,13 +267,18 @@ final class HealthInsuranceDeduction {
                 .withLimitedBy(outcome.limitedBy()));
     }
 
-    /** Senior citizen: resident in India and, at any time in the year, of the row's age (s.2(100)); s.128(4) reads it too. */
+    /**
+     * Senior citizen: resident in India and, at any time in the year, of the row's age (s.2(100)); s.128(4) reads it
+     * too. Only the row's conditions about the person are tested: those about the item say which payments it reaches.
+     */
     static boolean isSenior(NodeContext ctx, RuleVersion seniorRow, LocalDate born, boolean residentInIndia) {
         int age = Period.between(born, ctx.inputs().temporal().taxYearEnd()).getYears();
         ConditionContext person = new ConditionContext(residentInIndia,
                 PersonType.INDIVIDUAL,
                 Map.of(AgeSubject.INSURED_PERSON, age), Map.of());
-        return residentInIndia && seniorRow.conditions().stream().allMatch(condition -> condition.holds(person));
+        return residentInIndia && seniorRow.conditions().stream()
+                .filter(condition -> !condition.isAboutItem())
+                .allMatch(condition -> condition.holds(person));
     }
 
     private static LocalDate assesseeBirth(NodeContext ctx) {
