@@ -3,7 +3,6 @@ package com.thiru.wealthlens.taxengine.input;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * A retirement or termination payment and the entry of the Acts it falls under (S2 s.19(1) Table; 1961
@@ -15,7 +14,8 @@ import java.util.Set;
  * is refused where relief for arrears was allowed on the amount (s.19(2)(e)(iii); 1961 s.10(10C), s.89). Other
  * gratuity reads the separation it is measured on, other leave encashment the employer's leave figures (D-106), and
  * statutory gratuity and retrenchment the amount the labour statute entitles (D-109).
- * A fact given for an entry that does not read it is refused, since it would be ignored.
+ * Which facts an entry reads is its rows' to say, so the computation refuses a fact missing or ignored there, not this
+ * record (W-155c2, D-341).
  *
  * @param employment the employment that paid it — the index into {@code EnteredFacts.employments}, as a pay line's
  *     (D-225); one payment per component per employment
@@ -47,33 +47,9 @@ public record RetirementPayment(
             throw new IllegalArgumentException(component + ": the employment that paid it is an index from 0, but was "
                     + employment);
         }
-        requireExactlyFor(component, entry, Set.of(RetirementEntry.OTHER_EMPLOYER_COMMUTATION),
-                commutedValueOfWholePension.isPresent(), "commuted value of the whole pension");
         if (commutedValueOfWholePension.filter(value -> !value.isGreaterThan(Money.ZERO)).isPresent()) {
             throw new IllegalArgumentException(component + ": the commuted value of the whole pension must be"
                     + " positive");
-        }
-        requireExactlyFor(component, entry, Set.of(RetirementEntry.OTHER_GRATUITY), separation.isPresent(),
-                "separation");
-        requireExactlyFor(component, entry, Set.of(RetirementEntry.OTHER_LEAVE_ENCASHMENT), leave.isPresent(),
-                "leave figures");
-        requireExactlyFor(component, entry, Set.of(RetirementEntry.STATUTORY_GRATUITY, RetirementEntry.RETRENCHMENT),
-                statutory.isPresent(), "amount under the statute");
-        if (arrearsReliefAllowed && entry != RetirementEntry.VOLUNTARY_RETIREMENT) {
-            throw new IllegalArgumentException(component + ": relief for arrears bars only a voluntary retirement"
-                    + " deduction, not " + entry);
-        }
-    }
-
-    private static void requireExactlyFor(ComponentCode component, RetirementEntry entry, Set<RetirementEntry> readBy,
-            boolean given, String fact) {
-        if (readBy.contains(entry) && !given) {
-            throw new IllegalArgumentException(component + ": " + entry + " is measured on the " + fact
-                    + "; enter it");
-        }
-        if (!readBy.contains(entry) && given) {
-            throw new IllegalArgumentException(component + ": " + entry + " does not read a " + fact
-                    + "; it would be ignored, so it is refused");
         }
     }
 

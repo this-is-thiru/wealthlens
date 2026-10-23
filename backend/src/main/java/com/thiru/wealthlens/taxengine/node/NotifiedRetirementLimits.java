@@ -44,9 +44,6 @@ import java.util.stream.IntStream;
  */
 final class NotifiedRetirementLimits {
 
-    private static final BaseId AVERAGE_SALARY_BY_COMPLETED_YEARS = new BaseId("AVERAGE_SALARY_BY_COMPLETED_YEARS");
-    private static final BaseId LEAVE_SALARY_AT_CREDIT = new BaseId("LEAVE_SALARY_AT_CREDIT");
-    private static final BaseId AVERAGE_MONTHLY_SALARY = new BaseId("AVERAGE_MONTHLY_SALARY");
 
     /** An entry the ledger holds earlier amounts for — what {@code RS-RET-AGGREGATE-HISTORY}'s rows read (D-339). */
     private static final ItemFactId EARLIER_ENTRY = new ItemFactId("retirement.earlier.entry");
@@ -86,12 +83,12 @@ final class NotifiedRetirementLimits {
         payment.separation().ifPresent(separation -> {
             requireCovered(version, separation.separatedOn(), payment);
             Money average = averageSalary(ctx, separation, ctx.inputs().entered().employments().get(payment.employment()));
-            bases.put(AVERAGE_SALARY_BY_COMPLETED_YEARS, average.times(separation.completedYears()));
+            bases.put(EntryFacts.AVERAGE_SALARY_BY_COMPLETED_YEARS, average.times(separation.completedYears()));
         });
         payment.leave().ifPresent(leave -> {
             requireCovered(version, leave.retiredOn(), payment);
-            bases.put(LEAVE_SALARY_AT_CREDIT, leave.leaveSalaryAtCredit());
-            bases.put(AVERAGE_MONTHLY_SALARY, leave.averageMonthlySalary());
+            bases.put(EntryFacts.LEAVE_SALARY_AT_CREDIT, leave.leaveSalaryAtCredit());
+            bases.put(EntryFacts.AVERAGE_MONTHLY_SALARY, leave.averageMonthlySalary());
         });
         return new CapContext(Map.copyOf(bases));
     }

@@ -70,7 +70,6 @@ public final class RetirementNode implements ComputationNode {
     static final ItemFactId ALLOWED_IN_ANOTHER_YEAR = new ItemFactId("retirement.allowed.in.another.year");
 
     private static final BaseId PAYMENT_RECEIVED = new BaseId("PAYMENT_RECEIVED");
-    private static final BaseId AMOUNT_UNDER_STATUTE = new BaseId("AMOUNT_UNDER_STATUTE");
 
     @Override
     public NodeId produces() {
@@ -150,6 +149,7 @@ public final class RetirementNode implements ComputationNode {
         TemporalContext t = ctx.inputs().temporal();
         RuleRow rule = ctx.rule(ruleId);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
+        EntryFacts.requireWhatTheRowsRead(ctx, payment, ruleId, version);
         if (!ctx.inRegime(ruleId, version).applies()) {
             return Optional.empty();
         }
@@ -212,7 +212,7 @@ public final class RetirementNode implements ComputationNode {
         if (payment.statutory().isPresent()) {
             StatutoryEntitlement entitlement = payment.statutory().get();
             CapResult deducted = TemporallyApportionedCap.apply(rule, t, new CapContext(
-                    Map.of(PAYMENT_RECEIVED, received, AMOUNT_UNDER_STATUTE, entitlement.amountUnderStatute())));
+                    Map.of(PAYMENT_RECEIVED, received, EntryFacts.AMOUNT_UNDER_STATUTE, entitlement.amountUnderStatute())));
             return ctx.traceLine(claim.sequence(), row.id(), StepKind.DEDUCTION, received, deducted.value())
                     .withLimitedBy(deducted.limitedBy() + "; separation on " + entitlement.separatedOn());
         }

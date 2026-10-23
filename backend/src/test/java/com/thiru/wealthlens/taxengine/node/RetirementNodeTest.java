@@ -288,6 +288,106 @@ class RetirementNodeTest {
                 .hasMessageContaining("enter it");
     }
 
+    // ---------------------------------------------------------------- the facts an entry's rows read (W-155c2)
+
+    @Test
+    void evaluate_whenAnOtherEmployerCommutationLacksTheCommutedValue_isRefusedNamingItsRow() {
+        // Given — RET-COMMUTED-PENSION-OTHER defines a CommutedPensionShare, which reads the commuted value
+        RetirementPayment payment = new RetirementPayment(0, ComponentCodes.COMMUTED_PENSION,
+                RetirementEntry.OTHER_EMPLOYER_COMMUTATION, Optional.empty(), false, Optional.empty(), Optional.empty(),
+                Optional.empty());
+
+        // When / Then
+        assertRefused(ComponentCodes.COMMUTED_PENSION, payment, "commuted value", "RET-COMMUTED-PENSION-OTHER");
+    }
+
+    @Test
+    void evaluate_whenACommutedValueIsGivenForAGovernmentCommutation_isRefusedRatherThanIgnored() {
+        // Given — RET-COMMUTED-PENSION-GOVERNMENT deducts the whole amount and reads no commuted value
+        RetirementPayment payment = new RetirementPayment(0, ComponentCodes.COMMUTED_PENSION,
+                RetirementEntry.GOVERNMENT_COMMUTATION, Optional.of(Money.of("900000")), false, Optional.empty(),
+                Optional.empty(), Optional.empty());
+
+        // When / Then
+        assertRefused(ComponentCodes.COMMUTED_PENSION, payment, "GOVERNMENT_COMMUTATION",
+                "RET-COMMUTED-PENSION-GOVERNMENT");
+    }
+
+    @Test
+    void evaluate_whenArrearsReliefIsGivenForGovernmentGratuity_isRefusedAsNoBarReadsIt() {
+        // Given — no RS-RET-BAR row reaches government gratuity, relief or not
+        RetirementPayment payment = new RetirementPayment(0, ComponentCodes.GRATUITY,
+                RetirementEntry.GOVERNMENT_GRATUITY, Optional.empty(), true, Optional.empty(), Optional.empty(),
+                Optional.empty());
+
+        // When / Then
+        assertRefused(ComponentCodes.GRATUITY, payment, "relief for arrears", "RS-RET-BAR");
+    }
+
+    @Test
+    void evaluate_whenOtherGratuityLacksTheSeparation_isRefusedNamingItsRow() {
+        // Given — RET-GRATUITY-OTHER's cap reads AVERAGE_SALARY_BY_COMPLETED_YEARS
+        RetirementPayment payment = new RetirementPayment(0, ComponentCodes.GRATUITY, RetirementEntry.OTHER_GRATUITY,
+                Optional.empty(), false, Optional.empty(), Optional.empty(), Optional.empty());
+
+        // When / Then
+        assertRefused(ComponentCodes.GRATUITY, payment, "separation", "RET-GRATUITY-OTHER");
+    }
+
+    @Test
+    void evaluate_whenOtherLeaveEncashmentLacksItsFigures_isRefusedNamingItsRow() {
+        // Given — RET-LEAVE-ENCASHMENT-OTHER's cap reads the two leave bases
+        RetirementPayment payment = new RetirementPayment(0, ComponentCodes.LEAVE_ENCASHMENT,
+                RetirementEntry.OTHER_LEAVE_ENCASHMENT, Optional.empty(), false, Optional.empty(), Optional.empty(),
+                Optional.empty());
+
+        // When / Then
+        assertRefused(ComponentCodes.LEAVE_ENCASHMENT, payment, "leave figures", "RET-LEAVE-ENCASHMENT-OTHER");
+    }
+
+    @Test
+    void evaluate_whenLeaveFiguresAreGivenForGovernmentLeaveEncashment_isRefusedRatherThanIgnored() {
+        // Given
+        RetirementPayment payment = new RetirementPayment(0, ComponentCodes.LEAVE_ENCASHMENT,
+                RetirementEntry.GOVERNMENT_LEAVE_ENCASHMENT, Optional.empty(), false, Optional.empty(),
+                Optional.of(new LeaveAtRetirement(LocalDate.of(2026, 6, 30), Money.of("900000"), Money.of("100000"))),
+                Optional.empty());
+
+        // When / Then
+        assertRefused(ComponentCodes.LEAVE_ENCASHMENT, payment, "GOVERNMENT_LEAVE_ENCASHMENT",
+                "RET-LEAVE-ENCASHMENT-GOVERNMENT");
+    }
+
+    @Test
+    void evaluate_whenRetrenchmentLacksTheStatutoryAmount_isRefusedNamingItsRow() {
+        // Given — RET-RETRENCHMENT's cap reads AMOUNT_UNDER_STATUTE
+        RetirementPayment payment = new RetirementPayment(0, ComponentCodes.RETRENCHMENT_COMPENSATION,
+                RetirementEntry.RETRENCHMENT, Optional.empty(), false, Optional.empty(), Optional.empty(),
+                Optional.empty());
+
+        // When / Then
+        assertRefused(ComponentCodes.RETRENCHMENT_COMPENSATION, payment, "statute", "RET-RETRENCHMENT");
+    }
+
+    @Test
+    void evaluate_whenAStatutoryAmountIsGivenForGovernmentGratuity_isRefusedRatherThanIgnored() {
+        // Given
+        RetirementPayment payment = new RetirementPayment(0, ComponentCodes.GRATUITY,
+                RetirementEntry.GOVERNMENT_GRATUITY, Optional.empty(), false, Optional.empty(), Optional.empty(),
+                Optional.of(new StatutoryEntitlement(LocalDate.of(2025, 12, 15), Money.of("100000"))));
+
+        // When / Then
+        assertRefused(ComponentCodes.GRATUITY, payment, "GOVERNMENT_GRATUITY", "RET-GRATUITY-GOVERNMENT");
+    }
+
+    private static void assertRefused(ComponentCode component, RetirementPayment payment, String fact, String row) {
+        assertThatThrownBy(() -> run(2026, FIRST_SCHEDULE_RATES, List.of(new Paid(component, "300000")),
+                        List.of(payment)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(fact)
+                .hasMessageContaining(row);
+    }
+
     @Test
     void evaluate_whenAnEntryDoesNotFitItsComponent_isRefused() {
         // When / Then — gratuity cannot be voluntary retirement compensation

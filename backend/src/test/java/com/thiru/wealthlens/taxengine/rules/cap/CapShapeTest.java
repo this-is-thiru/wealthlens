@@ -4,9 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.money.Rate;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -167,6 +171,99 @@ class CapShapeTest {
             assertThatThrownBy(() -> new BaseId("annual value"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("upper-case with underscores");
+        }
+    }
+
+    /**
+     * W-155c2: the bases each shape looks up in {@code CapContext.bases}, read off each shape's {@code apply} by hand —
+     * {@code ctx.base(…)} only; counts, locations and contributions are other maps.
+     */
+    @Nested
+    @DisplayName("amountsRead")
+    class AmountsRead {
+
+        private static final BaseId PAYMENT = new BaseId("PAYMENT_RECEIVED");
+        private static final BaseId SALARY = new BaseId("SALARY");
+        private static final BaseId PLACE = new BaseId("PLACE");
+        private static final BaseId MONTH = new BaseId("MONTH");
+        private static final BaseId CHILD = new BaseId("CHILD");
+
+        @Test
+        void amountsRead_whenFixed_isEmpty() {
+            assertThat(new Fixed(Money.of("75000")).amountsRead()).isEmpty();
+        }
+
+        @Test
+        void amountsRead_whenPercentOfBase_isItsBase() {
+            assertThat(new PercentOfBase(Rate.percent("30"), ANNUAL_VALUE).amountsRead()).containsExactly(ANNUAL_VALUE);
+        }
+
+        @Test
+        void amountsRead_whenSlabLadder_isItsBase() {
+            // Given
+            SlabLadder ladder = new SlabLadder(List.of(new SlabLadder.Band(Money.ZERO, Optional.empty(),
+                    Rate.percent("10"))), SALARY);
+
+            // When / Then
+            assertThat(ladder.amountsRead()).containsExactly(SALARY);
+        }
+
+        @Test
+        void amountsRead_whenLeastOf_isEveryLimbsBases() {
+            // Given — RET-GRATUITY-OTHER's shape: received, a fixed limit, half a month's salary per year
+            LeastOf least = new LeastOf(List.of(
+                    new LeastOf.Limb("received", new PercentOfBase(Rate.percent("100"), PAYMENT)),
+                    new LeastOf.Limb("limit", new Fixed(Money.of("2000000"))),
+                    new LeastOf.Limb("half", new PercentOfBase(Rate.percent("50"), SALARY))));
+
+            // When / Then
+            assertThat(least.amountsRead()).containsExactlyInAnyOrder(PAYMENT, SALARY);
+        }
+
+        @Test
+        void amountsRead_whenAggregateWithCeiling_isItsSubCapsBasesNotItsContributions() {
+            // Given
+            ComponentCode nps = new ComponentCode("EMPLOYEE_NPS");
+            AggregateWithCeiling aggregate = new AggregateWithCeiling(List.of(nps, new ComponentCode("EMPLOYEE_PF")),
+                    Money.of("150000"), Map.of(nps, new PercentOfBase(Rate.percent("10"), SALARY)));
+
+            // When / Then
+            assertThat(aggregate.amountsRead()).containsExactly(SALARY);
+        }
+
+        @Test
+        void amountsRead_whenPerUnitPerPeriod_isEmptyBecauseItReadsCounts() {
+            assertThat(new PerUnitPerPeriod(Money.of("3000"), Optional.of(CHILD), 2, MONTH).amountsRead()).isEmpty();
+        }
+
+        @Test
+        void amountsRead_whenAmountInExcess_isItsAmountAndItsThresholdsBases() {
+            // Given
+            AmountInExcess excess = new AmountInExcess(PAYMENT, new PercentOfBase(Rate.percent("10"), SALARY));
+
+            // When / Then
+            assertThat(excess.amountsRead()).containsExactlyInAnyOrder(PAYMENT, SALARY);
+        }
+
+        @Test
+        void amountsRead_whenPercentOfBaseByLocation_isItsBaseNotItsLocation() {
+            // Given
+            PercentOfBaseByLocation byCity = new PercentOfBaseByLocation(SALARY, PLACE,
+                    List.of(new PercentOfBaseByLocation.Band(Set.of("MUMBAI"), Rate.percent("50"))),
+                    Rate.percent("40"));
+
+            // When / Then
+            assertThat(byCity.amountsRead()).containsExactly(SALARY);
+        }
+
+        @Test
+        void amountsRead_whenPercentOfBaseByPopulation_isItsBaseNotItsPopulation() {
+            // Given
+            PercentOfBaseByPopulation byPopulation = new PercentOfBaseByPopulation(SALARY, PLACE,
+                    List.of(new PercentOfBaseByPopulation.Band(1_500_000, Rate.percent("7.5"))), Rate.percent("5"));
+
+            // When / Then
+            assertThat(byPopulation.amountsRead()).containsExactly(SALARY);
         }
     }
 }

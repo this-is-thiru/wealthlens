@@ -1,5 +1,10 @@
 package com.thiru.wealthlens.taxengine.rules.cap;
 
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * A statutory limit, expressed as one of a closed set of shapes rather than as a formula.
  *
@@ -25,4 +30,25 @@ public sealed interface CapShape
 
     /** How this cap names itself in a trace line when nothing narrower bound the result. */
     String shapeName();
+
+    /**
+     * The bases whose amounts this cap reads from {@link CapContext#bases} — so a node can tell which entered amounts
+     * a row reads, and refuse one it would ignore (W-155c2, D-341). Counts, locations and contributions are not
+     * amounts and are not named. A composition reads what its parts read.
+     */
+    default Set<BaseId> amountsRead() {
+        return switch (this) {
+            case Fixed _, PerUnitPerPeriod _ -> Set.of();
+            case PercentOfBase percent -> Set.of(percent.base());
+            case SlabLadder ladder -> Set.of(ladder.base());
+            case PercentOfBaseByLocation byLocation -> Set.of(byLocation.base());
+            case PercentOfBaseByPopulation byPopulation -> Set.of(byPopulation.base());
+            case AmountInExcess excess -> Stream.concat(Stream.of(excess.amount()),
+                    excess.threshold().amountsRead().stream()).collect(Collectors.toUnmodifiableSet());
+            case LeastOf least -> least.limbs().stream().flatMap(limb -> limb.shape().amountsRead().stream())
+                    .collect(Collectors.toUnmodifiableSet());
+            case AggregateWithCeiling aggregate -> aggregate.subCaps().values().stream()
+                    .flatMap(subCap -> subCap.amountsRead().stream()).collect(Collectors.toUnmodifiableSet());
+        };
+    }
 }
