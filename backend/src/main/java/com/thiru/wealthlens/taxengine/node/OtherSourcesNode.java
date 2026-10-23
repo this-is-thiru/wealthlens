@@ -12,8 +12,6 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
-import com.thiru.wealthlens.taxengine.rules.condition.Condition;
-import com.thiru.wealthlens.taxengine.rules.condition.ConditionContext;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
@@ -190,10 +188,7 @@ public final class OtherSourcesNode implements ComputationNode {
      * person's (W-153a, W-153b; D-319, D-320).
      */
     static boolean reaches(NodeContext ctx, RuleId row, OtherSourceItem item) {
-        ConditionContext about = ctx.conditions().about(factsOf(item));
-        return TemporallyApportionedCap.governingVersion(ctx.rule(row), ctx.inputs().temporal()).conditions().stream()
-                .filter(Condition::isAboutItem)
-                .allMatch(condition -> condition.holds(about));
+        return RowReach.holdsFor(ctx, ctx.rule(row), factsOf(item));
     }
 
     /**
