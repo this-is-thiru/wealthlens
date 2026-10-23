@@ -105,6 +105,12 @@ public final class RuleIds {
     public static final RuleId PERQ_CAR_PARTLY_ELECTRIC = new RuleId("PERQ-CAR-PARTLY-ELECTRIC");
     public static final RuleId PERQ_CAR_PARTLY_LARGE = new RuleId("PERQ-CAR-PARTLY-LARGE");
     public static final RuleId PERQ_CAR_PARTLY_SMALL = new RuleId("PERQ-CAR-PARTLY-SMALL");
+    public static final RuleId PERQ_CAR_PATH_CONVEYANCE = new RuleId("PERQ-CAR-PATH-CONVEYANCE");
+    public static final RuleId PERQ_CAR_PATH_EMPLOYEE = new RuleId("PERQ-CAR-PATH-EMPLOYEE");
+    public static final RuleId PERQ_CAR_PATH_OFFICIAL = new RuleId("PERQ-CAR-PATH-OFFICIAL");
+    public static final RuleId PERQ_CAR_PATH_OWNRUN = new RuleId("PERQ-CAR-PATH-OWNRUN");
+    public static final RuleId PERQ_CAR_PATH_PARTLY = new RuleId("PERQ-CAR-PATH-PARTLY");
+    public static final RuleId PERQ_CAR_PATH_PRIVATE = new RuleId("PERQ-CAR-PATH-PRIVATE");
     public static final RuleId PERQ_CAR_PRIVATE = new RuleId("PERQ-CAR-PRIVATE");
     public static final RuleId PERQ_CARRIER_TRAVEL = new RuleId("PERQ-CARRIER-TRAVEL");
     public static final RuleId PERQ_CLUB = new RuleId("PERQ-CLUB");

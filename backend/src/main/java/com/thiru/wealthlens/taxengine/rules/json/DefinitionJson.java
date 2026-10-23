@@ -37,6 +37,8 @@ import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.definition.SurvivingChildrenLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
+import com.thiru.wealthlens.taxengine.rules.definition.VehicleComputation;
+import com.thiru.wealthlens.taxengine.rules.definition.VehiclePath;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
@@ -66,7 +68,7 @@ public final class DefinitionJson {
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
                 "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod",
-                "CapitalGainsParts", "SalaryAveragingPeriod");
+                "CapitalGainsParts", "SalaryAveragingPeriod", "VehiclePath");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -168,6 +170,8 @@ public final class DefinitionJson {
             }
             case "BucketPart" -> PackJson.construct(path, () -> new BucketPart(
                     new CapitalGainsPart(PackJson.text(node, "part", path))));
+            case "VehiclePath" -> PackJson.construct(path, () -> new VehiclePath(
+                    PackJson.enumValue(node, "computation", path, VehicleComputation.class)));
             case "SttChargeability" -> PackJson.construct(path, () -> new SttChargeability(
                     PackJson.text(node, "code", path)));
             case "ShortTermHoldingPeriod" -> PackJson.construct(path, () -> new ShortTermHoldingPeriod(

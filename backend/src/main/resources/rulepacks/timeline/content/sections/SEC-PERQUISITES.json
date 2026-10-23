@@ -112,6 +112,30 @@
         {
           "type": "ByRule",
           "rule": "PERQ-CAR-CONVEYANCE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-OFFICIAL"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-PARTLY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-OWNRUN"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-PRIVATE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-EMPLOYEE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-CONVEYANCE"
         }
       ]
     },

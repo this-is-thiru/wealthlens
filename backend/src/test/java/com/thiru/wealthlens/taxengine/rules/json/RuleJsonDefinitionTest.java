@@ -22,6 +22,8 @@ import com.thiru.wealthlens.taxengine.rules.definition.ShortTermHoldingPeriod;
 import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
+import com.thiru.wealthlens.taxengine.rules.definition.VehicleComputation;
+import com.thiru.wealthlens.taxengine.rules.definition.VehiclePath;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -197,6 +199,27 @@ class RuleJsonDefinitionTest {
 
         // Then
         assertThat(version.definition()).contains(new BucketPart(LONG_TERM_OTHER));
+    }
+
+    @Test
+    void version_whenAVehiclePath_readsTheComputation() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "VehiclePath", "computation": "RUNNING_AND_WEAR_LESS_CHARGE" }""");
+
+        // Then
+        assertThat(version.definition())
+                .contains(new VehiclePath(VehicleComputation.RUNNING_AND_WEAR_LESS_CHARGE));
+    }
+
+    @Test
+    void version_whenAVehiclePathNamesNoComputation_isRefusedNamingThePath() {
+        // When / Then — the computations are closed: a new one is new arithmetic (D-330 C1a)
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "VehiclePath", "computation": "SL_1C_I" }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("definition.computation")
+                .hasMessageContaining("SL_1C_I");
     }
 
     @ParameterizedTest(name = "{0}")

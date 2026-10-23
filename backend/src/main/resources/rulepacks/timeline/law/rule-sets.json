@@ -398,6 +398,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-PERQ-CAR-PATH",
+      "_note": "Table II: the computation a vehicle is valued by, each row's VehiclePath chosen by the vehicle's owner, use, who meets the private running and whether the employer keeps its records (vehicle.*, W-154e2); a vehicle no row reaches is refused",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-PERQ-CAR-PRIVATE",
       "_note": "One row: PERQ-CAR-PRIVATE",
       "selection": "EXACTLY_ONE",

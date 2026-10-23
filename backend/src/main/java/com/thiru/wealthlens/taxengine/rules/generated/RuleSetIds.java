@@ -80,6 +80,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_PERQ_CAR_EMPLOYEE = new RuleSetId("RS-PERQ-CAR-EMPLOYEE");
     public static final RuleSetId RS_PERQ_CAR_OWNRUN = new RuleSetId("RS-PERQ-CAR-OWNRUN");
     public static final RuleSetId RS_PERQ_CAR_PARTLY = new RuleSetId("RS-PERQ-CAR-PARTLY");
+    public static final RuleSetId RS_PERQ_CAR_PATH = new RuleSetId("RS-PERQ-CAR-PATH");
     public static final RuleSetId RS_PERQ_CAR_PRIVATE = new RuleSetId("RS-PERQ-CAR-PRIVATE");
     public static final RuleSetId RS_PERQ_EDUCATION_FREE = new RuleSetId("RS-PERQ-EDUCATION-FREE");
     public static final RuleSetId RS_PERQ_EMPLOYER_ACCRETION = new RuleSetId("RS-PERQ-EMPLOYER-ACCRETION");

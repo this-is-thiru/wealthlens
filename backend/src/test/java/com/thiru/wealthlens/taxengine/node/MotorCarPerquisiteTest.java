@@ -332,32 +332,86 @@ class MotorCarPerquisiteTest {
                 .hasMessageContaining("electric");
     }
 
-    @Test
-    void evaluate_whenWhollyOfficialWithRecords_hasNoValueAndNoLine() {
-        // Given
-        EmployerVehicle car = new EmployerVehicle(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.WHOLLY_OFFICIAL,
-                Optional.of(CarEngine.ofCapacity(1500)), false, false, 12, Money.ZERO, Optional.empty(), Money.ZERO,
-                new OfficialUseRecord(true, Optional.empty()));
+    private static EmployerVehicle whollyOfficial(VehicleOwner owner, OfficialUseRecord record) {
+        Optional<CarEngine> engine = owner == VehicleOwner.EMPLOYEE_OTHER_CONVEYANCE ? Optional.empty()
+                : Optional.of(CarEngine.ofCapacity(1500));
+        return new EmployerVehicle(0, owner, VehicleUse.WHOLLY_OFFICIAL, engine, false, false, 12, Money.ZERO,
+                Optional.empty(), Money.ZERO, record);
+    }
 
+    /** Wholly official with the records: "Nil, if the prescribed documents are maintained" (PERQ-CAR-2026; D-330 C5a). */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("yearsAndOwners")
+    void evaluate_whenWhollyOfficialWithRecords_isANilLineOnTheOfficialPath(int year, VehicleOwner owner) {
         // When
-        NodeResult result = run(2026, List.of(car));
+        NodeResult result = run(year, List.of(whollyOfficial(owner, new OfficialUseRecord(true, Optional.empty()))));
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).isEmpty();
+        assertThat(result.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.PERQ_CAR_PATH_OFFICIAL));
     }
 
-    @Test
-    void evaluate_whenWhollyOfficialWithoutRecords_isRefused() {
-        // Given
-        EmployerVehicle car = new EmployerVehicle(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.WHOLLY_OFFICIAL,
-                Optional.of(CarEngine.ofCapacity(1500)), false, false, 12, Money.ZERO, Optional.empty(), Money.ZERO,
-                OfficialUseRecord.none());
-
+    /** Without the records the Table states no value, so no path row reaches the vehicle (D-113 C7; W-154e2). */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("yearsAndOwners")
+    void evaluate_whenWhollyOfficialWithoutRecords_isRefusedAsNoPathReachesIt(int year, VehicleOwner owner) {
         // When / Then
-        assertThatThrownBy(() -> run(2026, List.of(car)))
+        assertThatThrownBy(() -> run(year, List.of(whollyOfficial(owner, OfficialUseRecord.none()))))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("certificate");
+                .hasMessageContaining("no row of RS-PERQ-CAR-PATH")
+                .hasMessageContaining("vehicle.journeys.and.certificate.kept=false");
+    }
+
+    private static Stream<Arguments> yearsAndOwners() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            for (VehicleOwner owner : VehicleOwner.values()) {
+                cases.add(Arguments.of(year, owner));
+            }
+        }
+        return cases.build();
+    }
+
+    /**
+     * Each path a specified employee's vehicle takes, both years, 12 months: the employer's 1,500 cc car partly official
+     * — employer runs, 5,000 / 1,800 × 12; employee runs, 2,000 / 600 × 12 — wholly private, 1,20,000 + 10% × 8,00,000
+     * − 12,000; the employee's 2,000 cc car, 1,50,000 less 7,000 / 2,400 × 12; a conveyance, 50,000 less 3,000 / 900 ×
+     * 12 (Table II; W-154e2).
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("paths")
+    void evaluate_whenEachPath_isValuedOnTheRowItsComputationReads(int year, String path, EmployerVehicle vehicle,
+            RuleId expectedRow, String expected) {
+        // When
+        NodeResult result = run(year, List.of(vehicle));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.rule()).isEqualTo(expectedRow));
+    }
+
+    private static Stream<Arguments> paths() {
+        EmployerVehicle employerRuns = partly(CarEngine.ofCapacity(1500), false, 12);
+        EmployerVehicle employeeRuns = employerCar(VehicleUse.PARTLY_OFFICIAL, CarEngine.ofCapacity(1500), true, "0",
+                Optional.empty(), "0");
+        EmployerVehicle whollyPrivate = employerCar(VehicleUse.WHOLLY_PRIVATE, CarEngine.ofCapacity(2000), false,
+                "120000", Optional.of(Money.of("800000")), "12000");
+        EmployerVehicle ownCar = ownVehicle(VehicleOwner.EMPLOYEE_CAR, Optional.of(CarEngine.ofCapacity(2000)),
+                "150000", OfficialUseRecord.none());
+        EmployerVehicle conveyance = ownVehicle(VehicleOwner.EMPLOYEE_OTHER_CONVEYANCE, Optional.empty(), "50000",
+                OfficialUseRecord.none());
+        return Stream.of(
+                Arguments.of(2025, "employer runs", employerRuns, RuleIds.PERQ_CAR_PARTLY_SMALL, "21600"),
+                Arguments.of(2026, "employer runs", employerRuns, RuleIds.PERQ_CAR_PARTLY_SMALL, "60000"),
+                Arguments.of(2025, "employee runs", employeeRuns, RuleIds.PERQ_CAR_OWNRUN_SMALL, "7200"),
+                Arguments.of(2026, "employee runs", employeeRuns, RuleIds.PERQ_CAR_OWNRUN_SMALL, "24000"),
+                Arguments.of(2025, "wholly private", whollyPrivate, RuleIds.PERQ_CAR_PRIVATE, "188000"),
+                Arguments.of(2026, "wholly private", whollyPrivate, RuleIds.PERQ_CAR_PRIVATE, "188000"),
+                Arguments.of(2025, "own car", ownCar, RuleIds.PERQ_CAR_EMPLOYEE, "121200"),
+                Arguments.of(2026, "own car", ownCar, RuleIds.PERQ_CAR_EMPLOYEE, "66000"),
+                Arguments.of(2025, "conveyance", conveyance, RuleIds.PERQ_CAR_CONVEYANCE, "39200"),
+                Arguments.of(2026, "conveyance", conveyance, RuleIds.PERQ_CAR_CONVEYANCE, "14000"));
     }
 
     @Test
