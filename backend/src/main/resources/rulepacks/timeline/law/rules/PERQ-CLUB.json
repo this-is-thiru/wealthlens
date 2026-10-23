@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-CLUB",
-  "ruleSet": "RS-PERQ-CLUB",
-  "_note": "Club expenditure, annual or periodical fees included, a corporate membership's initial fee not: the actual expenditure less recoveries (D-119). Which facts make it nil is by year — PERQ-CLUB-BUSINESS and PERQ-CLUB-UNIFORM in TY 2025-26, PERQ-CLUB-BUSINESS-UNIFORM in TY 2026-27 (OQ-12). For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1546). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
+  "ruleSet": "RS-PERQ-EXPENSE",
+  "_note": "Club expenditure, annual or periodical fees included, a corporate membership's initial fee not: the actual expenditure less recoveries (D-119). Which facts make it nil is by year — PERQ-CLUB-BUSINESS and PERQ-CLUB-UNIFORM in TY 2025-26, PERQ-CLUB-BUSINESS-UNIFORM in TY 2026-27 (OQ-12). For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1546). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4). The row reaches expense.kind CLUB, in RS-PERQ-EXPENSE; a bill an exclusion row of RS-PERQ-EXPENSE-EXCLUDED reaches is nil there (W-154d).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "BENEFIT_VALUE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.kind",
+          "code": "CLUB"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(7) stands as in the rule in force from 1-4-2009 (r.3(10))",
         "gazetteRef": "CG-DL-E-18082023-248178",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "BENEFIT_VALUE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.kind",
+          "code": "CLUB"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
         "gazetteRef": "CG-DL-E-20032026-271092",

@@ -81,16 +81,12 @@ public final class RuleSetIds {
     public static final RuleSetId RS_PERQ_CAR_OWNRUN = new RuleSetId("RS-PERQ-CAR-OWNRUN");
     public static final RuleSetId RS_PERQ_CAR_PARTLY = new RuleSetId("RS-PERQ-CAR-PARTLY");
     public static final RuleSetId RS_PERQ_CAR_PRIVATE = new RuleSetId("RS-PERQ-CAR-PRIVATE");
-    public static final RuleSetId RS_PERQ_CLUB = new RuleSetId("RS-PERQ-CLUB");
-    public static final RuleSetId RS_PERQ_CLUB_BUSINESS = new RuleSetId("RS-PERQ-CLUB-BUSINESS");
-    public static final RuleSetId RS_PERQ_CLUB_BUSINESS_UNIFORM = new RuleSetId("RS-PERQ-CLUB-BUSINESS-UNIFORM");
-    public static final RuleSetId RS_PERQ_CLUB_UNIFORM = new RuleSetId("RS-PERQ-CLUB-UNIFORM");
-    public static final RuleSetId RS_PERQ_CREDIT_CARD = new RuleSetId("RS-PERQ-CREDIT-CARD");
     public static final RuleSetId RS_PERQ_EDUCATION_FREE = new RuleSetId("RS-PERQ-EDUCATION-FREE");
     public static final RuleSetId RS_PERQ_EMPLOYER_ACCRETION = new RuleSetId("RS-PERQ-EMPLOYER-ACCRETION");
     public static final RuleSetId RS_PERQ_EMPLOYER_CONTRIBUTION = new RuleSetId("RS-PERQ-EMPLOYER-CONTRIBUTION");
+    public static final RuleSetId RS_PERQ_EXPENSE = new RuleSetId("RS-PERQ-EXPENSE");
+    public static final RuleSetId RS_PERQ_EXPENSE_EXCLUDED = new RuleSetId("RS-PERQ-EXPENSE-EXCLUDED");
     public static final RuleSetId RS_PERQ_GIFT = new RuleSetId("RS-PERQ-GIFT");
-    public static final RuleSetId RS_PERQ_HOLIDAY = new RuleSetId("RS-PERQ-HOLIDAY");
     public static final RuleSetId RS_PERQ_HOUSEHOLD = new RuleSetId("RS-PERQ-HOUSEHOLD");
     public static final RuleSetId RS_PERQ_LOAN = new RuleSetId("RS-PERQ-LOAN");
     public static final RuleSetId RS_PERQ_LOAN_PETTY = new RuleSetId("RS-PERQ-LOAN-PETTY");
@@ -99,7 +95,6 @@ public final class RuleSetIds {
     public static final RuleSetId RS_PERQ_MEAL_LIMIT = new RuleSetId("RS-PERQ-MEAL-LIMIT");
     public static final RuleSetId RS_PERQ_MEDABROAD_STAY = new RuleSetId("RS-PERQ-MEDABROAD-STAY");
     public static final RuleSetId RS_PERQ_MEDABROAD_TRAVEL = new RuleSetId("RS-PERQ-MEDABROAD-TRAVEL");
-    public static final RuleSetId RS_PERQ_OTHER_BENEFIT = new RuleSetId("RS-PERQ-OTHER-BENEFIT");
     public static final RuleSetId RS_PERQ_RPF_CONTRIBUTION = new RuleSetId("RS-PERQ-RPF-CONTRIBUTION");
     public static final RuleSetId RS_PERQ_RPF_INTEREST = new RuleSetId("RS-PERQ-RPF-INTEREST");
     public static final RuleSetId RS_PERQ_SPECIFIED_DATE = new RuleSetId("RS-PERQ-SPECIFIED-DATE");

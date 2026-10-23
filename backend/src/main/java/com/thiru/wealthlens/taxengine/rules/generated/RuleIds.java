@@ -112,6 +112,7 @@ public final class RuleIds {
     public static final RuleId PERQ_CLUB_BUSINESS_UNIFORM = new RuleId("PERQ-CLUB-BUSINESS-UNIFORM");
     public static final RuleId PERQ_CLUB_UNIFORM = new RuleId("PERQ-CLUB-UNIFORM");
     public static final RuleId PERQ_CREDIT_CARD = new RuleId("PERQ-CREDIT-CARD");
+    public static final RuleId PERQ_CREDIT_CARD_OFFICIAL = new RuleId("PERQ-CREDIT-CARD-OFFICIAL");
     public static final RuleId PERQ_EDUCATION = new RuleId("PERQ-EDUCATION");
     public static final RuleId PERQ_EDUCATION_FREE = new RuleId("PERQ-EDUCATION-FREE");
     public static final RuleId PERQ_EMPLOYER_ACCRETION = new RuleId("PERQ-EMPLOYER-ACCRETION");
@@ -134,6 +135,7 @@ public final class RuleIds {
     public static final RuleId PERQ_SPECIFIED_DATE = new RuleId("PERQ-SPECIFIED-DATE");
     public static final RuleId PERQ_SPECIFIED_EMPLOYEE = new RuleId("PERQ-SPECIFIED-EMPLOYEE");
     public static final RuleId PERQ_SPECIFIED_SECURITY = new RuleId("PERQ-SPECIFIED-SECURITY");
+    public static final RuleId PERQ_TELEPHONE = new RuleId("PERQ-TELEPHONE");
     public static final RuleId PERQ_UTILITY = new RuleId("PERQ-UTILITY");
     public static final RuleId RATE_CG_LONG_LISTED_EQUITY = new RuleId("RATE-CG-LONG-LISTED-EQUITY");
     public static final RuleId RATE_CG_LONG_OTHER = new RuleId("RATE-CG-LONG-OTHER");

@@ -3,9 +3,10 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.EmployerExpenseBenefit;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
-import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -14,24 +15,32 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Holidays, credit-card and club bills, and other benefits at arm's-length cost, for {@link PerquisiteNode} (S4 r.15(5)
- * Table IV Sl. 2, 5, 6, 9; Rules 1962 r.3(7)(ii), (v), (vi), (ix); D-119).
+ * Holidays, credit-card and club bills, telephones and other benefits at arm's-length cost, for {@link PerquisiteNode}
+ * (S4 r.15(5) Table IV Sl. 2, 5, 6, 9; Rules 1962 r.3(7)(ii), (v), (vi), (ix); D-119).
  *
- * <p>Each is its amount less the recovery. A credit card bill wholly for official purposes with the employer's records
- * is nil. A club bill is nil on the facts the year's rows name: in TY 2025-26 either business use with records or
- * uniform health-club facilities; in TY 2026-27 all of them together (OQ-12). Telephones are nil in both years.
+ * <p>Each is its amount less the recovery, on the row of {@code RS-PERQ-EXPENSE} its kind selects; a bill a row of
+ * {@code RS-PERQ-EXPENSE-EXCLUDED} reaches — by its kind and whether it was wholly for work, with the employer's
+ * details and certificate, and for a club the uniform facilities — is nil there instead; one neither set reaches is
+ * refused (W-154d). Which club exclusions a year has is which rows it holds (OQ-12).
  */
 final class ExpenseBenefitPerquisite {
 
-    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_HOLIDAY, RuleSetIds.RS_PERQ_CREDIT_CARD, RuleSetIds.RS_PERQ_CLUB,
-            RuleSetIds.RS_PERQ_CLUB_BUSINESS, RuleSetIds.RS_PERQ_CLUB_UNIFORM, RuleSetIds.RS_PERQ_CLUB_BUSINESS_UNIFORM,
-            RuleSetIds.RS_PERQ_OTHER_BENEFIT);
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_PERQ_EXPENSE, RuleSetIds.RS_PERQ_EXPENSE_EXCLUDED);
 
     private static final BaseId BENEFIT_VALUE = new BaseId("BENEFIT_VALUE");
+
+    /** What the valuing and exclusion rows are chosen by (D-325, D-327). */
+    private static final ItemFactId KIND = new ItemFactId("expense.kind");
+    private static final ItemFactId WHOLLY_FOR_WORK = new ItemFactId("expense.wholly.for.work");
+    private static final ItemFactId JOURNEYS_AND_CERTIFICATE_KEPT = new ItemFactId(
+            "expense.journeys.and.certificate.kept");
+    private static final ItemFactId HEALTH_CLUB_UNIFORM_FOR_ALL = new ItemFactId(
+            "expense.health.club.uniform.for.all");
 
     private ExpenseBenefitPerquisite() {
     }
@@ -39,58 +48,51 @@ final class ExpenseBenefitPerquisite {
     /** One line per entry, numbered from {@code firstSequence}. */
     static List<TraceLine> lines(NodeContext ctx, int firstSequence) {
         List<TraceLine> lines = new ArrayList<>();
-        for (EmployerExpenseBenefit benefit : ctx.inputs().entered().expenseBenefits()) {
+        List<EmployerExpenseBenefit> benefits = ctx.inputs().entered().expenseBenefits();
+        for (int i = 0; i < benefits.size(); i++) {
+            EmployerExpenseBenefit benefit = benefits.get(i);
             PerquisiteNode.requireEnteredEmployment(ctx, benefit.employment(), "expense benefit");
             int sequence = firstSequence + lines.size();
-            lines.add(switch (benefit.kind()) {
-                case HOLIDAY, HOLIDAY_OWN_FACILITY_AT_PUBLIC_VALUE, FAMILY_ON_OFFICIAL_TOUR, TOUR_EXTENDED_AS_VACATION ->
-                        valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_HOLIDAY), benefit, sequence, benefit.kind().name());
-                case CREDIT_CARD -> benefit.whollyForWork() && benefit.officialUse().journeysAndCertificateKept()
-                        ? nil(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CREDIT_CARD), benefit, sequence,
-                                "wholly for official purposes, with the employer's details and certificate")
-                        : valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CREDIT_CARD), benefit, sequence, "credit card");
-                case CLUB -> clubExclusion(ctx, benefit)
-                        .map(ruleId -> nil(ctx, ruleId, benefit, sequence, "excluded by " + ruleId))
-                        .orElseGet(() -> valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_CLUB), benefit, sequence, "club"));
-                case OTHER -> valued(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_OTHER_BENEFIT), benefit, sequence, "at arm's-length cost");
-                case TELEPHONE -> nil(ctx, ctx.ruleIdOf(RuleSetIds.RS_PERQ_OTHER_BENEFIT), benefit, sequence,
-                        "expenses on telephones, a mobile phone's included, are excepted");
-            });
+            int position = i + 1;
+            ItemFacts facts = factsOf(benefit);
+            lines.add(ctx.optionalRuleOf(RuleSetIds.RS_PERQ_EXPENSE_EXCLUDED, facts)
+                    .map(row -> nil(ctx, row, benefit, sequence))
+                    .or(() -> ctx.optionalRuleOf(RuleSetIds.RS_PERQ_EXPENSE, facts)
+                            .map(row -> valued(ctx, row, benefit, sequence)))
+                    .orElseThrow(() -> unvalued(ctx, position, facts)));
         }
         return lines;
     }
 
-    /** The row whose facts make a club bill nil this year, if they hold — by which rows the year's pack carries. */
-    private static Optional<RuleId> clubExclusion(NodeContext ctx, EmployerExpenseBenefit club) {
-        boolean businessWithRecords = club.whollyForWork() && club.officialUse().journeysAndCertificateKept();
-        Optional<RuleId> businessUniform = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CLUB_BUSINESS_UNIFORM).map(RuleRow::id);
-        if (businessUniform.isPresent()) {
-            return businessWithRecords && club.healthClubUniformForAll() ? businessUniform : Optional.empty();
-        }
-        Optional<RuleId> business = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CLUB_BUSINESS).map(RuleRow::id);
-        if (businessWithRecords && business.isPresent()) {
-            return business;
-        }
-        Optional<RuleId> uniform = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_CLUB_UNIFORM).map(RuleRow::id);
-        if (club.healthClubUniformForAll() && uniform.isPresent()) {
-            return uniform;
-        }
-        return Optional.empty();
+    /** The benefit's facts as the rows' conditions read them. */
+    private static ItemFacts factsOf(EmployerExpenseBenefit benefit) {
+        return new ItemFacts(Map.of(KIND, benefit.kind().name(),
+                WHOLLY_FOR_WORK, Boolean.toString(benefit.whollyForWork()),
+                JOURNEYS_AND_CERTIFICATE_KEPT, Boolean.toString(benefit.officialUse().journeysAndCertificateKept()),
+                HEALTH_CLUB_UNIFORM_FOR_ALL, Boolean.toString(benefit.healthClubUniformForAll())), Map.of(), Map.of());
     }
 
-    private static TraceLine valued(NodeContext ctx, RuleId ruleId, EmployerExpenseBenefit benefit, int sequence,
-            String what) {
+    /** A benefit no row of the year values or excludes. */
+    private static IllegalArgumentException unvalued(NodeContext ctx, int position, ItemFacts facts) {
+        String described = facts.codes().entrySet().stream()
+                .map(fact -> fact.getKey() + "=" + fact.getValue())
+                .sorted()
+                .collect(Collectors.joining(", ", "{", "}"));
+        return new IllegalArgumentException("Expense benefit " + position + ": no row of "
+                + RuleSetIds.RS_PERQ_EXPENSE + " values it in TY " + ctx.inputs().taxYear().label()
+                + " — its facts " + described);
+    }
+
+    private static TraceLine valued(NodeContext ctx, RuleRow row, EmployerExpenseBenefit benefit, int sequence) {
         Money net = benefit.amount().minus(benefit.recovered()).floorAtZero();
-        Money value = TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
+        Money value = TemporallyApportionedCap.apply(row, ctx.inputs().temporal(),
                 CapContext.of(BENEFIT_VALUE, net)).value();
-        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, benefit.amount(), value)
-                .withLimitedBy(what + ", less the recovery " + benefit.recovered());
+        return ctx.traceLine(sequence, row.id(), StepKind.INCOME, benefit.amount(), value)
+                .withLimitedBy(benefit.kind() + ", less the recovery " + benefit.recovered());
     }
 
-    private static TraceLine nil(NodeContext ctx, RuleId ruleId, EmployerExpenseBenefit benefit, int sequence,
-            String why) {
-        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, benefit.amount(), Money.ZERO)
-                .withLimitedBy("not a perquisite: " + why);
+    private static TraceLine nil(NodeContext ctx, RuleRow row, EmployerExpenseBenefit benefit, int sequence) {
+        return ctx.traceLine(sequence, row.id(), StepKind.INCOME, benefit.amount(), Money.ZERO)
+                .withLimitedBy("not a perquisite: excluded by " + row.id());
     }
-
 }

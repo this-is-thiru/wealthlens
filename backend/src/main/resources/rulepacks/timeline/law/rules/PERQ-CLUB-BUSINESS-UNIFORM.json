@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-CLUB-BUSINESS-UNIFORM",
-  "ruleSet": "RS-PERQ-CLUB-BUSINESS-UNIFORM",
-  "_note": "TY 2026-27 only: column C \"shall not apply, if such expenditure is incurred wholly and exclusively for business purposes and the following conditions are fulfilled:– (i) conditions in sub-rule (5)(b) are fulfilled; and (ii) use of health club, sports and similar facilities are provided uniformly to all employees by the employer\" (r.15(5) Table IV Sl. 6 col. D (b), Gazette 271092, p.1546) — one nil needing all three, as the text reads (D-119 C2a); whether it merges 1962's two exclusions by drafting is OQ-12. Every regime.",
+  "ruleSet": "RS-PERQ-EXPENSE-EXCLUDED",
+  "_note": "TY 2026-27 only: column C \"shall not apply, if such expenditure is incurred wholly and exclusively for business purposes and the following conditions are fulfilled:– (i) conditions in sub-rule (5)(b) are fulfilled; and (ii) use of health club, sports and similar facilities are provided uniformly to all employees by the employer\" (r.15(5) Table IV Sl. 6 col. D (b), Gazette 271092, p.1546) — one nil needing all three, as the text reads (D-119 C2a); whether it merges 1962's two exclusions by drafting is OQ-12. Every regime. The row reaches expense.kind CLUB where expense.wholly.for.work, expense.journeys.and.certificate.kept and expense.health.club.uniform.for.all are all true, in RS-PERQ-EXPENSE-EXCLUDED (W-154d).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -27,7 +27,28 @@
         "type": "Fixed",
         "amount": "0"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.kind",
+          "code": "CLUB"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.wholly.for.work",
+          "code": "true"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.journeys.and.certificate.kept",
+          "code": "true"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.health.club.uniform.for.all",
+          "code": "true"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
         "gazetteRef": "CG-DL-E-20032026-271092",

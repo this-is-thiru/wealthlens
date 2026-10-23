@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-OTHER-BENEFIT",
-  "ruleSet": "RS-PERQ-OTHER-BENEFIT",
-  "_note": "Any other benefit, amenity, service, right or privilege: \"cost to the employer under an arm's length transaction as reduced by the employee's contribution\", \"except expenses on telephones, including a mobile phone\" — a telephone is a nil line citing this row (D-119; rulebook PERQ-OTHER-2026, PERQ-PHONE-2026). The arm's-length cost is entered. For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1547). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
+  "ruleSet": "RS-PERQ-EXPENSE",
+  "_note": "Any other benefit, amenity, service, right or privilege: \"cost to the employer under an arm's length transaction as reduced by the employee's contribution\", \"except expenses on telephones, including a mobile phone\" — a telephone is PERQ-TELEPHONE's nil (D-119; rulebook PERQ-OTHER-2026, PERQ-PHONE-2026). The arm's-length cost is entered. For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1547). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4). The row reaches expense.kind OTHER, in RS-PERQ-EXPENSE; the telephone nil is PERQ-TELEPHONE's (W-154d).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,13 @@
         "percent": "100",
         "base": "BENEFIT_VALUE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.kind",
+          "code": "OTHER"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(7) stands as in the rule in force from 1-4-2009 (r.3(10))",
         "gazetteRef": "CG-DL-E-18082023-248178",
@@ -71,7 +77,13 @@
         "percent": "100",
         "base": "BENEFIT_VALUE"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.kind",
+          "code": "OTHER"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
         "gazetteRef": "CG-DL-E-20032026-271092",

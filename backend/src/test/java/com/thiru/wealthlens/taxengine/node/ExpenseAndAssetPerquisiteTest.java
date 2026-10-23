@@ -20,6 +20,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -34,8 +35,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -112,9 +116,11 @@ class ExpenseAndAssetPerquisiteTest {
                 Money.of("40000"), Money.ZERO, RECORDS, true, false));
         NodeResult personal = expenses(2026, expense(ExpenseBenefitKind.CREDIT_CARD, "40000", "0"));
 
-        // Then
+        // Then — the nil on its own exclusion row (W-154d)
         assertThat(official.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(personal.value()).isEqualTo(MoneyValue.of(Money.of("40000")));
+        assertThat(official.trace().getFirst().rule()).isEqualTo(RuleIds.PERQ_CREDIT_CARD_OFFICIAL);
+        assertThat(personal.trace().getFirst().rule()).isEqualTo(RuleIds.PERQ_CREDIT_CARD);
     }
 
     @Test
@@ -154,9 +160,105 @@ class ExpenseAndAssetPerquisiteTest {
         NodeResult gym = expenses(2026, expense(ExpenseBenefitKind.OTHER, "24000", "0"));
         NodeResult phone = expenses(2026, expense(ExpenseBenefitKind.TELEPHONE, "18000", "0"));
 
-        // Then
+        // Then — the telephone on its own exclusion row (W-154d)
         assertThat(gym.value()).isEqualTo(MoneyValue.of(Money.of("24000")));
         assertThat(phone.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(gym.trace().getFirst().rule()).isEqualTo(RuleIds.PERQ_OTHER_BENEFIT);
+        assertThat(phone.trace().getFirst().rule()).isEqualTo(RuleIds.PERQ_TELEPHONE);
+    }
+
+    /**
+     * Every kind with no facts, both years, at 10,000: the four holiday kinds on PERQ-HOLIDAY (Sl. 2), a card, a club
+     * and any other benefit on their rows (Sl. 5, 6, 9), each 10,000; a telephone nil on PERQ-TELEPHONE (Sl. 9's
+     * exception).
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("expenseKinds")
+    void evaluate_whenEachKindWithNoFacts_isValuedOnItsRowOrNilForATelephone(int year, ExpenseBenefitKind kind,
+            RuleId expectedRow, String expected) {
+        // When
+        NodeResult result = expenses(year, expense(kind, "10000", "0"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.rule()).isEqualTo(expectedRow));
+    }
+
+    private static Stream<Arguments> expenseKinds() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            for (ExpenseBenefitKind holiday : List.of(ExpenseBenefitKind.HOLIDAY,
+                    ExpenseBenefitKind.HOLIDAY_OWN_FACILITY_AT_PUBLIC_VALUE, ExpenseBenefitKind.FAMILY_ON_OFFICIAL_TOUR,
+                    ExpenseBenefitKind.TOUR_EXTENDED_AS_VACATION)) {
+                cases.add(Arguments.of(year, holiday, RuleIds.PERQ_HOLIDAY, "10000"));
+            }
+            cases.add(Arguments.of(year, ExpenseBenefitKind.CREDIT_CARD, RuleIds.PERQ_CREDIT_CARD, "10000"));
+            cases.add(Arguments.of(year, ExpenseBenefitKind.CLUB, RuleIds.PERQ_CLUB, "10000"));
+            cases.add(Arguments.of(year, ExpenseBenefitKind.OTHER, RuleIds.PERQ_OTHER_BENEFIT, "10000"));
+            cases.add(Arguments.of(year, ExpenseBenefitKind.TELEPHONE, RuleIds.PERQ_TELEPHONE, "0"));
+        }
+        return cases.build();
+    }
+
+    /** A card bill is nil only wholly for official purposes with the details and certificate (r.15(5)(b); r.3(7)(v)). */
+    @ParameterizedTest(name = "TY {0} wholly {1} records {2}")
+    @MethodSource("cardFacts")
+    void evaluate_whenACreditCardHasEachCombinationOfFacts_isNilOnlyWithBoth(int year, boolean wholly,
+            boolean records, RuleId expectedRow, String expected) {
+        // When
+        NodeResult result = expenses(year, new EmployerExpenseBenefit(0, ExpenseBenefitKind.CREDIT_CARD,
+                Money.of("10000"), Money.ZERO, records ? RECORDS : OfficialUseRecord.none(), wholly, false));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.rule()).isEqualTo(expectedRow));
+    }
+
+    private static Stream<Arguments> cardFacts() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, true, true, RuleIds.PERQ_CREDIT_CARD_OFFICIAL, "0"));
+            cases.add(Arguments.of(year, true, false, RuleIds.PERQ_CREDIT_CARD, "10000"));
+            cases.add(Arguments.of(year, false, true, RuleIds.PERQ_CREDIT_CARD, "10000"));
+            cases.add(Arguments.of(year, false, false, RuleIds.PERQ_CREDIT_CARD, "10000"));
+        }
+        return cases.build();
+    }
+
+    /**
+     * Every combination of the club facts at 30,000. TY 2025-26: business with records nil on PERQ-CLUB-BUSINESS
+     * (r.3(7)(vi)(B)), else uniform facilities nil on PERQ-CLUB-UNIFORM ((C)), else 30,000. TY 2026-27: nil on
+     * PERQ-CLUB-BUSINESS-UNIFORM only with all three (Sl. 6 col. D (b)), else 30,000 (D-119 C2a, OQ-12).
+     */
+    @ParameterizedTest(name = "TY {0} business {1} records {2} uniform {3}")
+    @MethodSource("clubFacts")
+    void evaluate_whenAClubHasEachCombinationOfFacts_isNilOnTheExclusionTheYearHolds(int year, boolean business,
+            boolean records, boolean uniform, RuleId expectedRow, String expected) {
+        // When
+        NodeResult result = expenses(year, club(business, records ? RECORDS : OfficialUseRecord.none(), uniform));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.rule()).isEqualTo(expectedRow));
+    }
+
+    private static Stream<Arguments> clubFacts() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (boolean business : new boolean[] {false, true}) {
+            for (boolean records : new boolean[] {false, true}) {
+                for (boolean uniform : new boolean[] {false, true}) {
+                    boolean businessWithRecords = business && records;
+                    RuleId earlier = businessWithRecords ? RuleIds.PERQ_CLUB_BUSINESS
+                            : uniform ? RuleIds.PERQ_CLUB_UNIFORM : RuleIds.PERQ_CLUB;
+                    cases.add(Arguments.of(2025, business, records, uniform, earlier,
+                            earlier.equals(RuleIds.PERQ_CLUB) ? "30000" : "0"));
+                    boolean all = businessWithRecords && uniform;
+                    cases.add(Arguments.of(2026, business, records, uniform,
+                            all ? RuleIds.PERQ_CLUB_BUSINESS_UNIFORM : RuleIds.PERQ_CLUB, all ? "0" : "30000"));
+                }
+            }
+        }
+        return cases.build();
     }
 
     @ParameterizedTest(name = "TY {0}")

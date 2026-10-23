@@ -404,36 +404,6 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-PERQ-CLUB",
-      "_note": "One row: PERQ-CLUB",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-PERQ-CLUB-BUSINESS",
-      "_note": "One row: PERQ-CLUB-BUSINESS; held in one shipped year only",
-      "selection": "AT_MOST_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-PERQ-CLUB-BUSINESS-UNIFORM",
-      "_note": "One row: PERQ-CLUB-BUSINESS-UNIFORM; held in one shipped year only",
-      "selection": "AT_MOST_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-PERQ-CLUB-UNIFORM",
-      "_note": "One row: PERQ-CLUB-UNIFORM; held in one shipped year only",
-      "selection": "AT_MOST_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-PERQ-CREDIT-CARD",
-      "_note": "One row: PERQ-CREDIT-CARD",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
       "id": "RS-PERQ-EDUCATION-FREE",
       "_note": "One row: PERQ-EDUCATION-FREE",
       "selection": "EXACTLY_ONE",
@@ -452,14 +422,20 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-PERQ-GIFT",
-      "_note": "One row: PERQ-GIFT",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
+      "id": "RS-PERQ-EXPENSE",
+      "_note": "Table IV Sl. 2, 5, 6, 9: the row valuing an expense benefit, chosen by its kind (expense.kind, W-154d); a bill an RS-PERQ-EXPENSE-EXCLUDED row reaches is nil there instead, and a kind neither set reaches is refused",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
     },
     {
-      "id": "RS-PERQ-HOLIDAY",
-      "_note": "One row: PERQ-HOLIDAY",
+      "id": "RS-PERQ-EXPENSE-EXCLUDED",
+      "_note": "Table IV Sl. 5, 6, 9: the bills the Rule excludes, each row reaching its kind and facts (expense.kind, expense.wholly.for.work, expense.journeys.and.certificate.kept, expense.health.club.uniform.for.all; W-154d); a year holds the club exclusions its Rule names (OQ-12)",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
+      "id": "RS-PERQ-GIFT",
+      "_note": "One row: PERQ-GIFT",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },
@@ -508,12 +484,6 @@
     {
       "id": "RS-PERQ-MEDABROAD-TRAVEL",
       "_note": "One row: PERQ-MEDABROAD-TRAVEL",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-PERQ-OTHER-BENEFIT",
-      "_note": "One row: PERQ-OTHER-BENEFIT",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },

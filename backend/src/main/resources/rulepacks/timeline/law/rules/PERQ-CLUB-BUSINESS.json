@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-CLUB-BUSINESS",
-  "ruleSet": "RS-PERQ-CLUB-BUSINESS",
-  "_note": "TY 2025-26 only: \"Nothing contained in this clause shall apply if such expenditure is incurred wholly and exclusively for business purposes\" with complete details kept and the employer's certificate (Rules 1962 r.3(7)(vi)(B), consolidated rule 3, p.4) — a nil, its own exclusion (D-119 C2a, OQ-12). Every regime.",
+  "ruleSet": "RS-PERQ-EXPENSE-EXCLUDED",
+  "_note": "TY 2025-26 only: \"Nothing contained in this clause shall apply if such expenditure is incurred wholly and exclusively for business purposes\" with complete details kept and the employer's certificate (Rules 1962 r.3(7)(vi)(B), consolidated rule 3, p.4) — a nil, its own exclusion (D-119 C2a, OQ-12). Every regime. The row reaches expense.kind CLUB where expense.wholly.for.work and expense.journeys.and.certificate.kept are true, in RS-PERQ-EXPENSE-EXCLUDED (W-154d).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -28,7 +28,23 @@
         "type": "Fixed",
         "amount": "0"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.kind",
+          "code": "CLUB"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.wholly.for.work",
+          "code": "true"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.journeys.and.certificate.kept",
+          "code": "true"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(7) stands as in the rule in force from 1-4-2009 (r.3(10))",
         "gazetteRef": "CG-DL-E-18082023-248178",
