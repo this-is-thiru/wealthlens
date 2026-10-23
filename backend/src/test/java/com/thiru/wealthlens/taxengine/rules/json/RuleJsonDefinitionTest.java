@@ -24,8 +24,11 @@ import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.definition.TransportDisability;
 import com.thiru.wealthlens.taxengine.rules.definition.VehicleComputation;
 import com.thiru.wealthlens.taxengine.rules.definition.VehiclePath;
+import com.thiru.wealthlens.taxengine.rules.definition.WearAndTear;
+import com.thiru.wealthlens.taxengine.rules.definition.WearAndTearMethod;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.money.Rate;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.EnumSet;
@@ -199,6 +202,27 @@ class RuleJsonDefinitionTest {
 
         // Then
         assertThat(version.definition()).contains(new BucketPart(LONG_TERM_OTHER));
+    }
+
+    @Test
+    void version_whenWearAndTear_readsTheRateAndMethod() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "WearAndTear", "percent": "20", "method": "REDUCING_BALANCE" }""");
+
+        // Then
+        assertThat(version.definition())
+                .contains(new WearAndTear(Rate.percent("20"), WearAndTearMethod.REDUCING_BALANCE));
+    }
+
+    @Test
+    void version_whenWearAndTearNamesNoMethod_isRefusedNamingThePath() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "WearAndTear", "percent": "20", "method": "STRAIGHT" }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("definition.method")
+                .hasMessageContaining("STRAIGHT");
     }
 
     @Test

@@ -295,6 +295,35 @@ class ExpenseAndAssetPerquisiteTest {
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("10000")));
     }
 
+    /**
+     * Each transferred kind at a cost of 1,00,000 after 2 completed years, no price, both years (Table IV Sl. 8;
+     * r.3(7)(viii)): a car on the reducing balance at 20%, 1,00,000 × 0.8 × 0.8 = 64,000; an electronic item at 50%,
+     * × 0.5 × 0.5 = 25,000; any other at 10% of the cost a year, 1,00,000 − 2 × 10,000 = 80,000 — the rate and method
+     * on each row's WearAndTear (W-154f).
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("transferKinds")
+    void evaluate_whenEachKindIsTransferredAfterTwoYears_isWrittenDownByItsRowsMethod(int year,
+            TransferredAssetKind kind, RuleId expectedRow, String expected) {
+        // When
+        NodeResult result = run(year, List.of(), List.of(), List.of(transfer(kind, "100000", 2, "0")));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.rule()).isEqualTo(expectedRow));
+    }
+
+    private static Stream<Arguments> transferKinds() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, TransferredAssetKind.MOTOR_CAR, RuleIds.PERQ_ASSET_TRANSFER_CAR, "64000"));
+            cases.add(Arguments.of(year, TransferredAssetKind.COMPUTER_OR_ELECTRONIC,
+                    RuleIds.PERQ_ASSET_TRANSFER_ELECTRONIC, "25000"));
+            cases.add(Arguments.of(year, TransferredAssetKind.OTHER, RuleIds.PERQ_ASSET_TRANSFER_OTHER, "80000"));
+        }
+        return cases.build();
+    }
+
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
     void evaluate_whenACarIsTransferred_isItsReducingBalanceLessThePrice(int year) {

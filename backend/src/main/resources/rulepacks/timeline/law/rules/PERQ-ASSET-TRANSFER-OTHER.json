@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-ASSET-TRANSFER-OTHER",
   "ruleSet": "RS-PERQ-ASSET-TRANSFER",
-  "_note": "Transfer of a movable asset: \"the actual cost of such assets to the employer as reduced by the cost of normal wear and tear\" and the price paid; for other assets, wear and tear at 10% — \"10% in case of other assets, of the cost of the asset for each completed year\" (r.15(5) Table IV Sl. 8, Gazette 271092, p.1547; TY 2025-26: Rules 1962 r.3(7)(viii), \"10 per cent of such cost for each completed year\", consolidated rule 3, p.4). This row is the rate; AssetPerquisite applies it (D-119 C5). For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1547). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
+  "_note": "Transfer of a movable asset: \"the actual cost of such assets to the employer as reduced by the cost of normal wear and tear\" and the price paid; for other assets, wear and tear at 10% — \"10% in case of other assets, of the cost of the asset for each completed year\" (r.15(5) Table IV Sl. 8, Gazette 271092, p.1547; TY 2025-26: Rules 1962 r.3(7)(viii), \"10 per cent of such cost for each completed year\", consolidated rule 3, p.4). This row is the rate and the method, a WearAndTear definition; AssetPerquisite applies it (D-119 C5; W-154f). For every employee. Every regime. TY 2026-27: Income-tax Rules, 2026 r.15(5) Table IV (Gazette 271092, p.1547). TY 2025-26: Income-tax Rules, 1962 r.3(7) (consolidated rule 3, pp.3–4).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -24,10 +24,10 @@
         "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 8",
         "presence": "PRESENT"
       },
-      "cap": {
-        "type": "PercentOfBase",
+      "definition": {
+        "type": "WearAndTear",
         "percent": "10",
-        "base": "ASSET_COST"
+        "method": "SHARE_OF_COST_EACH_YEAR"
       },
       "conditions": [
         {
@@ -72,10 +72,10 @@
         "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 8",
         "presence": "PRESENT"
       },
-      "cap": {
-        "type": "PercentOfBase",
+      "definition": {
+        "type": "WearAndTear",
         "percent": "10",
-        "base": "ASSET_COST"
+        "method": "SHARE_OF_COST_EACH_YEAR"
       },
       "conditions": [
         {

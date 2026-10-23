@@ -2,13 +2,12 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.EmployerAssetTransfer;
 import com.thiru.wealthlens.taxengine.input.EmployerAssetUse;
-import com.thiru.wealthlens.taxengine.input.TransferredAssetKind;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
-import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
+import com.thiru.wealthlens.taxengine.rules.definition.WearAndTear;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
@@ -30,8 +29,8 @@ import java.util.Set;
  * Rules 1962 r.3(7)(vii)–(viii); D-119).
  *
  * <p>Use: ten per cent a year of the cost for the months used, or the rent the employer paid, less the recovery; the
- * kinds the year excludes are nil. Transfer: the cost less wear and tear for the completed years — on the reducing
- * balance for computers and electronic items and for motor cars, as a straight line for the rest — less the price.
+ * kinds the year excludes are nil. Transfer: the cost less wear and tear for the completed years, at the rate and by the
+ * method the asset's row of {@code RS-PERQ-ASSET-TRANSFER} states (W-154f), less the price.
  */
 final class AssetPerquisite {
 
@@ -79,27 +78,26 @@ final class AssetPerquisite {
                         : "the rent paid") + ", less the recovery " + use.recovered());
     }
 
+    /** The cost written down by the wear and tear its row states — the rate and the method (W-154f) — less the price. */
     private static TraceLine transferred(NodeContext ctx, EmployerAssetTransfer transfer, int sequence) {
         RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_PERQ_ASSET_TRANSFER, ItemFacts.of(ASSET_KIND, transfer.kind().name()));
-        Rate rate = rateOf(ctx, ruleId);
-        Money written = transfer.kind() == TransferredAssetKind.OTHER
-                ? transfer.cost().minus(rate.ofShare(transfer.cost(), transfer.completedYears(), 1)).floorAtZero()
-                : rate.leftAfter(transfer.cost(), transfer.completedYears());
-        Money value = written.minus(transfer.pricePaid()).floorAtZero();
-        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, transfer.cost(), value)
-                .withLimitedBy("written down to " + written + " after "
-                + transfer.completedYears() + " completed years at " + rate
-                + (transfer.kind() == TransferredAssetKind.OTHER ? " of the cost" : " on the reducing balance")
-                + ", less the price " + transfer.pricePaid());
-    }
-
-    /** A wear-and-tear row's rate — the row states it as a percentage of the cost. */
-    private static Rate rateOf(NodeContext ctx, RuleId ruleId) {
         RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(ruleId), ctx.inputs().temporal());
-        if (version.cap().isPresent() && version.cap().get() instanceof PercentOfBase percent) {
-            return percent.percent();
-        }
-        throw new IllegalStateException(ruleId + " must state its wear and tear as a percentage of the cost");
+        WearAndTear wearAndTear = RuleDefinitions.require(version.definition(), WearAndTear.class, ruleId);
+        Rate rate = wearAndTear.rate();
+        Money cost = transfer.cost();
+        int years = transfer.completedYears();
+        Money written = switch (wearAndTear.method()) {
+            case REDUCING_BALANCE -> rate.leftAfter(cost, years);
+            case SHARE_OF_COST_EACH_YEAR -> cost.minus(rate.ofShare(cost, years, 1)).floorAtZero();
+        };
+        String applied = switch (wearAndTear.method()) {
+            case REDUCING_BALANCE -> " on the reducing balance";
+            case SHARE_OF_COST_EACH_YEAR -> " of the cost";
+        };
+        Money value = written.minus(transfer.pricePaid()).floorAtZero();
+        return ctx.traceLine(sequence, ruleId, StepKind.INCOME, cost, value)
+                .withLimitedBy("written down to " + written + " after " + years + " completed years at " + rate
+                        + applied + ", less the price " + transfer.pricePaid());
     }
 
     private static ExcludedAssets excludedAssets(NodeContext ctx, TemporalContext t) {
