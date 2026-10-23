@@ -2,13 +2,14 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.EducationLoanInterest;
 import com.thiru.wealthlens.taxengine.input.Individual;
-import com.thiru.wealthlens.taxengine.input.LoanPurpose;
 import com.thiru.wealthlens.taxengine.input.PurposeLoanInterest;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -28,6 +29,9 @@ import java.util.Set;
  * with the first that fails. A house loan is tried under s.130 first, under s.131 only where s.130 fails (s.131(1)).
  */
 final class LoanInterestDeduction {
+
+    /** The loan's purpose — the {@code LoanPurpose} name — which the purpose rows read (W-156d, D-349). */
+    private static final ItemFactId PURPOSE = new ItemFactId("loan.purpose");
 
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_EDUCATION_LOAN, RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER,
             RuleSetIds.RS_DED_HOUSE_LOAN, RuleSetIds.RS_DED_ELECTRIC_VEHICLE_LOAN);
@@ -77,10 +81,21 @@ final class LoanInterestDeduction {
                 .withLimitedBy("the interest paid");
     }
 
-    /** s.130–132: a house loan under s.130, else s.131; a vehicle loan under s.132. */
+    /**
+     * s.130–132: a vehicle loan under s.132; a house loan under s.130, else s.131 — which purpose each row takes is its
+     * own condition (W-156d, D-349).
+     */
     private static TraceLine purpose(NodeContext ctx, PurposeLoanInterest loan, int sequence) {
-        if (loan.purpose() == LoanPurpose.ELECTRIC_VEHICLE) {
-            return limited(ctx, loan, ctx.ruleIdOf(RuleSetIds.RS_DED_ELECTRIC_VEHICLE_LOAN), sequence);
+        ItemFacts purpose = ItemFacts.of(PURPOSE, loan.purpose().name());
+        RuleId vehicle = ctx.ruleIdOf(RuleSetIds.RS_DED_ELECTRIC_VEHICLE_LOAN);
+        if (RowReach.holdsFor(ctx, ctx.rule(vehicle), purpose)) {
+            return limited(ctx, loan, vehicle, sequence);
+        }
+        List<RuleId> house = List.of(ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER),
+                ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN));
+        if (!house.stream().allMatch(row -> RowReach.holdsFor(ctx, ctx.rule(row), purpose))) {
+            throw new IllegalArgumentException("A loan for " + loan.purpose() + " is reached by neither " + vehicle
+                    + " nor " + house);
         }
         Optional<String> earlier = failure(RuleDefinitions.require(version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER)).definition(), SanctionedLoanLimit.class,
                 ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER)), loan);

@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-NPS-EMPLOYER-GOVT",
   "ruleSet": "RS-DED-NPS-EMPLOYER",
-  "_note": "The employer's contribution to the employee's account under the notified pension scheme, \"as does not exceed (a) 14%, where such contribution is made by the employer being the Central Government or the State Government\" \"of his salary in the tax year\" (s.124(1)(a), p.160); \"salary\" includes dearness allowance where the terms provide and excludes all other allowances and perquisites (s.124(13)(b), p.161) — base SALARY, the employer-pension salary. Survives the new regime (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26. rulebook DED-NPS-EMP-001(a), -003. Whether the contribution is salary first is OQ-14. The 1961 counterpart, s.80CCD(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCD(2) as substituted by F(No.2)A 2019 s.24 (p.16): \"does not exceed–– (a) fourteen per cent., where such contribution is made by the Central Government\", with FA 2022 s.20 (p.28) reading \"Central Government or the State Government\" from 1-4-2020 — 14% of salary (s.80CCD Explanation, SAL-SALARY-FOR-EMPLOYER-PENSION). Every regime: s.115BAC(2)(i) keeps s.80CCD(2). sources/2026-10-07-chapter-via.md B7, M2, M8, M14. D-144.",
+  "_note": "The employer's contribution to the employee's account under the notified pension scheme, \"as does not exceed (a) 14%, where such contribution is made by the employer being the Central Government or the State Government\" \"of his salary in the tax year\" (s.124(1)(a), p.160); \"salary\" includes dearness allowance where the terms provide and excludes all other allowances and perquisites (s.124(13)(b), p.161) — base SALARY, the employer-pension salary. Survives the new regime (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26. rulebook DED-NPS-EMP-001(a), -003. Whether the contribution is salary first is OQ-14. The 1961 counterpart, s.80CCD(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCD(2) as substituted by F(No.2)A 2019 s.24 (p.16): \"does not exceed–– (a) fourteen per cent., where such contribution is made by the Central Government\", with FA 2022 s.20 (p.28) reading \"Central Government or the State Government\" from 1-4-2020 — 14% of salary (s.80CCD Explanation, SAL-SALARY-FOR-EMPLOYER-PENSION). Every regime: s.115BAC(2)(i) keeps s.80CCD(2). sources/2026-10-07-chapter-via.md B7, M2, M8, M14. D-144. The row reaches an employer contribution to the notified pension scheme only (employer.fund = NOTIFIED_PENSION_SCHEME): s.124's \"contribution ... to his account under a pension scheme\" (W-156d, D-349).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -34,6 +34,11 @@
           "type": "ItemFactIs",
           "fact": "employer.kind",
           "code": "GOVERNMENT"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "NOTIFIED_PENSION_SCHEME"
         }
       ],
       "introducedBy": {
@@ -83,6 +88,11 @@
           "type": "ItemFactIs",
           "fact": "employer.kind",
           "code": "GOVERNMENT"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "NOTIFIED_PENSION_SCHEME"
         }
       ],
       "introducedBy": {

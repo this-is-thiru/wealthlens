@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-156d — Chapter VIII's other kinds by rule data (D-343; R6)
+Item            : W-156e — salary kinds by rule data (D-343; R7; may split)
 Stage           : NOT STARTED — plan to write
-Plan            : (none yet) — ChapterEightNode :99 (NPS fund), :193–198 (life premium pay line, verdict), :64–65 (verdict); ScheduleXvDeduction :123–134 (Government employer); LoanInterestDeduction :82 (EV loan row)
-Approved        : W-156 split (D-343); W-156a – c done (D-344 – D-348)
+Plan            : (none yet) — EmployerContributionNode:140 (RPF), GrossSalaryNode:93 (NPS), SalaryDeductionNode:177 (Government allowances), AllowanceExemption:57–58 (per-child, verdict), LeaveTravelExemption:211 (per-km mode)
+Approved        : W-156 split (D-343); W-156a – d done (D-344 – D-349)
 Steps done      : —
-Next step       : read the R6 sites whole, write plans/W-156d.md, explain it, ask approval (do NOT code). Also open: nil-line proposal and PaidOtherThanInCash (W-156b2), the REG basis-set finding
-Last verify     : targeted 220/0; unit -Punit 3641/0; integration 281/0 (2026-10-23, W-156c)
+Next step       : read the R7 sites whole, write plans/W-156e.md, explain it, ask approval (do NOT code). Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding
+Last verify     : targeted 204/0 (+ NodeContextRuleSetTest 20/0); unit -Punit 3642/0; integration 281/0 (2026-10-23, W-156d)
 Waiting on      : the owner — placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-156c: take disability's severity row and who is a dependant from rows — disability.severity conditions on the four severity rows and DED-DEPENDANT for s.127 and s.128, so DisabilityDeduction holds no severity test or relationship switch (D-348)
-Updated         : 2026-10-23, session 31 — W-156c approved and committed; next W-156d
+Last item commit: taxplanning W-156d: take Chapter VIII's employer fund, Government salary and loan purpose from rows — employer.fund and loan.purpose conditions and DED-SCHEDULE-XV-GOVERNMENT-SALARY, so the nodes hold no fund, employer-kind or purpose test (D-349)
+Updated         : 2026-10-23, session 31 — W-156d approved and committed; next W-156e
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

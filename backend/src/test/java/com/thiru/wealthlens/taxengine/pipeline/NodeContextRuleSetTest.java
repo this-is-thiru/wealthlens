@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.input.AccommodationProvider;
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
+import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.Individual;
@@ -97,6 +98,12 @@ class NodeContextRuleSetTest {
 
     private static ItemFacts item(String fact, Enum<?> code) {
         return ItemFacts.of(new ItemFactId(fact), code.name());
+    }
+
+    /** An employer contribution to the notified pension scheme by this kind of employer — PensionDeduction's facts. */
+    private static ItemFacts npsEmployer(EmployerKind kind) {
+        return new ItemFacts(Map.of(new ItemFactId("employer.kind"), kind.name(), new ItemFactId("employer.fund"),
+                EmployerFund.NOTIFIED_PENSION_SCHEME.name()), Map.of(), Map.of());
     }
 
     /** A car that is not electric, of the given capacity — the facts MotorCarPerquisite supplies (D-257). */
@@ -402,12 +409,12 @@ class NodeContextRuleSetTest {
             for (TaxYearId year : YEARS) {
                 for (RegimeCode regime : List.of(NEW_TAX_REGIME, FIRST_SCHEDULE_RATES)) {
                     assertThat(rowFor(year, regime, RuleSetIds.RS_DED_NPS_EMPLOYER,
-                            item("employer.kind", EmployerKind.GOVERNMENT))).contains(RuleIds.DED_NPS_EMPLOYER_GOVT);
+                            npsEmployer(EmployerKind.GOVERNMENT))).contains(RuleIds.DED_NPS_EMPLOYER_GOVT);
                 }
                 assertThat(rowFor(year, NEW_TAX_REGIME, RuleSetIds.RS_DED_NPS_EMPLOYER,
-                        item("employer.kind", EmployerKind.OTHER))).contains(RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME);
+                        npsEmployer(EmployerKind.OTHER))).contains(RuleIds.DED_NPS_EMPLOYER_NEW_TAX_REGIME);
                 assertThat(rowFor(year, FIRST_SCHEDULE_RATES, RuleSetIds.RS_DED_NPS_EMPLOYER,
-                        item("employer.kind", EmployerKind.OTHER))).contains(RuleIds.DED_NPS_EMPLOYER_OTHER);
+                        npsEmployer(EmployerKind.OTHER))).contains(RuleIds.DED_NPS_EMPLOYER_OTHER);
             }
         }
     }

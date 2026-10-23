@@ -51,6 +51,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_DED_RENT_PAID = new RuleSetId("RS-DED-RENT-PAID");
     public static final RuleSetId RS_DED_SAVINGS_INTEREST = new RuleSetId("RS-DED-SAVINGS-INTEREST");
     public static final RuleSetId RS_DED_SCHEDULE_XV = new RuleSetId("RS-DED-SCHEDULE-XV");
+    public static final RuleSetId RS_DED_SCHEDULE_XV_GOVERNMENT_SALARY = new RuleSetId("RS-DED-SCHEDULE-XV-GOVERNMENT-SALARY");
     public static final RuleSetId RS_DED_SPECIFIED_DISEASE = new RuleSetId("RS-DED-SPECIFIED-DISEASE");
     public static final RuleSetId RS_DED_SPECIFIED_DISEASE_SENIOR = new RuleSetId("RS-DED-SPECIFIED-DISEASE-SENIOR");
     public static final RuleSetId RS_DED_WITHIN_GROSS_TOTAL = new RuleSetId("RS-DED-WITHIN-GROSS-TOTAL");

@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
 import com.thiru.wealthlens.taxengine.pipeline.ComponentSet;
@@ -12,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.cap.AggregateWithCeiling;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.PremiumShareBands;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
@@ -19,8 +19,10 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -28,6 +30,8 @@ import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * s.123 — the Schedule XV sums under one ceiling, each life policy's premium first within its share of the sum
@@ -38,6 +42,9 @@ final class ScheduleXvDeduction {
 
     private static final BaseId SALARY = new BaseId("SALARY");
     private static final BaseId GOVERNMENT_SALARY = new BaseId("GOVERNMENT_SALARY");
+
+    /** The employment's employer kind — what {@code DED-SCHEDULE-XV-GOVERNMENT-SALARY} reads (W-156d, D-349). */
+    private static final ItemFactId EMPLOYER_KIND = new ItemFactId("employer.kind");
 
     private ScheduleXvDeduction() {
     }
@@ -119,24 +126,41 @@ final class ScheduleXvDeduction {
      */
     private static Money governmentSalary(NodeContext ctx) {
         List<Employment> employments = ctx.inputs().entered().employments();
+        RuleRow government = ctx.ruleOf(RuleSetIds.RS_DED_SCHEDULE_XV_GOVERNMENT_SALARY);
         return ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class).in(HeadCode.SALARIES).stream()
-                .filter(line -> employments.get(line.employment()).employerKind() == EmployerKind.GOVERNMENT)
+                .filter(line -> RowReach.holdsFor(ctx, government, employerOf(employments.get(line.employment()))))
                 .filter(line -> ctx.pack().components().get(line.code()).kind() == ComponentKind.SALARY)
                 .map(ComponentSet.Line::amount)
                 .reduce(Money.ZERO, Money::plus);
     }
 
-    /** Schedule XV para 1(c) is a deduction from salary "payable by or on behalf of the Government" (D-154). */
+    /**
+     * Schedule XV para 1(c) is a deduction from salary "payable by or on behalf of the Government" (D-154): a pay line
+     * whose sub-cap is measured on the Government salary must come from an employment the Government-salary row
+     * reaches (W-156d, D-349).
+     */
     static void requireGovernmentEmployment(NodeContext ctx, List<ComponentSet.Line> payLines) {
         List<Employment> employments = ctx.inputs().entered().employments();
+        RuleRow government = ctx.ruleOf(RuleSetIds.RS_DED_SCHEDULE_XV_GOVERNMENT_SALARY);
+        AggregateWithCeiling cap = (AggregateWithCeiling) version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_SCHEDULE_XV))
+                .cap().orElseThrow();
+        Set<ComponentCode> fromGovernmentSalary = cap.subCaps().entrySet().stream()
+                .filter(subCap -> subCap.getValue().amountsRead().contains(GOVERNMENT_SALARY))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
         for (ComponentSet.Line line : payLines) {
-            if (line.code().equals(ComponentCodes.GOVERNMENT_DEFERRED_ANNUITY)
-                    && employments.get(line.employment()).employerKind() != EmployerKind.GOVERNMENT) {
-                throw new IllegalArgumentException("A sum deducted for a deferred annuity under Schedule XV para 1(c)"
-                        + " must come from salary payable by the Government; employment " + line.employment()
-                        + " is " + employments.get(line.employment()).employerKind() + " (D-154)");
+            Employment employment = employments.get(line.employment());
+            if (fromGovernmentSalary.contains(line.code())
+                    && !RowReach.holdsFor(ctx, government, employerOf(employment))) {
+                throw new IllegalArgumentException(line.code() + " is measured on the Government salary, but"
+                        + " employment " + line.employment() + " (" + employment.employerKind() + ") is not reached by "
+                        + government.id());
             }
         }
+    }
+
+    private static ItemFacts employerOf(Employment employment) {
+        return ItemFacts.of(EMPLOYER_KIND, employment.employerKind().name());
     }
 
     private static TraceLine nil(NodeContext ctx, List<TraceLine> lines, RuleId row, RuleVersion version,

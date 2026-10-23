@@ -76,6 +76,7 @@ class GeneratedConstantsTest {
             "DED-RENT-PAID",
             "DED-SAVINGS-INTEREST",
             "DED-SCHEDULE-XV",
+            "DED-SCHEDULE-XV-GOVERNMENT-SALARY",
             "DED-SPECIFIED-DISEASE",
             "DED-SPECIFIED-DISEASE-SENIOR",
             "DED-WITHIN-GROSS-TOTAL",

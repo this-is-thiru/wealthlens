@@ -224,6 +224,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-DED-SCHEDULE-XV-GOVERNMENT-SALARY",
+      "_note": "One row: DED-SCHEDULE-XV-GOVERNMENT-SALARY, which employments' salary is payable by the Government for Schedule XV para 1(c) (W-156d, D-349)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-DED-SPECIFIED-DISEASE",
       "_note": "One row: DED-SPECIFIED-DISEASE",
       "selection": "EXACTLY_ONE",

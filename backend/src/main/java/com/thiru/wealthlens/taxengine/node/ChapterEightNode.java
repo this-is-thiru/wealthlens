@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.input.EmployerFundContribution;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LifeInsurancePolicy;
@@ -64,7 +63,7 @@ public final class ChapterEightNode implements ComputationNode {
     private static final Set<RuleSetId> PAYMENT_ROWS = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV, RuleSetIds.RS_DED_NPS_OWN);
     private static final Set<RuleSetId> INVESTMENT_RULES = Set.of(RuleSetIds.RS_DED_SCHEDULE_XV,
             RuleSetIds.RS_DED_NPS_OWN, RuleSetIds.RS_DED_NPS_EMPLOYER,
-            RuleSetIds.RS_DED_PREMIUM_SHARE);
+            RuleSetIds.RS_DED_PREMIUM_SHARE, RuleSetIds.RS_DED_SCHEDULE_XV_GOVERNMENT_SALARY);
 
     @Override
     public NodeId produces() {
@@ -95,9 +94,7 @@ public final class ChapterEightNode implements ComputationNode {
     public NodeResult evaluate(NodeContext ctx) {
         List<ComponentSet.Line> payLines = payLines(ctx);
         List<QualifyingPayment> payments = ctx.inputs().entered().qualifyingPayments();
-        List<EmployerFundContribution> employerPension = ctx.inputs().entered().employerContributions().stream()
-                .filter(contribution -> contribution.fund() == EmployerFund.NOTIFIED_PENSION_SCHEME)
-                .toList();
+        List<EmployerFundContribution> employerPension = PensionDeduction.employerContributions(ctx);
         List<LifeInsurancePolicy> policies = ctx.inputs().entered().lifeInsurancePolicies();
         boolean investmentsEntered = !(payLines.isEmpty() && payments.isEmpty() && employerPension.isEmpty()
                 && policies.isEmpty());

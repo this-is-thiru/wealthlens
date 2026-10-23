@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
@@ -36,6 +37,9 @@ final class PensionDeduction {
     private static final BaseId SALARY = new BaseId("SALARY");
     /** What an employer pension contribution's row is chosen by, with the regime (D-253). */
     private static final ItemFactId EMPLOYER_KIND = new ItemFactId("employer.kind");
+
+    /** The fund an employer contribution went to — the {@code EmployerFund} name (W-156d, D-349). */
+    private static final ItemFactId EMPLOYER_FUND = new ItemFactId("employer.fund");
 
     private PensionDeduction() {
     }
@@ -82,7 +86,7 @@ final class PensionDeduction {
         PerquisiteNode.requireEnteredEmployment(ctx, employment, "employer pension contribution");
         Money contributed = contributions.stream().map(EmployerFundContribution::amount)
                 .reduce(Money.ZERO, Money::plus);
-        RuleId row = employerRow(ctx, employment);
+        RuleId row = employerRow(ctx, contributions.getFirst());
         TemporalContext t = ctx.inputs().temporal();
         Money salary = ctx.get(NodeIds.SALARY_BASE, SalaryBases.class)
                 .of(ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_EMPLOYER_PENSION), employment);
@@ -99,9 +103,29 @@ final class PensionDeduction {
      * A Government employer's row in every regime; any other employer's, the row for the regime (s.124(1)(b), (2)) —
      * the rows' conditions on the employment's employer kind and their regimes say which (D-252, D-253).
      */
-    private static RuleId employerRow(NodeContext ctx, int employment) {
-        EmployerKind kind = ctx.inputs().entered().employments().get(employment).employerKind();
-        return ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_EMPLOYER, ItemFacts.of(EMPLOYER_KIND, kind.name()));
+    private static RuleId employerRow(NodeContext ctx, EmployerFundContribution contribution) {
+        return ctx.ruleIdOf(RuleSetIds.RS_DED_NPS_EMPLOYER, factsOf(ctx, contribution));
+    }
+
+    /**
+     * The employer contributions s.124 deducts: those some {@code RS-DED-NPS-EMPLOYER} row reaches by its fund and its
+     * employer's kind — which fund is the notified pension scheme is the rows' to say (W-156d, D-349).
+     */
+    static List<EmployerFundContribution> employerContributions(NodeContext ctx) {
+        List<RuleRow> rows = ctx.pack().membersOf(Set.of(RuleSetIds.RS_DED_NPS_EMPLOYER)).stream()
+                .map(ctx::rule)
+                .toList();
+        return ctx.inputs().entered().employerContributions().stream()
+                .filter(contribution -> rows.stream()
+                        .anyMatch(row -> RowReach.holdsFor(ctx, row, factsOf(ctx, contribution))))
+                .toList();
+    }
+
+    private static ItemFacts factsOf(NodeContext ctx, EmployerFundContribution contribution) {
+        PerquisiteNode.requireEnteredEmployment(ctx, contribution.employment(), "employer contribution");
+        EmployerKind kind = ctx.inputs().entered().employments().get(contribution.employment()).employerKind();
+        return new ItemFacts(Map.of(EMPLOYER_KIND, kind.name(), EMPLOYER_FUND, contribution.fund().name()), Map.of(),
+                Map.of());
     }
 
     private static TraceLine nil(NodeContext ctx, List<TraceLine> lines, RuleId row, RuleVersion version,

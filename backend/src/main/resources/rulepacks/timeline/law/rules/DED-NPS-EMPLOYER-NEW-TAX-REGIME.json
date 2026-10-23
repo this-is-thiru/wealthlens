@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-NPS-EMPLOYER-NEW-TAX-REGIME",
   "ruleSet": "RS-DED-NPS-EMPLOYER",
-  "_note": "\"Where the total income of the assessee is chargeable to tax under section 202(1), the provisions of sub-section (1) shall have effect as if for \"10%\" referred to in clause (b) of that sub-section, \"14%\" had been substituted\" (s.124(2), p.160): an employer other than a Government, in the new regime. Base SALARY (s.124(13)(b)). Survives the new regime (s.202(2)(a)(xii)). TY 2026-27 and TY 2025-26. rulebook DED-NPS-EMP-002, -003. OQ-14. The 1961 counterpart, s.80CCD(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCD(2), proviso inserted by F(No.2)A 2024 s.25 (p.24, w.e.f. 1-4-2025): \"where the total income of the assessee is chargeable to tax under sub-section (1A) of section 115BAC, the provisions of sub-section (2) shall have effect as if for the words \"ten per cent.\" referred to in clause (b), the words \"fourteen per cent.\" had been substituted\". sources/2026-10-07-chapter-via.md M15. D-144.",
+  "_note": "\"Where the total income of the assessee is chargeable to tax under section 202(1), the provisions of sub-section (1) shall have effect as if for \"10%\" referred to in clause (b) of that sub-section, \"14%\" had been substituted\" (s.124(2), p.160): an employer other than a Government, in the new regime. Base SALARY (s.124(13)(b)). Survives the new regime (s.202(2)(a)(xii)). TY 2026-27 and TY 2025-26. rulebook DED-NPS-EMP-002, -003. OQ-14. The 1961 counterpart, s.80CCD(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCD(2), proviso inserted by F(No.2)A 2024 s.25 (p.24, w.e.f. 1-4-2025): \"where the total income of the assessee is chargeable to tax under sub-section (1A) of section 115BAC, the provisions of sub-section (2) shall have effect as if for the words \"ten per cent.\" referred to in clause (b), the words \"fourteen per cent.\" had been substituted\". sources/2026-10-07-chapter-via.md M15. D-144. The row reaches an employer contribution to the notified pension scheme only (employer.fund = NOTIFIED_PENSION_SCHEME): s.124's \"contribution ... to his account under a pension scheme\" (W-156d, D-349).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -40,6 +40,11 @@
             "fact": "employer.kind",
             "code": "GOVERNMENT"
           }
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "NOTIFIED_PENSION_SCHEME"
         }
       ],
       "introducedBy": {
@@ -95,6 +100,11 @@
             "fact": "employer.kind",
             "code": "GOVERNMENT"
           }
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "NOTIFIED_PENSION_SCHEME"
         }
       ],
       "introducedBy": {

@@ -416,7 +416,23 @@ class ChapterEightNodeTest {
         // When / Then — para 1(c) is salary "payable by or on behalf of the Government"
         assertThatThrownBy(() -> run(governmentAnnuity(2026, EmployerKind.OTHER, pay(ComponentCodes.BASIC, "600000"))))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("payable by the Government");
+                .hasMessageContaining(RuleIds.DED_SCHEDULE_XV_GOVERNMENT_SALARY.value());
+    }
+
+    @Test
+    void evaluate_whenTheEmployerContributesOnlyToAProvidentFund_givesNoPensionLine() {
+        // Given — s.124 is the employer's contribution to the notified pension scheme; no RS-DED-NPS-EMPLOYER row
+        // reaches a recognised provident fund (W-156d)
+        Case rpfOnly = new Case(2026, OLD, EmployerKind.OTHER, List.of(), List.of(),
+                List.of(new EmployerFundContribution(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("336000"))),
+                Money.of("2400000"), Money.of("2474000"));
+
+        // When
+        NodeResult result = run(rpfOnly);
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).isEmpty();
     }
 
     @ParameterizedTest(name = "TY {0}")

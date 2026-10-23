@@ -57,6 +57,7 @@ public final class RuleIds {
     public static final RuleId DED_RENT_PAID = new RuleId("DED-RENT-PAID");
     public static final RuleId DED_SAVINGS_INTEREST = new RuleId("DED-SAVINGS-INTEREST");
     public static final RuleId DED_SCHEDULE_XV = new RuleId("DED-SCHEDULE-XV");
+    public static final RuleId DED_SCHEDULE_XV_GOVERNMENT_SALARY = new RuleId("DED-SCHEDULE-XV-GOVERNMENT-SALARY");
     public static final RuleId DED_SPECIFIED_DISEASE = new RuleId("DED-SPECIFIED-DISEASE");
     public static final RuleId DED_SPECIFIED_DISEASE_SENIOR = new RuleId("DED-SPECIFIED-DISEASE-SENIOR");
     public static final RuleId DED_WITHIN_GROSS_TOTAL = new RuleId("DED-WITHIN-GROSS-TOTAL");
