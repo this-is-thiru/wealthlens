@@ -171,7 +171,19 @@ class DonationDeductionTest {
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(lines(result, RuleIds.DED_DONATION_HALF)).singleElement()
-                .satisfies(line -> assertThat(line.limitedBy().orElseThrow()).contains("s.133(6)"));
+                .satisfies(line -> assertThat(line.limitedBy().orElseThrow())
+                        .contains(RuleIds.DED_DONATION_UNREPORTED.value()));
+    }
+
+    @Test
+    void evaluate_whenAPublicBodyHasNotReported_isNotBarred() {
+        // When — s.133(6) reaches (1)(b)(ii) only (D-142): 10,000 is within the limit of 1,00,000; half is 5,000
+        NodeResult result = run(Case.of(new Donation(DonationClause.PUBLIC_BODY, Money.of("10000"), false, false)));
+
+        // Then
+        assertThat(result.value()).isEqualTo(rupees("5000"));
+        assertThat(lines(result, RuleIds.DED_DONATION_HALF)).extracting(TraceLine::out, TraceLine::limitedBy)
+                .containsExactly(tuple(rupees("5000"), Optional.of("within the qualifying limit")));
     }
 
     @Test
@@ -195,11 +207,11 @@ class DonationDeductionTest {
 
         // Then — the whole groups 10,000 each; the half groups 5,000 each
         assertThat(lines(result, RuleIds.DED_DONATION_WHOLE)).extracting(TraceLine::out, TraceLine::limitedBy)
-                .containsExactly(tuple(rupees("10000"), Optional.of("the whole, without limit")),
-                        tuple(rupees("10000"), Optional.of("the whole, within the qualifying limit")));
+                .containsExactly(tuple(rupees("10000"), Optional.of("without limit")),
+                        tuple(rupees("10000"), Optional.of("within the qualifying limit")));
         assertThat(lines(result, RuleIds.DED_DONATION_HALF)).extracting(TraceLine::out, TraceLine::limitedBy)
-                .containsExactly(tuple(rupees("5000"), Optional.of("half, without limit")),
-                        tuple(rupees("5000"), Optional.of("half, within the qualifying limit")));
+                .containsExactly(tuple(rupees("5000"), Optional.of("without limit")),
+                        tuple(rupees("5000"), Optional.of("within the qualifying limit")));
     }
 
     @Test

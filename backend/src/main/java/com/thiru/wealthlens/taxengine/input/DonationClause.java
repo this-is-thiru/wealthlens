@@ -1,8 +1,8 @@
 package com.thiru.wealthlens.taxengine.input;
 
 /**
- * Which part of s.133(1) a donee falls under — what decides whether a donation counts in full or at half, and whether
- * within the qualifying limit (S2 s.133(1), (2); D-142). s.133(1)(a)(xxiv) is a company's and has no clause here. For TY
+ * Which part of s.133(1) a donee falls under — the fact the donation rows read to say whether it counts in full or at
+ * half, and whether within the qualifying limit (S2 s.133(1), (2); D-142; W-156a, D-344). s.133(1)(a)(xxiv) is a company's and has no clause here. For TY
  * 2025-26 each names its 1961 s.80G(2) counterpart, which counts the same way (D-148).
  */
 public enum DonationClause {
@@ -23,10 +23,5 @@ public enum DonationClause {
     CHARITABLE_INSTITUTION,
 
     /** The bodies s.133(1)(b)(iii)–(vi) name; 1961 s.80G(2)(a)(v), (vi), (via) and (b) — half, within the limit. */
-    PUBLIC_BODY;
-
-    /** Whether the clause allows the whole of the sum (s.133(1)(a)) rather than half of it (s.133(1)(b)). */
-    public boolean isWhole() {
-        return this == NAMED_FUND || this == FAMILY_PLANNING;
-    }
+    PUBLIC_BODY
 }

@@ -28,6 +28,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_DED_DONATION_CASH = new RuleSetId("RS-DED-DONATION-CASH");
     public static final RuleSetId RS_DED_DONATION_HALF = new RuleSetId("RS-DED-DONATION-HALF");
     public static final RuleSetId RS_DED_DONATION_QUALIFYING = new RuleSetId("RS-DED-DONATION-QUALIFYING");
+    public static final RuleSetId RS_DED_DONATION_REPORT = new RuleSetId("RS-DED-DONATION-REPORT");
     public static final RuleSetId RS_DED_DONATION_WHOLE = new RuleSetId("RS-DED-DONATION-WHOLE");
     public static final RuleSetId RS_DED_EDUCATION_LOAN = new RuleSetId("RS-DED-EDUCATION-LOAN");
     public static final RuleSetId RS_DED_ELECTRIC_VEHICLE_LOAN = new RuleSetId("RS-DED-ELECTRIC-VEHICLE-LOAN");

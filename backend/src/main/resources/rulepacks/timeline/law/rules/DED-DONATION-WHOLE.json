@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-DONATION-WHOLE",
   "ruleSet": "RS-DED-DONATION-WHOLE",
-  "_note": "Donations allowed in full: \"the whole of the aggregate of the sum or the sums paid by the assessee, in the tax year as donations to\" the funds of s.133(1)(a)(i)–(xxii), without limit, and (xxiii) family planning, within s.133(2)'s qualifying limit (pp.167–168) — base AMOUNT_PAID, the sum counted (after the limit where it reaches). (xxiv) is \"by an assessee being a company\" and is not built. Only a sum of money (s.133(4)); the donees' approvals, notifications and a resident's Clean Ganga donation are entry conditions. Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(1)(i) (thc p.348): where the sums include those of the listed sub-clauses, \"an amount equal to the whole of the sum or, as the case may be, sums of such nature\" — the whole, without limit for the named funds, within s.80G(4)'s limit for (a)(vii) family planning. 1961 clauses for the engine's DonationClause: NAMED_FUND = the s.80G(2)(a) funds on (1)(i)'s whole list ((i), (iiia) with PM CARES, (iiiaa), (iiiab), (iiib), (iiie)–(iiihm), including (iiif) a University); FAMILY_PLANNING = (a)(vii); DROUGHT_RELIEF_FUND = (a)(iii); CHARITABLE_INSTITUTION = (a)(iv); PUBLIC_BODY = (a)(v), (vi), (via) and (b). (a)(ii), (iiic), (iiid) — the Jawaharlal Nehru Memorial Fund, the Indira Gandhi Memorial Trust, the Rajiv Gandhi Foundation — are omitted from AY 2024-25 (FA 2023 s.40(I), p.30). sources/2026-10-07-chapter-via.md B24, B25, M13; TOLA 2020 s.3(XII)(a) (A10). D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "_note": "Donations allowed in full: \"the whole of the aggregate of the sum or the sums paid by the assessee, in the tax year as donations to\" the funds of s.133(1)(a)(i)–(xxii), without limit, and (xxiii) family planning, within s.133(2)'s qualifying limit (pp.167–168) — base AMOUNT_PAID, the sum counted (after the limit where it reaches). (xxiv) is \"by an assessee being a company\" and is not built. Only a sum of money (s.133(4)); the donees' approvals, notifications and a resident's Clean Ganga donation are entry conditions. Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(1)(i) (thc p.348): where the sums include those of the listed sub-clauses, \"an amount equal to the whole of the sum or, as the case may be, sums of such nature\" — the whole, without limit for the named funds, within s.80G(4)'s limit for (a)(vii) family planning. 1961 clauses for the engine's DonationClause: NAMED_FUND = the s.80G(2)(a) funds on (1)(i)'s whole list ((i), (iiia) with PM CARES, (iiiaa), (iiiab), (iiib), (iiie)–(iiihm), including (iiif) a University); FAMILY_PLANNING = (a)(vii); DROUGHT_RELIEF_FUND = (a)(iii); CHARITABLE_INSTITUTION = (a)(iv); PUBLIC_BODY = (a)(v), (vi), (via) and (b). (a)(ii), (iiic), (iiid) — the Jawaharlal Nehru Memorial Fund, the Indira Gandhi Memorial Trust, the Rajiv Gandhi Foundation — are omitted from AY 2024-25 (FA 2023 s.40(I), p.30). sources/2026-10-07-chapter-via.md B24, B25, M13; TOLA 2020 s.3(XII)(a) (A10). D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches a donation by its clause (donation.clause): NAMED_FUND and FAMILY_PLANNING, the s.133(1)(a) donees (W-156a, D-344).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,23 @@
         "percent": "100",
         "base": "AMOUNT_PAID"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "NAMED_FUND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "FAMILY_PLANNING"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 (38 of 2020), s.3(XII)(a) — PM CARES added to s.80G(2)(a)(iiia), deemed from 1-4-2020; FA 2023 s.40(I) omits (a)(ii), (iiic), (iiid) from 1-4-2024",
         "gazetteRef": "CG-DL-E-29092020-222110",
@@ -72,7 +88,23 @@
         "percent": "100",
         "base": "AMOUNT_PAID"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "NAMED_FUND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "FAMILY_PLANNING"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(1)(a)",
         "gazetteRef": "CG-DL-E-22082025-265620",

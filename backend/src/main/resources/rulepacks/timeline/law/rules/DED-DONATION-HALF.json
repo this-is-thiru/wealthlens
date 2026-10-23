@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-DONATION-HALF",
   "ruleSet": "RS-DED-DONATION-HALF",
-  "_note": "Donations allowed at half: \"an amount equal to 50% of the aggregate of the sums paid as donation by an assessee during the tax year to\" s.133(1)(b)(i) the Prime Minister's Drought Relief Fund, without limit, and (ii)–(vi) — a registered or approved charitable fund or institution, the Government or a local authority for a charitable purpose other than family planning, a housing or town-planning authority, a notified minority-community corporation, an entity repairing a notified place — within s.133(2)'s qualifying limit (p.169); Income-tax Rules, 2026 Form No. 114 note 5 (p.2217): \"Donor shall be eligible for deduction of 50% of the donation made subject to 10% of adjusted gross total income as per section 133(2)\". Base AMOUNT_PAID, the sum counted. A (b)(ii) donation is allowed only on the donee's report (s.133(6)). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(1) (thc p.348): \"plus fifty per cent of the balance of such aggregate\" ((i)), \"fifty per cent of the aggregate\" ((ii)) — half of every sum not on the whole list: (a)(iii) the Prime Minister's Drought Relief Fund without limit; (a)(iv), (v), (vi), (via) and (b) within s.80G(4)'s limit. sources/2026-10-07-chapter-via.md B24, B25. D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "_note": "Donations allowed at half: \"an amount equal to 50% of the aggregate of the sums paid as donation by an assessee during the tax year to\" s.133(1)(b)(i) the Prime Minister's Drought Relief Fund, without limit, and (ii)–(vi) — a registered or approved charitable fund or institution, the Government or a local authority for a charitable purpose other than family planning, a housing or town-planning authority, a notified minority-community corporation, an entity repairing a notified place — within s.133(2)'s qualifying limit (p.169); Income-tax Rules, 2026 Form No. 114 note 5 (p.2217): \"Donor shall be eligible for deduction of 50% of the donation made subject to 10% of adjusted gross total income as per section 133(2)\". Base AMOUNT_PAID, the sum counted. A (b)(ii) donation is allowed only on the donee's report (s.133(6)). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(1) (thc p.348): \"plus fifty per cent of the balance of such aggregate\" ((i)), \"fifty per cent of the aggregate\" ((ii)) — half of every sum not on the whole list: (a)(iii) the Prime Minister's Drought Relief Fund without limit; (a)(iv), (v), (vi), (via) and (b) within s.80G(4)'s limit. sources/2026-10-07-chapter-via.md B24, B25. D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches a donation by its clause (donation.clause): DROUGHT_RELIEF_FUND, CHARITABLE_INSTITUTION and PUBLIC_BODY, the s.133(1)(b) donees (W-156a, D-344).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,28 @@
         "percent": "50",
         "base": "AMOUNT_PAID"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "DROUGHT_RELIEF_FUND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "CHARITABLE_INSTITUTION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "PUBLIC_BODY"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80G(1) — subs. by Act 66 of 1976, s.17 (w.e.f. 1-4-1977), (1)(i) subs. by Act 32 of 1985, s.18 (w.e.f. 1-4-1986)",
         "gazetteRef": "Act 66 of 1976 (assent 27-5-1976) s.17: read in Acts of the Parliament of India, 1976 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.442 (PDF p.456); Act 32 of 1985 (assent 24-5-1985) s.18(a): read in Acts of the Parliament of India, 1985 (the Legislative Department's annual volume; Wikimedia Commons DjVu scan, read from the page images), p.143 (DjVu p.155); the Gazette of India issue itself not read (D-215)",
@@ -72,7 +93,28 @@
         "percent": "50",
         "base": "AMOUNT_PAID"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "DROUGHT_RELIEF_FUND"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "CHARITABLE_INSTITUTION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "PUBLIC_BODY"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(1)(b)",
         "gazetteRef": "CG-DL-E-22082025-265620",

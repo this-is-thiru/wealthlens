@@ -1,39 +1,54 @@
 package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.Donation;
-import com.thiru.wealthlens.taxengine.input.DonationClause;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 /**
- * s.133 — donations — for {@link ChapterEightNode} (S2; D-142). Each donation the cash bar (5) or, for a charitable
- * institution, the missing report (6) stops gets a nil line; the rest count in four groups — whole or half, without
- * the qualifying limit or within it. The limited sums together count up to 10% of adjusted gross total income
- * (s.133(2)), before the whole or the half is taken. Where that limit binds the outcome says so, because s.134's base
- * and adjusted gross total income then each depend on the other (OQ-23).
+ * s.133 — donations — for {@link ChapterEightNode} (S2; D-142). Each donation the cash bar (5) or the donee-report bar
+ * (6) stops gets a nil line; the rest count by the share row that reaches their clause (whole or half), without the
+ * qualifying limit or within it as that row reaches them (W-156a, D-344). The limited sums together count up to 10% of
+ * adjusted gross total income (s.133(2)), before the share is taken. Where that limit binds the outcome says so,
+ * because s.134's base and adjusted gross total income then each depend on the other (OQ-23).
  */
 final class DonationDeduction {
 
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DONATION_WHOLE, RuleSetIds.RS_DED_DONATION_HALF,
-            RuleSetIds.RS_DED_DONATION_QUALIFYING, RuleSetIds.RS_DED_DONATION_CASH);
+            RuleSetIds.RS_DED_DONATION_QUALIFYING, RuleSetIds.RS_DED_DONATION_CASH,
+            RuleSetIds.RS_DED_DONATION_REPORT);
+
+    /** The donation's clause — the {@code DonationClause} constant name — which the share and limit rows read. */
+    static final ItemFactId CLAUSE = new ItemFactId("donation.clause");
+
+    /** Whether the donee reported the donation — what {@code DED-DONATION-UNREPORTED} reads. */
+    static final ItemFactId REPORTED_BY_DONEE = new ItemFactId("donation.reported.by.donee");
+
+    /** The sets whose row deducts a donation's share, in the order their lines are written. */
+    private static final List<RuleSetId> SHARES = List.of(RuleSetIds.RS_DED_DONATION_WHOLE,
+            RuleSetIds.RS_DED_DONATION_HALF);
 
     private static final BaseId AMOUNT_PAID = new BaseId("AMOUNT_PAID");
     private static final BaseId ADJUSTED_GTI = new BaseId("ADJUSTED_GTI");
@@ -51,27 +66,16 @@ final class DonationDeduction {
         }
     }
 
-    /** What stops a donation: the row whose provision does, and why. */
+    /** What stops a donation: the row its nil line cites, and why. */
     private record Bar(RuleId row, String reason) {
     }
 
-    /** The donations' sums that count, by group. */
-    private record Counted(Money whole, Money wholeLimited, Money half, Money halfLimited) {
+    /** The donations' sums that count, by share row: without the qualifying limit, and within it. */
+    private record Counted(Map<RuleId, Money> unlimited, Map<RuleId, Money> limited) {
 
-        Money limited() {
-            return wholeLimited.plus(halfLimited);
+        Money limitedTotal() {
+            return limited.values().stream().reduce(Money.ZERO, Money::plus);
         }
-    }
-
-    /** One of s.133's four groups: the row set that deducts it, and what its line calls it. */
-    private record Group(RuleSetId set, String what) {
-
-        static final Group WHOLE = new Group(RuleSetIds.RS_DED_DONATION_WHOLE, "the whole, without limit");
-        static final Group WHOLE_LIMITED =
-                new Group(RuleSetIds.RS_DED_DONATION_WHOLE, "the whole, within the qualifying limit");
-        static final Group HALF = new Group(RuleSetIds.RS_DED_DONATION_HALF, "half, without limit");
-        static final Group HALF_LIMITED =
-                new Group(RuleSetIds.RS_DED_DONATION_HALF, "half, within the qualifying limit");
     }
 
     private DonationDeduction() {
@@ -99,7 +103,7 @@ final class DonationDeduction {
         }
         Counted counted = counted(ctx, donations, firstSequence, lines);
         boolean bound = false;
-        Money limited = counted.limited();
+        Money limited = counted.limitedTotal();
         if (limited.isGreaterThan(Money.ZERO)) {
             Money limit = apply(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_QUALIFYING), ADJUSTED_GTI, adjustedGrossTotal);
             if (limited.isGreaterThan(limit)) {
@@ -111,84 +115,100 @@ final class DonationDeduction {
                         .withLimitedBy("10% of adjusted gross total income " + adjustedGrossTotal));
             }
         }
-        deduct(ctx, Group.WHOLE, counted.whole(), firstSequence, lines);
-        deduct(ctx, Group.WHOLE_LIMITED, counted.wholeLimited(), firstSequence, lines);
-        deduct(ctx, Group.HALF, counted.half(), firstSequence, lines);
-        deduct(ctx, Group.HALF_LIMITED, counted.halfLimited(), firstSequence, lines);
+        for (RuleSetId share : SHARES) {
+            RuleId row = ctx.ruleIdOf(share);
+            deduct(ctx, row, counted.unlimited().getOrDefault(row, Money.ZERO), "without limit", firstSequence, lines);
+            deduct(ctx, row, counted.limited().getOrDefault(row, Money.ZERO), "within the qualifying limit",
+                    firstSequence, lines);
+        }
         return new Outcome(lines, bound);
     }
 
-    /** Sums each donation the bars let through into its group; a nil line for each one they stop. */
+    /** Sums each donation the bars let through by its share row; a nil line for each one they stop. */
     private static Counted counted(NodeContext ctx, List<Donation> donations, int firstSequence,
             List<TraceLine> lines) {
         CashPaymentLimit cash = RuleDefinitions.require(version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_CASH)).definition(),
                 CashPaymentLimit.class, ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_CASH));
-        Money whole = Money.ZERO;
-        Money wholeLimited = Money.ZERO;
-        Money half = Money.ZERO;
-        Money halfLimited = Money.ZERO;
+        RuleRow qualifying = ctx.ruleOf(RuleSetIds.RS_DED_DONATION_QUALIFYING);
+        Map<RuleId, Money> unlimited = new LinkedHashMap<>();
+        Map<RuleId, Money> limited = new LinkedHashMap<>();
         for (Donation donation : donations) {
-            Optional<Bar> bar = bar(ctx, donation, cash);
+            RuleId share = shareRow(ctx, donation);
+            Optional<Bar> bar = bar(ctx, donation, share, cash);
             if (bar.isPresent()) {
                 lines.add(ctx.traceLine(firstSequence + lines.size(), bar.get().row(), StepKind.DEDUCTION,
                                 donation.amount(), Money.ZERO)
                         .withLimitedBy(bar.get().reason()));
                 continue;
             }
-            Money amount = donation.amount();
-            switch (donation.clause()) {
-                case NAMED_FUND -> whole = whole.plus(amount);
-                case FAMILY_PLANNING -> wholeLimited = wholeLimited.plus(amount);
-                case DROUGHT_RELIEF_FUND -> half = half.plus(amount);
-                case CHARITABLE_INSTITUTION, PUBLIC_BODY -> halfLimited = halfLimited.plus(amount);
-            }
+            (RowReach.holdsFor(ctx, qualifying, factsOf(donation)) ? limited : unlimited)
+                    .merge(share, donation.amount(), Money::plus);
         }
-        return new Counted(whole, wholeLimited, half, halfLimited);
+        return new Counted(unlimited, limited);
+    }
+
+    /** The row of the share sets that reaches the donation's clause; exactly one must. */
+    private static RuleId shareRow(NodeContext ctx, Donation donation) {
+        List<RuleId> reaching = SHARES.stream().map(ctx::ruleIdOf)
+                .filter(row -> RowReach.holdsFor(ctx, ctx.rule(row), factsOf(donation)))
+                .toList();
+        if (reaching.size() != 1) {
+            throw new IllegalStateException("A " + donation.clause() + " donation is reached by " + reaching + " of the"
+                    + " share rows; exactly one must deduct it");
+        }
+        return reaching.getFirst();
     }
 
     /** s.133(5), then s.133(6): what stops a donation, if anything. */
-    private static Optional<Bar> bar(NodeContext ctx, Donation donation, CashPaymentLimit cash) {
+    private static Optional<Bar> bar(NodeContext ctx, Donation donation, RuleId share, CashPaymentLimit cash) {
         if (!cash.allows(donation.amount(), donation.paidInCash())) {
             return Optional.of(new Bar(ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_CASH), "paid in cash over " + cash.atMost() + " (s.133(5))"));
         }
-        if (donation.clause() == DonationClause.CHARITABLE_INSTITUTION && !donation.reportedByDonee()) {
-            return Optional.of(new Bar(ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF), "not reported by the donee institution (s.133(6))"));
+        RuleRow report = ctx.ruleOf(RuleSetIds.RS_DED_DONATION_REPORT);
+        if (RowReach.holdsFor(ctx, report, factsOf(donation))) {
+            return Optional.of(new Bar(share, "barred by " + report.id()));
         }
         return Optional.empty();
     }
 
-    /** s.133(2): the limited sums cut to the limit — refused where whole and half sums mix (OQ-24). */
+    /** s.133(2): the limited sums cut to the limit — refused where they fall in more than one share (OQ-24). */
     private static Counted withinLimit(Counted counted, Money limit) {
-        if (counted.wholeLimited().isGreaterThan(Money.ZERO) && counted.halfLimited().isGreaterThan(Money.ZERO)) {
-            throw new IllegalArgumentException("Family-planning donations and half-allowed donations together exceed"
-                    + " the qualifying limit " + limit + "; s.133(2) does not say which sums the excess is taken"
+        List<RuleId> shares = counted.limited().entrySet().stream()
+                .filter(entry -> entry.getValue().isGreaterThan(Money.ZERO)).map(Map.Entry::getKey).toList();
+        if (shares.size() > 1) {
+            throw new IllegalArgumentException("Limited donations deducted at different shares (" + shares + ") together"
+                    + " exceed the qualifying limit " + limit + "; s.133(2) does not say which sums the excess is taken"
                     + " from (OQ-24), so it is refused rather than guessed (D-142)");
         }
-        return counted.wholeLimited().isGreaterThan(Money.ZERO)
-                ? new Counted(counted.whole(), limit, counted.half(), Money.ZERO)
-                : new Counted(counted.whole(), Money.ZERO, counted.half(), limit);
+        return new Counted(counted.unlimited(), Map.of(shares.getFirst(), limit));
     }
 
     private static void notInRegime(NodeContext ctx, List<Donation> donations, int firstSequence,
             List<TraceLine> lines) {
-        for (boolean whole : new boolean[] {true, false}) {
-            Money entered = donations.stream().filter(donation -> donation.clause().isWhole() == whole)
-                    .map(Donation::amount).reduce(Money.ZERO, Money::plus);
-            if (entered.isGreaterThan(Money.ZERO)) {
-                RuleId row = whole ? ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_WHOLE) : ctx.ruleIdOf(RuleSetIds.RS_DED_DONATION_HALF);
-                lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, entered, Money.ZERO)
+        Map<RuleId, Money> entered = new LinkedHashMap<>();
+        SHARES.forEach(share -> entered.put(ctx.ruleIdOf(share), Money.ZERO));
+        donations.forEach(donation -> entered.merge(shareRow(ctx, donation), donation.amount(), Money::plus));
+        entered.forEach((row, amount) -> {
+            if (amount.isGreaterThan(Money.ZERO)) {
+                lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, amount, Money.ZERO)
                         .withLimitedBy(ctx.inRegime(row, version(ctx, row)).whyNot()));
             }
+        });
+    }
+
+    private static void deduct(NodeContext ctx, RuleId row, Money counted, String what, int firstSequence,
+            List<TraceLine> lines) {
+        if (counted.isGreaterThan(Money.ZERO)) {
+            lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION,
+                            counted, apply(ctx, row, AMOUNT_PAID, counted))
+                    .withLimitedBy(what));
         }
     }
 
-    private static void deduct(NodeContext ctx, Group group, Money counted, int firstSequence, List<TraceLine> lines) {
-        if (counted.isGreaterThan(Money.ZERO)) {
-            RuleId row = ctx.ruleIdOf(group.set());
-            lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION,
-                            counted, apply(ctx, row, AMOUNT_PAID, counted))
-                    .withLimitedBy(group.what()));
-        }
+    /** The facts a donation's rows read. */
+    private static ItemFacts factsOf(Donation donation) {
+        return new ItemFacts(Map.of(CLAUSE, donation.clause().name(),
+                REPORTED_BY_DONEE, Boolean.toString(donation.reportedByDonee())), Map.of(), Map.of());
     }
 
     private static Money apply(NodeContext ctx, RuleId row, BaseId base, Money amount) {

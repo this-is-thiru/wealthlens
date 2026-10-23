@@ -86,6 +86,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-DED-DONATION-REPORT",
+      "_note": "One row: DED-DONATION-UNREPORTED, the donee-report bar (s.133(6); 1961 s.80G(5D) Explanation 2A), reached by the donation's facts (W-156a, D-344)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-DED-DONATION-WHOLE",
       "_note": "One row: DED-DONATION-WHOLE",
       "selection": "EXACTLY_ONE",

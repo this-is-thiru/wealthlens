@@ -51,6 +51,7 @@ class GeneratedConstantsTest {
             "DED-DONATION-CASH",
             "DED-DONATION-HALF",
             "DED-DONATION-QUALIFYING",
+            "DED-DONATION-UNREPORTED",
             "DED-DONATION-WHOLE",
             "DED-EDUCATION-LOAN",
             "DED-ELECTRIC-VEHICLE-LOAN",
