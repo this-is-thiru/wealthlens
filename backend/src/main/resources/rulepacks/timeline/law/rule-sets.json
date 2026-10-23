@@ -44,6 +44,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-DED-DEPENDANT",
+      "_note": "One row: DED-DEPENDANT, who is a dependant for s.127 and s.128, reached by the family member's facts (W-156c, D-348)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-DED-DISABILITY",
       "_note": "One row: DED-DISABILITY",
       "selection": "EXACTLY_ONE",

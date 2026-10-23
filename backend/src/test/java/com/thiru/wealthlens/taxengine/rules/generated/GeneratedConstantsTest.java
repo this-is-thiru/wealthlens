@@ -43,6 +43,7 @@ class GeneratedConstantsTest {
             "CG-TERM-LISTED-SECURITY",
             "DED-AGNIVEER-GOVERNMENT",
             "DED-AGNIVEER-OWN",
+            "DED-DEPENDANT",
             "DED-DEPOSIT-INTEREST-SENIOR",
             "DED-DISABILITY",
             "DED-DISABILITY-SEVERE",

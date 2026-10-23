@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-156c — disability by rule data (D-343; R5; N1)
+Item            : W-156d — Chapter VIII's other kinds by rule data (D-343; R6)
 Stage           : NOT STARTED — plan to write
-Plan            : (none yet) — DisabilityDeduction (207 lines): severity → row (:64, :104), dependant by relationship (:164–166)
-Approved        : W-156b closed (D-345 – D-347)
+Plan            : (none yet) — ChapterEightNode :99 (NPS fund), :193–198 (life premium pay line, verdict), :64–65 (verdict); ScheduleXvDeduction :123–134 (Government employer); LoanInterestDeduction :82 (EV loan row)
+Approved        : W-156 split (D-343); W-156a – c done (D-344 – D-348)
 Steps done      : —
-Next step       : read DisabilityDeduction whole and its rows, write plans/W-156c.md, explain it, ask approval (do NOT code). Also open: the nil-line proposal and PaidOtherThanInCash (W-156b2), the REG basis-set finding
-Last verify     : targeted 219/0; unit -Punit 3640/0; integration 281/0 (2026-10-23, W-156b2)
-Waiting on      : the owner — placement of the nil-line proposal and PaidOtherThanInCash (W-156b2) and of the REG basis-set finding; OQ-32, OQ-33 open
+Next step       : read the R6 sites whole, write plans/W-156d.md, explain it, ask approval (do NOT code). Also open: nil-line proposal and PaidOtherThanInCash (W-156b2), the REG basis-set finding
+Last verify     : targeted 220/0; unit -Punit 3641/0; integration 281/0 (2026-10-23, W-156c)
+Waiting on      : the owner — placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-156b2: take health insurance's payment kinds from rows — health.kind reach rows for cash, spreading, insurance paid and the limbs, so HealthInsuranceDeduction holds no kind test (D-347; W-156b closed)
-Updated         : 2026-10-23, session 31 — W-156b2 approved and committed, W-156b closed; next W-156c
+Last item commit: taxplanning W-156c: take disability's severity row and who is a dependant from rows — disability.severity conditions on the four severity rows and DED-DEPENDANT for s.127 and s.128, so DisabilityDeduction holds no severity test or relationship switch (D-348)
+Updated         : 2026-10-23, session 31 — W-156c approved and committed; next W-156d
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-DISABILITY-SEVERE",
   "ruleSet": "RS-DED-DISABILITY-SEVERE",
-  "_note": "A person with severe disability (80% or more, s.127(9)(g)): \"An individual, being resident in India, who is certified by a medical authority, at any time during the tax year, as a person with disability or person with severe disability, shall be allowed a deduction of ₹ 75000 or ₹ 125000, respectively\" (s.154(1), p.185); the certificate furnished with the return (s.154(2)) — an entry condition; meanings from s.127 (s.154(3)). rulebook DED-80U-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80U, is the TY 2025-26 version (W-075d3). D-138. TY 2025-26: Income-tax Act, 1961 s.80U(1) proviso (thc p.426): for a person with severe disability, \"one hundred and twenty-five thousand rupees\" — the same fixed row. sources/2026-10-07-chapter-via.md B18. D-146. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "_note": "A person with severe disability (80% or more, s.127(9)(g)): \"An individual, being resident in India, who is certified by a medical authority, at any time during the tax year, as a person with disability or person with severe disability, shall be allowed a deduction of ₹ 75000 or ₹ 125000, respectively\" (s.154(1), p.185); the certificate furnished with the return (s.154(2)) — an entry condition; meanings from s.127 (s.154(3)). rulebook DED-80U-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80U, is the TY 2025-26 version (W-075d3). D-138. TY 2025-26: Income-tax Act, 1961 s.80U(1) proviso (thc p.426): for a person with severe disability, \"one hundred and twenty-five thousand rupees\" — the same fixed row. sources/2026-10-07-chapter-via.md B18. D-146. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches the assessee by the certified severity (disability.severity = SEVERE_DISABILITY) — s.154(1) \"respectively\" / s.127(3) (W-156c, D-348).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -35,6 +35,11 @@
         {
           "type": "IsCertifiedDisabled",
           "minimum": "SEVERE_DISABILITY"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "disability.severity",
+          "code": "SEVERE_DISABILITY"
         }
       ],
       "introducedBy": {
@@ -85,6 +90,11 @@
         {
           "type": "IsCertifiedDisabled",
           "minimum": "SEVERE_DISABILITY"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "disability.severity",
+          "code": "SEVERE_DISABILITY"
         }
       ],
       "introducedBy": {

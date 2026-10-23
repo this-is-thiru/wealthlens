@@ -232,6 +232,7 @@ class TimelineReaderTest {
             new RuleId("DED-DISABILITY-SEVERE"),
             new RuleId("DED-DISABLED-DEPENDANT"),
             new RuleId("DED-DISABLED-DEPENDANT-SEVERE"),
+            new RuleId("DED-DEPENDANT"),
             new RuleId("DED-SPECIFIED-DISEASE"),
             new RuleId("DED-SPECIFIED-DISEASE-SENIOR"),
             new RuleId("DED-EDUCATION-LOAN"),

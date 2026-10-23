@@ -49,13 +49,15 @@ class DisabilityDeductionTest {
 
     /**
      * 0 a dependant parent with a disability, 66 and resident; 1 a dependant sibling with a severe disability, 40;
-     * 2 a sibling not dependant; 3 a dependant parent, 56, no disability.
+     * 2 a sibling not dependant; 3 a dependant parent, 56, no disability; 4 another dependant, 40.
      */
     private static final FamilySnapshot FAMILY = new FamilySnapshot(List.of(
             member(Relationship.PARENT, LocalDate.of(1960, 5, 1), true, DisabilitySeverity.DISABILITY),
             member(Relationship.SIBLING, LocalDate.of(1986, 5, 1), true, DisabilitySeverity.SEVERE_DISABILITY),
             member(Relationship.SIBLING, LocalDate.of(1988, 5, 1), false, DisabilitySeverity.DISABILITY),
             new Member(Relationship.PARENT, LocalDate.of(1970, 5, 1), true, Optional.empty(), Optional.empty(),
+                    false, true),
+            new Member(Relationship.DEPENDANT_OTHER, LocalDate.of(1986, 5, 1), true, Optional.empty(), Optional.empty(),
                     false, true)));
 
     private static Member member(Relationship relationship, LocalDate born, boolean dependant,
@@ -229,7 +231,16 @@ class DisabilityDeductionTest {
         // When / Then — s.127(9)(b)
         assertThatThrownBy(() -> run(OLD, plain(), support(2, "10000"), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("s.127(9)(b)");
+                .hasMessageContaining(RuleIds.DED_DEPENDANT.value());
+    }
+
+    @Test
+    void evaluate_whenAnotherDependantIsTreated_isRefusedNamingTheDependantRow() {
+        // When / Then — s.128(5)(a) takes s.127(9)(b)'s dependant: not anyone else wholly dependent (W-156c)
+        assertThatThrownBy(() -> run(OLD, plain(), List.of(), List.of(treated(4, "30000", "0"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(RuleIds.DED_DEPENDANT.value())
+                .hasMessageContaining("s.128");
     }
 
     @Test

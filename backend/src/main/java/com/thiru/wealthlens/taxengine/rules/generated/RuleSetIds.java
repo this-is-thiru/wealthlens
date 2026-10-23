@@ -20,6 +20,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_CG_TERM = new RuleSetId("RS-CG-TERM");
     public static final RuleSetId RS_DED_AGNIVEER_GOVERNMENT = new RuleSetId("RS-DED-AGNIVEER-GOVERNMENT");
     public static final RuleSetId RS_DED_AGNIVEER_OWN = new RuleSetId("RS-DED-AGNIVEER-OWN");
+    public static final RuleSetId RS_DED_DEPENDANT = new RuleSetId("RS-DED-DEPENDANT");
     public static final RuleSetId RS_DED_DEPOSIT_INTEREST_SENIOR = new RuleSetId("RS-DED-DEPOSIT-INTEREST-SENIOR");
     public static final RuleSetId RS_DED_DISABILITY = new RuleSetId("RS-DED-DISABILITY");
     public static final RuleSetId RS_DED_DISABILITY_SEVERE = new RuleSetId("RS-DED-DISABILITY-SEVERE");

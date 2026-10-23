@@ -10,11 +10,14 @@ import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -40,7 +43,23 @@ final class DisabilityDeduction {
 
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DISABILITY, RuleSetIds.RS_DED_DISABILITY_SEVERE,
             RuleSetIds.RS_DED_DISABLED_DEPENDANT, RuleSetIds.RS_DED_DISABLED_DEPENDANT_SEVERE, RuleSetIds.RS_DED_SPECIFIED_DISEASE,
-            RuleSetIds.RS_DED_SPECIFIED_DISEASE_SENIOR);
+            RuleSetIds.RS_DED_SPECIFIED_DISEASE_SENIOR, RuleSetIds.RS_DED_DEPENDANT);
+
+    /** The certified severity — the {@code DisabilitySeverity} name — which the severity rows read (W-156c, D-348). */
+    static final ItemFactId SEVERITY = new ItemFactId("disability.severity");
+
+    /** A family member's relationship to the assessee, which {@code DED-DEPENDANT} reads. */
+    static final ItemFactId RELATIONSHIP = new ItemFactId("dependant.relationship");
+
+    /** Whether a family member is wholly or mainly dependent on the assessee, which {@code DED-DEPENDANT} reads. */
+    static final ItemFactId WHOLLY_OR_MAINLY = new ItemFactId("dependant.wholly.or.mainly");
+
+    /** s.154's rows, the plain then the severe: the one reaching the assessee's severity applies. */
+    private static final List<RuleSetId> OWN = List.of(RuleSetIds.RS_DED_DISABILITY, RuleSetIds.RS_DED_DISABILITY_SEVERE);
+
+    /** s.127's rows, the plain then the severe: the one reaching the dependant's severity applies. */
+    private static final List<RuleSetId> DEPENDANT = List.of(RuleSetIds.RS_DED_DISABLED_DEPENDANT,
+            RuleSetIds.RS_DED_DISABLED_DEPENDANT_SEVERE);
 
     private static final BaseId AMOUNT_CLAIMED = new BaseId("AMOUNT_CLAIMED");
 
@@ -56,15 +75,15 @@ final class DisabilityDeduction {
         return lines;
     }
 
-    /** s.154: the severe row where its conditions hold, else the other; a nil line naming what failed. */
+    /** s.154: the row reaching the assessee's severity; a nil line naming the person condition that failed. */
     private static void ownDisability(NodeContext ctx, int firstSequence, List<TraceLine> lines) {
         if (!(ctx.inputs().assessee() instanceof Individual individual) || individual.disability().isEmpty()) {
             return;
         }
-        RuleId row = individual.disability().get() == DisabilitySeverity.SEVERE_DISABILITY
-                ? ctx.ruleIdOf(RuleSetIds.RS_DED_DISABILITY_SEVERE) : ctx.ruleIdOf(RuleSetIds.RS_DED_DISABILITY);
+        RuleId row = severityRow(ctx, OWN, individual.disability().get());
         RuleVersion version = version(ctx, row);
         Optional<Condition> unmet = version.conditions().stream()
+                .filter(condition -> !condition.isAboutItem())
                 .filter(condition -> !condition.holds(ctx.conditions()))
                 .findFirst();
         if (unmet.isPresent()) {
@@ -101,8 +120,7 @@ final class DisabilityDeduction {
         }
         DisabilitySeverity severity = member.disability().orElseThrow(() -> new IllegalArgumentException(
                 "Family member " + support.familyMember() + " has no certified disability (s.127(1))"));
-        RuleId row = severity == DisabilitySeverity.SEVERE_DISABILITY
-                ? ctx.ruleIdOf(RuleSetIds.RS_DED_DISABLED_DEPENDANT_SEVERE) : ctx.ruleIdOf(RuleSetIds.RS_DED_DISABLED_DEPENDANT);
+        RuleId row = severityRow(ctx, DEPENDANT, severity);
         if (!support.spentOrDeposited().isGreaterThan(Money.ZERO)) {
             lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, Money.ZERO, Money.ZERO)
                     .withLimitedBy("nothing spent or deposited"));
@@ -161,15 +179,27 @@ final class DisabilityDeduction {
                     + members.size() + " were entered");
         }
         FamilySnapshot.Member member = members.get(position);
-        boolean related = switch (member.relationship()) {
-            case SPOUSE, CHILD, PARENT, SIBLING -> true;
-            case DEPENDANT_OTHER -> false;
-        };
-        if (!related || !member.dependant()) {
-            throw new IllegalArgumentException("Family member " + position + " is not a dependant spouse, child,"
-                    + " parent, brother or sister wholly or mainly dependent on the assessee (s.127(9)(b))");
+        ItemFacts facts = new ItemFacts(Map.of(RELATIONSHIP, member.relationship().name(),
+                WHOLLY_OR_MAINLY, Boolean.toString(member.dependant())), Map.of(), Map.of());
+        RuleRow dependantRow = ctx.ruleOf(RuleSetIds.RS_DED_DEPENDANT);
+        if (!RowReach.holdsFor(ctx, dependantRow, facts)) {
+            throw new IllegalArgumentException("Family member " + position + " " + facts.codes() + " is not a"
+                    + " dependant for " + section + ": " + dependantRow.id() + " does not reach them");
         }
         return member;
+    }
+
+    /** The row of the pair whose severity condition reaches the certified severity; exactly one must. */
+    private static RuleId severityRow(NodeContext ctx, List<RuleSetId> pair, DisabilitySeverity severity) {
+        ItemFacts facts = ItemFacts.of(SEVERITY, severity.name());
+        List<RuleId> reaching = pair.stream().map(ctx::ruleIdOf)
+                .filter(row -> RowReach.holdsFor(ctx, ctx.rule(row), facts))
+                .toList();
+        if (reaching.size() != 1) {
+            throw new IllegalStateException(severity + " is reached by " + reaching + " of the rows of " + pair
+                    + "; exactly one must take it");
+        }
+        return reaching.getFirst();
     }
 
     private static boolean seniorMember(NodeContext ctx, RuleVersion seniorRow, FamilySnapshot.Member member) {
