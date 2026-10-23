@@ -1,6 +1,5 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.AccommodationProvider;
 import com.thiru.wealthlens.taxengine.input.EmployerAccommodation;
 import com.thiru.wealthlens.taxengine.input.Furniture;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
@@ -36,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -53,8 +53,8 @@ import java.util.Set;
  * population, the lower of the lease rental or hotel charges and a percentage of salary — "as reduced by the rent …
  * actually paid", plus its furniture. The "salary" is the accommodation base less the allowances the exemptions
  * allowed (r.15(8)(k)(iii)), which is why this node runs after {@code salary.exemptions}; it is apportioned to the
- * period occupied by days, as HRA's is. Owned or leased accommodation continued from an earlier year is capped at the
- * first year's amount scaled by the Cost Inflation Index (D-115). A perquisite is provided, not paid: its value is non-cash
+ * period occupied by days, as HRA's is. Accommodation continued from an earlier year is capped, where the cap's row
+ * reaches its provider (W-154a), at the first year's amount scaled by the Cost Inflation Index (D-115). A perquisite is provided, not paid: its value is non-cash
  * income, never take-home.
  */
 public final class PerquisiteNode implements ComputationNode {
@@ -127,8 +127,8 @@ public final class PerquisiteNode implements ComputationNode {
     private static TraceLine accommodation(NodeContext ctx, EmployerAccommodation accommodation, int sequence) {
         TemporalContext t = ctx.inputs().temporal();
         requireWithinYear(accommodation.occupied(), t);
-        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_PERQ_ACCOM,
-                ItemFacts.of(ACCOMMODATION_PROVIDER, accommodation.provider().name()));
+        ItemFacts facts = ItemFacts.of(ACCOMMODATION_PROVIDER, accommodation.provider().name());
+        RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_PERQ_ACCOM, facts);
         RuleRow rule = ctx.rule(ruleId);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         Money salary = salaryFor(ctx, accommodation, t);
@@ -141,8 +141,9 @@ public final class PerquisiteNode implements ComputationNode {
                 new CapContext(Map.copyOf(bases), Map.of(), population));
         Money value = valued.value().minus(accommodation.rentPaid()).floorAtZero();
         String bound = valued.limitedBy() + ", less the rent paid " + accommodation.rentPaid();
-        if (isContinued(accommodation, t.taxYear())) {
-            Money cap = continuedCap(ctx, accommodation, t);
+        Optional<RuleRow> capRow = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_ACCOM_CONTINUED, facts);
+        if (capRow.isPresent() && isContinued(accommodation, t.taxYear())) {
+            Money cap = continuedCap(ctx, capRow.get(), accommodation, t);
             if (cap.isLessThan(value)) {
                 value = cap;
                 bound += "; capped at the first year's amount scaled by the Cost Inflation Index, " + cap;
@@ -153,11 +154,12 @@ public final class PerquisiteNode implements ComputationNode {
                 .withLimitedBy(bound);
     }
 
-    /** Owned or leased accommodation provided to the employee before this tax year (r.15(2)(d); r.3(1) proviso). */
+    /**
+     * Accommodation provided to the employee before this tax year. Which providers the cap reaches is its row's
+     * conditions (W-154a).
+     */
     private static boolean isContinued(EmployerAccommodation accommodation, TaxYearId year) {
-        boolean ownedOrLeased = accommodation.provider() == AccommodationProvider.EMPLOYER_OWNED
-                || accommodation.provider() == AccommodationProvider.EMPLOYER_LEASED;
-        return ownedOrLeased && accommodation.firstProvidedIn().startYear() < year.startYear();
+        return accommodation.firstProvidedIn().startYear() < year.startYear();
     }
 
     /**
@@ -165,7 +167,8 @@ public final class PerquisiteNode implements ComputationNode {
      * table does not hold — any before 2023-24, the first tax year the Rules name — is refused: which year's index
      * then divides is OQ-11.
      */
-    private static Money continuedCap(NodeContext ctx, EmployerAccommodation accommodation, TemporalContext t) {
+    private static Money continuedCap(NodeContext ctx, RuleRow capRow, EmployerAccommodation accommodation,
+            TemporalContext t) {
         Money firstYearValue = accommodation.firstYearValue().orElseThrow(() -> new IllegalArgumentException(
                 "Accommodation continued from " + accommodation.firstProvidedIn() + " is capped at the amount"
                         + " calculated for the first tax year (r.15(2)(d); Rules 1962 r.3(1) third proviso); enter"
@@ -177,7 +180,7 @@ public final class PerquisiteNode implements ComputationNode {
                     + " the first tax year's is not settled (OQ-11), so it cannot be valued yet (D-115)");
         }
         Money scaled = firstYearValue.scaledBy(index.of(t.taxYear()), index.of(accommodation.firstProvidedIn()));
-        return TemporallyApportionedCap.apply(ctx.ruleOf(RuleSetIds.RS_PERQ_ACCOM_CONTINUED), t,
+        return TemporallyApportionedCap.apply(capRow, t,
                 CapContext.of(SCALED_FIRST_YEAR_VALUE, scaled)).value();
     }
 

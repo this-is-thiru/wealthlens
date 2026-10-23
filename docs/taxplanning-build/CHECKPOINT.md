@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-154 — perquisite paths by rule data (D-313; audit P4; N1)
-Stage           : READY — not started
-Plan            : written when taken (plans/W-154.md; likely a split, as W-153)
+Item            : W-154b — household benefits by rule data (D-325; Q2 – Q4)
+Stage           : READ — W-154a committed; plan for W-154b being written
+Plan            : plans/W-154b.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : on "start W-154": read its WI row, the audit file § W-088l1 P4 and N1 (PerquisiteNode, MotorCarPerquisite, AssetPerquisite, household / meal / expense benefit, accommodation, specified security paths), W-153's pattern (plans/W-153*.md: item facts, reach rows, isAboutItem), write plans/W-154.md (a split if > §7), STOP
-Last verify     : targeted 573/0; unit -Punit 3474/0; integration 281/0 (2026-10-22, W-153d)
-Waiting on      : the owner — "start W-154"; OQ-32, OQ-33 open
+Next step       : read W-154b WI row, plans/W-154.md Q2 – Q4 and risk 1, HouseholdBenefitPerquisite, SpecifiedEmployee, the Table III rows; write plans/W-154b.md; STOP
+Last verify     : targeted 183/0; unit -Punit 3482/0; integration 281/0 (2026-10-23, W-154a)
+Waiting on      : — (writing W-154b plan); OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-153d: state which items are dividend income for the surcharge's 15% limit as rule data — the RATE-SUR-*-LIMIT rows' othersources.kind condition, so SurchargeNode and DividendInterestAllowance hold no kind test (D-324; W-153 closed)
-Updated         : 2026-10-22, session 29 — PAUSED at the session limit, everything committed (resume at W-154)
+Last item commit: taxplanning W-154a: state which accommodation the continued cap reaches as rule data — PERQ-ACCOM-CONTINUED's accommodation.provider condition, so PerquisiteNode holds no provider test (W-154 split D-325; D-326)
+Updated         : 2026-10-23, session 30 — W-154a done and committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

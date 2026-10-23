@@ -33,8 +33,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -259,6 +262,49 @@ class PerquisiteNodeTest {
 
         // Then — 90,000 × 376 / 363 = 93,223.14
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("93223.14")));
+    }
+
+    /**
+     * Every provider, first provided 2023-24 (index 348), on a salary of 12,00,000. The cap's row reaches owned and
+     * leased accommodation only (W-154a): government and hotel accommodation enter no first-year amount, so were the
+     * row to reach them they would be refused for it.
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("continuedByProvider")
+    void evaluate_whenContinuedFromTheFirstTaxYear_isCappedOnlyWhereTheCapsRowReachesTheProvider(int year,
+            AccommodationProvider provider, Optional<String> cost, Optional<String> firstYearValue, String expected,
+            boolean capped) {
+        // Given
+        EmployerAccommodation home = continued(year, provider, 2023, cost, firstYearValue);
+
+        // When
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace().getFirst().limitedBy()).hasValueSatisfying(bound ->
+                assertThat(bound.contains("Cost Inflation Index")).isEqualTo(capped));
+    }
+
+    private static Stream<Arguments> continuedByProvider() {
+        Optional<String> none = Optional.empty();
+        return Stream.of(
+                // 10% of 12,00,000 = 1,20,000; cap 1,00,000 × 376 / 348 = 1,08,045.98, × 384 / 348 = 1,10,344.83
+                Arguments.of(2025, AccommodationProvider.EMPLOYER_OWNED, none, Optional.of("100000"), "108045.98",
+                        true),
+                Arguments.of(2026, AccommodationProvider.EMPLOYER_OWNED, none, Optional.of("100000"), "110344.83",
+                        true),
+                // the lower of 1,00,000 and 1,20,000; cap 90,000 × 376 / 348 = 97,241.38, × 384 / 348 = 99,310.34
+                Arguments.of(2025, AccommodationProvider.EMPLOYER_LEASED, Optional.of("100000"), Optional.of("90000"),
+                        "97241.38", true),
+                Arguments.of(2026, AccommodationProvider.EMPLOYER_LEASED, Optional.of("100000"), Optional.of("90000"),
+                        "99310.34", true),
+                // the licence fee 30,000, uncapped
+                Arguments.of(2025, AccommodationProvider.GOVERNMENT, Optional.of("30000"), none, "30000", false),
+                Arguments.of(2026, AccommodationProvider.GOVERNMENT, Optional.of("30000"), none, "30000", false),
+                // the lower of 90,000 and 24% of 12,00,000 = 2,88,000, uncapped
+                Arguments.of(2025, AccommodationProvider.HOTEL, Optional.of("90000"), none, "90000", false),
+                Arguments.of(2026, AccommodationProvider.HOTEL, Optional.of("90000"), none, "90000", false));
     }
 
     @Test

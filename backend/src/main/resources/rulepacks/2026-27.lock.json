@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.96",
-      "checksum": "sha256:09cb169a8f6480354fd9de4b788762110337c295f259ae432ff7a21547a59c41"
+      "version": "2026-27.law.97",
+      "checksum": "sha256:c20974d4df137d7e43f5007a4a642f9d2d0f76ab9d0d98a47e887736a1780af7"
     },
     "exec": {
       "version": "2026-27.exec.29",
@@ -89,7 +89,7 @@
     "OS-PF-TAXABLE-INTEREST": "sha256:55697a4cc3d52bcdaac1a450dfea98446c8adfaddbf1206d1beabeeb22e6bcce",
     "OS-RESIDUAL": "sha256:a6f2079cb5944a2cd75db4956c1320b6a64ed3b48454c4ec4b156213bbee2b47",
     "OS-TERMINATION-COMPENSATION": "sha256:7f8dc0f11f2873c956d0ed585a3ce55151673cb54d085c0c9b978b8e26ee6c40",
-    "PERQ-ACCOM-CONTINUED": "sha256:36334ec1d765ae385cf12d69571dce6121b36ec12900fc0d1656eb61e9cdbe16",
+    "PERQ-ACCOM-CONTINUED": "sha256:59dcd5798fc8cdc092b27e880e2d52078f0c566d4a95eb6cdf8b9d60f574348b",
     "PERQ-ACCOM-FURNITURE": "sha256:1d5bc25fe68af2c755dedd21a8a3745776cdba9d88068a7e0e74fc975070b20d",
     "PERQ-ACCOM-GOVERNMENT": "sha256:974f2d6754bab8c843084657343b2b6f0c278c8ae2e0ad647bbbdebabcf7576f",
     "PERQ-ACCOM-HOTEL": "sha256:290c6652204bcc779166cb8e4172bc54caeba0b326363a179819b6ff6f84f1f8",

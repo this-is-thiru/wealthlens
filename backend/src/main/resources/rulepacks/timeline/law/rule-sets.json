@@ -339,9 +339,9 @@
     },
     {
       "id": "RS-PERQ-ACCOM-CONTINUED",
-      "_note": "One row: PERQ-ACCOM-CONTINUED",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
+      "_note": "Table I continued accommodation's cap, reaching the providers its row names (accommodation.provider, W-154a)",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
     },
     {
       "id": "RS-PERQ-ACCOM-FURNITURE",
