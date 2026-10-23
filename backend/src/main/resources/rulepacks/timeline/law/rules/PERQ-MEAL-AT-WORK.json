@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-MEAL-AT-WORK",
-  "ruleSet": "RS-PERQ-MEAL-AT-WORK",
-  "_note": "Food and non-alcoholic beverages during working hours at office or business premises are not salary \"to the extent the value thereof … does not exceed\" the limit per meal; the excess is (D-117). TY 2026-27: \"₹200 per meal\" (r.15(5) Table IV Sl. 3 col. D (a), Gazette 271092, p.1546). TY 2025-26: \"fifty rupees per meal\" (Rules 1962 r.3(7)(iii) first proviso, consolidated rule 3, p.4). Per meal: one entry per meal value, so meals do not average. Every regime.",
+  "ruleSet": "RS-PERQ-MEAL-LIMIT",
+  "_note": "Food and non-alcoholic beverages during working hours at office or business premises are not salary \"to the extent the value thereof … does not exceed\" the limit per meal; the excess is (D-117). TY 2026-27: \"₹200 per meal\" (r.15(5) Table IV Sl. 3 col. D (a), Gazette 271092, p.1546). TY 2025-26: \"fifty rupees per meal\" (Rules 1962 r.3(7)(iii) first proviso, consolidated rule 3, p.4). Per meal: one entry per meal value, so meals do not average. Every regime. The row reaches meals.setting AT_WORK, in RS-PERQ-MEAL-LIMIT (W-154c).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -34,7 +34,13 @@
           "period": "MEAL"
         }
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "meals.setting",
+          "code": "AT_WORK"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 1962 r.3 as last amended by the Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E) — which substituted r.3(1) only; r.3(7) stands as in the rule in force from 1-4-2009 (r.3(10)) with r.3(7)(iii)'s second proviso from G.S.R. 452(E)",
         "gazetteRef": "CG-DL-E-18082023-248178",
@@ -81,7 +87,13 @@
           "period": "MEAL"
         }
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "meals.setting",
+          "code": "AT_WORK"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
         "gazetteRef": "CG-DL-E-20032026-271092",

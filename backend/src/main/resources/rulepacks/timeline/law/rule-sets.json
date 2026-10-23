@@ -488,16 +488,16 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-PERQ-MEAL-AT-WORK",
-      "_note": "One row: PERQ-MEAL-AT-WORK",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
+      "id": "RS-PERQ-MEAL-EXCLUDED",
+      "_note": "Table IV Sl. 3: food the Rule excludes wholly, each row reaching its setting (meals.setting, W-154c); a meal no row of this set or of RS-PERQ-MEAL-LIMIT reaches is valued in full on PERQ-MEAL",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
     },
     {
-      "id": "RS-PERQ-MEAL-VOUCHER",
-      "_note": "One row: PERQ-MEAL-VOUCHER",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
+      "id": "RS-PERQ-MEAL-LIMIT",
+      "_note": "Table IV Sl. 3 col. D (a): food salary only beyond a limit per meal, each row reaching its setting (meals.setting, W-154c); a row a regime does not apply in reaches nothing there",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
     },
     {
       "id": "RS-PERQ-MEDABROAD-STAY",

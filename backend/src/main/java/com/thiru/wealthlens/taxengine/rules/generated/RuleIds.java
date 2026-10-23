@@ -122,6 +122,8 @@ public final class RuleIds {
     public static final RuleId PERQ_LOAN_PETTY = new RuleId("PERQ-LOAN-PETTY");
     public static final RuleId PERQ_MEAL = new RuleId("PERQ-MEAL");
     public static final RuleId PERQ_MEAL_AT_WORK = new RuleId("PERQ-MEAL-AT-WORK");
+    public static final RuleId PERQ_MEAL_REMOTE = new RuleId("PERQ-MEAL-REMOTE");
+    public static final RuleId PERQ_MEAL_TEA_SNACKS = new RuleId("PERQ-MEAL-TEA-SNACKS");
     public static final RuleId PERQ_MEAL_VOUCHER = new RuleId("PERQ-MEAL-VOUCHER");
     public static final RuleId PERQ_MEDABROAD_STAY = new RuleId("PERQ-MEDABROAD-STAY");
     public static final RuleId PERQ_MEDABROAD_TRAVEL = new RuleId("PERQ-MEDABROAD-TRAVEL");

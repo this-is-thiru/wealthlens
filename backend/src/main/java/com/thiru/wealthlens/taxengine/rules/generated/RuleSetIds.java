@@ -95,8 +95,8 @@ public final class RuleSetIds {
     public static final RuleSetId RS_PERQ_LOAN = new RuleSetId("RS-PERQ-LOAN");
     public static final RuleSetId RS_PERQ_LOAN_PETTY = new RuleSetId("RS-PERQ-LOAN-PETTY");
     public static final RuleSetId RS_PERQ_MEAL = new RuleSetId("RS-PERQ-MEAL");
-    public static final RuleSetId RS_PERQ_MEAL_AT_WORK = new RuleSetId("RS-PERQ-MEAL-AT-WORK");
-    public static final RuleSetId RS_PERQ_MEAL_VOUCHER = new RuleSetId("RS-PERQ-MEAL-VOUCHER");
+    public static final RuleSetId RS_PERQ_MEAL_EXCLUDED = new RuleSetId("RS-PERQ-MEAL-EXCLUDED");
+    public static final RuleSetId RS_PERQ_MEAL_LIMIT = new RuleSetId("RS-PERQ-MEAL-LIMIT");
     public static final RuleSetId RS_PERQ_MEDABROAD_STAY = new RuleSetId("RS-PERQ-MEDABROAD-STAY");
     public static final RuleSetId RS_PERQ_MEDABROAD_TRAVEL = new RuleSetId("RS-PERQ-MEDABROAD-TRAVEL");
     public static final RuleSetId RS_PERQ_OTHER_BENEFIT = new RuleSetId("RS-PERQ-OTHER-BENEFIT");

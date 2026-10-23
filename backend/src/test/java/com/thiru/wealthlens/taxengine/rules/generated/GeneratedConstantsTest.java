@@ -141,6 +141,8 @@ class GeneratedConstantsTest {
             "PERQ-LOAN-PETTY",
             "PERQ-MEAL",
             "PERQ-MEAL-AT-WORK",
+            "PERQ-MEAL-REMOTE",
+            "PERQ-MEAL-TEA-SNACKS",
             "PERQ-MEAL-VOUCHER",
             "PERQ-MEDABROAD-STAY",
             "PERQ-MEDABROAD-TRAVEL",

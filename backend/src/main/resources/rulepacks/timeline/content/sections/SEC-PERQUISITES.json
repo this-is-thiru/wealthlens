@@ -159,6 +159,14 @@
         },
         {
           "type": "ByRule",
+          "rule": "PERQ-MEAL-TEA-SNACKS"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-MEAL-REMOTE"
+        },
+        {
+          "type": "ByRule",
           "rule": "PERQ-GIFT"
         }
       ]

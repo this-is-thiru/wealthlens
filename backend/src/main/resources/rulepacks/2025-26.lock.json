@@ -3,8 +3,8 @@
   "taxYear": "2025-26",
   "layers": {
     "law": {
-      "version": "2025-26.law.94",
-      "checksum": "sha256:4c0838ebab17931017ff7282a9f77517bd620fee4fa8b35f454d157f397bfb50"
+      "version": "2025-26.law.95",
+      "checksum": "sha256:4388d424b0c06ff1c512e36956da6739d9bc9a3d9ddd5883050f7a29b787b7b3"
     },
     "exec": {
       "version": "2025-26.exec.27",
@@ -123,8 +123,10 @@
     "PERQ-LOAN": "sha256:fe3efefef7a965a7a7c32e3a8a01ee0e98eacd44e47734682c20718ebea20910",
     "PERQ-LOAN-PETTY": "sha256:56a0d1b3002904610c527fb85d8edd66aecbc5febff5622e959824d36e3e2cb4",
     "PERQ-MEAL": "sha256:dc22984742e9e9ba8dbb886486b30c68c450fa12d0d438d36bdd4c959e7c1cc6",
-    "PERQ-MEAL-AT-WORK": "sha256:cfe600583d7ea5dfb0c548ec0727c32befb1dd9fa270524b5b65dc3eea12f348",
-    "PERQ-MEAL-VOUCHER": "sha256:63cbb48d6a1e80521824333c61ef00adb54a17fc440b41edde480913baf3ec0f",
+    "PERQ-MEAL-AT-WORK": "sha256:fac7045d77caed0e9abe7f36b57ff3720396b3cf29194304c66dad341978b312",
+    "PERQ-MEAL-REMOTE": "sha256:d900c92865aae127e84f40516d830e45a2e44277e1b2ac5d2dd19799fbccfacf",
+    "PERQ-MEAL-TEA-SNACKS": "sha256:dc507ee5588f5daeb976ae1b116b5138afbfff047fe88b7df67975bd235077e3",
+    "PERQ-MEAL-VOUCHER": "sha256:37290489a582a1b669152336296fb257bbb909d834dac123113121e35fe5fb26",
     "PERQ-MEDABROAD-STAY": "sha256:971f8fc414f2b509f81caaab3f26edbdbbfef9da50e485bd95b8139badd60577",
     "PERQ-MEDABROAD-TRAVEL": "sha256:29887c39e3b727edeb136aa1527df09982aa8f5257b57f0f8614731e3eb9136a",
     "PERQ-OTHER-BENEFIT": "sha256:206d4d95ccd6f8ba6d4ccdfcd3b461490328e7ca93bbfb82d6cc63cdafd7fb6f",

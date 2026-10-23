@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.pipeline.SalaryBases;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -31,8 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -167,9 +171,51 @@ class MealAndGiftPerquisiteTest {
         NodeResult tea = meals(year, NEW_TAX_REGIME, meals(MealSetting.TEA_OR_SNACKS_AT_WORK, 250, "40"));
         NodeResult remote = meals(year, NEW_TAX_REGIME, meals(MealSetting.AT_WORK_REMOTE_OR_OFFSHORE, 250, "400"));
 
-        // Then
+        // Then — each on its own exclusion row (W-154c)
         assertThat(tea.value()).isEqualTo(MoneyValue.of(Money.ZERO));
         assertThat(remote.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(tea.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.PERQ_MEAL_TEA_SNACKS));
+        assertThat(remote.trace()).singleElement()
+                .satisfies(line -> assertThat(line.rule()).isEqualTo(RuleIds.PERQ_MEAL_REMOTE));
+    }
+
+    /**
+     * Every setting, both years, both regimes: 100 meals at ₹300, a value of 30,000. At work or by voucher, the excess
+     * over the limit per meal — 100 × (300 − 200) = 10,000 in TY 2026-27, 100 × (300 − 50) = 25,000 in TY 2025-26 —
+     * save a voucher in TY 2025-26's new regime, in full (G.S.R. 452(E)); tea or snacks and remote food nil on their
+     * own rows; any other food in full (Table IV Sl. 3; rulebook PERQ-MEAL-2026).
+     */
+    @ParameterizedTest(name = "TY {0} {1} {2}")
+    @MethodSource("mealPartition")
+    void evaluate_whenEachSettingInEachYearAndRegime_isValuedOnTheRowItsSettingReaches(int year, RegimeCode regime,
+            MealSetting setting, RuleId expectedRow, String expected) {
+        // When
+        NodeResult result = meals(year, regime, meals(setting, 100, "300"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).singleElement().satisfies(line -> assertThat(line.rule()).isEqualTo(expectedRow));
+    }
+
+    private static Stream<Arguments> mealPartition() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            String beyond = year == 2026 ? "10000" : "25000";
+            for (RegimeCode regime : List.of(NEW_TAX_REGIME, FIRST_SCHEDULE_RATES)) {
+                boolean voucherInFull = year == 2025 && regime.equals(NEW_TAX_REGIME);
+                cases.add(Arguments.of(year, regime, MealSetting.AT_WORK, RuleIds.PERQ_MEAL_AT_WORK, beyond));
+                cases.add(Arguments.of(year, regime, MealSetting.PAID_VOUCHER,
+                        voucherInFull ? RuleIds.PERQ_MEAL : RuleIds.PERQ_MEAL_VOUCHER,
+                        voucherInFull ? "30000" : beyond));
+                cases.add(Arguments.of(year, regime, MealSetting.TEA_OR_SNACKS_AT_WORK, RuleIds.PERQ_MEAL_TEA_SNACKS,
+                        "0"));
+                cases.add(Arguments.of(year, regime, MealSetting.AT_WORK_REMOTE_OR_OFFSHORE, RuleIds.PERQ_MEAL_REMOTE,
+                        "0"));
+                cases.add(Arguments.of(year, regime, MealSetting.OTHERWISE, RuleIds.PERQ_MEAL, "30000"));
+            }
+        }
+        return cases.build();
     }
 
     @Test

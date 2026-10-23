@@ -1,7 +1,7 @@
 {
   "ruleId": "PERQ-MEAL-VOUCHER",
-  "ruleSet": "RS-PERQ-MEAL-VOUCHER",
-  "_note": "Food through paid vouchers usable only at eating joints: as PERQ-MEAL-AT-WORK, the excess over the limit per meal is salary (D-117). TY 2025-26: \"fifty rupees per meal\", and the limit \"shall not apply to an employee … who has exercised an option under sub-section (5) of section 115BAC or whose income is chargeable to tax under sub-section (1A) of section 115BAC\" (Rules 1962 r.3(7)(iii) second proviso, G.S.R. 452(E), Gazette 246719, read) — so this version is ExceptIn NEW_TAX_REGIME, and there a voucher is valued in full under PERQ-MEAL. TY 2026-27: \"₹200 per meal\" in every regime — S4 and S2 were searched for any such bar and none was found (r.15(5) Table IV Sl. 3 col. D (a), Gazette 271092, p.1546).",
+  "ruleSet": "RS-PERQ-MEAL-LIMIT",
+  "_note": "Food through paid vouchers usable only at eating joints: as PERQ-MEAL-AT-WORK, the excess over the limit per meal is salary (D-117). TY 2025-26: \"fifty rupees per meal\", and the limit \"shall not apply to an employee … who has exercised an option under sub-section (5) of section 115BAC or whose income is chargeable to tax under sub-section (1A) of section 115BAC\" (Rules 1962 r.3(7)(iii) second proviso, G.S.R. 452(E), Gazette 246719, read) — so this version is ExceptIn NEW_TAX_REGIME, and there a voucher is valued in full under PERQ-MEAL. TY 2026-27: \"₹200 per meal\" in every regime — S4 and S2 were searched for any such bar and none was found (r.15(5) Table IV Sl. 3 col. D (a), Gazette 271092, p.1546). The row reaches meals.setting PAID_VOUCHER, in RS-PERQ-MEAL-LIMIT (W-154c).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -37,7 +37,13 @@
           "period": "MEAL"
         }
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "meals.setting",
+          "code": "PAID_VOUCHER"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax (Tenth Amendment) Rules, 2023, G.S.R. 452(E), Notification No. 43/2023 — Income-tax Rules, 1962 r.3(7)(iii) second proviso substituted",
         "gazetteRef": "CG-DL-E-21062023-246719",
@@ -84,7 +90,13 @@
           "period": "MEAL"
         }
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "meals.setting",
+          "code": "PAID_VOUCHER"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
         "gazetteRef": "CG-DL-E-20032026-271092",

@@ -126,6 +126,8 @@ class TimelineReaderTest {
             new RuleId("RATE-COST-INFLATION-INDEX"),
             new RuleId("PERQ-MEAL"),
             new RuleId("PERQ-MEAL-AT-WORK"),
+            new RuleId("PERQ-MEAL-REMOTE"),
+            new RuleId("PERQ-MEAL-TEA-SNACKS"),
             new RuleId("PERQ-MEAL-VOUCHER"),
             new RuleId("PERQ-GIFT"),
             new RuleId("PERQ-LOAN"),
