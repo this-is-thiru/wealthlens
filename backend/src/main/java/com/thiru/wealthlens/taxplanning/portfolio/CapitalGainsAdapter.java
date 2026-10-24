@@ -22,11 +22,10 @@ import org.springframework.stereotype.Component;
  * where each side was traded, how and when the lot was acquired and when it was sold — as {@code portfolio} recorded
  * them. Whether a bucket is short-term or long-term (1961 s.2(42A); 2025 s.2(101); D-305) and which part of the head it
  * falls in (S2 ss.196–198; 1961 ss.111A, 112, 112A; S.O. 5054(E); D-289) are the rule data's, not this class's;
- * {@code portfolio}'s own short-term / long-term classification only says the disposal is a capital gain.
+ * {@code portfolio}'s own classification is not read: whether the head takes a bucket at all — not a speculative
+ * transaction, a derivative or a deposit's interest — is the engine's rows' too (W-160a, D-363).
  *
- * <p>Nothing is defaulted. An unclassified gain blocks, as does speculative business income, which this engine does
- * not compute. Fixed-deposit interest ({@code NOT_CAPITAL_GAINS}) is other-sources income, entered there, and is left out.
- * Brought-forward losses are the tax ledger's (S2 s.111), not {@code portfolio}'s, so none arrive here.
+ * <p>Nothing is defaulted. Brought-forward losses are the tax ledger's (S2 s.111), not {@code portfolio}'s, so none arrive here.
  */
 @Component
 @RequiredArgsConstructor
@@ -34,11 +33,7 @@ public class CapitalGainsAdapter {
 
     private final CapitalGainsSummaryService capitalGainsSummaryService;
 
-    /**
-     * The capital gains of {@code email} for {@code year}, pinned to the summary they were read from.
-     *
-     * @throws IllegalArgumentException if a gain is unclassified or speculative
-     */
+    /** The capital gains of {@code email} for {@code year}, pinned to the summary they were read from. */
     public CapitalGainsInput inputFor(String email, TaxYearId year) {
         CapitalGainsSummary summary =
                 capitalGainsSummaryService.summaryFor(email, TLocalDate.financialYear(year.startsOn()));
@@ -49,20 +44,9 @@ public class CapitalGainsAdapter {
         return new CapitalGainsInput(buckets, summary.asOf(), summary.portfolioComputationRef());
     }
 
-    /** The engine's bucket, or none for a nil amount and for income of another head. */
+    /** The engine's bucket, or none for a nil amount. */
     private static Optional<CapitalGainsInput.Bucket> bucketOf(CapitalGainsBucket bucket) {
-        if (bucket.gainRupees() == 0) {
-            return Optional.empty();
-        }
-        return switch (bucket.classification()) {
-            case SHORT_TERM, LONG_TERM -> Optional.of(engineBucket(bucket));
-            case NOT_CAPITAL_GAINS -> Optional.empty();
-            case UNCLASSIFIED -> throw new IllegalArgumentException("Realised gains of " + bucket.gainRupees() + " on "
-                    + bucket.assetType() + " are unclassified — a fund or bond awaiting the instrument registry, or a"
-                    + " derivative — so they cannot be taxed; classify them before computing (X1.3)");
-            case SPECULATIVE -> throw new IllegalArgumentException("Intraday gains of " + bucket.gainRupees()
-                    + " are speculative business income, which this engine does not compute (ITR-3)");
-        };
+        return bucket.gainRupees() == 0 ? Optional.empty() : Optional.of(engineBucket(bucket));
     }
 
     /** The bucket as the engine reads it; portfolio's own term is not passed — the engine decides it (D-305). */

@@ -1,7 +1,6 @@
 package com.thiru.wealthlens.taxplanning.portfolio;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,8 +24,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -148,14 +151,6 @@ class CapitalGainsAdapterTest {
     }
 
     @Test
-    void inputFor_whenAGainIsUnclassified_isRefused() {
-        // When / Then — X1.3: never defaulted either way
-        assertThatThrownBy(() -> inputOf(bucket(CapitalGainsType.UNCLASSIFIED, AssetType.BOND, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 10)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("unclassified");
-    }
-
-    @Test
     void inputFor_whenAnUnclassifiedBucketIsNil_leavesItOut() {
         // When
         CapitalGainsInput input = inputOf(bucket(CapitalGainsType.UNCLASSIFIED, AssetType.BOND, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 0));
@@ -164,21 +159,28 @@ class CapitalGainsAdapterTest {
         assertThat(input.buckets()).isEmpty();
     }
 
-    @Test
-    void inputFor_whenAGainIsSpeculative_isRefused() {
-        // When / Then — business income, which this engine does not compute
-        assertThatThrownBy(() -> inputOf(bucket(CapitalGainsType.SPECULATIVE, AssetType.EQUITY, SttEvidence.PAID, SttEvidence.PAID, 5)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("speculative business income");
-    }
-
-    @Test
-    void inputFor_whenTheIncomeIsDepositInterest_leavesItOut() {
-        // When — other-sources income, entered there
-        CapitalGainsInput input = inputOf(bucket(CapitalGainsType.NOT_CAPITAL_GAINS, AssetType.FD, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 900));
+    /**
+     * The classification is not read: an intraday, derivative or deposit bucket is passed with its facts, and the
+     * engine's RS-CG-NOT-COMPUTED and RS-CG-ELSEWHERE rows decide whether the head takes it (W-160a, D-363).
+     */
+    @ParameterizedTest(name = "{0} on {1}")
+    @MethodSource("everyClassification")
+    void inputFor_whateverPortfoliosClassification_passesTheBucketWithItsFacts(CapitalGainsType classification,
+            AssetType assetType) {
+        // When
+        CapitalGainsInput.Bucket passed = onlyBucketOf(bucket(classification, assetType, SttEvidence.NOT_PAID,
+                SttEvidence.NOT_PAID, 900));
 
         // Then
-        assertThat(input.buckets()).isEmpty();
+        assertThat(passed.facts().assetKind()).isEqualTo(assetType.name());
+    }
+
+    private static Stream<Arguments> everyClassification() {
+        return Stream.of(
+                Arguments.of(CapitalGainsType.UNCLASSIFIED, AssetType.BOND),
+                Arguments.of(CapitalGainsType.SPECULATIVE, AssetType.EQUITY),
+                Arguments.of(CapitalGainsType.NOT_CAPITAL_GAINS, AssetType.FD),
+                Arguments.of(CapitalGainsType.SHORT_TERM, AssetType.EQUITY));
     }
 
     @Test

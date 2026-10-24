@@ -34,7 +34,8 @@ import java.util.function.Predicate;
  *
  * <p>Each bucket of {@link CapitalGainsInput} belongs to the {@link CapitalGainsPart} the row of {@code RS-CG-PART} its
  * facts meet names (D-289), its STT read through {@link CapitalGainsStt} (D-298): which gains a special rate charges is the rule data's, and a bucket no row covers is refused
- * rather than charged with total income. A
+ * rather than charged with total income; whether the head takes a bucket at all is {@link CapitalGainsScope}'s rows'
+ * (W-160a). A
  * part whose buckets net to a loss contributes that loss, of the term {@code CG-PARTS} declares for the part: a
  * long-term loss is set off only against the parts that row lets it reach, a short-term loss against any part (D-309). The long-term loss goes first, because it can use fewer parts; each loss
  * takes the parts in {@code SETOFF-WITHIN-CAPITAL-GAINS}'s declared order, which neither Act prescribes (OQ-32), and
@@ -74,7 +75,7 @@ public final class CapitalGainsNode implements ComputationNode {
     @Override
     public Set<RuleSetId> ruleSets() {
         return Set.of(ROW, PARTS, DeclaredCapitalGainsParts.PARTS, CapitalGainsStt.CHARGEABILITY,
-                CapitalGainsTerm.HOLDING_PERIOD);
+                CapitalGainsTerm.HOLDING_PERIOD, CapitalGainsScope.NOT_COMPUTED, CapitalGainsScope.ELSEWHERE);
     }
 
     @Override
@@ -85,6 +86,9 @@ public final class CapitalGainsNode implements ComputationNode {
         Map<CapitalGainsPart, Money> net = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
+            if (!CapitalGainsScope.takes(ctx, bucket, lines)) {
+                continue;
+            }
             Term term = CapitalGainsTerm.of(ctx, bucket, lines);
             net.merge(partOf(ctx, bucket, term, CapitalGainsStt.of(ctx, bucket, term, lines)), bucket.gain(),
                     Money::plus);

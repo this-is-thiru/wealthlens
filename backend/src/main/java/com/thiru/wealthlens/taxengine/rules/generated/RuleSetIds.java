@@ -15,6 +15,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
  */
 public final class RuleSetIds {
 
+    public static final RuleSetId RS_CG_ELSEWHERE = new RuleSetId("RS-CG-ELSEWHERE");
+    public static final RuleSetId RS_CG_NOT_COMPUTED = new RuleSetId("RS-CG-NOT-COMPUTED");
     public static final RuleSetId RS_CG_PART = new RuleSetId("RS-CG-PART");
     public static final RuleSetId RS_CG_PARTS = new RuleSetId("RS-CG-PARTS");
     public static final RuleSetId RS_CG_TERM = new RuleSetId("RS-CG-TERM");

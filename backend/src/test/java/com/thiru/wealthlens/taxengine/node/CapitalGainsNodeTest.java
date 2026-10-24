@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
+import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
@@ -38,9 +39,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -513,13 +517,11 @@ class CapitalGainsNodeTest {
         "2025, LONG_TERM, UNKNOWN@BSE/DELIVERY, PAID@NSE, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2025, LONG_TERM, PAID@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2025, SHORT_TERM, UNKNOWN@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
-        "2025, SHORT_TERM, PAID@-, UNKNOWN@NSE/INTRADAY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
         "2025, LONG_TERM, UNKNOWN@NSE/DELIVERY, UNKNOWN@NSE/DELIVERY, UNRECORDED, 2003-06-01, LONG_TERM_LISTED_EQUITY",
         "2026, LONG_TERM, UNKNOWN@NSE/DELIVERY, PAID@NSE, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2026, LONG_TERM, UNKNOWN@BSE/DELIVERY, PAID@NSE, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2026, LONG_TERM, PAID@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2020-01-10, LONG_TERM_LISTED_EQUITY",
         "2026, SHORT_TERM, UNKNOWN@-, UNKNOWN@NSE/DELIVERY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
-        "2026, SHORT_TERM, PAID@-, UNKNOWN@NSE/INTRADAY, PURCHASE, 2025-01-10, SHORT_TERM_LISTED_EQUITY",
         "2026, LONG_TERM, UNKNOWN@NSE/DELIVERY, UNKNOWN@NSE/DELIVERY, UNRECORDED, 2003-06-01, LONG_TERM_LISTED_EQUITY"
     })
     void evaluate_whenAnUnknownSideWasChargeable_isInThePartTheLawGives(int year, Term term, String buy, String sale,
@@ -716,5 +718,77 @@ class CapitalGainsNodeTest {
                 .singleElement()
                 .satisfies(line -> assertThat(line.limitedBy().orElseThrow())
                         .endsWith("; a bonus lot processed before W-088k4a may be dated at its ex-date (W-088k4b)"));
+    }
+
+    /**
+     * Equity sold intraday, and futures and options, are business income this engine does not compute (2025
+     * s.66(31), (33); 1961 s.43(5) and proviso (d)): RS-CG-NOT-COMPUTED's rows refuse them before any term (W-160a).
+     */
+    @ParameterizedTest(name = "TY {0} sold {1}")
+    @MethodSource("notComputed")
+    void evaluate_whenABucketIsIncomeOfAHeadNotComputed_isRefusedNamingTheRow(int year, String saleVenue,
+            String row) {
+        // Given
+        CapitalGainsInput.Bucket sold = traded(Term.SHORT_TERM, PAID, "NSE/DELIVERY", PAID, saleVenue, "PURCHASE",
+                "2025-04-10");
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, sold))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("are reached by " + row)
+                .hasMessageContaining("income of a head this engine does not compute");
+    }
+
+    private static Stream<Arguments> notComputed() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, "NSE/INTRADAY", "CG-SPECULATIVE"));
+            cases.add(Arguments.of(year, "NSE/FUTURES", "CG-DERIVATIVE"));
+            cases.add(Arguments.of(year, "NSE/OPTIONS", "CG-DERIVATIVE"));
+        }
+        return cases.build();
+    }
+
+    /**
+     * CG-SPECULATIVE reaches equity sold intraday only, the reach portfolio's TradeClassifier gave (W-160a C3a): a fund
+     * unit sold intraday is not refused there but by RS-CG-TERM, which ships no period for a fund (D-305 C2).
+     */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAFundUnitIsSoldIntraday_isRefusedByTheTermNotAsSpeculative(int year) {
+        // Given
+        LocalDate bought = LocalDate.parse("2025-04-10");
+        CapitalGainsInput.Bucket fund = new CapitalGainsInput.Bucket(Money.of("1000"), new BucketFacts("MUTUAL_FUND",
+                PAID, PAID, "PURCHASE", Optional.empty(), bought, bought, SideVenue.UNRECORDED, venue("NSE/INTRADAY")),
+                Optional.empty());
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, fund))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no row of RS-CG-TERM");
+    }
+
+    /**
+     * A deposit's gain is its interest, income from other sources entered there (OS-INTEREST): RS-CG-ELSEWHERE leaves
+     * it out of the head with a nil line, and the head is what the equity beside it makes alone (W-160a).
+     */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenABucketIsADeposit_leavesItOutWithANilLine(int year) {
+        // Given
+        LocalDate opened = LocalDate.parse("2024-04-01");
+        CapitalGainsInput.Bucket deposit = new CapitalGainsInput.Bucket(Money.of("5000"), new BucketFacts("FD",
+                NOT_PAID, NOT_PAID, "PURCHASE", Optional.empty(), opened, opened.plusYears(1), SideVenue.UNRECORDED,
+                SideVenue.UNRECORDED), Optional.empty());
+        CapitalGainsInput.Bucket equity = traded(Term.SHORT_TERM, PAID, "NSE/DELIVERY", PAID, "NSE/DELIVERY",
+                "PURCHASE", "2025-04-10");
+
+        // When
+        NodeResult result = result(year, deposit, equity);
+
+        // Then
+        assertThat(result.value()).isEqualTo(run(year, equity));
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_DEPOSIT)).singleElement()
+                .satisfies(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO)));
     }
 }

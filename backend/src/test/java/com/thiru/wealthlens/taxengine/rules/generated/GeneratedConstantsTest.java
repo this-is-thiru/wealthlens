@@ -34,12 +34,15 @@ class GeneratedConstantsTest {
 
     /** Every rule the shipped timeline holds, in the generator's order — listed by hand. */
     private static final java.util.List<String> SHIPPED_RULE_IDS = java.util.List.of(
+            "CG-DEPOSIT",
+            "CG-DERIVATIVE",
             "CG-PART-LONG-LISTED",
             "CG-PART-LONG-NOTIFIED",
             "CG-PART-LONG-OTHER",
             "CG-PART-SHORT-LISTED",
             "CG-PART-SHORT-SLAB",
             "CG-PARTS",
+            "CG-SPECULATIVE",
             "CG-TERM-LISTED-SECURITY",
             "DED-AGNIVEER-GOVERNMENT",
             "DED-AGNIVEER-OWN",
