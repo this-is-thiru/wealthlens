@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-159 — retire the legacy taxplanning compute path (D-314; audit Q1; D-063)
+Item            : W-160 — portfolio's holding-period law and classes (D-315; audit T1; N3, N4)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-159.md (to write)
+Plan            : plans/W-160.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : READ W-159 (WI row; Appendix E group L2; D-063, D-314) — the plan first checks taxengine serves what the legacy path serves, and stops if not; write the plan, STOP
-Last verify     : targeted 437/0; unit -Punit 3714/0; integration 281/0; dump identical; probes 3/3 bite (2026-10-24, W-158d)
-Waiting on      : nothing for W-159; still open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : READ W-160 (WI row; audit § W-088l3 T1; D-315, D-302 D2a), write the plan, STOP
+Last verify     : targeted 437/0; unit -Punit 3714/0; integration 281/0 (2026-10-24, W-158d); W-159 docs only
+Waiting on      : nothing for W-160; still open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-158d: take a gift for consideration and pre-construction interest on another use from rows — gift.received on OS-GIFT, loan.use on the pre-construction rows picked per loan, OQ-34 raised; W-158 closed (D-360)
-Updated         : 2026-10-24, session 34 — W-158d done, W-158 closed (D-360)
+Last item commit: taxplanning W-159: move the legacy compute path's retirement after W-123 — its check failed: taxengine serves none of the legacy endpoints yet; W-104 told of the TaxComputationService name (D-361)
+Updated         : 2026-10-24, session 34 — W-159 moved after W-123 (D-361)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
