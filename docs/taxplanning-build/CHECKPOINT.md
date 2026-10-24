@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-156g — source the 1961 "dependant" for s.80DD and s.80DDB (D-348; W-156c C4a)
-Stage           : NOT_STARTED — W-156f2 done and committed (D-352)
-Plan            : plans/W-156g.md (to write)
-Approved        : W-156a – f2 done (D-344 – D-352)
+Item            : W-156h — the self-disability-claim bar on a dependant by rule data (D-353; W-156g C3a)
+Stage           : NOT_STARTED — W-156g done and committed (D-353)
+Plan            : plans/W-156h.md (to write)
+Approved        : W-156a – g done (D-344 – D-353)
 Steps done      : —
-Next step       : on the owner's go: READ W-156g (03-WORK-ITEMS.md, plans/W-156c.md C4), write plans/W-156g.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding
-Last verify     : targeted 492/0; unit -Punit 3660/0; integration 281/0 (2026-10-24, W-156f2)
-Waiting on      : the owner — go for W-156g; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
+Next step       : on the owner's go: READ W-156h (03-WORK-ITEMS.md, plans/W-156g.md C3, plans/W-156c.md), write plans/W-156h.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding
+Last verify     : targeted 148/0; unit -Punit 3660/0 (2026-10-24, W-156g)
+Waiting on      : the owner — go for W-156h; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-156f2: measure each gift by its own limb's row — OS-GIFT as limb (i) and OS-GIFT-IMMOVABLE, -PROPERTY-FREE, -PROPERTY-BOUGHT on gift.kind and gift.received, each with its own GiftThreshold, so GiftIncome holds no kind test (D-352)
-Updated         : 2026-10-24, session 33 — W-156f2 committed
+Last item commit: taxplanning W-156g: confirm the TY 2025-26 "dependant" from the 1961 s.80DD and s.80DDB Explanations — both quoted in DED-DEPENDANT's note and provenance, s.80DD's s.80U limb placed as W-156h (D-353)
+Updated         : 2026-10-24, session 33 — W-156g committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

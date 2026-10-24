@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-DEPENDANT",
   "ruleSet": "RS-DED-DEPENDANT",
-  "_note": "Who is a dependant for s.127 and s.128: TY 2026-27, Income-tax Act, 2025 s.127(9)(b) — the spouse, children, parents, brothers and sisters \"dependant wholly or mainly\" on the individual (as DED-DISABLED-DEPENDANT's note quotes it); s.128 takes it \"as s.127(9)\" (s.128(5)(a), DED-SPECIFIED-DISEASE's note). Reached by the family member's dependant.relationship and dependant.wholly.or.mainly; a member it does not reach is refused for either section. TY 2025-26: the 1961 counterparts are the Explanations to s.80DD and s.80DDB, whose words are NOT quoted in the repo; this version carries the 2025 Act's list, as the engine applied it before W-156c, and a sourcing item reads the Explanations to confirm or correct it (W-156c C4a, D-348). Conditions only; provenance and introduction are DED-DISABLED-DEPENDANT's. Old regime only, as those rows.",
+  "_note": "Who is a dependant for s.127 and s.128: TY 2026-27, Income-tax Act, 2025 s.127(9)(b) — the spouse, children, parents, brothers and sisters \"dependant wholly or mainly\" on the individual (as DED-DISABLED-DEPENDANT's note quotes it); s.128 takes it \"as s.127(9)\" (s.128(5)(a), DED-SPECIFIED-DISEASE's note). Reached by the family member's dependant.relationship and dependant.wholly.or.mainly; a member it does not reach is refused for either section. TY 2025-26: Income-tax Act, 1961 s.80DD Explanation (b): \"\"dependant\" means— (i) in the case of an individual, the spouse, children, parents, brothers and sisters of the individual or any of them; (ii) in the case of a Hindu undivided family, a member of the Hindu undivided family, dependant wholly or mainly on such individual or Hindu undivided family for his support and maintenance, and who has not claimed any deduction under section 80U in computing his total income for the assessment year relating to the previous year\" (thc p.344); s.80DDB Explanation (i): the same relations, \"dependant wholly or mainly on such individual or Hindu undivided family for his support and maintenance\", with no s.80U limb (thc p.345). This version, the part the two sections share, is confirmed (W-156g, D-353). s.80DD's s.80U limb is the 1961 counterpart of s.127(8), applied by DisabilityDeduction for s.127 only, in both years (W-156h). Sources: docs/taxplanning-build/sources/2026-10-24-dependant.md D1, D2. Conditions only; provenance and introduction are DED-DISABLED-DEPENDANT's. Old regime only, as those rows.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -69,10 +69,10 @@
       "publicationStatus": "PUBLISHED",
       "provenance": {
         "sourceUrl": "https://egazette.gov.in/WriteReadData/2022/234693.pdf",
-        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80DD(1), (4), Explanation, pp.343–344; Gazette CG-DL-E-31032022-234693, Finance Act, 2022 s.21, p.28",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80DD(1), (4), Explanation, pp.343–344, s.80DDB Explanation (i), p.345; Gazette CG-DL-E-31032022-234693, Finance Act, 2022 s.21, p.28",
         "accessedOn": "2026-10-07",
         "verificationLevel": "SOURCE_CHECKED",
-        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80DD after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80DD and s.80DDB after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
       }
     },
     {
