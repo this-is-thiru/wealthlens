@@ -43,7 +43,7 @@ final class DisabilityDeduction {
 
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_DISABILITY, RuleSetIds.RS_DED_DISABILITY_SEVERE,
             RuleSetIds.RS_DED_DISABLED_DEPENDANT, RuleSetIds.RS_DED_DISABLED_DEPENDANT_SEVERE, RuleSetIds.RS_DED_SPECIFIED_DISEASE,
-            RuleSetIds.RS_DED_SPECIFIED_DISEASE_SENIOR, RuleSetIds.RS_DED_DEPENDANT);
+            RuleSetIds.RS_DED_SPECIFIED_DISEASE_SENIOR, RuleSetIds.RS_DED_DEPENDANT, RuleSetIds.RS_DED_DEPENDANT_OWN_CLAIM);
 
     /** The certified severity — the {@code DisabilitySeverity} name — which the severity rows read (W-156c, D-348). */
     static final ItemFactId SEVERITY = new ItemFactId("disability.severity");
@@ -53,6 +53,12 @@ final class DisabilityDeduction {
 
     /** Whether a family member is wholly or mainly dependent on the assessee, which {@code DED-DEPENDANT} reads. */
     static final ItemFactId WHOLLY_OR_MAINLY = new ItemFactId("dependant.wholly.or.mainly");
+
+    /**
+     * Whether the dependant claims the deduction for their own disability, which {@code DED-DEPENDANT-OWN-CLAIM} reads
+     * (W-156h, D-354).
+     */
+    static final ItemFactId CLAIMS_OWN_DISABILITY = new ItemFactId("dependant.claims.own.disability");
 
     /** s.154's rows, the plain then the severe: the one reaching the assessee's severity applies. */
     private static final List<RuleSetId> OWN = List.of(RuleSetIds.RS_DED_DISABILITY, RuleSetIds.RS_DED_DISABILITY_SEVERE);
@@ -114,9 +120,12 @@ final class DisabilityDeduction {
         }
         DisabledDependantSupport support = supports.getFirst();
         FamilySnapshot.Member member = dependantMember(ctx, support.familyMember(), "s.127");
-        if (support.dependantClaimsSection154()) {
-            throw new IllegalArgumentException("A dependant who claims s.154 for themselves is not a dependant under"
-                    + " s.127 (s.127(8))");
+        RuleRow ownClaimRow = ctx.ruleOf(RuleSetIds.RS_DED_DEPENDANT_OWN_CLAIM);
+        if (!RowReach.holdsFor(ctx, ownClaimRow, ItemFacts.of(CLAIMS_OWN_DISABILITY,
+                Boolean.toString(support.dependantClaimsSection154())))) {
+            throw new IllegalArgumentException("Family member " + support.familyMember() + " claims the deduction for"
+                    + " their own disability, so is not a dependant for s.127: " + ownClaimRow.id()
+                    + " does not reach them");
         }
         DisabilitySeverity severity = member.disability().orElseThrow(() -> new IllegalArgumentException(
                 "Family member " + support.familyMember() + " has no certified disability (s.127(1))"));

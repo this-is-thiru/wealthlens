@@ -219,11 +219,20 @@ class DisabilityDeductionTest {
 
     @Test
     void evaluate_whenTheDependantClaimsSection154_isRefused() {
-        // When / Then — s.127(8)
+        // When / Then — s.127(8): the row of who s.127 takes does not reach them (W-156h)
         assertThatThrownBy(() -> run(OLD, plain(), List.of(new DisabledDependantSupport(0, Money.of("10000"), true)),
                         List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("s.127(8)");
+                .hasMessageContaining(RuleIds.DED_DEPENDANT_OWN_CLAIM.value());
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025TheDependantClaimsSection80u_isRefused() {
+        // When / Then — 1961 s.80DD Explanation (b): "who has not claimed any deduction under section 80U"
+        assertThatThrownBy(() -> run(TaxYearId.of(2025), OLD, plain(),
+                        List.of(new DisabledDependantSupport(0, Money.of("10000"), true)), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(RuleIds.DED_DEPENDANT_OWN_CLAIM.value());
     }
 
     @Test

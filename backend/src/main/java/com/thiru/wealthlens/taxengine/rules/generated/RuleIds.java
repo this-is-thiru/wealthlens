@@ -25,6 +25,7 @@ public final class RuleIds {
     public static final RuleId DED_AGNIVEER_GOVERNMENT = new RuleId("DED-AGNIVEER-GOVERNMENT");
     public static final RuleId DED_AGNIVEER_OWN = new RuleId("DED-AGNIVEER-OWN");
     public static final RuleId DED_DEPENDANT = new RuleId("DED-DEPENDANT");
+    public static final RuleId DED_DEPENDANT_OWN_CLAIM = new RuleId("DED-DEPENDANT-OWN-CLAIM");
     public static final RuleId DED_DEPOSIT_INTEREST_SENIOR = new RuleId("DED-DEPOSIT-INTEREST-SENIOR");
     public static final RuleId DED_DISABILITY = new RuleId("DED-DISABILITY");
     public static final RuleId DED_DISABILITY_SEVERE = new RuleId("DED-DISABILITY-SEVERE");

@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.114",
-      "checksum": "sha256:1dbe6c06bc2a009a8b23e0f6c4448033854b8a58a4951c41222c9ec1b016ff2e"
+      "version": "2026-27.law.115",
+      "checksum": "sha256:a3ad58987da3b8b135489f81590a0c3696273e4a7271456bb01ce2e90dc895e8"
     },
     "exec": {
       "version": "2026-27.exec.29",
@@ -30,6 +30,7 @@
     "DED-AGNIVEER-GOVERNMENT": "sha256:c879cebcf268eb0010d60e4ec11b7b6e94cb13821b6ed697c1212b4dd76a1975",
     "DED-AGNIVEER-OWN": "sha256:041287834dd9c47179d5130f8dbad30a7d7aab0fce4b352b38d026b9306638d1",
     "DED-DEPENDANT": "sha256:f80d72837d85db07361fcfe9265c5895687b6e0da04e60ca5854e37acea21999",
+    "DED-DEPENDANT-OWN-CLAIM": "sha256:690c4e564535357f7d24719cab05042efca17e5553a54875e7d899fec055312b",
     "DED-DEPOSIT-INTEREST-SENIOR": "sha256:c1bbd80b7f0a94cd1fbc55f97fa80e2bbbba4d76bdedd57f6e8aeba1749865f3",
     "DED-DISABILITY": "sha256:0b8486ce5800aa5a85488575e76ef1ea35e82fa521d306d4eb3c5b35e505f848",
     "DED-DISABILITY-SEVERE": "sha256:9623cba996f5996a58c7de264ec0dbb6aae8a4c41a77fa9bcf7684f6e630fb11",

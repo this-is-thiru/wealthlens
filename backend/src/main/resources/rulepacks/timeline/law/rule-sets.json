@@ -50,6 +50,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-DED-DEPENDANT-OWN-CLAIM",
+      "_note": "One row: DED-DEPENDANT-OWN-CLAIM, which dependants s.127 takes, by their own claim of the self-disability deduction (W-156h, D-354)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-DED-DISABILITY",
       "_note": "One row: DED-DISABILITY",
       "selection": "EXACTLY_ONE",

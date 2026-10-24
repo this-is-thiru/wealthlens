@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-156h — the self-disability-claim bar on a dependant by rule data (D-353; W-156g C3a)
-Stage           : NOT_STARTED — W-156g done and committed (D-353)
-Plan            : plans/W-156h.md (to write)
-Approved        : W-156a – g done (D-344 – D-353)
+Item            : W-157 — house-property occupancy (D-313; audit P7, borderline)
+Stage           : NOT_STARTED — W-156h done and committed; W-156 closed (D-354)
+Plan            : plans/W-157.md (to write)
+Approved        : W-156 closed (a – h, D-344 – D-354)
 Steps done      : —
-Next step       : on the owner's go: READ W-156h (03-WORK-ITEMS.md, plans/W-156g.md C3, plans/W-156c.md), write plans/W-156h.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding
-Last verify     : targeted 148/0; unit -Punit 3660/0 (2026-10-24, W-156g)
-Waiting on      : the owner — go for W-156h; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
+Next step       : on the owner's go: READ W-157 (03-WORK-ITEMS.md, the audit's P7 row), write plans/W-157.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding
+Last verify     : targeted 222/0; unit -Punit 3661/0; integration 281/0 (2026-10-24, W-156h)
+Waiting on      : the owner — go for W-157; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-156g: confirm the TY 2025-26 "dependant" from the 1961 s.80DD and s.80DDB Explanations — both quoted in DED-DEPENDANT's note and provenance, s.80DD's s.80U limb placed as W-156h (D-353)
-Updated         : 2026-10-24, session 33 — W-156g committed
+Last item commit: taxplanning W-156h: take the bar on a dependant who claims their own disability deduction from a row — DED-DEPENDANT-OWN-CLAIM on dependant.claims.own.disability, so DisabilityDeduction holds no s.127(8) test; W-156 closed (D-354)
+Updated         : 2026-10-24, session 33 — W-156h committed, W-156 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

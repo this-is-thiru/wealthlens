@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: DED-DISABLED-DEPENDANT* provision1961 (s.80DD) and provision2025 (s.127). summary: S2 s.127(1), (3), (9)(b); 1961 s.80DD(1) and proviso — a fixed sum (sources B14, M9; D-138, D-146). routes[0]: DED-DISABLED-DEPENDANT. routes[1]: DED-DISABLED-DEPENDANT-SEVERE (s.127(3)). disqualifiers[0]: the rows' regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: DED-DEPENDANT (s.127(9)(b); W-156c). disqualifiers[2]: s.127(8), DisabilityDeduction. disqualifiers[3]: OQ-19. disqualifiers[4]: D-138, DisabilityDeduction. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-DISABLED-DEPENDANT (D-166; until then DED-DISABLED-DEPENDANT's ExceptIn).",
+  "_sources": "provisions: DED-DISABLED-DEPENDANT* provision1961 (s.80DD) and provision2025 (s.127). summary: S2 s.127(1), (3), (9)(b); 1961 s.80DD(1) and proviso — a fixed sum (sources B14, M9; D-138, D-146). routes[0]: DED-DISABLED-DEPENDANT. routes[1]: DED-DISABLED-DEPENDANT-SEVERE (s.127(3)). disqualifiers[0]: the rows' regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: DED-DEPENDANT (s.127(9)(b); W-156c). disqualifiers[2]: s.127(8); 1961 s.80DD Explanation (b); DED-DEPENDANT-OWN-CLAIM (W-156h). disqualifiers[3]: OQ-19. disqualifiers[4]: D-138, DisabilityDeduction. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-DISABLED-DEPENDANT (D-166; until then DED-DISABLED-DEPENDANT's ExceptIn).",
   "key": "SEC-DISABLED-DEPENDANT",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -58,7 +58,7 @@
       "description": "A dependant who claims the deduction for their own disability is not a dependant for this one.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "DED-DISABLED-DEPENDANT"
+        "rule": "DED-DEPENDANT-OWN-CLAIM"
       }
     },
     {

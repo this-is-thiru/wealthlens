@@ -44,6 +44,7 @@ class GeneratedConstantsTest {
             "DED-AGNIVEER-GOVERNMENT",
             "DED-AGNIVEER-OWN",
             "DED-DEPENDANT",
+            "DED-DEPENDANT-OWN-CLAIM",
             "DED-DEPOSIT-INTEREST-SENIOR",
             "DED-DISABILITY",
             "DED-DISABILITY-SEVERE",
