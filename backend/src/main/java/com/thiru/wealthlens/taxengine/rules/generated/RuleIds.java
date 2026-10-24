@@ -66,6 +66,7 @@ public final class RuleIds {
     public static final RuleId HP_ARREARS = new RuleId("HP-ARREARS");
     public static final RuleId HP_INTEREST = new RuleId("HP-INTEREST");
     public static final RuleId HP_OWN_RESIDENCE = new RuleId("HP-OWN-RESIDENCE");
+    public static final RuleId HP_OWN_RESIDENCE_HIGHER_LIMIT = new RuleId("HP-OWN-RESIDENCE-HIGHER-LIMIT");
     public static final RuleId HP_OWN_RESIDENCE_INTEREST = new RuleId("HP-OWN-RESIDENCE-INTEREST");
     public static final RuleId HP_OWN_RESIDENCE_INTEREST_CAP = new RuleId("HP-OWN-RESIDENCE-INTEREST-CAP");
     public static final RuleId HP_OWN_RESIDENCE_PRE_CONSTRUCTION = new RuleId("HP-OWN-RESIDENCE-PRE-CONSTRUCTION");

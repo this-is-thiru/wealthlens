@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.election;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.HouseOccupancy;
 import com.thiru.wealthlens.taxengine.input.HouseProperty;
+import com.thiru.wealthlens.taxengine.node.HousePropertyNode;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
@@ -52,7 +53,7 @@ public final class HouseElection implements Election<List<Integer>> {
         List<Integer> qualifying = IntStream.range(0, houses.size())
                 .filter(i -> houses.get(i).occupancy() != HouseOccupancy.LET).boxed().toList();
         List<Integer> entered = IntStream.range(0, houses.size())
-                .filter(i -> houses.get(i).occupancy() == HouseOccupancy.OWN_RESIDENCE).boxed().toList();
+                .filter(i -> HousePropertyNode.isOwnResidence(rules, houses.get(i))).boxed().toList();
         List<List<Integer>> sets = new ArrayList<>();
         if (entered.size() <= limit) {
             sets.add(entered);

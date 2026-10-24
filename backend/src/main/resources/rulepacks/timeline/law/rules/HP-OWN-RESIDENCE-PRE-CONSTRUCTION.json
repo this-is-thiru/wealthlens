@@ -1,7 +1,7 @@
 {
   "ruleId": "HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
   "ruleSet": "RS-HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
-  "_note": "Pre-construction interest on an own residence (S2 s.21(6); 1961 s.23(2)) is deducted in five equal instalments, within HP-OWN-RESIDENCE-INTEREST-CAP (D-156; rulebook HP-DED-PRECON-001, HP-CAP-SELFOCC-002). TY 2026-27: Income-tax Act, 2025 s.22(1)(c), (3) (Gazette 265620, pp.47–48), inside the cap by the Finance Act, 2026 s.38 (Gazette 271439, p.41); every regime, because s.202(2)(a)(v) removes only s.22(1)(b) for these properties (p.227) and the Finance Act, 2026 did not extend it (s.56 omits only s.202(2)(a)(iii), p.46) — D-156 C1(a) follows the text, against DR 06 G1.4 and DR 01 R16's new-regime example (errata there). TY 2025-26: Income-tax Act, 1961 s.24(b) Explanation, deducted \"under this clause\" (thc p.147), so s.115BAC(2)(i)'s disallowance of clause (b) for these properties takes it too (Gazette 244830, p.34): except in the new regime. TaxYearSpan(4) as HP-PRE-CONSTRUCTION. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "_note": "Pre-construction interest on an own residence (S2 s.21(6); 1961 s.23(2)) is deducted in five equal instalments, within HP-OWN-RESIDENCE-INTEREST-CAP (D-156; rulebook HP-DED-PRECON-001, HP-CAP-SELFOCC-002). TY 2026-27: Income-tax Act, 2025 s.22(1)(c), (3) (Gazette 265620, pp.47–48), inside the cap by the Finance Act, 2026 s.38 (Gazette 271439, p.41); every regime, because s.202(2)(a)(v) removes only s.22(1)(b) for these properties (p.227) and the Finance Act, 2026 did not extend it (s.56 omits only s.202(2)(a)(iii), p.46) — D-156 C1(a) follows the text, against DR 06 G1.4 and DR 01 R16's new-regime example (errata there). TY 2025-26: Income-tax Act, 1961 s.24(b) Explanation, deducted \"under this clause\" (thc p.147), so s.115BAC(2)(i)'s disallowance of clause (b) for these properties takes it too (Gazette 244830, p.34): except in the new regime. TaxYearSpan(4) as HP-PRE-CONSTRUCTION. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches the loans of a house entered as an own residence (house.occupancy = OWN_RESIDENCE; W-157, D-355).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -28,7 +28,13 @@
         "type": "TaxYearSpan",
         "succeedingYears": 4
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "house.occupancy",
+          "code": "OWN_RESIDENCE"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52(C) — Income-tax Act, 1961 s.115BAC(2)(i) substituted (w.e.f. 1-4-2024)",
         "gazetteRef": "CG-DL-E-31032023-244830",
@@ -69,7 +75,13 @@
         "type": "TaxYearSpan",
         "succeedingYears": 4
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "house.occupancy",
+          "code": "OWN_RESIDENCE"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.22(1)(c), (3)",
         "gazetteRef": "CG-DL-E-22082025-265620",

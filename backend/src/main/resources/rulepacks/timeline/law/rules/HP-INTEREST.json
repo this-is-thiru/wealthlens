@@ -1,7 +1,7 @@
 {
   "ruleId": "HP-INTEREST",
   "ruleSet": "RS-HP-INTEREST",
-  "_note": "Interest payable on capital borrowed to acquire, construct, repair, renew or reconstruct a house is deducted in full from income from house property, for a house other than an own residence (D-156; rulebook HP-DED-INT-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(b) \"where the property has been acquired, constructed, repaired, renewed or reconstructed with borrowed capital, the amount of any interest payable on such capital\" (Gazette 265620, p.47); s.22(6): interest payable outside India is not allowed if tax has not been paid or deducted on it under Chapter XIX-B and there is no agent in India under s.306 (p.48). TY 2025-26: Income-tax Act, 1961 s.24(b), the same words; s.25, interest payable outside India with no tax paid or deducted under Chapter XVII-B and no agent under s.163 (thc p.147). The whole of it: PercentOfBase 100 states the node's arithmetic, as HP-ANNUAL-VALUE does. An own residence's interest is HP-OWN-RESIDENCE-INTEREST. Interest the assessee deducts under s.130 or s.131 is left out (s.130(4), s.131(3); D-139). Every regime: s.202(2)(a)(v) and 1961 s.115BAC(2)(i) disallow it only for an own residence.",
+  "_note": "Interest payable on capital borrowed to acquire, construct, repair, renew or reconstruct a house is deducted in full from income from house property, for a house other than an own residence (D-156; rulebook HP-DED-INT-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(b) \"where the property has been acquired, constructed, repaired, renewed or reconstructed with borrowed capital, the amount of any interest payable on such capital\" (Gazette 265620, p.47); s.22(6): interest payable outside India is not allowed if tax has not been paid or deducted on it under Chapter XIX-B and there is no agent in India under s.306 (p.48). TY 2025-26: Income-tax Act, 1961 s.24(b), the same words; s.25, interest payable outside India with no tax paid or deducted under Chapter XVII-B and no agent under s.163 (thc p.147). The whole of it: PercentOfBase 100 states the node's arithmetic, as HP-ANNUAL-VALUE does. An own residence's interest is HP-OWN-RESIDENCE-INTEREST. Interest the assessee deducts under s.130 or s.131 is left out (s.130(4), s.131(3); D-139). Every regime: s.202(2)(a)(v) and 1961 s.115BAC(2)(i) disallow it only for an own residence. The row reaches the loans of a house let or not let, any house other than an own residence (house.occupancy = LET or NOT_LET; W-157, D-355).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -29,7 +29,23 @@
         "percent": "100",
         "base": "INTEREST"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "house.occupancy",
+              "code": "LET"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "house.occupancy",
+              "code": "NOT_LET"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.24 — subs. by Act 14 of 2001, s.15 (w.e.f. 1-4-2002)",
         "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, 11-5-2001 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 26-5-2005, pp.107, 117–118",
@@ -71,7 +87,23 @@
         "percent": "100",
         "base": "INTEREST"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "house.occupancy",
+              "code": "LET"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "house.occupancy",
+              "code": "NOT_LET"
+            }
+          ]
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.22(1)(b), (6)",
         "gazetteRef": "CG-DL-E-22082025-265620",

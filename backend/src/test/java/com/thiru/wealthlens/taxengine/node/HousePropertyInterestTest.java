@@ -257,6 +257,25 @@ class HousePropertyInterestTest {
     }
 
     @Test
+    void evaluate_whenAVehicleLoanSitsBesideTheSection131Loan_matchesOnlyTheHouseLoans() {
+        // Given — the same 1,50,000 under s.131, and an electric-vehicle loan's 60,000 under s.132, which the
+        // house-loan rows do not reach (loan.purpose; W-157)
+        HousingLoan split = new HousingLoan(LoanUse.ACQUISITION_OR_CONSTRUCTION, BORROWED, Money.of("320000"),
+                Money.ZERO, Money.of("150000"), true, false);
+        PurposeLoanInterest section131 = new PurposeLoanInterest(LoanPurpose.RESIDENTIAL_HOUSE, Money.of("150000"),
+                LocalDate.of(2019, 6, 1), Money.of("3000000"), Optional.empty(), Optional.of(Money.of("4000000")),
+                false);
+        PurposeLoanInterest vehicle = new PurposeLoanInterest(LoanPurpose.ELECTRIC_VEHICLE, Money.of("60000"),
+                LocalDate.of(2023, 1, 1), Money.of("1200000"), Optional.empty(), Optional.empty(), false);
+
+        // When
+        NodeResult result = run(2026, OLD, List.of(let(ACQUIRED, split)), List.of(section131, vehicle));
+
+        // Then — the match takes the s.131 loan's 1,50,000 alone, so the head is as without the vehicle loan
+        assertThat(result.value()).isEqualTo(rupees("195400"));
+    }
+
+    @Test
     void evaluate_whenTheInterestLeftOutDiffersFromTheChapterEightLoans_isRefused() {
         // Given — 1,50,000 said to be under s.131, but the s.131 loan carries 1,00,000
         HousingLoan split = new HousingLoan(LoanUse.ACQUISITION_OR_CONSTRUCTION, BORROWED, Money.of("320000"),

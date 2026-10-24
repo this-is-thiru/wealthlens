@@ -290,6 +290,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-HP-OWN-RESIDENCE-HIGHER-LIMIT",
+      "_note": "One row: HP-OWN-RESIDENCE-HIGHER-LIMIT, which own residences' loans take the higher limit (W-157, D-355)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
       "_note": "One row: HP-OWN-RESIDENCE-PRE-CONSTRUCTION",
       "selection": "EXACTLY_ONE",

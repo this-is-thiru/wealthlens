@@ -85,6 +85,7 @@ class GeneratedConstantsTest {
             "HP-ARREARS",
             "HP-INTEREST",
             "HP-OWN-RESIDENCE",
+            "HP-OWN-RESIDENCE-HIGHER-LIMIT",
             "HP-OWN-RESIDENCE-INTEREST",
             "HP-OWN-RESIDENCE-INTEREST-CAP",
             "HP-OWN-RESIDENCE-PRE-CONSTRUCTION",

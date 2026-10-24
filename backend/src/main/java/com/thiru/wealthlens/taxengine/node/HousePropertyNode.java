@@ -7,11 +7,13 @@ import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -42,6 +44,9 @@ public final class HousePropertyNode implements ComputationNode {
     private static final BaseId ARREARS = new BaseId("ARREARS");
     private static final BaseId UNREALISED_RENT = new BaseId("UNREALISED_RENT");
 
+    /** How the owner used the house — the {@code HouseOccupancy} name — which the house rows read (W-157, D-355). */
+    static final ItemFactId OCCUPANCY = new ItemFactId("house.occupancy");
+
     @Override
     public NodeId produces() {
         return NodeIds.HOUSEPROPERTY_INCOME;
@@ -55,7 +60,8 @@ public final class HousePropertyNode implements ComputationNode {
     @Override
     public Set<RuleSetId> ruleSets() {
         Set<RuleSetId> rules = new HashSet<>(Set.of(RuleSetIds.RS_HP_ANNUAL_VALUE, RuleSetIds.RS_HP_OWN_RESIDENCE,
-                RuleSetIds.RS_HP_STANDARD_DEDUCTION, RuleSetIds.RS_HP_ARREARS, RuleSetIds.RS_HP_UNREALISED_RENT));
+                RuleSetIds.RS_HP_STANDARD_DEDUCTION, RuleSetIds.RS_HP_ARREARS, RuleSetIds.RS_HP_UNREALISED_RENT,
+                RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER, RuleSetIds.RS_DED_HOUSE_LOAN));
         rules.addAll(HousePropertyInterest.RULES);
         return Set.copyOf(rules);
     }
@@ -68,7 +74,8 @@ public final class HousePropertyNode implements ComputationNode {
         }
         TemporalContext t = ctx.inputs().temporal();
         requireOwnResidencesWithinLimit(ctx, t, properties);
-        HousePropertyInterest.requireChapterEightShareMatches(properties, ctx.inputs().entered().purposeLoanInterest());
+        HousePropertyInterest.requireChapterEightShareMatches(ctx, properties,
+                ctx.inputs().entered().purposeLoanInterest());
         List<TraceLine> lines = new ArrayList<>();
         HousePropertyInterest interest = new HousePropertyInterest(ctx, lines);
         Money head = Money.ZERO;
@@ -108,7 +115,7 @@ public final class HousePropertyNode implements ComputationNode {
      */
     private static Money annualValue(NodeContext ctx, TemporalContext t, int position, HouseProperty property,
             List<TraceLine> lines) {
-        if (property.occupancy() == HouseOccupancy.OWN_RESIDENCE) {
+        if (isOwnResidence(ctx, property)) {
             lines.add(ctx.traceLine(lines.size() + 1, ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE), StepKind.MEASURE,
                             property.expectedLettingValue(), Money.ZERO)
                     .withLimitedBy("property " + position + ": the owner's own residence, nil"));
@@ -155,7 +162,7 @@ public final class HousePropertyNode implements ComputationNode {
         int limit = RuleDefinitions.require(version.definition(), OwnResidenceHouses.class, ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE))
                 .houses();
         long ownResidences = properties.stream()
-                .filter(property -> property.occupancy() == HouseOccupancy.OWN_RESIDENCE)
+                .filter(property -> isOwnResidence(ctx, property))
                 .count();
         if (ownResidences > limit) {
             throw new IllegalArgumentException(ownResidences + " houses are entered as own residences; the annual"
@@ -164,4 +171,17 @@ public final class HousePropertyNode implements ComputationNode {
         }
     }
 
+    /**
+     * Whether {@code HP-OWN-RESIDENCE} reaches the house: its annual value is nil, it counts against the row's houses,
+     * and its interest is an own residence's (S2 s.21(6), s.22(2); W-157, D-355). {@code HouseElection} reads it here,
+     * through the node (D-255).
+     */
+    public static boolean isOwnResidence(NodeContext ctx, HouseProperty house) {
+        return RowReach.holdsFor(ctx, ctx.ruleOf(RuleSetIds.RS_HP_OWN_RESIDENCE), factsOf(house));
+    }
+
+    /** The facts the house rows read about one house. */
+    static ItemFacts factsOf(HouseProperty house) {
+        return ItemFacts.of(OCCUPANCY, house.occupancy().name());
+    }
 }

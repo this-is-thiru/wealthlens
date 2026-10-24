@@ -188,6 +188,7 @@ class TimelineReaderTest {
             new RuleId("HP-OWN-RESIDENCE-INTEREST"),
             new RuleId("HP-OWN-RESIDENCE-PRE-CONSTRUCTION"),
             new RuleId("HP-OWN-RESIDENCE-INTEREST-CAP"),
+            new RuleId("HP-OWN-RESIDENCE-HIGHER-LIMIT"),
             new RuleId("HP-UNREALISED-RENT"),
             new RuleId("OS-INTEREST"),
             new RuleId("OS-DIVIDEND"),

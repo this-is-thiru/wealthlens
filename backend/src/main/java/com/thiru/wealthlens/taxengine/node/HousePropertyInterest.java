@@ -1,20 +1,20 @@
 package com.thiru.wealthlens.taxengine.node;
 
-import com.thiru.wealthlens.taxengine.input.HouseOccupancy;
 import com.thiru.wealthlens.taxengine.input.HouseProperty;
 import com.thiru.wealthlens.taxengine.input.HousingLoan;
-import com.thiru.wealthlens.taxengine.input.LoanPurpose;
 import com.thiru.wealthlens.taxengine.input.LoanUse;
 import com.thiru.wealthlens.taxengine.input.PurposeLoanInterest;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceInterestLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -25,6 +25,7 @@ import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -39,7 +40,28 @@ final class HousePropertyInterest {
 
     static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_HP_INTEREST, RuleSetIds.RS_HP_PRE_CONSTRUCTION,
             RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST, RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION,
-            RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP);
+            RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP, RuleSetIds.RS_HP_OWN_RESIDENCE_HIGHER_LIMIT);
+
+    /** The year's-interest rows: one reaches the house, by its occupancy (W-157, D-355). */
+    private static final List<RuleSetId> YEARS_INTEREST = List.of(RuleSetIds.RS_HP_INTEREST,
+            RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST);
+
+    /** The pre-construction rows: one reaches the house, by its occupancy (W-157, D-355). */
+    private static final List<RuleSetId> PRE_CONSTRUCTION = List.of(RuleSetIds.RS_HP_PRE_CONSTRUCTION,
+            RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION);
+
+    /** The s.130 / s.131 rows, which take the loans whose purpose both reach (W-156d, D-349). */
+    private static final List<RuleSetId> HOUSE_LOANS = List.of(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER,
+            RuleSetIds.RS_DED_HOUSE_LOAN);
+
+    /** A Chapter VIII loan's purpose — the {@code LoanPurpose} name — which the house-loan rows read (D-349). */
+    private static final ItemFactId PURPOSE = new ItemFactId("loan.purpose");
+
+    /** What the capital was borrowed for — the {@code LoanUse} name — which the higher-limit row reads (D-355). */
+    private static final ItemFactId USE = new ItemFactId("loan.use");
+
+    /** Whether the lender's certificate is furnished for the loan, which the higher-limit row reads (D-355). */
+    private static final ItemFactId LENDER_CERTIFICATE = new ItemFactId("loan.lender.certificate");
 
     private static final BaseId INTEREST = new BaseId("INTEREST");
 
@@ -59,7 +81,8 @@ final class HousePropertyInterest {
      * their interest went there; it must be what the residential-house loans under those sections carry, or the same
      * interest is entered twice.
      */
-    static void requireChapterEightShareMatches(List<HouseProperty> properties, List<PurposeLoanInterest> purposeLoans) {
+    static void requireChapterEightShareMatches(NodeContext ctx, List<HouseProperty> properties,
+            List<PurposeLoanInterest> purposeLoans) {
         List<HousingLoan> loans = properties.stream().flatMap(property -> property.loans().stream()).toList();
         if (loans.isEmpty()) {
             return;
@@ -67,7 +90,8 @@ final class HousePropertyInterest {
         Money leftOut = loans.stream().map(HousingLoan::interestDeductedUnderChapterEight).reduce(Money.ZERO,
                 Money::plus);
         Money underChapterEight = purposeLoans.stream()
-                .filter(loan -> loan.purpose() == LoanPurpose.RESIDENTIAL_HOUSE)
+                .filter(loan -> HOUSE_LOANS.stream().allMatch(set -> RowReach.holdsFor(ctx, ctx.ruleOf(set),
+                        ItemFacts.of(PURPOSE, loan.purpose().name()))))
                 .map(PurposeLoanInterest::interestPayable)
                 .reduce(Money.ZERO, Money::plus);
         if (!leftOut.equals(underChapterEight)) {
@@ -83,9 +107,9 @@ final class HousePropertyInterest {
      * {@link #ownResidenceAllowed}; nothing is deducted for it here.
      */
     Money deductedFor(int position, HouseProperty property) {
-        boolean ownResidence = property.occupancy() == HouseOccupancy.OWN_RESIDENCE;
-        RuleId current = ownResidence ? ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST) : ctx.ruleIdOf(RuleSetIds.RS_HP_INTEREST);
-        RuleId prior = ownResidence ? ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION) : ctx.ruleIdOf(RuleSetIds.RS_HP_PRE_CONSTRUCTION);
+        boolean ownResidence = HousePropertyNode.isOwnResidence(ctx, property);
+        RuleId current = rowFor(YEARS_INTEREST, property);
+        RuleId prior = rowFor(PRE_CONSTRUCTION, property);
         Money deducted = Money.ZERO;
         for (HousingLoan loan : property.loans()) {
             Money interest = allowed(position, current, loan, yearsInterest(loan), "the year's interest");
@@ -161,8 +185,7 @@ final class HousePropertyInterest {
                 || loan.preConstructionInterest().equals(Money.ZERO)) {
             return Money.ZERO;
         }
-        RuleId row = property.occupancy() == HouseOccupancy.OWN_RESIDENCE
-                ? ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION) : ctx.ruleIdOf(RuleSetIds.RS_HP_PRE_CONSTRUCTION);
+        RuleId row = rowFor(PRE_CONSTRUCTION, property);
         TaxYearSpan span = RuleDefinitions.require(version(row).definition(), TaxYearSpan.class, row);
         if (!span.holds(TaxYearId.containing(acquiredOn(property)), ctx.inputs().taxYear())) {
             return Money.ZERO;
@@ -178,7 +201,9 @@ final class HousePropertyInterest {
      */
     private boolean qualifiesForHigherLimit(HouseProperty property, HousingLoan loan) {
         OwnResidenceInterestLimit limit = limit(version(ctx.ruleIdOf(RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST_CAP)));
-        if (loan.use() != LoanUse.ACQUISITION_OR_CONSTRUCTION || !loan.lenderCertificateHeld()) {
+        ItemFacts facts = new ItemFacts(Map.of(USE, loan.use().name(), LENDER_CERTIFICATE,
+                Boolean.toString(loan.lenderCertificateHeld())), Map.of(), Map.of());
+        if (!RowReach.holdsFor(ctx, ctx.ruleOf(RuleSetIds.RS_HP_OWN_RESIDENCE_HIGHER_LIMIT), facts)) {
             return false;
         }
         if (limit.borrowedOnOrAfter().filter(earliest -> loan.borrowedOn().isBefore(earliest)).isPresent()) {
@@ -198,6 +223,19 @@ final class HousePropertyInterest {
                     + " (S2 s.22(1)(c))");
         }
         return acquired;
+    }
+
+    /** The row of the pair that reaches the house, by its occupancy; exactly one must. */
+    private RuleId rowFor(List<RuleSetId> pair, HouseProperty property) {
+        ItemFacts facts = HousePropertyNode.factsOf(property);
+        List<RuleId> reaching = pair.stream().map(ctx::ruleIdOf)
+                .filter(row -> RowReach.holdsFor(ctx, ctx.rule(row), facts))
+                .toList();
+        if (reaching.size() != 1) {
+            throw new IllegalStateException(property.occupancy() + " is reached by " + reaching + " of the rows of "
+                    + pair + "; exactly one must take it");
+        }
+        return reaching.getFirst();
     }
 
     private OwnResidenceInterestLimit limit(RuleVersion version) {
