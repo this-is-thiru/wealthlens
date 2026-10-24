@@ -44,9 +44,5 @@ public record HousingLoan(
             throw new IllegalArgumentException("Interest deducted under s.130 or s.131 of " + interestDeductedUnderChapterEight
                     + " is more than the " + interestPayable + " payable on the loan");
         }
-        if (use != LoanUse.ACQUISITION_OR_CONSTRUCTION && preConstructionInterest.isGreaterThan(Money.ZERO)) {
-            throw new IllegalArgumentException("Pre-construction interest arises only on capital borrowed to acquire or"
-                    + " construct the house (S2 s.22(1)(c); 1961 s.24(b) Explanation)");
-        }
     }
 }

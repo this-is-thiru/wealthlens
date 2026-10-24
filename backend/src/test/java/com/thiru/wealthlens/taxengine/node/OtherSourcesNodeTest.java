@@ -735,6 +735,33 @@ class OtherSourcesNodeTest {
         return run(year, OLD, List.of(), List.of(), List.of(gifts));
     }
 
+    /**
+     * Limb (i) reaches a sum of money received without consideration only (s.92(2)(m)(i); 1961 s.56(2)(x)(a); OS-GIFT,
+     * W-158d), so a sum received for one reaches no limb and is refused — claimed as excluded too, since an exclusion
+     * is of a receipt a limb charges.
+     */
+    @ParameterizedTest(name = "TY {0} excluded {1}")
+    @MethodSource("sumsForAConsideration")
+    void evaluate_whenASumIsReceivedForAConsideration_isRefusedAsNoLimbReachesIt(int year,
+            Optional<GiftExclusion> ground) {
+        // Given
+        GiftReceived bought = new GiftReceived(GiftKind.SUM_OF_MONEY, Money.of("1"), Money.of("100000"), ground);
+
+        // When / Then
+        assertThatThrownBy(() -> runGifts(year, bought))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("gift 0: SUM_OF_MONEY, FOR_CONSIDERATION, is reached by []");
+    }
+
+    private static Stream<Arguments> sumsForAConsideration() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, Optional.empty()));
+            cases.add(Arguments.of(year, Optional.of(GiftExclusion.RELATIVE)));
+        }
+        return cases.build();
+    }
+
     /*
      * Gifts (S2 s.92(2)(m), (3); 1961 s.56(2)(x); D-201): ₹50,000, and for immovable property the higher of ₹50,000
      * and 10% of the consideration, from docs/taxplanning-build/sources/2026-10-17-gifts.md. Worked by hand.

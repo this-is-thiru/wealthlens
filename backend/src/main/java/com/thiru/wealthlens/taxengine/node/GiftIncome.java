@@ -77,10 +77,12 @@ final class GiftIncome {
             String where = "gift " + position;
             ItemFacts facts = factsOf(gift);
             if (gift.excludedAs().isPresent()) {
+                // An exclusion is of a receipt a limb charges, so one no limb reaches is refused first (W-158d).
+                RuleId limb = limbOf(ctx, where, gift, facts);
                 requireGroundOfTheYear(ctx, where, gift, facts);
                 if (covidDeathRow.filter(row -> RowReach.holdsFor(ctx, ctx.rule(row), facts)).isPresent()) {
                     covidDeathSums = covidDeathSums.plus(gift.value());
-                    covidDeathLimbs.add(limbOf(ctx, where, gift, facts));
+                    covidDeathLimbs.add(limb);
                 } else {
                     lines.add(ctx.ruleIdOf(RuleSetIds.RS_OS_GIFT_EXCLUSION), StepKind.EXEMPTION, gift.value(),
                             gift.value(), where + ": excluded, " + gift.excludedAs().get());

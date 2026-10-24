@@ -23,14 +23,6 @@ class GiftReceivedTest {
     }
 
     @Test
-    void construct_whenASumCarriesConsideration_isRefused() {
-        assertThatThrownBy(() -> new GiftReceived(GiftKind.SUM_OF_MONEY, Money.of("1"), Money.of("100000"),
-                        Optional.empty()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("without consideration");
-    }
-
-    @Test
     void construct_whenAFigureIsNegativeOrMissing_isRefused() {
         assertThatThrownBy(() -> new GiftReceived(GiftKind.OTHER_PROPERTY, Money.ZERO, Money.of("-1"),
                         Optional.empty()))

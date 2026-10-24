@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-GIFT",
   "ruleSet": "RS-OS-GIFT",
-  "_note": "Sums and property received without, or for inadequate, consideration, under other sources (D-201; rulebook OS-GIFT-001). TY 2026-27: Income-tax Act, 2025 s.92(2)(m): \"(i) any sum of money without consideration, the total of which exceeds ₹ 50000, the whole of such sum; (ii) any immovable property— (A) without consideration, the stamp duty value of which exceeds ₹ 50000, the stamp duty value of such property; (B) for a consideration, the stamp duty value of such property that exceeds such consideration, if this excess amount is more than the higher of … (I) ₹ 50000; or (II) 10% of the consideration; (iii) any property, other than immovable property,— (A) without consideration, the aggregate fair market value of which exceeds ₹ 50000, the whole of the aggregate fair market value of such property; (B) for a consideration which is less than the aggregate fair market value of the property by an amount exceeding ₹ 50000, the aggregate fair market value of such property as exceeds such consideration\" (p.139); s.92(3)'s exclusions (GiftExclusion). TY 2025-26: Income-tax Act, 1961 s.56(2)(x), the same with \"fifty thousand rupees\" and, since FA 2020 s.29(B)(i) (w.e.f. 1-4-2021), \"ten per cent.\" of the consideration; FA 2021's 20% reaches only s.43CA's 12-11-2020 → 30-6-2021 window, so not this year. Its proviso's exclusions add (XI) a prescribed class and the COVID-19 receipts (XII), (XIII) (FA 2022 s.16), the last limited by OS-GIFT-COVID-DEATH. This row is limb (i), sums of money, the year's total; limbs (ii), (iii)(A) and (iii)(B) are OS-GIFT-IMMOVABLE, OS-GIFT-PROPERTY-FREE and OS-GIFT-PROPERTY-BOUGHT, each with its own threshold and measure (W-156f2, D-352). Values are entered: stamp duty value (s.92(4)(a)), fair market value (S4 r.57). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-gifts.md.",
+  "_note": "Sums and property received without, or for inadequate, consideration, under other sources (D-201; rulebook OS-GIFT-001). TY 2026-27: Income-tax Act, 2025 s.92(2)(m): \"(i) any sum of money without consideration, the total of which exceeds ₹ 50000, the whole of such sum; (ii) any immovable property— (A) without consideration, the stamp duty value of which exceeds ₹ 50000, the stamp duty value of such property; (B) for a consideration, the stamp duty value of such property that exceeds such consideration, if this excess amount is more than the higher of … (I) ₹ 50000; or (II) 10% of the consideration; (iii) any property, other than immovable property,— (A) without consideration, the aggregate fair market value of which exceeds ₹ 50000, the whole of the aggregate fair market value of such property; (B) for a consideration which is less than the aggregate fair market value of the property by an amount exceeding ₹ 50000, the aggregate fair market value of such property as exceeds such consideration\" (p.139); s.92(3)'s exclusions (GiftExclusion). TY 2025-26: Income-tax Act, 1961 s.56(2)(x), the same with \"fifty thousand rupees\" and, since FA 2020 s.29(B)(i) (w.e.f. 1-4-2021), \"ten per cent.\" of the consideration; FA 2021's 20% reaches only s.43CA's 12-11-2020 → 30-6-2021 window, so not this year. Its proviso's exclusions add (XI) a prescribed class and the COVID-19 receipts (XII), (XIII) (FA 2022 s.16), the last limited by OS-GIFT-COVID-DEATH. This row is limb (i), sums of money, the year's total; limbs (ii), (iii)(A) and (iii)(B) are OS-GIFT-IMMOVABLE, OS-GIFT-PROPERTY-FREE and OS-GIFT-PROPERTY-BOUGHT, each with its own threshold and measure (W-156f2, D-352). Values are entered: stamp duty value (s.92(4)(a)), fair market value (S4 r.57). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-gifts.md. Limb (i) reaches a sum received without consideration only (gift.received = WITHOUT_CONSIDERATION; W-158d, D-360): s.92(2)(m)(i), \"any sum of money without consideration\"; 1961 s.56(2)(x)(a), \"any sum of money, without consideration\" (A1, B1); a sum received for a consideration reaches no limb and is refused.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -34,6 +34,11 @@
           "type": "ItemFactIs",
           "fact": "gift.kind",
           "code": "SUM_OF_MONEY"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "gift.received",
+          "code": "WITHOUT_CONSIDERATION"
         }
       ],
       "introducedBy": {
@@ -82,6 +87,11 @@
           "type": "ItemFactIs",
           "fact": "gift.kind",
           "code": "SUM_OF_MONEY"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "gift.received",
+          "code": "WITHOUT_CONSIDERATION"
         }
       ],
       "introducedBy": {

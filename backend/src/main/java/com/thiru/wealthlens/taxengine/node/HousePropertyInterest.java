@@ -2,7 +2,6 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.HouseProperty;
 import com.thiru.wealthlens.taxengine.input.HousingLoan;
-import com.thiru.wealthlens.taxengine.input.LoanUse;
 import com.thiru.wealthlens.taxengine.input.PurposeLoanInterest;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
@@ -24,9 +23,12 @@ import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Interest on capital borrowed for a house, for {@link HousePropertyNode} (S2 s.22(1)(b), (c), (2)–(6) with FA 2026
@@ -46,7 +48,10 @@ final class HousePropertyInterest {
     private static final List<RuleSetId> YEARS_INTEREST = List.of(RuleSetIds.RS_HP_INTEREST,
             RuleSetIds.RS_HP_OWN_RESIDENCE_INTEREST);
 
-    /** The pre-construction rows: one reaches the house, by its occupancy (W-157, D-355). */
+    /**
+     * The pre-construction rows: at most one reaches a loan, by the house's occupancy (W-157, D-355) and what the capital
+     * was borrowed for (W-158d, D-360).
+     */
     private static final List<RuleSetId> PRE_CONSTRUCTION = List.of(RuleSetIds.RS_HP_PRE_CONSTRUCTION,
             RuleSetIds.RS_HP_OWN_RESIDENCE_PRE_CONSTRUCTION);
 
@@ -57,10 +62,13 @@ final class HousePropertyInterest {
     /** A Chapter VIII loan's purpose — the {@code LoanPurpose} name — which the house-loan rows read (D-349). */
     private static final ItemFactId PURPOSE = new ItemFactId("loan.purpose");
 
-    /** What the capital was borrowed for — the {@code LoanUse} name — which the higher-limit row reads (D-355). */
+    /**
+     * What the capital was borrowed for — the {@code LoanUse} name — which the higher-limit and pre-construction rows
+     * read (D-355, D-360).
+     */
     private static final ItemFactId USE = new ItemFactId("loan.use");
 
-    /** Whether the lender's certificate is furnished for the loan, which the higher-limit row reads (D-355). */
+    /** Whether the lender's certificate is furnished for the loan, which the higher-limit and pre-construction rows read (D-355, D-360). */
     private static final ItemFactId LENDER_CERTIFICATE = new ItemFactId("loan.lender.certificate");
 
     private static final BaseId INTEREST = new BaseId("INTEREST");
@@ -109,12 +117,14 @@ final class HousePropertyInterest {
     Money deductedFor(int position, HouseProperty property) {
         boolean ownResidence = HousePropertyNode.isOwnResidence(ctx, property);
         RuleId current = rowFor(YEARS_INTEREST, property);
-        RuleId prior = rowFor(PRE_CONSTRUCTION, property);
         Money deducted = Money.ZERO;
-        for (HousingLoan loan : property.loans()) {
+        for (int i = 0; i < property.loans().size(); i++) {
+            HousingLoan loan = property.loans().get(i);
             Money interest = allowed(position, current, loan, yearsInterest(loan), "the year's interest");
-            Money instalment = allowed(position, prior, loan, instalment(property, loan), "the pre-construction"
-                    + " instalment");
+            Money instalment = preConstructionRowFor(position, i + 1, property, loan)
+                    .map(prior -> allowed(position, prior, loan, instalment(property, loan, prior),
+                            "the pre-construction instalment"))
+                    .orElse(Money.ZERO);
             if (ownResidence && qualifiesForHigherLimit(property, loan)) {
                 ownResidenceConditionsMet = ownResidenceConditionsMet.plus(interest).plus(instalment);
             } else if (ownResidence) {
@@ -180,12 +190,10 @@ final class HousePropertyInterest {
      * S2 s.22(1)(c); 1961 s.24(b) Explanation: an equal share of the pre-construction interest in the tax year of
      * acquisition and each of the span after it, nil outside it.
      */
-    private Money instalment(HouseProperty property, HousingLoan loan) {
-        if (loan.use() != LoanUse.ACQUISITION_OR_CONSTRUCTION
-                || loan.preConstructionInterest().equals(Money.ZERO)) {
+    private Money instalment(HouseProperty property, HousingLoan loan, RuleId row) {
+        if (loan.preConstructionInterest().equals(Money.ZERO)) {
             return Money.ZERO;
         }
-        RuleId row = rowFor(PRE_CONSTRUCTION, property);
         TaxYearSpan span = RuleDefinitions.require(version(row).definition(), TaxYearSpan.class, row);
         if (!span.holds(TaxYearId.containing(acquiredOn(property)), ctx.inputs().taxYear())) {
             return Money.ZERO;
@@ -223,6 +231,32 @@ final class HousePropertyInterest {
                     + " (S2 s.22(1)(c))");
         }
         return acquired;
+    }
+
+    /**
+     * The pre-construction row that reaches the loan, by the house's occupancy and the loan's use, if one does. Interest
+     * entered on a loan none reaches would be ignored, so it is refused (W-158d); several reaching is a pack defect.
+     */
+    private Optional<RuleId> preConstructionRowFor(int position, int loanPosition, HouseProperty property,
+            HousingLoan loan) {
+        ItemFacts house = HousePropertyNode.factsOf(property);
+        Map<ItemFactId, String> codes = new HashMap<>(house.codes());
+        codes.put(USE, loan.use().name());
+        ItemFacts facts = new ItemFacts(codes, house.quantities(), house.dates());
+        List<RuleId> reaching = PRE_CONSTRUCTION.stream().map(ctx::ruleIdOf)
+                .filter(row -> RowReach.holdsFor(ctx, ctx.rule(row), facts))
+                .toList();
+        if (reaching.size() > 1) {
+            throw new IllegalStateException(property.occupancy() + ", " + loan.use() + " is reached by " + reaching
+                    + " of the rows of " + PRE_CONSTRUCTION + "; at most one may take it");
+        }
+        if (reaching.isEmpty() && loan.preConstructionInterest().isGreaterThan(Money.ZERO)) {
+            throw new IllegalArgumentException("Property " + position + ", loan " + loanPosition + ": no row of "
+                    + PRE_CONSTRUCTION.stream().map(RuleSetId::toString).collect(Collectors.joining(" or "))
+                    + " takes pre-construction interest on capital borrowed for " + loan.use() + " in TY "
+                    + ctx.inputs().taxYear().label() + "; it would be ignored, so it is refused");
+        }
+        return reaching.stream().findFirst();
     }
 
     /** The row of the pair that reaches the house, by its occupancy; exactly one must. */

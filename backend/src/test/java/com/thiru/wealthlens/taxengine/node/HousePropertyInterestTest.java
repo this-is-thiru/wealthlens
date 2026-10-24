@@ -29,8 +29,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -345,12 +348,31 @@ class HousePropertyInterestTest {
                 .hasMessageContaining("needs the date it was acquired or constructed");
     }
 
-    @Test
-    void construction_whenARepairLoanCarriesPreConstructionInterest_isRefused() {
+    /**
+     * The pre-construction rows reach capital borrowed to acquire or construct only (1961 s.24(b) Explanation; s.22(1)(c)
+     * read so, pending OQ-34; W-158d): interest entered on a repair loan would be ignored, so it is refused, for a let
+     * house and an own residence alike.
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("repairLoansWithPreConstructionInterest")
+    void evaluate_whenARepairLoanCarriesPreConstructionInterest_isRefused(int year, String house,
+            HouseProperty property) {
         // When / Then
-        assertThatThrownBy(() -> new HousingLoan(LoanUse.REPAIR_OR_RECONSTRUCTION, BORROWED, Money.of("1000"),
-                        Money.of("1000"), Money.ZERO, true, false))
+        assertThatThrownBy(() -> run(year, OLD, List.of(property)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("acquire or construct");
+                .hasMessageContaining("loan 1: no row of RS-HP-PRE-CONSTRUCTION or RS-HP-OWN-RESIDENCE-PRE-CONSTRUCTION"
+                        + " takes pre-construction interest on capital borrowed for REPAIR_OR_RECONSTRUCTION")
+                .hasMessageContaining("it would be ignored, so it is refused");
+    }
+
+    private static Stream<Arguments> repairLoansWithPreConstructionInterest() {
+        HousingLoan repairs = new HousingLoan(LoanUse.REPAIR_OR_RECONSTRUCTION, BORROWED, Money.of("1000"),
+                Money.of("1000"), Money.ZERO, true, false);
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, "let", let(ACQUIRED, repairs)));
+            cases.add(Arguments.of(year, "own residence", home(ACQUIRED, repairs)));
+        }
+        return cases.build();
     }
 }
