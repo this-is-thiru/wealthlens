@@ -13,6 +13,8 @@ import java.util.Optional;
  * population for owned accommodation (the Rules name no cities; the bands are the row's, D-258), the employer's cost for the period — the
  * licence fee, the lease rental or the hotel charges — the rent the employee paid, and the furniture. The first tax
  * year it was provided decides whether the Cost Inflation Index cap applies (r.15(2)(d); r.3(1) third proviso).
+ * Which provider is measured on which of these is its Table I rows' to say; the computation refuses a fact no row
+ * reads (W-158b).
  *
  * @param employment which entered employment provides it, by position
  * @param provider who provides it and on what footing
@@ -47,46 +49,20 @@ public record EmployerAccommodation(
         if (employment < 0) {
             throw new IllegalArgumentException("An employment position may not be negative, but was " + employment);
         }
-        requireTheFactsTheFootingReads(provider, cityPopulation, employerCost, furniture);
-        requireFirstYearValueFits(provider, firstYearValue);
-        if (rentPaid.isLessThan(Money.ZERO)
-                || employerCost.filter(amount -> amount.isLessThan(Money.ZERO)).isPresent()) {
-            throw new IllegalArgumentException("Accommodation amounts may not be negative");
-        }
+        requireSigns(cityPopulation, employerCost, rentPaid, firstYearValue);
     }
 
-    /** Only owned or leased accommodation is capped by its first year's amount, which may not be negative. */
-    private static void requireFirstYearValueFits(AccommodationProvider provider, Optional<Money> firstYearValue) {
-        if (firstYearValue.isPresent() && provider != AccommodationProvider.EMPLOYER_OWNED
-                && provider != AccommodationProvider.EMPLOYER_LEASED) {
-            throw new IllegalArgumentException("Only owned or leased accommodation is capped by the first year's"
-                    + " amount (S4 r.15(2)(d); Rules 1962 r.3(1) third proviso); enter none for " + provider);
-        }
-        if (firstYearValue.filter(amount -> amount.isLessThan(Money.ZERO)).isPresent()) {
-            throw new IllegalArgumentException("Accommodation amounts may not be negative");
-        }
-    }
-
-    /** A fact the footing reads must be given, and one it does not read is refused rather than ignored. */
-    private static void requireTheFactsTheFootingReads(AccommodationProvider provider, Optional<Integer> cityPopulation,
-            Optional<Money> employerCost, Optional<Furniture> furniture) {
-        boolean owned = provider == AccommodationProvider.EMPLOYER_OWNED;
-        if (owned != cityPopulation.isPresent()) {
-            throw new IllegalArgumentException(owned
-                    ? "Owned accommodation is valued by the city's population as the Table's census counts it; state it"
-                    : provider + " is not valued by population; the population would be ignored, so it is refused");
-        }
+    /** A population counts people, so is positive; an amount may not be negative. */
+    private static void requireSigns(Optional<Integer> cityPopulation, Optional<Money> employerCost, Money rentPaid,
+            Optional<Money> firstYearValue) {
         if (cityPopulation.filter(people -> people <= 0).isPresent()) {
             throw new IllegalArgumentException("A city's population is a positive number of people, but was "
                     + cityPopulation.get());
         }
-        if (owned == employerCost.isPresent()) {
-            throw new IllegalArgumentException(owned
-                    ? "Owned accommodation has no employer's cost to enter; it would be ignored"
-                    : provider + " is valued on the employer's cost for the period; enter it");
-        }
-        if (provider == AccommodationProvider.HOTEL && furniture.isPresent()) {
-            throw new IllegalArgumentException("A hotel is valued on its charges; furniture is not applicable");
+        if (rentPaid.isLessThan(Money.ZERO)
+                || employerCost.filter(amount -> amount.isLessThan(Money.ZERO)).isPresent()
+                || firstYearValue.filter(amount -> amount.isLessThan(Money.ZERO)).isPresent()) {
+            throw new IllegalArgumentException("Accommodation amounts may not be negative");
         }
     }
 }

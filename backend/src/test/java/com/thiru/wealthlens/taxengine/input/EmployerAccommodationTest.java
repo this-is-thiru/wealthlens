@@ -28,48 +28,12 @@ class EmployerAccommodationTest {
     }
 
     @Test
-    void construct_whenOwnedWithoutItsCityPopulation_isRefused() {
-        // Table I Sl. 2(a): the percentage turns on the city's 2011-census population
-        assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, YEAR,
-                        Optional.empty(), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026), Optional.empty()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("population");
-    }
-
-    @Test
-    void construct_whenLeasedWithoutTheEmployersCost_isRefused() {
-        assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_LEASED, YEAR,
-                        Optional.empty(), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026), Optional.empty()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("cost");
-    }
-
-    @Test
-    void construct_whenAPopulationIsGivenForLeasedAccommodation_isRefusedRatherThanIgnored() {
-        assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_LEASED, YEAR,
-                        Optional.of(1_000_000), Optional.of(Money.of("180000")), Money.ZERO,
-                        Optional.empty(), TaxYearId.of(2026), Optional.empty()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("population");
-    }
-
-    @Test
     void construct_whenTheCityPopulationIsNotPositive_isRefused() {
         assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED, YEAR,
                         Optional.of(0), Optional.empty(), Money.ZERO, Optional.empty(), TaxYearId.of(2026),
                         Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("positive");
-    }
-
-    @Test
-    void construct_whenAHotelIsGivenFurniture_isRefused() {
-        // Table I Sl. 3: a hotel is valued on its charges; furniture is "Not applicable"
-        assertThatThrownBy(() -> new EmployerAccommodation(0, AccommodationProvider.HOTEL, YEAR, Optional.empty(),
-                        Optional.of(Money.of("90000")), Money.ZERO,
-                        Optional.of(Furniture.owned(Money.of("200000"), Money.ZERO)), TaxYearId.of(2026), Optional.empty()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("furniture");
     }
 
     @Test

@@ -60,8 +60,8 @@ import java.util.Set;
 public final class PerquisiteNode implements ComputationNode {
 
     private static final BaseId SALARY = new BaseId("SALARY");
-    private static final BaseId EMPLOYER_COST = new BaseId("EMPLOYER_COST");
-    private static final BaseId POPULATION = new BaseId("POPULATION");
+    static final BaseId EMPLOYER_COST = new BaseId("EMPLOYER_COST");
+    static final BaseId POPULATION = new BaseId("POPULATION");
     private static final BaseId FURNITURE_COST = new BaseId("FURNITURE_COST");
     private static final BaseId SCALED_FIRST_YEAR_VALUE = new BaseId("SCALED_FIRST_YEAR_VALUE");
     private static final ProrationBasis BY_DAYS_OCCUPIED = new Days();
@@ -105,8 +105,9 @@ public final class PerquisiteNode implements ComputationNode {
     public NodeResult evaluate(NodeContext ctx) {
         List<EmployerAccommodation> accommodations = ctx.inputs().entered().accommodations();
         List<TraceLine> trace = new ArrayList<>();
-        for (EmployerAccommodation accommodation : accommodations) {
-            trace.add(accommodation(ctx, accommodation, trace.size() + 1));
+        for (int i = 0; i < accommodations.size(); i++) {
+            EmployerAccommodation accommodation = accommodations.get(i);
+            trace.add(accommodation(ctx, accommodation, i + 1, trace.size() + 1));
             accommodation.furniture().ifPresent(furniture ->
                     trace.add(furniture(ctx, accommodation, furniture, trace.size() + 1)));
         }
@@ -124,10 +125,12 @@ public final class PerquisiteNode implements ComputationNode {
     }
 
     /** One accommodation's Table I value, less the rent the employee paid. */
-    private static TraceLine accommodation(NodeContext ctx, EmployerAccommodation accommodation, int sequence) {
+    private static TraceLine accommodation(NodeContext ctx, EmployerAccommodation accommodation, int position,
+            int sequence) {
         TemporalContext t = ctx.inputs().temporal();
         requireWithinYear(accommodation.occupied(), t);
-        ItemFacts facts = ItemFacts.of(ACCOMMODATION_PROVIDER, accommodation.provider().name());
+        ItemFacts facts = factsOf(accommodation);
+        AccommodationFacts.requireWhatTheRowsRead(ctx, accommodation, position, facts);
         RuleId ruleId = ctx.ruleIdOf(RuleSetIds.RS_PERQ_ACCOM, facts);
         RuleRow rule = ctx.rule(ruleId);
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
@@ -158,7 +161,7 @@ public final class PerquisiteNode implements ComputationNode {
      * Accommodation provided to the employee before this tax year. Which providers the cap reaches is its row's
      * conditions (W-154a).
      */
-    private static boolean isContinued(EmployerAccommodation accommodation, TaxYearId year) {
+    static boolean isContinued(EmployerAccommodation accommodation, TaxYearId year) {
         return accommodation.firstProvidedIn().startYear() < year.startYear();
     }
 
@@ -189,18 +192,28 @@ public final class PerquisiteNode implements ComputationNode {
         return RuleDefinitions.require(ctx.rule(ruleId).versionAt(t).definition(), IndexByYear.class, ruleId);
     }
 
-    /** Furnished: ten per cent a year of the cost for the period, or the hire charges; less the employee's charges. */
+    /** The accommodation's facts as the rows' conditions read them: who provides it (D-253). */
+    private static ItemFacts factsOf(EmployerAccommodation accommodation) {
+        return ItemFacts.of(ACCOMMODATION_PROVIDER, accommodation.provider().name());
+    }
+
+    /**
+     * Furnished: ten per cent a year of the cost for the period, or the hire charges; less the employee's charges. The
+     * row reaches the accommodation, since {@link AccommodationFacts} refused furniture it does not reach (W-158b).
+     */
     private static TraceLine furniture(NodeContext ctx, EmployerAccommodation accommodation, Furniture furniture,
             int sequence) {
         TemporalContext t = ctx.inputs().temporal();
-        RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_ACCOM_FURNITURE);
+        RuleRow rule = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_ACCOM_FURNITURE, factsOf(accommodation))
+                .orElseThrow(() -> new IllegalStateException("Furniture no row reaches was not refused before it"
+                        + " was valued"));
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         Money charged = furniture.cost()
                 .map(cost -> BY_DAYS_OCCUPIED.apportion(TemporallyApportionedCap.apply(rule, t,
                         new CapContext(Map.of(FURNITURE_COST, cost))).value(), t.taxYear(), accommodation.occupied()))
                 .orElseGet(() -> furniture.hireCharges().orElseThrow());
         Money value = charged.minus(furniture.employeeCharges()).floorAtZero();
-        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, ctx.ruleIdOf(RuleSetIds.RS_PERQ_ACCOM_FURNITURE), StepKind.INCOME,
+        return TraceLine.of(sequence, NodeIds.SALARY_PERQUISITES, rule.id(), StepKind.INCOME,
                         MoneyValue.of(charged), MoneyValue.of(value), version.provenance())
                 .withLimitedBy((furniture.cost().isPresent() ? "ten per cent a year of the cost" : "hire charges")
                         + ", less the employee's charges " + furniture.employeeCharges());

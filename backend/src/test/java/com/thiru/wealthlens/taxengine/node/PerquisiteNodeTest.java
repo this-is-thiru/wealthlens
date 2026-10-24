@@ -331,6 +331,153 @@ class PerquisiteNodeTest {
                 .hasMessageContaining("OQ-11");
     }
 
+    private static EmployerAccommodation entered(int year, AccommodationProvider provider, Optional<Integer> population,
+            Optional<String> cost, Optional<Furniture> furniture, int firstProvidedIn, Optional<String> firstYearValue) {
+        return new EmployerAccommodation(0, provider, wholeYear(year), population, cost.map(Money::of), Money.ZERO,
+                furniture, TaxYearId.of(firstProvidedIn), firstYearValue.map(Money::of));
+    }
+
+    /** What the provider's row reads must be entered: the owned row counts the population, the leased reads the cost. */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("missingFacts")
+    void evaluate_whenAFactTheProvidersRowReadsIsMissing_isRefusedAskingForIt(int year, AccommodationProvider provider,
+            Optional<Integer> population, Optional<String> cost, String expected) {
+        // Given
+        EmployerAccommodation home = entered(year, provider, population, cost, Optional.empty(), year,
+                Optional.empty());
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expected);
+    }
+
+    private static Stream<Arguments> missingFacts() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, AccommodationProvider.EMPLOYER_OWNED, Optional.empty(), Optional.empty(),
+                    "Accommodation 1 (EMPLOYER_OWNED) is measured on the city's population (PERQ-ACCOM-OWNED);"
+                            + " enter it"));
+            cases.add(Arguments.of(year, AccommodationProvider.EMPLOYER_LEASED, Optional.empty(), Optional.empty(),
+                    "Accommodation 1 (EMPLOYER_LEASED) is measured on the employer's cost (PERQ-ACCOM-LEASED);"
+                            + " enter it"));
+        }
+        return cases.build();
+    }
+
+    /** A fact the provider's row does not read would be ignored: only the owned row counts a population. */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("unreadFacts")
+    void evaluate_whenAFactTheProvidersRowDoesNotReadIsGiven_isRefused(int year, AccommodationProvider provider,
+            Optional<Integer> population, Optional<String> cost, String expected) {
+        // Given
+        EmployerAccommodation home = entered(year, provider, population, cost, Optional.empty(), year,
+                Optional.empty());
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expected);
+    }
+
+    private static Stream<Arguments> unreadFacts() {
+        Optional<Integer> city = Optional.of(5_000_000);
+        Optional<String> cost = Optional.of("100000");
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, AccommodationProvider.EMPLOYER_LEASED, city, cost,
+                    "(EMPLOYER_LEASED) is not measured on the city's population (PERQ-ACCOM-LEASED)"));
+            cases.add(Arguments.of(year, AccommodationProvider.GOVERNMENT, city, cost,
+                    "(GOVERNMENT) is not measured on the city's population (PERQ-ACCOM-GOVERNMENT)"));
+            cases.add(Arguments.of(year, AccommodationProvider.HOTEL, city, cost,
+                    "(HOTEL) is not measured on the city's population (PERQ-ACCOM-HOTEL)"));
+            cases.add(Arguments.of(year, AccommodationProvider.EMPLOYER_OWNED, city, cost,
+                    "(EMPLOYER_OWNED) is not measured on the employer's cost (PERQ-ACCOM-OWNED)"));
+        }
+        return cases.build();
+    }
+
+    /**
+     * A first year's amount is read only by the continued cap, which reaches owned and leased accommodation provided
+     * before this year: on government or hotel accommodation, or on owned accommodation first provided this year, it
+     * would be ignored.
+     */
+    @ParameterizedTest(name = "TY {0} {1} first provided {4}")
+    @MethodSource("uncappedFirstYearValues")
+    void evaluate_whenAFirstYearsAmountIsGivenWhereNoCapReadsIt_isRefused(int year, AccommodationProvider provider,
+            Optional<Integer> population, Optional<String> cost, int firstProvidedIn) {
+        // Given
+        EmployerAccommodation home = entered(year, provider, population, cost, Optional.empty(), firstProvidedIn,
+                Optional.of("90000"));
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no row of RS-PERQ-ACCOM-CONTINUED caps it")
+                .hasMessageContaining("the first year's amount would be ignored, so it is refused");
+    }
+
+    private static Stream<Arguments> uncappedFirstYearValues() {
+        Optional<String> cost = Optional.of("100000");
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, AccommodationProvider.GOVERNMENT, Optional.empty(), cost, 2023));
+            cases.add(Arguments.of(year, AccommodationProvider.HOTEL, Optional.empty(), cost, 2023));
+            cases.add(Arguments.of(year, AccommodationProvider.EMPLOYER_OWNED, Optional.of(5_000_000),
+                    Optional.empty(), year));
+        }
+        return cases.build();
+    }
+
+    /**
+     * Table I adds furniture to Sl. 1 and 2 only; the hotel's Sl. 3 has no furnished value of its own to add it to
+     * (G.S.R. 615(E) col. 4; Rules 2026 r.15(2)(e)(i), "Table I: Sl. Nos. 1 and 2"; W-158b).
+     */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAHotelIsFurnished_isRefusedAsNoRowValuesItsFurniture(int year) {
+        // Given
+        EmployerAccommodation hotel = entered(year, AccommodationProvider.HOTEL, Optional.empty(),
+                Optional.of("90000"), Optional.of(Furniture.owned(Money.of("200000"), Money.ZERO)), year,
+                Optional.empty());
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(hotel)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Accommodation 1 (HOTEL): no row of RS-PERQ-ACCOM-FURNITURE values its"
+                        + " furniture");
+    }
+
+    /**
+     * Furnished Government and leased accommodation take the furniture too (Sl. 1, 2(b)). Government: the licence fee
+     * 30,000 + 10% of 2,00,000 = 50,000. Leased: the lower of 1,00,000 and 10% of 12,00,000 = 1,00,000, + 20,000 =
+     * 1,20,000.
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("furnishedProviders")
+    void evaluate_whenGovernmentOrLeasedAccommodationIsFurnished_addsTheFurniture(int year,
+            AccommodationProvider provider, String cost, String expected) {
+        // Given
+        EmployerAccommodation home = entered(year, provider, Optional.empty(), Optional.of(cost),
+                Optional.of(Furniture.owned(Money.of("200000"), Money.ZERO)), year, Optional.empty());
+
+        // When
+        NodeResult result = run(year, FIRST_SCHEDULE_RATES, "1200000", "0", List.of(home));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of(expected)));
+        assertThat(result.trace()).extracting(TraceLine::rule).last().isEqualTo(RuleIds.PERQ_ACCOM_FURNITURE);
+    }
+
+    private static Stream<Arguments> furnishedProviders() {
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, AccommodationProvider.GOVERNMENT, "30000", "50000"));
+            cases.add(Arguments.of(year, AccommodationProvider.EMPLOYER_LEASED, "100000", "120000"));
+        }
+        return cases.build();
+    }
+
     @Test
     void evaluate_whenNoAccommodationIsProvided_isNilAndSaysNothing() {
         // When

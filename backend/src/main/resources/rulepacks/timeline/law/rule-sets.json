@@ -429,9 +429,9 @@
     },
     {
       "id": "RS-PERQ-ACCOM-FURNITURE",
-      "_note": "One row: PERQ-ACCOM-FURNITURE",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
+      "_note": "One row: PERQ-ACCOM-FURNITURE, reaching the providers of Table I Sl. 1 and 2 (accommodation.provider, W-158b); furniture in accommodation it does not reach, a hotel, is refused",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
     },
     {
       "id": "RS-PERQ-ASSET-TRANSFER",
