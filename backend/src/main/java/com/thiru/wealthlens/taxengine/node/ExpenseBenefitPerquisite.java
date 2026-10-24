@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * <p>Each is its amount less the recovery, on the row of {@code RS-PERQ-EXPENSE} its kind selects; a bill a row of
  * {@code RS-PERQ-EXPENSE-EXCLUDED} reaches — by its kind and whether it was wholly for work, with the employer's
  * details and certificate, and for a club the uniform facilities — is nil there instead; one neither set reaches is
- * refused (W-154d). Which club exclusions a year has is which rows it holds (OQ-12).
+ * refused (W-154d), as is a fact no row of its kind reads (W-158a). Which club exclusions a year has is which rows it holds (OQ-12).
  */
 final class ExpenseBenefitPerquisite {
 
@@ -41,6 +41,15 @@ final class ExpenseBenefitPerquisite {
             "expense.journeys.and.certificate.kept");
     private static final ItemFactId HEALTH_CLUB_UNIFORM_FOR_ALL = new ItemFactId(
             "expense.health.club.uniform.for.all");
+    /** A higher official use claimed on the employer's records — a vehicle's claim, read by no expense row today. */
+    private static final ItemFactId HIGHER_OFFICIAL_USE = new ItemFactId("expense.higher.official.use");
+
+    /**
+     * The facts a benefit may carry or not; one no row of its kind reads is refused (W-158a, D-357). A higher official
+     * use needs the records kept, and the records come with work, so each is checked before the fact it needs.
+     */
+    private static final List<ItemFactId> OPTIONAL = List.of(HIGHER_OFFICIAL_USE, JOURNEYS_AND_CERTIFICATE_KEPT,
+            WHOLLY_FOR_WORK, HEALTH_CLUB_UNIFORM_FOR_ALL);
 
     private ExpenseBenefitPerquisite() {
     }
@@ -55,6 +64,7 @@ final class ExpenseBenefitPerquisite {
             int sequence = firstSequence + lines.size();
             int position = i + 1;
             ItemFacts facts = factsOf(benefit);
+            ReadFacts.requireRead(ctx, RULES, facts, OPTIONAL, "Expense benefit " + position);
             lines.add(ctx.optionalRuleOf(RuleSetIds.RS_PERQ_EXPENSE_EXCLUDED, facts)
                     .map(row -> nil(ctx, row, benefit, sequence))
                     .or(() -> ctx.optionalRuleOf(RuleSetIds.RS_PERQ_EXPENSE, facts)
@@ -69,7 +79,9 @@ final class ExpenseBenefitPerquisite {
         return new ItemFacts(Map.of(KIND, benefit.kind().name(),
                 WHOLLY_FOR_WORK, Boolean.toString(benefit.whollyForWork()),
                 JOURNEYS_AND_CERTIFICATE_KEPT, Boolean.toString(benefit.officialUse().journeysAndCertificateKept()),
-                HEALTH_CLUB_UNIFORM_FOR_ALL, Boolean.toString(benefit.healthClubUniformForAll())), Map.of(), Map.of());
+                HEALTH_CLUB_UNIFORM_FOR_ALL, Boolean.toString(benefit.healthClubUniformForAll()),
+                HIGHER_OFFICIAL_USE, Boolean.toString(benefit.officialUse().higherOfficialUse().isPresent())),
+                Map.of(), Map.of());
     }
 
     /** A benefit no row of the year values or excludes. */

@@ -35,22 +35,5 @@ public record EmployerExpenseBenefit(
         if (employment < 0 || amount.isLessThan(Money.ZERO) || recovered.isLessThan(Money.ZERO)) {
             throw new IllegalArgumentException("An employment position and expense amounts may not be negative");
         }
-        requireWhatTheKindReads(kind, officialUse, whollyForWork, healthClubUniformForAll);
-    }
-
-    /** A fact the kind's row reads may be given, and one it does not read is refused rather than ignored. */
-    private static void requireWhatTheKindReads(ExpenseBenefitKind kind, OfficialUseRecord officialUse,
-            boolean whollyForWork, boolean healthClubUniformForAll) {
-        boolean cardOrClub = kind == ExpenseBenefitKind.CREDIT_CARD || kind == ExpenseBenefitKind.CLUB;
-        if (!cardOrClub && (whollyForWork || officialUse.journeysAndCertificateKept())) {
-            throw new IllegalArgumentException("Only a credit card or club bill is excluded for work with records; "
-                    + kind + " reads neither fact");
-        }
-        if (healthClubUniformForAll && kind != ExpenseBenefitKind.CLUB) {
-            throw new IllegalArgumentException("Uniform health-club facilities are asked only of a club bill");
-        }
-        if (officialUse.higherOfficialUse().isPresent()) {
-            throw new IllegalArgumentException("A higher official use is a vehicle's claim, not an expense's");
-        }
     }
 }

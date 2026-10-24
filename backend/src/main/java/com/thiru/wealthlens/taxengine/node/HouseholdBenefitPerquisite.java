@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * (S4 r.15(4) Table III; Rules 1962 r.3(3)–(6); D-120).
  *
  * <p>Each is its amount less the recovery, on the row of {@code RS-PERQ-HOUSEHOLD} its facts select; one no row
- * values is refused (W-154b). Whether a benefit needs a specified employee is {@code PERQ-SPECIFIED-EMPLOYEE}'s
+ * values is refused (W-154b), as is the carrier fact on a benefit no row reads it for (W-158a). Whether a benefit needs a specified employee is {@code PERQ-SPECIFIED-EMPLOYEE}'s
  * condition on its arrangement (OQ-10). A child's education in the employer's institution, or free by reason of the
  * employment, is provided by the employer; it is nil while its cost per month is within the limit, and salary in full
  * above it (D-120 C3).
@@ -40,6 +40,7 @@ final class HouseholdBenefitPerquisite {
     private static final ItemFactId KIND = new ItemFactId("household.kind");
     private static final ItemFactId CARRIER_IS_AIRLINE_OR_RAILWAYS = new ItemFactId(
             "household.carrier.airline.or.railways");
+    private static final Set<RuleSetId> VALUING = Set.of(RuleSetIds.RS_PERQ_HOUSEHOLD);
 
     /** A child's education as the specified-employee row reads it: provided by the employer, by the input's definition. */
     private static final ItemFacts CHILD_EDUCATION = ItemFacts.of(SpecifiedEmployee.ARRANGEMENT, "EMPLOYER_PROVIDED");
@@ -56,6 +57,8 @@ final class HouseholdBenefitPerquisite {
             PerquisiteNode.requireEnteredEmployment(ctx, benefit.employment(), "household benefit");
             ItemFacts facts = factsOf(benefit);
             int position = i + 1;
+            ReadFacts.requireRead(ctx, VALUING, facts, List.of(CARRIER_IS_AIRLINE_OR_RAILWAYS),
+                    "Household benefit " + position);
             RuleRow row = ctx.optionalRuleOf(RuleSetIds.RS_PERQ_HOUSEHOLD, facts)
                     .orElseThrow(() -> unvalued(ctx, position, facts));
             int sequence = firstSequence + lines.size();

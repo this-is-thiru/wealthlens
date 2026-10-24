@@ -358,13 +358,47 @@ class ExpenseAndAssetPerquisiteTest {
         assertThat(twelve.value()).isEqualTo(MoneyValue.of(Money.ZERO));
     }
 
-    @Test
-    void construct_whenAHolidayClaimsOfficialRecords_isRefused() {
-        // When / Then — only a card or club reads them
-        assertThatThrownBy(() -> new EmployerExpenseBenefit(0, ExpenseBenefitKind.HOLIDAY, Money.of("1000"),
-                        Money.ZERO, RECORDS, true, false))
+    /** Only the card and club rows read the work facts, so a holiday's are refused, naming the records first. */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAHolidayClaimsOfficialRecords_isRefusedAsNoRowReadsThem(int year) {
+        // Given
+        EmployerExpenseBenefit holiday = new EmployerExpenseBenefit(0, ExpenseBenefitKind.HOLIDAY, Money.of("1000"),
+                Money.ZERO, RECORDS, true, false);
+
+        // When / Then
+        assertThatThrownBy(() -> expenses(year, holiday))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("credit card or club");
+                .hasMessageContaining("Expense benefit 1: no row of RS-PERQ-EXPENSE or RS-PERQ-EXPENSE-EXCLUDED reads"
+                        + " expense.journeys.and.certificate.kept for this item");
+    }
+
+    /** Only the club rows read the uniform facilities (PERQ-CLUB-UNIFORM, PERQ-CLUB-BUSINESS-UNIFORM). */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenACreditCardClaimsUniformClubFacilities_isRefusedAsNoRowReadsThem(int year) {
+        // Given
+        EmployerExpenseBenefit card = new EmployerExpenseBenefit(0, ExpenseBenefitKind.CREDIT_CARD,
+                Money.of("1000"), Money.ZERO, OfficialUseRecord.none(), false, true);
+
+        // When / Then
+        assertThatThrownBy(() -> expenses(year, card))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("reads expense.health.club.uniform.for.all for this item");
+    }
+
+    /** A higher official use is a vehicle's claim; no expense row reads it (D-356 S1). */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenATelephoneClaimsAHigherOfficialUse_isRefusedAsNoRowReadsIt(int year) {
+        // Given
+        EmployerExpenseBenefit telephone = new EmployerExpenseBenefit(0, ExpenseBenefitKind.TELEPHONE,
+                Money.of("1000"), Money.ZERO, new OfficialUseRecord(true, Optional.of(Money.of("500"))), false, false);
+
+        // When / Then
+        assertThatThrownBy(() -> expenses(year, telephone))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("reads expense.higher.official.use for this item");
     }
 
     @Test

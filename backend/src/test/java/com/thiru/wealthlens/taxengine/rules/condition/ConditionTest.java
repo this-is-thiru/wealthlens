@@ -688,6 +688,40 @@ class ConditionTest {
     }
 
     @Nested
+    @DisplayName("itemFactsRead")
+    class ItemFactsRead {
+
+        @Test
+        void itemFactsRead_whenAnItemPredicate_isItsFact() {
+            // Then
+            assertThat(new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC").itemFactsRead()).containsExactly(VEHICLE_ENGINE);
+            assertThat(new ItemFactAtMost(ENGINE_CC, 1600).itemFactsRead()).containsExactly(ENGINE_CC);
+            assertThat(new ItemDateBefore(ACQUIRED_ON, LocalDate.of(2004, 10, 1)).itemFactsRead())
+                    .containsExactly(ACQUIRED_ON);
+        }
+
+        @Test
+        void itemFactsRead_whenOnlyAboutThePerson_isEmpty() {
+            // Then
+            assertThat(new IsResident().itemFactsRead()).isEmpty();
+            assertThat(new AgeAtLeast(60, AgeSubject.SELF).itemFactsRead()).isEmpty();
+        }
+
+        @Test
+        void itemFactsRead_whenAComposition_isEveryLimbsFacts() {
+            // Then — a person limb adds nothing; the item limbs through any depth
+            assertThat(AllOf.of(new IsResident(), new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC"),
+                    new ItemFactAtMost(ENGINE_CC, 1600)).itemFactsRead())
+                    .containsExactlyInAnyOrder(VEHICLE_ENGINE, ENGINE_CC);
+            assertThat(AnyOf.of(new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC"),
+                    new ItemDateBefore(ACQUIRED_ON, LocalDate.of(2004, 10, 1))).itemFactsRead())
+                    .containsExactlyInAnyOrder(VEHICLE_ENGINE, ACQUIRED_ON);
+            assertThat(new Not(AllOf.of(new ItemFactAtMost(ENGINE_CC, 1600))).itemFactsRead())
+                    .containsExactly(ENGINE_CC);
+        }
+    }
+
+    @Nested
     @DisplayName("the algebra is closed")
     class SealedFamily {
 

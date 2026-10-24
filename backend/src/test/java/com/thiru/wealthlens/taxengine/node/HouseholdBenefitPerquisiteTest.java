@@ -194,6 +194,22 @@ class HouseholdBenefitPerquisiteTest {
                 .hasMessageContaining("household.carrier.airline.or.railways=true");
     }
 
+    /** Only PERQ-CARRIER-TRAVEL reads who the carrier is, so a utility carrying the fact is refused. */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenAUtilityClaimsTheCarrierFact_isRefusedAsNoRowReadsIt(int year) {
+        // Given
+        EmployerHouseholdBenefit utility = new EmployerHouseholdBenefit(0,
+                HouseholdBenefitKind.UTILITY_FROM_OUTSIDE_AGENCY, BenefitArrangement.EMPLOYER_PROVIDED,
+                Money.of("8000"), Money.ZERO, true);
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, SPECIFIED, List.of(utility), List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Household benefit 1: no row of RS-PERQ-HOUSEHOLD reads"
+                        + " household.carrier.airline.or.railways for this item");
+    }
+
     /**
      * Every kind with every arrangement the input allows, at 10,000 with nothing recovered, both years. The row is
      * Table III's serial for the kind (Sl. 1 services, Sl. 2 both utilities, Sl. 3(a) education fees, Sl. 4 a

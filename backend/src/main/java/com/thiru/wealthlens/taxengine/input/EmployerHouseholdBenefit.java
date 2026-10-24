@@ -29,21 +29,17 @@ public record EmployerHouseholdBenefit(
         if (employment < 0 || amount.isLessThan(Money.ZERO) || recovered.isLessThan(Money.ZERO)) {
             throw new IllegalArgumentException("An employment position and benefit amounts may not be negative");
         }
-        requireWhatTheKindReads(kind, arrangement, carrierIsAirlineOrRailways);
+        requireTheEmployersOwnSupplyIsNotAnObligation(kind, arrangement);
     }
 
-    /** The employer's own supplies cannot meet the employee's obligation; the carrier fact is a carrier's alone. */
-    private static void requireWhatTheKindReads(HouseholdBenefitKind kind, BenefitArrangement arrangement,
-            boolean carrierIsAirlineOrRailways) {
+    /** The employer's own supplies cannot meet the employee's obligation. */
+    private static void requireTheEmployersOwnSupplyIsNotAnObligation(HouseholdBenefitKind kind,
+            BenefitArrangement arrangement) {
         boolean employerOnly = kind == HouseholdBenefitKind.UTILITY_FROM_EMPLOYER_RESOURCES
                 || kind == HouseholdBenefitKind.CARRIER_TRAVEL;
         if (employerOnly && arrangement == BenefitArrangement.EMPLOYEE_OBLIGATION_MET) {
             throw new IllegalArgumentException(kind + " is the employer's own supply; it cannot meet an obligation of"
                     + " the employee's");
-        }
-        if (carrierIsAirlineOrRailways && kind != HouseholdBenefitKind.CARRIER_TRAVEL) {
-            throw new IllegalArgumentException("Whether the carrier is an airline or the railways is asked only of a"
-                    + " carrier's journey");
         }
     }
 }

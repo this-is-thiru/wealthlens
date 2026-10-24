@@ -1,5 +1,9 @@
 package com.thiru.wealthlens.taxengine.rules.condition;
 
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * A yes/no test a rule attaches to itself — residency, age, whether a component is present.
  *
@@ -69,6 +73,26 @@ public sealed interface Condition
             case Not not -> not.condition().isAboutItem();
             case IsResident _, AgeAtLeast _, HasPersonType _, IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
                     HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, PaidOtherThanInCash _ -> false;
+        };
+    }
+
+    /**
+     * The item facts this condition mentions — so a node can refuse an entered fact no row reads, since it would be
+     * ignored (W-158a, D-357); the condition twin of {@code CapShape.amountsRead}. A composition reads what its limbs
+     * read.
+     */
+    default Set<ItemFactId> itemFactsRead() {
+        return switch (this) {
+            case ItemFactIs is -> Set.of(is.fact());
+            case ItemFactAtMost atMost -> Set.of(atMost.fact());
+            case ItemDateBefore before -> Set.of(before.fact());
+            case AllOf all -> all.all().stream().flatMap(limb -> limb.itemFactsRead().stream())
+                    .collect(Collectors.toUnmodifiableSet());
+            case AnyOf any -> any.any().stream().flatMap(limb -> limb.itemFactsRead().stream())
+                    .collect(Collectors.toUnmodifiableSet());
+            case Not not -> not.condition().itemFactsRead();
+            case IsResident _, AgeAtLeast _, HasPersonType _, IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
+                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, PaidOtherThanInCash _ -> Set.of();
         };
     }
 }
