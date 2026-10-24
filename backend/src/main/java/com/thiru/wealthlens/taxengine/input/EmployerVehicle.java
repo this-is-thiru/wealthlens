@@ -52,41 +52,27 @@ public record EmployerVehicle(
             throw new IllegalArgumentException(
                     "A vehicle is valued per calendar month; " + months + " is not a number of months in a tax year");
         }
-        requireWhatTheRowReads(owner, use, engine, chauffeur, employeeMeetsPrivateRunning);
-        requireAmounts(owner, runningExpenditure, cost, chargedToEmployee);
+        requireAnEngineOnlyOnACar(owner, engine);
+        requireAmounts(runningExpenditure, cost, chargedToEmployee);
     }
 
-    /** A fact Table II's row reads must be given, and one it does not read is refused rather than ignored. */
-    private static void requireWhatTheRowReads(VehicleOwner owner, VehicleUse use, Optional<CarEngine> engine,
-            boolean chauffeur, boolean employeeMeetsPrivateRunning) {
+    /**
+     * A {@link CarEngine} describes a car: a car states one, an other conveyance has none. Which paths read the engine
+     * is Table II's, and depends on the other cars entered, so the description is asked of every car (W-158c C2a).
+     */
+    private static void requireAnEngineOnlyOnACar(VehicleOwner owner, Optional<CarEngine> engine) {
         boolean conveyance = owner == VehicleOwner.EMPLOYEE_OTHER_CONVEYANCE;
         if (conveyance == engine.isPresent()) {
             throw new IllegalArgumentException(conveyance
                     ? "An other automotive conveyance has one Table II column; enter no engine"
                     : "A motor car is valued by its engine; state it");
         }
-        if (owner != VehicleOwner.EMPLOYER_CAR && use == VehicleUse.WHOLLY_PRIVATE) {
-            throw new IllegalArgumentException("Table II values an employee's own vehicle used wholly or partly"
-                    + " officially; wholly private use of one run at the employer's cost is not in the Table");
-        }
-        if (employeeMeetsPrivateRunning && (owner != VehicleOwner.EMPLOYER_CAR || use != VehicleUse.PARTLY_OFFICIAL)) {
-            throw new IllegalArgumentException("Who meets the private running is asked only of an employer's car used"
-                    + " partly officially (Table II Sl. 1(c))");
-        }
-        if (chauffeur && conveyance) {
-            throw new IllegalArgumentException("Table II gives a chauffeur's amount only for a motor car");
-        }
     }
 
-    private static void requireAmounts(VehicleOwner owner, Money runningExpenditure, Optional<Money> cost,
-            Money chargedToEmployee) {
+    private static void requireAmounts(Money runningExpenditure, Optional<Money> cost, Money chargedToEmployee) {
         if (runningExpenditure.isLessThan(Money.ZERO) || chargedToEmployee.isLessThan(Money.ZERO)
                 || cost.filter(amount -> amount.isLessThan(Money.ZERO)).isPresent()) {
             throw new IllegalArgumentException("Vehicle amounts may not be negative");
-        }
-        if (cost.isPresent() && owner != VehicleOwner.EMPLOYER_CAR) {
-            throw new IllegalArgumentException("Wear and tear is on the employer's car; an employee's vehicle has no"
-                    + " cost to enter");
         }
     }
 }

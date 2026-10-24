@@ -45,24 +45,6 @@ class EmployerVehicleTest {
     }
 
     @Test
-    void construct_whenTheEmployeesOwnCarIsWhollyPrivate_isRefused() {
-        // When / Then
-        assertThatThrownBy(() -> vehicle(VehicleOwner.EMPLOYEE_CAR, VehicleUse.WHOLLY_PRIVATE,
-                        Optional.of(CarEngine.ofCapacity(1500)), false, false, 12, Optional.empty()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("wholly private");
-    }
-
-    @Test
-    void construct_whenACostIsEnteredForTheEmployeesVehicle_isRefused() {
-        // When / Then
-        assertThatThrownBy(() -> vehicle(VehicleOwner.EMPLOYEE_CAR, VehicleUse.PARTLY_OFFICIAL,
-                        Optional.of(CarEngine.ofCapacity(1500)), false, false, 12, Optional.of(Money.of("500000"))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("cost");
-    }
-
-    @Test
     void construct_whenAHigherOfficialUseIsClaimedWithoutRecords_isRefused() {
         // When / Then
         assertThatThrownBy(() -> new OfficialUseRecord(false, Optional.of(Money.of("10000"))))

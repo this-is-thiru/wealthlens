@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * s.17(2)(iv)) — {@code PERQ-SPECIFIED-EMPLOYEE}'s condition on the vehicle's arrangement (W-154e1). Which Table II
  * computation values a vehicle is the {@link VehiclePath} of the row of {@code RS-PERQ-CAR-PATH} its facts select
  * (W-154e2): a wholly official vehicle is nil only with the employer's records, and with none no row selects it, so it
- * is refused (D-113 C7). Where the
+ * is refused (D-113 C7); a fact the path does not read is refused too ({@link VehicleFacts}, W-158c). Where the
  * employer lets one employee use several of its cars otherwise than wholly officially, the path rows' conditions on the
  * cars' count and position value the first entered at Sl. 1(c)(i) and the rest at Sl. 1(b) (r.15(3)(b); r.3(2)
  * proviso; W-154e3).
@@ -54,7 +54,7 @@ final class MotorCarPerquisite {
     /** What a {@code RS-PERQ-CAR-PATH} row is chosen by (D-330, W-154e2). */
     private static final ItemFactId OWNER = new ItemFactId("vehicle.owner");
     private static final ItemFactId USE = new ItemFactId("vehicle.use");
-    private static final ItemFactId EMPLOYEE_MEETS_PRIVATE_RUNNING = new ItemFactId(
+    static final ItemFactId EMPLOYEE_MEETS_PRIVATE_RUNNING = new ItemFactId(
             "vehicle.employee.meets.private.running");
     private static final ItemFactId JOURNEYS_AND_CERTIFICATE_KEPT = new ItemFactId(
             "vehicle.journeys.and.certificate.kept");
@@ -88,6 +88,7 @@ final class MotorCarPerquisite {
                     .orElseThrow(() -> unvalued(ctx, position, facts));
             VehicleComputation computation = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(path,
                     ctx.inputs().temporal()).definition(), VehiclePath.class, path.id()).computation();
+            VehicleFacts.requireWhatThePathReads(ctx, vehicle, position, path, computation, facts);
             if (computation == VehicleComputation.NOT_A_PERQUISITE) {
                 lines.add(ctx.traceLine(sequence, path.id(), StepKind.INCOME, vehicle.runningExpenditure(), Money.ZERO)
                         .withLimitedBy("not a perquisite: excluded by " + path.id()));
@@ -152,7 +153,6 @@ final class MotorCarPerquisite {
 
     /** Sl. 1(c)(i) or (ii) for the months, plus the chauffeur's amount. */
     private static TraceLine partly(NodeContext ctx, EmployerVehicle car, RuleSetId column, int sequence) {
-        requireNoCharge(car);
         RuleId ruleId = rowFor(ctx, column, car);
         Money value = perMonth(ctx, ruleId, car.months());
         String bound = ruleId + " for " + car.months() + " months";
@@ -181,7 +181,6 @@ final class MotorCarPerquisite {
     /** Sl. 2(b) or 3(b): the expenditure less the Table's official use, or less a higher amount claimed. */
     private static TraceLine ownVehicle(NodeContext ctx, EmployerVehicle vehicle, RuleId ruleId,
             Money tableOfficialUse, int sequence) {
-        requireNoCharge(vehicle);
         CapContext bases = new CapContext(Map.of(EXPENDITURE, vehicle.runningExpenditure(), TABLE_OFFICIAL_USE,
                 tableOfficialUse, CLAIMED_OFFICIAL_USE, vehicle.officialUse().higherOfficialUse().orElse(Money.ZERO)),
                 Map.of(), Map.of(MONTH, vehicle.months()));
@@ -235,14 +234,6 @@ final class MotorCarPerquisite {
     private static Money perMonth(NodeContext ctx, RuleId ruleId, int months) {
         return TemporallyApportionedCap.apply(ctx.rule(ruleId), ctx.inputs().temporal(),
                 new CapContext(Map.of(), Map.of(), Map.of(MONTH, months))).value();
-    }
-
-    private static void requireNoCharge(EmployerVehicle vehicle) {
-        if (vehicle.chargedToEmployee().isGreaterThan(Money.ZERO)) {
-            throw new IllegalArgumentException("Table II takes an amount charged to the employee off only an employer's"
-                    + " car used exclusively privately (Sl. 1(b)); " + vehicle.chargedToEmployee()
-                    + " was entered for a row that does not read it");
-        }
     }
 
     private static void requireEnteredEmployment(NodeContext ctx, EmployerVehicle vehicle) {

@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-158c — which facts an employer vehicle may carry, from Table II's rows (D-356; S3)
+Item            : W-158d — a gift for consideration and pre-construction interest on another use, from rows (D-356; S5, S7)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-158c.md (to write)
+Plan            : plans/W-158d.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : READ W-158c (EmployerVehicle:62–90; MotorCarPerquisite; Table II rows' conditions and caps), write the plan, STOP
-Last verify     : targeted 240/0; unit -Punit 3692/0; integration 281/0; dump identical + 4 new records; probes 3/3 bite (2026-10-24, W-158b)
-Waiting on      : nothing for W-158c; still open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33
+Next step       : READ W-158d (GiftReceived:33, OS-GIFT rows; HousingLoan:47, the pre-construction rows, HousePropertyInterest:160), write the plan, STOP
+Last verify     : targeted 202/0; unit -Punit 3708/0; integration 281/0; dump identical; probes 3/3 bite (2026-10-24, W-158c)
+Waiting on      : nothing for W-158d; still open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33
 Files touched   : (none)
-Last item commit: taxplanning W-158b: take which facts employer accommodation may carry from its rows — AccommodationFacts asks the provider, continued and furniture rows, PERQ-ACCOM-FURNITURE reaches Table I Sl. 1 and 2 only, a first year's amount no cap reads refused (D-358)
-Updated         : 2026-10-24, session 34 — W-158b done (D-358)
+Last item commit: taxplanning W-158c: take which facts an employer vehicle may carry from Table II — VehicleFacts refuses who meets the private running where it routes no path, and a chauffeur, cost, charge or higher official use the path's computation does not read; the engine kept as fact consistency (D-359)
+Updated         : 2026-10-24, session 34 — W-158c done (D-359)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

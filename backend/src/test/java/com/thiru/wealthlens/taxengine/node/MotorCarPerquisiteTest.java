@@ -494,6 +494,117 @@ class MotorCarPerquisiteTest {
                 Arguments.of(2026, "conveyance", conveyance, RuleIds.PERQ_CAR_CONVEYANCE, "14000"));
     }
 
+    private static EmployerVehicle entered(int employment, VehicleOwner owner, VehicleUse use, boolean chauffeur,
+            boolean employeeMeetsPrivateRunning, Optional<Money> cost, OfficialUseRecord record) {
+        Optional<CarEngine> engine = owner == VehicleOwner.EMPLOYEE_OTHER_CONVEYANCE ? Optional.empty()
+                : Optional.of(CarEngine.ofCapacity(1500));
+        return new EmployerVehicle(employment, owner, use, engine, chauffeur, employeeMeetsPrivateRunning, 12,
+                Money.of("100000"), cost, Money.ZERO, record);
+    }
+
+    /** Table II has no row for an employee's own vehicle used wholly privately, so no path reaches it (W-158c). */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenTheEmployeesOwnCarIsWhollyPrivate_isRefusedAsNoPathReachesIt(int year) {
+        // Given
+        EmployerVehicle car = entered(0, VehicleOwner.EMPLOYEE_CAR, VehicleUse.WHOLLY_PRIVATE, false, false,
+                Optional.empty(), OfficialUseRecord.none());
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, List.of(car)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Vehicle 1: no row of RS-PERQ-CAR-PATH values it");
+    }
+
+    /**
+     * Who meets the private running is read only where it routes the vehicle: an employee's own car, an employer's car
+     * wholly private, and the first of two shared employer cars (r.15(3)(b); r.3(2) proviso) reach the same path either
+     * way (W-158c).
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("privateRunningNotRead")
+    void evaluate_whenWhoMeetsThePrivateRunningDoesNotRouteTheVehicle_isRefused(int year, String vehicle,
+            List<EmployerVehicle> vehicles, String expected) {
+        // When / Then
+        assertThatThrownBy(() -> run(year, vehicles))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expected);
+    }
+
+    private static Stream<Arguments> privateRunningNotRead() {
+        EmployerVehicle ownCar = entered(0, VehicleOwner.EMPLOYEE_CAR, VehicleUse.PARTLY_OFFICIAL, false, true,
+                Optional.empty(), OfficialUseRecord.none());
+        EmployerVehicle whollyPrivate = entered(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.WHOLLY_PRIVATE, false, true,
+                Optional.of(Money.of("800000")), OfficialUseRecord.none());
+        EmployerVehicle firstShared = entered(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.PARTLY_OFFICIAL, false, true,
+                Optional.empty(), OfficialUseRecord.none());
+        EmployerVehicle secondShared = entered(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.WHOLLY_PRIVATE, false, false,
+                Optional.of(Money.of("800000")), OfficialUseRecord.none());
+        String ignored = " is reached whoever meets the private running";
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, "own car", List.of(ownCar), "Vehicle 1: PERQ-CAR-PATH-EMPLOYEE" + ignored));
+            cases.add(Arguments.of(year, "wholly private", List.of(whollyPrivate),
+                    "Vehicle 1: PERQ-CAR-PATH-PRIVATE" + ignored));
+            cases.add(Arguments.of(year, "first of two shared", List.of(firstShared, secondShared),
+                    "Vehicle 1: PERQ-CAR-PATH-PARTLY" + ignored));
+        }
+        return cases.build();
+    }
+
+    /**
+     * A chauffeur, a cost and a higher official use where the path's computation does not read them: a conveyance has
+     * no chauffeur's amount (Sl. 3), a wholly private car's running already holds the chauffeur's pay (Sl. 1(b)), a car
+     * valued per month has no wear and tear on its cost and no claim against the Table's amount (Sl. 1(c)).
+     */
+    @ParameterizedTest(name = "TY {0} {1}")
+    @MethodSource("unreadVehicleFacts")
+    void evaluate_whenAFactThePathsComputationDoesNotReadIsGiven_isRefused(int year, String vehicle,
+            EmployerVehicle entry, String expected) {
+        // When / Then
+        assertThatThrownBy(() -> run(year, List.of(entry)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expected);
+    }
+
+    private static Stream<Arguments> unreadVehicleFacts() {
+        EmployerVehicle conveyance = entered(0, VehicleOwner.EMPLOYEE_OTHER_CONVEYANCE, VehicleUse.PARTLY_OFFICIAL,
+                true, false, Optional.empty(), OfficialUseRecord.none());
+        EmployerVehicle whollyPrivate = entered(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.WHOLLY_PRIVATE, true, false,
+                Optional.of(Money.of("800000")), OfficialUseRecord.none());
+        EmployerVehicle costed = entered(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.PARTLY_OFFICIAL, false, false,
+                Optional.of(Money.of("800000")), OfficialUseRecord.none());
+        EmployerVehicle claimed = entered(0, VehicleOwner.EMPLOYER_CAR, VehicleUse.PARTLY_OFFICIAL, false, false,
+                Optional.empty(), new OfficialUseRecord(true, Optional.of(Money.of("50000"))));
+        String ignored = "; it would be ignored, so it is refused";
+        Stream.Builder<Arguments> cases = Stream.builder();
+        for (int year : new int[] {2025, 2026}) {
+            cases.add(Arguments.of(year, "chauffeur on a conveyance", conveyance,
+                    "Vehicle 1: PERQ-CAR-PATH-CONVEYANCE does not read a chauffeur" + ignored));
+            cases.add(Arguments.of(year, "chauffeur wholly private", whollyPrivate,
+                    "Vehicle 1: PERQ-CAR-PATH-PRIVATE does not read a chauffeur" + ignored));
+            cases.add(Arguments.of(year, "cost per month", costed,
+                    "Vehicle 1: PERQ-CAR-PATH-PARTLY does not read a cost" + ignored));
+            cases.add(Arguments.of(year, "higher use per month", claimed,
+                    "Vehicle 1: PERQ-CAR-PATH-PARTLY does not read a higher official use" + ignored));
+        }
+        return cases.build();
+    }
+
+    /** An employee's own car has no wear and tear on a cost: only Sl. 1(b) reads one (W-158c). */
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void evaluate_whenACostIsEnteredForTheEmployeesVehicle_isRefused(int year) {
+        // Given
+        EmployerVehicle car = entered(0, VehicleOwner.EMPLOYEE_CAR, VehicleUse.PARTLY_OFFICIAL, false, false,
+                Optional.of(Money.of("500000")), OfficialUseRecord.none());
+
+        // When / Then
+        assertThatThrownBy(() -> run(year, List.of(car)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Vehicle 1: PERQ-CAR-PATH-EMPLOYEE does not read a cost");
+    }
+
     @Test
     void evaluate_whenAChargeIsEnteredForAFixedAmountRow_isRefused() {
         // Given
