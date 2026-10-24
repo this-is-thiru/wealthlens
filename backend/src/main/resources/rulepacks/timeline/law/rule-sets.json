@@ -332,6 +332,24 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-OS-GIFT-IMMOVABLE",
+      "_note": "One row: OS-GIFT-IMMOVABLE, gifts limb (ii) (W-156f2, D-352)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-GIFT-PROPERTY-FREE",
+      "_note": "One row: OS-GIFT-PROPERTY-FREE, gifts limb (iii)(A) (W-156f2, D-352)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-OS-GIFT-PROPERTY-BOUGHT",
+      "_note": "One row: OS-GIFT-PROPERTY-BOUGHT, gifts limb (iii)(B) (W-156f2, D-352)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-OS-INCOME",
       "_note": "The row that charges an item of income from other sources, chosen by its othersources.kind (S2 s.92; 1961 s.56; D-321): OS-INTEREST, OS-DIVIDEND, OS-COMPENSATION-INTEREST-INCOME, OS-KEYMAN-POLICY, OS-FORFEITED-ADVANCE, OS-TERMINATION-COMPENSATION, OS-RESIDUAL. An item no row charges is refused, never charged as something else",
       "selection": "AT_MOST_ONE",

@@ -160,7 +160,7 @@
       "description": "Gifts from a relative, on marriage, by will or inheritance, and the other excluded sources are not income.",
       "enforcedBy": {
         "type": "ByRule",
-        "rule": "OS-GIFT"
+        "rule": "OS-GIFT-EXCLUSION"
       }
     }
   ]

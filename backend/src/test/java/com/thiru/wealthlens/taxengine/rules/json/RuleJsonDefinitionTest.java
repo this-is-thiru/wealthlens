@@ -12,6 +12,8 @@ import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
+import com.thiru.wealthlens.taxengine.rules.definition.GiftAggregation;
+import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
@@ -87,6 +89,38 @@ class RuleJsonDefinitionTest {
         assertThat(version.cap()).isEmpty();
         assertThat(version.relief()).isEmpty();
         assertThat(version.rounding()).isEmpty();
+    }
+
+    @Test
+    void version_whenAGiftThresholdWithAShare_readsTheShareAndAggregation() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "GiftThreshold", "exceeds": "50000", "considerationSharePercent": "10",
+                  "aggregation": "EACH_RECEIPT" }""");
+
+        // Then
+        assertThat(version.definition()).contains(new GiftThreshold(Money.of("50000"), Optional.of(Rate.percent("10")),
+                GiftAggregation.EACH_RECEIPT));
+    }
+
+    @Test
+    void version_whenAGiftThresholdHasNoShare_readsItAsAbsent() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "GiftThreshold", "exceeds": "50000", "aggregation": "YEAR_TOTAL" }""");
+
+        // Then
+        assertThat(version.definition()).contains(new GiftThreshold(Money.of("50000"), Optional.empty(),
+                GiftAggregation.YEAR_TOTAL));
+    }
+
+    @Test
+    void version_whenAGiftThresholdNamesAnUnknownAggregation_isRefusedNamingThePath() {
+        // When / Then
+        assertThatThrownBy(() -> versionWith("""
+                "definition": { "type": "GiftThreshold", "exceeds": "50000", "aggregation": "POOLED" }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("aggregation");
     }
 
     @Test

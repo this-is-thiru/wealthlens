@@ -1,7 +1,7 @@
 {
   "ruleId": "OS-GIFT",
   "ruleSet": "RS-OS-GIFT",
-  "_note": "Sums and property received without, or for inadequate, consideration, under other sources (D-201; rulebook OS-GIFT-001). TY 2026-27: Income-tax Act, 2025 s.92(2)(m): \"(i) any sum of money without consideration, the total of which exceeds ₹ 50000, the whole of such sum; (ii) any immovable property— (A) without consideration, the stamp duty value of which exceeds ₹ 50000, the stamp duty value of such property; (B) for a consideration, the stamp duty value of such property that exceeds such consideration, if this excess amount is more than the higher of … (I) ₹ 50000; or (II) 10% of the consideration; (iii) any property, other than immovable property,— (A) without consideration, the aggregate fair market value of which exceeds ₹ 50000, the whole of the aggregate fair market value of such property; (B) for a consideration which is less than the aggregate fair market value of the property by an amount exceeding ₹ 50000, the aggregate fair market value of such property as exceeds such consideration\" (p.139); s.92(3)'s exclusions (GiftExclusion). TY 2025-26: Income-tax Act, 1961 s.56(2)(x), the same with \"fifty thousand rupees\" and, since FA 2020 s.29(B)(i) (w.e.f. 1-4-2021), \"ten per cent.\" of the consideration; FA 2021's 20% reaches only s.43CA's 12-11-2020 → 30-6-2021 window, so not this year. Its proviso's exclusions add (XI) a prescribed class and the COVID-19 receipts (XII), (XIII) (FA 2022 s.16), the last limited by OS-GIFT-COVID-DEATH. Values are entered: stamp duty value (s.92(4)(a)), fair market value (S4 r.57). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-gifts.md.",
+  "_note": "Sums and property received without, or for inadequate, consideration, under other sources (D-201; rulebook OS-GIFT-001). TY 2026-27: Income-tax Act, 2025 s.92(2)(m): \"(i) any sum of money without consideration, the total of which exceeds ₹ 50000, the whole of such sum; (ii) any immovable property— (A) without consideration, the stamp duty value of which exceeds ₹ 50000, the stamp duty value of such property; (B) for a consideration, the stamp duty value of such property that exceeds such consideration, if this excess amount is more than the higher of … (I) ₹ 50000; or (II) 10% of the consideration; (iii) any property, other than immovable property,— (A) without consideration, the aggregate fair market value of which exceeds ₹ 50000, the whole of the aggregate fair market value of such property; (B) for a consideration which is less than the aggregate fair market value of the property by an amount exceeding ₹ 50000, the aggregate fair market value of such property as exceeds such consideration\" (p.139); s.92(3)'s exclusions (GiftExclusion). TY 2025-26: Income-tax Act, 1961 s.56(2)(x), the same with \"fifty thousand rupees\" and, since FA 2020 s.29(B)(i) (w.e.f. 1-4-2021), \"ten per cent.\" of the consideration; FA 2021's 20% reaches only s.43CA's 12-11-2020 → 30-6-2021 window, so not this year. Its proviso's exclusions add (XI) a prescribed class and the COVID-19 receipts (XII), (XIII) (FA 2022 s.16), the last limited by OS-GIFT-COVID-DEATH. This row is limb (i), sums of money, the year's total; limbs (ii), (iii)(A) and (iii)(B) are OS-GIFT-IMMOVABLE, OS-GIFT-PROPERTY-FREE and OS-GIFT-PROPERTY-BOUGHT, each with its own threshold and measure (W-156f2, D-352). Values are entered: stamp duty value (s.92(4)(a)), fair market value (S4 r.57). Every regime. Sources: docs/taxplanning-build/sources/2026-10-17-gifts.md.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -27,9 +27,15 @@
       "definition": {
         "type": "GiftThreshold",
         "exceeds": "50000",
-        "considerationSharePercent": "10"
+        "aggregation": "YEAR_TOTAL"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "gift.kind",
+          "code": "SUM_OF_MONEY"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.56(2)(x) — ins. by the Finance Act, 2017 (7 of 2017), s.29 (w.e.f. 1-4-2017); item (b)(B) subs. by the Finance Act, 2018 (13 of 2018), s.23 (w.e.f. 1-4-2019); \"ten per cent.\" for \"five per cent.\" by the Finance Act, 2020 (12 of 2020), s.29(B)(i) (w.e.f. 1-4-2021)",
         "gazetteRef": "Act 12 of 2020: CG-DL-E-27032020-218938, p.25; Act 7 of 2017: Gazette of India, Extraordinary, Part II, Section 1, No. 7, 31-3-2017 (egazette 2017/175141), p.17; Act 13 of 2018: Gazette of India, Extraordinary, Part II, Section 1, No. 17, 29-3-2018 (egazette 2018/184302), p.14",
@@ -69,9 +75,15 @@
       "definition": {
         "type": "GiftThreshold",
         "exceeds": "50000",
-        "considerationSharePercent": "10"
+        "aggregation": "YEAR_TOTAL"
       },
-      "conditions": [],
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "gift.kind",
+          "code": "SUM_OF_MONEY"
+        }
+      ],
       "introducedBy": {
         "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.92(2)(m), (3)",
         "gazetteRef": "CG-DL-E-22082025-265620",

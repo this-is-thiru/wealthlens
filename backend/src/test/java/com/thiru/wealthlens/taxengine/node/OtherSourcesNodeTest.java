@@ -817,6 +817,19 @@ class OtherSourcesNodeTest {
 
     @ParameterizedTest(name = "TY {0}")
     @ValueSource(ints = {2025, 2026})
+    void evaluate_whenASumAndPropertyAreBothReceivedFree_testsEachLimbsTotalApart(int year) {
+        // When — a sum of 30,000 and shares worth 30,000, both for nothing
+        NodeResult result = runGifts(year, sum("30000"), gift(GiftKind.OTHER_PROPERTY, "0", "30000"));
+
+        // Then — limb (i)'s total 30,000 and limb (iii)(A)'s total 30,000 each do not exceed 50,000; pooled, the
+        // 60,000 would have been charged
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).extracting(TraceLine::rule)
+                .containsExactly(RuleIds.OS_GIFT, RuleIds.OS_GIFT_PROPERTY_FREE);
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
     void evaluate_whenOtherPropertyIsBoughtBelowItsValue_chargesAShortfallAboveTheThreshold(int year) {
         // When — jewellery worth 1,60,000 for 1,00,000; another worth 1,50,000 for 1,00,000
         NodeResult result = runGifts(year, gift(GiftKind.OTHER_PROPERTY, "100000", "160000"),
@@ -857,7 +870,7 @@ class OtherSourcesNodeTest {
         // limit excludes 10,00,000, and the 2,00,000 left exceeds 50,000, so 2,00,000 is charged
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
         assertThat(result.trace()).extracting(TraceLine::rule)
-                .containsExactly(RuleIds.OS_GIFT, RuleIds.OS_GIFT_COVID_DEATH, RuleIds.OS_GIFT);
+                .containsExactly(RuleIds.OS_GIFT_EXCLUSION, RuleIds.OS_GIFT_COVID_DEATH, RuleIds.OS_GIFT);
         assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("300000")));
         assertThat(result.trace().get(1).out()).isEqualTo(MoneyValue.of(Money.of("1000000")));
     }
@@ -869,7 +882,7 @@ class OtherSourcesNodeTest {
 
         // Then
         assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
-        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_GIFT);
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_GIFT_EXCLUSION);
         assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("100000")));
     }
 

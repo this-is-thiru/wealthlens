@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-156f2 — gift measure by limb (D-351; W-156f C2a)
-Stage           : NOT_STARTED — W-156f done and committed (D-351)
-Plan            : plans/W-156f2.md (to write)
-Approved        : W-156a – f done (D-344 – D-351)
+Item            : W-156g — source the 1961 "dependant" for s.80DD and s.80DDB (D-348; W-156c C4a)
+Stage           : NOT_STARTED — W-156f2 done and committed (D-352)
+Plan            : plans/W-156g.md (to write)
+Approved        : W-156a – f2 done (D-344 – D-352)
 Steps done      : —
-Next step       : on the owner's go: READ W-156f2 (03-WORK-ITEMS.md, plans/W-156f.md C2), write plans/W-156f2.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding
-Last verify     : targeted 441/0; unit -Punit 3655/0; integration 281/0 (2026-10-24, W-156f)
-Waiting on      : the owner — go for W-156f2; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
+Next step       : on the owner's go: READ W-156g (03-WORK-ITEMS.md, plans/W-156c.md C4), write plans/W-156g.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding
+Last verify     : targeted 492/0; unit -Punit 3660/0; integration 281/0 (2026-10-24, W-156f2)
+Waiting on      : the owner — go for W-156g; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-156f: take gifts' grounds of exclusion from rows — OS-GIFT-EXCLUSION on gift.exclusion and gift.kind, and gift.exclusion on OS-GIFT-COVID-DEATH, so GiftIncome holds no ground test (D-351)
-Updated         : 2026-10-24, session 33 — W-156f committed
+Last item commit: taxplanning W-156f2: measure each gift by its own limb's row — OS-GIFT as limb (i) and OS-GIFT-IMMOVABLE, -PROPERTY-FREE, -PROPERTY-BOUGHT on gift.kind and gift.received, each with its own GiftThreshold, so GiftIncome holds no kind test (D-352)
+Updated         : 2026-10-24, session 33 — W-156f2 committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

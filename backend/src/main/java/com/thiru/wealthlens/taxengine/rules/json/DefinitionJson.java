@@ -14,6 +14,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.DisallowanceBasis;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
 import com.thiru.wealthlens.taxengine.rules.definition.FamilyPensionShare;
+import com.thiru.wealthlens.taxengine.rules.definition.GiftAggregation;
 import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
@@ -115,7 +116,8 @@ public final class DefinitionJson {
                             PackJson.bool(band.node(), "onlyCoveringDisabilityOrDisease", path)),
                             PackJson.rate(band.node(), "percent", path)))));
             case "GiftThreshold" -> PackJson.construct(path, () -> new GiftThreshold(PackJson.money(node, "exceeds", path),
-                    PackJson.rate(node, "considerationSharePercent", path)));
+                    PackJson.optionalRate(node, "considerationSharePercent", path),
+                    PackJson.enumValue(node, "aggregation", path, GiftAggregation.class)));
             case "PolicyPremiumLimits" -> PackJson.construct(path, () -> new PolicyPremiumLimits(
                     PackJson.date(node, "unitLinkedFrom", path), PackJson.money(node, "unitLinkedLimit", path),
                     PackJson.date(node, "otherFrom", path), PackJson.money(node, "otherLimit", path),

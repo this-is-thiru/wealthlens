@@ -191,6 +191,18 @@ public final class PackJson {
         });
     }
 
+    /** A percentage that may be absent or null, written as the statute states it. */
+    public static Optional<Rate> optionalRate(JsonNode parent, String field, String path) {
+        return PackJson.optionalText(parent, field, path).map(raw -> {
+            try {
+                return Rate.percent(raw);
+            } catch (NumberFormatException e) {
+                throw new PackValidationException(path + "." + field + " must be a percentage as the statute states it,"
+                        + " e.g. \"30\", but was \"" + raw + "\"");
+            }
+        });
+    }
+
     /** A required percentage, written as the statute states it. */
     public static Rate rate(JsonNode parent, String field, String path) {
         String raw = PackJson.text(parent, field, path);

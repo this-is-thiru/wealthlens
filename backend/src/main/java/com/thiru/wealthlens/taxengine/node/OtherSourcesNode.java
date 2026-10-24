@@ -87,7 +87,8 @@ public final class OtherSourcesNode implements ComputationNode {
     public Set<RuleSetId> ruleSets() {
         return Set.of(RuleSetIds.RS_OS_INCOME, RuleSetIds.RS_OS_SHARE, RuleSetIds.RS_OS_DIVIDEND_INTEREST,
                 RuleSetIds.RS_OS_BANKER_COMMISSION, RuleSetIds.RS_OS_OTHER_EXPENDITURE,
-                RuleSetIds.RS_OS_PF_TAXABLE_INTEREST, RuleSetIds.RS_OS_GIFT,
+                RuleSetIds.RS_OS_PF_TAXABLE_INTEREST, RuleSetIds.RS_OS_GIFT, RuleSetIds.RS_OS_GIFT_IMMOVABLE,
+                RuleSetIds.RS_OS_GIFT_PROPERTY_FREE, RuleSetIds.RS_OS_GIFT_PROPERTY_BOUGHT,
                 RuleSetIds.RS_OS_GIFT_COVID_DEATH, RuleSetIds.RS_OS_GIFT_EXCLUSION, RuleSetIds.RS_OS_BUSINESS_TRUST,
                 RuleSetIds.RS_OS_LIFE_POLICY_RATIO, RuleSetIds.RS_OS_LIFE_POLICY_PREMIUM, RuleSetIds.RS_OS_LIFE_POLICY);
     }
