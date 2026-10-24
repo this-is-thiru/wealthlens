@@ -203,6 +203,7 @@ class TimelineReaderTest {
             new RuleId("OS-PF-TAXABLE-INTEREST"),
             new RuleId("OS-GIFT"),
             new RuleId("OS-GIFT-COVID-DEATH"),
+            new RuleId("OS-GIFT-EXCLUSION"),
             new RuleId("OS-KEYMAN-POLICY"),
             new RuleId("OS-FORFEITED-ADVANCE"),
             new RuleId("OS-TERMINATION-COMPENSATION"),

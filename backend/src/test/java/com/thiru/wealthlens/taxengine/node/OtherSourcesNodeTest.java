@@ -848,11 +848,38 @@ class OtherSourcesNodeTest {
     }
 
     @Test
+    void evaluate_whenTaxYear2025HasCovidDeathSumsFromTheEmployerAndOthers_poolsOnlyTheOthers() {
+        // When — 3,00,000 from the deceased's employer (proviso (XIII)(A)) and 12,00,000 from others ((XIII)(B))
+        NodeResult result = runGifts(2025, excluded(GiftExclusion.COVID_DEATH_FROM_EMPLOYER, "300000"),
+                excluded(GiftExclusion.COVID_DEATH_FROM_OTHERS, "1200000"));
+
+        // Then — (A) has no limit, so the employer's 3,00,000 is excluded whole; of the others' 12,00,000 the
+        // limit excludes 10,00,000, and the 2,00,000 left exceeds 50,000, so 2,00,000 is charged
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("200000")));
+        assertThat(result.trace()).extracting(TraceLine::rule)
+                .containsExactly(RuleIds.OS_GIFT, RuleIds.OS_GIFT_COVID_DEATH, RuleIds.OS_GIFT);
+        assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("300000")));
+        assertThat(result.trace().get(1).out()).isEqualTo(MoneyValue.of(Money.of("1000000")));
+    }
+
+    @Test
+    void evaluate_whenTaxYear2025HasACovidTreatmentSum_excludesItWhole() {
+        // When — 1,00,000 toward COVID-19 treatment (1961 proviso (XII))
+        NodeResult result = runGifts(2025, excluded(GiftExclusion.COVID_TREATMENT, "100000"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).extracting(TraceLine::rule).containsExactly(RuleIds.OS_GIFT);
+        assertThat(result.trace().getFirst().out()).isEqualTo(MoneyValue.of(Money.of("100000")));
+    }
+
+    @Test
     void evaluate_whenTaxYear2026IsGivenACovidGround_isRefused() {
-        // When / Then — the 2025 Act's s.92(3) has no such ground
+        // When / Then — the 2025 Act's s.92(3) has no such ground, so the year's exclusion row does not reach it
         assertThatThrownBy(() -> runGifts(2026, excluded(GiftExclusion.COVID_TREATMENT, "100000")))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("s.92(3) has no such exclusion");
+                .hasMessageContaining("COVID_TREATMENT, claimed for SUM_OF_MONEY, is not a ground OS-GIFT-EXCLUSION has"
+                        + " in TY 2026-27");
     }
 
     @Test
@@ -864,7 +891,8 @@ class OtherSourcesNodeTest {
         // When / Then
         assertThatThrownBy(() -> runGifts(2025, property))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("excludes sums of money only, not OTHER_PROPERTY");
+                .hasMessageContaining("COVID_DEATH_FROM_OTHERS, claimed for OTHER_PROPERTY, is not a ground"
+                        + " OS-GIFT-EXCLUSION has in TY 2025-26");
     }
 
     @ParameterizedTest(name = "TY {0}")

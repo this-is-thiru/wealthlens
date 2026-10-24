@@ -84,6 +84,7 @@ public final class RuleIds {
     public static final RuleId OS_FORFEITED_ADVANCE = new RuleId("OS-FORFEITED-ADVANCE");
     public static final RuleId OS_GIFT = new RuleId("OS-GIFT");
     public static final RuleId OS_GIFT_COVID_DEATH = new RuleId("OS-GIFT-COVID-DEATH");
+    public static final RuleId OS_GIFT_EXCLUSION = new RuleId("OS-GIFT-EXCLUSION");
     public static final RuleId OS_INTEREST = new RuleId("OS-INTEREST");
     public static final RuleId OS_KEYMAN_POLICY = new RuleId("OS-KEYMAN-POLICY");
     public static final RuleId OS_LIFE_POLICY = new RuleId("OS-LIFE-POLICY");

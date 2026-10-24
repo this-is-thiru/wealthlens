@@ -103,6 +103,7 @@ class GeneratedConstantsTest {
             "OS-FORFEITED-ADVANCE",
             "OS-GIFT",
             "OS-GIFT-COVID-DEATH",
+            "OS-GIFT-EXCLUSION",
             "OS-INTEREST",
             "OS-KEYMAN-POLICY",
             "OS-LIFE-POLICY",

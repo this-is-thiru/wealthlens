@@ -70,6 +70,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_OS_DIVIDEND_INTEREST = new RuleSetId("RS-OS-DIVIDEND-INTEREST");
     public static final RuleSetId RS_OS_GIFT = new RuleSetId("RS-OS-GIFT");
     public static final RuleSetId RS_OS_GIFT_COVID_DEATH = new RuleSetId("RS-OS-GIFT-COVID-DEATH");
+    public static final RuleSetId RS_OS_GIFT_EXCLUSION = new RuleSetId("RS-OS-GIFT-EXCLUSION");
     public static final RuleSetId RS_OS_INCOME = new RuleSetId("RS-OS-INCOME");
     public static final RuleSetId RS_OS_LIFE_POLICY = new RuleSetId("RS-OS-LIFE-POLICY");
     public static final RuleSetId RS_OS_LIFE_POLICY_PREMIUM = new RuleSetId("RS-OS-LIFE-POLICY-PREMIUM");

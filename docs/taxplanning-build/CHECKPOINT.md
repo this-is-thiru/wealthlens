@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-156f — gift kinds by rule data (D-343; R8)
-Stage           : NOT_STARTED — W-156e done and committed (D-350)
-Plan            : plans/W-156f.md (to write)
-Approved        : W-156 split (D-343); W-156a – e done (D-344 – D-350)
+Item            : W-156f2 — gift measure by limb (D-351; W-156f C2a)
+Stage           : NOT_STARTED — W-156f done and committed (D-351)
+Plan            : plans/W-156f2.md (to write)
+Approved        : W-156a – f done (D-344 – D-351)
 Steps done      : —
-Next step       : on the owner's go: READ W-156f (03-WORK-ITEMS.md, plans/W-156.md R8), write plans/W-156f.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding (STATE Notes for resume, session 31)
-Last verify     : targeted 307/0; LeaveTravelExemptionTest 25/0 after case 3; unit -Punit 3653/0; integration 281/0 (2026-10-23, W-156e)
-Waiting on      : the owner — go for W-156f; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
+Next step       : on the owner's go: READ W-156f2 (03-WORK-ITEMS.md, plans/W-156f.md C2), write plans/W-156f2.md, STOP for approval. Also open: nil-line proposal, PaidOtherThanInCash, REG basis-set finding
+Last verify     : targeted 441/0; unit -Punit 3655/0; integration 281/0 (2026-10-24, W-156f)
+Waiting on      : the owner — go for W-156f2; placements: nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33 open
 Files touched   : (none)
-Last item commit: taxplanning W-156e: take salary's employer fund, employer kind, journey mode and per-child allowances from rows — employer.fund, employer.kind and journey.mode conditions, SAL-INCLUDES-PENSION-CONTRIBUTION and CapShape.countsRead, so the salary nodes hold no kind test (D-350)
-Updated         : 2026-10-23, session 32 — W-156e committed
+Last item commit: taxplanning W-156f: take gifts' grounds of exclusion from rows — OS-GIFT-EXCLUSION on gift.exclusion and gift.kind, and gift.exclusion on OS-GIFT-COVID-DEATH, so GiftIncome holds no ground test (D-351)
+Updated         : 2026-10-24, session 33 — W-156f committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

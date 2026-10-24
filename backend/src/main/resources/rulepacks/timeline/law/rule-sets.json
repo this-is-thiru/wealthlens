@@ -344,6 +344,12 @@
       "ground": "REGIME"
     },
     {
+      "id": "RS-OS-GIFT-EXCLUSION",
+      "_note": "One row: OS-GIFT-EXCLUSION, which grounds of exclusion the year has, and for which kind of receipt (W-156f, D-351)",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-OS-LIFE-POLICY",
       "_note": "One row: OS-LIFE-POLICY",
       "selection": "EXACTLY_ONE",
