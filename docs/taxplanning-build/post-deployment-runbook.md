@@ -390,6 +390,54 @@ it.
 
 **Retired after use:** W-171 / WL-37, once this is logged for every database. There is no code to remove.
 
+### 2.8 W-172 (D-373) — add the V2 sales' profit, brokerage and misc to the P&L · `SUPER_USER` · **every database · once · outstanding**
+
+**Why.** Before W-169 a V2 sale wrote only its purchase and sale amounts into the P&L, so every V2 year shows no
+profit, brokerage or misc, and "total realised profit" counts V1 sales only. Each V2 sale's trade-outcome row, written
+by `TradeOutcomeRecorder`, holds those three figures. This adds them into the split entry of the row's asset type and
+segment, at the year, month and half. Purchase and sale amounts, and every V1 figure, stay as they are.
+
+**When:** at the deploy, **after §2.6** (the split entries must exist). `recordedBefore` is the deploy moment **in the
+server's own time zone**, which is the zone `audit_metadata.createdAt` is written in. Rows written after it are W-169's
+and are skipped.
+
+**What it cannot place.** It lists, and leaves alone:
+- a row whose P&L document, side, split entry, month or half does not exist (for example a side §2.6 could not
+  place);
+- a row with no asset type or sell date;
+- a row with no record of when it was written.
+
+**Bring that list back** with §2.6's.
+
+**What it cannot find.** V2 sales made before the recorder existed (before 2026-09-13) have no row, so they keep
+purchase and sale only.
+
+1. **Count before** (read-only): `db.trade_outcomes.countDocuments({ sell_charge_breakup: { $exists: true } })`, the
+   recorder's rows.
+2. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/profit-and-loss/v2-figures/backfill?recordedBefore=<yyyy-MM-ddTHH:mm:ss>" \
+     -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Read `placed`, `unplaced` (with reasons), `alreadyCounted` and `writtenAfter`. Keep `unplaced`.
+3. **Back up** `profit_and_loss`:
+
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection profit_and_loss --out profit_and_loss-before-v2-backfill.json
+   ```
+
+4. **Write:** the same call with `&dryRun=false`. Each placed row's figures are added, and its id joins the document's
+   `pnl_backfilled_outcome_ids` in the same update. `audit_metadata.updatedBy` is the caller.
+5. **Verify:** a second dry run reports `placed` empty and `alreadyCounted` equal to step 4's `placed`.
+
+**Second run:** safe, including after a run that failed part-way: a row whose id is in the document's set is never
+added again (`ProfitAndLossV2BackfillIntegrationTest`). **Way back:** `mongoimport --mode upsert` of the step-3 file.
+
+**Removed after use:** W-173 / WL-38, which also unsets `pnl_backfilled_outcome_ids`, once this is logged for every
+database and its `unplaced` list is placed.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined

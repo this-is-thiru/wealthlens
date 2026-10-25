@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-172 — backfill V2-written P&L years' profit, brokerage and misc (D-372 C2a; R15)
+Item            : W-161 — the April – March year in one place (D-315; audit T2; N2)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-172.md (to write)
+Plan            : plans/W-161.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : READ W-172 (how to tell a V2-written sale or year from a V1 one — trade_outcomes charge breakups, user_charges, P&L charge summary; the split after §2.6; W-160d3's operation as template), write the plan, STOP
-Last verify     : unit -Punit 3708/0; integration 292/0 (2026-10-25, W-169)
-Waiting on      : nothing for W-172; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : READ W-161 (TLocalDate.financialYear and its callers, CapitalGainsSummaryService:48/:64, YearlyChargeSummary:42, the new reshape/backfill uses of financialYear; TaxYearId.containing vs one shared type — the plan's choice, D-269), write the plan, STOP
+Last verify     : unit -Punit 3708/0; integration 303/0 (2026-10-25, W-172)
+Waiting on      : nothing for W-161; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-169: record a V2 sale's profit, brokerage and misc in the P&L — folded from the trade-outcome rows the recorder computes, recordSale replaces the sale path; W-172 backfill placed (D-372)
-Updated         : 2026-10-25, session 35 — W-169 done and committed; resume at W-172 (plan to write)
+Last item commit: taxplanning W-172: backfill the V2 sales' profit, brokerage and misc into the P&L split — from the recorder's rows written before the deploy, each counted once; runbook §2.8, W-173, WL-38 (D-373)
+Updated         : 2026-10-25, session 35 — W-172 done and committed; resume at W-161 (plan to write)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
