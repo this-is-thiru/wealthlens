@@ -6,7 +6,7 @@ import com.thiru.wealthlens.portfolio.dto.V2BackfillReport.UnplacedRow;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
-import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -85,7 +85,7 @@ public class ProfitAndLossV2Backfill {
         if (row.getAssetType() == null || row.getSellDate() == null) {
             return Target.refused("the row records no asset type or sell date");
         }
-        String year = TLocalDate.financialYear(row.getSellDate());
+        String year = FinancialYear.containing(row.getSellDate()).label();
         String side = row.getAccountType() == AccountType.SELF ? "realised_profits" : "out_sourced_realised_profits";
         Document pnl = mongoTemplate.findOne(Query.query(Criteria.where("email").is(row.getEmail())
                 .and("financial_year").is(year)), Document.class, COLLECTION);

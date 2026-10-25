@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.brokercharges.entity.model;
 
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import java.time.Month;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -33,12 +34,7 @@ public class YearlyChargeSummary extends ChargeSummaryReport {
      */
     public List<MonthlyChargeSummary> monthsInFinancialYearOrder() {
         return monthlyReport.values().stream()
-                .sorted(Comparator.comparingInt(YearlyChargeSummary::financialYearPosition))
+                .sorted(Comparator.comparingInt(monthly -> FinancialYear.positionOf(monthly.getMonth())))
                 .toList();
-    }
-
-    /** April is month 1 of a financial year; March is month 12. */
-    private static int financialYearPosition(MonthlyChargeSummary monthly) {
-        return (monthly.getMonth().getValue() - Month.APRIL.getValue() + 12) % 12;
     }
 }

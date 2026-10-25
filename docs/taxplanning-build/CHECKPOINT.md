@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-161 — the April – March year in one place (D-315; audit T2; N2)
+Item            : W-162 — deductibility of a charge as tax-side rule data (D-315; audit T4)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-161.md (to write)
+Plan            : plans/W-162.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : READ W-161 (TLocalDate.financialYear and its callers, CapitalGainsSummaryService:48/:64, YearlyChargeSummary:42, the new reshape/backfill uses of financialYear; TaxYearId.containing vs one shared type — the plan's choice, D-269), write the plan, STOP
-Last verify     : unit -Punit 3708/0; integration 303/0 (2026-10-25, W-172)
-Waiting on      : nothing for W-161; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : READ W-162 (ChargeCatalogueEntity.deductible_for_capital_gains :69–70, ChargeDeductibilityService and its readers — TradeOutcomeRecorder's deductible buy/sell charges, CapitalGainsSummaryService's gain; the engine's s.48 rows if any; the charge catalogue seed JSON), write the plan, STOP
+Last verify     : unit -Punit 3715/0; integration 303/0 (2026-10-25, W-161)
+Waiting on      : nothing for W-162; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-172: backfill the V2 sales' profit, brokerage and misc into the P&L split — from the recorder's rows written before the deploy, each counted once; runbook §2.8, W-173, WL-38 (D-373)
-Updated         : 2026-10-25, session 35 — W-172 done and committed; resume at W-161 (plan to write)
+Last item commit: taxplanning W-161: put the April – March year in one place — shared FinancialYear replaces TLocalDate.financialYear and every hand-built window outside the engine; TaxYearId kept (D-374)
+Updated         : 2026-10-25, session 35 — W-161 done and committed; resume at W-162 (plan to write)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

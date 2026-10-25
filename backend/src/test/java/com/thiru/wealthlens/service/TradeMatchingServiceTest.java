@@ -384,7 +384,7 @@ class TradeMatchingServiceTest {
         String firstDay = tradeMatchingService.matchSellToLots(sellOfFive("sell-2", LocalDate.of(2024, 4, 1)), lots)
                 .getFirst().getFinancialYear();
 
-        // Then — TLocalDate.financialYear's form, as every other portfolio writer uses (D-239), not FY2023-24
+        // Then — FinancialYear.label()'s form, as every other portfolio writer uses (D-239), not FY2023-24
         assertEquals("2023-2024", lastDay);
         assertEquals("2024-2025", firstDay);
     }

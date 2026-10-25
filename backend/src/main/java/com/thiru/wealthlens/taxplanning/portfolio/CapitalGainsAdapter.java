@@ -4,7 +4,7 @@ import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
-import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
@@ -36,7 +36,7 @@ public class CapitalGainsAdapter {
     /** The capital gains of {@code email} for {@code year}, pinned to the summary they were read from. */
     public CapitalGainsInput inputFor(String email, TaxYearId year) {
         CapitalGainsSummary summary =
-                capitalGainsSummaryService.summaryFor(email, TLocalDate.financialYear(year.startsOn()));
+                capitalGainsSummaryService.summaryFor(email, new FinancialYear(year.startYear()).label());
         List<CapitalGainsInput.Bucket> buckets = summary.buckets().stream()
                 .map(CapitalGainsAdapter::bucketOf)
                 .flatMap(Optional::stream)

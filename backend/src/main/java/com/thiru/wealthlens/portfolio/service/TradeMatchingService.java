@@ -9,7 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
-import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -201,7 +201,7 @@ public class TradeMatchingService {
                 .netProfit(figures.netProfit())
                 .profitPercentage(figures.profitPercentage())
                 .holdingPeriodDays(ChronoUnit.DAYS.between(lot.getBuyDate(), sell.getSellDate()))
-                .financialYear(TLocalDate.financialYear(sell.getSellDate()))
+                .financialYear(FinancialYear.containing(sell.getSellDate()).label())
                 .sourceSellTransactionId(sell.getId())
                 .sourceBuyLotId(lot.getId())
                 .corporateActionDerived(lot.isCorporateActionDerived())

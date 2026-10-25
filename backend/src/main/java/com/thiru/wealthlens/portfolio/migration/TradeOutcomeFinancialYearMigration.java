@@ -2,7 +2,7 @@ package com.thiru.wealthlens.portfolio.migration;
 
 import com.thiru.wealthlens.portfolio.dto.FinancialYearRewriteReport;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
-import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,7 +52,7 @@ public class TradeOutcomeFinancialYearMigration {
                         + " no sell date, so its year cannot be recomputed; correct it by hand");
             }
             bulk.updateOne(Query.query(Criteria.where("id").is(row.getId())),
-                    Update.update("financialYear", TLocalDate.financialYear(row.getSellDate()))
+                    Update.update("financialYear", FinancialYear.containing(row.getSellDate()).label())
                             .set("audit_metadata.updatedBy", auditor)
                             .set("audit_metadata.updatedAt", now));
         }

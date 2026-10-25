@@ -28,6 +28,7 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.math.DoubleUtil;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -780,7 +781,7 @@ public class PortfolioService {
      * drift apart again.
      */
     private static String deriveFinancialYear(LocalDate transactionDate) {
-        return TLocalDate.financialYear(transactionDate);
+        return FinancialYear.containing(transactionDate).label();
     }
 
     public ProfitAndLossResponse getProfitAndLoss(UserMail userMail, String financialYear) {

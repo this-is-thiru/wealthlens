@@ -7,15 +7,13 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.bson.Document;
@@ -52,7 +50,6 @@ public class ProfitAndLossSplitReshape {
     private static final String LONG = "long_term_capital_gains";
     private static final String BY_CLASSIFICATION = "gains_by_classification";
     private static final String SPLIT = "gains_by_asset_and_segment";
-    private static final Pattern FINANCIAL_YEAR = Pattern.compile("(\\d{4})-(\\d{4})");
 
     private final MongoTemplate mongoTemplate;
 
@@ -120,15 +117,14 @@ public class ProfitAndLossSplitReshape {
 
     /** The one asset type and segment the side's outcomes in the year share, or why there is none. */
     private Placement placementOf(String email, String year, String side) {
-        Matcher matcher = FINANCIAL_YEAR.matcher(year == null ? "" : year);
-        if (!matcher.matches() || Integer.parseInt(matcher.group(2)) != Integer.parseInt(matcher.group(1)) + 1) {
+        Optional<FinancialYear> financialYear = FinancialYear.ofLabel(year);
+        if (financialYear.isEmpty()) {
             return Placement.refused("the financial year " + year + " cannot be read");
         }
-        int startYear = Integer.parseInt(matcher.group(1));
         Criteria account = SELF_SIDE.equals(side) ? Criteria.where("accountType").is(AccountType.SELF)
                 : Criteria.where("accountType").ne(AccountType.SELF);
         List<TradeOutcomeEntity> rows = mongoTemplate.find(Query.query(Criteria.where("email").is(email)
-                .and("sellDate").gte(LocalDate.of(startYear, 4, 1)).lte(LocalDate.of(startYear + 1, 3, 31))
+                .and("sellDate").gte(financialYear.get().startsOn()).lte(financialYear.get().endsOn())
                 .andOperator(account)), TradeOutcomeEntity.class);
         if (rows.isEmpty()) {
             return Placement.refused("no trade outcomes in the year");

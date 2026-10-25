@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.shared.util.money.TMoney;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -16,8 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -44,8 +43,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CapitalGainsSummaryService {
 
-    private static final Pattern FINANCIAL_YEAR = Pattern.compile("(\\d{4})-(\\d{4})");
-
     /** The charge catalogue's code for securities transaction tax. */
     private static final String STT = "STT";
 
@@ -54,13 +51,14 @@ public class CapitalGainsSummaryService {
     /**
      * The summary of {@code email}'s disposals sold in {@code financialYear}.
      *
-     * @param financialYear the year in {@code TLocalDate.financialYear}'s form, such as {@code 2025-2026}
+     * @param financialYear the year as {@link FinancialYear#label()} writes it, such as {@code 2025-2026}
      * @throws IllegalArgumentException if the year is malformed, or a disposal's deductible charges are unknown
      */
     public CapitalGainsSummary summaryFor(String email, String financialYear) {
-        int startYear = startYearOf(financialYear);
+        FinancialYear year = FinancialYear.parse(financialYear);
+        // The finder excludes both ends, so the day before the year opens and the day after it closes bound it.
         List<TradeOutcomeEntity> rows = tradeOutcomeRepository.findByEmailAndSellDateBetween(email,
-                LocalDate.of(startYear, 3, 31), LocalDate.of(startYear + 1, 4, 1));
+                year.startsOn().minusDays(1), year.endsOn().plusDays(1));
         requireQuantifiable(rows);
         Map<BucketKey, Double> gainByKey = new LinkedHashMap<>();
         // Nulls sort first so a row without a sell date reaches BucketKey's refusal, which names it.
@@ -74,15 +72,6 @@ public class CapitalGainsSummaryService {
         log.debug("Capital-gains summary for {} {}: {} disposals in {} buckets", email, financialYear, rows.size(),
                 buckets.size());
         return new CapitalGainsSummary(email, financialYear, buckets, Instant.now(), referenceOf(rows));
-    }
-
-    private static int startYearOf(String financialYear) {
-        Matcher matcher = FINANCIAL_YEAR.matcher(financialYear == null ? "" : financialYear);
-        if (!matcher.matches() || Integer.parseInt(matcher.group(2)) != Integer.parseInt(matcher.group(1)) + 1) {
-            throw new IllegalArgumentException("A financial year is written as portfolio writes it, such as 2025-2026,"
-                    + " but was " + financialYear);
-        }
-        return Integer.parseInt(matcher.group(1));
     }
 
     /** Every row's deductible charges are known: a charge with no breakdown cannot be split into deductible parts. */

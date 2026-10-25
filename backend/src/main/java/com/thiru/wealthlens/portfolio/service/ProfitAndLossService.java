@@ -25,7 +25,7 @@ import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
 import com.thiru.wealthlens.shared.util.money.TMoney;
-import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -236,7 +236,7 @@ public class ProfitAndLossService {
 	}
 
 	private static String sanitizeFinancialYear(LocalDate transactionDate) {
-		return TLocalDate.financialYear(transactionDate);
+		return FinancialYear.containing(transactionDate).label();
 	}
 
 
