@@ -10,6 +10,7 @@ import com.thiru.wealthlens.portfolio.dto.analytics.PortfolioSummaryResponse;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrResponse;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
@@ -24,7 +25,9 @@ import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.AnalyticsService;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -96,8 +99,8 @@ class AnalyticsServiceTest {
         stReport.setProfit(500.0);
         FinancialReport ltReport = FinancialReport.empty();
         ltReport.setProfit(300.0);
-        realised.setShortTermCapitalGains(stReport);
-        realised.setLongTermCapitalGains(ltReport);
+        realised.setGainsByAssetAndSegment(new EnumMap<>(Map.of(
+                AssetType.EQUITY, new EnumMap<>(Map.of(TradeSegment.DELIVERY, stReport, TradeSegment.INTRADAY, ltReport)))));
         pnl.setRealisedProfits(realised);
 
         when(profitAndLossRepository.findAllByEmail(email)).thenReturn(List.of(pnl));

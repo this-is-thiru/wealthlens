@@ -7,6 +7,7 @@ import com.thiru.wealthlens.portfolio.dto.analytics.MarketPriceEntry;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -19,7 +20,9 @@ import io.restassured.RestAssured;
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -142,7 +145,8 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         RealisedProfits realised = RealisedProfits.empty();
         FinancialReport ltReport = FinancialReport.empty();
         ltReport.setProfit(outcome.getNetProfit());
-        realised.setLongTermCapitalGains(ltReport);
+        realised.setGainsByAssetAndSegment(new EnumMap<>(Map.of(AssetType.EQUITY,
+                new EnumMap<>(Map.of(TradeSegment.DELIVERY, ltReport)))));
         pnl.setRealisedProfits(realised);
         mongoTemplate.save(pnl, "profit_and_loss");
     }

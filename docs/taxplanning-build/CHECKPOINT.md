@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-160d2 — the P&L's pair and map go (D-366; T1 P6; an API change)
+Item            : W-160d3 — the stored P&L documents (D-366; T1 P6; R15)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-160d2.md (to write)
+Plan            : plans/W-160d3.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : READ W-160d2 (ProfitAndLossService pair/map writes, :279–286 and isShortTermCapitalGain, its HoldingPeriodService/TradeClassifier; RealisedProfits, RealisedProfitsResponse; AnalyticsService:55–64 moves to the split (W-160d1 C1a); tests and api-collection Req3), write the plan, STOP
-Last verify     : unit -Punit 3732/0; integration 288/0 (2026-10-25, W-160d1)
-Waiting on      : nothing for W-160d2; open for later: per-bucket term audit record (near W-107/W-160g), keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : READ W-160d3 (whether every P&L-recorded sale has a trade_outcomes row; how V1/V2 figures map onto a rebuilt split; corporate-action sells; the R15 operation shape on W-160c's template), write the plan, STOP
+Last verify     : unit -Punit 3724/0; integration 286/0 (2026-10-25, W-160d2)
+Waiting on      : nothing for W-160d3; open for later: per-bucket term audit record (near W-107/W-160g), keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-160d1: write the P&L split by asset type and segment beside the pair — both families, the lot's asset type when the sale has none, the response carries it; W-160d split d1 – d3, W-169 placed (D-366; D-367)
-Updated         : 2026-10-25, session 35 — W-160d1 done and committed; resume at W-160d2 (plan to write)
+Last item commit: taxplanning W-160d2: drop the P&L's short / long pair and classification map — both families write the split only, the one-year tests go, the response loses the fields, analytics sums the split (D-368)
+Updated         : 2026-10-25, session 35 — W-160d2 done and committed; resume at W-160d3 (plan to write)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -14,7 +14,7 @@ import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
+import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -53,14 +54,11 @@ public class AnalyticsService {
                 .sum();
 
         double totalRealizedProfit = pnlList.stream()
-                .mapToDouble(pnl -> {
-                    RealisedProfits realised = pnl.getRealisedProfits();
-                    double st = (realised != null && realised.getShortTermCapitalGains() != null)
-                            ? realised.getShortTermCapitalGains().getProfit() : 0.0;
-                    double lt = (realised != null && realised.getLongTermCapitalGains() != null)
-                            ? realised.getLongTermCapitalGains().getProfit() : 0.0;
-                    return st + lt;
-                })
+                .map(ProfitAndLossEntity::getRealisedProfits)
+                .filter(Objects::nonNull)
+                .flatMap(realised -> realised.getGainsByAssetAndSegment().values().stream())
+                .flatMap(bySegment -> bySegment.values().stream())
+                .mapToDouble(FinancialReport::getProfit)
                 .sum();
 
         long totalTrades = transactions.size();

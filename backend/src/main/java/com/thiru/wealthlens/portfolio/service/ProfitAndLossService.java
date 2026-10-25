@@ -10,7 +10,6 @@ import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
@@ -19,9 +18,6 @@ import com.thiru.wealthlens.portfolio.entity.model.FortnightReport;
 import com.thiru.wealthlens.portfolio.entity.model.MonthlyReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
 import com.thiru.wealthlens.portfolio.entity.model.ReportModel;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
-import com.thiru.wealthlens.portfolio.holding.TradeClassificationQuery;
-import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -60,9 +56,6 @@ public class ProfitAndLossService {
     private static final int FORTNIGHT_BOUNDARY = 15;
 
     private final ProfitAndLossRepository profitAndLossRepository;
-    private final HoldingPeriodService holdingPeriodService;
-
-    private final TradeClassifier tradeClassifier;
     private final ChargeRecordingGateway chargeRecordingGateway;
 
     /**
@@ -135,26 +128,12 @@ public class ProfitAndLossService {
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits,
                                                           InternalTransactionContext internalContext) {
 
-		if (internalContext.isShortTermGain()) {
-
-			FinancialReport financialReport = TOptional.mapO(realisedProfits.getShortTermCapitalGains(),
-					FinancialReport.empty());
-			updateFinancialReport(financialReport, internalContext);
-			realisedProfits.setShortTermCapitalGains(financialReport);
-		} else {
-
-			FinancialReport financialReport = TOptional.mapO(realisedProfits.getLongTermCapitalGains(),
-					FinancialReport.empty());
-			updateFinancialReport(financialReport, internalContext);
-			realisedProfits.setLongTermCapitalGains(financialReport);
-		}
-
 		recordByAssetAndSegment(realisedProfits, internalContext);
 		realisedProfits.setLastUpdatedTime(LocalDateTime.now());
 		return realisedProfits;
 	}
 
-    /** V1's figures again, under what was sold and how it was traded (D-366). */
+    /** V1's figures, under what was sold and how it was traded (D-366). */
     private static void recordByAssetAndSegment(RealisedProfits realisedProfits,
                                                 InternalTransactionContext internalContext) {
         ProfitAndLossContext context = internalContext.getProfitAndLossContext();
@@ -276,7 +255,6 @@ public class ProfitAndLossService {
     @Data
     @NoArgsConstructor
     private static class InternalTransactionContext {
-        private boolean isShortTermGain;
         private double purchasePrice;
         private double sellPrice;
         private double profit;
@@ -286,16 +264,6 @@ public class ProfitAndLossService {
 
         InternalTransactionContext(ProfitAndLossContext profitAndLossContext) {
             this.profitAndLossContext = profitAndLossContext;
-            isShortTermCapitalGain();
-        }
-
-		private void isShortTermCapitalGain() {
-
-			LocalDate purchaseDate = profitAndLossContext.getPurchaseContext().getTransactionDate();
-			LocalDate sellDate = profitAndLossContext.getSellContext().getTransactionDate();
-
-            LocalDate thresholdDate = purchaseDate.plusYears(1);
-            this.isShortTermGain = sellDate.isBefore(thresholdDate);
         }
     }
 
@@ -394,19 +362,12 @@ public class ProfitAndLossService {
         ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
 
         for (BuyContext buyContext : profitLossContext.buyContexts()) {
-            // Two answers, deliberately. The classification is the real one and goes in the map;
-            // the boolean is what the legacy pair has always been given and keeps it byte-identical
-            // for existing readers until V1 goes and the pair goes with it (D8).
-            CapitalGainsType classification = tradeClassifier.classify(new TradeClassificationQuery(
-                    profitLossContext.stockCode(), profitLossContext.assetType(), profitLossContext.segment(),
-                    buyContext.date(), transactionDate)).capitalGainsType();
-            boolean isShortTermHeld = isShortTermCapitalGain(profitLossContext.assetType(), buyContext.date(), transactionDate);
             double purchaseAmount = buyContext.price() * buyContext.quantity();
             double sellAmount = profitLossContext.price() * buyContext.quantity();
             AssetType assetType = assetTypeOf(Optional.ofNullable(profitLossContext.assetType()),
                     buyContext.assetType(), profitLossContext.stockCode());
             InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate,
-                    isShortTermHeld, classification, assetType, profitLossContext.segment());
+                    assetType, profitLossContext.segment());
             updateProfitAndLossReport(profitAndLossEntity, profitLossContext, internalContext);
         }
 
@@ -438,38 +399,11 @@ public class ProfitAndLossService {
 
     private static RealisedProfits calculateProfitDetails(RealisedProfits realisedProfits, InternalContext internalContext) {
 
-        if (internalContext.isShortTermHeld()) {
-            FinancialReport financialReport = TOptional.mapO(realisedProfits.getShortTermCapitalGains(), FinancialReport.empty());
-            updateFinancialReport(financialReport, internalContext);
-            realisedProfits.setShortTermCapitalGains(financialReport);
-        } else {
-            FinancialReport financialReport = TOptional.mapO(realisedProfits.getLongTermCapitalGains(), FinancialReport.empty());
-            updateFinancialReport(financialReport, internalContext);
-            realisedProfits.setLongTermCapitalGains(financialReport);
-        }
-
-        recordByClassification(realisedProfits, internalContext);
         updateFinancialReport(splitReport(realisedProfits, internalContext.assetType(), internalContext.segment()),
                 internalContext);
 
         realisedProfits.setLastUpdatedTime(LocalDateTime.now());
         return realisedProfits;
-    }
-
-    /**
-     * The same amounts again, under the classification that is actually true (D8).
-     *
-     * <p>No branch: five classifications cannot be forced through an {@code if/else}, and that
-     * forcing is precisely the defect this exists to end. A key appears only once a disposal has
-     * been classified that way, so the map stays as small as the period's real variety.
-     */
-    private static void recordByClassification(RealisedProfits realisedProfits, InternalContext internalContext) {
-        Map<CapitalGainsType, FinancialReport> byClassification =
-                TOptional.mapO(realisedProfits.getGainsByClassification(), new EnumMap<>(CapitalGainsType.class));
-        FinancialReport report = byClassification.computeIfAbsent(
-                internalContext.classification(), _ -> FinancialReport.empty());
-        updateFinancialReport(report, internalContext);
-        realisedProfits.setGainsByClassification(byClassification);
     }
 
     /**
@@ -552,22 +486,8 @@ public class ProfitAndLossService {
         fortnightReport.setSellAmount(TMoney.add(fortnightReport.getSellAmount(), internalContext.sellAmount()));
     }
 
-    /**
-     * Resolved rather than assumed. This used to be {@code buyDate.plusYears(1)} applied to every
-     * asset type, which is the listed-equity rule — mutual funds, bonds and gold bonds each follow a
-     * different one, and some are short-term however long they are held.
-     *
-     * <p>The asset type comes from the trade's own context. The sub-class, which is what decides a
-     * mutual fund's rule, is not available here and resolves as unclassified; the service logs that
-     * and counts it short-term, which is the higher-taxed direction.
-     */
-    private boolean isShortTermCapitalGain(AssetType assetType, LocalDate buyDate, LocalDate sellDate) {
-        return holdingPeriodService.isShortTerm(assetType, null, buyDate, sellDate);
-    }
-
     private record InternalContext(double purchaseAmount, double sellAmount, LocalDate sellDate,
-                                   boolean isShortTermHeld, CapitalGainsType classification, AssetType assetType,
-                                   TradeSegment segment) {
+                                   AssetType assetType, TradeSegment segment) {
     }
 
     /** Prices the trade, unless the caller already did. */
