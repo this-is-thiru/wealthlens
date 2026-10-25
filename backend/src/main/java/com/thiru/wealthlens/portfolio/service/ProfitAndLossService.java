@@ -5,11 +5,13 @@ import com.thiru.wealthlens.brokercharges.entity.model.MonthlyChargeSummary;
 import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
+import com.thiru.wealthlens.portfolio.dto.context.AssetContext;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
@@ -147,9 +149,20 @@ public class ProfitAndLossService {
 			realisedProfits.setLongTermCapitalGains(financialReport);
 		}
 
+		recordByAssetAndSegment(realisedProfits, internalContext);
 		realisedProfits.setLastUpdatedTime(LocalDateTime.now());
 		return realisedProfits;
 	}
+
+    /** V1's figures again, under what was sold and how it was traded (D-366). */
+    private static void recordByAssetAndSegment(RealisedProfits realisedProfits,
+                                                InternalTransactionContext internalContext) {
+        ProfitAndLossContext context = internalContext.getProfitAndLossContext();
+        AssetContext sell = context.getSellContext();
+        AssetType assetType = assetTypeOf(Optional.ofNullable(sell.getAssetType()),
+                Optional.ofNullable(context.getPurchaseContext().getAssetType()), sell.getName());
+        updateFinancialReport(splitReport(realisedProfits, assetType, sell.getSegment()), internalContext);
+    }
 
     private static void updateFinancialReport(FinancialReport financialReport, InternalTransactionContext internalContext) {
         Map<Month, MonthlyReport> monthlyReports = updateMonthlyReports(financialReport.getMonthlyReport(),
@@ -390,7 +403,10 @@ public class ProfitAndLossService {
             boolean isShortTermHeld = isShortTermCapitalGain(profitLossContext.assetType(), buyContext.date(), transactionDate);
             double purchaseAmount = buyContext.price() * buyContext.quantity();
             double sellAmount = profitLossContext.price() * buyContext.quantity();
-            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate, isShortTermHeld, classification);
+            AssetType assetType = assetTypeOf(Optional.ofNullable(profitLossContext.assetType()),
+                    buyContext.assetType(), profitLossContext.stockCode());
+            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate,
+                    isShortTermHeld, classification, assetType, profitLossContext.segment());
             updateProfitAndLossReport(profitAndLossEntity, profitLossContext, internalContext);
         }
 
@@ -433,6 +449,8 @@ public class ProfitAndLossService {
         }
 
         recordByClassification(realisedProfits, internalContext);
+        updateFinancialReport(splitReport(realisedProfits, internalContext.assetType(), internalContext.segment()),
+                internalContext);
 
         realisedProfits.setLastUpdatedTime(LocalDateTime.now());
         return realisedProfits;
@@ -452,6 +470,30 @@ public class ProfitAndLossService {
                 internalContext.classification(), _ -> FinancialReport.empty());
         updateFinancialReport(report, internalContext);
         realisedProfits.setGainsByClassification(byClassification);
+    }
+
+    /**
+     * The split's report for one asset type and segment, created on first use. A sale with no segment was traded
+     * under the entry default, delivery (D-295).
+     */
+    private static FinancialReport splitReport(RealisedProfits realisedProfits, AssetType assetType,
+                                               TradeSegment segment) {
+        Map<AssetType, Map<TradeSegment, FinancialReport>> split =
+                TOptional.mapO(realisedProfits.getGainsByAssetAndSegment(), new EnumMap<>(AssetType.class));
+        FinancialReport report = split.computeIfAbsent(assetType, _ -> new EnumMap<>(TradeSegment.class))
+                .computeIfAbsent(segment == null ? TradeSegment.DELIVERY : segment, _ -> FinancialReport.empty());
+        realisedProfits.setGainsByAssetAndSegment(split);
+        return report;
+    }
+
+    /**
+     * The sale's asset type, else the lot's, recorded at its buy (D-367). A sale neither records is refused rather
+     * than filed under a guess.
+     */
+    private static AssetType assetTypeOf(Optional<AssetType> sold, Optional<AssetType> lot, String stockCode) {
+        return sold.or(() -> lot).orElseThrow(() -> new IllegalArgumentException("Neither the sale of " + stockCode
+                + " nor the lot it was sold from records an asset type, so its profit cannot be filed; record the"
+                + " asset type on the sale"));
     }
 
     private static void updateFinancialReport(FinancialReport financialReport, InternalContext internalContext) {
@@ -524,7 +566,8 @@ public class ProfitAndLossService {
     }
 
     private record InternalContext(double purchaseAmount, double sellAmount, LocalDate sellDate,
-                                   boolean isShortTermHeld, CapitalGainsType classification) {
+                                   boolean isShortTermHeld, CapitalGainsType classification, AssetType assetType,
+                                   TradeSegment segment) {
     }
 
     /** Prices the trade, unless the caller already did. */

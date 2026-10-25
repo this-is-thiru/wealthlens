@@ -208,8 +208,8 @@ class ChargeRecordingGatewayImplTest {
         // Given
         when(userChargeService.computeAndRecord(any())).thenReturn(computed());
         List<BuyContext> lots = List.of(
-                new BuyContext(4, LocalDate.of(2025, 1, 5), 90.0),
-                new BuyContext(6, LocalDate.of(2025, 5, 20), 110.0));
+                new BuyContext(4, LocalDate.of(2025, 1, 5), 90.0, Optional.empty()),
+                new BuyContext(6, LocalDate.of(2025, 5, 20), 110.0, Optional.empty()));
 
         // When
         gateway(true).record(userMail(), sell(lots));

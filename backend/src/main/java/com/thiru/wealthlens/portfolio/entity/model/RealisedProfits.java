@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.portfolio.entity.model;
 import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
@@ -52,6 +54,15 @@ public class RealisedProfits implements Serializable {
      */
     @Field("gains_by_classification")
     private Map<CapitalGainsType, FinancialReport> gainsByClassification = new EnumMap<>(CapitalGainsType.class);
+
+    /**
+     * Every realised amount for the period, split by what was sold and how it was traded — facts, so a
+     * reader may sum it, and the tax side decides any term or head of income from them (D-362, D-366).
+     * Written beside the pair and {@link #gainsByClassification}, which it replaces (W-160d2); each
+     * family writes the figures it writes into the pair.
+     */
+    @Field("gains_by_asset_and_segment")
+    private Map<AssetType, Map<TradeSegment, FinancialReport>> gainsByAssetAndSegment = new EnumMap<>(AssetType.class);
 
     @Field("last_updated_time")
     @LastModifiedDate

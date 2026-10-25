@@ -2,7 +2,9 @@ package com.thiru.wealthlens.portfolio.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.thiru.wealthlens.brokercharges.entity.model.YearlyChargeSummary;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.Map;
@@ -45,6 +47,12 @@ public class RealisedProfitsResponse {
 	 * <p><b>Not summable</b> — see {@code CapitalGainsType.countsAsCapitalGains()}.
 	 */
 	private Map<CapitalGainsType, FinancialReportResponse> gainsByClassification = new EnumMap<>(CapitalGainsType.class);
+
+	/**
+	 * Every realised amount, split by asset type and segment (D-366). Summable. Mapped by name, so the
+	 * field name must keep matching {@code RealisedProfits.gainsByAssetAndSegment}.
+	 */
+	private Map<AssetType, Map<TradeSegment, FinancialReportResponse>> gainsByAssetAndSegment = new EnumMap<>(AssetType.class);
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime lastUpdatedTime;

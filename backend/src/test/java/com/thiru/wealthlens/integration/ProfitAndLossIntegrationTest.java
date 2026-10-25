@@ -6,6 +6,7 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
@@ -18,6 +19,7 @@ import com.thiru.wealthlens.portfolio.service.TemporaryTransactionService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
+import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +71,24 @@ public class ProfitAndLossIntegrationTest extends AbstractIntegrationTest {
         // Note: Financial year is calculated by server based on current date
         // Verify short term vs long term classification is correct
         assertNull(pnl.getRealisedProfits().getLongTermCapitalGains());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenSaved_keepsTheSplitByAssetTypeAndSegment() {
+        // Given -- 10 bought at 100 and sold at 150, delivery (the request's default)
+        String email = "split@example.com";
+        ProfitAndLossContext context = buildContext(email, "RELIANCE", LocalDate.of(2024, 1, 15),
+                LocalDate.of(2024, 6, 20), 10.0, 100.0, 150.0, AccountType.SELF);
+
+        // When
+        profitAndLossService.updateProfitAndLoss(UserMail.from(email), context);
+
+        // Then -- read back through Mongo, the nested enum-keyed map survives
+        FinancialReport split = findPnlByEmail(email).getRealisedProfits().getGainsByAssetAndSegment()
+                .get(AssetType.EQUITY).get(TradeSegment.DELIVERY);
+        assertNotNull(split);
+        MoneyAssert.assertMoney(1500.0, split.getSellAmount());
+        MoneyAssert.assertMoney(1000.0, split.getPurchaseAmount());
     }
 
     @Test

@@ -644,14 +644,16 @@ public class PortfolioService {
             Double assetQuantity = assetEntity.getQuantity();
 
             if (sellQuantity >= assetQuantity) {
-                buyContexts.add(new BuyContext(assetEntity.getQuantity(), assetEntity.getTransactionDate(), assetEntity.getPrice()));
+                buyContexts.add(new BuyContext(assetEntity.getQuantity(), assetEntity.getTransactionDate(), assetEntity.getPrice(),
+                        Optional.ofNullable(assetEntity.getAssetType())));
                 matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, assetQuantity, assetQuantity));
 
                 assetEntity.setQuantity(0D);
 //                assetEntity.setTotalValue(0);
                 sellQuantity = sellQuantity - assetQuantity;
             } else {
-                buyContexts.add(new BuyContext(sellQuantity, assetEntity.getTransactionDate(), assetEntity.getPrice()));
+                buyContexts.add(new BuyContext(sellQuantity, assetEntity.getTransactionDate(), assetEntity.getPrice(),
+                        Optional.ofNullable(assetEntity.getAssetType())));
                 matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, sellQuantity, assetQuantity));
 
                 double remainingQuantity = assetQuantity - sellQuantity;

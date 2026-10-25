@@ -46,7 +46,9 @@ public class ProfitAndLossContext {
 		sellContext.setPrice(assetRequest.getPrice());
 		sellContext.setQuantity(sellQuantity);
 		sellContext.setTransactionDate(assetRequest.getTransactionDate());
+		sellContext.setName(assetRequest.getStockCode());
 		sellContext.setAssetType(assetRequest.getAssetType());
+		sellContext.setSegment(assetRequest.getSegment());
 		sellContext.setBrokerCharges(sellBrokerCharge);
 		sellContext.setMiscCharges(sellMiscCharge);
 
