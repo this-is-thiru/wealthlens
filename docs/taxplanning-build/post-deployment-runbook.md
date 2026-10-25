@@ -312,6 +312,59 @@ fields back; no code reads them.
 
 **Removed after use:** W-168 / WL-35, once this is logged for every database.
 
+### 2.6 W-160d3 (D-369) — move the P&L's stored short / long pair into its split · `SUPER_USER` · **every database · once · outstanding**
+
+**Why.** Since W-160d2 the P&L reads realised figures only from `gains_by_asset_and_segment`, its split by asset type
+and segment. Documents written before W-160d1 hold them in the short / long pair (`short_term_capital_gains`,
+`long_term_capital_gains`) and V2's duplicate `gains_by_classification`. Until this runs, those years show no
+realised figures and add nothing to "total realised profit". This moves the pair's own figures into the split, so no
+amount changes, and unsets the old fields. `trade_outcomes` supplies only which asset type and segment a side's year
+was.
+
+**When:** at the deploy, **straight after it**, after §2.2 if §2.2 is run, since a user whose `trade_outcomes` are
+rebuilt there can then be placed here.
+
+**What it cannot place.** A side whose year has no `trade_outcomes`, more than one asset type or segment, or an outcome
+with no asset type, is left as it is and listed with its reason. **Bring that list back**: a session places a backlog
+row for those sides and they are decided one by one (D-366 C2a).
+
+1. **Count before** (read-only):
+
+   ```js
+   db.profit_and_loss.countDocuments({ $or: [
+     { "realised_profits.short_term_capital_gains": { $exists: true } },
+     { "realised_profits.long_term_capital_gains": { $exists: true } },
+     { "realised_profits.gains_by_classification": { $exists: true } },
+     { "out_sourced_realised_profits.short_term_capital_gains": { $exists: true } },
+     { "out_sourced_realised_profits.long_term_capital_gains": { $exists: true } },
+     { "out_sourced_realised_profits.gains_by_classification": { $exists: true } } ] })
+   ```
+
+2. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/profit-and-loss/split/reshape" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Read `placed` (where each side's pair would go) and `unplaced` (each side left, with its reason). Keep the
+   `unplaced` list.
+3. **Back up** the collection:
+
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection profit_and_loss --out profit_and_loss-before-reshape.json
+   ```
+
+4. **Write:** the same call with `?dryRun=false`. Each placed side's pair is added into its split entry, at the year,
+   each month and each half, and the pair and the map are unset. `audit_metadata.updatedBy` is the caller.
+5. **Verify:** step 1's count equals the number of documents with a side in `unplaced`, and a second dry run reports
+   `placed` empty.
+
+**Second run:** safe, including after a run that failed part-way: a placed side keeps no old field, so only what is
+left is matched (`ProfitAndLossSplitReshapeIntegrationTest`). **Way back:** `mongoimport --mode upsert` of the step-3
+file.
+
+**Removed after use:** W-170 / WL-36, once this is logged for every database and its `unplaced` list is placed.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
