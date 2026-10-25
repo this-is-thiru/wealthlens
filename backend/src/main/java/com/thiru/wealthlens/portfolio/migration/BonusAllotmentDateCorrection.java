@@ -5,13 +5,9 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.BonusAllotmentCorrectionReport;
 import com.thiru.wealthlens.portfolio.dto.BonusAllotmentCorrectionReport.ActionCorrection;
 import com.thiru.wealthlens.portfolio.dto.BonusAllotmentDate;
-import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.TradeClassification;
-import com.thiru.wealthlens.portfolio.holding.TradeClassificationQuery;
-import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,7 +31,7 @@ import org.springframework.stereotype.Service;
  * 1(i)(f) to s.2(42A); 2025 s.2(101)(c)(C)(IV); W-088k4b, D-308).
  *
  * <p>For each action it records the allotment date, then moves the bonus lots, their transactions and the disposals of
- * those lots off the ex-date, recomputing each disposal's holding period and {@code portfolio}'s own classification.
+ * those lots off the ex-date, recomputing each disposal's holding period.
  * Only documents still at the ex-date are touched, so a second run — including after one that failed part-way — finds
  * nothing left. Every entry is validated before anything is written. Run when a {@code SUPER_USER} asks, never at
  * startup (D-280); the caller is recorded on each document written. One-time: removed once its run is logged for
@@ -47,8 +43,6 @@ import org.springframework.stereotype.Service;
 public class BonusAllotmentDateCorrection {
 
     private final MongoTemplate mongoTemplate;
-
-    private final TradeClassifier tradeClassifier;
 
     /**
      * Correct the given actions unless {@code dryRun}; {@code auditor} is who asked.
@@ -125,16 +119,10 @@ public class BonusAllotmentDateCorrection {
                 .and("corporateActions.id").is(action.getId()));
     }
 
-    /** The disposal's buy date moved, and what portfolio derived from it recomputed from the new date. */
-    private Update redated(TradeOutcomeEntity row, LocalDate allotmentDate) {
-        // A row from before segments were kept was classified with the entry default, DELIVERY (D-295).
-        TradeSegment segment = Optional.ofNullable(row.getSegment()).orElse(TradeSegment.DELIVERY);
-        TradeClassification classification = tradeClassifier.classify(new TradeClassificationQuery(row.getStockCode(),
-                row.getAssetType(), segment, allotmentDate, row.getSellDate()));
+    /** The disposal's buy date moved, and its holding period recomputed from the new date. */
+    private static Update redated(TradeOutcomeEntity row, LocalDate allotmentDate) {
         return Update.update("buyDate", allotmentDate)
-                .set("holdingPeriodDays", ChronoUnit.DAYS.between(allotmentDate, row.getSellDate()))
-                .set("capitalGainsType", classification.capitalGainsType())
-                .set("classificationReason", classification.reason());
+                .set("holdingPeriodDays", ChronoUnit.DAYS.between(allotmentDate, row.getSellDate()));
     }
 
     private static Update audited(Update update, String auditor, LocalDateTime now) {

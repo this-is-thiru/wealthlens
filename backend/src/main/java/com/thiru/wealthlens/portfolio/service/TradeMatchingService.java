@@ -5,11 +5,9 @@ import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
@@ -30,8 +28,6 @@ import org.springframework.stereotype.Service;
 @Log4j2
 @RequiredArgsConstructor
 public class TradeMatchingService {
-
-    private final HoldingPeriodService holdingPeriodService;
 
     /**
      * Builds virtual BuyLots from BUY TransactionEntity records.
@@ -205,7 +201,6 @@ public class TradeMatchingService {
                 .netProfit(figures.netProfit())
                 .profitPercentage(figures.profitPercentage())
                 .holdingPeriodDays(ChronoUnit.DAYS.between(lot.getBuyDate(), sell.getSellDate()))
-                .capitalGainsType(capitalGainsType(sell, lot))
                 .financialYear(TLocalDate.financialYear(sell.getSellDate()))
                 .sourceSellTransactionId(sell.getId())
                 .sourceBuyLotId(lot.getId())
@@ -215,16 +210,6 @@ public class TradeMatchingService {
                 .buyVenue(lot.getVenue())
                 .sellVenue(TradeVenue.stored(sell.getExchangeName(), sell.getSegment()))
                 .build();
-    }
-
-    /**
-     * Capital gains type, resolved rather than counted: 365 days is the listed-equity rule and was being applied to
-     * mutual funds, bonds and gold bonds too.
-     */
-    private CapitalGainsType capitalGainsType(SellRequest sell, BuyLot lot) {
-        return holdingPeriodService
-                .classify(lot.getAssetType(), null, lot.getBuyDate(), sell.getSellDate())
-                .capitalGainsType();
     }
 
     /** The buy charges as allocated, the sell's pro-rated to the matched quantity, and the portion's values. */
@@ -271,7 +256,6 @@ public class TradeMatchingService {
                 .netProfit(trade.getNetProfit())
                 .profitPercentage(trade.getProfitPercentage())
                 .holdingPeriodDays(trade.getHoldingPeriodDays())
-                .capitalGainsType(trade.getCapitalGainsType())
                 .financialYear(trade.getFinancialYear())
                 .sourceSellTransactionId(trade.getSourceSellTransactionId())
                 .sourceBuyLotId(trade.getSourceBuyLotId())
@@ -316,7 +300,6 @@ public class TradeMatchingService {
         entity.setNetProfit(trade.getNetProfit());
         entity.setProfitPercentage(trade.getProfitPercentage());
         entity.setHoldingPeriodDays(trade.getHoldingPeriodDays());
-        entity.setCapitalGainsType(trade.getCapitalGainsType());
         entity.setFinancialYear(trade.getFinancialYear());
         entity.setSourceSellTransactionId(trade.getSourceSellTransactionId());
         entity.setSourceBuyLotId(trade.getSourceBuyLotId());
@@ -439,7 +422,6 @@ public class TradeMatchingService {
         private double netProfit;
         private double profitPercentage;
         private long holdingPeriodDays;
-        private CapitalGainsType capitalGainsType;
         private String financialYear;
 
         private String sourceSellTransactionId;

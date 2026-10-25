@@ -11,18 +11,15 @@ import com.thiru.wealthlens.portfolio.dto.BonusAllotmentCorrectionReport;
 import com.thiru.wealthlens.portfolio.dto.BonusAllotmentCorrectionReport.ActionCorrection;
 import com.thiru.wealthlens.portfolio.dto.BonusAllotmentDate;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodSeeder;
 import com.thiru.wealthlens.portfolio.migration.BonusAllotmentDateCorrection;
 import java.time.LocalDate;
 import java.util.List;
 import org.bson.Document;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -39,14 +36,6 @@ class BonusAllotmentDateCorrectionIntegrationTest extends AbstractIntegrationTes
 
     @Autowired
     private BonusAllotmentDateCorrection correction;
-
-    @Autowired
-    private HoldingPeriodSeeder holdingPeriodSeeder;
-
-    @BeforeEach
-    void seedHoldingPeriods() {
-        holdingPeriodSeeder.seed("test");
-    }
 
     /** A bonus action, a holding's purchase lot and its bonus lot, both transactions, and a sale of the bonus lot. */
     private String bonusProcessedBeforeK4a(CorporateActionType type) {
@@ -72,7 +61,6 @@ class BonusAllotmentDateCorrectionIntegrationTest extends AbstractIntegrationTes
         sale.setBuyDate(EX_DATE);
         sale.setSellDate(SOLD);
         sale.setHoldingPeriodDays(367L);
-        sale.setCapitalGainsType(CapitalGainsType.LONG_TERM);
         mongoTemplate.save(sale);
         return action.getId();
     }
@@ -142,8 +130,7 @@ class BonusAllotmentDateCorrectionIntegrationTest extends AbstractIntegrationTes
         // When
         correction.correct(List.of(new BonusAllotmentDate(id, ALLOTTED)), false, "test");
 
-        // Then -- 22-1-2024 to 21-1-2025 is 365 days, and 22-1-2024 + 12 months (22-1-2025) is not before the sale, so
-        // short-term (D-303); the purchase lot keeps its date
+        // Then -- 22-1-2024 to 21-1-2025 is 365 days; the purchase lot keeps its date
         assertThat(mongoTemplate.findById(id, CorporateActionEntity.class).getAllotmentDate()).isEqualTo(ALLOTTED);
         assertThat(lotDate("bonus")).isEqualTo(ALLOTTED);
         assertThat(transactionDate("bonus-txn")).isEqualTo(ALLOTTED);
@@ -151,7 +138,6 @@ class BonusAllotmentDateCorrectionIntegrationTest extends AbstractIntegrationTes
         assertThat(transactionDate("parent-txn")).isEqualTo(BOUGHT);
         assertThat(sale().getBuyDate()).isEqualTo(ALLOTTED);
         assertThat(sale().getHoldingPeriodDays()).isEqualTo(365L);
-        assertThat(sale().getCapitalGainsType()).isEqualTo(CapitalGainsType.SHORT_TERM);
     }
 
     @Test

@@ -7,7 +7,6 @@ import com.thiru.wealthlens.portfolio.dto.analytics.MarketPriceEntry;
 import com.thiru.wealthlens.portfolio.dto.analytics.XirrRequest;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
@@ -133,7 +132,6 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         outcome.setNetProfit(1480.0 - 1015.0); // ~465.0
         outcome.setProfitPercentage((outcome.getNetProfit() / outcome.getTotalBuyValue()) * 100);
         outcome.setHoldingPeriodDays(516L); // days between 2023-01-01 and 2024-06-01
-        outcome.setCapitalGainsType(CapitalGainsType.LONG_TERM);
         outcome.setFinancialYear("2024-25");
         mongoTemplate.save(outcome, "trade_outcomes");
 
@@ -159,7 +157,6 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         win.setTotalBuyValue(1000.0);
         win.setTotalSellValue(1500.0);
         win.setHoldingPeriodDays(30L);
-        win.setCapitalGainsType(CapitalGainsType.SHORT_TERM);
         win.setFinancialYear("2024-25");
         mongoTemplate.save(win, "trade_outcomes");
 
@@ -172,7 +169,6 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         loss.setTotalBuyValue(2000.0);
         loss.setTotalSellValue(1700.0);
         loss.setHoldingPeriodDays(60L);
-        loss.setCapitalGainsType(CapitalGainsType.SHORT_TERM);
         loss.setFinancialYear("2024-25");
         mongoTemplate.save(loss, "trade_outcomes");
 
@@ -185,7 +181,6 @@ public class AnalyticsIntegrationTest extends AbstractIntegrationTest {
         breakeven.setTotalBuyValue(500.0);
         breakeven.setTotalSellValue(500.0);
         breakeven.setHoldingPeriodDays(45L);
-        breakeven.setCapitalGainsType(CapitalGainsType.LONG_TERM);
         breakeven.setFinancialYear("2024-25");
         mongoTemplate.save(breakeven, "trade_outcomes");
 

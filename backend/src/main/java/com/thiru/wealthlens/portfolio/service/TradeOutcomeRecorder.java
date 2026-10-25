@@ -139,9 +139,7 @@ public class TradeOutcomeRecorder {
                 .netProfit(figures.netProfit())
                 .profitPercentage(figures.profitPercentage())
                 .holdingPeriodDays(ChronoUnit.DAYS.between(asset.getTransactionDate(), sell.getTransactionDate()))
-                .capitalGainsType(classification.capitalGainsType())
                 .instrumentSubClass(classification.subClass())
-                .classificationReason(classification.reason())
                 .financialYear(TLocalDate.financialYear(sell.getTransactionDate()))
                 .sourceSellTransactionId(sellTransactionId)
                 .build();

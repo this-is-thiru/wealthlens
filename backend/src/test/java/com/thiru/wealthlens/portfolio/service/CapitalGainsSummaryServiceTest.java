@@ -16,7 +16,6 @@ import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
@@ -117,22 +116,6 @@ class CapitalGainsSummaryServiceTest {
         assertCanonical(263.00, bucket(summary, A_AND_B_BOUGHT_ON).gainRupees());
         assertCanonical(390.00, bucket(summary, LocalDate.of(2024, 1, 2)).gainRupees());
         assertThat(bucket(summary, A_AND_B_BOUGHT_ON).assetType()).isEqualTo(AssetType.EQUITY);
-    }
-
-    @Test
-    void summaryFor_whenRowsDifferOnlyInTheirStoredTerm_publishesOneBucket() {
-        // Given — the same facts, stored as one term and as the other; the term is the tax side's (W-160b)
-        TradeOutcomeEntity p = row("P", AssetType.EQUITY, 120, 100, 1);
-        p.setCapitalGainsType(CapitalGainsType.SHORT_TERM);
-        TradeOutcomeEntity q = row("Q", AssetType.EQUITY, 130, 100, 1);
-        q.setCapitalGainsType(CapitalGainsType.LONG_TERM);
-
-        // When
-        CapitalGainsSummary summary = summaryOf(List.of(p, q));
-
-        // Then — 120 − 100 = 20, 130 − 100 = 30
-        assertThat(summary.buckets()).hasSize(1);
-        assertCanonical(50.00, summary.buckets().getFirst().gainRupees());
     }
 
     @Test

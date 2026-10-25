@@ -233,8 +233,8 @@ class TradeOutcomeRecorderTest {
     }
 
     @Test
-    @DisplayName("intraday equity is recorded as speculative, with its segment on the row")
-    void record_whenIntraday_classifiesAsSpeculativeAndRecordsTheSegment() {
+    @DisplayName("intraday equity is recorded with its segment on the row")
+    void record_whenIntraday_recordsTheSegment() {
         // Given
         List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
                 new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 20.0), 1.0, 1.0));
@@ -245,7 +245,6 @@ class TradeOutcomeRecorderTest {
 
         // Then
         TradeOutcomeContext row = captureSaved(1).getFirst();
-        assertEquals(CapitalGainsType.SPECULATIVE, row.getCapitalGainsType());
         assertEquals(TradeSegment.INTRADAY, row.getSegment());
     }
 
@@ -471,9 +470,7 @@ class TradeOutcomeRecorderTest {
         assertEquals(SELL_DATE, row.getSellDate());
         // 2024-01-10 -> 2025-01-10 is 366 days (leap year); then 21+28+31+30+31+10 = 151
         assertEquals(517L, row.getHoldingPeriodDays());
-        assertEquals(CapitalGainsType.LONG_TERM, row.getCapitalGainsType());
         assertNull(row.getInstrumentSubClass());
-        assertEquals("held beyond 12 months", row.getClassificationReason());
         assertEquals("2025-2026", row.getFinancialYear());
         assertEquals("sell-1", row.getSourceSellTransactionId());
         assertEquals("asset-buy-1", row.getSourceBuyLotId());

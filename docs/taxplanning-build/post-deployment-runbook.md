@@ -265,9 +265,8 @@ in the wrong term. This moves them to the allotment date **you supply**, read fr
    ```
 
 5. **Write:** the same call with `?dryRun=false`. Each action gets `allotment_date`. Its bonus lots and transactions
-   still at the ex-date move to the allotment date. Each disposal of them gets `buy_date`, `holding_period_days` and
-   `portfolio`'s own `capital_gains_type` / `classification_reason` recomputed. `audit_metadata.updatedBy` is the
-   caller.
+   still at the ex-date move to the allotment date. Each disposal of them gets `buy_date` and `holding_period_days`
+   recomputed; since W-160c it no longer writes a term. `audit_metadata.updatedBy` is the caller.
 6. **Verify:** a second call (dry run) reports `0` for every count, and step 1 shows every bonus with its
    `allotment_date`.
 
@@ -275,6 +274,43 @@ in the wrong term. This moves them to the allotment date **you supply**, read fr
 an equal allotment date is a no-op. **Way back:** `mongoimport --mode upsert` of the step-4 files.
 
 **Removed after use:** W-150 / WL-34, once this is logged for every database with bonus actions.
+
+### 2.5 W-160c (D-365) — remove the term `portfolio` stored on `trade_outcomes` · `SUPER_USER` · **every database · once · outstanding**
+
+**Why.** `portfolio` stored a short-term / long-term label (`capital_gains_type`) and its reason
+(`classification_reason`) on each disposal, decided from its own copy of the holding-period law. The term is the tax
+side's to decide from the row's facts (D-362), and since W-160c no code writes or reads either field. This removes
+them from the rows written before. Nothing reads them, so the step only cleans the data; it changes no figure.
+
+**When:** at the one deploy, after §2.4. After W-160c no writer sets either field, so §2.2's rebuild may run before or
+after it.
+
+1. **Count before** (read-only):
+   `db.trade_outcomes.countDocuments({ $or: [ { capital_gains_type: { $exists: true } }, { classification_reason: { $exists: true } } ] })`.
+2. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/trade-outcomes/stored-terms/remove" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Expect `rows` equal to step 1's count.
+3. **Back up** the two fields:
+
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection trade_outcomes \
+     --query '{"$or":[{"capital_gains_type":{"$exists":true}},{"classification_reason":{"$exists":true}}]}' \
+     --fields _id,capital_gains_type,classification_reason --out trade_outcomes-stored-terms-backup.json
+   ```
+
+4. **Write:** the same call with `?dryRun=false`. Both fields are unset on every row carrying either, and
+   `audit_metadata.updatedBy` is set to the caller.
+5. **Verify:** step 1's count is 0, and a second call reports `rows` 0.
+
+**Second run:** safe, including after a run that failed part-way: only rows still carrying either field are matched
+(`TradeOutcomeStoredTermRemovalIntegrationTest`). **Way back:** `mongoimport --mode merge` of the step-3 file puts both
+fields back; no code reads them.
+
+**Removed after use:** W-168 / WL-35, once this is logged for every database.
 
 ---
 

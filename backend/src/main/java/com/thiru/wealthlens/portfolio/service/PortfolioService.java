@@ -18,7 +18,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.export.PortfolioExcelExporter;
@@ -79,7 +78,6 @@ public class PortfolioService {
     private final ChargeRecordingGateway chargeRecordingGateway;
     private final ChargeViewAssembler chargeViewAssembler;
     private final ChargeEngineProperties chargeEngineProperties;
-    private final HoldingPeriodService holdingPeriodService;
 
     private final TradeOutcomeRecorder tradeOutcomeRecorder;
 
@@ -719,11 +717,6 @@ public class PortfolioService {
                 .netProfit(figures.netProfit())
                 .profitPercentage(figures.profitPercentage())
                 .holdingPeriodDays(ChronoUnit.DAYS.between(buyDate, sellDate))
-                // Resolved rather than counted. For listed equity this is the same answer 365 days gave; for
-                // every other asset type it is the first correct one.
-                .capitalGainsType(holdingPeriodService
-                        .classify(assetRequest.getAssetType(), null, buyDate, sellDate)
-                        .capitalGainsType())
                 .financialYear(deriveFinancialYear(sellDate))
                 .sourceSellTransactionId(transactionId)
                 .sellExchangeName(assetRequest.getExchangeName())

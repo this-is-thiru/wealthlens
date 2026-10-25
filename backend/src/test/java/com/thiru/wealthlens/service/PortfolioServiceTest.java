@@ -15,13 +15,10 @@ import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolution;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
@@ -82,9 +79,6 @@ class PortfolioServiceTest {
     private ChargeViewAssembler chargeViewAssembler;
 
     @Mock
-    private HoldingPeriodService holdingPeriodService;
-
-    @Mock
     private TradeOutcomeRecorder tradeOutcomeRecorder;
 
     private TestablePortfolioService portfolioService;
@@ -115,7 +109,6 @@ class PortfolioServiceTest {
                 chargeRecordingGateway,
                 chargeViewAssembler,
                 properties,
-                holdingPeriodService,
                 tradeOutcomeRecorder
         );
     }
@@ -136,12 +129,12 @@ class PortfolioServiceTest {
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
-                HoldingPeriodService holdingPeriodService, TradeOutcomeRecorder tradeOutcomeRecorder) {
+                TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
                     chargeEngineProperties,
-                    holdingPeriodService, tradeOutcomeRecorder);
+                    tradeOutcomeRecorder);
         }
 
         void resetAddTransactionBehaviour() {
@@ -185,13 +178,12 @@ class PortfolioServiceTest {
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
-                HoldingPeriodService holdingPeriodService,
                 TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
                     chargeEngineProperties,
-                    holdingPeriodService, tradeOutcomeRecorder);
+                    tradeOutcomeRecorder);
         }
 
         @Override
@@ -208,7 +200,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -226,7 +218,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -587,8 +579,6 @@ class PortfolioServiceTest {
                 .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(
                         any(), any(), any(), any()))
                 .thenReturn(lots);
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
 
         // When
         portfolioService.sellStock(userMail, "sell-1", sell);
@@ -632,7 +622,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
 
         // When
         String result = realService.addTransaction(userMail, request, new ArrayList<>());
@@ -668,8 +658,6 @@ class PortfolioServiceTest {
         when(portfolioRepository
                 .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
 
         // When -- three successive single-unit sells
         for (int i = 0; i < 3; i++) {
@@ -702,8 +690,6 @@ class PortfolioServiceTest {
         when(portfolioRepository
                 .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
         AssetRequest sell = createAssetRequest("STOCK1");
         sell.setAccountType(AccountType.OUTSOURCED);
         sell.setAccountHolder("main");
@@ -738,7 +724,6 @@ class PortfolioServiceTest {
         assertEquals(LocalDate.of(2025, 8, 10), row.getSellDate());
         // 2024-01-10 -> 2025-01-10 is 366 days (leap year); then 21+28+31+30+31+30+31+10 = 212
         assertEquals(578L, row.getHoldingPeriodDays());
-        assertEquals(CapitalGainsType.LONG_TERM, row.getCapitalGainsType());
         assertEquals("2025-2026", row.getFinancialYear());
         assertEquals("sell-1", row.getSourceSellTransactionId());
         assertEquals("asset-buy-1", row.getSourceBuyLotId());
@@ -772,8 +757,6 @@ class PortfolioServiceTest {
         when(portfolioRepository
                 .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
         AssetRequest sell = createAssetRequest("STOCK1");
         sell.setQuantity(1.0);
         sell.setPrice(200.0);
@@ -798,8 +781,6 @@ class PortfolioServiceTest {
         when(portfolioRepository
                 .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
         AssetRequest sell = createAssetRequest("STOCK1");
         sell.setQuantity(1.0);
         sell.setPrice(200.0);

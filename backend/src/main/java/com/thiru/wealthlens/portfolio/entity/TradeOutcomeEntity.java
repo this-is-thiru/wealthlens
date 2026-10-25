@@ -6,7 +6,6 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
@@ -132,9 +131,6 @@ public class TradeOutcomeEntity implements AuditableEntity {
     @Field("holding_period_days")
     private Long holdingPeriodDays;
 
-    @Field(name = "capital_gains_type", targetType = FieldType.STRING)
-    private CapitalGainsType capitalGainsType;
-
 
     /**
      * How the disposal was traded. Decides speculative and derivative treatment before holding
@@ -144,19 +140,14 @@ public class TradeOutcomeEntity implements AuditableEntity {
     private TradeSegment segment;
 
     /**
-     * The second dimension behind {@link #capitalGainsType} — {@code EQUITY_ORIENTED} /
-     * {@code SPECIFIED} / {@code OTHER} for a scheme, {@code LISTED} / {@code UNLISTED} for a bond.
+     * The instrument's sub-class — {@code EQUITY_ORIENTED} / {@code SPECIFIED} / {@code OTHER} for a
+     * scheme, {@code LISTED} / {@code UNLISTED} for a bond.
      *
-     * <p>Null until the instrument registry ships (D7), which is why mutual funds and bonds record
-     * {@code UNCLASSIFIED}. Stored explicitly rather than inferred so a reader can tell a row that
-     * was classified as unknown from one written before the field existed.
+     * <p>Null until the instrument registry ships (D7). Stored explicitly rather than inferred so a
+     * reader can tell a row that was classified as unknown from one written before the field existed.
      */
     @Field("instrument_sub_class")
     private String instrumentSubClass;
-
-    /** Why the classification came out as it did — the only place an UNCLASSIFIED row says which kind of unknown it is. */
-    @Field("classification_reason")
-    private String classificationReason;
 
     /**
      * What the buy actually cost, by charge code, rather than one lumped total.

@@ -4,7 +4,6 @@ import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import java.time.LocalDate;
@@ -52,10 +51,8 @@ public class TradeOutcomeContext {
     private double netProfit;
     private double profitPercentage;
     private Long holdingPeriodDays;
-    private CapitalGainsType capitalGainsType;
     private TradeSegment segment;
     private String instrumentSubClass;
-    private String classificationReason;
     private Map<String, Double> buyChargeBreakup;
     private Map<String, Double> sellChargeBreakup;
     private double deductibleBuyCharges;

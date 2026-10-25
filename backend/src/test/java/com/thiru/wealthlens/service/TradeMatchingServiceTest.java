@@ -2,60 +2,28 @@ package com.thiru.wealthlens.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.lenient;
 
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
-import com.thiru.wealthlens.portfolio.entity.HoldingPeriodPolicyEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolver;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
-import com.thiru.wealthlens.portfolio.repository.HoldingPeriodPolicyRepository;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.BuyLot;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.MatchedTrade;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.SellRequest;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
-import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ClassPathResource;
 
-@ExtendWith(MockitoExtension.class)
 class TradeMatchingServiceTest {
 
-    @Mock
-    private HoldingPeriodPolicyRepository holdingPeriodPolicyRepository;
-
-    private TradeMatchingService tradeMatchingService;
-
-    /**
-     * A real resolver over the shipped policies rather than a mock. These tests assert capital-gains
-     * classification, and a stubbed classifier would make every one of those assertions agree with
-     * whatever the stub was told to say.
-     */
-    @BeforeEach
-    void setUp() throws Exception {
-        String json = new String(new ClassPathResource(
-                "data/holding-periods/holding-period-policies.json").getInputStream().readAllBytes());
-        // Lenient: several tests here never reach a classification, and an unused stub is not a defect.
-        lenient().when(holdingPeriodPolicyRepository.findAll())
-                .thenReturn(TJsonMapper.readAsList(json, HoldingPeriodPolicyEntity.class));
-        tradeMatchingService = new TradeMatchingService(
-                new HoldingPeriodService(new HoldingPeriodResolver(holdingPeriodPolicyRepository)));
-    }
+    private final TradeMatchingService tradeMatchingService = new TradeMatchingService();
 
     @Test
     void shouldMergeSameDayBuys() {
@@ -519,7 +487,6 @@ class TradeMatchingServiceTest {
         assertEquals(453.0 / 1025.0 * 100, fromFirst.getProfitPercentage(), 1e-9);
         // 2024-01-10 → 2025-01-10 is 366 days (2024 is a leap year); then 21 + 28 + 31 + 30 + 31 + 2 = 143
         assertEquals(509L, fromFirst.getHoldingPeriodDays());
-        assertEquals(CapitalGainsType.LONG_TERM, fromFirst.getCapitalGainsType());  // listed equity, over 12 months
         assertTrue(fromFirst.isCorporateActionDerived());
         assertEquals(List.of(), fromFirst.getAppliedCorporateActions());
         assertEquals(Acquisition.of(CorporateActionType.BONUS), fromFirst.getAcquisition());
@@ -716,7 +683,6 @@ class TradeMatchingServiceTest {
                 .netProfit(465.0)
                 .profitPercentage(45.81)
                 .holdingPeriodDays(151)
-                .capitalGainsType(CapitalGainsType.SHORT_TERM)
                 .financialYear("FY2023-24")
                 .sourceSellTransactionId("sell-123")
                 .sourceBuyLotId("lot-RELIANCE-2023-01-15")
@@ -742,7 +708,6 @@ class TradeMatchingServiceTest {
         assertEquals(LocalDate.of(2023, 6, 15), entity.getSellDate());
         assertEquals(465.0, entity.getNetProfit(), 0.01);
         assertEquals(151, entity.getHoldingPeriodDays());
-        assertEquals(CapitalGainsType.SHORT_TERM, entity.getCapitalGainsType());
         assertEquals("FY2023-24", entity.getFinancialYear());
         assertEquals("sell-123", entity.getSourceSellTransactionId());
         assertEquals("lot-RELIANCE-2023-01-15", entity.getSourceBuyLotId());
