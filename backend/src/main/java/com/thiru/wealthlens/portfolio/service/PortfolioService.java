@@ -13,14 +13,12 @@ import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.HoldingType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
-import com.thiru.wealthlens.portfolio.service.export.PortfolioExcelExporter;
 import com.thiru.wealthlens.portfolio.service.parser.AssetRequestParser;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
@@ -30,16 +28,13 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.math.DoubleUtil;
-import com.thiru.wealthlens.shared.util.parser.ExcelParser;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
-import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,8 +44,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -573,6 +566,11 @@ public class PortfolioService {
                 .sorted(Map.Entry.comparingByKey())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, _) -> e1, LinkedHashMap::new));
         assetResponse.setTransactionQuantities(transactionQuantities);
+        LocalDate today = TLocalDate.today();
+        Map<String, Long> daysHeld = new LinkedHashMap<>();
+        transactionQuantities.keySet().forEach(date ->
+                daysHeld.put(date, ChronoUnit.DAYS.between(TLocalDate.convertToDate(date), today)));
+        assetResponse.setDaysHeld(daysHeld);
         assetResponse.setTransactionDate(null);
         return assetResponse;
     }
@@ -807,66 +805,14 @@ public class PortfolioService {
         portfolioRepository.saveAll(stocks);
     }
 
-    public List<AssetResponse> getAssets(UserMail userMail, HoldingType holdingType) {
-
-        String oneYearBeforeDate = TLocalDate.lastYearSameDateInString();
-
-        List<AssetEntity> assetEntities = switch (holdingType) {
-            case LONG_TERM -> getLongTermHeldAssets(userMail, oneYearBeforeDate);
-            case SHORT_TERM -> getShortTermHeldAssets(userMail, oneYearBeforeDate);
-        };
-
-        Map<String, List<AssetEntity>> resultedAssetsMap = TCollectionUtil.groupingBy(assetEntities, stockWithCodeAndBroker());
-        List<AssetResponse> resultedAssets = TCollectionUtil.map(resultedAssetsMap.values(), PortfolioService::combineAllDetailsOfEntities);
-
-        List<String> stockCodes = TCollectionUtil.map(resultedAssets, AssetResponse::getStockCode);
-        Map<String, Double> assetQuantityMap = TCollectionUtil.toMap(resultedAssets, stockCodeWithBroker(), AssetResponse::getQuantity);
-
-        List<AssetResponse> allAssets = getStockEntities(userMail, new HashSet<>(stockCodes));
-
-        Function<AssetResponse, AssetResponse> quantityUpdater = assetResponse -> {
-            double quantity = assetResponse.getQuantity();
-            assetResponse.setTotalQuantity(quantity);
-            String stockWithBroker = assetResponse.getStockCode() + assetResponse.getBrokerName();
-            assetResponse.setQuantity(assetQuantityMap.getOrDefault(stockWithBroker, 0.0));
-            return assetResponse;
-        };
-
-        return TCollectionUtil.mapAndApply(allAssets, quantityUpdater, assetResponse -> assetResponse.getQuantity() > 0);
-    }
-
     private Function<AssetEntity, String> stockWithCodeAndBroker() {
         return asset -> asset.getStockCode() + asset.getBrokerName().name();
-    }
-
-    private Function<AssetResponse, String> stockCodeWithBroker() {
-        return assetResponse -> assetResponse.getStockCode() + assetResponse.getBrokerName();
     }
 
     private List<AssetResponse> getStockEntities(UserMail userMail, Collection<String> stockCodes) {
 
         List<AssetEntity> stockEntities = portfolioRepository.findByEmailAndStockCodeIn(userMail.getEmail(), stockCodes);
         return groupedWithCharges(userMail, stockEntities);
-    }
-
-    private List<AssetEntity> getLongTermHeldAssets(UserMail userMail, String oneYearBeforeDate) {
-
-        QueryFilter queryFilter = QueryFilter.builder().filterKey("transaction_date").value(oneYearBeforeDate).operation(QueryFilter.FilterOperation.LESSER_THAN).isDateField(true).build();
-
-        List<QueryFilter> queryFilters = new ArrayList<>();
-        queryFilters.add(queryFilter);
-
-        return searchAssets(userMail, queryFilters);
-    }
-
-    private List<AssetEntity> getShortTermHeldAssets(UserMail userMail, String oneYearBeforeDate) {
-
-        QueryFilter queryFilter = QueryFilter.builder().filterKey("transaction_date").value(oneYearBeforeDate).operation(QueryFilter.FilterOperation.GREATER_THAN).isDateField(true).build();
-
-        List<QueryFilter> queryFilters = new ArrayList<>();
-        queryFilters.add(queryFilter);
-
-        return searchAssets(userMail, queryFilters);
     }
 
     public List<AssetResponse> getMutualFunds(UserMail userMail) {
@@ -893,15 +839,5 @@ public class PortfolioService {
         log.info("ReportService.updateReports() removed — TradeOutcomeEntity uses typed schema");
         transactionService.updateTransactions();
         log.info("Updated all transactions");
-    }
-
-    public Pair<InputStreamResource, String> downloadTermAssets(UserMail userMail, HoldingType holdingType) {
-
-        List<AssetResponse> assets = this.getAssets(userMail, holdingType);
-        String fileName = ExcelParser.HOLDINGS_FILE_NAME;
-        ByteArrayInputStream inputStream = PortfolioExcelExporter.assets(assets, List.of(), true);
-        InputStreamResource resource = new InputStreamResource(inputStream);
-
-        return Pair.of(resource, fileName);
     }
 }

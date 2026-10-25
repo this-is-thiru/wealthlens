@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
@@ -19,6 +20,8 @@ import com.thiru.wealthlens.shared.dto.BulkGetRequest;
 import com.thiru.wealthlens.shared.dto.DateRange;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
+import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import io.restassured.RestAssured;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -703,6 +706,33 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void getAllStocks_whenAHoldingWasBoughtOnTwoDates_reportsTheDaysHeldForEach() {
+        String token = generateToken(TEST_EMAIL);
+
+        // Given -- one holding bought 400 days ago and 30 days ago
+        LocalDate today = TLocalDate.today();
+        AssetEntity older = buildAssetEntity();
+        older.setTransactionDate(today.minusDays(400));
+        AssetEntity newer = buildAssetEntity();
+        newer.setTransactionDate(today.minusDays(30));
+        mongoTemplate.save(older, "assets");
+        mongoTemplate.save(newer, "assets");
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/all";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, new HttpEntity<>(headers),
+                String.class);
+
+        // Then
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        AssetResponse holding = TJsonMapper.readAsList(response.getBody(), AssetResponse.class).getFirst();
+        assertEquals(400L, holding.getDaysHeld().get(today.minusDays(400).toString()));
+        assertEquals(30L, holding.getDaysHeld().get(today.minusDays(30).toString()));
+    }
+
+    @Test
     void getAllStocks_empty_whenNoAssets_expected200AndEmptyList() {
         String token = generateToken(TEST_EMAIL);
 
@@ -782,66 +812,6 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         assertNotNull(response.getBody());
-    }
-
-    @Test
-    void getAssets_longTerm_whenOldAssetsExist_expected200() {
-        String token = generateToken(TEST_EMAIL);
-
-        AssetEntity asset = buildAssetEntity();
-        asset.setTransactionDate(LocalDate.now().minusYears(2));
-        mongoTemplate.save(asset, "assets");
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/LONG_TERM";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-    }
-
-    @Test
-    void getAssets_shortTerm_whenRecentAssetsExist_expected200() {
-        String token = generateToken(TEST_EMAIL);
-
-        AssetEntity asset = buildAssetEntity();
-        asset.setTransactionDate(LocalDate.now().minusMonths(3));
-        mongoTemplate.save(asset, "assets");
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/SHORT_TERM";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-    }
-
-    @Test
-    void getAssets_noMatch_whenNoAssetsInCategory_expected200AndEmpty() {
-        String token = generateToken(TEST_EMAIL);
-
-        // Seed a non-matching asset (old, LONG_TERM)
-        AssetEntity asset = buildAssetEntity();
-        asset.setTransactionDate(LocalDate.now().minusYears(5));
-        mongoTemplate.save(asset, "assets");
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/SHORT_TERM";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        // SHORT_TERM won't include assets > 1 year old - expect empty list
-        assertEquals("[]", response.getBody());
     }
 
     @Test
@@ -978,48 +948,6 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         assertNotNull(response.getBody());
-    }
-
-    // ============================================================
-    // downloadTermAssets
-    // ============================================================
-
-    @Test
-    void downloadTermAssets_excelGeneration_whenAssetsExist_expected200WithExcel() {
-        String token = generateToken(TEST_EMAIL);
-
-        // Seed an old asset (LONG_TERM)
-        AssetEntity asset = buildAssetEntity();
-        asset.setTransactionDate(LocalDate.now().minusYears(2));
-        mongoTemplate.save(asset, "assets");
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/LONG_TERM/excel";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<byte[]> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, byte[].class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
-    }
-
-    @Test
-    void downloadTermAssets_fileStreamHeaders_whenDownloading_expectedContentDisposition() {
-        String token = generateToken(TEST_EMAIL);
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/LONG_TERM/excel";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<byte[]> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, byte[].class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        assertTrue(response.getHeaders().getContentDisposition().toString().startsWith("attachment; filename="));
     }
 
     // ============================================================

@@ -22,10 +22,6 @@ public class TLocalDate {
     }
 
 
-    public static String lastYearSameDateInString() {
-        return LocalDate.now().minusYears(1).toString();
-    }
-
     public static String convertToString(LocalDate date) {
         return date.toString();
     }

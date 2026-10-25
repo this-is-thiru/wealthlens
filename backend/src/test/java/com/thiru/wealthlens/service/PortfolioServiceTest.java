@@ -9,6 +9,7 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
@@ -35,10 +36,12 @@ import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.money.TMoney;
+import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -798,5 +801,33 @@ class PortfolioServiceTest {
         assertEquals(TradeSegment.DELIVERY, captor.getValue().getBuySegment());
         assertEquals("NSE", captor.getValue().getSellExchangeName());
         assertEquals(TradeSegment.INTRADAY, captor.getValue().getSellSegment());
+    }
+
+    @Test
+    void getAllStocks_whenAHoldingWasBoughtOnTwoDates_reportsTheDaysHeldForEach() {
+        // Given -- 5 bought 400 days ago and 3 bought 30 days ago, one stock at one broker
+        LocalDate today = TLocalDate.today();
+        when(portfolioRepository.findByEmail(userMail.getEmail()))
+                .thenReturn(List.of(lot(today.minusDays(400), 5.0), lot(today.minusDays(30), 3.0)));
+
+        // When
+        List<AssetResponse> holdings = portfolioService.getAllStocks(userMail);
+
+        // Then
+        assertEquals(1, holdings.size());
+        assertEquals(Map.of(today.minusDays(400).toString(), 400L, today.minusDays(30).toString(), 30L),
+                holdings.getFirst().getDaysHeld());
+        assertEquals(List.copyOf(holdings.getFirst().getTransactionQuantities().keySet()),
+                List.copyOf(holdings.getFirst().getDaysHeld().keySet()));
+    }
+
+    private static AssetEntity lot(LocalDate boughtOn, double quantity) {
+        AssetEntity lot = new AssetEntity();
+        lot.setStockCode("STOCK1");
+        lot.setBrokerName(BrokerName.ZERODHA);
+        lot.setPrice(100.0);
+        lot.setQuantity(quantity);
+        lot.setTransactionDate(boughtOn);
+        return lot;
     }
 }
