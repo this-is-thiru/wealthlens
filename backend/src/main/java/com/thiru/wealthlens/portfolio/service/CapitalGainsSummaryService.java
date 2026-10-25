@@ -5,7 +5,6 @@ import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
@@ -115,14 +114,14 @@ public class CapitalGainsSummaryService {
         return TMoney.scale(sale - cost - row.getDeductibleBuyCharges() - row.getDeductibleSellCharges());
     }
 
-    /** What a bucket is one of: the rows a bucket sums share all ten. */
-    private record BucketKey(CapitalGainsType classification, AssetType assetType, Optional<String> subClass,
+    /** What a bucket is one of: the rows a bucket sums share all nine. */
+    private record BucketKey(AssetType assetType, Optional<String> subClass,
             SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, TradeVenue acquisitionVenue,
             TradeVenue transferVenue, Acquisition acquisition, LocalDate acquiredOn,
             LocalDate transferredOn) {
 
         static BucketKey of(TradeOutcomeEntity row) {
-            return new BucketKey(row.getCapitalGainsType(), row.getAssetType(),
+            return new BucketKey(row.getAssetType(),
                     Optional.ofNullable(row.getInstrumentSubClass()), sttEvidenceOf(row.getBuyChargeBreakup()),
                     sttEvidenceOf(row.getSellChargeBreakup()),
                     TradeVenue.stored(row.getBuyExchangeName(), row.getBuySegment()),
@@ -132,7 +131,7 @@ public class CapitalGainsSummaryService {
         }
 
         CapitalGainsBucket bucket(double gainRupees) {
-            return new CapitalGainsBucket(classification, assetType, subClass, sttOnAcquisition, sttOnTransfer,
+            return new CapitalGainsBucket(assetType, subClass, sttOnAcquisition, sttOnTransfer,
                     acquisitionVenue, transferVenue, acquisition, acquiredOn, transferredOn, gainRupees);
         }
 
@@ -169,7 +168,7 @@ public class CapitalGainsSummaryService {
     private static String referenceOf(List<TradeOutcomeEntity> rows) {
         String material = rows.stream()
                 .sorted(Comparator.comparing(TradeOutcomeEntity::getId))
-                .map(row -> row.getId() + ":" + row.getCapitalGainsType() + ":" + gainOf(row))
+                .map(row -> row.getId() + ":" + gainOf(row))
                 .collect(Collectors.joining("\n"));
         return "trade_outcomes:" + TradeFingerprint.sha256(material);
     }

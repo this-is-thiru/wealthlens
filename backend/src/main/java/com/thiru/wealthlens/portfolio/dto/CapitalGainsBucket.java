@@ -1,14 +1,13 @@
 package com.thiru.wealthlens.portfolio.dto;
 
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.shared.util.money.TMoney;
 import java.time.LocalDate;
 import java.util.Optional;
 
 /**
- * One year's realised gain for one classification of one kind of asset, as {@code portfolio} publishes it
+ * One year's realised gain for one set of facts about one kind of asset, as {@code portfolio} publishes it
  * ({@code 13-edge-cases.md} R-10; D-237).
  *
  * <p>Gross, and never a tax: {@code portfolio} owns which disposals happened and what they made, the tax side owns
@@ -18,11 +17,10 @@ import java.util.Optional;
  * D-241, D-292), and where and how each side was traded, which decides whether STT was chargeable where no record
  * says (D-295); and how and when the
  * lots were acquired, the facts any waiver of that condition turns on (S.O. 5054(E); W-088f, D-249) — facts only, so a
- * change in the law is a change in the tax side's rule data, never here; no rate basis of its own. Every classification
- * is published, {@code UNCLASSIFIED} and {@code SPECULATIVE} included, so the tax side can block on the one and route
- * the other ({@code 07-architecture.md} X1.3) rather than never seeing them.
+ * change in the law is a change in the tax side's rule data, never here; no rate basis of its own. No term and no
+ * head of income either: whether the capital-gains head takes a bucket, and whether it is short-term or long-term, the
+ * tax side decides from these facts (W-160a, D-363; W-160b).
  *
- * @param classification how the disposals were classified
  * @param assetType what was disposed of
  * @param instrumentSubClass the scheme's or bond's sub-class, where the instrument registry has given one
  * @param sttOnAcquisition what the records say of securities transaction tax on the buys these gains came from
@@ -36,7 +34,6 @@ import java.util.Optional;
  * @param gainRupees the gross gain, a loss negative, canonical to paise
  */
 public record CapitalGainsBucket(
-        CapitalGainsType classification,
         AssetType assetType,
         Optional<String> instrumentSubClass,
         SttEvidence sttOnAcquisition,
@@ -49,10 +46,10 @@ public record CapitalGainsBucket(
         double gainRupees) {
 
     public CapitalGainsBucket {
-        if (classification == null || assetType == null || instrumentSubClass == null || sttOnAcquisition == null
+        if (assetType == null || instrumentSubClass == null || sttOnAcquisition == null
                 || sttOnTransfer == null || acquisitionVenue == null || transferVenue == null || acquisition == null
                 || acquiredOn == null || transferredOn == null) {
-            throw new IllegalArgumentException("A capital-gains bucket needs its classification, asset type, STT"
+            throw new IllegalArgumentException("A capital-gains bucket needs its asset type, STT"
                     + " evidence, venues, acquisition, acquisition date and transfer date; pass Optional.empty() for an instrument"
                     + " without a sub-class, UNKNOWN for STT with no record and TradeVenue.UNRECORDED for no venue");
         }

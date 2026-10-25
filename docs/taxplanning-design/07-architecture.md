@@ -80,6 +80,15 @@ Three properties, each forced by something read this session:
 > (D-237). Verified by: `TradeOutcomeEntity.java:65-66, 152-153` (`asset_type`, `instrument_sub_class`);
 > `RealisedProfits.gainsByClassification` (`Map<CapitalGainsType, FinancialReport>`).
 
+> **Erratum (W-160b, 2026-10-25):** the read-model carries no classification, and the "five-way partition" and the
+> `UNCLASSIFIED` block above no longer describe it. `portfolio` publishes facts only (D-362 C1a): one bucket per asset
+> type, sub-class, STT on each side, venue of each side, acquisition and the two dates. Whether the capital-gains head
+> takes a bucket is the engine's rule data — `RS-CG-NOT-COMPUTED` refuses a speculative or derivative sale,
+> `RS-CG-ELSEWHERE` leaves a deposit's interest out (W-160a, D-363) — and its term is `RS-CG-TERM`'s (D-305). A fund
+> or bond bucket no term row reaches is refused by the engine, not the adapter. Verified by:
+> `CapitalGainsBucket.java:36` (no classification component); `CapitalGainsSummaryService.java:118` (`BucketKey`);
+> `CapitalGainsScope.java:47` (`takes`); `CapitalGainsAdapter.java:53–58` (no classification read).
+
 ### X1.4 Events
 
 `FACT`: `grep -rln "ApplicationEventPublisher|@ApplicationModuleListener|@EventListener"` over

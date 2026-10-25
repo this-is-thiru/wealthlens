@@ -11,7 +11,6 @@ import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
 import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
@@ -24,12 +23,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -54,16 +51,16 @@ class CapitalGainsAdapterTest {
     @InjectMocks
     private CapitalGainsAdapter adapter;
 
-    private static CapitalGainsBucket bucket(CapitalGainsType classification, AssetType assetType,
-            SttEvidence sttOnAcquisition, SttEvidence sttOnTransfer, double gainRupees) {
-        return new CapitalGainsBucket(classification, assetType, Optional.empty(), sttOnAcquisition, sttOnTransfer,
+    private static CapitalGainsBucket bucket(AssetType assetType, SttEvidence sttOnAcquisition,
+            SttEvidence sttOnTransfer, double gainRupees) {
+        return new CapitalGainsBucket(assetType, Optional.empty(), sttOnAcquisition, sttOnTransfer,
                 TradeVenue.UNRECORDED, TradeVenue.UNRECORDED,
                 Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, gainRupees);
     }
 
     /** Long-term equity sold with STT, its buy without, acquired as stated. */
     private static CapitalGainsBucket boughtWithoutStt(Acquisition acquisition, LocalDate acquiredOn) {
-        return new CapitalGainsBucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY, Optional.empty(),
+        return new CapitalGainsBucket(AssetType.EQUITY, Optional.empty(),
                 SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, acquisition, acquiredOn, TRANSFERRED_ON, 1000.50);
     }
 
@@ -93,7 +90,7 @@ class CapitalGainsAdapterTest {
     @Test
     void inputFor_whenEquityWasPurchased_passesItsFactsThrough() {
         // When — STT paid on the buy, nothing on record for the sale, so a read of the wrong side fails
-        CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY,
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(AssetType.EQUITY,
                 SttEvidence.PAID, SttEvidence.UNKNOWN, 1000.50));
 
         // Then
@@ -115,20 +112,6 @@ class CapitalGainsAdapterTest {
     }
 
     @Test
-    void inputFor_whenPortfolioClassifiesTheSameFactsShortOrLong_passesTheSameBucket() {
-        // When — the engine decides the term from the dates (D-305); portfolio's classification only says the
-        // disposal is a capital gain, so it cannot reach the engine
-        CapitalGainsInput.Bucket asShort = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY,
-                SttEvidence.PAID, SttEvidence.PAID, 100));
-        CapitalGainsInput.Bucket asLong = onlyBucketOf(bucket(CapitalGainsType.LONG_TERM, AssetType.EQUITY,
-                SttEvidence.PAID, SttEvidence.PAID, 100));
-
-        // Then
-        assertThat(asShort).isEqualTo(asLong);
-        assertThat(asShort.facts().transferredOn()).isEqualTo(TRANSFERRED_ON);
-    }
-
-    @Test
     void inputFor_whenTheAcquisitionWasNotRecorded_saysSo() {
         // When — a row written before the acquisition was kept
         CapitalGainsInput.Bucket bucket = onlyBucketOf(boughtWithoutStt(Acquisition.UNRECORDED,
@@ -141,52 +124,43 @@ class CapitalGainsAdapterTest {
     }
 
     @Test
-    void inputFor_whenAFundHasACapitalGainsClassification_passesTheAssetThrough() {
+    void inputFor_whenTheAssetIsAFund_passesTheAssetThrough() {
         // When — no row covers a fund unit yet; the engine refuses it, not the adapter
-        CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(CapitalGainsType.SHORT_TERM, AssetType.MUTUAL_FUND,
-                SttEvidence.NOT_PAID, SttEvidence.PAID, 10));
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(bucket(AssetType.MUTUAL_FUND, SttEvidence.NOT_PAID,
+                SttEvidence.PAID, 10));
 
         // Then
         assertThat(bucket.facts().assetKind()).isEqualTo("MUTUAL_FUND");
     }
 
     @Test
-    void inputFor_whenAnUnclassifiedBucketIsNil_leavesItOut() {
+    void inputFor_whenABucketIsNil_leavesItOut() {
         // When
-        CapitalGainsInput input = inputOf(bucket(CapitalGainsType.UNCLASSIFIED, AssetType.BOND, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 0));
+        CapitalGainsInput input = inputOf(bucket(AssetType.BOND, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 0));
 
         // Then
         assertThat(input.buckets()).isEmpty();
     }
 
     /**
-     * The classification is not read: an intraday, derivative or deposit bucket is passed with its facts, and the
-     * engine's RS-CG-NOT-COMPUTED and RS-CG-ELSEWHERE rows decide whether the head takes it (W-160a, D-363).
+     * Whatever the asset, the bucket is passed with its facts: whether the head takes a bond, an intraday or derivative
+     * sale or a deposit is the engine's rows' to decide, not this class's (W-160a, D-363).
      */
-    @ParameterizedTest(name = "{0} on {1}")
-    @MethodSource("everyClassification")
-    void inputFor_whateverPortfoliosClassification_passesTheBucketWithItsFacts(CapitalGainsType classification,
-            AssetType assetType) {
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(value = AssetType.class, names = {"BOND", "EQUITY", "FD"})
+    void inputFor_whateverTheAsset_passesTheBucketWithItsFacts(AssetType assetType) {
         // When
-        CapitalGainsInput.Bucket passed = onlyBucketOf(bucket(classification, assetType, SttEvidence.NOT_PAID,
-                SttEvidence.NOT_PAID, 900));
+        CapitalGainsInput.Bucket passed = onlyBucketOf(bucket(assetType, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID,
+                900));
 
         // Then
         assertThat(passed.facts().assetKind()).isEqualTo(assetType.name());
     }
 
-    private static Stream<Arguments> everyClassification() {
-        return Stream.of(
-                Arguments.of(CapitalGainsType.UNCLASSIFIED, AssetType.BOND),
-                Arguments.of(CapitalGainsType.SPECULATIVE, AssetType.EQUITY),
-                Arguments.of(CapitalGainsType.NOT_CAPITAL_GAINS, AssetType.FD),
-                Arguments.of(CapitalGainsType.SHORT_TERM, AssetType.EQUITY));
-    }
-
     @Test
     void inputFor_whenTheBucketRecordsItsVenues_passesThemThrough() {
         // When — bought on BSE for delivery, sold on NSE intraday; the segment as its name (D-298)
-        CapitalGainsBucket recorded = new CapitalGainsBucket(CapitalGainsType.SHORT_TERM, AssetType.EQUITY,
+        CapitalGainsBucket recorded = new CapitalGainsBucket(AssetType.EQUITY,
                 Optional.empty(), SttEvidence.UNKNOWN, SttEvidence.UNKNOWN,
                 new TradeVenue(Optional.of("BSE"), Optional.of(TradeSegment.DELIVERY)),
                 new TradeVenue(Optional.of("NSE"), Optional.of(TradeSegment.INTRADAY)), Acquisition.of(null),

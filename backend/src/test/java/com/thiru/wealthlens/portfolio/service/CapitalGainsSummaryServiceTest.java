@@ -40,6 +40,7 @@ class CapitalGainsSummaryServiceTest {
 
     private static final String EMAIL = "user@example.com";
     private static final String YEAR = "2025-2026";
+    private static final LocalDate A_AND_B_BOUGHT_ON = LocalDate.of(2025, 1, 2);
 
     @Mock
     private TradeOutcomeRepository tradeOutcomeRepository;
@@ -48,12 +49,11 @@ class CapitalGainsSummaryServiceTest {
     private CapitalGainsSummaryService service;
 
     /** A disposal, with no charges until {@link #charged} gives it some. */
-    private static TradeOutcomeEntity row(String id, CapitalGainsType classification, AssetType assetType,
-            double sellPrice, double buyPrice, double quantity) {
+    private static TradeOutcomeEntity row(String id, AssetType assetType, double sellPrice, double buyPrice,
+            double quantity) {
         TradeOutcomeEntity row = new TradeOutcomeEntity();
         row.setId(id);
         row.setStockCode("STOCK-" + id);
-        row.setCapitalGainsType(classification);
         row.setAssetType(assetType);
         row.setSellDate(LocalDate.of(2025, 6, 2));
         row.setBuyDate(LocalDate.of(2024, 1, 2));
@@ -82,16 +82,18 @@ class CapitalGainsSummaryServiceTest {
         return row;
     }
 
-    /** Rows A, B (short-term equity) and C (long-term equity) of the plan's table, each sale bearing STT. */
+    /** Rows A, B (equity bought 2025-01-02) and C (equity bought 2024-01-02) of the plan's table, each sale bearing STT. */
     private static List<TradeOutcomeEntity> rowsAtoC() {
-        TradeOutcomeEntity a = charged(row("A", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 120, 100, 10), 5, 7);
+        TradeOutcomeEntity a = charged(row("A", AssetType.EQUITY, 120, 100, 10), 5, 7);
         a.setSellChargeBreakup(Map.of("BROKERAGE", 7.0, "STT", 1.20));
         a.setSellBrokerCharges(8.20);
         a.setNetProfit(178.80);
-        TradeOutcomeEntity b = charged(row("B", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 150, 130, 4), 2, 3);
+        a.setBuyDate(A_AND_B_BOUGHT_ON);
+        TradeOutcomeEntity b = charged(row("B", AssetType.EQUITY, 150, 130, 4), 2, 3);
         b.setSellMiscCharges(10);
         b.setSellChargeBreakup(Map.of("BROKERAGE", 3.0, "STT", 0.60));
-        TradeOutcomeEntity c = charged(row("C", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 500, 300, 2), 4, 6);
+        b.setBuyDate(A_AND_B_BOUGHT_ON);
+        TradeOutcomeEntity c = charged(row("C", AssetType.EQUITY, 500, 300, 2), 4, 6);
         c.setSellChargeBreakup(Map.of("BROKERAGE", 6.0, "STT", 1.00));
         return List.of(a, b, c);
     }
@@ -101,20 +103,36 @@ class CapitalGainsSummaryServiceTest {
         return service.summaryFor(EMAIL, YEAR);
     }
 
-    private static CapitalGainsBucket bucket(CapitalGainsSummary summary, CapitalGainsType classification) {
-        return summary.buckets().stream().filter(b -> b.classification() == classification).findFirst().orElseThrow();
+    private static CapitalGainsBucket bucket(CapitalGainsSummary summary, LocalDate acquiredOn) {
+        return summary.buckets().stream().filter(b -> b.acquiredOn().equals(acquiredOn)).findFirst().orElseThrow();
     }
 
     @Test
-    void summaryFor_whenRowsShareAClassification_sumsTheirGainsNetOfDeductibleCharges() {
+    void summaryFor_whenRowsShareTheirFacts_sumsTheirGainsNetOfDeductibleCharges() {
         // When
         CapitalGainsSummary summary = summaryOf(rowsAtoC());
 
         // Then — A 1,200 − 1,000 − 5 − 7 = 188, B 600 − 520 − 2 − 3 = 75; C 1,000 − 600 − 4 − 6 = 390
         assertThat(summary.buckets()).hasSize(2);
-        assertCanonical(263.00, bucket(summary, CapitalGainsType.SHORT_TERM).gainRupees());
-        assertCanonical(390.00, bucket(summary, CapitalGainsType.LONG_TERM).gainRupees());
-        assertThat(bucket(summary, CapitalGainsType.SHORT_TERM).assetType()).isEqualTo(AssetType.EQUITY);
+        assertCanonical(263.00, bucket(summary, A_AND_B_BOUGHT_ON).gainRupees());
+        assertCanonical(390.00, bucket(summary, LocalDate.of(2024, 1, 2)).gainRupees());
+        assertThat(bucket(summary, A_AND_B_BOUGHT_ON).assetType()).isEqualTo(AssetType.EQUITY);
+    }
+
+    @Test
+    void summaryFor_whenRowsDifferOnlyInTheirStoredTerm_publishesOneBucket() {
+        // Given — the same facts, stored as one term and as the other; the term is the tax side's (W-160b)
+        TradeOutcomeEntity p = row("P", AssetType.EQUITY, 120, 100, 1);
+        p.setCapitalGainsType(CapitalGainsType.SHORT_TERM);
+        TradeOutcomeEntity q = row("Q", AssetType.EQUITY, 130, 100, 1);
+        q.setCapitalGainsType(CapitalGainsType.LONG_TERM);
+
+        // When
+        CapitalGainsSummary summary = summaryOf(List.of(p, q));
+
+        // Then — 120 − 100 = 20, 130 − 100 = 30
+        assertThat(summary.buckets()).hasSize(1);
+        assertCanonical(50.00, summary.buckets().getFirst().gainRupees());
     }
 
     @Test
@@ -129,7 +147,7 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenTheBreakdownsShowStt_recordsItOnEachSide() {
         // Given — row A's sale bore STT 1.20, its buy only brokerage; row D's buy and sale both bore STT
-        TradeOutcomeEntity d = charged(row("D", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 110, 100, 1), 0, 0);
+        TradeOutcomeEntity d = charged(row("D", AssetType.EQUITY, 110, 100, 1), 0, 0);
         d.setBuyChargeBreakup(Map.of("STT", 0.10));
         d.setBuyBrokerCharges(0.10);
         d.setSellChargeBreakup(Map.of("STT", 0.11));
@@ -150,7 +168,7 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenNeitherSideHasABreakdown_recordsSttAsUnknownOnBoth() {
         // Given — a V1 sell with nil charges: nothing on record either side, which F1 read as no STT
-        TradeOutcomeEntity v1 = row("V", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 120, 100, 1);
+        TradeOutcomeEntity v1 = row("V", AssetType.EQUITY, 120, 100, 1);
 
         // When
         CapitalGainsBucket only = summaryOf(List.of(v1)).buckets().getFirst();
@@ -163,7 +181,7 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenOnlyTheBuyHasNoBreakdown_recordsEachSideAsItStands() {
         // Given — the buy predates the charge engine; the sale's breakdown levied STT
-        TradeOutcomeEntity row = soldWithStt(row("W", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1));
+        TradeOutcomeEntity row = soldWithStt(row("W", AssetType.EQUITY, 120, 100, 1));
 
         // When
         CapitalGainsBucket only = summaryOf(List.of(row)).buckets().getFirst();
@@ -176,10 +194,10 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenRowsDifferOnlyInWhetherTheBuysSttIsKnown_publishesThemApart() {
         // Given — one key but for the buy's evidence: PAID on X, nothing on record on Y
-        TradeOutcomeEntity known = soldWithStt(row("X", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 110, 100, 1));
+        TradeOutcomeEntity known = soldWithStt(row("X", AssetType.EQUITY, 110, 100, 1));
         known.setBuyChargeBreakup(Map.of("STT", 0.10));
         known.setBuyBrokerCharges(0.10);
-        TradeOutcomeEntity unknown = soldWithStt(row("Y", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 130, 100, 1));
+        TradeOutcomeEntity unknown = soldWithStt(row("Y", AssetType.EQUITY, 130, 100, 1));
 
         // When
         CapitalGainsSummary summary = summaryOf(List.of(known, unknown));
@@ -195,14 +213,14 @@ class CapitalGainsSummaryServiceTest {
     void summaryFor_whenRowsDifferInHowOrWhenAcquired_publishesTheFactsApart() {
         // Given -- long-term equity sold with STT, no STT on any buy: a bonus, a row from before the acquisition was
         // kept, and two purchases a day apart. Facts only: no date means anything here (D-249)
-        TradeOutcomeEntity bonus = soldWithStt(row("E", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 110, 0, 1));
+        TradeOutcomeEntity bonus = soldWithStt(row("E", AssetType.EQUITY, 110, 0, 1));
         bonus.setAcquisitionMode(AcquisitionMode.CORPORATE_ACTION);
         bonus.setAcquisitionCorporateAction(CorporateActionType.BONUS);
-        TradeOutcomeEntity unrecorded = soldWithStt(row("F", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1));
-        TradeOutcomeEntity first = soldWithStt(row("G", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 130, 100, 1));
+        TradeOutcomeEntity unrecorded = soldWithStt(row("F", AssetType.EQUITY, 120, 100, 1));
+        TradeOutcomeEntity first = soldWithStt(row("G", AssetType.EQUITY, 130, 100, 1));
         first.setAcquisitionMode(AcquisitionMode.PURCHASE);
         first.setBuyDate(LocalDate.of(2004, 9, 30));
-        TradeOutcomeEntity next = soldWithStt(row("H", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 140, 100, 1));
+        TradeOutcomeEntity next = soldWithStt(row("H", AssetType.EQUITY, 140, 100, 1));
         next.setAcquisitionMode(AcquisitionMode.PURCHASE);
         next.setBuyDate(LocalDate.of(2004, 10, 1));
 
@@ -222,7 +240,7 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenARowHasNoBuyDate_isRefused() {
         // Given
-        TradeOutcomeEntity undated = row("J", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1);
+        TradeOutcomeEntity undated = row("J", AssetType.EQUITY, 120, 100, 1);
         undated.setBuyDate(null);
 
         // When / Then
@@ -235,9 +253,9 @@ class CapitalGainsSummaryServiceTest {
     void summaryFor_whenRowsDifferOnlyInWhenSold_publishesEachSaleDateApart() {
         // Given -- W-088k2 cases 1, 2: two sales of one lot on 2-6-2025 and one on 3-6-2025; the engine counts the
         // holding period to each date (D-304)
-        TradeOutcomeEntity first = row("K", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1);
-        TradeOutcomeEntity sameDay = row("L", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 130, 100, 1);
-        TradeOutcomeEntity nextDay = row("M", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 140, 100, 1);
+        TradeOutcomeEntity first = row("K", AssetType.EQUITY, 120, 100, 1);
+        TradeOutcomeEntity sameDay = row("L", AssetType.EQUITY, 130, 100, 1);
+        TradeOutcomeEntity nextDay = row("M", AssetType.EQUITY, 140, 100, 1);
         nextDay.setSellDate(LocalDate.of(2025, 6, 3));
 
         // When
@@ -253,7 +271,7 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenARowHasNoSellDate_isRefusedNamingIt() {
         // Given -- W-088k2 case 3
-        TradeOutcomeEntity undated = row("N", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1);
+        TradeOutcomeEntity undated = row("N", AssetType.EQUITY, 120, 100, 1);
         undated.setSellDate(null);
 
         // When / Then
@@ -272,25 +290,25 @@ class CapitalGainsSummaryServiceTest {
     }
 
     @Test
-    void summaryFor_whenAFundIsUnclassified_publishesItsOwnBucket() {
-        // Given — the instrument registry has not classified the scheme (X1.3: published, blocked downstream)
-        TradeOutcomeEntity fund = charged(row("D", CapitalGainsType.UNCLASSIFIED, AssetType.MUTUAL_FUND, 50, 40, 10), 0, 0);
+    void summaryFor_whenAFundIsSoldBesideEquity_publishesItsOwnBucket() {
+        // Given — the instrument registry has given the scheme no sub-class
+        TradeOutcomeEntity fund = charged(row("D", AssetType.MUTUAL_FUND, 50, 40, 10), 0, 0);
 
         // When
         CapitalGainsSummary summary = summaryOf(List.of(rowsAtoC().get(2), fund));
 
         // Then — 500 − 400 = 100, apart from the equity
         assertThat(summary.buckets()).hasSize(2);
-        CapitalGainsBucket unclassified = bucket(summary, CapitalGainsType.UNCLASSIFIED);
-        assertThat(unclassified.assetType()).isEqualTo(AssetType.MUTUAL_FUND);
-        assertThat(unclassified.instrumentSubClass()).isEqualTo(Optional.empty());
-        assertCanonical(100.00, unclassified.gainRupees());
+        CapitalGainsBucket fundBucket = summary.buckets().stream()
+                .filter(b -> b.assetType() == AssetType.MUTUAL_FUND).findFirst().orElseThrow();
+        assertThat(fundBucket.instrumentSubClass()).isEqualTo(Optional.empty());
+        assertCanonical(100.00, fundBucket.gainRupees());
     }
 
     @Test
     void summaryFor_whenARowBoreChargesWithoutABreakdown_isRefused() {
         // Given — a migrated row: broker charges 20, no breakdown, so its deductible part reads 0 but is unknown
-        TradeOutcomeEntity migrated = charged(row("E", CapitalGainsType.SHORT_TERM, AssetType.EQUITY, 120, 100, 10), 0, 0);
+        TradeOutcomeEntity migrated = charged(row("E", AssetType.EQUITY, 120, 100, 10), 0, 0);
         migrated.setBuyBrokerCharges(20);
         migrated.setBuyChargeBreakup(Map.of());
         when(tradeOutcomeRepository.findByEmailAndSellDateBetween(eq(EMAIL), any(), any()))
@@ -359,7 +377,7 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenARowRecordsEachSidesVenue_publishesThemApart() {
         // Given -- bought on BSE for delivery, sold on NSE for delivery (D-295)
-        TradeOutcomeEntity row = soldWithStt(row("V", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1));
+        TradeOutcomeEntity row = soldWithStt(row("V", AssetType.EQUITY, 120, 100, 1));
         row.setBuyExchangeName("BSE");
         row.setBuySegment(TradeSegment.DELIVERY);
         row.setSellExchangeName("NSE");
@@ -378,7 +396,7 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenARowPredatesTheVenues_publishesThemUnrecorded() {
         // Given -- a row written before W-088j2b: no per-side venue, though the old exchange_name is set
-        TradeOutcomeEntity row = soldWithStt(row("W", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 120, 100, 1));
+        TradeOutcomeEntity row = soldWithStt(row("W", AssetType.EQUITY, 120, 100, 1));
         row.setExchangeName("NSE");
 
         // When
@@ -392,9 +410,9 @@ class CapitalGainsSummaryServiceTest {
     @Test
     void summaryFor_whenRowsDifferOnlyInTheSalesExchange_publishesThemApart() {
         // Given -- one key but for where the sale was entered into
-        TradeOutcomeEntity onNse = soldWithStt(row("X", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 110, 100, 1));
+        TradeOutcomeEntity onNse = soldWithStt(row("X", AssetType.EQUITY, 110, 100, 1));
         onNse.setSellExchangeName("NSE");
-        TradeOutcomeEntity offMarket = soldWithStt(row("Y", CapitalGainsType.LONG_TERM, AssetType.EQUITY, 130, 100, 1));
+        TradeOutcomeEntity offMarket = soldWithStt(row("Y", AssetType.EQUITY, 130, 100, 1));
 
         // When
         CapitalGainsSummary summary = summaryOf(List.of(onNse, offMarket));
