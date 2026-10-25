@@ -95,8 +95,8 @@ class ShadowRecordingIntegrationTest extends AbstractIntegrationTest {
                 List.of(new BuyContext(40, LocalDate.of(2025, 1, 5), 900.0, Optional.empty()),
                         new BuyContext(60, LocalDate.of(2025, 5, 20), 1100.0, Optional.empty())));
 
-        // When
-        profitAndLossService.updateProfitAndLoss(UserMail.from(EMAIL), context);
+        // When -- a sale reaches the P&L through recordSale (W-169); its charge is recorded whatever the rows
+        profitAndLossService.recordSale(UserMail.from(EMAIL), context, Optional.empty(), List.of());
 
         // Then
         Optional<UserChargeEntity> recorded = userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-shadow-2");

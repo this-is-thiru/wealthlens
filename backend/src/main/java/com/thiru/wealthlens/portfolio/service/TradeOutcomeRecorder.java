@@ -47,23 +47,30 @@ public class TradeOutcomeRecorder {
     public record MatchedLot(AssetEntity asset, double quantity, double originalQuantity) {
     }
 
-    public void record(UserMail userMail, AssetRequest sell, String sellTransactionId,
-                       List<MatchedLot> lots, Optional<ChargeComputation> sellComputation) {
+    /**
+     * Saves one row per lot and returns them, in lot order: the sale's charges and net profit are computed here once,
+     * and the P&L folds these rows rather than computing them again (W-169).
+     */
+    public List<TradeOutcomeContext> record(UserMail userMail, AssetRequest sell, String sellTransactionId,
+                                            List<MatchedLot> lots, Optional<ChargeComputation> sellComputation) {
         double totalSellQuantity = lots.stream().mapToDouble(MatchedLot::quantity).sum();
         if (totalSellQuantity <= 0) {
             log.warn("A V2 sell of {} matched no quantity; no trade outcome recorded", sell.getStockCode());
-            return;
+            return List.of();
         }
 
         List<Map<String, Double>> sellAllocation = allocate(
                 sellComputation.map(ChargeComputation::amountByCode).orElseGet(Map::of),
                 lots, totalSellQuantity);
 
+        List<TradeOutcomeContext> rows = new ArrayList<>();
         for (int i = 0; i < lots.size(); i++) {
-            tradeOutcomeService.saveTradeOutcome(userMail,
-                    buildRow(userMail, sell, sellTransactionId, lots.get(i), sellAllocation.get(i),
-                            lots.get(i).quantity() / totalSellQuantity));
+            TradeOutcomeContext row = buildRow(userMail, sell, sellTransactionId, lots.get(i), sellAllocation.get(i),
+                    lots.get(i).quantity() / totalSellQuantity);
+            tradeOutcomeService.saveTradeOutcome(userMail, row);
+            rows.add(row);
         }
+        return rows;
     }
 
     /**

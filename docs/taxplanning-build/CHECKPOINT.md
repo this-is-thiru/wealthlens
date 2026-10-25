@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-169 — the V2 P&L records profit, brokerage and misc (D-366 C4a)
+Item            : W-172 — backfill V2-written P&L years' profit, brokerage and misc (D-372 C2a; R15)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-169.md (to write)
+Plan            : plans/W-172.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : READ W-169 (ProfitAndLossService V2 family: InternalContext writes purchase/sell only at :498–511 then; what V2 knows of charges — the ChargeComputation, BuyContext charges; AnalyticsService.totalRealizedProfit; W-160d3's reshape keeps V2 years without profit), write the plan, STOP
-Last verify     : unit -Punit 3704/0; integration 292/0 (2026-10-25, W-160f)
-Waiting on      : nothing for W-169; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : READ W-172 (how to tell a V2-written sale or year from a V1 one — trade_outcomes charge breakups, user_charges, P&L charge summary; the split after §2.6; W-160d3's operation as template), write the plan, STOP
+Last verify     : unit -Punit 3708/0; integration 292/0 (2026-10-25, W-169)
+Waiting on      : nothing for W-172; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-160f: remove portfolio's duplicate holding-period law — the holding package, its policies, entity and CapitalGainsType go; runbook §2.7 drops the collection, W-171, WL-37; W-160 closed but for W-160g (D-371)
-Updated         : 2026-10-25, session 35 — W-160f done and committed; resume at W-169 (plan to write)
+Last item commit: taxplanning W-169: record a V2 sale's profit, brokerage and misc in the P&L — folded from the trade-outcome rows the recorder computes, recordSale replaces the sale path; W-172 backfill placed (D-372)
+Updated         : 2026-10-25, session 35 — W-169 done and committed; resume at W-172 (plan to write)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

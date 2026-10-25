@@ -665,11 +665,14 @@ public class PortfolioService {
         // overload and is not affected by any of this.
         var profitLossContext = toProfitLossContext(assetRequest, buyContexts, transactionId);
         Optional<ChargeComputation> computation = chargeRecordingGateway.record(userMail, profitLossContext);
-        profitAndLossService.updateProfitAndLoss(userMail, profitLossContext, computation);
         // The itemised capital-gains rows. Until now only the V1 sell wrote these, so a V2 user had
         // aggregate totals and nothing to file from. Deliberately after the pricing call, because
-        // the sell charge has to exist before it can be pro-rated across the lots it was matched to.
-        tradeOutcomeRecorder.record(userMail, assetRequest, transactionId, matchedLots, computation);
+        // the sell charge has to exist before it can be pro-rated across the lots it was matched to;
+        // and before the P&L, which folds these rows' charges and net profit rather than computing
+        // them a second time (W-169).
+        List<TradeOutcomeContext> rows =
+                tradeOutcomeRecorder.record(userMail, assetRequest, transactionId, matchedLots, computation);
+        profitAndLossService.recordSale(userMail, profitLossContext, computation, rows);
     }
 
     private static ProfitLossContext toProfitLossContext(AssetRequest assetRequest, List<BuyContext> buyContexts, String transactionId) {

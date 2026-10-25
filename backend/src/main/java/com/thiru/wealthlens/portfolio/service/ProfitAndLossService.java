@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.context.AssetContext;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
+import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
@@ -29,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -320,7 +322,8 @@ public class ProfitAndLossService {
 
         if (transactionType == TransactionType.SELL) {
             if (actionType == null) {
-                handleNormalSellCase(userMail, profitLossContext, precomputed);
+                throw new IllegalArgumentException("A sale of " + profitLossContext.stockCode() + " is recorded"
+                        + " through recordSale, with the trade-outcome rows that hold its figures");
             }
         } else if (transactionType == TransactionType.BUY) {
             handleNormalBuyCase(userMail, profitLossContext, precomputed);
@@ -351,34 +354,36 @@ public class ProfitAndLossService {
         profitAndLossRepository.save(profitAndLossEntity);
     }
 
-    private void handleNormalSellCase(UserMail userMail, ProfitLossContext profitLossContext,
-                                      Optional<ChargeComputation> precomputed) {
+    /**
+     * Records a V2 sale from the trade-outcome rows {@code TradeOutcomeRecorder} saved for it, one per lot — the one
+     * place its charges and net profit are computed, so the P&L and {@code trade_outcomes} cannot disagree (W-169).
+     *
+     * @param rows the rows, in the order of {@code profitLossContext.buyContexts()}, whose lots supply an asset type
+     *     the sale does not record; empty when the sale matched nothing
+     * @throws IllegalArgumentException if there are rows but not one per lot
+     */
+    public void recordSale(UserMail userMail, ProfitLossContext profitLossContext,
+                           Optional<ChargeComputation> precomputed, List<TradeOutcomeContext> rows) {
+        List<BuyContext> lots = profitLossContext.buyContexts();
+        if (!rows.isEmpty() && rows.size() != lots.size()) {
+            throw new IllegalArgumentException("The sale of " + profitLossContext.stockCode() + " has " + rows.size()
+                    + " trade-outcome rows for " + lots.size() + " lots");
+        }
         String email = userMail.getEmail();
-
         LocalDate transactionDate = profitLossContext.date();
         String financialYear = sanitizeFinancialYear(transactionDate);
+        ProfitAndLossEntity profitAndLossEntity = profitAndLossRepository.findByEmailAndFinancialYear(email, financialYear)
+                .orElse(new ProfitAndLossEntity(email, financialYear));
 
-        Optional<ProfitAndLossEntity> optionalProfitAndLoss = profitAndLossRepository.findByEmailAndFinancialYear(email, financialYear);
-        ProfitAndLossEntity profitAndLossEntity = optionalProfitAndLoss.orElse(new ProfitAndLossEntity(email, financialYear));
-
-        for (BuyContext buyContext : profitLossContext.buyContexts()) {
-            double purchaseAmount = buyContext.price() * buyContext.quantity();
-            double sellAmount = profitLossContext.price() * buyContext.quantity();
+        for (int i = 0; i < rows.size(); i++) {
             AssetType assetType = assetTypeOf(Optional.ofNullable(profitLossContext.assetType()),
-                    buyContext.assetType(), profitLossContext.stockCode());
-            InternalContext internalContext = new InternalContext(purchaseAmount, sellAmount, transactionDate,
-                    assetType, profitLossContext.segment());
-            updateProfitAndLossReport(profitAndLossEntity, profitLossContext, internalContext);
+                    lots.get(i).assetType(), profitLossContext.stockCode());
+            updateProfitAndLossReport(profitAndLossEntity, profitLossContext,
+                    InternalContext.of(rows.get(i), transactionDate, assetType, profitLossContext.segment()));
         }
 
-        // Phase B -- shadow recording. Deliberately outside the EQUITY gate below: that gate guards
-        // the superseded implementation, which resolves a rate card by broker and date with no
-        // asset-type dimension, so a mutual fund passed through it would be priced as equity. The
-        // engine has that dimension, so every asset type reaches it (FR-8). The return value is
-        // ignored -- nothing here may touch cost basis until Phase C.
+        // Prices the trade if the caller did not, as every V2 trade is (Phase B shadow recording).
         recordCharge(userMail, profitLossContext, precomputed);
-
-
         mergeChargeSummary(profitAndLossEntity, profitLossContext, precomputed);
         profitAndLossRepository.save(profitAndLossEntity);
     }
@@ -474,20 +479,38 @@ public class ProfitAndLossService {
     private static void updateYearlyTransactionReport(FinancialReport financialReport, InternalContext internalContext) {
         financialReport.setPurchaseAmount(TMoney.add(financialReport.getPurchaseAmount(), internalContext.purchaseAmount()));
         financialReport.setSellAmount(TMoney.add(financialReport.getSellAmount(), internalContext.sellAmount()));
+        financialReport.setProfit(TMoney.add(financialReport.getProfit(), internalContext.profit()));
+        financialReport.setBrokerage(TMoney.add(financialReport.getBrokerage(), internalContext.brokerage()));
+        financialReport.setMiscCharges(TMoney.add(financialReport.getMiscCharges(), internalContext.miscCharges()));
     }
 
     private static void updateMonthlyTransactionReport(MonthlyReport monthlyReport, InternalContext internalContext) {
         monthlyReport.setPurchaseAmount(TMoney.add(monthlyReport.getPurchaseAmount(), internalContext.purchaseAmount()));
         monthlyReport.setSellAmount(TMoney.add(monthlyReport.getSellAmount(), internalContext.sellAmount()));
+        monthlyReport.setProfit(TMoney.add(monthlyReport.getProfit(), internalContext.profit()));
+        monthlyReport.setBrokerage(TMoney.add(monthlyReport.getBrokerage(), internalContext.brokerage()));
+        monthlyReport.setMiscCharges(TMoney.add(monthlyReport.getMiscCharges(), internalContext.miscCharges()));
     }
 
     private static void updateFortnightTransactionReport(FortnightReport fortnightReport, InternalContext internalContext) {
         fortnightReport.setPurchaseAmount(TMoney.add(fortnightReport.getPurchaseAmount(), internalContext.purchaseAmount()));
         fortnightReport.setSellAmount(TMoney.add(fortnightReport.getSellAmount(), internalContext.sellAmount()));
+        fortnightReport.setProfit(TMoney.add(fortnightReport.getProfit(), internalContext.profit()));
+        fortnightReport.setBrokerage(TMoney.add(fortnightReport.getBrokerage(), internalContext.brokerage()));
+        fortnightReport.setMiscCharges(TMoney.add(fortnightReport.getMiscCharges(), internalContext.miscCharges()));
     }
 
-    private record InternalContext(double purchaseAmount, double sellAmount, LocalDate sellDate,
-                                   AssetType assetType, TradeSegment segment) {
+    /** One lot's share of a V2 sale, as its trade-outcome row computed it. */
+    private record InternalContext(double purchaseAmount, double sellAmount, double profit, double brokerage,
+                                   double miscCharges, LocalDate sellDate, AssetType assetType, TradeSegment segment) {
+
+        static InternalContext of(TradeOutcomeContext row, LocalDate sellDate, AssetType assetType,
+                                  TradeSegment segment) {
+            return new InternalContext(row.getCorporateActionAdjustedBuyPrice() * row.getBuyQuantity(),
+                    row.getSellPrice() * row.getSellQuantity(), row.getNetProfit(),
+                    row.getBuyBrokerCharges() + row.getSellBrokerCharges(),
+                    row.getBuyMiscCharges() + row.getSellMiscCharges(), sellDate, assetType, segment);
+        }
     }
 
     /** Prices the trade, unless the caller already did. */

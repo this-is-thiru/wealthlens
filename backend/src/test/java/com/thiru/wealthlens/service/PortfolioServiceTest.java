@@ -568,6 +568,30 @@ class PortfolioServiceTest {
     }
 
     @Test
+    void updateQuantityBySavingReportAndProfitAndLoss1_recordsTheSaleFromTheRowsTheRecorderSaved() {
+        // Given -- the recorder computes the sale's charges and net profit; the P&L must fold those rows (W-169)
+        List<AssetEntity> lots = new ArrayList<>(List.of(sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10))));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(3.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+        Optional<ChargeComputation> priced = Optional.of(computed());
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(priced);
+        List<TradeOutcomeContext> rows = List.of(TradeOutcomeContext.builder().netProfit(290.0).build());
+        when(tradeOutcomeRecorder.record(any(), any(), any(), any(), any())).thenReturn(rows);
+
+        // When
+        portfolioService.updateQuantityBySavingReportAndProfitAndLoss1(userMail, "sell-1", lots, sell);
+
+        // Then -- priced, then recorded, then the P&L given those very rows
+        InOrder order = inOrder(chargeRecordingGateway, tradeOutcomeRecorder, profitAndLossService);
+        order.verify(chargeRecordingGateway).record(eq(userMail), any(ProfitLossContext.class));
+        order.verify(tradeOutcomeRecorder).record(eq(userMail), eq(sell), eq("sell-1"), any(), eq(priced));
+        order.verify(profitAndLossService).recordSale(eq(userMail), any(ProfitLossContext.class), eq(priced),
+                same(rows));
+    }
+
+    @Test
     void updateQuantityBySavingReportAndProfitAndLoss_v1_doesNotRecordTradeOutcomesThroughTheNewPath() {
         // Given -- V1 is in live use and writes its outcomes through toTradeOutcomeContext.
         // If it ever reaches the recorder as well, every V1 sell is double-counted.
