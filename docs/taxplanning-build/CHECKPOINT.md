@@ -14,7 +14,7 @@ Last verify     : unit -Punit 3715/0; integration 303/0 (2026-10-25, W-161)
 Waiting on      : nothing for W-162; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
 Last item commit: taxplanning W-161: put the April – March year in one place — shared FinancialYear replaces TLocalDate.financialYear and every hand-built window outside the engine; TaxYearId kept (D-374)
-Updated         : 2026-10-25, session 35 — W-161 done and committed; resume at W-162 (plan to write)
+Updated         : 2026-10-25, session 35 — PAUSED at the owner's session-limit notice; everything committed and pushed; resume at W-162 (plan to write)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
