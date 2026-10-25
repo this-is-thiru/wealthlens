@@ -29,10 +29,9 @@ import java.util.Optional;
  * {@code asOf}s, not a recomputation.
  *
  * <p>A {@code taxengine}-owned projection of {@code portfolio}'s published read-model (decision
- * <b>D-024</b>). It carries no {@code CapitalGainsType}: that enum is {@code portfolio}'s, the
- * engine may not see it, and by the time a bucket reaches here {@code taxplanning} has already
- * decided whether the class counts as capital gains — {@code UNCLASSIFIED} is a blocking error
- * upstream ({@code X1.3}), not something the engine reasons about.
+ * <b>D-024</b>). It carries facts only: whether the capital-gains head takes a bucket, and its
+ * term, are the engine's rule data (W-160a, D-363; D-305), and {@code portfolio} no longer
+ * classifies a disposal at all (W-160b – f).
  *
  * @param buckets gross gain per bucket; may be empty, never null
  * @param asOf when the portfolio computed this

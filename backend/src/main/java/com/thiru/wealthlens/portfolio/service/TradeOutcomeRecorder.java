@@ -9,9 +9,6 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.TradeClassification;
-import com.thiru.wealthlens.portfolio.holding.TradeClassificationQuery;
-import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.money.TMoney;
@@ -41,7 +38,6 @@ import org.springframework.stereotype.Service;
 public class TradeOutcomeRecorder {
 
     private final TradeOutcomeService tradeOutcomeService;
-    private final TradeClassifier tradeClassifier;
     private final ChargeDeductibilityService chargeDeductibilityService;
     private final UserChargeService userChargeService;
 
@@ -117,10 +113,6 @@ public class TradeOutcomeRecorder {
         Map<String, Double> buyBreakup = share(buyBreakupFor(userMail, asset), buyShare);
         TradeFigures figures = rowFigures(sell, lot, sellBreakup, sellShare);
 
-        TradeClassification classification = tradeClassifier.classify(new TradeClassificationQuery(
-                sell.getStockCode(), sell.getAssetType(), sell.getSegment(),
-                asset.getTransactionDate(), sell.getTransactionDate()));
-
         TradeOutcomeContext.TradeOutcomeContextBuilder row = TradeOutcomeContext.builder()
                 .email(userMail.getEmail())
                 .stockCode(sell.getStockCode())
@@ -139,7 +131,6 @@ public class TradeOutcomeRecorder {
                 .netProfit(figures.netProfit())
                 .profitPercentage(figures.profitPercentage())
                 .holdingPeriodDays(ChronoUnit.DAYS.between(asset.getTransactionDate(), sell.getTransactionDate()))
-                .instrumentSubClass(classification.subClass())
                 .financialYear(TLocalDate.financialYear(sell.getTransactionDate()))
                 .sourceSellTransactionId(sellTransactionId)
                 .build();

@@ -10,7 +10,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodSeeder;
 import com.thiru.wealthlens.portfolio.migration.RebuildBuyChargeCorrection;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
@@ -37,9 +36,6 @@ class RebuildBuyChargeCorrectionIntegrationTest extends AbstractIntegrationTest 
     @Autowired
     private RebuildBuyChargeCorrection correction;
 
-    @Autowired
-    private HoldingPeriodSeeder holdingPeriodSeeder;
-
     /**
      * One buy of 10 @ 100 (broker 10, misc 4); sells of 5 @ 150 on 3 February and 3 March 2025, no sell charges. The old
      * rebuild stored the first sell's buy charges as 10 ÷ 10 × 5 = 5 and 4 ÷ 10 × 5 = 2, and the second's as
@@ -47,7 +43,6 @@ class RebuildBuyChargeCorrectionIntegrationTest extends AbstractIntegrationTest 
      */
     @BeforeEach
     void seed() {
-        holdingPeriodSeeder.seed("test");
         mongoTemplate.save(transaction("buy-1", TransactionType.BUY, 100.0, 10.0, 10.0, 4.0, LocalDate.of(2024, 1, 15)));
         mongoTemplate.save(transaction("sell-1", TransactionType.SELL, 150.0, 5.0, 0.0, 0.0, LocalDate.of(2025, 2, 3)));
         mongoTemplate.save(transaction("sell-2", TransactionType.SELL, 150.0, 5.0, 0.0, 0.0, LocalDate.of(2025, 3, 3)));

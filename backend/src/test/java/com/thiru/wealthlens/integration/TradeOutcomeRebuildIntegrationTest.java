@@ -10,7 +10,6 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodSeeder;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import io.restassured.response.ValidatableResponse;
@@ -35,12 +34,8 @@ class TradeOutcomeRebuildIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private TradeOutcomeRepository tradeOutcomeRepository;
 
-    @Autowired
-    private HoldingPeriodSeeder holdingPeriodSeeder;
-
     @BeforeEach
     void seed() {
-        holdingPeriodSeeder.seed("test");
         for (String user : new String[] {A, B, C}) {
             mongoTemplate.save(transaction(user, "buy", TransactionType.BUY, 10.0, LocalDate.of(2024, 1, 15)));
             mongoTemplate.save(transaction(user, "sell-1", TransactionType.SELL, 5.0, LocalDate.of(2025, 2, 3)));

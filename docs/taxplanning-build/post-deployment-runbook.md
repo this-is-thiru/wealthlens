@@ -365,6 +365,31 @@ file.
 
 **Removed after use:** W-170 / WL-36, once this is logged for every database and its `unplaced` list is placed.
 
+### 2.7 W-160f (D-371) — drop `portfolio`'s holding-period policies · owner, `mongosh` · **every database · once · outstanding**
+
+**Why.** `holding_period_policies` held `portfolio`'s own copy of the holding-period law, seeded by `POST
+/charges/seed`. Since W-160f no code reads, writes or seeds it: the term is the engine's `RS-CG-TERM` (D-305, D-362).
+This removes the stale law from the database. Nothing reads the collection, so no figure changes.
+
+**When:** at the deploy, any time after it.
+
+1. **Count before** (read-only): `db.holding_period_policies.countDocuments({})`. Expect the shipped policies (11),
+   or 0 where `/charges/seed` was never run.
+2. **Back up:**
+
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection holding_period_policies --out holding_period_policies-backup.json
+   ```
+
+3. **Drop:** `db.holding_period_policies.drop()`. Its two indexes go with it.
+4. **Verify:** `db.getCollectionNames().includes("holding_period_policies")` is `false`.
+
+**Second run:** safe; dropping a collection that does not exist changes nothing. **Way back:** `mongoimport --uri
+"<uri>" --db <db> --collection holding_period_policies --file holding_period_policies-backup.json`. No code would read
+it.
+
+**Retired after use:** W-171 / WL-37, once this is logged for every database. There is no code to remove.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined

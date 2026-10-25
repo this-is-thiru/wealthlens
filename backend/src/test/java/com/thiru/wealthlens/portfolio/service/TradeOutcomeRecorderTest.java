@@ -20,13 +20,9 @@ import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolution;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
-import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
@@ -58,7 +54,6 @@ class TradeOutcomeRecorderTest {
     private static final LocalDate SELL_DATE = LocalDate.of(2025, 6, 10);
 
     @Mock private TradeOutcomeService tradeOutcomeService;
-    @Mock private HoldingPeriodService holdingPeriodService;
     @Mock private ChargeDeductibilityService chargeDeductibilityService;
     @Mock private UserChargeService userChargeService;
     @Mock private TransactionRepository transactionRepository;
@@ -67,10 +62,8 @@ class TradeOutcomeRecorderTest {
 
     @BeforeEach
     void setUp() {
-        recorder = new TradeOutcomeRecorder(tradeOutcomeService, new TradeClassifier(holdingPeriodService),
-                chargeDeductibilityService, userChargeService, transactionRepository);
-        when(holdingPeriodService.classify(any(), any(), any(), any()))
-                .thenReturn(new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
+        recorder = new TradeOutcomeRecorder(tradeOutcomeService, chargeDeductibilityService, userChargeService,
+                transactionRepository);
     }
 
     private static AssetEntity lot(String txnId, double quantity, double price, double brokerCharges) {
