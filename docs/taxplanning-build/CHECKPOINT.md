@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-162c — the charge catalogue loses its deductibility flag (D-375, D-377; T4)
+Item            : W-163 — statutory charges on each broker's card (D-315; audit T3)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-162c.md (to write); split plans/W-162.md
+Plan            : plans/W-163.md (to write)
 Approved        : —
 Steps done      : —
-Next step       : READ W-162c (ChargeCatalogueEntity:54–70, ChargeCodes.requireDeductibilityDeclared, ChargeSeederService:150, :163–182 backfillDeductibility, ChargeCatalogueRepository's Javadoc, charge-catalogue.json key, ChargeSeederServiceTest:954, :997; the stored charge_catalogue field — op vs owner mongosh, R15), write the plan, STOP
-Last verify     : unit -Punit 3766/0; integration 309/0 (2026-10-27, W-162b)
-Waiting on      : nothing for W-162c; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : READ W-163 (the audit's T3 row; data/charges/*-equity-*.json — STT, STAMP_DUTY, GST, SEBI_FEE repeated per card; ChargeScheduleResolver / ChargeEngine for how a card's rules are evaluated), write the plan putting both readings to the owner (a shared statutory card the broker cards reference, or accepted as the contract note's bill), STOP
+Last verify     : unit -Punit 3760/0; integration 309/0 (2026-10-27, W-162c)
+Waiting on      : nothing for W-163; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-162b: stop storing which charges are deductible on trade outcomes — the recorder, entity and holdings view drop deductible_*, ChargeDeductibilityService removed; runbook §2.9 unsets the stored fields, W-174, WL-39; W-160g widened (D-377)
-Updated         : 2026-10-27, session 36 — W-162b committed; WL-A-2 republished after it
+Last item commit: taxplanning W-162c: remove the charge catalogue's deductibility flag — field, seed gate, backfill and JSON key go, RS-CG-CHARGE is the one place the law lives; runbook §2.10 unsets the stored flag, W-175, WL-40; W-162 closed (D-378)
+Updated         : 2026-10-27, session 36 — W-162c committed, W-162 closed; WL-A-2 republished after it
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

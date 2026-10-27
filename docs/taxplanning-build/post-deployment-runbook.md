@@ -475,6 +475,35 @@ both fields back; no code reads them.
 
 **Removed after use:** W-174 / WL-39, once this is logged for every database.
 
+### 2.10 W-162c (D-378) — unset the deductibility flag on `charge_catalogue` · owner, `mongosh` · **every database · once · outstanding**
+
+**Why.** `charge_catalogue.deductible_for_capital_gains` was one yes/no per charge code, the same for every year,
+saying whether the charge reduces a capital gain. Which charges do is the tax side's rule data for the year
+(`RS-CG-CHARGE`, W-162a, D-376), and since W-162c no code reads, writes, seeds or backfills the field. This removes the
+stale flag. Nothing reads it, so no figure changes; the catalogue's codes and other fields stay.
+
+**When:** at the deploy, any time after it.
+
+1. **Count before** (read-only): `db.charge_catalogue.countDocuments({ deductible_for_capital_gains: { $exists: true } })`.
+   Expect the codes seeded before W-162c (12), or 0 where `/charges/seed` was never run.
+2. **Back up:**
+
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection charge_catalogue \
+     --query '{"deductible_for_capital_gains":{"$exists":true}}' \
+     --fields _id,code,deductible_for_capital_gains --out charge_catalogue-deductibility-backup.json
+   ```
+
+3. **Unset:** `db.charge_catalogue.updateMany({ deductible_for_capital_gains: { $exists: true } }, { $unset: { deductible_for_capital_gains: "" } })`.
+   Expect `modifiedCount` equal to step 1's count.
+4. **Verify:** step 1's count is 0.
+
+**Second run:** safe, including after a run that failed part-way: only documents still carrying the field are matched, so a
+second run finishes what is left or changes nothing (`modifiedCount` 0). **Way back:** `mongoimport --uri "<uri>" --db
+<db> --collection charge_catalogue --mode merge --file charge_catalogue-deductibility-backup.json`. No code would read it.
+
+**Retired after use:** W-175 / WL-40, once this is logged for every database. There is no code to remove.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined
