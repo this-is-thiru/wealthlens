@@ -1,14 +1,15 @@
 package com.thiru.wealthlens.portfolio.service;
 
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
+import com.thiru.wealthlens.portfolio.dto.CapitalGainsAmounts;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
+import com.thiru.wealthlens.portfolio.dto.SideCharges;
 import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.repository.TradeOutcomeRepository;
-import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -28,11 +30,12 @@ import org.springframework.transaction.annotation.Transactional;
  * the tax side consumes, called synchronously ({@code 07-architecture.md} X1.3, X1.4; D-238).
  *
  * <p>Built from {@code trade_outcomes}, the only record that keeps the asset and its sub-class beside each disposal.
- * A row's gain is its sale value less its adjusted cost less the charges the catalogue marks deductible for capital
- * gains — not {@code netProfit}, which deducts every charge, STT included. User-entered misc charges carry no code,
- * so nothing says they are deductible, and they are not deducted. A row that bore broker charges but kept no
- * breakdown of them cannot be quantified at all, and refuses the year rather than overstating its gain. A row with no
- * breakdown on a side says nothing of securities transaction tax there, so that side's STT is {@code UNKNOWN}, never
+ * A bucket publishes what its rows fetched, what they cost and every charge on each side — the breakdown by code and
+ * the user-entered misc charge — never a gain: which charges reduce a gain is the law of the year, the tax side's rule
+ * data (2025 s.72; 1961 s.48; W-162a, D-375). Each row's sale value and cost are taken to the paisa before they are
+ * summed, as a contract note shows them. A row that bore broker charges but kept no breakdown of them cannot be
+ * quantified at all, and refuses the year rather than publish a charge of unknown kind. A row with no breakdown on a
+ * side says nothing of securities transaction tax there, so that side's STT is {@code UNKNOWN}, never
  * {@code NOT_PAID} (D-292).
  *
  * <p>Rows are chosen by sell date, not by their stored year, which is written in two forms (W-086a).
@@ -52,7 +55,7 @@ public class CapitalGainsSummaryService {
      * The summary of {@code email}'s disposals sold in {@code financialYear}.
      *
      * @param financialYear the year as {@link FinancialYear#label()} writes it, such as {@code 2025-2026}
-     * @throws IllegalArgumentException if the year is malformed, or a disposal's deductible charges are unknown
+     * @throws IllegalArgumentException if the year is malformed, or a disposal's charges are not broken down
      */
     public CapitalGainsSummary summaryFor(String email, String financialYear) {
         FinancialYear year = FinancialYear.parse(financialYear);
@@ -60,13 +63,13 @@ public class CapitalGainsSummaryService {
         List<TradeOutcomeEntity> rows = tradeOutcomeRepository.findByEmailAndSellDateBetween(email,
                 year.startsOn().minusDays(1), year.endsOn().plusDays(1));
         requireQuantifiable(rows);
-        Map<BucketKey, Double> gainByKey = new LinkedHashMap<>();
+        Map<BucketKey, CapitalGainsAmounts> amountsByKey = new LinkedHashMap<>();
         // Nulls sort first so a row without a sell date reaches BucketKey's refusal, which names it.
         rows.stream()
                 .sorted(Comparator.comparing(TradeOutcomeEntity::getSellDate,
                         Comparator.nullsFirst(Comparator.naturalOrder())).thenComparing(TradeOutcomeEntity::getId))
-                .forEach(row -> gainByKey.merge(BucketKey.of(row), gainOf(row), TMoney::add));
-        List<CapitalGainsBucket> buckets = gainByKey.entrySet().stream()
+                .forEach(row -> amountsByKey.merge(BucketKey.of(row), amountsOf(row), CapitalGainsAmounts::plus));
+        List<CapitalGainsBucket> buckets = amountsByKey.entrySet().stream()
                 .map(entry -> entry.getKey().bucket(entry.getValue()))
                 .toList();
         log.debug("Capital-gains summary for {} {}: {} disposals in {} buckets", email, financialYear, rows.size(),
@@ -74,7 +77,7 @@ public class CapitalGainsSummaryService {
         return new CapitalGainsSummary(email, financialYear, buckets, Instant.now(), referenceOf(rows));
     }
 
-    /** Every row's deductible charges are known: a charge with no breakdown cannot be split into deductible parts. */
+    /** Every row's charges are broken down: a charge with no breakdown is of no known kind. */
     private static void requireQuantifiable(List<TradeOutcomeEntity> rows) {
         List<TradeOutcomeEntity> unknown = rows.stream()
                 .filter(row -> withoutBreakup(row.getBuyBrokerCharges(), row.getBuyChargeBreakup())
@@ -83,7 +86,7 @@ public class CapitalGainsSummaryService {
         if (!unknown.isEmpty()) {
             TradeOutcomeEntity first = unknown.getFirst();
             throw new IllegalArgumentException(unknown.size() + " disposal(s) bore broker charges but kept no breakdown"
-                    + " of them, so the part that reduces a capital gain is unknown — the first sold "
+                    + " of them, so which of them reduce a capital gain is unknown — the first sold "
                     + first.getStockCode() + " on " + first.getSellDate() + "; record those trades again");
         }
     }
@@ -92,15 +95,20 @@ public class CapitalGainsSummaryService {
         return charges != 0 && (breakup == null || breakup.isEmpty());
     }
 
-    /** The sale value less the adjusted cost less the deductible charges, to the paisa. */
-    private static double gainOf(TradeOutcomeEntity row) {
+    /** The row's sale value and adjusted cost, each to the paisa, and its charges on each side as recorded. */
+    private static CapitalGainsAmounts amountsOf(TradeOutcomeEntity row) {
         if (row.getSellQuantity() == null || row.getBuyQuantity() == null) {
-            throw new IllegalArgumentException("The disposal " + row.getId() + " has no quantity, so its gain cannot"
-                    + " be computed");
+            throw new IllegalArgumentException("The disposal " + row.getId() + " has no quantity, so what it fetched"
+                    + " and cost cannot be computed");
         }
-        double sale = row.getSellPrice() * row.getSellQuantity();
-        double cost = row.getCorporateActionAdjustedBuyPrice() * row.getBuyQuantity();
-        return TMoney.scale(sale - cost - row.getDeductibleBuyCharges() - row.getDeductibleSellCharges());
+        return new CapitalGainsAmounts(row.getSellPrice() * row.getSellQuantity(),
+                row.getCorporateActionAdjustedBuyPrice() * row.getBuyQuantity(),
+                sideOf(row.getBuyChargeBreakup(), row.getBuyMiscCharges()),
+                sideOf(row.getSellChargeBreakup(), row.getSellMiscCharges()));
+    }
+
+    private static SideCharges sideOf(Map<String, Double> breakup, double miscRupees) {
+        return new SideCharges(breakup == null ? Map.of() : breakup, miscRupees);
     }
 
     /** What a bucket is one of: the rows a bucket sums share all nine. */
@@ -119,9 +127,9 @@ public class CapitalGainsSummaryService {
                     acquiredOnOf(row), transferredOnOf(row));
         }
 
-        CapitalGainsBucket bucket(double gainRupees) {
+        CapitalGainsBucket bucket(CapitalGainsAmounts amounts) {
             return new CapitalGainsBucket(assetType, subClass, sttOnAcquisition, sttOnTransfer,
-                    acquisitionVenue, transferVenue, acquisition, acquiredOn, transferredOn, gainRupees);
+                    acquisitionVenue, transferVenue, acquisition, acquiredOn, transferredOn, amounts);
         }
 
         private static LocalDate acquiredOnOf(TradeOutcomeEntity row) {
@@ -157,8 +165,15 @@ public class CapitalGainsSummaryService {
     private static String referenceOf(List<TradeOutcomeEntity> rows) {
         String material = rows.stream()
                 .sorted(Comparator.comparing(TradeOutcomeEntity::getId))
-                .map(row -> row.getId() + ":" + gainOf(row))
+                .map(row -> row.getId() + ":" + materialOf(amountsOf(row)))
                 .collect(Collectors.joining("\n"));
         return "trade_outcomes:" + TradeFingerprint.sha256(material);
+    }
+
+    /** A row's amounts in a fixed order, its codes sorted, so the digest does not turn on a map's iteration order. */
+    private static String materialOf(CapitalGainsAmounts amounts) {
+        return amounts.considerationRupees() + "/" + amounts.costRupees() + "/"
+                + new TreeMap<>(amounts.acquisition().rupeesByCode()) + "+" + amounts.acquisition().miscRupees() + "/"
+                + new TreeMap<>(amounts.transfer().rupeesByCode()) + "+" + amounts.transfer().miscRupees();
     }
 }

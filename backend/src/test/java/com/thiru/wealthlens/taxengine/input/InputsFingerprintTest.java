@@ -162,7 +162,7 @@ class InputsFingerprintTest {
                             "capitalGains.buckets",
                             mutate(in -> copy(in, r -> r.capitalGains = new CapitalGainsInput(
                                     List.of(new Bucket(
-                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("50000"),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("50000"), com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, List.of(),
                                             new BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE", Optional.empty(),
                                                     LocalDate.of(2020, 6, 1), LocalDate.of(2025, 6, 10),
                                                     SideVenue.UNRECORDED, SideVenue.UNRECORDED),

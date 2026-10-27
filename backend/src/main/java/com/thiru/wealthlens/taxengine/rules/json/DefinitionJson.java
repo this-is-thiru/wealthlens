@@ -7,6 +7,8 @@ import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrd
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
 import com.thiru.wealthlens.taxengine.rules.definition.CashPaymentLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.ChargeDeduction;
+import com.thiru.wealthlens.taxengine.rules.definition.ChargeDeductionLimb;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
@@ -71,7 +73,7 @@ public final class DefinitionJson {
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
                 "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod",
-                "CapitalGainsParts", "SalaryAveragingPeriod", "VehiclePath", "WearAndTear");
+                "CapitalGainsParts", "SalaryAveragingPeriod", "VehiclePath", "WearAndTear", "ChargeDeduction");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -104,8 +106,9 @@ public final class DefinitionJson {
     }
 
     /**
-     * The Chapter VIII deductions' definitions, other sources' gift and life-policy limits and the leave travel
-     * concession's children limit — apart only to keep each switch within the complexity limit.
+     * The Chapter VIII deductions' definitions, other sources' gift and life-policy limits, the leave travel
+     * concession's children limit and where a charge stands in a capital gain (W-162a) — apart only to keep each switch
+     * within the complexity limit.
      */
     private static RuleDefinition chapterEightDefinition(String tag, JsonNode node, String path) {
         return switch (tag) {
@@ -140,6 +143,8 @@ public final class DefinitionJson {
                     PackJson.money(node, "conditionsMet", path), PackJson.money(node, "anyOtherCase", path),
                     PackJson.money(node, "aggregate", path), PackJson.integer(node, "completionYearsAfterBorrowingYear", path),
                     PackJson.optionalDate(node, "borrowedOnOrAfter", path)));
+            case "ChargeDeduction" -> PackJson.construct(path, () -> new ChargeDeduction(
+                    PackJson.enumValue(node, "limb", path, ChargeDeductionLimb.class)));
             default -> setOffDefinition(tag, node, path);
         };
     }

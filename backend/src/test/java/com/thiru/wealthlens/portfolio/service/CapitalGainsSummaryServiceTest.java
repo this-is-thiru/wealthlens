@@ -106,25 +106,58 @@ class CapitalGainsSummaryServiceTest {
         return summary.buckets().stream().filter(b -> b.acquiredOn().equals(acquiredOn)).findFirst().orElseThrow();
     }
 
-    @Test
-    void summaryFor_whenRowsShareTheirFacts_sumsTheirGainsNetOfDeductibleCharges() {
-        // When
-        CapitalGainsSummary summary = summaryOf(rowsAtoC());
-
-        // Then — A 1,200 − 1,000 − 5 − 7 = 188, B 600 − 520 − 2 − 3 = 75; C 1,000 − 600 − 4 − 6 = 390
-        assertThat(summary.buckets()).hasSize(2);
-        assertCanonical(263.00, bucket(summary, A_AND_B_BOUGHT_ON).gainRupees());
-        assertCanonical(390.00, bucket(summary, LocalDate.of(2024, 1, 2)).gainRupees());
-        assertThat(bucket(summary, A_AND_B_BOUGHT_ON).assetType()).isEqualTo(AssetType.EQUITY);
+    /** The bucket's sale value and cost. */
+    private static void assertFetchedAndCost(CapitalGainsBucket bucket, double considerationRupees, double costRupees) {
+        assertCanonical(considerationRupees, bucket.amounts().considerationRupees());
+        assertCanonical(costRupees, bucket.amounts().costRupees());
     }
 
     @Test
-    void summaryFor_whenARowPaidStt_doesNotDeductIt() {
-        // When — row A's STT 1.20 is in its breakdown and in its netProfit of 178.80, not in its deductible charges
+    void summaryFor_whenRowsShareTheirFacts_sumsTheirAmounts() {
+        // When
+        CapitalGainsSummary summary = summaryOf(rowsAtoC());
+
+        // Then — A + B: 1,200 + 600 = 1,800 fetched, 1,000 + 520 = 1,520 cost; buy brokerage 5 + 2 = 7; sale brokerage
+        // 7 + 3 = 10, STT 1.20 + 0.60 = 1.80, misc 10 (B's). C: 1,000 fetched, 600 cost; brokerage 4 and 6, STT 1.00
+        assertThat(summary.buckets()).hasSize(2);
+        CapitalGainsBucket ab = bucket(summary, A_AND_B_BOUGHT_ON);
+        assertFetchedAndCost(ab, 1800.00, 1520.00);
+        assertCanonical(7.00, ab.amounts().acquisition().rupeesByCode().get("BROKERAGE"));
+        assertCanonical(10.00, ab.amounts().transfer().rupeesByCode().get("BROKERAGE"));
+        assertCanonical(1.80, ab.amounts().transfer().rupeesByCode().get("STT"));
+        assertCanonical(10.00, ab.amounts().transfer().miscRupees());
+        CapitalGainsBucket c = bucket(summary, LocalDate.of(2024, 1, 2));
+        assertFetchedAndCost(c, 1000.00, 600.00);
+        assertCanonical(4.00, c.amounts().acquisition().rupeesByCode().get("BROKERAGE"));
+        assertCanonical(6.00, c.amounts().transfer().rupeesByCode().get("BROKERAGE"));
+        assertCanonical(1.00, c.amounts().transfer().rupeesByCode().get("STT"));
+        assertThat(ab.assetType()).isEqualTo(AssetType.EQUITY);
+    }
+
+    @Test
+    void summaryFor_whenARowPaidStt_publishesItAsACharge() {
+        // When — row A's STT 1.20 is in its breakdown; whether it reduces the gain is the engine's (W-162a)
         CapitalGainsSummary summary = summaryOf(List.of(rowsAtoC().getFirst()));
 
-        // Then
-        assertCanonical(188.00, summary.buckets().getFirst().gainRupees());
+        // Then — published as recorded, beside the brokerage, and not netted against anything
+        CapitalGainsBucket a = summary.buckets().getFirst();
+        assertFetchedAndCost(a, 1200.00, 1000.00);
+        assertThat(a.amounts().transfer().rupeesByCode()).containsOnlyKeys("BROKERAGE", "STT");
+        assertCanonical(1.20, a.amounts().transfer().rupeesByCode().get("STT"));
+    }
+
+    @Test
+    void summaryFor_whenRowsCarrySubPaisaAmounts_takesEachRowToThePaisaBeforeSumming() {
+        // Given — two sales of a fund at NAV 12.3456, bought at 10.1111, 10.123 units each (W-162a C1a)
+        TradeOutcomeEntity first = row("P", AssetType.MUTUAL_FUND, 12.3456, 10.1111, 10.123);
+        TradeOutcomeEntity second = row("Q", AssetType.MUTUAL_FUND, 12.3456, 10.1111, 10.123);
+
+        // When
+        CapitalGainsBucket fund = summaryOf(List.of(first, second)).buckets().getFirst();
+
+        // Then — 12.3456 × 10.123 = 124.9745088 → 124.97 per row, so 249.94 (summed first it would be 249.95);
+        // 10.1111 × 10.123 = 102.3546653 → 102.35 per row, so 204.70 (summed first, 204.71)
+        assertFetchedAndCost(fund, 249.94, 204.70);
     }
 
     @Test
@@ -185,11 +218,11 @@ class CapitalGainsSummaryServiceTest {
         // When
         CapitalGainsSummary summary = summaryOf(List.of(known, unknown));
 
-        // Then — two buckets; 10 and 30 by hand, before the deductible charges this test leaves nil
+        // Then — two buckets: 110 fetched for 100, and 130 for 100, by hand
         assertThat(summary.buckets()).extracting(CapitalGainsBucket::sttOnAcquisition)
                 .containsExactly(SttEvidence.PAID, SttEvidence.UNKNOWN);
-        assertCanonical(10.00, summary.buckets().get(0).gainRupees());
-        assertCanonical(30.00, summary.buckets().get(1).gainRupees());
+        assertFetchedAndCost(summary.buckets().get(0), 110.00, 100.00);
+        assertFetchedAndCost(summary.buckets().get(1), 130.00, 100.00);
     }
 
     @Test
@@ -210,14 +243,14 @@ class CapitalGainsSummaryServiceTest {
         // When
         CapitalGainsSummary summary = summaryOf(List.of(bonus, unrecorded, first, next));
 
-        // Then -- four buckets; gains 110, 20, 30 and 40 by hand
+        // Then -- four buckets; 110 for 0, 120, 130 and 140 for 100 each, by hand
         assertThat(summary.buckets()).extracting(CapitalGainsBucket::acquisition, CapitalGainsBucket::acquiredOn)
                 .containsExactly(tuple(Acquisition.of(CorporateActionType.BONUS), LocalDate.of(2024, 1, 2)),
                         tuple(Acquisition.UNRECORDED, LocalDate.of(2024, 1, 2)),
                         tuple(Acquisition.of(null), LocalDate.of(2004, 9, 30)),
                         tuple(Acquisition.of(null), LocalDate.of(2004, 10, 1)));
-        assertCanonical(110.00, summary.buckets().get(0).gainRupees());
-        assertCanonical(40.00, summary.buckets().get(3).gainRupees());
+        assertFetchedAndCost(summary.buckets().get(0), 110.00, 0.00);
+        assertFetchedAndCost(summary.buckets().get(3), 140.00, 100.00);
     }
 
     @Test
@@ -244,11 +277,11 @@ class CapitalGainsSummaryServiceTest {
         // When
         CapitalGainsSummary summary = summaryOf(List.of(first, sameDay, nextDay));
 
-        // Then -- 20 + 30 on 2-6-2025, 40 on 3-6-2025, by hand
+        // Then -- 120 + 130 = 250 for 200 on 2-6-2025, 140 for 100 on 3-6-2025, by hand
         assertThat(summary.buckets()).extracting(CapitalGainsBucket::transferredOn)
                 .containsExactly(LocalDate.of(2025, 6, 2), LocalDate.of(2025, 6, 3));
-        assertCanonical(50.00, summary.buckets().get(0).gainRupees());
-        assertCanonical(40.00, summary.buckets().get(1).gainRupees());
+        assertFetchedAndCost(summary.buckets().get(0), 250.00, 200.00);
+        assertFetchedAndCost(summary.buckets().get(1), 140.00, 100.00);
     }
 
     @Test
@@ -264,12 +297,15 @@ class CapitalGainsSummaryServiceTest {
     }
 
     @Test
-    void summaryFor_whenARowHasMiscCharges_doesNotDeductThem() {
-        // When — row B's user-entered misc charge of 10 has no code, so nothing says it is deductible
+    void summaryFor_whenARowHasMiscCharges_publishesThemApartFromTheCodes() {
+        // When — row B's user-entered misc charge of 10 carries no code
         CapitalGainsSummary summary = summaryOf(List.of(rowsAtoC().get(1)));
 
-        // Then
-        assertCanonical(75.00, summary.buckets().getFirst().gainRupees());
+        // Then — 600 fetched for 520; the misc on the sale side, beside its coded brokerage 3 and STT 0.60
+        CapitalGainsBucket b = summary.buckets().getFirst();
+        assertFetchedAndCost(b, 600.00, 520.00);
+        assertCanonical(10.00, b.amounts().transfer().miscRupees());
+        assertThat(b.amounts().transfer().rupeesByCode()).containsOnlyKeys("BROKERAGE", "STT");
     }
 
     @Test
@@ -280,17 +316,17 @@ class CapitalGainsSummaryServiceTest {
         // When
         CapitalGainsSummary summary = summaryOf(List.of(rowsAtoC().get(2), fund));
 
-        // Then — 500 − 400 = 100, apart from the equity
+        // Then — 50 × 10 = 500 fetched for 40 × 10 = 400, apart from the equity
         assertThat(summary.buckets()).hasSize(2);
         CapitalGainsBucket fundBucket = summary.buckets().stream()
                 .filter(b -> b.assetType() == AssetType.MUTUAL_FUND).findFirst().orElseThrow();
         assertThat(fundBucket.instrumentSubClass()).isEqualTo(Optional.empty());
-        assertCanonical(100.00, fundBucket.gainRupees());
+        assertFetchedAndCost(fundBucket, 500.00, 400.00);
     }
 
     @Test
     void summaryFor_whenARowBoreChargesWithoutABreakdown_isRefused() {
-        // Given — a migrated row: broker charges 20, no breakdown, so its deductible part reads 0 but is unknown
+        // Given — a migrated row: broker charges 20, no breakdown, so what they were is unknown
         TradeOutcomeEntity migrated = charged(row("E", AssetType.EQUITY, 120, 100, 10), 0, 0);
         migrated.setBuyBrokerCharges(20);
         migrated.setBuyChargeBreakup(Map.of());
@@ -342,7 +378,7 @@ class CapitalGainsSummaryServiceTest {
     }
 
     @Test
-    void summaryFor_whenARowsGainChanges_namesAnotherComputation() {
+    void summaryFor_whenARowsAmountChanges_namesAnotherComputation() {
         // Given
         String before = summaryOf(rowsAtoC()).portfolioComputationRef();
         String again = summaryOf(rowsAtoC()).portfolioComputationRef();
@@ -354,6 +390,20 @@ class CapitalGainsSummaryServiceTest {
 
         // Then
         assertThat(again).isEqualTo(before);
+        assertThat(after).isNotEqualTo(before);
+    }
+
+    @Test
+    void summaryFor_whenOnlyARowsChargeChanges_namesAnotherComputation() {
+        // Given — the same sale and cost; only row C's sale-side STT differs, which can change the gain the engine nets
+        String before = summaryOf(rowsAtoC()).portfolioComputationRef();
+        List<TradeOutcomeEntity> changed = rowsAtoC();
+        changed.get(2).setSellChargeBreakup(Map.of("BROKERAGE", 6.0, "STT", 1.10));
+
+        // When
+        String after = summaryOf(changed).portfolioComputationRef();
+
+        // Then
         assertThat(after).isNotEqualTo(before);
     }
 
@@ -400,10 +450,10 @@ class CapitalGainsSummaryServiceTest {
         // When
         CapitalGainsSummary summary = summaryOf(List.of(onNse, offMarket));
 
-        // Then -- two buckets: 10 and 30 by hand
+        // Then -- two buckets: 110 for 100 and 130 for 100, by hand
         assertThat(summary.buckets()).extracting(b -> b.transferVenue().exchange())
                 .containsExactly(Optional.of("NSE"), Optional.empty());
-        assertCanonical(10.00, summary.buckets().get(0).gainRupees());
-        assertCanonical(30.00, summary.buckets().get(1).gainRupees());
+        assertFetchedAndCost(summary.buckets().get(0), 110.00, 100.00);
+        assertFetchedAndCost(summary.buckets().get(1), 130.00, 100.00);
     }
 }

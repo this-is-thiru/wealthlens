@@ -7,8 +7,10 @@ import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
+import com.thiru.wealthlens.portfolio.dto.CapitalGainsAmounts;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsBucket;
 import com.thiru.wealthlens.portfolio.dto.CapitalGainsSummary;
+import com.thiru.wealthlens.portfolio.dto.SideCharges;
 import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.SttEvidence;
@@ -16,12 +18,15 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Charge;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.ChargeSide;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,16 +57,21 @@ class CapitalGainsAdapterTest {
     private CapitalGainsAdapter adapter;
 
     private static CapitalGainsBucket bucket(AssetType assetType, SttEvidence sttOnAcquisition,
-            SttEvidence sttOnTransfer, double gainRupees) {
+            SttEvidence sttOnTransfer, double considerationRupees) {
         return new CapitalGainsBucket(assetType, Optional.empty(), sttOnAcquisition, sttOnTransfer,
                 TradeVenue.UNRECORDED, TradeVenue.UNRECORDED,
-                Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, gainRupees);
+                Acquisition.of(null), ACQUIRED_ON, TRANSFERRED_ON, amounts(considerationRupees));
+    }
+
+    /** Disposals that fetched {@code considerationRupees}, at no cost and no charge. */
+    private static CapitalGainsAmounts amounts(double considerationRupees) {
+        return new CapitalGainsAmounts(considerationRupees, 0, SideCharges.NONE, SideCharges.NONE);
     }
 
     /** Long-term equity sold with STT, its buy without, acquired as stated. */
     private static CapitalGainsBucket boughtWithoutStt(Acquisition acquisition, LocalDate acquiredOn) {
         return new CapitalGainsBucket(AssetType.EQUITY, Optional.empty(),
-                SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, acquisition, acquiredOn, TRANSFERRED_ON, 1000.50);
+                SttEvidence.NOT_PAID, SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, acquisition, acquiredOn, TRANSFERRED_ON, amounts(1000.50));
     }
 
     private CapitalGainsInput inputOf(CapitalGainsBucket... buckets) {
@@ -94,7 +104,9 @@ class CapitalGainsAdapterTest {
                 SttEvidence.PAID, SttEvidence.UNKNOWN, 1000.50));
 
         // Then
-        assertThat(bucket.gain()).isEqualTo(Money.of("1000.50"));
+        assertThat(bucket.consideration()).isEqualTo(Money.of("1000.50"));
+        assertThat(bucket.cost()).isEqualTo(Money.ZERO);
+        assertThat(bucket.charges()).isEmpty();
         assertThat(bucket.facts()).isEqualTo(new BucketFacts("EQUITY", "PAID", "UNKNOWN", "PURCHASE", Optional.empty(),
                 ACQUIRED_ON, TRANSFERRED_ON, SideVenue.UNRECORDED, SideVenue.UNRECORDED));
     }
@@ -134,6 +146,43 @@ class CapitalGainsAdapterTest {
     }
 
     @Test
+    void inputFor_whenTheBucketBoreCharges_passesEachAsItself() {
+        // Given — the buy's STT recorded as nil, the sale's misc entered by hand; no misc on the buy
+        CapitalGainsBucket charged = new CapitalGainsBucket(AssetType.EQUITY, Optional.empty(), SttEvidence.NOT_PAID,
+                SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON,
+                TRANSFERRED_ON, new CapitalGainsAmounts(1200, 1000,
+                        new SideCharges(Map.of("BROKERAGE", 5.0, "STT", 0.0), 0),
+                        new SideCharges(Map.of("BROKERAGE", 7.0), 10)));
+
+        // When
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(charged);
+
+        // Then — a code is a fact, so the nil STT passes too; which charges reduce the gain is the engine's
+        assertThat(bucket.consideration()).isEqualTo(Money.of("1200"));
+        assertThat(bucket.cost()).isEqualTo(Money.of("1000"));
+        assertThat(bucket.charges()).containsExactlyInAnyOrder(
+                new Charge(ChargeSide.ACQUISITION, "BROKERAGE", Money.of("5")),
+                new Charge(ChargeSide.ACQUISITION, "STT", Money.ZERO),
+                new Charge(ChargeSide.TRANSFER, "BROKERAGE", Money.of("7")),
+                new Charge(ChargeSide.TRANSFER, "MISC", Money.of("10")));
+    }
+
+    @Test
+    void inputFor_whenTheBucketNetsToNothing_stillPassesIt() {
+        // Given — sold for what it cost, with no charge: no gain, but not nothing (W-162a C2a)
+        CapitalGainsBucket evens = new CapitalGainsBucket(AssetType.EQUITY, Optional.empty(), SttEvidence.PAID,
+                SttEvidence.PAID, TradeVenue.UNRECORDED, TradeVenue.UNRECORDED, Acquisition.of(null), ACQUIRED_ON,
+                TRANSFERRED_ON, new CapitalGainsAmounts(100, 100, SideCharges.NONE, SideCharges.NONE));
+
+        // When
+        CapitalGainsInput.Bucket bucket = onlyBucketOf(evens);
+
+        // Then
+        assertThat(bucket.consideration()).isEqualTo(Money.of("100"));
+        assertThat(bucket.cost()).isEqualTo(Money.of("100"));
+    }
+
+    @Test
     void inputFor_whenABucketIsNil_leavesItOut() {
         // When
         CapitalGainsInput input = inputOf(bucket(AssetType.BOND, SttEvidence.NOT_PAID, SttEvidence.NOT_PAID, 0));
@@ -164,7 +213,7 @@ class CapitalGainsAdapterTest {
                 Optional.empty(), SttEvidence.UNKNOWN, SttEvidence.UNKNOWN,
                 new TradeVenue(Optional.of("BSE"), Optional.of(TradeSegment.DELIVERY)),
                 new TradeVenue(Optional.of("NSE"), Optional.of(TradeSegment.INTRADAY)), Acquisition.of(null),
-                ACQUIRED_ON, TRANSFERRED_ON, 10);
+                ACQUIRED_ON, TRANSFERRED_ON, amounts(10));
         CapitalGainsInput.Bucket bucket = onlyBucketOf(recorded);
 
         // Then

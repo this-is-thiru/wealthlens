@@ -7,6 +7,8 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsParts;
+import com.thiru.wealthlens.taxengine.rules.definition.ChargeDeduction;
+import com.thiru.wealthlens.taxengine.rules.definition.ChargeDeductionLimb;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
@@ -278,6 +280,27 @@ class RuleJsonDefinitionTest {
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("definition.computation")
                 .hasMessageContaining("SL_1C_I");
+    }
+
+    @Test
+    void version_whenAChargeDeduction_readsTheLimb() {
+        // When
+        RuleVersion version = versionWith("""
+                "definition": { "type": "ChargeDeduction", "limb": "TRANSFER_EXPENDITURE" }""");
+
+        // Then
+        assertThat(version.definition())
+                .contains(new ChargeDeduction(ChargeDeductionLimb.TRANSFER_EXPENDITURE));
+    }
+
+    @Test
+    void version_whenAChargeDeductionNamesNoLimb_isRefusedNamingThePath() {
+        // When / Then — the limbs are closed: a new one is new arithmetic (W-162a)
+        assertThatThrownBy(() -> versionWith("""
+                        "definition": { "type": "ChargeDeduction", "limb": "DEDUCTIBLE" }"""))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("definition.limb")
+                .hasMessageContaining("DEDUCTIBLE");
     }
 
     @ParameterizedTest(name = "{0}")

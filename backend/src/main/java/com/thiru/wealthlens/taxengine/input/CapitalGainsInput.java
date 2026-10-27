@@ -12,8 +12,9 @@ import java.util.Optional;
  * <h2>Gross buckets, never tax</h2>
  *
  * <p>{@code 13-edge-cases.md} R-10 and {@code 15-review-findings.md} F5. {@code portfolio} owns
- * which disposals happened, their dates, the FIFO cost basis and the amount of gain; the tax side
- * owns the rate basis, ss.196/197/198, the surcharge split and s.108(2) set-off. So every figure
+ * which disposals happened, their dates, what they fetched, the FIFO cost basis and the charges; the tax side
+ * owns which charges reduce the gain (s.72; W-162a), the rate basis, ss.196/197/198, the surcharge split and s.108(2)
+ * set-off. So every figure
  * here is a <b>gross amount with the facts the law turns on</b>, and no figure here is a tax: which part of the head a
  * bucket falls in is the rule data's (D-289).
  *
@@ -33,7 +34,7 @@ import java.util.Optional;
  * term, are the engine's rule data (W-160a, D-363; D-305), and {@code portfolio} no longer
  * classifies a disposal at all (W-160b – f).
  *
- * @param buckets gross gain per bucket; may be empty, never null
+ * @param buckets the disposals, bucket by bucket; may be empty, never null
  * @param asOf when the portfolio computed this
  * @param portfolioComputationRef the portfolio's own reference for the run, so a pinned figure can
  *     be traced back to what produced it
@@ -57,19 +58,25 @@ public record CapitalGainsInput(
     }
 
     /**
-     * One bucket of gross gain.
+     * One bucket of disposals: what they fetched, what they cost and what was charged on them, never a gain or a tax.
+     * Which charges reduce the gain is the rule data's ({@code RS-CG-CHARGE}; 2025 s.72; 1961 s.48; W-162a, D-375), so
+     * every charge arrives as itself.
      *
-     * @param gain the gross amount; never a tax
+     * @param consideration the full value of the consideration the disposals received
+     * @param cost their cost, the lots' price as adjusted for corporate actions
+     * @param charges every charge on either side, by code; may be empty, never null
      * @param facts what the special-rate provisions turn on; a bucket no rule covers is a blocking error, never a
      *     fallback to slab (R-10)
      * @param portfolioRuleRef the portfolio's own rule reference, where it has one
      */
     public record Bucket(
-            Money gain, BucketFacts facts, Optional<String> portfolioRuleRef) {
+            Money consideration, Money cost, List<Charge> charges, BucketFacts facts,
+            Optional<String> portfolioRuleRef) {
 
         public Bucket {
-            if (gain == null) {
-                throw new IllegalArgumentException("A capital-gains bucket must carry a gain");
+            if (consideration == null || cost == null || charges == null) {
+                throw new IllegalArgumentException("A capital-gains bucket must carry its consideration, its cost and"
+                        + " its charges; pass an empty list for none");
             }
             if (facts == null) {
                 throw new IllegalArgumentException(
@@ -79,6 +86,32 @@ public record CapitalGainsInput(
             if (portfolioRuleRef == null) {
                 throw new IllegalArgumentException(
                         "Bucket.portfolioRuleRef may not be null; pass Optional.empty()");
+            }
+            charges = List.copyOf(charges);
+        }
+    }
+
+    /** The side of a disposal a charge was levied on. */
+    public enum ChargeSide {
+        ACQUISITION,
+        TRANSFER
+    }
+
+    /**
+     * One charge on one side of a bucket's disposals, summed over them, as {@code portfolio} recorded it.
+     *
+     * @param side the buy or the sale
+     * @param code the charge catalogue's code, passed through, or {@code MISC} for a charge entered without one
+     * @param amount the amount charged; not negative
+     */
+    public record Charge(ChargeSide side, String code, Money amount) {
+
+        public Charge {
+            if (side == null || code == null || code.isBlank() || amount == null) {
+                throw new IllegalArgumentException("A charge needs its side, code and amount");
+            }
+            if (amount.isLessThan(Money.ZERO)) {
+                throw new IllegalArgumentException("The charge " + code + " on the " + side + " is negative: " + amount);
             }
         }
     }

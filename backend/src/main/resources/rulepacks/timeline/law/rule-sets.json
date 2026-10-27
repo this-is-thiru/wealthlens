@@ -20,6 +20,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-CG-CHARGE",
+      "_note": "Where a charge on one side of a capital-gains disposal stands in computing the gain (2025 s.72(1), (3)(b); 1961 s.48(i), (ii) and its securities-transaction-tax proviso; W-162a, D-375): transfer expenditure, cost of acquisition, or not deducted. Facts: charge.side (ACQUISITION or TRANSFER) and charge.code, the charge catalogue's code as recorded, or MISC for a charge the user entered without one. A charge no row covers refuses the computation. Not modelled: indexation (s.72(2); s.48 second proviso), cost by mode of acquisition (s.73; s.49), the non-resident rules (s.72(6), (7); s.48 first proviso), the interest bar (s.72(3)(a); FA 2023 s.22)",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-CG-NOT-COMPUTED",
       "_note": "Buckets outside the capital-gains head that this engine does not compute — business income (2025 s.66(31), (33); 1961 s.43(5)): CG-SPECULATIVE, CG-DERIVATIVE, conditions only; a bucket a row reaches is refused, tested before RS-CG-TERM (W-160a, D-363)",
       "selection": "AT_MOST_ONE",

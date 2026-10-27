@@ -40,23 +40,24 @@ final class CapitalGainsScope {
     }
 
     /**
-     * Whether the head takes the bucket; a bucket another head charges is traced as left out on {@code lines}.
+     * Whether the head takes the bucket of {@code gain}; a bucket another head charges is traced as left out on
+     * {@code lines}.
      *
      * @throws IllegalArgumentException where the bucket is income of a head this engine does not compute
      */
-    static boolean takes(NodeContext ctx, CapitalGainsInput.Bucket bucket, List<TraceLine> lines) {
+    static boolean takes(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
         BucketFacts facts = bucket.facts();
         ItemFacts item = new ItemFacts(Map.of(ASSET, facts.assetKind(),
                 TRANSFER_SEGMENT, facts.transferVenue().segment().orElse(UNRECORDED)), Map.of(), Map.of());
         Optional<RuleRow> notComputed = ctx.optionalRuleOf(NOT_COMPUTED, item);
         if (notComputed.isPresent()) {
-            throw new IllegalArgumentException("Capital gains of " + bucket.gain() + " (" + facts + ") are reached by "
+            throw new IllegalArgumentException("Capital gains of " + gain + " (" + facts + ") are reached by "
                     + notComputed.get().id() + " in TY " + ctx.pack().taxYear().label() + ": income of a head this"
                     + " engine does not compute, so they cannot be taxed here");
         }
         Optional<RuleRow> elsewhere = ctx.optionalRuleOf(ELSEWHERE, item);
         elsewhere.ifPresent(row -> lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE,
-                        bucket.gain(), Money.ZERO)
+                        gain, Money.ZERO)
                 .withLimitedBy("left out of the head: " + row.id() + " — another head charges it, entered there")));
         return elsewhere.isEmpty();
     }

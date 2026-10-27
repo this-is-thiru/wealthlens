@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ShortTermHoldingPeriod;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -39,14 +40,14 @@ final class CapitalGainsTerm {
     private CapitalGainsTerm() {
     }
 
-    /** The bucket's term, its trace line added to {@code lines}. */
-    static Term of(NodeContext ctx, CapitalGainsInput.Bucket bucket, List<TraceLine> lines) {
+    /** The term of the bucket of {@code gain}, its trace line added to {@code lines}. */
+    static Term of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
         BucketFacts facts = bucket.facts();
         String exchange = facts.transferVenue().exchange().orElse(UNRECORDED);
         Optional<RuleRow> row = ctx.optionalRuleOf(HOLDING_PERIOD, new ItemFacts(Map.of(ASSET, facts.assetKind(),
                 TRANSFER_EXCHANGE, exchange), Map.of(), Map.of()));
         if (row.isEmpty()) {
-            throw new IllegalArgumentException("Capital gains of " + bucket.gain() + " (" + facts + ") fall in no row"
+            throw new IllegalArgumentException("Capital gains of " + gain + " (" + facts + ") fall in no row"
                     + " of " + HOLDING_PERIOD + " for " + ctx.pack().taxYear().label() + ", so how long a holding is"
                     + " short-term is not known for them");
         }
@@ -54,7 +55,7 @@ final class CapitalGainsTerm {
                 ctx.inputs().temporal()).definition(), ShortTermHoldingPeriod.class, row.get().id()).months();
         boolean longTerm = facts.acquiredOn().plusMonths(months).isBefore(facts.transferredOn());
         Term term = longTerm ? Term.LONG_TERM : Term.SHORT_TERM;
-        lines.add(ctx.traceLine(lines.size() + 1, row.get().id(), StepKind.MEASURE, bucket.gain(), bucket.gain())
+        lines.add(ctx.traceLine(lines.size() + 1, row.get().id(), StepKind.MEASURE, gain, gain)
                 .withLimitedBy("Held " + facts.acquiredOn() + " → " + facts.transferredOn() + ": "
                         + (longTerm ? "more than " : "not more than ") + months + " months, " + term
                         + " (calendar months, D-303)"

@@ -15,6 +15,10 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId CG_CHARGE_COST = new RuleId("CG-CHARGE-COST");
+    public static final RuleId CG_CHARGE_MISC = new RuleId("CG-CHARGE-MISC");
+    public static final RuleId CG_CHARGE_STT = new RuleId("CG-CHARGE-STT");
+    public static final RuleId CG_CHARGE_TRANSFER = new RuleId("CG-CHARGE-TRANSFER");
     public static final RuleId CG_DEPOSIT = new RuleId("CG-DEPOSIT");
     public static final RuleId CG_DERIVATIVE = new RuleId("CG-DERIVATIVE");
     public static final RuleId CG_PART_LONG_LISTED = new RuleId("CG-PART-LONG-LISTED");

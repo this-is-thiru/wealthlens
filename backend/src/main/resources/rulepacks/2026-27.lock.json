@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.119",
-      "checksum": "sha256:a395db972be83c1c60ed33824b0f97807d573fc1f758859c86de2ed1d97796ed"
+      "version": "2026-27.law.120",
+      "checksum": "sha256:63b80a4c73884bec8c89c8d5fcea2aba5810c027cac993d9c47d929847091bd9"
     },
     "exec": {
       "version": "2026-27.exec.29",
@@ -20,6 +20,10 @@
     }
   },
   "rules": {
+    "CG-CHARGE-COST": "sha256:3735ee63375d863925a0f96587e085a5387d8a45b7edd8f9648999ebcf5da7c8",
+    "CG-CHARGE-MISC": "sha256:958d555512ed3d97f9c59daded9390d90cbc6f3999f8a0a4527c4d28fb0ec88b",
+    "CG-CHARGE-STT": "sha256:1546a7e2c765795d5fbb07cae53250c1d322cb7916e8db67b51b0470d896c211",
+    "CG-CHARGE-TRANSFER": "sha256:96e57a3abf9c4bd84c19c49fe14478aa6a91ec0c79b4cbbe06eebbfd587f0615",
     "CG-DEPOSIT": "sha256:8de91dab958dc26782ffcb1d9e99c52f04fc9e6885009119533c235222ad5ad5",
     "CG-DERIVATIVE": "sha256:cad217d0b1b1011b1c21825c5836869843722b8174f6024528fdec8454af9067",
     "CG-PART-LONG-LISTED": "sha256:d17255ba570dd8541932cb181919b662aa7bdafca01227b63f38fa85b2990eba",

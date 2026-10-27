@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.SttChargeability;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
@@ -54,13 +55,13 @@ final class CapitalGainsStt {
     record Sides(String acquisition, String transfer) {
     }
 
-    /** The bucket's sides, each derived state added to {@code lines}; the term only words the trace. */
-    static Sides of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Term term, List<TraceLine> lines) {
-        return new Sides(codeOf(ctx, bucket, term, Side.ACQUISITION, lines),
-                codeOf(ctx, bucket, term, Side.TRANSFER, lines));
+    /** The sides of the bucket of {@code gain}, each derived state added to {@code lines}; the term words the trace. */
+    static Sides of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, Term term, List<TraceLine> lines) {
+        return new Sides(codeOf(ctx, bucket, gain, term, Side.ACQUISITION, lines),
+                codeOf(ctx, bucket, gain, term, Side.TRANSFER, lines));
     }
 
-    private static String codeOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Term term, Side side,
+    private static String codeOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, Term term, Side side,
             List<TraceLine> lines) {
         String evidence = side.evidenceOf(bucket.facts());
         SideVenue venue = side.venueOf(bucket.facts());
@@ -77,7 +78,7 @@ final class CapitalGainsStt {
         }
         String code = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row.get(),
                 ctx.inputs().temporal()).definition(), SttChargeability.class, row.get().id()).code();
-        lines.add(ctx.traceLine(lines.size() + 1, row.get().id(), StepKind.MEASURE, bucket.gain(), bucket.gain())
+        lines.add(ctx.traceLine(lines.size() + 1, row.get().id(), StepKind.MEASURE, gain, gain)
                 .withLimitedBy("STT on the " + side.label + ": " + code + " (" + exchange + ", " + segment + ")"
                         + (term == Term.LONG_TERM ? "; S2 s.198 / 1961 s.112A count a chargeable side as"
                                 + " paid by the owner's ruling D-294" : "")));

@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-162 — deductibility of a charge as tax-side rule data (D-315; audit T4)
+Item            : W-162b — `portfolio` stops storing deductibility (D-375; T4)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-162.md (to write)
+Plan            : plans/W-162b.md (to write); split plans/W-162.md
 Approved        : —
 Steps done      : —
-Next step       : READ W-162 (ChargeCatalogueEntity.deductible_for_capital_gains :69–70, ChargeDeductibilityService and its readers — TradeOutcomeRecorder's deductible buy/sell charges, CapitalGainsSummaryService's gain; the engine's s.48 rows if any; the charge catalogue seed JSON), write the plan, STOP
-Last verify     : unit -Punit 3715/0; integration 303/0 (2026-10-25, W-161)
-Waiting on      : nothing for W-162; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : READ W-162b (TradeOutcomeRecorder:179, :198, ChargeDeductibilityService's last reader; TradeOutcomeEntity / TradeOutcomeContext deductible_* fields; ChargeViewAssembler:127–128, AssetCharges.deductibleSellCharges and its tests / export; runbook §2.9 shape from §2.5), write the plan, STOP
+Last verify     : unit -Punit 3771/0; integration 303/0 (2026-10-27, W-162a)
+Waiting on      : nothing for W-162b; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-161: put the April – March year in one place — shared FinancialYear replaces TLocalDate.financialYear and every hand-built window outside the engine; TaxYearId kept (D-374)
-Updated         : 2026-10-25, session 35 — PAUSED at the owner's session-limit notice; everything committed and pushed; resume at W-162 (plan to write)
+Last item commit: taxplanning W-162a: let the engine net the capital gain — RS-CG-CHARGE rows decide by year which charges are cost, transfer expenditure or not deducted; portfolio publishes amounts, not a gain (W-162 split D-375; D-376)
+Updated         : 2026-10-27, session 36 — W-162a committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

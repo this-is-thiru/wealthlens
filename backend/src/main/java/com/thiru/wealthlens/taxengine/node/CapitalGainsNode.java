@@ -32,7 +32,8 @@ import java.util.function.Predicate;
 /**
  * Income under "Capital gains", part by part, after the head's own losses (S2 s.108(2); 1961 s.70(2), (3); D-243).
  *
- * <p>Each bucket of {@link CapitalGainsInput} belongs to the {@link CapitalGainsPart} the row of {@code RS-CG-PART} its
+ * <p>Each bucket's gain is its consideration less its cost less the charges {@link CapitalGainsCharges}' rows deduct
+ * (2025 s.72; 1961 s.48; W-162a). Each bucket of {@link CapitalGainsInput} belongs to the {@link CapitalGainsPart} the row of {@code RS-CG-PART} its
  * facts meet names (D-289), its STT read through {@link CapitalGainsStt} (D-298): which gains a special rate charges is the rule data's, and a bucket no row covers is refused
  * rather than charged with total income; whether the head takes a bucket at all is {@link CapitalGainsScope}'s rows'
  * (W-160a). A
@@ -75,7 +76,8 @@ public final class CapitalGainsNode implements ComputationNode {
     @Override
     public Set<RuleSetId> ruleSets() {
         return Set.of(ROW, PARTS, DeclaredCapitalGainsParts.PARTS, CapitalGainsStt.CHARGEABILITY,
-                CapitalGainsTerm.HOLDING_PERIOD, CapitalGainsScope.NOT_COMPUTED, CapitalGainsScope.ELSEWHERE);
+                CapitalGainsTerm.HOLDING_PERIOD, CapitalGainsScope.NOT_COMPUTED, CapitalGainsScope.ELSEWHERE,
+                CapitalGainsCharges.DEDUCTIONS);
     }
 
     @Override
@@ -86,11 +88,12 @@ public final class CapitalGainsNode implements ComputationNode {
         Map<CapitalGainsPart, Money> net = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
-            if (!CapitalGainsScope.takes(ctx, bucket, lines)) {
+            Money gain = CapitalGainsCharges.gainOf(ctx, bucket, lines);
+            if (!CapitalGainsScope.takes(ctx, bucket, gain, lines)) {
                 continue;
             }
-            Term term = CapitalGainsTerm.of(ctx, bucket, lines);
-            net.merge(partOf(ctx, bucket, term, CapitalGainsStt.of(ctx, bucket, term, lines)), bucket.gain(),
+            Term term = CapitalGainsTerm.of(ctx, bucket, gain, lines);
+            net.merge(partOf(ctx, bucket, gain, term, CapitalGainsStt.of(ctx, bucket, gain, term, lines)), gain,
                     Money::plus);
         }
         DeclaredCapitalGainsParts declared = DeclaredCapitalGainsParts.of(ctx);
@@ -146,12 +149,12 @@ public final class CapitalGainsNode implements ComputationNode {
      *
      * @throws IllegalArgumentException if no row covers the bucket — its facts are named, so the gap can be read
      */
-    private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Term term,
+    private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, Term term,
             CapitalGainsStt.Sides stt) {
         return ctx.optionalRuleOf(PARTS, factsOf(bucket, term, stt))
                 .map(row -> RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row,
                         ctx.inputs().temporal()).definition(), BucketPart.class, row.id()).part())
-                .orElseThrow(() -> new IllegalArgumentException("Capital gains of " + bucket.gain() + " ("
+                .orElseThrow(() -> new IllegalArgumentException("Capital gains of " + gain + " ("
                         + term + ", " + bucket.facts() + ", STT as read " + stt + ") fall in no row of "
                         + PARTS + " for "
                         + ctx.pack().taxYear().label() + ", so no provision is known to charge them"));

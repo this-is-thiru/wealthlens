@@ -96,7 +96,7 @@ class CapitalGainsNodeTest {
         LocalDate acquiredOn = LocalDate.parse("2020-06-01");
         BucketFacts facts = new BucketFacts(asset, sttOnBuy, sttOnSale, "PURCHASE", Optional.empty(), acquiredOn,
                 soldFor(term, acquiredOn), SideVenue.UNRECORDED, SOLD_ON_NSE);
-        return new CapitalGainsInput.Bucket(Money.of(gain), facts, Optional.empty());
+        return new CapitalGainsInput.Bucket(Money.of(gain), Money.ZERO, List.of(), facts, Optional.empty());
     }
 
     /** Long-term equity sold with STT and bought without it, acquired as stated — S.O. 5054(E)'s question. */
@@ -110,7 +110,7 @@ class CapitalGainsNodeTest {
         LocalDate acquired = LocalDate.parse(acquiredOn);
         BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, PAID, mode, Optional.ofNullable(corporateAction),
                 acquired, soldFor(Term.LONG_TERM, acquired), SideVenue.UNRECORDED, SOLD_ON_NSE);
-        return new CapitalGainsInput.Bucket(Money.of("1000"), facts, Optional.empty());
+        return new CapitalGainsInput.Bucket(Money.of("1000"), Money.ZERO, List.of(), facts, Optional.empty());
     }
 
     /**
@@ -125,7 +125,7 @@ class CapitalGainsNodeTest {
         BucketFacts facts = new BucketFacts("EQUITY", sttOnBuy, sttOnSale, acquisition[0],
                 acquisition.length == 2 ? Optional.of(acquisition[1]) : Optional.empty(), acquired,
                 soldFor(term, acquired), venue(buyVenue), venue(saleVenue));
-        return new CapitalGainsInput.Bucket(Money.of("1000"), facts, Optional.empty());
+        return new CapitalGainsInput.Bucket(Money.of("1000"), Money.ZERO, List.of(), facts, Optional.empty());
     }
 
     /**
@@ -138,7 +138,7 @@ class CapitalGainsNodeTest {
         BucketFacts facts = new BucketFacts("EQUITY", acquisition.length == 2 ? NOT_PAID : PAID, PAID, acquisition[0],
                 acquisition.length == 2 ? Optional.of(acquisition[1]) : Optional.empty(), LocalDate.parse(acquiredOn),
                 LocalDate.parse(transferredOn), SideVenue.UNRECORDED, venue(saleVenue));
-        return new CapitalGainsInput.Bucket(Money.of("1000"), facts, Optional.empty());
+        return new CapitalGainsInput.Bucket(Money.of("1000"), Money.ZERO, List.of(), facts, Optional.empty());
     }
 
     private static SideVenue venue(String recorded) {
@@ -758,7 +758,7 @@ class CapitalGainsNodeTest {
     void evaluate_whenAFundUnitIsSoldIntraday_isRefusedByTheTermNotAsSpeculative(int year) {
         // Given
         LocalDate bought = LocalDate.parse("2025-04-10");
-        CapitalGainsInput.Bucket fund = new CapitalGainsInput.Bucket(Money.of("1000"), new BucketFacts("MUTUAL_FUND",
+        CapitalGainsInput.Bucket fund = new CapitalGainsInput.Bucket(Money.of("1000"), Money.ZERO, List.of(), new BucketFacts("MUTUAL_FUND",
                 PAID, PAID, "PURCHASE", Optional.empty(), bought, bought, SideVenue.UNRECORDED, venue("NSE/INTRADAY")),
                 Optional.empty());
 
@@ -777,7 +777,7 @@ class CapitalGainsNodeTest {
     void evaluate_whenABucketIsADeposit_leavesItOutWithANilLine(int year) {
         // Given
         LocalDate opened = LocalDate.parse("2024-04-01");
-        CapitalGainsInput.Bucket deposit = new CapitalGainsInput.Bucket(Money.of("5000"), new BucketFacts("FD",
+        CapitalGainsInput.Bucket deposit = new CapitalGainsInput.Bucket(Money.of("5000"), Money.ZERO, List.of(), new BucketFacts("FD",
                 NOT_PAID, NOT_PAID, "PURCHASE", Optional.empty(), opened, opened.plusYears(1), SideVenue.UNRECORDED,
                 SideVenue.UNRECORDED), Optional.empty());
         CapitalGainsInput.Bucket equity = traded(Term.SHORT_TERM, PAID, "NSE/DELIVERY", PAID, "NSE/DELIVERY",

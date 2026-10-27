@@ -171,7 +171,7 @@ class RegimeElectionSnapshotTest {
             // R-10 and 13-edge-cases row 67: a bucket no rule can place is a blocking error.
             // Defaulting to slab produces a plausible number that is wrong.
             assertThatThrownBy(() -> new Bucket(
-                            Money.of("1"), null, Optional.empty()))
+                            Money.of("1"), Money.ZERO, List.of(), null, Optional.empty()))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not a fallback to the slab ladder");
         }
@@ -204,12 +204,12 @@ class RegimeElectionSnapshotTest {
         void bothListsAreDefensivelyCopied() {
             List<Bucket> buckets = new ArrayList<>();
             buckets.add(new Bucket(
-                    Money.of("100"), FACTS, Optional.empty()));
+                    Money.of("100"), Money.ZERO, List.of(), FACTS, Optional.empty()));
             CapitalGainsInput input =
                     new CapitalGainsInput(buckets, AS_OF, "pf-run-1");
 
             buckets.add(new Bucket(
-                    Money.of("999999"), FACTS, Optional.empty()));
+                    Money.of("999999"), Money.ZERO, List.of(), FACTS, Optional.empty()));
 
             assertThat(input.buckets()).hasSize(1);
         }
