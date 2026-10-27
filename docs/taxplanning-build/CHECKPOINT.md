@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-162b — `portfolio` stops storing deductibility (D-375; T4)
+Item            : W-162c — the charge catalogue loses its deductibility flag (D-375, D-377; T4)
 Stage           : NOT_STARTED — plan to write
-Plan            : plans/W-162b.md (to write); split plans/W-162.md
+Plan            : plans/W-162c.md (to write); split plans/W-162.md
 Approved        : —
 Steps done      : —
-Next step       : READ W-162b (TradeOutcomeRecorder:179, :198, ChargeDeductibilityService's last reader; TradeOutcomeEntity / TradeOutcomeContext deductible_* fields; ChargeViewAssembler:127–128, AssetCharges.deductibleSellCharges and its tests / export; runbook §2.9 shape from §2.5), write the plan, STOP
-Last verify     : unit -Punit 3771/0; integration 303/0 (2026-10-27, W-162a)
-Waiting on      : nothing for W-162b; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : READ W-162c (ChargeCatalogueEntity:54–70, ChargeCodes.requireDeductibilityDeclared, ChargeSeederService:150, :163–182 backfillDeductibility, ChargeCatalogueRepository's Javadoc, charge-catalogue.json key, ChargeSeederServiceTest:954, :997; the stored charge_catalogue field — op vs owner mongosh, R15), write the plan, STOP
+Last verify     : unit -Punit 3766/0; integration 309/0 (2026-10-27, W-162b)
+Waiting on      : nothing for W-162c; open: api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-162a: let the engine net the capital gain — RS-CG-CHARGE rows decide by year which charges are cost, transfer expenditure or not deducted; portfolio publishes amounts, not a gain (W-162 split D-375; D-376)
-Updated         : 2026-10-27, session 36 — W-162a committed
+Last item commit: taxplanning W-162b: stop storing which charges are deductible on trade outcomes — the recorder, entity and holdings view drop deductible_*, ChargeDeductibilityService removed; runbook §2.9 unsets the stored fields, W-174, WL-39; W-160g widened (D-377)
+Updated         : 2026-10-27, session 36 — W-162b committed; WL-A-2 republished after it
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

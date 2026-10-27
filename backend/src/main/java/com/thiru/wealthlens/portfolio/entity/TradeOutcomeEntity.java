@@ -152,8 +152,8 @@ public class TradeOutcomeEntity implements AuditableEntity {
     /**
      * What the buy actually cost, by charge code, rather than one lumped total.
      *
-     * <p>Deductible cost is a sum over codes because only some charges reduce a capital gain (D3),
-     * and which ones is a property of the code. A single total cannot be split after the fact.
+     * <p>Kept by code because which charges reduce a capital gain is decided per code, by the tax side's rule data
+     * for the year (W-162a, D-376). A single total cannot be split after the fact.
      */
     @Field("buy_charge_breakup")
     private Map<String, Double> buyChargeBreakup = new LinkedHashMap<>();
@@ -161,14 +161,6 @@ public class TradeOutcomeEntity implements AuditableEntity {
     /** The same for the sell side, pro-rated to this lot's share of the disposal. */
     @Field("sell_charge_breakup")
     private Map<String, Double> sellChargeBreakup = new LinkedHashMap<>();
-
-    /** The part of {@link #buyChargeBreakup} that reduces the gain, resolved against the catalogue. */
-    @Field("deductible_buy_charges")
-    private double deductibleBuyCharges;
-
-    /** The part of {@link #sellChargeBreakup} that reduces the gain. Notably excludes STT. */
-    @Field("deductible_sell_charges")
-    private double deductibleSellCharges;
 
     @Field("financial_year")
     private String financialYear;

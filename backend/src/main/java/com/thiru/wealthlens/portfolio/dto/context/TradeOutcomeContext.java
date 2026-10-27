@@ -55,8 +55,6 @@ public class TradeOutcomeContext {
     private String instrumentSubClass;
     private Map<String, Double> buyChargeBreakup;
     private Map<String, Double> sellChargeBreakup;
-    private double deductibleBuyCharges;
-    private double deductibleSellCharges;
     private String financialYear;
 
     // Linkage fields

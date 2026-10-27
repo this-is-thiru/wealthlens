@@ -12,7 +12,6 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
-import com.thiru.wealthlens.brokercharges.service.ChargeDeductibilityService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
@@ -54,7 +53,6 @@ class TradeOutcomeRecorderTest {
     private static final LocalDate SELL_DATE = LocalDate.of(2025, 6, 10);
 
     @Mock private TradeOutcomeService tradeOutcomeService;
-    @Mock private ChargeDeductibilityService chargeDeductibilityService;
     @Mock private UserChargeService userChargeService;
     @Mock private TransactionRepository transactionRepository;
 
@@ -62,8 +60,7 @@ class TradeOutcomeRecorderTest {
 
     @BeforeEach
     void setUp() {
-        recorder = new TradeOutcomeRecorder(tradeOutcomeService, chargeDeductibilityService, userChargeService,
-                transactionRepository);
+        recorder = new TradeOutcomeRecorder(tradeOutcomeService, userChargeService, transactionRepository);
     }
 
     private static AssetEntity lot(String txnId, double quantity, double price, double brokerCharges) {
@@ -207,22 +204,6 @@ class TradeOutcomeRecorderTest {
         TradeOutcomeContext row = captureSaved(1).getFirst();
         assertEquals(Map.of(), row.getBuyChargeBreakup());
         MoneyAssert.assertMoney("the lumped total still survives", 20.0, row.getBuyBrokerCharges());
-    }
-
-    @Test
-    @DisplayName("deductible cost is a sum over codes, and excludes STT")
-    void record_recordsDeductibleCostSeparatelyFromTheTotal() {
-        // Given
-        when(chargeDeductibilityService.deductibleTotal(any())).thenReturn(20.0);
-        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
-                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 20.0), 1.0, 1.0));
-
-        // When
-        recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY), "sell-1",
-                lots, Optional.of(computation(Map.of("BROKERAGE", 20.0, "STT", 100.0))));
-
-        // Then
-        MoneyAssert.assertMoney(20.0, captureSaved(1).getFirst().getDeductibleSellCharges());
     }
 
     @Test
@@ -428,9 +409,6 @@ class TradeOutcomeRecorderTest {
         UserChargeEntity buyCharges = new UserChargeEntity();
         buyCharges.setAmountByCode(new LinkedHashMap<>(Map.of("BROKERAGE", 8.0, "STT", 2.0)));
         when(userChargeService.findOptionalForTransaction(EMAIL, "buy-1")).thenReturn(Optional.of(buyCharges));
-        // A stand-in rule that makes each map's figure visible: the deductible part is its STT
-        when(chargeDeductibilityService.deductibleTotal(any())).thenAnswer(
-                invocation -> invocation.<Map<String, Double>>getArgument(0).getOrDefault("STT", 0.0));
         AssetRequest sell = sell(3.0, 200.0, TradeSegment.DELIVERY);
         sell.setStockName("Sell Co");
         sell.setAccountType(AccountType.OUTSOURCED);
@@ -482,12 +460,10 @@ class TradeOutcomeRecorderTest {
         MoneyAssert.assertMoney(1.5, row.getBuyMiscCharges());       // 2 × 3 ÷ 4
         // The buy breakup's share, 3 of 4: BROKERAGE 8 × 0.75 = 6, STT 2 × 0.75 = 1.5
         MoneyAssert.assertBreakdown(Map.of("BROKERAGE", 6.0, "STT", 1.5), row.getBuyChargeBreakup());
-        MoneyAssert.assertMoney(1.5, row.getDeductibleBuyCharges());
         MoneyAssert.assertMoney(200.0, row.getSellPrice());
         // One lot takes the whole sell breakup: 20 + 6 = 26
         MoneyAssert.assertBreakdown(Map.of("BROKERAGE", 20.0, "STT", 6.0), row.getSellChargeBreakup());
         MoneyAssert.assertMoney(26.0, row.getSellBrokerCharges());
-        MoneyAssert.assertMoney(6.0, row.getDeductibleSellCharges());
         MoneyAssert.assertMoney(1.0, row.getSellMiscCharges());      // 1 × the whole sell
         MoneyAssert.assertMoney(309.0, row.getTotalBuyValue());      // 100 × 3 + 7.5 + 1.5
         MoneyAssert.assertMoney(573.0, row.getTotalSellValue());     // 200 × 3 − 26 − 1

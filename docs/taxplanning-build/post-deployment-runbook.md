@@ -438,6 +438,43 @@ added again (`ProfitAndLossV2BackfillIntegrationTest`). **Way back:** `mongoimpo
 **Removed after use:** W-173 / WL-38, which also unsets `pnl_backfilled_outcome_ids`, once this is logged for every
 database and its `unplaced` list is placed.
 
+### 2.9 W-162b (D-377) — remove the deductible charges stored on `trade_outcomes` · `SUPER_USER` · **every database · once · outstanding**
+
+**Why.** Each V2 recorder row stored `deductible_buy_charges` and `deductible_sell_charges`, the part of its charge
+breakdowns the charge catalogue's flag called deductible. Which charges reduce a capital gain is the tax side's rule
+data for the year (`RS-CG-CHARGE`, W-162a, D-376), and since W-162b no code writes or reads either field. This removes
+them from the rows written before. Nothing reads them, so the step only cleans the data; it changes no figure. The
+breakdowns themselves (`buy_charge_breakup`, `sell_charge_breakup`) stay.
+
+**When:** at the deploy, after §2.5. No other step reads either field, so the order among the rest is free.
+
+1. **Count before** (read-only):
+   `db.trade_outcomes.countDocuments({ $or: [ { deductible_buy_charges: { $exists: true } }, { deductible_sell_charges: { $exists: true } } ] })`.
+2. **Dry run** (the default):
+
+   ```bash
+   curl -sS -X POST "$BASE/trade-outcomes/deductible-charges/remove" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Expect `rows` equal to step 1's count.
+3. **Back up** the two fields:
+
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection trade_outcomes \
+     --query '{"$or":[{"deductible_buy_charges":{"$exists":true}},{"deductible_sell_charges":{"$exists":true}}]}' \
+     --fields _id,deductible_buy_charges,deductible_sell_charges --out trade_outcomes-deductible-charges-backup.json
+   ```
+
+4. **Write:** the same call with `?dryRun=false`. Both fields are unset on every row carrying either, and
+   `audit_metadata.updatedBy` is set to the caller.
+5. **Verify:** step 1's count is 0, and a second call reports `rows` 0.
+
+**Second run:** safe, including after a run that failed part-way: only rows still carrying either field are matched
+(`TradeOutcomeDeductibleChargeRemovalIntegrationTest`). **Way back:** `mongoimport --mode merge` of the step-3 file puts
+both fields back; no code reads them.
+
+**Removed after use:** W-174 / WL-39, once this is logged for every database.
+
 ---
 
 ## 3. Standing data conditions — read-only checks, no action defined

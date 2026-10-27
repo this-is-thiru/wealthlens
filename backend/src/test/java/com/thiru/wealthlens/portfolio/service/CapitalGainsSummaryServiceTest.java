@@ -31,8 +31,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * The published capital-gains read-model, from hand-worked rows (D-238): each gain is the sale value less the adjusted
- * cost less the deductible charges.
+ * The published capital-gains read-model, from hand-worked rows (D-238): each bucket's sale value, adjusted cost and
+ * charges by code, summed over its rows; the gain is the engine's to net (W-162a).
  */
 @ExtendWith(MockitoExtension.class)
 class CapitalGainsSummaryServiceTest {
@@ -63,14 +63,12 @@ class CapitalGainsSummaryServiceTest {
         return row;
     }
 
-    /** The row with brokerage on each side, broken down, so its deductible part is known. */
-    private static TradeOutcomeEntity charged(TradeOutcomeEntity row, double deductibleBuy, double deductibleSell) {
-        row.setBuyBrokerCharges(deductibleBuy);
-        row.setBuyChargeBreakup(Map.of("BROKERAGE", deductibleBuy));
-        row.setDeductibleBuyCharges(deductibleBuy);
-        row.setSellBrokerCharges(deductibleSell);
-        row.setSellChargeBreakup(Map.of("BROKERAGE", deductibleSell));
-        row.setDeductibleSellCharges(deductibleSell);
+    /** The row with brokerage on each side, broken down by code. */
+    private static TradeOutcomeEntity charged(TradeOutcomeEntity row, double buyBrokerage, double sellBrokerage) {
+        row.setBuyBrokerCharges(buyBrokerage);
+        row.setBuyChargeBreakup(Map.of("BROKERAGE", buyBrokerage));
+        row.setSellBrokerCharges(sellBrokerage);
+        row.setSellChargeBreakup(Map.of("BROKERAGE", sellBrokerage));
         return row;
     }
 

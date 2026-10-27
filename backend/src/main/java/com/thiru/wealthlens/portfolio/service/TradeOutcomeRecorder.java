@@ -2,7 +2,6 @@ package com.thiru.wealthlens.portfolio.service;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
-import com.thiru.wealthlens.brokercharges.service.ChargeDeductibilityService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
 import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
@@ -38,7 +37,6 @@ import org.springframework.stereotype.Service;
 public class TradeOutcomeRecorder {
 
     private final TradeOutcomeService tradeOutcomeService;
-    private final ChargeDeductibilityService chargeDeductibilityService;
     private final UserChargeService userChargeService;
 
     private final TransactionRepository transactionRepository;
@@ -176,7 +174,6 @@ public class TradeOutcomeRecorder {
                 .buyBrokerCharges(figures.buyBrokerCharges())
                 .buyMiscCharges(figures.buyMiscCharges())
                 .buyChargeBreakup(buyBreakup)
-                .deductibleBuyCharges(chargeDeductibilityService.deductibleTotal(buyBreakup))
                 .sourceBuyLotId(asset.getId())
                 .corporateActionDerived(asset.getCorporateActionType() != null)
                 .appliedCorporateActions(asset.getCorporateActions())
@@ -195,7 +192,6 @@ public class TradeOutcomeRecorder {
                 .sellBrokerCharges(figures.sellBrokerCharges())
                 .sellMiscCharges(figures.sellMiscCharges())
                 .sellChargeBreakup(sellBreakup)
-                .deductibleSellCharges(chargeDeductibilityService.deductibleTotal(sellBreakup))
                 .sellExchangeName(sell.getExchangeName())
                 .sellSegment(sell.getSegment());
     }
