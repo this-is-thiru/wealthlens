@@ -9,7 +9,9 @@ on:
 
 jobs:
   build:
-    runs-on: [ubuntu-latest]
+    # Pinned: ubuntu-latest began moving to Ubuntu 26 on 2026-10-19 (actions/runner-images#14748), and
+    # the integration tier stopped counting on CI between the runs of 25 and 27 October.
+    runs-on: [ubuntu-24.04]
     steps:
       - name: Checkout source
         uses: actions/checkout@v5
