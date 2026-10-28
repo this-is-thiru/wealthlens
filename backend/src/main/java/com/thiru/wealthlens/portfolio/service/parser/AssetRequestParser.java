@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.service.parser.model.AssetRequestParserImp
 import com.thiru.wealthlens.portfolio.service.parser.model.ExcelParser;
 import com.thiru.wealthlens.shared.dto.InputRecord;
 import com.thiru.wealthlens.shared.dto.enums.ExcelDataType;
+import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TOptional;
 import com.thiru.wealthlens.shared.util.parser.CellDetail;
 import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
@@ -61,7 +62,7 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         setQuantity(assetRequest, record);
         setTransactionType(assetRequest, record);
         setTransactionDate(assetRequest, record);
-        setMaturityDate(assetRequest, record);
+        setMaturityDate(assetRequest, record, inputRecord.getRecordNumber());
         setBrokerCharges(assetRequest, record);
         setMiscCharges(assetRequest, record);
         setBrokerOrderId(assetRequest, record);
@@ -104,10 +105,17 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         assetRequest.setAssetType(AssetType.valueOf(assetType));
     }
 
-    private static void setMaturityDate(AssetRequest assetRequest, Map<String, CellDetail> record) {
+    /**
+     * A Gold Bond's maturity is a fact of the tranche it belongs to; with no instrument data to read it from, the row
+     * must carry it rather than have one assumed (D-315 T5).
+     */
+    private static void setMaturityDate(AssetRequest assetRequest, Map<String, CellDetail> record, Integer recordNumber) {
 
         CellDetail cellDetail = record.getOrDefault(ExcelHeaders.MATURITY_DATE, CellDetail.def());
-        LocalDate maturityDate = getDefaultMaturity(assetRequest.getAssetType(), assetRequest.getTransactionDate(), (LocalDate) cellDetail.getCellValue());
+        LocalDate maturityDate = (LocalDate) cellDetail.getCellValue();
+        if (maturityDate == null && assetRequest.getAssetType() == AssetType.GOLD_BOND) {
+            throw new BadRequestException("Row " + recordNumber + ": a GOLD_BOND row needs its " + ExcelHeaders.MATURITY_DATE + "; it is not assumed");
+        }
         assetRequest.setMaturityDate(maturityDate);
     }
 
@@ -170,14 +178,6 @@ assetRequest.setTransactionType(TransactionType.valueOf(transactionType));
 
         CellDetail cellDetail = record.get(ExcelHeaders.COMMENTS);
         assetRequest.setComment((String) TOptional.map1(cellDetail, CellDetail::getCellValue));
-    }
-
-    private static LocalDate getDefaultMaturity(AssetType assetType, LocalDate transactionDate, LocalDate maturityDate) {
-
-        return switch (assetType) {
-            case EQUITY, BOND, MUTUAL_FUND, FD, INSURANCE -> null;
-            case GOLD_BOND -> maturityDate != null ? maturityDate : transactionDate.plusYears(8);
-        };
     }
 
     @Override

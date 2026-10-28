@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-164 — a Gold Bond's maturity not defaulted (audit T5, D-315) — NOT STARTED
-Stage           : — (session 37 PAUSED at the owner's session-limit notice; all committed and pushed)
-Plan            : — (write plans/W-164.md on "start W-164")
+Item            : W-180 — unpin the integration tier's Mongo image (D-385) — NOT STARTED (next in order after W-164)
+Stage           : — (W-164 DONE, D-386, committed)
+Plan            : — (write plans/W-180.md on "start W-180")
 Approved        : —
 Steps done      : —
-Next step       : on "start W-164": READ the WI row + AssetRequestParser:179, write plans/W-164.md, STOP for approval
-Last verify     : unit -Punit 3783/0; integration 310/0 (mongo:8.0.4); CI green run 40719965059 (c24c8846)
-Waiting on      : the owner — "start W-164"; open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : on "start W-180": READ the WI row + AbstractIntegrationTest + cicd.yaml, write plans/W-180.md, STOP for approval
+Last verify     : W-164 — AssetRequestParserTest 4/0; unit 3787/0; integration 310/0
+Waiting on      : the owner — "start W-180"; place or dismiss: V1/V2 accept GOLD_BOND without maturity (W-164 C3a); open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-163c: cite each statutory rate to the law — STT Sl. 5, stamp duty Art. 56A, the SEBI turnover fee and GST heading 9971 read, all agree; the four cards carry source and verified date; W-163 closed (D-384)
-Updated         : 2026-10-28, session 37 — PAUSED (owner shutting down); session note in STATE "Notes for resume"; branch pushed, origin = local
+Last item commit: taxplanning W-164: refuse an uploaded Gold Bond row with no maturity date instead of assuming eight years — a date given on any other type is kept, not dropped (D-386)
+Updated         : 2026-10-28, session 38 — W-164 DONE
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
