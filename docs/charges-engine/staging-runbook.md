@@ -9,7 +9,10 @@ shadow recording gets exercised.
 this branch — or is running an environment seeded before 2026-09-08, which §7b fixes.
 
 > **The rates were verified on 2026-09-08** against Zerodha's, Upstox's and Fyers' published pages;
-> the evidence is in `ac2-rate-verification.md`. The four statutory cards (W-163b, D-382), which hold
+> the evidence is in `ac2-rate-verification.md`. The cards added on 2026-10-28 (W-177, W-178: Upstox / Fyers
+> intraday, mutual fund and maintenance; equity futures and options for all three) were read on that date —
+> `docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md`, **which W-187 re-sources to the Gazette or
+> the issuer the owner names trustworthy** (D-394). The eight statutory cards (W-163b, D-382; W-178, D-393), which hold
 > the law's charges and name no broker, were checked against the law itself on 2026-10-28 (W-163c,
 > D-384; `docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md`). Every card carries a
 > `verifiedOn`, so `GET /charge-schedules/unverified` returns `[]` on a freshly seeded database. §7 is how you correct

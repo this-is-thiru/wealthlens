@@ -140,7 +140,6 @@ erDiagram
         String action_price
         DemergerDetail demerger_detail
         String description
-        LocalDate date
         AuditMetadata audit_metadata
     }
 

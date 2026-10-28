@@ -21,6 +21,24 @@ Nothing below has been changed yet; each needs the owner's word.
 | G6 | **W-071 (a split parent) is missing from the board.** Its children W-071a – g are on it | earlier sessions | Add `W-071 —` before W-071a |
 | G7 | **Findings left unplaced** in CHECKPOINT's "open" list, against the never-unplaced rule: CLAUDE.md's "backfill" 503 wording; the catalogue's SEBI_FEE reference (it names the exchange-fee Regulations, W-163c); the api-collection term requests; a per-bucket term audit record; keeping old stored labels; the nil-line proposal; `PaidOtherThanInCash`; the REG basis-set finding | earlier sessions and session 37 | The owner places each as a row, or dismisses it |
 
+## Second pass — every other surface (owner: "check evry aspect")
+
+| # | Gap | Whose | State |
+|---|---|---|---|
+| G8 | `docs/charges-engine/README.md` point 13 said the maintenance card is Zerodha's only unscoped fallback; W-177 gave Upstox and Fyers the same | session 38 | **Fixed** at this pass |
+| G9 | `docs/charges-engine/staging-runbook.md` lines 11 – 14 named "the four statutory cards" and sent the reader to `ac2-rate-verification.md` alone; W-177 / W-178 cards and the eight statutory cards had no pointer to their sources | session 38 | **Fixed** (it now points to both 2026-10-28 records and to W-187) |
+| G10 | `README.md` data model still listed `LocalDate date` on `CORPORATE_ACTION`, removed by W-166 | session 38 | **Fixed** |
+| G11 | `README.md` data model lacks `allotment_date` on `CORPORATE_ACTION` (added by W-088k4a, D-306) | earlier session | Open, for the owner (CLAUDE.md: the README predates the tax build; trust the code) |
+| G12 | `plans/W-180.md` steps unmarked (G4 above) | session 38 | **Fixed**: steps 1 – 3 "not taken: closed, D-387", step 4 ticked |
+| G13 | `ac2-rate-verification.md` has no entry for W-177 / W-178's cards; their evidence is the 2026-10-28 sources records | session 38 | Open, folded into W-187 |
+
+**Also checked, no gap:**
+- **Commit hygiene:** each session-38 commit contains only its item's named paths.
+- **CI** on the pushed branch: `c515c558` success (run 40736555883), `23048209` success. `e53f1e38` was cancelled
+  when the next push superseded it (the workflow's concurrency). `3dd61ee0` was in progress at this pass.
+- **No other document** carries a stale card or golden count.
+- **No document** names the Gold Bond 8-year default, `safeReadAsList` or `TJsonMapper.readValue(String)`.
+
 ## Checked and consistent (no gap)
 
 - D-rows D-1 – D-394: none missing.
