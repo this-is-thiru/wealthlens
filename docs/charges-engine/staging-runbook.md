@@ -9,10 +9,10 @@ shadow recording gets exercised.
 this branch — or is running an environment seeded before 2026-09-08, which §7b fixes.
 
 > **The rates were verified on 2026-09-08** against Zerodha's, Upstox's and Fyers' published pages;
-> the evidence is in `ac2-rate-verification.md`. All eleven broker cards carry a `verifiedOn`. The
-> four statutory cards (W-163b, D-382), which hold the law's charges and name no broker, carry none
-> until W-163c cites each rate to the law, so `GET /charge-schedules/unverified` lists those four on a
-> freshly seeded database. §7 is how you correct
+> the evidence is in `ac2-rate-verification.md`. The four statutory cards (W-163b, D-382), which hold
+> the law's charges and name no broker, were checked against the law itself on 2026-10-28 (W-163c,
+> D-384; `docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md`). Every card carries a
+> `verifiedOn`, so `GET /charge-schedules/unverified` returns `[]` on a freshly seeded database. §7 is how you correct
 > a rate when one changes — by superseding the card, never by editing it (ADR-26).
 
 ---
@@ -99,10 +99,9 @@ curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $TOKEN" \
   | jq '.data | map({scheduleCode, brokerName, assetType, segment, startDate, sourceUrl, verifiedOn})'
 ```
 
-Expect the four statutory cards and nothing else. Every shipped broker card was verified on
-2026-09-08 and carries a `verifiedOn` date, which is what closed AC-2 (see
-`ac2-rate-verification.md`). The statutory cards stay listed until W-163c cites their rates to the law
-(D-382).
+Expect **`[]`**. Every shipped broker card was verified on 2026-09-08 and carries a `verifiedOn`
+date, which is what closed AC-2 (see `ac2-rate-verification.md`). Each statutory card was verified on
+2026-10-28 against the law its rules cite (W-163c, D-384).
 
 A card appearing here means someone published one without checking its rates, or an existing one lost
 its date. It is a worklist, not a historical record — re-run it after every publish.

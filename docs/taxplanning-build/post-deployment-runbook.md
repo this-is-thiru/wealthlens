@@ -278,8 +278,9 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
    curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
-   Until W-163c cites the law for each rate, `unverified` lists the 4 statutory cards: they carry no `sourceUrl` or
-   `verifiedOn` (D-382 C3a). Anything else listed is a broker card due for verification.
+   Expect `unverified` empty. Every card carries a `verifiedOn`: a broker card against its charges page, and a
+   statutory card against the law it cites (W-163c, D-384; `sources/2026-10-28-statutory-charge-rates.md`). A card
+   listed here is due for verification.
 
    ```bash
    ```

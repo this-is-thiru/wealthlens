@@ -535,9 +535,9 @@ class ChargeSeederServiceTest {
         seeder.seed(AUDITOR);
         assertThat(seededSchedules()).isNotEmpty();
 
-        // When / Then — the broker's cards. The statutory cards are not yet cited to the law (D-382
-        // C3a); statutoryCards_areUnverifiedUntilTheLawIsCited pins that, and W-163c replaces it.
-        for (ChargeScheduleEntity schedule : brokerCards(seededSchedules())) {
+        // When / Then — every card: a broker's against its charges page, a statutory card against the
+        // law it cites (W-163c, D-384; sources/2026-10-28-statutory-charge-rates.md)
+        for (ChargeScheduleEntity schedule : seededSchedules()) {
             assertThat(schedule.getSourceUrl())
                     .as("sourceUrl of %s", schedule.getScheduleCode())
                     .isNotBlank().startsWith("https://");
@@ -548,21 +548,20 @@ class ChargeSeederServiceTest {
     }
 
     @Test
-    void statutoryCards_areUnverifiedUntilTheLawIsCited() {
-        // Given — a broker's page is not the law's source (D-382 C3a), so the four statutory cards
-        // carry neither until W-163c cites each rate, and findUnverified() lists them meanwhile
+    void everyStatutoryRuleCitesTheLawItComesFrom() {
+        // Given — a statutory rate is the law's, so each rule names its provision and the row of the
+        // sources record that read it (W-163c, D-384)
         seeder.seed(AUDITOR);
 
-        // When
-        List<ChargeScheduleEntity> statutory = seededSchedules().stream()
+        // When / Then
+        List<ChargeRule> statutoryRules = seededSchedules().stream()
                 .filter(schedule -> schedule.getBrokerName() == null)
+                .flatMap(schedule -> schedule.getRules().stream())
                 .toList();
-
-        // Then
-        assertThat(statutory).hasSize(4).allSatisfy(schedule -> {
-            assertThat(schedule.getSourceUrl()).as("sourceUrl of %s", schedule.getScheduleCode()).isNull();
-            assertThat(schedule.getVerifiedOn()).as("verifiedOn of %s", schedule.getScheduleCode()).isNull();
-        });
+        assertThat(statutoryRules).hasSize(11).allSatisfy(rule -> assertThat(rule.getNotes())
+                .as("notes of %s", rule.getCode())
+                .contains("Law: ")
+                .contains("sources/2026-10-28-statutory-charge-rates.md row "));
     }
 
     @Test

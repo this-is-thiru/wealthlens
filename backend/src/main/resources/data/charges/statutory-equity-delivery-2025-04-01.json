@@ -10,8 +10,8 @@
   "status": "ACTIVE",
   "currency": "INR",
   "requiresInstrumentProfile": false,
-  "sourceUrl": null,
-  "verifiedOn": null,
+  "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/198304.pdf",
+  "verifiedOn": "2026-10-28",
   "rules": [
     {
       "code": "STT",
@@ -29,7 +29,7 @@
       "taxable": false,
       "active": true,
       "order": 20,
-      "notes": "0.1% on buy and sell. Statutory; taken to the nearest rupee by convention and never part of a GST base."
+      "notes": "0.1% on buy and sell. Statutory; taken to the nearest rupee by convention and never part of a GST base. Law: Finance (No. 2) Act, 2004 s.98 Table Sl. 1 (purchase) and Sl. 2 (sale): 0.1 per cent. Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 1."
     },
     {
       "code": "SEBI_FEE",
@@ -47,7 +47,7 @@
       "taxable": true,
       "active": true,
       "order": 40,
-      "notes": "SEBI turnover fee, Rs 10 per crore of traded value."
+      "notes": "SEBI turnover fee, Rs 10 per crore of traded value. Law: SEBI (Stock Brokers) Regulations, 2026 fee schedule; before 7-1-2026 the 1992 Regulations, Schedule V Part B cl. 3(1) (from 1-4-2019): 0.00010 per cent of turnover, Rs 10 per crore. Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 7."
     },
     {
       "code": "STAMP_DUTY",
@@ -64,7 +64,7 @@
       "taxable": false,
       "active": true,
       "order": 60,
-      "notes": "0.015%, or Rs 1500 per crore, on the buy side only. Statutory; never part of a GST base."
+      "notes": "0.015%, or Rs 1500 per crore, on the buy side only. Statutory; never part of a GST base. Law: Indian Stamp Act, 1899, Schedule I Article 56A(b), transfer on delivery basis: 0.015% (Finance Act 2019, in force 1-7-2020). Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 4."
     },
     {
       "code": "GST",
@@ -88,7 +88,7 @@
       "taxable": false,
       "active": true,
       "order": 100,
-      "notes": "18% on the taxable services. The base is listed explicitly; securities transaction tax and stamp duty are absent by design (D1)."
+      "notes": "18% on the taxable services. The base is listed explicitly; securities transaction tax and stamp duty are absent by design (D1). Law: CGST 9% + SGST 9%, or IGST 18%: heading 9971, financial and related services not elsewhere listed (Notification 11/2017-Central Tax (Rate) Sl. 15; 8/2017-Integrated Tax (Rate)). Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 8."
     }
   ]
 }
