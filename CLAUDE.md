@@ -60,10 +60,10 @@ override convenience. Where the build enforces one, the enforcing check is named
 
 ### 6. Operations — every one-time action is written down
 
-- **Where:** everything caused by tax-planning work, past and future, in any module it touches (`taxplanning`,
-  `taxengine`, `portfolio`, `shared`, …), in `docs/taxplanning-build/post-deployment-runbook.md`; work unrelated to
-  tax planning in `docs/charges-engine/production-runbook.md`. Each holds, in order, what a database needs because of a change:
-  prechecks, startup runners to confirm, seed calls, data corrections, flags, recurring operations.
+- **Where:** one deploy runbook, `docs/taxplanning-build/post-deployment-runbook.md`, for every change in any module:
+  tax planning, the charge engine and the trade ledger (W-176, D-379). It holds, in order, what a database needs
+  because of a change: prechecks, startup runners to confirm, clearing, seed calls, data corrections, flags, recurring
+  operations.
 - **Same commit:** a change that needs any of these adds its entry there in the same commit, or it is not done.
   Each entry gives when, who, the exact command, a read-only check before and after, whether a second run is safe,
   and the way back (backup first for any write to stored data).
@@ -158,7 +158,7 @@ Within every module: `controller/` (no business logic) → `service/` (`@Transac
 
 **Broker charges** — a **rules engine**, not fixed columns. A `ChargeScheduleEntity` (rate card) is validity-windowed per broker and scoped by asset type, segment, exchange and plan; it holds a list of `ChargeRule`s, each with a `ChargeBasis` (TURNOVER, FLAT, PER_UNIT, SLAB, SCOPED_FLAT, DERIVED, FORMULA) served by one calculator. `ChargeScheduleResolver` picks the card by specificity, `ChargeEngine` evaluates the rules in order, and `UserChargeService` records a `UserChargeEntity` per transaction — one row keyed uniquely on `{email, transaction_id}`, carrying both the ordered `lines` and a `amount_by_code` map. Charge codes are validated against a seeded `charge_catalogue`, and a code becomes a Mongo field name so `ChargeCodes` restricts it to `[A-Z][A-Z0-9_]*`. Scheme-level charges (mutual-fund exit load) live on `ChargeInstrumentEntity` and apply **per FIFO lot**. AMC bills from `charge_accounts` via `POST /charges/amc/impose`. Seed data is JSON under `resources/data/charges/` and enters a database only through `POST /charges/seed` (`SUPER_USER`) — never at startup.
 
-**Charge engine flags** (`app.charges.*`, all in the three profile yamls): `engine-enabled` is a **master kill switch** — false makes simulate, backfill and the AMC cycle answer 503 and stops shadow recording. `shadow-recording` makes the trade path price and record every V2 trade with the result ignored. `authoritative` makes the computed total the cost basis on a V2 buy. The last two ship `false`, so the engine is inert until switched on.
+**Charge engine flags** (`app.charges.*`, all in the three profile yamls): `engine-enabled` is a **master kill switch** — false makes simulate, backfill and the AMC cycle answer 503 and stops shadow recording. `shadow-recording` makes the trade path price and record every V2 trade with the result ignored. `authoritative` makes the computed total the cost basis on a V2 buy. All three ship `true` in `application.yaml`, `application-staging.yaml` and `application-prod.yaml`, so a V2 trade is priced as soon as the app is up: seed first (deploy runbook §1B).
 
 **P&L** — `ProfitAndLossEntity` carries two parallel hierarchies: capital gains (`RealisedProfits → FinancialReport → MonthlyReport → FortnightReport`) and charges (`RealisedProfits → YearlyChargeSummary → MonthlyChargeSummary → half-month buckets`). The charge side is keyed by charge code rather than by fixed columns, so adding a charge is a data change; it is written only when a computation is handed in, which is the V2 flow.
 

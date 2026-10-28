@@ -1,18 +1,25 @@
-# WealthLens tax planning — post-deployment runbook
+# WealthLens — deploy runbook
 
-**What a database needs because of the tax-planning build, and how to check it, in deploy order.** It covers
-everything related to tax planning, past and future: `taxplanning` and `taxengine`, and **any other module touched
-because of them**, such as `portfolio` (W-085 – W-088u7) and `shared`. Each entry is keyed to the work item and
-decision that introduced it, and says:
+**Everything a database needs at a deploy, and how to check it, in the order it runs.** This one runbook covers:
+- **the charge engine** (`brokercharges`): seeding, clearing, its standing operations;
+- **the trade ledger** (`portfolio`): the prechecks before its unique indexes, and the `version` backfill;
+- **tax planning** (`taxplanning`, `taxengine`), and any other module touched because of it, such as `portfolio`
+  (W-085 – W-088u7) and `shared`.
+
+`docs/charges-engine/production-runbook.md` and `docs/trade-ledger/migration.md` are pointers to the sections here
+(W-176, D-379). `docs/charges-engine/staging-runbook.md` stays the charge engine's **test guide**: §1B uses its §4.1
+figure, and its §5, §5b and §7 are optional testing, not deploy steps.
+
+Each entry is keyed to the work item and decision that introduced it, and says:
 - when it runs, and who runs it;
 - the exact command, with a read-only check before and after;
 - whether a second run is safe, and the way back.
 
 The **run log** at the end records every run, per database.
 
-**The rule (R15, D-278, D-279, CLAUDE.md §6).** Any migration or setup that tax-planning work causes adds its
-entry here **in its own commit**, whichever module the change sits in, and its plan names it under
-"Post-deployment actions". This covers:
+**The rule (R15, D-278, D-279, D-379, CLAUDE.md §6).** Any migration or setup that a change causes adds its entry
+here **in that change's own commit**, whichever module it sits in, and its plan names it under "Post-deployment
+actions". This covers:
 - a seed or a data correction;
 - a startup runner whose outcome must be checked;
 - a flag to set;
@@ -24,20 +31,135 @@ goes into the run log.
 **Every operation here is idempotent (D-282).** A second run, including one after a run that failed part-way, either
 completes the work or changes nothing, and a test proves it. **A one-time operation is removed after use:** each has
 a row in **Phase 15 — Post-deployment cleanup** of the backlog (YouTrack parent **WL-28**), outside the build order
-and taken once its run is logged below for every database it applies to (D-286). Operations from work unrelated to tax planning (the charges engine's own, the trade
-ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-engine/production-runbook.md).
+and taken once its run is logged below for every database it applies to (D-286).
 
-**Databases** (from the profile yamls, host and database name only):
+**Databases** (from the profile yamls, host and database name only). Each cluster holds one application database:
+staging's app writes `it-staging`, prod's writes `Cluster0` (owner's counts, 2026-10-27; this settles the earlier
+open question).
 
 | Profile | Host | Database |
 |---|---|---|
 | default, `staging` | `it-staging.6fu8nvy.mongodb.net` | `it-staging` |
 | `prod` | `cluster0.x6trgen.mongodb.net` | `Cluster0` |
 
-> **Open question.** The owner sees `Cluster0.trade_outcomes` for both staging and prod, while
-> `application-staging.yaml` names `it-staging`. Run each step in the database each deployed app actually writes to.
+`$BASE` is the app's base URL, `$ADMIN_TOKEN` a `SUPER_USER` JWT and `$TOKEN` any user's JWT. `mongosh` steps run
+against the named database.
 
-`$BASE` is the app's base URL and `$ADMIN_TOKEN` a `SUPER_USER` JWT. `mongosh` steps run against the named database.
+**The order, from a fresh start** (owner, 2026-10-27: "we can run all runbook from starting"):
+
+| § | Step | prod `Cluster0` | staging `it-staging` |
+|---|---|---|---|
+| 0.1 | Environment, replica set, a `SUPER_USER` | check | check |
+| 0.2 | Duplicate checks before the unique indexes | run | run |
+| 0.3 | `profit_and_loss.version` present | **done**: 0 without (2026-10-27) | **done**: 0 without (2026-10-27) |
+| 1 | Deploy; startup checks | check | check |
+| 1A | Clear the charge engine's data | configuration only: 0 / 0 / 0, a no-op | configuration 12 / 11 / 2; `user_charges` 328, `charge_accounts` 1, P&L charge side 2 |
+| 1B | Seed the charge engine; drift, unverified, one simulate | run | run |
+| 2.0 – 2.10 | Tax planning, by hand, in order | per step | per step |
+| 3 | Standing data conditions, read-only | check | check |
+| 5 | Standing operations (not deploy steps) | as needed | as needed |
+
+**Why 1A and 1B come straight after the deploy:** the charge flags ship on (`engine-enabled`, `shadow-recording`
+and `authoritative` are `true` in all three profile yamls), so a V2 trade is priced as soon as the app is up. Clear
+and seed before anyone trades. On staging the owner is the only user.
+
+---
+
+## 0. Before deploying
+
+### 0.1 Environment · owner · **every deploy**
+
+| # | Check | Why |
+|---|---|---|
+| 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability |
+| 0.1.2 | MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` warns at startup (§1.7) |
+| 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only |
+
+### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **every database · before the deploy that first carries TL-7**
+
+**Why.** `PortfolioIndexInitializer` covers `transactions` and `profit_and_loss`. Both carry unique indexes
+(`transactions.source_temp_transaction_id`, unique and sparse; `profit_and_loss {email, financial_year}`) that, with
+`auto-index-creation` off, had never been applied. They meet data written without them.
+
+```js
+// transactions — each result is a temporary transaction redriven more than once
+db.transactions.aggregate([
+  { $match: { source_temp_transaction_id: { $ne: null } } },
+  { $sort:  { _id: 1 } },
+  { $group: { _id: "$source_temp_transaction_id", n: { $sum: 1 }, ids: { $push: "$_id" },
+              type: { $first: "$transaction_type" }, code: { $first: "$stock_code" },
+              qty:  { $first: "$quantity" },        date: { $first: "$transaction_date" } } },
+  { $match: { n: { $gt: 1 } } }
+])
+
+// profit_and_loss — group on BOTH fields; financial_year alone proves nothing on a multi-user database
+db.profit_and_loss.aggregate([
+  { $group: { _id: { email: "$email", fy: "$financial_year" }, n: { $sum: 1 }, ids: { $push: "$_id" } } },
+  { $match: { n: { $gt: 1 } } }
+])
+```
+
+Empty is the expected answer for both. Read-only, so a second run is safe.
+
+**If you deploy without checking, the application still starts.** Index creation is caught and logged at ERROR,
+naming the collection and the keys (§1.6), because failing a deploy over existing data is worse. The cost is that the
+constraint can be silently absent.
+
+**If either query returns something.** You are not obliged to fix it before deploying: the index is a new safety
+constraint, not something the app needs to run, and TL-7's replay guard stops new duplicates either way. The options,
+cheapest first:
+1. **Deploy anyway.** The constraint is absent and logged; resolve the data later and restart to pick the index up.
+2. **Resolve the data, then deploy**, as below.
+3. **Never** "fix" it by dropping the unique flag: that retires the constraint silently.
+
+*A duplicate `source_temp_transaction_id`.* **The first row is the legitimate one** (the query sorts by `_id`, whose
+ObjectId embeds its creation time); each later one re-applied the trade, so the holding was applied twice and the P&L
+double-counted. Deleting the `transactions` row alone fixes the index, not the money. For each extra id, find what it
+touched first:
+
+```js
+const dup = "<the second or later _id from the aggregate>";
+db.assets.find({ $or: [ { buy_transaction_ids: dup }, { sell_transaction_ids: dup } ] })
+db.trade_outcomes.find({ source_sell_transaction_id: dup })
+db.user_charges.find({ transaction_id: dup })
+db.transactions.find({ _id: dup })    // note its email, stock_code, transaction_date, quantity
+```
+
+- **A duplicated BUY.** V2 writes one `assets` document per buy, so the duplicate usually has its own document, the
+  one whose `buy_transaction_ids` holds only `dup`. Delete it, the `transactions` row and its `user_charges` row. V1
+  merges into an existing lot, so there decrement the quantity and `broker_charges` by the duplicate's amounts.
+- **A duplicated SELL.** Quantity was decremented twice, possibly across several lots. Restore the quantity on each
+  `assets` document listing `dup` in `sell_transaction_ids`, remove `dup` from that array, then delete the
+  `trade_outcomes`, `user_charges` and `transactions` rows.
+- **Either.** The period's `profit_and_loss` totals include the duplicate. There is no recompute from `transactions`
+  for `profit_and_loss` or `assets` (trade-ledger backlog **B-4**), so correct the period by hand or accept it.
+  `trade_outcomes` can be recomputed: after the duplicate `transactions` rows are gone, back up and delete **that
+  user's** rows, then run §2.2's rebuild for them.
+
+*A duplicate `{email, financial_year}`.* Two documents for one user and year, each holding part of the totals, the
+result of a race the `version` field (§0.3) now prevents. There is no merge tool. Look at each
+(`db.profit_and_loss.find({ email: "<email>", financial_year: "<fy>" })`); if one is a stub written to once, keep the
+fuller one and delete the stub. If both hold real figures, add them together by hand at the year, each month and each
+half. **Never simply delete one:** the figures do not come back.
+
+**Way back:** each correction above starts with a `mongoexport` of the documents it touches; `mongoimport --mode
+upsert` restores them.
+
+### 0.3 Trade ledger — `version` on `profit_and_loss` · owner, `mongosh` · **every database · before the deploy · done**
+
+**Why.** `ProfitAndLossEntity` carries `@Version private Long version`. On a document written without the field, Spring
+Data reads the null version as a new document and inserts against an existing `_id`
+(`E11000 duplicate key error … profit_and_loss index: _id_`), so every trade for an existing user in an existing year
+fails. `LegacyDocumentUpgradeIntegrationTest` proves it against a real MongoDB.
+
+1. **Check** (read-only): `db.profit_and_loss.countDocuments({ version: { $exists: false } })`. Must be `0`.
+   **2026-10-27: 0 on prod and on staging** (run log), so there is nothing to do.
+2. **Only if not 0:**
+   `db.profit_and_loss.updateMany({ version: { $exists: false } }, { $set: { version: NumberLong(0) } })`, then step 1
+   again.
+
+**Second run:** safe; only documents without the field are matched. **Way back:** none needed; the field is what the
+code requires.
 
 ---
 
@@ -49,6 +171,128 @@ ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-eng
 | 1.2 | **W-088u8a** (D-281, D-282) | **Nothing.** Tax policies are no longer seeded at boot: see §2.0 | — | — |
 | 1.3 | **W-088u8c** (D-285) | **Nothing.** The W-086a financial-year rewrite no longer runs at boot: see §2.3. No `CommandLineRunner` remains | — | — |
 | 1.4 | **W-088u8b** (D-284) | **Nothing.** `trade_outcomes` is no longer rebuilt at boot when empty: see §2.2 | — | — |
+| 1.5 | Charge engine (ADR-27) | `ChargeReadinessAuditor` counts the rate cards when the engine is pricing | Grep the log for `NO RATE CARDS`. Expected on a database never seeded (prod today) until §1B runs; `Charges engine ready: N rate card(s)` otherwise | Run §1A / §1B before anyone trades |
+| 1.6 | TL-7; charge engine | `PortfolioIndexInitializer` and `ChargeIndexInitializer` create their collections' indexes | Grep the log for `Could not create index` (ERROR from `portfolio`, WARN from the charge engine) | The app has started without that constraint. A unique one almost certainly means duplicates: §0.2, then restart |
+| 1.7 | Transactions | `TransactionSafetyAuditor` checks for a `MongoTransactionManager` | Grep the log for `multi-document transactions are DISABLED` | Not a replica set, or `app.mongodb.transactions-enabled` is off (§0.1.2) |
+
+---
+
+## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
+
+**Why.** The owner's fresh start (2026-10-27): the charge engine's data is cleared where it exists and seeded new in
+§1B, so every database starts from the cards in the repository. The configuration seeded from the repository
+(`charge_catalogue`, `charge_schedules`, `charge_instruments`) is cleared on **every** database; prod has none today.
+The engine's per-user data is cleared on **staging only**: `user_charges` (each V2 trade's contract note),
+`charge_accounts` (demat accounts registered for AMC) and the P&L's charge side (`yearly_charge_summary` on both
+sides of a `profit_and_loss` document). The P&L's gains stay.
+
+**Know this:**
+- **Staging loses its 328 recorded contract notes.** The cost basis already written on `assets` stays as recorded. A
+  V2 sale recorded before the deploy keeps its brokerage in the P&L's gains split (§2.8). The owner called this
+  staging data (W-176 plan, risk 1).
+- **Documents are deleted, collections are not dropped.** Dropping would also remove the unique indexes
+  `ChargeIndexInitializer` created at startup (§1.6), leaving `user_charges {email, transaction_id}` unenforced until
+  the next restart.
+- **No trade between 1A and 1B.** With the flags on and no cards, a V2 buy is charged ₹0 and that ₹0 becomes its
+  cost basis.
+- 1A is a fresh-start step, not a one-time migration, so it has no Phase 15 row and no code to remove.
+
+1. **Count before** (read-only; run it again after step 3):
+
+   ```js
+   ({ db: db.getName(),
+      charge_catalogue: db.charge_catalogue.countDocuments({}),
+      charge_schedules: db.charge_schedules.countDocuments({}),
+      charge_instruments: db.charge_instruments.countDocuments({}),
+      user_charges: db.user_charges.countDocuments({}),
+      charge_accounts: db.charge_accounts.countDocuments({}),
+      pnl_charge_side: db.profit_and_loss.countDocuments({ $or: [
+        { "realised_profits.yearly_charge_summary": { $exists: true } },
+        { "out_sourced_realised_profits.yearly_charge_summary": { $exists: true } } ] }) })
+   ```
+
+   Expect (2026-10-27): prod 0 / 0 / 0 / 0 / 0 / 0; staging 12 / 11 / 2 / 328 / 1 / 2. Take it again now; report a
+   difference before clearing.
+2. **Back up** (staging; on prod only if step 1 is not all 0):
+
+   ```bash
+   for c in charge_catalogue charge_schedules charge_instruments user_charges charge_accounts; do
+     mongoexport --uri "<uri>" --db <db> --collection $c --out charge-engine-$c-backup.json
+   done
+   mongoexport --uri "<uri>" --db <db> --collection profit_and_loss \
+     --query '{"$or":[{"realised_profits.yearly_charge_summary":{"$exists":true}},{"out_sourced_realised_profits.yearly_charge_summary":{"$exists":true}}]}' \
+     --fields _id,realised_profits.yearly_charge_summary,out_sourced_realised_profits.yearly_charge_summary \
+     --out charge-engine-pnl-charge-side-backup.json
+   ```
+
+3. **Clear.** The per-user part refuses to run unless the database is `it-staging`:
+
+   ```js
+   (() => {
+     const configuration = Object.fromEntries(["charge_catalogue", "charge_schedules", "charge_instruments"]
+       .map(c => [c, db.getCollection(c).deleteMany({}).deletedCount]));
+     if (db.getName() !== "it-staging") {
+       return { db: db.getName(), configuration, perUser: "not cleared: only it-staging clears per-user data" };
+     }
+     return { db: db.getName(), configuration,
+       user_charges: db.user_charges.deleteMany({}).deletedCount,
+       charge_accounts: db.charge_accounts.deleteMany({}).deletedCount,
+       pnl_charge_side: db.profit_and_loss.updateMany(
+         { $or: [ { "realised_profits.yearly_charge_summary": { $exists: true } },
+                  { "out_sourced_realised_profits.yearly_charge_summary": { $exists: true } } ] },
+         { $unset: { "realised_profits.yearly_charge_summary": "",
+                     "out_sourced_realised_profits.yearly_charge_summary": "" } }).modifiedCount };
+   })()
+   ```
+
+   Expect the counts from step 1 (on prod, `configuration` all 0).
+4. **Verify:** step 1 again reads all 0 (on prod, the per-user counts were 0 before and stay so), and
+   `db.user_charges.getIndexes()` still lists `user_charge_txn_idx`.
+
+**Second run:** safe, including after a run that failed part-way: deleting from an empty collection and unsetting an
+absent field change nothing (all counts 0). **Way back:** `mongoimport --uri "<uri>" --db <db> --collection <c> --file
+charge-engine-<c>-backup.json` per collection, and `mongoimport --mode merge` of the P&L file; then `POST
+/charges/seed`, whose run evicts the rate-card caches, so the restored cards are read (§5.5, "written directly").
+
+## 1B. Charge engine — seed the rate cards · `SUPER_USER` · **every database · after §1A, before the first trade**
+
+**Why.** Seeding is not automatic (ADR-27). A database with no cards prices every V2 trade `NO_SCHEDULE` at ₹0, and
+with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
+
+1. **Seed:**
+
+   ```bash
+   curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Expect 12 catalogue codes, 11 rate cards and 2 scheme profiles written (the 12 entries of
+   `data/charges/charge-catalogue.json`, its 11 card files and `instruments/`'s 2). A second run writes nothing and
+   says so.
+2. **Confirm it took** (read-only):
+
+   ```bash
+   # Must be empty: the shipped files and the database agree
+   curl -sS "$BASE/charge-schedules/drift" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   # Every card with a verifiedOn older than 90 days; rows mean rate verification is due (§5.2), not a failure
+   curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+3. **One simulate** against a known figure, Zerodha equity delivery, ₹1,00,000 sell:
+
+   ```bash
+   curl -sS -X POST "$BASE/charges/simulate" -H "Authorization: Bearer $TOKEN" \
+     -H 'Content-Type: application/json' -d '{
+       "brokerName":"ZERODHA","assetType":"EQUITY","segment":"DELIVERY","event":"SELL",
+       "exchange":"NSE","transactionDate":"2025-06-10","quantity":100,"price":1000
+     }' | jq '.data'
+   ```
+
+   Compare with the expected figure in [`../charges-engine/staging-runbook.md`](../charges-engine/staging-runbook.md)
+   §4.1. Its §4 holds every shipped card's figure, and §4.7b the three card generations: the same trade prices
+   differently by date, which is correct.
+
+**Second run:** safe; the seed skips what is on file. **Way back:** §1A clears what this wrote.
+
 
 ---
 
@@ -56,7 +300,8 @@ ledger's) are kept in [`../charges-engine/production-runbook.md`](../charges-eng
 
 > **There is one deploy, after Phases 0 – 14 are complete** (owner, D-287); nothing is deployed before then. Every
 > step in this section runs at that deploy, in order, on each database. Take each step's "count before" again at that
-> time: the figures recorded here (2026-10-20) are from today's databases.
+> time: the figures recorded here (2026-10-20 and 2026-10-27, run log) are from the databases as they were. They run
+> after §1A and §1B.
 
 ### 2.0 W-088u8a (D-281, D-282) — seed the TY 2025-26 tax policies · `SUPER_USER` · **required on a fresh database**
 
@@ -171,7 +416,7 @@ and `AnalyticsService`.
 ### 2.2 W-088u8b (D-284) — rebuild `trade_outcomes` from raw transactions · `SUPER_USER` · **when needed, not once**
 
 **Why.** `trade_outcomes` is derived from `transactions`; this recomputes it. It is a **standing operation, not a
-one-time one** (D-284). The trade-ledger correction procedure needs it (`docs/trade-ledger/migration.md` §3a), so
+one-time one** (D-284). The trade-ledger correction procedure needs it (§0.2), so
 it is not removed after use. It is never automatic (D-280).
 
 **When:**
@@ -287,6 +532,7 @@ after it.
 
 1. **Count before** (read-only):
    `db.trade_outcomes.countDocuments({ $or: [ { capital_gains_type: { $exists: true } }, { classification_reason: { $exists: true } } ] })`.
+   2026-10-27, rows with a term: prod 163, staging 201.
 2. **Dry run** (the default):
 
    ```bash
@@ -374,7 +620,7 @@ This removes the stale law from the database. Nothing reads the collection, so n
 **When:** at the deploy, any time after it.
 
 1. **Count before** (read-only): `db.holding_period_policies.countDocuments({})`. Expect the shipped policies (11),
-   or 0 where `/charges/seed` was never run.
+   or 0 where `/charges/seed` was never run. 2026-10-27: prod 0, staging 11. §1B no longer writes it.
 2. **Back up:**
 
    ```bash
@@ -450,6 +696,7 @@ breakdowns themselves (`buy_charge_breakup`, `sell_charge_breakup`) stay.
 
 1. **Count before** (read-only):
    `db.trade_outcomes.countDocuments({ $or: [ { deductible_buy_charges: { $exists: true } }, { deductible_sell_charges: { $exists: true } } ] })`.
+   2026-10-27: prod 0, staging 1.
 2. **Dry run** (the default):
 
    ```bash
@@ -485,7 +732,9 @@ stale flag. Nothing reads it, so no figure changes; the catalogue's codes and ot
 **When:** at the deploy, any time after it.
 
 1. **Count before** (read-only): `db.charge_catalogue.countDocuments({ deductible_for_capital_gains: { $exists: true } })`.
-   Expect the codes seeded before W-162c (12), or 0 where `/charges/seed` was never run.
+   Expect the codes seeded before W-162c (12), or 0 where `/charges/seed` was never run. **After §1A it is 0 on both
+   databases** (staging's 12 codes on 2026-10-27 are cleared there and re-seeded without the flag), so the step
+   confirms 0 and writes nothing.
 2. **Back up:**
 
    ```bash
@@ -584,16 +833,104 @@ files outside `taxplanning`, `taxengine`, `taxrules` (`taxengine.rules`' former 
 - No such commit changed a `taxplanning` entity or `data/tax-policies/`. Their last changes are the module's own
   PRs (#58, #59), before this build, so nothing in §2.0's files needs a correction.
 
+**The trade ledger's, with no step left:**
+- **Trades dated 31 March.** Three financial-year derivations filed a trade made **on** 31 March into the next year;
+  fixed in code. `db.transactions.countDocuments({ transaction_date: /-03-31$/ })` returned `0` on prod on
+  2026-09-12 (run log), so no stored data needed correcting.
+- **Additive fields.** `transactions.idempotency_key`, `trade_fingerprint` and `submitted_at` are absent on old rows;
+  both indexes are sparse, so old rows are simply not indexed. The trade ledger's other added fields were since
+  removed by tax-planning items, and their stored copies are §2.5, §2.6, §2.7 and §2.9.
+- **A response rename, not a database change.** `ReportModelResponse` is a DTO, never stored. Its keys changed:
+  `purchasePrice` → `purchaseAmount`, `sellPrice` → `sellAmount`, `brokerCharges` → `brokerage`. The old keys always
+  returned `0.0`, but a client reading them must move to the new names.
+
+---
+
+## 5. Standing operations — the charge engine after the deploy
+
+Not deploy steps. Each is a deliberate act, when needed; nothing here is scheduled.
+
+### 5.1 Register demat accounts · the user · **only if AMC is wanted**
+
+AMC is **not** billed for an account that is not registered: with no account there is nothing to bill, and nothing
+says so.
+
+```bash
+curl -sS -X POST "$BASE/charge-accounts/user/$USER_EMAIL" -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{
+    "brokerName":"ZERODHA","dematAccountId":"1208160000000001","accountHolder":"self",
+    "amcFrequency":"ANNUALLY","openedOn":"2024-01-01"
+  }'
+```
+
+### 5.2 Recurring operations · `SUPER_USER`
+
+| Operation | Command | Cadence | If it is never run |
+|---|---|---|---|
+| **AMC cycle** | `POST /charges/amc/impose` | quarterly / annually, per account frequency | No maintenance charge is billed. Idempotent per account and period: running it twice bills once |
+| **Rate verification** | `GET /charge-schedules/unverified` | every 90 days | Cards age silently. The endpoint lists anything older than 90 days; that is the reminder (ADR-26) |
+| **Drift check** | `GET /charge-schedules/drift` | every deploy | A card edited in the repository never reaches a database that already seeded it: the seeder skips it. Drift makes that visible |
+| **Publishing a rate change** | `POST /charge-schedules` | when a broker changes rates | **Never edit a deployed card** (ADR-26). Publish a successor; it supersedes the incumbent in the same transaction. Rehearsal: `staging-runbook.md` §7 |
+
+### 5.3 History before the engine is not priced
+
+Trades made before the engine priced them carry no computed charge, and **there is no way to give them one**. ADR-32
+applies the cutover forward only; the endpoint that could re-price history was removed for that reason. A charge
+report over an earlier period is sparse, which is correct. Pricing history, if wanted, is the
+[priced-portfolio epic](../epics/priced-portfolio.md), and needs historical rate cards first.
+
+### 5.4 If something goes wrong
+
+**Stop the engine without a deploy:** `app.charges.engine-enabled: false`. Simulate and the AMC cycle answer **503**,
+and nothing is recorded. Reads keep working (charge history, gaps, the reconciliation report), which is what
+you need to decide whether to turn it back on.
+
+**Stop only cost-basis changes**, keeping the engine recording for comparison: `app.charges.authoritative: false`. New
+buys go back to the client-supplied `brokerCharges`. Trades already written keep the cost basis they were given;
+nothing rewrites a stored `AssetEntity`.
+
+| Symptom | Where to look |
+|---|---|
+| Charges are zero | `GET /user-charges/user/{email}/gaps`: it names the reason per trade |
+| Startup warned about rate cards | §1B; grep the log for `NO RATE CARDS` |
+| A charge looks wrong | `GET /user-charges/user/{email}/transaction/{id}`: the contract note, line by line, with the `scheduleCode` that priced it |
+| Figures disagree with the client's | `GET /user-charges/user/{email}/reconciliation` |
+
+### 5.5 Known limits — recorded, not defects
+
+Full list in `docs/charges-engine/README.md` §10.
+- **A database with no cards prices nothing until §1B runs.**
+- **Nothing before 2025-04-01 can be priced:** no card covers it.
+- **Only two mutual-fund schemes have exit-load profiles.** Every other fund resolves `NO_INSTRUMENT_PROFILE` and
+  accrues no exit load; recorded, never fatal (ADR-24).
+- **A rate card written directly to MongoDB is invisible** until the resolver cache is evicted. `POST
+  /charge-schedules`, the close endpoint and `POST /charges/seed` evict it. Go through the API.
+- **Scheme profiles have no publishing endpoint:** they arrive by seeding, and a profile added by hand needs a
+  restart or a seed run.
+- **No `POST /charges/recompute`.** Amending a card that has already priced charges has no safe mechanism; designed in
+  tech-spec §14.4, not built.
+- **V1 `buyStock` / `sellStock` do not use the engine.** They are in live use and deliberately untouched. Only the V2
+  endpoints (`/portfolio/user/{email}/transaction/v2`) are priced.
+
+### 5.6 The trade idempotency window (TL-7)
+
+`app.portfolio.idempotency.window-seconds`, default 60. Two identical trades submitted inside it are collapsed into
+one. A bulk import that must submit identical rows sends an `idempotencyKey` per row: a supplied key is exact and has
+no window. Setting the window to 0 disables the derived-fingerprint fallback and leaves client keys working.
+
 ---
 
 ## Run log — one line per run, per database
 
 | Date | Database | Step | Run by | Result |
 |---|---|---|---|---|
+| 2026-09-12 | prod | trade ledger: trades dated 31 March (§4) | owner | `0` |
 | 2026-10-20 | prod `Cluster0` | 2.1 count | owner | `rebuildRows` 163, `lots` 146, `lotsSoldMoreThanOnce` 12, `rowsOnThoseLots` 29, `chargedOnThoseLots` 68.99166666666666 |
 | 2026-10-20 | staging | 2.1 count | owner | no rebuild rows, so 2.1 not needed |
 | 2026-10-20 | staging | W-088u8c checks | owner | `FY` rows 0; `temporary_transactions` absent |
 | 2026-10-20 | prod `Cluster0` | W-088u8c checks | owner | `FY` rows **163** (W-086a's rewrite never ran here: prod predates `91359d35`); `temporary_transactions` absent |
+| 2026-10-27 | prod `Cluster0` | W-176 counts (one query) | owner | `charge_catalogue` 0 (with the old flag 0); `charge_schedules` 0, `charge_instruments` 0; `user_charges` 0, `charge_accounts` 0; `transactions` 817, `assets` 529; `trade_outcomes` 163 (engine-priced 0, with a term 163, with `deductible_*` 0); `profit_and_loss` 7 (with a charge side 0, without `version` 0); `holding_period_policies` 0 |
+| 2026-10-27 | staging `it-staging` | W-176 counts (one query) | owner | `charge_catalogue` 12 (with the old flag 12); `charge_schedules` 11, `charge_instruments` 2; `user_charges` 328, `charge_accounts` 1; `transactions` 1009, `assets` 649; `trade_outcomes` 201 (engine-priced 1, with a term 201, with `deductible_*` 1); `profit_and_loss` 12 (with a charge side 2, without `version` 0); `holding_period_policies` 11 |
 
-**Not yet in this log:** §2.0 for each database (expected on staging and prod: all already present), 1.3's 0 and
-the section 3 counts, for each database.
+**Not yet in this log:** §0.2, §1A, §1B and §2.0 for each database (§2.0 expected on staging and prod: all already
+present), 1.3's 0 and the section 3 counts, for each database.
