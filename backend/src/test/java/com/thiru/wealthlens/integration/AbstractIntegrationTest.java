@@ -66,10 +66,13 @@ public abstract class AbstractIntegrationTest {
      * {@code org.testcontainers.mongodb.MongoDBContainer} does so only when asked. Dropping it
      * would leave {@code app.mongodb.transactions-enabled=true} pointed at a standalone server, and
      * every {@code @Transactional} write spanning two collections would fail.
+     *
+     * <p><b>Pinned to 8.0.4.</b> Later 8.0 patches refuse to start on Linux 6.19 and newer
+     * (SERVER-121912), which CI's Ubuntu 26 runner has (kernel 7.0).
      */
     static final MongoDBContainer mongoDBContainer;
     static {
-        mongoDBContainer = new MongoDBContainer("mongo:8.0").withReplicaSet();
+        mongoDBContainer = new MongoDBContainer("mongo:8.0.4").withReplicaSet();
         mongoDBContainer.start();
     }
 
