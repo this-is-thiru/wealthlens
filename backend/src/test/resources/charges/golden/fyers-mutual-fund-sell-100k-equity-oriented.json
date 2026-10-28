@@ -1,0 +1,24 @@
+{
+  "name": "fyers-mutual-fund-sell-100k-equity-oriented",
+  "describes": "A Rs 1,00,000 redemption from an equity-oriented scheme at Fyers: nil brokerage on the broker's card, and the statutory card's STT because the instrument profile says the scheme is equity-oriented.",
+  "context": {
+    "brokerName": "FYERS",
+    "assetType": "MUTUAL_FUND",
+    "segment": null,
+    "exchange": null,
+    "event": "SELL",
+    "price": 100,
+    "quantity": 1000,
+    "transactionDate": "2025-06-02"
+  },
+  "instrument": {
+    "equityOriented": true
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 0.0,
+      "STT": 1.0
+    },
+    "total": 1.0
+  }
+}

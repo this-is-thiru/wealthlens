@@ -1,0 +1,19 @@
+{
+  "name": "upstox-bond-sell-no-card",
+  "describes": "A bond sell at Upstox, which no card prices (W-179 G5). Since W-177 the broker's unscoped maintenance card is the fallback (a null scope matches anything, ChargeScheduleResolver), so the trade resolves to a card with no applicable rule: NO_MATCHING_RULES, Rs 0. Before W-177 the same trade was NO_SCHEDULE. Both are gaps; Zerodha already behaved this way.",
+  "context": {
+    "brokerName": "UPSTOX",
+    "assetType": "BOND",
+    "segment": null,
+    "exchange": null,
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 10,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {},
+    "total": 0.0,
+    "resolution": "NO_MATCHING_RULES"
+  }
+}

@@ -124,6 +124,14 @@ class ChargeSeederServiceTest {
                         "UPSTOX_EQ_DELIVERY_2026_03",
                         "FYERS_EQ_DELIVERY_2025_04",
                         "FYERS_EQ_DELIVERY_2026_03",
+                        "UPSTOX_EQ_INTRADAY_2025_04",
+                        "UPSTOX_EQ_INTRADAY_2026_03",
+                        "FYERS_EQ_INTRADAY_2025_04",
+                        "FYERS_EQ_INTRADAY_2026_03",
+                        "UPSTOX_MF_2025_04",
+                        "FYERS_MF_2025_04",
+                        "UPSTOX_MAINTENANCE_2025_04",
+                        "FYERS_MAINTENANCE_2025_04",
                         "STATUTORY_EQ_DELIVERY_2025_04",
                         "STATUTORY_EQ_INTRADAY_2025_04",
                         "STATUTORY_MF_2025_04",
@@ -266,7 +274,7 @@ class ChargeSeederServiceTest {
         // Then
         assertThat(report.seededBy()).isEqualTo(AUDITOR);
         assertThat(report.catalogueCreated()).hasSize(12);
-        assertThat(report.schedulesCreated()).hasSize(15);
+        assertThat(report.schedulesCreated()).hasSize(23);
         assertThat(report.instrumentsCreated()).containsExactlyInAnyOrder("PARAGPARIKHFLEXICAP", "HDFCLIQUID");
         assertThat(report.schedulesSkipped()).isEmpty();
         assertThat(report.wroteNothing()).isFalse();
@@ -290,7 +298,7 @@ class ChargeSeederServiceTest {
 
         // Then
         assertThat(report.wroteNothing()).isTrue();
-        assertThat(report.schedulesSkipped()).hasSize(15);
+        assertThat(report.schedulesSkipped()).hasSize(23);
         assertThat(report.drift()).isEmpty();
     }
 

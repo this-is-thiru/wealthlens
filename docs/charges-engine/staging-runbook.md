@@ -73,7 +73,7 @@ curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $TOKEN" \
                  schedulesCreated, instrumentsCreated, schedulesSkipped, drift: (.drift|length)}'
 ```
 
-Expect on a fresh database: 12 catalogue codes, 15 rate cards (11 broker, 4 statutory), 2 scheme profiles, nothing skipped,
+Expect on a fresh database: 12 catalogue codes, 23 rate cards (19 broker, 4 statutory), 2 scheme profiles, nothing skipped,
 no drift. Every document it writes records `seededBy` and the time — which is the reason this is an
 endpoint and not a startup hook.
 
@@ -106,7 +106,7 @@ date, which is what closed AC-2 (see `ac2-rate-verification.md`). Each statutory
 A card appearing here means someone published one without checking its rates, or an existing one lost
 its date. It is a worklist, not a historical record — re-run it after every publish.
 
-Fifteen cards ship: eleven broker cards, in three generations where a rate changed, and four
+Twenty-three cards ship: nineteen broker cards, in up to three generations where a rate changed, and four
 statutory cards. Since W-163b (D-382), STT, stamp duty, the SEBI fee and GST sit on the statutory
 cards, which name no broker; the engine prices them beside the broker's card.
 
@@ -118,8 +118,12 @@ cards, which name no broker; the engine prices them beside the broker's card.
 | `ZERODHA_EQ_INTRADAY_2025_04` / `_2026_03` | EQUITY / INTRADAY | split at 2026-03-01 |
 | `UPSTOX_EQ_DELIVERY_2025_04` / `_2026_03` | EQUITY / DELIVERY | split at 2026-03-01 |
 | `FYERS_EQ_DELIVERY_2025_04` / `_2026_03` | EQUITY / DELIVERY | split at 2026-03-01 |
+| `UPSTOX_EQ_INTRADAY_2025_04` / `_2026_03` | EQUITY / INTRADAY | split at 2026-03-01 (W-177) |
+| `FYERS_EQ_INTRADAY_2025_04` / `_2026_03` | EQUITY / INTRADAY | split at 2026-03-01 (W-177) |
 | `ZERODHA_MF_2025_04` | MUTUAL_FUND | 2025-04-01 → open |
 | `ZERODHA_MAINTENANCE_2025_04` | unscoped | 2025-04-01 → open |
+| `UPSTOX_MF_2025_04`, `FYERS_MF_2025_04` | MUTUAL_FUND | 2025-04-01 → open (W-177) |
+| `UPSTOX_MAINTENANCE_2025_04` (₹300), `FYERS_MAINTENANCE_2025_04` (₹0) | unscoped | 2025-04-01 → open (W-177) |
 | `STATUTORY_EQ_DELIVERY_2025_04` | EQUITY / DELIVERY, no broker | 2025-04-01 → open |
 | `STATUTORY_EQ_INTRADAY_2025_04` | EQUITY / INTRADAY, no broker | 2025-04-01 → open |
 | `STATUTORY_MF_2025_04` | MUTUAL_FUND, no broker | 2025-04-01 → open |
@@ -599,11 +603,13 @@ curl -sS -X POST "$BASE/charges/simulate" \
   -d '{"brokerName":"ZERODHA","assetType":"EQUITY","segment":"DELIVERY","event":"SELL",
        "price":1000,"quantity":100}' | jq -r '.message // .error // .'
 
-# A broker with no card at all → NO_SCHEDULE, not an error
+# No card in force at all → NO_SCHEDULE, not an error. Every broker now has an unscoped maintenance
+# card from 2025-04-01, which catches any trade no other card covers (NO_MATCHING_RULES, W-177), so
+# "no card at all" is a date before any card
 curl -sS -X POST "$BASE/charges/simulate" \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"brokerName":"UPSTOX","assetType":"MUTUAL_FUND","event":"SELL","stockCode":"HDFCLIQUID",
-       "price":100,"quantity":1000,"transactionDate":"2025-06-02"}' \
+  -d '{"brokerName":"UPSTOX","assetType":"BOND","event":"SELL",
+       "price":1000,"quantity":10,"transactionDate":"2025-03-01"}' \
   | jq '.data | {resolution, totalCharges}'
 ```
 

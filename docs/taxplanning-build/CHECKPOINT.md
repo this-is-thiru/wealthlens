@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-177 — missing broker cards (D-383; coverage G1 – G3) — NOT STARTED (the W-164 – W-167 chain is done; W-177 → W-178 → W-179 is the remaining chain after W-163c)
-Stage           : — (W-167 DONE, D-390, committed)
-Plan            : — (write plans/W-177.md on "start W-177")
+Item            : W-178 — equity futures and options (D-383; coverage G4) — NOT STARTED
+Stage           : — (W-177 DONE, D-392, committed)
+Plan            : — (write plans/W-178.md on "start W-178")
 Approved        : —
 Steps done      : —
-Next step       : on "start W-177": READ the WI row + reviews/2026-10-28-charge-coverage.md + the existing broker cards, write plans/W-177.md, STOP for approval
-Last verify     : W-167 — TJsonMapper+P&L mapping 8/0; unit 3792/0; integration 312/0
-Waiting on      : the owner — "start W-177"; push (parent + api-collection) if wanted; open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : on "start W-178": READ the WI row + coverage G4 + the brokers' F&O pages + the STT change of 1-4-2026 (source the Act, as W-163c), write plans/W-178.md, STOP for approval
+Last verify     : W-177 — golden 31/0; unit 3802/0; integration 312/0
+Waiting on      : the owner — "start W-178"; push (parent + api-collection) if wanted; open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
-Last item commit: taxplanning W-167: make TJsonMapper fail on nothing to read instead of answering null — a null source refused, the two uncalled methods deleted (D-390)
-Updated         : 2026-10-28, session 38 — W-164, W-165, W-166, W-167 DONE; W-180 closed; W-181 – W-184 placed after W-179 (D-391)
+Last item commit: taxplanning W-177: add the Upstox and Fyers intraday, mutual fund and maintenance cards, each figure read on the broker's page — uncarded Upstox and Fyers trades now resolve NO_MATCHING_RULES (D-392)
+Updated         : 2026-10-28, session 38 — W-164 – W-167, W-177 DONE; W-180 closed; W-181 – W-184 placed (D-391)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

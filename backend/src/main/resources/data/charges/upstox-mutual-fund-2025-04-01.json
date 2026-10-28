@@ -1,0 +1,34 @@
+{
+  "scheduleCode": "UPSTOX_MF_2025_04",
+  "brokerName": "UPSTOX",
+  "assetType": "MUTUAL_FUND",
+  "segment": null,
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": true,
+  "sourceUrl": "https://upstox.com/brokerage-charges/",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "BROKERAGE",
+      "displayName": "Brokerage",
+      "category": "BROKERAGE",
+      "basis": "FLAT",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "flatAmount": 0.0,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 5,
+      "notes": "Nil on mutual funds: \"Zero Commission on Mutual Funds and IPOs\". Read 2026-10-28 at https://upstox.com/brokerage-charges/ (W-177; sources/2026-10-28-broker-charge-pages.md)."
+    }
+  ]
+}

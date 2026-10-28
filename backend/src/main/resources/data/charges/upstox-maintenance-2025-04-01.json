@@ -1,0 +1,33 @@
+{
+  "scheduleCode": "UPSTOX_MAINTENANCE_2025_04",
+  "brokerName": "UPSTOX",
+  "assetType": null,
+  "segment": null,
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://upstox.com/brokerage-charges/",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "AMC",
+      "displayName": "Annual maintenance charge",
+      "category": "SUBSCRIPTION",
+      "basis": "FLAT",
+      "side": "BOTH",
+      "events": [
+        "AMC_CYCLE"
+      ],
+      "flatAmount": 300.0,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "Rs 300 per year plus GST: \"Non-BSDA users: | AMC of \u20b9 300 + GST\", billed by AmcChargeService's cycle rather than by a trade. Not modelled (W-179 S2): \"ZERO AMC is applicable for newly onboarded customers in the first year\" (\"users onboarded from 14-Feb-2025 onwards\"), and the BSDA tier, which the page does not state (\"Know more\"). Read 2026-10-28 at https://upstox.com/brokerage-charges/ (W-177; sources/2026-10-28-broker-charge-pages.md)."
+    }
+  ]
+}
