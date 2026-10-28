@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-185 — IPFT counted twice on the 2026-03 cash cards — NOT STARTED; but FIRST ask the owner to place W-187 (re-source W-177 / W-178 to the Gazette; proposed before W-185, which rests on a non-Gazette figure)
-Stage           : — (session 38 PAUSED at the owner's session-limit notice; all committed and pushed)
-Plan            : — (write plans/W-185.md on "start W-185")
+Item            : W-187 — re-source W-177 / W-178 to the Gazette (D-394, placed first by D-395) — NOT STARTED
+Stage           : — (session 38 PAUSED; all committed and pushed)
+Plan            : — (write plans/W-187.md on "start W-187")
 Approved        : —
 Steps done      : —
-Next step       : ASK the owner: W-187 placement, and G1 – G7 of reviews/2026-10-28-bookkeeping-audit.md (each needs the owner's word). Then, for the first item: check STATE line 60 board order (R4); only official Gazette copies count as READ unless the owner names a source trustworthy; every item commit updates the board + WL-A-2 if the runbook changed
-Last verify     : W-178 — charge tests 168/0; unit 3811/0; integration 312/0
-Waiting on      : the owner — W-187 placement; then "start <item>"; open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : on "start W-187": check STATE line 60 board order first (R4); READ the W-187 row + both 2026-10-28 sources records; ONLY official Gazette copies count as READ unless the owner names a source trustworthy — ask the owner which issuers (NSE circulars, SEBI's site, broker pages) count; write plans/W-187.md, STOP for approval. Every item commit: board + WL-A-2 if the runbook changed
+Last verify     : W-178 — charge tests 168/0; unit 3811/0; integration 312/0; CI success on c515c558
+Waiting on      : the owner — "start W-187"; OQ-32, OQ-33, OQ-34 open (every other finding is now a placed row, D-395)
 Files touched   : (none)
 Last item commit: taxplanning W-178: add equity futures and options cards for all three brokers and the law — the new STT from 30-3-2026, Finance Act 2026's assent; W-185 and W-186 placed (D-393)
-Updated         : 2026-10-28, session 38 — PAUSED; owner correction recorded (D-394): board fixed, WL-A-2 republished, R4 deviation recorded, W-187 written unplaced; all committed and pushed
+Updated         : 2026-10-28, session 38 — PAUSED; order W-187 → W-188 … W-198 → W-185 → W-186 → W-179 → W-181 … W-184 (D-395); audit in reviews/2026-10-28-bookkeeping-audit.md
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

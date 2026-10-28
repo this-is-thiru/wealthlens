@@ -56,3 +56,7 @@ Nothing below has been changed yet; each needs the owner's word.
 
 - Whether every runbook entry since W-176 has its run-log line for every database (the owner's runs).
 - Whether each D-row's quoted figures match the files they name, beyond this session's items.
+
+## Placed (D-395)
+
+Every open gap above is now a row: W-187 (G3, G13), W-188 (G5), W-189 (G6), W-190 (G11), W-191 – W-198 (G7's eight findings). G1 closes as W-185 → W-186 → W-179 are done in board order.
