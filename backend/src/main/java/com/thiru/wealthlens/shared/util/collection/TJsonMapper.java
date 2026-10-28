@@ -1,14 +1,22 @@
 package com.thiru.wealthlens.shared.util.collection;
 
-import io.micrometer.common.util.StringUtils;
 import java.util.List;
+import java.util.Objects;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.cfg.DateTimeFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 
+/**
+ * Copies and reads values through one configured JSON mapper.
+ *
+ * <p>Nothing to read is a failure, never a {@code null} answer (D-390): a {@code null} source would otherwise
+ * serialise to {@code "null"} and come back as {@code null}, carried on by a caller that never expected it.
+ */
 public class TJsonMapper {
+
+    private static final String NULL_SOURCE = "nothing to read: the source is null";
 
     private static final JsonMapper JSON_MAPPER = getJsonMapper();
     private static final JsonMapper JSON_MAPPER_SAFE = safeJsonMapper();
@@ -19,33 +27,13 @@ public class TJsonMapper {
     }
 
     public static <T> T copy(Object source, Class<T> targetClass) {
-        return readValue(JSON_MAPPER, writeValueAsString(source), targetClass);
+        Objects.requireNonNull(source, NULL_SOURCE);
+        return JSON_MAPPER.readValue(writeValueAsString(source), targetClass);
     }
 
     public static <T> T safeCopy(Object source, Class<T> targetClass) {
-        return readValue(JSON_MAPPER_SAFE, writeValueAsString(source), targetClass);
-    }
-
-    public static <T> List<T> safeReadAsList(String content, Class<T> targetClass) {
-        if (StringUtils.isEmpty(content)) {
-            return null;
-        }
-        return readAsList(JSON_MAPPER_SAFE, content, targetClass);
-    }
-
-    private static <T> List<T> readAsList(JsonMapper objectMapper, String content, Class<T> targetClass) {
-        if (StringUtils.isEmpty(content)) {
-            return null;
-        }
-        JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, targetClass);
-        return objectMapper.readValue(content, listType);
-    }
-
-    private static <T> T readValue(JsonMapper objectMapper, String content, Class<T> targetClass) {
-        if (StringUtils.isEmpty(content)) {
-            return null;
-        }
-        return objectMapper.readValue(content, targetClass);
+        Objects.requireNonNull(source, NULL_SOURCE);
+        return JSON_MAPPER_SAFE.readValue(writeValueAsString(source), targetClass);
     }
 
 
@@ -57,32 +45,15 @@ public class TJsonMapper {
 
 
     public static <T> List<T> readAsList(String content, Class<T> targetClass) {
-        return readAsList(JSON_MAPPER, content, targetClass);
-    }
-
-    public static <T> List<T> readAsList(Object object, Class<T> targetClass) {
-
-        if (object == null) {
-            return null;
-        }
-
-        String content = writeValueAsString(object);
         JavaType listType = JSON_MAPPER.getTypeFactory().constructCollectionType(List.class, targetClass);
         return JSON_MAPPER.readValue(content, listType);
     }
 
-    /**
-     * Reads a JSON <em>object</em> into a type — the counterpart of {@link #readAsList}.
-     *
-     * <p>Made public for the tax rule-pack loader, which parses {@code manifest.json} and must use
-     * this mapper rather than configuring a second one: two mappers eventually disagree about the
-     * same JSON.
-     */
-    public static <T> T readValue(String content, Class<T> targetClass) {
-        if (StringUtils.isEmpty(content)) {
-            return null;
-        }
-        return JSON_MAPPER.readValue(content, targetClass);
+    public static <T> List<T> readAsList(Object object, Class<T> targetClass) {
+        Objects.requireNonNull(object, NULL_SOURCE);
+        String content = writeValueAsString(object);
+        JavaType listType = JSON_MAPPER.getTypeFactory().constructCollectionType(List.class, targetClass);
+        return JSON_MAPPER.readValue(content, listType);
     }
 
     public static String writeValueAsString(Object source) {
