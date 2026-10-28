@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import com.thiru.wealthlens.taxengine.rules.timeline.Timeline;
 import com.thiru.wealthlens.taxengine.rules.timeline.TimelineReader;
@@ -47,6 +48,35 @@ class CoverageRegisterTest {
 
         // When / Then
         assertThatCode(() -> CoverageRegister.of(timeline).verify(timeline)).doesNotThrowAnyException();
+    }
+
+    /**
+     * Both rules cite 2025 s.108(2) / 1961 s.70(2), (3) in their provision fields; the house-property rows stay
+     * for limb (1), whose per-property figures HousePropertyNode nets (D-219, D-388).
+     */
+    @Test
+    void of_whenTheShippedRegisterIsRead_listsTheCapitalGainsSetOffUnderTheSectionItCites() {
+        // Given
+        Timeline timeline = TimelineReader.read(TIMELINE);
+        RuleId setOff = new RuleId("SETOFF-WITHIN-CAPITAL-GAINS");
+        RuleId parts = new RuleId("CG-PARTS");
+
+        // When
+        Map<SectionRef, Coverage> sections = CoverageRegister.of(timeline).sections();
+
+        // Then
+        for (SectionRef withinHead : new SectionRef[] {
+                new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "108"),
+                new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "70")}) {
+            assertThat(((Coverage.Modelled) sections.get(withinHead)).rules()).containsExactly(
+                    new RuleId("HP-ANNUAL-VALUE"), new RuleId("HP-INTEREST"), new RuleId("HP-OWN-RESIDENCE-INTEREST"),
+                    setOff, parts);
+        }
+        for (SectionRef charge : new SectionRef[] {
+                new SectionRef(SectionRef.Act.INCOME_TAX_ACT_2025, "67"),
+                new SectionRef(SectionRef.Act.INCOME_TAX_ACT_1961, "45")}) {
+            assertThat(((Coverage.Modelled) sections.get(charge)).rules()).doesNotContain(setOff, parts);
+        }
     }
 
     @Test

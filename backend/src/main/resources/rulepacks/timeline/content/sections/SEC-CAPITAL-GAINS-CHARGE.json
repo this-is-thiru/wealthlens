@@ -1,6 +1,6 @@
 {
   "_note": "Section catalogue entry (D-042, D-060, D-248). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
-  "_sources": "provisions: 1961 s.45 / 2025 s.67 (coverage MODELLED, D-248). summary: S2 s.67(1) (Gazette 265620 p.104); 1961 s.45(1) (thc p.261). routes[0]: SETOFF-WITHIN-CAPITAL-GAINS (CapitalGainsAbsorptionOrder, W-088a, D-243). routes[1]: RATE-CG-SHORT-LISTED-EQUITY, RATE-CG-LONG-OTHER, RATE-CG-LONG-LISTED-EQUITY (W-088b, D-244). disqualifiers[0]: the gain's amount is portfolio's (DR 13 R-10); assets portfolio does not hold are the brief's built-second scope (00-BRIEF.md section 9, M-08). disqualifiers[1]: S2 s.67(1) 'save as otherwise provided in sections 82 ... 89' / 1961 s.45(1) 'save as otherwise provided in sections 54 ... 54H' — the reinvestment exemptions, W-088i (S2 s.86 / 1961 s.54F) and DEFERRED (the rest).",
+  "_sources": "provisions: 1961 s.45 / 2025 s.67 (coverage MODELLED, D-248). summary: S2 s.67(1) (Gazette 265620 p.104); 1961 s.45(1) (thc p.261). the within-head set-off route moved to SEC-SET-OFF-WITHIN-HEAD, the section its rule cites (W-165, D-388). routes[0]: RATE-CG-SHORT-LISTED-EQUITY, RATE-CG-LONG-OTHER, RATE-CG-LONG-LISTED-EQUITY (W-088b, D-244). disqualifiers[0]: the gain's amount is portfolio's (DR 13 R-10); assets portfolio does not hold are the brief's built-second scope (00-BRIEF.md section 9, M-08). disqualifiers[1]: S2 s.67(1) 'save as otherwise provided in sections 82 ... 89' / 1961 s.45(1) 'save as otherwise provided in sections 54 ... 54H' — the reinvestment exemptions, W-088i (S2 s.86 / 1961 s.54F) and DEFERRED (the rest).",
   "key": "SEC-CAPITAL-GAINS-CHARGE",
   "provision1961": {
     "instrument": "Income-tax Act, 1961",
@@ -15,16 +15,6 @@
   "plainName": "Tax on capital gains",
   "summary": "A profit on transferring a capital asset is income under the head Capital gains, in the year the transfer takes place. Gains and losses are netted within the head, and each kind of gain is then taxed at its own rate.",
   "routes": [
-    {
-      "name": "The year's gains and losses netted within the head",
-      "description": "A short-term loss may be set against any gain; a long-term loss only against long-term gains. The order is stated, because the law does not fix one.",
-      "conditions": [
-        {
-          "type": "ByRule",
-          "rule": "SETOFF-WITHIN-CAPITAL-GAINS"
-        }
-      ]
-    },
     {
       "name": "Each kind of gain taxed at its own rate",
       "description": "Short-term gains on listed equity, long-term gains on listed equity and other long-term gains each carry their own rate.",
