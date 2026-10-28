@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-163c — DONE (D-384); W-163 closed; next W-164 (Gold Bond maturity default, not started)
-Stage           : DONE
-Plan            : —
-Approved        : "W-163c approved" (session 37, 2026-10-28)
+Item            : W-164 — a Gold Bond's maturity not defaulted (audit T5, D-315) — NOT STARTED
+Stage           : — (session 37 PAUSED at the owner's session-limit notice; all committed and pushed)
+Plan            : — (write plans/W-164.md on "start W-164")
+Approved        : —
 Steps done      : —
-Next step       : W-164 READ → EXPLAIN, only on the owner's word (WL-A-2 republished after 09fea374, read back identical)
-Last verify     : unit -Punit 3778/0; integration 310/0 (2026-10-28, W-163c)
-Waiting on      : the owner — next item W-164; catalogue SEBI_FEE reference (found, not changed); open: CLAUDE.md "backfill" 503 wording (no such endpoint); api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Next step       : on "start W-164": READ the WI row + AssetRequestParser:179, write plans/W-164.md, STOP for approval
+Last verify     : unit -Punit 3783/0; integration 310/0 (mongo:8.0.4); CI green run 40719965059 (c24c8846)
+Waiting on      : the owner — "start W-164"; open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
 Last item commit: taxplanning W-163c: cite each statutory rate to the law — STT Sl. 5, stamp duty Art. 56A, the SEBI turnover fee and GST heading 9971 read, all agree; the four cards carry source and verified date; W-163 closed (D-384)
-Updated         : 2026-10-28, session 37 — CI fixed (D-385), W-180 placed; next W-164
+Updated         : 2026-10-28, session 37 — PAUSED (owner shutting down); session note in STATE "Notes for resume"; branch pushed, origin = local
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
