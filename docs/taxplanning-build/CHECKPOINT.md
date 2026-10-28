@@ -11,10 +11,10 @@ Approved        : —
 Steps done      : —
 Next step       : on "start W-177": READ the WI row + reviews/2026-10-28-charge-coverage.md + the existing broker cards, write plans/W-177.md, STOP for approval
 Last verify     : W-167 — TJsonMapper+P&L mapping 8/0; unit 3792/0; integration 312/0
-Waiting on      : the owner — "start W-177"; push (parent + api-collection) if wanted; place: CorporateActionService:489 commented code, Checkstyle unused-field rule; 33 register rows (W-165 C3a scan); V1/V2 accept GOLD_BOND without maturity (W-164 C3a); open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Waiting on      : the owner — "start W-177"; push (parent + api-collection) if wanted; open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
 Last item commit: taxplanning W-167: make TJsonMapper fail on nothing to read instead of answering null — a null source refused, the two uncalled methods deleted (D-390)
-Updated         : 2026-10-28, session 38 — W-164, W-165, W-166, W-167 DONE; W-180 closed
+Updated         : 2026-10-28, session 38 — W-164, W-165, W-166, W-167 DONE; W-180 closed; W-181 – W-184 placed after W-179 (D-391)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
