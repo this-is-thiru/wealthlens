@@ -9,9 +9,7 @@ on:
 
 jobs:
   build:
-    # Pinned: ubuntu-latest began moving to Ubuntu 26 on 2026-10-19 (actions/runner-images#14748), and
-    # the integration tier stopped counting on CI between the runs of 25 and 27 October.
-    runs-on: [ubuntu-24.04]
+    runs-on: [ubuntu-26.04]
     steps:
       - name: Checkout source
         uses: actions/checkout@v5
@@ -57,6 +55,18 @@ jobs:
             [ -f "$f" ] || continue
             if grep -E 'failures="[1-9]' "$f" >/dev/null || grep -E 'errors="[1-9]' "$f" >/dev/null; then
               echo "Test failures found in: $f"
+              # One annotation per failing class, with its first failure's type and message, so the
+              # cause is readable on the run's page without opening the log.
+              python3 - "$f" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          suite = ET.parse(sys.argv[1]).getroot()
+          for case in suite.iter("testcase"):
+              problem = case.find("failure") if case.find("failure") is not None else case.find("error")
+              if problem is not None:
+                  message = " ".join((problem.get("type", "") + ": " + problem.get("message", "")).split())[:900]
+                  print(f"::error title={suite.get('name')}::{case.get('name')}: {message}")
+                  break
+          PY
               FAILED=1
             fi
           done
