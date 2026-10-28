@@ -73,7 +73,7 @@ curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $TOKEN" \
                  schedulesCreated, instrumentsCreated, schedulesSkipped, drift: (.drift|length)}'
 ```
 
-Expect on a fresh database: 12 catalogue codes, 23 rate cards (19 broker, 4 statutory), 2 scheme profiles, nothing skipped,
+Expect on a fresh database: 12 catalogue codes, 39 rate cards (31 broker, 8 statutory), 2 scheme profiles, nothing skipped,
 no drift. Every document it writes records `seededBy` and the time — which is the reason this is an
 endpoint and not a startup hook.
 
@@ -106,7 +106,7 @@ date, which is what closed AC-2 (see `ac2-rate-verification.md`). Each statutory
 A card appearing here means someone published one without checking its rates, or an existing one lost
 its date. It is a worklist, not a historical record — re-run it after every publish.
 
-Twenty-three cards ship: nineteen broker cards, in up to three generations where a rate changed, and four
+Thirty-nine cards ship: thirty-one broker cards, in up to three generations where a rate changed, and eight
 statutory cards. Since W-163b (D-382), STT, stamp duty, the SEBI fee and GST sit on the statutory
 cards, which name no broker; the engine prices them beside the broker's card.
 
@@ -124,10 +124,14 @@ cards, which name no broker; the engine prices them beside the broker's card.
 | `ZERODHA_MAINTENANCE_2025_04` | unscoped | 2025-04-01 → open |
 | `UPSTOX_MF_2025_04`, `FYERS_MF_2025_04` | MUTUAL_FUND | 2025-04-01 → open (W-177) |
 | `UPSTOX_MAINTENANCE_2025_04` (₹300), `FYERS_MAINTENANCE_2025_04` (₹0) | unscoped | 2025-04-01 → open (W-177) |
+| `{ZERODHA,UPSTOX,FYERS}_EQ_FUTURES_2025_04` / `_2026_03` | EQUITY / FUTURES | split at 2026-03-01, when NSE folded IPFT into its rate (W-178) |
+| `{ZERODHA,UPSTOX,FYERS}_EQ_OPTIONS_2025_04` / `_2026_03` | EQUITY / OPTIONS, on premium | split at 2026-03-01 (W-178) |
 | `STATUTORY_EQ_DELIVERY_2025_04` | EQUITY / DELIVERY, no broker | 2025-04-01 → open |
 | `STATUTORY_EQ_INTRADAY_2025_04` | EQUITY / INTRADAY, no broker | 2025-04-01 → open |
 | `STATUTORY_MF_2025_04` | MUTUAL_FUND, no broker | 2025-04-01 → open |
 | `STATUTORY_ACCOUNT_2025_04` | unscoped, no broker (GST on AMC) | 2025-04-01 → open |
+| `STATUTORY_EQ_FUTURES_2025_04` / `_2026_03` | EQUITY / FUTURES, no broker | split at 2026-03-30, when Finance Act 2026 s.159 took effect (W-178) |
+| `STATUTORY_EQ_OPTIONS_2025_04` / `_2026_03` | EQUITY / OPTIONS, no broker | split at 2026-03-30 (W-178) |
 
 ### 3.3 One broker's cards
 

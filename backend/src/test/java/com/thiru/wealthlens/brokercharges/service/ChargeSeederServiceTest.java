@@ -132,10 +132,26 @@ class ChargeSeederServiceTest {
                         "FYERS_MF_2025_04",
                         "UPSTOX_MAINTENANCE_2025_04",
                         "FYERS_MAINTENANCE_2025_04",
+                        "ZERODHA_EQ_FUTURES_2025_04",
+                        "ZERODHA_EQ_FUTURES_2026_03",
+                        "ZERODHA_EQ_OPTIONS_2025_04",
+                        "ZERODHA_EQ_OPTIONS_2026_03",
+                        "UPSTOX_EQ_FUTURES_2025_04",
+                        "UPSTOX_EQ_FUTURES_2026_03",
+                        "UPSTOX_EQ_OPTIONS_2025_04",
+                        "UPSTOX_EQ_OPTIONS_2026_03",
+                        "FYERS_EQ_FUTURES_2025_04",
+                        "FYERS_EQ_FUTURES_2026_03",
+                        "FYERS_EQ_OPTIONS_2025_04",
+                        "FYERS_EQ_OPTIONS_2026_03",
                         "STATUTORY_EQ_DELIVERY_2025_04",
                         "STATUTORY_EQ_INTRADAY_2025_04",
                         "STATUTORY_MF_2025_04",
-                        "STATUTORY_ACCOUNT_2025_04");
+                        "STATUTORY_ACCOUNT_2025_04",
+                        "STATUTORY_EQ_FUTURES_2025_04",
+                        "STATUTORY_EQ_FUTURES_2026_03",
+                        "STATUTORY_EQ_OPTIONS_2025_04",
+                        "STATUTORY_EQ_OPTIONS_2026_03");
         assertThat(seededCatalogue()).hasSize(12);
     }
 
@@ -274,7 +290,7 @@ class ChargeSeederServiceTest {
         // Then
         assertThat(report.seededBy()).isEqualTo(AUDITOR);
         assertThat(report.catalogueCreated()).hasSize(12);
-        assertThat(report.schedulesCreated()).hasSize(23);
+        assertThat(report.schedulesCreated()).hasSize(39);
         assertThat(report.instrumentsCreated()).containsExactlyInAnyOrder("PARAGPARIKHFLEXICAP", "HDFCLIQUID");
         assertThat(report.schedulesSkipped()).isEmpty();
         assertThat(report.wroteNothing()).isFalse();
@@ -298,7 +314,7 @@ class ChargeSeederServiceTest {
 
         // Then
         assertThat(report.wroteNothing()).isTrue();
-        assertThat(report.schedulesSkipped()).hasSize(23);
+        assertThat(report.schedulesSkipped()).hasSize(39);
         assertThat(report.drift()).isEmpty();
     }
 
@@ -566,7 +582,7 @@ class ChargeSeederServiceTest {
                 .filter(schedule -> schedule.getBrokerName() == null)
                 .flatMap(schedule -> schedule.getRules().stream())
                 .toList();
-        assertThat(statutoryRules).hasSize(11).allSatisfy(rule -> assertThat(rule.getNotes())
+        assertThat(statutoryRules).hasSize(27).allSatisfy(rule -> assertThat(rule.getNotes())
                 .as("notes of %s", rule.getCode())
                 .contains("Law: ")
                 .contains("sources/2026-10-28-statutory-charge-rates.md row "));

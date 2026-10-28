@@ -43,7 +43,7 @@ Every figure below is to be re-read on the page before it goes on a card, as AC-
 | G1 | Upstox and Fyers equity intraday | Upstox: "₹20 per executed order or 0.1% (whichever is lower)". Fyers: "₹20 or 0.03% per executed order for Intraday (whichever is lower)". Statutory charges are as W-163b's intraday card | W-177, **done** (D-392) |
 | G2 | Upstox and Fyers mutual funds | Upstox: "Zero Commission on Mutual Funds and IPOs". Fyers: "₹0 brokerage on mutual funds and IPOs" | W-177, **done** (D-392) |
 | G3 | Upstox and Fyers AMC (maintenance cards) | Upstox: ₹300 + GST for non-BSDA accounts, ₹0 in the first year for customers onboarded from 14 Feb 2025, BSDA "refer to the help center". Fyers: AMC "₹ 0" | W-177, **done** (D-392) |
-| G4 | Equity futures and options, all three brokers | Broker rates: Zerodha futures 0.03 % or ₹20, options flat ₹20; Upstox futures 0.05 % or ₹20, options ₹20; Fyers futures 0.03 % or ₹20, options ₹20. The pages also show a **change in law from 1 Apr 2026**: futures STT 0.02 % → 0.05 % on sell; options 0.1 % → 0.15 % of premium on sell, plus 0.15 % on exercised options (Upstox's page, with dates). Futures stamp duty is 0.002 %, options 0.003 %; options transaction charges are on premium. These need statutory cards with the law's dates, sourced as W-163c | W-178 |
+| G4 | Equity futures and options, all three brokers | Broker rates: Zerodha futures 0.03 % or ₹20, options flat ₹20; Upstox futures 0.05 % or ₹20, options ₹20; Fyers futures 0.03 % or ₹20, options ₹20. The pages also show a **change in law from 1 Apr 2026**: futures STT 0.02 % → 0.05 % on sell; options 0.1 % → 0.15 % of premium on sell, plus 0.15 % on exercised options (Upstox's page, with dates). Futures stamp duty is 0.002 %, options 0.003 %; options transaction charges are on premium. These need statutory cards with the law's dates, sourced as W-163c | W-178, **done** (D-393) |
 | G5 | `BOND` and `GOLD_BOND` traded through a broker | No page states a charge for bonds, sovereign gold bonds or government securities (Zerodha mentions only a ₹0.25 CDSL discount on bond debits) | W-179 |
 
 ## Existing cards simpler than the pages
@@ -67,7 +67,10 @@ these. They are recorded here so the omission is known, not placed.
   reused. **Done (D-392):** eight cards, the pages READ raw (`sources/2026-10-28-broker-charge-pages.md`). Since
   then an uncarded Upstox or Fyers trade (G4, G5) resolves `NO_MATCHING_RULES` against the broker's unscoped
   maintenance card, not `NO_SCHEDULE`. It is still ₹0 and still a gap.
-- **W-178:** equity futures and options (G4). Broker cards, plus statutory cards windowed by the law. The STT change
+- **W-178:** equity futures and options (G4). **Done (D-393):** sixteen cards. The new STT takes effect on 30-3-2026, Finance Act 2026's assent, under
+  the General Clauses Act s.5(1); the pages say 1 April. Found: NSE folded IPFT into its rates on 1-3-2026, so the
+  2026-03 cash cards count IPFT twice (W-185); Fyers' clearing charge is not modelled (W-186). Option exercise has
+  no event and stays a gap. Broker cards, plus statutory cards windowed by the law. The STT change
   of 1 Apr 2026 is sourced to its Act, as W-163c does.
 - **W-179:** decisions for the owner: bonds and gold bonds (G5), BSE cards (S1), Zerodha AMC tiers (S2), account-type
   and plan brokerage (S3), corporate-action order charges (S4). Each decision is placed as its own row once made.

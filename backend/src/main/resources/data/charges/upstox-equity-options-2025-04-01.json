@@ -1,0 +1,70 @@
+{
+  "scheduleCode": "UPSTOX_EQ_OPTIONS_2025_04",
+  "brokerName": "UPSTOX",
+  "assetType": "EQUITY",
+  "segment": "OPTIONS",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": "2026-02-28",
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://upstox.com/brokerage-charges/",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "BROKERAGE",
+      "displayName": "Brokerage",
+      "category": "BROKERAGE",
+      "basis": "FLAT",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "flatAmount": 20.0,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "\"Equity Options | Flat \u20b920 per executed order.\" Read 2026-10-28 at https://upstox.com/brokerage-charges/ (W-178; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md)."
+    },
+    {
+      "code": "EXCHANGE_TXN",
+      "displayName": "Exchange transaction charges",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.03503,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 30,
+      "notes": "NSE equity options transaction charge, 0.03503% of the premium, from 1-10-2024 until 28-2-2026 (Upstox's page). BSE differs. Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+    },
+    {
+      "code": "IPFT",
+      "displayName": "Investor Protection Fund Trust",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0005,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 50,
+      "notes": "NSE Investor Protection Fund Trust on equity options, Rs 50 per crore of the premium, before 1-3-2026. INFERRED, not read: the amount NSE's 1-3-2026 rate added when IPFT was combined into the transaction charge (0.0355299% - 0.03503% = 0.0004999%). Owner ruling W-178 C2a. docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+    }
+  ]
+}

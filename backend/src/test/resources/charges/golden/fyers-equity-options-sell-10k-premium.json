@@ -1,0 +1,25 @@
+{
+  "name": "fyers-equity-options-sell-10k-premium",
+  "describes": "The option sale at Fyers: the same as Zerodha's, because Fyers' clearing charge (0.009% of premium) is not modelled (W-186).",
+  "context": {
+    "brokerName": "FYERS",
+    "assetType": "EQUITY",
+    "segment": "OPTIONS",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 100,
+    "quantity": 100,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 10.0,
+      "EXCHANGE_TXN": 3.5,
+      "SEBI_FEE": 0.01,
+      "IPFT": 0.05,
+      "GST": 4.24
+    },
+    "total": 37.8
+  }
+}

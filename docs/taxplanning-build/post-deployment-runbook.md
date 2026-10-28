@@ -265,9 +265,10 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
    curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
-   Expect 12 catalogue codes, 23 rate cards and 2 scheme profiles written. That is the 12 entries of
-   `data/charges/charge-catalogue.json`, its 23 card files (19 broker cards — W-177 added Upstox and Fyers intraday,
-   mutual fund and maintenance, D-392 — and 4 statutory cards, which name no
+   Expect 12 catalogue codes, 39 rate cards and 2 scheme profiles written. That is the 12 entries of
+   `data/charges/charge-catalogue.json`, its 39 card files (31 broker cards — W-177 added Upstox and Fyers intraday,
+   mutual fund and maintenance, D-392; W-178 equity futures and options for all three, D-393 — and 8 statutory
+   cards: the 4 below and W-178's `STATUTORY_EQ_FUTURES_*` / `STATUTORY_EQ_OPTIONS_*`, which name no
    broker: `STATUTORY_EQ_DELIVERY_2025_04`, `STATUTORY_EQ_INTRADAY_2025_04`, `STATUTORY_MF_2025_04`,
    `STATUTORY_ACCOUNT_2025_04`; W-163b, D-382) and `instruments/`'s 2. A second run writes nothing and says so.
 2. **Confirm it took** (read-only):

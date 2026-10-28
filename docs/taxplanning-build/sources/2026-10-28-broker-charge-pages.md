@@ -21,6 +21,25 @@ The STT, stamp duty, SEBI fee and GST these trades also carry come from the stat
 (`sources/2026-10-28-statutory-charge-rates.md`). The IPFT and the Fyers 2025-04 exchange charge are as on each
 broker's delivery card for the same window.
 
+## Equity futures and options (W-178)
+
+Fetched the same way on 2026-10-28, with zerodha.com/charges added. READ unless marked.
+
+| # | Card rule | On the card | Page | Status | Words on the page |
+|---|---|---|---|---|---|
+| 8 | Zerodha futures `BROKERAGE` | MIN(0.03 %, ₹20) | zerodha.com/charges | READ | *"F&O - Futures … 0.03% or Rs. 20/executed order whichever is lower"* |
+| 9 | Zerodha options `BROKERAGE` | ₹20 flat | same | READ | *"F&O - Options … Flat Rs. 20 per executed order"* |
+| 10 | Upstox futures / options `BROKERAGE` | MIN(0.05 %, ₹20) / ₹20 flat | upstox.com/brokerage-charges/ | READ | *"Equity Futures \| ₹20 per executed order or 0.05% (whichever is lower) \| Equity Options \| Flat ₹20 per executed order."* |
+| 11 | Fyers futures / options `BROKERAGE` | MIN(0.03 %, ₹20) / ₹20 flat | fyers.in/charges-list | READ | *"Options \| Flat ₹20 per executed order. … Futures \| ₹20 or 0.03% per executed order (whichever is lower)."* |
+| 12 | `EXCHANGE_TXN`, 2025-04 cards | futures 0.00173 %; options 0.03503 % of premium | upstox.com/brokerage-charges/ | READ | *"Transaction charges (From 1st October 2024 to 28 February 2026) … NSE: Exchange turnover charge: 0.00173% … NSE: 0.03503% (on premium)"* |
+| 13 | `EXCHANGE_TXN`, 2026-03 cards | futures 0.0018299 %; options 0.0355299 % of premium | fyers.in/charges-list | READ | *"Exchange Transaction Charges \| NSE: 0.0030699% \| NSE: 0.0030699% \| NSE: 0.0018299% \| NSE: 0.0355299% (On premium)"*. Zerodha: *"NSE: 0.00183% … NSE: 0.03553% (on premium)"*. Upstox: *"Transaction charges (From 1st March 2026) … NSE: 0.00183% … NSE: 0.03553% (on premium)"* |
+| 14 | **IPFT folded into the transaction charge from 1-3-2026** | the 2026-03 F&O cards have no IPFT line | upstox.com/brokerage-charges/ | READ | *"IPFT charges \| From now on, IPFT charges will be combined with Transaction Charges."* Each 1-3-2026 rate is the old rate plus ₹9.99 per crore (cash, futures) or ₹49.99 per crore (options): 0.0030699 − 0.00297 = 0.0018299 − 0.00173 = 0.0000999; 0.0355299 − 0.03503 = 0.0004999. Fyers' page still lists *"NSE IPFT \| ₹0.01/Crore"* beside the combined rates; that is the pre-2023 figure, as in the cash cards' notes |
+| 15 | `IPFT`, 2025-04 F&O cards | futures 0.0001 % (₹10 per crore); options 0.0005 % of premium (₹50 per crore) | — | **INFERRED** (owner ruling W-178 C2a) | No page or circular reached states the F&O IPFT before 1-3-2026. The figures are the increments in row 14 |
+| 16 | Fyers clearing | **not modelled** (W-186) | fyers.in/charges-list | READ | *"Clearing Charges \| 0 \| 0 \| 0.0005% \| 0.009%"* (delivery, intraday, futures, options). The catalogue has no code for it; adding one also needs an `RS-CG-CHARGE` row (W-178 amendment) |
+
+**Found, for W-185:** the shipped 2026-03 cash cards charge the combined 0.0030699 % **and** a separate IPFT
+0.0001 % line, which counts IPFT twice from 1-3-2026 (row 14).
+
 ## Limits
 
 - **No date for the brokerage rates:** neither page dates its intraday, mutual-fund or AMC figures. The cards start

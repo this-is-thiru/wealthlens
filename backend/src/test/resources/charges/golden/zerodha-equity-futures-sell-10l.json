@@ -1,0 +1,25 @@
+{
+  "name": "zerodha-equity-futures-sell-10l",
+  "describes": "A Rs 10,00,000 futures sell at Zerodha: brokerage capped at Rs 20; STT 0.02% of the sale; NSE 0.00173% and the separate IPFT line (inferred, W-178 C2a) of the 2025-04 cards.",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "EQUITY",
+    "segment": "FUTURES",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 1000,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 200.0,
+      "EXCHANGE_TXN": 17.3,
+      "SEBI_FEE": 1.0,
+      "IPFT": 1.0,
+      "GST": 7.07
+    },
+    "total": 246.37
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "zerodha-equity-options-sell-10k-premium-on-the-stt-change",
+  "describes": "The option sale on 2026-03-30: STT 0.15% of the premium from assent; NSE's combined 1-3-2026 rate and no IPFT line.",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "EQUITY",
+    "segment": "OPTIONS",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 100,
+    "quantity": 100,
+    "transactionDate": "2026-03-30"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 15.0,
+      "EXCHANGE_TXN": 3.55,
+      "SEBI_FEE": 0.01,
+      "GST": 4.24
+    },
+    "total": 42.8
+  }
+}

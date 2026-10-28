@@ -1,0 +1,55 @@
+{
+  "scheduleCode": "UPSTOX_EQ_FUTURES_2026_03",
+  "brokerName": "UPSTOX",
+  "assetType": "EQUITY",
+  "segment": "FUTURES",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2026-03-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://upstox.com/brokerage-charges/",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "BROKERAGE",
+      "displayName": "Brokerage",
+      "category": "BROKERAGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.05,
+      "flatAmount": 20.0,
+      "aggregator": "MIN",
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "\"Equity Futures | \u20b920 per executed order or 0.05% (whichever is lower)\". Read 2026-10-28 at https://upstox.com/brokerage-charges/ (W-178; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md)."
+    },
+    {
+      "code": "EXCHANGE_TXN",
+      "displayName": "Exchange transaction charges",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0018299,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 30,
+      "notes": "NSE equity futures transaction charge from 1-3-2026, 0.0018299% (Fyers' page; Zerodha's and Upstox's print it rounded, 0.00183%). It includes the IPFT, which NSE combined with transaction charges from that date (Upstox: \"From now on, IPFT charges will be combined with Transaction Charges\"), so this card has no IPFT line. Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+    }
+  ]
+}
