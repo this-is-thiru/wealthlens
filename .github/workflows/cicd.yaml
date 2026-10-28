@@ -63,7 +63,9 @@ jobs:
           for case in suite.iter("testcase"):
               problem = case.find("failure") if case.find("failure") is not None else case.find("error")
               if problem is not None:
-                  message = " ".join((problem.get("type", "") + ": " + problem.get("message", "")).split())[:900]
+                  # The "Caused by" lines carry the root cause; an initializer error's own message is empty.
+                  causes = [line.strip() for line in (problem.text or "").splitlines() if line.strip().startswith("Caused by:")]
+                  message = " ".join((problem.get("type", "") + ": " + problem.get("message", "") + " " + " | ".join(causes)).split())[:1800]
                   print(f"::error title={suite.get('name')}::{case.get('name')}: {message}")
                   break
           PY
