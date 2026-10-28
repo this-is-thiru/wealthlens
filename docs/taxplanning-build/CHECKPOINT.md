@@ -9,7 +9,7 @@ Stage           : — (session 38 PAUSED at the owner's session-limit notice; al
 Plan            : — (write plans/W-185.md on "start W-185")
 Approved        : —
 Steps done      : —
-Next step       : ASK the owner where W-187 goes (D-394). Then, for whichever item is first: check STATE line 60 board order (R4) BEFORE starting; only official Gazette copies count as READ unless the owner names a source trustworthy; update the board + WL-A-2 (if the runbook changes) in every item commit
+Next step       : ASK the owner: W-187 placement, and G1 – G7 of reviews/2026-10-28-bookkeeping-audit.md (each needs the owner's word). Then, for the first item: check STATE line 60 board order (R4); only official Gazette copies count as READ unless the owner names a source trustworthy; every item commit updates the board + WL-A-2 if the runbook changed
 Last verify     : W-178 — charge tests 168/0; unit 3811/0; integration 312/0
 Waiting on      : the owner — W-187 placement; then "start <item>"; open: CLAUDE.md "backfill" 503 wording; catalogue SEBI_FEE reference; api-collection term requests; per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
