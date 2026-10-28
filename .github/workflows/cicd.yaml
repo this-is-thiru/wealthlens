@@ -21,6 +21,18 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # TEMPORARY diagnostic (Ubuntu 26): start mongo:8.0 as Testcontainers does and publish its
+      # state and log tail as annotations. Remove once the integration tier passes here.
+      - name: Diagnose mongo:8.0 on this runner
+        continue-on-error: true
+        run: |
+          echo "::notice title=runner::$(uname -r) | $(docker version --format 'docker {{.Server.Version}} api {{.Server.APIVersion}}') | cgroup $(stat -fc %T /sys/fs/cgroup)"
+          docker run -d --name diag-mongo mongo:8.0 --replSet docker-rs
+          sleep 20
+          echo "::notice title=state::$(docker inspect -f 'status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} error={{.State.Error}}' diag-mongo)"
+          docker exec diag-mongo mongosh --quiet --eval 'try { rs.initiate(); } catch (e) { print(e.message) }; sleep(5000); print(rs.status().ok)' 2>&1 | tail -5 | tr '\n' ' ' | sed 's/^/::notice title=rs::/'; echo
+          docker logs diag-mongo 2>&1 | tail -9 | while IFS= read -r line; do echo "::warning title=mongo log::$(echo "$line" | cut -c1-900)"; done
+
       # spotless:check runs inside this single invocation rather than as its own step.
       # A separate ./mvnw call costs a full JVM boot plus reactor and plugin resolution
       # on a cold runner — tens of seconds for a check that takes ~2s of actual work.
