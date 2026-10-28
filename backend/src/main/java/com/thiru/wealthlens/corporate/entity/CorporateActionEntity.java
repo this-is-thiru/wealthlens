@@ -47,8 +47,6 @@ public class CorporateActionEntity implements AuditableEntity {
     private String actionPrice;
     @Field("ratio")
     private String ratio;
-    @Field("date")
-    private LocalDate date;
     @Field("demerger_detail")
     private DemergerDetail demergerDetail;
 

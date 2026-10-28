@@ -51,9 +51,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ProfitAndLossService {
 
-    private static final int MARCH = 3;
-    private static final int DAY_31 = 31;
-
     /** The day a month's first fortnight ends, matching the report this sits beside. */
     private static final int FORTNIGHT_BOUNDARY = 15;
 

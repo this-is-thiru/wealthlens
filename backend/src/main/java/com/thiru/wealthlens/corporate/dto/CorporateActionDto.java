@@ -36,9 +36,6 @@ public class CorporateActionDto implements AuditableResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
     private LocalDate allotmentDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-    private LocalDate date;
-
     private AuditMetadataDto auditMetadata;
 
     @JsonIgnore

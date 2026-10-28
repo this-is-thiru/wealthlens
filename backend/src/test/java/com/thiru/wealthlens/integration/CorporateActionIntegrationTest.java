@@ -24,8 +24,10 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -295,6 +297,62 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         assertEquals(1, actions.size());
         assertEquals("RELIANCE", actions.get(0).getStockCode());
         assertEquals(CorporateActionType.BONUS, actions.get(0).getType());
+    }
+
+    // ========== D-389: "date" is no field of a corporate action ==========
+
+    @Test
+    void addCorporateAction_whenTheRequestStillCarriesDate_isAcceptedAndStoresNoDate() {
+        // GIVEN — the body an older client sends, "date" included
+        String token = generateToken("test@example.com", "SUPER_USER");
+        String body = """
+                {"stockCode": "RELIANCE", "stockName": "Reliance Industries", "type": "BONUS", "ratio": "1:1",
+                 "recordDate": "2024-01-15", "exDate": "2024-01-20", "date": "2024-01-20"}
+                """;
+
+        // WHEN / THEN
+        given()
+                .header("Authorization", "Bearer " + token)
+                .contentType("application/json")
+                .body(body)
+                .when()
+                .post("/corporate-action/add")
+                .then()
+                .statusCode(HttpStatus.OK.value());
+
+        org.bson.Document stored = mongoTemplate.getCollection("corporate_action").find().first();
+        assertNotNull(stored);
+        assertEquals("RELIANCE", stored.getString("stock_code"));
+        assertFalse(stored.containsKey("date"));
+    }
+
+    @Test
+    void getCorporateActions_whenRead_answersNoDateField() {
+        // GIVEN
+        String token = generateToken("test@example.com", "SUPER_USER");
+        CorporateActionDto dto = new CorporateActionDto();
+        dto.setStockCode("RELIANCE");
+        dto.setStockName("Reliance Industries");
+        dto.setType(CorporateActionType.BONUS);
+        dto.setRecordDate(LocalDate.of(2024, 1, 15));
+        dto.setExDate(LocalDate.of(2024, 1, 20));
+        dto.setRatio("1:1");
+        corporateActionService.addCorporateAction(dto);
+        String id = corporateActionRepository.findAll().get(0).getId();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        // WHEN
+        ResponseEntity<List<Map<String, Object>>> response = createNoErrorRestTemplate().exchange(
+                URI.create(baseUrl() + "/corporate-action/list?ids=" + id), HttpMethod.GET, new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {});
+
+        // THEN
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        Map<String, Object> action = response.getBody().get(0);
+        assertEquals("RELIANCE", action.get("stockCode"));
+        assertFalse(action.containsKey("date"));
     }
 
     // ========== HAPPY: addCorporateAction DEMERGER success ==========
