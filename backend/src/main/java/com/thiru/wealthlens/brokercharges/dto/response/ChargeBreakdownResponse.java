@@ -30,6 +30,9 @@ public class ChargeBreakdownResponse {
 
     private String scheduleCode;
 
+    /** The statutory card that priced the law's lines, where one did (D-380). */
+    private String statutoryScheduleCode;
+
     private String instrumentId;
 
     private ChargeResolution resolution;
@@ -44,6 +47,7 @@ public class ChargeBreakdownResponse {
     public static ChargeBreakdownResponse from(ChargeComputation computation) {
         ChargeBreakdownResponse response = new ChargeBreakdownResponse();
         response.scheduleCode = computation.scheduleCode();
+        response.statutoryScheduleCode = computation.statutoryScheduleCode();
         response.instrumentId = computation.instrumentId();
         response.resolution = computation.resolution();
         response.lines = computation.lines();
@@ -55,6 +59,7 @@ public class ChargeBreakdownResponse {
     public static ChargeBreakdownResponse from(UserChargeEntity charge) {
         ChargeBreakdownResponse response = new ChargeBreakdownResponse();
         response.scheduleCode = charge.getScheduleCode();
+        response.statutoryScheduleCode = charge.getStatutoryScheduleCode();
         response.instrumentId = charge.getInstrumentId();
         response.resolution = charge.getResolution();
         response.lines = charge.getLines();

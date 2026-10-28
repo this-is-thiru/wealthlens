@@ -4,6 +4,7 @@ import static com.thiru.wealthlens.testsupport.MoneyAssert.assertMoney;
 import static com.thiru.wealthlens.testsupport.MoneyAssert.assertNoCharge;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -926,6 +927,85 @@ class ChargeEngineTest {
         assertThat(computation.lines().getFirst().getSource()).isEqualTo(ChargeRuleSource.SCHEDULE);
     }
 
+    // ---------------------------------------------------------------- the statutory card (D-380, D-381)
+
+    @Test
+    void compute_whenAStatutoryCardResolves_pricesItsRulesBesideTheBrokersCard() {
+        // Given — brokerage ₹20 on the broker's card; STT 0.1 % of ₹1,00,000 = ₹100 on the statutory card
+        givenSchedule(flatRule("BROKERAGE", 20.0, 10));
+        givenStatutory(turnoverRule("STT", 0.1, 20));
+
+        // When
+        ChargeComputation computation = engine().compute(buy());
+
+        // Then — ₹20 + ₹100, each line saying which card levied it
+        assertMoney(100.0, computation.amountOf("STT"));
+        assertMoney(120.0, computation.total());
+        assertThat(computation.statutoryScheduleCode()).isEqualTo("STATUTORY_EQ_DELIVERY_2025_04");
+        assertThat(computation.statutoryScheduleId()).isEqualTo("stat-1");
+        assertThat(computation.lines()).extracting(ChargeLine::getCode, ChargeLine::getSource).containsExactly(
+                tuple("BROKERAGE", ChargeRuleSource.SCHEDULE), tuple("STT", ChargeRuleSource.STATUTORY));
+    }
+
+    @Test
+    void compute_whenStatutoryGstNamesTheBrokersLines_taxesThemAndNotTheStatutoryOnes() {
+        // Given — brokerage ₹20 and exchange charges ₹30 on the broker's card; STT ₹100 and GST 18 %
+        // of BROKERAGE, EXCHANGE_TXN and DP on the statutory card. No DP line on a buy, so it adds 0.
+        givenSchedule(flatRule("BROKERAGE", 20.0, 10), flatRule("EXCHANGE_TXN", 30.0, 30));
+        givenStatutory(turnoverRule("STT", 0.1, 20),
+                derivedRule("GST", 18.0, List.of("BROKERAGE", "EXCHANGE_TXN", "DP"), 100));
+
+        // When
+        ChargeComputation computation = engine().compute(buy());
+
+        // Then — 18 % of (₹20 + ₹30) = ₹9.00; STT never in the base. Total ₹20 + ₹30 + ₹100 + ₹9 = ₹159
+        assertMoney(9.0, computation.amountOf("GST"));
+        assertMoney(159.0, computation.total());
+    }
+
+    @Test
+    void compute_whenBothCardsDeclareTheSameCode_isRejectedNamingTheCodeAndBothCards() {
+        // Given — STT on the broker's card and on the statutory card: applying both charges it twice
+        givenSchedule(flatRule("STT", 100.0, 20));
+        givenStatutory(turnoverRule("STT", 0.1, 20));
+
+        // When / Then
+        assertThatThrownBy(() -> engine().compute(buy()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("STT")
+                .hasMessageContaining("ZERODHA_EQ_DELIVERY_2025_04")
+                .hasMessageContaining("STATUTORY_EQ_DELIVERY_2025_04");
+    }
+
+    @Test
+    void compute_whenAStatutoryRuleTaxesABrokerLinePricedAfterIt_isRejected() {
+        // Given — GST at order 10 on the statutory card, brokerage at order 20 on the broker's card.
+        // Neither card is wrong alone, so the validator cannot catch it; silently it would tax ₹0.
+        givenSchedule(flatRule("BROKERAGE", 20.0, 20));
+        givenStatutory(derivedRule("GST", 18.0, List.of("BROKERAGE"), 10));
+
+        // When / Then
+        assertThatThrownBy(() -> engine().compute(buy()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("GST")
+                .hasMessageContaining("BROKERAGE")
+                .hasMessageContaining("after it");
+    }
+
+    @Test
+    void compute_whenNoStatutoryCardResolves_pricesTheBrokersCardAlone() {
+        // Given — none ships until W-163b (D-381 D3a)
+        givenSchedule(flatRule("BROKERAGE", 20.0, 10));
+
+        // When
+        ChargeComputation computation = engine().compute(buy());
+
+        // Then
+        assertMoney(20.0, computation.total());
+        assertThat(computation.resolution()).isEqualTo(ChargeResolution.RESOLVED);
+        assertThat(computation.statutoryScheduleCode()).isNull();
+    }
+
     // ---------------------------------------------------------------- fixtures
 
     private ChargeEngine engine() {
@@ -943,6 +1023,14 @@ class ChargeEngineTest {
         schedule.setRequiresInstrumentProfile(requiresInstrumentProfile);
         schedule.setRules(new ArrayList<>(List.of(rules)));
         when(scheduleResolver.resolve(any())).thenReturn(Optional.of(schedule));
+    }
+
+    private void givenStatutory(ChargeRule... rules) {
+        ChargeScheduleEntity statutory = new ChargeScheduleEntity();
+        statutory.setId("stat-1");
+        statutory.setScheduleCode("STATUTORY_EQ_DELIVERY_2025_04");
+        statutory.setRules(new ArrayList<>(List.of(rules)));
+        when(scheduleResolver.resolveStatutory(any())).thenReturn(Optional.of(statutory));
     }
 
     private void givenInstrumentWithCategory(String id, FundCategory fundCategory) {

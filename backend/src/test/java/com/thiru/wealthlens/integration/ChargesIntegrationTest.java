@@ -157,6 +157,34 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void aStatutoryCard_publishedWithNoBroker_pricesBesideTheBrokersCardAndIsRecorded() {
+        // Given — a card naming no broker is the statutory card (D-380, D-381). SEBI_FEE ₹1.00 flat,
+        // a code the broker's card does not carry, published through the endpoint like any card
+        ChargeScheduleEntity statutory = new ChargeScheduleEntity();
+        statutory.setScheduleCode("IT_STATUTORY_EQ_2025");
+        statutory.setAssetType(AssetType.EQUITY);
+        statutory.setSegment(TradeSegment.DELIVERY);
+        statutory.setStartDate(LocalDate.of(2025, 1, 1));
+        statutory.setStatus(EntityStatus.ACTIVE);
+        statutory.setRules(new java.util.ArrayList<>(List.of(flatRule("SEBI_FEE", ChargeCategory.REGULATORY, 1.00, 40))));
+        assertThat(post("/charge-schedules", adminToken(), statutory).getStatusCode().value())
+                .isEqualTo(HttpStatus.OK.value());
+
+        // When
+        ChargeComputation computation = userChargeService.computeAndRecord(sell("txn-1", "INFY", HOLDER, TRADE_DATE));
+
+        // Then — the broker's card still prices (₹115.93, as above) and the statutory ₹1.00 joins it.
+        // SEBI_FEE is not in the broker card's GST base (BROKERAGE, DP), so GST stays ₹2.43.
+        assertThat(computation.scheduleCode()).isEqualTo("IT_EQ_2025");
+        assertMoney(1.00, computation.amountOf("SEBI_FEE"));
+        assertMoney(2.43, computation.amountOf("GST"));
+        assertMoney(116.93, computation.total());
+        UserChargeEntity stored = userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-1").orElseThrow();
+        assertThat(stored.getStatutoryScheduleCode()).isEqualTo("IT_STATUTORY_EQ_2025");
+        assertThat(stored.getStatutoryScheduleId()).isNotBlank();
+    }
+
+    @Test
     void depositoryCharge_acrossTwoSellsOfTheSameScripOnTheSameDay_isLeviedOnce() {
         // Given / When — the real dedupe path: two separate transactions, one after the other
         userChargeService.computeAndRecord(sell("txn-1", "INFY", HOLDER, TRADE_DATE));

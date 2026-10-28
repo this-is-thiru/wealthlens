@@ -354,7 +354,7 @@ class ProfitAndLossServiceTest {
         );
 
         when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.of(
-                new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+                new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
                         ChargeResolution.RESOLVED, List.of(), 999.99)));
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2024-2025")))
                 .thenReturn(Optional.empty());
@@ -411,7 +411,7 @@ class ProfitAndLossServiceTest {
 
     private static ChargeComputation computedWith(double brokerage, double stt, double gst) {
         List<ChargeLine> lines = List.of(line("BROKERAGE", brokerage), line("STT", stt), line("GST", gst));
-        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
                 ChargeResolution.RESOLVED, lines, brokerage + stt + gst);
     }
 

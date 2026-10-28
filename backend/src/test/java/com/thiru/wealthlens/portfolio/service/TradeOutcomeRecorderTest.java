@@ -105,7 +105,7 @@ class TradeOutcomeRecorderTest {
                     return line;
                 }).toList();
         double total = byCode.values().stream().mapToDouble(Double::doubleValue).sum();
-        return new ChargeComputation("sched-1", "ZER-EQ", null, ChargeResolution.RESOLVED, lines, total);
+        return new ChargeComputation("sched-1", "ZER-EQ", null, null, null, ChargeResolution.RESOLVED, lines, total);
     }
 
     private List<TradeOutcomeContext> captureSaved(int expected) {

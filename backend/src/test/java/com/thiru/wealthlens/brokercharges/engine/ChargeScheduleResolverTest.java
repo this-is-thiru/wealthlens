@@ -218,6 +218,77 @@ class ChargeScheduleResolverTest {
         verify(chargeScheduleRepository, times(2)).findCandidates(any(), any());
     }
 
+    // ---------------------------------------------------------------- the statutory card (D-380, D-381)
+
+    @Test
+    void resolveStatutory_selectsTheMostSpecificAgreeingCardWithNoBroker() {
+        // Given
+        givenStatutoryCandidates(
+                statutoryCard("ANY", null, null, TRADE_DATE),
+                statutoryCard("EQ_DELIVERY", AssetType.EQUITY, TradeSegment.DELIVERY, TRADE_DATE),
+                statutoryCard("EQ_INTRADAY", AssetType.EQUITY, TradeSegment.INTRADAY, TRADE_DATE));
+
+        // When / Then
+        assertThat(codeOf(resolver.resolveStatutory(trade()))).isEqualTo("EQ_DELIVERY");
+    }
+
+    @Test
+    void resolveStatutory_whenTwoCardsAreIndistinguishable_isRejectedNamingBoth() {
+        // Given
+        givenStatutoryCandidates(
+                statutoryCard("FIRST", AssetType.EQUITY, null, TRADE_DATE),
+                statutoryCard("SECOND", AssetType.EQUITY, null, TRADE_DATE));
+
+        // When / Then
+        assertThatThrownBy(() -> resolver.resolveStatutory(trade()))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("statutory")
+                .hasMessageContaining("FIRST")
+                .hasMessageContaining("SECOND");
+    }
+
+    @Test
+    void resolveStatutory_whenNoneIsOnFile_isEmptyWithoutAWarning() {
+        // Given — none ships until W-163b, so absence is not news
+        givenStatutoryCandidates();
+
+        // When / Then
+        try (LogCapture logs = LogCapture.on(ChargeScheduleResolver.class)) {
+            assertThat(resolver.resolveStatutory(trade())).isEmpty();
+            assertThat(logs.warnings()).isEmpty();
+        }
+    }
+
+    @Test
+    void resolveStatutory_isCachedApartFromTheBrokersCardAndEvictedWithIt() {
+        // Given — a broker's card and a statutory card for the same trade
+        givenCandidates(card("BROKER", AssetType.EQUITY, TradeSegment.DELIVERY, null, null, TRADE_DATE));
+        givenStatutoryCandidates(statutoryCard("LAW", AssetType.EQUITY, TradeSegment.DELIVERY, TRADE_DATE));
+
+        // When
+        String broker = codeOf(resolver.resolve(trade()));
+        String statutory = codeOf(resolver.resolveStatutory(trade()));
+        resolver.resolveStatutory(trade());
+        resolver.evictAll();
+        resolver.resolveStatutory(trade());
+
+        // Then — neither answers for the other; cached once, asked again after eviction
+        assertThat(broker).isEqualTo("BROKER");
+        assertThat(statutory).isEqualTo("LAW");
+        verify(chargeScheduleRepository, times(2)).findStatutoryCandidates(TRADE_DATE);
+    }
+
+    private void givenStatutoryCandidates(ChargeScheduleEntity... candidates) {
+        when(chargeScheduleRepository.findStatutoryCandidates(TRADE_DATE)).thenReturn(List.of(candidates));
+    }
+
+    private static ChargeScheduleEntity statutoryCard(
+            String code, AssetType assetType, TradeSegment segment, LocalDate startDate) {
+        ChargeScheduleEntity schedule = card(code, assetType, segment, null, null, startDate);
+        schedule.setBrokerName(null);
+        return schedule;
+    }
+
     private void givenCandidates(ChargeScheduleEntity... candidates) {
         when(chargeScheduleRepository.findCandidates(BrokerName.ZERODHA, TRADE_DATE))
                 .thenReturn(List.of(candidates));

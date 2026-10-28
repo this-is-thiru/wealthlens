@@ -116,7 +116,7 @@ class UserChargeServiceTest {
     @Test
     void computeAndRecord_storesTheProvenanceOfTheComputation() {
         // Given — a corrected rate card has to be able to find every row it produced
-        givenComputation(new ChargeComputation("sched-1", "ZERODHA_EQ_2025_04", "prof-1",
+        givenComputation(new ChargeComputation("sched-1", "ZERODHA_EQ_2025_04", "stat-1", "STATUTORY_EQ_2025_04", "prof-1",
                 ChargeResolution.RESOLVED, List.of(line("BROKERAGE", 20.0)), 20.0));
         givenNoExistingRow();
 
@@ -127,6 +127,8 @@ class UserChargeServiceTest {
         UserChargeEntity saved = captureSaved();
         assertThat(saved.getScheduleId()).isEqualTo("sched-1");
         assertThat(saved.getScheduleCode()).isEqualTo("ZERODHA_EQ_2025_04");
+        assertThat(saved.getStatutoryScheduleId()).isEqualTo("stat-1");
+        assertThat(saved.getStatutoryScheduleCode()).isEqualTo("STATUTORY_EQ_2025_04");
         assertThat(saved.getInstrumentId()).isEqualTo("prof-1");
         assertThat(saved.getResolution()).isEqualTo(ChargeResolution.RESOLVED);
     }
@@ -260,7 +262,7 @@ class UserChargeServiceTest {
 
     private static ChargeComputation computation(ChargeResolution resolution, ChargeLine... lines) {
         double total = List.of(lines).stream().mapToDouble(ChargeLine::getAmount).sum();
-        return new ChargeComputation("sched-1", "ZERODHA_EQ_2025_04", null, resolution, List.of(lines), total);
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_2025_04", null, null, null, resolution, List.of(lines), total);
     }
 
     private static ChargeLine line(String code, double amount) {

@@ -363,7 +363,7 @@ class PortfolioServiceTest {
     }
 
     private static ChargeComputation computed() {
-        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
                 ChargeResolution.RESOLVED, List.of(), COMPUTED_CHARGES);
     }
 

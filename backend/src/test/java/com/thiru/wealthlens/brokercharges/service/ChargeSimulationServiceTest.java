@@ -464,7 +464,7 @@ class ChargeSimulationServiceTest {
 
     private static ChargeComputation computation(ChargeLine... lines) {
         double total = Arrays.stream(lines).mapToDouble(ChargeLine::getAmount).sum();
-        return new ChargeComputation("sched-1", "zerodha-equity-2025", null,
+        return new ChargeComputation("sched-1", "zerodha-equity-2025", null, null, null,
                 ChargeResolution.RESOLVED, List.of(lines), total);
     }
 
