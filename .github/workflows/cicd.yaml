@@ -7,9 +7,20 @@ on:
   pull_request:
     branches: [master]
 
+# Read the repository and nothing else. Pushing the image uses Docker Hub's own credentials.
+permissions:
+  contents: read
+
+# A newer push to the same branch or PR makes the older run's result irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: [ubuntu-latest]
+    # The whole run takes under 10 minutes; a hung container wait must not hold a runner for 6 hours.
+    timeout-minutes: 30
     steps:
       - name: Checkout source
         uses: actions/checkout@v5
@@ -95,49 +106,45 @@ jobs:
           name: jacoco-coverage-xml
           path: backend/target/site/jacoco/jacoco.xml
 
-      # 2. NEW: Step to determine the Docker tag based on the event type
-      - name: Set Docker Image Tag
+      # The image is tagged with the commit (for rollback) and with a moving name: `latest` on master,
+      # the sanitised branch name on a pull request. The branch name is read from the environment,
+      # never interpolated into the script: a PR's author chooses it.
+      - name: Set Docker image tags
         id: set_tag
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          # Define the base image name
           REPO_IMAGE="tperamasani/wealthlens"
-
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # --- Logic for Pull Requests ---
-            # Get the source branch name (head_ref)
-            # 1. Sanitize: remove invalid characters (keep alphanumeric, -, ., _)
-            # 2. Lowercase: convert everything to lowercase
-            # 3. Replace slashes: replace '/' with '-' (e.g., feature/login -> feature-login)
-            BRANCH_REF=$(echo "${{ github.head_ref }}" | tr -dc '[:alnum:]-._/' | tr '[:upper:]' '[:lower:]')
-            TAG_NAME=${BRANCH_REF//\//-}
-
-            echo "::notice file=build_and_push.sh::Pull Request detected. Tagging image with branch name: $TAG_NAME"
+          SHA_TAG="sha-${GITHUB_SHA::12}"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            BRANCH_TAG=$(printf '%s' "$HEAD_REF" | tr -dc '[:alnum:]-._/' | tr '[:upper:]' '[:lower:]' | tr '/' '-')
+            MOVING_TAG="$BRANCH_TAG"
           else
-            # --- Logic for Push to Master (Merge) ---
-            TAG_NAME="latest"
-            echo "::notice file=build_and_push.sh::Push to master detected. Tagging image with: $TAG_NAME"
+            MOVING_TAG="latest"
           fi
+          echo "::notice::Image tags: ${REPO_IMAGE}:${MOVING_TAG}, ${REPO_IMAGE}:${SHA_TAG}"
+          echo "moving=${REPO_IMAGE}:${MOVING_TAG}" >> "$GITHUB_OUTPUT"
+          echo "sha=${REPO_IMAGE}:${SHA_TAG}" >> "$GITHUB_OUTPUT"
 
-          FULL_TAG="${REPO_IMAGE}:${TAG_NAME}"
-
-          # Set the determined tag and full tag as GitHub output variables for subsequent steps
-          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "full_tag=$FULL_TAG" >> $GITHUB_OUTPUT
-
-      - name: Login to docker hub
-        if: success()
-        run: docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
-
-      # 3. UPDATED: Use the dynamically generated full tag
+      # The image wraps the jar the steps above built and tested; the Dockerfile compiles nothing.
       - name: Build docker image
-        if: success()
-        run: docker build -t ${{ steps.set_tag.outputs.full_tag }} .
+        run: docker build -t "${{ steps.set_tag.outputs.moving }}" -t "${{ steps.set_tag.outputs.sha }}" .
 
-      # 4. UPDATED: Use the dynamically generated full tag
+      # Pushing needs Docker Hub secrets, which a pull request from a fork does not get: on master,
+      # and on pull requests from this repository, only.
+      - name: Login to docker hub
+        if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Publish image to docker hub
-        if: success()
-        run: docker push ${{ steps.set_tag.outputs.full_tag }}
-
+        if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+        run: |
+          docker push "${{ steps.set_tag.outputs.moving }}"
+          docker push "${{ steps.set_tag.outputs.sha }}"
 
 # deploy job is commented out and unchanged
 #  deploy:
