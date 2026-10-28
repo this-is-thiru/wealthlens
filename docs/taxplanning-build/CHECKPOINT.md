@@ -9,12 +9,12 @@ Stage           : DONE
 Plan            : —
 Approved        : "W-163c approved" (session 37, 2026-10-28)
 Steps done      : —
-Next step       : republish WL-A-2 if not yet read back; then W-164 READ → EXPLAIN only on the owner's word
+Next step       : W-164 READ → EXPLAIN, only on the owner's word (WL-A-2 republished after 09fea374, read back identical)
 Last verify     : unit -Punit 3778/0; integration 310/0 (2026-10-28, W-163c)
-Waiting on      : the owner — next item; catalogue SEBI_FEE reference (found, not changed); open: CLAUDE.md "backfill" 503 wording (no such endpoint); api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
+Waiting on      : the owner — CI: unit tests for UserChargeService read methods added (unit-only gate now met) and the workflow's test-failure check runs even after a failed build step; the root cause (integration tier not counting on CI) shows in the next run's "Check for test failures"; next item W-164; catalogue SEBI_FEE reference (found, not changed); open: CLAUDE.md "backfill" 503 wording (no such endpoint); api-collection term requests (submodule, owner's call); per-bucket term audit record, keep-old-labels option; nil-line proposal, PaidOtherThanInCash, REG basis-set finding; OQ-32, OQ-33, OQ-34
 Files touched   : (none)
 Last item commit: taxplanning W-163c: cite each statutory rate to the law — STT Sl. 5, stamp duty Art. 56A, the SEBI turnover fee and GST heading 9971 read, all agree; the four cards carry source and verified date; W-163 closed (D-384)
-Updated         : 2026-10-28, session 37 — W-163c done and committed (not pushed)
+Updated         : 2026-10-28, session 37 — W-163c done; pushed to origin/review/taxplanning (0150b3d0..09fea374)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

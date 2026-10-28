@@ -33,7 +33,11 @@ jobs:
       - name: Verify formatting, run tests, generate consolidated report
         run: ./mvnw clean spotless:check test verify -Dmaven.test.failure.ignore=true
 
+      # Runs even when the step above failed. A failing coverage gate stops that step, and the
+      # tests whose failure caused it would otherwise go unreported — the integration tier
+      # erroring as a whole looks exactly like "UserChargeService coverage 0.88".
       - name: Check for test failures
+        if: ${{ !cancelled() }}
         run: |
           # A missing report is not a pass. If the suite did not run, fail rather than
           # succeed on absent evidence.

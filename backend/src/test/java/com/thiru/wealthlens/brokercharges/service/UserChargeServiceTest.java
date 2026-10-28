@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
@@ -237,6 +238,60 @@ class UserChargeServiceTest {
     }
 
     @Test
+    void findOptionalForTransaction_whenTheTransactionWasPriced_returnsItsRow() {
+        // Given
+        UserChargeEntity row = new UserChargeEntity();
+        when(userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-1")).thenReturn(Optional.of(row));
+
+        // When / Then
+        assertThat(service.findOptionalForTransaction(EMAIL, "txn-1")).containsSame(row);
+    }
+
+    @Test
+    void findOptionalForTransaction_whenTheTransactionWasNeverPriced_isEmptyRatherThanRejected() {
+        // Given — a lot bought before the engine was switched on has no row, and never will (ADR-32)
+        when(userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-9")).thenReturn(Optional.empty());
+
+        // When / Then
+        assertThat(service.findOptionalForTransaction(EMAIL, "txn-9")).isEmpty();
+    }
+
+    @Test
+    void findForTransactions_keysEachRowByItsTransactionAndLeavesUnpricedIdsOut() {
+        // Given — three ids asked for, two priced
+        UserChargeEntity first = chargeFor("txn-1");
+        UserChargeEntity second = chargeFor("txn-2");
+        List<String> ids = List.of("txn-1", "txn-2", "txn-3");
+        when(userChargeRepository.findByEmailAndTransactionIdIn(EMAIL, ids)).thenReturn(List.of(first, second));
+
+        // When / Then — "never priced" stays distinguishable from "priced at nothing"
+        assertThat(service.findForTransactions(EMAIL, ids))
+                .containsOnlyKeys("txn-1", "txn-2")
+                .containsEntry("txn-1", first)
+                .containsEntry("txn-2", second);
+    }
+
+    @Test
+    void findForTransactions_whenTwoRowsShareATransaction_keepsTheFirst() {
+        // Given — the unique index makes this impossible on a sound database; the map must not throw
+        UserChargeEntity first = chargeFor("txn-1");
+        UserChargeEntity duplicate = chargeFor("txn-1");
+        List<String> ids = List.of("txn-1");
+        when(userChargeRepository.findByEmailAndTransactionIdIn(EMAIL, ids)).thenReturn(List.of(first, duplicate));
+
+        // When / Then
+        assertThat(service.findForTransactions(EMAIL, ids)).containsOnlyKeys("txn-1").containsEntry("txn-1", first);
+    }
+
+    @Test
+    void findForTransactions_whenNoIdsAreGiven_isEmptyWithoutQuerying() {
+        // When / Then
+        assertThat(service.findForTransactions(EMAIL, List.of())).isEmpty();
+        assertThat(service.findForTransactions(EMAIL, null)).isEmpty();
+        verifyNoInteractions(userChargeRepository);
+    }
+
+    @Test
     void deleteByEmail_removesEveryRowForTheUser() {
         service.deleteByEmail(EMAIL);
 
@@ -244,6 +299,12 @@ class UserChargeServiceTest {
     }
 
     // ---------------------------------------------------------------- fixtures
+
+    private static UserChargeEntity chargeFor(String transactionId) {
+        UserChargeEntity row = new UserChargeEntity();
+        row.setTransactionId(transactionId);
+        return row;
+    }
 
     private void givenComputation(ChargeComputation computation) {
         when(chargeEngine.compute(any())).thenReturn(computation);
