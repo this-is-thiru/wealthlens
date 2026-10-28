@@ -265,16 +265,23 @@ with `authoritative` on that ₹0 becomes the cost basis; nothing throws.
    curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
    ```
 
-   Expect 12 catalogue codes, 11 rate cards and 2 scheme profiles written (the 12 entries of
-   `data/charges/charge-catalogue.json`, its 11 card files and `instruments/`'s 2). A second run writes nothing and
-   says so.
+   Expect 12 catalogue codes, 15 rate cards and 2 scheme profiles written. That is the 12 entries of
+   `data/charges/charge-catalogue.json`, its 15 card files (11 broker cards and 4 statutory cards, which name no
+   broker: `STATUTORY_EQ_DELIVERY_2025_04`, `STATUTORY_EQ_INTRADAY_2025_04`, `STATUTORY_MF_2025_04`,
+   `STATUTORY_ACCOUNT_2025_04`; W-163b, D-382) and `instruments/`'s 2. A second run writes nothing and says so.
 2. **Confirm it took** (read-only):
 
    ```bash
    # Must be empty: the shipped files and the database agree
    curl -sS "$BASE/charge-schedules/drift" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
-   # Every card with a verifiedOn older than 90 days; rows mean rate verification is due (§5.2), not a failure
+   # Every card with a verifiedOn older than 90 days, or none; rows mean rate verification is due (§5.2), not a failure
    curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data'
+   ```
+
+   Until W-163c cites the law for each rate, `unverified` lists the 4 statutory cards: they carry no `sourceUrl` or
+   `verifiedOn` (D-382 C3a). Anything else listed is a broker card due for verification.
+
+   ```bash
    ```
 
 3. **One simulate** against a known figure, Zerodha equity delivery, ₹1,00,000 sell:

@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -122,7 +123,11 @@ class ChargeSeederServiceTest {
                         "UPSTOX_EQ_DELIVERY_2025_04",
                         "UPSTOX_EQ_DELIVERY_2026_03",
                         "FYERS_EQ_DELIVERY_2025_04",
-                        "FYERS_EQ_DELIVERY_2026_03");
+                        "FYERS_EQ_DELIVERY_2026_03",
+                        "STATUTORY_EQ_DELIVERY_2025_04",
+                        "STATUTORY_EQ_INTRADAY_2025_04",
+                        "STATUTORY_MF_2025_04",
+                        "STATUTORY_ACCOUNT_2025_04");
         assertThat(seededCatalogue()).hasSize(12);
     }
 
@@ -261,7 +266,7 @@ class ChargeSeederServiceTest {
         // Then
         assertThat(report.seededBy()).isEqualTo(AUDITOR);
         assertThat(report.catalogueCreated()).hasSize(12);
-        assertThat(report.schedulesCreated()).hasSize(11);
+        assertThat(report.schedulesCreated()).hasSize(15);
         assertThat(report.instrumentsCreated()).containsExactlyInAnyOrder("PARAGPARIKHFLEXICAP", "HDFCLIQUID");
         assertThat(report.schedulesSkipped()).isEmpty();
         assertThat(report.wroteNothing()).isFalse();
@@ -285,7 +290,7 @@ class ChargeSeederServiceTest {
 
         // Then
         assertThat(report.wroteNothing()).isTrue();
-        assertThat(report.schedulesSkipped()).hasSize(11);
+        assertThat(report.schedulesSkipped()).hasSize(15);
         assertThat(report.drift()).isEmpty();
     }
 
@@ -530,14 +535,53 @@ class ChargeSeederServiceTest {
         seeder.seed(AUDITOR);
         assertThat(seededSchedules()).isNotEmpty();
 
-        // When / Then
-        for (ChargeScheduleEntity schedule : seededSchedules()) {
+        // When / Then — the broker's cards. The statutory cards are not yet cited to the law (D-382
+        // C3a); statutoryCards_areUnverifiedUntilTheLawIsCited pins that, and W-163c replaces it.
+        for (ChargeScheduleEntity schedule : brokerCards(seededSchedules())) {
             assertThat(schedule.getSourceUrl())
                     .as("sourceUrl of %s", schedule.getScheduleCode())
                     .isNotBlank().startsWith("https://");
             assertThat(schedule.getVerifiedOn())
                     .as("%s must say when its rates were last checked", schedule.getScheduleCode())
                     .isNotNull();
+        }
+    }
+
+    @Test
+    void statutoryCards_areUnverifiedUntilTheLawIsCited() {
+        // Given — a broker's page is not the law's source (D-382 C3a), so the four statutory cards
+        // carry neither until W-163c cites each rate, and findUnverified() lists them meanwhile
+        seeder.seed(AUDITOR);
+
+        // When
+        List<ChargeScheduleEntity> statutory = seededSchedules().stream()
+                .filter(schedule -> schedule.getBrokerName() == null)
+                .toList();
+
+        // Then
+        assertThat(statutory).hasSize(4).allSatisfy(schedule -> {
+            assertThat(schedule.getSourceUrl()).as("sourceUrl of %s", schedule.getScheduleCode()).isNull();
+            assertThat(schedule.getVerifiedOn()).as("verifiedOn of %s", schedule.getScheduleCode()).isNull();
+        });
+    }
+
+    @Test
+    void noBrokerCardCarriesACodeAStatutoryCardDeclares() {
+        // Given — the engine refuses a code on both cards (D-381 D2a); this keeps the shipped data
+        // from reaching that refusal
+        seeder.seed(AUDITOR);
+        Set<String> statutoryCodes = seededSchedules().stream()
+                .filter(schedule -> schedule.getBrokerName() == null)
+                .flatMap(schedule -> schedule.getRules().stream())
+                .map(ChargeRule::getCode)
+                .collect(Collectors.toSet());
+
+        // When / Then
+        assertThat(statutoryCodes).containsExactlyInAnyOrder("STT", "STAMP_DUTY", "SEBI_FEE", "GST");
+        for (ChargeScheduleEntity schedule : brokerCards(seededSchedules())) {
+            assertThat(schedule.getRules()).extracting(ChargeRule::getCode)
+                    .as("codes on %s", schedule.getScheduleCode())
+                    .doesNotContainAnyElementsOf(statutoryCodes);
         }
     }
 
@@ -758,6 +802,10 @@ class ChargeSeederServiceTest {
         ArgumentCaptor<ChargeScheduleEntity> captor = ArgumentCaptor.forClass(ChargeScheduleEntity.class);
         verify(chargeScheduleRepository, org.mockito.Mockito.atLeast(0)).save(captor.capture());
         return new ArrayList<>(captor.getAllValues());
+    }
+
+    private static List<ChargeScheduleEntity> brokerCards(List<ChargeScheduleEntity> schedules) {
+        return schedules.stream().filter(schedule -> schedule.getBrokerName() != null).toList();
     }
 
     private static boolean sameScope(ChargeScheduleEntity left, ChargeScheduleEntity right) {

@@ -5,7 +5,7 @@
                "event": "SELL", "price": 100, "quantity": 1000, "transactionDate": "2025-06-02" },
   "instrument": { "equityOriented": true },
   "expected": {
-    "lines": { "STT": 1.00 },
+    "lines": { "BROKERAGE": 0.00, "STT": 1.00 },
     "total": 1.00
   }
 }

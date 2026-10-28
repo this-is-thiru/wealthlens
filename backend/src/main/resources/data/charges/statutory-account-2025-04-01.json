@@ -1,0 +1,36 @@
+{
+  "scheduleCode": "STATUTORY_ACCOUNT_2025_04",
+  "brokerName": null,
+  "assetType": null,
+  "segment": null,
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "currency": "INR",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": null,
+  "verifiedOn": null,
+  "rules": [
+    {
+      "code": "GST",
+      "displayName": "Goods and Services Tax",
+      "category": "TAX",
+      "basis": "DERIVED",
+      "side": "BOTH",
+      "events": [
+        "AMC_CYCLE"
+      ],
+      "rate": 18.0,
+      "baseCodes": [
+        "AMC"
+      ],
+      "rounding": "HALF_UP_2",
+      "taxable": false,
+      "active": true,
+      "order": 100,
+      "notes": "18%. Maintenance is a service, so it is taxable and the base names it explicitly."
+    }
+  ]
+}

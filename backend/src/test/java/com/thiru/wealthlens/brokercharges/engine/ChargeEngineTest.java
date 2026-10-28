@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -538,6 +539,7 @@ class ChargeEngineTest {
         schedule.setScheduleCode("ZERODHA_EQ_DELIVERY_2025_04");
         schedule.setRules(null);
         when(scheduleResolver.resolve(any())).thenReturn(Optional.of(schedule));
+        givenStatutory();
 
         // When
         ChargeComputation computation = engine().compute(buy());
@@ -993,17 +995,51 @@ class ChargeEngineTest {
     }
 
     @Test
-    void compute_whenNoStatutoryCardResolves_pricesTheBrokersCardAlone() {
-        // Given — none ships until W-163b (D-381 D3a)
+    void compute_whenNoStatutoryCardResolves_pricesTheBrokersCardAndRecordsTheGap() {
+        // Given — the broker's card resolves, no statutory card covers the scope (D-382)
         givenSchedule(flatRule("BROKERAGE", 20.0, 10));
+        givenNoStatutoryCard();
 
         // When
         ChargeComputation computation = engine().compute(buy());
 
-        // Then
+        // Then — the ₹20 brokerage is still priced; the figure is short by whatever the law levies
         assertMoney(20.0, computation.total());
-        assertThat(computation.resolution()).isEqualTo(ChargeResolution.RESOLVED);
+        assertThat(computation.resolution()).isEqualTo(ChargeResolution.NO_STATUTORY_SCHEDULE);
         assertThat(computation.statutoryScheduleCode()).isNull();
+    }
+
+    @Test
+    void compute_whenNoStatutoryCardResolvesAndNothingIsCharged_stillReportsTheGap() {
+        // Given — a buy, and the broker's only rule is sell-only
+        ChargeRule sellOnly = flatRule("DP", 13.5, 70);
+        sellOnly.setEvents(Set.of(ChargeEvent.SELL));
+        givenSchedule(sellOnly);
+        givenNoStatutoryCard();
+
+        // When / Then — not NO_MATCHING_RULES: the law's card was never looked at
+        assertThat(engine().compute(buy()).resolution()).isEqualTo(ChargeResolution.NO_STATUTORY_SCHEDULE);
+    }
+
+    @Test
+    void compute_whenACorporateActionChargesNothingAndNoStatutoryCardResolves_isStillExempt() {
+        // Given — a bonus allotment attracts nothing whatever the cards say
+        givenSchedule(flatRule("BROKERAGE", 20.0, 10));
+        givenNoStatutoryCard();
+
+        // When / Then
+        assertThat(engine().compute(contextWith(ChargeEvent.BUY, CorporateActionType.BONUS, Map.of())).resolution())
+                .isEqualTo(ChargeResolution.CORPORATE_ACTION_EXEMPT);
+    }
+
+    @Test
+    void compute_whenBothTheStatutoryCardAndTheProfileAreMissing_reportsTheStatutoryGap() {
+        // Given — the law's charges are missing for every trade in the scope, a profile for one scheme
+        givenSchedule(true, flatRule("BROKERAGE", 20.0, 10));
+        givenNoStatutoryCard();
+
+        // When / Then
+        assertThat(engine().compute(buy()).resolution()).isEqualTo(ChargeResolution.NO_STATUTORY_SCHEDULE);
     }
 
     // ---------------------------------------------------------------- fixtures
@@ -1023,6 +1059,18 @@ class ChargeEngineTest {
         schedule.setRequiresInstrumentProfile(requiresInstrumentProfile);
         schedule.setRules(new ArrayList<>(List.of(rules)));
         when(scheduleResolver.resolve(any())).thenReturn(Optional.of(schedule));
+
+        // Every shipped scope has a statutory card (D-382), so the default is one carrying no rules:
+        // tests about the broker's card are not about the law's. givenStatutory and the gap tests
+        // replace it.
+        ChargeScheduleEntity noStatutoryRules = new ChargeScheduleEntity();
+        noStatutoryRules.setId("stat-0");
+        noStatutoryRules.setScheduleCode("STATUTORY_EMPTY");
+        lenient().when(scheduleResolver.resolveStatutory(any())).thenReturn(Optional.of(noStatutoryRules));
+    }
+
+    private void givenNoStatutoryCard() {
+        when(scheduleResolver.resolveStatutory(any())).thenReturn(Optional.empty());
     }
 
     private void givenStatutory(ChargeRule... rules) {

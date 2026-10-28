@@ -200,7 +200,7 @@ class UserChargeServiceTest {
 
     @Test
     void findGaps_returnsEveryRowWhoseChargesCouldNotBeFullyAssessed() {
-        // Given — the four reasons a stored zero should not be read as "this trade was free".
+        // Given — the five reasons a stored zero should not be read as "this trade was free".
         //
         // NO_MATCHING_RULES is one of them because a card can resolve and still price nothing: an
         // unscoped card — a maintenance card is the obvious one — matches every dimension of a trade
@@ -210,6 +210,7 @@ class UserChargeServiceTest {
         when(userChargeRepository.findByEmailAndResolutionIn(EMAIL, List.of(
                 ChargeResolution.NO_SCHEDULE,
                 ChargeResolution.NO_INSTRUMENT_PROFILE,
+                ChargeResolution.NO_STATUTORY_SCHEDULE,
                 ChargeResolution.NO_MATCHING_RULES,
                 ChargeResolution.PROVISIONAL))).thenReturn(rows);
 

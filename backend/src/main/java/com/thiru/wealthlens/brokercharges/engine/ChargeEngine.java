@@ -97,7 +97,7 @@ public class ChargeEngine {
 
         List<ChargeLine> lines = accumulator.lines();
         if (lines.isEmpty()) {
-            return ChargeComputation.empty(emptyResolution(context, profileMissing));
+            return ChargeComputation.empty(emptyResolution(context, statutory == null, profileMissing));
         }
 
         BigDecimal total = ChargeRounding.apply(accumulator.total(), RoundingPolicy.HALF_UP_2);
@@ -106,7 +106,7 @@ public class ChargeEngine {
                 statutory == null ? null : statutory.getId(),
                 statutory == null ? null : statutory.getScheduleCode(),
                 instrument == null ? null : instrument.getId(),
-                profileMissing ? ChargeResolution.NO_INSTRUMENT_PROFILE : ChargeResolution.RESOLVED,
+                pricedResolution(statutory == null, profileMissing),
                 List.copyOf(lines), total.doubleValue());
     }
 
@@ -172,14 +172,29 @@ public class ChargeEngine {
     }
 
     /**
-     * Why nothing was charged. A deliberate exemption, a card with no applicable rule and a missing
-     * scheme profile are the same number and three different facts.
+     * Why nothing was charged. A deliberate exemption, a card with no applicable rule, a missing
+     * statutory card and a missing scheme profile are the same number and four different facts.
      */
-    private static ChargeResolution emptyResolution(ChargeContext context, boolean profileMissing) {
+    private static ChargeResolution emptyResolution(
+            ChargeContext context, boolean statutoryMissing, boolean profileMissing) {
         if (context.isCorporateAction()) {
             return ChargeResolution.CORPORATE_ACTION_EXEMPT;
         }
-        return profileMissing ? ChargeResolution.NO_INSTRUMENT_PROFILE : ChargeResolution.NO_MATCHING_RULES;
+        if (statutoryMissing || profileMissing) {
+            return pricedResolution(statutoryMissing, profileMissing);
+        }
+        return ChargeResolution.NO_MATCHING_RULES;
+    }
+
+    /**
+     * A missing statutory card is reported before a missing scheme profile when both are absent: it
+     * leaves out the law's charges on every trade in the scope, a profile only one scheme's.
+     */
+    private static ChargeResolution pricedResolution(boolean statutoryMissing, boolean profileMissing) {
+        if (statutoryMissing) {
+            return ChargeResolution.NO_STATUTORY_SCHEDULE;
+        }
+        return profileMissing ? ChargeResolution.NO_INSTRUMENT_PROFILE : ChargeResolution.RESOLVED;
     }
 
     /**

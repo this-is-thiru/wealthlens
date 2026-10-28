@@ -9,8 +9,10 @@ shadow recording gets exercised.
 this branch — or is running an environment seeded before 2026-09-08, which §7b fixes.
 
 > **The rates were verified on 2026-09-08** against Zerodha's, Upstox's and Fyers' published pages;
-> the evidence is in `ac2-rate-verification.md`. All eleven cards carry a `verifiedOn`, so
-> `GET /charge-schedules/unverified` returns `[]` on a freshly seeded database. §7 is how you correct
+> the evidence is in `ac2-rate-verification.md`. All eleven broker cards carry a `verifiedOn`. The
+> four statutory cards (W-163b, D-382), which hold the law's charges and name no broker, carry none
+> until W-163c cites each rate to the law, so `GET /charge-schedules/unverified` lists those four on a
+> freshly seeded database. §7 is how you correct
 > a rate when one changes — by superseding the card, never by editing it (ADR-26).
 
 ---
@@ -71,7 +73,7 @@ curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $TOKEN" \
                  schedulesCreated, instrumentsCreated, schedulesSkipped, drift: (.drift|length)}'
 ```
 
-Expect on a fresh database: 12 catalogue codes, 11 rate cards, 2 scheme profiles, nothing skipped,
+Expect on a fresh database: 12 catalogue codes, 15 rate cards (11 broker, 4 statutory), 2 scheme profiles, nothing skipped,
 no drift. Every document it writes records `seededBy` and the time — which is the reason this is an
 endpoint and not a startup hook.
 
@@ -97,13 +99,17 @@ curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $TOKEN" \
   | jq '.data | map({scheduleCode, brokerName, assetType, segment, startDate, sourceUrl, verifiedOn})'
 ```
 
-Expect **`[]`**. Every shipped card was verified on 2026-09-08 and carries a `verifiedOn` date, which
-is what closed AC-2 (see `ac2-rate-verification.md`).
+Expect the four statutory cards and nothing else. Every shipped broker card was verified on
+2026-09-08 and carries a `verifiedOn` date, which is what closed AC-2 (see
+`ac2-rate-verification.md`). The statutory cards stay listed until W-163c cites their rates to the law
+(D-382).
 
 A card appearing here means someone published one without checking its rates, or an existing one lost
 its date. It is a worklist, not a historical record — re-run it after every publish.
 
-Eleven cards ship, in three generations where a rate changed:
+Fifteen cards ship: eleven broker cards, in three generations where a rate changed, and four
+statutory cards. Since W-163b (D-382), STT, stamp duty, the SEBI fee and GST sit on the statutory
+cards, which name no broker; the engine prices them beside the broker's card.
 
 | scheduleCode | scope | window |
 |---|---|---|
@@ -115,6 +121,10 @@ Eleven cards ship, in three generations where a rate changed:
 | `FYERS_EQ_DELIVERY_2025_04` / `_2026_03` | EQUITY / DELIVERY | split at 2026-03-01 |
 | `ZERODHA_MF_2025_04` | MUTUAL_FUND | 2025-04-01 → open |
 | `ZERODHA_MAINTENANCE_2025_04` | unscoped | 2025-04-01 → open |
+| `STATUTORY_EQ_DELIVERY_2025_04` | EQUITY / DELIVERY, no broker | 2025-04-01 → open |
+| `STATUTORY_EQ_INTRADAY_2025_04` | EQUITY / INTRADAY, no broker | 2025-04-01 → open |
+| `STATUTORY_MF_2025_04` | MUTUAL_FUND, no broker | 2025-04-01 → open |
+| `STATUTORY_ACCOUNT_2025_04` | unscoped, no broker (GST on AMC) | 2025-04-01 → open |
 
 ### 3.3 One broker's cards
 
@@ -124,6 +134,9 @@ curl -sS "$BASE/charge-schedules?broker=ZERODHA" -H "Authorization: Bearer $TOKE
 ```
 
 ### 3.4 One card in full — this is what you check the rates against
+
+The broker's card holds the broker's and the exchange's charges; STT, stamp duty, the SEBI fee and GST
+are on the statutory card for the scope (`STATUTORY_EQ_DELIVERY_2025_04` here), fetched the same way.
 
 ```bash
 curl -sS "$BASE/charge-schedules/ZERODHA_EQ_DELIVERY_2025_04" -H "Authorization: Bearer $TOKEN" \

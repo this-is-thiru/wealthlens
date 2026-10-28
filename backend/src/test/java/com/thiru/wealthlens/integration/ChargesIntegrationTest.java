@@ -123,6 +123,16 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.getCollection("charge_schedules").deleteMany(new Document());
         mongoTemplate.getCollection("charge_instruments").deleteMany(new Document());
         scheduleRepository.save(equityCard("IT_EQ_2025", LocalDate.of(2025, 1, 1), null, 0.0));
+
+        // Every shipped scope has a statutory card (D-382), and a trade without one is a gap. This
+        // class's own cards still carry their statutory lines, so its statutory card carries none:
+        // unscoped, it is found for every trade and the AMC cycle, and adds nothing. A test that
+        // publishes a scoped statutory card outranks it.
+        ChargeScheduleEntity noStatutoryRules = new ChargeScheduleEntity();
+        noStatutoryRules.setScheduleCode("IT_STATUTORY_NONE");
+        noStatutoryRules.setStartDate(LocalDate.of(2025, 1, 1));
+        noStatutoryRules.setStatus(EntityStatus.ACTIVE);
+        scheduleRepository.save(noStatutoryRules);
     }
 
     // ------------------------------------------------------------ Tier H — persistence
