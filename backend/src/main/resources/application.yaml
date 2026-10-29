@@ -6,8 +6,8 @@ spring:
     name: wealthlens
 
   mongodb:
-    uri: mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@it-staging.6fu8nvy.mongodb.net/?retryWrites=true&w=majority
-    database: it-staging
+    uri: mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@wealthlens-dev.gmhwxe2.mongodb.net/?retryWrites=true&w=majority
+    database: wealthlens-dev
 
 app:
   security:
