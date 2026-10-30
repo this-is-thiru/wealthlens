@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-193 — NOT STARTED (next on the board after W-192)
-Stage           : — (W-192 done, D-403; committed as the last item commit)
-Plan            : — (write plans/W-193.md on "start W-193")
+Item            : W-201 — NOT STARTED (the Export | Stocks - Long/Short request; next on the board after W-193)
+Stage           : — (W-193 done, D-404; committed as the last item commit)
+Plan            : — (write plans/W-201.md on "start W-201")
 Approved        : —
 Steps done      : —
-Next step       : on "start W-193": check STATE line 60 board order first (R4: W-192 D  W-193 ·); READ the W-193 row; api-collection is a git submodule (memory: charge-card-gotchas); write plans/W-193.md; STOP for approval. FinishedPlanTest fails a DONE item with an open plan step
+Next step       : on "start W-201": check board order (R4: W-193 D  W-201 ·  W-194 ·); READ the W-201 row; confirm the dropped filter by a request/test before planning a fix; write plans/W-201.md; STOP. UNPUSHED: api-collection main e4f43a2 must be pushed BEFORE this branch
 Last verify     : W-192 — charge classes 128/0; unit 3817/0; integration 312/0 (2026-10-30)
-Waiting on      : the owner — "start W-193"; OQ-32, OQ-33, OQ-34 open
+Waiting on      : the owner — "start W-201"; OQ-32, OQ-33, OQ-34 open
 Files touched   : (none)
-Last item commit: taxplanning W-192: cite the stock brokers' turnover-fee Regulations for SEBI_FEE in the catalogue, and Article 56A as inserted by FA 2019 for STAMP_DUTY — both read in the Gazette (D-403)
-Updated         : 2026-10-30, session 40 — W-192 done (D-403), next W-193
+Last item commit: taxplanning W-193: drop the two long/short-term holding requests from api-collection — the endpoints W-160e removed; W-201 placed for the Long/Short export request (D-404)
+Updated         : 2026-10-30, session 40 — W-193 done (D-404), next W-201
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
