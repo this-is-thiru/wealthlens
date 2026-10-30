@@ -66,14 +66,15 @@ copy under D-184) and to egazette; the thc.nic.in prints are no longer cited.
     bye-laws). None is an amendment of Schedule V. The scan was then re-run from scratch with every outcome logged (owner, session 40, 2026-10-30, finished 22:03 IST): all 16,314 numbers answered — 14,112 PDFs downloaded and searched, 2,202 not on egazette (HTTP 404), **0 timeouts**, no PDF without extractable text — and it found the same four mentions and no other.
 - **The GST residual entry between 2019 and 2025:** each amendment was not read. The 2019 consolidated text and the
   2025 notification agree that item (vii) is the residual at 9 %.
-- **The catalogue's own references** (`charge-catalogue.json`, `statutoryReference`):
-  - `SEBI_FEE` cites "SEBI (Regulatory Fee on Stock Exchanges) Regulations, 2006". That is the fee the exchanges pay;
-    the 2019 amendment above amends it separately. The turnover fee a contract note passes on is the Stock Brokers
-    Regulations' fee (row 7).
-  - `STAMP_DUTY` cites "Indian Stamp Act, 1899, as amended 2020"; the rates were inserted by the Finance Act 2019, in
-    force 1-7-2020.
-
-  Both are left as they are: they are not rates, and W-163c's plan does not change the catalogue.
+- **The catalogue's own references** (`charge-catalogue.json`, `statutoryReference`), **corrected by W-192 (D-403),
+  2026-10-30:**
+  - `SEBI_FEE` cited "SEBI (Regulatory Fee on Stock Exchanges) Regulations, 2006", the fee the exchanges pay. It now
+    reads *"SEBI (Stock Brokers) Regulations, 2026, reg. 41(1), from 7-1-2026; before that SEBI (Stock Brokers and
+    Sub-brokers) Regulations, 1992, Schedule V Part B cl. 3(1), as substituted by the SEBI (Payment of Fees) (Amendment)
+    Regulations, 2019, from 1-4-2019"* — egazette 2019/200684 p.5 and 2026/269177 pp.44 – 45 (Chapter IX, *"Charge of
+    fees. 41. (1)"*).
+  - `STAMP_DUTY` cited "Indian Stamp Act, 1899, as amended 2020". It now reads *"Indian Stamp Act, 1899, Schedule I
+    Article 56A, as inserted by the Finance Act, 2019 (in force 1-7-2020)"* (rows 4 – 6, 13; "Stamp duty" above).
 
 - **STT Sl. 5 after Finance Act 2013 (W-199):** every Finance Act from 2014 to 2018 was read on egazette, whole
   text searched for *"Finance (No. 2) Act, 2004"* / *"23 of 2004"* and the marginal notes for ss.96 – 101:

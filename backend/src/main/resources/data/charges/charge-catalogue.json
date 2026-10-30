@@ -13,7 +13,7 @@
 
   { "code": "SEBI_FEE", "displayName": "SEBI turnover fees", "category": "REGULATORY", "status": "ACTIVE",
     "description": "Regulator's turnover fee.",
-    "statutoryReference": "SEBI (Regulatory Fee on Stock Exchanges) Regulations, 2006" },
+    "statutoryReference": "SEBI (Stock Brokers) Regulations, 2026, reg. 41(1), from 7-1-2026; before that SEBI (Stock Brokers and Sub-brokers) Regulations, 1992, Schedule V Part B cl. 3(1), as substituted by the SEBI (Payment of Fees) (Amendment) Regulations, 2019, from 1-4-2019" },
 
   { "code": "IPFT", "displayName": "Investor Protection Fund Trust", "category": "EXCHANGE", "status": "ACTIVE",
     "description": "Exchange levy funding investor protection.",
@@ -21,7 +21,7 @@
 
   { "code": "STAMP_DUTY", "displayName": "Stamp duty", "category": "STATUTORY", "status": "ACTIVE",
     "description": "Levied on purchases only. Not a taxable service, so it never forms part of a GST base.",
-    "statutoryReference": "Indian Stamp Act, 1899, as amended 2020" },
+    "statutoryReference": "Indian Stamp Act, 1899, Schedule I Article 56A, as inserted by the Finance Act, 2019 (in force 1-7-2020)" },
 
   { "code": "DP", "displayName": "Depository participant charges", "category": "DEPOSITORY", "status": "ACTIVE",
     "description": "Levied once per scrip per day per demat account on a sell, however many transactions make it up.",
