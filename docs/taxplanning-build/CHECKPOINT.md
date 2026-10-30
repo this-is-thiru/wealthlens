@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-187 — re-source W-177 / W-178 to the Gazette (D-394, placed first by D-395) — NOT STARTED
-Stage           : — (session 38 PAUSED; all committed and pushed)
-Plan            : — (write plans/W-187.md on "start W-187")
+Item            : W-199 — re-source statutory record rows 3 (STT Sl. 5, FA 2013) and 6 (SCRA s.2(h)(id)) to the Gazette (W-187 C4a, D-396) — NOT STARTED
+Stage           : — (W-187 done, D-396; committed as the last item commit)
+Plan            : — (write plans/W-199.md on "start W-199")
 Approved        : —
 Steps done      : —
-Next step       : on "start W-187": check STATE line 60 board order first (R4); READ the W-187 row + both 2026-10-28 sources records; ONLY official Gazette copies count as READ unless the owner names a source trustworthy — ask the owner which issuers (NSE circulars, SEBI's site, broker pages) count; write plans/W-187.md, STOP for approval. Every item commit: board + WL-A-2 if the runbook changed
-Last verify     : W-178 — charge tests 168/0; unit 3811/0; integration 312/0; CI success on c515c558
-Waiting on      : the owner — "start W-187"; OQ-32, OQ-33, OQ-34 open (every other finding is now a placed row, D-395)
+Next step       : on "start W-199": check STATE line 60 board order first (R4: W-187 D  W-199 ·  W-188 ·); READ the W-199 row and the statutory record rows 3, 6; ONLY Gazette copies count as READ unless the owner names a source trustworthy; write the plan; STOP for approval. Every item commit: board + WL-A-2 if the runbook changed
+Last verify     : W-187 — charge tests 168/0; unit 3811/0; integration 312/0 (2026-10-30, after clean)
+Waiting on      : the owner — "start W-199" (next on the board); OQ-32, OQ-33, OQ-34 open
 Files touched   : (none)
-Last item commit: taxplanning W-178: add equity futures and options cards for all three brokers and the law — the new STT from 30-3-2026, Finance Act 2026's assent; W-185 and W-186 placed (D-393)
-Updated         : 2026-10-28, session 38 — PAUSED; order W-187 → W-188 … W-198 → W-185 → W-186 → W-179 → W-181 … W-184 (D-395); audit in reviews/2026-10-28-bookkeeping-audit.md
+Last item commit: taxplanning W-187: re-source the W-177 / W-178 figures to the Gazette and NSE's circulars — IPFT rolled back to ₹0.01 per crore from 1-3-2026, not folded in; W-185 rewritten, W-199 placed (D-396)
+Updated         : 2026-10-30 ~22:05, session 40 — W-187 done (D-396), W-199 placed next
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

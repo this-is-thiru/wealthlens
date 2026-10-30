@@ -46,7 +46,7 @@
       "taxable": true,
       "active": true,
       "order": 30,
-      "notes": "NSE equity options transaction charge, 0.03503% of the premium, from 1-10-2024 until 28-2-2026 (Upstox's page). BSE differs. Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+      "notes": "NSE equity options transaction charge, 0.03503% of the premium (Rs 35.03 each side per lakh of premium value, NSE circular NSE/FA/64232 of 2024-09-27), from 1-10-2024 until 28-2-2026 (NSE/FA/73061). BSE differs. docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
     },
     {
       "code": "IPFT",
@@ -64,7 +64,7 @@
       "taxable": true,
       "active": true,
       "order": 50,
-      "notes": "NSE Investor Protection Fund Trust on equity options, Rs 50 per crore of the premium, before 1-3-2026. INFERRED, not read: the amount NSE's 1-3-2026 rate added when IPFT was combined into the transaction charge (0.0355299% - 0.03503% = 0.0004999%). Owner ruling W-178 C2a. docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+      "notes": "NSE Investor Protection Fund Trust on equity options, Rs 50 per crore of the premium, from 1-4-2023 until 28-2-2026: NSE circular NSE/FA/56129 of 2023-03-24 (\"Rs.50 per crore traded value (premium value) in Equity Options\"), rolled back to Rs 0.01 per crore from 1-3-2026 by NSE/FA/73061. docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
     }
   ]
 }

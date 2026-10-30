@@ -14,9 +14,15 @@ corrections are in the seed files; §6 is what remains operationally.
 | Zerodha | `https://zerodha.com/charges` | 2026-09-08 |
 | Upstox | `https://upstox.com/brokerage-charges/` | 2026-09-08 |
 | Fyers | `https://fyers.in/charges-list` | 2026-09-08 |
-| NSE transaction charge revision | NSE circular, 2026-02-27, effective 2026-03-01 | via search |
-| NSE IPFT revision | raised from ₹0.01/crore to ₹10/crore w.e.f. 2023-04-01 | via search |
+| NSE transaction charge revision | NSE circular NSE/FA/73061, 2026-02-27, effective 2026-03-01 (cash ₹306.99 + IPFT ₹0.01 per crore) | via search; **read 2026-10-30 (W-187)** |
+| NSE IPFT revision | NSE circular NSE/FA/56129, 2023-03-24: raised from ₹0.01/crore to ₹10/crore w.e.f. 2023-04-01 (₹50/crore of premium on options) | via search; **read 2026-10-30 (W-187)** |
 | Zerodha AMC | `support.zerodha.com` — ₹300 + 18% GST annually | via search |
+
+**Cards added after this check (W-177, W-178):** their evidence is not here but in
+`docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md` (broker prices; NSE circulars NSE/FA/56129,
+NSE/FA/64232, NSE/FA/73061 quoted from their PDFs) and `…/2026-10-28-statutory-charge-rates.md` (STT, stamp duty,
+SEBI fee, GST), both re-sourced by W-187 (D-396). **NSE/FA/73061 rolled the IPFT back to ₹0.01 per crore from
+2026-03-01** (0.0000001 %); the 2026-03 cards' IPFT lines are corrected by W-185.
 
 ---
 

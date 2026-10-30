@@ -15,7 +15,7 @@ Nothing below has been changed yet; each needs the owner's word.
 |---|---|---|---|
 | G1 | **Order:** W-185, W-186 and W-179 are `·` on the board before W-164, W-180, W-165, W-166, W-167, which are `D`. W-164 – W-167 and W-180 were done before W-177 – W-179, against the board (R4; D-394) | session 38 | Do W-185 → W-186 → W-179 next, or the owner re-orders the board to the order of work, recorded |
 | G2 | **W-187 is not on the board.** The Gazette re-sourcing of W-177 / W-178 is written but unplaced | session 38 (the owner's to place) | The owner places it; proposed before W-185 |
-| G3 | **Research on non-Gazette sources:** GCA s.5 (a commercial scan), the SEBI fee (sebi.gov.in), NSE transaction charges and the IPFT fold-in (broker pages), F&O IPFT before 1-3-2026 (inferred), broker prices (broker pages) | session 38 | W-187 |
+| G3 | **Research on non-Gazette sources:** GCA s.5 (a commercial scan), the SEBI fee (sebi.gov.in), NSE transaction charges and the IPFT fold-in (broker pages), F&O IPFT before 1-3-2026 (inferred), broker prices (broker pages) | session 38 | **Done**, W-187 (D-396) |
 | G4 | **W-180's plan steps are unticked.** It was closed without a change, and the plan says the steps were not taken, but the boxes are not marked that way | session 38 | Mark the four steps "not taken (closed, D-387)" |
 | G5 | **Plans of DONE items with unticked steps,** each with its item commit in git: W-075a (step 8), W-075d0 (5), W-078f (4), W-088p1 (1), W-156 (2), W-160a (2 – 6), W-160d1 (1 – 4), W-163 (3) | earlier sessions | Check each step against its item commit, then tick it, or record what was not done |
 | G6 | **W-071 (a split parent) is missing from the board.** Its children W-071a – g are on it | earlier sessions | Add `W-071 —` before W-071a |
@@ -30,7 +30,7 @@ Nothing below has been changed yet; each needs the owner's word.
 | G10 | `README.md` data model still listed `LocalDate date` on `CORPORATE_ACTION`, removed by W-166 | session 38 | **Fixed** |
 | G11 | `README.md` data model lacks `allotment_date` on `CORPORATE_ACTION` (added by W-088k4a, D-306) | earlier session | Open, for the owner (CLAUDE.md: the README predates the tax build; trust the code) |
 | G12 | `plans/W-180.md` steps unmarked (G4 above) | session 38 | **Fixed**: steps 1 – 3 "not taken: closed, D-387", step 4 ticked |
-| G13 | `ac2-rate-verification.md` has no entry for W-177 / W-178's cards; their evidence is the 2026-10-28 sources records | session 38 | Open, folded into W-187 |
+| G13 | `ac2-rate-verification.md` has no entry for W-177 / W-178's cards; their evidence is the 2026-10-28 sources records | session 38 | **Done**, W-187 (D-396): AC-2 points to the two 2026-10-28 records |
 
 **Also checked, no gap:**
 - **Commit hygiene:** each session-38 commit contains only its item's named paths.

@@ -46,7 +46,7 @@
       "taxable": true,
       "active": true,
       "order": 30,
-      "notes": "NSE cash market transaction charge, revised to 0.0030699% with effect from 2026-03-01 (NSE circular of 2026-02-27). The preceding card carries 0.00297%, which is what applied from 2024-10-01 until then."
+      "notes": "NSE cash market transaction charge, revised to 0.0030699% (Rs 306.99 each side per crore) with effect from 2026-03-01 (NSE circular NSE/FA/73061 of 2026-02-27). The preceding card carries 0.00297%, which is what applied from 2024-10-01 until then (NSE/FA/64232). The same circular cut the separate IPFT contribution to Rs 0.01 per crore; this card's IPFT line is W-185."
     },
     {
       "code": "IPFT",
