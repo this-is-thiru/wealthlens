@@ -28,7 +28,7 @@ Nothing below has been changed yet; each needs the owner's word.
 | G8 | `docs/charges-engine/README.md` point 13 said the maintenance card is Zerodha's only unscoped fallback; W-177 gave Upstox and Fyers the same | session 38 | **Fixed** at this pass |
 | G9 | `docs/charges-engine/staging-runbook.md` lines 11 – 14 named "the four statutory cards" and sent the reader to `ac2-rate-verification.md` alone; W-177 / W-178 cards and the eight statutory cards had no pointer to their sources | session 38 | **Fixed** (it now points to both 2026-10-28 records and to W-187) |
 | G10 | `README.md` data model still listed `LocalDate date` on `CORPORATE_ACTION`, removed by W-166 | session 38 | **Fixed** |
-| G11 | `README.md` data model lacks `allotment_date` on `CORPORATE_ACTION` (added by W-088k4a, D-306) | earlier session | Open, for the owner (CLAUDE.md: the README predates the tax build; trust the code) |
+| G11 | `README.md` data model lacks `allotment_date` on `CORPORATE_ACTION` (added by W-088k4a, D-306) | earlier session | **Done**, W-190 (D-401): `LocalDate allotment_date` after `ex_date`; the block and the entity now list the same 16 fields |
 | G12 | `plans/W-180.md` steps unmarked (G4 above) | session 38 | **Fixed**: steps 1 – 3 "not taken: closed, D-387", step 4 ticked |
 | G13 | `ac2-rate-verification.md` has no entry for W-177 / W-178's cards; their evidence is the 2026-10-28 sources records | session 38 | **Done**, W-187 (D-396): AC-2 points to the two 2026-10-28 records |
 

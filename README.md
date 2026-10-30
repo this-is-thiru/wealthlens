@@ -135,6 +135,7 @@ erDiagram
         AssetType asset_type
         LocalDate record_date
         LocalDate ex_date
+        LocalDate allotment_date
         Integer priority
         String ratio
         String action_price
