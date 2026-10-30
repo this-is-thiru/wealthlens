@@ -351,7 +351,7 @@ the same engine using `ChargeEvent.AMC_CYCLE`, and is idempotent per account and
 
 | Flag | Ships | Effect |
 |---|---|---|
-| `engine-enabled` | `true` | Master kill switch. `false` → simulate, backfill and the AMC cycle answer **503**, and nothing is shadow-recorded. Reads of already-recorded charges keep working |
+| `engine-enabled` | `true` | Master kill switch. `false` → `POST /charges/simulate`, `GET /charge-accounts/due` and `POST /charges/amc/impose` answer **503**, and nothing is shadow-recorded. Reads of already-recorded charges keep working |
 | `shadow-recording` | `false` | The trade path prices and records every V2 trade; the result is ignored |
 | `authoritative` | `false` | The computed total becomes the cost basis on a V2 buy |
 
