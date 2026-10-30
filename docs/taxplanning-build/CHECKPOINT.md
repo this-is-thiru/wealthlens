@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-200 — build-time check: a DONE item's plan has no open step (W-188 C2a, D-398) — NOT STARTED
-Stage           : — (W-188 done, D-398; committed as the last item commit)
-Plan            : — (write plans/W-200.md on "start W-200")
+Item            : W-189 — NOT STARTED (next on the board after W-200)
+Stage           : — (W-200 done, D-399; committed as the last item commit)
+Plan            : — (write plans/W-189.md on "start W-189")
 Approved        : —
 Steps done      : —
-Next step       : on "start W-200": check STATE line 60 board order first (R4: W-188 D  W-200 ·  W-189 ·); READ the W-200 row; write plans/W-200.md; STOP for approval. Every item commit: board + WL-A-2 if the runbook changed
-Last verify     : W-188 — unit 3811/0 (2026-10-30; docs only)
-Waiting on      : the owner — "start W-200"; OQ-32, OQ-33, OQ-34 open
+Next step       : on "start W-189": check STATE line 60 board order first (R4: W-200 D  W-189 ·); READ the W-189 row; write plans/W-189.md; STOP for approval. Every item commit: board + WL-A-2 if the runbook changed; FinishedPlanTest now fails a DONE item with an open plan step
+Last verify     : W-200 — targeted 35/0; probes 2 bite; unit 3817/0; integration 312/0 (2026-10-30)
+Waiting on      : the owner — "start W-189"; OQ-32, OQ-33, OQ-34 open
 Files touched   : (none)
-Last item commit: taxplanning W-188: tick the 15 open steps of eight finished plans with the commits that did them — all done, none left; W-200 placed for a check (D-398)
-Updated         : 2026-10-30, session 40 — W-188 done (D-398), next W-200
+Last item commit: taxplanning W-200: fail the build when a finished item's plan keeps an open step — FinishedPlanTest over every plan and the whole status board, the board reader shared as testsupport.StatusBoard (D-399)
+Updated         : 2026-10-30, session 40 — W-200 done (D-399), next W-189
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

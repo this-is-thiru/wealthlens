@@ -116,6 +116,7 @@ override convenience. Where the build enforces one, the enforcing check is named
 - **Money is never asserted with a bare `assertEquals`.** Use `com.thiru.wealthlens.testsupport.MoneyAssert` — exact double comparison on rupee amounts is a latent failure.
 - **`ArchitectureTest`** encodes the conventions below as ArchUnit rules (no field injection, controllers do not reach repositories, snake_case `@Field` names, no console printing). Introducing a violation fails the build.
 - **Checkstyle fails the build** (10.x, `validate`, main and test sources) with the rule set in `checkstyle.xml` — the enforced half of "Engineering standards". Code that predates it is listed in `checkstyle-suppressions.xml` between the `BASELINE` markers; that list may only shrink (`CheckstyleBaselineTest`). Fix a violation rather than suppressing it. `ArchitectureTest` adds the naming rules (no generic class suffixes, no duplicate simple class names).
+- **`FinishedPlanTest` fails the build** when a plan in `docs/taxplanning-build/plans/` belongs to an item the STATE.md status board marks `D` or `—` but still has an open `- [ ]` step that does not say "not taken" (W-200, D-399). Tick the step with the commit that did it, or mark it "not taken" with why.
 - **Claude Code sessions cannot commit a red tree:** `.claude/hooks/pre-commit-gate.sh` runs the unit tier before any `git commit` and blocks it on failure.
 - Third-party versions not managed by the Spring Boot parent live in the root `pom.xml` `<dependencyManagement>`; module poms declare deps without versions.
 
