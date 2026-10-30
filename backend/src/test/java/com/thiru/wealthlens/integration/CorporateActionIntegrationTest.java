@@ -301,9 +301,11 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
 
     // ========== D-389: "date" is no field of a corporate action ==========
 
+    // D-389 accepted a body still carrying "date" for older clients; D-406 refuses it, as every unknown property
+    // (W-202): api-collection is the only client (owner) and stopped sending it in W-166.
     @Test
-    void addCorporateAction_whenTheRequestStillCarriesDate_isAcceptedAndStoresNoDate() {
-        // GIVEN — the body an older client sends, "date" included
+    void addCorporateAction_whenTheRequestStillCarriesDate_answers400NamingIt() {
+        // GIVEN — a body with the removed "date" field
         String token = generateToken("test@example.com", "SUPER_USER");
         String body = """
                 {"stockCode": "RELIANCE", "stockName": "Reliance Industries", "type": "BONUS", "ratio": "1:1",
@@ -318,12 +320,10 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
                 .when()
                 .post("/corporate-action/add")
                 .then()
-                .statusCode(HttpStatus.OK.value());
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("message", containsString("\"date\""));
 
-        org.bson.Document stored = mongoTemplate.getCollection("corporate_action").find().first();
-        assertNotNull(stored);
-        assertEquals("RELIANCE", stored.getString("stock_code"));
-        assertFalse(stored.containsKey("date"));
+        assertEquals(0, mongoTemplate.getCollection("corporate_action").countDocuments());
     }
 
     @Test

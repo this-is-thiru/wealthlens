@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-202 — NOT STARTED (request bodies accept unknown JSON properties silently; next after W-201)
-Stage           : — (W-201 done, D-405; committed as the last item commit)
-Plan            : — (write plans/W-202.md on "start W-202")
+Item            : W-203 — NOT STARTED (the seeders drop unknown keys silently; next on the board after W-202)
+Stage           : PAUSED at the session limit (session 40) — W-202 done (D-406), committed; everything pushed (api-collection main first, then this branch)
+Plan            : — (write plans/W-203.md on "start W-203")
 Approved        : —
 Steps done      : —
-Next step       : on "start W-202": check board order (R4: W-201 D  W-202 ·  W-194 ·); READ the W-202 row; survey clients (api-collection, UI if in repo) for fields the server lacks before proposing strict deserialisation; write plans/W-202.md; STOP. UNPUSHED: api-collection main e4f43a2, 99d8653 — push the submodule BEFORE this branch
-Last verify     : W-192 — charge classes 128/0; unit 3817/0; integration 312/0 (2026-10-30)
-Waiting on      : the owner — "start W-202"; OQ-32, OQ-33, OQ-34 open
+Next step       : resume: Resume check; then on "start W-203": board order (R4: W-202 D  W-203 ·  W-204 ·); READ the W-203 row; write plans/W-203.md; STOP. FinishedPlanTest fails a DONE item with an open plan step; request bodies are strict (D-406)
+Last verify     : W-202 — targeted 48/0; probe (property off → both strictness tests fail); unit 3817/0; integration 314/0 (2026-10-30)
+Waiting on      : the owner — "start W-203"; OQ-32, OQ-33, OQ-34 open
 Files touched   : (none)
-Last item commit: taxplanning W-201: re-key three api-collection requests to queryFilters — the filters key was silently ignored, shown by probe; the Long/Short export renamed to what it does; W-202 placed for the silent default (D-405)
-Updated         : 2026-10-30, session 40 — W-201 done (D-405), next W-202
+Last item commit: taxplanning W-202: refuse a request body property the DTO does not have with a 400 — fail-on-unknown-properties on, D-389's date tolerance superseded, the collection's four stale fields fixed; W-203 and W-204 placed (D-406)
+Updated         : 2026-10-30 ~23:50, session 40 — PAUSED at the session limit; W-187 … W-202 done (D-396 – D-406), all committed and pushed; next W-203
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
