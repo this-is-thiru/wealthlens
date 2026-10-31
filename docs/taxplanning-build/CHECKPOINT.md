@@ -16,7 +16,8 @@ Last verify     : W-205: unit 3819/0; integration 319/0; failing-first 2 errors 
 Waiting on      : the owner — OQ-32, OQ-33, OQ-34 open; W-206 placed for the request-DTO redesign, the owner's to place
 Files touched   : none — W-205's files are in the last item commit
 Last item commit: taxplanning W-205: bind the six request-bound entities through the no-arg constructor — an omitted field arrived null (a sell 500, a published card with no author); a body could also write the author (D-409)
-Updated         : 2026-10-31, session 41 — W-205 done (D-409); STOPPED
+Updated         : 2026-10-31, session 41 — W-205 done (D-409); paused at the owner's session limit (machine
+                  shutdown); next session resumes at W-194
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
