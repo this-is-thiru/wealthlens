@@ -12,6 +12,10 @@ import java.util.function.Predicate;
  * The capital-gains parts absorbing a loss, in {@code SETOFF-WITHIN-CAPITAL-GAINS}'s declared order (S2 s.109(1),
  * s.111(1)(a); 1961 s.71(2), s.74(1); D-243, D-247). Kept in one place so every loss set off against the head takes
  * the parts the same way, whatever text its lines carry (D-263).
+ *
+ * <p>Each part is held twice — its gain, and its gain with a qualifying cost indexed (W-088g, D-426) — and a rupee a
+ * loss takes is taken from both, because the cap on the tax on land or building charges whichever of the two measures
+ * is the lesser after the same loss. A measure the loss empties stays nil rather than going below it.
  */
 final class CapitalGainsAbsorption {
 
@@ -23,11 +27,14 @@ final class CapitalGainsAbsorption {
 
     private final CapitalGainsAbsorptionOrder order;
     private final Map<CapitalGainsPart, Money> parts;
+    private final Map<CapitalGainsPart, Money> indexedParts;
 
-    /** Over {@code parts}, which are lowered in place as a loss is absorbed. */
-    CapitalGainsAbsorption(CapitalGainsAbsorptionOrder order, Map<CapitalGainsPart, Money> parts) {
+    /** Over {@code parts} and their indexed measure, both lowered in place as a loss is absorbed. */
+    CapitalGainsAbsorption(CapitalGainsAbsorptionOrder order, Map<CapitalGainsPart, Money> parts,
+            Map<CapitalGainsPart, Money> indexedParts) {
         this.order = order;
         this.parts = parts;
+        this.indexedParts = indexedParts;
     }
 
     /** The declared order, which a caller's lines name. */
@@ -47,6 +54,7 @@ final class CapitalGainsAbsorption {
             }
             Money taken = Money.min(remaining, available);
             parts.put(part, available.minus(taken));
+            indexedParts.put(part, indexedParts.getOrDefault(part, Money.ZERO).minus(taken).floorAtZero());
             remaining = remaining.minus(taken);
             lines.add(line.of(lines.size() + 1, part, available, taken));
         }

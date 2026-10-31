@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.cap.CapResult;
 import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
 import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
@@ -19,6 +20,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.definition.SpecialRateShortfallOrder;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
@@ -52,6 +54,12 @@ import java.util.Set;
  */
 public final class TaxByBasisNode implements ComputationNode {
 
+    /** The gain a special-rate row's rate is taken of. */
+    private static final BaseId SPECIAL_RATE_GAINS = new BaseId("SPECIAL_RATE_GAINS");
+
+    /** The same gain with a qualifying cost indexed, which the cap on land or building compares a second rate against. */
+    private static final BaseId INDEXED_SPECIAL_RATE_GAINS = new BaseId("INDEXED_SPECIAL_RATE_GAINS");
+
     @Override
     public NodeId produces() {
         return NodeIds.TAX_BYBASIS;
@@ -71,7 +79,8 @@ public final class TaxByBasisNode implements ComputationNode {
     @Override
     public NodeResult evaluate(NodeContext ctx) {
         Money totalIncome = ctx.get(NodeIds.ROUND_TOTALINCOME, MoneyValue.class).amount();
-        Map<CapitalGainsPart, Money> gains = specialRateGains(ctx, ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class),
+        HeadsAfterSetOff heads = ctx.get(NodeIds.SETOFF, HeadsAfterSetOff.class);
+        Map<CapitalGainsPart, Money> gains = specialRateGains(ctx, heads,
                 DeclaredCapitalGainsParts.of(ctx).parts());
         // The slab ladder: each regime's own, unless an age ladder replaces it — the rows' conditions say which (D-252)
         RuleRow row = ctx.ruleOf(RuleSetIds.RS_RATE_SLAB);
@@ -97,13 +106,24 @@ public final class TaxByBasisNode implements ComputationNode {
         for (Map.Entry<CapitalGainsPart, Money> part : charged.entrySet()) {
             RuleId rate = specialRate(ctx, part.getKey()).orElseThrow().id();
             RuleVersion rateVersion = TemporallyApportionedCap.governingVersion(ctx.rule(rate), ctx.inputs().temporal());
-            Money tax = TemporallyApportionedCap.apply(ctx.rule(rate), ctx.inputs().temporal(),
-                    CapContext.of(((SlabLadder) rateVersion.cap().orElseThrow()).base(), part.getValue())).value();
-            value = value.plusSpecialRate(new SpecialRateId(rate.value().replace('-', '_')), tax);
+            CapResult cap = TemporallyApportionedCap.apply(ctx.rule(rate), ctx.inputs().temporal(),
+                    basesOf(heads, part.getKey(), part.getValue()));
+            value = value.plusSpecialRate(new SpecialRateId(rate.value().replace('-', '_')), cap.value());
             lines.add(TraceLine.of(lines.size() + 1, produces(), rate, StepKind.TAX, MoneyValue.of(part.getValue()),
-                    MoneyValue.of(tax), rateVersion.provenance()).withLimitedBy(part.getKey().toString()));
+                    MoneyValue.of(cap.value()), rateVersion.provenance())
+                    .withLimitedBy(part.getKey() + "; " + cap.limitedBy()));
         }
         return new NodeResult(value, lines);
+    }
+
+    /**
+     * The amounts a special-rate cap may read: the part's gain after the shortfall, and the same gain with a qualifying
+     * cost indexed, less the same rupees the shortfall took and nil rather than negative (W-088g, D-426).
+     */
+    private static CapContext basesOf(HeadsAfterSetOff heads, CapitalGainsPart part, Money gain) {
+        Money shifted = heads.capitalGains(part).minus(gain);
+        return new CapContext(Map.of(SPECIAL_RATE_GAINS, gain, INDEXED_SPECIAL_RATE_GAINS,
+                heads.indexedCapitalGains(part).minus(shifted).floorAtZero()));
     }
 
     /**

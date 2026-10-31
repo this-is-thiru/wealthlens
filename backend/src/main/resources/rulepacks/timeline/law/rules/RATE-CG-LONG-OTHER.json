@@ -1,7 +1,7 @@
 {
   "ruleId": "RATE-CG-LONG-OTHER",
   "ruleSet": "RS-RATE-CG-SPECIAL",
-  "_note": "Long-term capital gains other than those of RATE-CG-LONG-LISTED-EQUITY, charged apart from total income (D-244). TY 2026-27: Income-tax Act, 2025 s.197(1)(b) (p.221): \"income-tax calculated on such long-term capital gains at the rate of 12.5%\". TY 2025-26: Income-tax Act, 1961 s.112(1)(a)(ii)(B) (a resident individual or HUF) and (d)(ii)(B) (any other resident) as substituted by the Finance (No. 2) Act, 2024 s.30 (pp.26–27): \"at the rate of twelve and one-half per cent. for any transfer which takes place on or after the 23rd day of July, 2024\". Not modelled: s.197(3) / the s.112(1)(a) second proviso (the rate cap on land or building acquired before 23-7-2024 — the asset kind is carried since W-088g2, D-425, and the cap is W-088g) and s.197(4) / s.112(1)(c)(iii) (a non-resident's unlisted securities, how the gain is computed). The shortfall of s.197(2) / the s.112(1)(a) proviso is RATE-CG-SHORTFALL-ORDER's; Chapter VIII is kept off by s.197(5) / s.112(2). Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 17, 19.",
+  "_note": "Long-term capital gains other than those of RATE-CG-LONG-LISTED-EQUITY, charged apart from total income (D-244). TY 2026-27: Income-tax Act, 2025 s.197(1)(b) (p.221): \"income-tax calculated on such long-term capital gains at the rate of 12.5%\". TY 2025-26: Income-tax Act, 1961 s.112(1)(a)(ii)(B) (a resident individual or HUF) and (d)(ii)(B) (any other resident) as substituted by the Finance (No. 2) Act, 2024 s.30 (pp.26–27): \"at the rate of twelve and one-half per cent. for any transfer which takes place on or after the 23rd day of July, 2024\". The cap is s.197(3) / the s.112(1)(a) second proviso (W-088g, D-426): the tax on a resident individual or HUF's land or building acquired before 23-7-2024 is the least of 12.5 % of the gain and 20 % of the gain computed with indexed cost, the second limb's base being absent for every other bucket, which is what makes the limb unable to bind there. Not modelled: s.197(4) / s.112(1)(c)(iii) (a non-resident's unlisted securities, how the gain is computed). The shortfall of s.197(2) / the s.112(1)(a) proviso is RATE-CG-SHORTFALL-ORDER's; Chapter VIII is kept off by s.197(5) / s.112(2). Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 17, 19; docs/taxplanning-build/sources/2026-10-31-land-building-cap.md rows 2-7, 9-10.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -25,13 +25,23 @@
         "presence": "PRESENT"
       },
       "cap": {
-        "type": "SlabLadder",
-        "base": "SPECIAL_RATE_GAINS",
-        "bands": [
+        "type": "LeastOf",
+        "limbs": [
           {
-            "lowerExclusive": "0",
-            "upperInclusive": null,
-            "rate": "12.5"
+            "name": "twelve and one-half per cent of the gain",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "12.5",
+              "base": "SPECIAL_RATE_GAINS"
+            }
+          },
+          {
+            "name": "twenty per cent of the gain computed with indexed cost",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "20",
+              "base": "INDEXED_SPECIAL_RATE_GAINS"
+            }
           }
         ]
       },
@@ -79,13 +89,23 @@
         "presence": "PRESENT"
       },
       "cap": {
-        "type": "SlabLadder",
-        "base": "SPECIAL_RATE_GAINS",
-        "bands": [
+        "type": "LeastOf",
+        "limbs": [
           {
-            "lowerExclusive": "0",
-            "upperInclusive": null,
-            "rate": "12.5"
+            "name": "twelve and one-half per cent of the gain",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "12.5",
+              "base": "SPECIAL_RATE_GAINS"
+            }
+          },
+          {
+            "name": "twenty per cent of the gain computed with indexed cost",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "20",
+              "base": "INDEXED_SPECIAL_RATE_GAINS"
+            }
           }
         ]
       },

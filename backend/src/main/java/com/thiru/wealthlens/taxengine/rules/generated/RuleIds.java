@@ -21,6 +21,7 @@ public final class RuleIds {
     public static final RuleId CG_CHARGE_TRANSFER = new RuleId("CG-CHARGE-TRANSFER");
     public static final RuleId CG_DEPOSIT = new RuleId("CG-DEPOSIT");
     public static final RuleId CG_DERIVATIVE = new RuleId("CG-DERIVATIVE");
+    public static final RuleId CG_INDEXED_COST_LAND_BUILDING = new RuleId("CG-INDEXED-COST-LAND-BUILDING");
     public static final RuleId CG_PART_LONG_LISTED = new RuleId("CG-PART-LONG-LISTED");
     public static final RuleId CG_PART_LONG_NOTIFIED = new RuleId("CG-PART-LONG-NOTIFIED");
     public static final RuleId CG_PART_LONG_OTHER = new RuleId("CG-PART-LONG-OTHER");
@@ -167,6 +168,7 @@ public final class RuleIds {
     public static final RuleId PERQ_SPECIFIED_SECURITY = new RuleId("PERQ-SPECIFIED-SECURITY");
     public static final RuleId PERQ_TELEPHONE = new RuleId("PERQ-TELEPHONE");
     public static final RuleId PERQ_UTILITY = new RuleId("PERQ-UTILITY");
+    public static final RuleId RATE_CG_COST_INFLATION_INDEX = new RuleId("RATE-CG-COST-INFLATION-INDEX");
     public static final RuleId RATE_CG_LONG_LISTED_EQUITY = new RuleId("RATE-CG-LONG-LISTED-EQUITY");
     public static final RuleId RATE_CG_LONG_OTHER = new RuleId("RATE-CG-LONG-OTHER");
     public static final RuleId RATE_CG_SHORT_LISTED_EQUITY = new RuleId("RATE-CG-SHORT-LISTED-EQUITY");

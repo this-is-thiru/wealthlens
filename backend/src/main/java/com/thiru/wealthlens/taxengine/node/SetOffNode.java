@@ -102,6 +102,7 @@ public final class SetOffNode implements ComputationNode {
         heads.put(HeadCode.OTHER_SOURCES, ctx.get(NodeIds.OTHERSOURCES_INCOME, MoneyValue.class).asMoney());
         CapitalGainsHead capitalGains = ctx.get(NodeIds.CAPITALGAINS_INCOME, CapitalGainsHead.class);
         Map<CapitalGainsPart, Money> parts = new HashMap<>(capitalGains.parts());
+        Map<CapitalGainsPart, Money> indexedParts = new HashMap<>(capitalGains.indexedParts());
         heads.put(HeadCode.CAPITAL_GAINS, capitalGains.total());
         AbsorptionOrder declared = RuleDefinitions.require(version(ctx, t, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS)).definition(),
                 AbsorptionOrder.class, ctx.ruleIdOf(RuleSetIds.RS_SETOFF_ACROSS_HEADS));
@@ -116,7 +117,7 @@ public final class SetOffNode implements ComputationNode {
         heads.forEach((head, amount) -> income.put(head, Money.max(amount, Money.ZERO)));
         List<TraceLine> lines = new ArrayList<>();
         SetOffContext run = new SetOffContext(ctx, order, income,
-                new CapitalGainsAbsorption(order.capitalGainsOrder(), parts), lines);
+                new CapitalGainsAbsorption(order.capitalGainsOrder(), parts, indexedParts), lines);
         for (HeadCode lossHead : order.order().heads()) {
             Money loss = Money.ZERO.minus(heads.getOrDefault(lossHead, Money.ZERO));
             if (loss.isGreaterThan(Money.ZERO)) {
@@ -127,7 +128,7 @@ public final class SetOffNode implements ComputationNode {
         CarriedLossSetOff.apply(ctx, carriedCapitalLosses(ctx, t, order.capitalGainsOrder(),
                 DeclaredCapitalGainsParts.of(ctx)), income, run.parts(), lines);
         Money total = income.values().stream().reduce(Money.ZERO, Money::plus);
-        return new NodeResult(new HeadsAfterSetOff(total, parts), lines);
+        return new NodeResult(new HeadsAfterSetOff(total, parts, indexedParts), lines);
     }
 
     /** One head's loss: what may be set off, set off against the others in order, and what is left. */

@@ -20,6 +20,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.GiftAggregation;
 import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
+import com.thiru.wealthlens.taxengine.rules.definition.IndexedCost;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
@@ -73,7 +74,8 @@ public final class DefinitionJson {
                 "ParticularsThreshold", "FamilyPensionShare", "ProvidentFundThreshold", "GiftThreshold", "PolicyPremiumLimits",
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
                 "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod",
-                "CapitalGainsParts", "SalaryAveragingPeriod", "VehiclePath", "WearAndTear", "ChargeDeduction");
+                "CapitalGainsParts", "SalaryAveragingPeriod", "VehiclePath", "WearAndTear", "ChargeDeduction",
+                "IndexedCost");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -92,7 +94,7 @@ public final class DefinitionJson {
                     PackJson.integer(node, "oneOver", path), PackJson.money(node, "limit", path)));
             case "ProvidentFundThreshold" -> PackJson.construct(path, () -> new ProvidentFundThreshold(
                     PackJson.money(node, "withoutEmployerContribution", path), PackJson.money(node, "otherwise", path)));
-            case "IndexByYear" -> indexByYear(node, path);
+            case "IndexByYear", "IndexedCost" -> indexDefinition(tag, node, path);
             case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
             case "DisallowanceBasis" -> PackJson.construct(path, () -> new DisallowanceBasis(
                     new DisallowanceSetId(PackJson.text(node, "set", path))));
@@ -201,10 +203,24 @@ public final class DefinitionJson {
         };
     }
 
+    /**
+     * The index a capital gain's cost is lifted by, and the year indexation starts from (D-115; 2025 s.72(8)(a)-(b),
+     * 1961 s.48 Explanations (iii), (v); W-088g, D-426) — apart only to keep each switch within the complexity limit.
+     */
+    private static RuleDefinition indexDefinition(String tag, JsonNode node, String path) {
+        return switch (tag) {
+            case "IndexByYear" -> indexByYear(node, path);
+            case "IndexedCost" -> PackJson.construct(path, () -> new IndexedCost(
+                    financialYear(PackJson.text(node, "floorYear", path), path + ".floorYear")));
+            default -> throw unreachable(tag, path);
+        };
+    }
+
     /** Each entry names its financial year as a label, {@code "2023-24"}, so the table reads as the notification. */
     private static IndexByYear indexByYear(JsonNode node, String path) {
         List<Map.Entry<TaxYearId, Integer>> entries = PackJson.array(node, "years", path,
-                e -> Map.entry(financialYear(PackJson.text(e.node(), "financialYear", e.path()), e.path()),
+                e -> Map.entry(financialYear(PackJson.text(e.node(), "financialYear", e.path()),
+                                e.path() + ".financialYear"),
                         PackJson.integer(e.node(), "index", e.path())));
         Map<TaxYearId, Integer> table = new LinkedHashMap<>();
         for (Map.Entry<TaxYearId, Integer> entry : entries) {
@@ -215,17 +231,15 @@ public final class DefinitionJson {
         return PackJson.construct(path, () -> new IndexByYear(table));
     }
 
-    private static TaxYearId financialYear(String label, String path) {
+    private static TaxYearId financialYear(String label, String where) {
         TaxYearId year;
         try {
             year = TaxYearId.of(Integer.parseInt(label.substring(0, Math.min(4, label.length()))));
         } catch (NumberFormatException e) {
-            throw new PackValidationException(path + ".financialYear must read like \"2023-24\", but was \"" + label
-                    + "\"");
+            throw new PackValidationException(where + " must read like \"2023-24\", but was \"" + label + "\"");
         }
         if (!year.label().equals(label)) {
-            throw new PackValidationException(path + ".financialYear must read like \"2023-24\", but was \"" + label
-                    + "\"");
+            throw new PackValidationException(where + " must read like \"2023-24\", but was \"" + label + "\"");
         }
         return year;
     }

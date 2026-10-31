@@ -42,6 +42,11 @@ import java.util.function.Predicate;
  * takes the parts in {@code SETOFF-WITHIN-CAPITAL-GAINS}'s declared order, which neither Act prescribes (OQ-32), and
  * every set-off line names it. What no part absorbs is shown and stays in the head — a capital-gains loss is not set
  * off against another head (S2 s.109(2); 1961 s.71(3)); it is carried forward (S2 s.111; 1961 s.74; D-247).
+ *
+ * <p>Each part's gain is carried twice: as it is, and with the cost of the buckets {@code RS-CG-INDEXED-COST} qualifies
+ * lifted by the Cost Inflation Index (W-088g, D-426). The second measure is what {@code RATE-CG-LONG-OTHER}'s cap
+ * compares a twenty per cent rate against; a bucket that does not qualify carries its gain as both, which leaves the
+ * twelve and one-half per cent limb the lesser for it.
  */
 public final class CapitalGainsNode implements ComputationNode {
 
@@ -77,7 +82,8 @@ public final class CapitalGainsNode implements ComputationNode {
     public Set<RuleSetId> ruleSets() {
         return Set.of(ROW, PARTS, DeclaredCapitalGainsParts.PARTS, CapitalGainsStt.CHARGEABILITY,
                 CapitalGainsTerm.HOLDING_PERIOD, CapitalGainsScope.NOT_COMPUTED, CapitalGainsScope.ELSEWHERE,
-                CapitalGainsCharges.DEDUCTIONS);
+                CapitalGainsCharges.DEDUCTIONS, CapitalGainsIndexation.QUALIFIER,
+                RuleSetIds.RS_RATE_CG_COST_INFLATION_INDEX);
     }
 
     @Override
@@ -86,6 +92,7 @@ public final class CapitalGainsNode implements ComputationNode {
         CapitalGainsAbsorptionOrder order = RuleDefinitions.require(row.version().definition(),
                 CapitalGainsAbsorptionOrder.class, row.id());
         Map<CapitalGainsPart, Money> net = new HashMap<>();
+        Map<CapitalGainsPart, Money> indexedNet = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
             Money gain = CapitalGainsCharges.gainOf(ctx, bucket, lines);
@@ -93,11 +100,15 @@ public final class CapitalGainsNode implements ComputationNode {
                 continue;
             }
             Term term = CapitalGainsTerm.of(ctx, bucket, gain, lines);
-            net.merge(partOf(ctx, bucket, gain, term, CapitalGainsStt.of(ctx, bucket, gain, term, lines)), gain,
+            CapitalGainsPart part = partOf(ctx, bucket, gain, term,
+                    CapitalGainsStt.of(ctx, bucket, gain, term, lines));
+            net.merge(part, gain, Money::plus);
+            indexedNet.merge(part, CapitalGainsIndexation.indexedGainOf(ctx, bucket, gain, lines).orElse(gain),
                     Money::plus);
         }
         DeclaredCapitalGainsParts declared = DeclaredCapitalGainsParts.of(ctx);
         Map<CapitalGainsPart, Money> available = new HashMap<>();
+        Map<CapitalGainsPart, Money> indexed = new HashMap<>();
         Money longTermLoss = Money.ZERO;
         Money shortTermLoss = Money.ZERO;
         for (CapitalGainsPart part : order.parts()) {
@@ -114,13 +125,26 @@ public final class CapitalGainsNode implements ComputationNode {
                 lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.INCOME, amount, amount)
                         .withLimitedBy(part.toString()));
                 available.put(part, amount);
+                indexed.put(part, measureOf(ctx, row.id(), part, indexedNet.getOrDefault(part, Money.ZERO), lines));
             }
         }
-        CapitalGainsAbsorption parts = new CapitalGainsAbsorption(order, available);
+        CapitalGainsAbsorption parts = new CapitalGainsAbsorption(order, available, indexed);
         Money longTermLeft = setOff(ctx, parts, longTermLoss, true, declared, lines);
         Money shortTermLeft = setOff(ctx, parts, shortTermLoss, false, declared, lines);
-        CapitalGainsHead head = new CapitalGainsHead(available, shortTermLeft, longTermLeft);
+        CapitalGainsHead head = new CapitalGainsHead(available, indexed, shortTermLeft, longTermLeft);
         return new NodeResult(head, lines);
+    }
+
+    /** A held part's indexed measure, nil rather than negative — a measure a cost that rose has already emptied. */
+    private static Money measureOf(NodeContext ctx, RuleId row, CapitalGainsPart part, Money measure,
+            List<TraceLine> lines) {
+        if (!measure.isLessThan(Money.ZERO)) {
+            return measure;
+        }
+        lines.add(ctx.traceLine(lines.size() + 1, row, StepKind.MEASURE, measure, Money.ZERO)
+                .withLimitedBy(part + ": indexed cost above the consideration, so nothing is left at the 20 per cent"
+                        + " measure"));
+        return Money.ZERO;
     }
 
     /**

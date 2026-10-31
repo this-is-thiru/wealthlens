@@ -8,6 +8,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-CG-INDEXED-COST",
+      "_note": "Whether a bucket's cost is lifted by the Cost Inflation Index, for the cap on the tax on land or building (1961 s.112(1)(a) second proviso; 2025 s.197(3); W-088g, D-426): a resident individual or HUF's land or building acquired before 23-7-2024 (capitalgains.asset, capitalgains.acquired.on, IsResident, HasPersonType). A bucket no row meets has no indexed measure at all",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-CG-PARTS",
       "_note": "One row: CG-PARTS",
       "selection": "EXACTLY_ONE",
@@ -640,6 +646,12 @@
     {
       "id": "RS-RATE-COST-INFLATION-INDEX",
       "_note": "One row: RATE-COST-INFLATION-INDEX",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-RATE-CG-COST-INFLATION-INDEX",
+      "_note": "One row: RATE-CG-COST-INFLATION-INDEX",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
     },

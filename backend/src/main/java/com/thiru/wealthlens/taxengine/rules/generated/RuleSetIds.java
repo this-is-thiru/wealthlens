@@ -17,6 +17,7 @@ public final class RuleSetIds {
 
     public static final RuleSetId RS_CG_CHARGE = new RuleSetId("RS-CG-CHARGE");
     public static final RuleSetId RS_CG_ELSEWHERE = new RuleSetId("RS-CG-ELSEWHERE");
+    public static final RuleSetId RS_CG_INDEXED_COST = new RuleSetId("RS-CG-INDEXED-COST");
     public static final RuleSetId RS_CG_NOT_COMPUTED = new RuleSetId("RS-CG-NOT-COMPUTED");
     public static final RuleSetId RS_CG_PART = new RuleSetId("RS-CG-PART");
     public static final RuleSetId RS_CG_PARTS = new RuleSetId("RS-CG-PARTS");
@@ -118,6 +119,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_PERQ_SPECIFIED_DATE = new RuleSetId("RS-PERQ-SPECIFIED-DATE");
     public static final RuleSetId RS_PERQ_SPECIFIED_EMPLOYEE = new RuleSetId("RS-PERQ-SPECIFIED-EMPLOYEE");
     public static final RuleSetId RS_PERQ_SPECIFIED_SECURITY = new RuleSetId("RS-PERQ-SPECIFIED-SECURITY");
+    public static final RuleSetId RS_RATE_CG_COST_INFLATION_INDEX = new RuleSetId("RS-RATE-CG-COST-INFLATION-INDEX");
     public static final RuleSetId RS_RATE_CG_SHORTFALL_ORDER = new RuleSetId("RS-RATE-CG-SHORTFALL-ORDER");
     public static final RuleSetId RS_RATE_CG_SPECIAL = new RuleSetId("RS-RATE-CG-SPECIAL");
     public static final RuleSetId RS_RATE_COST_INFLATION_INDEX = new RuleSetId("RS-RATE-COST-INFLATION-INDEX");
