@@ -4,25 +4,20 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-088i is closed (D-428), committed e5233041
-Stage           : 6 of 6 (DONE) — reviewed on "review approved, close it out"
-Plan            : plans/W-088i.md — approved as written, built, and its Build record holds the three departures
-Sourcing        : sources/2026-10-31-reinvestment-exemption.md — 2025 s.86 (Gazette 265620 pp.130–131),
-                  1961 s.54F (thc pp.292–293), FA 2023 s.30 the only post-2019 amendment
-Decisions       : OQ-38 answered — net consideration less the TRANSFER_EXPENDITURE charges only, STT out;
-                  one entered fact per transfer matched by date and refused when not unique; the same
-                  exempt amount leaves the gain and W-088g's indexed measure
-Board           : `W-088i D  W-088i2 ·  W-088i3 ·  W-088i4 ·  W-089 D`
-Built           : the exemption end to end (see D-428); unit tier 3866 / 0 / 0; WL-A-2 not republished —
-                  the runbook did not change
-Next step       : W-088i5 (D-429: session 43's review placed thirteen rows, W-088i5 first — a done item
-                  computes a wrong figure), then the owner's choice. Unblocked behind W-088i: W-088i2 (the deposit
-                  route), W-088i3 (the charge-backs), W-088i4 (a land or building as the original asset).
-                  Not startable: W-088h (needs unlisted securities mapped). Proposed earlier: W-089e
-Last verify     : unit tier 3866 / 0 / 0 (BUILD SUCCESS) at the close-out
-Files touched   : this file — the post-commit state line, uncommitted
-Last commit     : c3dfbf17 — taxplanning W-088i: close out the item (item build e5233041; state line ab0ddef9)
-Updated         : 2026-10-31, session 43 — W-088i closed (D-428)
+Item            : W-088i5 — one house claim measured once over every bucket of its sale
+Stage           : 5 of 6 (AWAITING_REVIEW) — built and verified; STOP for the owner's review
+Plan            : plans/W-088i5.md — approved C1a C2a; Build record holds two wrong predictions
+Sourcing        : sources/2026-10-31-reinvestment-exemption.md rows 1-2 (no new source)
+Decisions       : D-430 — the claim's buckets measured together, losing buckets included, the exempt amount
+                  shared by gain with the last taking the remainder
+Board           : `W-088g2 D  W-088i5 R  W-088g3 ·`
+Built           : ReinvestmentExemption.chargeableGainsOf + Measure; CapitalGainsNode.takenBuckets; +7 cases
+Next step       : the owner's review; on "commit it", commit the named paths below
+Last verify     : class 24/0/0; unit tier 3873 / 0 / 0; integration tier 323 / 0 / 0; Checkstyle 0
+Files touched   : ReinvestmentExemption.java, CapitalGainsNode.java, HouseReinvestment.java,
+                  ReinvestmentExemptionTest.java, plans/W-088i5.md (new), 03-WORK-ITEMS.md, STATE.md, this file
+Last commit     : ecc14100 — docs(taxplanning-build): place session 43's review as thirteen backlog rows (D-429)
+Updated         : 2026-10-31, session 44 — W-088i5 built, awaiting review
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

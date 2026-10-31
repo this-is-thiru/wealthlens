@@ -16,9 +16,13 @@ import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The part of a long-term capital gain that putting it into a residential house takes out of the charge (2025 s.86;
@@ -29,8 +33,12 @@ import java.util.Optional;
  * transfer date, and how many may be bought or built around it. The periods within which the new house must be bought
  * or built, and the cap on its cost, are the row's definition's, so no legal period or boundary is written here.
  *
- * <p>The row is matched per bucket by the transfer date the reinvestment names. Two buckets transferring on the same
- * date cannot be told apart, so a second claim on that date is refused rather than one of them chosen.
+ * <p>A claim names the transfer it answers by its date, and reaches every bucket of that date a row reaches.
+ * {@code portfolio} splits one sale into a bucket per lot key, so those buckets are measured together — their gains
+ * and net considerations summed, the cap and the proportion applied once — and the exempt amount is shared back to the
+ * buckets with a gain in proportion to that gain, the last taking the remainder. A losing bucket of the sale lowers the
+ * gain measured and is never written down itself. The figure is then the same however the sale was split, and the new
+ * house's cost is counted once (W-088i5, D-430). A second claim on one date is refused rather than one of them chosen.
  *
  * <p>The exemption is taken off the gain alone, and the head's second measure is computed from what is left, so the
  * same amount leaves both. What is not exempted is charged in full where the new house's cost is at least the net
@@ -56,37 +64,31 @@ final class ReinvestmentExemption {
     }
 
     /**
-     * The bucket's gain after the exemption, one {@code EXEMPTION} line added where a row reached it; the gain
-     * unchanged where no row does, or where the taxpayer entered no reinvestment for the transfer.
-     *
-     * @throws IllegalArgumentException where two entered reinvestments name the bucket's transfer
+     * A bucket the head takes, with what the exemption is measured from: its gain and net consideration, and the term
+     * the rows decided for it.
      */
-    static Money chargeableGainOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, Term term,
-            Money netConsideration, List<TraceLine> lines) {
-        Optional<HouseReinvestment> claim = claimFor(ctx, bucket);
-        if (claim.isEmpty() || !gain.isGreaterThan(Money.ZERO)) {
-            return gain;
-        }
-        Optional<RuleRow> qualifying = ctx.optionalRuleOf(EXEMPTION, factsOf(bucket, term, claim.get()));
-        if (qualifying.isEmpty()) {
-            return gain;
-        }
-        RuleRow row = qualifying.get();
-        ExemptReinvestment definition = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row,
-                ctx.inputs().temporal()).definition(), ExemptReinvestment.class, row.id());
-        HouseReinvestment reinvestment = claim.get();
-        Optional<String> outside = outsideWindow(definition, reinvestment);
-        Money exempt = outside.isPresent() ? Money.ZERO
-                : exemptGain(definition, reinvestment, gain, netConsideration);
-        Money chargeable = gain.minus(exempt);
-        lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.EXEMPTION, gain, chargeable)
-                .withLimitedBy(outside.orElseGet(() -> basisOf(definition, reinvestment, netConsideration))));
-        return chargeable;
+    record BucketGain(CapitalGainsInput.Bucket bucket, CapitalGainsCharges.Gain gain, Term term) {
     }
 
-    /** The reinvestment the taxpayer entered for this bucket's transfer; two on one date are refused. */
-    private static Optional<HouseReinvestment> claimFor(NodeContext ctx, CapitalGainsInput.Bucket bucket) {
-        LocalDate transferDate = bucket.facts().transferredOn();
+    /**
+     * Each bucket's gain after the exemption, in the order given: an {@code EXEMPTION} line for each bucket with a gain
+     * that a claim's row reached; the gain unchanged where no row does, or where no reinvestment names the transfer.
+     *
+     * @throws IllegalArgumentException where two entered reinvestments name one transfer
+     */
+    static List<Money> chargeableGainsOf(NodeContext ctx, List<BucketGain> buckets, List<TraceLine> lines) {
+        List<Money> chargeable = new ArrayList<>(buckets.stream().map(bucket -> bucket.gain().gain()).toList());
+        Set<LocalDate> transfers = new LinkedHashSet<>();
+        buckets.forEach(bucket -> transfers.add(bucket.bucket().facts().transferredOn()));
+        for (LocalDate transfer : transfers) {
+            claimOn(ctx, transfer).ifPresent(claim -> exempt(ctx, claim, reached(ctx, buckets, claim), buckets,
+                    chargeable, lines));
+        }
+        return List.copyOf(chargeable);
+    }
+
+    /** The reinvestment the taxpayer entered for the transfer on {@code transferDate}; two on one date are refused. */
+    private static Optional<HouseReinvestment> claimOn(NodeContext ctx, LocalDate transferDate) {
         List<HouseReinvestment> matching = ctx.inputs().entered().houseReinvestments().stream()
                 .filter(claim -> claim.transferDate().equals(transferDate))
                 .toList();
@@ -95,6 +97,86 @@ final class ReinvestmentExemption {
                     + ", so which answers this bucket cannot be told: " + matching);
         }
         return matching.stream().findFirst();
+    }
+
+    /** The positions of the buckets of the claim's transfer that a row reaches, each with the row that reached it. */
+    private static Map<Integer, RuleRow> reached(NodeContext ctx, List<BucketGain> buckets, HouseReinvestment claim) {
+        Map<Integer, RuleRow> reached = new LinkedHashMap<>();
+        for (int position = 0; position < buckets.size(); position++) {
+            BucketGain bucket = buckets.get(position);
+            if (bucket.bucket().facts().transferredOn().equals(claim.transferDate())) {
+                int at = position;
+                ctx.optionalRuleOf(EXEMPTION, factsOf(bucket.bucket(), bucket.term(), claim))
+                        .ifPresent(row -> reached.put(at, row));
+            }
+        }
+        return reached;
+    }
+
+    /** The claim measured once over the buckets it reached, the exempt amount shared to those with a gain. */
+    private static void exempt(NodeContext ctx, HouseReinvestment claim, Map<Integer, RuleRow> reached,
+            List<BucketGain> buckets, List<Money> chargeable, List<TraceLine> lines) {
+        if (reached.isEmpty()) {
+            return;
+        }
+        RuleRow first = reached.values().iterator().next();
+        ExemptReinvestment definition = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(first,
+                ctx.inputs().temporal()).definition(), ExemptReinvestment.class, first.id());
+        Measure measure = Measure.of(reached.keySet(), buckets);
+        Optional<String> outside = outsideWindow(definition, claim);
+        Money exempt = outside.isPresent() || !measure.hasGain() ? Money.ZERO
+                : exemptGain(definition, claim, measure.gain(), measure.netConsideration());
+        String reason = outside.orElseGet(() -> reasonOf(definition, claim, measure));
+        Money shared = Money.ZERO;
+        for (int index = 0; index < measure.gainers().size(); index++) {
+            int position = measure.gainers().get(index);
+            Money before = buckets.get(position).gain().gain();
+            Money share = index == measure.gainers().size() - 1 ? exempt.minus(shared)
+                    : exempt.scaledBy(before, measure.gainOfGainers());
+            shared = shared.plus(share);
+            chargeable.set(position, before.minus(share));
+            lines.add(ctx.traceLine(lines.size() + 1, reached.get(position).id(), StepKind.EXEMPTION, before,
+                    before.minus(share)).withLimitedBy(reason));
+        }
+    }
+
+    /** Why the line reads as it does, where the house is inside the window. */
+    private static String reasonOf(ExemptReinvestment definition, HouseReinvestment claim, Measure measure) {
+        String buckets = "the " + measure.size() + " buckets transferred on " + claim.transferDate();
+        if (!measure.hasGain()) {
+            return buckets + " show no gain together (" + measure.gain() + "), so nothing is exempt";
+        }
+        String basis = basisOf(definition, claim, measure.netConsideration());
+        return measure.size() == 1 ? basis : basis + "; measured with " + buckets + ": gain " + measure.gain()
+                + " against the net consideration " + measure.netConsideration();
+    }
+
+    /**
+     * The buckets one claim reached, taken as one sale: their gain and net consideration summed, and the buckets with a
+     * gain, in order, with the sum of their gains — the base the exempt amount is shared on.
+     */
+    private record Measure(int size, Money gain, Money netConsideration, List<Integer> gainers, Money gainOfGainers) {
+
+        static Measure of(Set<Integer> positions, List<BucketGain> buckets) {
+            Money gain = Money.ZERO;
+            Money netConsideration = Money.ZERO;
+            Money gainOfGainers = Money.ZERO;
+            List<Integer> gainers = new ArrayList<>();
+            for (int position : positions) {
+                CapitalGainsCharges.Gain measured = buckets.get(position).gain();
+                gain = gain.plus(measured.gain());
+                netConsideration = netConsideration.plus(measured.netConsideration());
+                if (measured.gain().isGreaterThan(Money.ZERO)) {
+                    gainers.add(position);
+                    gainOfGainers = gainOfGainers.plus(measured.gain());
+                }
+            }
+            return new Measure(positions.size(), gain, netConsideration, List.copyOf(gainers), gainOfGainers);
+        }
+
+        boolean hasGain() {
+            return gain.isGreaterThan(Money.ZERO);
+        }
     }
 
     /** The bucket's facts as the rows test them: its term and asset kind, and the bar's two counts. */

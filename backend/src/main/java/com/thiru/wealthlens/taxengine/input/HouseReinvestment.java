@@ -16,7 +16,8 @@ import java.time.LocalDate;
  * property" — the condition each limb of the bar carries (2025 s.86(5); 1961 s.54F(1) proviso) — is a fact no record
  * in this engine holds, so the entry states it by counting the houses it is true of.
  *
- * @param transferDate the date of the original transfer this reinvestment answers; the bucket is matched by it
+ * @param transferDate the date of the original transfer this reinvestment answers; every bucket of that date a row
+ *     reaches is measured with it, together (W-088i5)
  * @param newAssetOn when the new house was bought, or built
  * @param constructed whether the new house was built rather than bought — the two limbs have different periods
  * @param newAssetCost what the new house cost

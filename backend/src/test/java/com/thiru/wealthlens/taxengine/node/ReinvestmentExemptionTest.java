@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.input.HouseReinvestment;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
+import com.thiru.wealthlens.taxengine.pipeline.NodeValue;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
@@ -42,6 +43,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ReinvestmentExemptionTest {
 
     private static final CapitalGainsPart LONG_TERM_LISTED_EQUITY = new CapitalGainsPart("LONG_TERM_LISTED_EQUITY");
+
+    private static final CapitalGainsPart SHORT_TERM_LISTED_EQUITY = new CapitalGainsPart("SHORT_TERM_LISTED_EQUITY");
 
     private static final SideVenue SOLD_ON_NSE = new SideVenue(Optional.of("NSE"), Optional.empty());
 
@@ -75,8 +78,9 @@ class ReinvestmentExemptionTest {
         return new HouseReinvestment(transfer, newAssetOn, false, Money.of(cost), 0, 0);
     }
 
-    /** The head on one bucket, the taxpayer having entered {@code reinvestments}. */
-    private static NodeResult result(int year, List<HouseReinvestment> reinvestments, CapitalGainsInput.Bucket bucket) {
+    /** The head on {@code buckets}, the taxpayer having entered {@code reinvestments}. */
+    private static NodeResult result(int year, List<HouseReinvestment> reinvestments,
+            List<CapitalGainsInput.Bucket> buckets) {
         TaxYearId taxYear = TaxYearId.of(year);
         RulePack pack = pack(year);
         EngineInputs plain = NodeHarness.plainTaxpayer();
@@ -84,13 +88,44 @@ class ReinvestmentExemptionTest {
         EngineInputs inputs = new EngineInputs(taxYear, plain.regime(),
                 TemporalContext.forTaxYear(taxYear, taxYear.startsOn().plusMonths(5)), entered, plain.assessee(),
                 plain.family(), plain.ledgers(), plain.elections(),
-                new CapitalGainsInput(List.of(bucket), Instant.parse("2026-04-15T10:00:00Z"), "run-1"),
+                new CapitalGainsInput(buckets, Instant.parse("2026-04-15T10:00:00Z"), "run-1"),
                 plain.filing());
         return NodeHarness.with(pack).regime(plain.regime()).inputs(inputs).run(new CapitalGainsNode());
     }
 
+    private static NodeResult result(int year, List<HouseReinvestment> reinvestments, CapitalGainsInput.Bucket bucket) {
+        return result(year, reinvestments, List.of(bucket));
+    }
+
     private static NodeResult result(int year, HouseReinvestment reinvestment, CapitalGainsInput.Bucket bucket) {
         return result(year, List.of(reinvestment), bucket);
+    }
+
+    /** The head on several buckets, one house claimed for {@link #SOLD}. */
+    private static NodeResult result(HouseReinvestment reinvestment, CapitalGainsInput.Bucket... buckets) {
+        return result(2026, List.of(reinvestment), List.of(buckets));
+    }
+
+    /** A lot of {@code consideration} on {@code cost}, bought on {@code acquiredOn} and sold on {@link #SOLD}. */
+    private static CapitalGainsInput.Bucket lot(String consideration, String cost, LocalDate acquiredOn) {
+        return bucket(consideration, cost, acquiredOn, SOLD);
+    }
+
+    private static CapitalGainsHead head(NodeResult result) {
+        return (CapitalGainsHead) result.value();
+    }
+
+    /** The exemption lines' gains in and out, in the order written. */
+    private static List<List<NodeValue>> exemptionFigures(NodeResult result) {
+        return result.trace().stream()
+                .filter(line -> line.rule().equals(RuleIds.CG_EXEMPT_RESIDENTIAL_HOUSE))
+                .filter(line -> line.kind() == StepKind.EXEMPTION)
+                .map(line -> List.of(line.in(), line.out()))
+                .toList();
+    }
+
+    private static List<NodeValue> inOut(String in, String out) {
+        return List.<NodeValue>of(MoneyValue.of(Money.of(in)), MoneyValue.of(Money.of(out)));
     }
 
     /** The one exemption line, its figures the gain before and after; the reason it exempted nothing is its own. */
@@ -252,5 +287,119 @@ class ReinvestmentExemptionTest {
         assertThatThrownBy(() -> result(2026, two, goldenBucket(SOLD)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("2 reinvestments name the transfer");
+    }
+
+    @Test
+    void evaluate_whenOneHouseIsClaimedForASaleOfTwoLots_measuresTheSaleOnce() {
+        // Given — two long-term lots sold together, each 60,00,000 on a cost of 20,00,000, and one house of 60,00,000
+        HouseReinvestment house = house(SOLD, LocalDate.of(2027, 1, 15), "6000000");
+
+        // When
+        NodeResult result = result(house, lot("6000000", "2000000", LocalDate.of(2023, 5, 1)),
+                lot("6000000", "2000000", LocalDate.of(2024, 5, 1)));
+
+        // Then — 80,00,000 × 60,00,000 / 1,20,00,000 = 40,00,000 exempt, 20,00,000 from each lot by its gain
+        assertThat(exemptionFigures(result)).containsExactly(inOut("4000000", "2000000"), inOut("4000000", "2000000"));
+        assertThat(exemptionLine(result, Money.of("4000000"), Money.of("2000000")).limitedBy()).hasValueSatisfying(
+                reason -> assertThat(reason).contains("measured with the 2 buckets transferred on 2026-09-01"));
+        assertThat(head(result).part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("4000000"));
+    }
+
+    @Test
+    void evaluate_whenTheSameSaleIsOneBucketOrTwo_chargesTheSameGain() {
+        // Given — the sale of the case above, once as two lots and once as the single bucket portfolio makes when
+        // both lots share a key
+        HouseReinvestment house = house(SOLD, LocalDate.of(2027, 1, 15), "6000000");
+
+        // When
+        Money asTwo = head(result(house, lot("6000000", "2000000", LocalDate.of(2023, 5, 1)),
+                lot("6000000", "2000000", LocalDate.of(2024, 5, 1)))).part(LONG_TERM_LISTED_EQUITY);
+        Money asOne = head(result(house, lot("12000000", "4000000", LocalDate.of(2023, 5, 1))))
+                .part(LONG_TERM_LISTED_EQUITY);
+
+        // Then — 40,00,000 either way
+        assertThat(asTwo).isEqualTo(Money.of("4000000"));
+        assertThat(asOne).isEqualTo(asTwo);
+    }
+
+    @Test
+    void evaluate_whenAShortTermLotIsSoldTheSameDay_leavesItOutOfTheMeasure() {
+        // Given — a long-term lot of 60,00,000 on 20,00,000, a lot bought six months earlier on the same figures, and
+        // a house of 60,00,000
+        HouseReinvestment house = house(SOLD, LocalDate.of(2027, 1, 15), "6000000");
+
+        // When
+        NodeResult result = result(house, lot("6000000", "2000000", LocalDate.of(2023, 5, 1)),
+                lot("6000000", "2000000", LocalDate.of(2026, 3, 1)));
+
+        // Then — the row reaches the long-term lot alone; 60,00,000 ≥ its net consideration, so its 40,00,000 is
+        // exempt, and the short-term 40,00,000 is charged
+        assertThat(exemptionFigures(result)).containsExactly(inOut("4000000", "0"));
+        assertThat(head(result).part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.ZERO);
+        assertThat(head(result).part(SHORT_TERM_LISTED_EQUITY)).isEqualTo(Money.of("4000000"));
+    }
+
+    @Test
+    void evaluate_whenALotOfTheSaleMadeALoss_measuresTheSaleOnItsNetGain() {
+        // Given — a lot gaining 40,00,000 (60,00,000 on 20,00,000), a lot losing 10,00,000 (30,00,000 on 40,00,000),
+        // and a house of 45,00,000
+        HouseReinvestment house = house(SOLD, LocalDate.of(2027, 1, 15), "4500000");
+
+        // When
+        NodeResult result = result(house, lot("6000000", "2000000", LocalDate.of(2023, 5, 1)),
+                lot("3000000", "4000000", LocalDate.of(2024, 5, 1)));
+
+        // Then — 30,00,000 × 45,00,000 / 90,00,000 = 15,00,000 exempt, all of it from the gaining lot; 25,00,000
+        // less the 10,00,000 loss leaves 15,00,000, as the sale in one bucket would
+        assertThat(exemptionFigures(result)).containsExactly(inOut("4000000", "2500000"));
+        assertThat(head(result).part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("1500000"));
+    }
+
+    @Test
+    void evaluate_whenTheSalesLotsTogetherShowNoGain_exemptsNothing() {
+        // Given — a lot gaining 10,00,000 (30,00,000 on 20,00,000), a lot losing 20,00,000 (20,00,000 on 40,00,000),
+        // and a house of 50,00,000
+        HouseReinvestment house = house(SOLD, LocalDate.of(2027, 1, 15), "5000000");
+
+        // When
+        NodeResult result = result(house, lot("3000000", "2000000", LocalDate.of(2023, 5, 1)),
+                lot("2000000", "4000000", LocalDate.of(2024, 5, 1)));
+
+        // Then — the sale lost 10,00,000, so nothing is exempt and the loss is carried
+        assertThat(exemptionFigures(result)).containsExactly(inOut("1000000", "1000000"));
+        assertThat(exemptionLine(result, Money.of("1000000"), Money.of("1000000")).limitedBy()).hasValueSatisfying(
+                reason -> assertThat(reason).contains("show no gain"));
+        assertThat(head(result).longTermLossLeft()).isEqualTo(Money.of("1000000"));
+    }
+
+    @Test
+    void evaluate_whenTheExemptionSplitsUnevenly_givesTheLastLotTheRemainder() {
+        // Given — three lots of 30,00,000 on 20,00,000 and a house of 10,00,001
+        HouseReinvestment house = house(SOLD, LocalDate.of(2027, 1, 15), "1000001");
+
+        // When
+        NodeResult result = result(house, lot("3000000", "2000000", LocalDate.of(2023, 5, 1)),
+                lot("3000000", "2000000", LocalDate.of(2023, 6, 1)), lot("3000000", "2000000", LocalDate.of(2023, 7, 1)));
+
+        // Then — 30,00,000 × 10,00,001 / 90,00,000 = 3,33,333.67 exempt: 1,11,111.22 from the first two lots and the
+        // remaining 1,11,111.23 from the last, so 26,66,666.33 is charged
+        assertThat(exemptionFigures(result)).containsExactly(inOut("1000000", "888888.78"),
+                inOut("1000000", "888888.78"), inOut("1000000", "888888.77"));
+        assertThat(head(result).part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("2666666.33"));
+    }
+
+    @Test
+    void evaluate_whenAnotherLotIsSoldOnAnotherDate_leavesItCharged() {
+        // Given — a lot sold on the claim's date and a lot sold a month later, each 60,00,000 on 20,00,000, and a
+        // house of 60,00,000 claimed for the first sale
+        HouseReinvestment house = house(SOLD, LocalDate.of(2027, 1, 15), "6000000");
+
+        // When
+        NodeResult result = result(house, lot("6000000", "2000000", LocalDate.of(2023, 5, 1)),
+                bucket("6000000", "2000000", LocalDate.of(2023, 5, 1), LocalDate.of(2026, 10, 1)));
+
+        // Then — the first sale's whole 40,00,000 is exempt; the second's 40,00,000 is charged
+        assertThat(exemptionFigures(result)).containsExactly(inOut("4000000", "0"));
+        assertThat(head(result).part(LONG_TERM_LISTED_EQUITY)).isEqualTo(Money.of("4000000"));
     }
 }

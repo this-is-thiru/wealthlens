@@ -95,15 +95,12 @@ public final class CapitalGainsNode implements ComputationNode {
         Map<CapitalGainsPart, Money> net = new HashMap<>();
         Map<CapitalGainsPart, Money> indexedNet = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
-        for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
-            CapitalGainsCharges.Gain charges = CapitalGainsCharges.gainOf(ctx, bucket, lines);
-            Money gain = charges.gain();
-            if (!CapitalGainsScope.takes(ctx, bucket, gain, lines)) {
-                continue;
-            }
-            Term term = CapitalGainsTerm.of(ctx, bucket, gain, lines);
-            Money chargeable = ReinvestmentExemption.chargeableGainOf(ctx, bucket, gain, term,
-                    charges.netConsideration(), lines);
+        List<ReinvestmentExemption.BucketGain> taken = takenBuckets(ctx, lines);
+        List<Money> chargeableGains = ReinvestmentExemption.chargeableGainsOf(ctx, taken, lines);
+        for (int position = 0; position < taken.size(); position++) {
+            CapitalGainsInput.Bucket bucket = taken.get(position).bucket();
+            Term term = taken.get(position).term();
+            Money chargeable = chargeableGains.get(position);
             CapitalGainsPart part = partOf(ctx, bucket, chargeable, term,
                     CapitalGainsStt.of(ctx, bucket, chargeable, term, lines));
             net.merge(part, chargeable, Money::plus);
@@ -178,6 +175,22 @@ public final class CapitalGainsNode implements ComputationNode {
      *
      * @throws IllegalArgumentException if no row covers the bucket — its facts are named, so the gap can be read
      */
+    /**
+     * Each bucket the head takes, with its gain and its term — all of them before any is exempted, because a house claim
+     * is measured over every bucket of its transfer together ({@link ReinvestmentExemption}; W-088i5).
+     */
+    private static List<ReinvestmentExemption.BucketGain> takenBuckets(NodeContext ctx, List<TraceLine> lines) {
+        List<ReinvestmentExemption.BucketGain> taken = new ArrayList<>();
+        for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
+            CapitalGainsCharges.Gain gain = CapitalGainsCharges.gainOf(ctx, bucket, lines);
+            if (CapitalGainsScope.takes(ctx, bucket, gain.gain(), lines)) {
+                taken.add(new ReinvestmentExemption.BucketGain(bucket, gain,
+                        CapitalGainsTerm.of(ctx, bucket, gain.gain(), lines)));
+            }
+        }
+        return taken;
+    }
+
     private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, Term term,
             CapitalGainsStt.Sides stt) {
         return ctx.optionalRuleOf(PARTS, factsOf(bucket, term, stt))
