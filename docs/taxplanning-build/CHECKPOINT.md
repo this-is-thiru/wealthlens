@@ -5,7 +5,7 @@ owner anything, so a session cut off mid-message loses nothing. Rules: `00-START
 
 ```
 Item            : W-088i — the house-reinvestment exemption (S2 s.86 / 1961 s.54F, D-248)
-Stage           : 5 of 6 (REPORTED) — built and verified, awaiting the owner's review
+Stage           : 5 of 6 (REPORTED) — built, verified and committed e5233041; awaiting the review
 Plan            : plans/W-088i.md — approved as written: "W-088i approved, place W-088i2 and W-088i3"
 Sourcing        : sources/2026-10-31-reinvestment-exemption.md — 2025 s.86 (Gazette 265620 pp.130–131),
                   1961 s.54F (thc pp.292–293), FA 2023 s.30 the only post-2019 amendment, nine other
@@ -23,10 +23,9 @@ Departed        : recorded in the plan's Build record — the golden is ₹4,51,
 Next step       : the owner's review; then close-out — D-428, the WI clause, board `D`, and the
                   decision row for OQ-38's reading, Risk 3 and Risk 4
 Last verify     : unit tier 3866 / 0 / 0 (BUILD SUCCESS); ReinvestmentExemptionTest 17 / 0 / 0
-Files touched   : backend/ (nine files), the two lock files, 03-WORK-ITEMS.md, STATE.md, plans/
-                  W-088i.md, content sections and coverage, rule-sets.json and this file
-Last item commit: taxplanning W-089: run the T13-1 case end to end — a ₹12,00,000 income that is almost all long-term gains pays 87,750 rather than nil, because s.156(3) caps the rebate at the slab-rate tax, which is zero (D-427)
-Updated         : 2026-10-31, session 43 — W-088i reported; nothing committed
+Files touched   : nothing uncommitted — e5233041 holds the 64 files; STATE.md and this file alone moved since
+Last item commit: e5233041 — taxplanning W-088i: take a long-term gain put into a residential house out of the charge (2025 s.86; 1961 s.54F)
+Updated         : 2026-10-31, session 43 — W-088i committed e5233041; awaiting the review
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
