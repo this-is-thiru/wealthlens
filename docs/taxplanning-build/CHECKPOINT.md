@@ -15,7 +15,8 @@ Decisions       : OQ-38 answered — net consideration less the TRANSFER_EXPENDI
 Board           : `W-088i D  W-088i2 ·  W-088i3 ·  W-088i4 ·  W-089 D`
 Built           : the exemption end to end (see D-428); unit tier 3866 / 0 / 0; WL-A-2 not republished —
                   the runbook did not change
-Next step       : the owner's choice of the next item. Unblocked behind W-088i: W-088i2 (the deposit
+Next step       : W-088i5 (D-429: session 43's review placed thirteen rows, W-088i5 first — a done item
+                  computes a wrong figure), then the owner's choice. Unblocked behind W-088i: W-088i2 (the deposit
                   route), W-088i3 (the charge-backs), W-088i4 (a land or building as the original asset).
                   Not startable: W-088h (needs unlisted securities mapped). Proposed earlier: W-089e
 Last verify     : unit tier 3866 / 0 / 0 (BUILD SUCCESS) at the close-out
