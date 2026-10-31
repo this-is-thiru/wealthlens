@@ -60,21 +60,34 @@ public class ChargeScheduleResolver {
      */
     private final Map<ScopeKey, Optional<ChargeScheduleEntity>> cache = new ConcurrentHashMap<>();
 
+    /** The statutory cards' answers, kept apart so a broker-free key never answers for a broker's card. */
+    private final Map<ScopeKey, Optional<ChargeScheduleEntity>> statutoryCache = new ConcurrentHashMap<>();
+
     public Optional<ChargeScheduleEntity> resolve(ChargeContext context) {
         return cache.computeIfAbsent(ScopeKey.of(context), key -> select(context));
+    }
+
+    /**
+     * The statutory card for this trade: the one naming no broker (D-380, D-381), chosen among
+     * statutory cards by the same agreement, specificity and tie rules as a broker's card.
+     *
+     * <p>Resolved beside the broker's card, never ranked against it: the engine merges the two, so
+     * letting them compete would drop one card's charges. Absence is not warned about, because no
+     * statutory card ships until W-163b.
+     */
+    public Optional<ChargeScheduleEntity> resolveStatutory(ChargeContext context) {
+        return statutoryCache.computeIfAbsent(ScopeKey.withoutBroker(context), key -> selectStatutory(context));
     }
 
     /** Called when a schedule is published or superseded, so the next trade sees the new card. */
     public void evictAll() {
         cache.clear();
+        statutoryCache.clear();
     }
 
     private Optional<ChargeScheduleEntity> select(ChargeContext context) {
-        List<ChargeScheduleEntity> eligible = chargeScheduleRepository
-                .findCandidates(context.brokerName(), context.transactionDate())
-                .stream()
-                .filter(candidate -> agrees(candidate, context))
-                .toList();
+        List<ChargeScheduleEntity> eligible = agreeing(
+                chargeScheduleRepository.findCandidates(context.brokerName(), context.transactionDate()), context);
 
         if (eligible.isEmpty()) {
             log.warn("No charge schedule for broker={} on {} matching assetType={}, segment={}, exchange={},"
@@ -83,16 +96,34 @@ public class ChargeScheduleResolver {
                     context.exchange(), context.planCode(), context.transactionId());
             return Optional.empty();
         }
+        return Optional.of(mostSpecific(eligible, context, "broker " + context.brokerName()));
+    }
 
+    private Optional<ChargeScheduleEntity> selectStatutory(ChargeContext context) {
+        List<ChargeScheduleEntity> eligible = agreeing(
+                chargeScheduleRepository.findStatutoryCandidates(context.transactionDate()), context);
+
+        return eligible.isEmpty()
+                ? Optional.empty()
+                : Optional.of(mostSpecific(eligible, context, "the statutory charges"));
+    }
+
+    private static List<ChargeScheduleEntity> agreeing(List<ChargeScheduleEntity> candidates, ChargeContext context) {
+        return candidates.stream().filter(candidate -> agrees(candidate, context)).toList();
+    }
+
+    private static ChargeScheduleEntity mostSpecific(
+            List<ChargeScheduleEntity> eligible, ChargeContext context, String whose) {
         int best = eligible.stream().mapToInt(ChargeScheduleResolver::specificity).max().orElseThrow();
         List<ChargeScheduleEntity> mostSpecific = eligible.stream()
                 .filter(candidate -> specificity(candidate) == best)
                 .toList();
 
-        return Optional.of(mostRecent(mostSpecific, context));
+        return mostRecent(mostSpecific, context, whose);
     }
 
-    private static ChargeScheduleEntity mostRecent(List<ChargeScheduleEntity> candidates, ChargeContext context) {
+    private static ChargeScheduleEntity mostRecent(
+            List<ChargeScheduleEntity> candidates, ChargeContext context, String whose) {
         if (candidates.size() == 1) {
             return candidates.getFirst();
         }
@@ -111,8 +142,8 @@ public class ChargeScheduleResolver {
             String codes = newest.stream()
                     .map(ChargeScheduleEntity::getScheduleCode)
                     .collect(Collectors.joining(", "));
-            throw new BadRequestException("More than one charge schedule is equally specific for broker "
-                    + context.brokerName() + " on " + context.transactionDate() + ": " + codes
+            throw new BadRequestException("More than one charge schedule is equally specific for "
+                    + whose + " on " + context.transactionDate() + ": " + codes
                     + ". Close one of their validity windows.");
         }
         return newest.getFirst();
@@ -158,6 +189,12 @@ public class ChargeScheduleResolver {
 
         static ScopeKey of(ChargeContext context) {
             return new ScopeKey(context.brokerName(), context.assetType(), context.segment(),
+                    context.exchange(), context.planCode(), context.transactionDate());
+        }
+
+        /** A statutory card is chosen whoever the broker is, so the broker is not part of its scope. */
+        static ScopeKey withoutBroker(ChargeContext context) {
+            return new ScopeKey(null, context.assetType(), context.segment(),
                     context.exchange(), context.planCode(), context.transactionDate());
         }
     }

@@ -1,0 +1,77 @@
+{
+  "ruleId": "PERQ-CLUB-BUSINESS-UNIFORM",
+  "ruleSet": "RS-PERQ-EXPENSE-EXCLUDED",
+  "_note": "TY 2026-27 only: column C \"shall not apply, if such expenditure is incurred wholly and exclusively for business purposes and the following conditions are fulfilled:– (i) conditions in sub-rule (5)(b) are fulfilled; and (ii) use of health club, sports and similar facilities are provided uniformly to all employees by the employer\" (r.15(5) Table IV Sl. 6 col. D (b), Gazette 271092, p.1546) — one nil needing all three, as the text reads (D-119 C2a); whether it merges 1962's two exclusions by drafting is OQ-12. Every regime. The row reaches expense.kind CLUB where expense.wholly.for.work, expense.journeys.and.certificate.kept and expense.health.club.uniform.for.all are all true, in RS-PERQ-EXPENSE-EXCLUDED (W-154d).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(viii), with Income-tax Rules, 1962 r.3(7)(vi)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(e), with Income-tax Rules, 2026 r.15(5) Table IV Sl. 6",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "0"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.kind",
+          "code": "CLUB"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.wholly.for.work",
+          "code": "true"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.journeys.and.certificate.kept",
+          "code": "true"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "expense.health.club.uniform.for.all",
+          "code": "true"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 6 col. D (b), p.1546, and (5)(b), p.1547",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(5) Table IV Sl. 6 col. D (b), p.1546, and (5)(b), p.1547",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

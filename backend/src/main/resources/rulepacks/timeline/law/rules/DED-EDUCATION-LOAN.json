@@ -1,0 +1,99 @@
+{
+  "ruleId": "DED-EDUCATION-LOAN",
+  "ruleSet": "RS-DED-EDUCATION-LOAN",
+  "_note": "Interest on a loan for higher education: an individual, \"amount paid as interest during a tax year … on a loan taken by him from any financial institution or any approved charitable institution, if the — (a) loan taken is for the purpose of pursuing higher education of himself or his relative; and (b) payment is made out of his income chargeable to tax\" (s.129(1), p.165) — no limit on the amount; \"in respect of the initial tax year and seven tax years immediately succeeding the initial tax year, or until the interest … is fully paid … whichever is earlier\" (s.129(2)); the initial tax year is \"the tax year in which the assessee starts paying the interest\" (s.129(3)(d)); a relative is the spouse, children, or a student the individual is guardian of (s.129(3)(e)). The span is the definition (TaxYearSpan); the lender, the relative and payment out of taxable income are entry conditions. rulebook DED-80E-001, -002. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80E, is the TY 2025-26 version (W-075d4). D-139. TY 2025-26: Income-tax Act, 1961 s.80E (thc pp.346–347): an individual's interest paid \"out of his income chargeable to tax, by way of interest on loan taken by him from any financial institution or any approved charitable institution for the purpose of pursuing his higher education or for the purpose of higher education of his relative\", allowed \"in respect of the initial assessment year and seven assessment years immediately succeeding the initial assessment year or until the interest … is paid by the assessee in full, whichever is earlier\"; the initial assessment year is the one whose previous year the assessee starts paying — the same span counted in tax years. sources/2026-10-07-chapter-via.md B16. D-147. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80E; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.129",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 7
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80E — subs. by Act 18 of 2005, s.25 (w.e.f. 1-4-2006); relative ins. by Act 22 of 2007, s.21 (w.e.f. 1-4-2008)",
+        "gazetteRef": "Act 18 of 2005: Gazette of India, Extraordinary, Part II, Section 1, 13-5-2005 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 27, 4-10-2007, p.929; Act 22 of 2007: Gazette issue not read; s.21 in the Department's text of the Act and the assent of 11-5-2007 in the Department's circular, as relayed by the owner's ChatGPT share t_6ad20d9ccc688191a3d9b332798e0c0a (D-189)",
+        "notifiedOn": "2007-05-11",
+        "effectiveFrom": "2008-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/finance-bill-167",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80E, pp.346–347",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80E after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md; none amends s.80E) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80E; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.129",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "TaxYearSpan",
+        "succeedingYears": 7
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.129",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.129, p.165",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.129, p.165",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

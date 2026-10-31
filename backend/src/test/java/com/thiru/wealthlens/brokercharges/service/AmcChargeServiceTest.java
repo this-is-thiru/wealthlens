@@ -206,7 +206,7 @@ class AmcChargeServiceTest {
         // period is settled, so it must not be retried every cycle.
         givenDue(account(DEMAT, null));
         when(userChargeService.computeAndRecord(any()))
-                .thenReturn(new ChargeComputation("sched-1", "ZERODHA_AMC", null,
+                .thenReturn(new ChargeComputation("sched-1", "ZERODHA_AMC", null, null, null,
                         ChargeResolution.RESOLVED, List.of(), 0.0));
         when(userChargeService.findForTransaction(anyString(), anyString())).thenReturn(row("row-1"));
         when(chargeAccountRepository.save(any())).thenAnswer(call -> call.getArgument(0));
@@ -254,7 +254,7 @@ class AmcChargeServiceTest {
         line.setAmount(amount);
 
         when(userChargeService.computeAndRecord(any())).thenReturn(new ChargeComputation(
-                "sched-1", "ZERODHA_AMC", null, ChargeResolution.RESOLVED, List.of(line), amount));
+                "sched-1", "ZERODHA_AMC", null, null, null, ChargeResolution.RESOLVED, List.of(line), amount));
         when(userChargeService.findForTransaction(anyString(), anyString())).thenReturn(row("row-1"));
         when(chargeAccountRepository.save(any())).thenAnswer(call -> call.getArgument(0));
     }

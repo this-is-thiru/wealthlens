@@ -1,0 +1,112 @@
+{
+  "ruleId": "HP-OWN-RESIDENCE-HIGHER-LIMIT",
+  "ruleSet": "RS-HP-OWN-RESIDENCE-HIGHER-LIMIT",
+  "_note": "Which own residences' interest takes the higher limit of HP-OWN-RESIDENCE-INTEREST-CAP, by the loan (W-157, D-355; D-156): capital borrowed to acquire or construct the house (loan.use = ACQUISITION_OR_CONSTRUCTION), with the lender's certificate furnished (loan.lender.certificate = true). TY 2026-27: Income-tax Act, 2025 s.22(2)(a) \"₹ 200000, subject to the following conditions:–– (i) the property has been acquired or constructed with borrowed capital and such acquisition or construction is completed within five years from the end of tax year in which capital was borrowed\", (ii) and (4) the lender's certificate (as HP-OWN-RESIDENCE-INTEREST-CAP's note quotes them). TY 2025-26: Income-tax Act, 1961 s.24(b) second and third provisos, the same. The dates (on or after which capital was borrowed, the years to complete) stay in HP-OWN-RESIDENCE-INTEREST-CAP's OwnResidenceInterestLimit. A loan this row does not reach takes the lower figure. Conditions only; provenance and introduction are HP-OWN-RESIDENCE-INTEREST-CAP's.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b) second and third provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(2)(a), (4)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "loan.use",
+          "code": "ACQUISITION_OR_CONSTRUCTION"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "loan.lender.certificate",
+          "code": "true"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.24(b) last proviso — ins. by Act 7 of 2019, s.5(c) (w.e.f. 1-4-2020)",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, No. 15, 21-2-2019 (egazette 2019/198304), pp.8–9",
+        "notifiedOn": "2019-02-21",
+        "effectiveFrom": "2020-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/198304.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.24(b) provisos and Explanation, p.147 (footnotes 5–8); Income-tax Act, 1961 s.24(b) provisos: the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b) second and third provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(2)(a), (4)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "loan.use",
+          "code": "ACQUISITION_OR_CONSTRUCTION"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "loan.lender.certificate",
+          "code": "true"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2026 (4 of 2026), s.38 — Income-tax Act, 2025 s.22(2) amended",
+        "gazetteRef": "CG-DL-E-31032026-271439",
+        "notifiedOn": "2026-03-31",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(2), p.47; s.22(4), (5), p.48; Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.38, p.41",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(2), p.47; s.22(4), (5), p.48; Gazette CG-DL-E-31032026-271439, Finance Act, 2026 s.38, p.41",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

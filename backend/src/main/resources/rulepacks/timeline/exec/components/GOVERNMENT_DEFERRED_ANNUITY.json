@@ -1,0 +1,27 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(c): \"sum deducted from salary payable by or on behalf of the Government to any individual for securing deferred annuity or making provision for his spouse or children, to the extent of 20 % of salary\" (Gazette 265620, p.561). Withheld from pay, hence SALARIES, as EMPLOYEE_PF; ChapterEightNode refuses it on an employment that is not GOVERNMENT. The 20 % is DED-SCHEDULE-XV's sub-cap on GOVERNMENT_SALARY — the Government employments' pay in money under the head, not perquisites (OQ-16 answered by the owner, D-154 C1a). TY 2025-26: Income-tax Act, 1961 s.80C(2)(iii) (sources B21): a sum deducted from Government salary for a deferred annuity or provision for spouse or children, \"in so far as the sum so deducted does not exceed one-fifth of the salary\". D-154.",
+  "code": "GOVERNMENT_DEFERRED_ANNUITY",
+  "displayName": "Deducted from your Government salary for a deferred annuity",
+  "head": "SALARIES",
+  "kind": "EMPLOYEE_CONTRIBUTION",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(c), p.561; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(iii), pp.330–333",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

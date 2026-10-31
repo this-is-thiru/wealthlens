@@ -1,0 +1,3 @@
+# The image needs the built jar and nothing else (see Dockerfile).
+*
+!backend/target/wealthlens.jar

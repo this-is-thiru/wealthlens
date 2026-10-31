@@ -1,0 +1,110 @@
+{
+  "ruleId": "CG-CHARGE-MISC",
+  "ruleSet": "RS-CG-CHARGE",
+  "_note": "A charge the user entered by hand, without a code, on either side, is not deducted: the record does not say what it was for, so it cannot be shown to be cost or expenditure in connection with the transfer under s.48 / s.72(1). A product choice by the owner's ruling D-375 C4a, not a reading of either Act; the row cites the section it declines to apply.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.48(i), (ii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.72(1)(a), (b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "ChargeDeduction",
+        "limb": "NOT_DEDUCTED"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "charge.code",
+          "code": "MISC"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 1992 (18 of 1992), s.24 — Income-tax Act, 1961 s.48 substituted, clauses (i) and (ii), w.e.f. 1-4-1993",
+        "gazetteRef": "Gazette issue not read; Act No. 18 of 1992 and its assent of 14-5-1992 read in Acts of the Parliament of India 1992 (Wikimedia Commons), DjVu pp.97, 114 (D-215)",
+        "notifiedOn": "1992-05-14",
+        "effectiveFrom": "1993-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Acts_of_the_Parliament_of_India_1992.djvu",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Acts_of_the_Parliament_of_India_1992.djvu",
+        "sourceDescription": "Income-tax Act, 1961 s.48, thc.nic.in copy p.272; Finance Act, 1992 s.24 (Acts of the Parliament of India 1992, D-215); no amendment of clause (i), (ii) or the securities-transaction-tax proviso in the Acts of 2019–2026 (docs/taxplanning-build/sources/2026-10-27-capital-gains-computation.md rows C4, C5, C7, C8)",
+        "accessedOn": "2026-10-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.48(i), (ii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.72(1)(a), (b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "ChargeDeduction",
+        "limb": "NOT_DEDUCTED"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "charge.code",
+          "code": "MISC"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.72(1)(a), (b)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.72(1), (3), p.117; not amended by the Taxation Laws (Amendment) Act, 2025 or the Finance Act, 2026 (docs/taxplanning-build/sources/2026-10-27-capital-gains-computation.md rows C1, C2)",
+        "accessedOn": "2026-10-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.72(1), (3), p.117; not amended by the Taxation Laws (Amendment) Act, 2025 or the Finance Act, 2026 (docs/taxplanning-build/sources/2026-10-27-capital-gains-computation.md rows C1, C2)",
+    "accessedOn": "2026-10-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

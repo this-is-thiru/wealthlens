@@ -1,0 +1,142 @@
+{
+  "ruleId": "PERQ-ACCOM-FURNITURE",
+  "ruleSet": "RS-PERQ-ACCOM-FURNITURE",
+  "_note": "Furniture in furnished accommodation: ten per cent a year of its cost, or the hire charges where hired from a third party, less what the employee pays for it (D-111). TY 2026-27: Income-tax Rules, 2026 r.15(2)(e) (p.1542), \"(i) … increased by 10% per annum of the cost of furniture (including television sets, radio sets, refrigerators, other household appliances, air-conditioning plant or equipment), as reduced by any charges paid or payable for the same by the employee during the tax year; and (ii) if such furniture is hired from a third party, the value of perquisite would be the actual hire charges payable for the same as reduced by any charges paid or payable\". TY 2025-26: Income-tax Rules, 1962 r.3(1) Table I col. 4 as substituted by G.S.R. 615(E) (pp.4–5), to the same effect. This row is the ten per cent; PerquisiteNode apportions it to the period by days, takes hire charges as entered, and takes off the employee's charges. Every regime. It reaches the providers of Table I Sl. 1 and 2 only (W-158b): TY 2026-27, r.15(2)(e)(i), \"the value of perquisite as determined under Table I: Sl. Nos. 1 and 2. C be increased\", and Sl. 3, the hotel, is \"Not applicable.\" in column C, its column D the lower of the hotel's charges and 24% of salary; TY 2025-26, Table I column (4) adds the furniture to Sl. (1), (2)(a) and (2)(b), and Sl. (3)'s column (3) is \"Not applicable\", its column (4) the hotel's value alone (sources/2026-10-24-accommodation-furniture.md F1, F2).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(i)–(ii), with Income-tax Rules, 1962 r.3(1) Table I col. 4",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(a)–(b), with Income-tax Rules, 2026 r.15(2)(e)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "FURNITURE_COST"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "accommodation.provider",
+              "code": "GOVERNMENT"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "accommodation.provider",
+              "code": "EMPLOYER_OWNED"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "accommodation.provider",
+              "code": "EMPLOYER_LEASED"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Eighteenth Amendment) Rules, 2023, G.S.R. 615(E), Notification No. 65/2023 — Income-tax Rules, 1962 r.3(1) substituted",
+        "gazetteRef": "CG-DL-E-18082023-248178",
+        "notifiedOn": "2023-08-18",
+        "effectiveFrom": "2023-09-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/248178.pdf",
+        "sourceDescription": "Gazette CG-DL-E-18082023-248178, G.S.R. 615(E), Income-tax Rules, 1962 r.3(1) Table I and provisos, pp.4–6; no later amendment of r.3(1) to 31-3-2026 — the Department's consolidated rule 3 footnotes and the amendment list agree, and the Gazette amendment chain from 1-9-2025 is read (docs/taxplanning-build/sources/2026-10-10-rule-3.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2)(i)–(ii), with Income-tax Rules, 1962 r.3(1) Table I col. 4",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(1)(a)–(b), with Income-tax Rules, 2026 r.15(2)(e)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "FURNITURE_COST"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "accommodation.provider",
+              "code": "GOVERNMENT"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "accommodation.provider",
+              "code": "EMPLOYER_OWNED"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "accommodation.provider",
+              "code": "EMPLOYER_LEASED"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 15(2)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(2) Table I and sub-rules (b)–(g), pp.1540–1542",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.15(2), pp.1540–1542",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

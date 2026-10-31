@@ -1,0 +1,33 @@
+{
+  "id": "T5-4a",
+  "source": "DR 08 T5-4 — LTA, TY 2026-27. VERIFIED",
+  "_source": "**Expected exemption ₹68,000, taxable ₹52,000.** LTA received ₹1,20,000; Bengaluru → Delhi, flown, ₹68,000 for the family. The fare the Rules admit is entered as ₹80,000 so the amount incurred binds (DR 08: \"air fare limb — NEEDS VERIFICATION\"). \"One journey already claimed … within the 2026-2029 block. This is the 2nd\": the earlier journey is the ledger's, this one on 10-2-2027 (erratum below DR 08 T5, D-153).",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "LTA": "120000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "leaveTravel": [
+      {
+        "startedOn": "2027-02-10",
+        "mode": "AIR",
+        "amountIncurred": "68000",
+        "fareAdmissible": "80000"
+      }
+    ],
+    "leaveTravelLedger": {
+      "2026": {
+        "journeysClaimed": 1,
+        "carriedJourneyClaimed": false
+      }
+    }
+  },
+  "expected": {
+    "salaryExemptions": "68000"
+  }
+}

@@ -1,0 +1,529 @@
+package com.thiru.wealthlens.taxengine.input;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Bucket;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
+import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.SideVenue;
+import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Member;
+import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
+import com.thiru.wealthlens.taxengine.input.FilingFacts.Payment;
+import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.regime.ElectionState;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import java.lang.reflect.RecordComponent;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+/**
+ * The cache key. A component it cannot see is a wrong answer served from cache.
+ */
+class InputsFingerprintTest {
+
+    private static final TaxYearId TY = TaxYearId.of(2026);
+    private static final LocalDate AS_OF = LocalDate.of(2026, 9, 21);
+    private static final Instant PF_AS_OF = Instant.parse("2026-09-01T00:00:00Z");
+
+    /** The harness's plain taxpayer, with the one family member the family perturbations change. */
+    private static EngineInputs baseline() {
+        return copy(NodeHarness.plainTaxpayer(), r -> r.family = new FamilySnapshot(List.of(new Member(
+                Relationship.CHILD,
+                LocalDate.of(2010, 4, 4),
+                true,
+                Optional.empty(),
+                Optional.empty(),
+                false, true))));
+    }
+
+    private static LocalDate baselineDateOfBirth() {
+        return ((Individual) NodeHarness.plainTaxpayer().assessee()).dateOfBirth();
+    }
+
+    private static String hashOf(EngineInputs inputs) {
+        return InputsFingerprint.of(inputs).sha256();
+    }
+
+    @Nested
+    @DisplayName("equal inputs give equal fingerprints")
+    class Stability {
+
+        @Test
+        void twoIdenticallyBuiltInputSetsAgree() {
+            assertThat(hashOf(baseline())).isEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void theFingerprintIsSixtyFourLowerCaseHexDigits() {
+            assertThat(hashOf(baseline())).hasSize(64).matches("[0-9a-f]{64}");
+        }
+
+        @Test
+        void aMalformedFingerprintIsRejected() {
+            assertThatThrownBy(() -> new InputsFingerprint("NOTAHASH"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("64 lower-case hex digits");
+        }
+
+        @Test
+        void fingerprintingNothingIsRejectedRatherThanHashingTheWordNull() {
+            assertThatThrownBy(() -> InputsFingerprint.of(null))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    /**
+     * The property F6 got wrong. Every component of {@link EngineInputs} is perturbed in turn,
+     * including nested ones, and each must move the hash.
+     */
+    @Nested
+    @DisplayName("any field change gives a different fingerprint")
+    class Sensitivity {
+
+        static Stream<Arguments> perturbations() {
+            return Stream.of(
+                    Arguments.of("taxYear", mutate(in -> withTaxYear(in, TaxYearId.of(2025)))),
+                    Arguments.of(
+                            "entered.employments",
+                            mutate(in -> copy(in, r -> r.entered = new EnteredFacts(List.of(new Employment(List.of(
+                                    new SalaryComponent(new ComponentCode("BASIC"),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
+                                    false, EmployerKind.OTHER, false, Optional.empty())), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty())))),
+                    Arguments.of(
+                            "regime",
+                            mutate(in -> copy(in, r -> r.regime = new RegimeCode("FIRST_SCHEDULE_RATES")))),
+                    Arguments.of(
+                            "temporal.asOfDate",
+                            mutate(in -> copy(in, r -> r.temporal =
+                                    TemporalContext.forTaxYear(TY, AS_OF.plusDays(1))))),
+                    Arguments.of(
+                            "assessee.dateOfBirth",
+                            mutate(in -> copy(in, r -> r.assessee = new Individual(
+                                    baselineDateOfBirth().minusYears(1),
+                                    ResidentialStatus.RESIDENT,
+                                    Optional.empty(),
+                                    Optional.empty())))),
+                    Arguments.of(
+                            "assessee.residence",
+                            mutate(in -> copy(in, r -> r.assessee = new Individual(
+                                    baselineDateOfBirth(), ResidentialStatus.RNOR, Optional.empty(), Optional.empty())))),
+                    Arguments.of(
+                            "assessee.disability",
+                            mutate(in -> copy(in, r -> r.assessee = new Individual(
+                                    baselineDateOfBirth(),
+                                    ResidentialStatus.RESIDENT,
+                                    Optional.of(DisabilitySeverity.SEVERE_DISABILITY),
+                                    Optional.empty())))),
+                    Arguments.of(
+                            "assessee.type — an HUF with the same residence",
+                            mutate(in -> copy(in, r -> r.assessee = new Huf(ResidentialStatus.RESIDENT)))),
+                    Arguments.of(
+                            "family.members[0].dateOfBirth",
+                            mutate(in -> copy(in, r -> r.family = new FamilySnapshot(List.of(
+                                    new Member(
+                                            Relationship.CHILD,
+                                            LocalDate.of(2011, 4, 4),
+                                            true,
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            false, true)))))),
+                    Arguments.of(
+                            "ledgers.retirementAllowedBefore",
+                            mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(
+                                    Map.of(),
+                                    Map.of(),
+                                    Map.of(RetirementEntry.OTHER_GRATUITY, com.thiru.wealthlens.taxengine.rules.money.Money.of("100000")),
+                                    Map.of(),
+                                    Optional.empty(), Map.of())))),
+                    Arguments.of(
+                            "elections.stateByRegime",
+                            mutate(in -> copy(in, r -> r.elections = new RegimeElectionSnapshot(
+                                    Map.of(new RegimeCode("NEW_TAX_REGIME"), ElectionState.IN_EFFECT),
+                                    Map.of())))),
+                    Arguments.of(
+                            "capitalGains.buckets",
+                            mutate(in -> copy(in, r -> r.capitalGains = new CapitalGainsInput(
+                                    List.of(new Bucket(
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("50000"), com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, List.of(),
+                                            new BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE", Optional.empty(),
+                                                    LocalDate.of(2020, 6, 1), LocalDate.of(2025, 6, 10),
+                                                    SideVenue.UNRECORDED, SideVenue.UNRECORDED),
+                                            Optional.empty())),
+                                    PF_AS_OF,
+                                    "pf-run-1")))),
+                    Arguments.of(
+                            "capitalGains.asOf",
+                            mutate(in -> copy(in, r -> r.capitalGains = CapitalGainsInput.none(
+                                    PF_AS_OF.plusSeconds(1), "pf-run-1")))),
+                    Arguments.of(
+                            "ledgers.capitalLossCarriedForward",
+                            mutate(in -> copy(in, r -> r.ledgers = new LedgerSnapshot(
+                                    Map.of(),
+                                    Map.of(),
+                                    Map.of(),
+                                    Map.of(),
+                                    Optional.empty(),
+                                    Map.of(TaxYearId.of(2024), new CarriedCapitalLoss(
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of("10000"),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.ZERO,
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.ZERO, true)))))),
+                    Arguments.of(
+                            "filing.advanceTaxPaid",
+                            mutate(in -> copy(in, r -> r.filing = new FilingFacts(
+                                    LocalDate.of(2026, 7, 31),
+                                    Optional.empty(),
+                                    List.of(new Payment(
+                                            LocalDate.of(2026, 3, 15),
+                                            com.thiru.wealthlens.taxengine.rules.money.Money.of(
+                                                    "25000"))))))),
+                    Arguments.of(
+                            "filing.furnishedOn",
+                            mutate(in -> copy(in, r -> r.filing = new FilingFacts(
+                                    LocalDate.of(2026, 7, 31),
+                                    Optional.of(LocalDate.of(2026, 8, 1)),
+                                    List.of())))));
+        }
+
+        @ParameterizedTest(name = "{0} changes the fingerprint")
+        @MethodSource("perturbations")
+        void everyPerturbationMovesTheHash(String what, UnaryOperator<EngineInputs> perturb) {
+            assertThat(hashOf(perturb.apply(baseline())))
+                    .as("changing %s must change the cache key, or its answer is served stale", what)
+                    .isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void everyComponentOfEngineInputsIsCoveredByAPerturbation() {
+            // Guards the guard: a component added to EngineInputs without a perturbation here
+            // would leave this suite passing while the property went untested.
+            List<String> perturbed = perturbations()
+                    .map(a -> ((String) a.get()[0]).split("\\.")[0])
+                    .distinct()
+                    .toList();
+            List<String> components = List.of(EngineInputs.class.getRecordComponents()).stream()
+                    .map(RecordComponent::getName)
+                    .toList();
+
+            assertThat(perturbed).containsAll(components);
+        }
+
+        @Test
+        void employment_whenOnlyTheTermsOnDearnessAllowanceDiffer_movesTheHash() {
+            // Given — D-092: whether DA counts in the salary bases changes HRA and the pension limits
+            EngineInputs silent = copy(baseline(), r -> r.entered = enteringBasic(false, EmployerKind.OTHER));
+            EngineInputs providing = copy(baseline(), r -> r.entered = enteringBasic(true, EmployerKind.OTHER));
+
+            // When / Then
+            assertThat(hashOf(providing)).isNotEqualTo(hashOf(silent));
+        }
+
+        @Test
+        void employment_whenOnlyTheEmployerKindDiffers_movesTheHash() {
+            // Given — D-105: 1961 s.16(ii) reads whether the salary is from the Government
+            EngineInputs other = copy(baseline(), r -> r.entered = enteringBasic(true, EmployerKind.OTHER));
+            EngineInputs government = copy(baseline(), r -> r.entered = enteringBasic(true, EmployerKind.GOVERNMENT));
+
+            // When / Then
+            assertThat(hashOf(government)).isNotEqualTo(hashOf(other));
+        }
+
+        private static EnteredFacts enteringBasic(boolean termsIncludeDearnessAllowance, EmployerKind employerKind) {
+            return new EnteredFacts(List.of(new Employment(
+                    List.of(new SalaryComponent(new ComponentCode("BASIC"),
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("600000"))),
+                    termsIncludeDearnessAllowance, employerKind, false, Optional.empty())), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
+        }
+
+        @Test
+        void enteredFacts_whenOnlyATenancyDiffers_movesTheHash() {
+            // Given — D-099: the HRA exemption reads each tenancy, so it must be in the cache key
+            EngineInputs withTenancy = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(
+                    new Tenancy(com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
+                                    LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31)), "BENGALURU", false,
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("360000"))), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
+
+            // When / Then
+            assertThat(hashOf(withTenancy)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void enteredFacts_whenOnlyAJourneyDiffers_movesTheHash() {
+            // Given — D-100: the LTA exemption reads each journey
+            EngineInputs withJourney = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
+                    List.of(new Journey(LocalDate.of(2026, 5, 10), JourneyMode.RAIL_CONNECTED,
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of("18000"),
+                            Optional.of(com.thiru.wealthlens.taxengine.rules.money.Money.of("15000")),
+                            Optional.empty(), List.of())), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
+
+            // When / Then
+            assertThat(hashOf(withJourney)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void ledgers_whenOnlyABlocksJourneysDiffer_movesTheHash() {
+            // Given — D-100: journeys already claimed in block 2022-2025
+            EngineInputs claimed = copy(baseline(), r -> r.ledgers = new LedgerSnapshot(
+                    Map.of(2022, new LeaveTravelBlock(1, false)), Map.of(),
+                    Map.of(), Map.of(), Optional.empty(), Map.of()));
+
+            // When / Then
+            assertThat(hashOf(claimed)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void enteredFacts_whenOnlyAnAllowanceUseDiffers_movesTheHash() {
+            // Given — D-101: the allowance exemptions read how each allowance was used
+            EngineInputs withUse = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(), List.of(),
+                    List.of(AllowanceUse.forChildren(new ComponentCode("CHILDREN_EDUCATION_ALLOWANCE"), 2, 12)), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
+
+            // When / Then
+            assertThat(hashOf(withUse)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void enteredFacts_whenOnlyTheDisabledTransportClaimDiffers_movesTheHash() {
+            // Given — D-102: the transport exemption reads the condition, months, city and DA thereon
+            EngineInputs withClaim = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
+                    List.of(), List.of(), Optional.of(new DisabledTransportClaim(
+                            com.thiru.wealthlens.taxengine.rules.definition.TransportDisability.BLIND, 12,
+                            Optional.empty(), Optional.empty())), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
+
+            // When / Then
+            assertThat(hashOf(withClaim)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void enteredFacts_whenOnlyARetirementPaymentDiffers_movesTheHash() {
+            // Given — D-103: the retirement deductions read the entry each payment falls under
+            EngineInputs withPayment = copy(baseline(), r -> r.entered = new EnteredFacts(List.of(), List.of(),
+                    List.of(), List.of(), Optional.empty(), List.of(RetirementPayment.of(0,
+                            new ComponentCode("GRATUITY"), RetirementEntry.GOVERNMENT_GRATUITY)), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()));
+
+            // When / Then
+            assertThat(hashOf(withPayment)).isNotEqualTo(hashOf(baseline()));
+        }
+
+        @Test
+        void enteredFacts_whenOnlyASeparationsMonthDiffers_movesTheHash() {
+            // Given — D-106: other gratuity is measured on the ten months before the event
+            java.time.LocalDate separatedOn = java.time.LocalDate.of(2025, 6, 30);
+            List<MonthOfPay> months = SeparationTest.tenMonthsBefore(separatedOn, "100000");
+            List<MonthOfPay> raised = new java.util.ArrayList<>(months);
+            raised.set(9, new MonthOfPay(months.get(9).month(), Map.of(new ComponentCode("BASIC"),
+                    com.thiru.wealthlens.taxengine.rules.money.Money.of("110000"))));
+            EngineInputs before = copy(baseline(), r -> r.entered = enteringGratuity(separatedOn, months));
+            EngineInputs after = copy(baseline(), r -> r.entered = enteringGratuity(separatedOn, raised));
+
+            // When / Then
+            assertThat(hashOf(after)).isNotEqualTo(hashOf(before));
+        }
+
+        private static EnteredFacts enteringGratuity(java.time.LocalDate separatedOn, List<MonthOfPay> months) {
+            return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
+                    List.of(RetirementPayment.otherGratuity(0, new ComponentCode("GRATUITY"),
+                            new Separation(java.time.LocalDate.of(2000, 4, 1), separatedOn, months))), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
+        }
+
+        @Test
+        void enteredFacts_whenOnlyTheAmountUnderTheStatuteDiffers_movesTheHash() {
+            // Given — D-109: statutory gratuity and retrenchment read the employer's figure under the labour statute
+            EngineInputs lower = copy(baseline(), r -> r.entered = enteringStatutory("500000"));
+            EngineInputs higher = copy(baseline(), r -> r.entered = enteringStatutory("600000"));
+
+            // When / Then
+            assertThat(hashOf(higher)).isNotEqualTo(hashOf(lower));
+        }
+
+        private static EnteredFacts enteringStatutory(String amount) {
+            return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(),
+                    List.of(RetirementPayment.statutory(0, new ComponentCode("RETRENCHMENT_COMPENSATION"),
+                            RetirementEntry.RETRENCHMENT, new StatutoryEntitlement(java.time.LocalDate.of(2025, 12, 15),
+                                    com.thiru.wealthlens.taxengine.rules.money.Money.of(amount)))), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
+        }
+
+        @Test
+        void enteredFacts_whenOnlyAnAccommodationsRentDiffers_movesTheHash() {
+            // Given — D-111: the accommodation perquisite reads what the employee paid
+            EngineInputs lower = copy(baseline(), r -> r.entered = enteringAccommodation("24000"));
+            EngineInputs higher = copy(baseline(), r -> r.entered = enteringAccommodation("36000"));
+
+            // When / Then
+            assertThat(hashOf(higher)).isNotEqualTo(hashOf(lower));
+        }
+
+        private static EnteredFacts enteringAccommodation(String rentPaid) {
+            return new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(),
+                    List.of(new EmployerAccommodation(0, AccommodationProvider.EMPLOYER_OWNED,
+                            com.thiru.wealthlens.taxengine.rules.temporal.DateRange.between(
+                                    java.time.LocalDate.of(2026, 4, 1), java.time.LocalDate.of(2027, 3, 31)),
+                            Optional.of(5_000_000), Optional.empty(),
+                            com.thiru.wealthlens.taxengine.rules.money.Money.of(rentPaid), Optional.empty(),
+                            com.thiru.wealthlens.taxengine.rules.id.TaxYearId.of(2026), Optional.empty())), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty());
+        }
+
+        @Test
+        void enteredFacts_whenOnlyTheElectedAbsorptionOrderDiffers_movesTheHash() {
+            // Given — D-221: the order the heads absorb a loss in can change the surcharge, so it is in the key
+            EngineInputs salariesFirst = copy(baseline(), r -> r.entered = EnteredFacts.none().withAbsorptionOrder(
+                    List.of(HeadCode.SALARIES, HeadCode.HOUSE_PROPERTY, HeadCode.OTHER_SOURCES)));
+            EngineInputs otherSourcesFirst = copy(baseline(), r -> r.entered = EnteredFacts.none().withAbsorptionOrder(
+                    List.of(HeadCode.OTHER_SOURCES, HeadCode.HOUSE_PROPERTY, HeadCode.SALARIES)));
+
+            // When / Then
+            assertThat(hashOf(otherSourcesFirst)).isNotEqualTo(hashOf(salariesFirst));
+        }
+
+        @Test
+        void enteredFacts_whenEmpty_isStillInTheCanonicalForm() {
+            // D-026: declared and thin rather than absent, so an empty entry is a value in the key too
+            assertThat(InputsFingerprint.canonicalFormOf(baseline())).contains("entered=T:EnteredFacts{");
+        }
+    }
+
+    @Nested
+    @DisplayName("order that carries no meaning carries no hash")
+    class Ordering {
+
+        @Test
+        void mapIterationOrderIsIrrelevant() {
+            RegimeCode a = new RegimeCode("A_REGIME");
+            RegimeCode b = new RegimeCode("B_REGIME");
+
+            Map<RegimeCode, ElectionState> forward = new LinkedHashMap<>();
+            forward.put(a, ElectionState.IN_EFFECT);
+            forward.put(b, ElectionState.WITHDRAWN);
+            Map<RegimeCode, ElectionState> reversed = new LinkedHashMap<>();
+            reversed.put(b, ElectionState.WITHDRAWN);
+            reversed.put(a, ElectionState.IN_EFFECT);
+
+            assertThat(hashOf(copy(baseline(), r -> r.elections =
+                            new RegimeElectionSnapshot(forward, Map.of()))))
+                    .isEqualTo(hashOf(copy(baseline(), r -> r.elections =
+                            new RegimeElectionSnapshot(reversed, Map.of()))));
+        }
+
+        @Test
+        void recordComponentsAreHashedByNameNotDeclarationPosition() {
+            // Sorted by name, so reordering a declaration is a refactor rather than a mass cache
+            // invalidation. Visible in the canonical form: capitalGains precedes taxYear.
+            String canonical = InputsFingerprint.canonicalFormOf(baseline());
+
+            assertThat(canonical.indexOf("capitalGains=")).isLessThan(canonical.indexOf("taxYear="));
+        }
+
+        @Test
+        void listOrderIsSignificantBecauseCollidingIsWorseThanMissing() {
+            // FamilySnapshot says member order carries no meaning, but sorting could make two
+            // genuinely different inputs collide -- a wrong cache hit. Preserving order can only
+            // cause a needless miss.
+            Member first = new Member(
+                    Relationship.CHILD, LocalDate.of(2010, 4, 4), true,
+                    Optional.empty(), Optional.empty(), false, true);
+            Member second = new Member(
+                    Relationship.PARENT, LocalDate.of(1955, 4, 4), true,
+                    Optional.empty(), Optional.empty(), false, true);
+
+            assertThat(hashOf(copy(baseline(), r -> r.family =
+                            new FamilySnapshot(List.of(first, second)))))
+                    .isNotEqualTo(hashOf(copy(baseline(), r -> r.family =
+                            new FamilySnapshot(List.of(second, first)))));
+        }
+    }
+
+    @Nested
+    @DisplayName("the canonical form")
+    class Canonical {
+
+        @Test
+        void distinguishesAStringFromANumber() {
+            assertThat(InputsFingerprint.canonicalFormOf("5"))
+                    .isNotEqualTo(InputsFingerprint.canonicalFormOf(5));
+        }
+
+        @Test
+        void distinguishesAnEmptyOptionalFromAnAbsentValue() {
+            assertThat(InputsFingerprint.canonicalFormOf(Optional.empty()))
+                    .isNotEqualTo(InputsFingerprint.canonicalFormOf(null));
+        }
+
+        @Test
+        void theRulePackIsNotInHere() {
+            // RulePack.computationCacheKey() covers it, readably, and excludes editorial layers so
+            // catalogue revisions invalidate nothing (G-11). Folding it in would undo that.
+            assertThat(InputsFingerprint.canonicalFormOf(baseline()))
+                    .doesNotContain("RulePackRef")
+                    .doesNotContain("checksum");
+        }
+    }
+
+    // -- a mutable builder, so each perturbation states only what it changes -------------------
+
+    private static final class Draft {
+        TaxYearId taxYear;
+        RegimeCode regime;
+        TemporalContext temporal;
+        EnteredFacts entered;
+        Assessee assessee;
+        FamilySnapshot family;
+        LedgerSnapshot ledgers;
+        RegimeElectionSnapshot elections;
+        CapitalGainsInput capitalGains;
+        FilingFacts filing;
+    }
+
+    private static EngineInputs copy(EngineInputs in, java.util.function.Consumer<Draft> change) {
+        Draft draft = new Draft();
+        draft.taxYear = in.taxYear();
+        draft.regime = in.regime();
+        draft.temporal = in.temporal();
+        draft.entered = in.entered();
+        draft.assessee = in.assessee();
+        draft.family = in.family();
+        draft.ledgers = in.ledgers();
+        draft.elections = in.elections();
+        draft.capitalGains = in.capitalGains();
+        draft.filing = in.filing();
+        change.accept(draft);
+        return new EngineInputs(
+                draft.taxYear,
+                draft.regime,
+                draft.temporal,
+                draft.entered,
+                draft.assessee,
+                draft.family,
+                draft.ledgers,
+                draft.elections,
+                draft.capitalGains,
+                draft.filing);
+    }
+
+    private static EngineInputs withTaxYear(EngineInputs in, TaxYearId year) {
+        return copy(in, r -> {
+            r.taxYear = year;
+            r.temporal = TemporalContext.forTaxYear(year, AS_OF);
+        });
+    }
+
+    private static UnaryOperator<EngineInputs> mutate(UnaryOperator<EngineInputs> op) {
+        return op;
+    }
+}

@@ -1,0 +1,38 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-161). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: REBATE-* rows (W-049, D-077); 1961 s.87 'Rebate to be allowed in computing income-tax' (thc arrangement p.9) / 2025 s.155 (Gazette 265620 p.186). summary: S2 s.155(1), (2). routes[0]: the three rebate rows, RebateNode. No disqualifier: s.155 limits, it does not exclude; the conditions are s.156's, in SEC-REBATE-FOR-CERTAIN-INDIVIDUALS.",
+  "key": "SEC-REBATES-FROM-TAX",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.87",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.155",
+    "presence": "PRESENT"
+  },
+  "plainName": "Rebates taken off income-tax",
+  "summary": "Rebates are taken off the income-tax computed on your total income before them, and a rebate can never take off more than that tax.",
+  "routes": [
+    {
+      "name": "A rebate you qualify for",
+      "description": "Taken off the tax computed before rebates, never below nil.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "REBATE-NEW-TAX-REGIME"
+        },
+        {
+          "type": "ByRule",
+          "rule": "REBATE-NEW-TAX-REGIME-EXCESS"
+        },
+        {
+          "type": "ByRule",
+          "rule": "REBATE-RESIDENT-INDIVIDUAL"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": []
+}

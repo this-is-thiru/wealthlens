@@ -1,0 +1,25 @@
+package com.thiru.wealthlens.taxengine.rules.timeline;
+
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+
+class ZzPrintChecksumsTest {
+
+    @Test
+    void print() {
+        Timeline timeline = TimelineReader.read(Path.of("src/main/resources/rulepacks/timeline"));
+        StringBuilder out = new StringBuilder("\n");
+        for (int y : new int[] {2025, 2026}) {
+            CompiledPack pack = RulePackCompiler.compile(timeline, TaxYearId.of(y));
+            for (RulePackLayer layer : RulePackLayer.values()) {
+                out.append("CKSUM ").append(y).append(" LAYER ").append(layer.name()).append(' ')
+                        .append(pack.layerChecksum(layer)).append('\n');
+            }
+            pack.ruleChecksums().forEach((id, sum) -> out.append("CKSUM ").append(y).append(" RULE ")
+                    .append(id.value()).append(' ').append(sum).append('\n'));
+        }
+        throw new AssertionError(out.toString());
+    }
+}

@@ -59,6 +59,12 @@ public class AssetResponse implements AuditableResponse {
 
 	private Map<String, Double> transactionQuantities;
 
+	/**
+	 * Days from each buy date in {@link #transactionQuantities} to today — a fact of the holding; any term it gives is
+	 * the tax side's to decide (W-160e, D-362).
+	 */
+	private Map<String, Long> daysHeld;
+
 	private AuditMetadataDto auditMetadata;
 
 	/**

@@ -1,0 +1,56 @@
+{
+  "ruleId": "SAL-SALARY-FOR-RPF",
+  "ruleSet": "RS-SAL-SALARY-FOR-RPF",
+  "_note": "The salary the employer's contribution to a recognised provident fund is measured against for the twelve per cent limb, TY 2025-26 only (D-151; rulebook SAL-DEF-RPF-001): Income-tax Act, 1961 Sch. IV Pt A r.2(h) (thc.nic.in p.853), \"'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites\". The Income-tax Act, 2025 has the same words in Sch. XI Pt A para 2(i) (Gazette 265620, p.547), but from 1-4-2026 nothing measures against them: the Finance Act, 2026 s.127(a)(iii) substituted para 6 without the twelve per cent limb (Gazette 271439, pp.70–71) — so there is no TY 2026-27 version. Which pay lines count is each component's salaryBaseFor: BASIC outright, DEARNESS_ALLOWANCE only where the terms provide.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "Sch. IV Pt A r.2(h)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "presence": "ABSENT_IN_THIS_ACT"
+      },
+      "definition": {
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), Sch. IV Pt A r.2(h)",
+        "gazetteRef": "Act 43 of 1961 (assent 13-9-1961) Sch. IV Pt A r.2(h) as enacted: read in Acts of the Parliament of India, 1961 (the Legislative Department's annual volume; Wikimedia Commons PDF scan, read from the page images), p.464 (PDF p.476); the Gazette of India issue itself not read (D-215)",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Acts_of_the_Parliament_of_India_1961.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), Fourth Schedule Part A r.2(h), p.853, and r.6(a), p.856; Income-tax Act, 1961 Sch. IV Pt A r.2(h): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+    "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), Fourth Schedule Part A r.2(h), p.853, and r.6(a), p.856; Income-tax Act, 1961 Sch. IV Pt A r.2(h): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+    "accessedOn": "2026-10-10",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

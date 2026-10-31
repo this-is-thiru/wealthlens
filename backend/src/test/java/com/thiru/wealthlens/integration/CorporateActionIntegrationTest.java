@@ -24,8 +24,10 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -295,6 +297,62 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         assertEquals(1, actions.size());
         assertEquals("RELIANCE", actions.get(0).getStockCode());
         assertEquals(CorporateActionType.BONUS, actions.get(0).getType());
+    }
+
+    // ========== D-389: "date" is no field of a corporate action ==========
+
+    // D-389 accepted a body still carrying "date" for older clients; D-406 refuses it, as every unknown property
+    // (W-202): api-collection is the only client (owner) and stopped sending it in W-166.
+    @Test
+    void addCorporateAction_whenTheRequestStillCarriesDate_answers400NamingIt() {
+        // GIVEN — a body with the removed "date" field
+        String token = generateToken("test@example.com", "SUPER_USER");
+        String body = """
+                {"stockCode": "RELIANCE", "stockName": "Reliance Industries", "type": "BONUS", "ratio": "1:1",
+                 "recordDate": "2024-01-15", "exDate": "2024-01-20", "date": "2024-01-20"}
+                """;
+
+        // WHEN / THEN
+        given()
+                .header("Authorization", "Bearer " + token)
+                .contentType("application/json")
+                .body(body)
+                .when()
+                .post("/corporate-action/add")
+                .then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("message", containsString("\"date\""));
+
+        assertEquals(0, mongoTemplate.getCollection("corporate_action").countDocuments());
+    }
+
+    @Test
+    void getCorporateActions_whenRead_answersNoDateField() {
+        // GIVEN
+        String token = generateToken("test@example.com", "SUPER_USER");
+        CorporateActionDto dto = new CorporateActionDto();
+        dto.setStockCode("RELIANCE");
+        dto.setStockName("Reliance Industries");
+        dto.setType(CorporateActionType.BONUS);
+        dto.setRecordDate(LocalDate.of(2024, 1, 15));
+        dto.setExDate(LocalDate.of(2024, 1, 20));
+        dto.setRatio("1:1");
+        corporateActionService.addCorporateAction(dto);
+        String id = corporateActionRepository.findAll().get(0).getId();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        // WHEN
+        ResponseEntity<List<Map<String, Object>>> response = createNoErrorRestTemplate().exchange(
+                URI.create(baseUrl() + "/corporate-action/list?ids=" + id), HttpMethod.GET, new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {});
+
+        // THEN
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        Map<String, Object> action = response.getBody().get(0);
+        assertEquals("RELIANCE", action.get("stockCode"));
+        assertFalse(action.containsKey("date"));
     }
 
     // ========== HAPPY: addCorporateAction DEMERGER success ==========
@@ -715,6 +773,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAssetType(AssetType.EQUITY);
         ca.setRecordDate(LocalDate.of(2024, 1, 15));
         ca.setExDate(LocalDate.of(2024, 1, 20));
+        ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
         mongoTemplate.save(ca);
@@ -753,6 +812,126 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         assertEquals(1, performed.size());
     }
 
+    // ========== W-088k4a: a bonus lot dated from its allotment ==========
+
+    private void saveHolding() {
+        AssetEntity asset = new AssetEntity();
+        asset.setEmail("test@example.com");
+        asset.setStockCode("RELIANCE");
+        asset.setStockName("Reliance Industries");
+        asset.setBrokerName(BrokerName.UPSTOX);
+        asset.setAssetType(AssetType.EQUITY);
+        asset.setQuantity(100.0);
+        asset.setPrice(2500.0);
+        asset.setTransactionDate(LocalDate.of(2024, 1, 10));
+        asset.setTransactionType(TransactionType.BUY);
+        mongoTemplate.save(asset);
+
+        TransactionEntity transaction = new TransactionEntity();
+        transaction.setEmail("test@example.com");
+        transaction.setStockCode("RELIANCE");
+        transaction.setStockName("Reliance Industries");
+        transaction.setBrokerName(BrokerName.UPSTOX);
+        transaction.setAssetType(AssetType.EQUITY);
+        transaction.setQuantity(100.0);
+        transaction.setPrice(2500.0);
+        transaction.setTransactionType(TransactionType.BUY);
+        transaction.setTransactionDate(LocalDate.of(2024, 1, 10));
+        mongoTemplate.save(transaction);
+    }
+
+    private CorporateActionEntity bonus(LocalDate allotmentDate) {
+        CorporateActionEntity ca = new CorporateActionEntity();
+        ca.setStockCode("RELIANCE");
+        ca.setStockName("Reliance Industries");
+        ca.setType(CorporateActionType.BONUS);
+        ca.setAssetType(AssetType.EQUITY);
+        ca.setRecordDate(LocalDate.of(2024, 1, 15));
+        ca.setExDate(LocalDate.of(2024, 1, 20));
+        ca.setAllotmentDate(allotmentDate);
+        ca.setRatio("1:1");
+        ca.setPriority(1);
+        return ca;
+    }
+
+    @Test
+    void performPendingCorporateActions_whenABonusHasItsAllotmentDate_datesTheLotAndItsTransactionByIt() {
+        // GIVEN -- W-088k4a case 1: allotted 17-1-2024, ex-date 20-1-2024 (test values)
+        mongoTemplate.save(bonus(LocalDate.of(2024, 1, 17)));
+        saveHolding();
+        CorporateActionPerformDto performDto = new CorporateActionPerformDto("JANUARY", 2024, BrokerName.UPSTOX);
+
+        // WHEN
+        corporateActionService.performPendingCorporateActions("test@example.com", performDto, false);
+
+        // THEN -- the holding period runs from the allotment (Explanation 1(i)(f); D-307)
+        List<AssetEntity> bonusLots = mongoTemplate.findAll(AssetEntity.class).stream()
+                .filter(asset -> asset.getCorporateActionType() == CorporateActionType.BONUS).toList();
+        assertEquals(1, bonusLots.size());
+        assertEquals(LocalDate.of(2024, 1, 17), bonusLots.getFirst().getTransactionDate());
+        List<TransactionEntity> bonusTransactions = mongoTemplate.findAll(TransactionEntity.class).stream()
+                .filter(txn -> txn.getCorporateActionType() == CorporateActionType.BONUS).toList();
+        assertEquals(1, bonusTransactions.size());
+        assertEquals(LocalDate.of(2024, 1, 17), bonusTransactions.getFirst().getTransactionDate());
+    }
+
+    @Test
+    void performPendingCorporateActions_whenABonusHasNoAllotmentDate_isRefusedWritingNothing() {
+        // GIVEN -- W-088k4a case 2
+        mongoTemplate.save(bonus(null));
+        saveHolding();
+        CorporateActionPerformDto performDto = new CorporateActionPerformDto("JANUARY", 2024, BrokerName.UPSTOX);
+
+        // WHEN
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> corporateActionService.performPendingCorporateActions("test@example.com", performDto, false));
+
+        // THEN
+        assertTrue(exception.getMessage().contains("The bonus on RELIANCE (record date 2024-01-15) has no allotment date"));
+        assertTrue(mongoTemplate.findAll(AssetEntity.class).stream()
+                .noneMatch(asset -> asset.getCorporateActionType() == CorporateActionType.BONUS));
+        assertTrue(lastlyPerformedCorporateActionRepo.findAll().isEmpty());
+    }
+
+    @Test
+    void addCorporateActionBONUS_whenTheAllotmentDateIsGiven_savesIt() {
+        // GIVEN -- W-088k4a case 3
+        CorporateActionDto dto = new CorporateActionDto();
+        dto.setStockCode("RELIANCE");
+        dto.setStockName("Reliance Industries");
+        dto.setType(CorporateActionType.BONUS);
+        dto.setRecordDate(LocalDate.of(2024, 1, 15));
+        dto.setExDate(LocalDate.of(2024, 1, 20));
+        dto.setAllotmentDate(LocalDate.of(2024, 1, 17));
+        dto.setRatio("1:1");
+        dto.setPriority(1);
+
+        // WHEN
+        corporateActionService.addCorporateAction(dto);
+
+        // THEN
+        assertEquals(LocalDate.of(2024, 1, 17), corporateActionRepository.findAll().getFirst().getAllotmentDate());
+    }
+
+    @Test
+    void addCorporateActionBONUS_whenTheAllotmentDateIsNotYetKnown_savesItWithout() {
+        // GIVEN -- W-088k4a case 4: entered when announced, before allotment; only performing needs the date
+        CorporateActionDto dto = new CorporateActionDto();
+        dto.setStockCode("RELIANCE");
+        dto.setStockName("Reliance Industries");
+        dto.setType(CorporateActionType.BONUS);
+        dto.setRecordDate(LocalDate.of(2024, 1, 15));
+        dto.setExDate(LocalDate.of(2024, 1, 20));
+        dto.setRatio("1:1");
+        dto.setPriority(1);
+
+        // WHEN
+        corporateActionService.addCorporateAction(dto);
+
+        // THEN
+        assertNull(corporateActionRepository.findAll().getFirst().getAllotmentDate());
+    }
+
     // ========== HAPPY: performPendingCorporateActions all brokers ==========
 
     @Test
@@ -765,6 +944,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAssetType(AssetType.EQUITY);
         ca.setRecordDate(LocalDate.of(2024, 1, 15));
         ca.setExDate(LocalDate.of(2024, 1, 20));
+        ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
         mongoTemplate.save(ca);
@@ -842,6 +1022,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAssetType(AssetType.EQUITY);
         ca.setRecordDate(LocalDate.of(2024, 1, 15));
         ca.setExDate(LocalDate.of(2024, 1, 20));
+        ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
         mongoTemplate.save(ca);
@@ -890,6 +1071,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAssetType(AssetType.EQUITY);
         ca.setRecordDate(LocalDate.of(2024, 1, 15));
         ca.setExDate(LocalDate.of(2024, 1, 20));
+        ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
         mongoTemplate.save(ca);
@@ -1060,6 +1242,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAssetType(AssetType.EQUITY);
         ca.setRecordDate(LocalDate.of(2024, 1, 15));
         ca.setExDate(LocalDate.of(2024, 1, 20));
+        ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
         mongoTemplate.save(ca);
@@ -1110,6 +1293,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         ca.setAssetType(AssetType.EQUITY);
         ca.setRecordDate(LocalDate.of(2024, 1, 15));
         ca.setExDate(LocalDate.of(2024, 1, 20));
+        ca.setAllotmentDate(LocalDate.of(2024, 1, 17));
         ca.setRatio("1:1");
         ca.setPriority(1);
         mongoTemplate.save(ca);

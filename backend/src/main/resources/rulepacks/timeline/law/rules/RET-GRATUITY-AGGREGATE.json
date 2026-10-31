@@ -1,0 +1,110 @@
+{
+  "ruleId": "RET-GRATUITY-AGGREGATE",
+  "ruleSet": "RS-RET-AGGREGATE",
+  "_note": "The ceiling on other gratuity across employers and years (D-106; rulebook RET-GRAT-AGG-001): the aggregate deduction for the tax year may not exceed A − B, where A is the notified limit (this row's amount) and B the gratuity allowed in earlier years (LedgerSnapshot.gratuityAlreadyAllowed); the node forms A − B. TY 2026-27: Income-tax Act, 2025 s.19(2)(a) (p.44), \"if gratuity or gratuities was or were received from one or more than one employer in the same tax year (whether or not any gratuity or gratuities was or were received in any earlier tax year), the aggregate amount of deduction shall not exceed— A – B, where,— A = the limit specified by the Central Government, by notification; and B = the aggregate amount of gratuity or gratuities which was or were received in any one or more earlier tax years and allowed as an exemption or a deduction\". TY 2025-26: Income-tax Act, 1961 s.10(10)(iii) first and second provisos (thc.nic.in pp.71–72), to the same effect. A: S.O. 1213(E), twenty lakh rupees, the same notification as RET-GRATUITY-OTHER's limit. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10)(iii), first and second provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(2)(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "2000000"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "OTHER_GRATUITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 16/2019, S.O. 1213(E), under Income-tax Act, 1961 s.10(10)(iii): \"twenty lakh rupees\" for employees who retire, become incapacitated or die on or after 29-3-2018 or whose employment is terminated on or after that date, superseding S.O. 141(E) of 11-6-2010; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "Gazette of India Extraordinary Part II s.3(ii) No. 1079, 8-3-2019",
+        "notifiedOn": "2019-03-08",
+        "effectiveFrom": "2018-03-29",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/199504.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10)(iii), first and second provisos, p.72; the notification's Gazette copy (Gazette of India Extraordinary Part II s.3(ii) No. 1079, 8-3-2019), p.2; Income-tax Act, 1961 s.10(10)(iii), first and second provisos: the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10)(iii), first and second provisos",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(2)(a)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "2000000"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "OTHER_GRATUITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 16/2019, S.O. 1213(E), under Income-tax Act, 1961 s.10(10)(iii): \"twenty lakh rupees\" for employees who retire, become incapacitated or die on or after 29-3-2018 or whose employment is terminated on or after that date, superseding S.O. 141(E) of 11-6-2010; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "Gazette of India Extraordinary Part II s.3(ii) No. 1079, 8-3-2019",
+        "notifiedOn": "2019-03-08",
+        "effectiveFrom": "2018-03-29",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/199504.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(2)(a), p.44, s.202(2)(a) p.227 and s.536(2)(j); the notification's Gazette copy (Gazette of India Extraordinary Part II s.3(ii) No. 1079, 8-3-2019), p.2; Finance Act, 2026 searched in full: no amendment to s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(2)(a), p.44",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -38,14 +38,15 @@ public class CorporateActionEntity implements AuditableEntity {
     private LocalDate recordDate;
     @Field("ex_date")
     private LocalDate exDate;
+    // A bonus share's holding period runs from its allotment, not the ex-date (W-088k4a, D-307).
+    @Field("allotment_date")
+    private LocalDate allotmentDate;
     @Field("priority")
     private int priority;
     @Field("action_price")
     private String actionPrice;
     @Field("ratio")
     private String ratio;
-    @Field("date")
-    private LocalDate date;
     @Field("demerger_detail")
     private DemergerDetail demergerDetail;
 

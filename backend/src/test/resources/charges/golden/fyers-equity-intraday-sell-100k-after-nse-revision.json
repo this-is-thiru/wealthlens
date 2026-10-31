@@ -1,0 +1,25 @@
+{
+  "name": "fyers-equity-intraday-sell-100k-after-nse-revision",
+  "describes": "A Rs 1,00,000 intraday sell at Fyers after NSE's 2026-03-01 revision: the 2026-03 card's 0.0030699% transaction charge, and the Rs 20 cap.",
+  "context": {
+    "brokerName": "FYERS",
+    "assetType": "EQUITY",
+    "segment": "INTRADAY",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 100,
+    "transactionDate": "2026-04-01"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 25.0,
+      "EXCHANGE_TXN": 3.07,
+      "SEBI_FEE": 0.1,
+      "IPFT": 0.1,
+      "GST": 4.19
+    },
+    "total": 52.46
+  }
+}

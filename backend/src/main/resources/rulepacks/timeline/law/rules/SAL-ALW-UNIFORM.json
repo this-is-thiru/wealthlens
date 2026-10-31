@@ -1,0 +1,132 @@
+{
+  "ruleId": "SAL-ALW-UNIFORM",
+  "ruleSet": "RS-SAL-ALW-UNIFORM",
+  "_note": "A uniform allowance, exempt to the extent actually spent on the uniform (D-101; rulebook SAL-ALW-DUTY-001, H-9). TY 2026-27: Income-tax Act, 2025 Sch. III Table Sl. 12, \"to the extent to which such expenses are actually incurred for that purpose\"; Income-tax Rules, 2026 r.280(1)(g): \"any allowance granted to meet the expenditure incurred on the purchase or maintenance of uniform for wear during the performance of the duties of an office or employment of profit\"; not in r.280(3)'s list, so not in the new regime (s.202(2)(a)(ii)). TY 2025-26: 1961 s.10(14)(i) exempts allowances prescribed \"to the extent to which such expenses are actually incurred\"; Income-tax Rules, 1962 r.2BB(1)(f), the same words; not in r.2BB(3)'s list (G.S.R. 452(E)), so not for an assessee taxed under s.115BAC(1A). In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(14)(i), with Income-tax Rules, 1962 r.2BB(1)(f); excluded by r.2BB(3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 12, with Income-tax Rules, 2026 r.280(1)(g); excluded by s.202(2)(a)(ii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "allowance received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "ALLOWANCE_RECEIVED"
+            }
+          },
+          {
+            "name": "amount actually incurred",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_INCURRED"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Tenth Amendment) Rules, 2023, G.S.R. 452(E) — r.2BB(3) substituted (the allowances surviving s.115BAC); the latest change to r.2BB found",
+        "gazetteRef": "G.S.R. 452(E)",
+        "notifiedOn": "2023-06-21",
+        "effectiveFrom": "2023-06-21",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246719.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/documents/20117/11892059/Rule%2B-%2B2BB_en.pdf/fd9a5a13-a5e2-9baf-e18f-cb870d544553?t=1766001049047&version=2.0",
+        "sourceDescription": "Income Tax Department's consolidated Income-tax Rules, 1962 rule 2BB (6 pp.): (1)(a)–(f) p.1, (2) Table p.4–5, (3) p.6; r.2BB(3) as substituted by G.S.R. 452(E), gazette 2023/246719",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(14)(i), with Income-tax Rules, 1962 r.2BB(1)(f); excluded by r.2BB(3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "Sch. III Table Sl. 12, with Income-tax Rules, 2026 r.280(1)(g); excluded by s.202(2)(a)(ii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "allowance received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "ALLOWANCE_RECEIVED"
+            }
+          },
+          {
+            "name": "amount actually incurred",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_INCURRED"
+            }
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 280",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280, pp.1777–1783; Income-tax Act, 2025 Sch. III Table Sl. 12, 13 and s.202(2)(a)(ii)",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.280",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

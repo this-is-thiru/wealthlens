@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
@@ -12,16 +13,12 @@ import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
-import com.thiru.wealthlens.portfolio.dto.enums.HoldingType;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionStatus;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
-import com.thiru.wealthlens.portfolio.service.export.PortfolioExcelExporter;
 import com.thiru.wealthlens.portfolio.service.parser.AssetRequestParser;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
@@ -31,16 +28,14 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.math.DoubleUtil;
-import com.thiru.wealthlens.shared.util.parser.ExcelParser;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
-import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,8 +45,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -79,7 +72,6 @@ public class PortfolioService {
     private final ChargeRecordingGateway chargeRecordingGateway;
     private final ChargeViewAssembler chargeViewAssembler;
     private final ChargeEngineProperties chargeEngineProperties;
-    private final HoldingPeriodService holdingPeriodService;
 
     private final TradeOutcomeRecorder tradeOutcomeRecorder;
 
@@ -575,6 +567,11 @@ public class PortfolioService {
                 .sorted(Map.Entry.comparingByKey())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, _) -> e1, LinkedHashMap::new));
         assetResponse.setTransactionQuantities(transactionQuantities);
+        LocalDate today = TLocalDate.today();
+        Map<String, Long> daysHeld = new LinkedHashMap<>();
+        transactionQuantities.keySet().forEach(date ->
+                daysHeld.put(date, ChronoUnit.DAYS.between(TLocalDate.convertToDate(date), today)));
+        assetResponse.setDaysHeld(daysHeld);
         assetResponse.setTransactionDate(null);
         return assetResponse;
     }
@@ -646,14 +643,16 @@ public class PortfolioService {
             Double assetQuantity = assetEntity.getQuantity();
 
             if (sellQuantity >= assetQuantity) {
-                buyContexts.add(new BuyContext(assetEntity.getQuantity(), assetEntity.getTransactionDate(), assetEntity.getPrice()));
+                buyContexts.add(new BuyContext(assetEntity.getQuantity(), assetEntity.getTransactionDate(), assetEntity.getPrice(),
+                        Optional.ofNullable(assetEntity.getAssetType())));
                 matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, assetQuantity, assetQuantity));
 
                 assetEntity.setQuantity(0D);
 //                assetEntity.setTotalValue(0);
                 sellQuantity = sellQuantity - assetQuantity;
             } else {
-                buyContexts.add(new BuyContext(sellQuantity, assetEntity.getTransactionDate(), assetEntity.getPrice()));
+                buyContexts.add(new BuyContext(sellQuantity, assetEntity.getTransactionDate(), assetEntity.getPrice(),
+                        Optional.ofNullable(assetEntity.getAssetType())));
                 matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, sellQuantity, assetQuantity));
 
                 double remainingQuantity = assetQuantity - sellQuantity;
@@ -667,11 +666,14 @@ public class PortfolioService {
         // overload and is not affected by any of this.
         var profitLossContext = toProfitLossContext(assetRequest, buyContexts, transactionId);
         Optional<ChargeComputation> computation = chargeRecordingGateway.record(userMail, profitLossContext);
-        profitAndLossService.updateProfitAndLoss(userMail, profitLossContext, computation);
         // The itemised capital-gains rows. Until now only the V1 sell wrote these, so a V2 user had
         // aggregate totals and nothing to file from. Deliberately after the pricing call, because
-        // the sell charge has to exist before it can be pro-rated across the lots it was matched to.
-        tradeOutcomeRecorder.record(userMail, assetRequest, transactionId, matchedLots, computation);
+        // the sell charge has to exist before it can be pro-rated across the lots it was matched to;
+        // and before the P&L, which folds these rows' charges and net profit rather than computing
+        // them a second time (W-169).
+        List<TradeOutcomeContext> rows =
+                tradeOutcomeRecorder.record(userMail, assetRequest, transactionId, matchedLots, computation);
+        profitAndLossService.recordSale(userMail, profitLossContext, computation, rows);
     }
 
     private static ProfitLossContext toProfitLossContext(AssetRequest assetRequest, List<BuyContext> buyContexts, String transactionId) {
@@ -696,47 +698,9 @@ public class PortfolioService {
 
         LocalDate buyDate = assetEntity.getTransactionDate();
         LocalDate sellDate = assetRequest.getTransactionDate();
+        TradeFigures figures = v1Figures(assetEntity, assetRequest, sellQuantity, buyBrokerCharges, buyMiscCharges);
 
-        // Pro-rate buy-side charges based on sell quantity
-        double assetQuantity = assetEntity.getQuantity() != null ? assetEntity.getQuantity() : 1.0;
-
-        // Pro-rate sell-side charges based on sell quantity
-        double sellReqQuantity = assetRequest.getQuantity() != null ? assetRequest.getQuantity() : 1.0;
-        double sellBrokerCharges = (assetRequest.getBrokerCharges() / sellReqQuantity) * sellQuantity;
-        double sellMiscCharges = (assetRequest.getMiscCharges() / sellReqQuantity) * sellQuantity;
-
-        // Buy side values
-        double corporateActionAdjustedBuyPrice = assetEntity.getPrice();
-        double originalBuyPrice = corporateActionAdjustedBuyPrice; // Will improve later with source transaction data
-        double buyQty = sellQuantity;
-
-        // Sell side values
-        double sellPrice = assetRequest.getPrice();
-        double sellQty = sellQuantity;
-
-        // Computed values
-        double totalBuyValue = (corporateActionAdjustedBuyPrice * sellQuantity) + buyBrokerCharges + buyMiscCharges;
-        double totalSellValue = (sellPrice * sellQuantity) - sellBrokerCharges - sellMiscCharges;
-        double netProfit = totalSellValue - totalBuyValue;
-        double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
-
-        // Holding period and capital gains type
-        long holdingPeriodDays = ChronoUnit.DAYS.between(buyDate, sellDate);
-        // Resolved rather than counted. For listed equity this is the same answer 365 days gave; for
-        // every other asset type it is the first correct one.
-        CapitalGainsType capitalGainsType = holdingPeriodService
-                .classify(assetRequest.getAssetType(), null, buyDate, sellDate)
-                .capitalGainsType();
-
-        // Financial year derivation (Indian FY: April - March)
-        String financialYear = deriveFinancialYear(sellDate);
-
-        // Check if CA-derived (bonus stock or price=0)
-        boolean corporateActionDerived = (assetEntity.getCorporateActions() != null && !assetEntity.getCorporateActions().isEmpty())
-                || (assetEntity.getPrice() == 0 && assetEntity.getCorporateActionType() != null);
-
-        // Build context
-        TradeOutcomeContext context = TradeOutcomeContext.builder()
+        TradeOutcomeContext.TradeOutcomeContextBuilder row = TradeOutcomeContext.builder()
                 .email(email)
                 .stockCode(assetEntity.getStockCode())
                 .stockName(assetEntity.getStockName())
@@ -744,32 +708,67 @@ public class PortfolioService {
                 .brokerName(assetEntity.getBrokerName())
                 .assetType(assetEntity.getAssetType())
                 .accountType(assetRequest.getAccountType())
-                .accountHolder(assetRequest.getAccountHolder())
-                .originalBuyPrice(originalBuyPrice)
-                .corporateActionAdjustedBuyPrice(corporateActionAdjustedBuyPrice)
-                .buyQuantity(buyQty)
-                .buyDate(buyDate)
-                .buyBrokerCharges(buyBrokerCharges)
-                .buyMiscCharges(buyMiscCharges)
-                .sellPrice(sellPrice)
-                .sellQuantity(sellQty)
+                .accountHolder(assetRequest.getAccountHolder());
+        v1BuySide(row, assetEntity, sellQuantity, figures);
+        return row
+                .sellPrice(assetRequest.getPrice())
+                .sellQuantity(sellQuantity)
                 .sellDate(sellDate)
-                .sellBrokerCharges(sellBrokerCharges)
-                .sellMiscCharges(sellMiscCharges)
-                .totalBuyValue(totalBuyValue)
-                .totalSellValue(totalSellValue)
-                .netProfit(netProfit)
-                .profitPercentage(profitPercentage)
-                .holdingPeriodDays(holdingPeriodDays)
-                .capitalGainsType(capitalGainsType)
-                .financialYear(financialYear)
+                .sellBrokerCharges(figures.sellBrokerCharges())
+                .sellMiscCharges(figures.sellMiscCharges())
+                .totalBuyValue(figures.totalBuyValue())
+                .totalSellValue(figures.totalSellValue())
+                .netProfit(figures.netProfit())
+                .profitPercentage(figures.profitPercentage())
+                .holdingPeriodDays(ChronoUnit.DAYS.between(buyDate, sellDate))
+                .financialYear(deriveFinancialYear(sellDate))
                 .sourceSellTransactionId(transactionId)
-                .sourceBuyLotId(assetEntity.getId())
-                .corporateActionDerived(corporateActionDerived)
-                .appliedCorporateActions(assetEntity.getCorporateActions())
+                .sellExchangeName(assetRequest.getExchangeName())
+                .sellSegment(assetRequest.getSegment())
                 .build();
+    }
 
-        return context;
+    /** V1's lot side of the row: the lot's price, date, charges and how it was acquired. */
+    private static void v1BuySide(TradeOutcomeContext.TradeOutcomeContextBuilder row, AssetEntity assetEntity,
+                                  double sellQuantity, TradeFigures figures) {
+        // The original is the adjusted price until V1 reads its source transaction
+        row.originalBuyPrice(assetEntity.getPrice())
+                .corporateActionAdjustedBuyPrice(assetEntity.getPrice())
+                .buyQuantity(sellQuantity)
+                .buyDate(assetEntity.getTransactionDate())
+                .buyBrokerCharges(figures.buyBrokerCharges())
+                .buyMiscCharges(figures.buyMiscCharges())
+                .sourceBuyLotId(assetEntity.getId())
+                .corporateActionDerived(isCorporateActionDerived(assetEntity))
+                .appliedCorporateActions(assetEntity.getCorporateActions())
+                .acquisitionMode(Acquisition.of(assetEntity.getCorporateActionType()).mode())
+                .acquisitionCorporateAction(assetEntity.getCorporateActionType())
+                .buyExchangeName(assetEntity.getExchangeName())
+                .buySegment(assetEntity.getSegment());
+    }
+
+    /** V1's figures: the buy charges as handed in, the sell charges pro-rated to the quantity sold. */
+    private static TradeFigures v1Figures(AssetEntity assetEntity, AssetRequest assetRequest, double sellQuantity,
+                                          double buyBrokerCharges, double buyMiscCharges) {
+        // Pro-rate sell-side charges based on sell quantity
+        double sellReqQuantity = assetRequest.getQuantity() != null ? assetRequest.getQuantity() : 1.0;
+        double sellBrokerCharges = (assetRequest.getBrokerCharges() / sellReqQuantity) * sellQuantity;
+        double sellMiscCharges = (assetRequest.getMiscCharges() / sellReqQuantity) * sellQuantity;
+
+        double corporateActionAdjustedBuyPrice = assetEntity.getPrice();
+        double sellPrice = assetRequest.getPrice();
+        double totalBuyValue = (corporateActionAdjustedBuyPrice * sellQuantity) + buyBrokerCharges + buyMiscCharges;
+        double totalSellValue = (sellPrice * sellQuantity) - sellBrokerCharges - sellMiscCharges;
+        double netProfit = totalSellValue - totalBuyValue;
+        double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
+        return new TradeFigures(buyBrokerCharges, buyMiscCharges, sellBrokerCharges, sellMiscCharges,
+                totalBuyValue, totalSellValue, netProfit, profitPercentage);
+    }
+
+    /** A lot carrying corporate actions, or a zero-price lot a corporate action created (a bonus). */
+    private static boolean isCorporateActionDerived(AssetEntity assetEntity) {
+        return (assetEntity.getCorporateActions() != null && !assetEntity.getCorporateActions().isEmpty())
+                || (assetEntity.getPrice() == 0 && assetEntity.getCorporateActionType() != null);
     }
 
     /**
@@ -782,7 +781,7 @@ public class PortfolioService {
      * drift apart again.
      */
     private static String deriveFinancialYear(LocalDate transactionDate) {
-        return TLocalDate.financialYear(transactionDate);
+        return FinancialYear.containing(transactionDate).label();
     }
 
     public ProfitAndLossResponse getProfitAndLoss(UserMail userMail, String financialYear) {
@@ -810,66 +809,14 @@ public class PortfolioService {
         portfolioRepository.saveAll(stocks);
     }
 
-    public List<AssetResponse> getAssets(UserMail userMail, HoldingType holdingType) {
-
-        String oneYearBeforeDate = TLocalDate.lastYearSameDateInString();
-
-        List<AssetEntity> assetEntities = switch (holdingType) {
-            case LONG_TERM -> getLongTermHeldAssets(userMail, oneYearBeforeDate);
-            case SHORT_TERM -> getShortTermHeldAssets(userMail, oneYearBeforeDate);
-        };
-
-        Map<String, List<AssetEntity>> resultedAssetsMap = TCollectionUtil.groupingBy(assetEntities, stockWithCodeAndBroker());
-        List<AssetResponse> resultedAssets = TCollectionUtil.map(resultedAssetsMap.values(), PortfolioService::combineAllDetailsOfEntities);
-
-        List<String> stockCodes = TCollectionUtil.map(resultedAssets, AssetResponse::getStockCode);
-        Map<String, Double> assetQuantityMap = TCollectionUtil.toMap(resultedAssets, stockCodeWithBroker(), AssetResponse::getQuantity);
-
-        List<AssetResponse> allAssets = getStockEntities(userMail, new HashSet<>(stockCodes));
-
-        Function<AssetResponse, AssetResponse> quantityUpdater = assetResponse -> {
-            double quantity = assetResponse.getQuantity();
-            assetResponse.setTotalQuantity(quantity);
-            String stockWithBroker = assetResponse.getStockCode() + assetResponse.getBrokerName();
-            assetResponse.setQuantity(assetQuantityMap.getOrDefault(stockWithBroker, 0.0));
-            return assetResponse;
-        };
-
-        return TCollectionUtil.mapAndApply(allAssets, quantityUpdater, assetResponse -> assetResponse.getQuantity() > 0);
-    }
-
     private Function<AssetEntity, String> stockWithCodeAndBroker() {
         return asset -> asset.getStockCode() + asset.getBrokerName().name();
-    }
-
-    private Function<AssetResponse, String> stockCodeWithBroker() {
-        return assetResponse -> assetResponse.getStockCode() + assetResponse.getBrokerName();
     }
 
     private List<AssetResponse> getStockEntities(UserMail userMail, Collection<String> stockCodes) {
 
         List<AssetEntity> stockEntities = portfolioRepository.findByEmailAndStockCodeIn(userMail.getEmail(), stockCodes);
         return groupedWithCharges(userMail, stockEntities);
-    }
-
-    private List<AssetEntity> getLongTermHeldAssets(UserMail userMail, String oneYearBeforeDate) {
-
-        QueryFilter queryFilter = QueryFilter.builder().filterKey("transaction_date").value(oneYearBeforeDate).operation(QueryFilter.FilterOperation.LESSER_THAN).isDateField(true).build();
-
-        List<QueryFilter> queryFilters = new ArrayList<>();
-        queryFilters.add(queryFilter);
-
-        return searchAssets(userMail, queryFilters);
-    }
-
-    private List<AssetEntity> getShortTermHeldAssets(UserMail userMail, String oneYearBeforeDate) {
-
-        QueryFilter queryFilter = QueryFilter.builder().filterKey("transaction_date").value(oneYearBeforeDate).operation(QueryFilter.FilterOperation.GREATER_THAN).isDateField(true).build();
-
-        List<QueryFilter> queryFilters = new ArrayList<>();
-        queryFilters.add(queryFilter);
-
-        return searchAssets(userMail, queryFilters);
     }
 
     public List<AssetResponse> getMutualFunds(UserMail userMail) {
@@ -896,15 +843,5 @@ public class PortfolioService {
         log.info("ReportService.updateReports() removed — TradeOutcomeEntity uses typed schema");
         transactionService.updateTransactions();
         log.info("Updated all transactions");
-    }
-
-    public Pair<InputStreamResource, String> downloadTermAssets(UserMail userMail, HoldingType holdingType) {
-
-        List<AssetResponse> assets = this.getAssets(userMail, holdingType);
-        String fileName = ExcelParser.HOLDINGS_FILE_NAME;
-        ByteArrayInputStream inputStream = PortfolioExcelExporter.assets(assets, List.of(), true);
-        InputStreamResource resource = new InputStreamResource(inputStream);
-
-        return Pair.of(resource, fileName);
     }
 }

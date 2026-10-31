@@ -1,0 +1,101 @@
+{
+  "ruleId": "DED-WITHIN-GROSS-TOTAL",
+  "ruleSet": "RS-DED-WITHIN-GROSS-TOTAL",
+  "_note": "\"The aggregate amount of the deductions under this Chapter shall not, in any case, exceed the gross total income of the assessee\" (s.122(2), p.158); \"gross total income\" is the total income before Chapter VIII (s.122(10), p.159). Every regime: what the new regime keeps of Chapter VIII is bound too. TY 2026-27 and TY 2025-26. rulebook DED-GTI-CAP-001, -DEF-001. Its 1961 counterpart, s.80A(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80A(2) (thc p.328): \"The aggregate amount of the deductions under this Chapter shall not, in any case, exceed the gross total income of the assessee\"; s.80B(5) (p.329): gross total income is total income \"before making any deduction under this Chapter\". sources/2026-10-07-chapter-via.md B1, B3. D-144.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80A(2), with s.80B(5)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.122(2), (10)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "GROSS_TOTAL_INCOME"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80A(2) — Chapter VIA subs. by Act 20 of 1967, s.33 and the Third Schedule (w.e.f. 1-4-1968)",
+        "gazetteRef": "Act 20 of 1967 (the Finance (No. 2) Act, 1967): Gazette issue not read; s.33 and Third Schedule entry 13 in the Department's text, as relayed by the owner's ChatGPT share t_6ad20d9ccc688191a3d9b332798e0c0a (D-189); the Act's own date not read, so notifiedOn stays the 1961 Act's",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1968-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/section-33-87",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80A(2), p.328; s.80B(5), p.329",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80A(2) after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80A(2), with s.80B(5)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.122(2), (10)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "GROSS_TOTAL_INCOME"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.122(2), (10)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.122(2), p.158; s.122(10), p.159",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.122(2), p.158; s.122(10), p.159",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

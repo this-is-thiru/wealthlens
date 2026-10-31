@@ -1,0 +1,102 @@
+{
+  "ruleId": "SETOFF-CARRIED-HOUSE-PROPERTY",
+  "ruleSet": "RS-SETOFF-CARRIED-HOUSE-PROPERTY",
+  "_note": "A house-property loss carried forward and set off only against income from house property, for at most eight tax years after the one it arose in (D-218; rulebook SETOFF-CF-HP-001). TY 2026-27: Income-tax Act, 2025 s.110(1): the loss not set off \"shall be carried forward to the following tax year and— (a) be set off only against the income from house property, if any, assessable for that tax year\"; s.110(2): \"No loss shall be carried forward under this section for more than eight tax years immediately succeeding the tax year for which the loss was first computed\" (p.148); s.121's return condition does not name s.110 (p.158). TY 2025-26: Income-tax Act, 1961 s.71B, inserted by the Finance (No. 2) Act, 1998 s.26 w.e.f. 1-4-1999, unchanged since (thc copy p.319). LossCarryForward(HOUSE_PROPERTY, 8, false): set off only against house property (s.110(1)(a)); the year the loss arose and the eight after it, used only in the eight; no return condition — s.121 does not name s.110, and Income-tax Act, 1961 s.80 (thc copy p.327) names ss.72(1), 73(2), 73A(2), 74(1), (3) and 74A(3) but not s.71B (D-263). The order — this year's set-off first, then the oldest year's loss, the part attributable to a new-regime disallowance first — is declared, the Acts prescribing none (OQ-29). The part attributable to a deduction the new regime disallows is SETOFF-CARRIED-DISALLOWED-PART's.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.71B",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.110",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "LossCarryForward",
+        "absorbedBy": "HOUSE_PROPERTY",
+        "succeedingYears": 8,
+        "requiresReturnFiledInTime": false
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 1998 (21 of 1998), s.26 — Income-tax Act, 1961 s.71B inserted w.e.f. 1-4-1999",
+        "gazetteRef": "Act 21 of 1998 (assent 1-8-1998) s.26: read in Acts of the Parliament of India, 1998 (the Legislative Department's annual volume; Wikimedia Commons DjVu scan, read from the page images), p.98 (DjVu p.106), the Act's head DjVu p.95; the Gazette of India issue itself not read (as D-215)",
+        "notifiedOn": "1998-08-01",
+        "effectiveFrom": "1999-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Acts_of_the_Parliament_of_India_1998.djvu",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 s.71B, thc.nic.in copy (current to Act 7 of 2019) p.319; inserted by the Finance (No. 2) Act, 1998 s.26 (Acts of the Parliament of India, 1998, p.98); no amendment of s.71B in the Finance Acts 2020–2025, TLA 2019 or TOLA 2020",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.71B",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.110",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "LossCarryForward",
+        "absorbedBy": "HOUSE_PROPERTY",
+        "succeedingYears": 8,
+        "requiresReturnFiledInTime": false
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.110",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.110, p.148; s.121, p.158; not amended by the Finance Act, 2026",
+        "accessedOn": "2026-10-17",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.110, p.148",
+    "accessedOn": "2026-10-17",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

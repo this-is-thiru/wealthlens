@@ -1,0 +1,24 @@
+{
+  "name": "zerodha-equity-futures-sell-10l-before-the-stt-change",
+  "describes": "The same sell on Friday 2026-03-27: NSE's 1-3-2026 rate, which includes IPFT, so there is no IPFT line; STT still 0.02%, because Finance Act 2026 s.159 takes effect on 30-3-2026.",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "EQUITY",
+    "segment": "FUTURES",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 1000,
+    "transactionDate": "2026-03-27"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 200.0,
+      "EXCHANGE_TXN": 18.3,
+      "SEBI_FEE": 1.0,
+      "GST": 7.07
+    },
+    "total": 246.37
+  }
+}

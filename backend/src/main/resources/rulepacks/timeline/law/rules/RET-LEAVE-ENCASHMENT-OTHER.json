@@ -1,0 +1,174 @@
+{
+  "ruleId": "RET-LEAVE-ENCASHMENT-OTHER",
+  "ruleSet": "RS-RET-ENTRY",
+  "_note": "Leave salary at retirement for an employee who is not a Central or State Government employee: deducted up to the least of four limbs (D-106; rulebook RET-LEAVE-OTHER-001). TY 2026-27: Income-tax Act, 2025 s.19(1) Table Sl. 14 (p.44), \"(a) the cash equivalent of the leave salary in respect of the period of earned leave at his credit at the time of his retirement … (entitlement of earned leave shall not exceed thirty days for every year of actual service); (b) amount 'A', where,— A = 10 × B; B = average monthly salary for the ten months immediately preceding his retirement …; (c) amount as the Central Government may, by notification, specify …; and (d) actual payment received.\" TY 2025-26: Income-tax Act, 1961 s.10(10AA)(ii) (thc.nic.in pp.72–73), \"in respect of so much of the period of earned leave at his credit … as does not exceed ten months, calculated on the basis of the average salary drawn by the employee during the period of ten months immediately preceding his retirement … subject to such limit as the Central Government may, by notification … specify\"; Explanation: entitlement \"shall not exceed thirty days for every year of actual service\". The two years' first limbs differ: TY 2026-27's is \"the cash equivalent of the leave salary\" — what the employer pays for the leave at credit; TY 2025-26 has no such limb, the 1961 clause valuing the leave at credit \"on the basis of the average salary\", so its version names the limb \"leave at credit valued at the ten-month average salary\" and the employer's figure must be so valued (and each year's \"salary\" is its own: Sch. IV Pt A r.2(h) for TY 2025-26, s.19(2)(b) for TY 2026-27). Limb (a)'s figure and (b)'s average are the employer's (LeaveAtRetirement): neither Act says how many days make a month, and the ten months end on the retirement day. \"Ten months' average salary\" is 1000% of the monthly average, stating the Act's ten as data. The limit: S.O. 2276(E), 24-5-2023, Rs. 25,00,000 from 1-4-2023 (Gazette CG-DL-E-24052023-246047, p.2), carried into the 2025 Act by s.536(2)(j); an earlier retirement is refused. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10AA)(ii), with its Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 14, with s.19(2)(b)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "payment received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "PAYMENT_RECEIVED"
+            }
+          },
+          {
+            "name": "leave at credit valued at the ten-month average salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "LEAVE_SALARY_AT_CREDIT"
+            }
+          },
+          {
+            "name": "ten months' average salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "1000",
+              "base": "AVERAGE_MONTHLY_SALARY"
+            }
+          },
+          {
+            "name": "notified limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "2500000"
+            }
+          }
+        ]
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "OTHER_LEAVE_ENCASHMENT"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 31/2023, S.O. 2276(E), under Income-tax Act, 1961 s.10(10AA)(ii): \"Rs. 25,00,000 (twenty-five lakhs rupees only) as the limit in relation to employees … who retire\", deemed in force from 1-4-2023; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "CG-DL-E-24052023-246047",
+        "notifiedOn": "2023-05-24",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246047.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10AA)(ii), with its Explanation, pp.72–73; the notification's Gazette copy (CG-DL-E-24052023-246047), p.2; Income-tax Act, 1961 s.10(10AA)(ii), with its Explanation: the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10AA)(ii), with its Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.19(1) Table Sl. 14, with s.19(2)(b)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "payment received",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "PAYMENT_RECEIVED"
+            }
+          },
+          {
+            "name": "leave salary at credit",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "LEAVE_SALARY_AT_CREDIT"
+            }
+          },
+          {
+            "name": "ten months' average salary",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "1000",
+              "base": "AVERAGE_MONTHLY_SALARY"
+            }
+          },
+          {
+            "name": "notified limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "2500000"
+            }
+          }
+        ]
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "retirement.entry",
+          "code": "OTHER_LEAVE_ENCASHMENT"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Notification No. 31/2023, S.O. 2276(E), under Income-tax Act, 1961 s.10(10AA)(ii): \"Rs. 25,00,000 (twenty-five lakhs rupees only) as the limit in relation to employees … who retire\", deemed in force from 1-4-2023; carried into the Income-tax Act, 2025 by s.536(2)(j)",
+        "gazetteRef": "CG-DL-E-24052023-246047",
+        "notifiedOn": "2023-05-24",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/246047.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 14, with s.19(2)(b), pp.44–45, s.202(2)(a) p.227 and s.536(2)(j); the notification's Gazette copy (CG-DL-E-24052023-246047), p.2; Finance Act, 2026 searched in full: no amendment to s.19",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.19(1) Table Sl. 14, with s.19(2)(b), pp.44–45",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

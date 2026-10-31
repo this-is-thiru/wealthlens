@@ -1,0 +1,31 @@
+{
+  "id": "T6-2",
+  "source": "DR 08 T6-2 — the same property, self-occupied, old regime",
+  "_source": "\"HP-SELFOCC-001 annual value = 0\"; \"HP-CAP-SELFOCC-002 (FA 2026 s.38): the cap covers s.22(1)(b) AND (c) — 3,20,000 + 40,000 = 3,60,000, capped = 2,00,000\"; \"income from house property = −2,00,000\"; \"SETOFF-HP-001 set-off against other heads, capped = 2,00,000\"; \"Expected: a ₹2,00,000 loss, fully set off.\" TY 2025-26 too: 1961 s.24(b)'s ₹2,00,000 covers the instalment (Explanation), so the loss is the same. T6-1's house and loan, not let; dates as T6-1 (D-211 C3). INFERENCE, not DR 08's (D-217 C5): the other-sources deposit interest of ₹3,00,000 that absorbs the loss — DR 08 states no income under another head, and any amount of ₹2,00,000 or more gives the same set-off.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "houseProperties": [
+    {
+      "occupancy": "OWN_RESIDENCE",
+      "expectedLettingValue": "540000",
+      "rentReceivable": "0",
+      "localTaxesPaid": "18000",
+      "interestPayable": "320000",
+      "preConstructionInterest": "200000",
+      "preConstructionInstalment": 3
+    }
+  ],
+  "otherSources": [
+    {
+      "kind": "DEPOSIT_INTEREST",
+      "received": "300000"
+    }
+  ],
+  "expected": {
+    "housePropertyIncome": "-200000",
+    "housePropertyLossSetOff": "200000"
+  }
+}

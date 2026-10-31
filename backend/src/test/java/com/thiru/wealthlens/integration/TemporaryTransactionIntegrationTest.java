@@ -320,7 +320,6 @@ public class TemporaryTransactionIntegrationTest extends AbstractIntegrationTest
         ca.setAssetType(AssetType.EQUITY);
         ca.setRecordDate(recordDate);
         ca.setExDate(recordDate.plusDays(1));
-        ca.setDate(recordDate);
         ca.setDescription("Test CA");
         ca.setPriority(1);
         return ca;

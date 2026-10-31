@@ -21,7 +21,11 @@ public class TestReportApplication {
     private static final String DEFAULT_INPUT_GLOB = "**/target/surefire-reports/TEST-*.xml";
     private static final String DEFAULT_OUTPUT_PATH = "target/consolidated-test-report.html";
 
-    public static void main(String[] args) {
+    private TestReportApplication() {
+    }
+
+    /** Fails the run on any error: a report built from part of the results would hide the missing tests. */
+    public static void main(String[] args) throws IOException {
         String inputGlob = args.length > 0 ? args[0] : DEFAULT_INPUT_GLOB;
         String outputPathStr = args.length > 1 ? args[1] : DEFAULT_OUTPUT_PATH;
 
@@ -36,41 +40,35 @@ public class TestReportApplication {
         log.info("Searching for test reports matching glob: {}", inputGlob);
         log.info("Output path: {}", outputPath.toAbsolutePath());
 
-        try {
-            List<Path> xmlFiles = findXmlFiles(searchRoot, inputGlob);
+        List<Path> xmlFiles = findXmlFiles(searchRoot, inputGlob);
 
-            if (xmlFiles.isEmpty()) {
-                log.warn("No test report XML files found matching: {}", inputGlob);
-                printSummary(0, 0, 0, 0, outputPath);
-                return;
-            }
-
-            log.info("Found {} test report file(s)", xmlFiles.size());
-
-            SurefireReportParser parser = new JacksonXmlSurefireParser();
-            List<SurefireTestSuite> suites = xmlFiles.stream()
-                    .map(parser::parse)
-                    .toList();
-
-            ReportDataAggregator aggregator = new ReportDataAggregator();
-            var summary = aggregator.aggregate(suites);
-
-            TemplateEngine engine = ThymeleafTemplateEngineFactory.createEngine();
-            ReportGenerationService reportService = new ReportGenerationService(engine);
-            reportService.generate(summary, outputPath);
-
-            printSummary(
-                    summary.getTotalTests(),
-                    summary.getTotalPassed(),
-                    summary.getTotalFailed(),
-                    summary.getTotalErrors(),
-                    outputPath
-            );
-
-        } catch (Exception e) {
-            log.error("Failed to generate consolidated test report", e);
-            System.exit(1);
+        if (xmlFiles.isEmpty()) {
+            log.warn("No test report XML files found matching: {}", inputGlob);
+            printSummary(0, 0, 0, 0, outputPath);
+            return;
         }
+
+        log.info("Found {} test report file(s)", xmlFiles.size());
+
+        SurefireReportParser parser = new JacksonXmlSurefireParser();
+        List<SurefireTestSuite> suites = xmlFiles.stream()
+                .map(parser::parse)
+                .toList();
+
+        ReportDataAggregator aggregator = new ReportDataAggregator();
+        var summary = aggregator.aggregate(suites);
+
+        TemplateEngine engine = ThymeleafTemplateEngineFactory.createEngine();
+        ReportGenerationService reportService = new ReportGenerationService(engine);
+        reportService.generate(summary, outputPath);
+
+        printSummary(
+                summary.getTotalTests(),
+                summary.getTotalPassed(),
+                summary.getTotalFailed(),
+                summary.getTotalErrors(),
+                outputPath
+        );
     }
 
     private static List<Path> findXmlFiles(Path rootPath, String glob) throws IOException {

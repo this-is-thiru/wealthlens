@@ -1,14 +1,35 @@
 package com.thiru.wealthlens.architecture;
 
+import static com.tngtech.archunit.core.domain.JavaCall.Predicates.target;
+import static com.tngtech.archunit.core.domain.properties.HasName.Predicates.name;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 
 /**
  * The conventions documented in CLAUDE.md, made executable.
@@ -21,6 +42,48 @@ import com.tngtech.archunit.lang.ArchRule;
         packages = "com.thiru.wealthlens",
         importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
+
+    private static final Set<String> GENERIC_NAMES_BEFORE_W045A = Set.of(
+            "AuthHelper", "FileHelper", "ParserUtil", "DoubleUtil",
+            "ChargeRecordingGatewayImpl", "UserDetailsServiceImpl", "UserDetailsImpl",
+            "AssetRequestParserImpl");
+
+    private static final DescribedPredicate<JavaClass> GRANDFATHERED_GENERIC_NAMES =
+            DescribedPredicate.describe(
+                    "named before W-045a " + GENERIC_NAMES_BEFORE_W045A,
+                    javaClass -> GENERIC_NAMES_BEFORE_W045A.contains(javaClass.getSimpleName()));
+
+    private static final DescribedPredicate<JavaClass> SHARED_T_PREFIXED_UTILITIES =
+            DescribedPredicate.describe(
+                    "a T-prefixed utility in shared.util (CLAUDE.md, Conventions)",
+                    javaClass -> javaClass.getPackageName().startsWith("com.thiru.wealthlens.shared.util")
+                            && javaClass.getSimpleName().startsWith("T"));
+
+    /** Duplicate simple names that predate W-045a. Owed: 03-WORK-ITEMS.md Appendix F. May only shrink. */
+    private static final Set<String> DUPLICATE_NAMES_BEFORE_W045A = Set.of("DateRange", "ExcelParser");
+
+
+    /**
+     * CLAUDE.md "Engineering standards" §3: a generic suffix means the responsibility is not yet
+     * understood. The classes listed predate the rule (D-045, W-045a); the list may only shrink.
+     */
+    @ArchTest
+    static final ArchRule classes_have_no_generic_suffix =
+            noClasses()
+                    .that().areNotAnonymousClasses()
+                    .and(DescribedPredicate.not(GRANDFATHERED_GENERIC_NAMES))
+                    .and(DescribedPredicate.not(SHARED_T_PREFIXED_UTILITIES))
+                    .should().haveSimpleNameEndingWith("Helper")
+                    .orShould().haveSimpleNameEndingWith("Util")
+                    .orShould().haveSimpleNameEndingWith("Utils")
+                    .orShould().haveSimpleNameEndingWith("Manager")
+                    .orShould().haveSimpleNameEndingWith("Impl")
+                    .orShould().haveSimpleNameEndingWith("Data")
+                    .orShould().haveSimpleNameEndingWith("Info")
+                    .orShould().haveSimpleNameEndingWith("Processor")
+                    .orShould().haveSimpleNameEndingWith("Common")
+                    .orShould().haveSimpleNameEndingWith("Misc")
+                    .because("CLAUDE.md §3: a class name states the domain concept, not a generic role");
 
     @ArchTest
     static final ArchRule no_field_injection =
@@ -102,7 +165,305 @@ class ArchitectureTest {
     static final ArchRule money_rounding_lives_in_one_place =
             noClasses()
                     .that().resideOutsideOfPackage("..shared.util.money..")
+                    .and().resideOutsideOfPackage("..taxengine.rules.money..")
                     .and().haveSimpleNameNotEndingWith("ChargeRounding")
                     .should().callMethod(java.math.BigDecimal.class, "setScale", int.class, java.math.RoundingMode.class)
-                    .because("TL-8: paise rounding belongs to TMoney; a second copy is how two roundings diverge");
+                    .because("TL-8: paise rounding belongs to TMoney; a second copy is how two roundings diverge."
+                            + " taxengine.rules.money is the second permitted home, not a third copy: TL-8 section 7 names"
+                            + " 'anything filed on someone else's behalf' as the trigger for exact decimal storage,"
+                            + " and taxplanning ships ITR-ready figures. Its rounding likewise lives in one package.");
+
+    /**
+     * The two money representations may never meet outside one named seam.
+     *
+     * <p>{@code TMoney} is canonicalised {@code double} (TL-8 Option B); {@code taxengine} is exact
+     * decimal (TL-8 section 7). Both are correct for their own module and mixing them silently
+     * discards the guarantee of whichever one loses. Conversion happens in {@code MoneyBridge},
+     * inbound only, and nowhere else.
+     *
+     * <p>Vacuous until the engine has types — which is the point: the guard is in place before the
+     * first {@code Money} is written, not after.
+     */
+    @ArchTest
+    static final ArchRule taxengine_does_not_use_TMoney =
+            noClasses()
+                    .that().resideInAPackage("..taxengine..")
+                    .should().accessClassesThat().haveFullyQualifiedName("com.thiru.wealthlens.shared.util.money.TMoney")
+                    .because("taxengine is exact-decimal; TMoney is canonicalised double."
+                            + " Conversion belongs to MoneyBridge in taxplanning.portfolio, and to nothing else");
+
+    /**
+     * Only the portfolio adapter converts a canonicalised {@code double} into an exact {@code Money}.
+     *
+     * <p>Matched by method name rather than by {@code MoneyBridge.class}: the class does not exist
+     * yet, and a rule that cannot be written until the thing it guards exists is a rule that arrives
+     * after the mistake. Expressed as {@code noClasses} so the input set is every class outside the
+     * adapter package — ArchUnit 1.3 fails a rule whose {@code that()} matches nothing, and no class
+     * calls this method today.
+     */
+    @ArchTest
+    static final ArchRule only_the_adapter_converts =
+            noClasses()
+                    .that().resideOutsideOfPackage("..taxplanning.portfolio..")
+                    .should().callMethodWhere(target(name("fromTMoney")))
+                    .because("one seam, named and testable, rather than a conversion scattered per call site");
+
+    /**
+     * The engine fetches nothing.
+     *
+     * <p>Everything a computation may read arrives in {@code EngineInputs}. This is not tidiness:
+     * the optimiser runs thousands of evaluations inside one request, and a single repository call
+     * inside a node turns those into thousands of database round trips. It is also what makes a
+     * computation reproducible years later — a result that re-read the database would not be.
+     */
+    @ArchTest
+    static final ArchRule taxengine_fetches_nothing =
+            noClasses()
+                    .that().resideInAPackage("..taxengine..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "..repository..", "org.springframework.data..", "..taxplanning..")
+                    .because("everything the engine may read arrives in EngineInputs; it fetches nothing");
+
+    /**
+     * The engine reads no clock.
+     *
+     * <p>The instant of evaluation is an input, not ambient state. A clock inside makes a golden
+     * test time-dependent and an audit irreproducible — and the design has rules keyed on filing
+     * date and on an asset's acquisition date, which must be supplied, never inferred from today.
+     */
+    @ArchTest
+    static final ArchRule taxengine_has_no_clock =
+            noClasses()
+                    .that().resideInAPackage("..taxengine..")
+                    .should().callMethodWhere(target(name("now")))
+                    .orShould().dependOnClassesThat().haveFullyQualifiedName("java.time.Clock")
+                    .because("asOf is an EngineInputs field; a clock inside the engine makes golden tests"
+                            + " time-dependent and audits irreproducible");
+
+    /**
+     * A node asks the context whether a rule applies in the regime, never the rule's row.
+     *
+     * <p>A row's {@code regimes} is half the answer: the regime's disallowance sets are the other half (D-165). A
+     * node reading {@code appliesIn} itself applies a rule S2 s.202(2)(a) forbids — a wrong figure, explained as
+     * allowed.
+     */
+    @ArchTest
+    static final ArchRule nodes_ask_the_context_whether_a_rule_applies_in_the_regime =
+            noClasses()
+                    .that().resideInAPackage("..taxengine.node..")
+                    .should().callMethod(RegimeApplicability.class, "appliesIn", RegimeCode.class)
+                    .because("NodeContext.inRegime also applies the regime's disallowance sets (D-165)");
+
+    /**
+     * A node or an election names a rule set, never a row: the set's data chooses the row, by regime, person or item
+     * (D-252, D-253); an election reads it through its node (D-255).
+     *
+     * <p>A row named in Java is one a new regime's or a new item's row cannot replace without a code edit, which is
+     * what W-088m1, W-088m2 and W-088m4 removed. Both ways to name one are closed: the generated {@code RuleIds}, and a
+     * {@code RuleId} built from its text (D-254).
+     */
+    @ArchTest
+    static final ArchRule nodes_and_elections_reach_rules_through_rule_sets =
+            noClasses()
+                    .that().resideInAnyPackage("..taxengine.node..", "..taxengine.election..")
+                    .should().dependOnClassesThat().belongToAnyOf(RuleIds.class)
+                    .orShould().callConstructor(RuleId.class, String.class)
+                    .because("a node or election names a RuleSetId and the pack's data chooses the row (D-252 – D-255)");
+
+    /**
+     * Money is {@code Money}, and rates are {@code Rate}.
+     *
+     * <p>Expressed as a dependency rule rather than a field rule because {@code taxengine} has no
+     * fields yet, and ArchUnit 1.3 fails a rule that checks nothing. It is also stronger: it catches
+     * a {@code BigDecimal} parameter, return type or local, not only a field.
+     */
+    @ArchTest
+    static final ArchRule tax_modules_use_money_not_bigdecimal =
+            noClasses()
+                    .that().resideInAPackage("..taxengine..")
+                    .and().resideOutsideOfPackage("..taxengine.rules.money..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.math.BigDecimal")
+                    .because("D-MONEY: money is Money, rates are Rate, and nothing else is either."
+                            + " Money lives in taxengine.rules.money because a rule pack holds rupee figures --"
+                            + " slab band bounds, the 80C ceiling, the standard deduction -- so the rules"
+                            + " vocabulary needs it by its nature (B-001, W-013; package since D-048).");
+
+    /**
+     * The rules vocabulary never reaches into the engine that runs it.
+     *
+     * <p>Until decision D-048 {@code taxrules} was a module of its own and Spring Modulith enforced this
+     * direction. Folding it into {@code taxengine} kept every other reason for the split and lost only
+     * that check, so it is restated here: a cap shape or a pack type that imported a node, the pipeline
+     * or a result would make the law depend on how it happens to be evaluated.
+     */
+    @ArchTest
+    static final ArchRule rules_do_not_depend_on_the_runner =
+            noClasses()
+                    .that().resideInAPackage("..taxengine.rules..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "..taxengine.input..", "..taxengine.pipeline..",
+                            "..taxengine.trace..", "..taxengine.result..")
+                    .because("D-048: the law is data plus the arithmetic of single rules; ordering, carrying"
+                            + " values and tracing belong to the runner, which may read the rules and never"
+                            + " the reverse.");
+
+    /**
+     * Names withdrawn in favour of another abstraction: {@code ComputationStep} for the DAG's
+     * {@code ComputationNode}; {@code VerificationStatus} and {@code DraftOrFinal} for the three
+     * status axes (D-036, {@code W-045e}).
+     *
+     * <p>Not an ArchUnit rule: ArchUnit reads bytecode, and this is a name that must not appear in
+     * source at all. It is a gate because the withdrawal was already missed once — the name survived
+     * in ten design documents after being replaced, which is the same two-vocabularies failure this
+     * whole design was written to avoid.
+     */
+    @Test
+    void withdrawn_abstraction_names_do_not_appear_in_source() throws IOException {
+        Map<String, String> withdrawn = Map.of(
+                "ComputationStep", "ComputationNode (23-architecture-consolidation.md A4)",
+                "VerificationStatus", "VerificationLevel (D-036)",
+                "DraftOrFinal", "LegalStatus on the rule version (D-036)");
+        Path root = Path.of("src");
+        try (Stream<Path> paths = Files.walk(root)) {
+            List<String> offenders = paths
+                    .filter(Files::isRegularFile)
+                    .filter(f -> f.toString().endsWith(".java"))
+                    // This file is exempt: it names the withdrawn abstraction in order to forbid it,
+                    // the same shape as ChargeRounding's exemption from the money rule above. The
+                    // first run of this gate caught exactly this file, which is how we know it bites.
+                    .filter(f -> !f.endsWith("ArchitectureTest.java"))
+                    .filter(f -> {
+                        try {
+                            String source = Files.readString(f);
+                            return withdrawn.keySet().stream().anyMatch(source::contains);
+                        } catch (IOException e) {
+                            throw new IllegalStateException("could not read " + f, e);
+                        }
+                    })
+                    .map(Path::toString)
+                    .toList();
+            if (!offenders.isEmpty()) {
+                throw new AssertionError(
+                        "Withdrawn names (name → replacement: " + withdrawn + ") still appear in: " + offenders);
+            }
+        }
+    }
+
+    /**
+     * No node maps a category to a rule set — the pattern W-088m2 replaced with conditions on the item, so a new
+     * category is a row, not a map entry (review E1; D-254).
+     *
+     * <p>A source scan, because ArchUnit reads erased bytecode and cannot see a map's value type; the shape is the
+     * withdrawn-name gate above.
+     */
+    @Test
+    void nodes_hold_no_map_to_a_rule_set() throws IOException {
+        Pattern mapToRuleSet = Pattern.compile("Map<[^;=()]*,\\s*([\\w.]+\\.)?RuleSetId>");
+        Path root = Path.of("src/main/java/com/thiru/wealthlens/taxengine/node");
+        try (Stream<Path> paths = Files.walk(root)) {
+            List<String> offenders = paths
+                    .filter(Files::isRegularFile)
+                    .filter(f -> f.toString().endsWith(".java"))
+                    .filter(f -> {
+                        try {
+                            return mapToRuleSet.matcher(Files.readString(f)).find();
+                        } catch (IOException e) {
+                            throw new IllegalStateException("could not read " + f, e);
+                        }
+                    })
+                    .map(Path::toString)
+                    .sorted()
+                    .toList();
+            assertThat(offenders)
+                    .as("A node chooses a row by the item's facts in the set's rows (ItemFactIs), never by a map to a"
+                            + " rule set (D-253, D-254)")
+                    .isEmpty();
+        }
+    }
+
+    /**
+     * L5 guard 3 — {@code adjustPipeline} overrides are listed, and the list is reviewed.
+     *
+     * <p>{@code 17-regime-lifecycle.md} L5 makes tier-3 {@code RegimeBehaviour} the tier that can
+     * rot. A regime that rewrites the assembled pipeline is the easiest way to make the computation
+     * stop matching the rulebook, and it is invisible in review unless something points at it.
+     * Overriding is allowed; doing so <b>invisibly</b> is not — so this lists every overrider and
+     * fails until the list below is updated deliberately.
+     *
+     * <p>Written as a plain {@code @Test} rather than an {@code @ArchTest} on purpose. The expected
+     * number of overriders is <b>zero</b>, and under ArchUnit with no {@code archunit.properties} a
+     * rule matching nothing fails the build — so an {@code @ArchTest} here would break CI on day one
+     * instead of guarding anything. {@code W-031b}'s erratum on L5 says exactly this. The shape is
+     * the withdrawn-abstraction gate above.
+     *
+     * <p>L5's own recommendation is to ship with zero implementations beyond
+     * {@code DataDrivenRegimeBehaviour}. An entry appearing here is the signal to ask whether the
+     * {@code Condition} algebra is missing a predicate instead.
+     */
+    @Test
+    void adjustPipeline_overrides_are_listed_and_reviewed() throws IOException {
+        // Empty on purpose: no regime needs tier-3 behaviour today (L5's RECOMMENDATION).
+        // Adding a name here is a deliberate act, which is the whole point of the guard.
+        List<String> reviewed = List.of();
+
+        String hook = "adjustPipeline";
+        Path root = Path.of("src/main/java");
+        try (Stream<Path> paths = Files.walk(root)) {
+            List<String> overriders = paths
+                    .filter(Files::isRegularFile)
+                    .filter(f -> f.toString().endsWith(".java"))
+                    // The interface that declares the hook is not an override of it.
+                    .filter(f -> !f.endsWith("RegimeBehaviour.java"))
+                    .filter(f -> {
+                        try {
+                            return Files.readString(f).contains(hook);
+                        } catch (IOException e) {
+                            throw new IllegalStateException("could not read " + f, e);
+                        }
+                    })
+                    .map(f -> f.getFileName().toString().replace(".java", ""))
+                    .sorted()
+                    .toList();
+
+            if (!overriders.equals(reviewed)) {
+                throw new AssertionError(
+                        "RegimeBehaviour.adjustPipeline rewrites the assembled pipeline, so every"
+                                + " override is a review trigger (17-regime-lifecycle.md L5, guard 3)."
+                                + " Reviewed: " + reviewed + ", found: " + overriders
+                                + ". If this override is intended, add it to the reviewed list in this"
+                                + " test -- and first ask whether the Condition algebra is missing a"
+                                + " predicate, which would serve every regime rather than one.");
+            }
+        }
+    }
+
+
+    /**
+     * CLAUDE.md "Engineering standards" §3: one word per concept. Two top-level classes sharing a
+     * simple name in different modules make every import a guess (D-045, W-045a).
+     */
+    @Test
+    void simple_class_names_are_unique() {
+        Map<String, List<String>> byName = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("com.thiru.wealthlens")
+                .stream()
+                .filter(javaClass -> javaClass.isTopLevelClass())
+                .filter(javaClass -> !javaClass.getSimpleName().equals("package-info"))
+                .collect(Collectors.groupingBy(
+                        JavaClass::getSimpleName,
+                        TreeMap::new,
+                        Collectors.mapping(JavaClass::getName, Collectors.toList())));
+
+        Map<String, List<String>> duplicates = new TreeMap<>();
+        byName.forEach((name, classes) -> {
+            if (classes.size() > 1 && !DUPLICATE_NAMES_BEFORE_W045A.contains(name)) {
+                duplicates.put(name, classes);
+            }
+        });
+
+        assertThat(duplicates)
+                .as("top-level classes sharing a simple name — rename one to the concept it states")
+                .isEmpty();
+    }
 }

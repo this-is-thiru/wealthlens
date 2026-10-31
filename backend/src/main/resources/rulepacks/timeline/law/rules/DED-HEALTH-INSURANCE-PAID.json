@@ -1,0 +1,103 @@
+{
+  "ruleId": "DED-HEALTH-INSURANCE-PAID",
+  "ruleSet": "RS-DED-HEALTH-INSURANCE-PAID",
+  "_note": "The kinds of health payment that are \"paid to effect or to keep in force the health insurance\" of a person (s.126(7), quoted in the bucket rows' notes) and \"a sum paid for health insurance\" for the senior citizen's substitution (s.126(8)(a)): a premium, not a notified health scheme's contribution (D-145). It decides both which payments raise a bucket to its senior row and which make medical expenditure on that senior ineligible. TY 2025-26: Income-tax Act, 1961 s.80D(2)(c), (d) first proviso, (4), to the same effect (the bucket rows' TY 2025-26 notes). Conditions only, on health.kind; provenance and introduction are DED-HEALTH-FAMILY-SENIOR's (W-156b2, D-347). Old regime only, as the health rows.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80D(2)(c), (d) first proviso, (4); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.126(7), (8)(a)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "health.kind",
+          "code": "INSURANCE_PREMIUM"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80D(4) — \"fifty thousand rupees\" subs. by Act 13 of 2018, s.26 (w.e.f. 1-4-2019)",
+        "gazetteRef": "Act 13 of 2018: Gazette of India, Extraordinary, Part II, Section 1, No. 17, 29-3-2018 (egazette 2018/184302), p.15",
+        "notifiedOn": "2018-03-29",
+        "effectiveFrom": "2019-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/184302.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80D(2)(a), (c), (4), pp.341–342; Explanation (\"senior citizen\"), p.343",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80D after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md; none amends s.80D) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80D(2)(c), (d) first proviso, (4); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.126(7), (8)(a)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "health.kind",
+          "code": "INSURANCE_PREMIUM"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.126(2)(a), (2)(c), (4), (8)(a)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.126(2)(a), (2)(c), pp.161–162; s.126(8)(a), p.162; s.2(100), p.20",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.126(2)(a), (2)(c), pp.161–162; s.126(8)(a), p.162; s.2(100), p.20",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

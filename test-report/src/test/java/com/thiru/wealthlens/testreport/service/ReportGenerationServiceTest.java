@@ -28,7 +28,7 @@ class ReportGenerationServiceTest {
         return new ReportGenerationService(engine);
     }
 
-    private ExecutionSummary buildSampleSummary() {
+    private List<TestCaseResult> sampleTestCases() {
         TestCaseResult passed = TestCaseResult.builder()
                 .name("testBuyStock")
                 .className("PortfolioServiceTest")
@@ -60,6 +60,10 @@ class ReportGenerationServiceTest {
                 .status(TestStatus.PASSED)
                 .build();
 
+        return List.of(passed, failed, skipped, passed2);
+    }
+
+    private ExecutionSummary buildSampleSummary() {
         TestClassSummary classSummary = TestClassSummary.builder()
                 .fullyQualifiedClassName("PortfolioServiceTest")
                 .packageName("")
@@ -70,7 +74,7 @@ class ReportGenerationServiceTest {
                 .errorCount(0)
                 .skippedCount(1)
                 .totalTimeSeconds(0.487)
-                .testCases(List.of(passed, failed, skipped, passed2))
+                .testCases(sampleTestCases())
                 .build();
 
         return ExecutionSummary.builder()

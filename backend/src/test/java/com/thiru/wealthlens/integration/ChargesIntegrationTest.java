@@ -63,6 +63,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * The charges engine against a real MongoDB and a real HTTP stack.
@@ -110,6 +112,9 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ChargeSeederService chargeSeederService;
 
+    @Autowired
+    private ObjectMapper mvcMapper;
+
     @BeforeEach
     void seedOneKnownRateCard() {
         // The catalogue has to exist before anything can be published: the validator rejects a rule
@@ -123,6 +128,16 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.getCollection("charge_schedules").deleteMany(new Document());
         mongoTemplate.getCollection("charge_instruments").deleteMany(new Document());
         scheduleRepository.save(equityCard("IT_EQ_2025", LocalDate.of(2025, 1, 1), null, 0.0));
+
+        // Every shipped scope has a statutory card (D-382), and a trade without one is a gap. This
+        // class's own cards still carry their statutory lines, so its statutory card carries none:
+        // unscoped, it is found for every trade and the AMC cycle, and adds nothing. A test that
+        // publishes a scoped statutory card outranks it.
+        ChargeScheduleEntity noStatutoryRules = new ChargeScheduleEntity();
+        noStatutoryRules.setScheduleCode("IT_STATUTORY_NONE");
+        noStatutoryRules.setStartDate(LocalDate.of(2025, 1, 1));
+        noStatutoryRules.setStatus(EntityStatus.ACTIVE);
+        scheduleRepository.save(noStatutoryRules);
     }
 
     // ------------------------------------------------------------ Tier H — persistence
@@ -154,6 +169,34 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         assertThat(stored.getScheduleId()).isNotBlank();
         // findByScheduleId was removed as dead code; provenance is the stored scheduleId itself.
         assertThat(stored.getScheduleId()).isNotBlank();
+    }
+
+    @Test
+    void aStatutoryCard_publishedWithNoBroker_pricesBesideTheBrokersCardAndIsRecorded() {
+        // Given — a card naming no broker is the statutory card (D-380, D-381). SEBI_FEE ₹1.00 flat,
+        // a code the broker's card does not carry, published through the endpoint like any card
+        ChargeScheduleEntity statutory = new ChargeScheduleEntity();
+        statutory.setScheduleCode("IT_STATUTORY_EQ_2025");
+        statutory.setAssetType(AssetType.EQUITY);
+        statutory.setSegment(TradeSegment.DELIVERY);
+        statutory.setStartDate(LocalDate.of(2025, 1, 1));
+        statutory.setStatus(EntityStatus.ACTIVE);
+        statutory.setRules(new java.util.ArrayList<>(List.of(flatRule("SEBI_FEE", ChargeCategory.REGULATORY, 1.00, 40))));
+        assertThat(post("/charge-schedules", adminToken(), statutory).getStatusCode().value())
+                .isEqualTo(HttpStatus.OK.value());
+
+        // When
+        ChargeComputation computation = userChargeService.computeAndRecord(sell("txn-1", "INFY", HOLDER, TRADE_DATE));
+
+        // Then — the broker's card still prices (₹115.93, as above) and the statutory ₹1.00 joins it.
+        // SEBI_FEE is not in the broker card's GST base (BROKERAGE, DP), so GST stays ₹2.43.
+        assertThat(computation.scheduleCode()).isEqualTo("IT_EQ_2025");
+        assertMoney(1.00, computation.amountOf("SEBI_FEE"));
+        assertMoney(2.43, computation.amountOf("GST"));
+        assertMoney(116.93, computation.total());
+        UserChargeEntity stored = userChargeRepository.findByEmailAndTransactionId(EMAIL, "txn-1").orElseThrow();
+        assertThat(stored.getStatutoryScheduleCode()).isEqualTo("IT_STATUTORY_EQ_2025");
+        assertThat(stored.getStatutoryScheduleId()).isNotBlank();
     }
 
     @Test
@@ -477,6 +520,24 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         assertMoney(0.00, old.amountOf("BROKERAGE"));
         assertThat(recent.scheduleCode()).isEqualTo("IT_EQ_2026");
         assertMoney(5.00, recent.amountOf("BROKERAGE"));
+    }
+
+    @Test
+    void publishEndpoint_whenTheBodyOmitsAuditMetadata_stampsTheCaller() {
+        // Given — the api-collection body carries no auditMetadata, and the server must still record who
+        // published the card: Spring Data's auditing fills an object, it does not create one (W-205).
+        ChargeScheduleEntity card = equityCard("IT_EQ_AUDIT_2026", LocalDate.of(2026, 1, 1), null, 0.0);
+        ObjectNode body = (ObjectNode) mvcMapper.readTree(mvcMapper.writeValueAsString(card));
+        body.remove("auditMetadata");
+
+        // When
+        ResponseEntity<String> response = post("/charge-schedules", adminToken(), body.toString());
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
+        ChargeScheduleEntity stored = scheduleRepository.findByScheduleCode("IT_EQ_AUDIT_2026").orElseThrow();
+        assertThat(stored.getAuditMetadata().getCreatedBy()).isEqualTo(EMAIL);
+        assertThat(stored.getAuditMetadata().getCreatedAt()).isNotNull();
     }
 
     @Test

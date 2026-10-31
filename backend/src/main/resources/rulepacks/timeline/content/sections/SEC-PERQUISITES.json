@@ -1,0 +1,328 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-111, D-112, D-113, D-115, D-117, D-118, D-119, D-120, D-121, D-124, D-126, D-127, D-151). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: PERQ-*.json (1961 s.17(2) with Income-tax Rules, 1962 r.3; 2025 s.17(1) with Income-tax Rules, 2026 r.15). summary: S2 s.16(e) (\"salary\" includes perquisites), s.17(1)(a)–(b) (rent-free accommodation; a concession in rent). routes[0]: PERQ-ACCOM-GOVERNMENT, -OWNED, -LEASED, -HOTEL (r.15(2) Table I Sl. 1–3; r.3(1) Table I as substituted by G.S.R. 615(E)). routes[1]: PERQ-ACCOM-FURNITURE (r.15(2)(e)). routes[2]: PERQ-MEDABROAD-STAY, -TRAVEL (S2 s.17(2)(f), (3); 1961 s.17(2) proviso (vi), (vii)). routes[3]: PERQ-SPECIFIED-EMPLOYEE, PERQ-CAR-* (S2 s.17(1)(c), (f); S4 r.15(3), r.17; 1961 s.17(2)(iii)–(iv); Rules 1962 r.3(2), r.3C). routes[4]: PERQ-SERVICES, -UTILITY, -EDUCATION, -EDUCATION-FREE, -CARRIER-TRAVEL (S4 r.15(4) Table III; Rules 1962 r.3(3)–(6)); whom: OQ-10. routes[5]: PERQ-MEAL, -AT-WORK, -VOUCHER, -TEA-SNACKS, -REMOTE, PERQ-GIFT (S4 r.15(5) Table IV Sl. 3–4; Rules 1962 r.3(7)(iii)–(iv)). routes[6]: PERQ-LOAN, PERQ-LOAN-PETTY (S4 r.15(5) Table IV Sl. 1; Rules 1962 r.3(7)(i)). routes[7]: PERQ-HOLIDAY, -CREDIT-CARD (-OFFICIAL), -CLUB (and its by-year exclusions, OQ-12), -ASSET-USE (-EXCLUDED), -ASSET-TRANSFER-*, -OTHER-BENEFIT, -TELEPHONE (S4 r.15(5) Table IV Sl. 2, 5–9; Rules 1962 r.3(7)(ii), (v)–(ix)). routes[8]: PERQ-SPECIFIED-SECURITY, PERQ-SPECIFIED-DATE (S2 s.17(1)(d), (4); S4 r.15(6)–(8); 1961 s.17(2)(vi); Rules 1962 r.3(8)–(9)). routes[9]: 1961 s.10(10CC); 2025 Sch. III Table Sl. 10 — the tax an employer pays at its option is excluded, the perquisite stays (D-124; the literal 2025 reading is OQ-13); the payment itself is TDS-SAL-PERQ-001's (D-110, D-116). routes[0] also PERQ-ACCOM-CONTINUED (r.15(2)(d); r.3(1) third proviso) with RATE-COST-INFLATION-INDEX; accommodation first provided before 2023-24 is refused (OQ-11). routes[10]: PERQ-EMPLOYER-CONTRIBUTION (S2 s.17(1)(h); 1961 s.17(2)(vii); D-126), PERQ-EMPLOYER-ACCRETION (S2 s.17(1)(i), S4 r.16; 1961 s.17(2)(viia), Rules 1962 r.3B; D-127). routes[11]: PERQ-RPF-CONTRIBUTION (1961 Sch. IV Pt A r.6(a), s.17(1)(vi); TY 2025-26 only — the Finance Act, 2026 s.127(a)(iii) removed it from S2 Sch. XI Pt A para 6), PERQ-RPF-INTEREST (1961 Sch. IV Pt A r.6(b); S2 Sch. XI Pt A para 6 as substituted, s.17(1)(i); D-151).",
+  "key": "SEC-PERQUISITES",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.17(2)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.17(1)",
+    "presence": "PRESENT"
+  },
+  "plainName": "Perquisites",
+  "summary": "Benefits your employer provides other than in money are salary too, and are taxed at a value the rules set. Accommodation is valued at a share of your salary that depends on the size of the city, or on what the employer pays for a lease or a hotel if that is lower, less any rent you pay, plus a share of the cost of any furniture. This applies in both regimes.",
+  "routes": [
+    {
+      "name": "Accommodation from your employer",
+      "description": "A home the government provides at its licence fee, or one your employer owns, leases or books in a hotel, valued at a share of your salary for the time you lived there, less the rent you paid; a home your employer owns or leases and has given you since an earlier year is capped at the first year's value, raised with the cost inflation index.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ACCOM-GOVERNMENT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ACCOM-OWNED"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ACCOM-LEASED"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ACCOM-HOTEL"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ACCOM-CONTINUED"
+        }
+      ]
+    },
+    {
+      "name": "Furniture in the accommodation",
+      "description": "A share of the cost of furniture each year, or the hire charges if it is hired, less what you pay for it.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ACCOM-FURNITURE"
+        }
+      ]
+    },
+    {
+      "name": "Medical treatment abroad",
+      "description": "Your employer's spending on treatment, stay and travel abroad for you or your family, and one attendant, is not taxed as far as the Reserve Bank of India permitted the treatment and stay, and the travel is not taxed only if your income before it is not above a limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-MEDABROAD-STAY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-MEDABROAD-TRAVEL"
+        }
+      ]
+    },
+    {
+      "name": "Motor car",
+      "description": "A car your employer owns or hires, valued at a fixed amount a month by engine size, or at its running cost if it is only for your private use, and taxed only if you are a director, hold a substantial interest in the company, or your salary in money is above a limit; and the running of your own car or other vehicle paid by your employer, less an amount for official use.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-SPECIFIED-EMPLOYEE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PARTLY-SMALL"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PARTLY-LARGE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PARTLY-ELECTRIC"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-OWNRUN-SMALL"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-OWNRUN-LARGE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-OWNRUN-ELECTRIC"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-CHAUFFEUR"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PRIVATE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-EMPLOYEE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-CONVEYANCE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-OFFICIAL"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-PARTLY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-OWNRUN"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-PRIVATE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-EMPLOYEE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CAR-PATH-CONVEYANCE"
+        }
+      ]
+    },
+    {
+      "name": "Services, utilities and education",
+      "description": "Household staff, gas, electricity and water, and education for your household, at what your employer pays, and a carrier's free travel at its public fare; taxed only if you are a specified employee unless your employer pays what you owe yourself, and your child's schooling in your employer's own or a free school only above a limit per month.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-SERVICES"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-UTILITY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-EDUCATION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-EDUCATION-FREE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CARRIER-TRAVEL"
+        }
+      ]
+    },
+    {
+      "name": "Meals and gifts",
+      "description": "Food your employer provides, taxed only beyond a limit per meal at work or by voucher, and not at all for tea or snacks or at a remote site; and gifts, vouchers or tokens from your employer, not taxed while their total in the year stays below a limit, and taxed in full once it reaches it.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-MEAL"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-MEAL-AT-WORK"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-MEAL-VOUCHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-MEAL-TEA-SNACKS"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-MEAL-REMOTE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-GIFT"
+        }
+      ]
+    },
+    {
+      "name": "Loans from your employer",
+      "description": "An interest-free or cheap loan, valued at the interest the State Bank of India would have charged for the same purpose less what you paid; not taxed for small loans in total, or for treatment of a listed disease except what insurance repaid.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-LOAN"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-LOAN-PETTY"
+        }
+      ]
+    },
+    {
+      "name": "Holidays, cards, clubs and assets",
+      "description": "Holidays your employer pays for, credit-card and club bills unless they are for work with the employer's records, the use of your employer's assets at a share of their cost (not laptops or computers, and in some years not tablets or phones), assets transferred to you at their cost less wear and tear, and any other benefit at its cost to your employer — but not telephone bills.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-HOLIDAY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CREDIT-CARD"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CLUB"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CLUB-BUSINESS"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CLUB-UNIFORM"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CLUB-BUSINESS-UNIFORM"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-CREDIT-CARD-OFFICIAL"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ASSET-USE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ASSET-USE-EXCLUDED"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ASSET-TRANSFER-ELECTRONIC"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ASSET-TRANSFER-CAR"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-ASSET-TRANSFER-OTHER"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-OTHER-BENEFIT"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-TELEPHONE"
+        }
+      ]
+    },
+    {
+      "name": "Shares from your employer",
+      "description": "Shares or other securities under an employee share scheme, or sweat equity, from your current or a former employer: their market value on the day you exercise the option, less what you pay.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-SPECIFIED-SECURITY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-SPECIFIED-DATE"
+        }
+      ]
+    },
+    {
+      "name": "Tax your employer pays on a benefit",
+      "description": "If your employer chooses to pay the tax on a benefit it gives you other than in money, that tax is not counted as your income.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "Nothing to compute: the tax your employer pays on such a benefit is never counted as your income here, and its paying the tax is part of tax deduction at source."
+        }
+      ]
+    },
+    {
+      "name": "Your employer's retirement contributions",
+      "description": "What your employer puts into your provident fund, pension scheme and superannuation fund, added together, is taxed only beyond a limit in the year, and so are those funds' earnings on the part beyond it.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-EMPLOYER-CONTRIBUTION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-EMPLOYER-ACCRETION"
+        }
+      ]
+    },
+    {
+      "name": "Your recognised provident fund",
+      "description": "Where your employer's contribution to a recognised provident fund goes beyond the share of your salary the law allows, or the fund credits interest above the rate the Government has notified, the part beyond is taxed as your salary.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "PERQ-RPF-CONTRIBUTION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "PERQ-RPF-INTEREST"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": []
+}

@@ -9,8 +9,13 @@ shadow recording gets exercised.
 this branch — or is running an environment seeded before 2026-09-08, which §7b fixes.
 
 > **The rates were verified on 2026-09-08** against Zerodha's, Upstox's and Fyers' published pages;
-> the evidence is in `ac2-rate-verification.md`. All eleven cards carry a `verifiedOn`, so
-> `GET /charge-schedules/unverified` returns `[]` on a freshly seeded database. §7 is how you correct
+> the evidence is in `ac2-rate-verification.md`. The cards added on 2026-10-28 (W-177, W-178: Upstox / Fyers
+> intraday, mutual fund and maintenance; equity futures and options for all three) were read on that date —
+> `docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md`, **which W-187 re-sources to the Gazette or
+> the issuer the owner names trustworthy** (D-394). The eight statutory cards (W-163b, D-382; W-178, D-393), which hold
+> the law's charges and name no broker, were checked against the law itself on 2026-10-28 (W-163c,
+> D-384; `docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md`). Every card carries a
+> `verifiedOn`, so `GET /charge-schedules/unverified` returns `[]` on a freshly seeded database. §7 is how you correct
 > a rate when one changes — by superseding the card, never by editing it (ADR-26).
 
 ---
@@ -71,7 +76,7 @@ curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $TOKEN" \
                  schedulesCreated, instrumentsCreated, schedulesSkipped, drift: (.drift|length)}'
 ```
 
-Expect on a fresh database: 12 catalogue codes, 11 rate cards, 2 scheme profiles, nothing skipped,
+Expect on a fresh database: 12 catalogue codes, 39 rate cards (31 broker, 8 statutory), 2 scheme profiles, nothing skipped,
 no drift. Every document it writes records `seededBy` and the time — which is the reason this is an
 endpoint and not a startup hook.
 
@@ -97,13 +102,16 @@ curl -sS "$BASE/charge-schedules/unverified" -H "Authorization: Bearer $TOKEN" \
   | jq '.data | map({scheduleCode, brokerName, assetType, segment, startDate, sourceUrl, verifiedOn})'
 ```
 
-Expect **`[]`**. Every shipped card was verified on 2026-09-08 and carries a `verifiedOn` date, which
-is what closed AC-2 (see `ac2-rate-verification.md`).
+Expect **`[]`**. Every shipped broker card was verified on 2026-09-08 and carries a `verifiedOn`
+date, which is what closed AC-2 (see `ac2-rate-verification.md`). Each statutory card was verified on
+2026-10-28 against the law its rules cite (W-163c, D-384).
 
 A card appearing here means someone published one without checking its rates, or an existing one lost
 its date. It is a worklist, not a historical record — re-run it after every publish.
 
-Eleven cards ship, in three generations where a rate changed:
+Thirty-nine cards ship: thirty-one broker cards, in up to three generations where a rate changed, and eight
+statutory cards. Since W-163b (D-382), STT, stamp duty, the SEBI fee and GST sit on the statutory
+cards, which name no broker; the engine prices them beside the broker's card.
 
 | scheduleCode | scope | window |
 |---|---|---|
@@ -113,8 +121,20 @@ Eleven cards ship, in three generations where a rate changed:
 | `ZERODHA_EQ_INTRADAY_2025_04` / `_2026_03` | EQUITY / INTRADAY | split at 2026-03-01 |
 | `UPSTOX_EQ_DELIVERY_2025_04` / `_2026_03` | EQUITY / DELIVERY | split at 2026-03-01 |
 | `FYERS_EQ_DELIVERY_2025_04` / `_2026_03` | EQUITY / DELIVERY | split at 2026-03-01 |
+| `UPSTOX_EQ_INTRADAY_2025_04` / `_2026_03` | EQUITY / INTRADAY | split at 2026-03-01 (W-177) |
+| `FYERS_EQ_INTRADAY_2025_04` / `_2026_03` | EQUITY / INTRADAY | split at 2026-03-01 (W-177) |
 | `ZERODHA_MF_2025_04` | MUTUAL_FUND | 2025-04-01 → open |
 | `ZERODHA_MAINTENANCE_2025_04` | unscoped | 2025-04-01 → open |
+| `UPSTOX_MF_2025_04`, `FYERS_MF_2025_04` | MUTUAL_FUND | 2025-04-01 → open (W-177) |
+| `UPSTOX_MAINTENANCE_2025_04` (₹300), `FYERS_MAINTENANCE_2025_04` (₹0) | unscoped | 2025-04-01 → open (W-177) |
+| `{ZERODHA,UPSTOX,FYERS}_EQ_FUTURES_2025_04` / `_2026_03` | EQUITY / FUTURES | split at 2026-03-01, when NSE folded IPFT into its rate (W-178) |
+| `{ZERODHA,UPSTOX,FYERS}_EQ_OPTIONS_2025_04` / `_2026_03` | EQUITY / OPTIONS, on premium | split at 2026-03-01 (W-178) |
+| `STATUTORY_EQ_DELIVERY_2025_04` | EQUITY / DELIVERY, no broker | 2025-04-01 → open |
+| `STATUTORY_EQ_INTRADAY_2025_04` | EQUITY / INTRADAY, no broker | 2025-04-01 → open |
+| `STATUTORY_MF_2025_04` | MUTUAL_FUND, no broker | 2025-04-01 → open |
+| `STATUTORY_ACCOUNT_2025_04` | unscoped, no broker (GST on AMC) | 2025-04-01 → open |
+| `STATUTORY_EQ_FUTURES_2025_04` / `_2026_03` | EQUITY / FUTURES, no broker | split at 2026-03-30, when Finance Act 2026 s.159 took effect (W-178) |
+| `STATUTORY_EQ_OPTIONS_2025_04` / `_2026_03` | EQUITY / OPTIONS, no broker | split at 2026-03-30 (W-178) |
 
 ### 3.3 One broker's cards
 
@@ -124,6 +144,9 @@ curl -sS "$BASE/charge-schedules?broker=ZERODHA" -H "Authorization: Bearer $TOKE
 ```
 
 ### 3.4 One card in full — this is what you check the rates against
+
+The broker's card holds the broker's and the exchange's charges; STT, stamp duty, the SEBI fee and GST
+are on the statutory card for the scope (`STATUTORY_EQ_DELIVERY_2025_04` here), fetched the same way.
 
 ```bash
 curl -sS "$BASE/charge-schedules/ZERODHA_EQ_DELIVERY_2025_04" -H "Authorization: Bearer $TOKEN" \
@@ -587,11 +610,13 @@ curl -sS -X POST "$BASE/charges/simulate" \
   -d '{"brokerName":"ZERODHA","assetType":"EQUITY","segment":"DELIVERY","event":"SELL",
        "price":1000,"quantity":100}' | jq -r '.message // .error // .'
 
-# A broker with no card at all → NO_SCHEDULE, not an error
+# No card in force at all → NO_SCHEDULE, not an error. Every broker now has an unscoped maintenance
+# card from 2025-04-01, which catches any trade no other card covers (NO_MATCHING_RULES, W-177), so
+# "no card at all" is a date before any card
 curl -sS -X POST "$BASE/charges/simulate" \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"brokerName":"UPSTOX","assetType":"MUTUAL_FUND","event":"SELL","stockCode":"HDFCLIQUID",
-       "price":100,"quantity":1000,"transactionDate":"2025-06-02"}' \
+  -d '{"brokerName":"UPSTOX","assetType":"BOND","event":"SELL",
+       "price":1000,"quantity":10,"transactionDate":"2025-03-01"}' \
   | jq '.data | {resolution, totalCharges}'
 ```
 

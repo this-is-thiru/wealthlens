@@ -1,0 +1,139 @@
+{
+  "code": "NEW_TAX_REGIME",
+  "displayName": "New tax regime for individuals, Hindu undivided family and others (s.202(1))",
+  "appliesTo": [
+    "INDIVIDUAL"
+  ],
+  "rateTable": "RATE-SLAB-NEW-TAX-REGIME",
+  "disallowances": [
+    "DIS-NEW-TAX-REGIME-NO-EXEMPTION",
+    "DIS-NEW-TAX-REGIME-NO-SETOFF"
+  ],
+  "eligibility": [],
+  "isDefault": true,
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.115BAC(1A)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.202(1)",
+    "presence": "PRESENT"
+  },
+  "elections": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "protocol": {
+        "kind": "DEFAULT_NO_ACTION",
+        "vehicle": "NONE",
+        "deadline": {
+          "type": "NoDeadline"
+        },
+        "binding": {
+          "bindsSubsequentYears": false,
+          "maxWithdrawals": -1,
+          "afterWithdrawal": {
+            "type": "MayReElect"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": []
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+          "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.37, p.29 — Income-tax Act, 1961 s.115BAC(1A) as substituted: the new regime's rates apply to a person \"other than a person who has exercised an option under sub-section (6)\" — the default unless the option is exercised (D-133); Income-tax Rules, 1962 r.21AGA (G.S.R. 452(E), 21-6-2023, Gazette 2023/246719 p.6; the Department's consolidated rule, 13-12-2025, agrees) prescribes the manner of the option only, not the default; the interim Finance Act, 2024 (Gazette 252143) does not amend s.115BAC (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G8, G9, G12)",
+          "accessedOn": "2026-10-11",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "protocol": {
+        "kind": "DEFAULT_NO_ACTION",
+        "vehicle": "NONE",
+        "deadline": {
+          "type": "NoDeadline"
+        },
+        "binding": {
+          "bindsSubsequentYears": false,
+          "maxWithdrawals": -1,
+          "afterWithdrawal": {
+            "type": "MayReElect"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": []
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+          "sourceDescription": "s.202(1) — the default applies unless the option is exercised",
+          "accessedOn": "2026-09-18",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
+    }
+  ],
+  "lifecycle": {
+    "entryWindow": {
+      "from": "2024-04-01"
+    },
+    "inForceWindow": {
+      "from": "2024-04-01"
+    },
+    "onSunset": {
+      "type": "ContinueIndefinitely"
+    },
+    "onConditionFailure": {
+      "type": "NoInvalidation"
+    },
+    "provenance": {
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "sourceDescription": "s.202(1) — no entry window and no sunset stated",
+      "accessedOn": "2026-09-18",
+      "verificationLevel": "SOURCE_CHECKED"
+    }
+  },
+  "pipeline": {
+    "nodeRefs": [
+      "inputs.components",
+      "salary.base",
+      "salary.exemptions",
+      "salary.retirement",
+      "salary.monetaryincome",
+      "salary.perquisites",
+      "employer.contrib.charges",
+      "salary.gross",
+      "salary.deductions",
+      "salary.incomebeforetravel",
+      "salary.medicaltravel",
+      "salary.income",
+      "houseproperty.income",
+      "othersources.income",
+      "capitalgains.income",
+      "setoff",
+      "gti",
+      "chapterviii",
+      "totalincome",
+      "round.totalincome",
+      "tax.bybasis",
+      "tax.afterrebate",
+      "tax.surcharge",
+      "tax.cess",
+      "tax.netpayable",
+      "round.netpayable"
+    ]
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1)",
+    "accessedOn": "2026-09-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

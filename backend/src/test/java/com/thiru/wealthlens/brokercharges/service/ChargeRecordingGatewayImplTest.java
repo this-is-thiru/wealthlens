@@ -78,7 +78,7 @@ class ChargeRecordingGatewayImplTest {
     }
 
     private static ChargeComputation computed() {
-        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
                 ChargeResolution.RESOLVED, List.of(), 23.45);
     }
 
@@ -208,8 +208,8 @@ class ChargeRecordingGatewayImplTest {
         // Given
         when(userChargeService.computeAndRecord(any())).thenReturn(computed());
         List<BuyContext> lots = List.of(
-                new BuyContext(4, LocalDate.of(2025, 1, 5), 90.0),
-                new BuyContext(6, LocalDate.of(2025, 5, 20), 110.0));
+                new BuyContext(4, LocalDate.of(2025, 1, 5), 90.0, Optional.empty()),
+                new BuyContext(6, LocalDate.of(2025, 5, 20), 110.0, Optional.empty()));
 
         // When
         gateway(true).record(userMail(), sell(lots));

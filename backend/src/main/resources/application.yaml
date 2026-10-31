@@ -9,6 +9,12 @@ spring:
     uri: mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}@wealthlens-dev.gmhwxe2.mongodb.net/?retryWrites=true&w=majority
     database: wealthlens-dev
 
+  jackson:
+    deserialization:
+      # A request body naming a field its DTO does not have answers 400 instead of the field being dropped:
+      # an export filter sent as "filters" for "queryFilters" once returned every row with a 200 (W-201, W-202).
+      fail-on-unknown-properties: true
+
 app:
   security:
     key-secret: ${JWT_SECURITY_KEY}

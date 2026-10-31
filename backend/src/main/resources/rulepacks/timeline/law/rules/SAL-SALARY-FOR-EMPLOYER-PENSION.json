@@ -1,0 +1,98 @@
+{
+  "ruleId": "SAL-SALARY-FOR-EMPLOYER-PENSION",
+  "ruleSet": "RS-SAL-SALARY-FOR-EMPLOYER-PENSION",
+  "_note": "The salary that the employer's contribution to the s.124 pension scheme is measured against (D-092; rulebook SAL-DEF-NPS-001). TY 2026-27: Income-tax Act, 2025 s.124(13)(b) (p.161): \"'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites\". Finance Act, 2026 (4 of 2026) searched in full: it contains no \"dearness\" or \"terms of employment\" and amends none of s.19, s.124 or Schedule XV. TY 2025-26: Income-tax Act, 1961 s.80CCD Explanation (thc p.339), inserted with the section by Finance (No. 2) Act, 2004 (23 of 2004) s.15 (Goa Official Gazette reprint, Series I No. 9, 2-6-2005, p.221): \"For the purposes of this section, 'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites.\" The Act was \"assented to by the President of India on 10-9-2004 and published in the Gazette of India, Extraordinary, Part II, Section 1, dated 10-9-2004\" and is in force from 1-4-2004 (thc footnote). Not searched: any amendment since Act 7 of 2019 to the provisions quoted from the thc.nic.in copy.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80CCD(2) and Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(13)(b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2004 (23 of 2004), s.15 — inserted s.80CCD, with its Explanation, into the Income-tax Act, 1961",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, dated 10-9-2004 (as reprinted in the Official Gazette, Government of Goa, Series I No. 9, 2-6-2005)",
+        "notifiedOn": "2004-09-10",
+        "effectiveFrom": "2004-04-01",
+        "retrospective": true,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0506/0506-9-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0506/0506-9-SI-OG.pdf",
+        "sourceDescription": "Official Gazette, Government of Goa, Series I No. 9, 2-6-2005, reprinting the Finance (No. 2) Act, 2004 (Central Act No. 23 of 2004) — s.15, p.221; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019) s.80CCD Explanation, p.339",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80CCD(2) and Explanation",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(13)(b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.124(13)(b)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(13)(b); Finance Act, 2026 (4 of 2026) searched in full: no amendment",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(13)(b)",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
@@ -98,9 +97,13 @@ public class ChargeSeederService {
      * means by leaving {@code perLot} or {@code appliesToCorporateActions} out. Jackson 3 turned
      * {@code FAIL_ON_NULL_FOR_PRIMITIVES} on by default, so without this a card is rejected for not
      * restating every flag it does not use.
+     *
+     * <p>An unknown property is refused, the opposite of Jackson 3's default: a misspelt key would
+     * otherwise vanish and the card would seed with the field unset and nothing to say so (W-203).
      */
     private final ObjectMapper objectMapper = JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .build();
 
     /**
@@ -147,10 +150,8 @@ public class ChargeSeederService {
             // The gate every code enters through. A code is a Mongo field name downstream, so one
             // that cannot be used as a field name has to be refused here rather than at save time.
             ChargeCodes.validate(entry.getCode());
-            ChargeCodes.requireDeductibilityDeclared(entry);
-            Optional<ChargeCatalogueEntity> stored = chargeCatalogueRepository.findByCode(entry.getCode());
-            if (stored.isPresent()) {
-                backfillDeductibility(stored.get(), entry);
+            // A catalogue entry that has priced something must not be silently rewritten.
+            if (chargeCatalogueRepository.findByCode(entry.getCode()).isPresent()) {
                 continue;
             }
             chargeCatalogueRepository.save(entry);
@@ -158,27 +159,6 @@ public class ChargeSeederService {
             log.info("Seeded charge code {}", entry.getCode());
         }
         return created;
-    }
-
-    /**
-     * Fills in {@code deductibleForCapitalGains} on a code seeded before the field existed.
-     *
-     * <p>Seeding otherwise skips a code that is already stored, which is right — a catalogue entry
-     * that has priced something should not be silently rewritten. But a row seeded before TL-5 has
-     * <b>no</b> value for this flag, and an absent flag is not read as "unknown": it makes every
-     * charge non-deductible, so a trade outcome records zero deductible cost, overstating the gain.
-     *
-     * <p>So the backfill is strictly a gap-filler — it writes only when the stored value is null,
-     * and never overwrites a value already there.
-     */
-    private void backfillDeductibility(ChargeCatalogueEntity stored, ChargeCatalogueEntity seed) {
-        if (stored.getDeductibleForCapitalGains() != null) {
-            return;
-        }
-        stored.setDeductibleForCapitalGains(seed.getDeductibleForCapitalGains());
-        chargeCatalogueRepository.save(stored);
-        log.info("Backfilled deductibleForCapitalGains={} on existing charge code {}",
-                seed.getDeductibleForCapitalGains(), stored.getCode());
     }
 
     private void seedSchedules(List<String> created, List<String> skipped) {
@@ -343,12 +323,14 @@ public class ChargeSeederService {
     /**
      * Reads a seed file into an instance this method constructs, rather than one Jackson does.
      *
-     * <p>That is not a style preference. Lombok puts {@code @ConstructorProperties} on
-     * {@code @AllArgsConstructor}, Jackson honours it as a creator, and a card built through it has
-     * a <em>null</em> {@code auditMetadata} where a card built through the no-arg constructor has an
-     * empty one. Spring Data's auditing fills an object; it does not create one. So a seeded card
-     * used to be saved with no audit metadata at all, while every entity this application builds
-     * normally — a transaction, say — records who wrote it and when.
+     * <p>That is not a style preference. Jackson 3's constructor detector builds a Lombok class
+     * through its visible all-args constructor by default, even when a public no-arg constructor
+     * exists ({@code ConstructorDetector.DEFAULT} — the compiled entity carries no
+     * {@code @ConstructorProperties}), and a card built through it has a <em>null</em>
+     * {@code auditMetadata} where a card built through the no-arg constructor has an empty one.
+     * Spring Data's auditing fills an object; it does not create one. So a seeded card used to be
+     * saved with no audit metadata at all, while every entity this application builds normally — a
+     * transaction, say — records who wrote it and when.
      *
      * <p>Updating a pre-built instance keeps the initialiser and gives auditing something to write
      * into. Nothing here sets a single audit field: {@code SecurityAuditorAware} and

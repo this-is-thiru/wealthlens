@@ -12,17 +12,22 @@ import java.util.stream.Collectors;
  *
  * <p>An empty result is never silent: {@code resolution} distinguishes a corporate action that was
  * deliberately exempt from a period with no rate card on file.
+ *
+ * <p>{@code statutoryScheduleId} / {@code statutoryScheduleCode} name the statutory card that
+ * contributed lines, where one resolved (D-380).
  */
 public record ChargeComputation(
         String scheduleId,
         String scheduleCode,
+        String statutoryScheduleId,
+        String statutoryScheduleCode,
         String instrumentId,
         ChargeResolution resolution,
         List<ChargeLine> lines,
         double total) {
 
     public static ChargeComputation empty(ChargeResolution resolution) {
-        return new ChargeComputation(null, null, null, resolution, List.of(), 0.0);
+        return new ChargeComputation(null, null, null, null, null, resolution, List.of(), 0.0);
     }
 
     /** The amount charged under a code, or zero if it was not charged. */

@@ -1,0 +1,27 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(f): \"contribution by an employee to a recognised provident fund\" (Gazette 265620, p.561). D-130. Withheld from pay, hence SALARIES (D-130 C2a); not salary income. TY 2025-26: Income-tax Act, 1961 s.80C(2)(vi) (thc p.330): \"as a contribution by an employee to a recognised provident fund\". sources/2026-10-07-chapter-via.md; D-144.",
+  "code": "EMPLOYEE_PF",
+  "displayName": "Your contribution to a recognised provident fund",
+  "head": "SALARIES",
+  "kind": "EMPLOYEE_CONTRIBUTION",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(f), p.561; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(vi), p.330",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "ruleId": "OS-DEATH-GRATUITY",
+  "ruleSet": "RS-OS-SHARE",
+  "_note": "A Government death-cum-retirement gratuity received on the employee's death, under other sources: deducted in full (D-196; rulebook OS-GRATUITY-DEATH-001). TY 2026-27: Income-tax Act, 2025 s.93(1)(h) \"for income in the nature of gratuity as referred in section 19(2)(g), received on the death of the employee, the entire amount\" (p.142); s.19(2)(g): the gratuity \"received under the revised pension rules of the Central Government, or the Central Civil Services (Pension) Rules, 2021; or … any similar scheme\" for Union, all-India, State and local-authority services (p.46). Another employer's gratuity paid on a death has no clause and is OtherSourceKind.OTHER (W-079g). The salary head's counterpart is RET-GRATUITY-GOVERNMENT. TY 2025-26: Income-tax Act, 1961 s.10(10)(i) \"any death-cum-retirement gratuity received under the revised Pension Rules of the Central Government … or under any similar scheme …\" (thc p.71) — an exemption reaching the same gratuity; its introducedBy as RET-GRATUITY-GOVERNMENT's. Every regime. In RS-OS-SHARE, the share deducted from the item's income line reaches the items whose othersources.kind is DEATH_GRATUITY; the income itself is charged by its RS-OS-INCOME row (D-321, D-323).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.93(1)(h), with s.19(2)(g)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "GRATUITY"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "DEATH_GRATUITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52 — the new regime of s.115BAC(1A), whose s.115BAC(2)(i) does not exclude s.10(10) to (10C), so the entry applies in every regime",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.10(10)(i), p.71; Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52 (s.115BAC(2)(i)), pp.33–34; the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 read for s.10(10), none amends it (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.10(10)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.93(1)(h), with s.19(2)(g)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "GRATUITY"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "othersources.kind",
+          "code": "DEATH_GRATUITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.93(1)(h), with s.19(2)(g)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.93(1)(h), p.142, and s.19(2)(g), p.46; Finance Act, 2026 s.44 amends only s.93(1)(a) and (2)",
+        "accessedOn": "2026-10-16",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.93(1)(h), p.142, and s.19(2)(g), p.46; Finance Act, 2026 s.44 amends only s.93(1)(a) and (2)",
+    "accessedOn": "2026-10-16",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

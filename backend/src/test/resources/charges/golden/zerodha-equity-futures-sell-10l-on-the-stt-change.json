@@ -1,0 +1,24 @@
+{
+  "name": "zerodha-equity-futures-sell-10l-on-the-stt-change",
+  "describes": "The same sell on Monday 2026-03-30, the day Finance Act 2026 received assent: s.159 states no date, so it applies from assent (General Clauses Act s.5(1)) and STT is 0.05%. The brokers' pages say 1 April (W-178 C1a).",
+  "context": {
+    "brokerName": "ZERODHA",
+    "assetType": "EQUITY",
+    "segment": "FUTURES",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 1000,
+    "transactionDate": "2026-03-30"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 500.0,
+      "EXCHANGE_TXN": 18.3,
+      "SEBI_FEE": 1.0,
+      "GST": 7.07
+    },
+    "total": 546.37
+  }
+}

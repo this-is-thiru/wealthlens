@@ -1,0 +1,98 @@
+{
+  "ruleId": "RATE-ROUND-PAYABLE",
+  "ruleSet": "RS-RATE-ROUND-PAYABLE",
+  "_note": "S2 s.516: \"The amount of total income computed or any amount payable or refundable under this Act, shall be rounded off to the nearest multiple of ₹10 ignoring any part of a rupee consisting of paise and thereafter if such amount is not a multiple of ten, then— (a) such amount shall be increased to the next higher amount which is a multiple of ten, if the last figure in that amount is five or more; or (b) such amount shall be reduced to the next lower amount which is a multiple of ten, if the last figure is less than five\". Not amended by FA 2026. The row states both elements: toNearest 10 (the multiple) and roundsUpFrom 5 (\"the last figure … is five or more\"); paise are ignored first, which with a whole-rupee roundsUpFrom changes no result (D-316). This row: the amount payable or refundable (1961 counterpart s.288B, unamended to FA 2026, SOURCE_CHECKED for TY 2025-26 — W-050, D-076). A refund is rounded on its magnitude with the sign restored (ROUND-NEG-001, STATUS UNCLEAR). TY 2025-26 (W-052c, D-082): 1961 s.288B — \"Any amount payable, and the amount of refund due\" rounded as s.516. introducedBy names the 1961 Act (assent and commencement read); the substitution is in its citation from the footnote, whose Act's own date was not read. Unamended from F(No.2)A 2019 to FA 2026.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.288B",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.516",
+        "presence": "PRESENT"
+      },
+      "rounding": {
+        "toNearest": "10",
+        "roundsUpFrom": "5"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.288B — subs. by the Taxation Laws (Amendment) Act, 2006 (29 of 2006), s.19 (w.e.f. 13-7-2006)",
+        "gazetteRef": "Gazette of India, Part II, Section 1, 14-7-2006 — as stated in its reprint, The Gazette of Meghalaya, Part VII, No. 6, 13-3-2008 (notification No. LL(B)9/2006/127), s.19 at p.445; assent 13-7-2006 per the thc.nic.in footnote (D-189)",
+        "notifiedOn": "2006-07-13",
+        "effectiveFrom": "2006-07-13",
+        "retrospective": false,
+        "sourceUrl": "https://megpns.gov.in/gazette/2008/03/13-03-08-VII.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.288B and footnote 5, pp.822–823",
+        "accessedOn": "2026-09-25",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.288B",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.516",
+        "presence": "PRESENT"
+      },
+      "rounding": {
+        "toNearest": "10",
+        "roundsUpFrom": "5"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.516",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.516, pp.484–485",
+        "accessedOn": "2026-09-25",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.516, pp.484–485",
+    "accessedOn": "2026-09-25",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

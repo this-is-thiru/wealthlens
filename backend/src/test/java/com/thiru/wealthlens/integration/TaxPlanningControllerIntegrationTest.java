@@ -8,11 +8,13 @@ import com.thiru.wealthlens.taxplanning.enums.EmployerType;
 import com.thiru.wealthlens.taxplanning.enums.ProfileType;
 import com.thiru.wealthlens.taxplanning.enums.RegimeType;
 import com.thiru.wealthlens.taxplanning.policy.entity.TaxSlabPolicyEntity;
+import com.thiru.wealthlens.taxplanning.salary.dto.KnownErrorsComputation;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryComponentDto;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileRequest;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileResponse;
 import io.restassured.RestAssured;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -275,6 +277,9 @@ public class TaxPlanningControllerIntegrationTest extends AbstractIntegrationTes
         assertNotNull(computeResp.getBody().get("newRegimeResult"));
         assertNotNull(computeResp.getBody().get("oldRegimeResult"));
         assertNotNull(computeResp.getBody().get("recommendedRegime"));
+        // D-063: the figures are known to be wrong, and the response says so beside them
+        assertEquals(KnownErrorsComputation.NOTICE, computeResp.getBody().get("knownErrors"));
+        assertTrue(((String) computeResp.getBody().get("knownErrors")).startsWith("Known errors:"));
         String recommendedRegime = (String) computeResp.getBody().get("recommendedRegime");
         assertTrue(recommendedRegime.equals("NEW_REGIME") || recommendedRegime.equals("OLD_REGIME"),
                 "recommendedRegime should be NEW_REGIME or OLD_REGIME but was: " + recommendedRegime);
@@ -355,6 +360,22 @@ public class TaxPlanningControllerIntegrationTest extends AbstractIntegrationTes
         assertNotNull(reportResp.getBody());
         assertTrue(reportResp.getBody().length > 0);
         assertEquals("application/pdf", reportResp.getHeaders().getContentType().toString());
+        // D-168: the report prints the same known-wrong figures as the JSON endpoint, and the same notice
+        String text = pdfText(reportResp.getBody());
+        assertTrue(text.contains("Do not rely on these figures."), "the tax report carries the known-errors notice");
+    }
+
+    private static String pdfText(byte[] pdf) {
+        try {
+            com.itextpdf.text.pdf.PdfReader reader = new com.itextpdf.text.pdf.PdfReader(pdf);
+            try {
+                return com.itextpdf.text.pdf.parser.PdfTextExtractor.getTextFromPage(reader, 1).replaceAll("\\s+", " ");
+            } finally {
+                reader.close();
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("the tax report is not a readable PDF", e);
+        }
     }
 
     // ============================================================
@@ -509,5 +530,68 @@ public class TaxPlanningControllerIntegrationTest extends AbstractIntegrationTes
         var response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
 
         assertEquals(HttpStatus.FORBIDDEN.value(), response.getStatusCode().value());
+    }
+
+    // ============================================================
+    // W-088u8a: the tax-policy seed, a SUPER_USER operation
+    // ============================================================
+
+    private static final List<String> POLICY_COLLECTIONS =
+            List.of("tax_slab_policies", "perquisite_policies", "allowance_catalogue", "allowance_limits");
+
+    private void emptyThePolicies() {
+        POLICY_COLLECTIONS.forEach(name -> mongoTemplate.getCollection(name).deleteMany(new org.bson.Document()));
+    }
+
+    private List<Long> policyCounts() {
+        return POLICY_COLLECTIONS.stream().map(name -> mongoTemplate.getCollection(name).countDocuments()).toList();
+    }
+
+    @Test
+    void seedPolicies_whenADryRunOnAnEmptyDatabase_reportsAndWritesNothing() {
+        // Given
+        emptyThePolicies();
+
+        // When / Then — dryRun defaults to true
+        RestAssured.given().header("Authorization", "Bearer " + generateToken(USER_A, "SUPER_USER"))
+                .post("/tax-planning/admin/policies/seed")
+                .then().statusCode(200).body("dryRun", equalTo(true))
+                .body("parts.newDocuments", equalTo(List.of(1, 1, 1, 39, 14)));
+        assertEquals(List.of(0L, 0L, 0L, 0L), policyCounts());
+    }
+
+    @Test
+    void seedPolicies_whenWritten_recordsTheCallerAndASecondRunWritesNothing() {
+        // Given
+        emptyThePolicies();
+        String token = generateToken(USER_A, "SUPER_USER");
+
+        // When
+        RestAssured.given().header("Authorization", "Bearer " + token)
+                .post("/tax-planning/admin/policies/seed?dryRun=false").then().statusCode(200);
+
+        // Then — 2 slabs, 1 perquisite, 39 catalogue entries, 14 limits, each by the caller
+        assertEquals(List.of(2L, 1L, 39L, 14L), policyCounts());
+        POLICY_COLLECTIONS.forEach(name -> {
+            org.bson.Document stored = mongoTemplate.getCollection(name).find().first();
+            org.bson.Document audit = stored.get("audit_metadata", org.bson.Document.class);
+            assertNotNull(audit, name + " has no audit_metadata; keys " + stored.keySet());
+            assertEquals(USER_A, audit.getString("createdBy"), name);
+        });
+        RestAssured.given().header("Authorization", "Bearer " + token)
+                .post("/tax-planning/admin/policies/seed?dryRun=false")
+                .then().statusCode(200).body("parts.newDocuments", equalTo(List.of(0, 0, 0, 0, 0)));
+        assertEquals(List.of(2L, 1L, 39L, 14L), policyCounts());
+    }
+
+    @Test
+    void seedPolicies_whenNotASuperUser_isForbidden() {
+        // Given
+        emptyThePolicies();
+
+        // When / Then
+        RestAssured.given().header("Authorization", "Bearer " + generateToken(USER_A))
+                .post("/tax-planning/admin/policies/seed?dryRun=false").then().statusCode(403);
+        assertEquals(List.of(0L, 0L, 0L, 0L), policyCounts());
     }
 }

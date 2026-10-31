@@ -34,7 +34,7 @@ public class CorporateActionDto implements AuditableResponse {
     private LocalDate recordDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
-    private LocalDate date;
+    private LocalDate allotmentDate;
 
     private AuditMetadataDto auditMetadata;
 
@@ -53,6 +53,7 @@ public class CorporateActionDto implements AuditableResponse {
         corporateAction.setRatio(ratio);
         corporateAction.setExDate(exDate);
         corporateAction.setRecordDate(recordDate);
+        corporateAction.setAllotmentDate(allotmentDate);
         corporateAction.setPriority(priority);
         corporateAction.setDemergerDetail(toDemergerDetail());
 

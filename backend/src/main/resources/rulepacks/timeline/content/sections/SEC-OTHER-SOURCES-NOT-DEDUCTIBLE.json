@@ -1,0 +1,63 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-208). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.58 / 2025 s.94 (coverage MODELLED, D-208, with the three rows whose deductions it bars — no row cites s.94 in its provision fields). summary: S2 s.94(1)–(6) (Gazette 265620 p.142); 1961 s.58. routes: (1)(b), (c) — payableOutsideIndiaUntaxed makes the expense a nil line on OS-OTHER-EXPENDITURE, OS-BANKER-COMMISSION or OS-DIVIDEND-INTEREST (D-194). disqualifiers[0]: (1)(a) personal expenses — not entered (OtherSourceItem). disqualifiers[1]: (2) ss.29, 35(b)(i), 36 and (3) — the business head, DEFERRED. disqualifiers[2]: (4)–(6) winnings — refused with 1961 s.115BB, DEFERRED (D-193).",
+  "key": "SEC-OTHER-SOURCES-NOT-DEDUCTIBLE",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.58",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.94",
+    "presence": "PRESENT"
+  },
+  "plainName": "Amounts not deductible against income from other sources",
+  "summary": "Some spending is never deducted from income from other sources: personal expenses, and interest or salary payable outside India on which tax was not paid or deducted. Nothing at all is deducted against winnings from lotteries, races, games or betting, except for an owner of race horses.",
+  "routes": [
+    {
+      "name": "Interest or salary payable abroad, untaxed",
+      "description": "The expense is shown and not deducted.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-OTHER-EXPENDITURE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "OS-BANKER-COMMISSION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "OS-DIVIDEND-INTEREST"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Personal expenses are never an expense against this income and are not entered.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "expenses are entered as laid out to earn the income"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "The business head's rules on certain payments, and the rule for a foreign company, are not computed here.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "they belong to the business head, deferred with it"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Winnings bear no deduction, but their own rate is not computed here.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "their special rate is deferred in the coverage register"
+      }
+    }
+  ]
+}

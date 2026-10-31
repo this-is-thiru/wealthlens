@@ -1,0 +1,103 @@
+{
+  "ruleId": "DED-HEALTH-CASH-PERMITTED",
+  "ruleSet": "RS-DED-HEALTH-CASH-PERMITTED",
+  "_note": "The kinds of health payment that may be paid in cash: a preventive health check-up only. TY 2026-27: Income-tax Act, 2025 s.126(9)(a), as DED-HEALTH-CHECKUP's note states it (\"Cash is allowed for a check-up\"); TY 2025-26: Income-tax Act, 1961 s.80D(2B), payment by \"(i) any mode, including cash\" for a check-up and \"(ii) any mode other than cash in all other cases\" (sources/2026-10-07-chapter-via.md B12). A payment in cash of a kind this row does not reach is refused. Conditions only, on health.kind; provenance and introduction are DED-HEALTH-CHECKUP's (W-156b2, D-347). Old regime only, as the health rows.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80D(2B)(i); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.126(9)(a)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "health.kind",
+          "code": "PREVENTIVE_CHECKUP"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80D(2A), (2B) — ins. by Act 23 of 2012, s.26 (w.e.f. 1-4-2013)",
+        "gazetteRef": "Act 23 of 2012: Gazette of India, Extraordinary, Part II, Section 1, 28-5-2012 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 23-5-2013, p.506",
+        "notifiedOn": "2012-05-28",
+        "effectiveFrom": "2013-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/1314/1314-8-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80D(2A), (2B), pp.341–342",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80D after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md; none amends s.80D) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80D(2B)(i); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.126(9)(a)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "health.kind",
+          "code": "PREVENTIVE_CHECKUP"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.126(3)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.126(3), p.161",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.126(3), p.161",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

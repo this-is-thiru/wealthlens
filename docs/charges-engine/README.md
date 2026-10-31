@@ -13,7 +13,7 @@
 | **Branch** | `feature/charges-engine`, rebased onto `master` after PR #59 (test framework) and PR #60 (D10 fix) |
 | **Commits beyond master** | **46**, of which **11 are unpushed** (`git log origin/feature/charges-engine..HEAD`). Counted with `git rev-list master..HEAD --count` — trust the command over this cell, which has been wrong before |
 | **Phase** | A, B and **C complete**. Chunk 11 deleted 25 files; V1 buy/sell is untouched and still live |
-| **Next action** | The charges engine is done. **Active work continues in [`../trade-ledger/implementation-checklist.md`](../trade-ledger/implementation-checklist.md)** — resume at its first unticked box. On deploy, follow `production-runbook.md`: `POST /charges/seed` before the first trade. Nothing outstanding blocks it — see the checklist header for the three open items, all either accepted or V1-bound |
+| **Next action** | The charges engine is done. **Active work continues in [`../trade-ledger/implementation-checklist.md`](../trade-ledger/implementation-checklist.md)** — resume at its first unticked box. On deploy, follow the deploy runbook, [`../taxplanning-build/post-deployment-runbook.md`](../taxplanning-build/post-deployment-runbook.md) §1A – §1B: `POST /charges/seed` before the first trade. Nothing outstanding blocks it — see the checklist header for the three open items, all either accepted or V1-bound |
 | **Blocking questions** | **None.** Both were settled: `YearlyChargeSummary` was written beside the old report and the old one is now deleted; `userChargeId` was dropped, because `UserChargeEntity.transactionId` with its unique index already carries the link |
 
 ---
@@ -235,7 +235,7 @@ Read in this order:
 | 4 | **tech-spec.md** | The design. Entities, engine contracts, algorithms, seed format, extensibility analysis (§13), temporal semantics (§14) | 912 |
 | 5 | **test-plan.md** | How it is verified. ~190 tests across 11 tiers, with gates | 347 |
 | 6 | **implementation-checklist.md** | The build tracker. Resume from the first unticked box | 339 |
-| 7a | **production-runbook.md** | **Read before deploying.** Every step that must be run by hand, in order — seeding first, because the flags now ship on | 190 |
+| 7a | **production-runbook.md** | Moved: a pointer to each section's place in the one deploy runbook, `../taxplanning-build/post-deployment-runbook.md` (W-176, D-379) | 40 |
 | 7 | **staging-runbook.md** | Every endpoint as a runnable curl, with the figure each should return | 460 |
 | 8 | **ac2-rate-verification.md** | The AC-2 evidence: every shipped rate against the broker's page, what was wrong, and what closing it changed | 180 |
 | 9 | **phase-b-reconciliation-findings.md** | The Phase B exit artifact: the backfill and reconciliation run against 319 real transactions, what it proved, and why the deltas could not mean what the gate assumed | 143 |
@@ -364,7 +364,7 @@ Each of these was established by investigation or corrected after being got wron
 
 12. **Scheme profiles are seeded from `data/charges/instruments/`, a subdirectory.** The schedule pattern is `data/charges/*.json` and does not descend, which is the only thing stopping a profile from being parsed as a rate card with every field null — a card that would then resolve for everything and price it at zero. A new profile goes in that directory or it is a rate card.
 
-13. **The maintenance card is the only unscoped card, and that is load-bearing twice over.** It must leave every trade dimension unset or the AMC cycle — which carries no scrip, quantity or asset type — cannot resolve it at all. And because an unscoped card agrees with every trade, it is Zerodha's fallback wherever no specific card exists: such a trade now resolves to it and reads `NO_MATCHING_RULES` rather than `NO_SCHEDULE`. Both are gaps and both are reported; they are different sentences in the gaps report. Its rules declare `AMC_CYCLE` alone so that the fallback prices nothing rather than billing maintenance on a trade.
+13. **A broker's maintenance card is its only unscoped card, and that is load-bearing twice over.** It must leave every trade dimension unset or the AMC cycle — which carries no scrip, quantity or asset type — cannot resolve it at all. And because an unscoped card agrees with every trade, it is that broker's fallback wherever no specific card exists — Zerodha's, and since W-177 (D-392) Upstox's and Fyers' too: such a trade now resolves to it and reads `NO_MATCHING_RULES` rather than `NO_SCHEDULE`. Both are gaps and both are reported; they are different sentences in the gaps report. Its rules declare `AMC_CYCLE` alone so that the fallback prices nothing rather than billing maintenance on a trade.
 
 14. **`AssetEntity` has no ISIN or scheme code** — only `stockCode` and `stockName`. `ChargeInstrumentEntity` is keyed on `stockCode` for that reason, with `isin` stored for later.
 
@@ -460,7 +460,7 @@ writing code — `pr-description.md` is written and current.
   total is its cost basis. **This is the one thing that changed today** — before, merging was inert.
 - **`POST /charges/seed` must run before the first trade on any database.** Without rate cards every
   trade resolves `NO_SCHEDULE` and is charged nothing, and `authoritative` makes that zero the cost
-  basis. `ChargeReadinessAuditor` warns at startup; `production-runbook.md` is the ordered procedure.
+  basis. `ChargeReadinessAuditor` warns at startup; the deploy runbook's §1A – §1B is the ordered procedure.
 - **`it-staging` holds 319 backfilled `user_charges` rows** from 2026-09-09. The endpoint that wrote
   them has since been deleted, so that run is not repeatable.
 - **History is never re-priced** (ADR-32). Trades predating a deployment stay unpriced, by design.

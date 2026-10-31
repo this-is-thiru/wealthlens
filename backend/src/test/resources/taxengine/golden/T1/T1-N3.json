@@ -1,0 +1,14 @@
+{
+  "id": "T1-N3",
+  "source": "DR 08 T1-N3 — New regime, well inside the relief band. TI ₹12,50,000",
+  "_source": "**Expected: ₹52,000.** Status `VERIFIED`.",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "1250000",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "52000"
+  }
+}

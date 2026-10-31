@@ -1,10 +1,11 @@
 package com.thiru.wealthlens.portfolio.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
@@ -130,9 +131,6 @@ public class TradeOutcomeEntity implements AuditableEntity {
     @Field("holding_period_days")
     private Long holdingPeriodDays;
 
-    @Field(name = "capital_gains_type", targetType = FieldType.STRING)
-    private CapitalGainsType capitalGainsType;
-
 
     /**
      * How the disposal was traded. Decides speculative and derivative treatment before holding
@@ -142,25 +140,20 @@ public class TradeOutcomeEntity implements AuditableEntity {
     private TradeSegment segment;
 
     /**
-     * The second dimension behind {@link #capitalGainsType} — {@code EQUITY_ORIENTED} /
-     * {@code SPECIFIED} / {@code OTHER} for a scheme, {@code LISTED} / {@code UNLISTED} for a bond.
+     * The instrument's sub-class — {@code EQUITY_ORIENTED} / {@code SPECIFIED} / {@code OTHER} for a
+     * scheme, {@code LISTED} / {@code UNLISTED} for a bond.
      *
-     * <p>Null until the instrument registry ships (D7), which is why mutual funds and bonds record
-     * {@code UNCLASSIFIED}. Stored explicitly rather than inferred so a reader can tell a row that
-     * was classified as unknown from one written before the field existed.
+     * <p>Null until the instrument registry ships (D7). Stored explicitly rather than inferred so a
+     * reader can tell a row that was classified as unknown from one written before the field existed.
      */
     @Field("instrument_sub_class")
     private String instrumentSubClass;
 
-    /** Why the classification came out as it did — the only place an UNCLASSIFIED row says which kind of unknown it is. */
-    @Field("classification_reason")
-    private String classificationReason;
-
     /**
      * What the buy actually cost, by charge code, rather than one lumped total.
      *
-     * <p>Deductible cost is a sum over codes because only some charges reduce a capital gain (D3),
-     * and which ones is a property of the code. A single total cannot be split after the fact.
+     * <p>Kept by code because which charges reduce a capital gain is decided per code, by the tax side's rule data
+     * for the year (W-162a, D-376). A single total cannot be split after the fact.
      */
     @Field("buy_charge_breakup")
     private Map<String, Double> buyChargeBreakup = new LinkedHashMap<>();
@@ -168,14 +161,6 @@ public class TradeOutcomeEntity implements AuditableEntity {
     /** The same for the sell side, pro-rated to this lot's share of the disposal. */
     @Field("sell_charge_breakup")
     private Map<String, Double> sellChargeBreakup = new LinkedHashMap<>();
-
-    /** The part of {@link #buyChargeBreakup} that reduces the gain, resolved against the catalogue. */
-    @Field("deductible_buy_charges")
-    private double deductibleBuyCharges;
-
-    /** The part of {@link #sellChargeBreakup} that reduces the gain. Notably excludes STT. */
-    @Field("deductible_sell_charges")
-    private double deductibleSellCharges;
 
     @Field("financial_year")
     private String financialYear;
@@ -200,6 +185,36 @@ public class TradeOutcomeEntity implements AuditableEntity {
 
     @Field("applied_corporate_actions")
     private List<CorporateActionEntity> appliedCorporateActions = new ArrayList<>();
+
+    /**
+     * How the lot came to be held, from the lot's own record. Unlike {@link #corporateActionDerived}, which a purchase
+     * later split also sets, this is the lot's origin; absent on rows written before W-088f (D-249).
+     */
+    @Field("acquisition_mode")
+    private AcquisitionMode acquisitionMode;
+
+    /** The corporate action that created the lot, carried as itself; set only when {@link #acquisitionMode} says so. */
+    @Field("acquisition_corporate_action")
+    private CorporateActionType acquisitionCorporateAction;
+
+    /**
+     * The exchange the lot's buy was recorded on, from the lot's own record — not {@link #exchangeName}, which the
+     * writers take from different sides; absent on rows written before W-088j2b (D-295).
+     */
+    @Field("buy_exchange_name")
+    private String buyExchangeName;
+
+    /** The segment the lot's buy was recorded in; absent on rows written before W-088j2b. */
+    @Field(name = "buy_segment", targetType = FieldType.STRING)
+    private TradeSegment buySegment;
+
+    /** The exchange the sale was recorded on; absent on rows written before W-088j2b. */
+    @Field("sell_exchange_name")
+    private String sellExchangeName;
+
+    /** The segment the sale was recorded in; absent on rows written before W-088j2b. */
+    @Field(name = "sell_segment", targetType = FieldType.STRING)
+    private TradeSegment sellSegment;
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();

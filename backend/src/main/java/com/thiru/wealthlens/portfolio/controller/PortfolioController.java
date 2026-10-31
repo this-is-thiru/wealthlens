@@ -4,7 +4,6 @@ import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.ErasureReport;
 import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
-import com.thiru.wealthlens.portfolio.dto.enums.HoldingType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
@@ -17,10 +16,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.util.Pair;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -118,20 +113,6 @@ public class PortfolioController {
 
         UserMail.from(email);
         return transactionService.allTransactions();
-    }
-
-    @GetMapping("/assets/holding/{holdingType}")
-    public List<AssetResponse> allAssets(@PathVariable String email, @PathVariable String holdingType) {
-        return portfolioService.getAssets(UserMail.from(email), HoldingType.valueOf(holdingType));
-    }
-
-    @GetMapping("/assets/holding/{holdingType}/excel")
-    public ResponseEntity<InputStreamResource> downloadAssets(@PathVariable String email, @PathVariable String holdingType) {
-        Pair<InputStreamResource, String> resourcePair = portfolioService.downloadTermAssets(UserMail.from(email), HoldingType.valueOf(holdingType));
-        String mediaType = "application/vnd.ms-excel";
-        String headerValue = "attachment; filename=" + resourcePair.getSecond();
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, headerValue)
-                .contentType(MediaType.parseMediaType(mediaType)).body(resourcePair.getFirst());
     }
 
 //    @GetMapping("/stocks/download")

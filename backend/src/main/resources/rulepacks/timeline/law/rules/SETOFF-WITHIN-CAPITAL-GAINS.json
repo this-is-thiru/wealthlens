@@ -1,0 +1,108 @@
+{
+  "ruleId": "SETOFF-WITHIN-CAPITAL-GAINS",
+  "ruleSet": "RS-SETOFF-WITHIN-CAPITAL-GAINS",
+  "_note": "A loss within the capital-gains head set off against its other parts (D-243; rulebook SETOFF-INTRA-CG-001, R18). TY 2026-27: Income-tax Act, 2025 s.108(2) (p.147): \"(a) any short-term capital asset is a loss, such loss shall be set off against the income, computed in respect of any other capital asset for that year; (b) any long-term capital asset is a loss, such loss shall be set off against the income computed in respect of any other long-term capital asset for that year\". TY 2025-26: Income-tax Act, 1961 s.70(2), (3) as substituted by the Finance Act, 2002 s.27 (Goa reprint p.1375; thc copy p.318), the same asymmetry. Neither Act orders the parts a loss absorbs: CapitalGainsAbsorptionOrder is a declared default — short-term slab, short-term listed equity, long-term other, long-term listed equity (from the highest likely rate to the lowest; the listed long-term part last, its first Rs. 1,25,000 being untaxed) — a long-term loss taking only the long-term parts in that order; shown on every set-off line. Whether the assessee may choose another is OQ-32. The same order applies where another head's loss is set off against capital gains (SETOFF-ACROSS-HEADS). Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 11, 13, 14, 15.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.70(2), (3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.108(2)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "CapitalGainsAbsorptionOrder",
+        "parts": [
+          "SHORT_TERM_SLAB",
+          "SHORT_TERM_LISTED_EQUITY",
+          "LONG_TERM_OTHER",
+          "LONG_TERM_LISTED_EQUITY"
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2002 (20 of 2002), s.27 — Income-tax Act, 1961 s.70 substituted w.e.f. 1-4-2003",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, 13-5-2002 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 36, 4-12-2003, p.1375 (assent 11-5-2002)",
+        "notifiedOn": "2002-05-13",
+        "effectiveFrom": "2003-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0304/0304-36-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 s.70(2), (3), thc.nic.in copy (current to Act 7 of 2019) p.318; the Finance Act, 2002 s.27 (Goa reprint, Series I No. 36, 4-12-2003, p.1375); no amendment of s.70 in the Acts of 2019–2026 (their egazette texts, operative words searched)",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.70(2), (3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.108(2)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "CapitalGainsAbsorptionOrder",
+        "parts": [
+          "SHORT_TERM_SLAB",
+          "SHORT_TERM_LISTED_EQUITY",
+          "LONG_TERM_OTHER",
+          "LONG_TERM_LISTED_EQUITY"
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.108(2)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.108(2), p.147; not amended by the Finance Act, 2026 or the Taxation Laws (Amendment) Act, 2025",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.108, p.147",
+    "accessedOn": "2026-10-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

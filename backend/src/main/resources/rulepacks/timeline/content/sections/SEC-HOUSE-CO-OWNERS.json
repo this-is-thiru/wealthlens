@@ -1,0 +1,57 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-160). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: the head's rows, applied to HouseProperty.ownershipShare by HousePropertyNode (D-155 C2; D-160 C3, the D-150 precedent); 1961 s.26 / 2025 s.24. summary: S2 s.24(1), (2) (Gazette 265620 p.48); 1961 s.26 (thc p.148). routes[0]: the share applied to the property's income. routes[1]: s.24(2), each co-owner's own-residence nil. disqualifiers[0]: s.24(1) by contrast — no AOP person type.",
+  "key": "SEC-HOUSE-CO-OWNERS",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.26",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.24",
+    "presence": "PRESENT"
+  },
+  "plainName": "A house owned with others",
+  "summary": "Where you own a house with others in definite and ascertainable shares, you are not taxed together as an association; each of you is taxed on your own share of its income, and each may treat it as your own residence.",
+  "routes": [
+    {
+      "name": "Your share of the house",
+      "description": "The house's income is computed and your share of it is taxed.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-ANNUAL-VALUE"
+        },
+        {
+          "type": "ByRule",
+          "rule": "HP-STANDARD-DEDUCTION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "HP-ARREARS"
+        }
+      ]
+    },
+    {
+      "name": "Your own residence as a co-owner",
+      "description": "Each co-owner is entitled to the nil value separately.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "HP-OWN-RESIDENCE"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Shares that are not definite and ascertainable are taxed together.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "Not built yet: an association of persons is not an assessee the engine computes."
+      }
+    }
+  ]
+}

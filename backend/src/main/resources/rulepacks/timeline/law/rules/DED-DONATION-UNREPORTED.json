@@ -1,0 +1,112 @@
+{
+  "ruleId": "DED-DONATION-UNREPORTED",
+  "ruleSet": "RS-DED-DONATION-REPORT",
+  "_note": "The donee-report bar: a donation to a charitable fund or institution is allowed only on the information the donee furnishes. TY 2026-27: Income-tax Act, 2025 s.133(6) (p.169), \"Any claim of deduction … in case of a donation made to an institution or fund referred in sub-section (1)(b)(ii), shall be allowed–– (a) only on the basis of the information relating to such donation furnished by such institution or fund …\" (plans/W-078f.md:30) — it reaches (1)(b)(ii) only (D-142 erratum). TY 2025-26: Income-tax Act, 1961 s.80G(5D) Explanation 2A, inserted by the Finance Act, 2020 s.33 w.e.f. 1-6-2020: \"claim of the assessee for a deduction in respect of any donation made to an institution or fund to which the provisions of sub-section (5) applies … shall be allowed on the basis of information relating to said donation furnished by the institution or fund to the prescribed income-tax authority … subject to verification in accordance with the risk management strategy\" — reaching the s.80G(2)(a)(iv) institutions (sources/2026-10-07-chapter-via.md M6). Both are DonationClause.CHARITABLE_INSTITUTION. A conditions-only row: it reaches a donation by donation.clause and donation.reported.by.donee, and a donation it reaches is a nil line on its share row naming this row (W-156a, D-344). Old regime only, as DED-DONATION-HALF.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80G(5D) Explanation 2A; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(6); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "donation.clause",
+          "code": "CHARITABLE_INSTITUTION"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "donation.reported.by.donee",
+          "code": "false"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.33 — inserts Explanation 2A in s.80G(5D) of the Income-tax Act, 1961, w.e.f. 1-6-2020",
+        "gazetteRef": "CG-DL-E-27032020-218938",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2020-06-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "sourceDescription": "Gazette CG-DL-E-27032020-218938, Finance Act, 2020 s.33, pp.27–29: s.80G(5D) Explanation 2A (sources/2026-10-07-chapter-via.md M6); new regime: s.115BAC(2)(i) as DED-DONATION-HALF's TY 2025-26 version",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80G(5D) Explanation 2A; excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(6); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "donation.clause",
+          "code": "CHARITABLE_INSTITUTION"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "donation.reported.by.donee",
+          "code": "false"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(6)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(1)(b), (6), p.169; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(1)(b), (6), p.169; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-07",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

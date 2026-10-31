@@ -1,0 +1,42 @@
+{
+  "id": "T4-2",
+  "source": "DR 08 T4-2 — the same facts in the old regime",
+  "_source": "**Expected: ₹74,000 added; ₹2,40,000 deducted.** \"PF-AGGCAP-001 excess is unchanged = 74,000\". The deduction: DED-NPS-EMPLOYER-OTHER, 10% of 24,00,000 = 2,40,000 (W-074b, D-209); whether the uncapped ₹96,000 \"remains income\" is OQ-14. The case states no accretion facts; entered as a first year (D-128 C2a, DR 08 T4 erratum): PC1 = TP1 = 0, opening balance 0, closing balance 8,24,000, income accrued 0, so TP = (74,000 + 2 × 0) × 0 ÷ 8,24,000 = 0. INFERENCE, not DR 08's.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "2400000"
+    },
+    "termsIncludeDearnessAllowance": false,
+    "tenancies": [],
+    "employerContributions": [
+      {
+        "fund": "RECOGNISED_PROVIDENT_FUND",
+        "amount": "288000"
+      },
+      {
+        "fund": "NOTIFIED_PENSION_SCHEME",
+        "amount": "336000"
+      },
+      {
+        "fund": "APPROVED_SUPERANNUATION_FUND",
+        "amount": "200000"
+      }
+    ],
+    "retirementFundHistory": {
+      "earlierExcessContributions": "0",
+      "earlierTaxedAccretions": "0",
+      "incomeAccrued": "0",
+      "openingBalance": "0",
+      "closingBalance": "824000"
+    }
+  },
+  "expected": {
+    "employerContributionCharges": "74000",
+    "chapterEightDeduction": "240000"
+  }
+}

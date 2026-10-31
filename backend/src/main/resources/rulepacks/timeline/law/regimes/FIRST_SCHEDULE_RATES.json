@@ -1,0 +1,179 @@
+{
+  "code": "FIRST_SCHEDULE_RATES",
+  "displayName": "Rates of income-tax, Finance Act First Schedule Part I-B Paragraph A (option under s.202(4))",
+  "appliesTo": [
+    "INDIVIDUAL"
+  ],
+  "rateTable": "RATE-SLAB-FIRST-SCHEDULE",
+  "disallowances": [],
+  "eligibility": [],
+  "isDefault": false,
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.115BAC(6)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.202(4)",
+    "presence": "PRESENT"
+  },
+  "elections": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "protocol": {
+        "kind": "OPT_OUT",
+        "vehicle": "IN_THE_RETURN",
+        "vehicleWhen": [
+          {
+            "appliesWhen": [
+              {
+                "type": "HasIncomeUnderHead",
+                "head": "BUSINESS_OR_PROFESSION"
+              }
+            ],
+            "vehicle": "PRESCRIBED_FORM",
+            "form": {
+              "number": "10-IEA",
+              "displayName": "Application for exercise of option under clause (i) of sub-section (6) of section 115BAC or withdrawal of option under the proviso to sub-section (6) of section 115BAC of the Income-tax Act, 1961"
+            }
+          }
+        ],
+        "deadline": {
+          "type": "DueDateUnder",
+          "section": "139(1)"
+        },
+        "binding": {
+          "bindsSubsequentYears": true,
+          "maxWithdrawals": 1,
+          "afterWithdrawal": {
+            "type": "IneligibleUnless",
+            "revival": {
+              "type": "Not",
+              "condition": {
+                "type": "HasIncomeUnderHead",
+                "head": "BUSINESS_OR_PROFESSION"
+              }
+            },
+            "thenUse": "NO_BUSINESS_OR_PROFESSION"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": [
+            {
+              "type": "HasIncomeUnderHead",
+              "head": "BUSINESS_OR_PROFESSION"
+            }
+          ]
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+          "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C)(e), p.35 — Income-tax Act, 1961 s.115BAC(6): the option, \"in the manner as may be prescribed\", (ii) \"along with the return of income to be furnished under sub-section (1) of section 139\" for a person without business or profession income; (i) on or before the s.139(1) due date with business income, applying to subsequent years, withdrawn only once and then available again only under (ii) on ceasing to have such income (D-133); Income-tax Rules, 1962 r.21AGA, inserted by G.S.R. 452(E), 21-6-2023 (Gazette CG-DL-E-21062023-246719 p.6; the Department's consolidated rule, 13-12-2025, agrees): \"(1) … (a) in Form No. 10-IEA on or before the due date specified under sub-section (1) of section 139 … in the case of a person having income from business or profession; (b) in the return of income to be furnished under sub-section (1) of section 139 … in the case of a person not having income from business or profession\"; (2) \"The withdrawal of option … shall also be in Form No. 10-IEA\" — the form's title from p.7; the interim Finance Act, 2024 (Gazette 252143) does not amend s.115BAC (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G8, G9, G12; D-179)",
+          "accessedOn": "2026-10-11",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "protocol": {
+        "kind": "OPT_OUT",
+        "vehicle": "IN_THE_RETURN",
+        "deadline": {
+          "type": "DueDateUnder",
+          "section": "263(1)"
+        },
+        "binding": {
+          "bindsSubsequentYears": true,
+          "maxWithdrawals": 1,
+          "afterWithdrawal": {
+            "type": "IneligibleUnless",
+            "revival": {
+              "type": "Not",
+              "condition": {
+                "type": "HasIncomeUnderHead",
+                "head": "BUSINESS_OR_PROFESSION"
+              }
+            },
+            "thenUse": "NO_BUSINESS_OR_PROFESSION"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": [
+            {
+              "type": "HasIncomeUnderHead",
+              "head": "BUSINESS_OR_PROFESSION"
+            }
+          ]
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+          "sourceDescription": "Income-tax Rules 2026, r.136 + Table Sl. 4 — the option is in the return, with no separate form",
+          "accessedOn": "2026-09-18",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
+    }
+  ],
+  "lifecycle": {
+    "entryWindow": {
+      "from": "2024-04-01"
+    },
+    "inForceWindow": {
+      "from": "2024-04-01"
+    },
+    "onSunset": {
+      "type": "ContinueIndefinitely"
+    },
+    "onConditionFailure": {
+      "type": "NoInvalidation"
+    },
+    "provenance": {
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "sourceDescription": "s.202(4) — no entry window and no sunset stated",
+      "accessedOn": "2026-09-18",
+      "verificationLevel": "SOURCE_CHECKED"
+    }
+  },
+  "pipeline": {
+    "nodeRefs": [
+      "inputs.components",
+      "salary.base",
+      "salary.exemptions",
+      "salary.retirement",
+      "salary.monetaryincome",
+      "salary.perquisites",
+      "employer.contrib.charges",
+      "salary.gross",
+      "salary.deductions",
+      "salary.incomebeforetravel",
+      "salary.medicaltravel",
+      "salary.income",
+      "houseproperty.income",
+      "othersources.income",
+      "capitalgains.income",
+      "setoff",
+      "gti",
+      "chapterviii",
+      "totalincome",
+      "round.totalincome",
+      "tax.bybasis",
+      "tax.afterrebate",
+      "tax.surcharge",
+      "tax.cess",
+      "tax.netpayable",
+      "round.netpayable"
+    ]
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(4)",
+    "accessedOn": "2026-09-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-208). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.56 / 2025 s.92 (coverage MODELLED, D-208). summary: S2 s.92(1), (2); 1961 s.56(1), (2). routes: OS-INTEREST (s.92(2)(e)), OS-DIVIDEND ((a)), OS-KEYMAN-POLICY ((d)), OS-FORFEITED-ADVANCE ((h)), OS-TERMINATION-COMPENSATION ((j)), OS-BUSINESS-TRUST ((k)), OS-LIFE-POLICY ((l), with Schedule II Sl. 2 and OS-LIFE-POLICY-RATIO / -PREMIUM), OS-GIFT ((m), (3); 1961 also OS-GIFT-COVID-DEATH), OS-RESIDUAL ((1); also unit income, sources/2026-10-22-unit-income.md, D-321). OS-COMPENSATION-INTEREST-INCOME ((2)(i)) charges interest on compensation, deducted under SEC-OTHER-SOURCES-DEDUCTIONS. disqualifiers[0]: s.92(2)(b) winnings, 1961 s.115BB DEFERRED (D-193). disqualifiers[1]: s.92(2)(c), (f), (g), deductions in the business head, DEFERRED (D-202). disqualifiers[2]: s.18(1)(a), (c)(iii) — employer compensation and an employee's Keyman sums are salary (D-203). disqualifiers[3]: Schedule II Sl. 2 excludes life-policy sums meeting its conditions (OS-LIFE-POLICY-RATIO; D-205, D-207). disqualifiers[4]: s.67(5) — a ULIP's sums not excluded are capital gains, W-088. disqualifiers[5]: s.92(3) gift exclusions (GiftExclusion; D-201).",
+  "key": "SEC-OTHER-SOURCES",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.56",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.92",
+    "presence": "PRESENT"
+  },
+  "plainName": "Income from other sources",
+  "summary": "Income that belongs to no other head is income from other sources: interest, dividends, gifts above a limit, sums from a life policy that are not exempt, a forfeited advance, compensation on leaving a job paid by someone other than the employer, a business trust's distributions beyond what was put in, and anything else of the kind. Each is taken in full or by the rule for its kind.",
+  "routes": [
+    {
+      "name": "Interest",
+      "description": "Interest on securities, deposits and any other interest.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-INTEREST"
+        }
+      ]
+    },
+    {
+      "name": "Dividends",
+      "description": "Dividends.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-DIVIDEND"
+        }
+      ]
+    },
+    {
+      "name": "Gifts",
+      "description": "Sums and property received free or below value, above the limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-GIFT"
+        }
+      ]
+    },
+    {
+      "name": "Life policy sums",
+      "description": "Sums from a life policy that are not exempt, beyond the premiums paid.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-LIFE-POLICY"
+        },
+        {
+          "type": "ByRule",
+          "rule": "OS-LIFE-POLICY-RATIO"
+        },
+        {
+          "type": "ByRule",
+          "rule": "OS-LIFE-POLICY-PREMIUM"
+        }
+      ]
+    },
+    {
+      "name": "Keyman policy sums",
+      "description": "Keyman policy sums that are not salary or business income.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-KEYMAN-POLICY"
+        }
+      ]
+    },
+    {
+      "name": "Forfeited advance",
+      "description": "An advance kept when a sale of a capital asset falls through.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-FORFEITED-ADVANCE"
+        }
+      ]
+    },
+    {
+      "name": "Compensation on leaving a job",
+      "description": "Compensation from someone other than the employer.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-TERMINATION-COMPENSATION"
+        }
+      ]
+    },
+    {
+      "name": "Business trust distributions",
+      "description": "What a business trust paid out beyond the unit's issue price and earlier charges.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-BUSINESS-TRUST"
+        }
+      ]
+    },
+    {
+      "name": "Any other income",
+      "description": "Income from mutual fund units, and income that fits no other head and none of the kinds above.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "OS-RESIDUAL"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Winnings from lotteries, races, games or betting are taxed at a rate of their own and are not computed here.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "their special rate is deferred in the coverage register"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Sums from employees for their funds, and letting machinery, plant or furniture, are not computed here.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "their deductions belong to the business head, deferred with it"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Compensation from your employer on leaving, and Keyman sums you receive as an employee, are salary, not this head.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "OS-TERMINATION-COMPENSATION"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Life policy sums that meet the exemption's conditions are not income.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "OS-LIFE-POLICY-RATIO"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Unit linked policy sums that are not exempt are capital gains and are not computed here.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "capital gains are not built yet"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Gifts from a relative, on marriage, by will or inheritance, and the other excluded sources are not income.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "OS-GIFT-EXCLUSION"
+      }
+    }
+  ]
+}

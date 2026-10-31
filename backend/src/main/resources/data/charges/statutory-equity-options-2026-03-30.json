@@ -1,0 +1,91 @@
+{
+  "scheduleCode": "STATUTORY_EQ_OPTIONS_2026_03",
+  "brokerName": null,
+  "assetType": "EQUITY",
+  "segment": "OPTIONS",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2026-03-30",
+  "endDate": null,
+  "status": "ACTIVE",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "STT",
+      "displayName": "Securities Transaction Tax",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "SELL",
+      "events": [
+        "SELL"
+      ],
+      "rate": 0.15,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 20,
+      "notes": "0.15% of the premium, on the sell side only. Statutory; never part of a GST base. Law: Finance (No. 2) Act, 2004 s.98 Table serial 4, entry (a), sale of an option in securities: \"0.15 per cent.\" (Finance Act, 2026 s.159(i)). Not modelled: entry (b), an option exercised (\"0.15 per cent.\", s.159(ii)), for which there is no event. The new rate applies from 30-3-2026: Finance Act, 2026 s.159 states no date and is not among the sections s.1(2) brings in on 1-4-2026, so by the General Clauses Act, 1897 s.5(1)(b) it came into operation on the President's assent, 30-3-2026. The brokers' pages print \"from 1 Apr 2026\" (docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 12). Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 11 and row 12."
+    },
+    {
+      "code": "SEBI_FEE",
+      "displayName": "SEBI turnover fees",
+      "category": "REGULATORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0001,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 40,
+      "notes": "SEBI turnover fee on equity derivatives, Rs 10 per crore, on the premium: an option's turnover is \"computed on the basis of premium traded\" (Explanation (B)). Not modelled: the fee on the notional value of an option exercised or assigned, for which there is no event. Law: SEBI (Payment of Fees) (Amendment) Regulations, 2019, carried into the 2026 Regulations. Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 14."
+    },
+    {
+      "code": "STAMP_DUTY",
+      "displayName": "Stamp duty",
+      "category": "STATUTORY",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BUY",
+      "events": [
+        "BUY"
+      ],
+      "rate": 0.003,
+      "rounding": "HALF_UP_0",
+      "taxable": false,
+      "active": true,
+      "order": 60,
+      "notes": "0.003% of the premium, on the buy side only. Statutory; never part of a GST base. Law: Indian Stamp Act, 1899, Schedule I Article 56A(d)(ii), options (equity and commodity): 0.003%; s.21 proviso: the market value of an option is \"the premium paid by the buyer\" (Finance Act 2019, in force 1-7-2020). Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 13."
+    },
+    {
+      "code": "GST",
+      "displayName": "Goods and Services Tax",
+      "category": "TAX",
+      "basis": "DERIVED",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 18.0,
+      "baseCodes": [
+        "BROKERAGE",
+        "EXCHANGE_TXN",
+        "SEBI_FEE",
+        "IPFT"
+      ],
+      "rounding": "HALF_UP_2",
+      "taxable": false,
+      "active": true,
+      "order": 100,
+      "notes": "18% on the taxable services. The base is listed explicitly; securities transaction tax and stamp duty are absent by design (D1). Law: CGST 9% + SGST 9%, or IGST 18%: heading 9971, financial and related services not elsewhere listed (Notification 11/2017-Central Tax (Rate) Sl. 15; 8/2017-Integrated Tax (Rate)). Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 8."
+    }
+  ]
+}

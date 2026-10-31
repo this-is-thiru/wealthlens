@@ -1,0 +1,33 @@
+{
+  "code": "CHILDREN_EDUCATION_ALLOWANCE",
+  "_note": "An allowance paid in money with the salary, and salary under S2 s.16 / 1961 s.17(1); its exemption is SAL-ALW-CHILDREN-EDUCATION (D-101). In no salary base, being one of \"all other allowances\". CASH: paid in money (DR 05 M2).",
+  "displayName": "Children education allowance",
+  "head": "SALARIES",
+  "kind": "SALARY",
+  "cashNature": "CASH",
+  "treatment": "TAXABLE",
+  "feedsInto": [
+    "SAL-SALARY-INCLUDES",
+    "SAL-ALW-CHILDREN-EDUCATION"
+  ],
+  "salaryBaseFor": [
+    {
+      "rule": "SAL-SALARY-FOR-ACCOM",
+      "onlyWhereTermsProvide": false
+    }
+  ],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16 and Sch. III Table Sl. 12–13; Income-tax Act, 1961 s.10(14)",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

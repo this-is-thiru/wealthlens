@@ -1,0 +1,112 @@
+{
+  "ruleId": "PERQ-MEDABROAD-TRAVEL",
+  "ruleSet": "RS-PERQ-MEDABROAD-TRAVEL",
+  "_note": "The employer's spending on travel abroad for medical treatment (of the employee, a family member, and one attendant) is excluded from the perquisite \"only in the case of an employee whose gross total income, as computed before including therein the said expenditure, does not exceed\" the prescribed amount; above it the travel is wholly salary (D-112; rulebook PERQ-MEDABROAD-001). The condition reads salary.incomebeforetravel: the salary head is the only head built, so it is the gross total income today; when another head lands the node must read their total (MedicalTreatmentAbroadNode). TY 2026-27: Income-tax Act, 2025 s.17(3)(b) (Gazette 265620, p.40); Income-tax Rules, 2026 r.19, \"₹ 800000\" (Gazette 271092, p.1550). TY 2025-26: Income-tax Act, 1961 s.17(2) proviso (vi) condition (B), where the Finance Act, 2025 s.9(b) replaced \"two lakh rupees\" with \"such amount as may be prescribed\" with effect from 1-4-2026 (assessment year 2026-27; Gazette 262125, p.20); Income-tax Rules, 1962 r.3D, \"eight lakh rupees\", inserted by G.S.R. 555(E) of 18-8-2025 and in force on publication (Gazette 265477, p.2). Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2) proviso (vi)(2)–(3) and condition (B) as amended by the Finance Act, 2025 s.9(b), and (vii), with Income-tax Rules, 1962 r.3D",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(2)(f) and s.17(3)(b), with Income-tax Rules, 2026 r.19",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "TRAVEL"
+      },
+      "conditions": [
+        {
+          "type": "IncomeAtMost",
+          "node": "salary.incomebeforetravel",
+          "limit": "800000"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Twenty Second Amendment) Rules, 2025, G.S.R. 555(E), Notification No. 133/2025 — Income-tax Rules, 1962 r.3D inserted: \"the prescribed gross total income shall be eight lakh rupees\"",
+        "gazetteRef": "CG-DL-E-18082025-265477",
+        "notifiedOn": "2025-08-18",
+        "effectiveFrom": "2025-08-18",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265477.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265477.pdf",
+        "sourceDescription": "Gazette CG-DL-E-18082025-265477, G.S.R. 555(E), Income-tax Rules, 1962 r.3D, p.2; Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.9(b), p.20; Income-tax Act, 1961 as on thc.nic.in, s.17(2) proviso (vi) and (vii), pp.144–145; Income-tax Act, 1961 s.17(2) proviso (vi)(2)–(3) and condition (B) as amended by the Finance Act, 2025 s.9(b), and (vii), with Income-tax Rules, 1962 r.3D: the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.17(2) proviso (vi)(2)–(3) and condition (B) as amended by the Finance Act, 2025 s.9(b), and (vii), with Income-tax Rules, 1962 r.3D",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.17(2)(f) and s.17(3)(b), with Income-tax Rules, 2026 r.19",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "TRAVEL"
+      },
+      "conditions": [
+        {
+          "type": "IncomeAtMost",
+          "node": "salary.incomebeforetravel",
+          "limit": "800000"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 19",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.19, p.1550; Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.17(3)(b), p.40",
+        "accessedOn": "2026-09-28",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.19, p.1550",
+    "accessedOn": "2026-09-28",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "scheduleCode": "STATUTORY_ACCOUNT_2025_04",
+  "brokerName": null,
+  "assetType": null,
+  "segment": null,
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://cbic-gst.gov.in/hindi/pdf/integrated-tax-rate/Notification8-IGST.pdf",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "GST",
+      "displayName": "Goods and Services Tax",
+      "category": "TAX",
+      "basis": "DERIVED",
+      "side": "BOTH",
+      "events": [
+        "AMC_CYCLE"
+      ],
+      "rate": 18.0,
+      "baseCodes": [
+        "AMC"
+      ],
+      "rounding": "HALF_UP_2",
+      "taxable": false,
+      "active": true,
+      "order": 100,
+      "notes": "18%. Maintenance is a service, so it is taxable and the base names it explicitly. Law: CGST 9% + SGST 9%, or IGST 18%: heading 9971, financial and related services not elsewhere listed (Notification 11/2017-Central Tax (Rate) Sl. 15; 8/2017-Integrated Tax (Rate)). Read 2026-10-28; docs/taxplanning-build/sources/2026-10-28-statutory-charge-rates.md row 9."
+    }
+  ]
+}

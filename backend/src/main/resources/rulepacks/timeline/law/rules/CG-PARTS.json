@@ -1,0 +1,140 @@
+{
+  "ruleId": "CG-PARTS",
+  "ruleSet": "RS-CG-PARTS",
+  "_note": "The parts of the capital-gains head, each with the term of the gains it collects and whether a long-term loss may be set off against it (D-309). TY 2026-27: Income-tax Act, 2025 s.108(2)(b) (p.147): \"(b) any long-term capital asset is a loss, such loss shall be set off against the income computed in respect of any other long-term capital asset for that year\"; s.111(1)(a)(ii) (p.148), the loss carried forward, long-term \"only against … any other long-term capital asset\". TY 2025-26: Income-tax Act, 1961 s.70(3), as substituted by the Finance Act, 2002 s.27 (Goa reprint p.1375; thc copy p.318), and s.74(1), as substituted by the Finance Act, 2002 s.29, the same restriction. A short-term loss may be set off against any part (s.108(2)(a); s.70(2)), so only the long-term restriction is declared. The year's own set-off is SETOFF-WITHIN-CAPITAL-GAINS's and the carried loss's SETOFF-CARRIED-CAPITAL-GAINS's; each reads this row for the parts a long-term loss reaches and the term of a part's loss. Which bucket falls in which part is RS-CG-PART's (D-289); the term codes are those its rows test as capitalgains.term. The provisions, introducedBy and provenance are SETOFF-WITHIN-CAPITAL-GAINS's; the carried restriction's are SETOFF-CARRIED-CAPITAL-GAINS's.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.70(2), (3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.108(2)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "CapitalGainsParts",
+        "parts": [
+          {
+            "part": "SHORT_TERM_SLAB",
+            "term": "SHORT_TERM",
+            "canAbsorbLongTermLoss": false
+          },
+          {
+            "part": "SHORT_TERM_LISTED_EQUITY",
+            "term": "SHORT_TERM",
+            "canAbsorbLongTermLoss": false
+          },
+          {
+            "part": "LONG_TERM_OTHER",
+            "term": "LONG_TERM",
+            "canAbsorbLongTermLoss": true
+          },
+          {
+            "part": "LONG_TERM_LISTED_EQUITY",
+            "term": "LONG_TERM",
+            "canAbsorbLongTermLoss": true
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2002 (20 of 2002), s.27 — Income-tax Act, 1961 s.70 substituted w.e.f. 1-4-2003",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, 13-5-2002 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 36, 4-12-2003, p.1375 (assent 11-5-2002)",
+        "notifiedOn": "2002-05-13",
+        "effectiveFrom": "2003-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0304/0304-36-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 s.70(2), (3), thc.nic.in copy (current to Act 7 of 2019) p.318; the Finance Act, 2002 s.27 (Goa reprint, Series I No. 36, 4-12-2003, p.1375); no amendment of s.70 in the Acts of 2019–2026 (their egazette texts, operative words searched)",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.70(2), (3)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.108(2)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "CapitalGainsParts",
+        "parts": [
+          {
+            "part": "SHORT_TERM_SLAB",
+            "term": "SHORT_TERM",
+            "canAbsorbLongTermLoss": false
+          },
+          {
+            "part": "SHORT_TERM_LISTED_EQUITY",
+            "term": "SHORT_TERM",
+            "canAbsorbLongTermLoss": false
+          },
+          {
+            "part": "LONG_TERM_OTHER",
+            "term": "LONG_TERM",
+            "canAbsorbLongTermLoss": true
+          },
+          {
+            "part": "LONG_TERM_LISTED_EQUITY",
+            "term": "LONG_TERM",
+            "canAbsorbLongTermLoss": true
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.108(2)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.108(2), p.147; not amended by the Finance Act, 2026 or the Taxation Laws (Amendment) Act, 2025",
+        "accessedOn": "2026-10-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.108, p.147",
+    "accessedOn": "2026-10-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

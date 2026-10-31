@@ -1,0 +1,54 @@
+{
+  "scheduleCode": "ZERODHA_EQ_FUTURES_2026_03",
+  "brokerName": "ZERODHA",
+  "assetType": "EQUITY",
+  "segment": "FUTURES",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2026-03-01",
+  "endDate": null,
+  "status": "ACTIVE",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://zerodha.com/charges",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "BROKERAGE",
+      "displayName": "Brokerage",
+      "category": "BROKERAGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.03,
+      "flatAmount": 20.0,
+      "aggregator": "MIN",
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "\"0.03% or Rs. 20/executed order whichever is lower\" (F&O - Futures). Read 2026-10-28 at https://zerodha.com/charges (W-178; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md)."
+    },
+    {
+      "code": "EXCHANGE_TXN",
+      "displayName": "Exchange transaction charges",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0018299,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 30,
+      "notes": "NSE equity futures transaction charge from 1-3-2026, 0.0018299% (Rs 182.99 each side per crore, NSE circular NSE/FA/73061 of 2026-02-27). The circular keeps a separate IPFT contribution of Rs 0.01 per crore, total Rs 183 (the 0.00183% Zerodha's and Upstox's pages print); this card has no IPFT line, which is W-185. docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+    }
+  ]
+}

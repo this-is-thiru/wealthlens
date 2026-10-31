@@ -1,0 +1,119 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-150). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-HEALTH-* provision1961 (s.80D) and provision2025 (s.126); S2 heading \"Deduction in respect of health insurance premia\". summary: S2 s.126(2)–(10); 1961 s.80D(1)–(5) (sources B11–B13; D-136, D-145). routes[0]: DED-HEALTH-FAMILY (s.126(2)(a), (c), (4)). routes[1]: DED-HEALTH-PARENTS ((2)(b), (d), (4)). routes[2]: DED-HEALTH-FAMILY-SENIOR ((8)(a)). routes[3]: DED-HEALTH-PARENTS-SENIOR ((8)(a)). routes[4]: DED-HEALTH-CHECKUP ((3)). disqualifiers[0]: the rows' regimes (s.202(2)(a)(xii); s.115BAC(2)(i)). disqualifiers[1]: s.126(9); 80D(2B) — DED-HEALTH-CASH-PERMITTED (W-156b2). disqualifiers[2]: s.126(7); 80D(2)(c)-(d) first proviso — DED-HEALTH-INSURANCE-PAID (W-156b2). disqualifiers[3]: s.126(2)(b); 80D(2)(b), D-145. disqualifiers[4]: OQ-18 (D-136 C3a). disqualifiers[5]: s.126(5)–(6), the HUF, refused (D-136 C6). disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-HEALTH-FAMILY (D-166; until then DED-HEALTH-FAMILY's ExceptIn).",
+  "key": "SEC-HEALTH-INSURANCE",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80D",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.126",
+    "presence": "PRESENT"
+  },
+  "plainName": "Health insurance and medical expenditure",
+  "summary": "What you pay for health insurance, a Central Government Health Scheme or notified scheme contribution, or a preventive health check-up is deducted within limits: one limit for yourself, your spouse and dependant children, and a separate one for your parents, each larger for a senior citizen's insurance. Medical expenditure counts only for a senior citizen who has no health insurance. Check-ups for everyone together share one small limit, and are the only payment that may be in cash. A premium paid in advance for several years is spread across them. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "Yourself, your spouse and dependant children",
+      "description": "Insurance, a scheme contribution or a check-up, and an uninsured senior's medical expenditure, within the family's limits.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-HEALTH-FAMILY"
+        }
+      ]
+    },
+    {
+      "name": "Your parents",
+      "description": "Their insurance or check-up, and an uninsured senior parent's medical expenditure, within the parents' limits.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-HEALTH-PARENTS"
+        }
+      ]
+    },
+    {
+      "name": "A senior citizen in the family",
+      "description": "Insurance for a senior citizen in the family counts up to the higher limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-HEALTH-FAMILY-SENIOR"
+        }
+      ]
+    },
+    {
+      "name": "A senior citizen parent",
+      "description": "Insurance for a senior citizen parent counts up to the higher limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-HEALTH-PARENTS-SENIOR"
+        }
+      ]
+    },
+    {
+      "name": "Preventive health check-ups",
+      "description": "Check-ups for the family and parents together count within one small limit, which may be paid in cash.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-HEALTH-CHECKUP"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Not available in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A payment other than for a check-up was made in cash.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-HEALTH-CASH-PERMITTED"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Medical expenditure on a senior citizen whose health was insured in the year does not count.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-HEALTH-INSURANCE-PAID"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A health scheme contribution for a parent does not count; for parents only insurance and check-ups do.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-HEALTH-PARENTS"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A single premium covering both a senior citizen and someone who is not is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "which limit applies to such a premium is not settled"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A Hindu undivided family's claim is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "the family's own limits are not built"
+      }
+    }
+  ]
+}

@@ -315,6 +315,12 @@ public class CorporateActionService {
 
         String stockCode = corporateAction.getStockCode();
         LocalDate recordDate = corporateAction.getRecordDate();
+        if (corporateAction.getAllotmentDate() == null) {
+            throw new IllegalArgumentException("The bonus on " + stockCode + " (record date " + recordDate + ") has no"
+                    + " allotment date; a bonus share's holding period runs from its allotment (Income-tax Act, 1961"
+                    + " Explanation 1(i)(f) to s.2(42A); Income-tax Act, 2025 s.2(101)(c)(C)(IV)) — add it before"
+                    + " performing");
+        }
 
         List<AssetEntity> stockEntities = portfolioService.stocksForCorporateActions(email, stockCode, recordDate);
         if (stockEntities.isEmpty()) {
@@ -354,7 +360,7 @@ public class CorporateActionService {
         bonusSharesEntity.setId(null);
         bonusSharesEntity.setQuantity((double) bonusSharesCount);
         bonusSharesEntity.setPrice(0);
-        bonusSharesEntity.setTransactionDate(corporateAction.getExDate());
+        bonusSharesEntity.setTransactionDate(corporateAction.getAllotmentDate());
         bonusSharesEntity.setOrderTimeQuantities(List.of());
         bonusSharesEntity.setCorporateActionType(CorporateActionType.BONUS);
         bonusSharesEntity.setBuyTransactionIds(newTransactionIds);
@@ -385,7 +391,7 @@ public class CorporateActionService {
         bonusSharesTransaction.setPrice(0);
         bonusSharesTransaction.setQuantity((double) bonusSharesCount);
         bonusSharesTransaction.setTotalValue(0);
-        bonusSharesTransaction.setTransactionDate(corporateAction.getExDate());
+        bonusSharesTransaction.setTransactionDate(corporateAction.getAllotmentDate());
         bonusSharesTransaction.setCorporateActionType(CorporateActionType.BONUS);
         transactionEntities.add(bonusSharesTransaction);
 

@@ -1,0 +1,266 @@
+{
+  "ruleId": "CG-PART-LONG-NOTIFIED",
+  "ruleSet": "RS-CG-PART",
+  "_note": "A long-term gain on an equity share whose sale bore securities transaction tax but whose buy did not keeps the listed-equity long-term part where S.O. 5054(E) waives the buy-side condition (D-291). TY 2025-26: Income-tax Act, 1961 s.112A(4); S.O. 5054(E), 1-10-2018 (egazette 2018/190360 p.3): it \"notifies the transactions of acquisition of equity share entered into (I) before the 1st day of October, 2004; or (II) on or after the 1st day of October, 2004 which are not chargeable to securities transaction tax under Chapter VII of the Finance (No. 2) Act, 2004 (23 of 2004), other than the following\" — (a) a preferential issue in an infrequently traded share, (b) existing listed shares acquired not through a recognised stock exchange (proviso (i) \"through an issue of share by a company\", (ix) \"by mode of transfer referred to in section 47\"), (c) while delisted; para 2: in force from 1-4-2019, AY 2019-20 onwards. TY 2026-27: Income-tax Act, 2025 s.198(5), the notification continued by s.536(2)(j). Applied: acquired before 1-10-2004 (\"before\" is strict), or allotted by a bonus or a demerger (proviso (i), and (ix) for a demerger; D-289 C3(a)). A purchase, an unrecorded acquisition or another corporate action on or after 1-10-2004 is not covered and is refused: portfolio records none of (a)–(c). The acquisition mode is tested before the corporate action, which a purchase does not carry. The buy's STT need only not be PAID: under clause (I) no STT existed and under (II) an allotment is not chargeable to it, so a buy with no breakdown on record (UNKNOWN, D-292) is settled by the waiver's own facts; a buy with STT paid is CG-PART-LONG-LISTED's. Sources: docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 26–28. The sale's STT is PAID or CHARGEABLE (D-298); the buy's neither — S.O. 5054(E)(II) reaches acquisitions \"not chargeable\", and a chargeable buy is CG-PART-LONG-LISTED's.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.112A(4), with S.O. 5054(E)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.198(5)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "BucketPart",
+        "part": "LONG_TERM_LISTED_EQUITY"
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.term",
+              "code": "LONG_TERM"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "CHARGEABLE"
+                }
+              ]
+            },
+            {
+              "type": "Not",
+              "condition": {
+                "type": "AnyOf",
+                "any": [
+                  {
+                    "type": "ItemFactIs",
+                    "fact": "capitalgains.stt.acquisition",
+                    "code": "PAID"
+                  },
+                  {
+                    "type": "ItemFactIs",
+                    "fact": "capitalgains.stt.acquisition",
+                    "code": "CHARGEABLE"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemDateBefore",
+                  "fact": "capitalgains.acquired.on",
+                  "date": "2004-10-01"
+                },
+                {
+                  "type": "AllOf",
+                  "all": [
+                    {
+                      "type": "ItemFactIs",
+                      "fact": "capitalgains.acquisition",
+                      "code": "CORPORATE_ACTION"
+                    },
+                    {
+                      "type": "AnyOf",
+                      "any": [
+                        {
+                          "type": "ItemFactIs",
+                          "fact": "capitalgains.corporate.action",
+                          "code": "BONUS"
+                        },
+                        {
+                          "type": "ItemFactIs",
+                          "fact": "capitalgains.corporate.action",
+                          "code": "DEMERGER"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "S.O. 5054(E), CBDT Notification No. 60/2018 (F. No. 370142/9/2017-TPL), under Income-tax Act, 1961 s.112A(4)",
+        "gazetteRef": "Gazette of India Extraordinary Part II s.3(ii) No. 3875, 1-10-2018",
+        "notifiedOn": "2018-10-01",
+        "effectiveFrom": "2019-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/190360.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/190360.pdf",
+        "sourceDescription": "Gazette of India Extraordinary Part II s.3(ii) No. 3875, 1-10-2018 (egazette 2018/190360), S.O. 5054(E) pp.3–4, clauses (I), (II) and para 2; no amendment, supersession or rescission through 19-10-2026 — REPORTED, accepted by the owner (D-249; docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 26, 28)",
+        "accessedOn": "2026-10-20",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.112A(4), with S.O. 5054(E)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.198(5), with S.O. 5054(E) continued by s.536(2)(j)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "BucketPart",
+        "part": "LONG_TERM_LISTED_EQUITY"
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.term",
+              "code": "LONG_TERM"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "PAID"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "capitalgains.stt.transfer",
+                  "code": "CHARGEABLE"
+                }
+              ]
+            },
+            {
+              "type": "Not",
+              "condition": {
+                "type": "AnyOf",
+                "any": [
+                  {
+                    "type": "ItemFactIs",
+                    "fact": "capitalgains.stt.acquisition",
+                    "code": "PAID"
+                  },
+                  {
+                    "type": "ItemFactIs",
+                    "fact": "capitalgains.stt.acquisition",
+                    "code": "CHARGEABLE"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemDateBefore",
+                  "fact": "capitalgains.acquired.on",
+                  "date": "2004-10-01"
+                },
+                {
+                  "type": "AllOf",
+                  "all": [
+                    {
+                      "type": "ItemFactIs",
+                      "fact": "capitalgains.acquisition",
+                      "code": "CORPORATE_ACTION"
+                    },
+                    {
+                      "type": "AnyOf",
+                      "any": [
+                        {
+                          "type": "ItemFactIs",
+                          "fact": "capitalgains.corporate.action",
+                          "code": "BONUS"
+                        },
+                        {
+                          "type": "ItemFactIs",
+                          "fact": "capitalgains.corporate.action",
+                          "code": "DEMERGER"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.536(2)(j) — S.O. 5054(E) continued under s.198(5)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.198(5) (p.223) and s.536(2)(j) (p.492); S.O. 5054(E), egazette 2018/190360 pp.3–4; no fresh notification under s.198(5) — REPORTED, accepted by the owner (D-249; docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 26–28)",
+        "accessedOn": "2026-10-20",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2018/190360.pdf",
+    "sourceDescription": "Gazette of India Extraordinary Part II s.3(ii) No. 3875, 1-10-2018 (egazette 2018/190360), S.O. 5054(E), pp.3–4",
+    "accessedOn": "2026-10-20",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

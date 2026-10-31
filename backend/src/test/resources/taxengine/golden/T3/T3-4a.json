@@ -1,0 +1,30 @@
+{
+  "id": "T3-4a",
+  "source": "DR 08 T3-4a as amended by its erratum (D-104) — T3-1 occupied 1 Apr – 31 Oct 2026",
+  "_source": "DR 08 states ₹1,33,000 on 7/12; its erratum (D-104, OQ-8): by days, 214 of 365 — salary 13,20,000 × 214/365 = 7,73,917.81; limb (b) 2,10,000 − 77,391.78 = **₹1,32,608.22**. Rent ₹30,000 × 7 = 2,10,000.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "taxYears": [
+    "2026-27"
+  ],
+  "salary": {
+    "pay": {
+      "BASIC": "1200000",
+      "DEARNESS_ALLOWANCE": "120000",
+      "HRA": "600000"
+    },
+    "termsIncludeDearnessAllowance": true,
+    "tenancies": [
+      {
+        "from": "2026-04-01",
+        "to": "2026-10-31",
+        "location": "BENGALURU",
+        "ownedByAssessee": false,
+        "rentPaid": "210000"
+      }
+    ]
+  },
+  "expected": {
+    "salaryExemptions": "132608.22",
+    "limitedBy": "rent less one-tenth of salary"
+  }
+}

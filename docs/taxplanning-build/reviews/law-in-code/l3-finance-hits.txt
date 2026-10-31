@@ -1,0 +1,29 @@
+## G2 16
+service/StepUpSIPCalculator.java:13: double tolerance = 0.00001;
+service/StepUpSIPCalculator.java:14: int maxIterations = 100;
+service/StepUpSIPCalculator.java:17: double initialGuess = (request.getTargetAmount() > totalPrincipal) ? 0.01 : -0.05;
+service/StepUpSIPCalculator.java:23: String monthlyRate = df.format(rate * 100);
+service/StepUpSIPCalculator.java:24: String annualRate = df.format(yearlyRate * 100);
+service/StepUpSIPCalculator.java:30: double tolerance = 0.00001;
+service/StepUpSIPCalculator.java:31: double rate = 0.01; // Initial guess (1%)
+service/StepUpSIPCalculator.java:33: for (int iter = 0; iter < 100; iter++) {
+service/StepUpSIPCalculator.java:46: rate += (request.getTargetAmount() - fv) / request.getTargetAmount() * 0.001;
+service/StepUpSIPCalculator.java:89: double h = 0.0001;
+service/StepUpSIPCalculator.java:96: double fv = 0.0;
+service/FinancesService.java:44: double rateOfInterestPerMonth = percentageOfRateOfInterest / (12 * 100);
+service/FinancesService.java:55: double rounded = Math.round(principalAmount * 100.0) / 100.0;
+service/FinancesService.java:65: double rateOfInterestPerMonth = percentageOfRateOfInterest / (12 * 100);
+service/FinancesService.java:82: double rateOfInterestPerMonth = percentageOfRateOfInterest / (12 * 100);
+service/FinancesService.java:127: double rateOfInterestPerMonth = financeRequest.getRateOfInterest() / (12 * 100);
+## G4 11
+service/FinancesService.java:15: return switch (calculationType) {
+service/FinancesService.java:16: case EMI -> calculateEmi(financeRequest);
+service/FinancesService.java:17: case TOTAL_AMOUNT -> calculateFinalAmount(financeRequest);
+service/FinancesService.java:18: case PRINCIPAL_AMOUNT -> calculatePrincipal(financeRequest);
+service/FinancesService.java:19: case RATE_OF_INTEREST ->
+service/FinancesService.java:21: case TIME_PERIOD -> calculateTimePeriod(financeRequest);
+service/FinancesService.java:22: case NONE -> throw new IllegalArgumentException("Invalid calculation type");
+service/FinancesService.java:94: switch (calculationType) {
+service/FinancesService.java:95: case EMI, TOTAL_AMOUNT -> {
+service/FinancesService.java:106: case PRINCIPAL_AMOUNT -> {
+service/FinancesService.java:117: case TIME_PERIOD -> {

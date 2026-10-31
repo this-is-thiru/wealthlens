@@ -1,0 +1,72 @@
+{
+  "scheduleCode": "FYERS_EQ_FUTURES_2025_04",
+  "brokerName": "FYERS",
+  "assetType": "EQUITY",
+  "segment": "FUTURES",
+  "exchange": null,
+  "planCode": null,
+  "startDate": "2025-04-01",
+  "endDate": "2026-02-28",
+  "status": "ACTIVE",
+  "requiresInstrumentProfile": false,
+  "sourceUrl": "https://fyers.in/charges-list",
+  "verifiedOn": "2026-10-28",
+  "rules": [
+    {
+      "code": "BROKERAGE",
+      "displayName": "Brokerage",
+      "category": "BROKERAGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.03,
+      "flatAmount": 20.0,
+      "aggregator": "MIN",
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 10,
+      "notes": "\"Futures | \u20b920 or 0.03% per executed order (whichever is lower).\" Read 2026-10-28 at https://fyers.in/charges-list (W-178; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md). Not modelled: Fyers' clearing charge on futures, \"Clearing Charges ... 0.0005%\" (W-186)."
+    },
+    {
+      "code": "EXCHANGE_TXN",
+      "displayName": "Exchange transaction charges",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.00173,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 30,
+      "notes": "NSE equity futures transaction charge, 0.00173% (Rs 1.73 each side per lakh of traded value, NSE circular NSE/FA/64232 of 2024-09-27), from 1-10-2024 until 28-2-2026 (NSE/FA/73061). BSE differs; a card naming an exchange would outrank this one. docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+    },
+    {
+      "code": "IPFT",
+      "displayName": "Investor Protection Fund Trust",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.0001,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 50,
+      "notes": "NSE Investor Protection Fund Trust on equity futures, Rs 10 per crore of traded value, from 1-4-2023 until 28-2-2026: NSE circular NSE/FA/56129 of 2023-03-24 (\"Rs.10 per crore of the traded value in Cash Equities Market Segment & Equity Futures\"), rolled back to Rs 0.01 per crore from 1-3-2026 by NSE/FA/73061. docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+    }
+  ]
+}

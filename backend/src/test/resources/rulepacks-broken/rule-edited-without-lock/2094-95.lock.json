@@ -1,0 +1,52 @@
+{
+  "_brokenOnPurpose": "The real 2026-27 lock, relabelled: it pins the band rate the timeline no longer has.",
+  "taxYear": "2094-95",
+  "layers": {
+    "law": {
+      "version": "2094-95.law.1",
+      "checksum": "sha256:82f882a02d719d9d9700b6d9302c87ea7d6f281ee25714a05b9b71802009dcd6"
+    },
+    "exec": {
+      "version": "2094-95.exec.1",
+      "checksum": "sha256:9656c99704ee4e69b765d02fdcf7bf3e863d5fc27f6625b6f6a73e44cc22cebd"
+    },
+    "forms": {
+      "version": "2094-95.forms.1",
+      "checksum": "sha256:e4e3ee30d84e7eeed400f6e535452cd5b84670da1c1fe776cc0e1da74b552f82"
+    },
+    "content": {
+      "version": "2094-95.content.1",
+      "checksum": "sha256:29f8a32de376a5eea0ad7856021db0adab80f58637603811c7041b03c7a0b44e"
+    }
+  },
+  "rules": {
+    "RATE-SLAB-FIRST-SCHEDULE": "sha256:5025b10dcb48c3f3609ba6cd4694411295ef33164ee4b9d2958374e7f172973e",
+    "RATE-SLAB-NEW-TAX-REGIME": "sha256:56358a25be545d6766915b4bc4128a3b62e3fed05c49953c48975530dc06c229"
+  },
+  "instruments": {
+    "_note": "Fixture instruments, as RulePackLoadTest's: a lock must name them (D-210); these years are not law.",
+    "act": {
+      "citation": "Income-tax Act, 2025 (30 of 2025)",
+      "assentedOn": "2025-08-21",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-22082025-265620",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    },
+    "financeAct": {
+      "citation": "Income-tax Act, 2025 (30 of 2025)",
+      "assentedOn": "2025-08-21",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-22082025-265620",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    },
+    "rules": {
+      "citation": "Income-tax Rules, 2026",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-20032026-271092",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    }
+  }
+}

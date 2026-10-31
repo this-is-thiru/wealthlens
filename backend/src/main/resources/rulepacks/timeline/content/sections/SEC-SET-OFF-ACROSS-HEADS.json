@@ -1,0 +1,73 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-219). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.71 / 2025 s.109 (coverage MODELLED, D-219). summary: S2 s.109(1), (2) (Gazette 265620 p.148); 1961 s.71(1)–(3A) (thc p.318). routes[0]: SETOFF-ACROSS-HEADS (AbsorptionOrder, OQ-28). routes[1]: SETOFF-HOUSE-PROPERTY (the limit). disqualifiers[0]: s.202(2)(b)(ii) / s.115BAC(2)(ii)(b), DIS-NEW-TAX-REGIME-NO-SETOFF. disqualifiers[1]: s.109(1)(a) / s.71(2A) — business head, DEFERRED. disqualifiers[2]: s.109(2) / s.71(3) — capital gains, W-088. disqualifiers[3]: s.120 / s.79A — search cases, DEFERRED.",
+  "key": "SEC-SET-OFF-ACROSS-HEADS",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.71",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.109",
+    "presence": "PRESENT"
+  },
+  "plainName": "Setting off a loss against income under another head",
+  "summary": "A loss under one head that is left after setting it against the same head reduces income under the other heads in the same year. A loss from house property does so only up to a limit; the rest is carried forward.",
+  "routes": [
+    {
+      "name": "A loss against the other heads",
+      "description": "The other heads absorb the loss in a stated order, which the law does not fix.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SETOFF-ACROSS-HEADS"
+        }
+      ]
+    },
+    {
+      "name": "A house-property loss, up to the limit",
+      "description": "Only part of a house-property loss may be set against other heads in a year.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SETOFF-HOUSE-PROPERTY"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "In the default regime a house-property loss is not set off against another head, and the loss is treated as fully used.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-SETOFF"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A business loss is never set against salary.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "the business head is deferred in the coverage register"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A loss on capital assets is never set against another head.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "the capital-gains head is planned for a later item"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "No loss is set against undisclosed income found in a search.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "search cases are deferred in the coverage register"
+      }
+    }
+  ]
+}
