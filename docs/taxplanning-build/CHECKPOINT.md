@@ -9,18 +9,17 @@ Stage           : 6 of 6; closed out
 Plan            : plans/W-179.md — D1a, D2a, D3a, D4a, D5a taken as recommended (D-417)
 Approved        : "W-179 approved D1a D2a D3a D4a D5a" (2026-10-31)
 Steps done      : W-208 – W-212 placed, D-417 in STATE, the board `D`, the plan, the WI row, this file
-Next step       : the owner's word on the commit of these two state lines; then start W-181 at the
-                  EXPLAIN stage (the next open item in board order): the resume check, plans/W-181.md,
-                  the board `·` → `E`, update this file, STOP
+Next step       : start W-181 at the EXPLAIN stage (the next open item in board order): the resume
+                  check, plans/W-181.md, the board `·` → `E`, update this file, STOP
 Last verify     : doc guards `FinishedPlanTest,CoverageBacklogTest` 9/0 (2026-10-31); the item commit
                   carries 4 files (+272 / −21); no code, no card, no rule pack
-Waiting on      : the owner — the commit of these two state lines; whether the resume check's grep should
-                  change; OQ-32, OQ-33, OQ-34 open. Theirs to name when W-208 and W-210 start: the BSE
-                  segments traded, and the plan mechanism (a `planCode` on the trade request, or a lookup)
-Files touched   : only these two state lines — STATE.md (Last checkpoint) and CHECKPOINT.md; the item
-                  itself is in c76dad9a, so the tree is otherwise clean
+Waiting on      : the owner — whether the resume check's grep should change; OQ-32, OQ-33, OQ-34
+                  open. Theirs to name when W-208 and W-210 start: the BSE segments traded, and the plan
+                  mechanism (a `planCode` on the trade request, or a lookup)
+Files touched   : none — the tree is clean at resume. The item is c76dad9a and these two state lines
+                  are 11f30bb3, both committed; `git status --short` must be empty
 Last item commit: taxplanning W-179: place the five charge-coverage decisions as rows W-208 – W-212 — the coverage review left bonds, BSE, the Zerodha AMC tiers, the plan and buyback fees unpriced, so each decision now states what the code allows (one needs no data, one is data only, three need a published fact and a vocabulary entry) and what it costs (D-417)
-Updated         : 2026-10-31, session 43 — W-179 committed as c76dad9a; next W-181
+Updated         : 2026-10-31, session 43 — W-179 committed as c76dad9a, state lines as 11f30bb3; next W-181
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
