@@ -558,6 +558,10 @@ after it.
      --fields _id,capital_gains_type,classification_reason --out trade_outcomes-stored-terms-backup.json
    ```
 
+   **Keep the file (W-195, D-411).** Step 4 deletes the only in-database copy, so this export is the record of what the
+   old label said: keep it with the deploy record for that database, named for the database
+   (`trade_outcomes-stored-terms-backup-<db>.json`), and do not treat it as a working file.
+
 4. **Write:** the same call with `?dryRun=false`. Both fields are unset on every row carrying either, and
    `audit_metadata.updatedBy` is set to the caller.
 5. **Verify:** step 1's count is 0, and a second call reports `rows` 0.

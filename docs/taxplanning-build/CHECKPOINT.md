@@ -4,20 +4,20 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-195 — not started (the owner's decision: keep the old stored term labels as history)
-Stage           : nothing in flight; W-194 committed (a decision, no code)
-Plan            : none yet
+Item            : W-196 — next on the board, not started (health-insurance cash and spreading refusals as nil lines)
+Stage           : W-195 closed (D-411, docs only); nothing in flight
+Plan            : plans/W-195.md (done). W-196 has no plan yet
 Approved        : —
 Steps done      : —
-Next step       : on "start W-195": run the resume check; the board order puts W-195 first; read the row
-                  (03-WORK-ITEMS.md) and the docs it names (plans/W-160c.md review talk, runbook §2.5, D-365);
-                  write plans/W-195.md (a decision item — explain, no build until decided); board `W-195 ·` → `E`;
-                  update this file; STOP — no coding
-Last verify     : W-194: unit 3819/0 (docs only; no integration run — no code changed)
-Waiting on      : the owner — W-195's decision; OQ-32, OQ-33, OQ-34 open; W-206 placed, the owner's to place
-Files touched   : none — W-194's files are in the last item commit
-Last item commit: taxplanning W-194: record the engine's per-bucket term with the computation, to be built with W-109 — a stored computation must keep the term it decided after the law or the facts move (D-410)
-Updated         : 2026-10-31, session 42 — W-194 done (D-410); STOPPED
+Next step       : on "start W-196": resume check, board order, read the row and the named docs
+                  (plans/W-156b2.md:106; D-347), write plans/W-196.md, set the board W-196 · → E,
+                  update this file, STOP with no coding.
+Last verify     : W-195: unit 3819/0 (docs only); W-205: integration 319/0 (2026-10-31)
+Waiting on      : the owner — whether to start W-196; OQ-32, OQ-33, OQ-34 open; W-206 (request
+                  DTOs) placed · at the end of the queue, the owner's to place
+Files touched   : plans/W-195.md, STATE.md, 03-WORK-ITEMS.md, post-deployment-runbook.md, this file
+Last item commit: taxplanning W-195: keep §2.5's export as the history and remove the old stored term labels — the label came from the duplicate law with no rule, pack or year, so it is not an audit record (D-411)
+Updated         : 2026-10-31, session 42 — W-195 done and committed; STOPPED
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
