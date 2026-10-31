@@ -4,28 +4,25 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088i — the house-reinvestment exemption (S2 s.86 / 1961 s.54F, D-248)
-Stage           : 5 of 6 (REPORTED) — built, verified and committed e5233041; awaiting the review
-Plan            : plans/W-088i.md — approved as written: "W-088i approved, place W-088i2 and W-088i3"
+Item            : none in flight — W-088i is closed (D-428), committed e5233041
+Stage           : 6 of 6 (DONE) — reviewed on "review approved, close it out"
+Plan            : plans/W-088i.md — approved as written, built, and its Build record holds the three departures
 Sourcing        : sources/2026-10-31-reinvestment-exemption.md — 2025 s.86 (Gazette 265620 pp.130–131),
-                  1961 s.54F (thc pp.292–293), FA 2023 s.30 the only post-2019 amendment, nine other
-                  Acts of 2019–2026 searched with no hit
-Approved        : yes — the plan as written; OQ-38's TRANSFER_EXPENDITURE-only reading of net
-                  consideration, Risk 3's entered-fact-per-transfer shape and Risk 4's same exempt
-                  amount off both measures are the decisions to record at close-out
-Board           : `W-088i R  W-088i2 ·  W-088i3 ·  W-088i4 ·`
-Built           : HouseReinvestment, ExemptReinvestment, ReinvestmentExemption, the row
-                  CG-EXEMPT-RESIDENTIAL-HOUSE (both versions), coverage MODELLED, SEC-CAPITAL-GAINS-
-                  REINVESTED-HOUSE, the 40th EnteredFacts component, RuleDefinition's permit
-Departed        : recorded in the plan's Build record — the golden is ₹4,51,750 not ₹5,03,750 (the
-                  nil-band shift), the cap was ₹100 crore and is ₹10 crore, and the row serves EQUITY
-                  only because AssetType.LAND_OR_BUILDING cannot say a house from a plot (W-088i4)
-Next step       : the owner's review; then close-out — D-428, the WI clause, board `D`, and the
-                  decision row for OQ-38's reading, Risk 3 and Risk 4
-Last verify     : unit tier 3866 / 0 / 0 (BUILD SUCCESS); ReinvestmentExemptionTest 17 / 0 / 0
-Files touched   : nothing uncommitted — e5233041 holds the 64 files; STATE.md and this file alone moved since
+                  1961 s.54F (thc pp.292–293), FA 2023 s.30 the only post-2019 amendment
+Decisions       : OQ-38 answered — net consideration less the TRANSFER_EXPENDITURE charges only, STT out;
+                  one entered fact per transfer matched by date and refused when not unique; the same
+                  exempt amount leaves the gain and W-088g's indexed measure
+Board           : `W-088i D  W-088i2 ·  W-088i3 ·  W-088i4 ·  W-089 D`
+Built           : the exemption end to end (see D-428); unit tier 3866 / 0 / 0; WL-A-2 not republished —
+                  the runbook did not change
+Next step       : the owner's choice of the next item. Unblocked behind W-088i: W-088i2 (the deposit
+                  route), W-088i3 (the charge-backs), W-088i4 (a land or building as the original asset).
+                  Not startable: W-088h (needs unlisted securities mapped). Proposed earlier: W-089e
+Last verify     : unit tier 3866 / 0 / 0 (BUILD SUCCESS) at the close-out
+Files touched   : STATE.md, 03-WORK-ITEMS.md and this file — the close-out, staged and awaiting the
+                  owner's word to commit
 Last item commit: e5233041 — taxplanning W-088i: take a long-term gain put into a residential house out of the charge (2025 s.86; 1961 s.54F)
-Updated         : 2026-10-31, session 43 — W-088i committed e5233041; awaiting the review
+Updated         : 2026-10-31, session 43 — W-088i closed (D-428)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
