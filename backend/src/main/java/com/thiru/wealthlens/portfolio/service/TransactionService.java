@@ -197,13 +197,6 @@ public class TransactionService {
         }).toList();
     }
 
-
-//    public List<Transaction> testMethod(UserMail userMail, String stockCode, LocalDate recordDate) {
-//
-//        String email = userMail.getEmail();
-//        return transactionRepository.findByEmailAndStockCodeAndTransactionDateBeforeOrderByTransactionDateDesc(email, stockCode, recordDate);
-//    }
-
     public void updateTransactions() {
         List<TransactionEntity> transactionEntities = transactionRepository.findAll();
 

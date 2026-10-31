@@ -164,7 +164,6 @@ public class ProfitAndLossService {
         metadata.setProfit(TMoney.add(metadata.getProfit(), internalContext.getProfit()));
         metadata.setBrokerage(TMoney.add(metadata.getBrokerage(), internalContext.getBrokerCharges()));
         metadata.setMiscCharges(TMoney.add(metadata.getMiscCharges(), internalContext.getMiscCharges()));
-//        metadata.setLastUpdatedTime(LocalDateTime.now());
     }
 
     private static Map<Month, MonthlyReport> updateMonthlyReports(Map<Month, MonthlyReport> monthlyReports,

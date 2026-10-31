@@ -107,7 +107,7 @@ public class AssetEntity implements AuditableEntity {
     @Field("order_id")
     private String orderId;
 
-    // TODO: Remove this as we use orderTimeQuantity
+    // TODO(W-214): Remove this as we use orderTimeQuantity
     @Field("order_execution_time")
     private Instant orderExecutionTime;
 

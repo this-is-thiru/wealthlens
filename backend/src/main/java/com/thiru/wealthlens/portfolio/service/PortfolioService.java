@@ -68,7 +68,6 @@ public class PortfolioService {
     private final MongoTemplateService mongoTemplateService;
     private final TradeOutcomeService tradeOutcomeService;
     private final TransactionRepository transactionRepository;
-//    private final UserBrokerChargeService userBrokerChargeService;
     private final TemporaryTransactionService temporaryTransactionService;
     private final ChargeRecordingGateway chargeRecordingGateway;
     private final ChargeViewAssembler chargeViewAssembler;
@@ -381,8 +380,6 @@ public class PortfolioService {
         String email = userMail.getEmail();
         assetRequest.setEmail(email);
         AssetEntity assetEntity = assetRequest.asAsset();
-        double totalValueOfTransaction = getTotalValue(assetRequest);
-//        assetEntity.setTotalValue(totalValueOfTransaction);
 
         // Priced before the lot is written. The other order works right up until the computed total
         // becomes the cost basis, at which point the saved lot carries the figure the user typed.
@@ -659,7 +656,6 @@ public class PortfolioService {
                 matchedLots.add(new TradeOutcomeRecorder.MatchedLot(assetEntity, assetQuantity, assetQuantity));
 
                 assetEntity.setQuantity(0D);
-//                assetEntity.setTotalValue(0);
                 sellQuantity = sellQuantity - assetQuantity;
             } else {
                 buyContexts.add(new BuyContext(sellQuantity, assetEntity.getTransactionDate(), assetEntity.getPrice(),
@@ -668,7 +664,6 @@ public class PortfolioService {
 
                 double remainingQuantity = assetQuantity - sellQuantity;
                 assetEntity.setQuantity(remainingQuantity);
-//                assetEntity.setTotalValue(remainingQuantity * assetEntity.getPrice());
                 sellQuantity = 0;
             }
         }

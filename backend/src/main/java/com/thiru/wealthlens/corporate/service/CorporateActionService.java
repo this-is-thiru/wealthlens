@@ -99,29 +99,6 @@ public class CorporateActionService {
         return TCollectionUtil.map(actions, corporateAction -> TJsonMapper.copy(corporateAction, CorporateActionDto.class));
     }
 
-//    public void performQuarterlyCorporateActions(String email, int year, int quarter) {
-//
-//        Month quarterStart = TLocalDate.firstMonthOfQuarter(quarter);
-//        LocalDate fromDate = LocalDate.of(year, quarterStart, ONE);
-//        LocalDate toDate = LocalDate.of(year, quarterStart.plus(3), ONE).minusDays(ONE);
-//        List<CorporateActionEntity> corporateActions = corporateActionRepository.findByTypeInAndRecordDateBetween(CorporateActionType.FILTERABLE_CORPORATE_ACTIONS, fromDate, toDate);
-//        for (CorporateActionEntity corporateAction : corporateActions) {
-//            performQuarterlyCorporateAction(email, corporateAction);
-//        }
-//        log.info(corporateActions);
-//    }
-//
-//    public void performQuarterlyCorporateAction(String email, CorporateActionEntity corporateAction) {
-//
-//        CorporateActionType action = corporateAction.getType();
-//        if (Objects.requireNonNull(action) == CorporateActionType.BONUS) {
-//            processBonusShares(email, corporateAction);
-//        } else {
-//            throw new IllegalArgumentException("Invalid action type" + action);
-//        }
-//        log.info("Quarterly corporate action: {} noted successfully for stock: {}", action, corporateAction.getStockCode());
-//    }
-
     @Transactional
     public void deleteCorporateActions(String id) {
         corporateActionRepository.deleteById(id);
@@ -244,7 +221,7 @@ public class CorporateActionService {
         return "Corporate action: " + action + " noted successfully for stock: " + actionWrapper.getStockCode();
     }
 
-    // TODO: Remove - Doesn't work, need to fix
+    // TODO(W-213): Remove - Doesn't work, need to fix
     @Deprecated
     private void processStockSplit(CorporateActionDto actionWrapper) {
 
@@ -455,64 +432,8 @@ public class CorporateActionService {
                 log.info("CA skipping for broker name {} and stock {}", entry.getKey(), stockCode);
                 continue;
             }
-            processStockSplit(corporateAction, entry.getKey(), entry.getValue());
             updateLastlyPerformedCorporateAction(email, stockCode, corporateAction.getAssetType(), corporateAction.getType(), corporateAction.getExDate(), entry.getKey());
         }
-    }
-
-    private void processStockSplit(CorporateActionEntity corporateAction, BrokerName brokerName, List<AssetEntity> stockEntities) {
-
-        String stockCode = corporateAction.getStockCode();
-
-        int totalShares = TCollectionUtil.map(stockEntities, assetEntity -> assetEntity.getQuantity().intValue()).stream().reduce(0, Integer::sum);
-        String[] splitRatio = corporateAction.getRatio().split(":");
-        int numerator = Integer.parseInt(splitRatio[0]);
-        int denominator = Integer.parseInt(splitRatio[1]);
-        int bonusSharesCount = totalShares * numerator / denominator;
-//
-//        String[] demergerPriceRatio = demergerDetail.getDemergerPriceRatio().split(":");
-//        double mainStockPriceRatio = Double.parseDouble(demergerPriceRatio[0]);
-//        double secondaryStockPriceRatio = Double.parseDouble(demergerPriceRatio[1]);
-//
-//        if (demergerDetail.getDemergerStocks().size() != 1) {
-//            throw new IllegalArgumentException("Invalid demerger ratio format");
-//        }
-//
-//        var newDemergerStock = demergerDetail.getDemergerStocks().getFirst();
-//        var demergedStockContext = new DemergedStockContext(newDemergerStock.getStockCode(), newDemergerStock.getStockName(), secondaryStockPriceRatio, secondaryStockRatio);
-//
-//        List<AssetEntity> finalDemergedStocks = new ArrayList<>();
-//        for (AssetEntity assetEntity : stockEntities) {
-//            var demergerContext = new DemergerContext(demergerDetail.getMainStockCode(), demergerDetail.getMainStockName(), mainStockPriceRatio, mainStockRatio, assetEntity, new ArrayList<>(Collections.singleton(demergedStockContext)));
-//            List<AssetEntity> demergedStocks = processStockSplitForEachAssetEntry(demergerContext);
-//
-//            CorporateActionEntity action = TJsonMapper.copy(corporateAction, CorporateActionEntity.class);
-//            demergedStocks.parallelStream().forEach(a -> a.getCorporateActions().add(action));
-//            finalDemergedStocks.addAll(demergedStocks);
-//        }
-//
-//        portfolioService.saveCorporateActionProcessedStocks(finalDemergedStocks);
-//        log.info("Demerger of shares added for symbol: {} in Broker: {}", stockCode, brokerName);
-    }
-
-    public List<AssetEntity> processStockSplitForEachAssetEntry(DemergerContext demergerContext) {
-//        double mainStockPricePercentage = demergerContext.pricePercentage();
-//        AssetEntity entity = demergerContext.entity();
-//
-//        List<AssetEntity> demergedStocks = new ArrayList<>();
-//        for (var demergerStockContext : demergerContext.demergedStocks()) {
-//            AssetEntity asNewEntity = asNewEntity(demergerStockContext, entity);
-//            demergedStocks.add(asNewEntity);
-//        }
-//
-//        var oldPrice = entity.getPrice();
-//        double newPrice = oldPrice * (mainStockPricePercentage / 100);
-//        entity.setPrice(newPrice);
-//        entity.setStockCode(demergerContext.stockCode());
-//        entity.setStockName(demergerContext.stockName());
-//        demergedStocks.add(entity);
-//
-        return null;
     }
 
     private void processDemergerOfShares(CorporateActionEntity corporateAction, BrokerName brokerName, List<AssetEntity> stockEntities) {
@@ -620,7 +541,7 @@ public class CorporateActionService {
         String[] demergerRatios = demergerRatio.split(":");
         String[] demergerPriceRatios = demergerPriceRatio.split(":");
 
-        // TODO: come to this for uneven ratios
+        // TODO(W-214): come to this for uneven ratios
         if (demergerRatios.length != 2) {
             throw new IllegalArgumentException("Invalid demerger ratio format");
         }

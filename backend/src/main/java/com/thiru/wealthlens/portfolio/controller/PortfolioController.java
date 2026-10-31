@@ -7,7 +7,6 @@ import com.thiru.wealthlens.portfolio.dto.ProfitAndLossResponse;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
-import com.thiru.wealthlens.portfolio.service.TemporaryService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.portfolio.service.UserRecordsErasureService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
@@ -34,7 +33,6 @@ public class PortfolioController {
     private final PortfolioService portfolioService;
     private final UserRecordsErasureService userRecordsErasureService;
     private final TransactionService transactionService;
-    private final TemporaryService temporaryService;
 
     @PostMapping("/transaction")
     public String addTransaction(@PathVariable String email, @RequestBody AssetRequest assetRequest) {
@@ -51,14 +49,6 @@ public class PortfolioController {
                                                      @RequestParam("file") MultipartFile file) {
         return portfolioService.uploadTransactions(UserMail.from(email), quarter, file);
     }
-
-    // @PostMapping("/insurance")
-    // public String> addInsurance(@PathVariable String email,
-    // @RequestBody AssetRequest assetRequest) {
-    // return
-    // portfolioService.addTransaction(UserMail.from(email),
-    // assetRequest));
-    // }
 
     @GetMapping("/profit-and-loss")
     public ProfitAndLossResponse getProfitAndLoss(@PathVariable String email,
@@ -115,14 +105,6 @@ public class PortfolioController {
         return transactionService.allTransactions();
     }
 
-//    @GetMapping("/stocks/download")
-//    public InputStreamResource> downloadPortfolioStocks1(@PathVariable String email) {
-//
-//        Pair<InputStreamResource, String> resourcePair = portfolioService.downloadPortfolioStocks(UserMail.from(email));
-//        FileStream fileStream = FileStream.from(resourcePair.getSecond(), resourcePair.getFirst(), FileType.XLSX);
-//        return FileHelper.sendFileAsAttachment(fileStream);
-//    }
-
     // Note: Below this comment is for testing purpose only
 
     @PostMapping("/request")
@@ -139,17 +121,5 @@ public class PortfolioController {
                                                          @RequestBody BulkGetRequest bulkGetRequest) {
         return portfolioService.searchAssets(UserMail.from(email), bulkGetRequest.getQueryFilters());
     }
-
-//    @GetMapping("/assets/purchase/before/{stockCode}/{date}")
-//    public List<Asset>> testRequest(@PathVariable String email, @PathVariable String stockCode, @PathVariable String date) {
-//        List<Asset> assets = portfolioService.testMethod(UserMail.from(email), stockCode, TLocaleDate.convertToDate(date));
-//        return assets);
-//    }
-
-//    @GetMapping("/assets/purchase/before/{stockCode}/{date}")
-//    public List<Transaction>> testRequest1(@PathVariable String email, @PathVariable String stockCode, @PathVariable String date) {
-//        List<Transaction> assets = transactionService.testMethod(UserMail.from(email), stockCode, TLocaleDate.convertToDate(date));
-//        return assets);
-//    }
 
 }
