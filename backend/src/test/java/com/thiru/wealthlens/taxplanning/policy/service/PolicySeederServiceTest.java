@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxplanning.policy.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -122,5 +123,15 @@ class PolicySeederServiceTest {
         assertThat(report.parts().get(3)).isEqualTo(new Part("ALLOWANCE_CATALOGUE",
                 "data/tax-policies/allowance-catalogue-2025-26.json", 19, 20));
         verify(allowanceRepo, times(19)).save(any(AllowanceCatalogueEntity.class));
+    }
+
+    @Test
+    void read_whenAFileCarriesAPropertyThePolicyDoesNot_failsNamingTheFileAndTheProperty() {
+        // Given — a policy file whose field is misspelt; ignoring it would seed the policy with the value unset
+        // When / Then
+        assertThatThrownBy(() -> seeder.read("tax-policies-fixture/misspelt-slab.json", new TaxSlabPolicyEntity()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("misspelt-slab.json")
+                .hasMessageContaining("standardDeducton");
     }
 }

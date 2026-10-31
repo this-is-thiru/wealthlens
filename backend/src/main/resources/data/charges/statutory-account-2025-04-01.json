@@ -8,7 +8,6 @@
   "startDate": "2025-04-01",
   "endDate": null,
   "status": "ACTIVE",
-  "currency": "INR",
   "requiresInstrumentProfile": false,
   "sourceUrl": "https://cbic-gst.gov.in/hindi/pdf/integrated-tax-rate/Notification8-IGST.pdf",
   "verifiedOn": "2026-10-28",

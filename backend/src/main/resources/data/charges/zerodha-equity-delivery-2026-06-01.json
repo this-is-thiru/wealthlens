@@ -8,7 +8,6 @@
   "startDate": "2026-06-19",
   "endDate": null,
   "status": "ACTIVE",
-  "currency": "INR",
   "requiresInstrumentProfile": false,
   "sourceUrl": "https://zerodha.com/charges",
   "verifiedOn": "2026-09-08",

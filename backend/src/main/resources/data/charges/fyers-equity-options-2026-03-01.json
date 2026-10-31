@@ -8,7 +8,6 @@
   "startDate": "2026-03-01",
   "endDate": null,
   "status": "ACTIVE",
-  "currency": "INR",
   "requiresInstrumentProfile": false,
   "sourceUrl": "https://fyers.in/charges-list",
   "verifiedOn": "2026-10-28",

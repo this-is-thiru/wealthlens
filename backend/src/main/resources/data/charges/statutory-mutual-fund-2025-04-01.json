@@ -8,7 +8,6 @@
   "startDate": "2025-04-01",
   "endDate": null,
   "status": "ACTIVE",
-  "currency": "INR",
   "requiresInstrumentProfile": false,
   "sourceUrl": "https://egazette.gov.in/WriteReadData/2019/198304.pdf",
   "verifiedOn": "2026-10-28",

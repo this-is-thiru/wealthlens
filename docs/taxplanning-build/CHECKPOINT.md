@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-203 — NOT STARTED (the seeders drop unknown keys silently; next on the board after W-202)
-Stage           : PAUSED at the session limit (session 40) — W-202 done (D-406), committed; everything pushed (api-collection main first, then this branch)
-Plan            : — (write plans/W-203.md on "start W-203")
+Item            : W-204 — READY (next on the board after W-203)
+Stage           : W-203 committed (stage 6 done); nothing in flight
+Plan            : — (write plans/W-204.md on "start W-204")
 Approved        : —
 Steps done      : —
-Next step       : resume: Resume check; then on "start W-203": board order (R4: W-202 D  W-203 ·  W-204 ·); READ the W-203 row; write plans/W-203.md; STOP. FinishedPlanTest fails a DONE item with an open plan step; request bodies are strict (D-406)
-Last verify     : W-202 — targeted 48/0; probe (property off → both strictness tests fail); unit 3817/0; integration 314/0 (2026-10-30)
-Waiting on      : the owner — "start W-203"; OQ-32, OQ-33, OQ-34 open
+Next step       : resume: Resume check; then on "start W-204": board order (R4: W-203 D  W-204 ·); READ the W-204 row; write plans/W-204.md; STOP
+Last verify     : W-203 — charge 49/0, policy 5/0; unit 3819/0; integration 314/0 (2026-10-31)
+Waiting on      : the owner — "start W-204"; OQ-32, OQ-33, OQ-34 open
 Files touched   : (none)
-Last item commit: taxplanning W-202: refuse a request body property the DTO does not have with a 400 — fail-on-unknown-properties on, D-389's date tolerance superseded, the collection's four stale fields fixed; W-203 and W-204 placed (D-406)
-Updated         : 2026-10-30 ~23:50, session 40 — PAUSED at the session limit; W-187 … W-202 done (D-396 – D-406), all committed and pushed; next W-203
+Last item commit: taxplanning W-203: make both seeders refuse an unknown key and drop currency from the 39 cards — Jackson 3 ignores an unknown key by default, so a misspelt field seeded a card silently incomplete (D-407)
+Updated         : 2026-10-31, session 41 — W-203 committed; next W-204
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

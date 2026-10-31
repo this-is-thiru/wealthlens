@@ -97,9 +97,13 @@ public class ChargeSeederService {
      * means by leaving {@code perLot} or {@code appliesToCorporateActions} out. Jackson 3 turned
      * {@code FAIL_ON_NULL_FOR_PRIMITIVES} on by default, so without this a card is rejected for not
      * restating every flag it does not use.
+     *
+     * <p>An unknown property is refused, the opposite of Jackson 3's default: a misspelt key would
+     * otherwise vanish and the card would seed with the field unset and nothing to say so (W-203).
      */
     private final ObjectMapper objectMapper = JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .build();
 
     /**

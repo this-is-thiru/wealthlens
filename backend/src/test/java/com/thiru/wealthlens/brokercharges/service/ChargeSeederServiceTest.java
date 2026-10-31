@@ -794,6 +794,25 @@ class ChargeSeederServiceTest {
                 .hasMessageContaining("broken-card.json");
     }
 
+    @Test
+    void read_whenAFileCarriesAPropertyTheCardDoesNot_failsNamingTheFileAndTheProperty() {
+        // Given — a field misspelt; ignoring it would seed the card with the flag left at its default
+        Resource misspelt = new ByteArrayResource(
+                "{ \"scheduleCode\": \"TYPOD\", \"requiresInstrumentProfiles\": true }"
+                        .getBytes(StandardCharsets.UTF_8)) {
+            @Override
+            public String getFilename() {
+                return "misspelt-card.json";
+            }
+        };
+
+        // When / Then
+        assertThatThrownBy(() -> seeder.read(misspelt, ChargeScheduleEntity::new))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("misspelt-card.json")
+                .hasMessageContaining("requiresInstrumentProfiles");
+    }
+
     private ChargeSeederService seederWith(ChargeScheduleValidator validator) {
         return new ChargeSeederService(chargeCatalogueRepository, chargeScheduleRepository,
                 chargeInstrumentRepository, validator, chargeScheduleResolver, chargeInstrumentResolver,

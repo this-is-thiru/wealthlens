@@ -21,8 +21,10 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Seeds the TY 2025-26 tax policies — slabs, perquisites, the allowance catalogue and limits — from
@@ -53,7 +55,13 @@ public class PolicySeederService {
     private final AllowanceCatalogueRepository allowanceRepo;
     private final AllowanceLimitRepository limitRepo;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    /**
+     * An unknown property is refused, the opposite of Jackson 3's default: a misspelt key would
+     * otherwise vanish and the policy would seed with the field unset and nothing to say so (W-203).
+     */
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
 
     /** Seed what is missing, unless {@code dryRun}; {@code auditor} is who asked. */
     public PolicySeedReport seed(boolean dryRun, String auditor) {
@@ -134,9 +142,10 @@ public class PolicySeederService {
     /**
      * Fills {@code fresh}, built by its no-argument constructor, rather than letting Jackson pick a constructor: Jackson 3
      * chooses the entities' all-arguments one and passes null for the audit metadata no file carries, and a document
-     * saved without it records no author (found in W-088u8a; every policy the boot seeder wrote lacks it).
+     * saved without it records no author (found in W-088u8a; every policy the boot seeder wrote lacks it). Package-private
+     * so a test can hand it a fixture.
      */
-    private <T> T read(String file, T fresh) {
+    <T> T read(String file, T fresh) {
         try {
             return objectMapper.readerForUpdating(fresh).readValue(readResource(file));
         } catch (IOException | JacksonException e) {
