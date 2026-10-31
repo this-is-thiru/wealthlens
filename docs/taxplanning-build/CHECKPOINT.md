@@ -4,17 +4,19 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-088g5 is closed (D-433)
-Stage           : 6 of 6 (DONE) — "commit it" was the review approval; board D in the item commit
-Plan            : plans/W-088g5.md — approved C1a C2a; Build record
-Decisions       : D-433 — land refused on V1/V2/upload; W-088g9, W-223, W-224 placed; runbook §3.7
-Board           : `W-088g5 D  W-088g9 ·  W-088g6 ·`
-Next step       : republish WL-A-2 if not yet done (runbook §3.7); then W-088g9 (a property entry) — on
-                  "start W-088g9", plan and STOP
-Last verify     : unit tier 3887 / 0 / 0; integration tier 326 / 0 / 0; Checkstyle 0
+Item            : none in flight — session 44 paused by the owner (session limit); W-088g5 closed (D-433)
+Stage           : 6 of 6 (DONE) for W-088g5; nothing started after it
+Done today      : D-429 review placed 13 rows; W-088i5 (D-430), W-088g3 (D-431), W-088g4 (D-432), W-088g5 (D-433)
+                  all built, verified, committed and closed; WL-A-2 republished after ba8755b6 and read back (§3.7)
+Board           : `W-088g5 D  W-088g9 ·  W-088g6 ·  W-088g7 ·  W-088g8 ·`
+Next step       : W-088g9 (a property entry of its own, D-433) — on "start W-088g9", plan and STOP. Then by the
+                  board: W-088g6 – g8, W-088h …; review rows W-216 – W-224 wait at the end of the queue
+Owner actions   : nothing pushed — review/taxplanning is ahead of origin and api-collection main is ahead by
+                  1 (56715c7, W-217): push the submodule first. After the deploy carrying W-088g5, run runbook §3.7
+Last verify     : unit tier 3887 / 0 / 0; integration tier 326 / 0 / 0; Checkstyle 0 (at ba8755b6)
 Files touched   : none
-Last commit     : the W-088g5 item commit (subject in STATE "Last checkpoint")
-Updated         : 2026-11-01, session 44 — W-088g5 closed
+Last item commit: ba8755b6 — taxplanning W-088g5: refuse a land or building on the broker trade paths
+Updated         : 2026-11-01, session 44 — paused
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
