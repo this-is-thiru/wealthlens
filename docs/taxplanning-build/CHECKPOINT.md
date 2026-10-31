@@ -4,24 +4,24 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088g — the cap on the tax on land or building acquired before 23-7-2024. Done
-                  (D-426), committed 5484a3e9
-Stage           : 6 of 6 (REVIEWED) — nothing in flight
-Plan            : plans/W-088g.md — built as approved (C1a … C7a); its Build record carries the five
-                  departures and its Decisions (D-426) the readings OQ-36 and OQ-37 now settle to
-Approved        : "W-088g approved C1a C2a C3a C4a C5a C6a C7a" (2026-10-31), then "commit it"
-Steps done      : all nine steps of the second-pass list, the close-out and the commit
-Next step       : the owner's choice of the next item. The next board item is W-088h (a non-resident's
-                  unlisted securities — unreachable until the asset is mapped); W-088i (the
-                  house-reinvestment exemption, S2 s.86 / 1961 s.54F) is the one the board calls
-                  reachable now
-Last verify     : ./mvnw test -pl backend -Punit → 3848 / 0 / 0, Checkstyle and Spotless green in
-                  validate; run before the commit, whose pre-commit gate passed on the same tree
-Waiting on      : the owner's choice of the next item — nothing else is outstanding
-Files touched   : this file and STATE.md — nothing under backend/; the item commit 5484a3e9 carries the 29
-                  paths (engine, pack, locks, tests, the four documents)
+Item            : W-089 — T13-1, the rebate with special-rate income (DR 13 R-5). Done (D-427)
+Stage           : 6 of 6 (REVIEWED) — approved, closed out, NOT committed; nothing in flight
+Plan            : plans/W-089.md — built as approved; its Build record carries the one departure (the
+                  cap-bypass probe failed on RebateNode's overlap guard, not on a nil bill) and its
+                  Decisions (D-427) C1 – C4
+Approved        : "W-089 approved" (2026-10-31), then "W-089 approved, place W-089e"
+Steps done      : all six, including the close-out: the WI row's built clause, board D, D-427, W-089e
+                  placed (WI row at 03-WORK-ITEMS.md:1371 and board `W-089e ·`), STATE 7–8
+Next step       : the owner's word to commit. Nothing else is outstanding; W-089d's sibling W-089e is
+                  placed but not started, and W-088i remains the next substantive item on the board
+Last verify     : ./mvnw test -pl backend -Dtest=T13RebateAndSpecialRateTest → 1 / 0 / 0;
+                  ./mvnw test -pl backend -Punit → 3849 / 0 / 0, Checkstyle and Spotless green in validate
+Waiting on      : the owner's "commit it" — the tree is staged-ready but uncommitted
+Files touched   : backend/.../golden/T13RebateAndSpecialRateTest.java (new),
+                  backend/.../golden/GoldenCaseRunner.java, plans/W-089.md (new), 03-WORK-ITEMS.md,
+                  STATE.md (board, D-427, fields 7–8) and this file
 Last item commit: taxplanning W-088g: cap the tax on land or building acquired before 23-7-2024 at the lesser of 12.5 % of the gain and 20 % of the gain on indexed cost — so a 2005 purchase sold for four times its cost pays 1,57,264.96 instead of 3,75,000, while a non-resident and a purchase on the cut-off day keep the flat rate because the qualifier's conditions, not a Java branch, decide (D-426)
-Updated         : 2026-10-31, session 43 — W-088g committed 5484a3e9, this the post-commit state line
+Updated         : 2026-10-31, session 43 — W-089 closed out on the owner's approval; stopped before the commit
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

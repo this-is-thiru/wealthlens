@@ -204,6 +204,21 @@ final class GoldenCaseRunner {
     }
 
     /**
+     * The shipped pipeline from the heads to net payable on the facts given, the real total-income node included —
+     * for a case stated on more than one head's facts (W-089).
+     */
+    ShippedPipelineRun run(EngineInputs inputs) {
+        RulePack pack = pack(inputs.taxYear());
+        List<ComputationNode> nodes = new ArrayList<>(BUILT);
+        nodes.add(new TotalIncomeNode());
+        PipelineRunner.Result result = PipelineRunner.run(NodeRegistry.of(nodes), pack,
+                pack.regimes().get(inputs.regime()), inputs);
+        boolean provisional = result.trace().stream()
+                .anyMatch(line -> line.provenance().verificationLevel() == VerificationLevel.UNVERIFIED);
+        return new ShippedPipelineRun(result, provisional);
+    }
+
+    /**
      * A T6 case with one employment's basic pay added, its set-off order resolved by recomputation over the whole
      * shipped pipeline, through the real total-income node to net payable (D-221).
      */
