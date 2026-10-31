@@ -1,7 +1,7 @@
 {
   "ruleId": "DED-HEALTH-CASH-PERMITTED",
   "ruleSet": "RS-DED-HEALTH-CASH-PERMITTED",
-  "_note": "The kinds of health payment that may be paid in cash: a preventive health check-up only. TY 2026-27: Income-tax Act, 2025 s.126(9)(a), as DED-HEALTH-CHECKUP's note states it (\"Cash is allowed for a check-up\"); TY 2025-26: Income-tax Act, 1961 s.80D(2B), payment by \"(i) any mode, including cash\" for a check-up and \"(ii) any mode other than cash in all other cases\" (sources/2026-10-07-chapter-via.md B12). A payment in cash of a kind this row does not reach is refused. Conditions only, on health.kind; provenance and introduction are DED-HEALTH-CHECKUP's (W-156b2, D-347). Old regime only, as the health rows.",
+  "_note": "The kinds of health payment that may be paid in cash: a preventive health check-up only. TY 2026-27: Income-tax Act, 2025 s.126(9)(a), as DED-HEALTH-CHECKUP's note states it (\"Cash is allowed for a check-up\"); TY 2025-26: Income-tax Act, 1961 s.80D(2B), payment by \"(i) any mode, including cash\" for a check-up and \"(ii) any mode other than cash in all other cases\" (sources/2026-10-07-chapter-via.md B12). A payment in cash of a kind this row does not reach is disallowed, with a nil line naming this row (W-196, D-412). Conditions only, on health.kind; provenance and introduction are DED-HEALTH-CHECKUP's (W-156b2, D-347). Old regime only, as the health rows.",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [

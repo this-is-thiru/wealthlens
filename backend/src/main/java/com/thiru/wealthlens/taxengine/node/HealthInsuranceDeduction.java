@@ -44,8 +44,9 @@ import java.util.Set;
  * own ceiling; the check-up limit first, across both, its allowance split between them in the ratio claimed (G2.3's
  * reading). A bucket takes its senior-citizen row where a premium or scheme payment in it covers a senior citizen —
  * resident in India and of the row's age at any time in the year; one premium covering a senior and a non-senior is
- * refused (OQ-18). Medical expenditure on a senior citizen for whom a premium was paid is refused (s.126(7)); so is
- * cash other than for a check-up (s.126(9)), and a lump-sum premium counts a year's fraction (s.126(8)(b), (10)).
+ * refused (OQ-18). Medical expenditure on a senior citizen for whom a premium was paid is refused (s.126(7)); cash
+ * other than for a check-up is disallowed, with a nil line naming the row that bars it (s.126(9)); a lump-sum premium
+ * counts a year's fraction (s.126(8)(b), (10)).
  */
 final class HealthInsuranceDeduction {
 
@@ -120,8 +121,8 @@ final class HealthInsuranceDeduction {
         for (Bucket bucket : Bucket.values()) {
             buckets.put(bucket, new Paid());
         }
-        payments.forEach(payment -> record(ctx, payment, payments, buckets));
         List<TraceLine> lines = new ArrayList<>();
+        payments.forEach(payment -> record(ctx, payment, payments, buckets, firstSequence, lines));
         allocateCheckups(ctx, buckets, firstSequence, lines);
         for (Bucket bucket : Bucket.values()) {
             bucketLine(ctx, bucket, buckets.get(bucket), firstSequence, lines);
@@ -130,13 +131,17 @@ final class HealthInsuranceDeduction {
     }
 
     private static void record(NodeContext ctx, HealthPayment payment, List<HealthPayment> all,
-            Map<Bucket, Paid> buckets) {
-        if (payment.paidInCash()) {
-            requireReached(ctx, RuleSetIds.RS_DED_HEALTH_CASH_PERMITTED, payment, "paid in cash");
+            Map<Bucket, Paid> buckets, int firstSequence, List<TraceLine> lines) {
+        if (payment.paidInCash() && !RowReach.holdsFor(ctx, ctx.ruleOf(RuleSetIds.RS_DED_HEALTH_CASH_PERMITTED),
+                kindOf(payment))) {
+            RuleId row = ctx.ruleIdOf(RuleSetIds.RS_DED_HEALTH_CASH_PERMITTED);
+            lines.add(ctx.traceLine(firstSequence + lines.size(), row, StepKind.DEDUCTION, payment.amount(),
+                            Money.ZERO)
+                    .withLimitedBy("paid in cash, which " + row + " does not allow for a " + payment.kind()));
+            return;
         }
         if (payment.relevantTaxYears() > 1) {
-            requireReached(ctx, RuleSetIds.RS_DED_HEALTH_SPREAD, payment,
-                    "spread over " + payment.relevantTaxYears() + " tax years");
+            requireSpread(ctx, payment);
         }
         Bucket bucket = bucketOf(ctx, payment);
         Paid paid = buckets.get(bucket);
@@ -153,12 +158,15 @@ final class HealthInsuranceDeduction {
         }
     }
 
-    /** Refuses a payment whose kind the row does not reach for what was done with it (s.126(8)(b), (9)). */
-    private static void requireReached(NodeContext ctx, RuleSetId set, HealthPayment payment, String what) {
-        RuleRow row = ctx.ruleOf(set);
+    /**
+     * Refuses a payment whose kind the row does not reach for being spread over its years (s.126(8)(b), (10)) — an
+     * input the engine cannot reinterpret, not a deduction the law disallows (W-196, D-412).
+     */
+    private static void requireSpread(NodeContext ctx, HealthPayment payment) {
+        RuleRow row = ctx.ruleOf(RuleSetIds.RS_DED_HEALTH_SPREAD);
         if (!RowReach.holdsFor(ctx, row, kindOf(payment))) {
-            throw new IllegalArgumentException("A " + payment.kind() + " of " + payment.amount() + " was " + what
-                    + ", which " + row.id() + " does not allow for it");
+            throw new IllegalArgumentException("A " + payment.kind() + " of " + payment.amount() + " was spread over "
+                    + payment.relevantTaxYears() + " tax years, which " + row.id() + " does not allow for it");
         }
     }
 

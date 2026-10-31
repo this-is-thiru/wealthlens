@@ -234,23 +234,59 @@ class HealthInsuranceDeductionTest {
     }
 
     @Test
-    void evaluate_whenAPremiumIsPaidInCash_isRefused() {
-        // When / Then — s.126(9)
-        assertThatThrownBy(() -> run(OLD,
-                        new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), Money.of("10000"), true,
-                                1)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(RuleIds.DED_HEALTH_CASH_PERMITTED.value());
+    void evaluate_whenAPremiumIsPaidInCash_givesANilLineNamingTheCashRow() {
+        // When — s.126(9): cash is allowed only for a check-up (W-196, D-412)
+        NodeResult result = run(OLD,
+                new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), Money.of("10000"), true, 1));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.DED_HEALTH_CASH_PERMITTED);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("10000")));
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+            assertThat(line.limitedBy()).hasValueSatisfying(reason ->
+                    assertThat(reason).contains(RuleIds.DED_HEALTH_CASH_PERMITTED.value()));
+        });
     }
 
     @Test
-    void evaluate_whenMedicalExpenditureIsPaidInCash_isRefusedNamingTheCashRow() {
-        // When / Then — s.126(9)(a): cash for a check-up only (W-156b2)
+    void evaluate_whenMedicalExpenditureIsPaidInCash_givesANilLineNamingTheCashRow() {
+        // When — s.126(9)(a): cash for a check-up only (W-196, D-412)
+        NodeResult result = run(OLD,
+                new HealthPayment(HealthPaymentKind.MEDICAL_EXPENDITURE, true, List.of(), Money.of("10000"), true, 1));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.ZERO));
+        assertThat(result.trace()).singleElement().satisfies(line -> {
+            assertThat(line.rule()).isEqualTo(RuleIds.DED_HEALTH_CASH_PERMITTED);
+            assertThat(line.in()).isEqualTo(MoneyValue.of(Money.of("10000")));
+            assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO));
+        });
+    }
+
+    @Test
+    void evaluate_whenACashPremiumIsBarredAndACheckUpIsAllowed_deductsTheCheckUpOnly() {
+        // When — the barred 10,000 counts for nothing, the 3,000 check-up within s.126(3)'s limit (W-196)
+        NodeResult result = run(OLD,
+                new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), Money.of("10000"), true, 1),
+                self(HealthPaymentKind.PREVENTIVE_CHECKUP, "3000"));
+
+        // Then
+        assertThat(result.value()).isEqualTo(MoneyValue.of(Money.of("3000")));
+        assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.DED_HEALTH_CASH_PERMITTED))
+                .singleElement().satisfies(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO)));
+    }
+
+    @Test
+    void evaluate_whenACashPremiumCoversAnInsuredSeniorParentsMedicalExpenditureIsClaimed_stillRefuses() {
+        // When / Then — s.126(7): an amount was paid, though not deductible (W-196, C3a)
         assertThatThrownBy(() -> run(OLD,
-                        new HealthPayment(HealthPaymentKind.MEDICAL_EXPENDITURE, true, List.of(), Money.of("10000"),
-                                true, 1)))
+                        new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, false, List.of(0), Money.of("45000"), true,
+                                1),
+                        forMembers(HealthPaymentKind.MEDICAL_EXPENDITURE, "10000", 0)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(RuleIds.DED_HEALTH_CASH_PERMITTED.value());
+                .hasMessageContaining(RuleIds.DED_HEALTH_INSURANCE_PAID.value());
     }
 
     @Test
