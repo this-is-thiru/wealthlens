@@ -353,6 +353,54 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
                 || response.getStatusCode().value() == HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
+    @Test
+    void addTransaction_goldBondWhenNoMaturityDate_expected400() {
+        String token = generateToken(TEST_EMAIL);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setAssetType(AssetType.GOLD_BOND);
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AssetRequest> entity = new HttpEntity<>(request, headers);
+
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertTrue(response.getBody().contains("A GOLD_BOND needs its MATURITY DATE; it is not assumed"));
+        assertEquals(0, mongoTemplate.count(
+                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
+                TransactionEntity.class, "transactions"),
+                "the refusal must come before any write");
+    }
+
+    @Test
+    void addTransaction_goldBondWhenMaturityDate_expectedStoredOnTheTransaction() {
+        String token = generateToken(TEST_EMAIL);
+        LocalDate maturityDate = LocalDate.of(2032, 2, 20);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setAssetType(AssetType.GOLD_BOND);
+        request.setMaturityDate(maturityDate);
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AssetRequest> entity = new HttpEntity<>(request, headers);
+
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        TransactionEntity stored = mongoTemplate.findOne(
+                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
+                TransactionEntity.class, "transactions");
+        assertNotNull(stored);
+        assertEquals(maturityDate, stored.getMaturityDate());
+    }
+
     // ============================================================
     // uploadTransactions
     // ============================================================
@@ -1212,6 +1260,54 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         // the type no longer exists.
         assertEquals(0, mongoTemplate.getCollection("user_broker_charges").countDocuments(),
                 "nothing may write the superseded implementation's collection");
+    }
+
+    @Test
+    void addTransactionV2_goldBondWhenNoMaturityDate_expected400() {
+        String token = generateToken(TEST_EMAIL);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setAssetType(AssetType.GOLD_BOND);
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AssetRequest> entity = new HttpEntity<>(request, headers);
+
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertTrue(response.getBody().contains("A GOLD_BOND needs its MATURITY DATE; it is not assumed"));
+        assertEquals(0, mongoTemplate.count(
+                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
+                TransactionEntity.class, "transactions"),
+                "the refusal must come before any write");
+    }
+
+    @Test
+    void addTransactionV2_goldBondWhenMaturityDate_expectedStoredOnTheTransaction() {
+        String token = generateToken(TEST_EMAIL);
+        LocalDate maturityDate = LocalDate.of(2032, 2, 20);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setAssetType(AssetType.GOLD_BOND);
+        request.setMaturityDate(maturityDate);
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AssetRequest> entity = new HttpEntity<>(request, headers);
+
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        TransactionEntity stored = mongoTemplate.findOne(
+                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
+                TransactionEntity.class, "transactions");
+        assertNotNull(stored);
+        assertEquals(maturityDate, stored.getMaturityDate());
     }
 
 

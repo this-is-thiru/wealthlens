@@ -30,6 +30,7 @@ import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import com.thiru.wealthlens.shared.util.math.DoubleUtil;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
+import com.thiru.wealthlens.shared.util.transaction.ExcelHeaders;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -168,6 +169,11 @@ public class PortfolioService {
      *
      * <p>Zero price is deliberately allowed. Bonus shares and split allotments are issued free, and
      * refusing them here would block the corporate-action flow that creates them.
+     *
+     * <p>A Gold Bond's maturity is a fact of the tranche it belongs to; no instrument data is held to
+     * read it from, so the trade carries it rather than have one assumed (D-315 T5). The Excel upload
+     * enforces the same rule per row ({@code AssetRequestParser.setMaturityDate}); this is its JSON
+     * twin, at the one point both trade paths pass (D-386).
      */
     private static void validateAssetRequest(UserMail userMail, AssetRequest assetRequest) {
         String requestEmail = assetRequest.getEmail();
@@ -190,6 +196,11 @@ public class PortfolioService {
                     "A trade cannot be dated in the future: " + transactionDate + ". It would be priced "
                             + "against whichever rate card is open-ended today rather than the one in force "
                             + "when it settles");
+        }
+
+        if (assetRequest.getAssetType() == AssetType.GOLD_BOND && assetRequest.getMaturityDate() == null) {
+            throw new BadRequestException(
+                    "A GOLD_BOND needs its " + ExcelHeaders.MATURITY_DATE + "; it is not assumed");
         }
     }
 
