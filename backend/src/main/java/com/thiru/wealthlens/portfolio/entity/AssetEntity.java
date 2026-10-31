@@ -1,6 +1,8 @@
 package com.thiru.wealthlens.portfolio.entity;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
@@ -29,7 +31,8 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Document(value = "assets")
-@AllArgsConstructor
+// A body binds through the no-arg constructor, so an omitted field keeps its initialiser (W-205).
+@AllArgsConstructor(onConstructor_ = @JsonCreator(mode = JsonCreator.Mode.DISABLED))
 @NoArgsConstructor
 @Data
 public class AssetEntity implements AuditableEntity {
@@ -141,6 +144,7 @@ public class AssetEntity implements AuditableEntity {
 
     @Field("audit_metadata")
     @Setter(value = AccessLevel.NONE)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private AuditMetadata auditMetadata = new AuditMetadata();
 
     // this email we can't accept from the request payload, we are formatting this through the code

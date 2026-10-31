@@ -4,17 +4,19 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-205 — READY (placed by W-204; next on the board after W-204)
-Stage           : W-204 committed (stage 6 done); nothing in flight
-Plan            : — (write plans/W-205.md on "start W-205")
+Item            : W-194 — not started (the owner's decision first: an audit record of the per-bucket term)
+Stage           : nothing in flight; W-205 committed
+Plan            : none yet
 Approved        : —
 Steps done      : —
-Next step       : resume: Resume check; then on "start W-205": board order (R4: W-204 D  W-205 ·); READ the W-205 row; write plans/W-205.md; STOP
-Last verify     : W-204 — probe rate card 200, transact 200 (after seed); unit 3819/0; integration 314/0 (2026-10-31)
-Waiting on      : the owner — "start W-205"; OQ-32, OQ-33, OQ-34 open
-Files touched   : (none)
-Last item commit: taxplanning W-204: complete the two api-collection requests Jackson 3 refuses — an omitted field reaches the Lombok all-args constructor as null; the rate card is plan-scoped past the shipped card (D-408)
-Updated         : 2026-10-31, session 41 — W-204 committed; next W-205
+Next step       : on "start W-194": run the resume check; the board order puts W-194 first; read the row
+                  (03-WORK-ITEMS.md) and the docs it names; write plans/W-194.md (a decision item — explain, no
+                  build until decided); board `W-194 ·` → `E`; update this file; STOP — no coding
+Last verify     : W-205: unit 3819/0; integration 319/0; failing-first 2 errors + 2 failures then 5/0 (2026-10-31)
+Waiting on      : the owner — OQ-32, OQ-33, OQ-34 open; W-206 placed for the request-DTO redesign, the owner's to place
+Files touched   : none — W-205's files are in the last item commit
+Last item commit: taxplanning W-205: bind the six request-bound entities through the no-arg constructor — an omitted field arrived null (a sell 500, a published card with no author); a body could also write the author (D-409)
+Updated         : 2026-10-31, session 41 — W-205 done (D-409); STOPPED
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

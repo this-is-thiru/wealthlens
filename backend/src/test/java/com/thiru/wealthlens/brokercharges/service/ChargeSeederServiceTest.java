@@ -262,10 +262,10 @@ class ChargeSeederServiceTest {
     @Test
     void seed_handsEveryDocumentToMongoWithSomethingAuditingCanFill() {
         // Given — Spring Data's auditing populates an AuditMetadata; it does not create one. A card
-        // Jackson built through @AllArgsConstructor carries null there, because Lombok stamps
-        // @ConstructorProperties on it and Jackson honours that as a creator, so the field
-        // initialiser never runs. Seeded cards were saved with no audit metadata at all while every
-        // normally-built entity in this application records who wrote it.
+        // Jackson built through @AllArgsConstructor carries null there, because Jackson 3's
+        // constructor detector prefers the visible all-args constructor even over a no-arg one, so
+        // the field initialiser never runs. Seeded cards were saved with no audit metadata at all
+        // while every normally-built entity in this application records who wrote it.
         //
         // Who and when is Spring's job and is asserted against a real database in
         // ChargesIntegrationTest. What this pins is the precondition it needs.

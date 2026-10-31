@@ -63,6 +63,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * The charges engine against a real MongoDB and a real HTTP stack.
@@ -109,6 +111,9 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private ChargeSeederService chargeSeederService;
+
+    @Autowired
+    private ObjectMapper mvcMapper;
 
     @BeforeEach
     void seedOneKnownRateCard() {
@@ -515,6 +520,24 @@ class ChargesIntegrationTest extends AbstractIntegrationTest {
         assertMoney(0.00, old.amountOf("BROKERAGE"));
         assertThat(recent.scheduleCode()).isEqualTo("IT_EQ_2026");
         assertMoney(5.00, recent.amountOf("BROKERAGE"));
+    }
+
+    @Test
+    void publishEndpoint_whenTheBodyOmitsAuditMetadata_stampsTheCaller() {
+        // Given — the api-collection body carries no auditMetadata, and the server must still record who
+        // published the card: Spring Data's auditing fills an object, it does not create one (W-205).
+        ChargeScheduleEntity card = equityCard("IT_EQ_AUDIT_2026", LocalDate.of(2026, 1, 1), null, 0.0);
+        ObjectNode body = (ObjectNode) mvcMapper.readTree(mvcMapper.writeValueAsString(card));
+        body.remove("auditMetadata");
+
+        // When
+        ResponseEntity<String> response = post("/charge-schedules", adminToken(), body.toString());
+
+        // Then
+        assertThat(response.getStatusCode().value()).isEqualTo(HttpStatus.OK.value());
+        ChargeScheduleEntity stored = scheduleRepository.findByScheduleCode("IT_EQ_AUDIT_2026").orElseThrow();
+        assertThat(stored.getAuditMetadata().getCreatedBy()).isEqualTo(EMAIL);
+        assertThat(stored.getAuditMetadata().getCreatedAt()).isNotNull();
     }
 
     @Test

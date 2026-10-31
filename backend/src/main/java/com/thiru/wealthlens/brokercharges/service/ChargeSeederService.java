@@ -323,12 +323,14 @@ public class ChargeSeederService {
     /**
      * Reads a seed file into an instance this method constructs, rather than one Jackson does.
      *
-     * <p>That is not a style preference. Lombok puts {@code @ConstructorProperties} on
-     * {@code @AllArgsConstructor}, Jackson honours it as a creator, and a card built through it has
-     * a <em>null</em> {@code auditMetadata} where a card built through the no-arg constructor has an
-     * empty one. Spring Data's auditing fills an object; it does not create one. So a seeded card
-     * used to be saved with no audit metadata at all, while every entity this application builds
-     * normally — a transaction, say — records who wrote it and when.
+     * <p>That is not a style preference. Jackson 3's constructor detector builds a Lombok class
+     * through its visible all-args constructor by default, even when a public no-arg constructor
+     * exists ({@code ConstructorDetector.DEFAULT} — the compiled entity carries no
+     * {@code @ConstructorProperties}), and a card built through it has a <em>null</em>
+     * {@code auditMetadata} where a card built through the no-arg constructor has an empty one.
+     * Spring Data's auditing fills an object; it does not create one. So a seeded card used to be
+     * saved with no audit metadata at all, while every entity this application builds normally — a
+     * transaction, say — records who wrote it and when.
      *
      * <p>Updating a pre-built instance keeps the initialiser and gives auditing something to write
      * into. Nothing here sets a single audit field: {@code SecurityAuditorAware} and
