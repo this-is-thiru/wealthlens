@@ -4,17 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-204 — READY (next on the board after W-203)
-Stage           : W-203 committed (stage 6 done); nothing in flight
-Plan            : — (write plans/W-204.md on "start W-204")
+Item            : W-205 — READY (placed by W-204; next on the board after W-204)
+Stage           : W-204 committed (stage 6 done); nothing in flight
+Plan            : — (write plans/W-205.md on "start W-205")
 Approved        : —
 Steps done      : —
-Next step       : resume: Resume check; then on "start W-204": board order (R4: W-203 D  W-204 ·); READ the W-204 row; write plans/W-204.md; STOP
-Last verify     : W-203 — charge 49/0, policy 5/0; unit 3819/0; integration 314/0 (2026-10-31)
-Waiting on      : the owner — "start W-204"; OQ-32, OQ-33, OQ-34 open
+Next step       : resume: Resume check; then on "start W-205": board order (R4: W-204 D  W-205 ·); READ the W-205 row; write plans/W-205.md; STOP
+Last verify     : W-204 — probe rate card 200, transact 200 (after seed); unit 3819/0; integration 314/0 (2026-10-31)
+Waiting on      : the owner — "start W-205"; OQ-32, OQ-33, OQ-34 open
 Files touched   : (none)
-Last item commit: taxplanning W-203: make both seeders refuse an unknown key and drop currency from the 39 cards — Jackson 3 ignores an unknown key by default, so a misspelt field seeded a card silently incomplete (D-407)
-Updated         : 2026-10-31, session 41 — W-203 committed; next W-204
+Last item commit: taxplanning W-204: complete the two api-collection requests Jackson 3 refuses — an omitted field reaches the Lombok all-args constructor as null; the rate card is plan-scoped past the shipped card (D-408)
+Updated         : 2026-10-31, session 41 — W-204 committed; next W-205
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
