@@ -4,23 +4,23 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-185 — not started (the next item on the board, after W-198)
-Stage           : idle; nothing in flight; no code
-Plan            : —
-Approved        : —
-Steps done      : —
-Next step       : start W-185 (the IPFT line on the thirteen 2026-03 broker cards — the 0.01 per
-                  crore per side from 1-3-2026, a separate contribution beside the transaction
-                  charge): the resume check, the board order, the row and its named docs,
-                  plans/W-185.md, the board `·` → `E`, update this file, STOP
-Last verify     : W-198: targeted 124/0, unit 3821/0, integration 319/0, dump 0 real differences of
-                  338,990; law relocked 2025-26.law.118 / 2026-27.law.121 (2026-10-31)
-Waiting on      : the owner — the commit of these post-commit state lines; OQ-32, OQ-33, OQ-34 open;
-                  W-206 (request DTOs) and W-207 (a non-premium's multi-year sum) placed · at the
-                  queue's end
-Files touched   : none — the post-commit lines are in 9dac3513, so a clean tree here is expected
+Item            : W-185 — BUILT, not committed (the IPFT line on the thirteen 2026-03 cards)
+Stage           : 6 of 6 done; awaiting the owner's commit
+Plan            : plans/W-185.md — built C1a, C2a, C3a, C4b
+Approved        : "W-185 approved C1a C2a C3a C4b" (2026-10-31)
+Steps done      : both; D-415 recorded in STATE, Built note in the WI row
+Next step       : on the owner's "commit it", stage exactly the files under "Files touched" and
+                  commit; then start W-186 (clearing charges) from a fresh resume check
+Last verify     : targeted 170/0, unit 3822/0, integration 319/0 (2026-10-31); failing first 8,
+                  bite probe bit and was reverted; no Java, no relock, no dump
+Waiting on      : the owner — the commit; whether the resume check's grep should change (a
+                  docs-only state line returns in place of the item commit); OQ-32, OQ-33, OQ-34
+Files touched   : 13 cards under backend/src/main/resources/data/charges/*-2026-03-01.json and
+                  zerodha-equity-delivery-2026-06-01.json; 7 edited + 1 new (…-sell-1cr-on-the-stt-
+                  change.json) golden fixtures; docs/charges-engine/ac2-rate-verification.md;
+                  docs/charges-engine/staging-runbook.md; 03-WORK-ITEMS.md; STATE.md; plans/W-185.md
 Last item commit: taxplanning W-198: count a set's basis row as reached and drop the two one-row regime sets — their rows are reached through the set resting on them, not by a node, so the sets existed only for an overstated rule (D-414)
-Updated         : 2026-10-31, session 42 — W-198 committed as f4e5c3e3, the state lines as 9dac3513; next W-185
+Updated         : 2026-10-31, session 43 — W-185 built (D-415), all green, awaiting the commit
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
@@ -31,3 +31,8 @@ git status --short                              # must list exactly "Files touch
 ```
 
 Mismatch → stop and report both outputs. Match → do **Next step** and nothing else.
+
+*Known false mismatch:* after a docs-only post-commit state line, the grep returns that state-line commit
+(`9dac3513`, `47b099d6` for W-198) rather than the item commit, because the state lines carry the item prefix
+too. Compare the **item** commit named above; the tree, not the grep, is what decides. (Raised for a row in
+`plans/W-185.md`, Risks.)

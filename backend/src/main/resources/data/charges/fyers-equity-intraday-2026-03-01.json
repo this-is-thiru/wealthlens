@@ -10,7 +10,7 @@
   "status": "ACTIVE",
   "requiresInstrumentProfile": false,
   "sourceUrl": "https://fyers.in/charges-list",
-  "verifiedOn": "2026-10-28",
+  "verifiedOn": "2026-10-30",
   "rules": [
     {
       "code": "BROKERAGE",
@@ -48,7 +48,7 @@
       "taxable": true,
       "active": true,
       "order": 30,
-      "notes": "NSE cash market transaction charge, revised to 0.0030699% (Rs 306.99 each side per crore) with effect from 2026-03-01 (NSE circular NSE/FA/73061 of 2026-02-27). The preceding card carries 0.00297%, which is what applied from 2024-10-01 until then (NSE/FA/64232). The same circular cut the separate IPFT contribution to Rs 0.01 per crore; this card's IPFT line is W-185."
+      "notes": "NSE cash market transaction charge, revised to 0.0030699% (Rs 306.99 each side per crore) with effect from 2026-03-01 (NSE circular NSE/FA/73061 of 2026-02-27). The preceding card carries 0.00297%, which is what applied from 2024-10-01 until then (NSE/FA/64232). The same circular cut the separate IPFT contribution to Rs 0.01 per crore, which this card carries on its own IPFT line at 0.0000001%."
     },
     {
       "code": "IPFT",
@@ -61,12 +61,12 @@
         "BUY",
         "SELL"
       ],
-      "rate": 0.0001,
+      "rate": 0.0000001,
       "rounding": "HALF_UP_2",
       "taxable": true,
       "active": true,
       "order": 50,
-      "notes": "NSE Investor Protection Fund Trust, Rs 10 per crore of traded value, raised from Rs 0.01 per crore with effect from 2023-04-01. Zerodha's and Fyers' charges pages still print the pre-2023 figure; Upstox's states Rs 0.10 per lakh, which is the same thing. Verified against the revision rather than the pages, by the repository owner's decision of 2026-09-08."
+      "notes": "NSE Investor Protection Fund Trust, Rs 0.01 per crore of traded value from 2026-03-01, a separate contribution beside the transaction charge (NSE circular NSE/FA/73061 of 2026-02-27); Rs 10 per crore applied from 2023-04-01 until 2026-02-28 (NSE/FA/56129). Read 2026-10-30; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md rows 14 and N3 (W-185)."
     }
   ]
 }

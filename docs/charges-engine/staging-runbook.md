@@ -127,7 +127,7 @@ cards, which name no broker; the engine prices them beside the broker's card.
 | `ZERODHA_MAINTENANCE_2025_04` | unscoped | 2025-04-01 → open |
 | `UPSTOX_MF_2025_04`, `FYERS_MF_2025_04` | MUTUAL_FUND | 2025-04-01 → open (W-177) |
 | `UPSTOX_MAINTENANCE_2025_04` (₹300), `FYERS_MAINTENANCE_2025_04` (₹0) | unscoped | 2025-04-01 → open (W-177) |
-| `{ZERODHA,UPSTOX,FYERS}_EQ_FUTURES_2025_04` / `_2026_03` | EQUITY / FUTURES | split at 2026-03-01, when NSE folded IPFT into its rate (W-178) |
+| `{ZERODHA,UPSTOX,FYERS}_EQ_FUTURES_2025_04` / `_2026_03` | EQUITY / FUTURES | split at 2026-03-01: the transaction charge was revised then, and the separate IPFT contribution rolled back from ₹10 to ₹0.01 per crore the same day (W-178, W-185 — it was not folded into the rate) |
 | `{ZERODHA,UPSTOX,FYERS}_EQ_OPTIONS_2025_04` / `_2026_03` | EQUITY / OPTIONS, on premium | split at 2026-03-01 (W-178) |
 | `STATUTORY_EQ_DELIVERY_2025_04` | EQUITY / DELIVERY, no broker | 2025-04-01 → open |
 | `STATUTORY_EQ_INTRADAY_2025_04` | EQUITY / INTRADAY, no broker | 2025-04-01 → open |
