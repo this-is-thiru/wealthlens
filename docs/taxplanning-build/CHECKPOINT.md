@@ -4,23 +4,20 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-196 — BUILT, awaiting the owner's instruction to commit
-Stage           : code, tests, pack note and docs done; unit 3821/0, integration 319/0; staged, not committed
-Plan            : plans/W-196.md (C1a cash → nil line, C2a spreading stays a refusal + a row
-                  placed, C3a a barred premium still bars a senior's medical expenditure)
-Approved        : "W-196 approved C1a C2a C3a" (2026-10-31)
-Steps done      : 1–3 (build, probes and both tiers, close-out docs); the commit is not done
-Next step       : on the owner's instruction, commit the eight staged paths; then start W-197
-                  (`PaidOtherThanInCash` unused: wire it to the cash bar or remove it) — the
-                  resume check, the board order, plans/W-197.md, the board `·` → `E`, STOP
+Item            : W-197 — not started (the next item on the board, after W-196)
+Stage           : idle; nothing in flight; no code
+Plan            : —
+Approved        : —
+Steps done      : —
+Next step       : start W-197 (`PaidOtherThanInCash` unused: wire it to the cash bar or remove
+                  it) — the resume check, the board order, read the row and its named docs,
+                  plans/W-197.md, the board `·` → `E`, update this file, STOP
 Last verify     : W-196: unit 3821/0, integration 319/0 (2026-10-31)
 Waiting on      : the owner — OQ-32, OQ-33, OQ-34 open; W-206 (request DTOs) and W-207 (a
                   non-premium's multi-year sum) placed · at the queue's end, the owner's to place
-Files touched   : HealthInsuranceDeduction.java, DED-HEALTH-CASH-PERMITTED.json,
-                  HealthInsuranceDeductionTest.java, 02-TECH-SPEC.md, 03-WORK-ITEMS.md,
-                  STATE.md, this file, plans/W-196.md (new)
-Last item commit: taxplanning W-195: keep §2.5's export as the history and remove the old stored term labels — the label came from the duplicate law with no rule, pack or year, so it is not an audit record (D-411)
-Updated         : 2026-10-31, session 42 — W-196 built and staged; the commit is the owner's to call
+Files touched   : this file and STATE.md (the post-commit state lines, awaiting the owner's word)
+Last item commit: taxplanning W-196: give a cash-barred health payment a nil line naming the row, and keep the spreading refusal — the law bars cash, it does not bar a multi-year sum the scheme limb allows (D-412)
+Updated         : 2026-10-31, session 42 — W-196 committed as 1db76af5 on the owner's "approved"; next W-197
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
