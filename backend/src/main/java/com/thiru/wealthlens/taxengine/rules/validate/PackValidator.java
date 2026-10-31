@@ -84,7 +84,7 @@ public final class PackValidator {
         checkMidYearChangesAreDeclared(pack, problems);          // I14
         checkEveryVersionHasAnAmendment(pack, problems);         // I15
         checkRequiredRuleSetsHoldARow(pack, problems);           // D-252
-        checkEveryRuleIsInARuleSet(pack, problems);              // D-252
+        checkEveryRuleIsReached(pack, problems);                 // D-252
         CapitalGainsPartReferences.check(pack, problems);        // D-309
 
         if (!problems.isEmpty()) {
@@ -94,12 +94,20 @@ public final class PackValidator {
         }
     }
 
-    /** D-252 — a node reaches a row only through its set, so a row in none would be dead and silent about it. */
-    private static void checkEveryRuleIsInARuleSet(RulePack pack, List<String> problems) {
-        Set<RuleId> inASet = pack.membersOf(pack.ruleSets().keySet());
+    /**
+     * D-252 — a row is reached one of two ways, and a row in neither would be dead and silent about it: a node
+     * reaches it as a member of the set it names, and an explanation reaches a basis row through the set resting on
+     * it ({@link DisallowanceSet#basis()}, {@link ConditionSet#basis()}) — a basis row defines no amount, so no node
+     * evaluates it (W-198).
+     */
+    private static void checkEveryRuleIsReached(RulePack pack, List<String> problems) {
+        Set<RuleId> reached = new LinkedHashSet<>(pack.membersOf(pack.ruleSets().keySet()));
+        pack.disallowanceSets().values().forEach(set -> reached.add(set.basis()));
+        pack.conditionSets().values().forEach(set -> reached.add(set.basis()));
         pack.rules().keySet().stream()
-                .filter(rule -> !inASet.contains(rule))
-                .map(rule -> "rule " + rule + " names no rule set; a node reaches a row only through its set")
+                .filter(rule -> !reached.contains(rule))
+                .map(rule -> "rule " + rule + " names no rule set and is no set's basis; a node reaches a row"
+                        + " through its set, an explanation through the set's basis")
                 .sorted()
                 .forEach(problems::add);
     }

@@ -280,19 +280,42 @@ class PackValidatorTest {
     @DisplayName("D-252 — every row is reached through a rule set")
     class RuleSets {
 
-        @Test
-        void validate_whenARuleIsInNoSet_isRefusedNamingIt() {
-            // Given — the slab rule's set dropped, so no set holds it
-            RulePack whole = validPack().build();
+        /** The same pack with the set holding {@code rule} dropped, so the row names no set. */
+        private static RulePack withoutSetHolding(RulePack whole, RuleId rule) {
             Map<RuleSetId, RuleSet> sets = new LinkedHashMap<>(whole.ruleSets());
-            sets.remove(new RuleSetId("RS-" + SLAB.value()));
-            RulePack orphaned = new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(), sets,
+            sets.remove(new RuleSetId("RS-" + rule.value()));
+            return new RulePack(whole.taxYear(), whole.layers(), whole.instruments(), whole.rules(), sets,
                     whole.components(), whole.regimes(), whole.disallowanceSets(), whole.conditionSets());
+        }
+
+        @Test
+        void validate_whenARuleIsInNoSetAndIsNoSetsBasis_isRefusedNamingIt() {
+            // Given — the slab rule's set dropped, so nothing reaches it
+            RulePack orphaned = withoutSetHolding(validPack().build(), SLAB);
 
             // When / Then
             assertThatThrownBy(() -> PackValidator.validate(orphaned))
                     .isInstanceOf(PackValidationException.class)
-                    .hasMessageContaining("rule RATE-SLAB-NEW-TAX-REGIME names no rule set");
+                    .hasMessageContaining("rule RATE-SLAB-NEW-TAX-REGIME names no rule set")
+                    .hasMessageContaining("is no set's basis");
+        }
+
+        @Test
+        void validate_whenADisallowanceSetsBasisIsInNoRuleSet_validates() {
+            // Given — the basis row's set dropped; the disallowance set resting on it is what reaches it
+            RulePack reachedThroughTheSet = withoutSetHolding(validPack().build(), DISALLOW);
+
+            // When / Then
+            assertThatCode(() -> PackValidator.validate(reachedThroughTheSet)).doesNotThrowAnyException();
+        }
+
+        @Test
+        void validate_whenAConditionSetsBasisIsInNoRuleSet_validates() {
+            // Given — the eligibility set's basis row outside a rule set
+            RulePack reachedThroughTheSet = withoutSetHolding(validPack().build(), ELIG);
+
+            // When / Then
+            assertThatCode(() -> PackValidator.validate(reachedThroughTheSet)).doesNotThrowAnyException();
         }
 
         @Test

@@ -58,7 +58,10 @@ public final class RuleSetJson {
                 PackJson.enumValue(node, "ground", path, SelectionGround.class), List.of());
     }
 
-    /** The row's membership; none where it names no set, which the validator refuses for a shipped pack. */
+    /**
+     * The row's membership; none where it names no set, which the validator refuses for a shipped pack unless a set
+     * rests on the row as its basis ({@code DisallowanceSet.basis()}, {@code ConditionSet.basis()}; W-198).
+     */
     private static Optional<Membership> membership(JsonNode node, String path) {
         RuleId rule = new RuleId(PackJson.text(node, "ruleId", path));
         return PackJson.optionalText(node, "ruleSet", path).map(name -> {

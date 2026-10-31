@@ -4,25 +4,25 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-197 — BUILT, awaiting the owner's instruction to commit
-Stage           : code and docs done; unit 3819/0, integration 319/0; staged, not committed
-Plan            : plans/W-197.md (C1a remove the unused `PaidOtherThanInCash` and its plumbing,
-                  C2 correct the two counts)
-Approved        : "W-197 approved C1a C2" (2026-10-31)
-Steps done      : 1–3 (build, probe and both tiers, close-out docs); the commit is not done
-Next step       : on the owner's instruction, commit the named paths; then start W-198 (the two
-                  one-row regime sets no node reads — keep with a reason, or fold): the resume check,
-                  the board order, the row and its named docs, plans/W-198.md, the board `·` → `E`, STOP
-Last verify     : W-197: unit 3819/0, integration 319/0, dump diff 0 of 338,990 (2026-10-31)
-Waiting on      : the owner — the commit of W-197; OQ-32, OQ-33, OQ-34 open; W-206 (request DTOs)
-                  and W-207 (a non-premium's multi-year sum) placed · at the queue's end
-Files touched   : Condition.java, ConditionContext.java, ConditionJson.java,
-                  MedicalTreatmentAbroadNode.java, PaidOtherThanInCash.java (deleted),
-                  ConditionTest.java, PackJsonTest.java, TaxYear2025RulePackTest.java,
-                  RegimeLifecycleTest.java, 02-TECH-SPEC.md, 03-WORK-ITEMS.md, STATE.md,
-                  this file, plans/W-197.md (new)
-Last item commit: a6c7f8c8 taxplanning W-196: record the post-commit state — CHECKPOINT moves to W-197, and the last checkpoint names the commit that now exists
-Updated         : 2026-10-31, session 42 — W-197 built and staged; the commit is the owner's to call
+Item            : W-198 — built, awaiting the owner's review and instruction to commit (approved
+                  C1a C2a; the two one-row regime sets folded into the disallowance mechanism)
+Stage           : built and verified; nothing staged
+Plan            : docs/taxplanning-build/plans/W-198.md
+Approved        : "W-198 approved C1a C2a"
+Steps done      : 1–3 (code, packs, relock, tests; both tiers; close-out docs)
+Next step       : the owner reviews the diff; on their word, stage the Files touched below and
+                  commit `<scope>: <verb> …` with no attribution line (the owner's instruction);
+                  then start W-185. No commit before the owner asks
+Last verify     : W-198: targeted 124/0, unit 3821/0, integration 319/0, dump 0 real differences
+                  of 338,990; law relocked 2025-26.law.118 / 2026-27.law.121 (2026-10-31)
+Waiting on      : the owner — the commit of W-198 (and, with it, the W-197 post-commit state lines);
+                  OQ-32, OQ-33, OQ-34 open; W-206 (request DTOs) and W-207 (a non-premium's
+                  multi-year sum) placed · at the queue's end
+Files touched   : PackValidator, RuleSetJson, RuleSetIds, rule-sets.json, the two REG-… rule files,
+                  both .lock.json, PackValidatorTest, TaxYear2025RulePackTest, RulePackLoadTest,
+                  02-TECH-SPEC.md, 03-WORK-ITEMS.md, STATE.md, plans/W-198.md (new), this file
+Last item commit: taxplanning W-197: remove the unused PaidOtherThanInCash condition — no pack row, node or catalogue entry reached it, and the engine never supplied its fact (D-413)
+Updated         : 2026-10-31, session 42 — W-198 built (D-414); next W-185 after the owner's commit
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

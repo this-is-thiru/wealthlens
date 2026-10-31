@@ -130,8 +130,6 @@ public final class RuleSetIds {
     public static final RuleSetId RS_RATE_SUR_EXCLUDING = new RuleSetId("RS-RATE-SUR-EXCLUDING");
     public static final RuleSetId RS_RATE_SUR_LIMIT = new RuleSetId("RS-RATE-SUR-LIMIT");
     public static final RuleSetId RS_REBATE = new RuleSetId("RS-REBATE");
-    public static final RuleSetId RS_REG_NEW_TAX_REGIME_NO_EXEMPTION = new RuleSetId("RS-REG-NEW-TAX-REGIME-NO-EXEMPTION");
-    public static final RuleSetId RS_REG_NEW_TAX_REGIME_NO_SETOFF = new RuleSetId("RS-REG-NEW-TAX-REGIME-NO-SETOFF");
     public static final RuleSetId RS_RET_AGGREGATE = new RuleSetId("RS-RET-AGGREGATE");
     public static final RuleSetId RS_RET_AGGREGATE_HISTORY = new RuleSetId("RS-RET-AGGREGATE-HISTORY");
     public static final RuleSetId RS_RET_BAR = new RuleSetId("RS-RET-BAR");

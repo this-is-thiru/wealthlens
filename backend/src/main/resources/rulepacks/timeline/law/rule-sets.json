@@ -698,18 +698,6 @@
       "ground": "REGIME"
     },
     {
-      "id": "RS-REG-NEW-TAX-REGIME-NO-EXEMPTION",
-      "_note": "One row: REG-NEW-TAX-REGIME-NO-EXEMPTION",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
-      "id": "RS-REG-NEW-TAX-REGIME-NO-SETOFF",
-      "_note": "One row: REG-NEW-TAX-REGIME-NO-SETOFF",
-      "selection": "EXACTLY_ONE",
-      "ground": "REGIME"
-    },
-    {
       "id": "RS-RET-AGGREGATE",
       "_note": "The notified caps across employers and years (S2 s.19(2)(a), (f)): an entry the Government caps by notification has a row; any other has none (retirement.entry, W-088m2)",
       "selection": "AT_MOST_ONE",
