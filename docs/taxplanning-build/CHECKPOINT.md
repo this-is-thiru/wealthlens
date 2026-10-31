@@ -4,7 +4,7 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088g1 — the Cost Inflation Index from 2001-02. Done (D-424), not yet committed
+Item            : W-088g1 — the Cost Inflation Index from 2001-02. Done (D-424), committed f3027724
 Stage           : 6 of 6 (REVIEWED) — nothing in flight
 Plan            : plans/W-088g1.md — approved C1a (source and decide, no pack change), C2a (a
                   capital-gains-only RATE-CG-COST-INFLATION-INDEX, added by W-088g)
@@ -21,11 +21,11 @@ Last verify     : doc guards `FinishedPlanTest,CoverageBacklogTest` 9 / 0 / 0 af
                   backend/src` empty)
 Waiting on      : the owner — this file's commit. Still open from before: the resume check's grep
                   wording; OQ-32 – OQ-37; the BSE segments for W-208 and the plan mechanism for W-210
-Files touched   : this file, STATE.md, 03-WORK-ITEMS.md, plans/W-088g1.md,
-                  sources/2026-10-31-cost-inflation-index.md — five documents, no backend path
-Last item commit: taxplanning W-088g: split the land-or-building cap into the index years and the asset kind — the provision is expressible in the pack's own vocabulary, but nothing can reach it: no AssetType is land or building, all five CG-PART rows require EQUITY, and 22 years of the Cost Inflation Index are absent (D-423)
-Updated         : 2026-10-31, session 43 — W-088g1 approved and closed; the tree is clean but for
-                  the five documents above, which the owner's commit carries
+Files touched   : this file and STATE.md only. Committed: f3027724 (the item: 5 files — the
+                  plan, the source, the WI row, STATE, CHECKPOINT)
+Last item commit: taxplanning W-088g1: source the Cost Inflation Index for every year from 2001-02 and decide its shape — all 26 years now stand on a hashed Gazette copy, and the index becomes a capital-gains-only rule added with its reader, because widening the shared table would silently lift the refusal D-115 decided and a rule no node reads is invisible to the build (D-424)
+Updated         : 2026-10-31, session 43 — W-088g1 committed as f3027724; the tree is clean but for
+                  this file and STATE, which the state-line commit carries
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
@@ -41,5 +41,5 @@ Mismatch → stop and report both outputs. Match → do **Next step** and nothin
 than the item commit named above, because state lines carry the item prefix too. Compare the **item**
 commit; the tree, not the grep, is what decides. It has fired for W-179's planning (`f461363c` against
 `866f3dd2`), W-181's (`c620ba99` against `c76dad9a`), W-182's (`592ff6a6` against `e494326f`), W-183's
-(`ac3a9fce` against `ecf681cd`), W-184's (`235d2566` against `f511544a`, then `a0fe2665`) and W-088g's
-(`c59d8223` against `c030e04f`).
+(`ac3a9fce` against `ecf681cd`), W-184's (`235d2566` against `f511544a`, then `a0fe2665`), W-088g's
+(`c59d8223` against `c030e04f`) and W-088g1's (this state line against `f3027724`).
