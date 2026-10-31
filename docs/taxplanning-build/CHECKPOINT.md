@@ -4,20 +4,18 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-088i5 — one house claim measured once over every bucket of its sale
-Stage           : 5 of 6 (AWAITING_REVIEW) — built and verified; STOP for the owner's review
-Plan            : plans/W-088i5.md — approved C1a C2a; Build record holds two wrong predictions
-Sourcing        : sources/2026-10-31-reinvestment-exemption.md rows 1-2 (no new source)
+Item            : none in flight — W-088i5 is closed (D-430), committed ad4f1c82
+Stage           : 6 of 6 (DONE) — "commit it" is the owner's review approval
+Plan            : plans/W-088i5.md — approved C1a C2a, built; Build record holds two wrong predictions
 Decisions       : D-430 — the claim's buckets measured together, losing buckets included, the exempt amount
                   shared by gain with the last taking the remainder
-Board           : `W-088g2 D  W-088i5 R  W-088g3 ·`
+Board           : `W-088g2 D  W-088i5 D  W-088g3 ·`
 Built           : ReinvestmentExemption.chargeableGainsOf + Measure; CapitalGainsNode.takenBuckets; +7 cases
-Next step       : the owner's review; on "commit it", commit the named paths below
+Next step       : W-088g3 (the land cap per land gain, D-429) — on "start W-088g3", plan and STOP
 Last verify     : class 24/0/0; unit tier 3873 / 0 / 0; integration tier 323 / 0 / 0; Checkstyle 0
-Files touched   : ReinvestmentExemption.java, CapitalGainsNode.java, HouseReinvestment.java,
-                  ReinvestmentExemptionTest.java, plans/W-088i5.md (new), 03-WORK-ITEMS.md, STATE.md, this file
-Last commit     : ecc14100 — docs(taxplanning-build): place session 43's review as thirteen backlog rows (D-429)
-Updated         : 2026-10-31, session 44 — W-088i5 built, awaiting review
+Files touched   : none
+Last commit     : ad4f1c82 — taxplanning W-088i5: measure a house claim once over every bucket of its sale
+Updated         : 2026-10-31, session 44 — W-088i5 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
