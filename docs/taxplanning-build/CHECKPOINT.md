@@ -19,9 +19,8 @@ Next step       : the owner's choice of the next item. Unblocked behind W-088i: 
                   route), W-088i3 (the charge-backs), W-088i4 (a land or building as the original asset).
                   Not startable: W-088h (needs unlisted securities mapped). Proposed earlier: W-089e
 Last verify     : unit tier 3866 / 0 / 0 (BUILD SUCCESS) at the close-out
-Files touched   : STATE.md, 03-WORK-ITEMS.md and this file — the close-out, staged and awaiting the
-                  owner's word to commit
-Last item commit: e5233041 — taxplanning W-088i: take a long-term gain put into a residential house out of the charge (2025 s.86; 1961 s.54F)
+Files touched   : this file — the post-commit state line, uncommitted
+Last commit     : c3dfbf17 — taxplanning W-088i: close out the item (item build e5233041; state line ab0ddef9)
 Updated         : 2026-10-31, session 43 — W-088i closed (D-428)
 ```
 
