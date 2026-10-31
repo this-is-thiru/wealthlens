@@ -18,9 +18,9 @@ Last verify     : W-198: targeted 124/0, unit 3821/0, integration 319/0, dump 0 
 Waiting on      : the owner — the commit of these post-commit state lines; OQ-32, OQ-33, OQ-34 open;
                   W-206 (request DTOs) and W-207 (a non-premium's multi-year sum) placed · at the
                   queue's end
-Files touched   : this file and STATE.md (the post-commit state lines, awaiting the owner's word)
+Files touched   : none — the post-commit lines are in 9dac3513, so a clean tree here is expected
 Last item commit: taxplanning W-198: count a set's basis row as reached and drop the two one-row regime sets — their rows are reached through the set resting on them, not by a node, so the sets existed only for an overstated rule (D-414)
-Updated         : 2026-10-31, session 42 — W-198 committed as f4e5c3e3; next W-185
+Updated         : 2026-10-31, session 42 — W-198 committed as f4e5c3e3, the state lines as 9dac3513; next W-185
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
