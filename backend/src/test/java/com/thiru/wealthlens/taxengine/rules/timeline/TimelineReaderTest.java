@@ -46,6 +46,7 @@ class TimelineReaderTest {
             new RuleId("CG-TERM-LAND-BUILDING"),
             new RuleId("CG-SPECULATIVE"),
             new RuleId("CG-DERIVATIVE"),
+            new RuleId("CG-EXEMPT-RESIDENTIAL-HOUSE"),
             new RuleId("CG-CHARGE-COST"),
             new RuleId("CG-CHARGE-MISC"),
             new RuleId("CG-CHARGE-STT"),

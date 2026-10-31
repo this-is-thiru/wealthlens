@@ -33,7 +33,8 @@ import java.util.function.Predicate;
  * Income under "Capital gains", part by part, after the head's own losses (S2 s.108(2); 1961 s.70(2), (3); D-243).
  *
  * <p>Each bucket's gain is its consideration less its cost less the charges {@link CapitalGainsCharges}' rows deduct
- * (2025 s.72; 1961 s.48; W-162a). Each bucket of {@link CapitalGainsInput} belongs to the {@link CapitalGainsPart} the row of {@code RS-CG-PART} its
+ * (2025 s.72; 1961 s.48; W-162a), and so much of a long-term gain as the taxpayer put into a residential house is
+ * taken out of it before the part is chosen ({@link ReinvestmentExemption}; 2025 s.86; 1961 s.54F; W-088i). Each bucket of {@link CapitalGainsInput} belongs to the {@link CapitalGainsPart} the row of {@code RS-CG-PART} its
  * facts meet names (D-289), its STT read through {@link CapitalGainsStt} (D-298): which gains a special rate charges is the rule data's, and a bucket no row covers is refused
  * rather than charged with total income; whether the head takes a bucket at all is {@link CapitalGainsScope}'s rows'
  * (W-160a). A
@@ -83,7 +84,7 @@ public final class CapitalGainsNode implements ComputationNode {
         return Set.of(ROW, PARTS, DeclaredCapitalGainsParts.PARTS, CapitalGainsStt.CHARGEABILITY,
                 CapitalGainsTerm.HOLDING_PERIOD, CapitalGainsScope.NOT_COMPUTED, CapitalGainsScope.ELSEWHERE,
                 CapitalGainsCharges.DEDUCTIONS, CapitalGainsIndexation.QUALIFIER,
-                RuleSetIds.RS_RATE_CG_COST_INFLATION_INDEX);
+                RuleSetIds.RS_RATE_CG_COST_INFLATION_INDEX, ReinvestmentExemption.EXEMPTION);
     }
 
     @Override
@@ -95,15 +96,19 @@ public final class CapitalGainsNode implements ComputationNode {
         Map<CapitalGainsPart, Money> indexedNet = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
-            Money gain = CapitalGainsCharges.gainOf(ctx, bucket, lines);
+            CapitalGainsCharges.Gain charges = CapitalGainsCharges.gainOf(ctx, bucket, lines);
+            Money gain = charges.gain();
             if (!CapitalGainsScope.takes(ctx, bucket, gain, lines)) {
                 continue;
             }
             Term term = CapitalGainsTerm.of(ctx, bucket, gain, lines);
-            CapitalGainsPart part = partOf(ctx, bucket, gain, term,
-                    CapitalGainsStt.of(ctx, bucket, gain, term, lines));
-            net.merge(part, gain, Money::plus);
-            indexedNet.merge(part, CapitalGainsIndexation.indexedGainOf(ctx, bucket, gain, lines).orElse(gain),
+            Money chargeable = ReinvestmentExemption.chargeableGainOf(ctx, bucket, gain, term,
+                    charges.netConsideration(), lines);
+            CapitalGainsPart part = partOf(ctx, bucket, chargeable, term,
+                    CapitalGainsStt.of(ctx, bucket, chargeable, term, lines));
+            net.merge(part, chargeable, Money::plus);
+            indexedNet.merge(part,
+                    CapitalGainsIndexation.indexedGainOf(ctx, bucket, chargeable, lines).orElse(chargeable),
                     Money::plus);
         }
         DeclaredCapitalGainsParts declared = DeclaredCapitalGainsParts.of(ctx);

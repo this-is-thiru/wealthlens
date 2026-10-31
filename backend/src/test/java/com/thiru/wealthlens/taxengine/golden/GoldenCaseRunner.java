@@ -166,7 +166,7 @@ final class GoldenCaseRunner {
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
                 new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER, false, Optional.empty())),
-                        salary.tenancies(), salary.leaveTravel(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory(), List.of(), salary.qualifyingPayments(), salary.lifeInsurancePolicies(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), salary.providentFundAccounts(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                        salary.tenancies(), salary.leaveTravel(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory(), List.of(), salary.qualifyingPayments(), salary.lifeInsurancePolicies(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), salary.providentFundAccounts(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), ledger(salary), plain.elections(), plain.capitalGains(),
                 plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, salaryHead, inputs);
@@ -194,7 +194,7 @@ final class GoldenCaseRunner {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
-                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
         PipelineRunner.Result result = PipelineRunner.run(registry, pack, heads, inputs);
@@ -232,7 +232,7 @@ final class GoldenCaseRunner {
                 EmployerKind.OTHER, false, Optional.empty());
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
-                new EnteredFacts(List.of(employment), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                new EnteredFacts(List.of(employment), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
         return ElectionResolver.resolve(new SetOffOrderElection(), NodeRegistry.of(nodes), pack,
@@ -266,7 +266,7 @@ final class GoldenCaseRunner {
                 Money.ZERO, false);
         return new EngineInputs(year, plain.regime(),
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
-                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
     }
@@ -285,7 +285,7 @@ final class GoldenCaseRunner {
                 Money.ZERO, false);
         EngineInputs inputs = new EngineInputs(year, regime,
                 TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
-                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), houses, List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty()),
+                new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), houses, List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
         return ElectionResolver.resolve(new HouseElection(), NodeRegistry.of(nodes), pack, pack.regimes().get(regime),

@@ -14,6 +14,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-CG-EXEMPTION",
+      "_note": "Whether a long-term capital gain is not charged because it was put into a residential house (2025 s.86; 1961 s.54F; W-088i): the term, the asset kind the engine can serve, the person types, and the bar — how many other residential houses the taxpayer owns on the transfer date and how many were bought or built around it (capitalgains.term, capitalgains.asset, capitalgains.reinvestment.other.houses.owned, capitalgains.reinvestment.other.houses.acquired). The periods within which the new house must be bought or built, and the cap on its cost, are the row's definition's. A bucket no row meets is charged in full, and its transfer needs no reinvestment",
+      "selection": "AT_MOST_ONE",
+      "ground": "REGIME_AND_CONDITIONS"
+    },
+    {
       "id": "RS-CG-PARTS",
       "_note": "One row: CG-PARTS",
       "selection": "EXACTLY_ONE",

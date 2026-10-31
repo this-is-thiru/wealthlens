@@ -40,6 +40,7 @@ class GeneratedConstantsTest {
             "CG-CHARGE-TRANSFER",
             "CG-DEPOSIT",
             "CG-DERIVATIVE",
+            "CG-EXEMPT-RESIDENTIAL-HOUSE",
             "CG-INDEXED-COST-LAND-BUILDING",
             "CG-PART-LONG-LISTED",
             "CG-PART-LONG-NOTIFIED",

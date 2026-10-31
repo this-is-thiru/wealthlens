@@ -39,15 +39,22 @@ final class CapitalGainsCharges {
     }
 
     /** The bucket's gain, each charge's line added to {@code lines}. */
-    static Money gainOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, List<TraceLine> lines) {
+    static Gain gainOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, List<TraceLine> lines) {
         Money gain = bucket.consideration().minus(bucket.cost());
+        Money netConsideration = bucket.consideration();
         for (Charge charge : bucket.charges()) {
-            gain = gain.minus(deducted(ctx, bucket, charge, lines));
+            ChargeDeductionLimb limb = limbOf(ctx, bucket, charge, lines);
+            if (limb.deducts()) {
+                gain = gain.minus(charge.amount());
+            }
+            if (limb == ChargeDeductionLimb.TRANSFER_EXPENDITURE) {
+                netConsideration = netConsideration.minus(charge.amount());
+            }
         }
-        return gain;
+        return new Gain(gain, netConsideration);
     }
 
-    private static Money deducted(NodeContext ctx, CapitalGainsInput.Bucket bucket, Charge charge,
+    private static ChargeDeductionLimb limbOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Charge charge,
             List<TraceLine> lines) {
         RuleRow row = ctx.optionalRuleOf(DEDUCTIONS, new ItemFacts(Map.of(SIDE, charge.side().name(), CODE,
                 charge.code()), Map.of(), Map.of()))
@@ -57,9 +64,20 @@ final class CapitalGainsCharges {
                         + ", so whether it reduces the gain is unknown"));
         ChargeDeductionLimb limb = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row,
                 ctx.inputs().temporal()).definition(), ChargeDeduction.class, row.id()).limb();
-        Money deducted = limb.deducts() ? charge.amount() : Money.ZERO;
-        lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, charge.amount(), deducted)
+        lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, charge.amount(),
+                        limb.deducts() ? charge.amount() : Money.ZERO)
                 .withLimitedBy(charge.code() + " on the " + charge.side() + ": " + limb));
-        return deducted;
+        return limb;
+    }
+
+    /**
+     * A bucket's gain, and the net consideration the house-reinvestment exemption is measured against: the full value
+     * of the consideration less the transfer expenditure these rows deduct (2025 s.86(10); 1961 s.54F Explanation;
+     * OQ-38's reading, approved with W-088i).
+     *
+     * @param gain the consideration less the cost and every charge a row deducts
+     * @param netConsideration the consideration less the charges a row deducts as transfer expenditure
+     */
+    record Gain(Money gain, Money netConsideration) {
     }
 }

@@ -3,8 +3,8 @@
   "taxYear": "2026-27",
   "layers": {
     "law": {
-      "version": "2026-27.law.124",
-      "checksum": "sha256:319cacfe8c749cfe5e222f6c3d65d8abb31b064b18ed86fc627afd28ea230d9b"
+      "version": "2026-27.law.125",
+      "checksum": "sha256:67f00eeeadf3c013d02f4b59edc18a1245fd25686af955c78767183e15467a1c"
     },
     "exec": {
       "version": "2026-27.exec.29",
@@ -26,6 +26,7 @@
     "CG-CHARGE-TRANSFER": "sha256:c5f0c0967e9f6aa9b2154b422a3e9bd9686b5d638656bf9aef69db4fbe6fdd70",
     "CG-DEPOSIT": "sha256:8de91dab958dc26782ffcb1d9e99c52f04fc9e6885009119533c235222ad5ad5",
     "CG-DERIVATIVE": "sha256:cad217d0b1b1011b1c21825c5836869843722b8174f6024528fdec8454af9067",
+    "CG-EXEMPT-RESIDENTIAL-HOUSE": "sha256:6f02f0dc52e5d72dde214a2539a48006cccc5fe8f78512262844138924b52a00",
     "CG-INDEXED-COST-LAND-BUILDING": "sha256:f4aeb8fd1075ec2870a1beee5f0026dcd2becbe49d44877fd459efd1f1b08d27",
     "CG-PART-LONG-LISTED": "sha256:d17255ba570dd8541932cb181919b662aa7bdafca01227b63f38fa85b2990eba",
     "CG-PART-LONG-NOTIFIED": "sha256:a9577cc7ed1830d74c0586eb8d7d1b6f384e48b3a0c5154a040359aecaf318b4",

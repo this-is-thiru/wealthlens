@@ -17,6 +17,7 @@ public final class RuleSetIds {
 
     public static final RuleSetId RS_CG_CHARGE = new RuleSetId("RS-CG-CHARGE");
     public static final RuleSetId RS_CG_ELSEWHERE = new RuleSetId("RS-CG-ELSEWHERE");
+    public static final RuleSetId RS_CG_EXEMPTION = new RuleSetId("RS-CG-EXEMPTION");
     public static final RuleSetId RS_CG_INDEXED_COST = new RuleSetId("RS-CG-INDEXED-COST");
     public static final RuleSetId RS_CG_NOT_COMPUTED = new RuleSetId("RS-CG-NOT-COMPUTED");
     public static final RuleSetId RS_CG_PART = new RuleSetId("RS-CG-PART");
