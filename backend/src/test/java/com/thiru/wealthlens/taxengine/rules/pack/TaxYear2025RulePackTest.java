@@ -39,7 +39,6 @@ import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -107,7 +106,7 @@ class TaxYear2025RulePackTest {
         // for a person having income from business or profession; (b) in the return for one not having it
         ElectionProtocol optOut = pack().regimes().get(FIRST_SCHEDULE_RATES).election();
         ConditionContext taxpayer = new ConditionContext(true, PersonType.INDIVIDUAL, Map.of(AgeSubject.SELF, 40),
-                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), Optional.empty(), ItemFacts.NONE);
+                Map.of(), Map.of(), Set.of(head), Set.of(), Set.of(), ItemFacts.NONE);
 
         // When
         VehicleRoute route = optOut.vehicleFor(taxpayer);

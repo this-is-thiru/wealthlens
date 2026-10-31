@@ -9,7 +9,6 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -206,8 +205,7 @@ class ConditionTest {
             Map<NodeId, Money> values,
             Set<HeadCode> heads,
             Set<ComponentCode> components,
-            Set<EvidenceType> evidence,
-            Optional<Boolean> nonCash) {
+            Set<EvidenceType> evidence) {
         return new ConditionContext(
                 true,
                 PersonType.INDIVIDUAL,
@@ -217,14 +215,13 @@ class ConditionTest {
                 heads,
                 components,
                 evidence,
-                nonCash,
                 ItemFacts.NONE);
     }
 
     private static ConditionContext withIncome(String totalIncome) {
         return claim(
                 Map.of(TOTAL_INCOME, Money.of(totalIncome)),
-                Set.of(), Set.of(), Set.of(), Optional.empty());
+                Set.of(), Set.of(), Set.of());
     }
 
     @Nested
@@ -277,7 +274,7 @@ class ConditionTest {
             ConditionContext ctx = claim(
                     Map.of(),
                     Set.of(HeadCode.SALARIES, HeadCode.BUSINESS_OR_PROFESSION),
-                    Set.of(), Set.of(), Optional.empty());
+                    Set.of(), Set.of());
 
             assertThat(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION).holds(ctx)).isTrue();
         }
@@ -286,7 +283,7 @@ class ConditionTest {
         void doesNotHold_forASalariedTaxpayerWithNoBusinessIncome() {
             // REG-OPTOUT-YEARLY-001: this is exactly why a salaried person may switch every year
             ConditionContext ctx =
-                    claim(Map.of(), Set.of(HeadCode.SALARIES), Set.of(), Set.of(), Optional.empty());
+                    claim(Map.of(), Set.of(HeadCode.SALARIES), Set.of(), Set.of());
 
             assertThat(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION).holds(ctx)).isFalse();
         }
@@ -298,7 +295,7 @@ class ConditionTest {
             ConditionContext ctx = claim(
                     Map.of(TOTAL_INCOME, Money.of("50000")),
                     Set.of(HeadCode.BUSINESS_OR_PROFESSION),
-                    Set.of(), Set.of(), Optional.empty());
+                    Set.of(), Set.of());
 
             assertThat(new HasIncomeUnderHead(HeadCode.BUSINESS_OR_PROFESSION).holds(ctx)).isTrue();
         }
@@ -311,7 +308,7 @@ class ConditionTest {
         @Test
         void holdsOnPresenceRegardlessOfAmount() {
             ConditionContext ctx =
-                    claim(Map.of(), Set.of(), Set.of(HRA), Set.of(), Optional.empty());
+                    claim(Map.of(), Set.of(), Set.of(HRA), Set.of());
 
             assertThat(new ComponentPresent(HRA).holds(ctx)).isTrue();
             assertThat(new ComponentPresent(new ComponentCode("LTA")).holds(ctx)).isFalse();
@@ -326,7 +323,7 @@ class ConditionTest {
         void holds_whenTheArtefactWasFurnished() {
             ConditionContext ctx = claim(
                     Map.of(), Set.of(), Set.of(),
-                    Set.of(EvidenceType.INSTITUTION_REPORT_80G), Optional.empty());
+                    Set.of(EvidenceType.INSTITUTION_REPORT_80G));
 
             assertThat(new EvidenceRecorded(EvidenceType.INSTITUTION_REPORT_80G).holds(ctx)).isTrue();
         }
@@ -336,7 +333,7 @@ class ConditionTest {
             // s.133(6): an 80G claim is allowed on the institution's report, not on a receipt —
             // so "no report" is the answer, not missing information
             ConditionContext ctx =
-                    claim(Map.of(), Set.of(), Set.of(), Set.of(), Optional.empty());
+                    claim(Map.of(), Set.of(), Set.of(), Set.of());
 
             assertThat(new EvidenceRecorded(EvidenceType.INSTITUTION_REPORT_80G).holds(ctx)).isFalse();
         }
@@ -345,41 +342,9 @@ class ConditionTest {
         void aReceiptForOneClaimIsNotEvidenceForAnother() {
             ConditionContext ctx = claim(
                     Map.of(), Set.of(), Set.of(),
-                    Set.of(EvidenceType.LANDLORD_PAN), Optional.empty());
+                    Set.of(EvidenceType.LANDLORD_PAN));
 
             assertThat(new EvidenceRecorded(EvidenceType.LENDER_PAN).holds(ctx)).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("PaidOtherThanInCash — s.126(9), s.133(5)")
-    class PaymentMode {
-
-        @Test
-        void holds_whenPaidByAnyNonCashMode() {
-            ConditionContext ctx =
-                    claim(Map.of(), Set.of(), Set.of(), Set.of(), Optional.of(true));
-
-            assertThat(new PaidOtherThanInCash().holds(ctx)).isTrue();
-        }
-
-        @Test
-        void doesNotHold_whenPaidInCash() {
-            ConditionContext ctx =
-                    claim(Map.of(), Set.of(), Set.of(), Set.of(), Optional.of(false));
-
-            assertThat(new PaidOtherThanInCash().holds(ctx)).isFalse();
-        }
-
-        @Test
-        void holds_whenNoPaymentModeWasRecorded_throws() {
-            // Assuming either answer silently allows or denies a deduction
-            ConditionContext ctx =
-                    claim(Map.of(), Set.of(), Set.of(), Set.of(), Optional.empty());
-
-            assertThatThrownBy(() -> new PaidOtherThanInCash().holds(ctx))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("s.126(9)");
         }
     }
 
@@ -726,7 +691,7 @@ class ConditionTest {
     class SealedFamily {
 
         /**
-         * An exhaustive switch with no {@code default} over all sixteen predicates. This does not
+         * An exhaustive switch with no {@code default} over all fifteen predicates. This does not
          * merely pass — it <b>compiles</b>, and that is the assertion. A seventeenth {@code Condition}
          * breaks this line, which is the whole reason the interface is sealed.
          *
@@ -746,7 +711,6 @@ class ConditionTest {
                     new HasIncomeUnderHead(HeadCode.SALARIES),
                     new ComponentPresent(HRA),
                     new EvidenceRecorded(EvidenceType.LANDLORD_PAN),
-                    new PaidOtherThanInCash(),
                     new ItemFactIs(VEHICLE_ENGINE, "ELECTRIC"),
                     new ItemFactAtMost(ENGINE_CC, 1600),
                     new ItemDateBefore(ACQUIRED_ON, LocalDate.of(2004, 10, 1)),
@@ -765,7 +729,6 @@ class ConditionTest {
                     case HasIncomeUnderHead ignored -> "structure";
                     case ComponentPresent ignored -> "structure";
                     case EvidenceRecorded ignored -> "structure";
-                    case PaidOtherThanInCash ignored -> "structure";
                     case ItemFactIs ignored -> "item";
                     case ItemFactAtMost ignored -> "item";
                     case ItemDateBefore ignored -> "item";
@@ -776,8 +739,9 @@ class ConditionTest {
                 assertThat(group).isNotBlank();
             }
 
-            // Part E's list, after the W-021 erratum: 13, not the 16 the backlog claimed; and the three item facts
-            assertThat(all).hasSize(16);
+            // Part E's list, after the W-021 erratum: 12, not the 16 the backlog claimed (PaidOtherThanInCash removed,
+            // W-197); and the three item facts
+            assertThat(all).hasSize(15);
         }
     }
 }

@@ -27,12 +27,13 @@ import java.util.stream.Collectors;
  * rule id, because the id is the contract. The change is a second {@code RuleVersion} with its own
  * {@code Validity}, not a different rule guarded by a date predicate.
  *
- * <p><b>The clause is complete.</b> All thirteen predicates of {@code 15-review-findings.md} Part E
- * exist — four person facts, two amounts, four structure, three composition — so the algebra is
- * closed as designed: a switch over a condition that misses a case does not compile. A fourteenth
- * predicate is a new class and a new permit, never an edit to an existing one. The fourteenth is
- * {@link ItemFactIs}: a fact of the item a node is computing, so the row for a car or a payment is chosen in data
- * (W-088m2, D-253); the fifteenth, {@link ItemFactAtMost}, its counted facts (W-088n1, D-257); the sixteenth,
+ * <p><b>The clause is complete as the engine needs it.</b> Twelve of the thirteen predicates of {@code
+ * 15-review-findings.md} Part E exist — four person facts, two amounts, three structure, three composition; the
+ * fourth structure predicate, {@code PaidOtherThanInCash}, was removed by W-197 (D-413) because no pack row, node
+ * or catalogue entry reached it — so the algebra is closed as designed: a switch over a condition that misses a
+ * case does not compile. A new predicate is a new class and a new permit, never an edit to an existing one. The
+ * thirteenth is {@link ItemFactIs}: a fact of the item a node is computing, so the row for a car or a payment is chosen in data
+ * (W-088m2, D-253); the fourteenth, {@link ItemFactAtMost}, its counted facts (W-088n1, D-257); the fifteenth,
  * {@link ItemDateBefore}, its dated facts (W-088f2b, D-291). That last one dates a fact of the item — when a lot was
  * acquired — to decide whether a row applies, which is what a condition is for; it does not date the rule (V-2).
  */
@@ -46,7 +47,6 @@ public sealed interface Condition
                 HasIncomeUnderHead,
                 ComponentPresent,
                 EvidenceRecorded,
-                PaidOtherThanInCash,
                 ItemFactIs,
                 ItemFactAtMost,
                 ItemDateBefore,
@@ -72,7 +72,7 @@ public sealed interface Condition
             case AnyOf any -> any.any().stream().anyMatch(Condition::isAboutItem);
             case Not not -> not.condition().isAboutItem();
             case IsResident _, AgeAtLeast _, HasPersonType _, IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
-                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, PaidOtherThanInCash _ -> false;
+                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _ -> false;
         };
     }
 
@@ -92,7 +92,7 @@ public sealed interface Condition
                     .collect(Collectors.toUnmodifiableSet());
             case Not not -> not.condition().itemFactsRead();
             case IsResident _, AgeAtLeast _, HasPersonType _, IsCertifiedDisabled _, IncomeAtMost _, IncomeAtLeast _,
-                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _, PaidOtherThanInCash _ -> Set.of();
+                    HasIncomeUnderHead _, ComponentPresent _, EvidenceRecorded _ -> Set.of();
         };
     }
 }

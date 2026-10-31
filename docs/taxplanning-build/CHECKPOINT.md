@@ -4,20 +4,25 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-197 — not started (the next item on the board, after W-196)
-Stage           : idle; nothing in flight; no code
-Plan            : —
-Approved        : —
-Steps done      : —
-Next step       : start W-197 (`PaidOtherThanInCash` unused: wire it to the cash bar or remove
-                  it) — the resume check, the board order, read the row and its named docs,
-                  plans/W-197.md, the board `·` → `E`, update this file, STOP
-Last verify     : W-196: unit 3821/0, integration 319/0 (2026-10-31)
-Waiting on      : the owner — OQ-32, OQ-33, OQ-34 open; W-206 (request DTOs) and W-207 (a
-                  non-premium's multi-year sum) placed · at the queue's end, the owner's to place
-Files touched   : this file and STATE.md (the post-commit state lines, awaiting the owner's word)
-Last item commit: taxplanning W-196: give a cash-barred health payment a nil line naming the row, and keep the spreading refusal — the law bars cash, it does not bar a multi-year sum the scheme limb allows (D-412)
-Updated         : 2026-10-31, session 42 — W-196 committed as 1db76af5 on the owner's "approved"; next W-197
+Item            : W-197 — BUILT, awaiting the owner's instruction to commit
+Stage           : code and docs done; unit 3819/0, integration 319/0; staged, not committed
+Plan            : plans/W-197.md (C1a remove the unused `PaidOtherThanInCash` and its plumbing,
+                  C2 correct the two counts)
+Approved        : "W-197 approved C1a C2" (2026-10-31)
+Steps done      : 1–3 (build, probe and both tiers, close-out docs); the commit is not done
+Next step       : on the owner's instruction, commit the named paths; then start W-198 (the two
+                  one-row regime sets no node reads — keep with a reason, or fold): the resume check,
+                  the board order, the row and its named docs, plans/W-198.md, the board `·` → `E`, STOP
+Last verify     : W-197: unit 3819/0, integration 319/0, dump diff 0 of 338,990 (2026-10-31)
+Waiting on      : the owner — the commit of W-197; OQ-32, OQ-33, OQ-34 open; W-206 (request DTOs)
+                  and W-207 (a non-premium's multi-year sum) placed · at the queue's end
+Files touched   : Condition.java, ConditionContext.java, ConditionJson.java,
+                  MedicalTreatmentAbroadNode.java, PaidOtherThanInCash.java (deleted),
+                  ConditionTest.java, PackJsonTest.java, TaxYear2025RulePackTest.java,
+                  RegimeLifecycleTest.java, 02-TECH-SPEC.md, 03-WORK-ITEMS.md, STATE.md,
+                  this file, plans/W-197.md (new)
+Last item commit: a6c7f8c8 taxplanning W-196: record the post-commit state — CHECKPOINT moves to W-197, and the last checkpoint names the commit that now exists
+Updated         : 2026-10-31, session 42 — W-197 built and staged; the commit is the owner's to call
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

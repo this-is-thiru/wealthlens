@@ -4,7 +4,6 @@ import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -19,11 +18,10 @@ import java.util.Set;
  * looks like a legitimate result is worse than an error — {@code D-NOSILENT}. Returning
  * {@code INCOMPLETE_INPUTS_FOR_RULE} to the caller is the point; guessing is not.
  *
- * <p><b>One context describes one claim, not one taxpayer.</b> {@link PaidOtherThanInCash} takes no
- * argument — it asks how <em>this</em> payment was made — so a context is built per rule evaluation.
- * Caching one per user and reusing it across claims would make that predicate answer about whichever
- * payment happened to be loaded first. {@link EvidenceRecorded} and {@link ComponentPresent} read
- * the same way.
+ * <p><b>One context describes one claim, not one taxpayer.</b> {@link EvidenceRecorded} asks what was
+ * furnished for <em>this</em> claim, so a context is built per rule evaluation. Caching one per user
+ * and reusing it across claims would make that predicate answer about whichever claim happened to be
+ * loaded first. {@link ComponentPresent} reads the same way.
  *
  * @param resident whether the assessee is resident
  * @param personType the kind of assessee
@@ -34,8 +32,6 @@ import java.util.Set;
  * @param headsWithIncome the heads under which the assessee has income
  * @param componentsPresent the pay lines present in this computation
  * @param evidenceRecorded the artefacts furnished for the claim this context describes
- * @param paidOtherThanInCash how the payment under this claim was made; empty where the claim
- *     involves no payment, so a rule asking about payment mode fails rather than guessing
  * @param item the facts of the item a node is choosing a row for; {@link ItemFacts#NONE} where it chooses for none
  */
 public record ConditionContext(
@@ -47,7 +43,6 @@ public record ConditionContext(
         Set<HeadCode> headsWithIncome,
         Set<ComponentCode> componentsPresent,
         Set<EvidenceType> evidenceRecorded,
-        Optional<Boolean> paidOtherThanInCash,
         ItemFacts item) {
 
     public ConditionContext {
@@ -58,7 +53,7 @@ public record ConditionContext(
             throw new IllegalArgumentException("ConditionContext maps may not be null");
         }
         if (nodeValues == null || headsWithIncome == null || componentsPresent == null
-                || evidenceRecorded == null || paidOtherThanInCash == null || item == null) {
+                || evidenceRecorded == null || item == null) {
             throw new IllegalArgumentException("ConditionContext collections may not be null");
         }
         ages = Map.copyOf(ages);
@@ -76,13 +71,13 @@ public record ConditionContext(
             Map<AgeSubject, Integer> ages,
             Map<AgeSubject, DisabilitySeverity> disabilities) {
         this(resident, personType, ages, disabilities,
-                Map.of(), Set.of(), Set.of(), Set.of(), Optional.empty(), ItemFacts.NONE);
+                Map.of(), Set.of(), Set.of(), Set.of(), ItemFacts.NONE);
     }
 
     /** The same facts, about the given item. */
     public ConditionContext about(ItemFacts facts) {
         return new ConditionContext(resident, personType, ages, disabilities, nodeValues, headsWithIncome,
-                componentsPresent, evidenceRecorded, paidOtherThanInCash, facts);
+                componentsPresent, evidenceRecorded, facts);
     }
 
     /** A resident individual of the given age, with nothing else recorded. */
@@ -128,16 +123,5 @@ public record ConditionContext(
                     "No value for node " + node + "; the context holds " + nodeValues.keySet());
         }
         return value;
-    }
-
-    /**
-     * Whether the payment under this claim was made otherwise than in cash.
-     *
-     * @throws IllegalArgumentException where the claim records no payment mode — s.126(9) and
-     *     s.133(5) turn on it, and assuming either answer silently allows or denies a deduction
-     */
-    public boolean wasPaidOtherThanInCash() {
-        return paidOtherThanInCash.orElseThrow(() -> new IllegalArgumentException(
-                "No payment mode recorded for this claim; s.126(9) and s.133(5) turn on it"));
     }
 }

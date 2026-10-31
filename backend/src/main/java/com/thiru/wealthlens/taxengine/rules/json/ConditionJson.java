@@ -20,7 +20,6 @@ import com.thiru.wealthlens.taxengine.rules.condition.ItemDateBefore;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFactAtMost;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFactIs;
 import com.thiru.wealthlens.taxengine.rules.condition.Not;
-import com.thiru.wealthlens.taxengine.rules.condition.PaidOtherThanInCash;
 import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
@@ -51,7 +50,6 @@ public final class ConditionJson {
         "HasIncomeUnderHead",
         "ComponentPresent",
         "EvidenceRecorded",
-        "PaidOtherThanInCash",
         "ItemFactIs",
         "ItemFactAtMost",
         "ItemDateBefore",
@@ -71,7 +69,7 @@ public final class ConditionJson {
                     case "IsResident", "AgeAtLeast", "HasPersonType", "IsCertifiedDisabled" ->
                             personFact(tag, node, path);
                     case "IncomeAtMost", "IncomeAtLeast", "HasIncomeUnderHead", "ComponentPresent",
-                            "EvidenceRecorded", "PaidOtherThanInCash" -> amountOrStructure(tag, node, path);
+                            "EvidenceRecorded" -> amountOrStructure(tag, node, path);
                     case "ItemFactIs" -> new ItemFactIs(
                             new ItemFactId(PackJson.text(node, "fact", path)), PackJson.text(node, "code", path));
                     case "ItemFactAtMost" -> new ItemFactAtMost(
@@ -110,7 +108,6 @@ public final class ConditionJson {
                     new ComponentCode(PackJson.text(node, "code", path)));
             case "EvidenceRecorded" -> new EvidenceRecorded(
                     PackJson.enumValue(node, "evidenceType", path, EvidenceType.class));
-            case "PaidOtherThanInCash" -> new PaidOtherThanInCash();
             default -> throw unhandled(tag, path);
         };
     }

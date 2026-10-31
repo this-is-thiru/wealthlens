@@ -371,7 +371,7 @@ class PackJsonTest {
     // -------------------------------------------------------------- W-033b
 
     @Nested
-    @DisplayName("Condition — all sixteen")
+    @DisplayName("Condition — all fifteen")
     class Conditions {
 
         static com.thiru.wealthlens.taxengine.rules.condition.ConditionContext taxpayer() {
@@ -388,7 +388,6 @@ class PackJsonTest {
                     java.util.Set.of(com.thiru.wealthlens.taxengine.rules.condition.HeadCode.SALARIES),
                     java.util.Set.of(new ComponentCode("HRA")),
                     java.util.Set.of(com.thiru.wealthlens.taxengine.rules.condition.EvidenceType.LANDLORD_PAN),
-                    java.util.Optional.of(true),
                     com.thiru.wealthlens.taxengine.rules.condition.ItemFacts.of(
                             new com.thiru.wealthlens.taxengine.rules.id.ItemFactId("vehicle.engine"), "ELECTRIC"));
         }
@@ -400,7 +399,6 @@ class PackJsonTest {
         @Test
         void everyVariantParsesAndEvaluates() {
             assertThat(holds("{\"type\": \"IsResident\"}")).isTrue();
-            assertThat(holds("{\"type\": \"PaidOtherThanInCash\"}")).isTrue();
             assertThat(holds("{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"SELF\"}")).isFalse();
             assertThat(holds("{\"type\": \"AgeAtLeast\", \"years\": 60, \"subject\": \"INSURED_PERSON\"}"))
                     .isTrue();
@@ -524,14 +522,22 @@ class PackJsonTest {
         }
 
         @Test
-        void anUnknownTagListsAllSixteen() {
+        void aRemovedTagIsRefused() {
+            // W-197, D-413: PaidOtherThanInCash had no row, no node and no catalogue entry that reached it
+            assertThatThrownBy(() -> holds("{\"type\": \"PaidOtherThanInCash\"}"))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("one of");
+        }
+
+        @Test
+        void anUnknownTagListsAllFifteen() {
             assertThatThrownBy(() -> ConditionJson.condition(json("{\"type\": \"IsRich\"}"), "c"))
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("IsResident")
-                    .hasMessageContaining("PaidOtherThanInCash")
                     .hasMessageContaining("ItemFactIs")
                     .hasMessageContaining("ItemFactAtMost")
                     .hasMessageContaining("ItemDateBefore")
+                    .hasMessageNotContaining("PaidOtherThanInCash")
                     .hasMessageContaining("IsRich");
         }
     }
