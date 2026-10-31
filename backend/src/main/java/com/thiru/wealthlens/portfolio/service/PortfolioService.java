@@ -173,6 +173,11 @@ public class PortfolioService {
      * read it from, so the trade carries it rather than have one assumed (D-315 T5). The Excel upload
      * enforces the same rule per row ({@code AssetRequestParser.setMaturityDate}); this is its JSON
      * twin, at the one point both trade paths pass (D-386).
+     *
+     * <p>A land or building is refused outright, on the same twin footing ({@link AssetType#NOT_A_BROKER_TRADE};
+     * W-088g5, D-433): the broker path cannot carry its purchase expenses into its cost, and a property entry of its
+     * own is W-088g9's. The redrive ({@code processTransaction}) is not guarded — with both entry points refusing,
+     * no land temporary transaction can exist.
      */
     private static void validateAssetRequest(UserMail userMail, AssetRequest assetRequest) {
         String requestEmail = assetRequest.getEmail();
@@ -200,6 +205,10 @@ public class PortfolioService {
         if (assetRequest.getAssetType() == AssetType.GOLD_BOND && assetRequest.getMaturityDate() == null) {
             throw new BadRequestException(
                     "A GOLD_BOND needs its " + ExcelHeaders.MATURITY_DATE + "; it is not assumed");
+        }
+
+        if (assetRequest.getAssetType() == AssetType.LAND_OR_BUILDING) {
+            throw new BadRequestException(AssetType.NOT_A_BROKER_TRADE);
         }
     }
 

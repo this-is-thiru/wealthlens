@@ -782,6 +782,7 @@ Any repair would be a new work item with its own section-2 entry.
 | 3.4 | **W-088j2b** (D-295, "no backfill") | `trade_outcomes` rows written before W-088j2b have no per-side venue (`buy_exchange_name`, `buy_segment`, `sell_exchange_name`, `sell_segment`); they read as `TradeVenue.UNRECORDED`. The old `exchange_name` / `segment` are **not** read for tax (V1 took the exchange from the buy, V2 and the rebuild from the sale). Remedy for a user: §2.2's per-user rebuild, which writes the new fields. The segment is published as recorded: `DELIVERY` is also the entry default (D-295) | Count and values below |
 | 3.5 | **W-088k3** (D-305) | The tax engine decides short-term or long-term itself, from `RS-CG-TERM`: an equity disposal is a listed security (twelve months) when its **sale** is recorded on `NSE` or `BSE` (`sell_exchange_name`; a reading, D-305 C1). A disposal whose sale exchange is absent or another string is **refused** for the term — no other period is shipped (D-305 C2). Rows written before W-088j2b have no `sell_exchange_name` (§3.4). Remedy for a user: §2.2's per-user rebuild, which writes it from `transactions.exchange_name` | Count below |
 | 3.6 | **W-088k4a** (D-307) | `corporate_action.allotment_date` is new and not backfilled. Performing a `BONUS` action without it is **refused** (400, naming the stock and record date), so a pending bonus whose date is not entered blocks its quarterly perform. Bonus lots processed before W-088k4a are dated at the ex-date; W-088k4b corrects them | List below |
+| 3.7 | **W-088g5** (D-433) | A `LAND_OR_BUILDING` trade is now **refused** on V1, V2 and the upload (400). Land was enterable from W-088g2 (D-425) until this guard; a row entered in that window **stays as it is** — the guard refuses new entries and touches nothing stored. Expected 0 on every database; a non-zero count is reported to the owner, not corrected (a correction would be its own item, with W-088g9's property entry) | the 3.7 query below, owner, any time after the deploy that carries W-088g5; safe to run again |
 
 ```js
 // 3.1 — rows, and users, whose summary would be refused
@@ -799,6 +800,14 @@ db.transactions.aggregate([{ $group: { _id: { exchange: "$exchange_name", segmen
 
 // 3.6 — bonus actions without an allotment date (W-088k4a, D-307): performing them is refused until it is entered
 db.corporate_action.find({ type: "BONUS", allotment_date: { $exists: false } }, { stock_code: 1, record_date: 1, ex_date: 1 })
+
+// 3.7 — land or building rows entered on the trade paths before W-088g5's guard (D-433); one query over every app database
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); return {
+    database: n,
+    transactions: d.transactions.countDocuments({ asset_type: "LAND_OR_BUILDING" }),
+    assets: d.assets.countDocuments({ asset_type: "LAND_OR_BUILDING" }),
+    trade_outcomes: d.trade_outcomes.countDocuments({ asset_type: "LAND_OR_BUILDING" }) }; }) }])
 
 // 3.5 — equity capital-gains disposals whose term the engine refuses: the sale not recorded on NSE or BSE (W-088k3, D-305)
 db.trade_outcomes.aggregate([

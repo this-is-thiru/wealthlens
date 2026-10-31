@@ -57,7 +57,7 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         setStockName(assetRequest, record);
         setExchangeName(assetRequest, record);
         setBrokerName(assetRequest, record);
-        setAssetType(assetRequest, record);
+        setAssetType(assetRequest, record, inputRecord.getRecordNumber());
         setPrice(assetRequest, record);
         setQuantity(assetRequest, record);
         setTransactionType(assetRequest, record);
@@ -98,11 +98,15 @@ public class AssetRequestParser extends AbstractRequestParser<AssetRequest> {
         assetRequest.setBrokerName(BrokerName.valueOf(brokerName));
     }
 
-    private static void setAssetType(AssetRequest assetRequest, Map<String, CellDetail> record) {
+    /** The row's asset type; a land or building is refused with its row, as the JSON paths refuse it (W-088g5). */
+    private static void setAssetType(AssetRequest assetRequest, Map<String, CellDetail> record, Integer recordNumber) {
 
         CellDetail cellDetail = record.get(ExcelHeaders.ASSET_TYPE);
-        String assetType = (String) cellDetail.getCellValue();
-        assetRequest.setAssetType(AssetType.valueOf(assetType));
+        AssetType assetType = AssetType.valueOf((String) cellDetail.getCellValue());
+        if (assetType == AssetType.LAND_OR_BUILDING) {
+            throw new BadRequestException("Row " + recordNumber + ": " + AssetType.NOT_A_BROKER_TRADE);
+        }
+        assetRequest.setAssetType(assetType);
     }
 
     /**

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.shared.dto.InputRecord;
 import com.thiru.wealthlens.shared.dto.enums.ExcelDataType;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
@@ -56,6 +57,18 @@ class AssetRequestParserTest {
 
         // Then
         assertEquals("Row 3: a GOLD_BOND row needs its MATURITY DATE; it is not assumed", refusal.getMessage());
+    }
+
+    @Test
+    void toRequest_whenTheRowIsALandOrBuilding_refusesNamingTheRow() {
+        // Given — a plot on row 4 of an upload
+        InputRecord inputRecord = row(4, "LAND_OR_BUILDING", CellDetail.def());
+
+        // When
+        BadRequestException refusal = assertThrows(BadRequestException.class, () -> parser.toRequest(inputRecord));
+
+        // Then
+        assertEquals("Row 4: " + AssetType.NOT_A_BROKER_TRADE, refusal.getMessage());
     }
 
     @Test
