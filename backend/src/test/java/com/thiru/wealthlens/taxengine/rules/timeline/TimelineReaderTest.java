@@ -40,8 +40,10 @@ class TimelineReaderTest {
     private static final Set<RuleId> SHIPPED_RULES = Set.of(
             new RuleId("CG-PART-SHORT-LISTED"),
             new RuleId("CG-PART-SHORT-SLAB"),
+            new RuleId("CG-PART-SHORT-SLAB-LAND-BUILDING"),
             new RuleId("CG-PARTS"),
             new RuleId("CG-TERM-LISTED-SECURITY"),
+            new RuleId("CG-TERM-LAND-BUILDING"),
             new RuleId("CG-SPECULATIVE"),
             new RuleId("CG-DERIVATIVE"),
             new RuleId("CG-CHARGE-COST"),
@@ -51,6 +53,7 @@ class TimelineReaderTest {
             new RuleId("CG-DEPOSIT"),
             new RuleId("CG-PART-LONG-LISTED"),
             new RuleId("CG-PART-LONG-OTHER"),
+            new RuleId("CG-PART-LONG-OTHER-LAND-BUILDING"),
             new RuleId("CG-PART-LONG-NOTIFIED"),
             new RuleId("STT-PURCHASE-DELIVERY"),
             new RuleId("STT-SALE-DELIVERY"),

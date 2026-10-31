@@ -6,5 +6,6 @@ public enum AssetType {
     BOND,
     GOLD_BOND,
     FD,
-    INSURANCE
+    INSURANCE,
+    LAND_OR_BUILDING
 }
