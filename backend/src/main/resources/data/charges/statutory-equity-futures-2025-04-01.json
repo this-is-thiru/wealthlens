@@ -79,7 +79,8 @@
         "BROKERAGE",
         "EXCHANGE_TXN",
         "SEBI_FEE",
-        "IPFT"
+        "IPFT",
+        "CLEARING"
       ],
       "rounding": "HALF_UP_2",
       "taxable": false,

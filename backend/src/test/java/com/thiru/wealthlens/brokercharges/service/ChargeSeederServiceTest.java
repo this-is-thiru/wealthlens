@@ -152,7 +152,7 @@ class ChargeSeederServiceTest {
                         "STATUTORY_EQ_FUTURES_2026_03",
                         "STATUTORY_EQ_OPTIONS_2025_04",
                         "STATUTORY_EQ_OPTIONS_2026_03");
-        assertThat(seededCatalogue()).hasSize(12);
+        assertThat(seededCatalogue()).hasSize(13);
     }
 
     @Test
@@ -289,7 +289,7 @@ class ChargeSeederServiceTest {
 
         // Then
         assertThat(report.seededBy()).isEqualTo(AUDITOR);
-        assertThat(report.catalogueCreated()).hasSize(12);
+        assertThat(report.catalogueCreated()).hasSize(13);
         assertThat(report.schedulesCreated()).hasSize(39);
         assertThat(report.instrumentsCreated()).containsExactlyInAnyOrder("PARAGPARIKHFLEXICAP", "HDFCLIQUID");
         assertThat(report.schedulesSkipped()).isEmpty();

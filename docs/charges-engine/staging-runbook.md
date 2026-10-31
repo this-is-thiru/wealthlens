@@ -76,7 +76,7 @@ curl -sS -X POST "$BASE/charges/seed" -H "Authorization: Bearer $TOKEN" \
                  schedulesCreated, instrumentsCreated, schedulesSkipped, drift: (.drift|length)}'
 ```
 
-Expect on a fresh database: 12 catalogue codes, 39 rate cards (31 broker, 8 statutory), 2 scheme profiles, nothing skipped,
+Expect on a fresh database: 13 catalogue codes, 39 rate cards (31 broker, 8 statutory), 2 scheme profiles, nothing skipped,
 no drift. Every document it writes records `seededBy` and the time — which is the reason this is an
 endpoint and not a startup hook.
 
@@ -86,14 +86,14 @@ Requires `SUPER_USER`: it writes the rate cards every user is charged against.
 
 ## 3. Confirm the deployment has its seed data
 
-### 3.1 The charge catalogue — 12 codes
+### 3.1 The charge catalogue — 13 codes
 
 ```bash
 curl -sS "$BASE/charge-catalogue" -H "Authorization: Bearer $TOKEN" | jq '.data | length, [.[].code]'
 ```
 
-Expect `12` and:
-`BROKERAGE, STT, EXCHANGE_TXN, SEBI_FEE, IPFT, STAMP_DUTY, DP, GST, AMC, ACCOUNT_OPENING, EXIT_LOAD, MF_TXN_FEE`
+Expect `13` and:
+`BROKERAGE, STT, EXCHANGE_TXN, SEBI_FEE, IPFT, CLEARING, STAMP_DUTY, DP, GST, AMC, ACCOUNT_OPENING, EXIT_LOAD, MF_TXN_FEE`
 
 ### 3.2 The AC-2 worklist — every card whose rates nobody has checked
 

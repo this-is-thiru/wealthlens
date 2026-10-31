@@ -19,6 +19,10 @@
     "description": "Exchange levy funding investor protection.",
     "statutoryReference": null },
 
+  { "code": "CLEARING", "displayName": "Clearing charges", "category": "EXCHANGE", "status": "ACTIVE",
+    "description": "Levied by the clearing member on a trade to settle it. Only Fyers bills one; the others print zero.",
+    "statutoryReference": null },
+
   { "code": "STAMP_DUTY", "displayName": "Stamp duty", "category": "STATUTORY", "status": "ACTIVE",
     "description": "Levied on purchases only. Not a taxable service, so it never forms part of a GST base.",
     "statutoryReference": "Indian Stamp Act, 1899, Schedule I Article 56A, as inserted by the Finance Act, 2019 (in force 1-7-2020)" },

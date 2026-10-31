@@ -53,6 +53,11 @@
                 {
                   "type": "ItemFactIs",
                   "fact": "charge.code",
+                  "code": "CLEARING"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "charge.code",
                   "code": "SEBI_FEE"
                 },
                 {
@@ -151,6 +156,11 @@
                   "type": "ItemFactIs",
                   "fact": "charge.code",
                   "code": "EXCHANGE_TXN"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "charge.code",
+                  "code": "CLEARING"
                 },
                 {
                   "type": "ItemFactIs",

@@ -27,7 +27,7 @@
       "taxable": true,
       "active": true,
       "order": 10,
-      "notes": "\"Options | Flat \u20b920 per executed order.\" Read 2026-10-28 at https://fyers.in/charges-list (W-178; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md). Not modelled: Fyers' clearing charge on options, \"Clearing Charges ... 0.009%\" (W-186)."
+      "notes": "\"Options | Flat \u20b920 per executed order.\" Read 2026-10-28 at https://fyers.in/charges-list (W-178; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md)."
     },
     {
       "code": "EXCHANGE_TXN",
@@ -46,6 +46,24 @@
       "active": true,
       "order": 30,
       "notes": "NSE equity options transaction charge, 0.03503% of the premium (Rs 35.03 each side per lakh of premium value, NSE circular NSE/FA/64232 of 2024-09-27), from 1-10-2024 until 28-2-2026 (NSE/FA/73061). BSE differs. docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md."
+    },
+    {
+      "code": "CLEARING",
+      "displayName": "Clearing charges",
+      "category": "EXCHANGE",
+      "basis": "TURNOVER",
+      "amountBasis": "TURNOVER",
+      "side": "BOTH",
+      "events": [
+        "BUY",
+        "SELL"
+      ],
+      "rate": 0.009,
+      "rounding": "HALF_UP_2",
+      "taxable": true,
+      "active": true,
+      "order": 40,
+      "notes": "Fyers' clearing charge on equity options, \"Clearing Charges ... 0.009%\" of the premium, read 2026-10-28 at https://fyers.in/charges-list (W-186; docs/taxplanning-build/sources/2026-10-28-broker-charge-pages.md row 16). The page states one rate and no effective date, so both Fyers options cards carry it."
     },
     {
       "code": "IPFT",
