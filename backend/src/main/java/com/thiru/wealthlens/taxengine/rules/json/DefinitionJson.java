@@ -25,6 +25,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.IndexedCost;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
+import com.thiru.wealthlens.taxengine.rules.definition.NotModelledProvision;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceInterestLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.ParticularsThreshold;
@@ -76,7 +77,7 @@ public final class DefinitionJson {
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
                 "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod",
                 "CapitalGainsParts", "SalaryAveragingPeriod", "VehiclePath", "WearAndTear", "ChargeDeduction",
-                "IndexedCost", "ExemptReinvestment");
+                "IndexedCost", "ExemptReinvestment", "NotModelledProvision");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -95,7 +96,7 @@ public final class DefinitionJson {
                     PackJson.integer(node, "oneOver", path), PackJson.money(node, "limit", path)));
             case "ProvidentFundThreshold" -> PackJson.construct(path, () -> new ProvidentFundThreshold(
                     PackJson.money(node, "withoutEmployerContribution", path), PackJson.money(node, "otherwise", path)));
-            case "IndexByYear", "IndexedCost", "ExemptReinvestment" -> capitalGainsDefinition(tag, node, path);
+            case "IndexByYear", "IndexedCost", "ExemptReinvestment", "NotModelledProvision" -> capitalGainsDefinition(tag, node, path);
             case "DayWindow" -> PackJson.construct(path, () -> new DayWindow(PackJson.integer(node, "days", path)));
             case "DisallowanceBasis" -> PackJson.construct(path, () -> new DisallowanceBasis(
                     new DisallowanceSetId(PackJson.text(node, "set", path))));
@@ -207,8 +208,8 @@ public final class DefinitionJson {
     /**
      * The index a capital gain's cost is lifted by and the year indexation starts from (D-115; 2025 s.72(8)(a)-(b),
      * 1961 s.48 Explanations (iii), (v); W-088g, D-426), and the house-reinvestment exemption's periods and cap
-     * (2025 s.86(1), (8); 1961 s.54F(1), its second proviso; W-088i) — apart only to keep each switch within the
-     * complexity limit.
+     * (2025 s.86(1), (8); 1961 s.54F(1), its second proviso; W-088i), and a provision not modelled yet with its effect
+     * (W-088g4) — apart only to keep each switch within the complexity limit.
      */
     private static RuleDefinition capitalGainsDefinition(String tag, JsonNode node, String path) {
         return switch (tag) {
@@ -220,6 +221,9 @@ public final class DefinitionJson {
                     PackJson.integer(node, "monthsAfterPurchase", path),
                     PackJson.integer(node, "monthsAfterConstruction", path),
                     PackJson.money(node, "newAssetCostCap", path)));
+            case "NotModelledProvision" -> PackJson.construct(path, () -> new NotModelledProvision(
+                    PackJson.text(node, "subject", path),
+                    PackJson.enumValue(node, "effect", path, NotModelledProvision.TaxEffect.class)));
             default -> throw unreachable(tag, path);
         };
     }

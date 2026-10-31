@@ -20,6 +20,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_CG_EXEMPTION = new RuleSetId("RS-CG-EXEMPTION");
     public static final RuleSetId RS_CG_INDEXED_COST = new RuleSetId("RS-CG-INDEXED-COST");
     public static final RuleSetId RS_CG_NOT_COMPUTED = new RuleSetId("RS-CG-NOT-COMPUTED");
+    public static final RuleSetId RS_CG_NOT_MODELLED = new RuleSetId("RS-CG-NOT-MODELLED");
     public static final RuleSetId RS_CG_PART = new RuleSetId("RS-CG-PART");
     public static final RuleSetId RS_CG_PARTS = new RuleSetId("RS-CG-PARTS");
     public static final RuleSetId RS_CG_TERM = new RuleSetId("RS-CG-TERM");

@@ -23,6 +23,9 @@ public final class RuleIds {
     public static final RuleId CG_DERIVATIVE = new RuleId("CG-DERIVATIVE");
     public static final RuleId CG_EXEMPT_RESIDENTIAL_HOUSE = new RuleId("CG-EXEMPT-RESIDENTIAL-HOUSE");
     public static final RuleId CG_INDEXED_COST_LAND_BUILDING = new RuleId("CG-INDEXED-COST-LAND-BUILDING");
+    public static final RuleId CG_NOT_MODELLED_IMPROVEMENT = new RuleId("CG-NOT-MODELLED-IMPROVEMENT");
+    public static final RuleId CG_NOT_MODELLED_STAMPDUTY = new RuleId("CG-NOT-MODELLED-STAMPDUTY");
+    public static final RuleId CG_NOT_MODELLED_VALUE2001 = new RuleId("CG-NOT-MODELLED-VALUE2001");
     public static final RuleId CG_PART_LONG_LISTED = new RuleId("CG-PART-LONG-LISTED");
     public static final RuleId CG_PART_LONG_NOTIFIED = new RuleId("CG-PART-LONG-NOTIFIED");
     public static final RuleId CG_PART_LONG_OTHER = new RuleId("CG-PART-LONG-OTHER");

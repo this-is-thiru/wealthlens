@@ -65,6 +65,9 @@ another bucket shares the part. Every `LandOrBuildingCapTest` case has one bucke
 
 ## R3 — a land sale is computed without the provisions that change it → W-088g4
 
+> **Corrected 2026-11-01 (D-432).** The 2025 Act's fair-market-value option is s.90(9)(a)–(b) and (10), not "2025
+> s.55" as written below; the coverage register already listed s.90 (`sources/2026-11-01-land-sale-provisions.md`).
+
 Before W-088g2 a land sale was refused at `CapitalGainsTerm` (a loud failure). It now produces a figure, while three
 provisions that change a land figure are `DEFERRED` in `content/coverage.json` and were not discussed in
 `plans/W-088g.md` or `plans/W-088g2.md`: 1961 s.50C (the stamp-duty value as the consideration, `:654`), the cost of

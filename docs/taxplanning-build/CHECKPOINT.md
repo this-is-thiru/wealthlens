@@ -4,17 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-088g3 is closed (D-431)
+Item            : none in flight — W-088g4 is closed (D-432)
 Stage           : 6 of 6 (DONE) — "commit it" was the review approval; board D in the item commit
-Plan            : plans/W-088g3.md — approved C1a C2a C3a; Revision 1 and Build record
-Decisions       : D-431 — the land gain alone, per land bucket, reductions pro rata; review R2 and D-429 corrected
-Board           : `W-088g3 D  W-088g4 ·`
-Next step       : W-088g4 (a land sale computed without s.50C, improvement cost, s.55(2)(b) — D-429) — on
-                  "start W-088g4", plan and STOP
-Last verify     : unit tier 3881 / 0 / 0; integration tier 323 / 0 / 0; Checkstyle 0
+Plan            : plans/W-088g4.md — approved C1a C2a; Revision 1 and Build record
+Decisions       : D-432 — notices by effect; W-088g6-g8 placed; "2025 s.55" corrected to s.90
+Board           : `W-088g4 D  W-088g5 ·  W-088g6 ·  W-088g7 ·  W-088g8 ·`
+Next step       : W-088g5 (land through the trade paths, proven — D-429) — on "start W-088g5", plan and STOP
+Last verify     : unit tier 3886 / 0 / 0; integration tier 323 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last commit     : the W-088g3 item commit (subject in STATE "Last checkpoint")
-Updated         : 2026-11-01, session 44 — W-088g3 closed
+Last commit     : the W-088g4 item commit (subject in STATE "Last checkpoint")
+Updated         : 2026-11-01, session 44 — W-088g4 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

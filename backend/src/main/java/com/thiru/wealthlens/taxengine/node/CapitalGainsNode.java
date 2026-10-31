@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
+import com.thiru.wealthlens.taxengine.rules.definition.NotModelledProvision;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
@@ -20,8 +21,13 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxengine.trace.Notice;
+import com.thiru.wealthlens.taxengine.trace.Severity;
 import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceAnnotation;
 import com.thiru.wealthlens.taxengine.trace.TraceLine;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,6 +58,9 @@ import java.util.function.Predicate;
  * twelve and one-half per cent limb the lesser for it.
  */
 public final class CapitalGainsNode implements ComputationNode {
+
+    /** The provisions not modelled yet that a bucket's notice names (W-088g4). */
+    private static final RuleSetId NOT_MODELLED = RuleSetIds.RS_CG_NOT_MODELLED;
 
     private static final RuleSetId ROW = RuleSetIds.RS_SETOFF_WITHIN_CAPITAL_GAINS;
 
@@ -86,7 +95,7 @@ public final class CapitalGainsNode implements ComputationNode {
         return Set.of(ROW, PARTS, DeclaredCapitalGainsParts.PARTS, CapitalGainsStt.CHARGEABILITY,
                 CapitalGainsTerm.HOLDING_PERIOD, CapitalGainsScope.NOT_COMPUTED, CapitalGainsScope.ELSEWHERE,
                 CapitalGainsCharges.DEDUCTIONS, CapitalGainsIndexation.QUALIFIER,
-                RuleSetIds.RS_RATE_CG_COST_INFLATION_INDEX, ReinvestmentExemption.EXEMPTION);
+                RuleSetIds.RS_RATE_CG_COST_INFLATION_INDEX, ReinvestmentExemption.EXEMPTION, NOT_MODELLED);
     }
 
     @Override
@@ -98,7 +107,8 @@ public final class CapitalGainsNode implements ComputationNode {
         Map<CapitalGainsPart, Money> gaining = new HashMap<>();
         Map<CapitalGainsPart, List<IndexedGain>> qualifying = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
-        List<ReinvestmentExemption.BucketGain> taken = takenBuckets(ctx, lines);
+        List<TraceAnnotation> annotations = new ArrayList<>();
+        List<ReinvestmentExemption.BucketGain> taken = takenBuckets(ctx, lines, annotations);
         List<Money> chargeableGains = ReinvestmentExemption.chargeableGainsOf(ctx, taken, lines);
         for (int position = 0; position < taken.size(); position++) {
             CapitalGainsInput.Bucket bucket = taken.get(position).bucket();
@@ -142,7 +152,7 @@ public final class CapitalGainsNode implements ComputationNode {
         Money longTermLeft = setOff(ctx, parts, longTermLoss, true, declared, lines);
         Money shortTermLeft = setOff(ctx, parts, shortTermLoss, false, declared, lines);
         CapitalGainsHead head = new CapitalGainsHead(available, indexed, shortTermLeft, longTermLeft);
-        return new NodeResult(head, lines);
+        return new NodeResult(head, lines, annotations);
     }
 
     /** A qualifying gain's indexed measure, nil rather than negative — a measure a cost that rose has already emptied. */
@@ -185,18 +195,50 @@ public final class CapitalGainsNode implements ComputationNode {
      */
     /**
      * Each bucket the head takes, with its gain and its term — all of them before any is exempted, because a house claim
-     * is measured over every bucket of its transfer together ({@link ReinvestmentExemption}; W-088i5).
+     * is measured over every bucket of its transfer together ({@link ReinvestmentExemption}; W-088i5) — and on each
+     * bucket's term line, a notice for every provision not modelled that reaches it.
      */
-    private static List<ReinvestmentExemption.BucketGain> takenBuckets(NodeContext ctx, List<TraceLine> lines) {
+    private static List<ReinvestmentExemption.BucketGain> takenBuckets(NodeContext ctx, List<TraceLine> lines,
+            List<TraceAnnotation> annotations) {
         List<ReinvestmentExemption.BucketGain> taken = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
             CapitalGainsCharges.Gain gain = CapitalGainsCharges.gainOf(ctx, bucket, lines);
             if (CapitalGainsScope.takes(ctx, bucket, gain.gain(), lines)) {
                 taken.add(new ReinvestmentExemption.BucketGain(bucket, gain,
                         CapitalGainsTerm.of(ctx, bucket, gain.gain(), lines)));
+                noticesOf(ctx, bucket).ifPresent(notices ->
+                        annotations.add(new TraceAnnotation(lines.getLast().sequence(), notices)));
             }
         }
         return taken;
+    }
+
+    /**
+     * The notices for the provisions {@code RS-CG-NOT-MODELLED}'s rows say reach the bucket (W-088g4, D-432): one that
+     * could raise the tax makes the figure provisional ({@link Severity#ACTION_REQUIRED}); one that could only lower it
+     * leaves the figure standing as the most it can be ({@link Severity#ATTENTION}). None where no row reaches it.
+     */
+    private static Optional<List<Notice>> noticesOf(NodeContext ctx, CapitalGainsInput.Bucket bucket) {
+        ItemFacts facts = new ItemFacts(Map.of(ASSET, bucket.facts().assetKind()), Map.of(),
+                Map.of(ACQUIRED_ON, bucket.facts().acquiredOn()));
+        List<Notice> notices = new ArrayList<>();
+        for (RuleRow row : ctx.rulesOf(NOT_MODELLED)) {
+            if (RowReach.holdsFor(ctx, row, facts)) {
+                RuleVersion version = TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal());
+                NotModelledProvision provision = RuleDefinitions.require(version.definition(),
+                        NotModelledProvision.class, row.id());
+                boolean mayRaise = provision.effect() == NotModelledProvision.TaxEffect.MAY_RAISE;
+                notices.add(Notice.about(mayRaise ? Severity.ACTION_REQUIRED : Severity.ATTENTION,
+                        "Not applied yet: " + provision.subject() + " (2025 " + version.provision2025().reference()
+                                + "; 1961 " + version.provision1961().reference() + "). "
+                                + (mayRaise ? "Applying it can raise the tax on this sale, so the figure is provisional"
+                                        + " until it is checked."
+                                        : "Applying it can only lower the tax on this sale, so the figure is the most it"
+                                                + " can be."),
+                        row.id()));
+            }
+        }
+        return notices.isEmpty() ? Optional.empty() : Optional.of(notices);
     }
 
     private static CapitalGainsPart partOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, Term term,

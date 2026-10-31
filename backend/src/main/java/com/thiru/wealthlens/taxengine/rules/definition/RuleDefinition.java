@@ -15,5 +15,5 @@ public sealed interface RuleDefinition permits HeadTotal, SalaryBase, JourneysPe
         ProvidentFundThreshold, GiftThreshold, PolicyPremiumLimits, SurvivingChildrenLimit,
         AbsorptionOrder, CapitalGainsAbsorptionOrder, SpecialRateShortfallOrder, LossCarryForward, BucketPart,
         SttChargeability, ShortTermHoldingPeriod, CapitalGainsParts, SalaryAveragingPeriod, VehiclePath, WearAndTear, ChargeDeduction,
-        IndexedCost, ExemptReinvestment {
+        IndexedCost, ExemptReinvestment, NotModelledProvision {
 }
