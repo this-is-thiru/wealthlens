@@ -2,41 +2,36 @@ package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import java.util.List;
 import java.util.Map;
 
 /**
  * The heads once every loss is set off against the others (D-243): their total, and what each capital-gains part still
  * holds — the special-rate parts are taxed on their own basis, so the total alone would lose them.
  *
- * <p>Each part is carried twice, as {@link CapitalGainsHead} carries it: the gain, and the gain with a qualifying cost
- * lifted by the Cost Inflation Index, which the cap on the tax on land or building compares a second rate against
- * (W-088g, D-426). The two maps are lowered by the same rupee amount whenever a loss is absorbed, so they stay key for
- * key with each other.
+ * <p>Beside a part it carries the land or building gains the cap on their tax applies to, as {@link CapitalGainsHead}
+ * carries them ({@link IndexedGain}; W-088g, D-426; W-088g3, D-431), lowered in proportion whenever a loss is absorbed.
  *
  * @param total every head's income after set-off, which gross total income is
  * @param capitalGains each capital-gains part held, after other heads' losses, nil or more; a part not held is nil
- * @param indexedCapitalGains the same parts with a qualifying cost indexed, nil or more, key for key with
- *     {@code capitalGains}
+ * @param indexedGains each held part's qualifying gains, together no more than the part
  */
 public record HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capitalGains,
-        Map<CapitalGainsPart, Money> indexedCapitalGains) implements NodeValue {
+        Map<CapitalGainsPart, List<IndexedGain>> indexedGains) implements NodeValue {
 
     public HeadsAfterSetOff {
-        if (total == null || capitalGains == null || indexedCapitalGains == null) {
+        if (total == null || capitalGains == null || indexedGains == null) {
             throw new IllegalArgumentException("Heads after set-off need the total, the capital-gains parts and their"
                     + " indexed measure");
         }
-        if (!capitalGains.keySet().equals(indexedCapitalGains.keySet())) {
-            throw new IllegalArgumentException("A part's indexed measure must be carried for exactly the parts held:"
-                    + " " + capitalGains.keySet() + " held, " + indexedCapitalGains.keySet() + " measured");
-        }
+        IndexedGain.requireHeld(capitalGains, indexedGains);
         capitalGains = Map.copyOf(capitalGains);
-        indexedCapitalGains = Map.copyOf(indexedCapitalGains);
+        indexedGains = IndexedGain.copied(indexedGains);
     }
 
-    /** Heads whose capital-gains parts hold no indexed measure — each part's measure is its gain. */
+    /** Heads none of whose capital gains the cap on land or building reaches. */
     public HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capitalGains) {
-        this(total, capitalGains, capitalGains);
+        this(total, capitalGains, Map.of());
     }
 
     /** One capital-gains part after set-off; nil for a part not held. */
@@ -44,9 +39,9 @@ public record HeadsAfterSetOff(Money total, Map<CapitalGainsPart, Money> capital
         return capitalGains.getOrDefault(part, Money.ZERO);
     }
 
-    /** One part's gain with its qualifying cost indexed; nil for a part not held. */
-    public Money indexedCapitalGains(CapitalGainsPart part) {
-        return indexedCapitalGains.getOrDefault(part, Money.ZERO);
+    /** One part's gains the cap on land or building reaches; none for a part without one. */
+    public List<IndexedGain> indexedGains(CapitalGainsPart part) {
+        return indexedGains.getOrDefault(part, List.of());
     }
 
     @Override

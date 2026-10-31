@@ -38,6 +38,12 @@ No existing test has more than one bucket (`ReinvestmentExemptionTest`, 17 cases
 
 ## R2 — the land cap's lesser-of is taken over the whole part → W-088g3
 
+> **Corrected 2026-11-01 (D-431).** This finding called the part-level cap a defect against "the law". It is not: it
+> is the reading the owner approved for OQ-36 in W-088g (C2a, `plans/W-088g.md:338`), and the Gazette text supports
+> more than one reading (`plans/W-088g3.md`). The probe showed only that the engine differed from the land-alone
+> reading. W-088g3 put the question back to the owner, who chose the land gain alone. The text below is kept as
+> written.
+
 `RATE-CG-LONG-OTHER`'s cap is one `LeastOf` (`:28`, `:92`) of 12.5 % of `SPECIAL_RATE_GAINS` and 20 % of
 `INDEXED_SPECIAL_RATE_GAINS`, both read per **part** (`TaxByBasisNode.basesOf`, `:123`). `CapitalGainsNode:110`
 merges into the part's indexed measure every bucket's gain — the indexed gain for qualifying land, the plain gain for

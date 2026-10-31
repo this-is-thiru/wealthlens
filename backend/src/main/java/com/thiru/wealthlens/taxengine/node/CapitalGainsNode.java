@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
+import com.thiru.wealthlens.taxengine.pipeline.IndexedGain;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -93,7 +95,8 @@ public final class CapitalGainsNode implements ComputationNode {
         CapitalGainsAbsorptionOrder order = RuleDefinitions.require(row.version().definition(),
                 CapitalGainsAbsorptionOrder.class, row.id());
         Map<CapitalGainsPart, Money> net = new HashMap<>();
-        Map<CapitalGainsPart, Money> indexedNet = new HashMap<>();
+        Map<CapitalGainsPart, Money> gaining = new HashMap<>();
+        Map<CapitalGainsPart, List<IndexedGain>> qualifying = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
         List<ReinvestmentExemption.BucketGain> taken = takenBuckets(ctx, lines);
         List<Money> chargeableGains = ReinvestmentExemption.chargeableGainsOf(ctx, taken, lines);
@@ -104,13 +107,16 @@ public final class CapitalGainsNode implements ComputationNode {
             CapitalGainsPart part = partOf(ctx, bucket, chargeable, term,
                     CapitalGainsStt.of(ctx, bucket, chargeable, term, lines));
             net.merge(part, chargeable, Money::plus);
-            indexedNet.merge(part,
-                    CapitalGainsIndexation.indexedGainOf(ctx, bucket, chargeable, lines).orElse(chargeable),
-                    Money::plus);
+            Optional<Money> indexed = CapitalGainsIndexation.indexedGainOf(ctx, bucket, chargeable, lines);
+            if (chargeable.isGreaterThan(Money.ZERO)) {
+                gaining.merge(part, chargeable, Money::plus);
+                indexed.ifPresent(measure -> qualifying.computeIfAbsent(part, held -> new ArrayList<>())
+                        .add(new IndexedGain(chargeable, measureOf(ctx, row.id(), part, measure, lines))));
+            }
         }
         DeclaredCapitalGainsParts declared = DeclaredCapitalGainsParts.of(ctx);
         Map<CapitalGainsPart, Money> available = new HashMap<>();
-        Map<CapitalGainsPart, Money> indexed = new HashMap<>();
+        Map<CapitalGainsPart, List<IndexedGain>> indexed = new HashMap<>();
         Money longTermLoss = Money.ZERO;
         Money shortTermLoss = Money.ZERO;
         for (CapitalGainsPart part : order.parts()) {
@@ -127,7 +133,9 @@ public final class CapitalGainsNode implements ComputationNode {
                 lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.INCOME, amount, amount)
                         .withLimitedBy(part.toString()));
                 available.put(part, amount);
-                indexed.put(part, measureOf(ctx, row.id(), part, indexedNet.getOrDefault(part, Money.ZERO), lines));
+                if (qualifying.containsKey(part)) {
+                    indexed.put(part, IndexedGain.lowered(qualifying.get(part), gaining.get(part), amount));
+                }
             }
         }
         CapitalGainsAbsorption parts = new CapitalGainsAbsorption(order, available, indexed);
@@ -137,7 +145,7 @@ public final class CapitalGainsNode implements ComputationNode {
         return new NodeResult(head, lines);
     }
 
-    /** A held part's indexed measure, nil rather than negative — a measure a cost that rose has already emptied. */
+    /** A qualifying gain's indexed measure, nil rather than negative — a measure a cost that rose has already emptied. */
     private static Money measureOf(NodeContext ctx, RuleId row, CapitalGainsPart part, Money measure,
             List<TraceLine> lines) {
         if (!measure.isLessThan(Money.ZERO)) {

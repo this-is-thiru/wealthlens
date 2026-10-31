@@ -20,6 +20,7 @@ import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.IndexedGain;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
@@ -66,6 +67,8 @@ class LandOrBuildingCapTest {
 
     private static final SpecialRateId LONG_OTHER = new SpecialRateId("RATE_CG_LONG_OTHER");
 
+    private static final LocalDate SOLD_2026 = LocalDate.of(2026, 9, 1);
+
     private static final String AT_TWELVE = "twelve and one-half per cent of the gain";
 
     private static final String AT_TWENTY = "twenty per cent of the gain computed with indexed cost";
@@ -107,6 +110,24 @@ class LandOrBuildingCapTest {
                 Optional.empty());
     }
 
+    /**
+     * Equity sold on NSE with STT paid on the buy and not on the sale — the other kind {@code LONG_TERM_OTHER} holds
+     * ({@code CG-PART-LONG-OTHER}).
+     */
+    private static CapitalGainsInput.Bucket sharesWithoutStt(LocalDate bought, LocalDate sold, String cost,
+            String consideration) {
+        SideVenue nse = new SideVenue(Optional.of("NSE"), Optional.empty());
+        BucketFacts facts = new BucketFacts("EQUITY", "PAID", "NOT_PAID", "PURCHASE", Optional.empty(), bought, sold,
+                nse, nse);
+        return new CapitalGainsInput.Bucket(Money.of(consideration), Money.of(cost), List.of(), facts,
+                Optional.empty());
+    }
+
+    /** The 2005 plot of the TY 2026-27 cases: 10,00,000 → 40,00,000, indexed cost 32,82,051.28 (117 → 384). */
+    private static CapitalGainsInput.Bucket plot() {
+        return bucket(LocalDate.of(2005, 6, 1), SOLD_2026, "1000000", "4000000");
+    }
+
     /** TY {@code year}'s head for the taxpayer {@code status} describes. */
     private static CapitalGainsHead head(int year, ResidentialStatus status, CapitalGainsInput.Bucket... buckets) {
         TaxYearId taxYear = TaxYearId.of(year);
@@ -120,12 +141,17 @@ class LandOrBuildingCapTest {
      * handed to {@code TaxByBasisNode} beside its parts.
      */
     private static NodeResult tax(int year, ResidentialStatus status, CapitalGainsHead head) {
+        return tax(year, status, head, Money.of("1000000"));
+    }
+
+    /** As {@link #tax(int, ResidentialStatus, CapitalGainsHead)}, on {@code otherIncome} of other income. */
+    private static NodeResult tax(int year, ResidentialStatus status, CapitalGainsHead head, Money otherIncome) {
         TaxYearId taxYear = TaxYearId.of(year);
-        Money totalIncome = Money.of("1000000").plus(head.total());
+        Money totalIncome = otherIncome.plus(head.total());
         return NodeHarness.with(pack(taxYear)).regime(FIRST_SCHEDULE_RATES)
                 .inputs(inputs(year, status, CapitalGainsInput.none(Instant.parse("2026-04-15T10:00:00Z"), "cap-run")))
                 .given(NodeIds.ROUND_TOTALINCOME, totalIncome)
-                .given(NodeIds.SETOFF, new HeadsAfterSetOff(totalIncome, head.parts(), head.indexedParts()))
+                .given(NodeIds.SETOFF, new HeadsAfterSetOff(totalIncome, head.parts(), head.indexedGains()))
                 .run(new TaxByBasisNode());
     }
 
@@ -159,7 +185,7 @@ class LandOrBuildingCapTest {
         NodeResult result = tax(2025, ResidentialStatus.RESIDENT, head);
 
         // Then — 12.5 % of 60,00,000 is 7,50,000 against 20 % of 40,78,740.16 = 8,15,748.03, so the first limb is less
-        assertThat(head.indexedPart(LONG_TERM_OTHER)).isEqualTo(Money.of("4078740.16"));
+        assertThat(head.indexedGains(LONG_TERM_OTHER)).extracting(IndexedGain::indexedGain).containsExactly(Money.of("4078740.16"));
         assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("750000"));
         assertThat(result.trace())
                 .filteredOn(line -> line.rule().equals(RuleIds.RATE_CG_LONG_OTHER))
@@ -179,7 +205,7 @@ class LandOrBuildingCapTest {
         NodeResult result = tax(2025, ResidentialStatus.RESIDENT, head);
 
         // Then — 12.5 % of 30,00,000 is 3,75,000 against 20 % of 7,86,324.79 = 1,57,264.96; the cap binds
-        assertThat(head.indexedPart(LONG_TERM_OTHER)).isEqualTo(Money.of("786324.79"));
+        assertThat(head.indexedGains(LONG_TERM_OTHER)).extracting(IndexedGain::indexedGain).containsExactly(Money.of("786324.79"));
         assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("157264.96"));
         assertThat(result.trace())
                 .filteredOn(line -> line.rule().equals(RuleIds.RATE_CG_LONG_OTHER))
@@ -215,7 +241,7 @@ class LandOrBuildingCapTest {
         NodeResult result = tax(2026, ResidentialStatus.RESIDENT, head);
 
         // Then — 20 % of 7,17,948.72 = 1,43,589.74 against 12.5 % of 30,00,000 = 3,75,000
-        assertThat(head.indexedPart(LONG_TERM_OTHER)).isEqualTo(Money.of("717948.72"));
+        assertThat(head.indexedGains(LONG_TERM_OTHER)).extracting(IndexedGain::indexedGain).containsExactly(Money.of("717948.72"));
         assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("143589.74"));
     }
 
@@ -230,7 +256,7 @@ class LandOrBuildingCapTest {
         NodeResult result = tax(2026, ResidentialStatus.RESIDENT, head);
 
         // Then — 20 % of 42,148.76 = 8,429.75 against 12.5 % of 1,00,000 = 12,500
-        assertThat(head.indexedPart(LONG_TERM_OTHER)).isEqualTo(Money.of("42148.76"));
+        assertThat(head.indexedGains(LONG_TERM_OTHER)).extracting(IndexedGain::indexedGain).containsExactly(Money.of("42148.76"));
         assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("8429.75"));
     }
 
@@ -243,9 +269,9 @@ class LandOrBuildingCapTest {
         // When
         NodeResult result = tax(2026, ResidentialStatus.RESIDENT, head);
 
-        // Then — no row of RS-CG-INDEXED-COST meets the bucket, so the part carries its gain as its measure too, and
-        // 20 % of 1,00,000 = 20,000 cannot be less than 12.5 % of it = 12,500
-        assertThat(head.indexedPart(LONG_TERM_OTHER)).isEqualTo(head.part(LONG_TERM_OTHER));
+        // Then — no row of RS-CG-INDEXED-COST meets the bucket, so the part lists no indexed gain and its whole gain is
+        // the rest, both bases alike: 20 % of 1,00,000 = 20,000 cannot be less than 12.5 % of it = 12,500
+        assertThat(head.indexedGains(LONG_TERM_OTHER)).isEmpty();
         assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("12500"));
     }
 
@@ -258,8 +284,66 @@ class LandOrBuildingCapTest {
         // When
         NodeResult result = tax(2025, ResidentialStatus.NON_RESIDENT, head);
 
-        // Then — the bucket carries no measure, so the 20 % limb is 20 % of the gain itself and 12.5 % is the lesser
-        assertThat(head.indexedPart(LONG_TERM_OTHER)).isEqualTo(head.part(LONG_TERM_OTHER));
+        // Then — the bucket lists no indexed gain, so the part is charged as the rest: 20 % of the gain itself against
+        // 12.5 %, the lesser
+        assertThat(head.indexedGains(LONG_TERM_OTHER)).isEmpty();
         assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("375000"));
+    }
+
+    @Test
+    void taxOnLandGain_whenTheLandSharesThePartWithAnotherGain_capsTheLandGainAlone() {
+        // Given — the plot (gain 30,00,000, indexed 7,17,948.72) and shares sold without STT, 10,00,000 → 20,00,000
+        CapitalGainsHead head = head(2026, ResidentialStatus.RESIDENT, plot(),
+                sharesWithoutStt(LocalDate.of(2022, 6, 1), SOLD_2026, "1000000", "2000000"));
+
+        // When
+        NodeResult result = tax(2026, ResidentialStatus.RESIDENT, head);
+
+        // Then — the plot: min(3,75,000, 1,43,589.74); the shares at 12.5 % of 10,00,000 = 1,25,000
+        assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("268589.74"));
+    }
+
+    @Test
+    void taxOnLandGain_whenTwoLandSalesSitInOneYear_capsEachOnItsOwn() {
+        // Given — the plot, and a flat bought 2015-06-01 for 40,00,000 and sold for 1,00,00,000: indexed cost
+        // 40,00,000 × 384 ÷ 254 = 60,47,244.09, indexed gain 39,52,755.91
+        CapitalGainsHead head = head(2026, ResidentialStatus.RESIDENT, plot(),
+                bucket(LocalDate.of(2015, 6, 1), SOLD_2026, "4000000", "10000000"));
+
+        // When
+        NodeResult result = tax(2026, ResidentialStatus.RESIDENT, head);
+
+        // Then — 1,43,589.74 for the plot plus min(7,50,000, 7,90,551.18) for the flat
+        assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("893589.74"));
+    }
+
+    @Test
+    void taxOnLandGain_whenTheNilBandShiftsOntoThePart_takesItFromEachGainInProportion() {
+        // Given — the plot and the shares, and no other income: the 2,50,000 nil band shifts onto the part
+        CapitalGainsHead head = head(2026, ResidentialStatus.RESIDENT, plot(),
+                sharesWithoutStt(LocalDate.of(2022, 6, 1), SOLD_2026, "1000000", "2000000"));
+
+        // When
+        NodeResult result = tax(2026, ResidentialStatus.RESIDENT, head, Money.ZERO);
+
+        // Then — the plot bears 2,50,000 × 30 ÷ 40 = 1,87,500: 28,12,500 and indexed 5,30,448.72, so 1,06,089.74;
+        // the shares 9,37,500 at 12.5 % = 1,17,187.50
+        assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("223277.24"));
+    }
+
+    @Test
+    void taxOnLandGain_whenALosingLotNetsIntoThePart_takesItFromEachGainInProportion() {
+        // Given — the plot, the shares, and a second lot sold without STT losing 4,00,000 (10,00,000 → 6,00,000)
+        CapitalGainsHead head = head(2026, ResidentialStatus.RESIDENT, plot(),
+                sharesWithoutStt(LocalDate.of(2022, 6, 1), SOLD_2026, "1000000", "2000000"),
+                sharesWithoutStt(LocalDate.of(2023, 6, 1), SOLD_2026, "1000000", "600000"));
+
+        // When
+        NodeResult result = tax(2026, ResidentialStatus.RESIDENT, head);
+
+        // Then — the plot bears 4,00,000 × 30 ÷ 40 = 3,00,000: 27,00,000 and indexed 4,17,948.72, so 83,589.74; the
+        // shares bear 1,00,000: 9,00,000 at 12.5 % = 1,12,500
+        assertThat(head.part(LONG_TERM_OTHER)).isEqualTo(Money.of("3600000"));
+        assertThat(valueOf(result).at(LONG_OTHER)).isEqualTo(Money.of("196089.74"));
     }
 }

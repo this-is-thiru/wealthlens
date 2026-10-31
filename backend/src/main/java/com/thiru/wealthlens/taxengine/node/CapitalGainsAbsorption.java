@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.node;
 
+import com.thiru.wealthlens.taxengine.pipeline.IndexedGain;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -13,9 +14,9 @@ import java.util.function.Predicate;
  * s.111(1)(a); 1961 s.71(2), s.74(1); D-243, D-247). Kept in one place so every loss set off against the head takes
  * the parts the same way, whatever text its lines carry (D-263).
  *
- * <p>Each part is held twice — its gain, and its gain with a qualifying cost indexed (W-088g, D-426) — and a rupee a
- * loss takes is taken from both, because the cap on the tax on land or building charges whichever of the two measures
- * is the lesser after the same loss. A measure the loss empties stays nil rather than going below it.
+ * <p>Beside each part are the land or building gains the cap on their tax applies to ({@link IndexedGain}; W-088g,
+ * D-426): what a loss takes from the part it takes from each of them in proportion, and from their indexed measure by
+ * the same rupees, nil rather than below it (W-088g3 C3a, D-431).
  */
 final class CapitalGainsAbsorption {
 
@@ -27,14 +28,14 @@ final class CapitalGainsAbsorption {
 
     private final CapitalGainsAbsorptionOrder order;
     private final Map<CapitalGainsPart, Money> parts;
-    private final Map<CapitalGainsPart, Money> indexedParts;
+    private final Map<CapitalGainsPart, List<IndexedGain>> indexedGains;
 
-    /** Over {@code parts} and their indexed measure, both lowered in place as a loss is absorbed. */
+    /** Over {@code parts} and their qualifying gains, both lowered in place as a loss is absorbed. */
     CapitalGainsAbsorption(CapitalGainsAbsorptionOrder order, Map<CapitalGainsPart, Money> parts,
-            Map<CapitalGainsPart, Money> indexedParts) {
+            Map<CapitalGainsPart, List<IndexedGain>> indexedGains) {
         this.order = order;
         this.parts = parts;
-        this.indexedParts = indexedParts;
+        this.indexedGains = indexedGains;
     }
 
     /** The declared order, which a caller's lines name. */
@@ -54,7 +55,8 @@ final class CapitalGainsAbsorption {
             }
             Money taken = Money.min(remaining, available);
             parts.put(part, available.minus(taken));
-            indexedParts.put(part, indexedParts.getOrDefault(part, Money.ZERO).minus(taken).floorAtZero());
+            indexedGains.computeIfPresent(part, (held, gains) -> IndexedGain.lowered(gains, available,
+                    available.minus(taken)));
             remaining = remaining.minus(taken);
             lines.add(line.of(lines.size() + 1, part, available, taken));
         }

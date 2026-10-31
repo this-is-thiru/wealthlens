@@ -4,18 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-088i5 is closed (D-430), committed ad4f1c82
-Stage           : 6 of 6 (DONE) — "commit it" is the owner's review approval
-Plan            : plans/W-088i5.md — approved C1a C2a, built; Build record holds two wrong predictions
-Decisions       : D-430 — the claim's buckets measured together, losing buckets included, the exempt amount
-                  shared by gain with the last taking the remainder
-Board           : `W-088g2 D  W-088i5 D  W-088g3 ·`
-Built           : ReinvestmentExemption.chargeableGainsOf + Measure; CapitalGainsNode.takenBuckets; +7 cases
-Next step       : W-088g3 (the land cap per land gain, D-429) — on "start W-088g3", plan and STOP
-Last verify     : class 24/0/0; unit tier 3873 / 0 / 0; integration tier 323 / 0 / 0; Checkstyle 0
+Item            : none in flight — W-088g3 is closed (D-431)
+Stage           : 6 of 6 (DONE) — "commit it" was the review approval; board D in the item commit
+Plan            : plans/W-088g3.md — approved C1a C2a C3a; Revision 1 and Build record
+Decisions       : D-431 — the land gain alone, per land bucket, reductions pro rata; review R2 and D-429 corrected
+Board           : `W-088g3 D  W-088g4 ·`
+Next step       : W-088g4 (a land sale computed without s.50C, improvement cost, s.55(2)(b) — D-429) — on
+                  "start W-088g4", plan and STOP
+Last verify     : unit tier 3881 / 0 / 0; integration tier 323 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last commit     : ad4f1c82 — taxplanning W-088i5: measure a house claim once over every bucket of its sale
-Updated         : 2026-10-31, session 44 — W-088i5 closed
+Last commit     : the W-088g3 item commit (subject in STATE "Last checkpoint")
+Updated         : 2026-11-01, session 44 — W-088g3 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

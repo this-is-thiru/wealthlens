@@ -5,6 +5,7 @@ import com.thiru.wealthlens.taxengine.input.Huf;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.IndexedGain;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
@@ -105,25 +106,47 @@ public final class TaxByBasisNode implements ComputationNode {
         Map<CapitalGainsPart, Money> charged = shiftShortfall(ctx, gains, nilBandCeiling(ladder).minus(atSlab), lines);
         for (Map.Entry<CapitalGainsPart, Money> part : charged.entrySet()) {
             RuleId rate = specialRate(ctx, part.getKey()).orElseThrow().id();
-            RuleVersion rateVersion = TemporallyApportionedCap.governingVersion(ctx.rule(rate), ctx.inputs().temporal());
-            CapResult cap = TemporallyApportionedCap.apply(ctx.rule(rate), ctx.inputs().temporal(),
-                    basesOf(heads, part.getKey(), part.getValue()));
-            value = value.plusSpecialRate(new SpecialRateId(rate.value().replace('-', '_')), cap.value());
-            lines.add(TraceLine.of(lines.size() + 1, produces(), rate, StepKind.TAX, MoneyValue.of(part.getValue()),
-                    MoneyValue.of(cap.value()), rateVersion.provenance())
-                    .withLimitedBy(part.getKey() + "; " + cap.limitedBy()));
+            value = value.plusSpecialRate(new SpecialRateId(rate.value().replace('-', '_')),
+                    taxOnPart(ctx, rate, heads, part.getKey(), part.getValue(), lines));
         }
         return new NodeResult(value, lines);
     }
 
     /**
-     * The amounts a special-rate cap may read: the part's gain after the shortfall, and the same gain with a qualifying
-     * cost indexed, less the same rupees the shortfall took and nil rather than negative (W-088g, D-426).
+     * A part's tax at its special rate: the row applied to each land or building gain the cap reaches, with that gain
+     * and its indexed measure as the two bases, and once more to the rest of the part with the rest as both — so the
+     * cap is measured on the land gain alone (OQ-36 as re-decided, W-088g3 C1a, D-431). The shortfall the part gave up
+     * comes off its land gains in proportion, and off their indexed measure by the same rupees (W-088g3 C3a). A line
+     * per application; a part taxed in one keeps the single line it always had.
      */
-    private static CapContext basesOf(HeadsAfterSetOff heads, CapitalGainsPart part, Money gain) {
-        Money shifted = heads.capitalGains(part).minus(gain);
-        return new CapContext(Map.of(SPECIAL_RATE_GAINS, gain, INDEXED_SPECIAL_RATE_GAINS,
-                heads.indexedCapitalGains(part).minus(shifted).floorAtZero()));
+    private static Money taxOnPart(NodeContext ctx, RuleId rate, HeadsAfterSetOff heads, CapitalGainsPart part,
+            Money gain, List<TraceLine> lines) {
+        List<IndexedGain> land = IndexedGain.lowered(heads.indexedGains(part), heads.capitalGains(part), gain);
+        Money rest = gain.minus(IndexedGain.totalOf(land));
+        boolean chargesRest = rest.isGreaterThan(Money.ZERO) || land.isEmpty();
+        boolean alone = land.size() + (chargesRest ? 1 : 0) == 1;
+        Money tax = Money.ZERO;
+        for (int index = 0; index < land.size(); index++) {
+            IndexedGain one = land.get(index);
+            tax = tax.plus(applyRate(ctx, rate, alone ? part.toString()
+                    : part + ", qualifying gain " + (index + 1) + " of " + land.size(), one.gain(), one.indexedGain(),
+                    lines));
+        }
+        if (chargesRest) {
+            tax = tax.plus(applyRate(ctx, rate, alone ? part.toString() : part + ", the rest", rest, rest, lines));
+        }
+        return tax;
+    }
+
+    /** One application of a special-rate row to a gain and its indexed measure, its line added. */
+    private static Money applyRate(NodeContext ctx, RuleId rate, String what, Money gain, Money indexedGain,
+            List<TraceLine> lines) {
+        RuleVersion rateVersion = TemporallyApportionedCap.governingVersion(ctx.rule(rate), ctx.inputs().temporal());
+        CapResult cap = TemporallyApportionedCap.apply(ctx.rule(rate), ctx.inputs().temporal(),
+                new CapContext(Map.of(SPECIAL_RATE_GAINS, gain, INDEXED_SPECIAL_RATE_GAINS, indexedGain)));
+        lines.add(TraceLine.of(lines.size() + 1, NodeIds.TAX_BYBASIS, rate, StepKind.TAX, MoneyValue.of(gain),
+                MoneyValue.of(cap.value()), rateVersion.provenance()).withLimitedBy(what + "; " + cap.limitedBy()));
+        return cap.value();
     }
 
     /**
