@@ -5,8 +5,6 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class ExcelParser {
 
-    private static final String EXCEL_TYPE = "text/xls";
-
     public static final String ASSETS = "ASSETS";
     public static final String TRANSACTIONS = "TRANSACTIONS";
     public static final String PORTFOLIO_FILE_NAME = "portfolio.xlsx";

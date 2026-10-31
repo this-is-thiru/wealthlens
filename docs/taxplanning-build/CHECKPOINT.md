@@ -4,25 +4,26 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-182 — closed. Item ecf681cd, state line b0ead327, protocol amendment c3ec40de
+Item            : W-183 — built, verified and staged; awaiting the owner's "commit it"
 Stage           : 6 of 6 (REVIEWED) — nothing in flight
-Plan            : plans/W-182.md — built as C1a, C1c-a, C2a, C3a, C4a
-Approved        : "W-182 approved C1a C1c-a C2a C3a C4a"; "Publish now" and "Add to
-                  00-START-HERE close-out" for D-420 (2026-10-31)
-Steps done      : the item, the WL-A-2 republish, and R15's new republish rule (D-420)
-Next step       : "start W-183" opens the next item at EXPLAIN — a build check for unused private
-                  fields and constants; the tool choice is its plan's first question. Remember
-                  R15: if that item changes the runbook file, republish WL-A-2 after its commit
-Last verify     : clean install green; unit 3828 / 0 / 0; integration 323 / 0 / 0 (OrbStack);
-                  both commented-code greps read hit by hit; doc guards 9 / 0; WL-A-2 read back
-                  against the file (only the H1 differs — it is the article's summary)
-Waiting on      : the owner — this file's commit, then W-183. Still open from before: the resume
-                  check's grep wording; OQ-32, OQ-33, OQ-34; the BSE segments for W-208 and the
-                  plan mechanism for W-210
-Files touched   : this file only. Committed: ecf681cd (the item: 11 Java files, STATE, WI rows,
-                  W-182 plan), b0ead327 (state line), c3ec40de (00-START-HERE R15, STATE D-420)
-Last item commit: taxplanning W-182: remove the seventeen commented-out blocks and the three comment-only classes — seven of them named types or fields that no longer exist, so nothing could be compiled back, and deleting the dead split methods makes W-213 and the three untracked TODOs visible instead of restoring anything (D-419)
-Updated         : 2026-10-31, session 43 — W-182 closed on three commits, tree clean but this file
+Plan            : plans/W-183.md — built as C1a, C2a, C3a, C4a, C5a
+Approved        : "W-183 approved C1a C2a C3a C4a C5a" (2026-10-31)
+Steps done      : the two guards, the eight removals, the deliberate violation, D-421, W-215 placed
+Next step       : the owner's "commit it" for this item; then "start W-184" — the coverage register
+                  against the rules' citations (33 MODELLED rows, each a D-208 judgement, then a
+                  baselined check). R15: W-183 changes no runbook text, so WL-A-2 is not republished
+Last verify     : clean install green (Checkstyle 0, Spotless passed); unit 3830 / 0 / 0;
+                  integration 323 / 0 / 0 (OrbStack); the deliberate violation failed both guards by
+                  name and passed once reverted; doc guards 9 / 0
+Waiting on      : the owner — this item's commit. Still open from before: the resume check's grep
+                  wording; OQ-32, OQ-33, OQ-34; the BSE segments for W-208 and the plan mechanism
+                  for W-210
+Files touched   : 7 code files, the new UnusedPrivateFieldTest, plans/W-183.md, 03-WORK-ITEMS.md,
+                  STATE.md (D-421, board D, Last checkpoint, Last updated, Current position), this
+                  file — all staged, nothing committed
+Last item commit: taxplanning W-182: remove the seventeen commented-out blocks and the three comment-only classes — seven of them named types or fields that no longer exist, so nothing could be compiled back, and deleting the dead split methods makes W-213 and the three untracked TODOs visible instead of restoring anything (D-419) — the W-183 commit does not exist yet; its subject is in STATE's "Last checkpoint"
+Updated         : 2026-10-31, session 43 — W-183 built; staged, not committed (the commit is the
+                  owner's word)
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
@@ -38,4 +39,4 @@ Mismatch → stop and report both outputs. Match → do **Next step** and nothin
 rather than the item commit, because the state lines carry the item prefix too. Compare the **item** commit
 named above; the tree, not the grep, is what decides. It fired for W-179's planning (`f461363c` against
 `866f3dd2`), for W-181's planning (`c620ba99` against `c76dad9a`), for W-182's planning (`592ff6a6` against
-`e494326f`) and twice before (`5c1b9f89` against `93fb1569`).
+`e494326f`) and for W-183's planning (`ac3a9fce` against `ecf681cd`).

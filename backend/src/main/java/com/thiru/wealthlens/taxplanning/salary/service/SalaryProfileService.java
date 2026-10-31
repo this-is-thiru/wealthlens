@@ -3,7 +3,6 @@ package com.thiru.wealthlens.taxplanning.salary.service;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.taxplanning.enums.ProfileType;
 import com.thiru.wealthlens.taxplanning.enums.RegimeType;
-import com.thiru.wealthlens.taxplanning.policy.service.PolicyService;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryComponentDto;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileRequest;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileResponse;
@@ -27,7 +26,6 @@ public class SalaryProfileService {
 
     private final SalaryProfileRepository profileRepo;
     private final TaxComputationRepository computationRepo;
-    private final PolicyService policyService;
 
     public SalaryProfileResponse createProfile(String email, SalaryProfileRequest request) {
         validateRequest(request);

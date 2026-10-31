@@ -44,8 +44,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChargeReconciliationService {
 
-    private static final int PAISE_SCALE = 2;
-
     private final UserChargeRepository userChargeRepository;
     private final TransactionRepository transactionRepository;
 

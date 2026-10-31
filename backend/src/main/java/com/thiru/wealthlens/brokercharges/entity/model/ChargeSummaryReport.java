@@ -28,9 +28,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 public class ChargeSummaryReport {
 
-    /** Two decimal places: a report is denominated in paise, whatever precision a rule carried. */
-    private static final int PAISE_SCALE = 2;
-
     @Field("amount_by_code")
     private Map<String, Double> amountByCode = new HashMap<>();
 
