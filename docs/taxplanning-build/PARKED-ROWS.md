@@ -44,6 +44,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-214 | PARKED | The untracked TODOs | The deploy gate | Not checked |
 | W-215 | PARKED | The dead members no build check covers | The deploy gate | Not checked |
 | W-230 | NOW 5 | A V2 sale's entered charge lost where no card prices it | This switch | Done first |
+| W-231 | PARKED | The trade-outcome rebuild across a stock split | Before the rebuild runs at the deploy (runbook §2) | **Silent wrong cost for a post-split sale; only reachable by running the rebuild** |
 | W-216 | NOW 4 | A stock split with a malformed ratio recorded as performed | This switch | Done first |
 | W-217 | PARKED | The api-collection pointer on a pushed commit | Owner, before the next push | Not checked |
 | W-218 | PARKED | W-089's and W-088i's records completed | The deploy gate | Not checked |

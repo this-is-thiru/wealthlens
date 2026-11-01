@@ -795,6 +795,7 @@ Any repair would be a new work item with its own section-2 entry.
 | 3.6 | **W-088k4a** (D-307) | `corporate_action.allotment_date` is new and not backfilled. Performing a `BONUS` action without it is **refused** (400, naming the stock and record date), so a pending bonus whose date is not entered blocks its quarterly perform. Bonus lots processed before W-088k4a are dated at the ex-date; W-088k4b corrects them | List below |
 | 3.7 | **W-088g5** (D-433) | A `LAND_OR_BUILDING` trade is now **refused** on V1, V2 and the upload (400). Land was enterable from W-088g2 (D-425) until this guard; a row entered in that window **stays as it is** — the guard refuses new entries and touches nothing stored. Expected 0 on every database; a non-zero count is reported to the owner, not corrected (a correction would be its own item, with W-088g9's property entry) | the 3.7 query below, owner, any time after the deploy that carries W-088g5; safe to run again |
 | 3.8 | **W-223** (D-437) | Until W-223 a V2 buy no rate card priced had its entered `brokerCharges` replaced by nil; from it the entered figure stays. A lot already written stays nil; its entered charge is still on its source transaction, so nothing is lost. Reported, not corrected: a correction is its own item | the 3.8 query below, owner, any time after the deploy that carries W-223; read-only; safe to run again; nothing to undo |
+| 3.9 | **W-213, W-216** (D-438) | Until W-213 a stock split performed through the per-user path changed no lot, yet was marked performed, and a malformed ratio could be too. A lot affected stays unsplit with a performed row. Reported, not corrected: a correction is its own row, placed once a count is seen. **Read the ratios too:** W-213 reads `n:d` as new shares to old (`2:1` doubles). A stored `1:10` meant as ten-for-one would **shrink** a holding when performed: re-enter such an action before anyone performs it | the 3.9 query below, owner, after the deploy that carries W-213 and before any split is performed; read-only; safe to run again; nothing to undo |
 
 ```js
 // 3.1 — rows, and users, whose summary would be refused
@@ -828,6 +829,13 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
     return { database: n, lots: d.assets.find({ broker_charges: 0, "buy_transaction_ids.0": { $exists: true } },
         { buy_transaction_ids: 1 }).toArray()
       .filter(lot => d.transactions.countDocuments({ _id: { $in: ids(lot) }, broker_charges: { $gt: 0 } }) > 0).length }; }) }])
+
+// 3.9 — splits already performed, and every stored split's ratio (W-213, W-216, D-438); one query over every app database
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); return {
+    database: n,
+    performed: d.lastly_performed_corporate_action.countDocuments({ action_type: "STOCK_SPLIT" }),
+    ratios: d.corporate_action.distinct("ratio", { type: "STOCK_SPLIT" }) }; }) }])
 
 // 3.5 — equity capital-gains disposals whose term the engine refuses: the sale not recorded on NSE or BSE (W-088k3, D-305)
 db.trade_outcomes.aggregate([

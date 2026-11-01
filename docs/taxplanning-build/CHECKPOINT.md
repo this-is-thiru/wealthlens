@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-213 + W-216 — stock splits, one family
-Stage           : 1 of 6 (READ) — W-223 closed (D-437)
-Done today      : W-088g9, W-229, W-089b, W-223 committed and closed; WL-A-2 republished
-Board           : `W-223 D`; queue: W-213, W-216, W-230, then Phase 11 from W-096
-Next step       : write plans/W-213.md covering both, one page, and STOP
-Owner actions   : nothing pushed — api-collection is ahead by 2: push it first. W-217 before the next push. Runbook §3.7, §3.8, §0.4 at the deploy
-Last verify     : unit + integration 4289 / 0 / 0; Checkstyle 0
-Files touched   : none
-Last item commit: taxplanning W-223: keep a V2 buy's entered charge where no rate card prices it
+Item            : W-230 — a V2 sale's entered charge lost where no card prices it
+Stage           : 2 of 6 (EXPLAINED) — plan written; no code
+Done today      : W-088g9, W-229, W-089b, W-223, W-213, W-216 committed and closed; WL-A-2 republished
+Board           : `W-216 D`, `W-230 E`; queue: then Phase 11 from W-096
+Next step       : ask for "W-230 approved"; do not build before it
+Owner actions   : nothing pushed — api-collection is ahead by 3: push it first. W-217 before the next push. Runbook §3.7 – §3.9, §0.4 at the deploy
+Last verify     : unit + integration 4307 / 0 / 0, Checkstyle 0; StockSplitIntegrationTest 7 / 0 / 0
+Files touched   : docs/taxplanning-build/plans/W-230.md, docs/taxplanning-build/STATE.md
+Last item commit: taxplanning W-213, W-216: apply a stock split on one path and check its ratio
 Updated         : 2026-11-01, session 45
 ```
 

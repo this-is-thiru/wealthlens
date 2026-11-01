@@ -14,7 +14,6 @@ import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -123,26 +122,6 @@ public class TransactionService {
                 transactionEntity.getStockName(), transactionEntity.getTransactionDate(), userMail.getEmail());
         TransactionEntity savedTransactionEntity = transactionRepository.save(transactionEntity);
         return savedTransactionEntity.getId();
-    }
-
-    public List<TransactionEntity> transactionsForCorporateActions(double quantity, String stockCode, LocalDate recordDate) {
-
-        List<TransactionEntity> transactionEntities = transactionRepository.findByStockCodeAndTransactionDateBeforeOrderByTransactionDateDesc(stockCode, recordDate);
-
-        List<TransactionEntity> transactionsToConsider = new ArrayList<>();
-        for (TransactionEntity transactionEntity : transactionEntities) {
-            if (quantity <= 0) {
-                break;
-            }
-
-            transactionsToConsider.add(transactionEntity);
-            quantity -= transactionEntity.getQuantity();
-        }
-
-        if (quantity > 0) {
-            throw new IllegalArgumentException("Invalid transactions");
-        }
-        return transactionsToConsider;
     }
 
     public List<TransactionEntity> transactionsForCorporateActions(String stockCode, LocalDate recordDate) {

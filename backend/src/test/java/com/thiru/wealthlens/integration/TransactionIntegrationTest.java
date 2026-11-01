@@ -129,65 +129,6 @@ public class TransactionIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void transactionsForCorporateActions_sufficientQuantity() {
-        // GIVEN
-        String email = "corpaction@test.com";
-        LocalDate recordDate = LocalDate.of(2024, 6, 1);
-        double requiredQty = 15.0;
-
-        TransactionEntity txn1 = new TransactionEntity();
-        txn1.setEmail(email);
-        txn1.setStockCode("HDFCBANK");
-        txn1.setStockName("HDFC Bank");
-        txn1.setPrice(1600.0);
-        txn1.setQuantity(10.0);
-        txn1.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        txn1.setTransactionDate(LocalDate.of(2024, 1, 15));
-        txn1.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.ZERODHA);
-        transactionRepository.save(txn1);
-
-        TransactionEntity txn2 = new TransactionEntity();
-        txn2.setEmail(email);
-        txn2.setStockCode("HDFCBANK");
-        txn2.setStockName("HDFC Bank");
-        txn2.setPrice(1650.0);
-        txn2.setQuantity(10.0);
-        txn2.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        txn2.setTransactionDate(LocalDate.of(2024, 3, 10));
-        txn2.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.ZERODHA);
-        transactionRepository.save(txn2);
-
-        // WHEN
-        List<TransactionEntity> result = transactionService.transactionsForCorporateActions(requiredQty, "HDFCBANK", recordDate);
-
-        // THEN
-        assertEquals(2, result.size());
-    }
-
-    @Test
-    void transactionsForCorporateActions_insufficientQuantity_throws() {
-        // GIVEN
-        String email = "insufficient@test.com";
-        LocalDate recordDate = LocalDate.of(2024, 6, 1);
-        double requiredQty = 50.0;
-
-        TransactionEntity txn = new TransactionEntity();
-        txn.setEmail(email);
-        txn.setStockCode("SBIN");
-        txn.setStockName("State Bank of India");
-        txn.setPrice(750.0);
-        txn.setQuantity(5.0);
-        txn.setTransactionType(com.thiru.wealthlens.portfolio.dto.enums.TransactionType.BUY);
-        txn.setTransactionDate(LocalDate.of(2024, 2, 1));
-        txn.setBrokerName(com.thiru.wealthlens.portfolio.dto.enums.BrokerName.UPSTOX);
-        transactionRepository.save(txn);
-
-        // WHEN / THEN
-        assertThrows(IllegalArgumentException.class, () ->
-                transactionService.transactionsForCorporateActions(requiredQty, "SBIN", recordDate));
-    }
-
-    @Test
     void transactionsForCorporateActions_dateFilterOrdered() {
         // GIVEN
         String email = "datefilter@test.com";

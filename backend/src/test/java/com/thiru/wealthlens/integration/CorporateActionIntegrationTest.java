@@ -658,7 +658,7 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
     // ========== HAPPY: performCorporateAction STOCK_SPLIT ==========
 
     @Test
-    void performCorporateAction_STOCKSPLIT_whenValidData_success() {
+    void performCorporateAction_STOCKSPLIT_refusesAndChangesNoLot() {
         // GIVEN
         AssetEntity asset = new AssetEntity();
         asset.setEmail("test@example.com");
@@ -691,11 +691,11 @@ public class CorporateActionIntegrationTest extends AbstractIntegrationTest {
         dto.setExDate(LocalDate.of(2024, 1, 20));
         dto.setRatio("1:10");
 
-        // WHEN
-        String result = corporateActionService.performCorporateAction(dto);
-
-        // THEN
-        assertEquals("Corporate action: STOCK_SPLIT noted successfully for stock: RELIANCE", result);
+        // WHEN / THEN — a split applies per user and broker (W-213, D-438): this path changed every user's lots
+        IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
+                () -> corporateActionService.performCorporateAction(dto));
+        assertTrue(refusal.getMessage().contains("/corporate-action/user/{email}/perform"));
+        assertEquals(100.0, mongoTemplate.findAll(AssetEntity.class).getFirst().getQuantity());
     }
 
     // ========== HAPPY: performCorporateAction NAME_OR_SYMBOL_CHANGE ==========
