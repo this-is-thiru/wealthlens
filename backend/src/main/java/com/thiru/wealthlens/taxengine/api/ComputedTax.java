@@ -29,12 +29,18 @@ public record ComputedTax(String computationId, String receipt, String taxYear, 
      *
      * @param facts the bucket
      * @param gain the gain after charges, before any exemption
+     * @param charges each charge and its limb
      * @param term the term decided
      * @param termRow the {@code RS-CG-TERM} row it met
      * @param monthsRead that row's holding period
      * @param leftOutBy the row that left it to another head
      */
-    public record Bucket(BucketFacts facts, Money gain, String term, String termRow, Integer monthsRead, String leftOutBy) {
+    public record Bucket(BucketFacts facts, Money gain, List<Charge> charges, String term, String termRow, Integer monthsRead,
+            String leftOutBy) {
+
+        /** One charge and where the rows put it: cost, transfer expenditure or not deducted. */
+        public record Charge(String side, String code, Money amount, String limb) {
+        }
     }
 
     /** One line of the trace, in plain values. */

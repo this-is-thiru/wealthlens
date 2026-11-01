@@ -207,10 +207,12 @@ public final class CapitalGainsNode implements ComputationNode {
             CapitalGainsCharges.Gain gain = CapitalGainsCharges.gainOf(ctx, bucket, lines);
             Optional<RuleId> leftOutBy = CapitalGainsScope.leftOutBy(ctx, bucket, gain.gain(), lines);
             if (leftOutBy.isPresent()) {
-                outcomes.add(new BucketOutcome(bucket.facts(), gain.gain(), Optional.empty(), leftOutBy));
+                outcomes.add(new BucketOutcome(bucket.facts(), gain.gain(), CapitalGainsCharges.outcomesOf(ctx, bucket),
+                        Optional.empty(), leftOutBy));
             } else {
                 BucketOutcome.TermDecision decision = CapitalGainsTerm.of(ctx, bucket, gain.gain(), lines);
-                outcomes.add(new BucketOutcome(bucket.facts(), gain.gain(), Optional.of(decision), Optional.empty()));
+                outcomes.add(new BucketOutcome(bucket.facts(), gain.gain(), CapitalGainsCharges.outcomesOf(ctx, bucket),
+                        Optional.of(decision), Optional.empty()));
                 taken.add(new ReinvestmentExemption.BucketGain(bucket, gain, decision.term()));
                 noticesOf(ctx, bucket).ifPresent(notices ->
                         annotations.add(new TraceAnnotation(lines.getLast().sequence(), notices)));

@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.node;
 
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Charge;
+import com.thiru.wealthlens.taxengine.pipeline.BucketOutcome;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.ChargeDeduction;
@@ -56,6 +57,14 @@ final class CapitalGainsCharges {
             }
         }
         return new Gain(gain, netConsideration);
+    }
+
+    /** Each of the bucket's charges and the limb its row names (W-160g, D-444). */
+    static List<BucketOutcome.ChargeOutcome> outcomesOf(NodeContext ctx, CapitalGainsInput.Bucket bucket) {
+        return bucket.charges().stream()
+                .map(charge -> new BucketOutcome.ChargeOutcome(charge.side().name(), charge.code(), charge.amount(),
+                        limbIn(ctx, rowOf(ctx, bucket, charge)).name()))
+                .toList();
     }
 
     /**

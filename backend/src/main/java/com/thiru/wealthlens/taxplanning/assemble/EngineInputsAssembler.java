@@ -3,7 +3,9 @@ package com.thiru.wealthlens.taxplanning.assemble;
 import com.thiru.wealthlens.taxengine.input.Assessee;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
+import com.thiru.wealthlens.taxengine.input.FilingFacts;
 import com.thiru.wealthlens.taxengine.input.Huf;
 import com.thiru.wealthlens.taxengine.input.Individual;
 import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
@@ -63,6 +65,16 @@ public class EngineInputsAssembler {
                 assessee(profile), family(profile), LedgerSnapshot.empty(), elections(profile, year), gains,
                 owned.inputs().filing().toFilingFacts());
         return new Assembled(inputs, draft, profile.isHoldsPortfolio());
+    }
+
+    /**
+     * Inputs for reading a holder's capital gains alone: no entries, no filing, and the facts the rows may read about the person.
+     * No figure from them but the head's is meaningful, and nothing they make is stored.
+     */
+    public EngineInputs forCapitalGains(TaxpayerProfile profile, TaxYearId year, RegimeCode regime, LocalDate asOf,
+            CapitalGainsInput gains) {
+        return new EngineInputs(year, regime, TemporalContext.forTaxYear(year, asOf), EnteredFacts.none(), assessee(profile),
+                family(profile), LedgerSnapshot.empty(), elections(profile, year), gains, FilingFacts.notYetFurnished(year.endsOn()));
     }
 
     /**

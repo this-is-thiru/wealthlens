@@ -428,7 +428,7 @@ public enum TaxError {                     //  http  retryable  class
 | a `taxengine.node` or `taxengine.election` class names no rule row: no `RuleIds`, no `new RuleId(String)` — it names a `RuleSetId` | `nodes_and_elections_reach_rules_through_rule_sets` | ✅ `W-088m3`, widened `W-088m4` |
 | no `taxengine/node` source declares a `Map<…, RuleSetId>` (an item is chosen by `ItemFactIs`) | `ArchitectureTest.nodes_hold_no_map_to_a_rule_set` (plain test) | ✅ `W-088m3` |
 | every `ComputationNode` implementation is referenced by some pack pipeline | `ArchitectureTest` | ○ `W-053` (with I3) |
-| every `@RequestBody` carries `@Valid`; no controller returns an `@Document` type | `ArchitectureTest` | ○ `W-095` |
+| no `/tax/**` controller returns an `@Document` type; a request validates once, on the way in, so `@Valid` is not required (D-444) | `ArchitectureTest` | ✅ `W-095` |
 
 ---
 

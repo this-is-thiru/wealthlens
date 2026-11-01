@@ -2,17 +2,18 @@ package com.thiru.wealthlens.taxplanning.workspace;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 
 /**
  * Workspaces, drafts and their revisions ({@code DR 11} F2, F3, F5). Every path first proves the profile is this account's. A save
- * writes its revision before the draft: the unique revision key is what turns two racing saves into one winner.
+ * writes its revision before the draft: the unique revision key is what turns two racing saves into one winner, and the loser's
+ * failure ends its transaction, so the controller asks for the conflict afterwards.
  */
 @Service
 @Transactional
@@ -93,27 +94,24 @@ public class DraftService {
     /**
      * Applies {@code patch} if {@code expectedRevision} is current.
      *
-     * @throws StaleDraftException if it is not, carrying the draft as it stands
-     * @throws BadRequestException if the draft is frozen or the result would not bind
+     * @throws DraftConflictException if it is not, or the draft is frozen, carrying the draft as it stands
+     * @throws BadRequestException if the result would not bind
      */
     public DraftView patch(String email, String draftId, int expectedRevision, JsonNode patch) {
         FilingDraft draft = owned(email, draftId);
         if (!draft.getStatus().isEditable()) {
-            throw new BadRequestException("A draft that is " + draft.getStatus() + " cannot be edited");
+            throw new DraftConflictException("A draft that is " + draft.getStatus() + " cannot be edited", DraftView.of(draft),
+                    List.of());
         }
         if (draft.getCurrentRevision() != expectedRevision) {
-            throw new StaleDraftException(DraftView.of(draft));
+            throw stale(draft, expectedRevision, patch);
         }
         JsonNode inputs = JsonPatchApplier.apply(DraftInputsMapper.tree(draft.getInputsJson()), patch);
         DraftInputsMapper.requireBinds(inputs);
         boolean reopened = draft.getStatus() == DraftStatus.READY;
         DraftRevision revision = revision(draft, expectedRevision + 1, email, reopened);
         revision.setChangeSetJson(DraftInputsMapper.text(patch));
-        try {
-            revisionRepository.insert(revision);
-        } catch (DuplicateKeyException e) {
-            throw new StaleDraftException(DraftView.of(owned(email, draftId)));
-        }
+        revisionRepository.insert(revision);
         draft.setInputsJson(DraftInputsMapper.text(inputs));
         draft.setCurrentRevision(expectedRevision + 1);
         draft.setStatus(DraftStatus.DRAFT);
@@ -178,6 +176,37 @@ public class DraftService {
                 () -> new IllegalStateException("The draft " + draftId + " has no workspace"));
         workspace.setPrimaryDraftId(draftId);
         return workspaceRepository.save(workspace);
+    }
+
+    /**
+     * The conflict for a save that lost a race, read after that save's transaction has ended: inside it, nothing more can be read.
+     */
+    @Transactional(readOnly = true)
+    public DraftConflictException.DraftConflict conflictAfterRace(String email, String draftId, int expectedRevision, JsonNode patch) {
+        return stale(owned(email, draftId), expectedRevision, patch).conflict();
+    }
+
+    private DraftConflictException stale(FilingDraft current, int expectedRevision, JsonNode patch) {
+        List<String> changed = revisionRepository.findByDraftIdOrderByRevisionNumber(current.getId()).stream()
+                .filter(revision -> revision.getRevisionNumber() > expectedRevision && revision.getChangeSetJson() != null)
+                .flatMap(revision -> pathsIn(DraftInputsMapper.tree(revision.getChangeSetJson())).stream())
+                .toList();
+        List<String> conflicting = pathsIn(patch).stream()
+                .filter(path -> changed.stream().anyMatch(other -> overlap(path, other)))
+                .toList();
+        return new DraftConflictException("This draft has moved on to revision " + current.getCurrentRevision(),
+                DraftView.of(current), conflicting);
+    }
+
+    private static List<String> pathsIn(JsonNode patch) {
+        List<String> paths = new ArrayList<>();
+        patch.forEach(operation -> paths.add(operation.path("path").asString("")));
+        return paths;
+    }
+
+    /** Whether one path is the other or lies inside it; an array append overlaps the whole array's later appends. */
+    private static boolean overlap(String one, String other) {
+        return one.equals(other) || one.startsWith(other + "/") || other.startsWith(one + "/");
     }
 
     private FilingDraft owned(String email, String draftId) {

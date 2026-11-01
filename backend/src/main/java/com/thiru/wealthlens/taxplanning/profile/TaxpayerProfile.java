@@ -1,8 +1,6 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
@@ -34,7 +32,6 @@ public class TaxpayerProfile implements AuditableEntity {
     @Field("email")
     private String email;
 
-    @JsonIgnore
     @Indexed(unique = true)
     @Field("pan")
     private String pan;
@@ -65,10 +62,4 @@ public class TaxpayerProfile implements AuditableEntity {
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
-
-    /** The PAN as a response shows it: masked, since it is an identifier ({@code DR 14} O1.1). */
-    @JsonProperty("maskedPan")
-    public String maskedPan() {
-        return Pan.maskedOrNull(pan);
-    }
 }

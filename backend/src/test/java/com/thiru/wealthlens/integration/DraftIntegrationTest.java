@@ -10,6 +10,12 @@ import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
 import io.restassured.RestAssured;
 import java.net.URI;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
@@ -171,8 +177,12 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         status("{\"status\": \"READY\"}");
         status("{\"status\": \"ACTED_ON\"}");
 
-        // When / Then
-        assertThat(save(ADD_EMPLOYMENT.formatted("1"), "\"rev-0\"").getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        // When
+        ResponseEntity<String> frozen = save(ADD_EMPLOYMENT.formatted("1"), "\"rev-0\"");
+
+        // Then — T11-6
+        assertThat(frozen.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(1);
     }
 
     @Test
@@ -202,5 +212,72 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         assertThat(call(HttpMethod.GET, OTHER, "/drafts/" + draftId, null, null).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(call(HttpMethod.PATCH, OTHER, "/drafts/" + draftId, ADD_EMPLOYMENT.formatted("1"), "\"rev-0\"")
                 .getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void createDraft_whenFiveAreMadeForOneYear_keepsThemAll() {
+        // Given — T11-1: the first made in aDraft
+        for (int label = 2; label <= 5; label++) {
+            call(HttpMethod.POST, OWNER, "/profiles/" + profileId + "/workspaces/2026/drafts", "{\"label\": \"Draft " + label + "\"}", null);
+        }
+
+        // When / Then
+        assertThat(mongoTemplate.findAll(FilingDraft.class)).hasSize(5);
+        assertThat(mongoTemplate.findAll(TaxYearWorkspace.class)).hasSize(1);
+    }
+
+    @Test
+    void patch_whenTwoSavesRaceOnOnePath_oneWinsAndTheOtherNamesThePath() throws Exception {
+        // Given — T11-2
+        ExecutorService threads = Executors.newFixedThreadPool(2);
+        Callable<ResponseEntity<String>> save = () -> save(ADD_EMPLOYMENT.formatted("1"), "\"rev-0\"");
+
+        // When
+        List<ResponseEntity<String>> both = threads.invokeAll(List.of(save, save)).stream().map(DraftIntegrationTest::resultOf).toList();
+        threads.shutdown();
+
+        // Then
+        assertThat(both).extracting(ResponseEntity::getStatusCode).containsExactlyInAnyOrder(HttpStatus.OK, HttpStatus.CONFLICT);
+        String loser = both.stream().filter(r -> r.getStatusCode() == HttpStatus.CONFLICT).findFirst().orElseThrow().getBody();
+        assertThat(loser).contains("\"conflictingPaths\":[\"/entered/employments/-\"]");
+        assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
+    }
+
+    private static ResponseEntity<String> resultOf(Future<ResponseEntity<String>> future) {
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Test
+    void patch_whenSavesTouchDisjointPaths_theLoserResendsAndBothApply() {
+        // Given — T11-3
+        save("[{\"op\": \"replace\", \"path\": \"/filing/dueDate\", \"value\": \"2027-07-31\"}]", "\"rev-0\"");
+        String other = ADD_EMPLOYMENT.formatted("500");
+
+        // When
+        ResponseEntity<String> stale = save(other, "\"rev-0\"");
+        ResponseEntity<String> resent = save(other, "\"rev-1\"");
+
+        // Then
+        assertThat(stale.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(stale.getBody()).contains("\"conflictingPaths\":[]");
+        assertThat(resent.getHeaders().getETag()).isEqualTo("\"rev-2\"");
+        assertThat(resent.getBody()).contains("2027-07-31", "500");
+    }
+
+    @Test
+    void inputsAt_whenEachSaveIsReplayed_isByteIdenticalToWhatWasRead() {
+        // Given — T11-4
+        String blank = mongoTemplate.findAll(FilingDraft.class).getFirst().getInputsJson();
+        save(ADD_EMPLOYMENT.formatted("100"), "\"rev-0\"");
+        String first = mongoTemplate.findAll(FilingDraft.class).getFirst().getInputsJson();
+        save(ADD_EMPLOYMENT.formatted("200"), "\"rev-1\"");
+
+        // When / Then
+        assertThat(call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/0", null, null).getBody()).isEqualTo(blank);
+        assertThat(call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/1", null, null).getBody()).isEqualTo(first);
     }
 }

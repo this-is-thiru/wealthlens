@@ -1,15 +1,15 @@
 package com.thiru.wealthlens.taxplanning.profile.controller;
 
-import com.thiru.wealthlens.taxplanning.profile.BankAccount;
 import com.thiru.wealthlens.taxplanning.profile.BankAccountRequest;
-import com.thiru.wealthlens.taxplanning.profile.Employer;
+import com.thiru.wealthlens.taxplanning.profile.BankAccountResponse;
 import com.thiru.wealthlens.taxplanning.profile.EmployerRequest;
-import com.thiru.wealthlens.taxplanning.profile.FamilyMember;
+import com.thiru.wealthlens.taxplanning.profile.EmployerResponse;
 import com.thiru.wealthlens.taxplanning.profile.FamilyMemberRequest;
-import com.thiru.wealthlens.taxplanning.profile.Landlord;
+import com.thiru.wealthlens.taxplanning.profile.FamilyMemberResponse;
 import com.thiru.wealthlens.taxplanning.profile.LandlordRequest;
-import com.thiru.wealthlens.taxplanning.profile.Lender;
+import com.thiru.wealthlens.taxplanning.profile.LandlordResponse;
 import com.thiru.wealthlens.taxplanning.profile.LenderRequest;
+import com.thiru.wealthlens.taxplanning.profile.LenderResponse;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileReferenceService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -30,82 +30,82 @@ public class TaxProfileReferenceController {
     private final TaxProfileReferenceService service;
 
     @PostMapping("/family-members")
-    public FamilyMember createFamilyMember(@PathVariable String email, @PathVariable String profileId, @RequestBody FamilyMemberRequest request) {
-        return service.createFamilyMember(email, profileId, request);
+    public FamilyMemberResponse createFamilyMember(@PathVariable String email, @PathVariable String profileId, @RequestBody FamilyMemberRequest request) {
+        return FamilyMemberResponse.of(service.createFamilyMember(email, profileId, request));
     }
 
     @GetMapping("/family-members")
-    public List<FamilyMember> familyMembers(@PathVariable String email, @PathVariable String profileId) {
-        return service.familyMembers(email, profileId);
+    public List<FamilyMemberResponse> familyMembers(@PathVariable String email, @PathVariable String profileId) {
+        return service.familyMembers(email, profileId).stream().map(FamilyMemberResponse::of).toList();
     }
 
     @PutMapping("/family-members/{id}")
-    public FamilyMember replaceFamilyMember(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
+    public FamilyMemberResponse replaceFamilyMember(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
             @RequestBody FamilyMemberRequest request) {
-        return service.replaceFamilyMember(email, profileId, id, request);
+        return FamilyMemberResponse.of(service.replaceFamilyMember(email, profileId, id, request));
     }
 
     @PostMapping("/employers")
-    public Employer createEmployer(@PathVariable String email, @PathVariable String profileId, @RequestBody EmployerRequest request) {
-        return service.createEmployer(email, profileId, request);
+    public EmployerResponse createEmployer(@PathVariable String email, @PathVariable String profileId, @RequestBody EmployerRequest request) {
+        return EmployerResponse.of(service.createEmployer(email, profileId, request));
     }
 
     @GetMapping("/employers")
-    public List<Employer> employers(@PathVariable String email, @PathVariable String profileId) {
-        return service.employers(email, profileId);
+    public List<EmployerResponse> employers(@PathVariable String email, @PathVariable String profileId) {
+        return service.employers(email, profileId).stream().map(EmployerResponse::of).toList();
     }
 
     @PutMapping("/employers/{id}")
-    public Employer replaceEmployer(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
+    public EmployerResponse replaceEmployer(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
             @RequestBody EmployerRequest request) {
-        return service.replaceEmployer(email, profileId, id, request);
+        return EmployerResponse.of(service.replaceEmployer(email, profileId, id, request));
     }
 
     @PostMapping("/landlords")
-    public Landlord createLandlord(@PathVariable String email, @PathVariable String profileId, @RequestBody LandlordRequest request) {
-        return service.createLandlord(email, profileId, request);
+    public LandlordResponse createLandlord(@PathVariable String email, @PathVariable String profileId, @RequestBody LandlordRequest request) {
+        return LandlordResponse.of(service.createLandlord(email, profileId, request));
     }
 
     @GetMapping("/landlords")
-    public List<Landlord> landlords(@PathVariable String email, @PathVariable String profileId) {
-        return service.landlords(email, profileId);
+    public List<LandlordResponse> landlords(@PathVariable String email, @PathVariable String profileId) {
+        return service.landlords(email, profileId).stream().map(LandlordResponse::of).toList();
     }
 
     @PutMapping("/landlords/{id}")
-    public Landlord replaceLandlord(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
+    public LandlordResponse replaceLandlord(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
             @RequestBody LandlordRequest request) {
-        return service.replaceLandlord(email, profileId, id, request);
+        return LandlordResponse.of(service.replaceLandlord(email, profileId, id, request));
     }
 
     @PostMapping("/lenders")
-    public Lender createLender(@PathVariable String email, @PathVariable String profileId, @RequestBody LenderRequest request) {
-        return service.createLender(email, profileId, request);
+    public LenderResponse createLender(@PathVariable String email, @PathVariable String profileId, @RequestBody LenderRequest request) {
+        return LenderResponse.of(service.createLender(email, profileId, request));
     }
 
     @GetMapping("/lenders")
-    public List<Lender> lenders(@PathVariable String email, @PathVariable String profileId) {
-        return service.lenders(email, profileId);
+    public List<LenderResponse> lenders(@PathVariable String email, @PathVariable String profileId) {
+        return service.lenders(email, profileId).stream().map(LenderResponse::of).toList();
     }
 
     @PutMapping("/lenders/{id}")
-    public Lender replaceLender(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
+    public LenderResponse replaceLender(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
             @RequestBody LenderRequest request) {
-        return service.replaceLender(email, profileId, id, request);
+        return LenderResponse.of(service.replaceLender(email, profileId, id, request));
     }
 
     @PostMapping("/bank-accounts")
-    public BankAccount createBankAccount(@PathVariable String email, @PathVariable String profileId, @RequestBody BankAccountRequest request) {
-        return service.createBankAccount(email, profileId, request);
+    public BankAccountResponse createBankAccount(@PathVariable String email, @PathVariable String profileId, @RequestBody BankAccountRequest request) {
+        return BankAccountResponse.of(service.createBankAccount(email, profileId, request));
     }
 
     @GetMapping("/bank-accounts")
-    public List<BankAccount> bankAccounts(@PathVariable String email, @PathVariable String profileId) {
-        return service.bankAccounts(email, profileId);
+    public List<BankAccountResponse> bankAccounts(@PathVariable String email, @PathVariable String profileId) {
+        return service.bankAccounts(email, profileId).stream().map(BankAccountResponse::of).toList();
     }
 
     @PutMapping("/bank-accounts/{id}")
-    public BankAccount replaceBankAccount(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
+    public BankAccountResponse replaceBankAccount(@PathVariable String email, @PathVariable String profileId, @PathVariable String id,
             @RequestBody BankAccountRequest request) {
-        return service.replaceBankAccount(email, profileId, id, request);
+        return BankAccountResponse.of(service.replaceBankAccount(email, profileId, id, request));
     }
 }

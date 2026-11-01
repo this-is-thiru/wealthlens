@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-109a closed (D-443)
-Stage           : 6 of 6 (DONE); the owner orders what remains
-Done today      : W-088g9, W-229, W-089b, W-223, W-213, W-216, W-230; profile, drafts, compute families; W-109a (D-434 – D-443)
-Board           : `W-109a D`; open in Phase 11: W-160g, W-111; Phases 10, 12, 13, 14 unstarted; `K` rows in PARKED-ROWS.md
-Next step       : the owner chooses the next family from the view given in session 45
+Item            : family B — W-234, W-112, the "Not checked" parked rows
+Stage           : 1 of 6 (READ) — family A closed (D-444)
+Done today      : D-434 – D-444 committed and closed
+Board           : family A `D`; next family B, then W-134 – W-136, C, D, E, the rest of F
+Next step       : triage the parked rows, write one plan, and STOP
 Owner actions   : nothing pushed — api-collection is ahead by 5: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy
-Last verify     : unit + integration 4389 / 0 / 0; Checkstyle 0
+Last verify     : unit + integration 4398 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last item commit: taxplanning W-109a: store what was decided for each capital-gains bucket
+Last item commit: taxplanning W-095, W-111, W-160g: finish the API
 Updated         : 2026-11-01, session 45
 ```
 

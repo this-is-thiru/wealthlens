@@ -1421,7 +1421,7 @@ if that is not enough for the item in hand.
 | W-092 | `ItrSchedule`, `FieldSource`, `forms/itr-schedules.json` | `DR 21` I5 | schedules **shared by reference** |
 | W-093 | `ScheduleMapper` | `DR 21` I5 | a **fold**, not a per-form mapper |
 | W-094 | **T21 tests** | `DR 21` I8 | T21-1 … T21-16 |
-| W-095 | ArchUnit: `@Valid` on every `@RequestBody`; no `@Document` returned | TS T10 | |
+| W-095 | ArchUnit: `@Valid` on every `@RequestBody`; no `@Document` returned | TS T10 | **Built (D-444):** no `@Document` returned, `/tax/**` controllers only; `@Valid` dropped from T10 |
 
 ---
 
@@ -1434,7 +1434,7 @@ if that is not enough for the item in hand.
 | W-098 | `Employer`, `Landlord`, `Lender`, `BankAccount` | `DR 15` F3, F4 **Built (D-440).** |
 | W-099 | `TaxYearWorkspace`, `FilingDraft`, `DraftInputs` | `DR 11` F2 **Built (D-441):** inputs as `EnteredFacts` JSON, departing from `DR 11` F4 |
 | W-082d | The regime election history *(D-220)*: `RegimeElectionHistory` (per profile and regime, append-only, `stateAsAt(TaxYearId)`) and `ElectionEvent` (`DR 17` L3) in `taxplanning` — the source W-103 projects into `RegimeElectionSnapshot`; moved from W-082 (Appendix A) because it holds `ProfileId` (W-096) and `DraftId` (W-099) | `DR 17` L3 | before W-103 **Built (D-441):** `isElectedBy`, not `stateAsAt`; states are W-082e's |
-| W-082e | The s.202(4)(a) binding, history-aware regime offers *(D-222)*: `DR 17` L3's state branches — IN_EFFECT carried into later years, WITHDRAWN and the withdrawals used (`RegimeElectionSnapshot.withdrawalsUsedFor`), PERMANENTLY_INELIGIBLE with `AfterWithdrawal.IneligibleUnless` revival and its route, LAPSED with `ContinuationPolicy`; `RegimeOffer` gains `Continuing` / `Lapsed`; lifts W-082b's refusal of a regime whose binding applies | `DR 17` L3; `01-rulebook.md` R2 `REG-OPTOUT-YEARLY-001` | needs W-082d's history and, to be reachable, income under the business head |
+| W-082e | The s.202(4)(a) binding, history-aware regime offers *(D-222)*: `DR 17` L3's state branches — IN_EFFECT carried into later years, WITHDRAWN and the withdrawals used (`RegimeElectionSnapshot.withdrawalsUsedFor`), PERMANENTLY_INELIGIBLE with `AfterWithdrawal.IneligibleUnless` revival and its route, LAPSED with `ContinuationPolicy`; `RegimeOffer` gains `Continuing` / `Lapsed`; lifts W-082b's refusal of a regime whose binding applies | `DR 17` L3; `01-rulebook.md` R2 `REG-OPTOUT-YEARLY-001` | needs W-082d's history and, to be reachable, income under the business head **Parked (D-444):** unreachable until the business head exists; `K` in `PARKED-ROWS.md` |
 | W-100 | `DraftRevision` + JSON-Patch apply/replay | `DR 11` F2 **Built (D-441).** |
 | W-101 | repositories + indexes | TS T7 **Part built (D-440):** the six profile collections' indexes; the rest with W-099's family **Rest built (D-441).** |
 | W-102 | `cleanDatabase()` additions | TS T7 — **every** collection **Needs no build (D-440):** `AbstractIntegrationTest.cleanDatabase` clears every non-seeded collection (`:121-126`), which this row predates |
@@ -1459,9 +1459,9 @@ if that is not enough for the item in hand.
 | W-108 | draft endpoints | TS T8 **Built (D-441):** workspace, create, read, patch, status, primary, revisions; fork not built |
 | W-109 | compute + compare-regimes endpoints | TS T8 **Requirement (W-194, D-410):** the stored computation carries, per capital-gains bucket, a typed outcome — the bucket's facts, its gain, the term, the `RS-CG-TERM` row it met and the months read — beside the trace; a bucket the head leaves out is recorded as left out, naming the row that took it; a test proves each bucket's term and row from a two-bucket input **Built (D-442):** compute and compare-regimes; the requirement above is W-109a |
 | W-109a | **The stored computation's per-bucket capital-gains outcome** *(D-410, W-194; D-442 C3a)*: a typed outcome per bucket beside the trace: the bucket's facts, its gain, the term, the `RS-CG-TERM` row it met and the months read; a bucket the head leaves out is recorded as left out, naming the row that took it; a test proves each bucket's term and row from a two-bucket input | W-109's requirement; D-410 | next, after W-109 **Built (D-443).** |
-| W-160g | A by-term read endpoint *(D-362; T1, C1a)*: `taxplanning` serves a holding's or a realised gain's term as the engine's `RS-CG-TERM` decides it for a tax year, over `portfolio`'s facts — the product's by-term view after `portfolio` stops holding a term; **widened (D-377):** also each disposal's or holding's deductible charges as `RS-CG-CHARGE` decides them for the year, over the stored breakdowns — the view `AssetCharges.deductibleSellCharges` gave before W-162b; after W-109 | TS T8; `plans/W-160.md`; D-362; D-377 |
+| W-160g | A by-term read endpoint *(D-362; T1, C1a)*: `taxplanning` serves a holding's or a realised gain's term as the engine's `RS-CG-TERM` decides it for a tax year, over `portfolio`'s facts — the product's by-term view after `portfolio` stops holding a term; **widened (D-377):** also each disposal's or holding's deductible charges as `RS-CG-CHARGE` decides them for the year, over the stored breakdowns — the view `AssetCharges.deductibleSellCharges` gave before W-162b; after W-109 | TS T8; `plans/W-160.md`; D-362; D-377 **Built (D-444).** |
 | W-110 | optimistic locking, `If-Match`, 409 merge body | `DR 11` F5 **Built (D-441).** |
-| W-111 | **T11 tests** | `DR 11` F10 |
+| W-111 | **T11 tests** | `DR 11` F10 **Built (D-444):** T11-1, 2, 3, 4, 6; the rest recorded against the rows that reach them |
 
 ---
 
@@ -1505,7 +1505,7 @@ if that is not enough for the item in hand.
 
 | Item | Produces | Spec |
 |---|---|---|
-| W-134 | PII: field encryption, log masking | `DR 14` O1 |
+| W-134 | PII: field encryption, log masking | `DR 14` O1 **Also (D-444):** covers `tax_filing_drafts.inputs_json`, revisions and computations; must be built, not waived, before a real PAN is stored |
 | W-135 | third-party PII exclusion from exports | `DR 14` O1.1, O5 |
 | W-136 | retention derived from pack carry-forward periods | `DR 14` O5 |
 | W-137 | `TaxJob` + `JobLease` + 6 jobs | `DR 19` E8 |
@@ -1519,7 +1519,7 @@ if that is not enough for the item in hand.
 | W-144 | JaCoCo + PIT gates | `DR 07` X5.5 |
 | W-145 | persona fixtures | `DR 19` E10 |
 | W-146 | **synthetic pack test** — three regimes, synthetic year, sunset | `DR 10` E8, `DR 17` T17-11, `DR 18` T18-13 |
-| W-232 | **Encryption at rest and third-party retention** *(D-440; W-096 C1a)*: `DR 14` O1.1 requires identifiers (PAN, TAN), money and special-category data encrypted at rest with field-level keys, and reads of special-category data recorded; O5 sets retention for landlords and lenders. No encryption exists and no row owned it. One cross-cutting decision (driver-level or by field), with the unique `{pan}` index's form and the key's handling; must hold before any real PAN is stored; also covers `tax_filing_drafts.inputs_json` and revisions, which hold income and claims (D-441) | `DR 14` O1.1, O5; D-440 | before the one deploy; `K` in `PARKED-ROWS.md` |
+| W-232 | **Encryption at rest and third-party retention** *(D-440; W-096 C1a)*: `DR 14` O1.1 requires identifiers (PAN, TAN), money and special-category data encrypted at rest with field-level keys, and reads of special-category data recorded; O5 sets retention for landlords and lenders. No encryption exists and no row owned it. One cross-cutting decision (driver-level or by field), with the unique `{pan}` index's form and the key's handling; must hold before any real PAN is stored; also covers `tax_filing_drafts.inputs_json` and revisions, which hold income and claims (D-441) | `DR 14` O1.1, O5; D-440 | before the one deploy; `K` in `PARKED-ROWS.md` **Merged into W-134 (D-444):** W-134 – W-136 already owned this; D-440 was wrong to say no row did |
 | W-233 | **One filed draft per ledger entry (I8)** *(D-441 C3a; `DR 11` F8)*: several `ACTED_ON` drafts of one tax year could each claim a once-in-a-lifetime deduction, each plausible and together wrong. A cross-year ledger entry may be consumed by at most one `ACTED_ON` draft per year; the transition fails otherwise. Build when ledgers feed from stored data | `DR 11` F8 I8; D-441 | before the one deploy; `K` in `PARKED-ROWS.md` |
 | W-234 | **Cross-year facts from stored data** *(D-442 C3a)*: `EngineInputsAssembler` passes `LedgerSnapshot.empty()`, since no store holds carried losses, leave-travel blocks or retirement history, so a user who has them sees tax too high, and the response's `notIncluded` says so. A store, entry and projection into `LedgerSnapshot` | D-442 | before the one deploy; `K` in `PARKED-ROWS.md` |
 

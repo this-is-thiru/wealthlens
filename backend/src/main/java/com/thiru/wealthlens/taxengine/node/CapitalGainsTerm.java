@@ -28,7 +28,7 @@ import java.util.Optional;
  * transfer — long-term only after the same date that many months on, by the owner's ruling D-303. A bucket no row
  * covers is refused, its facts named, never given a period by default.
  */
-final class CapitalGainsTerm {
+public final class CapitalGainsTerm {
 
     static final RuleSetId HOLDING_PERIOD = RuleSetIds.RS_CG_TERM;
 
@@ -42,7 +42,7 @@ final class CapitalGainsTerm {
     }
 
     /** The term of the bucket of {@code gain} and what decided it, its trace line added to {@code lines}. */
-    static BucketOutcome.TermDecision of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
+    public static BucketOutcome.TermDecision of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
         BucketFacts facts = bucket.facts();
         String exchange = facts.transferVenue().exchange().orElse(UNRECORDED);
         Optional<RuleRow> row = ctx.optionalRuleOf(HOLDING_PERIOD, new ItemFacts(Map.of(ASSET, facts.assetKind(),

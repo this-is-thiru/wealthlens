@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
+import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
@@ -314,5 +315,113 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
             }
         }
         throw new AssertionError("No bucket gained " + rupees + " in " + buckets);
+    }
+
+    private String holderId() {
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT", "holdsPortfolio": true}""", null);
+        return mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+    }
+
+    private JsonNode capitalGains(String profileId, String query) {
+        ResponseEntity<String> view = call(HttpMethod.GET, OWNER, "/profiles/" + profileId + "/capital-gains/2026" + query, null, null);
+        assertThat(view.getStatusCode()).as(view.getBody()).isEqualTo(HttpStatus.OK);
+        return JSON.readTree(view.getBody());
+    }
+
+    private void heldLot() {
+        AssetEntity lot = new AssetEntity();
+        lot.setEmail(OWNER);
+        lot.setStockCode("HELD");
+        lot.setAssetType(AssetType.EQUITY);
+        lot.setExchangeName("NSE");
+        lot.setQuantity(10.0);
+        lot.setPrice(100);
+        lot.setTransactionDate(LocalDate.of(2025, 6, 1));
+        mongoTemplate.save(lot);
+    }
+
+    @Test
+    void capitalGains_whenChargesAreOnASale_namesEachOnesLimb() {
+        // Given — brokerage 100 and STT 80 on each side
+        TradeOutcomeEntity row = new TradeOutcomeEntity();
+        row.setId("charged");
+        row.setEmail(OWNER);
+        row.setStockCode("INFY");
+        row.setAssetType(AssetType.EQUITY);
+        row.setBuyDate(LocalDate.of(2024, 4, 1));
+        row.setSellDate(LocalDate.of(2026, 9, 1));
+        row.setBuyQuantity(1.0);
+        row.setSellQuantity(1.0);
+        row.setCorporateActionAdjustedBuyPrice(500000);
+        row.setSellPrice(1600000);
+        row.setBuyChargeBreakup(Map.of("BROKERAGE", 100.0, "STT", 80.0));
+        row.setSellChargeBreakup(Map.of("BROKERAGE", 100.0, "STT", 80.0));
+        row.setSellExchangeName("NSE");
+        row.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        mongoTemplate.save(row);
+
+        // When
+        JsonNode charges = capitalGains(holderId(), "").at("/realised/0/charges");
+
+        // Then
+        Map<String, String> limbs = new java.util.HashMap<>();
+        charges.forEach(charge -> limbs.put(charge.get("side").asString() + "/" + charge.get("code").asString(), charge.get("limb").asString()));
+        assertThat(limbs).containsEntry("ACQUISITION/BROKERAGE", "COST_OF_ACQUISITION")
+                .containsEntry("TRANSFER/BROKERAGE", "TRANSFER_EXPENDITURE")
+                .containsEntry("ACQUISITION/STT", "NOT_DEDUCTED")
+                .containsEntry("TRANSFER/STT", "NOT_DEDUCTED");
+    }
+
+    @Test
+    void capitalGains_whenHeldLotsAreAskedFor_readsEachLotsTermIfSoldThen() {
+        // Given — bought 1-6-2025; twelve calendar months end 1-6-2026, long-term only after it (D-303)
+        heldLot();
+        String id = holderId();
+
+        // When / Then
+        JsonNode may = capitalGains(id, "?asOf=2026-05-01").at("/held/0");
+        assertThat(may.get("term").asString()).as(may.toString()).isEqualTo("SHORT_TERM");
+        JsonNode june = capitalGains(id, "?asOf=2026-06-01").at("/held/0");
+        assertThat(june.get("term").asString()).as(june.toString()).isEqualTo("SHORT_TERM");
+        JsonNode longTerm = capitalGains(id, "?asOf=2026-06-02").at("/held/0");
+        assertThat(longTerm.get("term").asString()).isEqualTo("LONG_TERM");
+        assertThat(longTerm.get("termRow").asString()).isEqualTo("CG-TERM-LISTED-SECURITY");
+        assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
+    }
+
+    @Test
+    void capitalGains_whenTheProfileDoesNotHoldThePortfolio_expected400() {
+        // Given
+        draft(false, "0");
+        String id = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+
+        // When / Then
+        assertThat(call(HttpMethod.GET, OWNER, "/profiles/" + id + "/capital-gains/2026", null, null).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void compareRegimes_whenARegimeWasElectedInAnEarlierYear_stillPricesBoth() {
+        // Given — filed TY 2025-26 on FIRST_SCHEDULE_RATES; a person with no business income has the free annual choice
+        call(HttpMethod.POST, OWNER, "/profiles", """
+                {"name": "Self", "pan": "ABCDE1234F", "kind": "INDIVIDUAL", "dateOfBirth": "1985-06-01",
+                 "residentialStatus": "RESIDENT"}""", null);
+        String id = mongoTemplate.findAll(TaxpayerProfile.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/profiles/" + id + "/workspaces/2025/drafts", "{\"label\": \"Filed\"}", null);
+        String filed = mongoTemplate.findAll(FilingDraft.class).getFirst().getId();
+        call(HttpMethod.POST, OWNER, "/drafts/" + filed + "/status", "{\"status\": \"READY\"}", null);
+        call(HttpMethod.POST, OWNER, "/drafts/" + filed + "/status", "{\"status\": \"ACTED_ON\", \"regimeCode\": \"FIRST_SCHEDULE_RATES\"}", null);
+        call(HttpMethod.POST, OWNER, "/profiles/" + id + "/workspaces/2026/drafts", "{\"label\": \"Next\"}", null);
+        String next = mongoTemplate.findAll(FilingDraft.class).stream().filter(d -> d.getTaxYearStart() == 2026).findFirst().orElseThrow().getId();
+        call(HttpMethod.PATCH, OWNER, "/drafts/" + next, "[{\"op\": \"replace\", \"path\": \"/filing/dueDate\", \"value\": \"2027-07-31\"}]", "\"rev-0\"");
+
+        // When
+        ResponseEntity<String> compared = call(HttpMethod.POST, OWNER, "/drafts/" + next + "/compare-regimes", null, null);
+
+        // Then
+        assertThat(compared.getStatusCode()).as(compared.getBody()).isEqualTo(HttpStatus.OK);
+        assertThat(JSON.readTree(compared.getBody()).get("priced").size()).isEqualTo(2);
     }
 }

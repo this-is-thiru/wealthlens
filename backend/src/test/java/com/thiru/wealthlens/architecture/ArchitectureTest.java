@@ -4,6 +4,7 @@ import static com.tngtech.archunit.core.domain.JavaCall.Predicates.target;
 import static com.tngtech.archunit.core.domain.properties.HasName.Predicates.name;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,11 +15,15 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -114,6 +119,23 @@ class ArchitectureTest {
                     .should().haveSimpleNameEndingWith("Controller")
                     .andShould().resideInAPackage("..controller..")
                     .because("REST entry points are discoverable by name and location");
+
+    @ArchTest
+    static final ArchRule tax_controllers_return_no_stored_document =
+            methods()
+                    .that().areDeclaredInClassesThat().resideInAnyPackage("..taxplanning.profile.controller..",
+                            "..taxplanning.workspace.controller..", "..taxplanning.compute.controller..")
+                    .should(new ArchCondition<JavaMethod>("return no @Document type") {
+                        @Override
+                        public void check(JavaMethod method, ConditionEvents events) {
+                            method.getReturnType().getAllInvolvedRawTypes().stream()
+                                    .filter(type -> type.isAnnotatedWith(
+                                            "org.springframework.data.mongodb.core.mapping.Document"))
+                                    .forEach(type -> events.add(SimpleConditionEvent.violated(method,
+                                            method.getFullName() + " returns the stored " + type.getName())));
+                        }
+                    })
+                    .because("storage shapes and identifiers stay off the wire (TS T10, W-095, D-444)");
 
     @ArchTest
     static final ArchRule services_do_not_live_in_other_layers =

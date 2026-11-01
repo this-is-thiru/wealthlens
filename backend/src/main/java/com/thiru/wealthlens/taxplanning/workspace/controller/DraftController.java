@@ -1,17 +1,18 @@
 package com.thiru.wealthlens.taxplanning.workspace.controller;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
-import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
+import com.thiru.wealthlens.taxplanning.workspace.DraftConflictException;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatusRequest;
 import com.thiru.wealthlens.taxplanning.workspace.DraftView;
-import com.thiru.wealthlens.taxplanning.workspace.StaleDraftException;
-import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
+import com.thiru.wealthlens.taxplanning.workspace.RevisionResponse;
+import com.thiru.wealthlens.taxplanning.workspace.WorkspaceResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,8 +37,8 @@ public class DraftController {
     private final DraftService draftService;
 
     @GetMapping("/profiles/{profileId}/workspaces/{taxYear}")
-    public TaxYearWorkspace workspace(@PathVariable String email, @PathVariable String profileId, @PathVariable int taxYear) {
-        return draftService.workspace(email, profileId, taxYear);
+    public WorkspaceResponse workspace(@PathVariable String email, @PathVariable String profileId, @PathVariable int taxYear) {
+        return WorkspaceResponse.of(draftService.workspace(email, profileId, taxYear));
     }
 
     @GetMapping("/profiles/{profileId}/workspaces/{taxYear}/drafts")
@@ -57,12 +58,14 @@ public class DraftController {
     }
 
     @PatchMapping("/drafts/{draftId}")
-    public ResponseEntity<DraftView> patch(@PathVariable String email, @PathVariable String draftId,
+    public ResponseEntity<?> patch(@PathVariable String email, @PathVariable String draftId,
             @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) String ifMatch, @RequestBody JsonNode patch) {
         try {
             return tagged(draftService.patch(email, draftId, revisionIn(ifMatch), patch));
-        } catch (StaleDraftException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).eTag(tag(e.current())).body(e.current());
+        } catch (DraftConflictException e) {
+            return conflict(e.conflict());
+        } catch (DataIntegrityViolationException e) {
+            return conflict(draftService.conflictAfterRace(email, draftId, revisionIn(ifMatch), patch));
         }
     }
 
@@ -73,18 +76,22 @@ public class DraftController {
     }
 
     @PostMapping("/drafts/{draftId}/primary")
-    public TaxYearWorkspace primary(@PathVariable String email, @PathVariable String draftId) {
-        return draftService.makePrimary(email, draftId);
+    public WorkspaceResponse primary(@PathVariable String email, @PathVariable String draftId) {
+        return WorkspaceResponse.of(draftService.makePrimary(email, draftId));
     }
 
     @GetMapping("/drafts/{draftId}/revisions")
-    public List<DraftRevision> revisions(@PathVariable String email, @PathVariable String draftId) {
-        return draftService.revisions(email, draftId);
+    public List<RevisionResponse> revisions(@PathVariable String email, @PathVariable String draftId) {
+        return draftService.revisions(email, draftId).stream().map(RevisionResponse::of).toList();
     }
 
     @GetMapping("/drafts/{draftId}/revisions/{number}")
     public JsonNode inputsAt(@PathVariable String email, @PathVariable String draftId, @PathVariable int number) {
         return draftService.inputsAt(email, draftId, number);
+    }
+
+    private static ResponseEntity<DraftConflictException.DraftConflict> conflict(DraftConflictException.DraftConflict conflict) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).eTag(tag(conflict.current())).body(conflict);
     }
 
     private static ResponseEntity<DraftView> tagged(DraftView view) {
