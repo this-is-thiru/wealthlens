@@ -3,9 +3,9 @@ package com.thiru.wealthlens.taxplanning.workspace;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
-import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.FairMarketValueBasis;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import java.util.stream.Collectors;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.DeserializationFeature;
@@ -15,7 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
 
 /**
- * A draft's inputs as text and as the engine's {@link EnteredFacts}. Strict, so a misspelt field is refused rather than dropped. A
+ * A draft's inputs as text and as {@link DraftInputs}. Strict, so a misspelt field is refused rather than dropped. A
  * refusal names where, never the value, which may be an amount or an identifier ({@code DR 14} O1.1).
  */
 final class DraftInputsMapper {
@@ -45,7 +45,7 @@ final class DraftInputsMapper {
     }
 
     static String blank() {
-        return MAPPER.writeValueAsString(EnteredFacts.none());
+        return MAPPER.writeValueAsString(DraftInputs.blank());
     }
 
     static JsonNode tree(String json) {
@@ -56,12 +56,20 @@ final class DraftInputsMapper {
         return MAPPER.writeValueAsString(tree);
     }
 
-    /** Refuses {@code tree} unless it binds to {@link EnteredFacts}, so nothing the engine cannot read is stored. */
+    /** The stored document, which {@link #requireBinds} already checked. */
+    static DraftInputs read(String json) {
+        return MAPPER.readValue(json, DraftInputs.class);
+    }
+
+    /** Refuses {@code tree} unless it binds to {@link DraftInputs}, so nothing the engine cannot read is stored. */
     static void requireBinds(JsonNode tree) {
         try {
-            MAPPER.treeToValue(tree, EnteredFacts.class);
+            MAPPER.treeToValue(tree, DraftInputs.class);
         } catch (JacksonException e) {
-            throw new BadRequestException("The draft's inputs do not fit at " + e.getPathReference());
+            throw new BadRequestException("The draft's inputs do not fit at /" + e.getPath().stream()
+                    .map(reference -> reference.getPropertyName() != null ? reference.getPropertyName()
+                            : String.valueOf(reference.getIndex()))
+                    .collect(Collectors.joining("/")));
         }
     }
 }

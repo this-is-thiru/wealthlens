@@ -14,6 +14,7 @@ package com.thiru.wealthlens.taxengine.rules.regime;
  * It sits beside {@code ElectionProtocol}, {@code ElectionKind}, {@code ElectionVehicle} and
  * {@code ElectionRoute}, which are the vocabulary it completes.
  */
+@org.springframework.modulith.NamedInterface("input")
 public enum ElectionState {
 
     /** No election has ever been made. The default, and what an absent entry means. */

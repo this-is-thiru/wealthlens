@@ -14,33 +14,7 @@ import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
-import com.thiru.wealthlens.taxengine.node.BalanceNode;
-import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
-import com.thiru.wealthlens.taxengine.node.CessNode;
-import com.thiru.wealthlens.taxengine.node.ChapterEightNode;
-import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
-import com.thiru.wealthlens.taxengine.node.CreditsNode;
-import com.thiru.wealthlens.taxengine.node.EmployerContributionNode;
-import com.thiru.wealthlens.taxengine.node.ExemptionNode;
-import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
-import com.thiru.wealthlens.taxengine.node.GrossTotalIncomeNode;
-import com.thiru.wealthlens.taxengine.node.HousePropertyNode;
-import com.thiru.wealthlens.taxengine.node.MedicalTreatmentAbroadNode;
-import com.thiru.wealthlens.taxengine.node.MonetarySalaryIncomeNode;
-import com.thiru.wealthlens.taxengine.node.NetPayableNode;
-import com.thiru.wealthlens.taxengine.node.OtherSourcesNode;
-import com.thiru.wealthlens.taxengine.node.PerquisiteNode;
-import com.thiru.wealthlens.taxengine.node.RebateNode;
-import com.thiru.wealthlens.taxengine.node.RetirementNode;
-import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
-import com.thiru.wealthlens.taxengine.node.RoundTotalIncomeNode;
-import com.thiru.wealthlens.taxengine.node.SalaryBaseNode;
-import com.thiru.wealthlens.taxengine.node.SalaryDeductionNode;
-import com.thiru.wealthlens.taxengine.node.SalaryIncomeBeforeTravelNode;
-import com.thiru.wealthlens.taxengine.node.SalaryIncomeNode;
-import com.thiru.wealthlens.taxengine.node.SetOffNode;
-import com.thiru.wealthlens.taxengine.node.SurchargeNode;
-import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
+import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.node.TotalIncomeNode;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
@@ -84,34 +58,9 @@ import java.util.concurrent.ConcurrentHashMap;
 final class GoldenCaseRunner {
 
     /** Every node built so far, the real ones. */
-    private static final List<ComputationNode> BUILT = List.of(
-            new ComponentPartitionNode(),
-            new EmployerContributionNode(),
-            new GrossSalaryNode(),
-            new SalaryBaseNode(),
-            new ExemptionNode(),
-            new MonetarySalaryIncomeNode(),
-            new PerquisiteNode(),
-            new RetirementNode(),
-            new SalaryDeductionNode(),
-            new SalaryIncomeBeforeTravelNode(),
-            new MedicalTreatmentAbroadNode(),
-            new SalaryIncomeNode(),
-            new HousePropertyNode(),
-            new OtherSourcesNode(),
-            new CapitalGainsNode(),
-            new SetOffNode(),
-            new GrossTotalIncomeNode(),
-            new ChapterEightNode(),
-            new RoundTotalIncomeNode(),
-            new TaxByBasisNode(),
-            new RebateNode(),
-            new SurchargeNode(),
-            new CessNode(),
-            new NetPayableNode(),
-            new CreditsNode(),
-            new BalanceNode(),
-            new RoundNetPayableNode());
+    private static final List<ComputationNode> BUILT = ShippedNodes.all().stream()
+            .filter(node -> !(node instanceof TotalIncomeNode))
+            .toList();
 
     /** Fixed, so two runs of one case project to computations that may differ in nothing (T23-4). */
     private static final ComputationId ID = new ComputationId("00000000-0000-4000-8000-0000000000a1");

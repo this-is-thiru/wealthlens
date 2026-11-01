@@ -11,6 +11,7 @@ package com.thiru.wealthlens.taxengine.rules.condition;
  * <p>Ordered least to most severe, so that {@code IsCertifiedDisabled(DISABILITY)} holds for someone
  * certified severe — a minimum, not an equality.
  */
+@org.springframework.modulith.NamedInterface("input")
 public enum DisabilitySeverity {
 
     /** Certified as a person with disability. */

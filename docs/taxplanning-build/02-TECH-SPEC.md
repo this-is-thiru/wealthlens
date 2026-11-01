@@ -112,7 +112,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 `profile/` `TaxpayerProfile` `Pan` `Tan` `FamilyMember` `Employer` `Landlord` `Lender` `BankAccount`
 (✅ `W-096`–`W-098`, D-440) · `workspace/` `TaxYearWorkspace` `FilingDraft` `DraftRevision` `DraftInputs`
 `EntryProvenance` (○ `W-099`, `W-100`) · `assemble/` `EngineInputsAssembler` — the **only** place
-`EngineInputs` is built (○ `W-103`) · `portfolio/` `MoneyBridge` (✅ `W-087`, D-240: `fromTMoney` refuses a non-canonical or non-finite double; `toTMoney` throws) `CapitalGainsAdapter` (✅ `W-087b`, D-241: `inputFor(email, taxYear)` — term and rate basis from S2 ss.196–198 / 1961 ss.111A, 112, 112A on `EQUITY` and the bucket's STT flags; unclassified, speculative and unmapped assets refused; OQ-31 refused), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) from `service.CapitalGainsSummaryService.summaryFor(email, financialYear)` (✅ `W-086`, D-238; the adapter → `W-087b`) ·
+`EngineInputs` is built (✅ `W-103`, D-442) · `portfolio/` `MoneyBridge` (✅ `W-087`, D-240: `fromTMoney` refuses a non-canonical or non-finite double; `toTMoney` throws) `CapitalGainsAdapter` (✅ `W-087b`, D-241: `inputFor(email, taxYear)` — term and rate basis from S2 ss.196–198 / 1961 ss.111A, 112, 112A on `EQUITY` and the bucket's STT flags; unclassified, speculative and unmapped assets refused; OQ-31 refused), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) from `service.CapitalGainsSummaryService.summaryFor(email, financialYear)` (✅ `W-086`, D-238; the adapter → `W-087b`) ·
 `projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`)
 · `scenario/` `Scenario` `ScenarioDiff` `DiffLine` (⚠ UNOWNED) · `controller/` DTOs only · `job/`
 `TaxJob` + 6 jobs, `JobLease` (○ `W-137`).
@@ -357,8 +357,9 @@ distinct from the legacy `/tax-planning` until that is deleted (**D-046 B3**). W
 | `GET` / `PATCH` | `/drafts/{draftId}` | ✅ `W-108`; `If-Match` ✅ `W-110` |
 | `POST` | `/drafts/{draftId}/status` · `/primary` | ✅ `W-108`; `/fork` not built (D-441) |
 | `GET` | `/drafts/{draftId}/revisions[/{n}]` | ✅ `W-108`, `W-100` |
-| `POST` | `/drafts/{draftId}/compute` | ○ `W-109` |
-| `POST` | `/drafts/{draftId}/compare-regimes` | ○ `W-109` |
+| `POST` | `/drafts/{draftId}/compute` | ✅ `W-109` (D-442) |
+| `POST` | `/drafts/{draftId}/compare-regimes` | ✅ `W-109` |
+| `GET` | `/computations/{receipt}` | ✅ `W-107` |
 | `GET` | `/drafts/{draftId}/forecast` | ○ `W-113` |
 | `GET` | `/drafts/{draftId}/calendar` | ○ `W-114` |
 | `GET` | `/drafts/{draftId}/completeness` | ○ `W-115` |

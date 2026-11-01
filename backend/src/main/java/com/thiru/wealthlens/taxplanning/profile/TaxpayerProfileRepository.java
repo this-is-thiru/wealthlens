@@ -7,4 +7,7 @@ public interface TaxpayerProfileRepository extends MongoRepository<TaxpayerProfi
 
     /** Every profile of an account. */
     List<TaxpayerProfile> findByEmail(String email);
+
+    /** The account's profile that holds its portfolio, if any. */
+    List<TaxpayerProfile> findByEmailAndHoldsPortfolioTrue(String email);
 }

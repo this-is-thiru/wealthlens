@@ -70,6 +70,21 @@ public class DraftService {
         return DraftView.of(draft);
     }
 
+    /**
+     * The draft and its document, if this account owns it.
+     *
+     * @throws BadRequestException otherwise
+     */
+    @Transactional(readOnly = true)
+    public OwnedDraft ownedDraft(String email, String draftId) {
+        FilingDraft draft = owned(email, draftId);
+        return new OwnedDraft(draft, DraftInputsMapper.read(draft.getInputsJson()));
+    }
+
+    /** A draft with its document read. */
+    public record OwnedDraft(FilingDraft draft, DraftInputs inputs) {
+    }
+
     @Transactional(readOnly = true)
     public DraftView draft(String email, String draftId) {
         return DraftView.of(owned(email, draftId));

@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : the compute family — W-103 – W-107, W-109
-Stage           : 1 of 6 (READ) — the drafts family closed (D-441)
-Done today      : the switch's queue, the profile and drafts families committed and closed; WL-A-2 republished
-Board           : drafts family `D`, `W-101 D`; next the compute family
-Next step       : write one family plan, one page, and STOP
-Owner actions   : nothing pushed — api-collection is ahead by 4: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy
-Last verify     : unit + integration 4375 / 0 / 0, Checkstyle 0; unit tier at this commit
+Item            : W-109a — the stored computation's per-bucket capital-gains outcome
+Stage           : 1 of 6 (READ) — the compute family closed (D-442)
+Done today      : the queue and the profile, drafts and compute families committed and closed; WL-A-2 republished
+Board           : compute family `D`; next W-109a
+Next step       : write plans/W-109a.md, one page, and STOP
+Owner actions   : nothing pushed — api-collection is ahead by 5: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy
+Last verify     : unit + integration 4386 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last item commit: taxplanning W-099, W-082d, W-100, W-108, W-110: hold a year's entries as drafts with revisions
+Last item commit: taxplanning W-103, W-104, W-107, W-109: compute a stored draft over HTTP
 Updated         : 2026-11-01, session 45
 ```
 

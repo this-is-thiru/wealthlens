@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
-import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.FairMarketValueBasis;
 import com.thiru.wealthlens.taxengine.input.MonthOfPay;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -18,13 +17,13 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 
-/** A draft's inputs bind to the engine's {@link EnteredFacts}, on which storing them as one model stands (D-441 C1a). */
+/** A draft's inputs bind to the engine's {@code EnteredFacts}, on which storing them as one model stands (D-441 C1a). */
 class EnteredFactsBindingTest {
 
     private static JsonNode withEmployment(String amount) {
         JsonNode blank = DraftInputsMapper.tree(DraftInputsMapper.blank());
         return JsonPatchApplier.apply(blank, DraftInputsMapper.tree("""
-                [{"op": "add", "path": "/employments/-", "value": {
+                [{"op": "add", "path": "/entered/employments/-", "value": {
                   "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": %s}}],
                   "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
                   "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}}]""".formatted(amount)));
@@ -56,7 +55,7 @@ class EnteredFactsBindingTest {
 
         // Then
         DraftInputsMapper.requireBinds(tree);
-        assertThat(DraftInputsMapper.tree(DraftInputsMapper.text(tree)).at("/employments/0/components/0/annualAmount/amountInRupees")
+        assertThat(DraftInputsMapper.tree(DraftInputsMapper.text(tree)).at("/entered/employments/0/components/0/annualAmount/amountInRupees")
                 .decimalValue()).isEqualByComparingTo("175000.50");
     }
 
@@ -77,7 +76,7 @@ class EnteredFactsBindingTest {
         // When
         Set<Type> abstractTypes = new HashSet<>();
         Set<String> badMapKeys = new HashSet<>();
-        walk(EnteredFacts.class, new HashSet<>(), abstractTypes, badMapKeys);
+        walk(DraftInputs.class, new HashSet<>(), abstractTypes, badMapKeys);
 
         // Then
         assertThat(abstractTypes).containsExactly(FairMarketValueBasis.class);

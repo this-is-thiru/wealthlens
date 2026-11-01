@@ -44,6 +44,9 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-214 | PARKED | The untracked TODOs | The deploy gate | Not checked |
 | W-215 | PARKED | The dead members no build check covers | The deploy gate | Not checked |
 | W-230 | NOW 5 | A V2 sale's entered charge lost where no card prices it | This switch | Done first |
+| W-234 | PARKED | Cross-year facts from stored data | The deploy gate | **The figure can be too high for such a user;** every response's `notIncluded` says so |
+| W-105 | PARKED | `TaxError`, `TaxEngineException` sealed hierarchy | The deploy gate | A readable 400 from `IllegalArgumentException` (D-442) |
+| W-106 | PARKED | `ControllerAdviser` extension, exhaustive switch | The deploy gate | As W-105 |
 | W-233 | PARKED | One filed draft per ledger entry (I8) | When ledgers feed from stored data, then the deploy gate | Unreachable until then: no draft consumes a ledger entry yet |
 | W-232 | PARKED | Encryption at rest and third-party retention | The deploy gate; **must be built, not waived, before a real PAN is stored** | PAN and TAN plain in the database; masked in responses, messages and logs (D-440) |
 | W-231 | PARKED | The trade-outcome rebuild across a stock split | Before the rebuild runs at the deploy (runbook §2) | **Silent wrong cost for a post-split sale; only reachable by running the rebuild** |
@@ -68,6 +71,7 @@ Findings that did not earn a row (D-435).
 - 2025 s.266(2)(c) – (g) (s.157 relief, foreign relief, s.206 credit, s.391(2)) are not entered, so the balance can only be too high, never too low (W-089b, D-436); W-089a owns (c).
 - A sold lot no card priced refuses the summary until charges can be entered by code for such assets (W-223 C2a, D-437). A refusal, not a wrong figure, so no row; it needs a decision before the deploy gate.
 - Not built from `DR 11` (D-441 C3a): snapshots every 50 revisions (replay stays short until a draft has hundreds), fork, draft-to-draft diff, quota eviction, year rollover, per-field provenance (no reader before document import).
+- A portfolio holder's fingerprint includes the adapter's read time, so two runs of one revision differ; the draft's pinned capital gains (`DR 11` F4.1) will settle it (D-442).
 - Where the balance is served: `TaxComputation` holds the bill only; W-104 / W-109 read `round.netpayable` and decide on `FilingPosition` (D-436).
 
 ## Also open, not Phase 9

@@ -29,7 +29,7 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
     private static final String OWNER = "drafter@example.com";
     private static final String OTHER = "other@example.com";
     private static final String ADD_EMPLOYMENT = """
-            [{"op": "add", "path": "/employments/-", "value": {
+            [{"op": "add", "path": "/entered/employments/-", "value": {
               "components": [{"code": {"value": "BASIC"}, "annualAmount": {"amountInRupees": %s}}],
               "termsIncludeDearnessAllowance": false, "employerKind": "OTHER",
               "dearnessAllowanceCountsForRetirement": false, "companyEmployer": null}}]""";

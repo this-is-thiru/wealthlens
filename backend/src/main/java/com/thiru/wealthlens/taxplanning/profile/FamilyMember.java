@@ -7,6 +7,7 @@ import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
+import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import java.time.LocalDate;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -46,7 +47,7 @@ public class FamilyMember implements AuditableEntity, ProfileScoped {
     private boolean dependant;
 
     @Field(name = "disability", targetType = FieldType.STRING)
-    private DisabilityLevel disability;
+    private DisabilitySeverity disability;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
     @Field("date_of_death")

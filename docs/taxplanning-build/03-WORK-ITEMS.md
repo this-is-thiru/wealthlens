@@ -1438,11 +1438,11 @@ if that is not enough for the item in hand.
 | W-100 | `DraftRevision` + JSON-Patch apply/replay | `DR 11` F2 **Built (D-441).** |
 | W-101 | repositories + indexes | TS T7 **Part built (D-440):** the six profile collections' indexes; the rest with W-099's family **Rest built (D-441).** |
 | W-102 | `cleanDatabase()` additions | TS T7 — **every** collection **Needs no build (D-440):** `AbstractIntegrationTest.cleanDatabase` clears every non-seeded collection (`:121-126`), which this row predates |
-| W-103 | `EngineInputsAssembler` | `DR 23` A3 — the **only** place `EngineInputs` is built |
-| W-104 | `TaxComputationService` | `DR 23` A6 — core/overlay split; **note (D-361):** the legacy `taxplanning/service/TaxComputationService` (L2, retired by W-159 after W-123) holds the name and ArchitectureTest refuses two classes with one simple name — the plan takes another name or waits on W-159 |
+| W-103 | `EngineInputsAssembler` | `DR 23` A3 — the **only** place `EngineInputs` is built **Built (D-442).** |
+| W-104 | `TaxComputationService` | `DR 23` A6 — core/overlay split; **note (D-361):** the legacy `taxplanning/service/TaxComputationService` (L2, retired by W-159 after W-123) holds the name and ArchitectureTest refuses two classes with one simple name — the plan takes another name or waits on W-159 **Built (D-442):** as `DraftComputationService`, `tax_draft_computations`, the legacy names being taken |
 | W-105 | `TaxError`, `TaxEngineException` sealed hierarchy | TS T9, `DR 23` A7 |
 | W-106 | `ControllerAdviser` extension — exhaustive switch | `DR 23` A7 |
-| W-107 | `ComputationReceipt` | `DR 19` E6 |
+| W-107 | `ComputationReceipt` | `DR 19` E6 **Built (D-442):** `GET /computations/{receipt}` |
 
 > **Erratum (W-043, 2026-09-21):** **`ComputationReceipt` was produced by two items** — this row and
 > `W-043`'s. A6 never mentions it; `W-043`'s `Produces` lists it; this row lists it too. Neither
@@ -1457,7 +1457,8 @@ if that is not enough for the item in hand.
 > Verified by: `grep -n ComputationReceipt docs/taxplanning-build/03-WORK-ITEMS.md` → two producing
 > rows; `./mvnw test -pl backend -Dtest=TaxComputationTest` — 21 tests.
 | W-108 | draft endpoints | TS T8 **Built (D-441):** workspace, create, read, patch, status, primary, revisions; fork not built |
-| W-109 | compute + compare-regimes endpoints | TS T8 **Requirement (W-194, D-410):** the stored computation carries, per capital-gains bucket, a typed outcome — the bucket's facts, its gain, the term, the `RS-CG-TERM` row it met and the months read — beside the trace; a bucket the head leaves out is recorded as left out, naming the row that took it; a test proves each bucket's term and row from a two-bucket input |
+| W-109 | compute + compare-regimes endpoints | TS T8 **Requirement (W-194, D-410):** the stored computation carries, per capital-gains bucket, a typed outcome — the bucket's facts, its gain, the term, the `RS-CG-TERM` row it met and the months read — beside the trace; a bucket the head leaves out is recorded as left out, naming the row that took it; a test proves each bucket's term and row from a two-bucket input **Built (D-442):** compute and compare-regimes; the requirement above is W-109a |
+| W-109a | **The stored computation's per-bucket capital-gains outcome** *(D-410, W-194; D-442 C3a)*: a typed outcome per bucket beside the trace: the bucket's facts, its gain, the term, the `RS-CG-TERM` row it met and the months read; a bucket the head leaves out is recorded as left out, naming the row that took it; a test proves each bucket's term and row from a two-bucket input | W-109's requirement; D-410 | next, after W-109 |
 | W-160g | A by-term read endpoint *(D-362; T1, C1a)*: `taxplanning` serves a holding's or a realised gain's term as the engine's `RS-CG-TERM` decides it for a tax year, over `portfolio`'s facts — the product's by-term view after `portfolio` stops holding a term; **widened (D-377):** also each disposal's or holding's deductible charges as `RS-CG-CHARGE` decides them for the year, over the stored breakdowns — the view `AssetCharges.deductibleSellCharges` gave before W-162b; after W-109 | TS T8; `plans/W-160.md`; D-362; D-377 |
 | W-110 | optimistic locking, `If-Match`, 409 merge body | `DR 11` F5 **Built (D-441).** |
 | W-111 | **T11 tests** | `DR 11` F10 |
@@ -1520,6 +1521,7 @@ if that is not enough for the item in hand.
 | W-146 | **synthetic pack test** — three regimes, synthetic year, sunset | `DR 10` E8, `DR 17` T17-11, `DR 18` T18-13 |
 | W-232 | **Encryption at rest and third-party retention** *(D-440; W-096 C1a)*: `DR 14` O1.1 requires identifiers (PAN, TAN), money and special-category data encrypted at rest with field-level keys, and reads of special-category data recorded; O5 sets retention for landlords and lenders. No encryption exists and no row owned it. One cross-cutting decision (driver-level or by field), with the unique `{pan}` index's form and the key's handling; must hold before any real PAN is stored; also covers `tax_filing_drafts.inputs_json` and revisions, which hold income and claims (D-441) | `DR 14` O1.1, O5; D-440 | before the one deploy; `K` in `PARKED-ROWS.md` |
 | W-233 | **One filed draft per ledger entry (I8)** *(D-441 C3a; `DR 11` F8)*: several `ACTED_ON` drafts of one tax year could each claim a once-in-a-lifetime deduction, each plausible and together wrong. A cross-year ledger entry may be consumed by at most one `ACTED_ON` draft per year; the transition fails otherwise. Build when ledgers feed from stored data | `DR 11` F8 I8; D-441 | before the one deploy; `K` in `PARKED-ROWS.md` |
+| W-234 | **Cross-year facts from stored data** *(D-442 C3a)*: `EngineInputsAssembler` passes `LedgerSnapshot.empty()`, since no store holds carried losses, leave-travel blocks or retirement history, so a user who has them sees tax too high, and the response's `notIncluded` says so. A store, entry and projection into `LedgerSnapshot` | D-442 | before the one deploy; `K` in `PARKED-ROWS.md` |
 
 ⚠ **W-146 is the acceptance test for the whole architecture.** It must pass with **zero** changes to
 production source. If it does not, the Open/Closed claim has failed.

@@ -1,11 +1,12 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
+import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import java.time.LocalDate;
 
 /** What a client sends to create or replace a {@link FamilyMember}. */
 public record FamilyMemberRequest(String name, FamilySnapshot.Relationship relationship, LocalDate dateOfBirth, Boolean dependant,
-        DisabilityLevel disability, LocalDate dateOfDeath, Boolean multipleBirthAfterFirstChild, Boolean residentInIndia,
+        DisabilitySeverity disability, LocalDate dateOfDeath, Boolean multipleBirthAfterFirstChild, Boolean residentInIndia,
         String pan) implements ProfileReferenceRequest<FamilyMember> {
 
     @Override

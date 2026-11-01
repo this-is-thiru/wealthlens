@@ -21,6 +21,7 @@ import java.util.Optional;
  *     filing position date-dependent while the computation itself is not
  * @param axisDates per-fact dates supplied by the node that needs them
  */
+@org.springframework.modulith.NamedInterface("input")
 public record TemporalContext(
         TaxYearId taxYear,
         LocalDate taxYearStart,

@@ -1,11 +1,12 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
+import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import java.time.LocalDate;
 
 /** What a client sends to create or replace a {@link TaxpayerProfile}. */
 public record TaxpayerProfileRequest(String name, String pan, AssesseeKind kind, LocalDate dateOfBirth,
-        ResidentialStatus residentialStatus, DisabilityLevel disability, LocalDate dateOfDeath) {
+        ResidentialStatus residentialStatus, DisabilitySeverity disability, LocalDate dateOfDeath, Boolean holdsPortfolio) {
 
     TaxpayerProfile applyTo(TaxpayerProfile profile) {
         ProfileFacts.requireName(name);
@@ -22,6 +23,7 @@ public record TaxpayerProfileRequest(String name, String pan, AssesseeKind kind,
         profile.setResidentialStatus(residentialStatus);
         profile.setDisability(disability);
         profile.setDateOfDeath(dateOfDeath);
+        profile.setHoldsPortfolio(Boolean.TRUE.equals(holdsPortfolio));
         return profile;
     }
 }

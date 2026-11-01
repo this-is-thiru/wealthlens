@@ -47,6 +47,10 @@ public class TaxProfileService {
     }
 
     private TaxpayerProfile save(TaxpayerProfile profile) {
+        if (profile.isHoldsPortfolio() && taxpayerProfileRepository.findByEmailAndHoldsPortfolioTrue(profile.getEmail()).stream()
+                .anyMatch(holder -> !holder.getId().equals(profile.getId()))) {
+            throw new BadRequestException("Another profile of this account already holds its portfolio");
+        }
         try {
             TaxpayerProfile saved = taxpayerProfileRepository.save(profile);
             log.info("Saved taxpayer profile {}", saved.getId());
