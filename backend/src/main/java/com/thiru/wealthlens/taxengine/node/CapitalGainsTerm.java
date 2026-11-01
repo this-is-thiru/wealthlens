@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
+import com.thiru.wealthlens.taxengine.pipeline.BucketOutcome;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
@@ -40,8 +41,8 @@ final class CapitalGainsTerm {
     private CapitalGainsTerm() {
     }
 
-    /** The term of the bucket of {@code gain}, its trace line added to {@code lines}. */
-    static Term of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
+    /** The term of the bucket of {@code gain} and what decided it, its trace line added to {@code lines}. */
+    static BucketOutcome.TermDecision of(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
         BucketFacts facts = bucket.facts();
         String exchange = facts.transferVenue().exchange().orElse(UNRECORDED);
         Optional<RuleRow> row = ctx.optionalRuleOf(HOLDING_PERIOD, new ItemFacts(Map.of(ASSET, facts.assetKind(),
@@ -62,6 +63,6 @@ final class CapitalGainsTerm {
                         + (facts.corporateAction().equals(Optional.of("BONUS"))
                                 ? "; a bonus lot processed before W-088k4a may be dated at its ex-date (W-088k4b)"
                                 : "")));
-        return term;
+        return new BucketOutcome.TermDecision(term, row.get().id(), months);
     }
 }

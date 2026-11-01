@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.node;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.BucketFacts;
 import com.thiru.wealthlens.taxengine.input.CapitalGainsInput.Term;
+import com.thiru.wealthlens.taxengine.pipeline.BucketOutcome;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
 import com.thiru.wealthlens.taxengine.pipeline.IndexedGain;
@@ -108,7 +109,8 @@ public final class CapitalGainsNode implements ComputationNode {
         Map<CapitalGainsPart, List<IndexedGain>> qualifying = new HashMap<>();
         List<TraceLine> lines = new ArrayList<>();
         List<TraceAnnotation> annotations = new ArrayList<>();
-        List<ReinvestmentExemption.BucketGain> taken = takenBuckets(ctx, lines, annotations);
+        List<BucketOutcome> outcomes = new ArrayList<>();
+        List<ReinvestmentExemption.BucketGain> taken = takenBuckets(ctx, lines, annotations, outcomes);
         List<Money> chargeableGains = ReinvestmentExemption.chargeableGainsOf(ctx, taken, lines);
         for (int position = 0; position < taken.size(); position++) {
             CapitalGainsInput.Bucket bucket = taken.get(position).bucket();
@@ -151,7 +153,7 @@ public final class CapitalGainsNode implements ComputationNode {
         CapitalGainsAbsorption parts = new CapitalGainsAbsorption(order, available, indexed);
         Money longTermLeft = setOff(ctx, parts, longTermLoss, true, declared, lines);
         Money shortTermLeft = setOff(ctx, parts, shortTermLoss, false, declared, lines);
-        CapitalGainsHead head = new CapitalGainsHead(available, indexed, shortTermLeft, longTermLeft);
+        CapitalGainsHead head = new CapitalGainsHead(available, indexed, shortTermLeft, longTermLeft, outcomes);
         return new NodeResult(head, lines, annotations);
     }
 
@@ -199,13 +201,17 @@ public final class CapitalGainsNode implements ComputationNode {
      * bucket's term line, a notice for every provision not modelled that reaches it.
      */
     private static List<ReinvestmentExemption.BucketGain> takenBuckets(NodeContext ctx, List<TraceLine> lines,
-            List<TraceAnnotation> annotations) {
+            List<TraceAnnotation> annotations, List<BucketOutcome> outcomes) {
         List<ReinvestmentExemption.BucketGain> taken = new ArrayList<>();
         for (CapitalGainsInput.Bucket bucket : ctx.inputs().capitalGains().buckets()) {
             CapitalGainsCharges.Gain gain = CapitalGainsCharges.gainOf(ctx, bucket, lines);
-            if (CapitalGainsScope.takes(ctx, bucket, gain.gain(), lines)) {
-                taken.add(new ReinvestmentExemption.BucketGain(bucket, gain,
-                        CapitalGainsTerm.of(ctx, bucket, gain.gain(), lines)));
+            Optional<RuleId> leftOutBy = CapitalGainsScope.leftOutBy(ctx, bucket, gain.gain(), lines);
+            if (leftOutBy.isPresent()) {
+                outcomes.add(new BucketOutcome(bucket.facts(), gain.gain(), Optional.empty(), leftOutBy));
+            } else {
+                BucketOutcome.TermDecision decision = CapitalGainsTerm.of(ctx, bucket, gain.gain(), lines);
+                outcomes.add(new BucketOutcome(bucket.facts(), gain.gain(), Optional.of(decision), Optional.empty()));
+                taken.add(new ReinvestmentExemption.BucketGain(bucket, gain, decision.term()));
                 noticesOf(ctx, bucket).ifPresent(notices ->
                         annotations.add(new TraceAnnotation(lines.getLast().sequence(), notices)));
             }

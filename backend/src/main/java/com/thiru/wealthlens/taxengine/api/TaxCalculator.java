@@ -4,6 +4,8 @@ import com.thiru.wealthlens.taxengine.election.ElectionResolver;
 import com.thiru.wealthlens.taxengine.election.RegimeElection;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
+import com.thiru.wealthlens.taxengine.pipeline.BucketOutcome;
+import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
@@ -13,11 +15,13 @@ import com.thiru.wealthlens.taxengine.result.ComputationReceipt;
 import com.thiru.wealthlens.taxengine.result.TaxComputation;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +48,8 @@ public class TaxCalculator {
                 inputs.regime().value(), computation.totalIncome(), computation.netPayableBeforeFilingEffects(),
                 ((MoneyValue) run.valueOf(NodeIds.CREDITS)).amount(),
                 ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
-                computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation));
+                computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation),
+                buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)));
     }
 
     /** Every candidate regime priced on these inputs. */
@@ -68,6 +73,15 @@ public class TaxCalculator {
             throw new IllegalArgumentException("The tax year has no regime " + code.value());
         }
         return spec;
+    }
+
+    private static List<ComputedTax.Bucket> buckets(CapitalGainsHead head) {
+        return head.bucketOutcomes().stream().map(outcome -> {
+            Optional<BucketOutcome.TermDecision> decision = outcome.term();
+            return new ComputedTax.Bucket(outcome.facts(), outcome.gain(), decision.map(d -> d.term().name()).orElse(null),
+                    decision.map(d -> d.row().value()).orElse(null), decision.map(BucketOutcome.TermDecision::months).orElse(null),
+                    outcome.leftOutBy().map(RuleId::value).orElse(null));
+        }).toList();
     }
 
     private static List<ComputedTax.Step> steps(TaxComputation computation) {

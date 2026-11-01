@@ -786,8 +786,8 @@ class CapitalGainsNodeTest {
         // When
         NodeResult result = result(year, deposit, equity);
 
-        // Then
-        assertThat(result.value()).isEqualTo(run(year, equity));
+        // Then — every figure as if it were absent; only the record of what was decided (W-109a) tells them apart
+        assertThat(result.value()).usingRecursiveComparison().ignoringFields("bucketOutcomes").isEqualTo(run(year, equity));
         assertThat(result.trace()).filteredOn(line -> line.rule().equals(RuleIds.CG_DEPOSIT)).singleElement()
                 .satisfies(line -> assertThat(line.out()).isEqualTo(MoneyValue.of(Money.ZERO)));
     }

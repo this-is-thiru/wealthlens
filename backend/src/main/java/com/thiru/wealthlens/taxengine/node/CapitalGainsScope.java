@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
@@ -40,12 +41,12 @@ final class CapitalGainsScope {
     }
 
     /**
-     * Whether the head takes the bucket of {@code gain}; a bucket another head charges is traced as left out on
-     * {@code lines}.
+     * The row that leaves the bucket of {@code gain} to another head, traced as left out on {@code lines}; empty where the head
+     * takes it.
      *
      * @throws IllegalArgumentException where the bucket is income of a head this engine does not compute
      */
-    static boolean takes(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
+    static Optional<RuleId> leftOutBy(NodeContext ctx, CapitalGainsInput.Bucket bucket, Money gain, List<TraceLine> lines) {
         BucketFacts facts = bucket.facts();
         ItemFacts item = new ItemFacts(Map.of(ASSET, facts.assetKind(),
                 TRANSFER_SEGMENT, facts.transferVenue().segment().orElse(UNRECORDED)), Map.of(), Map.of());
@@ -59,6 +60,6 @@ final class CapitalGainsScope {
         elsewhere.ifPresent(row -> lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE,
                         gain, Money.ZERO)
                 .withLimitedBy("left out of the head: " + row.id() + " — another head charges it, entered there")));
-        return elsewhere.isEmpty();
+        return elsewhere.map(RuleRow::id);
     }
 }

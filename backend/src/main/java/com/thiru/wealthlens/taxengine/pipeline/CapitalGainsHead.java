@@ -22,12 +22,14 @@ import java.util.Map;
  * @param indexedGains each held part's qualifying gains, together no more than the part
  * @param shortTermLossLeft the year's short-term loss no part absorbed
  * @param longTermLossLeft the year's long-term loss no long-term part absorbed
+ * @param bucketOutcomes what was decided for each bucket, in input order (W-109a, D-410)
  */
 public record CapitalGainsHead(Map<CapitalGainsPart, Money> parts, Map<CapitalGainsPart, List<IndexedGain>> indexedGains,
-        Money shortTermLossLeft, Money longTermLossLeft) implements NodeValue {
+        Money shortTermLossLeft, Money longTermLossLeft, List<BucketOutcome> bucketOutcomes) implements NodeValue {
 
     public CapitalGainsHead {
-        if (parts == null || indexedGains == null || shortTermLossLeft == null || longTermLossLeft == null) {
+        if (parts == null || indexedGains == null || shortTermLossLeft == null || longTermLossLeft == null
+                || bucketOutcomes == null) {
             throw new IllegalArgumentException("A capital-gains head needs its parts, their indexed measure and the"
                     + " losses left");
         }
@@ -40,6 +42,13 @@ public record CapitalGainsHead(Map<CapitalGainsPart, Money> parts, Map<CapitalGa
         IndexedGain.requireHeld(parts, indexedGains);
         parts = Map.copyOf(parts);
         indexedGains = IndexedGain.copied(indexedGains);
+        bucketOutcomes = List.copyOf(bucketOutcomes);
+    }
+
+    /** A head that keeps no record of its buckets. */
+    public CapitalGainsHead(Map<CapitalGainsPart, Money> parts, Map<CapitalGainsPart, List<IndexedGain>> indexedGains,
+            Money shortTermLossLeft, Money longTermLossLeft) {
+        this(parts, indexedGains, shortTermLossLeft, longTermLossLeft, List.of());
     }
 
     /** A head none of whose gains the cap on land or building reaches. */

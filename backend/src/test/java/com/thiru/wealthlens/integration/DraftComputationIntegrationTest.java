@@ -101,6 +101,41 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(row);
     }
 
+    /** A short lot and a deposit beside T13-1's: 10-1-2026 → 1-9-2026, 1,00,000 → 1,20,000; a deposit's interest elsewhere. */
+    private void shortLotAndDeposit() {
+        TradeOutcomeEntity lot = new TradeOutcomeEntity();
+        lot.setId("short-lot");
+        lot.setEmail(OWNER);
+        lot.setStockCode("TCS");
+        lot.setAssetType(AssetType.EQUITY);
+        lot.setBuyDate(LocalDate.of(2026, 1, 10));
+        lot.setSellDate(LocalDate.of(2026, 9, 1));
+        lot.setBuyQuantity(1.0);
+        lot.setSellQuantity(1.0);
+        lot.setCorporateActionAdjustedBuyPrice(100000);
+        lot.setSellPrice(120000);
+        lot.setBuyChargeBreakup(Map.of("STT", 1.0));
+        lot.setSellChargeBreakup(Map.of("STT", 1.0));
+        lot.setBuyBrokerCharges(1.0);
+        lot.setSellBrokerCharges(1.0);
+        lot.setSellExchangeName("NSE");
+        lot.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        mongoTemplate.save(lot);
+        TradeOutcomeEntity deposit = new TradeOutcomeEntity();
+        deposit.setId("deposit");
+        deposit.setEmail(OWNER);
+        deposit.setStockCode("FD-1");
+        deposit.setAssetType(AssetType.FD);
+        deposit.setBuyDate(LocalDate.of(2024, 5, 1));
+        deposit.setSellDate(LocalDate.of(2026, 9, 2));
+        deposit.setBuyQuantity(1.0);
+        deposit.setSellQuantity(1.0);
+        deposit.setCorporateActionAdjustedBuyPrice(100000);
+        deposit.setSellPrice(107000);
+        deposit.setAcquisitionMode(AcquisitionMode.PURCHASE);
+        mongoTemplate.save(deposit);
+    }
+
     private JsonNode compute(String draftId) {
         ResponseEntity<String> computed = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compute", REGIME, null);
         assertThat(computed.getStatusCode()).as(computed.getBody()).isEqualTo(HttpStatus.OK);
@@ -245,5 +280,39 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(comparison.get("priced").size()).isEqualTo(2);
         assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
         assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
+    }
+
+    @Test
+    void byReceipt_whenBucketsDiffer_recordsWhatWasDecidedForEach() {
+        // Given
+        listedEquitySale();
+        shortLotAndDeposit();
+        JsonNode view = compute(draft(true, "0"));
+
+        // When
+        JsonNode buckets = JSON.readTree(call(HttpMethod.GET, OWNER, "/computations/" + view.at("/tax/receipt").asString(), null,
+                null).getBody()).at("/tax/capitalGainsBuckets");
+
+        // Then — sold 1-9, 1-9, 2-9: 16,00,000 − 5,00,000; 1,20,000 − 1,00,000; 1,07,000 − 1,00,000 left to other sources
+        assertThat(buckets.size()).isEqualTo(3);
+        JsonNode longLot = bucketGaining(buckets, "1100000");
+        assertThat(longLot.get("term").asString()).isEqualTo("LONG_TERM");
+        assertThat(longLot.get("termRow").asString()).isEqualTo("CG-TERM-LISTED-SECURITY");
+        assertThat(longLot.get("monthsRead").asInt()).isEqualTo(12);
+        JsonNode shortLot = bucketGaining(buckets, "20000");
+        assertThat(shortLot.get("term").asString()).isEqualTo("SHORT_TERM");
+        assertThat(shortLot.get("termRow").asString()).isEqualTo("CG-TERM-LISTED-SECURITY");
+        JsonNode deposit = bucketGaining(buckets, "7000");
+        assertThat(deposit.get("leftOutBy").asString()).isEqualTo("CG-DEPOSIT");
+        assertThat(deposit.get("term").isNull()).isTrue();
+    }
+
+    private static JsonNode bucketGaining(JsonNode buckets, String rupees) {
+        for (JsonNode bucket : buckets) {
+            if (bucket.at("/gain/amountInRupees").decimalValue().compareTo(new BigDecimal(rupees)) == 0) {
+                return bucket;
+            }
+        }
+        throw new AssertionError("No bucket gained " + rupees + " in " + buckets);
     }
 }
