@@ -35,8 +35,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * The only place {@link EngineInputs} is built ({@code DR 23} A3): a draft, its profile, family, elections and, for the profile
- * that holds the account's portfolio, its capital gains. Here, and not in the engine, the date is read. No store of carried
- * losses exists yet, so ledgers are empty, which a computation's response says (W-234).
+ * that holds the account's portfolio, its capital gains. Here, and not in the engine, the date is read. What earlier years
+ * carried in is what the draft states (W-234).
  */
 @Component
 @RequiredArgsConstructor
@@ -62,7 +62,7 @@ public class EngineInputsAssembler {
         CapitalGainsInput gains = profile.isHoldsPortfolio() ? capitalGainsAdapter.inputFor(email, year)
                 : CapitalGainsInput.none(asOf.atStartOfDay(ZoneOffset.UTC).toInstant(), "not-the-portfolio-holder");
         EngineInputs inputs = new EngineInputs(year, regime, TemporalContext.forTaxYear(year, asOf), owned.inputs().entered(),
-                assessee(profile), family(profile), LedgerSnapshot.empty(), elections(profile, year), gains,
+                assessee(profile), family(profile), owned.inputs().brought(), elections(profile, year), gains,
                 owned.inputs().filing().toFilingFacts());
         return new Assembled(inputs, draft, profile.isHoldsPortfolio());
     }

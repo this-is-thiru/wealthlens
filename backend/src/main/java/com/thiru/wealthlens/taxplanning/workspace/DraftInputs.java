@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxplanning.workspace;
 
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.FilingFacts;
+import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.time.LocalDate;
 import java.util.List;
@@ -12,11 +13,12 @@ import java.util.Optional;
  *
  * @param entered the entries
  * @param filing the due date, which may not be known while drafting, and tax already paid
+ * @param brought what earlier years carried in, as the user's last return states it (W-234, D-445)
  */
-public record DraftInputs(EnteredFacts entered, Filing filing) {
+public record DraftInputs(EnteredFacts entered, Filing filing, LedgerSnapshot brought) {
 
     static DraftInputs blank() {
-        return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of()));
+        return new DraftInputs(EnteredFacts.none(), new Filing(null, null, List.of(), null, List.of()), LedgerSnapshot.empty());
     }
 
     /** The engine's {@link FilingFacts} once the due date is stated; {@code dueDate} and {@code furnishedOn} may be null until then. */

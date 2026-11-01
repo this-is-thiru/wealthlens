@@ -22,9 +22,11 @@ import tools.jackson.databind.json.JsonMapper;
 @RequiredArgsConstructor
 public class DraftComputationService {
 
-    /** Stated with every figure until each is built: the owner's C3a, D-442; W-234 and the pin in {@code DR 11} F4.1. */
+    /** Stated with every figure until each is built (D-442, D-445): W-089a, W-088i2, W-088i3 and the pin in {@code DR 11} F4.1. */
     private static final List<String> NOT_INCLUDED = List.of(
-            "Losses and other amounts carried from earlier years",
+            "Relief for salary received in arrears or in advance",
+            "A house-reinvestment exemption by deposit in the capital gains account scheme",
+            "A house-reinvestment exemption charged back in a later year when the new house is sold or another is bought",
             "Capital gains are read from the portfolio as it stands now, not pinned to this draft");
 
     private static final JsonMapper MAPPER = JsonMapper.builder().build();

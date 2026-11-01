@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : family B — W-234, W-112, the "Not checked" parked rows
-Stage           : 1 of 6 (READ) — family A closed (D-444)
-Done today      : D-434 – D-444 committed and closed
-Board           : family A `D`; next family B, then W-134 – W-136, C, D, E, the rest of F
-Next step       : triage the parked rows, write one plan, and STOP
+Item            : W-089c, W-112 — advance tax, interest and fees
+Stage           : 1 of 6 (READ) — W-234 closed (D-445)
+Done today      : D-434 – D-445 committed and closed
+Board           : `W-234 D`; next W-089c, W-112, then W-134 – W-136, C, D, E, the rest of F
+Next step       : read the sections from the Gazette, write one plan, and STOP
 Owner actions   : nothing pushed — api-collection is ahead by 5: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy
-Last verify     : unit + integration 4398 / 0 / 0; Checkstyle 0
+Last verify     : unit + integration 4401 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last item commit: taxplanning W-095, W-111, W-160g: finish the API
+Last item commit: taxplanning W-234: let a draft state what earlier years carried in
 Updated         : 2026-11-01, session 45
 ```
 

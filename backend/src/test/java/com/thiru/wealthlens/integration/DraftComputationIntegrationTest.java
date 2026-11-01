@@ -162,7 +162,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("87750");
         assertThat(view.get("capitalGainsIncluded").asBoolean()).isTrue();
         assertThat(view.get("revision").asInt()).isEqualTo(1);
-        assertThat(view.get("notIncluded").size()).isEqualTo(2);
+        assertThat(view.get("notIncluded").size()).isEqualTo(4);
         assertThat(view.at("/tax/trace").size()).isPositive();
     }
 
@@ -423,5 +423,55 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(compared.getStatusCode()).as(compared.getBody()).isEqualTo(HttpStatus.OK);
         assertThat(JSON.readTree(compared.getBody()).get("priced").size()).isEqualTo(2);
+    }
+
+    private ResponseEntity<String> bring(String draftId, String map, String key, String value) {
+        return call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId,
+                "[{\"op\": \"add\", \"path\": \"/brought/" + map + "/" + key + "\", \"value\": " + value + "}]", "\"rev-1\"");
+    }
+
+    private static String money(String rupees) {
+        return "{\"amountInRupees\": " + rupees + "}";
+    }
+
+    @Test
+    void compute_whenALongTermLossIsBroughtForward_setsItOffBeforeTheBill() {
+        // Given — 11,00,000 − 1,00,000 = 10,00,000; 3,00,000 of the nil band → 7,00,000; above 1,25,000 is 5,75,000; at 12.5 %
+        // 71,875; cess 2,875
+        listedEquitySale();
+        String draftId = draft(true, "0");
+        String loss = "{\"shortTermLoss\": " + money("0") + ", \"longTermLoss\": " + money("100000") + ", \"shortTermAbsorbedSince\": "
+                + money("0") + ", \"longTermAbsorbedSince\": " + money("0") + ", \"determinedInReturnFiledInTime\": true}";
+        assertThat(bring(draftId, "capitalLossCarriedForward", "2024", loss).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // When / Then
+        assertThat(rupees(compute(draftId), "bill")).isEqualByComparingTo("74750");
+    }
+
+    @Test
+    void compute_whenAHousePropertyLossHasNoHousePropertyIncomeToMeet_changesNothing() {
+        // Given — a carried house-property loss meets only house-property income (2025 s.110), and this draft has none
+        listedEquitySale();
+        String draftId = draft(true, "0");
+        String loss = "{\"loss\": " + money("50000") + ", \"attributableToNewRegimeDisallowance\": " + money("0") + ", \"absorbedSince\": "
+                + money("0") + "}";
+        assertThat(bring(draftId, "housePropertyLossCarriedForward", "2024", loss).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // When / Then
+        assertThat(rupees(compute(draftId), "bill")).isEqualByComparingTo("87750");
+    }
+
+    @Test
+    void patch_whenWhatIsBroughtForwardIsMisspelt_expected400NamingIt() {
+        // Given
+        String draftId = draft(false, "0");
+
+        // When
+        ResponseEntity<String> refused = call(HttpMethod.PATCH, OWNER, "/drafts/" + draftId,
+                "[{\"op\": \"add\", \"path\": \"/brought/capitalLossCarried\", \"value\": {}}]", "\"rev-1\"");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("capitalLossCarried");
     }
 }
