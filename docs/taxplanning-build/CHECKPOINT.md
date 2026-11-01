@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : the drafts family — W-099, W-082d, W-100, the rest of W-101
-Stage           : 1 of 6 (READ) — the profile family closed (D-440)
-Done today      : the switch's queue and the profile family committed and closed; WL-A-2 republished
-Board           : `W-096 – W-098 D`, `W-102 D`; next W-099, W-082d, W-100
+Item            : the compute family — W-103 – W-107, W-109
+Stage           : 1 of 6 (READ) — the drafts family closed (D-441)
+Done today      : the switch's queue, the profile and drafts families committed and closed; WL-A-2 republished
+Board           : drafts family `D`, `W-101 D`; next the compute family
 Next step       : write one family plan, one page, and STOP
 Owner actions   : nothing pushed — api-collection is ahead by 4: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy
-Last verify     : unit + integration 4338 / 0 / 0; Checkstyle 0
+Last verify     : unit + integration 4375 / 0 / 0, Checkstyle 0; unit tier at this commit
 Files touched   : none
-Last item commit: taxplanning W-096, W-097, W-098: store a taxpayer's profile, family, employers, landlords, lenders and bank accounts
+Last item commit: taxplanning W-099, W-082d, W-100, W-108, W-110: hold a year's entries as drafts with revisions
 Updated         : 2026-11-01, session 45
 ```
 

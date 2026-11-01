@@ -352,11 +352,11 @@ distinct from the legacy `/tax-planning` until that is deleted (**D-046 B3**). W
 | Method | Path (under the base) | Item |
 |---|---|---|
 | `GET` | `/tax-years` | ⚠ UNOWNED |
-| `GET` | `/workspaces/{taxYear}` | ○ `W-108` |
-| `POST` | `/workspaces/{taxYear}/drafts` | ○ `W-108` |
-| `GET` / `PATCH` | `/drafts/{draftId}` | ○ `W-108`; `If-Match` ○ `W-110` |
-| `POST` | `/drafts/{draftId}/fork` · `/status` · `/primary` | ○ `W-108` |
-| `GET` | `/drafts/{draftId}/revisions[/{n}]` | ○ `W-108` (model `W-100`) |
+| `GET` | `/profiles/{profileId}/workspaces/{taxYear}` | ✅ `W-108` (D-441: names the profile; an account holds several) |
+| `GET` / `POST` | `/profiles/{profileId}/workspaces/{taxYear}/drafts` | ✅ `W-108` |
+| `GET` / `PATCH` | `/drafts/{draftId}` | ✅ `W-108`; `If-Match` ✅ `W-110` |
+| `POST` | `/drafts/{draftId}/status` · `/primary` | ✅ `W-108`; `/fork` not built (D-441) |
+| `GET` | `/drafts/{draftId}/revisions[/{n}]` | ✅ `W-108`, `W-100` |
 | `POST` | `/drafts/{draftId}/compute` | ○ `W-109` |
 | `POST` | `/drafts/{draftId}/compare-regimes` | ○ `W-109` |
 | `GET` | `/drafts/{draftId}/forecast` | ○ `W-113` |

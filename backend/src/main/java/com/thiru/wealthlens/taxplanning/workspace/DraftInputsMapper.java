@@ -1,0 +1,67 @@
+package com.thiru.wealthlens.taxplanning.workspace;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.FairMarketValueBasis;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.KeyDeserializer;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
+
+/**
+ * A draft's inputs as text and as the engine's {@link EnteredFacts}. Strict, so a misspelt field is refused rather than dropped. A
+ * refusal names where, never the value, which may be an amount or an identifier ({@code DR 14} O1.1).
+ */
+final class DraftInputsMapper {
+
+    static final JsonMapper MAPPER = JsonMapper.builder()
+            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .addMixIn(FairMarketValueBasis.class, FairMarketValueBasisJson.class)
+            .addModule(new SimpleModule().addKeyDeserializer(ComponentCode.class, new KeyDeserializer() {
+                @Override
+                public Object deserializeKey(String key, DeserializationContext context) {
+                    return new ComponentCode(key);
+                }
+            }))
+            .build();
+
+    private DraftInputsMapper() {
+    }
+
+    /** The engine's sealed type, named in JSON from here because {@code taxengine} holds no JSON of its own inputs. */
+    @JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME)
+    @JsonSubTypes({
+        @JsonSubTypes.Type(FairMarketValueBasis.ListedTraded.class),
+        @JsonSubTypes.Type(FairMarketValueBasis.ListedNotTraded.class),
+        @JsonSubTypes.Type(FairMarketValueBasis.MerchantBankerValue.class)
+    })
+    private interface FairMarketValueBasisJson {
+    }
+
+    static String blank() {
+        return MAPPER.writeValueAsString(EnteredFacts.none());
+    }
+
+    static JsonNode tree(String json) {
+        return MAPPER.readTree(json);
+    }
+
+    static String text(JsonNode tree) {
+        return MAPPER.writeValueAsString(tree);
+    }
+
+    /** Refuses {@code tree} unless it binds to {@link EnteredFacts}, so nothing the engine cannot read is stored. */
+    static void requireBinds(JsonNode tree) {
+        try {
+            MAPPER.treeToValue(tree, EnteredFacts.class);
+        } catch (JacksonException e) {
+            throw new BadRequestException("The draft's inputs do not fit at " + e.getPathReference());
+        }
+    }
+}
