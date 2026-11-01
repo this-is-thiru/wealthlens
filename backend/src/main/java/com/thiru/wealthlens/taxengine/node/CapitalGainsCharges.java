@@ -43,7 +43,11 @@ final class CapitalGainsCharges {
         Money gain = bucket.consideration().minus(bucket.cost());
         Money netConsideration = bucket.consideration();
         for (Charge charge : bucket.charges()) {
-            ChargeDeductionLimb limb = limbOf(ctx, bucket, charge, lines);
+            RuleRow row = rowOf(ctx, bucket, charge);
+            ChargeDeductionLimb limb = limbIn(ctx, row);
+            lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, charge.amount(),
+                            limb.deducts() ? charge.amount() : Money.ZERO)
+                    .withLimitedBy(charge.code() + " on the " + charge.side() + ": " + limb));
             if (limb.deducts()) {
                 gain = gain.minus(charge.amount());
             }
@@ -54,20 +58,32 @@ final class CapitalGainsCharges {
         return new Gain(gain, netConsideration);
     }
 
-    private static ChargeDeductionLimb limbOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Charge charge,
-            List<TraceLine> lines) {
-        RuleRow row = ctx.optionalRuleOf(DEDUCTIONS, new ItemFacts(Map.of(SIDE, charge.side().name(), CODE,
+    /**
+     * The bucket's charges a row classes as cost of acquisition. They are cost, so a measure that indexes the cost indexes
+     * them with it (2025 s.72(8)(b); 1961 s.48 Explanation (iii); D-434 C1a).
+     */
+    static Money acquisitionCostOf(NodeContext ctx, CapitalGainsInput.Bucket bucket) {
+        Money total = Money.ZERO;
+        for (Charge charge : bucket.charges()) {
+            if (limbIn(ctx, rowOf(ctx, bucket, charge)) == ChargeDeductionLimb.COST_OF_ACQUISITION) {
+                total = total.plus(charge.amount());
+            }
+        }
+        return total;
+    }
+
+    private static ChargeDeductionLimb limbIn(NodeContext ctx, RuleRow row) {
+        return RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row, ctx.inputs().temporal())
+                .definition(), ChargeDeduction.class, row.id()).limb();
+    }
+
+    private static RuleRow rowOf(NodeContext ctx, CapitalGainsInput.Bucket bucket, Charge charge) {
+        return ctx.optionalRuleOf(DEDUCTIONS, new ItemFacts(Map.of(SIDE, charge.side().name(), CODE,
                 charge.code()), Map.of(), Map.of()))
                 .orElseThrow(() -> new IllegalArgumentException("The charge " + charge.code() + " on the "
                         + charge.side() + " of capital gains (" + bucket.facts() + ") falls in no row of "
                         + DEDUCTIONS + " for " + ctx.pack().taxYear().label()
                         + ", so whether it reduces the gain is unknown"));
-        ChargeDeductionLimb limb = RuleDefinitions.require(TemporallyApportionedCap.governingVersion(row,
-                ctx.inputs().temporal()).definition(), ChargeDeduction.class, row.id()).limb();
-        lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, charge.amount(),
-                        limb.deducts() ? charge.amount() : Money.ZERO)
-                .withLimitedBy(charge.code() + " on the " + charge.side() + ": " + limb));
-        return limb;
     }
 
     /**

@@ -34,6 +34,10 @@ import java.util.Optional;
  * table so that widening the shared one cannot lift {@link PerquisiteNode}'s refusal of a year before it (D-115,
  * D-424 C2a).
  *
+ * <p>The cost lifted is the price and every charge {@code RS-CG-CHARGE} classes as cost of acquisition (D-434 C1a): a
+ * charge deducted at face value beside an indexed price would measure the cap on too large a gain, and so charge too much
+ * tax.
+ *
  * <p>The facts handed to the row are the asset kind and the acquisition date alone, because those are the facts the
  * row may name: {@link ItemFacts} throws on a fact the item does not carry, so a row that came to read the term would
  * refuse the computation rather than silently find no measure.
@@ -68,10 +72,11 @@ final class CapitalGainsIndexation {
         TaxYearId saleYear = TaxYearId.containing(bucket.facts().transferredOn());
         TaxYearId acquiredYear = TaxYearId.containing(bucket.facts().acquiredOn());
         TaxYearId divisorYear = acquiredYear.startYear() >= floor.startYear() ? acquiredYear : floor;
-        Money indexedCost = bucket.cost().scaledBy(index.of(saleYear), index.of(divisorYear));
-        Money indexedGain = gain.plus(bucket.cost()).minus(indexedCost);
+        Money cost = bucket.cost().plus(CapitalGainsCharges.acquisitionCostOf(ctx, bucket));
+        Money indexedCost = cost.scaledBy(index.of(saleYear), index.of(divisorYear));
+        Money indexedGain = gain.plus(cost).minus(indexedCost);
         lines.add(ctx.traceLine(lines.size() + 1, row.id(), StepKind.MEASURE, gain, indexedGain)
-                .withLimitedBy("the cost " + bucket.cost() + " indexed by the index for " + saleYear.label() + " ("
+                .withLimitedBy("the cost " + cost + " indexed by the index for " + saleYear.label() + " ("
                         + index.of(saleYear) + ") over that for " + divisorYear.label() + " (" + index.of(divisorYear)
                         + "): " + indexedCost));
         return Optional.of(indexedGain);

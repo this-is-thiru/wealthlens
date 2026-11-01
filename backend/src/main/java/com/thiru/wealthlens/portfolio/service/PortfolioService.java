@@ -175,8 +175,8 @@ public class PortfolioService {
      * twin, at the one point both trade paths pass (D-386).
      *
      * <p>A land or building is refused outright, on the same twin footing ({@link AssetType#NOT_A_BROKER_TRADE};
-     * W-088g5, D-433): the broker path cannot carry its purchase expenses into its cost, and a property entry of its
-     * own is W-088g9's. The redrive ({@code processTransaction}) is not guarded — with both entry points refusing,
+     * W-088g5, D-433): the broker path cannot carry its purchase expenses into its cost, and its sale is entered through
+     * {@link PropertySaleService} (W-088g9). The redrive ({@code processTransaction}) is not guarded — with both entry points refusing,
      * no land temporary transaction can exist.
      */
     private static void validateAssetRequest(UserMail userMail, AssetRequest assetRequest) {

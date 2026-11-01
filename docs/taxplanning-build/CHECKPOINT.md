@@ -4,19 +4,17 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — session 44 paused by the owner (session limit); W-088g5 closed (D-433)
-Stage           : 6 of 6 (DONE) for W-088g5; nothing started after it
-Done today      : D-429 review placed 13 rows; W-088i5 (D-430), W-088g3 (D-431), W-088g4 (D-432), W-088g5 (D-433)
-                  all built, verified, committed and closed; WL-A-2 republished after ba8755b6 and read back (§3.7)
-Board           : `W-088g5 D  W-088g9 ·  W-088g6 ·  W-088g7 ·  W-088g8 ·`
-Next step       : W-088g9 (a property entry of its own, D-433) — on "start W-088g9", plan and STOP. Then by the
-                  board: W-088g6 – g8, W-088h …; review rows W-216 – W-224 wait at the end of the queue
+Item            : none in flight — W-088g9 closed (D-434)
+Stage           : 6 of 6 (DONE) for W-088g9; nothing started after it
+Done today      : W-088g9 built, verified, committed on the owner's "commit it"; W-225 – W-228 placed
+Board           : `W-088g9 D  W-088g6 ·  W-088g7 ·  W-088g8 ·`
+Next step       : W-088g6 (the stamp-duty value; its row also carries the bucket-key note) — on "start W-088g6", plan and STOP
 Owner actions   : nothing pushed — review/taxplanning is ahead of origin and api-collection main is ahead by
-                  1 (56715c7, W-217): push the submodule first. After the deploy carrying W-088g5, run runbook §3.7
-Last verify     : unit tier 3887 / 0 / 0; integration tier 326 / 0 / 0; Checkstyle 0 (at ba8755b6)
+                  2 (56715c7, this item's request): push the submodule first. After the deploy carrying W-088g5, run runbook §3.7
+Last verify     : unit tier 3924 / 0 / 0; integration tier 334 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last item commit: ba8755b6 — taxplanning W-088g5: refuse a land or building on the broker trade paths
-Updated         : 2026-11-01, session 44 — paused
+Last item commit: taxplanning W-088g9: enter a property sale with its expenses by code
+Updated         : 2026-11-01, session 45
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

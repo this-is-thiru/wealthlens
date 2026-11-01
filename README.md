@@ -660,6 +660,27 @@ curl -X POST "http://localhost:8080/portfolio/user/user@example.com/transaction/
   }'
 ```
 
+### Record a Property Sale
+
+A land or building is not a broker trade, so its sale is entered here, once, with what was paid to buy and sell it by
+code (`STAMP_DUTY`, `REGISTRATION`, `BROKERAGE`, `LEGAL_FEE`). It writes the row the capital-gains summary reads, not a
+holding or a P&L entry. A purchase only; amounts are the user's own share. The same sale posted twice is refused.
+
+```bash
+curl -X POST "http://localhost:8080/properties/user/user@example.com/sales" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "propertyName": "Plot 7",
+    "acquiredOn": "2015-06-01",
+    "costRupees": 4000000,
+    "acquisitionExpenses": {"STAMP_DUTY": 280000, "REGISTRATION": 40000, "BROKERAGE": 40000},
+    "transferredOn": "2025-09-01",
+    "considerationRupees": 10000000,
+    "transferExpenses": {"BROKERAGE": 100000, "LEGAL_FEE": 20000}
+  }'
+```
+
 ## Assumptions
 
 - **MongoDB Replica Set:** Multi-document transactions require a MongoDB replica set. The `app.mongodb.transactions-enabled` flag must be `true`.

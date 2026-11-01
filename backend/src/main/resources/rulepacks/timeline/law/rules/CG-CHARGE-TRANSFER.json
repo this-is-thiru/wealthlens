@@ -1,7 +1,7 @@
 {
   "ruleId": "CG-CHARGE-TRANSFER",
   "ruleSet": "RS-CG-CHARGE",
-  "_note": "A charge on the sale side of a disposal is expenditure incurred wholly and exclusively in connection with the transfer, deducted from the full value of the consideration: TY 2025-26 Income-tax Act, 1961 s.48(i) (subs. by the Finance Act, 1992 s.24, w.e.f. 1-4-1993); TY 2026-27 Income-tax Act, 2025 s.72(1)(a). Which charges on a contract note are cost or transfer expenditure the Acts do not say; the codes are the charge catalogue's, classified by the owner's ruling D-375 C2a.",
+  "_note": "A charge on the sale side of a disposal is expenditure incurred wholly and exclusively in connection with the transfer, deducted from the full value of the consideration: TY 2025-26 Income-tax Act, 1961 s.48(i) (subs. by the Finance Act, 1992 s.24, w.e.f. 1-4-1993); TY 2026-27 Income-tax Act, 2025 s.72(1)(a). Which charges on a contract note are cost or transfer expenditure the Acts do not say; the codes are the charge catalogue's, classified by the owner's ruling D-375 C2a. A land or building's expenses follow the same two limbs by side, and REGISTRATION and LEGAL_FEE, which no contract note carries, join them, by the owner's ruling D-434 C1a, C2a: the Acts are silent on those too (sources/2026-11-01-property-expenses.md).",
   "axis": "TAX_YEAR",
   "midYearCombination": "LATEST_VERSION_GOVERNS",
   "versions": [
@@ -69,6 +69,16 @@
                   "type": "ItemFactIs",
                   "fact": "charge.code",
                   "code": "STAMP_DUTY"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "charge.code",
+                  "code": "REGISTRATION"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "charge.code",
+                  "code": "LEGAL_FEE"
                 },
                 {
                   "type": "ItemFactIs",
@@ -176,6 +186,16 @@
                   "type": "ItemFactIs",
                   "fact": "charge.code",
                   "code": "STAMP_DUTY"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "charge.code",
+                  "code": "REGISTRATION"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "charge.code",
+                  "code": "LEGAL_FEE"
                 },
                 {
                   "type": "ItemFactIs",
