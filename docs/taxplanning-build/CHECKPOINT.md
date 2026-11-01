@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-223 — a V2 buy's entered charges zeroed where no rate card applies
-Stage           : 1 of 6 (READ) — W-089b closed (D-436)
-Done today      : W-088g9, W-229, W-089b committed and closed
-Board           : `W-089b D`; queue: W-223, W-213, W-216, then Phase 11 from W-096
-Next step       : write plans/W-223.md, one page, and STOP
-Owner actions   : nothing pushed — api-collection is ahead by 2: push it first. W-217 before the next push. Runbook §3.7, §0.4 at the deploy
-Last verify     : unit tier 3944 / 0 / 0; integration tier 334 / 0 / 0; Checkstyle 0
+Item            : W-213 + W-216 — stock splits, one family
+Stage           : 1 of 6 (READ) — W-223 closed (D-437)
+Done today      : W-088g9, W-229, W-089b, W-223 committed and closed; WL-A-2 republished
+Board           : `W-223 D`; queue: W-213, W-216, W-230, then Phase 11 from W-096
+Next step       : write plans/W-213.md covering both, one page, and STOP
+Owner actions   : nothing pushed — api-collection is ahead by 2: push it first. W-217 before the next push. Runbook §3.7, §3.8, §0.4 at the deploy
+Last verify     : unit + integration 4289 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last item commit: taxplanning W-089b: credit tax already paid against the bill
+Last item commit: taxplanning W-223: keep a V2 buy's entered charge where no rate card prices it
 Updated         : 2026-11-01, session 45
 ```
 

@@ -30,6 +30,14 @@ public record ChargeComputation(
         return new ChargeComputation(null, null, null, null, null, resolution, List.of(), 0.0);
     }
 
+    /**
+     * Whether this names a figure at all. Nil from a resolution the engine does not stand behind means it could not price the
+     * trade, which says nothing about what the trade cost; a nil it does stand behind, or any figure, is an answer.
+     */
+    public boolean hasFigure() {
+        return total != 0 || !resolution.isUnresolved();
+    }
+
     /** The amount charged under a code, or zero if it was not charged. */
     public double amountOf(String code) {
         return lines.stream()

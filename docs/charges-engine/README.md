@@ -459,8 +459,8 @@ writing code — `pr-description.md` is written and current.
   `engine-enabled: true` as the kill switch. A V2 trade is priced by the engine and the computed
   total is its cost basis. **This is the one thing that changed today** — before, merging was inert.
 - **`POST /charges/seed` must run before the first trade on any database.** Without rate cards every
-  trade resolves `NO_SCHEDULE` and is charged nothing, and `authoritative` makes that zero the cost
-  basis. `ChargeReadinessAuditor` warns at startup; the deploy runbook's §1A – §1B is the ordered procedure.
+  trade resolves `NO_SCHEDULE` and is priced nothing: its charges by code are absent, so a sold lot refuses
+  the capital-gains summary, and the entered charge stays the cost basis (W-223). `ChargeReadinessAuditor` warns at startup; the deploy runbook's §1A – §1B is the ordered procedure.
 - **`it-staging` holds 319 backfilled `user_charges` rows** from 2026-09-09. The endpoint that wrote
   them has since been deleted, so that run is not repeatable.
 - **History is never re-priced** (ADR-32). Trades predating a deployment stay unpriced, by design.

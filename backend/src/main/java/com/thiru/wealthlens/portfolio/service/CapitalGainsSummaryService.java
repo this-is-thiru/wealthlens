@@ -87,7 +87,8 @@ public class CapitalGainsSummaryService {
             TradeOutcomeEntity first = unknown.getFirst();
             throw new IllegalArgumentException(unknown.size() + " disposal(s) bore broker charges but kept no breakdown"
                     + " of them, so which of them reduce a capital gain is unknown — the first sold "
-                    + first.getStockCode() + " on " + first.getSellDate() + "; record those trades again");
+                    + first.getStockCode() + " on " + first.getSellDate() + "; a trade a rate card prices can be recorded again,"
+                    + " and one no card prices cannot be computed until its charges can be entered by code");
         }
     }
 

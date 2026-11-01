@@ -787,13 +787,14 @@ Any repair would be a new work item with its own section-2 entry.
 
 | # | Item / decision | Condition | Read-only check |
 |---|---|---|---|
-| 3.1 | **W-086** (D-238 C2a) | `CapitalGainsSummaryService` **refuses** a user's summary if any of their disposals carries broker charges with no breakdown ("record those trades again"). The rebuild's rows never have one | Count below |
+| 3.1 | **W-086** (D-238 C2a) | `CapitalGainsSummaryService` **refuses** a user's summary if any of their disposals carries broker charges with no breakdown ("record those trades again", worded since W-223: a trade a rate card prices can be recorded again, and one no card prices cannot be computed until its charges can be entered by code). The rebuild's rows never have one | Count below |
 | 3.2 | **W-088f** (D-249 C4a, "no backfill") | Rows written before W-088f have no `acquisition_mode`; they read as `UNRECORDED` (`Acquisition.stored` maps a missing mode to it) | `db.trade_outcomes.countDocuments({ acquisition_mode: { $exists: false } })` |
 | 3.3 | **W-088j** (D-292), narrowed by **W-088j2c2** (D-298), **W-088j2d** (D-299) and **W-088j2e** (D-300) | A side of a disposal with no charge breakdown says nothing of STT, so it reads as `UNKNOWN`, not "no STT". Since D-298 the engine settles such a side from its recorded venue: an equity side on `NSE` or `BSE` in `DELIVERY` (and a sale in `INTRADAY`) is chargeable under Chapter VII s.98 Sl. 1–3 — a buy only when the lot was acquired by purchase (Sl. 1 "Purchase", D-300), and a long-term buy acquired before 1-10-2004 or by a bonus or demerger is settled by S.O. 5054(E) (`CG-PART-LONG-NOTIFIED`). What is still **refused** by the tax engine: a side with nil charges and no breakdown whose exchange is not recorded, is spelt other than exactly `NSE` / `BSE`, or is genuinely off an exchange, and a long-term buy on `NSE` / `BSE` that is not shown to be a purchase and is not a bonus or demerger allotment — a rights allotment, or an unrecorded mode (D-300) (a side with charges and no breakdown is refused earlier, §3.1). No user declaration was built (D-299); a repair, if the count is not nil, is a new work item — the exchange string is the fault for most rows, and §2.2's rebuild fills a row's missing venue from `transactions` | Count below (an upper bound) |
 | 3.4 | **W-088j2b** (D-295, "no backfill") | `trade_outcomes` rows written before W-088j2b have no per-side venue (`buy_exchange_name`, `buy_segment`, `sell_exchange_name`, `sell_segment`); they read as `TradeVenue.UNRECORDED`. The old `exchange_name` / `segment` are **not** read for tax (V1 took the exchange from the buy, V2 and the rebuild from the sale). Remedy for a user: §2.2's per-user rebuild, which writes the new fields. The segment is published as recorded: `DELIVERY` is also the entry default (D-295) | Count and values below |
 | 3.5 | **W-088k3** (D-305) | The tax engine decides short-term or long-term itself, from `RS-CG-TERM`: an equity disposal is a listed security (twelve months) when its **sale** is recorded on `NSE` or `BSE` (`sell_exchange_name`; a reading, D-305 C1). A disposal whose sale exchange is absent or another string is **refused** for the term — no other period is shipped (D-305 C2). Rows written before W-088j2b have no `sell_exchange_name` (§3.4). Remedy for a user: §2.2's per-user rebuild, which writes it from `transactions.exchange_name` | Count below |
 | 3.6 | **W-088k4a** (D-307) | `corporate_action.allotment_date` is new and not backfilled. Performing a `BONUS` action without it is **refused** (400, naming the stock and record date), so a pending bonus whose date is not entered blocks its quarterly perform. Bonus lots processed before W-088k4a are dated at the ex-date; W-088k4b corrects them | List below |
 | 3.7 | **W-088g5** (D-433) | A `LAND_OR_BUILDING` trade is now **refused** on V1, V2 and the upload (400). Land was enterable from W-088g2 (D-425) until this guard; a row entered in that window **stays as it is** — the guard refuses new entries and touches nothing stored. Expected 0 on every database; a non-zero count is reported to the owner, not corrected (a correction would be its own item, with W-088g9's property entry) | the 3.7 query below, owner, any time after the deploy that carries W-088g5; safe to run again |
+| 3.8 | **W-223** (D-437) | Until W-223 a V2 buy no rate card priced had its entered `brokerCharges` replaced by nil; from it the entered figure stays. A lot already written stays nil; its entered charge is still on its source transaction, so nothing is lost. Reported, not corrected: a correction is its own item | the 3.8 query below, owner, any time after the deploy that carries W-223; read-only; safe to run again; nothing to undo |
 
 ```js
 // 3.1 — rows, and users, whose summary would be refused
@@ -819,6 +820,14 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
     transactions: d.transactions.countDocuments({ asset_type: "LAND_OR_BUILDING" }),
     assets: d.assets.countDocuments({ asset_type: "LAND_OR_BUILDING" }),
     trade_outcomes: d.trade_outcomes.countDocuments({ asset_type: "LAND_OR_BUILDING" }) }; }) }])
+
+// 3.8 — lots with nil charges whose source transaction entered a charge above nil (W-223, D-437); one query over every app database
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    const ids = lot => lot.buy_transaction_ids.flatMap(id => ObjectId.isValid(id) ? [id, new ObjectId(id)] : [id]);
+    return { database: n, lots: d.assets.find({ broker_charges: 0, "buy_transaction_ids.0": { $exists: true } },
+        { buy_transaction_ids: 1 }).toArray()
+      .filter(lot => d.transactions.countDocuments({ _id: { $in: ids(lot) }, broker_charges: { $gt: 0 } }) > 0).length }; }) }])
 
 // 3.5 — equity capital-gains disposals whose term the engine refuses: the sale not recorded on NSE or BSE (W-088k3, D-305)
 db.trade_outcomes.aggregate([

@@ -12,7 +12,7 @@ board shows its status.
 means nobody has established that the figure or behaviour is safe**: check it before waiving it. W-208 – W-212 (rate-card
 accuracy) and W-089a (arrears relief) most need that check.
 
-**Queue:** `W-229`, then W-089b, W-223, W-213, W-216, then Phase 11 from W-096, planned by family. A new finding gets a row only
+**Queue:** `W-229`, then W-089b, W-223, W-213, W-216, W-230, then Phase 11 from W-096, planned by family. A new finding gets a row only
 if it gives a wrong figure with no refusal or notice; anything else is a line under "Noted" below.
 
 | Row | State | What | Comes back | Meanwhile |
@@ -43,6 +43,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-213 | NOW 3 | A stock split's arithmetic on the two perform flows | This switch | Done first |
 | W-214 | PARKED | The untracked TODOs | The deploy gate | Not checked |
 | W-215 | PARKED | The dead members no build check covers | The deploy gate | Not checked |
+| W-230 | NOW 5 | A V2 sale's entered charge lost where no card prices it | This switch | Done first |
 | W-216 | NOW 4 | A stock split with a malformed ratio recorded as performed | This switch | Done first |
 | W-217 | PARKED | The api-collection pointer on a pushed commit | Owner, before the next push | Not checked |
 | W-218 | PARKED | W-089's and W-088i's records completed | The deploy gate | Not checked |
@@ -62,6 +63,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 Findings that did not earn a row (D-435).
 
 - 2025 s.266(2)(c) – (g) (s.157 relief, foreign relief, s.206 credit, s.391(2)) are not entered, so the balance can only be too high, never too low (W-089b, D-436); W-089a owns (c).
+- A sold lot no card priced refuses the summary until charges can be entered by code for such assets (W-223 C2a, D-437). A refusal, not a wrong figure, so no row; it needs a decision before the deploy gate.
 - Where the balance is served: `TaxComputation` holds the bill only; W-104 / W-109 read `round.netpayable` and decide on `FilingPosition` (D-436).
 
 ## Also open, not Phase 9

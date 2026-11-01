@@ -407,8 +407,8 @@ public class PortfolioService {
      * Replaces the user-entered charge with the engine's, once {@code app.charges.authoritative} is
      * on (AC-10).
      *
-     * <p>An absent computation leaves the entered figure alone rather than zeroing it. The engine
-     * declines for reasons that say nothing about whether the trade cost anything — no rate card for
+     * <p>An absent computation, or one with no figure ({@link ChargeComputation#hasFigure}, W-223), leaves
+     * the entered figure alone rather than zeroing it. The engine declines for reasons that say nothing about whether the trade cost anything — no rate card for
      * the period, the kill switch, a scheme with no profile — and overwriting a real cost with zero
      * because we could not price it would be worse than keeping an estimate.
      *
@@ -416,10 +416,11 @@ public class PortfolioService {
      * sending it and keep working, it simply stops being read. Removing it is a later release.
      */
     private void applyComputedCostBasis(AssetEntity assetEntity, Optional<ChargeComputation> computation) {
-        if (!chargeEngineProperties.authoritative() || computation.isEmpty()) {
+        if (!chargeEngineProperties.authoritative()) {
             return;
         }
-        assetEntity.setBrokerCharges(computation.get().total());
+        computation.filter(ChargeComputation::hasFigure)
+                .ifPresent(computed -> assetEntity.setBrokerCharges(computed.total()));
     }
 
     private static ProfitLossContext buyContext(String transactionId, AssetRequest assetRequest) {
