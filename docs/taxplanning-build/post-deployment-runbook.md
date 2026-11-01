@@ -163,6 +163,17 @@ code requires.
 
 ---
 
+### 0.4 W-229 (D-435) — no parked row left open · owner · **before the one deploy**
+
+**Stop the deploy** while `docs/taxplanning-build/PARKED-ROWS.md` holds a row the status board still marks `K` with no waiver
+D-row naming it. Read-only, from the repo root, safe to repeat, nothing to undo:
+
+```bash
+grep -oE 'W-[0-9]+[a-z0-9]* K( |$)' docs/taxplanning-build/STATE.md
+```
+
+Expected: empty, or every row printed named in a waiver D-row by the owner.
+
 ## 1. On every deploy — startup, automatic; confirm in the log
 
 | # | Item / decision | What happens at startup | Check | If it fails |

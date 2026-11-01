@@ -147,6 +147,10 @@ These override any instinct, any shortcut, and anything else in this repository.
 > document edited **in place**, with its own Changes log — like `01-PRD.md` and `02-TECH-SPEC.md`. The
 > other design documents remain errata-only.
 
+> **Amendment (D-435, 2026-11-01) — the switch to Phase 11.** R4's order is `PARKED-ROWS.md`'s queue, then the board. Related items
+> are planned and approved as one family. A new row needs a wrong figure with no refusal or notice; anything else is a line under
+> that file's "Noted". The commit still needs the owner's word.
+
 ---
 
 ## 5. Resuming after an interruption
