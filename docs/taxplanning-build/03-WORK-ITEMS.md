@@ -1429,15 +1429,15 @@ if that is not enough for the item in hand.
 
 | Item | Produces | Spec |
 |---|---|---|
-| W-096 | `TaxpayerProfile`, `Pan` | `DR 15` F1 — **PAN was missing entirely** |
-| W-097 | `FamilyMember` | `DR 15` F2 |
-| W-098 | `Employer`, `Landlord`, `Lender`, `BankAccount` | `DR 15` F3, F4 |
+| W-096 | `TaxpayerProfile`, `Pan` | `DR 15` F1 — **PAN was missing entirely** **Built (D-440).** |
+| W-097 | `FamilyMember` | `DR 15` F2 **Built (D-440):** facts only, departing from `DR 15` F2 by CLAUDE.md §4 |
+| W-098 | `Employer`, `Landlord`, `Lender`, `BankAccount` | `DR 15` F3, F4 **Built (D-440).** |
 | W-099 | `TaxYearWorkspace`, `FilingDraft`, `DraftInputs` | `DR 11` F2 |
 | W-082d | The regime election history *(D-220)*: `RegimeElectionHistory` (per profile and regime, append-only, `stateAsAt(TaxYearId)`) and `ElectionEvent` (`DR 17` L3) in `taxplanning` — the source W-103 projects into `RegimeElectionSnapshot`; moved from W-082 (Appendix A) because it holds `ProfileId` (W-096) and `DraftId` (W-099) | `DR 17` L3 | before W-103 |
 | W-082e | The s.202(4)(a) binding, history-aware regime offers *(D-222)*: `DR 17` L3's state branches — IN_EFFECT carried into later years, WITHDRAWN and the withdrawals used (`RegimeElectionSnapshot.withdrawalsUsedFor`), PERMANENTLY_INELIGIBLE with `AfterWithdrawal.IneligibleUnless` revival and its route, LAPSED with `ContinuationPolicy`; `RegimeOffer` gains `Continuing` / `Lapsed`; lifts W-082b's refusal of a regime whose binding applies | `DR 17` L3; `01-rulebook.md` R2 `REG-OPTOUT-YEARLY-001` | needs W-082d's history and, to be reachable, income under the business head |
 | W-100 | `DraftRevision` + JSON-Patch apply/replay | `DR 11` F2 |
-| W-101 | repositories + indexes | TS T7 |
-| W-102 | `cleanDatabase()` additions | TS T7 — **every** collection |
+| W-101 | repositories + indexes | TS T7 **Part built (D-440):** the six profile collections' indexes; the rest with W-099's family |
+| W-102 | `cleanDatabase()` additions | TS T7 — **every** collection **Needs no build (D-440):** `AbstractIntegrationTest.cleanDatabase` clears every non-seeded collection (`:121-126`), which this row predates |
 | W-103 | `EngineInputsAssembler` | `DR 23` A3 — the **only** place `EngineInputs` is built |
 | W-104 | `TaxComputationService` | `DR 23` A6 — core/overlay split; **note (D-361):** the legacy `taxplanning/service/TaxComputationService` (L2, retired by W-159 after W-123) holds the name and ArchitectureTest refuses two classes with one simple name — the plan takes another name or waits on W-159 |
 | W-105 | `TaxError`, `TaxEngineException` sealed hierarchy | TS T9, `DR 23` A7 |
@@ -1518,6 +1518,7 @@ if that is not enough for the item in hand.
 | W-144 | JaCoCo + PIT gates | `DR 07` X5.5 |
 | W-145 | persona fixtures | `DR 19` E10 |
 | W-146 | **synthetic pack test** — three regimes, synthetic year, sunset | `DR 10` E8, `DR 17` T17-11, `DR 18` T18-13 |
+| W-232 | **Encryption at rest and third-party retention** *(D-440; W-096 C1a)*: `DR 14` O1.1 requires identifiers (PAN, TAN), money and special-category data encrypted at rest with field-level keys, and reads of special-category data recorded; O5 sets retention for landlords and lenders. No encryption exists and no row owned it. One cross-cutting decision (driver-level or by field), with the unique `{pan}` index's form and the key's handling; must hold before any real PAN is stored | `DR 14` O1.1, O5; D-440 | before the one deploy; `K` in `PARKED-ROWS.md` |
 
 ⚠ **W-146 is the acceptance test for the whole architecture.** It must pass with **zero** changes to
 production source. If it does not, the Open/Closed claim has failed.

@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : Phase 11's first family, from W-096
-Stage           : 1 of 6 (READ) — W-230 closed (D-439); the switch's queue is done
-Done today      : W-088g9, W-229, W-089b, W-223, W-213, W-216, W-230 committed and closed; WL-A-2 republished
-Board           : `W-230 D`; next Phase 11 from W-096
+Item            : the drafts family — W-099, W-082d, W-100, the rest of W-101
+Stage           : 1 of 6 (READ) — the profile family closed (D-440)
+Done today      : the switch's queue and the profile family committed and closed; WL-A-2 republished
+Board           : `W-096 – W-098 D`, `W-102 D`; next W-099, W-082d, W-100
 Next step       : write one family plan, one page, and STOP
-Owner actions   : nothing pushed — api-collection is ahead by 3: push it first. W-217 before the next push. Runbook §3.7 – §3.9, §0.4 at the deploy
-Last verify     : full 4316 run, 1 failure on W-230's misworked test figure, corrected; that class green; unit tier at this commit
+Owner actions   : nothing pushed — api-collection is ahead by 4: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy
+Last verify     : unit + integration 4338 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last item commit: taxplanning W-230: keep a V2 sale's entered charge where no rate card prices it
+Last item commit: taxplanning W-096, W-097, W-098: store a taxpayer's profile, family, employers, landlords, lenders and bank accounts
 Updated         : 2026-11-01, session 45
 ```
 

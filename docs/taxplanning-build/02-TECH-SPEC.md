@@ -109,8 +109,8 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 
 ### `taxplanning` (new code) — planned
 
-`profile/` `TaxpayerProfile` `Pan` `FamilyMember` `Employer` `Landlord` `Lender` `BankAccount`
-(○ `W-096`–`W-098`) · `workspace/` `TaxYearWorkspace` `FilingDraft` `DraftRevision` `DraftInputs`
+`profile/` `TaxpayerProfile` `Pan` `Tan` `FamilyMember` `Employer` `Landlord` `Lender` `BankAccount`
+(✅ `W-096`–`W-098`, D-440) · `workspace/` `TaxYearWorkspace` `FilingDraft` `DraftRevision` `DraftInputs`
 `EntryProvenance` (○ `W-099`, `W-100`) · `assemble/` `EngineInputsAssembler` — the **only** place
 `EngineInputs` is built (○ `W-103`) · `portfolio/` `MoneyBridge` (✅ `W-087`, D-240: `fromTMoney` refuses a non-canonical or non-finite double; `toTMoney` throws) `CapitalGainsAdapter` (✅ `W-087b`, D-241: `inputFor(email, taxYear)` — term and rate basis from S2 ss.196–198 / 1961 ss.111A, 112, 112A on `EQUITY` and the bucket's STT flags; unclassified, speculative and unmapped assets refused; OQ-31 refused), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) from `service.CapitalGainsSummaryService.summaryFor(email, financialYear)` (✅ `W-086`, D-238; the adapter → `W-087b`) ·
 `projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`)

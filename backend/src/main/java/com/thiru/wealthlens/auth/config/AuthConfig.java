@@ -41,7 +41,9 @@ public class AuthConfig {
                                 // is permitAll: a path nobody adds here is public. A rate card sets
                                 // what every user is charged, /charges/amc/impose bills real money,
                                 // and /user-charges exposes one person's trading history.
-                                "/charge-schedules/**", "/charge-catalogue", "/charges/**", "/user-charges/**", "/charge-accounts/**").authenticated()
+                                "/charge-schedules/**", "/charge-catalogue", "/charges/**", "/user-charges/**", "/charge-accounts/**",
+                                // Taxpayer data: PAN, family, income. Public by the same fallback unless named (W-096, D-440).
+                                "/tax/**").authenticated()
                         .anyRequest().permitAll())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())

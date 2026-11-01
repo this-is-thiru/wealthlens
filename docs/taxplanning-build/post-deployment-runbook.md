@@ -188,6 +188,10 @@ Expected: empty, or every row printed named in a waiver D-row by the owner.
 
 ---
 
+### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
+
+Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender` and `BankAccount`; a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Do not deploy these with real PANs before W-232 (encryption at rest): §0.4 holds the deploy until it is built or waived.**
+
 ## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
 
 **Why.** The owner's fresh start (2026-10-27): the charge engine's data is cleared where it exists and seeded new in
