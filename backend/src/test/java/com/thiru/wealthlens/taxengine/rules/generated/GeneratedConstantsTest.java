@@ -56,6 +56,7 @@ class GeneratedConstantsTest {
             "CG-SPECULATIVE",
             "CG-TERM-LAND-BUILDING",
             "CG-TERM-LISTED-SECURITY",
+            "CREDIT-TAX-PAID",
             "DED-AGNIVEER-GOVERNMENT",
             "DED-AGNIVEER-OWN",
             "DED-DEPENDANT",

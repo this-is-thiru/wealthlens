@@ -167,6 +167,8 @@
       "tax.surcharge",
       "tax.cess",
       "tax.netpayable",
+      "credits",
+      "tax.balance",
       "round.netpayable"
     ]
   },

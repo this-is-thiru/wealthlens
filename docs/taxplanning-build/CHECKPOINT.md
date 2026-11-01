@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-089b — `CreditsNode` (first of the switch's queue, PARKED-ROWS.md)
-Stage           : 1 of 6 (READ) — W-229 closed (D-435)
-Done today      : W-088g9 (D-434), W-229 (D-435) committed and closed
-Board           : `W-088g9 D  W-229 D`; queue: W-089b, W-223, W-213, W-216, then Phase 11 from W-096
-Next step       : republish WL-A-2 if not yet read back (runbook §0.4); write plans/W-089b.md, one page, and STOP
+Item            : W-223 — a V2 buy's entered charges zeroed where no rate card applies
+Stage           : 1 of 6 (READ) — W-089b closed (D-436)
+Done today      : W-088g9, W-229, W-089b committed and closed
+Board           : `W-089b D`; queue: W-223, W-213, W-216, then Phase 11 from W-096
+Next step       : write plans/W-223.md, one page, and STOP
 Owner actions   : nothing pushed — api-collection is ahead by 2: push it first. W-217 before the next push. Runbook §3.7, §0.4 at the deploy
-Last verify     : unit tier 3927 / 0 / 0; Checkstyle 0 (W-229); integration 334 / 0 / 0 (W-088g9, no main code since)
+Last verify     : unit tier 3944 / 0 / 0; integration tier 334 / 0 / 0; Checkstyle 0
 Files touched   : none
-Last item commit: taxplanning W-229: park the open Phase 9 rows and switch to Phase 11
+Last item commit: taxplanning W-089b: credit tax already paid against the bill
 Updated         : 2026-11-01, session 45
 ```
 

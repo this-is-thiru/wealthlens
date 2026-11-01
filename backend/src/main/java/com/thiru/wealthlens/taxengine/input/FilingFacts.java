@@ -26,9 +26,12 @@ import java.util.Optional;
  * @param furnishedOn the date it was actually furnished; empty where it has not been filed yet,
  *     which is the ordinary case when someone is planning rather than filing
  * @param advanceTaxPaid the payments, with their dates; may be empty, never null
+ * @param taxAtSource the year's tax deducted or collected at source (2025 s.390(5); 1961 s.199(1)), nil where none
+ * @param selfAssessmentPaid tax paid on the return (2025 s.266; 1961 s.140A), with dates; may be empty, never null
  */
 public record FilingFacts(
-        LocalDate dueDate, Optional<LocalDate> furnishedOn, List<Payment> advanceTaxPaid) {
+        LocalDate dueDate, Optional<LocalDate> furnishedOn, List<Payment> advanceTaxPaid, Money taxAtSource,
+        List<Payment> selfAssessmentPaid) {
 
     /**
      * One advance-tax payment.
@@ -66,11 +69,24 @@ public record FilingFacts(
                             + " was paid");
         }
         advanceTaxPaid = List.copyOf(advanceTaxPaid);
+        if (taxAtSource == null || taxAtSource.isLessThan(Money.ZERO)) {
+            throw new IllegalArgumentException("FilingFacts.taxAtSource must be nil or more, but was " + taxAtSource);
+        }
+        if (selfAssessmentPaid == null) {
+            throw new IllegalArgumentException(
+                    "FilingFacts.selfAssessmentPaid may not be null; pass an empty list where nothing was paid");
+        }
+        selfAssessmentPaid = List.copyOf(selfAssessmentPaid);
     }
 
     /** A return not yet furnished, with nothing paid in advance. */
     public static FilingFacts notYetFurnished(LocalDate dueDate) {
-        return new FilingFacts(dueDate, Optional.empty(), List.of());
+        return new FilingFacts(dueDate, Optional.empty(), List.of(), Money.ZERO, List.of());
+    }
+
+    /** Everything paid on the return, whenever paid. */
+    public Money totalSelfAssessmentPaid() {
+        return selfAssessmentPaid.stream().map(Payment::amount).reduce(Money.ZERO, Money::plus);
     }
 
     /** Everything paid in advance, whenever paid. */

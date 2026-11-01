@@ -59,7 +59,10 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 
 ## Noted
 
-Findings that did not earn a row (D-435). None yet.
+Findings that did not earn a row (D-435).
+
+- 2025 s.266(2)(c) – (g) (s.157 relief, foreign relief, s.206 credit, s.391(2)) are not entered, so the balance can only be too high, never too low (W-089b, D-436); W-089a owns (c).
+- Where the balance is served: `TaxComputation` holds the bill only; W-104 / W-109 read `round.netpayable` and decide on `FilingPosition` (D-436).
 
 ## Also open, not Phase 9
 

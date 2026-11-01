@@ -44,6 +44,12 @@
       "ground": "REGIME_AND_CONDITIONS"
     },
     {
+      "id": "RS-CREDIT-TAX-PAID",
+      "_note": "Tax already paid for the year, credited against the bill (2025 s.266(2)(a), (b); 1961 s.140A(1)(i), (ii); W-089b, D-436).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
       "id": "RS-CG-NOT-COMPUTED",
       "_note": "Buckets outside the capital-gains head that this engine does not compute — business income (2025 s.66(31), (33); 1961 s.43(5)): CG-SPECULATIVE, CG-DERIVATIVE, conditions only; a bucket a row reaches is refused, tested before RS-CG-TERM (W-160a, D-363)",
       "selection": "AT_MOST_ONE",

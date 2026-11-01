@@ -18,7 +18,8 @@ import java.util.Set;
  * <p>No rule states it; it is "an arithmetic sum of already-computed rows" ({@code REBATE-ORDER-001}),
  * each of which has its own line. So the node emits none, and the sum shows as the rounding line's input.
  *
- * <p>The Phase 9 credits item subtracts credits under its own rule.
+ * <p>Credits are not subtracted here (D-436 C1a, superseding that clause of D-080): this stays the bill elections
+ * compare; {@link BalanceNode} takes the credits from it.
  */
 public final class NetPayableNode implements ComputationNode {
 

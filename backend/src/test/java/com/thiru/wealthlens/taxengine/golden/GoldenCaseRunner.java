@@ -14,10 +14,12 @@ import com.thiru.wealthlens.taxengine.input.LedgerSnapshot;
 import com.thiru.wealthlens.taxengine.input.OtherSourceItem;
 import com.thiru.wealthlens.taxengine.input.OtherSourceKind;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
+import com.thiru.wealthlens.taxengine.node.BalanceNode;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.CessNode;
 import com.thiru.wealthlens.taxengine.node.ChapterEightNode;
 import com.thiru.wealthlens.taxengine.node.ComponentPartitionNode;
+import com.thiru.wealthlens.taxengine.node.CreditsNode;
 import com.thiru.wealthlens.taxengine.node.EmployerContributionNode;
 import com.thiru.wealthlens.taxengine.node.ExemptionNode;
 import com.thiru.wealthlens.taxengine.node.GrossSalaryNode;
@@ -107,6 +109,8 @@ final class GoldenCaseRunner {
             new SurchargeNode(),
             new CessNode(),
             new NetPayableNode(),
+            new CreditsNode(),
+            new BalanceNode(),
             new RoundNetPayableNode());
 
     /** Fixed, so two runs of one case project to computations that may differ in nothing (T23-4). */

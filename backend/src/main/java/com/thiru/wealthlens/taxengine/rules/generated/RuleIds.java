@@ -37,6 +37,7 @@ public final class RuleIds {
     public static final RuleId CG_SPECULATIVE = new RuleId("CG-SPECULATIVE");
     public static final RuleId CG_TERM_LAND_BUILDING = new RuleId("CG-TERM-LAND-BUILDING");
     public static final RuleId CG_TERM_LISTED_SECURITY = new RuleId("CG-TERM-LISTED-SECURITY");
+    public static final RuleId CREDIT_TAX_PAID = new RuleId("CREDIT-TAX-PAID");
     public static final RuleId DED_AGNIVEER_GOVERNMENT = new RuleId("DED-AGNIVEER-GOVERNMENT");
     public static final RuleId DED_AGNIVEER_OWN = new RuleId("DED-AGNIVEER-OWN");
     public static final RuleId DED_DEPENDANT = new RuleId("DED-DEPENDANT");

@@ -14,13 +14,14 @@ import java.util.Set;
  * (S2 s.516; 1961 s.288B; {@code RATE-ROUND-003}). A refund is rounded on its magnitude with the sign
  * restored ({@code ROUND-NEG-001}, STATUS UNCLEAR).
  *
- * <p>Reads {@code tax.netpayable} only for now; {@code W-112} adds {@code interest.and.fees} when it
+ * <p>Reads {@code tax.balance}, the bill after credits, so the amount rounded is the final one and the trace keeps its two
+ * {@code ROUNDING} lines (PRD F2.4; D-436). {@code W-112} adds {@code interest.and.fees} when it
  * builds that node (D-076).
  */
 public final class RoundNetPayableNode implements ComputationNode {
 
     private static final RoundingStep STEP =
-            new RoundingStep(NodeIds.ROUND_NETPAYABLE, NodeIds.TAX_NETPAYABLE, RuleSetIds.RS_RATE_ROUND_PAYABLE);
+            new RoundingStep(NodeIds.ROUND_NETPAYABLE, NodeIds.TAX_BALANCE, RuleSetIds.RS_RATE_ROUND_PAYABLE);
 
     @Override
     public NodeId produces() {

@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.regime.ElectionState;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
@@ -194,13 +195,13 @@ class InputsFingerprintTest {
                                     List.of(new Payment(
                                             LocalDate.of(2026, 3, 15),
                                             com.thiru.wealthlens.taxengine.rules.money.Money.of(
-                                                    "25000"))))))),
+                                                    "25000"))), Money.ZERO, List.of())))),
                     Arguments.of(
                             "filing.furnishedOn",
                             mutate(in -> copy(in, r -> r.filing = new FilingFacts(
                                     LocalDate.of(2026, 7, 31),
                                     Optional.of(LocalDate.of(2026, 8, 1)),
-                                    List.of())))));
+                                    List.of(), Money.ZERO, List.of())))));
         }
 
         @ParameterizedTest(name = "{0} changes the fingerprint")

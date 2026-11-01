@@ -124,9 +124,9 @@ class TaxYear2025RulePackTest {
 
         // Then
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
-        assertThat(pack.rules()).hasSize(231);
+        assertThat(pack.rules()).hasSize(232);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.124");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.125");
     }
 
     @Test
@@ -229,7 +229,7 @@ class TaxYear2025RulePackTest {
                 .given(NodeIds.TAX_SURCHARGE, Money.ZERO)
                 .run(new CessNode());
         var rounded = NodeHarness.with(pack).regime(NEW_TAX_REGIME).inputs(inputs2025(NEW_TAX_REGIME))
-                .given(NodeIds.TAX_NETPAYABLE, Money.of("10.40"))
+                .given(NodeIds.TAX_BALANCE, Money.of("10.40"))
                 .run(new RoundNetPayableNode());
 
         // Then

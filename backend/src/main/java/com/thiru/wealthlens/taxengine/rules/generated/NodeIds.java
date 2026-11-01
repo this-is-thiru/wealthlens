@@ -17,6 +17,7 @@ public final class NodeIds {
 
     public static final NodeId CAPITALGAINS_INCOME = new NodeId("capitalgains.income");
     public static final NodeId CHAPTERVIII = new NodeId("chapterviii");
+    public static final NodeId CREDITS = new NodeId("credits");
     public static final NodeId EMPLOYER_CONTRIB_CHARGES = new NodeId("employer.contrib.charges");
     public static final NodeId GTI = new NodeId("gti");
     public static final NodeId HOUSEPROPERTY_INCOME = new NodeId("houseproperty.income");
@@ -36,6 +37,7 @@ public final class NodeIds {
     public static final NodeId SALARY_RETIREMENT = new NodeId("salary.retirement");
     public static final NodeId SETOFF = new NodeId("setoff");
     public static final NodeId TAX_AFTERREBATE = new NodeId("tax.afterrebate");
+    public static final NodeId TAX_BALANCE = new NodeId("tax.balance");
     public static final NodeId TAX_BYBASIS = new NodeId("tax.bybasis");
     public static final NodeId TAX_CESS = new NodeId("tax.cess");
     public static final NodeId TAX_NETPAYABLE = new NodeId("tax.netpayable");

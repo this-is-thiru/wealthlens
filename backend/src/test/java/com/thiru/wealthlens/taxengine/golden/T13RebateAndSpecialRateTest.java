@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.input.EmployerKind;
 import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.FilingFacts;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.SpecialRateId;
@@ -130,5 +131,22 @@ class T13RebateAndSpecialRateTest {
                 List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 Optional.empty(), List.of());
+    }
+
+    @Test
+    void run_whenTaxIsAlreadyPaid_leavesTheBillAndCreditsIt() {
+        // Given — T13-1's bill of 87,750, and 75,000 at source
+        EngineInputs plain = inputs(basicPay("175000"), gains("1600000", "500000"));
+        EngineInputs inputs = new EngineInputs(plain.taxYear(), plain.regime(), plain.temporal(), plain.entered(),
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                new FilingFacts(plain.filing().dueDate(), Optional.empty(), List.of(), Money.of("75000"), List.of()));
+
+        // When
+        GoldenCaseRunner.ShippedPipelineRun run = RUNNER.run(inputs);
+
+        // Then — the bill elections compare has not moved; the final payable is 87,750 − 75,000 = 12,750
+        assertThat(run.result().valueOf(NodeIds.TAX_NETPAYABLE)).isEqualTo(MoneyValue.of(Money.of("87750")));
+        assertThat(run.result().valueOf(NodeIds.CREDITS)).isEqualTo(MoneyValue.of(Money.of("75000")));
+        assertThat(run.result().valueOf(NodeIds.ROUND_NETPAYABLE)).isEqualTo(MoneyValue.of(Money.of("12750")));
     }
 }

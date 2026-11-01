@@ -80,7 +80,7 @@ class RoundingNodesTest {
     }
 
     private static NodeResult roundPayable(String payable) {
-        return run(pack(), new RoundNetPayableNode(), NodeIds.TAX_NETPAYABLE, payable);
+        return run(pack(), new RoundNetPayableNode(), NodeIds.TAX_BALANCE, payable);
     }
 
     // -- total income ------------------------------------------------------------------------------
@@ -191,10 +191,10 @@ class RoundingNodesTest {
     }
 
     @Test
-    void run_whenTheNetPayableIsNotGiven_isRefusedBecauseTheNodeDeclaresIt() {
+    void run_whenTheBalanceIsNotGiven_isRefusedBecauseTheNodeDeclaresIt() {
         // When / Then
         assertThatThrownBy(() -> NodeHarness.with(pack()).regime(NEW_TAX_REGIME).run(new RoundNetPayableNode()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(NodeIds.TAX_NETPAYABLE.value());
+                .hasMessageContaining(NodeIds.TAX_BALANCE.value());
     }
 }

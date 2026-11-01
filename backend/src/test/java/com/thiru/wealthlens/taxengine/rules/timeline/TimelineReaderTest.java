@@ -60,6 +60,7 @@ class TimelineReaderTest {
             new RuleId("CG-PART-LONG-OTHER"),
             new RuleId("CG-PART-LONG-OTHER-LAND-BUILDING"),
             new RuleId("CG-PART-LONG-NOTIFIED"),
+            new RuleId("CREDIT-TAX-PAID"),
             new RuleId("STT-PURCHASE-DELIVERY"),
             new RuleId("STT-SALE-DELIVERY"),
             new RuleId("STT-SALE-NONDELIVERY"),
@@ -292,7 +293,8 @@ class TimelineReaderTest {
                         "inputs.components", "employer.contrib.charges", "salary.gross", "salary.base", "salary.exemptions", "salary.perquisites", "salary.retirement", "salary.monetaryincome", "salary.deductions",
                         "salary.incomebeforetravel", "salary.medicaltravel", "salary.income",
                         "houseproperty.income", "othersources.income", "capitalgains.income", "setoff", "gti", "chapterviii", "totalincome", "round.totalincome", "tax.bybasis",
-                        "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "round.netpayable");
+                        "tax.afterrebate", "tax.surcharge", "tax.cess", "tax.netpayable", "credits", "tax.balance",
+                        "round.netpayable");
     }
 
     @Test
