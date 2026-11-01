@@ -9,6 +9,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
+import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.service.CapitalGainsSummaryService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
@@ -90,5 +91,29 @@ class NoCardCostBasisIntegrationTest extends AbstractIntegrationTest {
         assertTrue(refusal.getMessage().contains("the first sold SGB-1"), refusal.getMessage());
         assertTrue(refusal.getMessage().contains("cannot be computed until its charges can be entered by code"),
                 refusal.getMessage());
+    }
+
+    @Test
+    void summaryFor_whenASaleKeptAnEnteredCharge_refusesNamingIt() {
+        // Given — nothing entered on the buy, 30 on the sale
+        post(TransactionType.BUY, 0.0);
+        post(TransactionType.SELL, 30.0);
+        TradeOutcomeEntity row = mongoTemplate.findOne(new Query(Criteria.where("email").is(EMAIL)), TradeOutcomeEntity.class);
+        String year = FinancialYear.containing(LocalDate.now()).label();
+
+        // When / Then
+        MoneyAssert.assertMoney(30.0, row.getSellBrokerCharges());
+        assertThrows(IllegalArgumentException.class, () -> capitalGainsSummaryService.summaryFor(EMAIL, year));
+    }
+
+    @Test
+    void summaryFor_whenNothingWasEnteredOnEitherSide_computes() {
+        // Given
+        post(TransactionType.BUY, 0.0);
+        post(TransactionType.SELL, 0.0);
+
+        // When / Then
+        assertEquals(1, capitalGainsSummaryService.summaryFor(EMAIL, FinancialYear.containing(LocalDate.now()).label())
+                .buckets().size());
     }
 }

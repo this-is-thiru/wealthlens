@@ -28,10 +28,12 @@ import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -488,5 +490,73 @@ class TradeOutcomeRecorderTest {
         assertEquals(TradeSegment.DELIVERY, row.getBuySegment());
         assertEquals("NSE", row.getSellExchangeName());
         assertEquals(TradeSegment.INTRADAY, row.getSellSegment());
+    }
+
+    private List<TradeOutcomeContext> sold(double entered, Optional<ChargeComputation> computation,
+            TradeOutcomeRecorder.MatchedLot... lots) {
+        double quantity = Arrays.stream(lots).mapToDouble(TradeOutcomeRecorder.MatchedLot::quantity).sum();
+        AssetRequest sale = sell(quantity, 5100.0, TradeSegment.DELIVERY);
+        sale.setBrokerCharges(entered);
+        recorder.record(UserMail.from(EMAIL), sale, "sell-1", List.of(lots), computation);
+        return captureSaved(lots.length);
+    }
+
+    private static TradeOutcomeRecorder.MatchedLot held(String id, double quantity) {
+        return new TradeOutcomeRecorder.MatchedLot(lot(id, 0.0, 5000.0, 0.0), quantity, quantity);
+    }
+
+    @Test
+    void record_whenNoCardPricesTheSale_keepsTheEnteredChargeOutsideTheBreakdown() {
+        // When
+        TradeOutcomeContext row = sold(30.0, Optional.of(ChargeComputation.empty(ChargeResolution.NO_SCHEDULE)),
+                held("buy-1", 10.0)).getFirst();
+
+        // Then — 51,000 − 30 − 50,000 = 970
+        MoneyAssert.assertMoney(30.0, row.getSellBrokerCharges());
+        assertEquals(Map.of(), row.getSellChargeBreakup());
+        MoneyAssert.assertMoney(970.0, row.getNetProfit());
+    }
+
+    @Test
+    void record_whenTheEngineDeclines_splitsTheEnteredChargeByQuantity() {
+        // When
+        List<TradeOutcomeContext> rows = sold(30.0, Optional.empty(), held("buy-1", 6.0), held("buy-2", 4.0));
+
+        // Then
+        MoneyAssert.assertMoney(18.0, rows.get(0).getSellBrokerCharges());
+        MoneyAssert.assertMoney(12.0, rows.get(1).getSellBrokerCharges());
+    }
+
+    @Test
+    void record_whenTheEnteredChargeDoesNotDivideEvenly_thePartsSumToIt() {
+        // When
+        List<TradeOutcomeContext> rows = sold(100.0, Optional.of(ChargeComputation.empty(ChargeResolution.NO_MATCHING_RULES)),
+                held("buy-1", 1.0), held("buy-2", 1.0), held("buy-3", 1.0));
+
+        // Then — running totals 33.33, 66.67, 100.00 (allocate's method), so each part is the difference
+        MoneyAssert.assertMoney(33.33, rows.get(0).getSellBrokerCharges());
+        MoneyAssert.assertMoney(33.34, rows.get(1).getSellBrokerCharges());
+        MoneyAssert.assertMoney(33.33, rows.get(2).getSellBrokerCharges());
+    }
+
+    @Test
+    void record_whenTheEngineHasAFigure_ignoresTheEnteredCharge() {
+        // When
+        TradeOutcomeContext row = sold(30.0, Optional.of(computation(Map.of("BROKERAGE", 45.5))), held("buy-1", 10.0))
+                .getFirst();
+
+        // Then
+        MoneyAssert.assertMoney(45.5, row.getSellBrokerCharges());
+        assertEquals(Set.of("BROKERAGE"), row.getSellChargeBreakup().keySet());
+    }
+
+    @Test
+    void record_whenNoCardAndNothingEntered_recordsNil() {
+        // When
+        TradeOutcomeContext row = sold(0.0, Optional.of(ChargeComputation.empty(ChargeResolution.NO_SCHEDULE)),
+                held("buy-1", 10.0)).getFirst();
+
+        // Then
+        MoneyAssert.assertMoney(0.0, row.getSellBrokerCharges());
     }
 }

@@ -36,6 +36,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TradeOutcomeRecorder {
 
+    /**
+     * Allocates a sale's entered charge as {@link #allocate} does a code, so its parts sum exactly. It is carried beside the
+     * breakdown, never in it: where the engine has no figure ({@link ChargeComputation#hasFigure}) the charge's kind is unknown,
+     * so the row's total holds it and an empty breakdown makes the capital-gains summary refuse rather than overstate the gain
+     * (W-230, D-439).
+     */
+    private static final String ENTERED_CHARGE = "ENTERED";
+
     private final TradeOutcomeService tradeOutcomeService;
     private final UserChargeService userChargeService;
 
@@ -61,10 +69,15 @@ public class TradeOutcomeRecorder {
                 sellComputation.map(ChargeComputation::amountByCode).orElseGet(Map::of),
                 lots, totalSellQuantity);
 
+        List<Map<String, Double>> enteredAllocation = allocate(
+                sellComputation.filter(ChargeComputation::hasFigure).isPresent()
+                        ? Map.of() : Map.of(ENTERED_CHARGE, sell.getBrokerCharges()),
+                lots, totalSellQuantity);
+
         List<TradeOutcomeContext> rows = new ArrayList<>();
         for (int i = 0; i < lots.size(); i++) {
             TradeOutcomeContext row = buildRow(userMail, sell, sellTransactionId, lots.get(i), sellAllocation.get(i),
-                    lots.get(i).quantity() / totalSellQuantity);
+                    enteredAllocation.get(i).getOrDefault(ENTERED_CHARGE, 0.0), lots.get(i).quantity() / totalSellQuantity);
             tradeOutcomeService.saveTradeOutcome(userMail, row);
             rows.add(row);
         }
@@ -111,12 +124,12 @@ public class TradeOutcomeRecorder {
 
     private TradeOutcomeContext buildRow(UserMail userMail, AssetRequest sell, String sellTransactionId,
                                          MatchedLot lot, Map<String, Double> sellBreakup,
-                                         double sellShare) {
+                                         double enteredCharge, double sellShare) {
         AssetEntity asset = lot.asset();
         double buyShare = lot.originalQuantity() > 0 ? lot.quantity() / lot.originalQuantity() : 0.0;
 
         Map<String, Double> buyBreakup = share(buyBreakupFor(userMail, asset), buyShare);
-        TradeFigures figures = rowFigures(sell, lot, sellBreakup, sellShare);
+        TradeFigures figures = rowFigures(sell, lot, sellBreakup, enteredCharge, sellShare);
 
         TradeOutcomeContext.TradeOutcomeContextBuilder row = TradeOutcomeContext.builder()
                 .email(userMail.getEmail())
@@ -147,9 +160,9 @@ public class TradeOutcomeRecorder {
      * per row as well as across rows. Two figures that must agree come from one.
      */
     private static TradeFigures rowFigures(AssetRequest sell, MatchedLot lot, Map<String, Double> sellBreakup,
-                                           double sellShare) {
+                                           double enteredCharge, double sellShare) {
         AssetEntity asset = lot.asset();
-        double sellCharges = TMoney.sum(sellBreakup.values());
+        double sellCharges = TMoney.add(TMoney.sum(sellBreakup.values()), enteredCharge);
         double buyCharges = LotChargeAllocator.deductBroker(asset, lot.quantity(), lot.originalQuantity());
         double buyMiscCharges = LotChargeAllocator.deductMisc(asset, lot.quantity(), lot.originalQuantity());
         // Misc charges stay user-entered -- the engine does not produce them, so there is no

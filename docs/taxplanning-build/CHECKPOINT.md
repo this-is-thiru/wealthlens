@@ -4,15 +4,15 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-230 — a V2 sale's entered charge lost where no card prices it
-Stage           : 2 of 6 (EXPLAINED) — plan written; no code
-Done today      : W-088g9, W-229, W-089b, W-223, W-213, W-216 committed and closed; WL-A-2 republished
-Board           : `W-216 D`, `W-230 E`; queue: then Phase 11 from W-096
-Next step       : ask for "W-230 approved"; do not build before it
+Item            : Phase 11's first family, from W-096
+Stage           : 1 of 6 (READ) — W-230 closed (D-439); the switch's queue is done
+Done today      : W-088g9, W-229, W-089b, W-223, W-213, W-216, W-230 committed and closed; WL-A-2 republished
+Board           : `W-230 D`; next Phase 11 from W-096
+Next step       : write one family plan, one page, and STOP
 Owner actions   : nothing pushed — api-collection is ahead by 3: push it first. W-217 before the next push. Runbook §3.7 – §3.9, §0.4 at the deploy
-Last verify     : unit + integration 4307 / 0 / 0, Checkstyle 0; StockSplitIntegrationTest 7 / 0 / 0
-Files touched   : docs/taxplanning-build/plans/W-230.md, docs/taxplanning-build/STATE.md
-Last item commit: taxplanning W-213, W-216: apply a stock split on one path and check its ratio
+Last verify     : full 4316 run, 1 failure on W-230's misworked test figure, corrected; that class green; unit tier at this commit
+Files touched   : none
+Last item commit: taxplanning W-230: keep a V2 sale's entered charge where no rate card prices it
 Updated         : 2026-11-01, session 45
 ```
 
