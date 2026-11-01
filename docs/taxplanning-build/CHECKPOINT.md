@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : W-089c, W-112 — advance tax, interest and fees
-Stage           : 1 of 6 (READ) — W-234 closed (D-445)
-Done today      : D-434 – D-445 committed and closed
-Board           : `W-234 D`; next W-089c, W-112, then W-134 – W-136, C, D, E, the rest of F
-Next step       : read the sections from the Gazette, write one plan, and STOP
-Owner actions   : nothing pushed — api-collection is ahead by 5: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy
-Last verify     : unit + integration 4401 / 0 / 0; Checkstyle 0
+Item            : none in flight — session 45 paused by the owner (session limit); W-234 closed (D-445)
+Stage           : next W-089c + W-112 is at READ only: no plan written, no code
+Done today      : W-088g9, W-229 (switch to Phase 11), W-089b, W-223, W-213, W-216, W-230, profile, drafts, compute families, W-109a, family A, W-234 (D-434 – D-445)
+Board           : `W-234 D`; order the owner took: W-089c + W-112, then W-134 – W-136, then C, D, E, the rest of F; `K` rows in PARKED-ROWS.md
+Next step       : read 1961 ss.207–211, 234A–234C, 234F and 2025 ss.403–409, 423–425, 428 in full (Gazette 265620 pp.~431–448; re-fetch), write plans/W-089c.md as one family plan, one page, and STOP
+Owner actions   : nothing pushed — api-collection is ahead by 5: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy. Revoke the zenmux key if not wanted
+Last verify     : unit + integration 4401 / 0 / 0; Checkstyle 0 (at the W-234 commit)
 Files touched   : none
 Last item commit: taxplanning W-234: let a draft state what earlier years carried in
-Updated         : 2026-11-01, session 45
+Updated         : 2026-11-01, session 45 — paused
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
