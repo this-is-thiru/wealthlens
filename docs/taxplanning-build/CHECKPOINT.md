@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-089c + W-112 committed and closed on the owner's "commit it" (D-446)
-Stage           : next family W-134 – W-136 is not started: READ first, then one plan, and STOP
+Item            : none in flight — session 46 paused by the owner (session limit, Mac shut down); W-089c + W-112 closed (D-446, fc7c5056)
+Stage           : next family W-134 – W-136 not started: no reading, no plan, no code
 Done today      : session 46: READ (sources/2026-11-06-advance-tax-interest.md); plan approved C1a–C5a; built advance.tax, interest.and.fees, 7 rows, 7 definitions; relocked law.126 / law.129
 Board           : W-089c D (PARKED-ROWS: NOW 2), W-112 D; W-112a (234C carve-out), W-112b (refund interest) placed after W-112
-Next step       : read the W-134 – W-136 rows and their decision rows, source what they need, write one family plan, STOP
-Owner actions   : nothing pushed — api-collection is ahead by 5: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy. Revoke the zenmux key if not wanted. OrbStack was started for the integration tier
+Next step       : read the W-134 – W-136 rows and their decision rows, source what they need (Gazette only), write one family plan, STOP
+Owner actions   : pushed 2026-11-06: review/taxplanning at fc7c5056; api-collection already level with origin/main; W-217 check passed (pointer 814dfb4 on origin/main) — run it again before every push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy. Revoke the zenmux key if not wanted. Integration tier: `orb start` first
 Last verify     : unit + integration 4425 / 0 / 0; Checkstyle 0; Spotless clean (at the W-089c + W-112 commit)
 Files touched   : none
 Last item commit: taxplanning W-089c, W-112: compute advance tax, the interest on it and the late-return fee
-Updated         : 2026-11-06, session 46
+Updated         : 2026-11-06, session 46 — paused
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
