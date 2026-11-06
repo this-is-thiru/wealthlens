@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
@@ -22,9 +23,11 @@ import java.util.TreeSet;
 public final class ShippedRulePacks implements RulePackProvider {
 
     private final Map<TaxYearId, RulePack> packs;
+    private final Map<TaxYearId, Map<RuleId, String>> ruleChecksums;
 
-    private ShippedRulePacks(Map<TaxYearId, RulePack> packs) {
+    private ShippedRulePacks(Map<TaxYearId, RulePack> packs, Map<TaxYearId, Map<RuleId, String>> ruleChecksums) {
         this.packs = Map.copyOf(packs);
+        this.ruleChecksums = Map.copyOf(ruleChecksums);
     }
 
     /**
@@ -38,11 +41,14 @@ public final class ShippedRulePacks implements RulePackProvider {
             throw new IllegalArgumentException("An application shipping no tax years cannot compute anything");
         }
         Map<TaxYearId, RulePack> packs = new HashMap<>();
+        Map<TaxYearId, Map<RuleId, String>> ruleChecksums = new HashMap<>();
         for (TaxYearId year : years) {
-            JsonPackAssembler assembler = new JsonPackAssembler(ClasspathRulePackProvider.lock(root, year).instruments());
+            RulePackLock lock = ClasspathRulePackProvider.lock(root, year);
+            JsonPackAssembler assembler = new JsonPackAssembler(lock.instruments());
             packs.put(year, new ClasspathRulePackProvider(root, Set.of(year), assembler).load(year));
+            ruleChecksums.put(year, lock.ruleChecksums());
         }
-        return new ShippedRulePacks(packs);
+        return new ShippedRulePacks(packs, ruleChecksums);
     }
 
     @Override
@@ -57,5 +63,13 @@ public final class ShippedRulePacks implements RulePackProvider {
                     + new TreeSet<>(packs.keySet().stream().map(TaxYearId::label).toList()));
         }
         return packs.get(year);
+    }
+
+    @Override
+    public Map<RuleId, String> ruleChecksums(TaxYearId year) {
+        if (!ruleChecksums.containsKey(year)) {
+            throw new PackValidationException("No pack for " + year);
+        }
+        return ruleChecksums.get(year);
     }
 }

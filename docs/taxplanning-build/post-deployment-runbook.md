@@ -271,7 +271,7 @@ Safe to repeat; it writes nothing, so there is nothing to undo.
 
 ### 1.y W-137 (D-449) — the background jobs · owner · **first deploy carrying them, then after the first runs**
 
-Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. The jobs run only where `app.tax.jobs.enabled` is true (all three profile yamls): `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`). Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only.
+Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. The jobs run only where `app.tax.jobs.enabled` is true (all three profile yamls): `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`). Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only. **W-138 (D-450):** `staleness-sweep` runs at every start under the same switch and logs `Job staleness-sweep flagged N draft(s)`; after a deploy that changes a pack (a new `law` or `exec` version in a lock), expect N to be the ready and filed drafts computed under the old one, and 0 on the next start.
 
 **After the first run of each** (read-only):
 

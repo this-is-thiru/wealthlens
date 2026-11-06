@@ -59,6 +59,10 @@ public class FilingDraft implements AuditableEntity {
     @Field("archived_at")
     private LocalDateTime archivedAt;
 
+    /** Set by the staleness sweep when the law moved under this draft's last computation; cleared by computing again (W-138). */
+    @Field("staleness")
+    private DraftStaleness staleness;
+
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
 

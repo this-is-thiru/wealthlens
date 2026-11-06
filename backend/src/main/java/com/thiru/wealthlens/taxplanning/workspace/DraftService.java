@@ -55,6 +55,14 @@ public class DraftService {
         return drafts.stream().map(DraftView::of).toList();
     }
 
+    /** The draft's figures are current again: it was just computed under the shipped pack (W-138). */
+    public void clearStaleness(String draftId) {
+        draftRepository.findById(draftId).filter(draft -> draft.getStaleness() != null).ifPresent(draft -> {
+            draft.setStaleness(null);
+            draftRepository.save(draft);
+        });
+    }
+
     /** A blank draft at revision nil; the workspace's first becomes its primary. */
     public DraftView createDraft(String email, String profileId, int taxYearStart, String label) {
         if (label == null || label.isBlank()) {

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.thiru.wealthlens.taxengine.api.TaxCalculator;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.jobs.AutoArchive;
 import com.thiru.wealthlens.taxplanning.jobs.JobContext;
@@ -11,8 +13,10 @@ import com.thiru.wealthlens.taxplanning.jobs.JobFailure;
 import com.thiru.wealthlens.taxplanning.jobs.JobFailureRepository;
 import com.thiru.wealthlens.taxplanning.jobs.JobLease;
 import com.thiru.wealthlens.taxplanning.jobs.RetentionPurge;
+import com.thiru.wealthlens.taxplanning.jobs.StalenessSweep;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
 import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
+import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatus;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import com.thiru.wealthlens.taxplanning.workspace.TaxYearWorkspace;
@@ -21,6 +25,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,6 +92,12 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private JobFailureRepository failures;
+
+    @Autowired
+    private StalenessSweep stalenessSweep;
+
+    @Autowired
+    private TaxCalculator taxCalculator;
 
     @BeforeEach
     void theDayOfTheHandFigures() {
@@ -259,5 +272,119 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(stored("expired")).isNotNull();
         assertThat(mongoTemplate.findAll(JobFailure.class)).isEmpty();
+    }
+
+    /** The shipped 2026-27 pack's law and exec versions, with one of them replaced by an older one. */
+    private List<String> withOlder(String layer) {
+        return taxCalculator.packVersions(TaxYearId.of(2026)).orElseThrow().stream()
+                .map(version -> version.contains("layer=" + layer) ? version.replaceAll("version=[^,]+", "version=2026-27.old.1") : version)
+                .sorted().toList();
+    }
+
+    private void computation(String draftId, List<String> lawAndExec, Map<String, String> ruleChecksums) {
+        DraftComputation computation = new DraftComputation();
+        computation.setId("computation-" + draftId);
+        computation.setReceipt("receipt-" + draftId);
+        computation.setDraftId(draftId);
+        computation.setRevision(1);
+        computation.setResultJson("{}");
+        computation.setLawAndExec(lawAndExec);
+        computation.setRuleChecksums(ruleChecksums);
+        mongoTemplate.save(computation);
+    }
+
+    private Map<String, String> pinnedWithOneChanged() {
+        String unchanged = taxCalculator.ruleChecksums(TaxYearId.of(2026), Set.of("ADV-LIABILITY")).get("ADV-LIABILITY");
+        return Map.of("ADV-INSTALMENTS", "sha256:0", "ADV-LIABILITY", unchanged);
+    }
+
+    @Test
+    void stalenessSweep_whenTheLawMovedUnderAReadyDraft_flagsItWithTheRulesItReadThatChanged() {
+        // Given — computed under an older law layer; of its two rules, ADV-INSTALMENTS has changed since
+        workspace("workspace-1", null);
+        draft("ready", DraftStatus.READY, 2026, "2026-10-01T12:00:00");
+        computation("ready", withOlder("LAW"), pinnedWithOneChanged());
+
+        // When
+        runner.run(stalenessSweep);
+
+        // Then — R-8: flagged, never recomputed
+        DraftStaleness staleness = stored("ready").getStaleness();
+        assertThat(staleness.changedRules()).containsExactly("ADV-INSTALMENTS");
+        assertThat(staleness.ruleDiffAvailable()).isTrue();
+        assertThat(staleness.receipt()).isEqualTo("receipt-ready");
+        assertThat(staleness.computedUnder()).isEqualTo(withOlder("LAW"));
+        assertThat(staleness.current()).isEqualTo(taxCalculator.packVersions(TaxYearId.of(2026)).orElseThrow());
+        assertThat(staleness.since()).isEqualTo(LocalDateTime.parse("2026-11-06T06:30:00"));
+        assertThat(mongoTemplate.findAll(DraftComputation.class)).hasSize(1);
+    }
+
+    @Test
+    void stalenessSweep_whenOnlyTheExecLayerMoved_flagsAFiledDraftToo() {
+        // Given — V9: any change to a computed year, not only to the law layer
+        workspace("workspace-1", null);
+        draft("filed", DraftStatus.ACTED_ON, 2026, "2026-10-01T12:00:00");
+        computation("filed", withOlder("EXEC"), pinnedWithOneChanged());
+
+        // When
+        runner.run(stalenessSweep);
+
+        // Then
+        assertThat(stored("filed").getStaleness()).isNotNull();
+        assertThat(stored("filed").getStatus()).isEqualTo(DraftStatus.ACTED_ON);
+    }
+
+    @Test
+    void stalenessSweep_whenADraftIsBeingWorkedOrItsLawIsCurrent_leavesItAlone() {
+        // Given
+        workspace("workspace-1", null);
+        draft("working", DraftStatus.DRAFT, 2026, "2026-10-01T12:00:00");
+        computation("working", withOlder("LAW"), pinnedWithOneChanged());
+        draft("current", DraftStatus.READY, 2026, "2026-10-01T12:00:00");
+        computation("current", taxCalculator.packVersions(TaxYearId.of(2026)).orElseThrow(), pinnedWithOneChanged());
+
+        // When
+        runner.run(stalenessSweep);
+
+        // Then
+        assertThat(stored("working").getStaleness()).isNull();
+        assertThat(stored("current").getStaleness()).isNull();
+    }
+
+    @Test
+    void stalenessSweep_whenRunAgainLater_keepsTheFirstFlag() {
+        // Given
+        workspace("workspace-1", null);
+        draft("ready", DraftStatus.READY, 2026, "2026-10-01T12:00:00");
+        computation("ready", withOlder("LAW"), pinnedWithOneChanged());
+        runner.run(stalenessSweep);
+
+        // When
+        clock.set("2026-11-07T06:30:00Z");
+        runner.run(stalenessSweep);
+
+        // Then
+        assertThat(stored("ready").getStaleness().since()).isEqualTo(LocalDateTime.parse("2026-11-06T06:30:00"));
+    }
+
+    @Test
+    void stalenessSweep_whenTheComputationPredatesItsPins_readsTheVersionsFromItsResultAndNamesNoRules() {
+        // Given — stored before W-138: the versions only inside the result, no rule checksums
+        workspace("workspace-1", null);
+        draft("old", DraftStatus.READY, 2026, "2026-10-01T12:00:00");
+        DraftComputation computation = new DraftComputation();
+        computation.setId("computation-old");
+        computation.setReceipt("TXC-2026-BBBBBB");
+        computation.setDraftId("old");
+        computation.setRevision(1);
+        computation.setResultJson("{\"tax\": {\"lawAndExec\": [\"" + String.join("\", \"", withOlder("LAW")) + "\"]}}");
+        mongoTemplate.save(computation);
+
+        // When
+        runner.run(stalenessSweep);
+
+        // Then
+        assertThat(stored("old").getStaleness().ruleDiffAvailable()).isFalse();
+        assertThat(stored("old").getStaleness().changedRules()).isEmpty();
     }
 }

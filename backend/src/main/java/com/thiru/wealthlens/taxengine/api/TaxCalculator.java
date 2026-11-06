@@ -30,8 +30,11 @@ import com.thiru.wealthlens.taxengine.rules.pack.RulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
+import java.util.TreeMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -120,6 +123,32 @@ public class TaxCalculator {
                 .map(LossCarryForward.class::cast)
                 .mapToInt(carry -> carry.span().succeedingYears())
                 .max();
+    }
+
+    /**
+     * The year's law and exec layer versions, in the form {@link ComputedTax#lawAndExec()} pins them: a stored computation whose pins
+     * differ was made under law that has since moved (W-138, {@code 13-edge-cases.md} R-8). Empty where no pack ships for the year.
+     */
+    public Optional<List<String>> packVersions(TaxYearId year) {
+        if (!rulePacks.availableYears().contains(year)) {
+            return Optional.empty();
+        }
+        return Optional.of(rulePacks.load(year).layers().values().stream().filter(ref -> ref.layer().affectsComputation())
+                .map(Object::toString).sorted().toList());
+    }
+
+    /**
+     * The current checksum of each of {@code ruleIds} the year's pack holds — a rule it no longer holds is left out, so a caller
+     * comparing against what it pinned sees that rule as changed (W-138).
+     */
+    public Map<String, String> ruleChecksums(TaxYearId year, Set<String> ruleIds) {
+        Map<String, String> current = new TreeMap<>();
+        rulePacks.ruleChecksums(year).forEach((rule, checksum) -> {
+            if (ruleIds.contains(rule.value())) {
+                current.put(rule.value(), checksum);
+            }
+        });
+        return current;
     }
 
     private static RegimeSpec spec(RulePack pack, RegimeCode code) {

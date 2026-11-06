@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-137 (+ W-136) committed and closed (D-449)
-Stage           : next by board order: W-138 (staleness sweep), not started
-Done today      : session 47: W-134 family (D-447), W-134a (D-448), W-137 (D-449) built and closed
-Board           : W-137 D, W-235 · (after W-137), W-138 ·, W-236 · (after W-146)
-Next step       : read W-138 and its decision rows (DR 13 R-8, DR 18 V9, D-449), source what they need (Gazette only), write its plan, STOP
+Item            : none in flight — W-138 committed and closed (D-450)
+Stage           : next by board order: W-235 (erasure on request; DPDP Act to be sourced from the Gazette first), not started
+Done today      : session 47: D-447 (W-134 – W-136), D-448 (W-134a), D-449 (W-137), D-450 (W-138) built and closed
+Board           : W-138 D, W-235 · (next), W-236 · (after W-146)
+Next step       : read W-235 and its decision rows (DR 14 O5, D-447 C6a, D-449 C2a); find the DPDP Act, 2023 and its Rules in the Gazette (READ only from Gazette copies), write its plan, STOP
 Owner actions   : runbook §0.5, §0.6, §1.y (after the first job runs), §1.x, §3.7 – §3.9, §0.4 at the deploy; push review/taxplanning when ready (W-217 check first); `orb start` before the integration tier
-Last verify     : unit + integration 4448 / 0 / 0; Checkstyle 0; Spotless clean (at the W-137 commit)
+Last verify     : unit + integration 4457 / 0 / 0; Checkstyle 0; Spotless clean (at the W-138 commit)
 Files touched   : none
-Last item commit: taxplanning W-137, W-136: archive untouched drafts and delete expired ones, keeping a filed draft as long as its year's law carries a loss
-Updated         : 2026-11-06, session 47 — W-137 closed
+Last item commit: taxplanning W-138: flag ready and filed drafts whose law moved, naming the rules that changed
+Updated         : 2026-11-06, session 47 — W-138 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

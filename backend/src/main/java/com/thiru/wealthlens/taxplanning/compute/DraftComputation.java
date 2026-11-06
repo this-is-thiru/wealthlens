@@ -3,6 +3,8 @@ package com.thiru.wealthlens.taxplanning.compute;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
+import java.util.List;
+import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.convert.ValueConverter;
@@ -40,6 +42,14 @@ public class DraftComputation implements AuditableEntity {
     @ValueConverter(EncryptedField.class)
     @Field("result_json")
     private String resultJson;
+
+    /** The law and exec layer versions it ran under, in the clear: pack structure, not personal data ({@code DR 14} O7; W-138). */
+    @Field("law_and_exec")
+    private List<String> lawAndExec;
+
+    /** The checksum, then, of each rule its trace read: what later names the rules that changed under it (W-138). */
+    @Field("rule_checksums")
+    private Map<String, String> ruleChecksums;
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();

@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
+import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import io.restassured.RestAssured;
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -512,5 +514,24 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(mongoTemplate.findAll(AccessRecord.class)).singleElement()
                 .satisfies(read -> assertThat(read.getSubject()).isEqualTo(ReadSubject.COMPUTATION))
                 .satisfies(read -> assertThat(read.getSubjectId()).isEqualTo(receipt));
+    }
+
+    @Test
+    void compute_whenTheDraftWasFlaggedStale_clearsTheFlag() {
+        // Given — W-138: flagged by the sweep after the law moved
+        String draftId = draft(false, "0");
+        FilingDraft draft = mongoTemplate.findById(draftId, FilingDraft.class);
+        draft.setStaleness(new DraftStaleness(LocalDate.of(2026, 11, 1).atStartOfDay(), "TXC-2026-AAAAAA", List.of("old"),
+                List.of("new"), List.of(), false));
+        mongoTemplate.save(draft);
+
+        // When
+        compute(draftId);
+
+        // Then — computed under the shipped pack, so current again; and the computation pins what it ran under
+        assertThat(mongoTemplate.findById(draftId, FilingDraft.class).getStaleness()).isNull();
+        DraftComputation stored = mongoTemplate.findAll(DraftComputation.class).getFirst();
+        assertThat(stored.getLawAndExec()).hasSize(2);
+        assertThat(stored.getRuleChecksums()).isNotEmpty().allSatisfy((rule, checksum) -> assertThat(checksum).startsWith("sha256:"));
     }
 }

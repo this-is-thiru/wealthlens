@@ -13,7 +13,9 @@ import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,8 +66,16 @@ public class DraftComputationService {
         stored.setDraftId(draftId);
         stored.setRevision(view.revision());
         stored.setResultJson(MAPPER.writeValueAsString(view));
+        stored.setLawAndExec(tax.lawAndExec());
+        stored.setRuleChecksums(taxCalculator.ruleChecksums(TaxYearId.of(assembled.draft().getTaxYearStart()), rulesRead(tax)));
         repository.save(stored);
+        draftService.clearStaleness(draftId);
         return view;
+    }
+
+    private static Set<String> rulesRead(ComputedTax tax) {
+        return tax.trace().stream().map(ComputedTax.Step::rule).filter(rule -> rule != null && !rule.isBlank())
+                .collect(Collectors.toSet());
     }
 
     /** Every regime priced on the draft; the draft is unchanged and nothing is stored. */

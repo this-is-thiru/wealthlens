@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.taxengine.rules.timeline;
 
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.PackJson;
 import com.thiru.wealthlens.taxengine.rules.pack.PackAssembler;
@@ -70,6 +71,14 @@ public final class ClasspathRulePackProvider implements RulePackProvider {
     @Override
     public Set<TaxYearId> availableYears() {
         return years;
+    }
+
+    @Override
+    public Map<RuleId, String> ruleChecksums(TaxYearId year) {
+        if (year == null || !years.contains(year)) {
+            throw new PackValidationException("No pack for " + year);
+        }
+        return lock(root, year).ruleChecksums();
     }
 
     @Override
