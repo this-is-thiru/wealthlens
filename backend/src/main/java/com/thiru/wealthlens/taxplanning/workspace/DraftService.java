@@ -2,6 +2,8 @@ package com.thiru.wealthlens.taxplanning.workspace;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
+import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
+import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +27,7 @@ public class DraftService {
     private final FilingDraftRepository draftRepository;
     private final DraftRevisionRepository revisionRepository;
     private final RegimeElectionHistoryRepository electionHistoryRepository;
+    private final TaxAccessLog taxAccessLog;
 
     /** The profile's workspace for the year, made on first asking. */
     public TaxYearWorkspace workspace(String email, String profileId, int taxYearStart) {
@@ -41,9 +44,11 @@ public class DraftService {
         return workspaceRepository.save(workspace);
     }
 
+    /** The year's drafts, each read recorded: a draft's inputs carry claims such as medical spend ({@code DR 14} O1.1). */
     public List<DraftView> drafts(String email, String profileId, int taxYearStart) {
-        return draftRepository.findByWorkspaceId(workspace(email, profileId, taxYearStart).getId()).stream()
-                .map(DraftView::of).toList();
+        List<FilingDraft> drafts = draftRepository.findByWorkspaceId(workspace(email, profileId, taxYearStart).getId());
+        drafts.forEach(draft -> taxAccessLog.record(email, ReadSubject.DRAFT, draft.getId()));
+        return drafts.stream().map(DraftView::of).toList();
     }
 
     /** A blank draft at revision nil; the workspace's first becomes its primary. */
@@ -86,9 +91,10 @@ public class DraftService {
     public record OwnedDraft(FilingDraft draft, DraftInputs inputs) {
     }
 
-    @Transactional(readOnly = true)
     public DraftView draft(String email, String draftId) {
-        return DraftView.of(owned(email, draftId));
+        FilingDraft draft = owned(email, draftId);
+        taxAccessLog.record(email, ReadSubject.DRAFT, draftId);
+        return DraftView.of(draft);
     }
 
     /**
@@ -125,7 +131,6 @@ public class DraftService {
     }
 
     /** The inputs as they stood at {@code number}, by replay from revision nil. */
-    @Transactional(readOnly = true)
     public JsonNode inputsAt(String email, String draftId, int number) {
         JsonNode state = null;
         for (DraftRevision revision : revisions(email, draftId)) {
@@ -138,6 +143,7 @@ public class DraftService {
         if (state == null || number > owned(email, draftId).getCurrentRevision()) {
             throw new BadRequestException("This draft has no revision " + number);
         }
+        taxAccessLog.record(email, ReadSubject.DRAFT_REVISION, draftId);
         return state;
     }
 

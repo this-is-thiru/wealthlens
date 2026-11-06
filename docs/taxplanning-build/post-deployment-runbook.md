@@ -71,7 +71,7 @@ and seed before anyone trades. On staging the owner is the only user.
 
 | # | Check | Why |
 |---|---|---|
-| 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability |
+| 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5 |
 | 0.1.2 | MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` warns at startup (§1.7) |
 | 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only |
 
@@ -174,6 +174,56 @@ grep -oE 'W-[0-9]+[a-z0-9]* K( |$)' docs/taxplanning-build/STATE.md
 
 Expected: empty, or every row printed named in a waiver D-row by the owner.
 
+### 0.5 W-134 (D-447) — the tax keys, and the tax-planning collections cleared · owner · **every database · before the first deploy carrying W-134**
+
+**Why.** From W-134 the profile, reference, draft and computation collections hold personal data encrypted
+(`k1:…`) and PANs and TANs as keyed digests (`pan_digest`, `tan_digest`). Rows written before it are plain text, which
+the new build refuses to read, and `tax_employers`' unique index `tax_employer_tan_idx` changes its key from `tan` to
+`tan_digest`, which a start cannot do over the old index of that name. No real PAN has been stored before the one deploy
+(D-447 C7a), so the collections are cleared, not converted. A fresh-start step: no code to remove, so no Phase 15 row.
+
+**Know this:**
+- **A lost key is lost data.** Nothing can decrypt a stored field without `TAX_DATA_KEY`, and a new `TAX_DIGEST_KEY`
+  lets a second profile take a PAN already held. Keep both in the secret store **and** its backup before the first start.
+- **Collections are dropped, not emptied**, unlike §1A: dropping also removes the old indexes, and the new build creates
+  every index again at its start (§1.x). Drop while the new build is not yet running.
+- **Only these eleven collections.** The tax-policy collections (`tax_slab_policies`, `tax_year_registry`, …) share the
+  `tax_` prefix and are **not** touched.
+
+1. **Keys** (once per environment, not per database): `openssl rand -base64 32`, twice — one for `TAX_DATA_KEY`, one for
+   `TAX_DIGEST_KEY`. Each must decode to 32 bytes, or the app stops at start naming the property. Never reuse one key
+   for both, and never reuse staging's in prod.
+2. **Count before** (read-only; one query, every database; run it again after step 4):
+
+   ```js
+   db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+     .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+       return { database: n, counts: ["tax_profiles", "tax_family_members", "tax_employers", "tax_landlords", "tax_lenders",
+         "tax_bank_accounts", "tax_year_workspaces", "tax_filing_drafts", "tax_draft_revisions", "tax_draft_computations",
+         "tax_regime_election_history"].map(c => ({ c, n: d.getCollection(c).countDocuments({}),
+         plainPan: c === "tax_profiles" ? d.tax_profiles.countDocuments({ pan: { $not: /^k1:/ } }) : null })) }; }) }])
+   ```
+
+   Expect: test data only, or nothing. **Stop** if any `tax_profiles` row holds a real person's PAN — say so first.
+3. **Back up** any collection step 2 counts above 0:
+   `mongoexport --uri "<uri>" --db <db> --collection <c> --out tax-<c>-before-w134.json`.
+4. **Drop** (the same eleven, nothing else):
+
+   ```js
+   ["tax_profiles", "tax_family_members", "tax_employers", "tax_landlords", "tax_lenders", "tax_bank_accounts",
+    "tax_year_workspaces", "tax_filing_drafts", "tax_draft_revisions", "tax_draft_computations",
+    "tax_regime_election_history"].map(c => ({ c, dropped: db.getCollection(c).drop() }))
+   ```
+
+   A second run returns `dropped: false` for each and changes nothing.
+5. **After the deploy** (read-only): §1.x's `Ensured the indexes of` lines; then create one profile and check
+   `db.tax_profiles.find({}, { pan: 1, pan_digest: 1 })` shows `pan` beginning `k1:` and a 64-character `pan_digest`.
+   `tax_access_log` gains a row for each read of a profile, family, draft or computation: never cleared, it is the
+   O4 audit record.
+
+**Way back.** Deploy the previous build, then `mongoimport` each step-3 file into its collection. Rows written by the new
+build are encrypted and the previous build cannot read them: drop those collections again first.
+
 ## 1. On every deploy — startup, automatic; confirm in the log
 
 | # | Item / decision | What happens at startup | Check | If it fails |
@@ -190,7 +240,7 @@ Expected: empty, or every row printed named in a waiver D-row by the owner.
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 
-Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender`, `BankAccount`, `TaxYearWorkspace`, `FilingDraft`, `DraftRevision`, `RegimeElectionHistory` (`WorkspaceIndexInitializer`, W-099, D-441) and `DraftComputation` (`DraftComputationIndexInitializer`, W-104, D-442); a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Do not deploy these with real PANs before W-232 (encryption at rest): §0.4 holds the deploy until it is built or waived.**
+Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender`, `BankAccount`, `TaxYearWorkspace`, `FilingDraft`, `DraftRevision`, `RegimeElectionHistory` (`WorkspaceIndexInitializer`, W-099, D-441) and `DraftComputation` (`DraftComputationIndexInitializer`, W-104, D-442); a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Encryption at rest is built (W-134, D-447; W-232 merged into it): §0.5 before the first deploy carrying it.**
 
 ## 1A. W-176 (D-379) — clear the charge engine's data · owner, `mongosh` · **every fresh start**
 

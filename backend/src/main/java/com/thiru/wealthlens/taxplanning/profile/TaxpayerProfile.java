@@ -6,9 +6,11 @@ import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
 import java.time.LocalDate;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -32,10 +34,16 @@ public class TaxpayerProfile implements AuditableEntity {
     @Field("email")
     private String email;
 
-    @Indexed(unique = true)
+    @ValueConverter(EncryptedField.class)
     @Field("pan")
     private String pan;
 
+    /** The PAN's keyed digest: what keeps a PAN unique now that the PAN itself is stored encrypted (D-447 C1a). */
+    @Indexed(unique = true)
+    @Field("pan_digest")
+    private String panDigest;
+
+    @ValueConverter(EncryptedField.class)
     @Field("name")
     private String name;
 
@@ -43,6 +51,7 @@ public class TaxpayerProfile implements AuditableEntity {
     private AssesseeKind kind;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
+    @ValueConverter(EncryptedField.class)
     @Field("date_of_birth")
     private LocalDate dateOfBirth;
 
@@ -53,7 +62,8 @@ public class TaxpayerProfile implements AuditableEntity {
     @Field("holds_portfolio")
     private boolean holdsPortfolio;
 
-    @Field(name = "disability", targetType = FieldType.STRING)
+    @ValueConverter(EncryptedField.class)
+    @Field("disability")
     private DisabilitySeverity disability;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)

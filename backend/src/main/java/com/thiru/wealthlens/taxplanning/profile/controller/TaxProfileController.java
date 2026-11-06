@@ -33,7 +33,7 @@ public class TaxProfileController {
 
     @GetMapping("/{profileId}")
     public TaxpayerProfileResponse one(@PathVariable String email, @PathVariable String profileId) {
-        return TaxpayerProfileResponse.of(service.owned(email, profileId));
+        return TaxpayerProfileResponse.of(service.read(email, profileId));
     }
 
     @PutMapping("/{profileId}")

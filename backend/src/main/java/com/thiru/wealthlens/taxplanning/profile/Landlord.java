@@ -3,8 +3,10 @@ package com.thiru.wealthlens.taxplanning.profile;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
+import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -26,12 +28,15 @@ public class Landlord implements AuditableEntity, ProfileScoped {
     @Field("profile_id")
     private String profileId;
 
+    @ValueConverter(EncryptedField.class)
     @Field("name")
     private String name;
 
+    @ValueConverter(EncryptedField.class)
     @Field("address")
     private String address;
 
+    @ValueConverter(EncryptedField.class)
     @Field("pan")
     private String pan;
 

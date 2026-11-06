@@ -8,6 +8,8 @@ import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import io.restassured.RestAssured;
 import java.math.BigDecimal;
@@ -495,5 +497,20 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(refused.getBody()).contains("capitalLossCarried");
+    }
+
+    @Test
+    void byReceipt_whenShown_isStoredEncryptedAndTheReadIsRecorded() {
+        // Given
+        String receipt = compute(draft(false, "0")).at("/tax/receipt").asString();
+
+        // When
+        call(HttpMethod.GET, OWNER, "/computations/" + receipt, null, null);
+
+        // Then — DR 14 O1.1, O4
+        assertThat(mongoTemplate.getCollection("tax_draft_computations").find().first().getString("result_json")).startsWith("k1:");
+        assertThat(mongoTemplate.findAll(AccessRecord.class)).singleElement()
+                .satisfies(read -> assertThat(read.getSubject()).isEqualTo(ReadSubject.COMPUTATION))
+                .satisfies(read -> assertThat(read.getSubjectId()).isEqualTo(receipt));
     }
 }

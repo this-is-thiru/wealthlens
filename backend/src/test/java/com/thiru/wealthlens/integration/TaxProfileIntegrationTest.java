@@ -1,12 +1,16 @@
 package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxplanning.profile.Employer;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import io.restassured.RestAssured;
 import java.net.URI;
 import java.util.stream.Stream;
+import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -213,5 +217,59 @@ class TaxProfileIntegrationTest extends AbstractIntegrationTest {
         assertThat(again.getBody()).doesNotContain("BLRA12345B");
         assertThat(elsewhere.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(mongoTemplate.findAll(Employer.class)).hasSize(2);
+    }
+
+    private String stored(String collection) {
+        return mongoTemplate.getCollection(collection).find().first().toJson();
+    }
+
+    @Test
+    void save_whenAProfileAndItsReferencesAreStored_holdsNoPersonalDataInTheClear() {
+        // Given
+        String profileId = createdProfileId();
+        String path = OWNER + "/profiles/" + profileId + "/";
+
+        // When
+        call(HttpMethod.POST, OWNER, path + "family-members", """
+                {"name": "Asha", "relationship": "SPOUSE", "dateOfBirth": "1986-02-01", "disability": "DISABILITY",
+                 "pan": "PQRST5678K"}""");
+        call(HttpMethod.POST, OWNER, path + "employers", "{\"name\": \"Acme\", \"tan\": \"BLRA12345B\", \"type\": \"PRIVATE\"}");
+        call(HttpMethod.POST, OWNER, path + "landlords", "{\"name\": \"Ravi\", \"address\": \"Bengaluru\", \"pan\": \"LMNOP4321Q\"}");
+        call(HttpMethod.POST, OWNER, path + "lenders", "{\"name\": \"Meera\", \"pan\": \"FGHIJ8765K\", \"kind\": \"OTHER\"}");
+
+        // Then — DR 14 O1.1: what Mongo holds names none of them; what the app reads back is unchanged
+        assertThat(stored("tax_profiles")).doesNotContain(PAN, "Self", "1985-06-01");
+        assertThat(stored("tax_family_members")).doesNotContain("PQRST5678K", "Asha", "1986-02-01", "\"DISABILITY\"");
+        assertThat(stored("tax_employers")).doesNotContain("BLRA12345B");
+        assertThat(stored("tax_landlords")).doesNotContain("LMNOP4321Q", "Ravi", "Bengaluru");
+        assertThat(stored("tax_lenders")).doesNotContain("FGHIJ8765K", "Meera");
+        Document profile = mongoTemplate.getCollection("tax_profiles").find().first();
+        assertThat(profile.getString("pan")).startsWith("k1:");
+        // HMAC-SHA256 of ABCDE1234F under the test digest key (bytes 0x1F … 0x3E), computed with Python's hmac, not the code
+        assertThat(profile.getString("pan_digest")).isEqualTo("fc7b5d1c7f778ae0d11ff7f39543daf491a5b2f2e1ca37b3f68a03e2066bca62");
+        TaxpayerProfile read = mongoTemplate.findAll(TaxpayerProfile.class).getFirst();
+        assertThat(read.getPan()).isEqualTo(PAN);
+        assertThat(read.getName()).isEqualTo("Self");
+        assertThat(read.getDateOfBirth()).hasToString("1985-06-01");
+        assertThat(call(HttpMethod.GET, OWNER, path + "family-members", null).getBody()).contains("Asha", "DISABILITY", "1986-02-01");
+    }
+
+    @Test
+    void read_whenAProfileAndItsFamilyAreShown_recordsEachReadWithoutItsValues() {
+        // Given
+        String profileId = createdProfileId();
+
+        // When
+        call(HttpMethod.GET, OWNER, OWNER + "/profiles/" + profileId, null);
+        call(HttpMethod.GET, OWNER, OWNER + "/profiles/" + profileId + "/family-members", null);
+        call(HttpMethod.GET, OWNER, OWNER + "/profiles/" + profileId + "/employers", null);
+
+        // Then — DR 14 O1.1, O4: the two reads that carry special-category data, and only those
+        assertThat(mongoTemplate.findAll(AccessRecord.class))
+                .extracting(AccessRecord::getSubject, AccessRecord::getSubjectId, AccessRecord::getPrincipal)
+                .containsExactlyInAnyOrder(
+                        tuple(ReadSubject.PROFILE, profileId, OWNER),
+                        tuple(ReadSubject.FAMILY_MEMBERS, profileId, OWNER));
+        assertThat(mongoTemplate.getCollection("tax_access_log").find().first().toJson()).doesNotContain(PAN, "Self");
     }
 }

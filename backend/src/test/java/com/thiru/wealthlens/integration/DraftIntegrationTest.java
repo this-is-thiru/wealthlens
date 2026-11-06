@@ -1,9 +1,12 @@
 package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
+import com.thiru.wealthlens.taxplanning.protection.AccessRecord;
+import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import com.thiru.wealthlens.taxplanning.workspace.RegimeElectionHistory;
@@ -279,5 +282,26 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         // When / Then
         assertThat(call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/0", null, null).getBody()).isEqualTo(blank);
         assertThat(call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/1", null, null).getBody()).isEqualTo(first);
+    }
+
+    @Test
+    void patch_whenAFigureIsSaved_storesTheDraftAndItsRevisionsEncryptedAndRecordsTheirReads() {
+        // Given
+        save(ADD_EMPLOYMENT.formatted("175000"), "\"rev-0\"");
+
+        // When
+        call(HttpMethod.GET, OWNER, "/drafts/" + draftId, null, null);
+        String atOne = call(HttpMethod.GET, OWNER, "/drafts/" + draftId + "/revisions/1", null, null).getBody();
+
+        // Then — DR 14 O1.1: the figure is read back but is in no stored document; O4: both reads recorded
+        assertThat(atOne).contains("175000");
+        assertThat(mongoTemplate.getCollection("tax_filing_drafts").find().first().getString("inputs_json")).startsWith("k1:");
+        mongoTemplate.getCollection("tax_filing_drafts").find()
+                .forEach(stored -> assertThat(stored.toJson()).doesNotContain("175000", "BASIC"));
+        mongoTemplate.getCollection("tax_draft_revisions").find()
+                .forEach(stored -> assertThat(stored.toJson()).doesNotContain("175000", "BASIC"));
+        assertThat(mongoTemplate.findAll(AccessRecord.class))
+                .extracting(AccessRecord::getSubject, AccessRecord::getSubjectId)
+                .containsExactlyInAnyOrder(tuple(ReadSubject.DRAFT, draftId), tuple(ReadSubject.DRAFT_REVISION, draftId));
     }
 }

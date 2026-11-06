@@ -7,6 +7,8 @@ import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.assemble.EngineInputsAssembler;
+import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
+import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
 import com.thiru.wealthlens.taxplanning.workspace.DraftService;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -44,6 +46,7 @@ public class DraftComputationService {
     private final DraftService draftService;
     private final DraftComputationRepository repository;
     private final Clock clock;
+    private final TaxAccessLog taxAccessLog;
 
     /** Computes the draft under {@code regimeCode} and stores the result. */
     public DraftComputationView compute(String email, String draftId, String regimeCode) {
@@ -78,10 +81,10 @@ public class DraftComputationService {
      *
      * @throws BadRequestException if this account holds no such receipt
      */
-    @Transactional(readOnly = true)
     public DraftComputationView byReceipt(String email, String receipt) {
-        return repository.findByReceiptAndEmail(receipt, email)
-                .map(stored -> MAPPER.readValue(stored.getResultJson(), DraftComputationView.class))
+        DraftComputation stored = repository.findByReceiptAndEmail(receipt, email)
                 .orElseThrow(() -> new BadRequestException("This account holds no such receipt"));
+        taxAccessLog.record(email, ReadSubject.COMPUTATION, receipt);
+        return MAPPER.readValue(stored.getResultJson(), DraftComputationView.class);
     }
 }

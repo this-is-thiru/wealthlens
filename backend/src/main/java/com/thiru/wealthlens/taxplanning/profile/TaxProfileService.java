@@ -1,6 +1,9 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxplanning.protection.IdentifierDigest;
+import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
+import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class TaxProfileService {
 
     private final TaxpayerProfileRepository taxpayerProfileRepository;
+    private final IdentifierDigest identifierDigest;
+    private final TaxAccessLog taxAccessLog;
 
     public TaxpayerProfile create(String email, TaxpayerProfileRequest request) {
         TaxpayerProfile profile = request.applyTo(new TaxpayerProfile());
@@ -25,9 +30,18 @@ public class TaxProfileService {
         return save(profile);
     }
 
-    @Transactional(readOnly = true)
+    /** Every profile of the account, each read recorded: a profile carries disability ({@code DR 14} O1.1). */
     public List<TaxpayerProfile> all(String email) {
-        return taxpayerProfileRepository.findByEmail(email);
+        List<TaxpayerProfile> profiles = taxpayerProfileRepository.findByEmail(email);
+        profiles.forEach(profile -> taxAccessLog.record(email, ReadSubject.PROFILE, profile.getId()));
+        return profiles;
+    }
+
+    /** {@link #owned}, for showing to the user, so the read is recorded ({@code DR 14} O1.1). */
+    public TaxpayerProfile read(String email, String profileId) {
+        TaxpayerProfile profile = owned(email, profileId);
+        taxAccessLog.record(email, ReadSubject.PROFILE, profileId);
+        return profile;
     }
 
     /**
@@ -51,6 +65,7 @@ public class TaxProfileService {
                 .anyMatch(holder -> !holder.getId().equals(profile.getId()))) {
             throw new BadRequestException("Another profile of this account already holds its portfolio");
         }
+        profile.setPanDigest(identifierDigest.of(profile.getPan()));
         try {
             TaxpayerProfile saved = taxpayerProfileRepository.save(profile);
             log.info("Saved taxpayer profile {}", saved.getId());

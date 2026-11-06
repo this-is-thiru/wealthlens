@@ -46,7 +46,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-105 | PARKED | `TaxError`, `TaxEngineException` sealed hierarchy | The deploy gate | A readable 400 from `IllegalArgumentException` (D-442) |
 | W-106 | PARKED | `ControllerAdviser` extension, exhaustive switch | The deploy gate | As W-105 |
 | W-233 | PARKED | One filed draft per ledger entry (I8) | When ledgers feed from stored data, then the deploy gate | Unreachable until then: no draft consumes a ledger entry yet |
-| W-232 | MERGED | Into W-134 (D-444) | W-134: **must be built, not waived, before a real PAN is stored** | PAN and TAN plain in the database; masked in responses, messages and logs |
+| W-232 | MERGED | Into W-134 (D-444) | W-134: **must be built, not waived, before a real PAN is stored** — **built (D-447)** | Was: PAN and TAN plain in the database. Now encrypted at rest, unique by keyed digest; masked in responses, messages and logs |
 | W-082e | PARKED | History-aware regime offers | When the business head exists, else waived at the deploy gate | A binding applies only with business income; the existing refusal names this row |
 | W-231 | PARKED | The trade-outcome rebuild across a stock split | Before the rebuild runs at the deploy (runbook §2) | **Silent wrong cost for a post-split sale; only reachable by running the rebuild** |
 | W-216 | NOW 4 | A stock split with a malformed ratio recorded as performed | This switch | Done first |

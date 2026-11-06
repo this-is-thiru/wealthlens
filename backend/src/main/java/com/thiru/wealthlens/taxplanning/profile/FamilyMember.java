@@ -6,9 +6,11 @@ import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.taxengine.input.FamilySnapshot;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
 import java.time.LocalDate;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -31,6 +33,7 @@ public class FamilyMember implements AuditableEntity, ProfileScoped {
     @Field("profile_id")
     private String profileId;
 
+    @ValueConverter(EncryptedField.class)
     @Field("name")
     private String name;
 
@@ -38,13 +41,15 @@ public class FamilyMember implements AuditableEntity, ProfileScoped {
     private FamilySnapshot.Relationship relationship;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
+    @ValueConverter(EncryptedField.class)
     @Field("date_of_birth")
     private LocalDate dateOfBirth;
 
     @Field("dependant")
     private boolean dependant;
 
-    @Field(name = "disability", targetType = FieldType.STRING)
+    @ValueConverter(EncryptedField.class)
+    @Field("disability")
     private DisabilitySeverity disability;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
@@ -57,6 +62,7 @@ public class FamilyMember implements AuditableEntity, ProfileScoped {
     @Field("resident_in_india")
     private boolean residentInIndia;
 
+    @ValueConverter(EncryptedField.class)
     @Field("pan")
     private String pan;
 

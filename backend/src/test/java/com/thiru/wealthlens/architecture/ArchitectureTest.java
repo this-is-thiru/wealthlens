@@ -120,6 +120,14 @@ class ArchitectureTest {
                     .andShould().resideInAPackage("..controller..")
                     .because("REST entry points are discoverable by name and location");
 
+    /** A landlord's or lender's data is about someone who is not the user, so nothing the user shares may carry it (W-135, D-447 C5a). */
+    @ArchTest
+    static final ArchRule exports_carry_no_third_party_data =
+            noClasses()
+                    .that().resideInAPackage("..taxplanning.document..")
+                    .should().dependOnClassesThat().haveNameMatching(".*\\.taxplanning\\.profile\\.(Landlord|Lender)\\w*")
+                    .because("DR 14 O1.1 and DR 15 F3 exclude third-party data from any export the user shares");
+
     @ArchTest
     static final ArchRule tax_controllers_return_no_stored_document =
             methods()

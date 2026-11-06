@@ -1,0 +1,34 @@
+package com.thiru.wealthlens.taxplanning.protection;
+
+import java.time.Instant;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
+
+/**
+ * One read of special-category data, recorded even though nothing changed ({@code DR 14} O1.1, O4): who, what, when — never a
+ * value. Appended only; nothing updates or deletes one, as the question "what did this product show this person" outlives the data.
+ */
+@Data
+@NoArgsConstructor
+@Document("tax_access_log")
+public class AccessRecord {
+
+    @MongoId
+    private String id;
+
+    @Field("principal")
+    private String principal;
+
+    @Field(name = "subject", targetType = FieldType.STRING)
+    private ReadSubject subject;
+
+    @Field("subject_id")
+    private String subjectId;
+
+    @Field("read_at")
+    private Instant readAt;
+}

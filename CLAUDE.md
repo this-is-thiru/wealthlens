@@ -80,7 +80,7 @@ override convenience. Where the build enforces one, the enforcing check is named
 # Build (skip tests)
 ./mvnw clean install -pl backend -am -DskipTests
 
-# Run the app (default profile → it-staging Atlas cluster; needs MONGO_USER, MONGO_PASSWORD, JWT_SECURITY_KEY)
+# Run the app (default profile → it-staging Atlas cluster; needs MONGO_USER, MONGO_PASSWORD, JWT_SECURITY_KEY, TAX_DATA_KEY, TAX_DIGEST_KEY — the last two 32 bytes in base64)
 ./mvnw spring-boot:run -pl backend
 
 # All tests (unit + integration; integration needs Docker)

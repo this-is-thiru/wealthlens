@@ -18,6 +18,9 @@ spring:
 app:
   security:
     key-secret: ${JWT_SECURITY_KEY}
+  tax:
+    data-key: ${TAX_DATA_KEY}
+    digest-key: ${TAX_DIGEST_KEY}
   mongodb:
     transactions-enabled: true
   portfolio:

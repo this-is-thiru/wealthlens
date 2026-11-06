@@ -2,8 +2,10 @@ package com.thiru.wealthlens.taxplanning.compute;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -35,6 +37,7 @@ public class DraftComputation implements AuditableEntity {
     @Field("revision")
     private int revision;
 
+    @ValueConverter(EncryptedField.class)
     @Field("result_json")
     private String resultJson;
 

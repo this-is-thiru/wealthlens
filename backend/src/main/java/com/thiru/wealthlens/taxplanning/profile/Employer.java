@@ -3,8 +3,10 @@ package com.thiru.wealthlens.taxplanning.profile;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.taxplanning.enums.EmployerType;
+import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,7 +19,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 @Data
 @NoArgsConstructor
 @Document("tax_employers")
-@CompoundIndex(name = "tax_employer_tan_idx", def = "{'profile_id': 1, 'tan': 1}", unique = true)
+@CompoundIndex(name = "tax_employer_tan_idx", def = "{'profile_id': 1, 'tan_digest': 1}", unique = true)
 public class Employer implements AuditableEntity, ProfileScoped {
 
     @MongoId
@@ -29,9 +31,15 @@ public class Employer implements AuditableEntity, ProfileScoped {
     @Field("name")
     private String name;
 
+    @ValueConverter(EncryptedField.class)
     @Field("tan")
     private String tan;
 
+    /** The TAN's keyed digest, which keeps a TAN unique within a profile now that the TAN is stored encrypted (D-447 C1a). */
+    @Field("tan_digest")
+    private String tanDigest;
+
+    @ValueConverter(EncryptedField.class)
     @Field("pan")
     private String pan;
 
