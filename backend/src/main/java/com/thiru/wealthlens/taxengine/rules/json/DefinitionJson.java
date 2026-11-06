@@ -2,6 +2,8 @@ package com.thiru.wealthlens.taxengine.rules.json;
 
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.definition.AbsorptionOrder;
+import com.thiru.wealthlens.taxengine.rules.definition.AdvanceShortfallInterest;
+import com.thiru.wealthlens.taxengine.rules.definition.AdvanceTaxLiability;
 import com.thiru.wealthlens.taxengine.rules.definition.BucketPart;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsAbsorptionOrder;
 import com.thiru.wealthlens.taxengine.rules.definition.CapitalGainsPart;
@@ -12,6 +14,7 @@ import com.thiru.wealthlens.taxengine.rules.definition.ChargeDeductionLimb;
 import com.thiru.wealthlens.taxengine.rules.definition.CommutedPensionShare;
 import com.thiru.wealthlens.taxengine.rules.definition.DayWindow;
 import com.thiru.wealthlens.taxengine.rules.definition.DearnessAllowanceTest;
+import com.thiru.wealthlens.taxengine.rules.definition.DefermentInterest;
 import com.thiru.wealthlens.taxengine.rules.definition.DisabledTransportLimit;
 import com.thiru.wealthlens.taxengine.rules.definition.DisallowanceBasis;
 import com.thiru.wealthlens.taxengine.rules.definition.ExcludedAssets;
@@ -22,8 +25,12 @@ import com.thiru.wealthlens.taxengine.rules.definition.GiftThreshold;
 import com.thiru.wealthlens.taxengine.rules.definition.HeadTotal;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexByYear;
 import com.thiru.wealthlens.taxengine.rules.definition.IndexedCost;
+import com.thiru.wealthlens.taxengine.rules.definition.InstalmentSchedule;
+import com.thiru.wealthlens.taxengine.rules.definition.InterestCalculation;
 import com.thiru.wealthlens.taxengine.rules.definition.JourneysPerCalendarBlock;
+import com.thiru.wealthlens.taxengine.rules.definition.LateReturnFee;
 import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
+import com.thiru.wealthlens.taxengine.rules.definition.MonthlyInterest;
 import com.thiru.wealthlens.taxengine.rules.definition.MovableAssetKind;
 import com.thiru.wealthlens.taxengine.rules.definition.NotModelledProvision;
 import com.thiru.wealthlens.taxengine.rules.definition.OwnResidenceHouses;
@@ -51,6 +58,8 @@ import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
+import java.time.MonthDay;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +86,8 @@ public final class DefinitionJson {
                 "SurvivingChildrenLimit", "AbsorptionOrder", "CapitalGainsAbsorptionOrder",
                 "SpecialRateShortfallOrder", "LossCarryForward", "BucketPart", "SttChargeability", "ShortTermHoldingPeriod",
                 "CapitalGainsParts", "SalaryAveragingPeriod", "VehiclePath", "WearAndTear", "ChargeDeduction",
-                "IndexedCost", "ExemptReinvestment", "NotModelledProvision");
+                "IndexedCost", "ExemptReinvestment", "NotModelledProvision", "AdvanceTaxLiability", "InstalmentSchedule",
+                "DefermentInterest", "MonthlyInterest", "AdvanceShortfallInterest", "InterestCalculation", "LateReturnFee");
         return switch (tag) {
             case "HeadTotal" -> {
                 HeadCode head = PackJson.enumValue(node, "head", path, HeadCode.class);
@@ -201,7 +211,7 @@ public final class DefinitionJson {
                                 PackJson.bool(e.node(), "canAbsorbLongTermLoss", e.path()))));
                 yield PackJson.construct(path, () -> new CapitalGainsParts(parts));
             }
-            default -> throw unreachable(tag, path);
+            default -> advanceTaxDefinition(tag, node, path);
         };
     }
 
@@ -226,6 +236,52 @@ public final class DefinitionJson {
                     PackJson.enumValue(node, "effect", path, NotModelledProvision.TaxEffect.class)));
             default -> throw unreachable(tag, path);
         };
+    }
+
+    /**
+     * Advance tax, the interest on it and on a late return, and the late-return fee (2025 ss.403 – 408, 423 – 425, 428; 1961
+     * ss.207 – 211, 234A – 234C, 234F; Rules 2026 r.269; W-089c, W-112) — apart only to keep each switch within the
+     * complexity limit.
+     */
+    private static RuleDefinition advanceTaxDefinition(String tag, JsonNode node, String path) {
+        return switch (tag) {
+            case "AdvanceTaxLiability" -> PackJson.construct(path, () -> new AdvanceTaxLiability(
+                    PackJson.integer(node, "exemptFromAge", path), PackJson.money(node, "atLeast", path)));
+            case "InstalmentSchedule" -> {
+                List<InstalmentSchedule.Instalment> instalments = PackJson.array(node, "instalments", path,
+                        e -> PackJson.construct(e.path(), () -> new InstalmentSchedule.Instalment(
+                                monthDay(e.node(), e.path()), PackJson.rate(e.node(), "cumulativePercent", e.path()))));
+                yield PackJson.construct(path, () -> new InstalmentSchedule(instalments));
+            }
+            case "DefermentInterest" -> {
+                List<DefermentInterest.Step> steps = PackJson.array(node, "steps", path,
+                        e -> PackJson.construct(e.path(), () -> new DefermentInterest.Step(monthDay(e.node(), e.path()),
+                                PackJson.rate(e.node(), "sharePercent", e.path()),
+                                PackJson.rate(e.node(), "interestPercent", e.path()),
+                                PackJson.optionalRate(e.node(), "noInterestFromPercent", e.path()))));
+                yield PackJson.construct(path, () -> new DefermentInterest(steps));
+            }
+            case "MonthlyInterest" -> PackJson.construct(path, () -> new MonthlyInterest(
+                    PackJson.rate(node, "perMonthPercent", path), PackJson.bool(node, "statesPartOfMonth", path)));
+            case "AdvanceShortfallInterest" -> PackJson.construct(path, () -> new AdvanceShortfallInterest(
+                    PackJson.rate(node, "paidBelowPercent", path), PackJson.rate(node, "perMonthPercent", path)));
+            case "InterestCalculation" -> PackJson.construct(path, () -> new InterestCalculation(
+                    PackJson.money(node, "baseRoundedDownTo", path), PackJson.bool(node, "fractionOfMonthCountsWhole", path)));
+            case "LateReturnFee" -> PackJson.construct(path, () -> new LateReturnFee(PackJson.money(node, "incomeAtMost", path),
+                    PackJson.money(node, "lowerFee", path), PackJson.bool(node, "lowerFeeIsCeiling", path),
+                    PackJson.money(node, "fee", path)));
+            default -> throw unreachable(tag, path);
+        };
+    }
+
+    /** A day of the year written {@code "06-15"}, as the Tables write "15th June". */
+    private static MonthDay monthDay(JsonNode node, String path) {
+        String text = PackJson.text(node, "dueOn", path);
+        try {
+            return MonthDay.parse("--" + text);
+        } catch (DateTimeParseException e) {
+            throw new PackValidationException(path + ".dueOn must read like \"06-15\", but was \"" + text + "\"");
+        }
     }
 
     /** Each entry names its financial year as a label, {@code "2023-24"}, so the table reads as the notification. */

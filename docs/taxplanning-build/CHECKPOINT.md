@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — session 45 paused by the owner (session limit); W-234 closed (D-445)
-Stage           : next W-089c + W-112 is at READ only: no plan written, no code
-Done today      : W-088g9, W-229 (switch to Phase 11), W-089b, W-223, W-213, W-216, W-230, profile, drafts, compute families, W-109a, family A, W-234 (D-434 – D-445)
-Board           : `W-234 D`; order the owner took: W-089c + W-112, then W-134 – W-136, then C, D, E, the rest of F; `K` rows in PARKED-ROWS.md
-Next step       : read 1961 ss.207–211, 234A–234C, 234F and 2025 ss.403–409, 423–425, 428 in full (Gazette 265620 pp.~431–448; re-fetch), write plans/W-089c.md as one family plan, one page, and STOP
-Owner actions   : nothing pushed — api-collection is ahead by 5: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy. Revoke the zenmux key if not wanted
-Last verify     : unit + integration 4401 / 0 / 0; Checkstyle 0 (at the W-234 commit)
+Item            : none in flight — W-089c + W-112 committed and closed on the owner's "commit it" (D-446)
+Stage           : next family W-134 – W-136 is not started: READ first, then one plan, and STOP
+Done today      : session 46: READ (sources/2026-11-06-advance-tax-interest.md); plan approved C1a–C5a; built advance.tax, interest.and.fees, 7 rows, 7 definitions; relocked law.126 / law.129
+Board           : W-089c D (PARKED-ROWS: NOW 2), W-112 D; W-112a (234C carve-out), W-112b (refund interest) placed after W-112
+Next step       : read the W-134 – W-136 rows and their decision rows, source what they need, write one family plan, STOP
+Owner actions   : nothing pushed — api-collection is ahead by 5: push it first. W-217 before the next push. Runbook §1.x, §3.7 – §3.9, §0.4 at the deploy. Revoke the zenmux key if not wanted. OrbStack was started for the integration tier
+Last verify     : unit + integration 4425 / 0 / 0; Checkstyle 0; Spotless clean (at the W-089c + W-112 commit)
 Files touched   : none
-Last item commit: taxplanning W-234: let a draft state what earlier years carried in
-Updated         : 2026-11-01, session 45 — paused
+Last item commit: taxplanning W-089c, W-112: compute advance tax, the interest on it and the late-return fee
+Updated         : 2026-11-06, session 46
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

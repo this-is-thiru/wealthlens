@@ -34,6 +34,8 @@ class GeneratedConstantsTest {
 
     /** Every rule the shipped timeline holds, in the generator's order — listed by hand. */
     private static final java.util.List<String> SHIPPED_RULE_IDS = java.util.List.of(
+            "ADV-INSTALMENTS",
+            "ADV-LIABILITY",
             "CG-CHARGE-COST",
             "CG-CHARGE-MISC",
             "CG-CHARGE-STT",
@@ -97,6 +99,7 @@ class GeneratedConstantsTest {
             "DED-SPECIFIED-DISEASE",
             "DED-SPECIFIED-DISEASE-SENIOR",
             "DED-WITHIN-GROSS-TOTAL",
+            "FEE-LATE-RETURN",
             "HP-ANNUAL-VALUE",
             "HP-ARREARS",
             "HP-INTEREST",
@@ -108,6 +111,10 @@ class GeneratedConstantsTest {
             "HP-PRE-CONSTRUCTION",
             "HP-STANDARD-DEDUCTION",
             "HP-UNREALISED-RENT",
+            "INT-ADVANCE-SHORTFALL",
+            "INT-CALCULATION",
+            "INT-DEFERMENT",
+            "INT-LATE-RETURN",
             "OS-BANKER-COMMISSION",
             "OS-BUSINESS-TRUST",
             "OS-COMMUTED-PENSION",

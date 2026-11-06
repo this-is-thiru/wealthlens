@@ -169,6 +169,8 @@
       "tax.netpayable",
       "credits",
       "tax.balance",
+      "advance.tax",
+      "interest.and.fees",
       "round.netpayable"
     ]
   },

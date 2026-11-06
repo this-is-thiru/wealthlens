@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.taxengine.pipeline.ComputationNode;
+import com.thiru.wealthlens.taxengine.pipeline.InterestAndFees;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeResult;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
@@ -79,8 +80,10 @@ class RoundingNodesTest {
         return run(pack(), new RoundTotalIncomeNode(), NodeIds.TOTALINCOME, totalIncome);
     }
 
+    /** The balance rounded with nothing owed on it, so the figure is the balance's own (D-446). */
     private static NodeResult roundPayable(String payable) {
-        return run(pack(), new RoundNetPayableNode(), NodeIds.TAX_BALANCE, payable);
+        return NodeHarness.with(pack()).regime(NEW_TAX_REGIME).given(NodeIds.TAX_BALANCE, Money.of(payable))
+                .given(NodeIds.INTEREST_AND_FEES, new InterestAndFees(List.of())).run(new RoundNetPayableNode());
     }
 
     // -- total income ------------------------------------------------------------------------------

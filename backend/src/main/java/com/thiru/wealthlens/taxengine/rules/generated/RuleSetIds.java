@@ -15,6 +15,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
  */
 public final class RuleSetIds {
 
+    public static final RuleSetId RS_ADV_INSTALMENTS = new RuleSetId("RS-ADV-INSTALMENTS");
+    public static final RuleSetId RS_ADV_LIABILITY = new RuleSetId("RS-ADV-LIABILITY");
     public static final RuleSetId RS_CG_CHARGE = new RuleSetId("RS-CG-CHARGE");
     public static final RuleSetId RS_CG_ELSEWHERE = new RuleSetId("RS-CG-ELSEWHERE");
     public static final RuleSetId RS_CG_EXEMPTION = new RuleSetId("RS-CG-EXEMPTION");
@@ -63,6 +65,7 @@ public final class RuleSetIds {
     public static final RuleSetId RS_DED_SPECIFIED_DISEASE = new RuleSetId("RS-DED-SPECIFIED-DISEASE");
     public static final RuleSetId RS_DED_SPECIFIED_DISEASE_SENIOR = new RuleSetId("RS-DED-SPECIFIED-DISEASE-SENIOR");
     public static final RuleSetId RS_DED_WITHIN_GROSS_TOTAL = new RuleSetId("RS-DED-WITHIN-GROSS-TOTAL");
+    public static final RuleSetId RS_FEE_LATE_RETURN = new RuleSetId("RS-FEE-LATE-RETURN");
     public static final RuleSetId RS_HP_ANNUAL_VALUE = new RuleSetId("RS-HP-ANNUAL-VALUE");
     public static final RuleSetId RS_HP_ARREARS = new RuleSetId("RS-HP-ARREARS");
     public static final RuleSetId RS_HP_INTEREST = new RuleSetId("RS-HP-INTEREST");
@@ -74,6 +77,10 @@ public final class RuleSetIds {
     public static final RuleSetId RS_HP_PRE_CONSTRUCTION = new RuleSetId("RS-HP-PRE-CONSTRUCTION");
     public static final RuleSetId RS_HP_STANDARD_DEDUCTION = new RuleSetId("RS-HP-STANDARD-DEDUCTION");
     public static final RuleSetId RS_HP_UNREALISED_RENT = new RuleSetId("RS-HP-UNREALISED-RENT");
+    public static final RuleSetId RS_INT_ADVANCE_SHORTFALL = new RuleSetId("RS-INT-ADVANCE-SHORTFALL");
+    public static final RuleSetId RS_INT_CALCULATION = new RuleSetId("RS-INT-CALCULATION");
+    public static final RuleSetId RS_INT_DEFERMENT = new RuleSetId("RS-INT-DEFERMENT");
+    public static final RuleSetId RS_INT_LATE_RETURN = new RuleSetId("RS-INT-LATE-RETURN");
     public static final RuleSetId RS_OS_BANKER_COMMISSION = new RuleSetId("RS-OS-BANKER-COMMISSION");
     public static final RuleSetId RS_OS_BUSINESS_TRUST = new RuleSetId("RS-OS-BUSINESS-TRUST");
     public static final RuleSetId RS_OS_DIVIDEND_INTEREST = new RuleSetId("RS-OS-DIVIDEND-INTEREST");

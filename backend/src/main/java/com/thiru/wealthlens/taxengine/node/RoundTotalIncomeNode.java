@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -16,7 +17,7 @@ import java.util.Set;
 public final class RoundTotalIncomeNode implements ComputationNode {
 
     private static final RoundingStep STEP =
-            new RoundingStep(NodeIds.ROUND_TOTALINCOME, NodeIds.TOTALINCOME, RuleSetIds.RS_RATE_ROUND_TOTAL_INCOME);
+            new RoundingStep(NodeIds.ROUND_TOTALINCOME, List.of(NodeIds.TOTALINCOME), RuleSetIds.RS_RATE_ROUND_TOTAL_INCOME);
 
     @Override
     public NodeId produces() {
@@ -25,7 +26,7 @@ public final class RoundTotalIncomeNode implements ComputationNode {
 
     @Override
     public Set<NodeId> requires() {
-        return Set.of(STEP.reads());
+        return Set.copyOf(STEP.reads());
     }
 
     @Override

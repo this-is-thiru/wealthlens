@@ -38,5 +38,9 @@ public enum StepKind {
     ROUNDING,
 
     /** A figure other rules are computed on, neither added nor taken off — a salary base (D-092). */
-    MEASURE
+    MEASURE,
+    /** Interest charged on the return; it grows with the delay (W-112, D-446). */
+    INTEREST,
+    /** A fee charged on the return; unlike interest it does not grow with the delay (W-112, D-446). */
+    FEE
 }

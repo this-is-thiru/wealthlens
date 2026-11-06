@@ -7,8 +7,10 @@ import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsNode;
 import com.thiru.wealthlens.taxengine.node.CapitalGainsTerm;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
+import com.thiru.wealthlens.taxengine.pipeline.AdvanceTaxPosition;
 import com.thiru.wealthlens.taxengine.pipeline.BucketOutcome;
 import com.thiru.wealthlens.taxengine.pipeline.CapitalGainsHead;
+import com.thiru.wealthlens.taxengine.pipeline.InterestAndFees;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
@@ -52,7 +54,8 @@ public class TaxCalculator {
         TaxComputation computation = ComputationProjector.project(run, inputs, id);
         return new ComputedTax(id.value(), ComputationReceipt.of(id, inputs.taxYear()).value(), inputs.taxYear().label(),
                 inputs.regime().value(), computation.totalIncome(), computation.netPayableBeforeFilingEffects(),
-                ((MoneyValue) run.valueOf(NodeIds.CREDITS)).amount(),
+                ((MoneyValue) run.valueOf(NodeIds.CREDITS)).amount(), advanceTax((AdvanceTaxPosition) run.valueOf(NodeIds.ADVANCE_TAX)),
+                owed((InterestAndFees) run.valueOf(NodeIds.INTEREST_AND_FEES)),
                 ((MoneyValue) run.valueOf(NodeIds.ROUND_NETPAYABLE)).amount(), computation.inputs().sha256(),
                 computation.lawAndExec().values().stream().map(Object::toString).sorted().toList(), steps(computation),
                 buckets((CapitalGainsHead) run.valueOf(NodeIds.CAPITALGAINS_INCOME)));
@@ -114,6 +117,16 @@ public class TaxCalculator {
                     decision.map(d -> d.row().value()).orElse(null), decision.map(BucketOutcome.TermDecision::months).orElse(null),
                     outcome.leftOutBy().map(RuleId::value).orElse(null));
         }).toList();
+    }
+
+    private static ComputedTax.AdvanceTax advanceTax(AdvanceTaxPosition position) {
+        return new ComputedTax.AdvanceTax(position.liable(), position.amount(), position.instalments().stream()
+                .map(i -> new ComputedTax.AdvanceTax.Instalment(i.dueOn(), i.dueByThen(), i.paidByThen(), i.stillOwed())).toList());
+    }
+
+    private static List<ComputedTax.Owed> owed(InterestAndFees owed) {
+        return owed.items().stream().map(item -> new ComputedTax.Owed(item.rule().value(), item.kind().name(), item.amount()))
+                .toList();
     }
 
     private static List<ComputedTax.Step> steps(TaxComputation computation) {

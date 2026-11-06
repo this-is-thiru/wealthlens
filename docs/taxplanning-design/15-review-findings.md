@@ -230,6 +230,13 @@ All five provisions were read this session from S2.
 | `INT-EXCESSREFUND-001` | **s.426(1)** | Interest where a refund granted under s.270(1) turns out not to be due |
 | `FEE-LATEFILE-001` | **s.428** | Fee for late return: **not exceeding ₹1,000** where total income does not exceed ₹5,00,000; **₹5,000** in any other case |
 
+> **Erratum (W-089c + W-112, D-446, 2026-11-06):** (1) s.428 was substituted by the Finance Act, 2026 s.96 from 1-4-2026: the
+> fee is a fixed ₹1,000 where total income does not exceed ₹5,00,000 and ₹5,000 otherwise; 1961 s.234F(1), as substituted by
+> the Finance Act, 2021 s.60, is ₹5,000, at most ₹1,000 at or below ₹5,00,000. (2) The sketch below measures s.425 against
+> `assessed`; s.425(1) uses *tax due on the returned income* (s.425(5)), and s.423 uses tax less advance tax, so the three
+> provisions take three different amounts. (3) As built, the amount interest is calculated on is rounded down to ₹100 and a
+> part month counted whole (Rules 2026 r.269; OQ-39). Sources: `taxplanning-build/sources/2026-11-06-advance-tax-interest.md`.
+
 ```java
 package com.thiru.wealthlens.taxengine.node;
 

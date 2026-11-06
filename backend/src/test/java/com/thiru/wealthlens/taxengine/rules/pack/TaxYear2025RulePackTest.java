@@ -9,6 +9,7 @@ import com.thiru.wealthlens.taxengine.node.RebateNode;
 import com.thiru.wealthlens.taxengine.node.RoundNetPayableNode;
 import com.thiru.wealthlens.taxengine.node.TaxByBasisNode;
 import com.thiru.wealthlens.taxengine.pipeline.HeadsAfterSetOff;
+import com.thiru.wealthlens.taxengine.pipeline.InterestAndFees;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.TaxByBasis;
 import com.thiru.wealthlens.taxengine.rules.condition.AgeSubject;
@@ -38,6 +39,7 @@ import com.thiru.wealthlens.taxengine.rules.validate.PackValidator;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -124,9 +126,9 @@ class TaxYear2025RulePackTest {
 
         // Then
         assertThatCode(() -> PackValidator.validate(pack)).doesNotThrowAnyException();
-        assertThat(pack.rules()).hasSize(232);
+        assertThat(pack.rules()).hasSize(239);
         assertThat(pack.regimes()).hasSize(2);
-        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.125");
+        assertThat(pack.computationCacheKey()).startsWith("2025-26|").contains("law=2025-26.law.126");
     }
 
     @Test
@@ -230,6 +232,7 @@ class TaxYear2025RulePackTest {
                 .run(new CessNode());
         var rounded = NodeHarness.with(pack).regime(NEW_TAX_REGIME).inputs(inputs2025(NEW_TAX_REGIME))
                 .given(NodeIds.TAX_BALANCE, Money.of("10.40"))
+                .given(NodeIds.INTEREST_AND_FEES, new InterestAndFees(List.of()))
                 .run(new RoundNetPayableNode());
 
         // Then

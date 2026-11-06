@@ -12,9 +12,15 @@ import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import io.restassured.RestAssured;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpEntity;
@@ -33,9 +39,21 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * The first tax figure over HTTP: a stored draft, through the assembler and the shipped pipeline (W-103, W-104, W-107, W-109;
  * D-442). The case is {@code DR 13} T13-1, worked by hand in {@code plans/W-089.md}: 1,00,000 of salary, 11,00,000 of listed-equity
- * gains, 84,375 at 12.5 %, nil rebate, 3,375 of cess, a bill of 87,750.
+ * gains, 84,375 at 12.5 %, nil rebate, 3,375 of cess, a bill of 87,750. Computed on a fixed day, 6-11-2026, because interest for
+ * deferring advance tax runs to the day of computation (W-112, D-446): by then 15 June and 15 September have passed.
  */
 class DraftComputationIntegrationTest extends AbstractIntegrationTest {
+
+    /** The day every computation here is made on. */
+    @TestConfiguration
+    static class FixedDay {
+
+        @Bean
+        @Primary
+        Clock fixedDay() {
+            return Clock.fixed(Instant.parse("2026-11-06T06:30:00Z"), ZoneId.of("Asia/Kolkata"));
+        }
+    }
 
     private static final String OWNER = "computer@example.com";
     private static final String REGIME = "{\"regime\": \"NEW_TAX_REGIME\"}";
@@ -156,33 +174,37 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // When
         JsonNode view = compute(draftId);
 
-        // Then — the same 87,750 the golden case gets from its own inputs
+        // Then — the same 87,750 the golden case gets from its own inputs; nothing paid in advance, so by 6-11-2026 June
+        // owes 13,100 × 3 % = 393 and September 39,400 × 3 % = 1,182: 87,750 + 1,575 = 89,325, to the nearest ₹10 89,330
         assertThat(rupees(view, "bill")).isEqualByComparingTo("87750");
         assertThat(rupees(view, "credits")).isEqualByComparingTo("0");
-        assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("87750");
+        assertThat(view.at("/tax/advanceTax/liable").asBoolean()).isTrue();
+        assertThat(view.at("/tax/interestAndFees/0/rule").asString()).isEqualTo("INT-DEFERMENT");
+        assertThat(view.at("/tax/interestAndFees/0/amount/amountInRupees").decimalValue()).isEqualByComparingTo("1575");
+        assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("89330");
         assertThat(view.get("capitalGainsIncluded").asBoolean()).isTrue();
         assertThat(view.get("revision").asInt()).isEqualTo(1);
-        assertThat(view.get("notIncluded").size()).isEqualTo(4);
+        assertThat(view.get("notIncluded").size()).isEqualTo(8);
         assertThat(view.at("/tax/trace").size()).isPositive();
     }
 
     @Test
     void compute_whenTaxWasDeductedAtSource_creditsItAgainstTheBill() {
-        // Given — 87,750 − 75,000
+        // Given — 87,750 − 75,000 = 12,750, still ₹10,000 or more, so advance tax was due
         listedEquitySale();
 
         // When
         JsonNode view = compute(draft(true, "75000"));
 
-        // Then
+        // Then — June 1,900 × 3 % = 57, September 5,700 × 3 % = 171: 12,978, to the nearest ₹10 12,980
         assertThat(rupees(view, "bill")).isEqualByComparingTo("87750");
         assertThat(rupees(view, "credits")).isEqualByComparingTo("75000");
-        assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("12750");
+        assertThat(rupees(view, "finalAmount")).isEqualByComparingTo("12980");
     }
 
     @Test
     void compute_whenMoreWasDeductedThanIsDue_showsARefundToTheNearestTen() {
-        // Given — 87,750 − 1,00,004 = −12,254
+        // Given — 87,750 − 1,00,004 = −12,254; no advance tax was due, so nothing is owed on it
         listedEquitySale();
 
         // When / Then

@@ -936,6 +936,48 @@
       "_note": "One row: SETOFF-WITHIN-CAPITAL-GAINS",
       "selection": "EXACTLY_ONE",
       "ground": "REGIME"
+    },
+    {
+      "id": "RS-ADV-LIABILITY",
+      "_note": "Who must pay advance tax (2025 s.403(3), s.404; 1961 s.207(2), s.208; W-089c, D-446).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-ADV-INSTALMENTS",
+      "_note": "The advance-tax instalments (2025 s.408; 1961 s.211; W-089c, D-446).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-INT-LATE-RETURN",
+      "_note": "Interest for a late return (2025 s.423; 1961 s.234A; W-112, D-446).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-INT-ADVANCE-SHORTFALL",
+      "_note": "Interest for advance tax below 90 % of the assessed tax (2025 s.424; 1961 s.234B; W-112, D-446).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-INT-DEFERMENT",
+      "_note": "Interest for deferring advance tax (2025 s.425; 1961 s.234C; W-112, D-446).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-INT-CALCULATION",
+      "_note": "How an assessee's interest is calculated (Rules 2026 r.269; Rules 1962 r.119A; W-112, D-446).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
+    },
+    {
+      "id": "RS-FEE-LATE-RETURN",
+      "_note": "The late-return fee (2025 s.428(a); 1961 s.234F(1); W-112, D-446).",
+      "selection": "EXACTLY_ONE",
+      "ground": "REGIME"
     }
   ]
 }

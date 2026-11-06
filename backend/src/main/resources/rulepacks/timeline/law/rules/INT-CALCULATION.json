@@ -1,0 +1,101 @@
+{
+  "ruleId": "INT-CALCULATION",
+  "ruleSet": "RS-INT-CALCULATION",
+  "_note": "How interest an assessee pays is calculated: the amount rounded down to a multiple of ₹100, a fraction of a month counted as a whole month where the section says 'part of a month'. Read in Rules 2026 r.269(b), (c); the TY 2025-26 counterpart, Rules 1962 r.119A, has no Gazette copy in the repo, so that version is UNVERIFIED and carries r.269's figures (D-446 C4a). Sources: sources/2026-11-06-advance-tax-interest.md; D-446.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Rules, 1962",
+        "reference": "r.119A",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Rules, 2026",
+        "reference": "r.269(a) – (c)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "InterestCalculation",
+        "baseRoundedDownTo": "100",
+        "fractionOfMonthCountsWhole": true
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 1962, S.O. 969 of 26-3-1962, r.119A; the rule's own insertion not read",
+        "gazetteRef": "S.O. 969, 26-3-1962 (the Rules' notification, as the Department's r.1 page states it); the Gazette issue not read",
+        "notifiedOn": "1962-03-26",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "UNVERIFIED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.269 p.1769, read in place of Rules 1962 r.119A",
+        "accessedOn": "2026-11-06",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "Income-tax Rules, 1962 r.119A in a Gazette copy (or the owner's ruling on the Department's page): that the amount is rounded down to a multiple of ₹100 and a fraction of a month counted as a whole month"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Rules, 1962",
+        "reference": "r.119A",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Rules, 2026",
+        "reference": "r.269(a) – (c)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "InterestCalculation",
+        "baseRoundedDownTo": "100",
+        "fractionOfMonthCountsWhole": true
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 269",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.269(a) – (c) p.1769",
+        "accessedOn": "2026-11-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.269(a) – (c) p.1769",
+    "accessedOn": "2026-11-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

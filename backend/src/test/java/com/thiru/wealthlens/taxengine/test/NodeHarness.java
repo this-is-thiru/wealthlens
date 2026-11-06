@@ -202,6 +202,6 @@ public final class NodeHarness {
                 LedgerSnapshot.empty(),
                 RegimeElectionSnapshot.none(),
                 CapitalGainsInput.none(Instant.parse("2026-09-01T00:00:00Z"), "harness-run"),
-                FilingFacts.notYetFurnished(LocalDate.of(2026, 7, 31)));
+                FilingFacts.notYetFurnished(LocalDate.of(2027, 7, 31)));
     }
 }

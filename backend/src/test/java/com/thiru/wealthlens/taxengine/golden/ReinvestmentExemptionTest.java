@@ -103,7 +103,7 @@ class ReinvestmentExemptionTest {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EnteredFacts entered = EnteredFacts.none().withHouseReinvestments(List.of(reinvestment));
         return new EngineInputs(TY_2026_27, plain.regime(),
-                TemporalContext.forTaxYear(TY_2026_27, TY_2026_27.startsOn().plusMonths(5)), entered,
+                TemporalContext.forTaxYear(TY_2026_27, TY_2026_27.startsOn()), entered,
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), gains, plain.filing());
     }
 }

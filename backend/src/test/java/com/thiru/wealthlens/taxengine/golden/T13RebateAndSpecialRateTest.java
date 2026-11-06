@@ -119,7 +119,7 @@ class T13RebateAndSpecialRateTest {
     private static EngineInputs inputs(Employment employment, CapitalGainsInput gains) {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         return new EngineInputs(TY_2026_27, plain.regime(),
-                TemporalContext.forTaxYear(TY_2026_27, TY_2026_27.startsOn().plusMonths(5)), entered(employment),
+                TemporalContext.forTaxYear(TY_2026_27, TY_2026_27.startsOn()), entered(employment),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), gains, plain.filing());
     }
 

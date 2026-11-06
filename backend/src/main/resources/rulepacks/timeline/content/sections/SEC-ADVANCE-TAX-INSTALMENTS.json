@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.211 / 2025 s.408 (coverage MODELLED by ADV-INSTALMENTS); sources/2026-11-06-advance-tax-interest.md; D-446",
+  "key": "SEC-ADVANCE-TAX-INSTALMENTS",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.211",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.408",
+    "presence": "PRESENT"
+  },
+  "plainName": "Advance-tax instalments",
+  "summary": "A growing share of the year's advance tax is due by each instalment date; anything paid by the end of March counts for that year.",
+  "routes": [
+    {
+      "name": "Advance-tax instalments",
+      "description": "A growing share of the year's advance tax is due by each instalment date; anything paid by the end of March counts for that year.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "ADV-INSTALMENTS"
+        }
+      ]
+    }
+  ]
+}

@@ -250,7 +250,9 @@ class TraceLineTest {
                             StepKind.TAX,
                             StepKind.RELIEF,
                             StepKind.ROUNDING,
-                            StepKind.MEASURE);
+                            StepKind.MEASURE,
+                            StepKind.INTEREST,
+                            StepKind.FEE);
         }
     }
 }

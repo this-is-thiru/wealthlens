@@ -27,7 +27,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-088i7 | PARKED | The construction window's start as rule data | With W-088i4 | No figure at risk (row read, D-445) |
 | W-089a | PARKED | When salary is taxed — due, paid in advance, or arrears — and relief for arrears | The deploy gate | **Tax can be too high:** no arrears relief; `notIncluded` says so (D-445) |
 | W-089b | NOW 1 | `CreditsNode` | This switch | Done first |
-| W-089c | PARKED | Advance tax | Before W-112, then the deploy gate | No figure yet; W-112 needs it |
+| W-089c | NOW 2 | Advance tax | This switch | Built with W-112 (D-446) |
 | W-089d | PARKED | Salary TDS | The deploy gate | No figure yet; Form 130 needs it |
 | W-089e | PARKED | The un-limited rebate with special-rate income | When a source settles it, else waived at the deploy gate | Refused (row) |
 | W-078j7c | PARKED | The r.280 watch, next run | The deploy gate | A source watch; run before the deploy |

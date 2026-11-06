@@ -34,6 +34,8 @@ public final class ShippedNodes {
             new NetPayableNode(),
             new CreditsNode(),
             new BalanceNode(),
+            new AdvanceTaxNode(),
+            new InterestAndFeeNode(),
             new RoundNetPayableNode());
 
     private ShippedNodes() {

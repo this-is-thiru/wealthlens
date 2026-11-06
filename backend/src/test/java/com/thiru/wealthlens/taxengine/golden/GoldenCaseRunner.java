@@ -38,6 +38,7 @@ import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
 import com.thiru.wealthlens.taxengine.rules.timeline.ClasspathRulePackProvider;
 import com.thiru.wealthlens.taxengine.test.LockedInstruments;
 import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -117,7 +118,7 @@ final class GoldenCaseRunner {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         SalaryGoldenCase.Salary salary = golden.salary();
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
-                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                TemporalContext.forTaxYear(year, computedOn(year)),
                 new EnteredFacts(List.of(new Employment(salary.pay(), salary.termsIncludeDearnessAllowance(), EmployerKind.OTHER, false, Optional.empty())),
                         salary.tenancies(), salary.leaveTravel(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), salary.employerContributions(), salary.retirementFundHistory(), List.of(), salary.qualifyingPayments(), salary.lifeInsurancePolicies(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(), salary.providentFundAccounts(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), ledger(salary), plain.elections(), plain.capitalGains(),
@@ -146,7 +147,7 @@ final class GoldenCaseRunner {
                 new PipelineSpec(toChapterEight), shipped.behaviour(), shipped.provenance());
         EngineInputs plain = NodeHarness.plainTaxpayer();
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
-                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                TemporalContext.forTaxYear(year, computedOn(year)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
@@ -184,7 +185,7 @@ final class GoldenCaseRunner {
         Employment employment = new Employment(List.of(new SalaryComponent(ComponentCodes.BASIC, basicPay)), false,
                 EmployerKind.OTHER, false, Optional.empty());
         EngineInputs inputs = new EngineInputs(year, golden.regime(),
-                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                TemporalContext.forTaxYear(year, computedOn(year)),
                 new EnteredFacts(List.of(employment), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), golden.housePropertiesIn(year), golden.otherSources(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(), plain.elections(),
                 plain.capitalGains(), plain.filing());
@@ -218,7 +219,7 @@ final class GoldenCaseRunner {
         OtherSourceItem item = new OtherSourceItem(OtherSourceKind.OTHER_INTEREST, interest, Money.ZERO, Money.ZERO,
                 Money.ZERO, false);
         return new EngineInputs(year, plain.regime(),
-                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                TemporalContext.forTaxYear(year, computedOn(year)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), List.of(), List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
@@ -237,7 +238,7 @@ final class GoldenCaseRunner {
         OtherSourceItem item = new OtherSourceItem(OtherSourceKind.OTHER_INTEREST, interest, Money.ZERO, Money.ZERO,
                 Money.ZERO, false);
         EngineInputs inputs = new EngineInputs(year, regime,
-                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                TemporalContext.forTaxYear(year, computedOn(year)),
                 new EnteredFacts(List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), Optional.empty(), List.of(), houses, List.of(item), List.of(), List.of(), List.of(), List.of(), List.of(), Optional.empty(), List.of()),
                 plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
                 plain.filing());
@@ -294,7 +295,7 @@ final class GoldenCaseRunner {
     private static EngineInputs inputs(GoldenCase golden, TaxYearId year) {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         return new EngineInputs(year, golden.regime(),
-                TemporalContext.forTaxYear(year, year.startsOn().plusMonths(5)),
+                TemporalContext.forTaxYear(year, computedOn(year)),
                 plain.entered(), aged(plain, year, golden.ageAtYearEnd()), plain.family(), plain.ledgers(),
                 plain.elections(), plain.capitalGains(), plain.filing());
     }
@@ -310,4 +311,13 @@ final class GoldenCaseRunner {
                         Optional.empty(), Optional.empty()))
                 .orElse(harness);
     }
+
+    /**
+     * The day every golden case is computed on: the year's first day, before any advance-tax instalment or return is due, so
+     * DR 08's figures, which are the tax alone, carry no interest or fee (D-446). Interest and fees have their own tests.
+     */
+    private static LocalDate computedOn(TaxYearId year) {
+        return year.startsOn();
+    }
+
 }

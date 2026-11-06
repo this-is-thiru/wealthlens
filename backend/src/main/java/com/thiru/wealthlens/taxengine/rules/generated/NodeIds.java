@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
  */
 public final class NodeIds {
 
+    public static final NodeId ADVANCE_TAX = new NodeId("advance.tax");
     public static final NodeId CAPITALGAINS_INCOME = new NodeId("capitalgains.income");
     public static final NodeId CHAPTERVIII = new NodeId("chapterviii");
     public static final NodeId CREDITS = new NodeId("credits");
@@ -22,6 +23,7 @@ public final class NodeIds {
     public static final NodeId GTI = new NodeId("gti");
     public static final NodeId HOUSEPROPERTY_INCOME = new NodeId("houseproperty.income");
     public static final NodeId INPUTS_COMPONENTS = new NodeId("inputs.components");
+    public static final NodeId INTEREST_AND_FEES = new NodeId("interest.and.fees");
     public static final NodeId OTHERSOURCES_INCOME = new NodeId("othersources.income");
     public static final NodeId ROUND_NETPAYABLE = new NodeId("round.netpayable");
     public static final NodeId ROUND_TOTALINCOME = new NodeId("round.totalincome");

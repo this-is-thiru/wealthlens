@@ -15,6 +15,8 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
  */
 public final class RuleIds {
 
+    public static final RuleId ADV_INSTALMENTS = new RuleId("ADV-INSTALMENTS");
+    public static final RuleId ADV_LIABILITY = new RuleId("ADV-LIABILITY");
     public static final RuleId CG_CHARGE_COST = new RuleId("CG-CHARGE-COST");
     public static final RuleId CG_CHARGE_MISC = new RuleId("CG-CHARGE-MISC");
     public static final RuleId CG_CHARGE_STT = new RuleId("CG-CHARGE-STT");
@@ -78,6 +80,7 @@ public final class RuleIds {
     public static final RuleId DED_SPECIFIED_DISEASE = new RuleId("DED-SPECIFIED-DISEASE");
     public static final RuleId DED_SPECIFIED_DISEASE_SENIOR = new RuleId("DED-SPECIFIED-DISEASE-SENIOR");
     public static final RuleId DED_WITHIN_GROSS_TOTAL = new RuleId("DED-WITHIN-GROSS-TOTAL");
+    public static final RuleId FEE_LATE_RETURN = new RuleId("FEE-LATE-RETURN");
     public static final RuleId HP_ANNUAL_VALUE = new RuleId("HP-ANNUAL-VALUE");
     public static final RuleId HP_ARREARS = new RuleId("HP-ARREARS");
     public static final RuleId HP_INTEREST = new RuleId("HP-INTEREST");
@@ -89,6 +92,10 @@ public final class RuleIds {
     public static final RuleId HP_PRE_CONSTRUCTION = new RuleId("HP-PRE-CONSTRUCTION");
     public static final RuleId HP_STANDARD_DEDUCTION = new RuleId("HP-STANDARD-DEDUCTION");
     public static final RuleId HP_UNREALISED_RENT = new RuleId("HP-UNREALISED-RENT");
+    public static final RuleId INT_ADVANCE_SHORTFALL = new RuleId("INT-ADVANCE-SHORTFALL");
+    public static final RuleId INT_CALCULATION = new RuleId("INT-CALCULATION");
+    public static final RuleId INT_DEFERMENT = new RuleId("INT-DEFERMENT");
+    public static final RuleId INT_LATE_RETURN = new RuleId("INT-LATE-RETURN");
     public static final RuleId OS_BANKER_COMMISSION = new RuleId("OS-BANKER-COMMISSION");
     public static final RuleId OS_BUSINESS_TRUST = new RuleId("OS-BUSINESS-TRUST");
     public static final RuleId OS_COMMUTED_PENSION = new RuleId("OS-COMMUTED-PENSION");
