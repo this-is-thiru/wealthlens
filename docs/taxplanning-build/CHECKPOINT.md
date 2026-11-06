@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-134 family committed and closed (D-447)
-Stage           : next by board order: W-134a (encrypt the legacy salary module), then W-137; not started
+Item            : none in flight — W-134a committed and closed (D-448)
+Stage           : next by board order: W-137 (TaxJob + JobLease + 6 jobs, with W-136 retention), not started
 Done today      : session 47: planned, approved C1a – C7a, built; 4440 / 0 / 0; four probes bit and reverted
-Board           : W-134 D, W-134a ·, W-135 D, W-136 —, W-235 ·
-Next step       : read W-134a and its decision row (D-447 C2a), write its plan, STOP
-Owner actions   : runbook §0.5 (two keys; clear eleven tax_* collections) plus §1.x, §3.7 – §3.9, §0.4 at the deploy; push review/taxplanning when ready (W-217 check first); `orb start` before the integration tier
+Board           : W-134 D, W-134a —, W-135 D, W-136 —, W-235 ·
+Next step       : read W-137 and its decision rows (DR 19 E8, D-447 C6a), source what they need (Gazette only), write its plan, STOP
+Owner actions   : runbook §0.5 (keys; clear eleven tax_* collections) and §0.6 (count legacy salary data; deploy held until W-159 D), plus §1.x, §3.7 – §3.9, §0.4 at the deploy; push review/taxplanning when ready (W-217 check first); `orb start` before the integration tier
 Last verify     : unit + integration 4440 / 0 / 0; Checkstyle 0; Spotless clean (at the W-134 family commit)
 Files touched   : none
-Last item commit: taxplanning W-134, W-135, W-136: encrypt stored personal data, record its reads, mask PANs in logs and keep third-party data out of exports
-Updated         : 2026-11-06, session 47 — W-134 family closed
+Last item commit: taxplanning W-134a: merge the legacy salary data into W-159 and hold the deploy until it is done
+Updated         : 2026-11-06, session 47 — W-134a closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

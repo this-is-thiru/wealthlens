@@ -224,6 +224,37 @@ the new build refuses to read, and `tax_employers`' unique index `tax_employer_t
 **Way back.** Deploy the previous build, then `mongoimport` each step-3 file into its collection. Rows written by the new
 build are encrypted and the previous build cannot read them: drop those collections again first.
 
+### 0.6 W-134a (D-448) — the legacy salary data, counted; the deploy held until W-159 · owner, `mongosh` · **every database · before the one deploy**
+
+**Why.** `salary_profiles` and `tax_computations` (the `/tax-planning` salary flow) hold salary structure, deduction
+figures, a disability flag and pasted CTC text in plain text, which `DR 14` O1.1 says must be encrypted. W-134's
+encryption does not cover them. W-159 removes the module and these collections instead (D-448 C1a), so the counts
+here are what W-159's plan has to account for.
+
+1. **Count** (read-only; one query, every database):
+
+   ```js
+   db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+     .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+       return { database: n,
+         salary_profiles: d.salary_profiles.countDocuments({}),
+         disabled: d.salary_profiles.countDocuments({ is_physically_disabled: true }),
+         sourceText: d.salary_profiles.countDocuments({ source_text: { $nin: [null, ""] } }),
+         accounts: d.salary_profiles.distinct("email").length,
+         tax_computations: d.tax_computations.countDocuments({}) }; }) }])
+   ```
+
+   Record each database's line in the run log. A non-zero `sourceText` means pasted CTC letters are stored.
+2. **Stop the deploy** while the status board shows W-159 as anything but `D`. Read-only, from the repo root:
+
+   ```bash
+   grep -oE 'W-159 [A-Z·—]' docs/taxplanning-build/STATE.md
+   ```
+
+   Expected: `W-159 D`. Anything else holds the deploy unless the owner records a waiver D-row naming W-134a.
+
+Safe to repeat; it writes nothing, so there is nothing to undo.
+
 ## 1. On every deploy — startup, automatic; confirm in the log
 
 | # | Item / decision | What happens at startup | Check | If it fails |
