@@ -269,6 +269,23 @@ Safe to repeat; it writes nothing, so there is nothing to undo.
 
 ---
 
+### 1.y W-137 (D-449) — the background jobs · owner · **first deploy carrying them, then after the first runs**
+
+Automatic: `JobIndexInitializer` creates the lease's TTL index. **Confirm** the log holds `Ensured the indexes of JobLease`. The jobs run only where `app.tax.jobs.enabled` is true (all three profile yamls): `auto-archive` at 03:00 each Sunday and `retention-purge` at 04:00 on the 1st, in the server's zone (`app.tax.jobs.*-cron`). Each logs `Job <name> archived draft <id>` or `deleted draft <id> of tax year <year>` per draft — ids only.
+
+**After the first run of each** (read-only):
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    return { database: n, failures: d.tax_job_failures.find({}, { _id: 0, job: 1, subject: 1, reason: 1 }).toArray(),
+      leasesHeld: d.tax_job_leases.countDocuments({}) }; }) }])
+```
+
+Expected: no failures, and `leasesHeld` 0 between runs. A failure naming a tax year means a filed draft of a year no shipped pack covers: it is **kept**, and the row stays until the owner decides (ship that year's pack, or a D-row). Nothing to run twice; the collections are new.
+
+**Way back:** set `app.tax.jobs.enabled=false` and restart; nothing is scheduled, and stored drafts stay as they are. A draft the purge deleted is gone: restore it from the database backup.
+
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 
 Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender`, `BankAccount`, `TaxYearWorkspace`, `FilingDraft`, `DraftRevision`, `RegimeElectionHistory` (`WorkspaceIndexInitializer`, W-099, D-441) and `DraftComputation` (`DraftComputationIndexInitializer`, W-104, D-442); a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Encryption at rest is built (W-134, D-447; W-232 merged into it): §0.5 before the first deploy carrying it.**

@@ -11,6 +11,11 @@ app:
   tax:
     data-key: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
     digest-key: HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=
+    jobs:
+      enabled: false
+    retention:
+      archive-after: P18M
+      purge-archived-after: P12M
   mongodb:
     transactions-enabled: true
 

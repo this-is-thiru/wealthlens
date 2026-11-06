@@ -19,6 +19,7 @@ import com.thiru.wealthlens.taxengine.result.ComputationId;
 import com.thiru.wealthlens.taxengine.result.ComputationProjector;
 import com.thiru.wealthlens.taxengine.result.ComputationReceipt;
 import com.thiru.wealthlens.taxengine.result.TaxComputation;
+import com.thiru.wealthlens.taxengine.rules.definition.LossCarryForward;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
@@ -30,6 +31,7 @@ import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -99,6 +101,25 @@ public class TaxCalculator {
     public RegimeCode defaultRegime(TaxYearId year) {
         return rulePacks.load(year).regimes().values().stream().filter(RegimeSpec::isDefault).map(RegimeSpec::code)
                 .findFirst().orElseThrow(() -> new IllegalStateException("The pack for " + year.label() + " has no default"));
+    }
+
+    /**
+     * The most tax years after the one a loss arose in that the year's pack lets it be carried forward, across every
+     * {@link LossCarryForward} row and version — the period a filed computation may have to explain (D-447 C6a, W-137). Empty
+     * where the application ships no pack for the year, or the pack carries no loss forward, so a caller can refuse rather
+     * than guess.
+     */
+    public OptionalInt longestCarryForward(TaxYearId year) {
+        if (!rulePacks.availableYears().contains(year)) {
+            return OptionalInt.empty();
+        }
+        return rulePacks.load(year).rules().values().stream()
+                .flatMap(row -> row.versions().stream())
+                .flatMap(version -> version.definition().stream())
+                .filter(LossCarryForward.class::isInstance)
+                .map(LossCarryForward.class::cast)
+                .mapToInt(carry -> carry.span().succeedingYears())
+                .max();
     }
 
     private static RegimeSpec spec(RulePack pack, RegimeCode code) {

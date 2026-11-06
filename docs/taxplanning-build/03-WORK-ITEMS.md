@@ -1482,7 +1482,7 @@ if that is not enough for the item in hand.
 | W-120 | documentation checklist | `DR 12` C3.2, `DR 22` C7 | **F25** |
 | W-121 | materiality banding | `DR 22` C6 | **F40.4** |
 | W-122 | progressive onboarding steps | `DR 20` F34 | **F34** |
-| W-123 | PDF report | `DR 04` F10 | **F10** |
+| W-123 | PDF report | `DR 04` F10 | **F10** **Also (D-449 C1a):** `DR 19` E8's `GeneratePdf` job (on `ComputationCompleted`, idempotent on the computation id) is built here, on W-137's `TaxJob` and `TaxJobRunner` |
 
 ---
 
@@ -1497,7 +1497,7 @@ if that is not enough for the item in hand.
 | W-128 | `G5.2` validation identities | `DR 06` G5.2 |
 | W-129 | multi-employer assembly | `DR 06` G5.3 |
 | W-130 | `ReconciliationReport` | `DR 05` M4.2 |
-| W-131 | upload / parse / confirm endpoints + async job | TS T8 |
+| W-131 | upload / parse / confirm endpoints + async job | TS T8 **Also (D-449 C1a):** the async job is `DR 19` E8's `ParseDocument`, on W-137's `TaxJob` and `TaxJobRunner` |
 | W-132 | **T8 tests** | `DR 08` T8-1 … T8-6 |
 | W-133 | Excel import (**F28**) | `DR 19` E9.1 |
 
@@ -1512,8 +1512,9 @@ if that is not enough for the item in hand.
 | W-135 | third-party PII exclusion from exports | `DR 14` O1.1, O5 **Built (D-447):** `ArchitectureTest.exports_carry_no_third_party_data` — nothing in `taxplanning.document` may depend on `Landlord` or `Lender`; a new export package is added to the rule |
 | W-136 | retention derived from pack carry-forward periods | `DR 14` O5 **Merged into W-137 (D-447 C6a):** a retention schedule has no caller before `RetentionPurge`, so it is built with it |
 | W-235 | **Erasure on request** *(D-447 C6a)*: `DR 14` O5 says what is erased and what retained when a user asks — drafts and revisions erased, `ACTED_ON` drafts and computations kept with the reason shown, third-party data erased with the draft, the access log pseudonymised. No row owned it. Whether the Digital Personal Data Protection Act, 2023 adds duties is unread: source it (Gazette) before planning | `DR 14` O5; D-447 | after W-137 |
-| W-137 | `TaxJob` + `JobLease` + 6 jobs | `DR 19` E8 **Also W-136 (D-447 C6a):** `RetentionPurge` reads its period as the largest `LossCarryForward` span in the draft's year's pack (8 in both shipped years: `SETOFF-CARRIED-HOUSE-PROPERTY`, `SETOFF-CARRIED-CAPITAL-GAINS`) and refuses when there is none |
-| W-138 | staleness sweep | `DR 13` R-8 |
+| W-137 | `TaxJob` + `JobLease` + 6 jobs | `DR 19` E8 **Also W-136 (D-447 C6a):** `RetentionPurge` reads its period as the largest `LossCarryForward` span in the draft's year's pack (8 in both shipped years: `SETOFF-CARRIED-HOUSE-PROPERTY`, `SETOFF-CARRIED-CAPITAL-GAINS`) and refuses when there is none **Built (D-449):** `taxplanning/jobs/`: `TaxJob`, `TaxJobRunner` (lease in `tax_job_leases`, TTL-indexed), `JobFailure` (`tax_job_failures`), `AutoArchive` (weekly), `RetentionPurge` (monthly), `TaxJobSchedule` behind `app.tax.jobs.enabled`; `FilingDraft.acted_on_at`, `archived_at`; `TaxCalculator.longestCarryForward`. `StalenessSweep` is W-138, `ParseDocument` W-131, `GeneratePdf` W-123, `GazetteWatch` W-236 |
+| W-236 | **Gazette watch** *(D-449 C1a; `DR 19` E8)*: a daily singleton job that checks the Gazette index for an instrument touching a shipped pack and opens a ticket, never writing a pack. Undesigned: which index (egazette.gov.in search, by ministry and date), how "touching" is decided, and where a ticket goes (YouTrack WL). Design first, with the owner | `DR 19` E8; D-449 | after W-146 |
+| W-138 | staleness sweep | `DR 13` R-8 **Also (D-449):** a `TaxJob` run by W-137's `TaxJobRunner` under its lease, on pack upgrade at startup |
 | W-139 | pack linter + cross-year diff — **the diff reuses `PackDiff` from `W-045h`**; this item adds the linter and the cross-year report on top | `DR 15` C4 |
 | W-140 | boundary-case generator | `DR 15` C5 |
 | W-141 | independent Python oracle + `expected.csv` | `DR 19` E4.2 |

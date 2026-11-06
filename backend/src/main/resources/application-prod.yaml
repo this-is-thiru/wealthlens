@@ -15,6 +15,13 @@ app:
   tax:
     data-key: ${TAX_DATA_KEY}
     digest-key: ${TAX_DIGEST_KEY}
+    jobs:
+      enabled: true
+      auto-archive-cron: "0 0 3 * * SUN"
+      retention-purge-cron: "0 0 4 1 * *"
+    retention:
+      archive-after: P18M
+      purge-archived-after: P12M
   portfolio:
     idempotency:
       # How long a trade with NO client-supplied idempotencyKey stays de-duplicable, in seconds.

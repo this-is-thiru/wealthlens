@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-134a committed and closed (D-448)
-Stage           : next by board order: W-137 (TaxJob + JobLease + 6 jobs, with W-136 retention), not started
-Done today      : session 47: planned, approved C1a – C7a, built; 4440 / 0 / 0; four probes bit and reverted
-Board           : W-134 D, W-134a —, W-135 D, W-136 —, W-235 ·
-Next step       : read W-137 and its decision rows (DR 19 E8, D-447 C6a), source what they need (Gazette only), write its plan, STOP
-Owner actions   : runbook §0.5 (keys; clear eleven tax_* collections) and §0.6 (count legacy salary data; deploy held until W-159 D), plus §1.x, §3.7 – §3.9, §0.4 at the deploy; push review/taxplanning when ready (W-217 check first); `orb start` before the integration tier
-Last verify     : unit + integration 4440 / 0 / 0; Checkstyle 0; Spotless clean (at the W-134 family commit)
+Item            : none in flight — W-137 (+ W-136) committed and closed (D-449)
+Stage           : next by board order: W-138 (staleness sweep), not started
+Done today      : session 47: W-134 family (D-447), W-134a (D-448), W-137 (D-449) built and closed
+Board           : W-137 D, W-235 · (after W-137), W-138 ·, W-236 · (after W-146)
+Next step       : read W-138 and its decision rows (DR 13 R-8, DR 18 V9, D-449), source what they need (Gazette only), write its plan, STOP
+Owner actions   : runbook §0.5, §0.6, §1.y (after the first job runs), §1.x, §3.7 – §3.9, §0.4 at the deploy; push review/taxplanning when ready (W-217 check first); `orb start` before the integration tier
+Last verify     : unit + integration 4448 / 0 / 0; Checkstyle 0; Spotless clean (at the W-137 commit)
 Files touched   : none
-Last item commit: taxplanning W-134a: merge the legacy salary data into W-159 and hold the deploy until it is done
-Updated         : 2026-11-06, session 47 — W-134a closed
+Last item commit: taxplanning W-137, W-136: archive untouched drafts and delete expired ones, keeping a filed draft as long as its year's law carries a loss
+Updated         : 2026-11-06, session 47 — W-137 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

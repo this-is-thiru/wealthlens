@@ -4,6 +4,9 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.taxplanning.profile.TaxProfileService;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +31,7 @@ public class DraftService {
     private final DraftRevisionRepository revisionRepository;
     private final RegimeElectionHistoryRepository electionHistoryRepository;
     private final TaxAccessLog taxAccessLog;
+    private final Clock clock;
 
     /** The profile's workspace for the year, made on first asking. */
     public TaxYearWorkspace workspace(String email, String profileId, int taxYearStart) {
@@ -153,7 +157,7 @@ public class DraftService {
         if (request.status() == null || !draft.getStatus().canBecome(request.status())) {
             throw new BadRequestException("A draft that is " + draft.getStatus() + " cannot become " + request.status());
         }
-        draft.setStatus(request.status());
+        draft.moveTo(request.status(), LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
         if (request.status() == DraftStatus.ACTED_ON && request.regimeCode() != null) {
             draft.setRegimeElection(request.regimeCode());
             recordElection(draft, request.regimeCode());

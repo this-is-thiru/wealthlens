@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxplanning.workspace;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.convert.ValueConverter;
@@ -50,6 +51,23 @@ public class FilingDraft implements AuditableEntity {
     @Field("regime_election")
     private String regimeElection;
 
+    /** When it was acted on, in UTC: a filed draft is kept by this, whatever its status later ({@code DR 14} O5; W-137). */
+    @Field("acted_on_at")
+    private LocalDateTime actedOnAt;
+
+    /** When it was last archived, in UTC; cleared on restore. What an archived draft's retention runs from (W-137). */
+    @Field("archived_at")
+    private LocalDateTime archivedAt;
+
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
+
+    /** Moves to {@code next}, recording when it was acted on or archived; a draft leaving {@code ARCHIVED} is no longer archived. */
+    public void moveTo(DraftStatus next, LocalDateTime atUtc) {
+        status = next;
+        if (next == DraftStatus.ACTED_ON) {
+            actedOnAt = atUtc;
+        }
+        archivedAt = next == DraftStatus.ARCHIVED ? atUtc : null;
+    }
 }
