@@ -71,7 +71,7 @@ and seed before anyone trades. On staging the owner is the only user.
 
 | # | Check | Why |
 |---|---|---|
-| 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `TAX_PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
+| 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
 | 0.1.2 | MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` warns at startup (§1.7) |
 | 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only |
 
@@ -296,7 +296,7 @@ Rules, 2025 r.8(3)). The monthly `retention-purge` (§1.y) then erases the profi
 status, revisions, computations, family, employers, landlords, lenders, bank accounts, workspaces, regime election history,
 and the access records naming any of them — logging `Job retention-purge erased profile <id>`. Nothing to seed or correct.
 
-**Before the first start:** `TAX_PRIVACY_CONTACT` set (§0.1.1) to the contact the owner publishes; the start is refused
+**Before the first start:** `PRIVACY_CONTACT` set (§0.1.1) to the contact the owner publishes; the start is refused
 without it. **After a purge that logged an erasure** (read-only; replace `<id>`):
 
 ```js

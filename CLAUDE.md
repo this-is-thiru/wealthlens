@@ -80,7 +80,7 @@ override convenience. Where the build enforces one, the enforcing check is named
 # Build (skip tests)
 ./mvnw clean install -pl backend -am -DskipTests
 
-# Run the app (default profile → it-staging Atlas cluster; needs MONGO_USER, MONGO_PASSWORD, JWT_SECURITY_KEY, TAX_DATA_KEY, TAX_DIGEST_KEY — the last two 32 bytes in base64)
+# Run the app (default profile → it-staging Atlas cluster; needs MONGO_USER, MONGO_PASSWORD, JWT_SECURITY_KEY, TAX_DATA_KEY, TAX_DIGEST_KEY, PRIVACY_CONTACT — the two tax keys 32 bytes in base64)
 ./mvnw spring-boot:run -pl backend
 
 # All tests (unit + integration; integration needs Docker)
@@ -149,7 +149,7 @@ Within every module: `controller/` (no business logic) → `service/` (`@Transac
 
 - `shared/advice/ResponseWrapperAdvice` wraps **every** JSON response body in `ApiResponse<T>` — except under the `integration-test` profile, where it is disabled (`@Profile("!integration-test")`). Integration tests therefore assert unwrapped payloads.
 - `shared/exception/ControllerAdviser` maps `IllegalArgumentException` → 400, everything else → 500. `BadRequestException extends IllegalArgumentException`. Messages are human-readable strings, never codes.
-- `auth/filter/AuthFilter` (a `OncePerRequestFilter`) validates the JWT before `UsernamePasswordAuthenticationFilter`; sessions are stateless, tokens expire in 30 min, HmacSHA256 signed with `app.security.key-secret`. Public paths are listed in `auth/config/AuthConfig` (`/auth/login`, `/auth/register`, `/helper/**`, `/finances/**`, `/template/**`, `/tax-planning/public/**`).
+- `auth/filter/AuthFilter` (a `OncePerRequestFilter`) validates the JWT before `UsernamePasswordAuthenticationFilter`; sessions are stateless, tokens expire in 30 min, HmacSHA256 signed with `app.security.key-secret`. Public paths are listed in `auth/config/AuthConfig` (`/auth/login`, `/auth/register`, `/helper/**`, `/finances/**`, `/template/**`, `/tax-planning/public/**`, `/privacy/**`).
 - MongoDB multi-document `@Transactional` writes need a replica set **and** `app.mongodb.transactions-enabled=true`.
 
 ### Domain rules that are not obvious from the code

@@ -12,10 +12,30 @@ spring:
 app:
   security:
     key-secret: ${JWT_SECURITY_KEY}
+  privacy:
+    # W-237a: published at GET /privacy/rights (DPDP Rules r.14(1), r.9); named in every response to a rights request
+    contact: ${PRIVACY_CONTACT}
+    identifier: "the email address your account is registered with"
+    rights:
+      - right: "A summary of your personal data and its processing, and of the others it was shared with"
+        section: "Digital Personal Data Protection Act, 2023 s.11(1)"
+        means: "Write to the contact from the email your account is registered with"
+      - right: "Correction, completion or updating of your personal data"
+        section: "Digital Personal Data Protection Act, 2023 s.12(1), (2)"
+        means: "Write to the contact from the email your account is registered with"
+      - right: "Erasure of your personal data"
+        section: "Digital Personal Data Protection Act, 2023 s.12(1), (3)"
+        means: "For a tax-planning profile, ask in the app; for anything else, write to the contact from the email your account is registered with"
+        endpoints: ["POST /tax/user/{email}/profiles/{profileId}/erasure"]
+      - right: "Redressal of a grievance about how your personal data is handled"
+        section: "Digital Personal Data Protection Act, 2023 s.13"
+        means: "Write to the contact from the email your account is registered with"
+      - right: "Nominating another person to exercise these rights on your death or incapacity"
+        section: "Digital Personal Data Protection Act, 2023 s.14"
+        means: "Write to the contact from the email your account is registered with"
   tax:
     data-key: ${TAX_DATA_KEY}
     digest-key: ${TAX_DIGEST_KEY}
-    privacy-contact: ${TAX_PRIVACY_CONTACT}
     jobs:
       enabled: true
       auto-archive-cron: "0 0 3 * * SUN"
