@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxplanning.jobs;
 import com.thiru.wealthlens.shared.privacy.PrivacySettings;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxplanning.profile.ProfileErasureRepository;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatus;
@@ -22,7 +23,8 @@ import org.springframework.stereotype.Component;
  * Deletes drafts whose retention has run out ({@code DR 14} O5; W-136, D-449). A draft ever acted on is kept to the end of the
  * last tax year its own year's law lets a loss be carried into, read from the rule pack; a year whose pack says nothing is refused
  * and kept. Any other archived draft is kept for {@link RetentionPeriods#purgeArchivedAfter()} after it was archived. A profile
- * held for erasure is erased whole once {@link PrivacySettings#erasureHold()} has passed since the request (W-235).
+ * held for erasure is erased whole once {@link PrivacySettings#erasureHold()} has passed since the request (W-235); its erasure
+ * record is completed first, so a run cut off in between leaves the profile held, and the next run erases it (W-237f).
  */
 @Component
 @Log4j2
@@ -35,6 +37,7 @@ public class RetentionPurge implements TaxJob {
     private final RetentionPeriods periods;
     private final TaxpayerProfileRepository profiles;
     private final ProfileRemoval profileRemoval;
+    private final ProfileErasureRepository profileErasures;
     private final PrivacySettings privacy;
 
     @Override
@@ -80,6 +83,10 @@ public class RetentionPurge implements TaxJob {
                 log.warn("Job {} lost its lease; stopping", name());
                 return false;
             }
+            profileErasures.findByProfileIdAndErasedAtIsNull(profile.getId()).ifPresent(erasure -> {
+                erasure.setErasedAt(context.nowUtc());
+                profileErasures.save(erasure);
+            });
             profileRemoval.remove(profile);
             log.info("Job {} erased profile {}", name(), profile.getId());
         }

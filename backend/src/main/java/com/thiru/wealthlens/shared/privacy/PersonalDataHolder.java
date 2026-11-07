@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.shared.privacy;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.core.Ordered;
 
 /**
@@ -21,6 +22,17 @@ public interface PersonalDataHolder extends Ordered {
 
     /** Deletes everything the module stores about the person. */
     void erase(String email);
+
+    /**
+     * After a restore from a snapshot taken at {@code snapshotTakenAt}, applies again each erasure of part of an account the
+     * module recorded at or after it, and each hold of one asked then (W-237f C2a′). Most modules erase only whole accounts, which
+     * {@link AccountErasureService#reapply} applies again itself.
+     *
+     * @return the id of each part erased or held again
+     */
+    default List<String> reapply(LocalDateTime snapshotTakenAt) {
+        return List.of();
+    }
 
     /** Holders erase in this order; the login goes last, so an account is never left without the record of its own data. */
     @Override

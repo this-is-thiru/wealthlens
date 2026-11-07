@@ -14,4 +14,8 @@ public interface AccountErasureRequestRepository extends MongoRepository<Account
     Optional<AccountErasureRequest> findByEmailAndErasedAtIsNull(String email);
 
     List<AccountErasureRequest> findByErasedAtIsNullAndRequestedAtLessThanEqual(LocalDateTime requestedBy);
+
+    List<AccountErasureRequest> findByErasedAtGreaterThanEqual(LocalDateTime erasedFrom);
+
+    List<AccountErasureRequest> findByErasedAtIsNullAndRequestedAtGreaterThanEqual(LocalDateTime requestedFrom);
 }

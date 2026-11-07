@@ -60,6 +60,30 @@ public class AccountErasureService {
         log.info("Account erasure {} done", request.getId());
     }
 
+    /**
+     * Applies again, after a restore, what the restored snapshot does not hold (W-237f C2a′): each account erased at or after
+     * {@code snapshotTakenAt} is erased again, keeping the first {@code erased_at}; each asked for then and still held is held
+     * again; and each module applies its own part-erasures. An erasure before the snapshot is left alone: the snapshot already
+     * reflects it, and the email may since belong to a new account. A second call changes nothing.
+     */
+    public ReappliedErasures reapply(ErasureReapplication reapplication) {
+        LocalDateTime snapshotTakenAt = Optional.ofNullable(reapplication).map(ErasureReapplication::snapshotTakenAt)
+                .orElseThrow(() -> new BadRequestException("Give the restored snapshot's time, snapshotTakenAt"));
+        if (snapshotTakenAt.isAfter(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)))) {
+            throw new BadRequestException("The snapshot's time " + snapshotTakenAt + " is in the future");
+        }
+        List<String> erased = requests.findByErasedAtGreaterThanEqual(snapshotTakenAt).stream()
+                .map(AccountErasureRequest::getEmail).distinct().toList();
+        erased.forEach(email -> holders.forEach(holder -> holder.erase(email)));
+        List<AccountErasureRequest> open = requests.findByErasedAtIsNullAndRequestedAtGreaterThanEqual(snapshotTakenAt);
+        open.forEach(request -> holders.forEach(holder -> holder.hold(request.getEmail(), request.getRequestedAt())));
+        List<String> parts = holders.stream().flatMap(holder -> holder.reapply(snapshotTakenAt).stream()).toList();
+        log.info("Erasures since {} applied again: {} accounts erased, {} held, {} parts", snapshotTakenAt, erased.size(),
+                open.size(), parts.size());
+        return new ReappliedErasures(snapshotTakenAt, erased, open.stream().map(AccountErasureRequest::getEmail).toList(),
+                parts);
+    }
+
     private LocalDateTime erasedFrom(AccountErasureRequest request) {
         return request.getRequestedAt().plus(privacy.erasureHold());
     }

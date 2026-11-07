@@ -33,6 +33,11 @@ completes the work or changes nothing, and a test proves it. **A one-time operat
 a row in **Phase 15 — Post-deployment cleanup** of the backlog (YouTrack parent **WL-28**), outside the build order
 and taken once its run is logged below for every database it applies to (D-286).
 
+**Every file a step here saves is personal data, and is deleted (W-237f C3a).** A `mongoexport` taken as a step's way back
+(§0.5, §1A, §2.1 – §2.5, §1.s) is the owner's own copy, and Act s.8(7)(a) reaches it as it reaches the database. Delete
+it once its step's result is in the run log and checked, or once the longest snapshot retention in §1.s has passed,
+whichever is first. The run-log line says "export deleted".
+
 **Databases** (from the profile yamls, host and database name only). Each cluster holds one application database:
 staging's app writes `it-staging`, prod's writes `Cluster0` (owner's counts, 2026-10-27; this settles the earlier
 open question).
@@ -312,7 +317,7 @@ Expected: `left` 0, `heldOverdue` 0 (a held profile past its year still present 
 §1.y's failure check). A second purge changes nothing. **Way back:** none for an erased profile — erasure is the point;
 before the hold ends, a held profile can be released only by unsetting `erasure_requested_at` in the console (the PAN
 digest is rebuilt on the user's next save), which needs the user's word. **Backups:** an Atlas snapshot keeps erased data
-until it expires (W-237).
+until it expires; when that is, and a restore, are in §1.s (W-237f).
 
 ### 1.w W-236 — the Gazette watch · owner, `SUPER_USER` · **when the owner chooses to start it; each database once**
 
@@ -423,7 +428,8 @@ Expected: `left` 0 and `heldOverdue` 0 on every database (an open request past i
 failed: §1.y's failure check; the next run completes it). A second run changes nothing: each erase deletes by email.
 **Way back:** none for an erased account. Before the hold ends, an account is released only with the user's word, by
 deleting its open request row in the console (`deleteOne` on its `_id`) and unsetting `erasure_requested_at` on its tax
-profiles. **Backups:** an Atlas snapshot keeps erased data until it expires (W-237f).
+profiles. **Backups:** an Atlas snapshot keeps erased data until it expires; when that is, and a restore, are in §1.s
+(W-237f).
 
 ### 1.t W-237e — logs of processing kept a year, then erased · owner · **first deploy carrying it; monthly review; after the first run that erases**
 
@@ -475,7 +481,87 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
 Expected: `overdue` 0 on every database (more means the job did not run or failed: §1.y's failure check; the next run
 completes it). A second run changes nothing: each step deletes by date. **Way back:** set `app.tax.jobs.enabled=false`
 (stops every job) and restart; erased rows are gone — restore from the database backup. **Backups:** an Atlas snapshot
-keeps erased rows until it expires (W-237f).
+keeps erased rows until it expires; when that is, and a restore, are in §1.s (W-237f).
+
+### 1.s W-237f — erased data in the backups, and a restore · owner · **before the duties commence (about May 2027); on every restore**
+
+The Fiduciary must cause its Data Processor to erase what it was given (Act s.8(7)(b)). Backups are one of the expected
+safeguards (Rules r.6(1)(d)), and r.8(3) Case 2 has the host keep the data at least a year. Nothing in the law limits how
+long a snapshot may be kept: that is the owner's choice. The one bound is set by the app: **no snapshot may be kept
+longer than `app.privacy.log-retention` (P1Y)**. A restore relies on the erasure records, and they are kept only a year
+after each erasure (§1.t), so a snapshot older than that could hold a person no record still names (W-237f C1a).
+
+**When erased data leaves the backups:** at `erased_at` plus the longest retention below. Data is erased a year after the
+request (§1.z, §1.u), so a snapshot taken during the hold holds it until that snapshot expires.
+
+**The owner's record (W-237f facts 1 – 4, C4a)** — filled in by the owner, not yet given:
+
+| | prod `Cluster0` | staging `it-staging` |
+|---|---|---|
+| Atlas tier; Cloud Backup on? | *not given* | *not given* |
+| Snapshot schedule; retention of each kind; point-in-time window | *not given* | *not given* |
+| Longest retention ≤ P1Y? (the check) | *not given* | *not given* |
+| Snapshots or exports kept outside Atlas | *not given* | *not given* |
+| EC2 volume snapshotted (EBS, AMI)? | *not given* | — |
+| Processor terms accepted (Atlas, AWS): document and date (Act s.8(2), r.6(1)(f)) | *not given* | *not given* |
+
+**The check (owner, read-only, safe to repeat):** read each cluster's backup policy in Atlas, enter every retention
+figure above, and confirm none exceeds one year. A longer one is shortened in Atlas before the duties commence. If a
+tier has no backup that can be set, that is a re-plan of W-237f (its risk 2), not a row here.
+
+**On every restore.** A restore puts the database back to the snapshot's moment, and every erasure since is lost from the
+data. The records of those erasures are exported first and put back after, and then one call applies them again. It
+reapplies only what was done at or after the snapshot's time. An erasure from before that time is already reflected in
+the snapshot, and its email may since belong to a new account, which must not be touched.
+
+1. **Before the restore, from the live database** (read-only):
+
+   ```bash
+   mongoexport --uri "<uri>" --db <db> --collection privacy_erasure_requests --out erasure-requests-before-restore.json
+   mongoexport --uri "<uri>" --db <db> --collection tax_profile_erasures --out profile-erasures-before-restore.json
+   ```
+
+   Note the snapshot's time in UTC (`yyyy-MM-ddTHH:mm:ss`) as `S`.
+2. **Restore** the snapshot in Atlas.
+3. **Put the records back** (an upsert by `_id`: a record the snapshot already holds is replaced by its later state):
+
+   ```bash
+   mongoimport --uri "<uri>" --db <db> --collection privacy_erasure_requests --mode upsert --file erasure-requests-before-restore.json
+   mongoimport --uri "<uri>" --db <db> --collection tax_profile_erasures --mode upsert --file profile-erasures-before-restore.json
+   ```
+
+4. **Apply them again** (`SUPER_USER`):
+
+   ```bash
+   curl -X POST "$BASE/privacy/erasure/reapply" -H "Authorization: Bearer $ADMIN_TOKEN" \
+     -H "Content-Type: application/json" -d '{"snapshotTakenAt": "<S>"}'
+   ```
+
+   The answer names `accountsErased` (erased at or after `S`, erased again; `erased_at` unchanged), `accountsHeld`
+   (asked at or after `S`, not yet erased, held again) and `profiles` (single profiles erased or held again). A time
+   in the future, or none, is refused with 400.
+5. **Check after (read-only)**, with `S` as an ISO date:
+
+   ```js
+   db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+     .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+       const s = new Date("<S>Z");
+       const emails = d.privacy_erasure_requests.distinct("email", { erased_at: { $gte: s } });
+       return { database: n, accountsBack: d.user_details.countDocuments({ _id: { $in: emails } })
+           + d.assets.countDocuments({ email: { $in: emails } }) + d.tax_profiles.countDocuments({ email: { $in: emails } }),
+         profilesBack: d.tax_profiles.countDocuments({ _id: { $in: d.tax_profile_erasures.distinct("profile_id",
+           { erased_at: { $ne: null } }) } }) }; }) }])
+   ```
+
+   Expected: `accountsBack` 0 and `profilesBack` 0 on every database; then §1.u's check for each email in
+   `accountsErased`. More than 0 means the call was not made or failed part-way. Make it again: each step deletes by email
+   or by profile id, so a second call completes the work or changes nothing (tested).
+6. **Delete the two export files** once the run is logged ("export deleted").
+
+**Way back:** none is needed for the call, because it erases only what had been erased before the restore. If the
+import was wrong, import the exports again and repeat step 4. **Profile-erasure records** (`tax_profile_erasures`:
+`email`, `profile_id`, `requested_at`, `erased_at`) are new with W-237f. They are written by each single-profile request
+from that deploy on, and erased a year after `erased_at` by §1.t's `log-retention` job. Nothing to seed.
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 

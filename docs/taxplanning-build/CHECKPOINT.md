@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-237e committed and closed (D-475)
-Stage           : 6 (DONE); next by board order W-237f, not started
-Done today      : sessions 49 – 53: D-462 – D-475 (W-145, W-243, W-244, W-146, W-146b, W-236, W-237a – e; W-237 split; W-245 decided); W-241 – W-249, W-146a, W-237b – g placed; WL-A-2 republished; pushed at a4c41426, four item commits since
-Board           : W-237 · (parent), W-237a – e D, W-237f · (next), W-237g ·, W-247 ·, W-248 ·, W-249 ·; W-146a · (after W-082e); W-238 – W-242 ·, W-246 · in Phase 14
-Next step       : read W-237f's row (erased data in Atlas snapshots; s.8(7)(b)) and write its plan, STOP
-Owner actions   : pushed 2026-11-07 (session 50): review/taxplanning at a4c41426, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Give the Data Protection Board's breach-intimation channel (W-237c, asked); give the PRIVACY_CONTACT value (asked, none received yet); give the rule for when an account's purpose lapses (W-249, when you choose); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.u (account erasure), §1.t (new: processing log, monthly review), §1.w (Gazette watch, when you choose), §1.v (weekly grievance queue), §1.x, §5.7 (on a breach — fill in the Board's channel), §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : W-237e: unit + integration 4735 / 0 / 0; Checkstyle 0; Spotless clean; 5 probes failed as meant, restored by cmp
+Item            : none in flight — W-237f committed and closed (D-476)
+Stage           : 6 (DONE); next by board order W-237g, not started
+Done today      : sessions 49 – 54: D-462 – D-476 (W-145, W-243, W-244, W-146, W-146b, W-236, W-237a – f; W-237 split; W-245 decided); W-241 – W-249, W-146a, W-237b – g placed; WL-A-2 republished; pushed at a4c41426, five item commits since
+Board           : W-237 · (parent), W-237a – f D, W-237g · (next), W-247 ·, W-248 ·, W-249 ·; W-146a · (after W-082e); W-238 – W-242 ·, W-246 · in Phase 14
+Next step       : read W-237g's row (a copy before erasure; decide with W-123) and write its plan, STOP
+Owner actions   : pushed 2026-11-07 (session 50): review/taxplanning at a4c41426, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Fill runbook §1.s's record (W-237f facts 1 – 4: Atlas tier/backup, snapshot retention ≤ P1Y, copies outside Atlas, EBS; processor terms); give the Data Protection Board's breach-intimation channel (W-237c, asked); give the PRIVACY_CONTACT value (asked, none received yet); give the rule for when an account's purpose lapses (W-249, when you choose); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.u, §1.t, §1.s, §1.w (when you choose), §1.v, §1.x, §5.7, §3.7 – §3.9, §0.4; `orb start` before the integration tier
+Last verify     : W-237f: unit + integration 4744 / 0 / 0 (was 4735); Checkstyle 0; Spotless clean; 3 probes failed as meant, restored by cmp
 Files touched   : none
-Last item commit: taxplanning W-237e: keep a log of who reached whose personal data, and erase logs and privacy records a year after their processing
-Updated         : 2026-11-07, session 53 — W-237e closed
+Last item commit: taxplanning W-237f: record each profile erasure and apply erasures again after a restore, and state when erased data leaves the backups
+Updated         : 2026-11-07, session 54 — W-237f closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
