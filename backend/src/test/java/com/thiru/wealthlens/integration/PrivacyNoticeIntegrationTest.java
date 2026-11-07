@@ -57,6 +57,53 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void rights_whenRead_tellsTheUserToTakeTheirCopyBeforeAskingForErasure() throws IOException, InterruptedException {
+        // When
+        PrivacyNotice notice = JsonMapper.builder().build().readValue(get("/privacy/rights").body(), PrivacyNotice.class);
+
+        // Then — W-247 C2a, as application-integration-test.yaml states it
+        assertThat(notice.rights()).filteredOn(right -> right.section().endsWith("s.12(1), (3)")).singleElement()
+                .extracting(PrivacyRight::means).asString()
+                .startsWith("Take your copy first, since nothing can be read once you ask:")
+                .contains("POST /portfolio/user/{email}/stocks/download");
+    }
+
+    @Test
+    void notice_whenOpenedWithoutSigningIn_showsAPageWithEveryRightTheContactAndTheResponseDays()
+            throws IOException, InterruptedException {
+        // When
+        HttpResponse<String> page = get("/privacy");
+
+        // Then — W-247 C1a; each value as application-integration-test.yaml states it
+        assertThat(page.statusCode()).isEqualTo(200);
+        assertThat(page.headers().firstValue("Content-Type")).hasValueSatisfying(type -> assertThat(type).startsWith("text/html"));
+        assertThat(page.body()).contains(
+                "A summary of your personal data and its processing, and of the others it was shared with",
+                "Correction, completion or updating of your personal data",
+                "Erasure of your personal data",
+                "Redressal of a grievance about how your personal data is handled",
+                "Nominating another person to exercise these rights on your death or incapacity",
+                "Digital Personal Data Protection Act, 2023 s.14",
+                "Take your copy first, since nothing can be read once you ask",
+                "POST /privacy/erasure/user/{email}",
+                "privacy@example.com",
+                "the email address your account is registered with",
+                "<span>30</span> days");
+    }
+
+    @Test
+    void notice_whenThePageIsPublic_theRestOfPrivacyStillNeedsAToken() throws IOException, InterruptedException {
+        // When / Then — "/privacy" is an exact public path, not a prefix
+        assertThat(get("/privacy/grievances/user/someone@example.com").statusCode()).isEqualTo(401);
+    }
+
+    private static HttpResponse<String> get(String path) throws IOException, InterruptedException {
+        return HttpClient.newHttpClient().send(HttpRequest.newBuilder(
+                URI.create(RestAssured.baseURI + ":" + RestAssured.port + path)).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+    }
+
+    @Test
     void rights_whenTheNoticeListsASelfServiceRequest_itsResponseNamesTheContact()
             throws IOException, InterruptedException {
         // Given

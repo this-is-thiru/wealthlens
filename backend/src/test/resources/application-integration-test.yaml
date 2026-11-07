@@ -21,7 +21,7 @@ app:
         means: "Write to the contact from the email your account is registered with"
       - right: "Erasure of your personal data"
         section: "Digital Personal Data Protection Act, 2023 s.12(1), (3)"
-        means: "Ask in the app, for one tax-planning profile or for your whole account; your account is erased a year after you ask, and cannot be used meanwhile"
+        means: "Take your copy first, since nothing can be read once you ask: before erasing a tax-planning profile, read its drafts, revisions and computations; before erasing your whole account, also download your portfolio's assets and transactions (POST /portfolio/user/{email}/stocks/download), the only part of it that can be downloaded. Then ask in the app, for one tax-planning profile or for your whole account; your account is erased a year after you ask, and cannot be used meanwhile"
         endpoints: ["POST /tax/user/{email}/profiles/{profileId}/erasure", "POST /privacy/erasure/user/{email}"]
       - right: "Redressal of a grievance about how your personal data is handled"
         section: "Digital Personal Data Protection Act, 2023 s.13"

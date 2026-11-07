@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your privacy rights — WealthLens</title>
+    <style>
+        body { font-family: system-ui, sans-serif; line-height: 1.5; max-width: 46rem; margin: 0 auto; padding: 1rem; color: #1a1a1a; background: #fff; }
+        h2 { font-size: 1.1rem; margin-bottom: 0.25rem; }
+        .section { color: #555; font-size: 0.9rem; margin-top: 0; }
+        code { background: #f2f2f2; padding: 0 0.2rem; }
+        @media (prefers-color-scheme: dark) {
+            body { color: #e6e6e6; background: #161616; }
+            .section { color: #aaa; }
+            code { background: #2a2a2a; }
+        }
+    </style>
+</head>
+<body>
+<h1>Your privacy rights</h1>
+<p>Questions about how your personal data is processed are answered by
+    <strong th:text="${notice.contact}">contact</strong>.
+    Every request is identified by <span th:text="${notice.identifier}">identifier</span>.</p>
+
+<section th:each="right : ${notice.rights}">
+    <h2 th:text="${right.right}">right</h2>
+    <p class="section" th:text="${right.section}">section</p>
+    <p th:text="${right.means}">means</p>
+    <ul th:if="${!right.endpoints.isEmpty()}">
+        <li th:each="endpoint : ${right.endpoints}"><code th:text="${endpoint}">endpoint</code></li>
+    </ul>
+</section>
+
+<p>A grievance is answered within <span th:text="${notice.grievanceResponseDays}">30</span> days of its receipt.</p>
+</body>
+</html>

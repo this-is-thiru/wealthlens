@@ -149,7 +149,7 @@ Within every module: `controller/` (no business logic) → `service/` (`@Transac
 
 - `shared/advice/ResponseWrapperAdvice` wraps **every** JSON response body in `ApiResponse<T>` — except under the `integration-test` profile, where it is disabled (`@Profile("!integration-test")`). Integration tests therefore assert unwrapped payloads.
 - `shared/exception/ControllerAdviser` maps `IllegalArgumentException` → 400, everything else → 500. `BadRequestException extends IllegalArgumentException`. Messages are human-readable strings, never codes.
-- `auth/filter/AuthFilter` (a `OncePerRequestFilter`) validates the JWT before `UsernamePasswordAuthenticationFilter`; sessions are stateless, tokens expire in 30 min, HmacSHA256 signed with `app.security.key-secret`. Public paths are listed in `auth/config/AuthConfig` (`/auth/login`, `/auth/register`, `/helper/**`, `/finances/**`, `/template/**`, `/tax-planning/public/**`, `/privacy/rights`; the rest of `/privacy/**` needs a token, W-237b).
+- `auth/filter/AuthFilter` (a `OncePerRequestFilter`) validates the JWT before `UsernamePasswordAuthenticationFilter`; sessions are stateless, tokens expire in 30 min, HmacSHA256 signed with `app.security.key-secret`. Public paths are listed in `auth/config/AuthConfig` (`/auth/login`, `/auth/register`, `/helper/**`, `/finances/**`, `/template/**`, `/tax-planning/public/**`, `/privacy/rights`, and `/privacy` — the notice as a page, W-247; the rest of `/privacy/**` needs a token, W-237b).
 - MongoDB multi-document `@Transactional` writes need a replica set **and** `app.mongodb.transactions-enabled=true`.
 
 ### Domain rules that are not obvious from the code
