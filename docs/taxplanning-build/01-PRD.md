@@ -54,10 +54,10 @@ designed-for case becomes a schema change.
 
 | ID | Persona | Defining facts | Fixture |
 |---|---|---|---|
-| **PR-1** | **Ravi** — salaried, one employer | 31, Bengaluru, ₹28 LPA, rents at ₹42,000/month, holds equities in `portfolio`, sold some this year | `Fixtures.ravi()` ○ `W-145` |
-| **PR-2** | **Priya** — changed jobs in October | two employers, two Form 16s, both granted a full standard deduction | `Fixtures.priya()` ○ `W-145` |
-| **PR-3** | **Anand** — 62, retired | pension, bank interest, no business income | `Fixtures.anand()` ○ `W-145` |
-| **PR-4** | **Meera** — high earner | above ₹50,00,000, surcharge and marginal relief, significant capital gains | `Fixtures.meera()` ○ `W-145` |
+| **PR-1** | **Ravi** — salaried, one employer | 31, Bengaluru, ₹28 LPA, rents at ₹42,000/month, holds equities in `portfolio`, sold some this year | `Fixtures.ravi()` ✅ `W-145` |
+| **PR-2** | **Priya** — changed jobs in October | two employers, two Form 16s, both granted a full standard deduction | `Fixtures.priya()` ✅ `W-145` |
+| **PR-3** | **Anand** — 62, retired | pension, bank interest, no business income | `Fixtures.anand()` ✅ `W-145` |
+| **PR-4** | **Meera** — high earner | above ₹50,00,000, surcharge and marginal relief, significant capital gains | `Fixtures.meera()` ✅ `W-145` |
 | **PR-5** | **An HUF** — the second assessee type | managed by its karta, who files separately as an individual under the **same account**; income and figures **to be sourced** in the rulebook before the first HUF item (no number is invented here) | ⚠ UNOWNED — lands with the first HUF item (`03-WORK-ITEMS.md` Appendix F) |
 
 ---

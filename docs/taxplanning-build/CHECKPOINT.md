@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-144 committed and closed (D-461)
-Stage           : 6 (DONE); next by board order W-145, not started
-Done today      : session 48: D-451 – D-461 (W-235, W-139, W-139a, W-140, W-140a, W-141, W-142, W-142a, W-143, W-144; W-143a closed); W-237 – W-240 placed
-Board           : W-144 D, W-145 · (next); W-238 ·, W-239 ·, W-240 · at the end of Phase 14
-Next step       : read W-145's row and decision rows, write its plan, STOP
+Item            : none in flight — W-145 committed and closed (D-462)
+Stage           : 6 (DONE); next by board order W-146, not started
+Done today      : session 48: D-451 – D-461; session 49: D-462 (W-145); W-241, W-242 placed; not pushed since d5479b0c
+Board           : W-145 D, W-146 · (next); W-241 ·, W-242 · placed; W-238 ·, W-239 ·, W-240 · at the end of Phase 14
+Next step       : read W-146's row and decision rows, write its plan, STOP
 Owner actions   : pushed 2026-11-07: review/taxplanning at d5479b0c, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Give the TAX_PRIVACY_CONTACT value (asked; none received yet); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : unit + integration 4634 / 0 / 0; verify gates met; -Pmutation-taxengine 103 / 103; Checkstyle 0; Spotless clean (at the W-144 commit)
+Last verify     : W-145: PersonaFixturesTest 7 / 0 / 0; unit 4225 / 0 / 0; Checkstyle 0; Spotless clean (integration not run: test-only change)
 Files touched   : none
-Last item commit: taxplanning W-144: gate the tax engine's coverage and its cap shapes' mutation score in the build
-Updated         : 2026-11-07, session 48 — W-144 closed
+Last item commit: taxplanning W-145: give the four PRD personas as engine-input fixtures, each held to hand-worked figures
+Updated         : 2026-11-07, session 49 — W-145 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
