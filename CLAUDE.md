@@ -95,6 +95,9 @@ override convenience. Where the build enforces one, the enforcing check is named
 # Mutation testing — scoped to the calculation engines only
 ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -pl backend
 
+# Performance budgets (PRD §5 N1 – N3; W-143) — machine-dependent, so never in the default build; no coverage agent
+./mvnw test -pl backend -Pbenchmark
+
 # Single test class / single method
 ./mvnw test -pl backend -Dtest=PortfolioServiceTest
 ./mvnw test -pl backend -Dtest=PortfolioServiceTest#addTransaction_whenBuy_createsAsset
