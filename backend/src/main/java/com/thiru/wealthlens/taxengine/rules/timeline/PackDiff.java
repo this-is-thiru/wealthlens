@@ -15,8 +15,9 @@ import tools.jackson.databind.json.JsonMapper;
  * signs off a list of changed rules, versions and values rather than a guess. The same year before and
  * after an edit, or year N against N+1 for the cross-year report {@code W-139} builds on.
  *
- * <p>Read from the compiled, canonical {@code law/rates.json}, so one walk covers every field of every
- * rule shape, and an edited note — dropped by the canonical form — is not a change. A version is
+ * <p>Read from the compiled, canonical {@code law/rates.json} and {@code law/regimes.json}, so one walk covers every
+ * field of every rule shape, regime and disallowance set, and an edited note — dropped by the canonical form — is not a
+ * change. A version is
  * identified by its start date, so closing it reads as a changed end date rather than a version
  * removed and another added.
  *
@@ -32,7 +33,7 @@ public record PackDiff(TaxYearId from, TaxYearId to, List<Finding> findings) {
         findings = List.copyOf(findings);
     }
 
-    /** One difference. {@code W-139} adds its lint findings, and a magnitude on {@code ValueChanged}. */
+    /** One difference. What a reviewer should look at first among them is {@link PackLint}'s (W-139). */
     public sealed interface Finding {
 
         record RuleAdded(RuleId rule) implements Finding {}
@@ -54,6 +55,20 @@ public record PackDiff(TaxYearId from, TaxYearId to, List<Finding> findings) {
          */
         record ValueChanged(RuleId rule, String version, String field, String before, String after)
                 implements Finding {}
+
+        /**
+         * A regime's or a disallowance set's field changed (W-139); a whole entry added or removed reads as its field
+         * {@code (entry)} going from or to {@code (absent)}.
+         *
+         * @param entry e.g. {@code regime NEW_TAX_REGIME} or {@code disallowance set DIS-NEW-TAX-REGIME-NO-SETOFF}
+         */
+        record RegimeValueChanged(String entry, String field, String before, String after) implements Finding {}
+    }
+
+    /** Builds the finding for one changed leaf. */
+    @FunctionalInterface
+    private interface LeafChange {
+        Finding of(String path, String before, String after);
     }
 
     public static PackDiff between(CompiledPack before, CompiledPack after) {
@@ -75,14 +90,44 @@ public record PackDiff(TaxYearId from, TaxYearId to, List<Finding> findings) {
                 compareRule(rule, was, is, findings);
             }
         }
+        compareRegimeEntries(before, after, "regimes", "code", "regime ", findings);
+        compareRegimeEntries(before, after, "disallowanceSets", "id", "disallowance set ", findings);
         return new PackDiff(before.taxYear(), after.taxYear(), findings);
+    }
+
+    private static void compareRegimeEntries(
+            CompiledPack before, CompiledPack after, String list, String key, String label, List<Finding> findings) {
+        Map<String, JsonNode> was = entriesOf(before, list, key);
+        Map<String, JsonNode> is = entriesOf(after, list, key);
+        TreeSet<String> names = new TreeSet<>(was.keySet());
+        names.addAll(is.keySet());
+        for (String name : names) {
+            String entry = label + name;
+            if (!was.containsKey(name) || !is.containsKey(name)) {
+                findings.add(new Finding.RegimeValueChanged(entry, "(entry)", was.containsKey(name) ? "(present)" : ABSENT,
+                        is.containsKey(name) ? "(present)" : ABSENT));
+            } else {
+                for (String field : fieldNames(was.get(name), is.get(name))) {
+                    compare(field, was.get(name).get(field), is.get(name).get(field), findings,
+                            (path, old, now) -> new Finding.RegimeValueChanged(entry, path, old, now));
+                }
+            }
+        }
+    }
+
+    private static Map<String, JsonNode> entriesOf(CompiledPack pack, String list, String key) {
+        Map<String, JsonNode> entries = new TreeMap<>();
+        MAPPER.readTree(pack.files().get("law/regimes.json")).path(list)
+                .forEach(entry -> entries.put(entry.path(key).asString(), entry));
+        return entries;
     }
 
     private static void compareRule(RuleId rule, JsonNode was, JsonNode is, List<Finding> findings) {
         TreeSet<String> fields = fieldNames(was, is);
         fields.remove("versions");
         for (String field : fields) {
-            compare(rule, RULE_LEVEL, field, was.get(field), is.get(field), findings);
+            compare(field, was.get(field), is.get(field), findings,
+                    (path, old, now) -> new Finding.ValueChanged(rule, RULE_LEVEL, path, old, now));
         }
         Map<String, JsonNode> oldVersions = versionsOf(was);
         Map<String, JsonNode> newVersions = versionsOf(is);
@@ -97,46 +142,46 @@ public record PackDiff(TaxYearId from, TaxYearId to, List<Finding> findings) {
                 findings.add(new Finding.VersionRemoved(rule, key));
             } else {
                 for (String field : fieldNames(old, now)) {
-                    compare(rule, key, field, old.get(field), now.get(field), findings);
+                    compare(field, old.get(field), now.get(field), findings,
+                            (path, before, after) -> new Finding.ValueChanged(rule, key, path, before, after));
                 }
             }
         }
     }
 
     /** Walks objects by field and arrays by index; anything else is compared as a leaf. */
-    private static void compare(
-            RuleId rule, String version, String path, JsonNode was, JsonNode is, List<Finding> findings) {
+    private static void compare(String path, JsonNode was, JsonNode is, List<Finding> findings, LeafChange change) {
         if (was != null && is != null && was.isObject() && is.isObject()) {
             for (String field : fieldNames(was, is)) {
-                compare(rule, version, path + "." + field, was.get(field), is.get(field), findings);
+                compare(path + "." + field, was.get(field), is.get(field), findings, change);
             }
         } else if (was != null && is != null && was.isArray() && is.isArray()) {
             for (int i = 0; i < Math.max(was.size(), is.size()); i++) {
-                compare(rule, version, path + "[" + i + "]", was.get(i), is.get(i), findings);
+                compare(path + "[" + i + "]", was.get(i), is.get(i), findings, change);
             }
         } else {
             String before = text(was);
             String after = text(is);
             if (!before.equals(after)) {
-                findings.add(new Finding.ValueChanged(rule, version, path, before, after));
+                findings.add(change.of(path, before, after));
             }
         }
     }
 
-    private static String text(JsonNode node) {
+    static String text(JsonNode node) {
         if (node == null) {
             return ABSENT;
         }
         return node.isValueNode() ? node.asString() : MAPPER.writeValueAsString(node);
     }
 
-    private static TreeSet<String> fieldNames(JsonNode was, JsonNode is) {
+    static TreeSet<String> fieldNames(JsonNode was, JsonNode is) {
         TreeSet<String> names = new TreeSet<>(was.propertyNames());
         names.addAll(is.propertyNames());
         return names;
     }
 
-    private static Map<String, JsonNode> rulesOf(CompiledPack pack) {
+    static Map<String, JsonNode> rulesOf(CompiledPack pack) {
         Map<String, JsonNode> rules = new TreeMap<>();
         MAPPER.readTree(pack.files().get("law/rates.json")).path("rules")
                 .forEach(rule -> rules.put(rule.path("ruleId").asString(), rule));
@@ -144,7 +189,7 @@ public record PackDiff(TaxYearId from, TaxYearId to, List<Finding> findings) {
     }
 
     /** A version's identity: its start date, or {@code pending}, which has none. */
-    private static Map<String, JsonNode> versionsOf(JsonNode rule) {
+    static Map<String, JsonNode> versionsOf(JsonNode rule) {
         Map<String, JsonNode> versions = new TreeMap<>();
         for (JsonNode version : rule.path("versions")) {
             JsonNode validity = version.path("validity");

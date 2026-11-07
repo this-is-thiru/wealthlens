@@ -16,6 +16,9 @@ import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeBehaviourRegistry;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
+import com.thiru.wealthlens.taxengine.rules.registry.VerificationLevel;
+import com.thiru.wealthlens.taxengine.rules.temporal.AmendmentRef;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
 import com.thiru.wealthlens.taxengine.rules.temporal.TemporalAxis;
@@ -83,6 +86,7 @@ public final class PackValidator {
         checkYearIsCoveredWithoutGapOrOverlap(pack, problems);  // I13
         checkMidYearChangesAreDeclared(pack, problems);          // I14
         checkEveryVersionHasAnAmendment(pack, problems);         // I15
+        checkVerificationFollowsPublication(pack, problems);     // W-139
         checkRequiredRuleSetsHoldARow(pack, problems);           // D-252
         checkEveryRuleIsReached(pack, problems);                 // D-252
         CapitalGainsPartReferences.check(pack, problems);        // D-309
@@ -419,6 +423,25 @@ public final class PackValidator {
                     problems.add(
                             "rule " + entry.getKey() + " version " + i + " names no AmendmentRef;"
                                     + " the trace could state its figure but not where it came from");
+                }
+            }
+        }
+    }
+
+    /**
+     * W-139 ({@code DR 15} C4) — a version whose value is marked as read cannot have been read before the instrument that
+     * introduced it was published: such a date is a verification carried forward from an older version.
+     */
+    private static void checkVerificationFollowsPublication(RulePack pack, List<String> problems) {
+        for (Map.Entry<RuleId, com.thiru.wealthlens.taxengine.rules.pack.RuleRow> entry : pack.rules().entrySet()) {
+            for (RuleVersion version : entry.getValue().versions()) {
+                Provenance read = version.provenance();
+                AmendmentRef instrument = version.introducedBy();
+                if (instrument != null && read.verificationLevel() != VerificationLevel.UNVERIFIED && read.accessedOn() != null
+                        && read.accessedOn().isBefore(instrument.notifiedOn())) {
+                    problems.add("rule " + entry.getKey() + " has a version it says was read on "
+                            + read.accessedOn() + ", before " + instrument.instrumentCitation() + " was notified on "
+                            + instrument.notifiedOn() + "; a verification carried forward from an older version");
                 }
             }
         }

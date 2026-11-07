@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-235 committed and closed (D-451)
-Stage           : 6 (DONE); next by board order W-139, not started
-Done today      : session 48: DPDP sourced (Gazette); D-451 (W-235) built and closed; W-237 placed
-Board           : W-235 D, W-139 · (next), W-237 · (new, after W-236)
-Next step       : read W-139's row and decision rows, write its plan, STOP
-Owner actions   : give the TAX_PRIVACY_CONTACT value and set it in every environment (the start is refused without it); push review/taxplanning and api-collection when ready (W-217 check first); deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : unit + integration 4465 / 0 / 0; Checkstyle 0; Spotless clean (at the W-235 commit)
+Item            : none in flight — W-139 committed and closed (D-452)
+Stage           : 6 (DONE); next by board order W-139a, not started
+Done today      : session 48: D-451 (W-235), D-452 (W-139) built and closed; W-237, W-139a placed
+Board           : W-139 D, W-139a · (next), W-140 ·
+Next step       : read W-139a's row and decision rows, write its plan, STOP
+Owner actions   : give the TAX_PRIVACY_CONTACT value; sign off the 13 findings in reviews/pack-review-2025-26-to-2026-27.md; push review/taxplanning and api-collection when ready (W-217 check first); deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
+Last verify     : unit + integration 4479 / 0 / 0; Checkstyle 0; Spotless clean (at the W-139 commit)
 Files touched   : none
-Last item commit: taxplanning W-235: erase a profile on request after the one-year hold, filed drafts included
-Updated         : 2026-11-07, session 48 — W-235 closed
+Last item commit: taxplanning W-139: review each pair of shipped years in a committed file the build compares, with lints for drops, copies, shape and tenfold changes
+Updated         : 2026-11-07, session 48 — W-139 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

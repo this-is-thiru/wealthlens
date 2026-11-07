@@ -820,6 +820,30 @@ class PackValidatorTest {
     }
 
     @Nested
+    @DisplayName("W-139 — a verified value was read after its instrument was published")
+    class VerificationDate {
+
+        @Test
+        void aVersionReadTheDayBeforeItsInstrumentWasNotifiedIsRejected() {
+            // Given — the Finance Act was notified on 2026-03-31; the row says it was read on 2026-03-30
+            PackBuilder pack = validPack();
+            pack.rules.put(SLAB, new RuleRow(SLAB, TemporalAxis.TAX_YEAR, List.of(new RuleVersion(
+                    Validity.Between.fromOnwards(LocalDate.of(2026, 4, 1)), new RegimeApplicability.AllRegimes(),
+                    Optional.of(new Fixed(Money.ZERO)), Optional.empty(), Optional.empty(), Optional.empty(), List.of(),
+                    Provision.notYetVerified("Income-tax Act, 1961"), Provision.present("Income-tax Act, 2025", "s.202(1)"),
+                    introducedByFinanceAct(), LegalStatus.IN_FORCE, PublicationStatus.PUBLISHED,
+                    new Provenance(URI.create("https://egazette.gov.in/WriteReadData/2026/271439.pdf"), "Finance Act 2026",
+                            LocalDate.of(2026, 3, 30), VerificationLevel.SOURCE_CHECKED, null))),
+                    provenance()));
+
+            // When / Then
+            assertThatThrownBy(() -> PackValidator.validate(pack.build()))
+                    .isInstanceOf(PackValidationException.class)
+                    .hasMessageContaining("read on 2026-03-30, before Finance Act, 2026 (4 of 2026), s.38 was notified on 2026-03-31");
+        }
+    }
+
+    @Nested
     @DisplayName("I9 — behaviours resolve, in both directions")
     class Behaviours {
 

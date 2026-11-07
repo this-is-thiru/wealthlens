@@ -1008,6 +1008,8 @@ Every other tax-planning item changes only code or the rule data shipped in the 
 nodes, tax years, catalogue and coverage, W-001 – W-088u5. Those reach a database only through the startup checks
 in section 1. `tax_year_registry` has an entity and a repository, but no code reads or writes it, so it needs
 nothing.
+**W-139 (D-452)** adds a build-time pack review only (`PackReviewTest`, `reviews/pack-review-*.md`): nothing at
+runtime, nothing in a database.
 
 **The audit behind this list** (D-279, 2026-10-20). Every commit whose subject starts `taxplanning` was read for
 files outside `taxplanning`, `taxengine`, `taxrules` (`taxengine.rules`' former home) and `rulepacks`:
