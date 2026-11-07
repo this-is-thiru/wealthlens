@@ -43,4 +43,41 @@ class PackReviewTest {
                     .as("%s is stale: rerun with -Dpack.review.write=true and read the change", file).isEqualTo(review);
         }
     }
+
+    private static String shippedReview() {
+        Timeline timeline = TimelineReader.read(TIMELINE);
+        return PackReview.render(RulePackCompiler.compile(timeline, new TaxYearId(2025)),
+                RulePackCompiler.compile(timeline, new TaxYearId(2026)));
+    }
+
+    private static String section(String review, String heading) {
+        int start = review.indexOf("\n## " + heading);
+        int end = review.indexOf("\n## ", start + 1);
+        return review.substring(start, end < 0 ? review.length() : end);
+    }
+
+    @Test
+    void render_whenTheShippedYearsAreCompared_splitsTheirSuccessionsIntoThirtyOneLawChangesAndOneHundredEightyNineResourced() {
+        // When — the counts a script over every rule file found (plans/W-139a.md)
+        String review = shippedReview();
+
+        // Then
+        assertThat(review).contains("## Law changed at the boundary — 31 version(s)",
+                "## Re-sourced only — 189 version(s)");
+        assertThat(section(review, "Law changed").lines().filter(line -> line.startsWith("- `")).count()).isEqualTo(31);
+    }
+
+    @Test
+    void render_whenARuleIsLawChanged_showsTheLeafAndItsInstrumentAndAResourcedRuleOnlyByName() {
+        // When
+        String review = shippedReview();
+
+        // Then — PERQ-LOAN-PETTY's 2026 version, read in its rule file: cap.amount 20000 → 200000, Rules 2026 r.15(5)
+        assertThat(section(review, "Law changed")).contains("`PERQ-LOAN-PETTY` 2025-04-01 → 2026-04-01: ",
+                "`cap.amount` 20000 → 200000", "introduced by: Income-tax Rules, 2026, G.S.R. 198(E), rule 15(5)");
+        // ADV-INSTALMENTS: both versions state the same law, only validity, introducedBy and provenance differ
+        assertThat(section(review, "Re-sourced only")).contains("`ADV-INSTALMENTS`");
+        assertThat(section(review, "Law changed")).doesNotContain("ADV-INSTALMENTS");
+        assertThat(section(review, "Other changes")).doesNotContain("ADV-INSTALMENTS");
+    }
 }

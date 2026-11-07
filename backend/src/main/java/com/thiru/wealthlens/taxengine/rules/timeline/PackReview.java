@@ -2,16 +2,27 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
- * The review file for one pair of tax years ({@code DR 15} C4; W-139): {@link PackLint}'s findings first, then every
- * {@link PackDiff} change, one line per rule or regime entry. It is committed and compared on every build, so a change to the
+ * The review file for one pair of tax years ({@code DR 15} C4; W-139): {@link PackLint}'s findings first; then each rule
+ * whose law changed at the boundary, field by field with the instrument that changed it; then the rules only re-sourced;
+ * then every other {@link PackDiff} change, one line per rule or regime entry (W-139a). It is committed and compared on every build, so a change to the
  * law cannot land without this file changing in the same commit, where a reviewer reads it.
  */
 public final class PackReview {
+
+    /**
+     * A version's facts about itself rather than the law it states: when it applies, what introduced it, where it was read.
+     * They change at nearly every boundary, so a succession that changes only these is listed by id (W-139a C1a).
+     */
+    private static final Set<String> SOURCE_FIELDS = Set.of("validity", "introducedBy", "provenance");
 
     private PackReview() {
     }
@@ -31,8 +42,22 @@ public final class PackReview {
                 .append(" and read what changed here before committing.\n\n## To read first — ").append(lint.size())
                 .append(" finding(s)\n\n");
         lint.forEach(finding -> out.append("- ").append(line(finding, before, after)).append('\n'));
-        Map<String, List<String>> changes = changesBySubject(diff);
-        out.append("\n## Every change — ").append(changes.size()).append(" rule(s) or regime entries\n\n");
+        List<PackLint.Succession> successions = PackLint.successions(before, after);
+        List<String> lawChanged = new ArrayList<>();
+        List<String> resourced = new ArrayList<>();
+        Set<String> explained = new HashSet<>();
+        for (PackLint.Succession succession : successions) {
+            explained.add(succession.rule().value() + " " + succession.earlier() + " removed");
+            explained.add(succession.rule().value() + " " + succession.later() + " added");
+            lawLine(succession).ifPresentOrElse(lawChanged::add, () -> resourced.add(succession.rule().value()));
+        }
+        out.append("\n## Law changed at the boundary — ").append(lawChanged.size()).append(" version(s)\n\n");
+        lawChanged.forEach(line -> out.append("- ").append(line).append('\n'));
+        out.append("\n## Re-sourced only — ").append(resourced.size())
+                .append(" version(s): law unchanged; instrument and source changed\n\n");
+        out.append(resourced.stream().map(id -> "`" + id + "`").collect(Collectors.joining(", "))).append('\n');
+        Map<String, List<String>> changes = changesBySubject(diff, explained);
+        out.append("\n## Other changes — ").append(changes.size()).append(" rule(s) or regime entries\n\n");
         changes.forEach((subject, lines) -> out.append("- `").append(subject).append("`: ")
                 .append(String.join("; ", lines)).append('\n'));
         return out.toString();
@@ -52,9 +77,28 @@ public final class PackReview {
         };
     }
 
-    private static Map<String, List<String>> changesBySubject(PackDiff diff) {
+    /** The succession's changed law, then its instrument; empty when only its source fields changed. */
+    private static Optional<String> lawLine(PackLint.Succession succession) {
+        List<String> law = PackDiff.versionChanges(succession.rule(), succession.later(), succession.earlierVersion(),
+                        succession.laterVersion()).stream()
+                .map(PackDiff.Finding.ValueChanged.class::cast)
+                .filter(change -> !SOURCE_FIELDS.contains(change.field().split("[.\\[]")[0]))
+                .map(change -> "`" + change.field() + "` " + change.before() + " → " + change.after())
+                .toList();
+        if (law.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of("`" + succession.rule().value() + "` " + succession.earlier() + " → " + succession.later() + ": "
+                + String.join("; ", law) + "; introduced by: "
+                + succession.laterVersion().path("introducedBy").path("instrumentCitation").asString(""));
+    }
+
+    private static Map<String, List<String>> changesBySubject(PackDiff diff, Set<String> explained) {
         Map<String, List<String>> changes = new TreeMap<>();
         for (PackDiff.Finding finding : diff.findings()) {
+            if (isExplained(finding, explained)) {
+                continue;
+            }
             switch (finding) {
                 case PackDiff.Finding.RuleAdded added -> add(changes, added.rule().value(), "added");
                 case PackDiff.Finding.RuleRemoved removed -> add(changes, removed.rule().value(), "removed");
@@ -69,6 +113,17 @@ public final class PackReview {
             }
         }
         return changes;
+    }
+
+    /** A version swap a succession above already shows. */
+    private static boolean isExplained(PackDiff.Finding finding, Set<String> explained) {
+        return switch (finding) {
+            case PackDiff.Finding.VersionAdded added -> explained.contains(added.rule().value() + " " + added.version()
+                    + " added");
+            case PackDiff.Finding.VersionRemoved removed -> explained.contains(removed.rule().value() + " "
+                    + removed.version() + " removed");
+            default -> false;
+        };
     }
 
     private static void add(Map<String, List<String>> changes, String subject, String change) {

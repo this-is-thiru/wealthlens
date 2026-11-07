@@ -43,6 +43,13 @@ public final class PackLint {
                 implements Finding {}
     }
 
+    /**
+     * A version the later pack holds and the earlier does not, with its predecessor: the latest version before it in either
+     * pack. The review shows what changed between them (W-139a).
+     */
+    record Succession(RuleId rule, String earlier, String later, JsonNode earlierVersion, JsonNode laterVersion) {
+    }
+
     public static List<Finding> between(CompiledPack before, CompiledPack after) {
         Map<String, JsonNode> oldRules = PackDiff.rulesOf(before);
         Map<String, JsonNode> newRules = PackDiff.rulesOf(after);
@@ -54,11 +61,37 @@ public final class PackLint {
         }
         for (Map.Entry<String, JsonNode> rule : newRules.entrySet()) {
             if (oldRules.containsKey(rule.getKey())) {
-                lintVersions(new RuleId(rule.getKey()), PackDiff.versionsOf(oldRules.get(rule.getKey())),
-                        PackDiff.versionsOf(rule.getValue()), findings);
+                Map<String, JsonNode> was = PackDiff.versionsOf(oldRules.get(rule.getKey()));
+                PackDiff.versionsOf(rule.getValue()).forEach((key, version) -> {
+                    if (was.containsKey(key)) {
+                        tenfold(new RuleId(rule.getKey()), key, "", was.get(key), version, findings);
+                    }
+                });
             }
         }
+        successions(before, after).forEach(succession -> lintSuccession(succession, findings));
         return List.copyOf(findings);
+    }
+
+    /** Every succession between the two packs, by rule id, then by the later version. */
+    static List<Succession> successions(CompiledPack before, CompiledPack after) {
+        Map<String, JsonNode> oldRules = PackDiff.rulesOf(before);
+        List<Succession> successions = new ArrayList<>();
+        PackDiff.rulesOf(after).forEach((id, rule) -> {
+            if (oldRules.containsKey(id)) {
+                Map<String, JsonNode> was = PackDiff.versionsOf(oldRules.get(id));
+                TreeMap<String, JsonNode> all = new TreeMap<>(was);
+                all.putAll(PackDiff.versionsOf(rule));
+                PackDiff.versionsOf(rule).forEach((key, version) -> {
+                    Map.Entry<String, JsonNode> predecessor = all.lowerEntry(key);
+                    if (!was.containsKey(key) && predecessor != null) {
+                        successions.add(new Succession(new RuleId(id), predecessor.getKey(), key, predecessor.getValue(),
+                                version));
+                    }
+                });
+            }
+        });
+        return successions;
     }
 
     private static boolean saysAbsentFromAnAct(JsonNode rule) {
@@ -72,36 +105,23 @@ public final class PackLint {
         return false;
     }
 
-    private static void lintVersions(
-            RuleId rule, Map<String, JsonNode> was, Map<String, JsonNode> is, List<Finding> findings) {
-        TreeMap<String, JsonNode> all = new TreeMap<>(was);
-        all.putAll(is);
-        for (Map.Entry<String, JsonNode> version : is.entrySet()) {
-            String key = version.getKey();
-            if (was.containsKey(key)) {
-                tenfold(rule, key, "", was.get(key), version.getValue(), findings);
-                continue;
-            }
-            Map.Entry<String, JsonNode> predecessor = all.lowerEntry(key);
-            if (predecessor != null) {
-                lintSuccession(rule, predecessor.getKey(), predecessor.getValue(), key, version.getValue(), findings);
-            }
-        }
-    }
-
-    private static void lintSuccession(
-            RuleId rule, String earlier, JsonNode old, String later, JsonNode now, List<Finding> findings) {
-        if (Objects.equals(old.get("introducedBy"), now.get("introducedBy"))
-                && Objects.equals(old.path("provenance").get("sourceUrl"), now.path("provenance").get("sourceUrl"))) {
+    private static void lintSuccession(Succession succession, List<Finding> findings) {
+        RuleId rule = succession.rule();
+        JsonNode old = succession.earlierVersion();
+        JsonNode next = succession.laterVersion();
+        String earlier = succession.earlier();
+        String later = succession.later();
+        if (Objects.equals(old.get("introducedBy"), next.get("introducedBy"))
+                && Objects.equals(old.path("provenance").get("sourceUrl"), next.path("provenance").get("sourceUrl"))) {
             findings.add(new Finding.CopiedVersion(rule, earlier, later));
         }
         String type = old.path("definition").path("type").asString("");
-        String newType = now.path("definition").path("type").asString("");
+        String newType = next.path("definition").path("type").asString("");
         if (!type.equals(newType)) {
             findings.add(new Finding.ShapeChanged(rule, earlier, later, "definition.type", type, newType));
         }
-        listSizes(rule, earlier, later, "", old, now, findings);
-        tenfold(rule, earlier + " → " + later, "", old, now, findings);
+        listSizes(rule, earlier, later, "", old, next, findings);
+        tenfold(rule, earlier + " → " + later, "", old, next, findings);
     }
 
     /** Every list present in both versions at the same path whose length differs. */

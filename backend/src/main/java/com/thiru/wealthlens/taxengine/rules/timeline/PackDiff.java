@@ -149,6 +149,16 @@ public record PackDiff(TaxYearId from, TaxYearId to, List<Finding> findings) {
         }
     }
 
+    /** Every changed leaf between two versions of one rule, labelled {@code version} (W-139a). */
+    static List<Finding> versionChanges(RuleId rule, String version, JsonNode was, JsonNode is) {
+        List<Finding> findings = new ArrayList<>();
+        for (String field : fieldNames(was, is)) {
+            compare(field, was.get(field), is.get(field), findings,
+                    (path, before, after) -> new Finding.ValueChanged(rule, version, path, before, after));
+        }
+        return findings;
+    }
+
     /** Walks objects by field and arrays by index; anything else is compared as a leaf. */
     private static void compare(String path, JsonNode was, JsonNode is, List<Finding> findings, LeafChange change) {
         if (was != null && is != null && was.isObject() && is.isObject()) {
