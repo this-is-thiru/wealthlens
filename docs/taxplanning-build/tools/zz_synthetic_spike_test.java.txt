@@ -1,0 +1,111 @@
+package com.thiru.wealthlens.taxengine.rules.timeline;
+
+import com.thiru.wealthlens.taxengine.api.TaxCalculator;
+import com.thiru.wealthlens.taxengine.input.EngineInputs;
+import com.thiru.wealthlens.taxengine.input.EnteredFacts;
+import com.thiru.wealthlens.taxengine.input.EmployerKind;
+import com.thiru.wealthlens.taxengine.input.Employment;
+import com.thiru.wealthlens.taxengine.input.SalaryComponent;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePackLayer;
+import com.thiru.wealthlens.taxengine.rules.temporal.TemporalContext;
+import com.thiru.wealthlens.taxengine.rules.validate.PackValidator;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
+
+class ZzSyntheticSpikeTest {
+
+    @Test
+    void spike() throws Exception {
+        JsonMapper mapper = JsonMapper.builder().build();
+        JsonNode instruments = mapper.readTree(Files.readString(Path.of(
+                "src/test/resources/rulepacks-fixture/2099-00.lock.json"))).get("instruments");
+        Timeline timeline = TimelineReader.read(Path.of("src/test/resources/rulepacks-synthetic/timeline"));
+        StringBuilder out = new StringBuilder("\n");
+        for (int y : new int[] {2099, 2100, 2101}) {
+            TaxYearId year = TaxYearId.of(y);
+            CompiledPack pack = RulePackCompiler.compile(timeline, year);
+            ObjectNode lock = mapper.createObjectNode();
+            lock.put("taxYear", year.label());
+            ObjectNode layers = lock.putObject("layers");
+            for (RulePackLayer layer : RulePackLayer.values()) {
+                ObjectNode l = layers.putObject(layer.name().toLowerCase());
+                l.put("version", year.label() + "." + layer.name().toLowerCase() + ".1");
+                l.put("checksum", pack.layerChecksum(layer));
+            }
+            ObjectNode rules = lock.putObject("rules");
+            pack.ruleChecksums().entrySet().stream().sorted(java.util.Map.Entry.comparingByKey(
+                    java.util.Comparator.comparing(id -> id.value())))
+                    .forEach(e -> rules.put(e.getKey().value(), e.getValue()));
+            lock.set("instruments", instruments);
+            String text = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(lock) + "\n";
+            Files.writeString(Path.of("src/test/resources/rulepacks-synthetic/" + year.label() + ".lock.json"), text);
+            Files.writeString(Path.of("target/test-classes/rulepacks-synthetic/" + year.label() + ".lock.json"), text);
+        }
+        ShippedRulePacks packs = ShippedRulePacks.compile("rulepacks-synthetic",
+                ClasspathRulePackProvider.shippedYears("rulepacks-synthetic"));
+        TaxCalculator calculator = new TaxCalculator(packs);
+        for (int y : new int[] {2099, 2100, 2101}) {
+            TaxYearId year = TaxYearId.of(y);
+            RulePack pack = packs.load(year);
+            try {
+                PackValidator.validate(pack);
+                out.append(y).append(" valid; regimes ").append(pack.regimes().keySet()).append('\n');
+            } catch (RuntimeException e) {
+                out.append(y).append(" INVALID ").append(e.getMessage()).append('\n');
+            }
+            for (RegimeCode code : pack.regimes().keySet()) {
+                try {
+                    var tax = calculator.compute(inputs(year, code, "1000000"));
+                    out.append(y).append(' ').append(code.value()).append(" TI ").append(tax.totalIncome())
+                            .append(" bill ").append(tax.bill()).append(" final ").append(tax.finalAmount()).append('\n');
+                    tax.trace().forEach(s -> out.append("    ").append(s).append('\n'));
+                } catch (RuntimeException e) {
+                    out.append(y).append(' ').append(code.value()).append(" FAILED ").append(e).append('\n');
+                }
+            }
+            try {
+                var cmp = calculator.compareRegimes(inputs(year, new RegimeCode("SYN_DEFAULT"), "1000000"));
+                out.append(y).append(" compare ").append(cmp).append('\n');
+            } catch (RuntimeException e) {
+                out.append(y).append(" compare FAILED ").append(e).append('\n');
+            }
+        }
+        throw new AssertionError(out.toString());
+    }
+
+    private static EngineInputs inputs(TaxYearId year, RegimeCode regime, String basic) {
+        EngineInputs plain = NodeHarness.plainTaxpayer();
+        Employment employment = new Employment(List.of(new SalaryComponent(new ComponentCode("BASIC"),
+                Money.of(basic))), false, EmployerKind.OTHER, false, Optional.empty());
+        EnteredFacts e = plain.entered();
+        EnteredFacts entered = new EnteredFacts(List.of(employment), e.tenancies(), e.leaveTravel(), e.allowanceUses(),
+                e.disabledTransport(), e.retirementPayments(), e.accommodations(), e.medicalTreatmentAbroad(),
+                e.vehicles(), e.meals(), e.gifts(), e.loans(), e.expenseBenefits(), e.assetsLent(),
+                e.assetsTransferred(), e.householdBenefits(), e.childEducation(), e.shareAllotments(),
+                e.employerContributions(), e.retirementFundHistory(), e.recognisedFundInterest(),
+                e.qualifyingPayments(), e.lifeInsurancePolicies(), e.healthPayments(), e.disabledDependantSupport(),
+                e.specifiedDiseaseTreatment(), e.educationLoanInterest(), e.purposeLoanInterest(),
+                e.agniveerCorpusFund(), e.rentDeclaration(), e.donations(), e.houseProperties(),
+                e.otherSourceItems(), e.providentFundAccounts(), e.giftsReceived(), e.businessTrustUnits(),
+                e.lifePolicyReceipts(), e.claimedLifePolicies(), e.absorptionOrder(), e.houseReinvestments());
+        return new EngineInputs(year, regime, TemporalContext.forTaxYear(year, year.startsOn()), entered,
+                plain.assessee(), plain.family(), plain.ledgers(), plain.elections(), plain.capitalGains(),
+                plain.filing());
+    }
+
+    @SuppressWarnings("unused")
+    private static final Set<String> KEEP = Set.of();
+}

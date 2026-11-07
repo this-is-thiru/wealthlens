@@ -103,14 +103,12 @@ public final class SalaryDeductionNode implements ComputationNode {
 
     /**
      * The whole of the tax on employment entered, where the regime allows it; where the regime forbids it, a nil line
-     * for what was paid, naming the provision (D-165).
+     * for what was paid, naming the provision (D-165). The set never yields a row written for other regimes (W-243),
+     * so the verdict is that it applies or that a disallowance forbids it.
      */
     private static Optional<TraceLine> taxOnEmployment(NodeContext ctx) {
         RuleVersion version = ctx.ruleOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT).versionAt(ctx.inputs().temporal());
         RegimeVerdict verdict = ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT), version);
-        if (verdict instanceof RegimeVerdict.ExcludedByRow) {
-            return Optional.empty();
-        }
         HeadTotal total = RuleDefinitions.require(version.definition(), HeadTotal.class, ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT));
         HeadTotalLines paid = HeadTotalLines.of(ctx, ctx.get(NodeIds.INPUTS_COMPONENTS, ComponentSet.class), total,
                 ctx.ruleIdOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT));
@@ -130,7 +128,8 @@ public final class SalaryDeductionNode implements ComputationNode {
      * A Government employee's entertainment allowance (1961 s.16(ii); D-105): the least of one-fifth of the salary
      * exclusive of allowances and the fixed limit, where an entertainment allowance was paid. None where the year's
      * Act has no such deduction, the row is written for other regimes, or no Government employment paid the
-     * allowance; nil, naming the provision, where the regime forbids it (D-166).
+     * allowance; nil, naming the provision, where the regime forbids it (D-166). A row written for other regimes is
+     * never yielded by its set (W-243), so it arrives here as no row at all.
      */
     private static Optional<TraceLine> entertainmentAllowance(NodeContext ctx, int sequence) {
         Optional<RuleRow> row = ctx.optionalRuleOf(RuleSetIds.RS_SAL_ENTMT_ALLOWANCE);
@@ -142,9 +141,6 @@ public final class SalaryDeductionNode implements ComputationNode {
         RuleId ruleId = rule.id();
         RuleVersion version = TemporallyApportionedCap.governingVersion(rule, t);
         RegimeVerdict verdict = ctx.inRegime(ruleId, version);
-        if (verdict instanceof RegimeVerdict.ExcludedByRow) {
-            return Optional.empty();
-        }
         Map<Integer, Money> paidByGovernment = paidByGovernment(ctx, rule);
         if (paidByGovernment.isEmpty()) {
             return Optional.empty();

@@ -286,15 +286,16 @@ public final class NodeContext {
 
     /**
      * The set's only row, or the one of several that applies on the set's ground; never several. A set chosen on
-     * conditions tests even a lone row: its row may be for another item (D-253).
+     * conditions tests even a lone row: its row may be for another item (D-253). A lone row of a set chosen by regime
+     * is tested only for the regimes it is written for: one the regime disallows is still returned, so the node can
+     * name the provision that forbids it, but one written for other regimes is not this regime's law (W-243).
      */
     private List<RuleRow> chosen(RuleSetId id, RuleSelection expected, ItemFacts item) {
         RuleSet set = declared(id, expected);
         List<RuleRow> rows = rowsOf(set);
-        if (rows.size() <= 1 && set.ground() == SelectionGround.REGIME) {
-            return rows;
-        }
-        List<RuleRow> applying = rows.stream().filter(row -> appliesHere(row, set.ground(), item)).toList();
+        List<RuleRow> applying = rows.size() <= 1 && set.ground() == SelectionGround.REGIME
+                ? rows.stream().filter(this::writtenForThisRegime).toList()
+                : rows.stream().filter(row -> appliesHere(row, set.ground(), item)).toList();
         if (applying.size() > 1 || (applying.isEmpty() && expected == RuleSelection.EXACTLY_ONE)) {
             throw new IllegalStateException("Rule set " + id + " has " + applying.size() + " of its rows "
                     + rows.stream().map(RuleRow::id).toList() + " applying in regime " + regime.code() + " for "
@@ -302,6 +303,10 @@ public final class NodeContext {
                     + (expected == RuleSelection.EXACTLY_ONE ? "; exactly one must" : "; at most one may"));
         }
         return applying;
+    }
+
+    private boolean writtenForThisRegime(RuleRow row) {
+        return row.versionAt(inputs.temporal()).regimes().appliesIn(regime.code());
     }
 
     private boolean appliesHere(RuleRow row, SelectionGround ground, ItemFacts item) {

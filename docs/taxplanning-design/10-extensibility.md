@@ -445,6 +445,9 @@ A test-resource pack for a fictional TY 2099-00 declaring **three** regimes for 
 | `SYN_CLASSIC` | different slab ladder, `OPT_OUT`, vehicle `PRESCRIBED_FORM`, lock-in `NONE` | a second peer |
 | `SYN_FLAT` | **`FlatRate`**, `OPT_IN`, lock-in `ONCE_EXERCISED_APPLIES_TO_SUBSEQUENT_YEARS`, gated by a `ConditionSet` requiring total income below a threshold | a regime with a *different rate shape*, *different election mechanics* and *eligibility conditions* |
 
+> **Erratum (W-146, 2026-11-07):** `SYN_FLAT` names a `FlatRate` shape and a lock-in the vocabulary does not have, and a lock-in cannot be offered until W-082e (`election/RegimeOffers.java:64` – `66`) — `SYN_FLAT` is a one-band `SlabLadder` (8 % from nil) and `OPT_IN` with no lock-in (owner, D-463 C3a, D-464).
+> Verified by: `plans/W-146.md` build record, F2; `docs/taxplanning-build/tools/w146_synthetic_pack.py`.
+
 ```
 assert  the pack loads and validates, including invariants I5, I6, I7
 assert  eligibleRegimes() returns 3 for a qualifying taxpayer and 2 for one who fails SYN_FLAT's condition

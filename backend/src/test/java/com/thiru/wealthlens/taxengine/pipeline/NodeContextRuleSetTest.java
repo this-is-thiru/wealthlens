@@ -277,6 +277,59 @@ class NodeContextRuleSetTest {
                 .map(RuleRow::id).contains(RuleIds.PERQ_CAR_PARTLY_SMALL);
     }
 
+    @Test
+    void ruleOf_whenTheSetsOnlyRowExcludesTheRegime_isRefused() {
+        // Given — the standard deduction cut down to the new regime's row, read under the First Schedule rates: the
+        // row is written OnlyIn the new regime, so it is not this regime's law (W-243)
+        RulePack pack = withSet(shipped(), RuleSetIds.RS_SAL_STANDARD_DEDUCTION, RuleSelection.EXACTLY_ONE,
+                RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME);
+        NodeContext ctx = reading(pack, FIRST_SCHEDULE_RATES, NodeHarness.plainTaxpayer(),
+                RuleSetIds.RS_SAL_STANDARD_DEDUCTION);
+
+        // When / Then
+        assertThatThrownBy(() -> ctx.ruleOf(RuleSetIds.RS_SAL_STANDARD_DEDUCTION))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("RS-SAL-STANDARD-DEDUCTION has 0 of its rows [SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME]")
+                .hasMessageContaining("FIRST_SCHEDULE_RATES")
+                .hasMessageContaining("exactly one must");
+    }
+
+    @Test
+    void optionalRuleOf_whenTheSetsOnlyRowExcludesTheRegime_isEmpty() {
+        // Given — the same lone row in a set that takes at most one
+        RulePack pack = withSet(shipped(), RuleSetIds.RS_SAL_STANDARD_DEDUCTION, RuleSelection.AT_MOST_ONE,
+                RuleIds.SAL_STANDARD_DEDUCTION_NEW_TAX_REGIME);
+        NodeContext ctx = reading(pack, FIRST_SCHEDULE_RATES, NodeHarness.plainTaxpayer(),
+                RuleSetIds.RS_SAL_STANDARD_DEDUCTION);
+
+        // When / Then
+        assertThat(ctx.optionalRuleOf(RuleSetIds.RS_SAL_STANDARD_DEDUCTION)).isEmpty();
+    }
+
+    @Test
+    void ruleOf_whenTheSetsOnlyRowIsDisallowedInTheRegime_isStillThatRow() {
+        // Given — tax on employment is written for all regimes and disallowed in the new one by its disallowance set:
+        // the node still needs the row, to name the provision on its nil line
+        NodeContext ctx = reading(shipped(), NEW_TAX_REGIME, NodeHarness.plainTaxpayer(),
+                RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT);
+
+        // When
+        RuleRow row = ctx.ruleOf(RuleSetIds.RS_SAL_TAX_ON_EMPLOYMENT);
+
+        // Then
+        assertThat(row.id()).isEqualTo(RuleIds.SAL_TAX_ON_EMPLOYMENT);
+        assertThat(ctx.inRegime(row.id(), row.versionAt(NodeHarness.plainTaxpayer().temporal())))
+                .isInstanceOf(RegimeVerdict.Disallowed.class);
+    }
+
+    /** The pack with one set narrowed to the given rows and selection, its ground kept. */
+    private static RulePack withSet(RulePack shipped, RuleSetId id, RuleSelection selection, RuleId... rows) {
+        Map<RuleSetId, RuleSet> sets = new HashMap<>(shipped.ruleSets());
+        sets.put(id, new RuleSet(id, selection, shipped.ruleSets().get(id).ground(), List.of(rows)));
+        return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), sets,
+                shipped.components(), shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets());
+    }
+
     /**
      * Every value of each item fact the nodes supply, in both shipped years, chooses the row the Java maps chose before
      * W-088m2 — the expected rows copied by hand from those maps (MotorCarPerquisite PARTLY / OWN_RUNNING,
