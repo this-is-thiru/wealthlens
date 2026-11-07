@@ -12,9 +12,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param identifier what identifies a user's request
  * @param rights each right and how to exercise it
  * @param grievance the period within which a grievance is answered (r.14(3); W-237b)
+ * @param breach when the Board's detailed report on a breach is due (r.7(2)(b); W-237c)
  */
 @ConfigurationProperties(prefix = "app.privacy")
-public record PrivacySettings(String contact, String identifier, List<PrivacyRight> rights, GrievancePeriod grievance) {
+public record PrivacySettings(String contact, String identifier, List<PrivacyRight> rights, GrievancePeriod grievance,
+        BreachReporting breach) {
 
     public PrivacySettings {
         if (contact == null || contact.isBlank()) {
@@ -28,6 +30,10 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
         if (grievance == null) {
             throw new IllegalStateException("app.privacy.grievance must state the period within which a grievance is answered"
                     + " (DPDP Rules r.14(3))");
+        }
+        if (breach == null) {
+            throw new IllegalStateException("app.privacy.breach must state when the Board's report on a breach is due"
+                    + " (DPDP Rules r.7(2)(b))");
         }
         rights = List.copyOf(rights);
     }

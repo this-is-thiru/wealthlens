@@ -45,6 +45,10 @@ app:
       response-days: 30
       # DPDP Rules, 2025 r.14(3): "a reasonable period not exceeding ninety days" (G.S.R. 846(E), egazette 2025/267650 p.30)
       longest-days-allowed: 90
+    breach:
+      # W-237c: DPDP Rules, 2025 r.7(2)(b): the detailed report "within seventy-two hours of becoming aware of the breach"
+      # (G.S.R. 846(E), egazette 2025/267650 p.26); a longer period the Board allows is recorded per breach
+      board-report-hours: 72
   tax:
     data-key: ${TAX_DATA_KEY}
     digest-key: ${TAX_DIGEST_KEY}

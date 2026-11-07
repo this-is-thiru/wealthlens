@@ -1106,7 +1106,7 @@ files outside `taxplanning`, `taxengine`, `taxrules` (`taxengine.rules`' former 
 
 ---
 
-## 5. Standing operations — the charge engine after the deploy
+## 5. Standing operations — the charge engine (5.1 – 5.6) and a personal data breach (5.7)
 
 Not deploy steps. Each is a deliberate act, when needed; nothing here is scheduled.
 
@@ -1177,6 +1177,41 @@ Full list in `docs/charges-engine/README.md` §10.
 `app.portfolio.idempotency.window-seconds`, default 60. Two identical trades submitted inside it are collapsed into
 one. A bulk import that must submit identical rows sends an `idempotencyKey` per row: a supplied key is exact and has
 no window. Setting the window to 0 disables the derived-fingerprint fallback and leaves client keys working.
+
+### 5.7 W-237c — on a personal data breach · owner, `SUPER_USER` · **whenever the owner becomes aware of one**
+
+A breach is *"any unauthorised processing of personal data or accidental disclosure, acquisition, sharing, use,
+alteration, destruction or loss of access to personal data"* that compromises its confidentiality, integrity or
+availability (DPDP Act, 2023 s.2(u)). The clock starts **when you become aware** (Rules r.7). Write that time down
+first. Steps, in order (`$BASE`, `$TOKEN` as a `SUPER_USER`; times UTC, `yyyy-MM-ddTHH:mm:ss`):
+
+1. **Without delay: post the notice** to each affected user. It covers r.7(1)(a) – (d), in plain words; the app adds
+   the privacy contact, (e). `scope` is `EVERY_REGISTERED_USER` or `LISTED` with `emails`:
+
+   ```bash
+   curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" "$BASE/privacy/breach-notices" \
+     -d '{"text": {"description": "<what, how much, when>", "consequences": "<what may follow for them>",
+          "mitigation": "<done and being done>", "safetyMeasures": "<what they can do>"},
+          "becameAwareAt": "<UTC>", "scope": "EVERY_REGISTERED_USER"}'
+   ```
+
+   `201` with `id`, `affected` and `board.reportDueAt` (awareness + `app.privacy.breach.board-report-hours`, 72).
+2. **Without delay: tell the Board** the description, nature, extent, timing, location and likely impact (r.7(2)(a)),
+   through **the channel the Board publishes** (not stated in the Gazette copies read for W-237c; owner to fill in
+   here). Then record it: `POST $BASE/privacy/breach-notices/<id>/board-intimated` → `board.firstIntimatedAt`.
+3. **Without delay: email each affected user** the same text from the privacy contact's mailbox (the account email is
+   the only mode of communication users register). The text and addresses: `GET $BASE/privacy/breach-notices/<id>/report`.
+   Record who was emailed: `POST …/<id>/emailed` with `{"emails": [...]}`. A user already recorded keeps their first
+   time, so a repeat changes nothing.
+4. **Within 72 hours of awareness, or by the later time the Board allows on a written request:** send the Board the
+   detailed report, r.7(2)(b)(i) – (vi). Item (vi), the intimations given, is `GET …/<id>/report` (per user: posted,
+   read in the account, emailed). If the Board allows longer: `POST …/<id>/board-extension` with
+   `{"reportDueAt": "<UTC>", "reference": "<the Board's reference>"}`. When sent: `POST …/<id>/board-report-sent`.
+
+**Read-only check, at any time:** `GET …/<id>/report`: `board.firstIntimatedAt` and `board.reportSentAt` set, the
+latter before `board.reportDueAt`; every affected user with `emailedAt`. **Second runs:** each recording call refuses
+a repeat (`400`) except `emailed`, which keeps first times. **Way back:** none needed: the calls record what was done
+and change no user data. A notice posted in error stays on record; post a correcting notice.
 
 ---
 

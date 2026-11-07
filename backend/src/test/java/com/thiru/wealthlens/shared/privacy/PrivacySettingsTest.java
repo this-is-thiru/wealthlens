@@ -14,22 +14,24 @@ class PrivacySettingsTest {
 
     private static final GrievancePeriod PERIOD = new GrievancePeriod(30, 90);
 
+    private static final BreachReporting BREACH = new BreachReporting(72);
+
     @Test
     void new_whenTheContactIsBlank_isRefusedNamingTheVariable() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings(" ", "your email", RIGHTS, PERIOD))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings(" ", "your email", RIGHTS, PERIOD, BREACH))
                 .withMessageContaining("PRIVACY_CONTACT");
     }
 
     @Test
     void new_whenNoRightIsPublished_isRefused() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", List.of(), PERIOD))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", List.of(), PERIOD, BREACH))
                 .withMessageContaining("r.14(1)");
     }
 
     @Test
     void notice_whenSettingsAreComplete_publishesEachRightTheIdentifierAndTheContact() {
         // Given
-        PrivacySettings settings = new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD);
+        PrivacySettings settings = new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD, BREACH);
 
         // When
         PrivacyNotice notice = settings.notice();
@@ -43,8 +45,19 @@ class PrivacySettingsTest {
 
     @Test
     void new_whenNoGrievancePeriodIsSet_isRefused() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, null))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, null, BREACH))
                 .withMessageContaining("r.14(3)");
+    }
+
+    @Test
+    void new_whenNoBreachReportingIsSet_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
+                null)).withMessageContaining("r.7(2)(b)");
+    }
+
+    @Test
+    void breachReporting_whenNoHoursAreSet_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new BreachReporting(0)).withMessageContaining("at least one hour");
     }
 
     @Test
