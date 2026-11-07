@@ -1,0 +1,26 @@
+{
+  "id": "ELIG-RESIDENT",
+  "_note": "Synthetic law for W-146 (DR 10 E8, DR 17 T17-11, DR 18 T18-13): not law, never shipped.",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2099-04-01"
+      },
+      "displayName": "a resident",
+      "conditions": [
+        {
+          "type": "IsResident"
+        }
+      ],
+      "basis": "SYN-RATE-FLAT",
+      "provenance": {
+        "sourceUrl": "https://example.invalid/w-146-synthetic",
+        "sourceDescription": "Synthetic law for W-146 (DR 10 E8, DR 17 T17-11, DR 18 T18-13): not law, never shipped.",
+        "accessedOn": "2026-11-07",
+        "verificationLevel": "UNVERIFIED",
+        "whatToCheck": "nothing: synthetic figures chosen for W-146's hand arithmetic"
+      }
+    }
+  ]
+}

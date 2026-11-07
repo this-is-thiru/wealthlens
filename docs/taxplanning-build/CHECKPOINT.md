@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-244 committed and closed (D-466); W-146 unblocked (W-243, W-244 done; W-245 decided a)
-Stage           : 6 (DONE); next by board order W-146 (resume), not started
-Done today      : session 49: D-462 – D-466 (W-145, W-243, W-244; W-146 findings, W-245 decided); W-241 – W-246, W-146a, W-146b placed; not pushed since d5479b0c
-Board           : W-243 D, W-244 D, W-245 —, W-246 ·, W-146 · (next, resume), W-146a ·, W-146b ·; W-241 ·, W-242 ·; W-238 – W-240 · at the end of Phase 14
-Next step       : resume W-146: re-plan its build against D-464 / D-466 (122 synthetic rows, no lock-in, "no business income" eligibility), STOP for approval
+Item            : none in flight — W-146 committed and closed (D-467); Phase 14's acceptance test passes
+Stage           : 6 (DONE); next by board order W-146b (W-146a waits for the parked W-082e), not started
+Done today      : sessions 49 – 50: D-462 – D-467 (W-145, W-243, W-244, W-146; W-245 decided); W-241 – W-246, W-146a, W-146b placed; not pushed since d5479b0c
+Board           : W-146 D, W-146a · (after W-082e), W-146b · (next), W-236 ·; W-237 – W-240 ·, W-241 – W-242 ·, W-246 ·, W-146a ·, W-146b · in Phase 14
+Next step       : read W-146b's row and D-162, write its plan, STOP
 Owner actions   : pushed 2026-11-07: review/taxplanning at d5479b0c, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Give the TAX_PRIVACY_CONTACT value (asked; none received yet); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : W-244: unit 4234 / 0 / 0; integration 416 / 0 / 0; Checkstyle 0; Spotless clean
+Last verify     : W-146: SyntheticPackTest 11 + ContentPerturbationTest 4; unit 4249 / 0 / 0; integration 416 / 0 / 0; Checkstyle 0; Spotless clean; no src/main change
 Files touched   : none
-Last item commit: taxplanning W-244: read eligibility condition sets from the timeline, versioned by year as disallowance sets are
-Updated         : 2026-11-07, session 49 — W-244 closed
+Last item commit: taxplanning W-146: prove a new year, regimes and a mid-year limit are data — three synthetic years load, validate and compute through the production engine with no production change
+Updated         : 2026-11-07, session 50 — W-146 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

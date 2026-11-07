@@ -451,6 +451,9 @@ A test-resource pack for a fictional TY 2099-00 declaring **three** regimes for 
 > **Erratum (W-244, 2026-11-07):** *"a `ConditionSet` requiring total income below a threshold"* cannot be evaluated: offers are made before any computation, on a `ConditionContext` with no node values, and `IncomeAtMost` throws without one (`election/RegimeOffers.java:62`, `rules/condition/ConditionContext.java:119` – `125`) — `SYN_FLAT`'s set requires *no income under the head "profits and gains of business or profession"* (`Not` of `HasIncomeUnderHead`), decidable before computing; income-based eligibility is W-246 (owner, D-466 C3a).
 > Verified by: `docs/taxplanning-build/plans/W-244.md`, "A second gap".
 
+> **Erratum (W-146, 2026-11-07):** the W-244 erratum's *"no income under the head … business or profession"* cannot fail when offers are made — the condition context carries no heads of income (`pipeline/NodeContext.java:335` – `345`) — so E8's *"2 for one who fails"* could not be shown — `SYN_FLAT` is open to residents only (`IsResident`); a non-resident is offered two regimes (owner, W-146 Revision 1 R2a).
+> Verified by: `backend/src/test/java/com/thiru/wealthlens/taxengine/golden/SyntheticPackTest.java`, `offers_whenANonResidentIn2099_barsTheFlatRegimeNamingItsCondition`.
+
 ```
 assert  the pack loads and validates, including invariants I5, I6, I7
 assert  eligibleRegimes() returns 3 for a qualifying taxpayer and 2 for one who fails SYN_FLAT's condition

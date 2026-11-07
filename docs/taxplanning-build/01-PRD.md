@@ -299,7 +299,7 @@ F19 retirement events · F20 arrears relief · F21 advisor access · F22 NRI · 
 |---|---|---|---|
 | **P1** | **Purity** — `taxengine` fetches nothing, reads no clock | ArchUnit (`taxengine_fetches_nothing`, `taxengine_has_no_clock`) | ✅ `W-004` |
 | **P2** | **Determinism** — identical `EngineInputs` ⇒ identical `TaxComputation`, forever | `T23-4` | fingerprint ✅ `W-038`, runner ✅ `W-042`; **the T23-4 test ⚠ UNOWNED** |
-| **P3** | **Layer isolation** — `content/` and `forms/` cannot change a number | `T23-1`, invariant I27 | ○ `W-146` |
+| **P3** | **Layer isolation** — `content/` and `forms/` cannot change a number | `T23-1`, invariant I27 | ✅ `W-146` |
 | **P4** | **Derived order** — no hand-ordered step list; a node declares its edges | `T23-6` | ✅ `W-040`, `W-042` |
 | **P5** | **Explained zeros** — an unavailable relief produces a line with a reason | `T23-8` | ⚠ UNOWNED |
 

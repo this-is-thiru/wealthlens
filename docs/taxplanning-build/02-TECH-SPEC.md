@@ -243,7 +243,7 @@ no validator branch, because it would be unreachable.
 | I24 | a catalogue entry's channel matches its rule's Chapter VIII Part; Part C carries the s.122(5) late-return warning | pack load | ⚠ UNOWNED |
 | I25 | every `EvidenceRequirement` names what closes it | pack load | ⚠ UNOWNED |
 | I26 | every `ClaimStep` with a deadline resolves against the tax calendar | pack load | ⚠ UNOWNED |
-| I27 | perturbing `content/` and `forms/` changes no computed number | property test | ○ `W-146` |
+| I27 | perturbing `content/` and `forms/` changes no computed number | property test | ✅ `W-146` (`ContentPerturbationTest`; the timeline holds no `forms/`, which compiles empty) |
 | I28 | no occurrence of `ComputationStep` under `backend/src` | `ArchitectureTest` | ✅ `W-004` |
 | I29 | every `TaxEngineException` declares a `TaxError`; the advice switch is exhaustive | build (sealed switch) | ○ `W-105`, `W-106` |
 | I30 | `taxengine` depends on no repository, Spring Data or `taxplanning` type, and reads no clock | `ArchitectureTest` | ✅ `W-004` |
@@ -593,3 +593,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-10-31 | T1 `condition/`: `PaidOtherThanInCash` removed — no pack row, node or catalogue entry reached it, and the engine never supplied its fact; the predicate list's count stays fifteen, which it had been only by omitting `ItemDateBefore` (W-088f2b) | `W-197`, D-413 |
 | 2026-10-31 | T4 `validate/`: D-252's check becomes "every row is reached" — a rule set's member, or a set's basis row (`DisallowanceSet.basis()`, `ConditionSet.basis()`); `RS-REG-NEW-TAX-REGIME-NO-EXEMPTION` / `-NO-SETOFF` and their generated constants go (153 sets → 151), the two basis rows name no `ruleSet`, and both years' law layers are relocked 2025-26.law.118 / 2026-27.law.121 | `W-198`, D-414 |
 | 2026-11-07 | T3 `timeline/`: eligibility condition sets are timeline data — `law/condition-sets/<ID>.json`, versioned and projected into each year's `law/regimes.json` as disallowance sets are; `DisallowanceSetVersions` generalised to `SetVersions` for both (W-244) | `W-244` |
+| 2026-11-07 | I27 built: `ContentPerturbationTest` — every content text rewritten, or `content/` removed, compiles the same pack in both years (W-146) | `W-146` |
