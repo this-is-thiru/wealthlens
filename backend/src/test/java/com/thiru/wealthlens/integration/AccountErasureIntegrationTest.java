@@ -275,13 +275,15 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
         // Given
         aRowInEveryCollectionFor(ANU);
         requestErasure().statusCode(202);
+        Map<String, Long> beforeTheRun = rowsOf(ANU);
         clock.set("2028-06-10T07:59:59Z");
 
         // When
         runner.run(accountErasure);
 
-        // Then
-        assertThat(rowsOf(ANU)).allSatisfy((collection, rows) -> assertThat(rows).as(collection).isEqualTo(1));
+        // Then — the request itself adds a processing-log row (W-237e), so the count is compared, not assumed to be one
+        assertThat(rowsOf(ANU)).isEqualTo(beforeTheRun);
+        assertThat(beforeTheRun).allSatisfy((collection, rows) -> assertThat(rows).as(collection).isPositive());
         assertThat(theRequest().getErasedAt()).isNull();
     }
 

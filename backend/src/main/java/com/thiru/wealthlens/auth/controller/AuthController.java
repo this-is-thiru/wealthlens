@@ -5,6 +5,7 @@ import com.thiru.wealthlens.auth.dto.LoginResponse;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.dto.RoleUpgradeRequest;
 import com.thiru.wealthlens.auth.service.AuthService;
+import com.thiru.wealthlens.shared.privacy.ProcessingLogFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +29,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest loginRequest) {
+        ProcessingLogFilter.nameLoginAttempt(loginRequest.getEmail());
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
                 loginRequest.getPassword());

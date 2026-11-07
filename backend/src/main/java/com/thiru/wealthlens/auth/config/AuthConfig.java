@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.auth.config;
 
 import com.thiru.wealthlens.auth.filter.AuthFilter;
+import com.thiru.wealthlens.shared.privacy.ProcessingLogFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class AuthConfig {
 
     private final AuthFilter authFilter;
+    private final ProcessingLogFilter processingLogFilter;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
 
@@ -49,7 +51,9 @@ public class AuthConfig {
                         .anyRequest().permitAll())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class).build();
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+                // Ahead of the token check, so a refused request is recorded with what the person was told (W-237e C1a).
+                .addFilterBefore(processingLogFilter, AuthFilter.class).build();
     }
 
     @Bean

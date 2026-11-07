@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Erases a person's grievances and breach intimations, and takes their email out of each breach notice (W-237d C7a). The
- * notice itself stays: it is the owner's record to the Board about the breach, not about the person.
+ * notice itself stays: it is the owner's record to the Board about the breach, not about the person. The person's own requests in
+ * the processing log go too; requests others made about them stay until their year has passed (r.8(3); W-237e C3a).
  */
 @Component
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class PrivacyRecordErasure implements PersonalDataHolder {
     public void erase(String email) {
         mongoTemplate.remove(query(where("email").is(email)), Grievance.class);
         mongoTemplate.remove(query(where("email").is(email)), BreachIntimation.class);
+        mongoTemplate.remove(query(where("principal").is(email)), ProcessingRecord.class);
         mongoTemplate.updateMulti(query(where("affected").is(email)), new Update().pull("affected", email), BreachNotice.class);
     }
 }

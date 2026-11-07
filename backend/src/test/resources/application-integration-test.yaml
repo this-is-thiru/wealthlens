@@ -42,6 +42,9 @@ app:
     # W-235, W-237d: DPDP Rules, 2025 r.8(3): personal data and logs kept "for a minimum period of one year from the date of
     # such processing", then erased (G.S.R. 846(E), egazette 2025/267650); the erasure request is the last processing
     erasure-hold: P1Y
+    # W-237e: DPDP Rules, 2025 r.6(1)(e): logs kept "for a period of one year"; r.8(3): logs of the processing kept "for a
+    # minimum period of one year from the date of such processing", then erased (G.S.R. 846(E), egazette 2025/267650 p.26)
+    log-retention: P1Y
   tax:
     data-key: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
     digest-key: HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=

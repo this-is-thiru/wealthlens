@@ -15,10 +15,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param grievance the period within which a grievance is answered (r.14(3); W-237b)
  * @param breach when the Board's detailed report on a breach is due (r.7(2)(b); W-237c)
  * @param erasureHold how long data held for erasure is kept from the request, the last processing (r.8(3); W-235, W-237d)
+ * @param logRetention how long a log of processing, and a privacy record, is kept from its last processing
+ *     (r.6(1)(e), r.8(3); W-237e)
  */
 @ConfigurationProperties(prefix = "app.privacy")
 public record PrivacySettings(String contact, String identifier, List<PrivacyRight> rights, GrievancePeriod grievance,
-        BreachReporting breach, Period erasureHold) {
+        BreachReporting breach, Period erasureHold, Period logRetention) {
 
     public PrivacySettings {
         if (contact == null || contact.isBlank()) {
@@ -37,11 +39,17 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
             throw new IllegalStateException("app.privacy.breach must state when the Board's report on a breach is due"
                     + " (DPDP Rules r.7(2)(b))");
         }
-        if (erasureHold == null || erasureHold.isNegative() || erasureHold.isZero()) {
-            throw new IllegalStateException("app.privacy.erasure-hold must state how long data held for erasure is kept"
-                    + " (DPDP Rules r.8(3))");
-        }
+        requirePositive(erasureHold, "app.privacy.erasure-hold must state how long data held for erasure is kept"
+                + " (DPDP Rules r.8(3))");
+        requirePositive(logRetention, "app.privacy.log-retention must state how long logs of processing are kept"
+                + " (DPDP Rules r.6(1)(e), r.8(3))");
         rights = List.copyOf(rights);
+    }
+
+    private static void requirePositive(Period period, String refusal) {
+        if (period == null || period.isNegative() || period.isZero()) {
+            throw new IllegalStateException(refusal);
+        }
     }
 
     /** The notice published at {@code GET /privacy/rights}. */

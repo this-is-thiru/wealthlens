@@ -398,7 +398,9 @@ job (`app.tax.jobs.account-erasure-cron`, 04:30; one of §1.y's jobs, same lease
 module's data for each account past its year — portfolio, trades, P&L, charges, charge accounts, corporate-action
 watermarks, insurance, tax profiles and everything under them, the older salary profiles and computations, the person's
 access-log entries, grievances and breach intimations, their email in each breach notice's `affected` — the login last,
-then sets `erased_at`. The request row stays: it is the record that the erasure was done. Nothing to seed or correct.
+then sets `erased_at`. The request row stays a year after `erased_at` as the record that the erasure was done, then §1.t's
+`log-retention` job erases it (W-237e C4a). The person's own processing-log rows go with the account; rows others wrote
+about them stay until their year (§1.t). Nothing to seed or correct.
 
 **Before the first start:** the hold moved from `app.tax.retention.erasure-hold` to `app.privacy.erasure-hold` (env var
 `APP_PRIVACY_ERASUREHOLD`); the run log has no §1.z run, so no environment carries the old name. **After a run that
@@ -411,7 +413,8 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
       "charge_accounts", "lastly_performed_corporate_action", "insurances", "salary_profiles", "tax_computations",
       "tax_profiles", "tax_draft_computations", "privacy_grievances", "privacy_breach_intimations"].reduce((sum, c) =>
         sum + d.getCollection(c).countDocuments({ email: e }), d.user_details.countDocuments({ _id: e })
-        + d.tax_access_log.countDocuments({ principal: e }) + d.privacy_breach_notices.countDocuments({ affected: e })),
+        + d.tax_access_log.countDocuments({ principal: e }) + d.privacy_processing_log.countDocuments({ principal: e })
+        + d.privacy_breach_notices.countDocuments({ affected: e })),
       heldOverdue: d.privacy_erasure_requests.countDocuments({ erased_at: null,
         requested_at: { $lte: new Date(Date.now() - 367 * 864e5) } }) }; }) }])
 ```
@@ -421,6 +424,58 @@ failed: §1.y's failure check; the next run completes it). A second run changes 
 **Way back:** none for an erased account. Before the hold ends, an account is released only with the user's word, by
 deleting its open request row in the console (`deleteOne` on its `_id`) and unsetting `erasure_requested_at` on its tax
 profiles. **Backups:** an Atlas snapshot keeps erased data until it expires (W-237f).
+
+### 1.t W-237e — logs of processing kept a year, then erased · owner · **first deploy carrying it; monthly review; after the first run that erases**
+
+Every request made by a named person — a signed-in user, or a login attempt for an email, failed ones included — writes
+one row to `privacy_processing_log`: `principal`, `subject_email` (the path's `{email}`, else the principal), `method`,
+`route` (the matched pattern, never the path's values, the query or the body), `status`, `remote_address`, `recorded_at`
+(UTC). A request with no named person (no token, no login) is not recorded. The daily `log-retention` job
+(`app.tax.jobs.log-retention-cron`, 04:45; one of §1.y's jobs, same lease and failure records) erases what is a year past
+its last processing (`app.privacy.log-retention: P1Y`, env var `APP_PRIVACY_LOGRETENTION`; DPDP Rules, 2025 r.6(1)(e),
+r.8(3)): processing-log rows and `tax_access_log` reads by their time, grievances by `answered_at` (an unanswered one is
+kept), breach intimations by the latest of `posted_at`, `read_at`, `emailed_at`, erasure requests by `erased_at`. Breach
+notices stay. **Console logs are not this log:** they live only as long as the container (`aws/runbook-daily.sh` replaces
+it on each start) and are diagnostics (W-237e C5a).
+
+**First start (automatic):** `PrivacyIndexInitializer` creates the log's indexes. **Confirm** the log holds `Ensured the
+indexes of ProcessingRecord`; a failure stops startup. The collection is new: nothing to check first, nothing to seed.
+
+**Monthly review (read-only, safe to repeat, nothing to roll back)** — r.6(1)(c)'s "monitoring and review": failed logins
+by email and address over the last 31 days, and any principal that reached more than one person's data:
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    const since = new Date(Date.now() - 31 * 864e5);
+    return { database: n,
+      failedLogins: d.privacy_processing_log.aggregate([{ $match: { route: "/auth/login", status: { $ne: 200 },
+        recorded_at: { $gte: since } } }, { $group: { _id: { principal: "$principal", from: "$remote_address" },
+        attempts: { $sum: 1 } } }, { $sort: { attempts: -1 } }]).toArray(),
+      reachedOthers: d.privacy_processing_log.aggregate([{ $match: { recorded_at: { $gte: since },
+        $expr: { $ne: ["$principal", "$subject_email"] } } }, { $group: { _id: "$principal",
+        subjects: { $addToSet: "$subject_email" } } }]).toArray() }; }) }])
+```
+
+Expected: few failed logins per email and address, and `reachedOthers` naming only the owner. Anything else is a
+possible unauthorised access: §5.7.
+
+**After the first run that erases** (a year after this deploy; read-only):
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    const cut = new Date(Date.now() - 367 * 864e5);
+    return { database: n, overdue: d.privacy_processing_log.countDocuments({ recorded_at: { $lte: cut } })
+      + d.tax_access_log.countDocuments({ read_at: { $lte: cut } })
+      + d.privacy_grievances.countDocuments({ answered_at: { $lte: cut } })
+      + d.privacy_erasure_requests.countDocuments({ erased_at: { $lte: cut } }) }; }) }])
+```
+
+Expected: `overdue` 0 on every database (more means the job did not run or failed: §1.y's failure check; the next run
+completes it). A second run changes nothing: each step deletes by date. **Way back:** set `app.tax.jobs.enabled=false`
+(stops every job) and restart; erased rows are gone — restore from the database backup. **Backups:** an Atlas snapshot
+keeps erased rows until it expires (W-237f).
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 
