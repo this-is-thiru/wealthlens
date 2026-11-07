@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-139a committed and closed (D-453)
-Stage           : 6 (DONE); next by board order W-140, not started
-Done today      : session 48: D-451 (W-235), D-452 (W-139), D-453 (W-139a) built and closed; W-237 placed
-Board           : W-139a D, W-140 · (next)
-Next step       : read W-140's row and decision rows, write its plan, STOP
+Item            : none in flight — W-140 committed and closed (D-454)
+Stage           : 6 (DONE); next by board order W-140a, not started
+Done today      : session 48: D-451 (W-235), D-452 (W-139), D-453 (W-139a), D-454 (W-140) built and closed; W-237, W-140a placed
+Board           : W-140 D, W-140a · (next), W-141 ·
+Next step       : read W-140a's row and decision rows, write its plan, STOP — it needs Gazette rates (surcharge, cess, slabs) read again for each hand figure
 Owner actions   : give the TAX_PRIVACY_CONTACT value; sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; push review/taxplanning and api-collection when ready (W-217 check first); deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : unit + integration 4481 / 0 / 0; Checkstyle 0; Spotless clean (at the W-139a commit)
+Last verify     : unit + integration 4484 / 0 / 0; Checkstyle 0; Spotless clean (at the W-140 commit)
 Files touched   : none
-Last item commit: taxplanning W-139a: show each rule's changed law and its instrument at the year boundary in the pack review
-Updated         : 2026-11-07, session 48 — W-139a closed
+Last item commit: taxplanning W-140: generate the income boundaries from each shipped pack and fail on one with no hand-worked case
+Updated         : 2026-11-07, session 48 — W-140 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

@@ -1,0 +1,327 @@
+{
+  "_note": "Boundaries BoundaryCaseGenerator finds in the shipped packs that no T1/T2 case works by hand yet (W-140, D-454); seeded from the generator's first run, 2026-11-07. Each waits for a hand figure; when its case is written, its entry goes. BoundaryCoverageTest fails on a boundary in neither place, and on an entry that no longer names one.",
+  "boundaries": [
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2025-26",
+      "totalIncome": "10000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2025-26",
+      "totalIncome": "10000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2025-26",
+      "totalIncome": "10196940",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2025-26",
+      "totalIncome": "10196950",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2025-26",
+      "totalIncome": "20000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2025-26",
+      "totalIncome": "20000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2025-26",
+      "totalIncome": "20892790",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2025-26",
+      "totalIncome": "20892800",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "5000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "5000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "5195890",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "5195900",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "10000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "10000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "10214690",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "10214700",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "20000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "20000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "20929990",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "20930000",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "53017820",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "53017830",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2025-26",
+      "totalIncome": "300010",
+      "ageAtLeast": 60,
+      "why": "basic exemption, age 60+, one step above (RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2026-27",
+      "totalIncome": "10000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2026-27",
+      "totalIncome": "10000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2026-27",
+      "totalIncome": "10196940",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2026-27",
+      "totalIncome": "10196950",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2026-27",
+      "totalIncome": "20000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2026-27",
+      "totalIncome": "20000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2026-27",
+      "totalIncome": "20892790",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "NEW_TAX_REGIME",
+      "taxYear": "2026-27",
+      "totalIncome": "20892800",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-NEW-TAX-REGIME-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "300010",
+      "ageAtLeast": 60,
+      "why": "basic exemption, age 60+, one step above (RATE-SLAB-FIRST-SCHEDULE-AGE-60TO79); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "5000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "5000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "5195890",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "5195900",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "10000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "10000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "10214690",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "10214700",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "20000000",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "20000010",
+      "ageAtLeast": 0,
+      "why": "surcharge threshold, one step above (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "20929990",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "20930000",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "53017820",
+      "ageAtLeast": 0,
+      "why": "relief crossover, last binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    },
+    {
+      "regime": "FIRST_SCHEDULE_RATES",
+      "taxYear": "2026-27",
+      "totalIncome": "53017830",
+      "ageAtLeast": 0,
+      "why": "relief crossover, first not binding (RATE-SUR-FIRST-SCHEDULE-CEILING); no DR 08 case — a hand figure is W-140a's"
+    }
+  ]
+}
