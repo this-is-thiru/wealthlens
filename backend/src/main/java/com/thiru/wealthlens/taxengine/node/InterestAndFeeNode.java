@@ -138,7 +138,7 @@ public final class InterestAndFeeNode implements ComputationNode {
             Money base = calculation.base(bill.minus(advancePaid).minus(filing.taxAtSource()));
             int months = months(from, end, calculation.fractionOfMonthCountsWhole());
             Money interest = rule.perMonth().of(base).times(months);
-            add(row.id(), InterestAndFees.Kind.INTEREST, base, interest, months + " months from " + from + " to " + end);
+            add(row.id(), InterestAndFees.Kind.INTEREST, base, interest, period(months, from, end));
             if (interest.isGreaterThan(Money.ZERO) && !rule.statesPartOfMonth() && months != months(from, end, false)) {
                 annotate(new Notice(Severity.ATTENTION, "The section counts months and does not say part of a month; a part"
                         + " month is counted as a whole month, as the sections beside it do (OQ-39)", List.of(row.id())));
@@ -174,7 +174,12 @@ public final class InterestAndFeeNode implements ComputationNode {
             int total = Math.max(counted, months(from, end, calculation.fractionOfMonthCountsWhole()));
             interest = interest.plus(rule.perMonth().of(calculation.base(shortfall)).times(total - counted));
             add(row.id(), InterestAndFees.Kind.INTEREST, calculation.base(assessed.minus(advancePaid)), interest,
-                    total + " months from " + from + " to " + end);
+                    period(total, from, end));
+        }
+
+        /** The months counted and over what span; a span not yet begun says so rather than running backwards (W-142a). */
+        private static String period(int months, LocalDate from, LocalDate end) {
+            return end.isBefore(from) ? "not yet due: runs from " + from : months + " months from " + from + " to " + end;
         }
 
         /** s.425 / s.234C: at each date already reached, on the shortfall from the share of the tax due on the returned income. */

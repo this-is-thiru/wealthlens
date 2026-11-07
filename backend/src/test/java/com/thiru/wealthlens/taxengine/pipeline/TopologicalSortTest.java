@@ -7,7 +7,6 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
@@ -101,38 +100,48 @@ class TopologicalSortTest {
     class Determinism {
 
         @Test
-        void theSameGraphGivesTheSameOrderWhateverTheInputOrder() {
-            // TraceLine.sequence comes from this order and the trace IS the result. An order that
-            // varied with iteration order would make identical inputs produce differing traces --
-            // golden tests failing for no reason, and scenario diffs reporting changes nobody made.
-            List<NodeId> expected = orderOf(salaryGraph());
+        void of_whenTheSameListIsOrderedAgain_givesTheSameOrder() {
+            // TraceLine.sequence comes from this order and the trace IS the result: the same declared pipeline must give
+            // the same trace every time, or golden tests fail for no reason and scenario diffs report changes nobody made.
+            // Given
+            List<NodeId> first = orderOf(salaryGraph());
 
+            // When / Then
             for (int attempt = 0; attempt < 20; attempt++) {
-                List<ComputationNode> shuffled = new ArrayList<>(salaryGraph());
-                Collections.shuffle(shuffled);
-
-                assertThat(orderOf(shuffled)).isEqualTo(expected);
+                assertThat(orderOf(salaryGraph())).isEqualTo(first);
             }
         }
 
         @Test
-        void tiesBreakOnNodeId() {
-            // Three independent nodes: nothing orders them but their ids.
+        void of_whenNodesAreIndependent_keepsTheListedOrder() {
+            // Given — three independent nodes listed c, a, b; nothing orders them but the list (W-142a)
             NodeId a = new NodeId("aaa");
-            NodeId m = new NodeId("mmm");
-            NodeId z = new NodeId("zzz");
+            NodeId b = new NodeId("bbb");
+            NodeId c = new NodeId("ccc");
 
-            assertThat(orderOf(List.of(node(z), node(a), node(m)))).containsExactly(a, m, z);
+            // When / Then — the NodeId tie-break this replaced gave a, b, c
+            assertThat(orderOf(List.of(node(c), node(a), node(b)))).containsExactly(c, a, b);
         }
 
         @Test
-        void tiesAmongNodesFreedTogetherAlsoBreakOnNodeId() {
+        void of_whenAnEdgeContradictsTheList_followsTheEdge() {
+            // Given — b requires c, but b is listed first
+            NodeId b = new NodeId("bbb");
+            NodeId c = new NodeId("ccc");
+
+            // When / Then
+            assertThat(orderOf(List.of(node(b, c), node(c)))).containsExactly(c, b);
+        }
+
+        @Test
+        void of_whenNodesAreFreedTogether_runsTheOneListedFirst() {
+            // Given — root, then branch.b listed before branch.a; both wait only on root
             NodeId root = new NodeId("root");
             NodeId b = new NodeId("branch.b");
             NodeId a = new NodeId("branch.a");
 
-            assertThat(orderOf(List.of(node(root), node(b, root), node(a, root))))
-                    .containsExactly(root, a, b);
+            // When / Then
+            assertThat(orderOf(List.of(node(root), node(b, root), node(a, root)))).containsExactly(root, b, a);
         }
     }
 

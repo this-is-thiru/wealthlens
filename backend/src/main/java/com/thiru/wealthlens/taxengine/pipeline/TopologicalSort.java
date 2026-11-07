@@ -1,15 +1,15 @@
 package com.thiru.wealthlens.taxengine.pipeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.NodeId;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -24,7 +24,10 @@ import java.util.TreeMap;
  * <h2>The order is canonical, not merely valid</h2>
  *
  * <p>A graph usually admits many valid topological orders. This returns <b>one</b> of them, always
- * the same one, by breaking ties on {@link NodeId}. That is not tidiness:
+ * the same one for the same list, by breaking ties on the list's own order: among the nodes ready together, the one listed
+ * first runs first. The caller's list is the regime's declared pipeline, pack data, so the trace reads in the order the
+ * regime states it — salary before credits — wherever the edges allow (W-142a; it broke ties on {@link NodeId} before,
+ * which put {@code credits} first). That is not tidiness:
  * {@code TraceLine.sequence} comes from this order, the trace <b>is</b> the result
  * ({@code D-VIEWFROMTRACE}), and computations are cached, compared and replayed years later. An
  * order that varied with iteration order would make identical inputs produce traces that differ run
@@ -36,13 +39,13 @@ public final class TopologicalSort {
     private TopologicalSort() {}
 
     /**
-     * Order these nodes so that every node follows everything it requires.
+     * Order these nodes so that every node follows everything it requires, and otherwise as listed.
      *
      * @throws IllegalArgumentException if a required slot has no producer among these nodes, or if
      *     the edges contain a cycle — both are defects in what the node classes declare, so they
      *     name the nodes involved rather than reporting that sorting failed
      */
-    public static List<ComputationNode> of(Collection<ComputationNode> nodes) {
+    public static List<ComputationNode> of(List<ComputationNode> nodes) {
         if (nodes == null) {
             throw new IllegalArgumentException("Cannot order a null collection of nodes");
         }
@@ -69,7 +72,11 @@ public final class TopologicalSort {
             waitingFor.put(node.produces(), edges);
         }
 
-        List<ComputationNode> ordered = kahnOrder(byProduces, waitingFor, unblocks);
+        Map<NodeId, Integer> listed = new HashMap<>();
+        for (ComputationNode node : nodes) {
+            listed.putIfAbsent(node.produces(), listed.size());
+        }
+        List<ComputationNode> ordered = kahnOrder(byProduces, waitingFor, unblocks, listed);
         if (ordered.size() != byProduces.size()) {
             throw new IllegalArgumentException(cycleMessage(waitingFor, unblocks, ordered.size()));
         }
@@ -100,12 +107,12 @@ public final class TopologicalSort {
     private static List<ComputationNode> kahnOrder(
             Map<NodeId, ComputationNode> byProduces,
             Map<NodeId, Set<NodeId>> waitingFor,
-            Map<NodeId, Set<NodeId>> unblocks) {
-        Deque<NodeId> ready = new ArrayDeque<>();
+            Map<NodeId, Set<NodeId>> unblocks,
+            Map<NodeId, Integer> listed) {
+        PriorityQueue<NodeId> ready = new PriorityQueue<>(Comparator.comparingInt(listed::get));
         waitingFor.entrySet().stream()
                 .filter(entry -> entry.getValue().isEmpty())
                 .map(Map.Entry::getKey)
-                .sorted(Comparator.comparing(NodeId::value))
                 .forEach(ready::add);
 
         List<ComputationNode> ordered = new ArrayList<>(byProduces.size());
@@ -113,16 +120,13 @@ public final class TopologicalSort {
             NodeId next = ready.poll();
             ordered.add(byProduces.get(next));
 
-            List<NodeId> freed = new ArrayList<>();
             for (NodeId dependent : unblocks.get(next)) {
                 Set<NodeId> remaining = waitingFor.get(dependent);
                 remaining.remove(next);
                 if (remaining.isEmpty()) {
-                    freed.add(dependent);
+                    ready.add(dependent);
                 }
             }
-            freed.sort(Comparator.comparing(NodeId::value));
-            freed.forEach(ready::add);
         }
         return ordered;
     }

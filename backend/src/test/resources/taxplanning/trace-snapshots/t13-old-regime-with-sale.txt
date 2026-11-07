@@ -1,34 +1,34 @@
-1 | capitalgains.income | CG-CHARGE-STT | MEASURE | STT on the ACQUISITION: NOT_DEDUCTED
-2 | capitalgains.income | CG-CHARGE-STT | MEASURE | STT on the TRANSFER: NOT_DEDUCTED
-3 | capitalgains.income | CG-TERM-LISTED-SECURITY | MEASURE | Held 2024-04-01 → 2026-09-01: more than 12 months, LONG_TERM (calendar months, D-303)
-4 | capitalgains.income | SETOFF-WITHIN-CAPITAL-GAINS | INCOME | LONG_TERM_LISTED_EQUITY
-5 | credits | CREDIT-TAX-PAID | MEASURE | tax at source
-6 | credits | CREDIT-TAX-PAID | MEASURE | advance tax
-7 | credits | CREDIT-TAX-PAID | MEASURE | self-assessment tax
-8 | salary.base | SAL-SALARY-FOR-HRA | MEASURE | 
-9 | salary.base | SAL-SALARY-FOR-GRATUITY | MEASURE | 
-10 | salary.base | SAL-SALARY-FOR-EMPLOYER-PENSION | MEASURE | 
-11 | salary.base | SAL-SALARY-FOR-EMPLOYEE-PENSION | MEASURE | 
-12 | salary.base | SAL-SALARY-FOR-ACCOM | MEASURE | 
-13 | salary.gross | SAL-SALARY-INCLUDES | INCOME | 
-14 | salary.deductions | SAL-TAX-ON-EMPLOYMENT | DEDUCTION | 
-15 | salary.deductions | SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE | DEDUCTION | statutory amount
-16 | round.totalincome | RATE-ROUND-TOTAL-INCOME | ROUNDING | 
-17 | tax.bybasis | RATE-SLAB-FIRST-SCHEDULE | TAX | total income 1225000.00 less the capital gains at special rates 1100000.00
-18 | tax.bybasis | RATE-CG-SHORTFALL-ORDER | MEASURE | LONG_TERM_LISTED_EQUITY less 125000.00: income at slab rates leaves 125000.00 of the basic exemption unused, taken in the order [SHORT_TERM_LISTED_EQUITY, LONG_TERM_OTHER, LONG_TERM_LISTED_EQUITY]
-19 | tax.bybasis | RATE-CG-LONG-LISTED-EQUITY | TAX | LONG_TERM_LISTED_EQUITY; slab
-20 | tax.afterrebate | REBATE-RESIDENT-INDIVIDUAL | RELIEF | total income exceeds 500000.00
-21 | tax.surcharge | RATE-SUR-FIRST-SCHEDULE | TAX | 
-22 | tax.surcharge | RATE-SUR-FIRST-SCHEDULE-LIMIT | TAX | the tax in respect of dividends (0.00, their share of the slab tax by income, D-229) and of the special-rate gains (106250.00), at RATE-SUR-FIRST-SCHEDULE's rate, at most the limit
-23 | tax.surcharge | RATE-SUR-FIRST-SCHEDULE-CEILING | RELIEF | total income exceeds no surcharge threshold
-24 | tax.cess | RATE-HEALTH-EDUCATION-CESS | TAX | 
+1 | salary.base | SAL-SALARY-FOR-HRA | MEASURE | 
+2 | salary.base | SAL-SALARY-FOR-GRATUITY | MEASURE | 
+3 | salary.base | SAL-SALARY-FOR-EMPLOYER-PENSION | MEASURE | 
+4 | salary.base | SAL-SALARY-FOR-EMPLOYEE-PENSION | MEASURE | 
+5 | salary.base | SAL-SALARY-FOR-ACCOM | MEASURE | 
+6 | salary.gross | SAL-SALARY-INCLUDES | INCOME | 
+7 | salary.deductions | SAL-TAX-ON-EMPLOYMENT | DEDUCTION | 
+8 | salary.deductions | SAL-STANDARD-DEDUCTION-ANY-OTHER-CASE | DEDUCTION | statutory amount
+9 | capitalgains.income | CG-CHARGE-STT | MEASURE | STT on the ACQUISITION: NOT_DEDUCTED
+10 | capitalgains.income | CG-CHARGE-STT | MEASURE | STT on the TRANSFER: NOT_DEDUCTED
+11 | capitalgains.income | CG-TERM-LISTED-SECURITY | MEASURE | Held 2024-04-01 → 2026-09-01: more than 12 months, LONG_TERM (calendar months, D-303)
+12 | capitalgains.income | SETOFF-WITHIN-CAPITAL-GAINS | INCOME | LONG_TERM_LISTED_EQUITY
+13 | round.totalincome | RATE-ROUND-TOTAL-INCOME | ROUNDING | 
+14 | tax.bybasis | RATE-SLAB-FIRST-SCHEDULE | TAX | total income 1225000.00 less the capital gains at special rates 1100000.00
+15 | tax.bybasis | RATE-CG-SHORTFALL-ORDER | MEASURE | LONG_TERM_LISTED_EQUITY less 125000.00: income at slab rates leaves 125000.00 of the basic exemption unused, taken in the order [SHORT_TERM_LISTED_EQUITY, LONG_TERM_OTHER, LONG_TERM_LISTED_EQUITY]
+16 | tax.bybasis | RATE-CG-LONG-LISTED-EQUITY | TAX | LONG_TERM_LISTED_EQUITY; slab
+17 | tax.afterrebate | REBATE-RESIDENT-INDIVIDUAL | RELIEF | total income exceeds 500000.00
+18 | tax.surcharge | RATE-SUR-FIRST-SCHEDULE | TAX | 
+19 | tax.surcharge | RATE-SUR-FIRST-SCHEDULE-LIMIT | TAX | the tax in respect of dividends (0.00, their share of the slab tax by income, D-229) and of the special-rate gains (106250.00), at RATE-SUR-FIRST-SCHEDULE's rate, at most the limit
+20 | tax.surcharge | RATE-SUR-FIRST-SCHEDULE-CEILING | RELIEF | total income exceeds no surcharge threshold
+21 | tax.cess | RATE-HEALTH-EDUCATION-CESS | TAX | 
+22 | credits | CREDIT-TAX-PAID | MEASURE | tax at source
+23 | credits | CREDIT-TAX-PAID | MEASURE | advance tax
+24 | credits | CREDIT-TAX-PAID | MEASURE | self-assessment tax
 25 | advance.tax | ADV-LIABILITY | MEASURE | liable: the bill less tax at source
 26 | advance.tax | ADV-INSTALMENTS | MEASURE | still owed by 2026-06-15
 27 | advance.tax | ADV-INSTALMENTS | MEASURE | still owed by 2026-09-15
 28 | advance.tax | ADV-INSTALMENTS | MEASURE | still owed by 2026-12-15
 29 | advance.tax | ADV-INSTALMENTS | MEASURE | still owed by 2027-03-15
-30 | interest.and.fees | INT-LATE-RETURN | INTEREST | 0 months from 2027-08-01 to 2026-11-06
-31 | interest.and.fees | INT-ADVANCE-SHORTFALL | INTEREST | 0 months from 2027-04-01 to 2026-11-06
+30 | interest.and.fees | INT-LATE-RETURN | INTEREST | not yet due: runs from 2027-08-01
+31 | interest.and.fees | INT-ADVANCE-SHORTFALL | INTEREST | not yet due: runs from 2027-04-01
 32 | interest.and.fees | INT-DEFERMENT | INTEREST | short by 2026-06-15
 33 | interest.and.fees | INT-DEFERMENT | INTEREST | short by 2026-09-15
 34 | interest.and.fees | INT-DEFERMENT | INTEREST | by 2026-12-15, not yet reached

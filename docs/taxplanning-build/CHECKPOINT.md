@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-142 committed and closed (D-457)
-Stage           : 6 (DONE); next by board order W-142a, not started
-Done today      : session 48: D-451 – D-457 built and closed (W-235, W-139, W-139a, W-140, W-140a, W-141, W-142); W-237, W-142a placed
-Board           : W-142 D, W-142a · (next), W-143 ·
-Next step       : read W-142a's row and decision rows, write its plan, STOP
-Owner actions   : give the TAX_PRIVACY_CONTACT value; sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; push review/taxplanning and api-collection when ready (W-217 check first); deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : unit + integration 4627 / 0 / 0; Checkstyle 0; Spotless clean (at the W-142 commit)
+Item            : none in flight — W-142a committed and closed (D-458)
+Stage           : 6 (DONE); next by board order W-143, not started
+Done today      : session 48: D-451 – D-458 built and closed (W-235, W-139, W-139a, W-140, W-140a, W-141, W-142, W-142a); W-237 placed; pushed at W-142
+Board           : W-142a D, W-143 · (next)
+Next step       : read W-143's row and decision rows, write its plan, STOP
+Owner actions   : pushed 2026-11-07: review/taxplanning at 27beca54, api-collection main at fe20cd9 (W-217 check passed: the pointer is on origin/main — run it again before every push). Give the TAX_PRIVACY_CONTACT value; sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
+Last verify     : unit + integration 4629 / 0 / 0; Checkstyle 0; Spotless clean (at the W-142a commit)
 Files touched   : none
-Last item commit: taxplanning W-142: fail the build when the published trace changes without a reviewed snapshot
-Updated         : 2026-11-07, session 48 — W-142 closed
+Last item commit: taxplanning W-142a: order the trace by the regime's declared pipeline and say when interest is not yet due
+Updated         : 2026-11-07, session 48 — W-142a closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

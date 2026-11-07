@@ -163,6 +163,27 @@ class AdvanceTaxAndInterestTest {
     }
 
     @Test
+    void evaluate_whenComputedBeforeTheLateReturnSpanBegins_saysItIsNotYetDue() {
+        // Given — TY 2026-27, unfiled, computed on 6-11-2026: the late-return span starts the day after 31-7-2027 (W-142a);
+        // TY 2025-26 on the same day is already four months into its span, 1-8-2026 to 6-11-2026
+        EngineInputs early = inputs(2026, filing(2026, Optional.empty(), List.of()), LocalDate.of(2026, 11, 6), UNDER_SIXTY);
+        EngineInputs late = inputs(2025, filing(2025, Optional.empty(), List.of()), LocalDate.of(2026, 11, 6), UNDER_SIXTY);
+
+        // When
+        Optional<String> before = lateReturnText(owed(2026, "100000", "1200000", early));
+        Optional<String> during = lateReturnText(owed(2025, "100000", "1200000", late));
+
+        // Then
+        assertThat(before).hasValue("not yet due: runs from 2027-08-01");
+        assertThat(during).hasValue("4 months from 2026-08-01 to 2026-11-06");
+    }
+
+    private static Optional<String> lateReturnText(NodeResult result) {
+        return result.trace().stream().filter(line -> line.rule().equals(RuleIds.INT_LATE_RETURN)).findFirst()
+                .flatMap(line -> line.limitedBy());
+    }
+
+    @Test
     void evaluate_whenPlanningInSeptember_chargesOnlyTheJuneInstalmentAlreadyMissed() {
         // Given — 1-9-2025: only 15 June has passed; nothing is due on the return yet
         EngineInputs inputs = inputs(2025, filing(2025, Optional.empty(), List.of()), LocalDate.of(2025, 9, 1), UNDER_SIXTY);
