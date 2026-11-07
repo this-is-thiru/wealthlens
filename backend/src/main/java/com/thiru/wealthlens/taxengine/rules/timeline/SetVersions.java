@@ -2,30 +2,31 @@ package com.thiru.wealthlens.taxengine.rules.timeline;
 
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.json.PackJson;
-import com.thiru.wealthlens.taxengine.rules.json.RegistryJson;
 import com.thiru.wealthlens.taxengine.rules.json.ValueJson;
-import com.thiru.wealthlens.taxengine.rules.pack.DisallowanceSet;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * A disallowance set, one version per span of years (D-165).
+ * A shared set of the regimes' law — a disallowance set (D-165) or an eligibility condition set (W-244) — one version
+ * per span of years.
  *
- * <p>The same set rests on different provisions in different years — TY 2025-26 on 1961 s.115BAC(2)(i), TY 2026-27
- * on 2025 s.202(2)(a) — and lists only the rules each year holds, so a set file on the timeline holds
- * {@code versions}, each {@code {validity, displayName, basis, disallowedRules, provenance}}. A year's pack holds the
- * one version in force as a plain set, so nothing that reads a compiled pack sees the versions.
+ * <p>The same set rests on different provisions in different years — a disallowance set on 1961 s.115BAC(2)(i) in
+ * TY 2025-26 and on 2025 s.202(2)(a) in TY 2026-27; a condition's threshold may change — so a set file on the timeline
+ * holds {@code versions}, each the set's fields with a {@code validity}. A year's pack holds the one version in force
+ * as a plain set, so nothing that reads a compiled pack sees the versions. Both kinds share this reader so that the
+ * two cannot come to version differently.
  */
-final class DisallowanceSetVersions {
+final class SetVersions {
 
     private static final String VERSIONS = "versions";
 
-    private DisallowanceSetVersions() {
+    private SetVersions() {
     }
 
     /** The set as one year's pack holds it; empty where no version is in force in the year. */
@@ -43,13 +44,14 @@ final class DisallowanceSetVersions {
         return inYear.stream().findFirst().map(version -> projected(set, version, path));
     }
 
-    /** Every version, each read as the set a year would hold — so a malformed version fails on reading. */
-    static List<DisallowanceSet> everyVersion(JsonNode set, String path) {
+    /**
+     * Every version, each read by {@code parser} as the set a year would hold — so a malformed version fails on
+     * reading.
+     */
+    static <T> List<T> everyVersion(JsonNode set, String path, BiFunction<JsonNode, String, T> parser) {
         List<JsonNode> versions = PackJson.array(set, VERSIONS, path, entry -> entry.node());
         requireNoOverlap(versions, path);
-        return versions.stream()
-                .map(version -> RegistryJson.disallowanceSet(projected(set, version, path), path))
-                .toList();
+        return versions.stream().map(version -> parser.apply(projected(set, version, path), path)).toList();
     }
 
     private static JsonNode projected(JsonNode set, JsonNode version, String path) {

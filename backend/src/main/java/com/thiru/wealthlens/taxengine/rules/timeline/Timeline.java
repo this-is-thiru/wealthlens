@@ -6,6 +6,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.Map;
@@ -25,6 +26,8 @@ import java.util.Optional;
  * @param regimeSources each regime's file verbatim, for the same reason
  * @param disallowanceSetSources each disallowance set's file verbatim, by id — a set holds a version per span of
  *     years, and a year's pack is compiled from the one in force (D-165)
+ * @param conditionSetSources each eligibility condition set's file verbatim, by id, versioned as a disallowance set
+ *     is (W-244)
  * @param components every pay component, by code (D-089) — each arrives with the first rule that reads it
  * @param componentSources each component's file verbatim, for the reason {@code ruleSources} is kept
  * @param pipelineNodes the exec node catalogue, each node's file verbatim. Nothing reads its fields
@@ -45,6 +48,7 @@ public record Timeline(
         Map<RuleId, String> ruleSources,
         Map<RegimeCode, String> regimeSources,
         Map<DisallowanceSetId, String> disallowanceSetSources,
+        Map<ConditionSetId, String> conditionSetSources,
         Map<ComponentCode, ComponentDefinition> components,
         Map<ComponentCode, String> componentSources,
         Map<NodeId, String> pipelineNodes,
@@ -59,6 +63,7 @@ public record Timeline(
         ruleSources = Map.copyOf(ruleSources);
         regimeSources = Map.copyOf(regimeSources);
         disallowanceSetSources = Map.copyOf(disallowanceSetSources);
+        conditionSetSources = Map.copyOf(conditionSetSources);
         components = Map.copyOf(components);
         componentSources = Map.copyOf(componentSources);
         pipelineNodes = Map.copyOf(pipelineNodes);

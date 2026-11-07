@@ -4,12 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thiru.wealthlens.taxengine.election.RegimeOffer;
+import com.thiru.wealthlens.taxengine.election.RegimeOffers;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.JsonPackAssembler;
 import com.thiru.wealthlens.taxengine.rules.json.RegistryJson;
+import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
+import com.thiru.wealthlens.taxengine.test.NodeHarness;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -40,6 +45,8 @@ class RulePackCompilerTest {
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
     private static final String SLAB = "RATE-SLAB-NEW-TAX-REGIME";
     private static final String SLAB_FILE = "law/rules/" + SLAB + ".json";
+    private static final String CONDITION_SET = "ELIG-SENIOR";
+    private static final String CONDITION_SET_FILE = "law/condition-sets/" + CONDITION_SET + ".json";
 
     /** The rule's last version — the one in force in 2026-27, since TY 2025-26 has its own before it. */
     private static JsonNode inForceIn2026(ObjectNode rule) {
@@ -151,6 +158,95 @@ class RulePackCompilerTest {
         assertThatThrownBy(() -> TimelineReader.read(root))
                 .isInstanceOf(PackValidationException.class)
                 .hasMessageContaining("holds DIS-SOMETHING-ELSE; a timeline file is named for the one identity it holds");
+    }
+
+    @ParameterizedTest(name = "TY {0}")
+    @ValueSource(ints = {2025, 2026})
+    void compile_whenTheShippedTimelineIsCompiled_holdsNoConditionSets(int year) {
+        // When — no shipped regime names an eligibility set (W-244)
+        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(TIMELINE), TaxYearId.of(year));
+
+        // Then
+        assertThat(MAPPER.readTree(compiled.files().get("law/regimes.json")).path("conditionSets")).isEmpty();
+    }
+
+    @Test
+    void compile_whenAConditionSetHasAVersionPerYear_holdsEachYearsVersion() throws IOException {
+        // Given — a set whose age threshold is 60 in TY 2025-26 and 65 from TY 2026-27
+        Path root = timelineCopy();
+        writeConditionSet(root, conditionSet(
+                version("2025-04-01", Optional.of("2026-03-31"), ageAtLeast(60)),
+                version("2026-04-01", Optional.empty(), ageAtLeast(65))));
+        Timeline timeline = TimelineReader.read(root);
+
+        // When
+        JsonNode in2025 = MAPPER.readTree(RulePackCompiler.compile(timeline, TaxYearId.of(2025)).files()
+                .get("law/regimes.json")).path("conditionSets");
+        JsonNode in2026 = MAPPER.readTree(RulePackCompiler.compile(timeline, TY_2026).files()
+                .get("law/regimes.json")).path("conditionSets");
+
+        // Then — each year holds its own version as a plain set
+        assertThat(in2025).hasSize(1);
+        assertThat(in2025.get(0).path("conditions").get(0).path("years").asInt()).isEqualTo(60);
+        assertThat(in2026).hasSize(1);
+        assertThat(in2026.get(0).path("conditions").get(0).path("years").asInt()).isEqualTo(65);
+        assertThat(in2026.get(0).path("id").asString()).isEqualTo(CONDITION_SET);
+        assertThat(in2026.get(0).has("versions")).isFalse();
+        assertThat(in2026.get(0).has("validity")).isFalse();
+    }
+
+    @Test
+    void read_whenTwoVersionsOfAConditionSetOverlap_isRefused() throws IOException {
+        // Given — the second version starts before the first ends
+        Path root = timelineCopy();
+        writeConditionSet(root, conditionSet(
+                version("2025-04-01", Optional.of("2026-03-31"), ageAtLeast(60)),
+                version("2026-01-01", Optional.empty(), ageAtLeast(65))));
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining(CONDITION_SET_FILE + ": versions overlap");
+    }
+
+    @Test
+    void read_whenAConditionSetFileIsNamedForAnotherId_isRefused() throws IOException {
+        // Given
+        Path root = timelineCopy();
+        ObjectNode set = conditionSet(version("2025-04-01", Optional.empty(), ageAtLeast(60)));
+        set.put("id", "ELIG-SOMETHING-ELSE");
+        writeConditionSet(root, set);
+
+        // When / Then
+        assertThatThrownBy(() -> TimelineReader.read(root))
+                .isInstanceOf(PackValidationException.class)
+                .hasMessageContaining("holds ELIG-SOMETHING-ELSE; a timeline file is named for the one identity it holds");
+    }
+
+    @Test
+    void compile_whenARegimeNamesAConditionSet_barsAnAssesseeWhoFailsItNamingTheCondition() throws IOException {
+        // Given — the First Schedule rates open only to a senior citizen, by a set on the timeline; the harness
+        // taxpayer is 41 at the year's end
+        Path root = timelineCopy();
+        writeConditionSet(root,
+                conditionSet(version("2025-04-01", Optional.empty(), ageAtLeast(60))));
+        Path regimeFile = root.resolve("law/regimes/FIRST_SCHEDULE_RATES.json");
+        ObjectNode regime = (ObjectNode) tree(regimeFile);
+        regime.putArray("eligibility").add(CONDITION_SET);
+        write(regimeFile, regime);
+        CompiledPack compiled = RulePackCompiler.compile(TimelineReader.read(root), TY_2026);
+        RulePackLock lock = lock();
+        RulePack pack = new JsonPackAssembler(lock.instruments()).assemble(TY_2026, lock.layers(), compiled.files());
+
+        // When
+        List<RegimeOffer> offers = RegimeOffers.of(pack, NodeHarness.plainTaxpayer());
+
+        // Then
+        assertThat(offers).filteredOn(offer -> offer.code().value().equals("FIRST_SCHEDULE_RATES")).singleElement()
+                .isInstanceOfSatisfying(RegimeOffer.Barred.class, barred -> assertThat(barred.reason())
+                        .contains("a senior citizen (W-244 test)").contains("does not hold"));
+        assertThat(offers).filteredOn(offer -> offer.code().value().equals("NEW_TAX_REGIME")).singleElement()
+                .isInstanceOf(RegimeOffer.Available.class);
     }
 
     @Test
@@ -305,6 +401,49 @@ class RulePackCompilerTest {
 
         // Then
         assertThatCode(() -> lock().verify(compiled)).doesNotThrowAnyException();
+    }
+
+    /** The set to the timeline's condition-set directory, which the shipped timeline does not yet have. */
+    private static void writeConditionSet(Path root, JsonNode set) throws IOException {
+        Path file = root.resolve(CONDITION_SET_FILE);
+        Files.createDirectories(file.getParent());
+        write(file, set);
+    }
+
+    private static ObjectNode conditionSet(ObjectNode... versions) {
+        ObjectNode set = MAPPER.createObjectNode();
+        set.put("id", CONDITION_SET);
+        ArrayNode list = set.putArray("versions");
+        for (ObjectNode version : versions) {
+            list.add(version);
+        }
+        return set;
+    }
+
+    private static ObjectNode version(String from, Optional<String> to, ObjectNode condition) {
+        ObjectNode version = MAPPER.createObjectNode();
+        ObjectNode validity = version.putObject("validity");
+        validity.put("type", "Between");
+        validity.put("from", from);
+        to.ifPresent(end -> validity.put("to", end));
+        version.put("displayName", "a senior citizen (W-244 test)");
+        version.putArray("conditions").add(condition);
+        version.put("basis", "RATE-SLAB-FIRST-SCHEDULE");
+        ObjectNode provenance = version.putObject("provenance");
+        provenance.put("sourceUrl", "https://example.invalid/w-244-test");
+        provenance.put("sourceDescription", "Test data for W-244, not law");
+        provenance.put("accessedOn", "2026-11-07");
+        provenance.put("verificationLevel", "UNVERIFIED");
+        provenance.put("whatToCheck", "nothing: test data");
+        return version;
+    }
+
+    private static ObjectNode ageAtLeast(int years) {
+        ObjectNode condition = MAPPER.createObjectNode();
+        condition.put("type", "AgeAtLeast");
+        condition.put("years", years);
+        condition.put("subject", "SELF");
+        return condition;
     }
 
     private static RulePackLock lock() throws IOException {

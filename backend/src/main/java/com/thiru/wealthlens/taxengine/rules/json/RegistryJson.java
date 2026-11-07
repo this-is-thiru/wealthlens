@@ -133,7 +133,8 @@ public final class RegistryJson {
         return byId;
     }
 
-    static ConditionSet conditionSet(JsonNode node, String path) {
+    /** One condition set, as a year's pack holds it — and as the timeline reads each version of one (W-244). */
+    public static ConditionSet conditionSet(JsonNode node, String path) {
         ConditionSetId id = new ConditionSetId(PackJson.text(node, "id", path));
         String where = path + " (" + id + ")";
 

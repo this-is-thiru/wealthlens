@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.registry.PublicationStatus;
 import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
@@ -66,6 +67,7 @@ public final class RulePackCompiler {
         }
         ArrayNode regimes = regimes(timeline, taxYear);
         ArrayNode disallowanceSets = disallowanceSets(timeline, taxYear);
+        ArrayNode conditionSets = conditionSets(timeline, taxYear);
         ArrayNode components = components(timeline, taxYear, ruleChecksums.keySet());
         ArrayNode nodes = nodes(timeline);
 
@@ -76,7 +78,7 @@ public final class RulePackCompiler {
         files.put("law/regimes.json", render(object()
                 .<ObjectNode>set("regimes", regimes)
                 .<ObjectNode>set("disallowanceSets", disallowanceSets)
-                .set("conditionSets", MAPPER.createArrayNode())));
+                .set("conditionSets", conditionSets)));
         files.put("exec/pipelines.json", render(object()
                 .<ObjectNode>set("nodes", nodes)
                 .set("axes", object().set("bindings", MAPPER.createArrayNode()))));
@@ -102,10 +104,20 @@ public final class RulePackCompiler {
     private static ArrayNode disallowanceSets(Timeline timeline, TaxYearId taxYear) {
         ArrayNode disallowanceSets = MAPPER.createArrayNode();
         for (DisallowanceSetId id : sorted(timeline.disallowanceSetSources().keySet(), DisallowanceSetId::value)) {
-            DisallowanceSetVersions.forTaxYear(MAPPER.readTree(timeline.disallowanceSetSources().get(id)), taxYear,
+            SetVersions.forTaxYear(MAPPER.readTree(timeline.disallowanceSetSources().get(id)), taxYear,
                     "law/disallowances/" + id.value() + ".json").ifPresent(disallowanceSets::add);
         }
         return disallowanceSets;
+    }
+
+    /** The eligibility condition sets in force in the year, each as its year's version (W-244). */
+    private static ArrayNode conditionSets(Timeline timeline, TaxYearId taxYear) {
+        ArrayNode conditionSets = MAPPER.createArrayNode();
+        for (ConditionSetId id : sorted(timeline.conditionSetSources().keySet(), ConditionSetId::value)) {
+            SetVersions.forTaxYear(MAPPER.readTree(timeline.conditionSetSources().get(id)), taxYear,
+                    "law/condition-sets/" + id.value() + ".json").ifPresent(conditionSets::add);
+        }
+        return conditionSets;
     }
 
     /** The components live in the year, each projected onto the rules the year's pack holds. */

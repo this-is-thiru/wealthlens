@@ -10,6 +10,7 @@ import com.thiru.wealthlens.taxengine.rules.json.RegimeJson;
 import com.thiru.wealthlens.taxengine.rules.json.RegistryJson;
 import com.thiru.wealthlens.taxengine.rules.json.RuleJson;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
+import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.DisallowanceSetId;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import com.thiru.wealthlens.taxengine.rules.temporal.DateRange;
@@ -49,6 +50,8 @@ public final class TimelineReader {
     private static final String REGIMES = "law/regimes";
     /** The regimes' shared disallowance sets, one per file, a version per span of years (D-165). */
     private static final String DISALLOWANCES = "law/disallowances";
+    /** The regimes' shared eligibility condition sets, one per file, a version per span of years (W-244). */
+    private static final String CONDITION_SETS = "law/condition-sets";
     private static final String PIPELINES = "exec/pipelines";
     /** The pay components, one per file (D-089). */
     private static final String COMPONENTS = "exec/components";
@@ -56,7 +59,7 @@ public final class TimelineReader {
     private static final String SECTIONS = "content/sections";
     /** Each Act's section list, carried verbatim for the coverage register (D-066). */
     private static final String ACTS = "content/acts";
-    private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, DISALLOWANCES, PIPELINES, COMPONENTS, SECTIONS,
+    private static final List<String> KNOWN_DIRECTORIES = List.of(RULES, REGIMES, DISALLOWANCES, CONDITION_SETS, PIPELINES, COMPONENTS, SECTIONS,
             ACTS);
     /** The one content file: the coverage register, carried verbatim for its own reader (D-059). */
     private static final String COVERAGE = "content/coverage.json";
@@ -103,6 +106,7 @@ public final class TimelineReader {
         private final Map<RuleId, String> ruleSources = new HashMap<>();
         private final Map<RegimeCode, String> regimeSources = new HashMap<>();
         private final Map<DisallowanceSetId, String> disallowanceSetSources = new HashMap<>();
+        private final Map<ConditionSetId, String> conditionSetSources = new HashMap<>();
         private final Map<ComponentCode, ComponentDefinition> components = new HashMap<>();
         private final Map<ComponentCode, String> componentSources = new HashMap<>();
         private final Map<NodeId, String> pipelineNodes = new HashMap<>();
@@ -124,6 +128,7 @@ public final class TimelineReader {
                 case RULES -> addRule(path, stem, node, content);
                 case REGIMES -> addRegime(path, stem, node, content);
                 case DISALLOWANCES -> addDisallowanceSet(path, stem, node, content);
+                case CONDITION_SETS -> addConditionSet(path, stem, node, content);
                 case PIPELINES -> addPipelineNode(path, stem, node, content);
                 case COMPONENTS -> addComponent(path, stem, node, content);
                 case SECTIONS -> addSection(path, stem, node, content);
@@ -156,8 +161,15 @@ public final class TimelineReader {
             DisallowanceSetId id = PackJson.construct(path,
                     () -> new DisallowanceSetId(PackJson.text(node, "id", path)));
             requireNamedFor(path, stem, id.value());
-            DisallowanceSetVersions.everyVersion(node, path);
+            SetVersions.everyVersion(node, path, RegistryJson::disallowanceSet);
             disallowanceSetSources.put(id, content);
+        }
+
+        private void addConditionSet(String path, String stem, JsonNode node, String content) {
+            ConditionSetId id = PackJson.construct(path, () -> new ConditionSetId(PackJson.text(node, "id", path)));
+            requireNamedFor(path, stem, id.value());
+            SetVersions.everyVersion(node, path, RegistryJson::conditionSet);
+            conditionSetSources.put(id, content);
         }
 
         private void addPipelineNode(String path, String stem, JsonNode node, String content) {
@@ -186,7 +198,8 @@ public final class TimelineReader {
         }
 
         Timeline timeline() {
-            return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources, components, componentSources,
+            return new Timeline(rules, ruleSets, regimes, ruleSources, regimeSources, disallowanceSetSources,
+                    conditionSetSources, components, componentSources,
                     pipelineNodes, coverage, sections, acts);
         }
     }

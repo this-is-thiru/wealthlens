@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-243 committed and closed (D-465); W-146 B (D-463, D-464)
-Stage           : 6 (DONE); next by board order W-244, not started
-Done today      : session 49: D-462 – D-465 (W-145, W-243; W-146 findings, W-245 decided); W-241 – W-245, W-146a, W-146b placed; not pushed since d5479b0c
-Board           : W-243 D, W-244 ·, W-245 — (decided a, D-464), W-146 B, W-146a ·, W-146b ·; W-241 ·, W-242 · placed; W-238 ·, W-239 ·, W-240 · at the end of Phase 14
-Next step       : read W-244's row and decision rows, write its plan, STOP
+Item            : none in flight — W-244 committed and closed (D-466); W-146 unblocked (W-243, W-244 done; W-245 decided a)
+Stage           : 6 (DONE); next by board order W-146 (resume), not started
+Done today      : session 49: D-462 – D-466 (W-145, W-243, W-244; W-146 findings, W-245 decided); W-241 – W-246, W-146a, W-146b placed; not pushed since d5479b0c
+Board           : W-243 D, W-244 D, W-245 —, W-246 ·, W-146 · (next, resume), W-146a ·, W-146b ·; W-241 ·, W-242 ·; W-238 – W-240 · at the end of Phase 14
+Next step       : resume W-146: re-plan its build against D-464 / D-466 (122 synthetic rows, no lock-in, "no business income" eligibility), STOP for approval
 Owner actions   : pushed 2026-11-07: review/taxplanning at d5479b0c, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Give the TAX_PRIVACY_CONTACT value (asked; none received yet); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : W-243: unit 4228 / 0 / 0; integration 416 / 0 / 0; Checkstyle 0; Spotless clean
+Last verify     : W-244: unit 4234 / 0 / 0; integration 416 / 0 / 0; Checkstyle 0; Spotless clean
 Files touched   : none
-Last item commit: taxplanning W-243: test a lone regime-chosen row against the regimes it is written for
-Updated         : 2026-11-07, session 49 — W-243 closed
+Last item commit: taxplanning W-244: read eligibility condition sets from the timeline, versioned by year as disallowance sets are
+Updated         : 2026-11-07, session 49 — W-244 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
