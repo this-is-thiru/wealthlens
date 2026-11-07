@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-140a committed and closed (D-455)
-Stage           : 6 (DONE); next by board order W-141, not started
-Done today      : session 48: D-451 (W-235), D-452 (W-139), D-453 (W-139a), D-454 (W-140), D-455 (W-140a) built and closed; W-237 placed
-Board           : W-140a D, W-141 · (next)
-Next step       : read W-141's row and decision rows, write its plan, STOP
+Item            : none in flight — W-141 committed and closed (D-456)
+Stage           : 6 (DONE); next by board order W-142, not started
+Done today      : session 48: D-451 (W-235), D-452 (W-139), D-453 (W-139a), D-454 (W-140), D-455 (W-140a), D-456 (W-141) built and closed; W-237 placed
+Board           : W-141 D, W-142 · (next)
+Next step       : read W-142's row and decision rows, write its plan, STOP
 Owner actions   : give the TAX_PRIVACY_CONTACT value; sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; push review/taxplanning and api-collection when ready (W-217 check first); deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : unit + integration 4622 / 0 / 0; Checkstyle 0; Spotless clean (at the W-140a commit)
+Last verify     : unit + integration 4624 / 0 / 0; Checkstyle 0; Spotless clean (at the W-141 commit)
 Files touched   : none
-Last item commit: taxplanning W-140a: work by hand the 23 surcharge and age boundaries the generator found without a case
-Updated         : 2026-11-07, session 48 — W-140a closed
+Last item commit: taxplanning W-141: check the engine against an independent oracle written from the Gazette on 3,744 incomes
+Updated         : 2026-11-07, session 48 — W-141 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
