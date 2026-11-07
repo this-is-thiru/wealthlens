@@ -45,6 +45,10 @@ app:
     # W-237e: DPDP Rules, 2025 r.6(1)(e): logs kept "for a period of one year"; r.8(3): logs of the processing kept "for a
     # minimum period of one year from the date of such processing", then erased (G.S.R. 846(E), egazette 2025/267650 p.26)
     log-retention: P1Y
+    # W-249: Act s.8(7)(a) erases once the purpose is no longer served; the purpose lapses three years after the last
+    # sign-in. The owner's ruling (D-480), not a figure from the law: Rules r.8(1)'s periods bind only the Third Schedule's
+    # classes, which WealthLens is not in; it must exceed erasure-hold, r.8(3)'s year
+    purpose-lapse: P3Y
   personal-data:
     data-key: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
     digest-key: HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=

@@ -32,5 +32,7 @@
 </section>
 
 <p>A grievance is answered within <span th:text="${notice.grievanceResponseDays}">30</span> days of its receipt.</p>
+<p>Your account and everything it holds is erased once its purpose is no longer served: when no one has signed in to it for
+    <span th:text="${notice.purposeLapse.toTotalMonths()}">36</span> months.</p>
 </body>
 </html>

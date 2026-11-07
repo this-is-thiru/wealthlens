@@ -19,22 +19,24 @@ class PrivacySettingsTest {
 
     private static final Period HOLD = Period.ofYears(1);
 
+    private static final Period LAPSE = Period.ofYears(3);
+
     @Test
     void new_whenTheContactIsBlank_isRefusedNamingTheVariable() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings(" ", "your email", RIGHTS, PERIOD, BREACH, HOLD, HOLD))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings(" ", "your email", RIGHTS, PERIOD, BREACH, HOLD, HOLD, LAPSE))
                 .withMessageContaining("PRIVACY_CONTACT");
     }
 
     @Test
     void new_whenNoRightIsPublished_isRefused() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", List.of(), PERIOD, BREACH, HOLD, HOLD))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", List.of(), PERIOD, BREACH, HOLD, HOLD, LAPSE))
                 .withMessageContaining("r.14(1)");
     }
 
     @Test
     void notice_whenSettingsAreComplete_publishesEachRightTheIdentifierAndTheContact() {
         // Given
-        PrivacySettings settings = new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD, BREACH, HOLD, HOLD);
+        PrivacySettings settings = new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD, BREACH, HOLD, HOLD, LAPSE);
 
         // When
         PrivacyNotice notice = settings.notice();
@@ -44,42 +46,69 @@ class PrivacySettingsTest {
         assertThat(notice.identifier()).isEqualTo("your email");
         assertThat(notice.rights()).singleElement().satisfies(right -> assertThat(right.endpoints()).isEmpty());
         assertThat(notice.grievanceResponseDays()).isEqualTo(30);
+        assertThat(notice.purposeLapse()).isEqualTo(Period.ofYears(3));
+    }
+
+    @Test
+    void new_whenNoPurposeLapseIsSet_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
+                BREACH, HOLD, HOLD, null)).withMessageContaining("app.privacy.purpose-lapse");
+    }
+
+    @Test
+    void new_whenThePurposeLapseIsShorterThanTheHold_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
+                BREACH, HOLD, HOLD, Period.ofMonths(6))).withMessageContaining("r.8(3)");
+    }
+
+    @Test
+    void new_whenThePurposeLapseEqualsTheHoldInOtherUnits_isRefused() {
+        // Given twelve months against a year: equal, though Period.equals says otherwise
+        // When / Then
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
+                BREACH, HOLD, HOLD, Period.ofMonths(12))).withMessageContaining("r.8(3)");
+    }
+
+    @Test
+    void new_whenThePurposeLapseIsOneMonthLongerThanTheHold_isAccepted() {
+        assertThat(new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD, BREACH, HOLD, HOLD, Period.ofMonths(13))
+                .purposeLapse()).isEqualTo(Period.ofMonths(13));
     }
 
     @Test
     void new_whenNoGrievancePeriodIsSet_isRefused() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, null, BREACH, HOLD, HOLD))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, null, BREACH, HOLD, HOLD, LAPSE))
                 .withMessageContaining("r.14(3)");
     }
 
     @Test
     void new_whenNoBreachReportingIsSet_isRefused() {
         assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
-                null, HOLD, HOLD)).withMessageContaining("r.7(2)(b)");
+                null, HOLD, HOLD, LAPSE)).withMessageContaining("r.7(2)(b)");
     }
 
     @Test
     void new_whenNoErasureHoldIsSet_isRefused() {
         assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
-                BREACH, null, HOLD)).withMessageContaining("r.8(3)");
+                BREACH, null, HOLD, LAPSE)).withMessageContaining("r.8(3)");
     }
 
     @Test
     void new_whenTheErasureHoldIsZero_isRefused() {
         assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
-                BREACH, Period.ZERO, HOLD)).withMessageContaining("r.8(3)");
+                BREACH, Period.ZERO, HOLD, LAPSE)).withMessageContaining("r.8(3)");
     }
 
     @Test
     void new_whenNoLogRetentionIsSet_isRefused() {
         assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
-                BREACH, HOLD, null)).withMessageContaining("app.privacy.log-retention");
+                BREACH, HOLD, null, LAPSE)).withMessageContaining("app.privacy.log-retention");
     }
 
     @Test
     void new_whenTheLogRetentionIsZero_isRefused() {
         assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
-                BREACH, HOLD, Period.ZERO)).withMessageContaining("r.6(1)(e)");
+                BREACH, HOLD, Period.ZERO, LAPSE)).withMessageContaining("r.6(1)(e)");
     }
 
     @Test

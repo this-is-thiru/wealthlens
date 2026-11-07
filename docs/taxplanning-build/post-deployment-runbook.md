@@ -600,6 +600,35 @@ a row that changed during a run is left for the next run, and a run that failed 
 **Way back:** restore the three collections from step 1 and redeploy the previous build, which reads plain text.
 **One-time:** removed by W-254 (YouTrack WL-43) once this step's run is logged for every database.
 
+### 1.q W-249 (D-480) — erasure once the purpose has lapsed · owner · **first deploy carrying it, then after the first run**
+
+An account not signed in to for `app.privacy.purpose-lapse: P3Y` (the owner's ruling, D-480; not a figure from the law)
+is erased by the daily `account-erasure` job (§1.u, same job and holders), at once and with no hold, and recorded in
+`privacy_erasure_requests` with `cause: "PURPOSE_LAPSED"`, `requested_at` the lapse moment, `erased_at` the run. Each
+sign-in and each registration stores `user_details.last_signed_in_at`. An account without it (every account registered
+before W-249) gets the first run's time: **nothing can lapse earlier than three years after the first run on a
+database.** No command to run. The privacy notice (`GET /privacy/rights`, `/privacy`) states the period.
+
+**Before the first start:** an environment override `APP_PRIVACY_PURPOSELAPSE` must be longer than `erasure-hold` (P1Y),
+or the app refuses to start naming `app.privacy.purpose-lapse`; none is expected. **Read-only, before the first run and
+after it** (the day after the deploy):
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    return { database: n, users: d.user_details.countDocuments({}),
+      notCounted: d.user_details.countDocuments({ last_signed_in_at: { $exists: false } }),
+      lapseErasures: d.privacy_erasure_requests.countDocuments({ cause: "PURPOSE_LAPSED" }),
+      lapseOpen: d.privacy_erasure_requests.countDocuments({ cause: "PURPOSE_LAPSED", erased_at: null }) }; }) }])
+```
+
+Expected before: `notCounted` = `users`, `lapseErasures` 0. After the first run: `notCounted` 0 and `lapseErasures` 0
+(the earliest lapse is three years away). From then, `lapseOpen` 0 the day after any run (an open one means the run
+failed part-way: §1.y's failure check; the next run completes it). A second run changes nothing: the time is set only
+where absent, and an account with a request open is left to it. **Way back:** before the first lapse, `$unset`
+`last_signed_in_at` loses nothing (the next run counts again from its own time). An erased account cannot be brought
+back; after a restore, §1.s's reapply erases a lapse erasure again like a requested one.
+
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 
 Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender`, `BankAccount`, `TaxYearWorkspace`, `FilingDraft`, `DraftRevision`, `RegimeElectionHistory` (`WorkspaceIndexInitializer`, W-099, D-441) and `DraftComputation` (`DraftComputationIndexInitializer`, W-104, D-442); a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Encryption at rest is built (W-134, D-447; W-232 merged into it): §0.5 before the first deploy carrying it.**

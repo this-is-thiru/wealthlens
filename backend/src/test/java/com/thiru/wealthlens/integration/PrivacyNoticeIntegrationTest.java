@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Period;
 import java.util.Arrays;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,7 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
                 .containsExactly("POST /tax/user/{email}/profiles/{profileId}/erasure", "POST /privacy/erasure/user/{email}",
                         "POST /privacy/grievances/user/{email}");
         assertThat(notice.grievanceResponseDays()).isEqualTo(30);
+        assertThat(notice.purposeLapse()).isEqualTo(Period.ofYears(3));
     }
 
     @Test
@@ -88,6 +90,8 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
                 "POST /privacy/erasure/user/{email}",
                 "privacy@example.com",
                 "the email address your account is registered with",
+                "when no one has signed in to it for",
+                "<span>36</span> months",
                 "<span>30</span> days");
     }
 

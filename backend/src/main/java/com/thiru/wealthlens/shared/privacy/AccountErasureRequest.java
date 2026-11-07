@@ -3,6 +3,7 @@ package com.thiru.wealthlens.shared.privacy;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -27,9 +28,13 @@ public class AccountErasureRequest implements AuditableEntity {
     @Field("email")
     private String email;
 
-    /** UTC; the last processing, from which Rules r.8(3)'s year is counted. */
+    /** UTC; the last processing, from which Rules r.8(3)'s year is counted; for a lapse, the moment the purpose lapsed. */
     @Field("requested_at")
     private LocalDateTime requestedAt;
+
+    /** Absent on a request stored before W-249, which was asked for: read it with {@link #getCause()}. */
+    @Field("cause")
+    private ErasureCause cause;
 
     /** UTC; absent until every holder has erased. */
     @Field("erased_at")
@@ -37,4 +42,8 @@ public class AccountErasureRequest implements AuditableEntity {
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();
+
+    public ErasureCause getCause() {
+        return Optional.ofNullable(cause).orElse(ErasureCause.REQUESTED);
+    }
 }

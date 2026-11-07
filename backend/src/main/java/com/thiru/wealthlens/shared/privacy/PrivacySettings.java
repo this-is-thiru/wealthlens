@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.privacy;
 
+import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -17,10 +18,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param erasureHold how long data held for erasure is kept from the request, the last processing (r.8(3); W-235, W-237d)
  * @param logRetention how long a log of processing, and a privacy record, is kept from its last processing
  *     (r.6(1)(e), r.8(3); W-237e)
+ * @param purposeLapse how long after an account's last sign-in its purpose is no longer served, so it is erased (Act
+ *     s.8(7)(a)); the owner's ruling, not a figure from the law (W-249, D-480)
  */
 @ConfigurationProperties(prefix = "app.privacy")
 public record PrivacySettings(String contact, String identifier, List<PrivacyRight> rights, GrievancePeriod grievance,
-        BreachReporting breach, Period erasureHold, Period logRetention) {
+        BreachReporting breach, Period erasureHold, Period logRetention, Period purposeLapse) {
 
     public PrivacySettings {
         if (contact == null || contact.isBlank()) {
@@ -43,7 +46,19 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
                 + " (DPDP Rules r.8(3))");
         requirePositive(logRetention, "app.privacy.log-retention must state how long logs of processing are kept"
                 + " (DPDP Rules r.6(1)(e), r.8(3))");
+        requireLongerThanHold(purposeLapse, erasureHold);
         rights = List.copyOf(rights);
+    }
+
+    /*
+     * A lapsed account is erased at once, with no hold, so r.8(3)'s year from its last processing must already have passed.
+     * Periods are compared from one fixed day because a Period of months and one of years are not comparable as values.
+     */
+    private static void requireLongerThanHold(Period purposeLapse, Period erasureHold) {
+        if (purposeLapse == null || !LocalDate.EPOCH.plus(purposeLapse).isAfter(LocalDate.EPOCH.plus(erasureHold))) {
+            throw new IllegalStateException("app.privacy.purpose-lapse must state how long after the last sign-in an account"
+                    + " is erased, and be longer than app.privacy.erasure-hold (DPDP Rules r.8(3))");
+        }
     }
 
     private static void requirePositive(Period period, String refusal) {
@@ -54,6 +69,6 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
 
     /** The notice published at {@code GET /privacy/rights}. */
     public PrivacyNotice notice() {
-        return new PrivacyNotice(rights, identifier, contact, grievance.responseDays());
+        return new PrivacyNotice(rights, identifier, contact, grievance.responseDays(), purposeLapse);
     }
 }

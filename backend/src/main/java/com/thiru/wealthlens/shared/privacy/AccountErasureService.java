@@ -13,7 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Erasure of a whole account (Digital Personal Data Protection Act, 2023 s.8(7)(a), s.12(3); W-237d). A request holds the
- * account at once; once Rules r.8(3)'s year from it has passed, every {@link PersonalDataHolder} erases what it stores. Nothing
+ * account at once; once Rules r.8(3)'s year from it has passed, every {@link PersonalDataHolder} erases what it stores. An
+ * account whose purpose has lapsed is erased at once, with the lapse recorded as its request (W-249). Nothing
  * is kept for another law: none binds WealthLens to keep a person's records (W-237d C5a).
  */
 @Service
@@ -25,6 +26,7 @@ public class AccountErasureService {
     private final AccountErasureRequestRepository requests;
     private final List<PersonalDataHolder> holders;
     private final PrivacySettings privacy;
+    private final RegisteredUsers registeredUsers;
     private final Clock clock;
 
     /** Holds the account; asking again while held returns the same receipt. */
@@ -33,13 +35,19 @@ public class AccountErasureService {
         if (open.isPresent()) {
             return receipt(open.get());
         }
-        AccountErasureRequest request = new AccountErasureRequest();
-        request.setEmail(email);
-        request.setRequestedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
-        AccountErasureRequest saved = requests.save(request);
-        holders.forEach(holder -> holder.hold(email, saved.getRequestedAt()));
+        AccountErasureRequest saved = open(email, LocalDateTime.now(clock.withZone(ZoneOffset.UTC)), ErasureCause.REQUESTED);
         log.info("Account erasure {} requested; held until {}", saved.getId(), erasedFrom(saved));
         return receipt(saved);
+    }
+
+    private AccountErasureRequest open(String email, LocalDateTime requestedAt, ErasureCause cause) {
+        AccountErasureRequest request = new AccountErasureRequest();
+        request.setEmail(email);
+        request.setRequestedAt(requestedAt);
+        request.setCause(cause);
+        AccountErasureRequest saved = requests.save(request);
+        holders.forEach(holder -> holder.hold(email, requestedAt));
+        return saved;
     }
 
     /** The latest request for the account. */
@@ -48,9 +56,27 @@ public class AccountErasureService {
                 .orElseThrow(() -> new BadRequestException("No erasure was requested for " + email));
     }
 
-    /** Requests whose hold has passed by {@code nowUtc}, not yet erased. */
+    /** Requests asked for whose hold has passed by {@code nowUtc}, not yet erased. */
     public List<AccountErasureRequest> due(LocalDateTime nowUtc) {
-        return requests.findByErasedAtIsNullAndRequestedAtLessThanEqual(nowUtc.minus(privacy.erasureHold()));
+        return requests.findByErasedAtIsNullAndRequestedAtLessThanEqual(nowUtc.minus(privacy.erasureHold())).stream()
+                .filter(request -> request.getCause() == ErasureCause.REQUESTED).toList();
+    }
+
+    /**
+     * Opens a request for each account not signed in to for {@code purpose-lapse} by {@code nowUtc} (Act s.8(7)(a); W-249
+     * C3a) and holds it, then returns every lapse request not yet erased, those a failed run left open included. Nothing is
+     * held for a year first: the settings refuse a lapse no longer than r.8(3)'s year, so it has already passed since the last
+     * processing. An account with a request open is left to that request. Each account first counts from {@code nowUtc} if no
+     * sign-in is recorded (C2a).
+     */
+    public List<AccountErasureRequest> lapsed(LocalDateTime nowUtc) {
+        registeredUsers.startCounting(nowUtc);
+        for (LastSignIn signIn : registeredUsers.signedInLastBy(nowUtc.minus(privacy.purposeLapse()))) {
+            if (!requests.existsByEmailAndErasedAtIsNull(signIn.email())) {
+                open(signIn.email(), signIn.signedInAt().plus(privacy.purposeLapse()), ErasureCause.PURPOSE_LAPSED);
+            }
+        }
+        return requests.findByErasedAtIsNullAndCause(ErasureCause.PURPOSE_LAPSED);
     }
 
     public void erase(AccountErasureRequest request, LocalDateTime nowUtc) {
@@ -85,6 +111,9 @@ public class AccountErasureService {
     }
 
     private LocalDateTime erasedFrom(AccountErasureRequest request) {
+        if (request.getCause() == ErasureCause.PURPOSE_LAPSED) {
+            return request.getRequestedAt();
+        }
         return request.getRequestedAt().plus(privacy.erasureHold());
     }
 
