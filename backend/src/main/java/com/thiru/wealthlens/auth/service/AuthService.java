@@ -6,6 +6,7 @@ import com.thiru.wealthlens.auth.dto.LoginResponse;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
+import com.thiru.wealthlens.shared.privacy.HeldAccounts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -34,12 +35,17 @@ public class AuthService {
     private final UserDetailsRepository userDetailsRepo;
     private final PasswordEncoder passwordEncoder;
     private final SecurityConfig securityConfig;
+    private final HeldAccounts heldAccounts;
 
     public String addUser(RegistrationRequest request) {
 
         Optional<UserDetail> optionalUserDetails = userDetailsRepo.findById(request.getEmail());
         if (optionalUserDetails.isPresent()) {
             throw new IllegalArgumentException("User with email " + request.getEmail() + " already exists");
+        }
+        // The login is erased last; until the erasure is recorded done, the email is not free (W-237d).
+        if (heldAccounts.contains(request.getEmail())) {
+            throw new IllegalArgumentException("The account " + request.getEmail() + " is being erased");
         }
 
         UserDetail userEntity = new UserDetail();

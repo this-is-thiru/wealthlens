@@ -1,5 +1,6 @@
 package com.thiru.wealthlens.shared.privacy;
 
+import java.time.Period;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -13,10 +14,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param rights each right and how to exercise it
  * @param grievance the period within which a grievance is answered (r.14(3); W-237b)
  * @param breach when the Board's detailed report on a breach is due (r.7(2)(b); W-237c)
+ * @param erasureHold how long data held for erasure is kept from the request, the last processing (r.8(3); W-235, W-237d)
  */
 @ConfigurationProperties(prefix = "app.privacy")
 public record PrivacySettings(String contact, String identifier, List<PrivacyRight> rights, GrievancePeriod grievance,
-        BreachReporting breach) {
+        BreachReporting breach, Period erasureHold) {
 
     public PrivacySettings {
         if (contact == null || contact.isBlank()) {
@@ -34,6 +36,10 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
         if (breach == null) {
             throw new IllegalStateException("app.privacy.breach must state when the Board's report on a breach is due"
                     + " (DPDP Rules r.7(2)(b))");
+        }
+        if (erasureHold == null || erasureHold.isNegative() || erasureHold.isZero()) {
+            throw new IllegalStateException("app.privacy.erasure-hold must state how long data held for erasure is kept"
+                    + " (DPDP Rules r.8(3))");
         }
         rights = List.copyOf(rights);
     }

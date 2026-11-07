@@ -76,7 +76,7 @@ public class TaxpayerProfile implements AuditableEntity {
 
     /**
      * When the user asked for this profile to be erased, in UTC (W-235). From then nothing reads or processes it; it is erased once
-     * the hold the law requires has passed ({@code RetentionPeriods#erasureHold}).
+     * the hold the law requires has passed ({@code PrivacySettings#erasureHold}, W-237d).
      */
     @Field("erasure_requested_at")
     private LocalDateTime erasureRequestedAt;

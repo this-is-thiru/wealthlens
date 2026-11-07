@@ -23,6 +23,7 @@ public class TaxJobSchedule {
     private final TaxJobRunner runner;
     private final AutoArchive autoArchive;
     private final RetentionPurge retentionPurge;
+    private final AccountErasure accountErasure;
     private final StalenessSweep stalenessSweep;
 
     private final GazetteWatch gazetteWatch;
@@ -43,6 +44,11 @@ public class TaxJobSchedule {
     @Scheduled(cron = "${app.tax.jobs.retention-purge-cron}")
     public void retentionPurge() {
         runner.run(retentionPurge);
+    }
+
+    @Scheduled(cron = "${app.tax.jobs.account-erasure-cron}")
+    public void accountErasure() {
+        runner.run(accountErasure);
     }
 
     /** Daily, and only once the owner has turned the watch on: it calls out to the e-Gazette (W-236 C4a). */

@@ -3,6 +3,7 @@ package com.thiru.wealthlens.shared.privacy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
+import java.time.Period;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -16,22 +17,24 @@ class PrivacySettingsTest {
 
     private static final BreachReporting BREACH = new BreachReporting(72);
 
+    private static final Period HOLD = Period.ofYears(1);
+
     @Test
     void new_whenTheContactIsBlank_isRefusedNamingTheVariable() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings(" ", "your email", RIGHTS, PERIOD, BREACH))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings(" ", "your email", RIGHTS, PERIOD, BREACH, HOLD))
                 .withMessageContaining("PRIVACY_CONTACT");
     }
 
     @Test
     void new_whenNoRightIsPublished_isRefused() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", List.of(), PERIOD, BREACH))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", List.of(), PERIOD, BREACH, HOLD))
                 .withMessageContaining("r.14(1)");
     }
 
     @Test
     void notice_whenSettingsAreComplete_publishesEachRightTheIdentifierAndTheContact() {
         // Given
-        PrivacySettings settings = new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD, BREACH);
+        PrivacySettings settings = new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD, BREACH, HOLD);
 
         // When
         PrivacyNotice notice = settings.notice();
@@ -45,14 +48,26 @@ class PrivacySettingsTest {
 
     @Test
     void new_whenNoGrievancePeriodIsSet_isRefused() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, null, BREACH))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, null, BREACH, HOLD))
                 .withMessageContaining("r.14(3)");
     }
 
     @Test
     void new_whenNoBreachReportingIsSet_isRefused() {
         assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
-                null)).withMessageContaining("r.7(2)(b)");
+                null, HOLD)).withMessageContaining("r.7(2)(b)");
+    }
+
+    @Test
+    void new_whenNoErasureHoldIsSet_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
+                BREACH, null)).withMessageContaining("r.8(3)");
+    }
+
+    @Test
+    void new_whenTheErasureHoldIsZero_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD,
+                BREACH, Period.ZERO)).withMessageContaining("r.8(3)");
     }
 
     @Test

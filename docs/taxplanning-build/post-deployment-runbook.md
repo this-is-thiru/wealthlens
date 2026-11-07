@@ -291,7 +291,7 @@ Expected: no failures, and `leasesHeld` 0 between runs. A failure naming a tax y
 ### 1.z W-235 — erasure on request · owner · **first deploy carrying it, then after the first purge that erases**
 
 A user's `POST /tax/user/{email}/profiles/{profileId}/erasure` holds the profile at once (`erasure_requested_at`, its
-`pan_digest` removed) and answers `202` with the erase date, one year later (`app.tax.retention.erasure-hold: P1Y`, DPDP
+`pan_digest` removed) and answers `202` with the erase date, one year later (`app.privacy.erasure-hold: P1Y` since W-237d, DPDP
 Rules, 2025 r.8(3)). The monthly `retention-purge` (§1.y) then erases the profile and everything under it — drafts of every
 status, revisions, computations, family, employers, landlords, lenders, bank accounts, workspaces, regime election history,
 and the access records naming any of them — logging `Job retention-purge erased profile <id>`. Nothing to seed or correct.
@@ -387,6 +387,40 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/
 `200` with `answer.answeredAt`; the user reads it at `GET /privacy/grievances/user/{email}`. A second answer to the same
 grievance is refused (`400`), so a repeated call changes nothing. **Way back:** an answer given in error is corrected by
 writing to the user from the privacy contact; the stored answer is not edited.
+
+### 1.u W-237d — account-wide erasure · owner · **first deploy carrying it, then after the first run that erases**
+
+A user's `POST /privacy/erasure/user/{email}` holds the whole account at once (`privacy_erasure_requests`: `requested_at`)
+and answers `202` with `erasedFrom`, one year later (`app.privacy.erasure-hold: P1Y`, DPDP Rules, 2025 r.8(3)), and the
+privacy contact. From then the account cannot sign in, its tokens are refused, the email cannot be registered again, AMC
+billing skips its charge accounts, and each of its tax profiles is held as §1.z holds one. The daily `account-erasure`
+job (`app.tax.jobs.account-erasure-cron`, 04:30; one of §1.y's jobs, same lease and failure records) erases every
+module's data for each account past its year — portfolio, trades, P&L, charges, charge accounts, corporate-action
+watermarks, insurance, tax profiles and everything under them, the older salary profiles and computations, the person's
+access-log entries, grievances and breach intimations, their email in each breach notice's `affected` — the login last,
+then sets `erased_at`. The request row stays: it is the record that the erasure was done. Nothing to seed or correct.
+
+**Before the first start:** the hold moved from `app.tax.retention.erasure-hold` to `app.privacy.erasure-hold` (env var
+`APP_PRIVACY_ERASUREHOLD`); the run log has no §1.z run, so no environment carries the old name. **After a run that
+logged `Account erasure <id> done`** (read-only; replace `<email>`):
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const e = "<email>";
+    return { database: n, left: ["assets", "transactions", "trade_outcomes", "profit_and_loss", "user_charges",
+      "charge_accounts", "lastly_performed_corporate_action", "insurances", "salary_profiles", "tax_computations",
+      "tax_profiles", "tax_draft_computations", "privacy_grievances", "privacy_breach_intimations"].reduce((sum, c) =>
+        sum + d.getCollection(c).countDocuments({ email: e }), d.user_details.countDocuments({ _id: e })
+        + d.tax_access_log.countDocuments({ principal: e }) + d.privacy_breach_notices.countDocuments({ affected: e })),
+      heldOverdue: d.privacy_erasure_requests.countDocuments({ erased_at: null,
+        requested_at: { $lte: new Date(Date.now() - 367 * 864e5) } }) }; }) }])
+```
+
+Expected: `left` 0 and `heldOverdue` 0 on every database (an open request past its year means the job did not run or
+failed: §1.y's failure check; the next run completes it). A second run changes nothing: each erase deletes by email.
+**Way back:** none for an erased account. Before the hold ends, an account is released only with the user's word, by
+deleting its open request row in the console (`deleteOne` on its `_id`) and unsetting `erasure_requested_at` on its tax
+profiles. **Backups:** an Atlas snapshot keeps erased data until it expires (W-237f).
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 
