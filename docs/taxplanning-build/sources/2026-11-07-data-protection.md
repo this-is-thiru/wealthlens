@@ -40,6 +40,16 @@ on it.
 
 "not noted": the page was not recorded while reading; the rule number locates it.
 
+## Read for W-237 (session 50, the same copies; sha256 re-checked: `4deb2398…`, `eabc7d05…`)
+
+| # | Provision | Text, in substance (quoted where it decides) | Copy |
+|---|---|---|---|
+| 15 | Act s.3(c)(i) | The Act shall *"not apply to— (i) personal data processed by an individual for any personal or domestic purpose"* | 248045, pp.3–4 |
+| 16 | Act s.8(6) | *"In the event of a personal data breach, the Data Fiduciary shall give the Board and each affected Data Principal, intimation of such breach in such form and manner as may be prescribed"* | 248045, p.7 |
+| 17 | Act s.8(7)(b) | The Fiduciary shall *"cause its Data Processor to erase any personal data that was made available by the Data Fiduciary for processing to such Data Processor"* | 248045, p.8 |
+| 18 | Rules r.7(1) | On becoming aware of a breach, intimate *"to each affected Data Principal … without delay, through her user account or any mode of communication registered by her"*: its description, consequences, mitigation, the safety measures she may take, and a contact | 267650 |
+| 19 | Rules r.7(2) | To the Board: *"without delay"* a description; *"within seventy-two hours of becoming aware of the breach"* (or longer if the Board allows on a written request) the detail, causes, measures, findings on who caused it, remedies, and a report of the intimations given | 267650, pp.26–27 |
+
 ## What is not settled by these copies (owner's call, not mine)
 
 - Whether any law binds **WealthLens** (not the user) to keep a filed computation. The Income-tax Act's record duties

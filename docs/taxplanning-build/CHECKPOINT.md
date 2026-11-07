@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-236 committed and closed (D-469)
-Stage           : 6 (DONE); next by board order W-237, not started
-Done today      : sessions 49 – 50: D-462 – D-469 (W-145, W-243, W-244, W-146, W-146b, W-236; W-245 decided); W-241 – W-246, W-146a placed; WL-A-2 republished (§1.w); not pushed since d5479b0c
-Board           : W-236 D, W-237 · (next); W-146a · (after W-082e); W-238 – W-242 ·, W-246 · in Phase 14
-Next step       : read W-237's row and decision rows, write its plan, STOP
+Item            : none in flight — W-237 split (D-470); W-237a – g placed
+Stage           : 6 (DONE); next by board order W-237a, not started
+Done today      : sessions 49 – 50: D-462 – D-470 (W-145, W-243, W-244, W-146, W-146b, W-236; W-237 split; W-245 decided); W-241 – W-246, W-146a, W-237a – g placed; WL-A-2 republished; not pushed since d5479b0c
+Board           : W-236 D, W-237 · (parent), W-237a · (next) – W-237g ·; W-146a · (after W-082e); W-238 – W-242 ·, W-246 · in Phase 14
+Next step       : read W-237a's row and the data-protection sources, write its plan, STOP
 Owner actions   : pushed 2026-11-07: review/taxplanning at d5479b0c, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Six item commits since. Give the TAX_PRIVACY_CONTACT value (asked; none received yet); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.w (new: Gazette watch, when you choose), §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
 Last verify     : W-236: unit 4260 / 0 / 0; integration 425 / 0 / 0; Checkstyle 0; Spotless clean
 Files touched   : none
-Last item commit: taxplanning W-236: watch the e-Gazette daily for instruments that may change a shipped pack, recording leads, never writing a pack
-Updated         : 2026-11-07, session 50 — W-236 closed
+Last item commit: taxplanning W-237: split data protection across the app into seven duties, each to be planned against the Gazette copies
+Updated         : 2026-11-07, session 50 — W-237 split and committed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")
