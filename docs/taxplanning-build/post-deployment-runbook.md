@@ -34,7 +34,7 @@ a row in **Phase 15 — Post-deployment cleanup** of the backlog (YouTrack paren
 and taken once its run is logged below for every database it applies to (D-286).
 
 **Every file a step here saves is personal data, and is deleted (W-237f C3a).** A `mongoexport` taken as a step's way back
-(§0.5, §1A, §2.1 – §2.5, §1.s) is the owner's own copy, and Act s.8(7)(a) reaches it as it reaches the database. Delete
+(§0.5, §1A, §2.1 – §2.5, §1.s, §1.r) is the owner's own copy, and Act s.8(7)(a) reaches it as it reaches the database. Delete
 it once its step's result is in the run log and checked, or once the longest snapshot retention in §1.s has passed,
 whichever is first. The run-log line says "export deleted".
 
@@ -562,6 +562,43 @@ the snapshot, and its email may since belong to a new account, which must not be
 import was wrong, import the exports again and repeat step 4. **Profile-erasure records** (`tax_profile_erasures`:
 `email`, `profile_id`, `requested_at`, `erased_at`) are new with W-237f. They are written by each single-profile request
 from that deploy on, and erased a year after `erased_at` by §1.t's `log-retention` job. Nothing to seed.
+
+### 1.r W-248 (D-479) — personal data stored before W-248, encrypted · owner, `SUPER_USER` · **every database · right after the first start carrying W-248, before users**
+
+From W-248 these fields are stored encrypted under `TAX_DATA_KEY` (§0.5): `privacy_grievances` `text` and `answer`;
+`privacy_processing_log` `remote_address`; `insurances` `insurance_id`, `agent_name`, `agent_email`, `agent_contact`,
+`agent_address`, `notes`, and in each `policyDetails` element `policy_id`, the four `agent_*`, `notes` and
+`policy_description`. A row written before W-248 holds them in plain text, and the app refuses to read it (a `500`)
+until this step has run. The key properties moved from `app.tax.*` to `app.personal-data.data-key` / `digest-key`; they
+read the same `TAX_DATA_KEY` / `TAX_DIGEST_KEY`, so the environment does not change and every `k1:` row still reads.
+
+1. **Backup first** (the copy is personal data in plain text: delete it as the header says):
+   `mongodump --uri "<uri>" --db <db> --collection <c> --out <dir>` for `privacy_grievances`, `privacy_processing_log`
+   and `insurances`.
+2. **Check before** (read-only):
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    const plain = f => ({ [f]: { $regex: "^(?!k1:)" } });
+    const agent = ["agent_name", "agent_email", "agent_contact", "agent_address", "notes"];
+    return { database: n,
+      grievances: d.privacy_grievances.countDocuments({ $or: ["text", "answer"].map(plain) }),
+      processingLog: d.privacy_processing_log.countDocuments(plain("remote_address")),
+      insurances: d.insurances.countDocuments({ $or: ["insurance_id", ...agent].map(plain).concat([{ policyDetails:
+        { $elemMatch: { $or: ["policy_id", "policy_description", ...agent].map(plain) } } }]) }) }; }) }])
+```
+
+3. **Dry run**, then the real run, with a `SUPER_USER` token:
+   `curl -X POST -H "Authorization: Bearer <token>" "<host>/privacy/stored-fields/encrypt"` (a dry run by default),
+   then the same URL ending `?dryRun=false`. Expected: the dry run's `plainRows` per collection
+   equal step 2's counts and `encryptedRows` 0; the real run's `encryptedRows` equal `plainRows`.
+4. **Check after:** step 2 again — `0` everywhere.
+
+A second run is safe: it finds nothing and changes nothing. Each update is conditioned on the plain value it read, so
+a row that changed during a run is left for the next run, and a run that failed part-way is completed by the next.
+**Way back:** restore the three collections from step 1 and redeploy the previous build, which reads plain text.
+**One-time:** removed by W-254 (YouTrack WL-43) once this step's run is logged for every database.
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 

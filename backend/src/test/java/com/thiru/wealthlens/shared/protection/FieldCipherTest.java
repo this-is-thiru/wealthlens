@@ -1,4 +1,4 @@
-package com.thiru.wealthlens.taxplanning.protection;
+package com.thiru.wealthlens.shared.protection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -12,7 +12,7 @@ class FieldCipherTest {
     private static final String OTHER_KEY = "HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=";
 
     private static FieldCipher cipher(String key) {
-        return new FieldCipher(new TaxDataKeys(key, KEY));
+        return new FieldCipher(new PersonalDataKeys(key, KEY));
     }
 
     @Test
@@ -61,7 +61,7 @@ class FieldCipherTest {
     @Test
     void new_whenTheKeyIsMissingOrShort_refusesToStart() {
         // When / Then
-        assertThatThrownBy(() -> cipher(null)).isInstanceOf(IllegalStateException.class).hasMessageContaining("app.tax.data-key");
+        assertThatThrownBy(() -> cipher(null)).isInstanceOf(IllegalStateException.class).hasMessageContaining("app.personal-data.data-key");
         assertThatThrownBy(() -> cipher("AAEC")).isInstanceOf(IllegalStateException.class).hasMessageContaining("32 bytes");
     }
 }

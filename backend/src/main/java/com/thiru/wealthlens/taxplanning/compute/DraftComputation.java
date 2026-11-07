@@ -2,7 +2,7 @@ package com.thiru.wealthlens.taxplanning.compute;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
-import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.EncryptedField;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;

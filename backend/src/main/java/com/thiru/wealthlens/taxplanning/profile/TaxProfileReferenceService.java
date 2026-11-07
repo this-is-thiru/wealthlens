@@ -1,7 +1,7 @@
 package com.thiru.wealthlens.taxplanning.profile;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
-import com.thiru.wealthlens.taxplanning.protection.IdentifierDigest;
+import com.thiru.wealthlens.shared.protection.IdentifierDigest;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
 import java.util.List;

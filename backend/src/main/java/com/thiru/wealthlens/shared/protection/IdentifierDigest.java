@@ -1,4 +1,4 @@
-package com.thiru.wealthlens.taxplanning.protection;
+package com.thiru.wealthlens.shared.protection;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -18,8 +18,8 @@ public class IdentifierDigest {
 
     private final SecretKeySpec key;
 
-    public IdentifierDigest(TaxDataKeys keys) {
-        this.key = new SecretKeySpec(KeyBytes.decode(keys.digestKey(), "app.tax.digest-key"), ALGORITHM);
+    public IdentifierDigest(PersonalDataKeys keys) {
+        this.key = new SecretKeySpec(KeyBytes.decode(keys.digestKey(), "app.personal-data.digest-key"), ALGORITHM);
     }
 
     public String of(String identifier) {

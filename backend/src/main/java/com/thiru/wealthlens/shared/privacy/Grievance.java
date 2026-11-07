@@ -2,9 +2,11 @@ package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.EncryptedField;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -27,6 +29,7 @@ public class Grievance implements AuditableEntity {
     @Field("email")
     private String email;
 
+    @ValueConverter(EncryptedField.class)
     @Field("text")
     private String text;
 
@@ -38,6 +41,7 @@ public class Grievance implements AuditableEntity {
     @Field("respond_by")
     private LocalDateTime respondBy;
 
+    @ValueConverter(EncryptedField.class)
     @Field("answer")
     private String answer;
 

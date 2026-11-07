@@ -1,4 +1,4 @@
-package com.thiru.wealthlens.taxplanning.protection;
+package com.thiru.wealthlens.shared.protection;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FieldCipher {
 
-    private static final String KEY_ID = "k1:";
+    static final String KEY_ID = "k1:";
     private static final String TRANSFORMATION = "AES/GCM/NoPadding";
     private static final int NONCE_BYTES = 12;
     private static final int TAG_BITS = 128;
@@ -26,8 +26,8 @@ public class FieldCipher {
     private final SecretKeySpec key;
     private final SecureRandom random = new SecureRandom();
 
-    public FieldCipher(TaxDataKeys keys) {
-        this.key = new SecretKeySpec(KeyBytes.decode(keys.dataKey(), "app.tax.data-key"), "AES");
+    public FieldCipher(PersonalDataKeys keys) {
+        this.key = new SecretKeySpec(KeyBytes.decode(keys.dataKey(), "app.personal-data.data-key"), "AES");
     }
 
     public String encrypt(String plain) {

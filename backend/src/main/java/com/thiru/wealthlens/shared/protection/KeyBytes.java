@@ -1,4 +1,4 @@
-package com.thiru.wealthlens.taxplanning.protection;
+package com.thiru.wealthlens.shared.protection;
 
 import java.util.Base64;
 

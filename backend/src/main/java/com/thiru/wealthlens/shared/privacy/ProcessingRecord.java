@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.shared.privacy;
 
+import com.thiru.wealthlens.shared.protection.EncryptedField;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -42,6 +44,7 @@ public class ProcessingRecord {
     private int status;
 
     /** The address the request came from: r.8(3)'s "associated traffic data". */
+    @ValueConverter(EncryptedField.class)
     @Field("remote_address")
     private String remoteAddress;
 
