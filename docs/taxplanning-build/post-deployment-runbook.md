@@ -363,6 +363,31 @@ numbers adds nothing. Re-seeding sets the cursor back; the leads already recorde
 **Way back:** `app.tax.gazette-watch.enabled=false` and restart. The cursor and leads stay; they are read by nothing else.
 Nothing to back up: the watch writes only its own two collections.
 
+### 1.v W-237b — grievances answered within the published period · owner, `SUPER_USER` · **weekly, from the first deploy carrying it**
+
+A user raises a grievance with `POST /privacy/grievances/user/{email}` (`201`, a receipt naming `respondBy`: the receipt time plus
+`app.privacy.grievance.response-days`, 30, published in `GET /privacy/rights`). DPDP Rules, 2025 r.14(3) allow at most
+ninety days (`longest-days-allowed: 90`; a start whose period exceeds it is refused). Nothing to seed; the
+`privacy_grievances` collection is created by the first grievance. The app sends no mail: **this check is the measure
+that keeps answers in time.**
+
+**Weekly (read-only, safe to repeat, nothing to roll back):** as a `SUPER_USER`,
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/privacy/grievances"
+```
+
+Expected: the unanswered grievances, the one due soonest first. Answer each before its `respondBy`:
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"text": "<the answer>"}' "$BASE/privacy/grievances/<id>/answer"
+```
+
+`200` with `answer.answeredAt`; the user reads it at `GET /privacy/grievances/user/{email}`. A second answer to the same
+grievance is refused (`400`), so a repeated call changes nothing. **Way back:** an answer given in error is corrected by
+writing to the user from the privacy contact; the stored answer is not edited.
+
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 
 Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender`, `BankAccount`, `TaxYearWorkspace`, `FilingDraft`, `DraftRevision`, `RegimeElectionHistory` (`WorkspaceIndexInitializer`, W-099, D-441) and `DraftComputation` (`DraftComputationIndexInitializer`, W-104, D-442); a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Encryption at rest is built (W-134, D-447; W-232 merged into it): §0.5 before the first deploy carrying it.**

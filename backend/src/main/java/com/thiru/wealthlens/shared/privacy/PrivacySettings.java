@@ -11,9 +11,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param contact who answers questions about the processing of personal data ({@code PRIVACY_CONTACT})
  * @param identifier what identifies a user's request
  * @param rights each right and how to exercise it
+ * @param grievance the period within which a grievance is answered (r.14(3); W-237b)
  */
 @ConfigurationProperties(prefix = "app.privacy")
-public record PrivacySettings(String contact, String identifier, List<PrivacyRight> rights) {
+public record PrivacySettings(String contact, String identifier, List<PrivacyRight> rights, GrievancePeriod grievance) {
 
     public PrivacySettings {
         if (contact == null || contact.isBlank()) {
@@ -24,11 +25,15 @@ public record PrivacySettings(String contact, String identifier, List<PrivacyRig
             throw new IllegalStateException("app.privacy.identifier and app.privacy.rights must say what identifies a"
                     + " request and how each right is exercised (DPDP Rules r.14(1))");
         }
+        if (grievance == null) {
+            throw new IllegalStateException("app.privacy.grievance must state the period within which a grievance is answered"
+                    + " (DPDP Rules r.14(3))");
+        }
         rights = List.copyOf(rights);
     }
 
     /** The notice published at {@code GET /privacy/rights}. */
     public PrivacyNotice notice() {
-        return new PrivacyNotice(rights, identifier, contact);
+        return new PrivacyNotice(rights, identifier, contact, grievance.responseDays());
     }
 }

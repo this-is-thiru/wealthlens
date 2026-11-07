@@ -25,10 +25,16 @@ app:
         endpoints: ["POST /tax/user/{email}/profiles/{profileId}/erasure"]
       - right: "Redressal of a grievance about how your personal data is handled"
         section: "Digital Personal Data Protection Act, 2023 s.13"
-        means: "Write to the contact from the email your account is registered with"
+        means: "Raise it in the app; you are told at once the date by which it will be answered"
+        endpoints: ["POST /privacy/grievances/user/{email}"]
       - right: "Nominating another person to exercise these rights on your death or incapacity"
         section: "Digital Personal Data Protection Act, 2023 s.14"
         means: "Write to the contact from the email your account is registered with"
+    grievance:
+      # W-237b: the days within which a grievance is answered, published in the notice and promised on each receipt
+      response-days: 30
+      # DPDP Rules, 2025 r.14(3): "a reasonable period not exceeding ninety days" (G.S.R. 846(E), egazette 2025/267650 p.30)
+      longest-days-allowed: 90
   tax:
     data-key: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
     digest-key: HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=

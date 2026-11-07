@@ -2,6 +2,7 @@ package com.thiru.wealthlens.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thiru.wealthlens.shared.privacy.GrievanceReceipt;
 import com.thiru.wealthlens.shared.privacy.PrivacyNotice;
 import com.thiru.wealthlens.shared.privacy.PrivacyRight;
 import com.thiru.wealthlens.taxplanning.erasure.ErasureReceipt;
@@ -25,7 +26,8 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
 
     /** Each rights request the app serves, and the response it answers with. */
     private static final Map<String, Class<?>> RESPONSES = Map.of(
-            "POST /tax/user/{email}/profiles/{profileId}/erasure", ErasureReceipt.class);
+            "POST /tax/user/{email}/profiles/{profileId}/erasure", ErasureReceipt.class,
+            "POST /privacy/grievances/user/{email}", GrievanceReceipt.class);
 
     @Test
     void rights_whenReadWithoutSigningIn_publishesTheRightsTheIdentifierAndTheContact()
@@ -47,7 +49,8 @@ class PrivacyNoticeIntegrationTest extends AbstractIntegrationTest {
                 "Digital Personal Data Protection Act, 2023 s.13",
                 "Digital Personal Data Protection Act, 2023 s.14");
         assertThat(notice.rights()).flatExtracting(PrivacyRight::endpoints)
-                .containsExactly("POST /tax/user/{email}/profiles/{profileId}/erasure");
+                .containsExactly("POST /tax/user/{email}/profiles/{profileId}/erasure", "POST /privacy/grievances/user/{email}");
+        assertThat(notice.grievanceResponseDays()).isEqualTo(30);
     }
 
     @Test

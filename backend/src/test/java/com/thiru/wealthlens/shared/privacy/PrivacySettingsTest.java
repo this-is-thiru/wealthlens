@@ -12,22 +12,24 @@ class PrivacySettingsTest {
     private static final List<PrivacyRight> RIGHTS = List.of(
             new PrivacyRight("Erasure of your personal data", "s.12(1), (3)", "Write to the contact", null));
 
+    private static final GrievancePeriod PERIOD = new GrievancePeriod(30, 90);
+
     @Test
     void new_whenTheContactIsBlank_isRefusedNamingTheVariable() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings(" ", "your email", RIGHTS))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings(" ", "your email", RIGHTS, PERIOD))
                 .withMessageContaining("PRIVACY_CONTACT");
     }
 
     @Test
     void new_whenNoRightIsPublished_isRefused() {
-        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", List.of()))
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", List.of(), PERIOD))
                 .withMessageContaining("r.14(1)");
     }
 
     @Test
     void notice_whenSettingsAreComplete_publishesEachRightTheIdentifierAndTheContact() {
         // Given
-        PrivacySettings settings = new PrivacySettings("dpo@example.com", "your email", RIGHTS);
+        PrivacySettings settings = new PrivacySettings("dpo@example.com", "your email", RIGHTS, PERIOD);
 
         // When
         PrivacyNotice notice = settings.notice();
@@ -36,5 +38,28 @@ class PrivacySettingsTest {
         assertThat(notice.contact()).isEqualTo("dpo@example.com");
         assertThat(notice.identifier()).isEqualTo("your email");
         assertThat(notice.rights()).singleElement().satisfies(right -> assertThat(right.endpoints()).isEmpty());
+        assertThat(notice.grievanceResponseDays()).isEqualTo(30);
+    }
+
+    @Test
+    void new_whenNoGrievancePeriodIsSet_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new PrivacySettings("dpo@example.com", "your email", RIGHTS, null))
+                .withMessageContaining("r.14(3)");
+    }
+
+    @Test
+    void grievancePeriod_whenThePromiseExceedsTheLawsLimit_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new GrievancePeriod(91, 90))
+                .withMessageContaining("exceeds the longest period the law allows (90 days");
+    }
+
+    @Test
+    void grievancePeriod_whenThePromiseEqualsTheLawsLimit_isAccepted() {
+        assertThat(new GrievancePeriod(90, 90).responseDays()).isEqualTo(90);
+    }
+
+    @Test
+    void grievancePeriod_whenNoDaysAreSet_isRefused() {
+        assertThatIllegalStateException().isThrownBy(() -> new GrievancePeriod(0, 90)).withMessageContaining("at least one day");
     }
 }

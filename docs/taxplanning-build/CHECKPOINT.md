@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-237a committed and closed (D-471)
-Stage           : 6 (DONE); next by board order W-237b, not started
-Done today      : sessions 49 – 50: D-462 – D-471 (W-145, W-243, W-244, W-146, W-146b, W-236, W-237a; W-237 split; W-245 decided); W-241 – W-247, W-146a, W-237b – g placed; WL-A-2 republished; not pushed since d5479b0c
-Board           : W-237 · (parent), W-237a D, W-237b · (next) – W-237g ·, W-247 ·; W-146a · (after W-082e); W-238 – W-242 ·, W-246 · in Phase 14
-Next step       : read W-237b's row and the data-protection sources, write its plan, STOP
-Owner actions   : pushed 2026-11-07: review/taxplanning at d5479b0c, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Six item commits since. Give the PRIVACY_CONTACT value (renamed from TAX_PRIVACY_CONTACT by W-237a; asked, none received yet); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.w (new: Gazette watch, when you choose), §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : W-237a: unit 4261 / 0 / 0; integration 427 / 0 / 0; Checkstyle 0; Spotless clean
+Item            : none in flight — W-237b committed and closed (D-472)
+Stage           : 6 (DONE); next by board order W-237c, not started
+Done today      : sessions 49 – 51: D-462 – D-472 (W-145, W-243, W-244, W-146, W-146b, W-236, W-237a, W-237b; W-237 split; W-245 decided); W-241 – W-248, W-146a, W-237b – g placed; WL-A-2 republished; pushed at a4c41426, one item commit since
+Board           : W-237 · (parent), W-237a D, W-237b D, W-237c · (next) – W-237g ·, W-247 ·, W-248 ·; W-146a · (after W-082e); W-238 – W-242 ·, W-246 · in Phase 14
+Next step       : read W-237c's row and the data-protection sources (breach intimation, rows 16, 18, 19), write its plan, STOP
+Owner actions   : pushed 2026-11-07 (session 50): review/taxplanning at a4c41426, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Give the PRIVACY_CONTACT value (renamed from TAX_PRIVACY_CONTACT by W-237a; asked, none received yet); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.w (Gazette watch, when you choose), §1.v (new: weekly grievance queue), §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
+Last verify     : W-237b: unit + integration 4700 / 0 / 0; Checkstyle 0; Spotless clean
 Files touched   : none
-Last item commit: taxplanning W-237a: publish the means of exercising each data-protection right, the identifier and the contact, app-wide
-Updated         : 2026-11-07, session 50 — W-237a closed
+Last item commit: taxplanning W-237b: record grievances and answer them within the published period
+Updated         : 2026-11-07, session 51 — W-237b closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

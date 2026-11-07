@@ -34,7 +34,7 @@ public class AuthConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register", "/helper/**", "/finances/**", "/template/**", "/tax-planning/public/**", "/privacy/**").permitAll()
+                        .requestMatchers("/auth/login", "/auth/register", "/helper/**", "/finances/**", "/template/**", "/tax-planning/public/**", "/privacy/rights").permitAll()
                         .requestMatchers("/auth/**", "/portfolio/**", "/reports/**", "/transactions/**", "/corporate-action/**",
                                 "/temporary-transactions/**", "/broker-charges/**", "/user-broker-charges/**", "/test/**", "/analytics/**", "/tax-planning/**",
                                 // The charges engine. Listed explicitly because the fallback below
@@ -43,7 +43,9 @@ public class AuthConfig {
                                 // and /user-charges exposes one person's trading history.
                                 "/charge-schedules/**", "/charge-catalogue", "/charges/**", "/user-charges/**", "/charge-accounts/**",
                                 // Taxpayer data: PAN, family, income. Public by the same fallback unless named (W-096, D-440).
-                                "/tax/**").authenticated()
+                                "/tax/**",
+                                // A user's grievances and the owner's queue (W-237b); only the notice is public.
+                                "/privacy/**").authenticated()
                         .anyRequest().permitAll())
                 .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())
