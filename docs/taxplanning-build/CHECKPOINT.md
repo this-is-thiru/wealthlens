@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-142a committed and closed (D-458)
-Stage           : 6 (DONE); next by board order W-143, not started
-Done today      : session 48: D-451 – D-458 built and closed (W-235, W-139, W-139a, W-140, W-140a, W-141, W-142, W-142a); W-237 placed; pushed at W-142
-Board           : W-142a D, W-143 · (next)
-Next step       : read W-143's row and decision rows, write its plan, STOP
+Item            : none in flight — W-143 committed and closed (D-459); W-143a closed without code (D-460)
+Stage           : 6 (DONE); next by board order W-144, not started
+Done today      : session 48: D-451 – D-460 (W-235, W-139, W-139a, W-140, W-140a, W-141, W-142, W-142a, W-143; W-143a closed); W-237, W-238 placed
+Board           : W-143 D, W-143a —, W-144 · (next), W-238 · (new: the optimiser, owner to phase)
+Next step       : read W-144's row and decision rows, write its plan, STOP
 Owner actions   : pushed 2026-11-07: review/taxplanning at 27beca54, api-collection main at fe20cd9 (W-217 check passed: the pointer is on origin/main — run it again before every push). Give the TAX_PRIVACY_CONTACT value; sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : unit + integration 4629 / 0 / 0; Checkstyle 0; Spotless clean (at the W-142a commit)
+Last verify     : unit + integration 4629 / 0 / 0; -Pbenchmark 3 / 0 / 0; Checkstyle 0; Spotless clean (at the W-143 commit)
 Files touched   : none
-Last item commit: taxplanning W-142a: order the trace by the regime's declared pipeline and say when interest is not yet due
-Updated         : 2026-11-07, session 48 — W-142a closed
+Last item commit: taxplanning W-143: time the engine against its budgets and close the incremental runner they make unnecessary
+Updated         : 2026-11-07, session 48 — W-143 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

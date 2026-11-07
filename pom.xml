@@ -193,6 +193,8 @@
                 <configuration>
                     <!-- @{argLine} preserves the JaCoCo agent injected by prepare-agent. -->
                     <argLine>@{argLine}</argLine>
+                    <!-- Timings depend on the machine, so benchmarks run only under -Pbenchmark (W-143). -->
+                    <excludedGroups>benchmark</excludedGroups>
                 </configuration>
             </plugin>
 
@@ -361,6 +363,7 @@
             ./mvnw test              → everything (needs Docker)
             ./mvnw test -Punit       → unit only, no Docker, seconds
             ./mvnw test -Pintegration → integration only
+            ./mvnw test -pl backend -Pbenchmark → the performance budgets only (W-143), uninstrumented
         -->
         <profile>
             <id>unit</id>
@@ -370,7 +373,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>integration</excludedGroups>
+                            <excludedGroups>integration,benchmark</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -386,6 +389,24 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <groups>integration</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>benchmark</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- No JaCoCo agent: instrumentation would time the coverage, not the engine. -->
+                            <argLine combine.self="override"></argLine>
+                            <groups>benchmark</groups>
+                            <excludedGroups>integration</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>

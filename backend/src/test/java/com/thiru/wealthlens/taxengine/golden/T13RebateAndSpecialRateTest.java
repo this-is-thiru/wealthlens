@@ -102,13 +102,13 @@ class T13RebateAndSpecialRateTest {
     }
 
     /** One employment whose only pay is basic pay. */
-    private static Employment basicPay(String rupees) {
+    static Employment basicPay(String rupees) {
         return new Employment(List.of(new SalaryComponent(ComponentCodes.BASIC, Money.of(rupees))), false,
                 EmployerKind.OTHER, false, Optional.empty());
     }
 
     /** One long-term listed-equity lot bought for {@code cost} and sold on NSE for {@code consideration}, STT paid. */
-    private static CapitalGainsInput gains(String consideration, String cost) {
+    static CapitalGainsInput gains(String consideration, String cost) {
         BucketFacts facts = new BucketFacts("EQUITY", "PAID", "PAID", "PURCHASE", Optional.empty(), ACQUIRED, SOLD,
                 SideVenue.UNRECORDED, SOLD_ON_NSE);
         return CapitalGainsHarness.inputOf(new CapitalGainsInput.Bucket(Money.of(consideration), Money.of(cost),
@@ -116,7 +116,7 @@ class T13RebateAndSpecialRateTest {
     }
 
     /** The harness's resident taxpayer in TY 2026-27, in the default regime, with one employment and these gains. */
-    private static EngineInputs inputs(Employment employment, CapitalGainsInput gains) {
+    static EngineInputs inputs(Employment employment, CapitalGainsInput gains) {
         EngineInputs plain = NodeHarness.plainTaxpayer();
         return new EngineInputs(TY_2026_27, plain.regime(),
                 TemporalContext.forTaxYear(TY_2026_27, TY_2026_27.startsOn()), entered(employment),

@@ -278,9 +278,9 @@ F19 retirement events · F20 arrears relief · F21 advisor access · F22 NRI · 
 
 | ID | Requirement | Verified by |
 |---|---|---|
-| **N1** | Single compute p99 < 50 ms | ○ `W-143` |
-| **N2** | Regime comparison (N=2) p99 < 100 ms | ○ `W-143` |
-| **N3** | Optimiser p99 < 3 s synchronous | ○ `W-143` |
+| **N1** | Single compute p99 < 50 ms | ✅ `W-143` (p99 0.77 ms, M1 Pro, JDK 25; `-Pbenchmark`) |
+| **N2** | Regime comparison (N=2) p99 < 100 ms | ✅ `W-143` (p99 1.35 ms) |
+| **N3** | Optimiser p99 < 3 s synchronous | ○ `W-238` — the optimiser is not built; `W-143` timed W-084a's joint pricing instead (p99 34 ms) |
 | **N4** | Document parse asynchronous, target < 30 s | ○ `W-131` |
 | **N5** | Rule packs are compiled at startup only, never on the request path | ✅ `W-028` (provider); ○ `W-045g` (compiler) |
 | **N6** | PAN, salary, health and disability data encrypted at rest; identifiers masked in every log | ○ `W-134` |
