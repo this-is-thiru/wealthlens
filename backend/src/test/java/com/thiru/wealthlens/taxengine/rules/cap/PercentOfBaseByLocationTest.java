@@ -81,4 +81,10 @@ class PercentOfBaseByLocationTest {
                         Rate.percent("40")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void shapeName_whenNamed_namesItsBaseAndLocation() {
+        // When / Then — the label a trace line shows when nothing narrower bound the result (W-144)
+        assertThat(BY_CITY.shapeName()).isEqualTo("percentage of SALARY by LOCATION");
+    }
 }

@@ -93,4 +93,19 @@ class PercentOfBaseByPopulationTest {
         assertThatThrownBy(() -> new PercentOfBaseByPopulation.Band(-1, Rate.percent("5")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void apply_whenThePopulationIsNil_takesTheOtherwisePercentage() {
+        // When — no people exceeds no band: 5% × 12,00,000 = 60,000 (W-144: a nil population is valid, not refused)
+        CapResult result = forPopulation(0);
+
+        // Then
+        assertThat(result.value()).isEqualTo(Money.of("60000"));
+    }
+
+    @Test
+    void shapeName_whenNamed_namesItsBaseAndPopulation() {
+        // When / Then — the label a trace line shows when nothing narrower bound the result
+        assertThat(TABLE_I.shapeName()).isEqualTo("percentage of SALARY by POPULATION");
+    }
 }

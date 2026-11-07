@@ -144,6 +144,7 @@ class SlabLadderTest {
                     .isInstanceOf(PackValidationException.class)
                     .hasMessageContaining("band 1")
                     .hasMessageContaining("400001")
+                    .hasMessageContaining("band 0 upperInclusive 400000.00")
                     .hasMessageContaining("RATE-SLAB-BAND-002");
         }
 

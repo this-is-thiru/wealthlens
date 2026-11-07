@@ -212,4 +212,11 @@ class AggregateWithCeilingTest {
                     .hasMessageContaining("LIC_PREMIUM");
         }
     }
+
+    @Test
+    void shapeName_whenNamed_countsItsContributorsAndStatesItsCeiling() {
+        // When / Then — three contributors under the ₹1,50,000 ceiling (W-144)
+        assertThat(plainCeiling(List.of(EMPLOYEE_PF, LIC_PREMIUM, TUITION_FEES)).shapeName())
+                .isEqualTo("aggregate of 3 capped at 150000.00");
+    }
 }

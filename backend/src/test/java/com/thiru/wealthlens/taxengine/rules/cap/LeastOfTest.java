@@ -171,4 +171,11 @@ class LeastOfTest {
                     .hasMessageContaining("at least one limb");
         }
     }
+
+    @Test
+    void shapeName_whenNamed_countsItsLimbs() {
+        // When / Then — two limbs (W-144)
+        assertThat(new LeastOf(List.of(limb("received", "600000"), limb("ceiling", "300000"))).shapeName())
+                .isEqualTo("least of 2 limbs");
+    }
 }

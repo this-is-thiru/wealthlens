@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-143 committed and closed (D-459); W-143a closed without code (D-460)
-Stage           : 6 (DONE); next by board order W-144, not started
-Done today      : session 48: D-451 – D-460 (W-235, W-139, W-139a, W-140, W-140a, W-141, W-142, W-142a, W-143; W-143a closed); W-237, W-238 placed
-Board           : W-143 D, W-143a —, W-144 · (next), W-238 · (new: the optimiser, owner to phase)
-Next step       : read W-144's row and decision rows, write its plan, STOP
-Owner actions   : pushed 2026-11-07: review/taxplanning at 27beca54, api-collection main at fe20cd9 (W-217 check passed: the pointer is on origin/main — run it again before every push). Give the TAX_PRIVACY_CONTACT value; sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : unit + integration 4629 / 0 / 0; -Pbenchmark 3 / 0 / 0; Checkstyle 0; Spotless clean (at the W-143 commit)
+Item            : none in flight — W-144 committed and closed (D-461)
+Stage           : 6 (DONE); next by board order W-145, not started
+Done today      : session 48: D-451 – D-461 (W-235, W-139, W-139a, W-140, W-140a, W-141, W-142, W-142a, W-143, W-144; W-143a closed); W-237 – W-240 placed
+Board           : W-144 D, W-145 · (next); W-238 ·, W-239 ·, W-240 · at the end of Phase 14
+Next step       : read W-145's row and decision rows, write its plan, STOP
+Owner actions   : pushed 2026-11-07: review/taxplanning at d5479b0c, api-collection main at fe20cd9 (W-217 check passed — run it again before every push). Give the TAX_PRIVACY_CONTACT value (asked; none received yet); sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
+Last verify     : unit + integration 4634 / 0 / 0; verify gates met; -Pmutation-taxengine 103 / 103; Checkstyle 0; Spotless clean (at the W-144 commit)
 Files touched   : none
-Last item commit: taxplanning W-143: time the engine against its budgets and close the incremental runner they make unnecessary
-Updated         : 2026-11-07, session 48 — W-143 closed
+Last item commit: taxplanning W-144: gate the tax engine's coverage and its cap shapes' mutation score in the build
+Updated         : 2026-11-07, session 48 — W-144 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

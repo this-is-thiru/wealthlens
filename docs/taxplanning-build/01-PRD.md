@@ -287,8 +287,8 @@ F19 retirement events · F20 arrears relief · F21 advisor access · F22 NRI · 
 | **N7** | Landlord and lender data excluded from any user-shared export | ○ `W-135` |
 | **N8** | `ACTED_ON` drafts and their computations retained 8 years, derived from the rule packs' carry-forward periods | ○ `W-136` |
 | **N9** | Every computation carries a receipt: `TXC-<year>-<6 chars>` | ✅ `W-043` (type); ○ `W-107` (API) |
-| **N10** | JaCoCo: `taxengine` 95% line / 90% branch; `taxrules` 90% / 85% | ○ `W-144` |
-| **N11** | PIT mutation score ≥ 90% on cap shapes and marginal reliefs | ○ `W-144` |
+| **N10** | JaCoCo: `taxengine` 95% line / 90% branch; `taxrules` 90% / 85% | ◐ `W-144`: lines gated at these figures; branches gated as a ratchet at 81% / 76% (measured), raised to 90% / 85% by `W-240` |
+| **N11** | PIT mutation score ≥ 90% on cap shapes and marginal reliefs | ✅ `W-144` (`-Pmutation-taxengine`, threshold 90; 103 / 103 killed) |
 | **N12** | `./mvnw test -pl backend -Punit` under 20 s through the whole backlog (9.6 s warm at `W-045a`) | every item |
 
 ---
