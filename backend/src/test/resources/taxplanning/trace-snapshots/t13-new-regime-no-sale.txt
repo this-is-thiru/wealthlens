@@ -1,0 +1,26 @@
+1 | credits | CREDIT-TAX-PAID | MEASURE | tax at source
+2 | credits | CREDIT-TAX-PAID | MEASURE | advance tax
+3 | credits | CREDIT-TAX-PAID | MEASURE | self-assessment tax
+4 | salary.base | SAL-SALARY-FOR-HRA | MEASURE | 
+5 | salary.base | SAL-SALARY-FOR-GRATUITY | MEASURE | 
+6 | salary.base | SAL-SALARY-FOR-EMPLOYER-PENSION | MEASURE | 
+7 | salary.base | SAL-SALARY-FOR-EMPLOYEE-PENSION | MEASURE | 
+8 | salary.base | SAL-SALARY-FOR-ACCOM | MEASURE | 
+9 | salary.gross | SAL-SALARY-INCLUDES | INCOME | 
+10 | salary.deductions | SAL-STANDARD-DEDUCTION-NEW-TAX-REGIME | DEDUCTION | statutory amount
+11 | round.totalincome | RATE-ROUND-TOTAL-INCOME | ROUNDING | 
+12 | tax.bybasis | RATE-SLAB-NEW-TAX-REGIME | TAX | 
+13 | tax.afterrebate | REBATE-NEW-TAX-REGIME | RELIEF | the lesser of the tax and 60000.00
+14 | tax.afterrebate | REBATE-NEW-TAX-REGIME-EXCESS | RELIEF | total income does not exceed 1200000.00
+15 | tax.surcharge | RATE-SUR-NEW-TAX-REGIME | TAX | 
+16 | tax.surcharge | RATE-SUR-NEW-TAX-REGIME-CEILING | RELIEF | total income exceeds no surcharge threshold
+17 | tax.cess | RATE-HEALTH-EDUCATION-CESS | TAX | 
+18 | advance.tax | ADV-LIABILITY | MEASURE | not liable: below the amount advance tax starts at
+19 | interest.and.fees | INT-LATE-RETURN | INTEREST | 0 months from 2027-08-01 to 2026-11-06
+20 | interest.and.fees | INT-ADVANCE-SHORTFALL | INTEREST | not liable to advance tax
+21 | interest.and.fees | INT-DEFERMENT | INTEREST | not liable to advance tax
+22 | interest.and.fees | INT-DEFERMENT | INTEREST | not liable to advance tax
+23 | interest.and.fees | INT-DEFERMENT | INTEREST | not liable to advance tax
+24 | interest.and.fees | INT-DEFERMENT | INTEREST | not liable to advance tax
+25 | interest.and.fees | FEE-LATE-RETURN | FEE | furnished by 2027-07-31
+26 | round.netpayable | RATE-ROUND-PAYABLE | ROUNDING | 

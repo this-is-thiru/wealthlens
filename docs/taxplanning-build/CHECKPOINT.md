@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-141 committed and closed (D-456)
-Stage           : 6 (DONE); next by board order W-142, not started
-Done today      : session 48: D-451 (W-235), D-452 (W-139), D-453 (W-139a), D-454 (W-140), D-455 (W-140a), D-456 (W-141) built and closed; W-237 placed
-Board           : W-141 D, W-142 · (next)
-Next step       : read W-142's row and decision rows, write its plan, STOP
+Item            : none in flight — W-142 committed and closed (D-457)
+Stage           : 6 (DONE); next by board order W-142a, not started
+Done today      : session 48: D-451 – D-457 built and closed (W-235, W-139, W-139a, W-140, W-140a, W-141, W-142); W-237, W-142a placed
+Board           : W-142 D, W-142a · (next), W-143 ·
+Next step       : read W-142a's row and decision rows, write its plan, STOP
 Owner actions   : give the TAX_PRIVACY_CONTACT value; sign off the findings in reviews/pack-review-2025-26-to-2026-27.md; push review/taxplanning and api-collection when ready (W-217 check first); deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
-Last verify     : unit + integration 4624 / 0 / 0; Checkstyle 0; Spotless clean (at the W-141 commit)
+Last verify     : unit + integration 4627 / 0 / 0; Checkstyle 0; Spotless clean (at the W-142 commit)
 Files touched   : none
-Last item commit: taxplanning W-141: check the engine against an independent oracle written from the Gazette on 3,744 incomes
-Updated         : 2026-11-07, session 48 — W-141 closed
+Last item commit: taxplanning W-142: fail the build when the published trace changes without a reviewed snapshot
+Updated         : 2026-11-07, session 48 — W-142 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

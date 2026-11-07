@@ -13,8 +13,11 @@ import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
 import io.restassured.RestAssured;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -61,6 +64,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
     private static final String OWNER = "computer@example.com";
     private static final String REGIME = "{\"regime\": \"NEW_TAX_REGIME\"}";
+    private static final Path TRACE_SNAPSHOTS = Path.of("src/test/resources/taxplanning/trace-snapshots");
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private static final String ENTRIES = """
             [{"op": "add", "path": "/entered/employments/-", "value": {
@@ -160,9 +164,72 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
     }
 
     private JsonNode compute(String draftId) {
-        ResponseEntity<String> computed = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compute", REGIME, null);
+        return compute(draftId, REGIME);
+    }
+
+    private JsonNode compute(String draftId, String regime) {
+        ResponseEntity<String> computed = call(HttpMethod.POST, OWNER, "/drafts/" + draftId + "/compute", regime, null);
         assertThat(computed.getStatusCode()).as(computed.getBody()).isEqualTo(HttpStatus.OK);
         return JSON.readTree(computed.getBody());
+    }
+
+    /**
+     * The published trace ({@code ComputedTax.Step}) against its approved snapshot, one line per step (W-142, C1a, C3a):
+     * any difference fails, the explanation's wording included. {@code -Dtrace.snapshot.write=true} rewrites the file.
+     */
+    private static void assertTraceMatches(JsonNode view, String snapshot) throws IOException {
+        StringBuilder lines = new StringBuilder();
+        for (JsonNode step : view.at("/tax/trace")) {
+            lines.append(step.get("sequence").asInt()).append(" | ").append(step.get("node").asString()).append(" | ")
+                    .append(step.get("rule").asString()).append(" | ").append(step.get("kind").asString()).append(" | ")
+                    .append(step.get("limitedBy").isNull() ? "-" : step.get("limitedBy").asString()).append('\n');
+        }
+        Path file = TRACE_SNAPSHOTS.resolve(snapshot + ".txt");
+        if (Boolean.getBoolean("trace.snapshot.write")) {
+            Files.writeString(file, lines.toString());
+        }
+        assertThat(file).as("%s is missing: run with -Dtrace.snapshot.write=true and read it", file).exists();
+        assertThat(lines.toString())
+                .as("the trace changed: if meant, rerun with -Dtrace.snapshot.write=true and review the diff of %s", file)
+                .isEqualTo(Files.readString(file));
+    }
+
+    @Test
+    void trace_whenT13IsComputed_matchesItsApprovedSnapshot() throws IOException {
+        // Given
+        listedEquitySale();
+        String draftId = draft(true, "0");
+
+        // When
+        JsonNode view = compute(draftId);
+
+        // Then
+        assertTraceMatches(view, "t13-new-regime-with-sale");
+    }
+
+    @Test
+    void trace_whenThePortfolioHoldsNoSale_matchesItsApprovedSnapshot() throws IOException {
+        // Given
+        String draftId = draft(true, "0");
+
+        // When
+        JsonNode view = compute(draftId);
+
+        // Then
+        assertTraceMatches(view, "t13-new-regime-no-sale");
+    }
+
+    @Test
+    void trace_whenT13IsComputedUnderTheOldRegime_matchesItsApprovedSnapshot() throws IOException {
+        // Given
+        listedEquitySale();
+        String draftId = draft(true, "0");
+
+        // When
+        JsonNode view = compute(draftId, "{\"regime\": \"FIRST_SCHEDULE_RATES\"}");
+
+        // Then
+        assertTraceMatches(view, "t13-old-regime-with-sale");
     }
 
     private static BigDecimal rupees(JsonNode view, String figure) {
