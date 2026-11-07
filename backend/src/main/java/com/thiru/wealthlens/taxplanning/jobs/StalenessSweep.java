@@ -4,6 +4,7 @@ import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputation;
 import com.thiru.wealthlens.taxplanning.compute.DraftComputationRepository;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfileRepository;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatus;
 import com.thiru.wealthlens.taxplanning.workspace.FilingDraft;
@@ -35,6 +36,7 @@ public class StalenessSweep implements TaxJob {
     private final FilingDraftRepository drafts;
     private final DraftComputationRepository computations;
     private final TaxCalculator taxCalculator;
+    private final TaxpayerProfileRepository profiles;
 
     @Override
     public String name() {
@@ -49,7 +51,9 @@ public class StalenessSweep implements TaxJob {
     @Override
     public void run(JobContext context) {
         int flagged = 0;
-        for (FilingDraft draft : drafts.findByStatusIn(Set.of(DraftStatus.READY, DraftStatus.ACTED_ON))) {
+        Set<String> held = profiles.idsHeldForErasure();
+        for (FilingDraft draft : drafts.findByStatusIn(Set.of(DraftStatus.READY, DraftStatus.ACTED_ON)).stream()
+                .filter(draft -> !held.contains(draft.getProfileId())).toList()) {
             if (!context.holdsLease()) {
                 log.warn("Job {} lost its lease; stopping", name());
                 return;

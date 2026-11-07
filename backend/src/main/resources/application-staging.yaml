@@ -15,6 +15,7 @@ app:
   tax:
     data-key: ${TAX_DATA_KEY}
     digest-key: ${TAX_DIGEST_KEY}
+    privacy-contact: ${TAX_PRIVACY_CONTACT}
     jobs:
       enabled: true
       auto-archive-cron: "0 0 3 * * SUN"
@@ -22,6 +23,8 @@ app:
     retention:
       archive-after: P18M
       purge-archived-after: P12M
+      # Data Protection Rules, 2025 r.8(3): a year from the erasure request, the last processing (W-235)
+      erasure-hold: P1Y
   portfolio:
     idempotency:
       # How long a trade with NO client-supplied idempotencyKey stays de-duplicable, in seconds.

@@ -15,6 +15,7 @@ import com.thiru.wealthlens.taxplanning.jobs.JobLease;
 import com.thiru.wealthlens.taxplanning.jobs.RetentionPurge;
 import com.thiru.wealthlens.taxplanning.jobs.StalenessSweep;
 import com.thiru.wealthlens.taxplanning.jobs.TaxJobRunner;
+import com.thiru.wealthlens.taxplanning.profile.TaxpayerProfile;
 import com.thiru.wealthlens.taxplanning.workspace.DraftRevision;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStaleness;
 import com.thiru.wealthlens.taxplanning.workspace.DraftStatus;
@@ -386,5 +387,23 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(stored("old").getStaleness().ruleDiffAvailable()).isFalse();
         assertThat(stored("old").getStaleness().changedRules()).isEmpty();
+    }
+
+    @Test
+    void stalenessSweep_whenTheProfileIsHeldForErasure_flagsNothing() {
+        // Given — a READY draft whose law moved, as in the flagging case, but its profile held for erasure (W-235)
+        TaxpayerProfile held = new TaxpayerProfile();
+        held.setId("profile-1");
+        held.setErasureRequestedAt(LocalDateTime.parse("2026-11-01T00:00:00"));
+        mongoTemplate.save(held);
+        workspace("workspace-1", null);
+        draft("ready", DraftStatus.READY, 2026, "2026-10-01T12:00:00");
+        computation("ready", withOlder("LAW"), pinnedWithOneChanged());
+
+        // When
+        runner.run(stalenessSweep);
+
+        // Then
+        assertThat(stored("ready").getStaleness()).isNull();
     }
 }

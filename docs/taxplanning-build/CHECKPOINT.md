@@ -4,16 +4,16 @@
 owner anything, so a session cut off mid-message loses nothing. Rules: `00-START-HERE.md` §5b.
 
 ```
-Item            : none in flight — W-138 committed and closed (D-450)
-Stage           : next by board order: W-235 (erasure on request; DPDP Act to be sourced from the Gazette first), not started
-Done today      : session 47: D-447 (W-134 – W-136), D-448 (W-134a), D-449 (W-137), D-450 (W-138) built and closed
-Board           : W-138 D, W-235 · (next), W-236 · (after W-146)
-Next step       : read W-235 and its decision rows (DR 14 O5, D-447 C6a, D-449 C2a); find the DPDP Act, 2023 and its Rules in the Gazette (READ only from Gazette copies), write its plan, STOP
-Owner actions   : runbook §0.5, §0.6, §1.y (after the first job runs), §1.x, §3.7 – §3.9, §0.4 at the deploy; push review/taxplanning when ready (W-217 check first); `orb start` before the integration tier
-Last verify     : unit + integration 4457 / 0 / 0; Checkstyle 0; Spotless clean (at the W-138 commit)
+Item            : none in flight — W-235 committed and closed (D-451)
+Stage           : 6 (DONE); next by board order W-139, not started
+Done today      : session 48: DPDP sourced (Gazette); D-451 (W-235) built and closed; W-237 placed
+Board           : W-235 D, W-139 · (next), W-237 · (new, after W-236)
+Next step       : read W-139's row and decision rows, write its plan, STOP
+Owner actions   : give the TAX_PRIVACY_CONTACT value and set it in every environment (the start is refused without it); push review/taxplanning and api-collection when ready (W-217 check first); deploy runbook §0.5, §0.6, §1.y, §1.z, §1.x, §3.7 – §3.9, §0.4; `orb start` before the integration tier
+Last verify     : unit + integration 4465 / 0 / 0; Checkstyle 0; Spotless clean (at the W-235 commit)
 Files touched   : none
-Last item commit: taxplanning W-138: flag ready and filed drafts whose law moved, naming the rules that changed
-Updated         : 2026-11-06, session 47 — W-138 closed
+Last item commit: taxplanning W-235: erase a profile on request after the one-year hold, filed drafts included
+Updated         : 2026-11-07, session 48 — W-235 closed
 ```
 
 ## Resume check (run these, compare, then act on "Next step")

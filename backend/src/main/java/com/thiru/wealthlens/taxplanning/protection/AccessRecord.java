@@ -10,7 +10,8 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 
 /**
  * One read of special-category data, recorded even though nothing changed ({@code DR 14} O1.1, O4): who, what, when — never a
- * value. Appended only; nothing updates or deletes one, as the question "what did this product show this person" outlives the data.
+ * value. Appended only; nothing updates one, and only the erasure of what it names deletes it (W-235 C4a) — the hold before an
+ * erasure is the year the Data Protection Rules, 2025 r.6(1)(e) keep such logs.
  */
 @Data
 @NoArgsConstructor

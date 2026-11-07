@@ -4,6 +4,7 @@ import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.taxplanning.protection.IdentifierDigest;
 import com.thiru.wealthlens.taxplanning.protection.ReadSubject;
 import com.thiru.wealthlens.taxplanning.protection.TaxAccessLog;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,8 @@ public class TaxProfileService {
 
     /** Every profile of the account, each read recorded: a profile carries disability ({@code DR 14} O1.1). */
     public List<TaxpayerProfile> all(String email) {
-        List<TaxpayerProfile> profiles = taxpayerProfileRepository.findByEmail(email);
+        List<TaxpayerProfile> profiles = taxpayerProfileRepository.findByEmail(email).stream().filter(TaxProfileService::isActive)
+                .toList();
         profiles.forEach(profile -> taxAccessLog.record(email, ReadSubject.PROFILE, profile.getId()));
         return profiles;
     }
@@ -45,14 +47,15 @@ public class TaxProfileService {
     }
 
     /**
-     * The profile, if this account owns it.
+     * The profile, if this account owns it and it is not held for erasure.
      *
-     * @throws BadRequestException otherwise, saying the same whether it is absent or another account's
+     * @throws BadRequestException otherwise, saying the same whether it is absent, another account's or held for erasure
      */
     @Transactional(readOnly = true)
     public TaxpayerProfile owned(String email, String profileId) {
         return taxpayerProfileRepository.findById(profileId)
                 .filter(profile -> email.equals(profile.getEmail()))
+                .filter(TaxProfileService::isActive)
                 .orElseThrow(() -> new BadRequestException("This account holds no such profile"));
     }
 
@@ -60,9 +63,26 @@ public class TaxProfileService {
         return save(request.applyTo(owned(email, profileId)));
     }
 
+    /**
+     * Holds the profile for erasure from {@code requestedAt} (UTC; W-235): from then it reads as absent, and its PAN's digest is
+     * dropped so the PAN may be registered again. The encrypted PAN stays until the profile is erased.
+     */
+    public TaxpayerProfile holdForErasure(String email, String profileId, LocalDateTime requestedAt) {
+        TaxpayerProfile profile = owned(email, profileId);
+        profile.setErasureRequestedAt(requestedAt);
+        profile.setPanDigest(null);
+        TaxpayerProfile held = taxpayerProfileRepository.save(profile);
+        log.info("Held taxpayer profile {} for erasure", held.getId());
+        return held;
+    }
+
+    private static boolean isActive(TaxpayerProfile profile) {
+        return profile.getErasureRequestedAt() == null;
+    }
+
     private TaxpayerProfile save(TaxpayerProfile profile) {
         if (profile.isHoldsPortfolio() && taxpayerProfileRepository.findByEmailAndHoldsPortfolioTrue(profile.getEmail()).stream()
-                .anyMatch(holder -> !holder.getId().equals(profile.getId()))) {
+                .filter(TaxProfileService::isActive).anyMatch(holder -> !holder.getId().equals(profile.getId()))) {
             throw new BadRequestException("Another profile of this account already holds its portfolio");
         }
         profile.setPanDigest(identifierDigest.of(profile.getPan()));

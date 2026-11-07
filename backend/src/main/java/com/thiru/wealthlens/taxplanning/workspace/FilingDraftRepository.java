@@ -9,6 +9,9 @@ public interface FilingDraftRepository extends MongoRepository<FilingDraft, Stri
 
     List<FilingDraft> findByWorkspaceId(String workspaceId);
 
+    /** Every draft of a profile, across its years. */
+    List<FilingDraft> findByProfileId(String profileId);
+
     /** Drafts in {@code status} last changed before {@code updatedBefore}: what auto-archive considers. */
     List<FilingDraft> findByStatusAndAuditMetadataUpdatedAtBefore(DraftStatus status, LocalDateTime updatedBefore);
 

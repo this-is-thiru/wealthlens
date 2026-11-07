@@ -89,11 +89,12 @@ public class DraftComputationService {
     /**
      * What a receipt showed.
      *
-     * @throws BadRequestException if this account holds no such receipt
+     * @throws BadRequestException if this account holds no such receipt, or its profile is held for erasure
      */
     public DraftComputationView byReceipt(String email, String receipt) {
         DraftComputation stored = repository.findByReceiptAndEmail(receipt, email)
                 .orElseThrow(() -> new BadRequestException("This account holds no such receipt"));
+        draftService.ownedDraft(email, stored.getDraftId());
         taxAccessLog.record(email, ReadSubject.COMPUTATION, receipt);
         return MAPPER.readValue(stored.getResultJson(), DraftComputationView.class);
     }

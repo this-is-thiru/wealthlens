@@ -8,6 +8,7 @@ import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
 import com.thiru.wealthlens.taxplanning.protection.EncryptedField;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.convert.ValueConverter;
@@ -38,8 +39,11 @@ public class TaxpayerProfile implements AuditableEntity {
     @Field("pan")
     private String pan;
 
-    /** The PAN's keyed digest: what keeps a PAN unique now that the PAN itself is stored encrypted (D-447 C1a). */
-    @Indexed(unique = true)
+    /**
+     * The PAN's keyed digest: what keeps a PAN unique now that the PAN itself is stored encrypted (D-447 C1a). Absent while the
+     * profile is held for erasure, so the same PAN may be registered again (W-235); hence sparse.
+     */
+    @Indexed(unique = true, sparse = true)
     @Field("pan_digest")
     private String panDigest;
 
@@ -69,6 +73,13 @@ public class TaxpayerProfile implements AuditableEntity {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
     @Field("date_of_death")
     private LocalDate dateOfDeath;
+
+    /**
+     * When the user asked for this profile to be erased, in UTC (W-235). From then nothing reads or processes it; it is erased once
+     * the hold the law requires has passed ({@code RetentionPeriods#erasureHold}).
+     */
+    @Field("erasure_requested_at")
+    private LocalDateTime erasureRequestedAt;
 
     @Field("audit_metadata")
     private AuditMetadata auditMetadata = new AuditMetadata();

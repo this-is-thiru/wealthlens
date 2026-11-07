@@ -71,7 +71,7 @@ and seed before anyone trades. On staging the owner is the only user.
 
 | # | Check | Why |
 |---|---|---|
-| 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5 |
+| 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `TAX_PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
 | 0.1.2 | MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` warns at startup (§1.7) |
 | 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only |
 
@@ -186,7 +186,9 @@ the new build refuses to read, and `tax_employers`' unique index `tax_employer_t
 - **A lost key is lost data.** Nothing can decrypt a stored field without `TAX_DATA_KEY`, and a new `TAX_DIGEST_KEY`
   lets a second profile take a PAN already held. Keep both in the secret store **and** its backup before the first start.
 - **Collections are dropped, not emptied**, unlike §1A: dropping also removes the old indexes, and the new build creates
-  every index again at its start (§1.x). Drop while the new build is not yet running.
+  every index again at its start (§1.x). Drop while the new build is not yet running. **W-235:** `tax_profiles`' unique
+  `pan_digest` index is now **sparse** (a profile held for erasure has no digest); a start cannot change the options of the
+  old index of that name, so this drop is also what lets it be created.
 - **Only these eleven collections.** The tax-policy collections (`tax_slab_policies`, `tax_year_registry`, …) share the
   `tax_` prefix and are **not** touched.
 
@@ -285,6 +287,32 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
 Expected: no failures, and `leasesHeld` 0 between runs. A failure naming a tax year means a filed draft of a year no shipped pack covers: it is **kept**, and the row stays until the owner decides (ship that year's pack, or a D-row). Nothing to run twice; the collections are new.
 
 **Way back:** set `app.tax.jobs.enabled=false` and restart; nothing is scheduled, and stored drafts stay as they are. A draft the purge deleted is gone: restore it from the database backup.
+
+### 1.z W-235 — erasure on request · owner · **first deploy carrying it, then after the first purge that erases**
+
+A user's `POST /tax/user/{email}/profiles/{profileId}/erasure` holds the profile at once (`erasure_requested_at`, its
+`pan_digest` removed) and answers `202` with the erase date, one year later (`app.tax.retention.erasure-hold: P1Y`, DPDP
+Rules, 2025 r.8(3)). The monthly `retention-purge` (§1.y) then erases the profile and everything under it — drafts of every
+status, revisions, computations, family, employers, landlords, lenders, bank accounts, workspaces, regime election history,
+and the access records naming any of them — logging `Job retention-purge erased profile <id>`. Nothing to seed or correct.
+
+**Before the first start:** `TAX_PRIVACY_CONTACT` set (§0.1.1) to the contact the owner publishes; the start is refused
+without it. **After a purge that logged an erasure** (read-only; replace `<id>`):
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const id = "<id>";
+    return { database: n, left: ["tax_family_members", "tax_employers", "tax_landlords", "tax_lenders", "tax_bank_accounts",
+      "tax_year_workspaces", "tax_filing_drafts", "tax_regime_election_history"].reduce((sum, c) =>
+        sum + d.getCollection(c).countDocuments({ profile_id: id }), d.tax_profiles.countDocuments({ _id: id })),
+      heldOverdue: d.tax_profiles.countDocuments({ erasure_requested_at: { $lte: new Date(Date.now() - 366 * 864e5) } }) }; }) }])
+```
+
+Expected: `left` 0, `heldOverdue` 0 (a held profile past its year still present means the purge did not run or failed:
+§1.y's failure check). A second purge changes nothing. **Way back:** none for an erased profile — erasure is the point;
+before the hold ends, a held profile can be released only by unsetting `erasure_requested_at` in the console (the PAN
+digest is rebuilt on the user's next save), which needs the user's word. **Backups:** an Atlas snapshot keeps erased data
+until it expires (W-237).
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 

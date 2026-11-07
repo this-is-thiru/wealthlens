@@ -143,6 +143,14 @@ Two obligations pull in opposite directions, and the design must state which win
 | Audit log | 8 years | retained, **pseudonymised**: the profile id survives, the identifiers do not |
 | **Landlord and lender PAN** (third-party data) | **the tax year plus 2 years** — the shortest that still supports a query about the return | erased with the draft |
 
+**Amended by W-235 (2026-11-07, owner: C1a, C4a) — the "On erasure request" column above is superseded.** The Digital
+Personal Data Protection Act, 2023 s.12(3) erases on request *"unless retention … is necessary for the specified purpose or for
+compliance with any law"*, and no law found binds WealthLens (rather than the assessee) to keep a filed computation
+(`docs/taxplanning-build/sources/2026-11-07-data-protection.md`). So on request **everything under the profile is erased** —
+`ACTED_ON` drafts, computations, cross-year ledgers and the access records naming them included — after a **one-year hold**
+from the request, during which nothing reads or processes it (DPDP Rules, 2025 r.8(3), r.6(1)(e)). The default retention
+column is unchanged.
+
 `INFERENCE`: the eight-year figure is not arbitrary and should not be a magic number in code. It is
 `max(carry-forward periods in the pack)`, derivable from `SETOFF-CF-HP-001` and `SETOFF-CF-CG-001`, and
 it should be **computed from the rule pack** so that a change in the carry-forward period changes the

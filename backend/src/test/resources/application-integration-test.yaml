@@ -11,11 +11,14 @@ app:
   tax:
     data-key: AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
     digest-key: HyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4=
+    privacy-contact: privacy@example.com
     jobs:
       enabled: false
     retention:
       archive-after: P18M
       purge-archived-after: P12M
+      # Data Protection Rules, 2025 r.8(3): a year from the erasure request, the last processing (W-235)
+      erasure-hold: P1Y
   mongodb:
     transactions-enabled: true
 
