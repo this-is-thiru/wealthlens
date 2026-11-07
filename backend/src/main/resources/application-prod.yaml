@@ -20,6 +20,20 @@ app:
       enabled: true
       auto-archive-cron: "0 0 3 * * SUN"
       retention-purge-cron: "0 0 4 1 * *"
+      gazette-watch-cron: "0 0 5 * * *"
+    gazette-watch:
+      # W-236: off until the owner seeds the cursor and turns it on (runbook §1.w)
+      enabled: false
+      base-url: https://egazette.gov.in/WriteReadData
+      user-agent: WealthLens-GazetteWatch/1.0
+      timeout: 10s
+      pause: 1s
+      max-numbers-per-run: 400
+      misses-to-stop: 20
+      max-document-size: 40MB
+      # A copy naming the Board, or the Act with the Department, is a lead (sources/2026-11-07-gazette-watch-window.md)
+      lead-when-any: ["central board of direct taxes"]
+      lead-when-all: ["income-tax act", "department of revenue"]
     retention:
       archive-after: P18M
       purge-archived-after: P12M

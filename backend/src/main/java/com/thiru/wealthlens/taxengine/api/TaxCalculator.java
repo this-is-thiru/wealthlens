@@ -28,7 +28,9 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackProvider;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
+import com.thiru.wealthlens.taxengine.rules.temporal.Provision;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -149,6 +151,23 @@ public class TaxCalculator {
             }
         });
         return current;
+    }
+
+    /**
+     * Every section of an Income-tax Act cited by any version of any rule in the packs the application ships, with the citing
+     * rule — so a reader outside the engine can name the rules an instrument amending a section may touch (W-236).
+     */
+    public List<ProvisionCitation> provisionsCited() {
+        Set<ProvisionCitation> cited = new LinkedHashSet<>();
+        for (TaxYearId year : rulePacks.availableYears()) {
+            rulePacks.load(year).rules().forEach((id, row) -> row.versions().forEach(version -> {
+                for (Provision provision : List.of(version.provision1961(), version.provision2025())) {
+                    CitedSections.actOf(provision).ifPresent(act -> CitedSections.of(provision.reference())
+                            .forEach(section -> cited.add(new ProvisionCitation(act, section, id.value()))));
+                }
+            }));
+        }
+        return List.copyOf(cited);
     }
 
     private static RegimeSpec spec(RulePack pack, RegimeCode code) {

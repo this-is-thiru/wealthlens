@@ -314,6 +314,55 @@ before the hold ends, a held profile can be released only by unsetting `erasure_
 digest is rebuilt on the user's next save), which needs the user's word. **Backups:** an Atlas snapshot keeps erased data
 until it expires (W-237).
 
+### 1.w W-236 — the Gazette watch · owner, `SUPER_USER` · **when the owner chooses to start it; each database once**
+
+**Why.** A daily job reads new e-Gazette copies and records a lead for each that may change a shipped pack (it names
+the Central Board of Direct Taxes, or the Income-tax Act with the Department of Revenue). It **never writes a pack**: a
+lead is read by the owner against the Gazette before anything changes. It calls out to `egazette.gov.in`, so it ships
+**off** (`app.tax.gazette-watch.enabled: false` in all three profile yamls) and needs a starting point it never guesses.
+
+**Automatic on deploy:** `JobIndexInitializer` creates the unique index on `tax_gazette_leads.url` — **confirm** the log
+holds `Ensured the indexes of GazetteLead`.
+
+1. **Check before** (read-only): no cursor yet, no leads.
+
+   ```bash
+   curl -sS "$BASE/tax-planning/admin/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data | length'
+   ```
+
+   Expect `0`. In `mongosh`: `db.tax_gazette_cursor.find()` returns nothing.
+2. **Choose the starting number.** On egazette.gov.in, open a recent Extraordinary Gazette; its address ends
+   `WriteReadData/<year>/<number>.pdf`. The watch reads the numbers **after** the one given, so give the latest one already
+   looked at (a lower number only means a longer first run).
+3. **Seed the cursor** (recorded with the caller; a year before 2009 or after this year, or a number not positive, is a
+   400):
+
+   ```bash
+   curl -sS -X PUT "$BASE/tax-planning/admin/gazette-cursor" -H "Authorization: Bearer $ADMIN_TOKEN" \
+     -H "Content-Type: application/json" -d '{"year": <year>, "lastNumber": <number>}' | jq '.data'
+   ```
+
+   Expect the cursor back with `updatedBy` your login.
+4. **Turn it on:** set `app.tax.gazette-watch.enabled=true` for the environment (`APP_TAX_GAZETTEWATCH_ENABLED=true`)
+   and restart; `app.tax.jobs.enabled` must be true too. It runs at 05:00 daily, server time
+   (`app.tax.jobs.gazette-watch-cron`), reading at most 400 numbers and stopping after 20 missing in a row.
+5. **After the first run** (read-only): the log holds `Job gazette-watch stopped at <year>/<number>`, one
+   `Gazette lead <url> …` WARN line per lead, and no `Job gazette-watch refused`; then
+
+   ```bash
+   curl -sS "$BASE/tax-planning/admin/gazette-leads" -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.data[] | {url, page, note, possiblyAffected}'
+   ```
+
+   **Unverified until this run:** whether `egazette.gov.in` serves the server's host daily. A failure in
+   `tax_job_failures` naming an HTTP status, or no cursor movement, means it does not — turn the watch off and record it
+   in the run log.
+
+**Twice?** Safe: the cursor only moves forward past copies read, and a lead's URL is unique, so a rerun over the same
+numbers adds nothing. Re-seeding sets the cursor back; the leads already recorded stay.
+
+**Way back:** `app.tax.gazette-watch.enabled=false` and restart. The cursor and leads stay; they are read by nothing else.
+Nothing to back up: the watch writes only its own two collections.
+
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 
 Automatic at startup (`TaxProfileIndexInitializer`). **Confirm** the log holds `Ensured the indexes of` for `TaxpayerProfile`, `FamilyMember`, `Employer`, `Landlord`, `Lender`, `BankAccount`, `TaxYearWorkspace`, `FilingDraft`, `DraftRevision`, `RegimeElectionHistory` (`WorkspaceIndexInitializer`, W-099, D-441) and `DraftComputation` (`DraftComputationIndexInitializer`, W-104, D-442); a failure stops startup. The collections are new, so there is nothing to check first, and a second start changes nothing. Way back: drop the empty collections. **Encryption at rest is built (W-134, D-447; W-232 merged into it): §0.5 before the first deploy carrying it.**

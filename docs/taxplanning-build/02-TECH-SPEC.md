@@ -115,7 +115,7 @@ holder's module may see it (B-003, four times). `taxplanning` also contains the 
 `EngineInputs` is built (✅ `W-103`, D-442) · `portfolio/` `MoneyBridge` (✅ `W-087`, D-240: `fromTMoney` refuses a non-canonical or non-finite double; `toTMoney` throws) `CapitalGainsAdapter` (✅ `W-087b`, D-241: `inputFor(email, taxYear)` — term and rate basis from S2 ss.196–198 / 1961 ss.111A, 112, 112A on `EQUITY` and the bucket's STT flags; unclassified, speculative and unmapped assets refused; OQ-31 refused), reading `portfolio`'s `dto.CapitalGainsSummary` / `CapitalGainsBucket` (✅ `W-085`, D-237: gross per classification, asset type and sub-class; no brought-forward loss) from `service.CapitalGainsSummaryService.summaryFor(email, financialYear)` (✅ `W-086`, D-238; the adapter → `W-087b`) ·
 `projection/` `ForecastProjection` `CalendarProjection` `CompletenessProjection` (○ `W-113`–`W-115`)
 · `scenario/` `Scenario` `ScenarioDiff` `DiffLine` (⚠ UNOWNED) · `controller/` DTOs only · `job/`
-`TaxJob` + 6 jobs, `JobLease` (○ `W-137`).
+`TaxJob` + 6 jobs, `JobLease` (○ `W-137`) · `gazette/` `GazetteWatch` (a `TaxJob`, daily, off until seeded and enabled) `GazetteCopies` `GazetteMatcher` `GazetteLead` `GazetteCursor` — leads, never pack writes; tier two from `taxengine` `api.TaxCalculator.provisionsCited()` / `ProvisionCitation` (✅ `W-236`).
 
 **Name collisions to avoid** (the new `ArchitectureTest.simple_class_names_are_unique` enforces
 it): the legacy module already has `TaxComputationService`, `TaxComputationEntity`, `TaxEngine`,
@@ -594,3 +594,4 @@ truth plus this log. Earlier text is in git (last errata version: commit `db8a6b
 | 2026-10-31 | T4 `validate/`: D-252's check becomes "every row is reached" — a rule set's member, or a set's basis row (`DisallowanceSet.basis()`, `ConditionSet.basis()`); `RS-REG-NEW-TAX-REGIME-NO-EXEMPTION` / `-NO-SETOFF` and their generated constants go (153 sets → 151), the two basis rows name no `ruleSet`, and both years' law layers are relocked 2025-26.law.118 / 2026-27.law.121 | `W-198`, D-414 |
 | 2026-11-07 | T3 `timeline/`: eligibility condition sets are timeline data — `law/condition-sets/<ID>.json`, versioned and projected into each year's `law/regimes.json` as disallowance sets are; `DisallowanceSetVersions` generalised to `SetVersions` for both (W-244) | `W-244` |
 | 2026-11-07 | I27 built: `ContentPerturbationTest` — every content text rewritten, or `content/` removed, compiles the same pack in both years (W-146) | `W-146` |
+| 2026-11-07 | `taxplanning/gazette/`: the Gazette watch — a daily job reading whole e-Gazette copies by number for leads (CBDT, or the Income-tax Act with the Department of Revenue), stored in `tax_gazette_leads`; `taxengine` `api` gains `provisionsCited()` (W-236) | `W-236` |

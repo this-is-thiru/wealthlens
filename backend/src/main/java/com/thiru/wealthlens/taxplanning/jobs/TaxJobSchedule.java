@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxplanning.jobs;
 
+import com.thiru.wealthlens.taxplanning.gazette.GazetteWatch;
+import com.thiru.wealthlens.taxplanning.gazette.GazetteWatchSettings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -23,6 +25,10 @@ public class TaxJobSchedule {
     private final RetentionPurge retentionPurge;
     private final StalenessSweep stalenessSweep;
 
+    private final GazetteWatch gazetteWatch;
+
+    private final GazetteWatchSettings gazetteWatchSettings;
+
     @Scheduled(cron = "${app.tax.jobs.auto-archive-cron}")
     public void autoArchive() {
         runner.run(autoArchive);
@@ -37,5 +43,13 @@ public class TaxJobSchedule {
     @Scheduled(cron = "${app.tax.jobs.retention-purge-cron}")
     public void retentionPurge() {
         runner.run(retentionPurge);
+    }
+
+    /** Daily, and only once the owner has turned the watch on: it calls out to the e-Gazette (W-236 C4a). */
+    @Scheduled(cron = "${app.tax.jobs.gazette-watch-cron}")
+    public void gazetteWatch() {
+        if (gazetteWatchSettings.enabled()) {
+            runner.run(gazetteWatch);
+        }
     }
 }
