@@ -64,8 +64,6 @@ class ArchitectureTest {
                     javaClass -> javaClass.getPackageName().startsWith("com.thiru.wealthlens.shared.util")
                             && javaClass.getSimpleName().startsWith("T"));
 
-    /** Duplicate simple names that predate W-045a. Owed: 03-WORK-ITEMS.md Appendix F. May only shrink. */
-    private static final Set<String> DUPLICATE_NAMES_BEFORE_W045A = Set.of("DateRange", "ExcelParser");
 
 
     /**
@@ -487,7 +485,7 @@ class ArchitectureTest {
 
         Map<String, List<String>> duplicates = new TreeMap<>();
         byName.forEach((name, classes) -> {
-            if (classes.size() > 1 && !DUPLICATE_NAMES_BEFORE_W045A.contains(name)) {
+            if (classes.size() > 1) {
                 duplicates.put(name, classes);
             }
         });

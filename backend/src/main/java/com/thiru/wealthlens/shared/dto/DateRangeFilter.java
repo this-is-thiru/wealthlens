@@ -5,8 +5,9 @@ import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import java.time.LocalDate;
 import lombok.Data;
 
+/** The dates a bulk read is filtered to, both ends as entered ({@code BulkGetRequest.dateRange}). */
 @Data
-public class DateRange {
+public class DateRangeFilter {
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TCollectionUtil.DATE_FORMAT)
 	private LocalDate startDate;

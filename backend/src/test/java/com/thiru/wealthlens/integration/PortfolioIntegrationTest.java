@@ -17,7 +17,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
-import com.thiru.wealthlens.shared.dto.DateRange;
+import com.thiru.wealthlens.shared.dto.DateRangeFilter;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
@@ -844,7 +844,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(asset, "assets");
 
         BulkGetRequest request = new BulkGetRequest();
-        DateRange range = new DateRange();
+        DateRangeFilter range = new DateRangeFilter();
         range.setStartDate(LocalDate.now().minusDays(10));
         range.setEndDate(LocalDate.now().plusDays(10));
         request.setDateRange(range);
@@ -1141,7 +1141,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         BulkGetRequest request = new BulkGetRequest();
         // Include dateRange to satisfy controller's getStocks method
-        DateRange range = new DateRange();
+        DateRangeFilter range = new DateRangeFilter();
         range.setStartDate(LocalDate.now().minusYears(10));
         range.setEndDate(LocalDate.now().plusYears(1));
         request.setDateRange(range);
