@@ -1,0 +1,112 @@
+{
+  "ruleId": "HP-OWN-RESIDENCE-INTEREST",
+  "ruleSet": "RS-HP-OWN-RESIDENCE-INTEREST",
+  "_note": "Interest payable on capital borrowed for an own residence (S2 s.21(6); 1961 s.23(2)) is deducted, within HP-OWN-RESIDENCE-INTEREST-CAP, except in the new tax regime (D-156; rulebook HP-DED-INT-001, HP-NEW-001). TY 2026-27: Income-tax Act, 2025 s.22(1)(b) (Gazette 265620, p.47); s.202(2)(a)(v): the new regime's total income is computed without \"section 22(1)(b), in respect of properties referred to in section 21(6)\" (p.227); the Finance Act, 2026 amends s.202(2)(a) only by omitting (iii) (s.56, Gazette 271439, p.46). TY 2025-26: Income-tax Act, 1961 s.24(b) (thc p.147); s.115BAC(2)(i) as substituted by the Finance Act, 2023 s.52(C): computed without \"clause (b) of section 24 [in respect of the property referred to in sub-section (2) of section 23]\" (Gazette 244830, p.34). PercentOfBase 100 states the node's arithmetic. The same s.22(6) / s.25 and s.130–131 exclusions as HP-INTEREST. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches the loans of a house entered as an own residence (house.occupancy = OWN_RESIDENCE; W-157, D-355).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b), s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(1)(b), s.202(2)(a)(v)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "INTEREST"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "house.occupancy",
+          "code": "OWN_RESIDENCE"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (8 of 2023), s.52(C) — Income-tax Act, 1961 s.115BAC(2)(i) substituted (w.e.f. 1-4-2024)",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.24(b), p.147; Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), p.34; Income-tax Act, 1961 s.24(b), s.115BAC(2)(i): the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.24(b), s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.22(1)(b), s.202(2)(a)(v)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "INTEREST"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "house.occupancy",
+          "code": "OWN_RESIDENCE"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.22(1)(b), s.202(2)(a)(v)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(1)(b), p.47; s.202(2)(a)(v), p.227",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.22(1)(b), p.47; s.202(2)(a)(v), p.227",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "T1-O1",
+  "source": "DR 08 T1-O1 — Old regime, at the rebate ceiling. TI ₹5,00,000, age under 60",
+  "_source": "**Expected: ₹0.** Status `VERIFIED`.",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "500000",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "0"
+  }
+}

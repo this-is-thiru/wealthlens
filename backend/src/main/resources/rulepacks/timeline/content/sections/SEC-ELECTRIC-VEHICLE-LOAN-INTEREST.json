@@ -1,0 +1,55 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-ELECTRIC-VEHICLE-LOAN provision1961 (s.80EEB) and provision2025 (s.132). summary: S2 s.132(1)–(4); 1961 s.80EEB as inserted by F(No.2)A 2019 s.25 (sources M3; D-139, D-147). routes[0]: DED-ELECTRIC-VEHICLE-LOAN. disqualifiers[0]: the row's regimes. disqualifiers[1]: s.132(2), the row's definition. disqualifiers[2]: s.132(4); W-078. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-ELECTRIC-VEHICLE-LOAN (D-166; until then DED-ELECTRIC-VEHICLE-LOAN's ExceptIn).",
+  "key": "SEC-ELECTRIC-VEHICLE-LOAN-INTEREST",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80EEB",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.132",
+    "presence": "PRESENT"
+  },
+  "plainName": "Interest on an electric vehicle loan",
+  "summary": "Interest payable on a loan from a financial institution to buy an electric vehicle is deducted up to a limit, where the loan was sanctioned within the window the Act sets. The same interest may not be deducted anywhere else. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "A loan for an electric vehicle",
+      "description": "The interest payable in the year, up to the limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-ELECTRIC-VEHICLE-LOAN"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "It is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "A loan sanctioned outside the window.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-ELECTRIC-VEHICLE-LOAN"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "The same interest claimed under any other provision, such as house property, is not checked yet.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "house property income is not built"
+      }
+    }
+  ]
+}

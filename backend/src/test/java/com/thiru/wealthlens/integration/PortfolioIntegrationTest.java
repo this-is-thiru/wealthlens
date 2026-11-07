@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.OrderTimeQuantity;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
@@ -16,9 +17,11 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.service.PortfolioService;
 import com.thiru.wealthlens.portfolio.service.TransactionService;
 import com.thiru.wealthlens.shared.dto.BulkGetRequest;
-import com.thiru.wealthlens.shared.dto.DateRange;
+import com.thiru.wealthlens.shared.dto.DateRangeFilter;
 import com.thiru.wealthlens.shared.dto.RedriveResult;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.util.collection.TJsonMapper;
+import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import io.restassured.RestAssured;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -348,6 +351,54 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         // Application may return 400 or 500 depending on validation depth
         assertTrue(response.getStatusCode().value() == HttpStatus.BAD_REQUEST.value()
                 || response.getStatusCode().value() == HttpStatus.INTERNAL_SERVER_ERROR.value());
+    }
+
+    @Test
+    void addTransaction_goldBondWhenNoMaturityDate_expected400() {
+        String token = generateToken(TEST_EMAIL);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setAssetType(AssetType.GOLD_BOND);
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AssetRequest> entity = new HttpEntity<>(request, headers);
+
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertTrue(response.getBody().contains("A GOLD_BOND needs its MATURITY DATE; it is not assumed"));
+        assertEquals(0, mongoTemplate.count(
+                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
+                TransactionEntity.class, "transactions"),
+                "the refusal must come before any write");
+    }
+
+    @Test
+    void addTransaction_goldBondWhenMaturityDate_expectedStoredOnTheTransaction() {
+        String token = generateToken(TEST_EMAIL);
+        LocalDate maturityDate = LocalDate.of(2032, 2, 20);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setAssetType(AssetType.GOLD_BOND);
+        request.setMaturityDate(maturityDate);
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AssetRequest> entity = new HttpEntity<>(request, headers);
+
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        TransactionEntity stored = mongoTemplate.findOne(
+                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
+                TransactionEntity.class, "transactions");
+        assertNotNull(stored);
+        assertEquals(maturityDate, stored.getMaturityDate());
     }
 
     // ============================================================
@@ -703,6 +754,33 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void getAllStocks_whenAHoldingWasBoughtOnTwoDates_reportsTheDaysHeldForEach() {
+        String token = generateToken(TEST_EMAIL);
+
+        // Given -- one holding bought 400 days ago and 30 days ago
+        LocalDate today = TLocalDate.today();
+        AssetEntity older = buildAssetEntity();
+        older.setTransactionDate(today.minusDays(400));
+        AssetEntity newer = buildAssetEntity();
+        newer.setTransactionDate(today.minusDays(30));
+        mongoTemplate.save(older, "assets");
+        mongoTemplate.save(newer, "assets");
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/stocks/all";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, new HttpEntity<>(headers),
+                String.class);
+
+        // Then
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        AssetResponse holding = TJsonMapper.readAsList(response.getBody(), AssetResponse.class).getFirst();
+        assertEquals(400L, holding.getDaysHeld().get(today.minusDays(400).toString()));
+        assertEquals(30L, holding.getDaysHeld().get(today.minusDays(30).toString()));
+    }
+
+    @Test
     void getAllStocks_empty_whenNoAssets_expected200AndEmptyList() {
         String token = generateToken(TEST_EMAIL);
 
@@ -766,7 +844,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         mongoTemplate.save(asset, "assets");
 
         BulkGetRequest request = new BulkGetRequest();
-        DateRange range = new DateRange();
+        DateRangeFilter range = new DateRangeFilter();
         range.setStartDate(LocalDate.now().minusDays(10));
         range.setEndDate(LocalDate.now().plusDays(10));
         request.setDateRange(range);
@@ -782,66 +860,6 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         assertNotNull(response.getBody());
-    }
-
-    @Test
-    void getAssets_longTerm_whenOldAssetsExist_expected200() {
-        String token = generateToken(TEST_EMAIL);
-
-        AssetEntity asset = buildAssetEntity();
-        asset.setTransactionDate(LocalDate.now().minusYears(2));
-        mongoTemplate.save(asset, "assets");
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/LONG_TERM";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-    }
-
-    @Test
-    void getAssets_shortTerm_whenRecentAssetsExist_expected200() {
-        String token = generateToken(TEST_EMAIL);
-
-        AssetEntity asset = buildAssetEntity();
-        asset.setTransactionDate(LocalDate.now().minusMonths(3));
-        mongoTemplate.save(asset, "assets");
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/SHORT_TERM";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-    }
-
-    @Test
-    void getAssets_noMatch_whenNoAssetsInCategory_expected200AndEmpty() {
-        String token = generateToken(TEST_EMAIL);
-
-        // Seed a non-matching asset (old, LONG_TERM)
-        AssetEntity asset = buildAssetEntity();
-        asset.setTransactionDate(LocalDate.now().minusYears(5));
-        mongoTemplate.save(asset, "assets");
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/SHORT_TERM";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, String.class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        // SHORT_TERM won't include assets > 1 year old - expect empty list
-        assertEquals("[]", response.getBody());
     }
 
     @Test
@@ -978,48 +996,6 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         assertNotNull(response.getBody());
-    }
-
-    // ============================================================
-    // downloadTermAssets
-    // ============================================================
-
-    @Test
-    void downloadTermAssets_excelGeneration_whenAssetsExist_expected200WithExcel() {
-        String token = generateToken(TEST_EMAIL);
-
-        // Seed an old asset (LONG_TERM)
-        AssetEntity asset = buildAssetEntity();
-        asset.setTransactionDate(LocalDate.now().minusYears(2));
-        mongoTemplate.save(asset, "assets");
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/LONG_TERM/excel";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<byte[]> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, byte[].class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
-    }
-
-    @Test
-    void downloadTermAssets_fileStreamHeaders_whenDownloading_expectedContentDisposition() {
-        String token = generateToken(TEST_EMAIL);
-
-        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/assets/holding/LONG_TERM/excel";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        RestTemplate rt = createRestTemplate();
-        ResponseEntity<byte[]> response = rt.exchange(URI.create(url), HttpMethod.GET, entity, byte[].class);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
-        assertTrue(response.getHeaders().getContentDisposition().toString().startsWith("attachment; filename="));
     }
 
     // ============================================================
@@ -1165,7 +1141,7 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
         BulkGetRequest request = new BulkGetRequest();
         // Include dateRange to satisfy controller's getStocks method
-        DateRange range = new DateRange();
+        DateRangeFilter range = new DateRangeFilter();
         range.setStartDate(LocalDate.now().minusYears(10));
         range.setEndDate(LocalDate.now().plusYears(1));
         request.setDateRange(range);
@@ -1284,6 +1260,54 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
         // the type no longer exists.
         assertEquals(0, mongoTemplate.getCollection("user_broker_charges").countDocuments(),
                 "nothing may write the superseded implementation's collection");
+    }
+
+    @Test
+    void addTransactionV2_goldBondWhenNoMaturityDate_expected400() {
+        String token = generateToken(TEST_EMAIL);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setAssetType(AssetType.GOLD_BOND);
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AssetRequest> entity = new HttpEntity<>(request, headers);
+
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertTrue(response.getBody().contains("A GOLD_BOND needs its MATURITY DATE; it is not assumed"));
+        assertEquals(0, mongoTemplate.count(
+                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
+                TransactionEntity.class, "transactions"),
+                "the refusal must come before any write");
+    }
+
+    @Test
+    void addTransactionV2_goldBondWhenMaturityDate_expectedStoredOnTheTransaction() {
+        String token = generateToken(TEST_EMAIL);
+        LocalDate maturityDate = LocalDate.of(2032, 2, 20);
+        AssetRequest request = buildBuyRequest(TEST_STOCK_CODE, TEST_STOCK_NAME, 10.0, 2500.0);
+        request.setAssetType(AssetType.GOLD_BOND);
+        request.setMaturityDate(maturityDate);
+
+        String url = baseUrl() + "/portfolio/user/" + TEST_EMAIL + "/transaction/v2";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<AssetRequest> entity = new HttpEntity<>(request, headers);
+
+        RestTemplate rt = createRestTemplate();
+        ResponseEntity<String> response = rt.exchange(URI.create(url), HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        TransactionEntity stored = mongoTemplate.findOne(
+                new org.springframework.data.mongodb.core.query.Query(Criteria.where("email").is(TEST_EMAIL)),
+                TransactionEntity.class, "transactions");
+        assertNotNull(stored);
+        assertEquals(maturityDate, stored.getMaturityDate());
     }
 
 

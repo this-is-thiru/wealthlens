@@ -1,0 +1,239 @@
+package com.thiru.wealthlens.taxengine.rules.json;
+
+import com.thiru.wealthlens.taxengine.rules.cap.AggregateWithCeiling;
+import com.thiru.wealthlens.taxengine.rules.cap.AmountInExcess;
+import com.thiru.wealthlens.taxengine.rules.cap.CapShape;
+import com.thiru.wealthlens.taxengine.rules.cap.Fixed;
+import com.thiru.wealthlens.taxengine.rules.cap.LeastOf;
+import com.thiru.wealthlens.taxengine.rules.cap.PerUnitPerPeriod;
+import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBase;
+import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByLocation;
+import com.thiru.wealthlens.taxengine.rules.cap.PercentOfBaseByPopulation;
+import com.thiru.wealthlens.taxengine.rules.cap.SlabLadder;
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.RegimeApplicability;
+import com.thiru.wealthlens.taxengine.rules.registry.Provenance;
+import com.thiru.wealthlens.taxengine.rules.relief.ExcessOverThreshold;
+import com.thiru.wealthlens.taxengine.rules.relief.FlatWithCeiling;
+import com.thiru.wealthlens.taxengine.rules.relief.NoRelief;
+import com.thiru.wealthlens.taxengine.rules.relief.ReliefShape;
+import com.thiru.wealthlens.taxengine.rules.relief.RuleRelief;
+import com.thiru.wealthlens.taxengine.rules.relief.ThresholdLadderCeiling;
+import com.thiru.wealthlens.taxengine.rules.rounding.RuleRounding;
+import com.thiru.wealthlens.taxengine.rules.temporal.Validity;
+import com.thiru.wealthlens.taxengine.rules.validate.PackValidationException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import tools.jackson.databind.JsonNode;
+
+/**
+ * The sealed families a rule version is made of: when it applies, where, what it limits, what relief
+ * it grants, and what it rounds to.
+ *
+ * <p>Each family is a tagged union keyed on {@code "type"}, and an unrecognised tag fails with the
+ * permitted tags listed — because the reader of that message is a pack author choosing between
+ * {@code "SlabLadder"} and {@code "SlabLadder "} with a trailing space, not a Java developer.
+ *
+ * <p>What a version defines is read by {@link DefinitionJson}.
+ */
+public final class ShapeJson {
+
+    private ShapeJson() {
+    }
+
+    // ---------------------------------------------------------------- Validity
+
+    /** When a rule version was in force. */
+    public static Validity validity(JsonNode node, String path, Provenance provenance) {
+        String tag = PackJson.tag(node, path, "Between", "Retrospective", "PendingNotification");
+        return PackJson.construct(path, () ->
+        switch (tag) {
+                    case "Between" -> new Validity.Between(
+                            PackJson.date(node, "from", path), PackJson.optionalDate(node, "to", path));
+                    case "Retrospective" -> new Validity.Retrospective(
+                            PackJson.date(node, "deemedEffectiveFrom", path),
+                            PackJson.optionalDate(node, "to", path),
+                            PackJson.date(node, "actuallyEnactedOn", path));
+                    case "PendingNotification" -> new Validity.PendingNotification(
+                            new RuleId(PackJson.text(node, "interimRule", path)),
+                            PackJson.text(node, "interimDescription", path),
+                            provenance);
+                    default -> throw unreachable(tag, path);
+                });
+    }
+
+    // ------------------------------------------------------- RegimeApplicability
+
+    /** Which regimes a rule version applies in. */
+    public static RegimeApplicability regimes(JsonNode node, String path) {
+        String tag = PackJson.tag(node, path, "AllRegimes", "OnlyIn", "ExceptIn");
+        return PackJson.construct(path, () ->
+        switch (tag) {
+                    case "AllRegimes" -> new RegimeApplicability.AllRegimes();
+                    case "OnlyIn" -> new RegimeApplicability.OnlyIn(regimeCodes(node, path));
+                    case "ExceptIn" -> new RegimeApplicability.ExceptIn(regimeCodes(node, path));
+                    default -> throw unreachable(tag, path);
+                });
+    }
+
+    private static Set<RegimeCode> regimeCodes(JsonNode node, String path) {
+        return PackJson.array(node, "regimes", path, e -> new RegimeCode(e.node().asString()))
+                .stream()
+                .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
+    }
+
+    // ---------------------------------------------------------------- CapShape
+
+    /** A statutory limit. All six shapes. */
+    public static CapShape cap(JsonNode node, String path) {
+        String tag = PackJson.tag(
+                node,
+                path,
+                "Fixed",
+                "PercentOfBase",
+                "SlabLadder",
+                "LeastOf",
+                "AggregateWithCeiling",
+                "PerUnitPerPeriod",
+                "AmountInExcess",
+                "PercentOfBaseByLocation",
+                "PercentOfBaseByPopulation");
+        return PackJson.construct(path, () ->
+        switch (tag) {
+                    case "Fixed" -> new Fixed(PackJson.money(node, "amount", path));
+                    case "PercentOfBase" -> new PercentOfBase(
+                            PackJson.rate(node, "percent", path), new BaseId(PackJson.text(node, "base", path)));
+                    case "SlabLadder" -> slabLadder(node, path);
+                    case "LeastOf" -> leastOf(node, path);
+                    case "AggregateWithCeiling" -> aggregate(node, path);
+                    case "PerUnitPerPeriod" -> perUnitPerPeriod(node, path);
+                    case "AmountInExcess" -> new AmountInExcess(new BaseId(PackJson.text(node, "amount", path)),
+                            cap(PackJson.object(node, "threshold", path), path + ".threshold"));
+                    case "PercentOfBaseByLocation" -> percentByLocation(node, path);
+                    case "PercentOfBaseByPopulation" -> percentByPopulation(node, path);
+                    default -> throw unreachable(tag, path);
+                });
+    }
+
+    private static SlabLadder slabLadder(JsonNode node, String path) {
+        List<SlabLadder.Band> bands = PackJson.array(node, "bands", path, element -> {
+            JsonNode band = element.node();
+            return new SlabLadder.Band(
+                    PackJson.money(band, "lowerExclusive", element.path()),
+                    PackJson.optionalMoney(band, "upperInclusive", element.path()),
+                    PackJson.rate(band, "rate", element.path()));
+        });
+        SlabLadder ladder =
+                new SlabLadder(bands, new BaseId(PackJson.text(node, "base", path)));
+        ladder.validate();
+        return ladder;
+    }
+
+    private static LeastOf leastOf(JsonNode node, String path) {
+        return new LeastOf(PackJson.array(node, "limbs", path, element -> new LeastOf.Limb(
+                PackJson.text(element.node(), "name", element.path()),
+                cap(PackJson.object(element.node(), "shape", element.path()), element.path() + ".shape"))));
+    }
+
+    private static PercentOfBaseByLocation percentByLocation(JsonNode node, String path) {
+        List<PercentOfBaseByLocation.Band> bands = PackJson.array(node, "bands", path, element ->
+                new PercentOfBaseByLocation.Band(
+                        new java.util.LinkedHashSet<>(PackJson.array(element.node(), "locations", element.path(),
+                                e -> e.node().asString())),
+                        PackJson.rate(element.node(), "percent", element.path())));
+        return new PercentOfBaseByLocation(new BaseId(PackJson.text(node, "base", path)),
+                new BaseId(PackJson.text(node, "location", path)), bands, PackJson.rate(node, "otherwise", path));
+    }
+
+    private static PercentOfBaseByPopulation percentByPopulation(JsonNode node, String path) {
+        List<PercentOfBaseByPopulation.Band> bands = PackJson.array(node, "bands", path, element ->
+                new PercentOfBaseByPopulation.Band(PackJson.integer(element.node(), "exceeding", element.path()),
+                        PackJson.rate(element.node(), "percent", element.path())));
+        return new PercentOfBaseByPopulation(new BaseId(PackJson.text(node, "base", path)),
+                new BaseId(PackJson.text(node, "population", path)), bands, PackJson.rate(node, "otherwise", path));
+    }
+
+    private static AggregateWithCeiling aggregate(JsonNode node, String path) {
+        List<ComponentCode> contributors = PackJson.array(
+                node, "contributors", path, e -> new ComponentCode(e.node().asString()));
+
+        Map<ComponentCode, CapShape> subCaps = new LinkedHashMap<>();
+        PackJson.optionalObject(node, "subCaps", path).ifPresent(caps -> {
+            for (String code : caps.propertyNames()) {
+                subCaps.put(
+                        new ComponentCode(code),
+                        cap(caps.get(code), path + ".subCaps." + code));
+            }
+        });
+        return new AggregateWithCeiling(contributors, PackJson.money(node, "ceiling", path), subCaps);
+    }
+
+    private static PerUnitPerPeriod perUnitPerPeriod(JsonNode node, String path) {
+        Optional<String> unit = PackJson.optionalText(node, "unit", path);
+        return new PerUnitPerPeriod(
+                PackJson.money(node, "amount", path),
+                unit.map(BaseId::new),
+                unit.isPresent() ? PackJson.integer(node, "maxUnits", path) : 1,
+                new BaseId(PackJson.text(node, "period", path)));
+    }
+
+    // ---------------------------------------------------------------- ReliefShape
+
+    /**
+     * A relief, with its limit to slab-rate tax. The limit has no default: absent is refused, so a
+     * rebate's limit is always stated in the pack (D-075).
+     */
+    public static RuleRelief relief(JsonNode node, String path) {
+        String tag = PackJson.tag(
+                node, path, "FlatWithCeiling", "ExcessOverThreshold", "ThresholdLadderCeiling", "NoRelief");
+        boolean limitedToSlabRateTax = PackJson.bool(node, "limitedToSlabRateTax", path);
+        return PackJson.construct(path, () -> {
+            ReliefShape shape = switch (tag) {
+                case "FlatWithCeiling" -> new FlatWithCeiling(
+                        PackJson.money(node, "maximum", path), PackJson.money(node, "incomeCeiling", path));
+                case "ExcessOverThreshold" -> new ExcessOverThreshold(PackJson.money(node, "threshold", path));
+                case "ThresholdLadderCeiling" -> new ThresholdLadderCeiling(PackJson.array(
+                        node, "thresholds", path, e -> moneyElement(e.node(), e.path())));
+                case "NoRelief" -> new NoRelief();
+                default -> throw unreachable(tag, path);
+            };
+            return new RuleRelief(shape, limitedToSlabRateTax);
+        });
+    }
+
+    // ---------------------------------------------------------------- RuleRounding
+
+    /**
+     * The step an amount is rounded to and the remainder from which it rounds up (D-316). Untagged: rounding is one
+     * kind, not a family, so a {@code type} would be a choice with a single option (D-078).
+     */
+    public static RuleRounding rounding(JsonNode node, String path) {
+        Money toNearest = PackJson.money(node, "toNearest", path);
+        Money roundsUpFrom = PackJson.money(node, "roundsUpFrom", path);
+        return PackJson.construct(path, () -> new RuleRounding(toNearest, roundsUpFrom));
+    }
+
+    // ---------------------------------------------------------------- money
+
+    private static Money moneyElement(JsonNode element, String path) {
+        String raw = element.asString();
+        try {
+            return Money.of(raw);
+        } catch (NumberFormatException e) {
+            throw new PackValidationException(
+                    path + " must be a rupee amount as a string, but was \"" + raw + "\"");
+        }
+    }
+
+    private static PackValidationException unreachable(String tag, String path) {
+        return new PackValidationException(path + " has unhandled type \"" + tag + "\"");
+    }
+}

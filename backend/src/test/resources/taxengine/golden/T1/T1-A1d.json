@@ -1,0 +1,15 @@
+{
+  "id": "T1-A1d",
+  "source": "DR 08 T1-A1 — Old regime, age variants at the basic exemption",
+  "_source": "| T1-A1d | 82 | OLD | ₹5,00,010 | 10 × 20% = 2; rebate 0 (TI > 5,00,000); cess 0.08; total 2.08 → 2 → **down to 0** | **₹0** |",
+  "regime": "FIRST_SCHEDULE_RATES",
+  "totalIncome": "500010",
+  "ageAtYearEnd": 82,
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "0"
+  }
+}

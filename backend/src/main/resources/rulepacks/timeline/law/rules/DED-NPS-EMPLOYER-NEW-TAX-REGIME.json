@@ -1,0 +1,135 @@
+{
+  "ruleId": "DED-NPS-EMPLOYER-NEW-TAX-REGIME",
+  "ruleSet": "RS-DED-NPS-EMPLOYER",
+  "_note": "\"Where the total income of the assessee is chargeable to tax under section 202(1), the provisions of sub-section (1) shall have effect as if for \"10%\" referred to in clause (b) of that sub-section, \"14%\" had been substituted\" (s.124(2), p.160): an employer other than a Government, in the new regime. Base SALARY (s.124(13)(b)). Survives the new regime (s.202(2)(a)(xii)). TY 2026-27 and TY 2025-26. rulebook DED-NPS-EMP-002, -003. OQ-14. The 1961 counterpart, s.80CCD(2), is the TY 2025-26 version (W-075d1). TY 2025-26: Income-tax Act, 1961 s.80CCD(2), proviso inserted by F(No.2)A 2024 s.25 (p.24, w.e.f. 1-4-2025): \"where the total income of the assessee is chargeable to tax under sub-section (1A) of section 115BAC, the provisions of sub-section (2) shall have effect as if for the words \"ten per cent.\" referred to in clause (b), the words \"fourteen per cent.\" had been substituted\". sources/2026-10-07-chapter-via.md M15. D-144. The row reaches an employer contribution to the notified pension scheme only (employer.fund = NOTIFIED_PENSION_SCHEME): s.124's \"contribution ... to his account under a pension scheme\" (W-156d, D-349).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80CCD(2), proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(1)(b) with s.124(2)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "14",
+        "base": "SALARY"
+      },
+      "conditions": [
+        {
+          "type": "Not",
+          "condition": {
+            "type": "ItemFactIs",
+            "fact": "employer.kind",
+            "code": "GOVERNMENT"
+          }
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "NOTIFIED_PENSION_SCHEME"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.25 — the proviso reading \"ten per cent.\" in s.80CCD(2)(b) as \"fourteen per cent.\" where the total income is chargeable under s.115BAC(1A)",
+        "gazetteRef": "CG-DL-E-16082024-256436",
+        "notifiedOn": "2024-08-16",
+        "effectiveFrom": "2025-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.25, p.24; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80CCD(2), p.339; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80CCD(2) after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80CCD(2), proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.124(1)(b) with s.124(2)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "14",
+        "base": "SALARY"
+      },
+      "conditions": [
+        {
+          "type": "Not",
+          "condition": {
+            "type": "ItemFactIs",
+            "fact": "employer.kind",
+            "code": "GOVERNMENT"
+          }
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "employer.fund",
+          "code": "NOTIFIED_PENSION_SCHEME"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.124(1)(b) with s.124(2)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(1)(b), (2), p.160; s.124(13)(b), p.161; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.124(1)(b), (2), p.160; s.124(13)(b), p.161; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

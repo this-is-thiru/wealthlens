@@ -1,0 +1,144 @@
+{
+  "ruleId": "INT-DEFERMENT",
+  "ruleSet": "RS-INT-DEFERMENT",
+  "_note": "Copied from the shipped TY 2026-27 timeline for W-146's synthetic pack, regime references renamed (NEW_TAX_REGIME -> SYN_DEFAULT, SYN_FLAT; FIRST_SCHEDULE_RATES -> SYN_CLASSIC); not law, never shipped. Original note: Interest for deferring advance tax, at each date on the shortfall from the share of the tax due on the returned income; none at June or September if 12 % or 36 % was paid. 2025 s.425(1) Table states 3 %; 1961 s.234C(1)(a)(i) states 'one per cent. per month for a period of three months', the same 3 %. The s.425(4) / s.234C carve-out for capital gains and dividends is not modelled (W-112a): a notice says so. Sources: sources/2026-11-06-advance-tax-interest.md; D-446.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.234C(1)(a)(i), (ii), proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.425(1) Table, (2), (5)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "DefermentInterest",
+        "steps": [
+          {
+            "dueOn": "06-15",
+            "sharePercent": "15",
+            "interestPercent": "3",
+            "noInterestFromPercent": "12"
+          },
+          {
+            "dueOn": "09-15",
+            "sharePercent": "45",
+            "interestPercent": "3",
+            "noInterestFromPercent": "36"
+          },
+          {
+            "dueOn": "12-15",
+            "sharePercent": "75",
+            "interestPercent": "3"
+          },
+          {
+            "dueOn": "03-15",
+            "sharePercent": "100",
+            "interestPercent": "1"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.234C(1)(a)(i), (ii), proviso, as in the thc.nic.in consolidation",
+        "gazetteRef": "Act 43 of 1961 (assent 13-9-1961), the date the repo's other as-enacted rows carry; the section's later insertion and substitutions as in the thc.nic.in consolidation; the Gazette issue not read",
+        "notifiedOn": "1961-09-13",
+        "effectiveFrom": "1962-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.234C(1)(a)(i), (ii), proviso p.696–697; amending Acts 2019 – 2026 searched (sources row list)",
+        "accessedOn": "2026-11-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.234C(1)(a)(i), (ii), proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.425(1) Table, (2), (5)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "DefermentInterest",
+        "steps": [
+          {
+            "dueOn": "06-15",
+            "sharePercent": "15",
+            "interestPercent": "3",
+            "noInterestFromPercent": "12"
+          },
+          {
+            "dueOn": "09-15",
+            "sharePercent": "45",
+            "interestPercent": "3",
+            "noInterestFromPercent": "36"
+          },
+          {
+            "dueOn": "12-15",
+            "sharePercent": "75",
+            "interestPercent": "3"
+          },
+          {
+            "dueOn": "03-15",
+            "sharePercent": "100",
+            "interestPercent": "1"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.425(1) Table, (2), (5)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.425(1) Table, (2), (5) p.447–448; s.425(5)(f) as substituted by the Finance Act, 2026 s.95 (CG-DL-E-31032026-271439 p.58)",
+        "accessedOn": "2026-11-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.425(1) Table, (2), (5) p.447–448; s.425(5)(f) as substituted by the Finance Act, 2026 s.95 (CG-DL-E-31032026-271439 p.58)",
+    "accessedOn": "2026-11-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

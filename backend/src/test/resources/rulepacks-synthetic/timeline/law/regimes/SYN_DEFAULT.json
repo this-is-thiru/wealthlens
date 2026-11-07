@@ -1,0 +1,118 @@
+{
+  "code": "SYN_DEFAULT",
+  "_note": "Synthetic law for W-146 (DR 10 E8, DR 17 T17-11, DR 18 T18-13): not law, never shipped.",
+  "displayName": "SYN_DEFAULT (synthetic)",
+  "appliesTo": [
+    "INDIVIDUAL"
+  ],
+  "rateTable": "SYN-RATE-DEFAULT",
+  "disallowances": [
+    "DIS-NEW-TAX-REGIME-NO-EXEMPTION",
+    "DIS-NEW-TAX-REGIME-NO-SETOFF"
+  ],
+  "eligibility": [],
+  "isDefault": true,
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "none",
+    "presence": "ABSENT_IN_THIS_ACT"
+  },
+  "provision2025": {
+    "instrument": "Synthetic Act, 2099",
+    "reference": "s.1",
+    "presence": "PRESENT"
+  },
+  "elections": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2099-04-01"
+      },
+      "protocol": {
+        "kind": "DEFAULT_NO_ACTION",
+        "vehicle": "NONE",
+        "deadline": {
+          "type": "NoDeadline"
+        },
+        "binding": {
+          "bindsSubsequentYears": false,
+          "maxWithdrawals": -1,
+          "afterWithdrawal": {
+            "type": "MayReElect"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": []
+        },
+        "provenance": {
+          "sourceUrl": "https://example.invalid/w-146-synthetic",
+          "sourceDescription": "Synthetic law for W-146 (DR 10 E8, DR 17 T17-11, DR 18 T18-13): not law, never shipped.",
+          "accessedOn": "2026-11-07",
+          "verificationLevel": "UNVERIFIED",
+          "whatToCheck": "nothing: synthetic figures chosen for W-146's hand arithmetic"
+        }
+      }
+    }
+  ],
+  "lifecycle": {
+    "entryWindow": {
+      "from": "2099-04-01"
+    },
+    "inForceWindow": {
+      "from": "2099-04-01"
+    },
+    "onSunset": {
+      "type": "ContinueIndefinitely"
+    },
+    "onConditionFailure": {
+      "type": "NoInvalidation"
+    },
+    "provenance": {
+      "sourceUrl": "https://example.invalid/w-146-synthetic",
+      "sourceDescription": "Synthetic law for W-146 (DR 10 E8, DR 17 T17-11, DR 18 T18-13): not law, never shipped.",
+      "accessedOn": "2026-11-07",
+      "verificationLevel": "UNVERIFIED",
+      "whatToCheck": "nothing: synthetic figures chosen for W-146's hand arithmetic"
+    }
+  },
+  "pipeline": {
+    "nodeRefs": [
+      "inputs.components",
+      "salary.base",
+      "salary.exemptions",
+      "salary.retirement",
+      "salary.monetaryincome",
+      "salary.perquisites",
+      "employer.contrib.charges",
+      "salary.gross",
+      "salary.deductions",
+      "salary.incomebeforetravel",
+      "salary.medicaltravel",
+      "salary.income",
+      "houseproperty.income",
+      "othersources.income",
+      "capitalgains.income",
+      "setoff",
+      "gti",
+      "chapterviii",
+      "totalincome",
+      "round.totalincome",
+      "tax.bybasis",
+      "tax.afterrebate",
+      "tax.surcharge",
+      "tax.cess",
+      "tax.netpayable",
+      "credits",
+      "tax.balance",
+      "advance.tax",
+      "interest.and.fees",
+      "round.netpayable"
+    ]
+  },
+  "provenance": {
+    "sourceUrl": "https://example.invalid/w-146-synthetic",
+    "sourceDescription": "Synthetic law for W-146 (DR 10 E8, DR 17 T17-11, DR 18 T18-13): not law, never shipped.",
+    "accessedOn": "2026-11-07",
+    "verificationLevel": "UNVERIFIED",
+    "whatToCheck": "nothing: synthetic figures chosen for W-146's hand arithmetic"
+  }
+}

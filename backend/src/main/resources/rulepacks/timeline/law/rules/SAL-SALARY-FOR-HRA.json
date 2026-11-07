@@ -1,0 +1,98 @@
+{
+  "ruleId": "SAL-SALARY-FOR-HRA",
+  "ruleSet": "RS-SAL-SALARY-FOR-HRA",
+  "_note": "The salary that house rent allowance is measured against (D-092; rulebook SAL-DEF-HRA-001, H-4). TY 2026-27: Income-tax Rules, 2026 r.279(2)(b) (gazette p.1776): \"'salary' includes dearness allowance, if provided for under the terms of employment, but excludes all other allowances and perquisites.\" No commission in the text. TY 2025-26: Income-tax Rules, 1962 r.2A Explanation (i): \"'salary' shall have the meaning assigned to it in clause (h) of rule 2 of Part A of the Fourth Schedule\" (DoR compendium pp.347-348; also indiankanoon.org/doc/154865060) — and Income-tax Act, 1961, Fourth Schedule Part A r.2(h) (thc.nic.in copy, current to Act 7 of 2019, p.853): \"'salary' includes dearness allowance, if the terms of employment so provide, but excludes all other allowances and perquisites.\" The compendium's annotations to r.2A cite Gestetner Duplicators v. CIT [1979] 117 ITR 1 (SC): commission on sales paid under the contract of employment is 'salary' — which components count is the registry's (W-064), not this row's.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Rules, 1962",
+        "reference": "r.2A Explanation (i), with Income-tax Act, 1961 Sch. IV Pt A r.2(h)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Rules, 2026",
+        "reference": "r.279(2)(b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax (Fourth Amendment) Rules, 1986 — the latest change to rule 2A of the Income-tax Rules, 1962 found (clause (c) substituted, clause (d) and Explanation (iii) omitted; Explanation (i) unchanged since rule 2A's insertion in 1965)",
+        "gazetteRef": "S.O. 412(E)",
+        "notifiedOn": "1986-07-09",
+        "effectiveFrom": "1987-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/412e-notification-s.o.412-e-date-of-issue-9/7/1986",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://www.incometaxindia.gov.in/w/rule-2a-1",
+        "sourceDescription": "Income-tax Rules, 1962 r.2A Explanation (i) on the Income Tax Department's consolidated rule page (upload date 13-12-2025; D-176): \"'salary' shall have the meaning assigned to it in clause (h) of rule 2 of Part A of the Fourth Schedule\" — unchanged since rule 2A's insertion in 1965, whose Gazette text is not on egazette; no later amendment to 31-3-2026: the Department page and the amendment list (ChatGPT share t_6acb25ca…) agree, the Gazette amendment chain from 1-9-2025 is read and the 2024–2025 notifications are clear (docs/taxplanning-build/sources/2026-10-11-rules-2a-to-26c.md G3); Income-tax Act, 1961 Sch. IV Pt A r.2(h) on thc.nic.in p.853, no amendment by the Acts F(No.2)A 2019 … FA 2026 (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-11",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Rules, 1962",
+        "reference": "r.2A Explanation (i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Rules, 2026",
+        "reference": "r.279(2)(b)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "SalaryBase",
+        "dearnessAllowance": "WHERE_TERMS_PROVIDE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Rules, 2026, G.S.R. 198(E), rule 279(2)(b)",
+        "gazetteRef": "CG-DL-E-20032026-271092",
+        "notifiedOn": "2026-03-20",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+        "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 (G.S.R. 198(E), 20-3-2026, in force 1-4-2026 by r.1(2)), r.279(2)(b), p.1776",
+        "accessedOn": "2026-09-27",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+    "sourceDescription": "Gazette CG-DL-E-20032026-271092, Income-tax Rules, 2026 r.279(2)(b), p.1776",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

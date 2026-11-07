@@ -28,6 +28,14 @@ public enum ChargeResolution {
     NO_INSTRUMENT_PROFILE,
 
     /**
+     * The broker's card applied, but no statutory card covers this trade's scope and date (D-380,
+     * D-382), so the law's charges (securities transaction tax, stamp duty, GST) could not be
+     * assessed. The broker's own lines are still priced; the figure is short by whatever the law
+     * levies.
+     */
+    NO_STATUTORY_SCHEDULE,
+
+    /**
      * The computation depends on facts that may still change — user history, or FIFO lots not yet
      * uploaded. Correct as of now, but a candidate for recomputation.
      *
@@ -62,7 +70,7 @@ public enum ChargeResolution {
      * is an answer, not a gap.
      */
     public static final List<ChargeResolution> UNRESOLVED =
-            List.of(NO_SCHEDULE, NO_INSTRUMENT_PROFILE, NO_MATCHING_RULES, PROVISIONAL);
+            List.of(NO_SCHEDULE, NO_INSTRUMENT_PROFILE, NO_STATUTORY_SCHEDULE, NO_MATCHING_RULES, PROVISIONAL);
 
     /** Whether the engine reached a figure it stands behind. */
     public boolean isUnresolved() {

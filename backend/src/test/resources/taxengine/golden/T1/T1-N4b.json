@@ -1,0 +1,14 @@
+{
+  "id": "T1-N4b",
+  "source": "DR 08 T1-N4 — New regime, the crossover where `REBATE-NEW-MR-001` stops binding (TI = 12,70,590)",
+  "_source": "**Expected: ₹73,400 and ₹73,410.** (TI = 12,70,590 : … round: → 73,412 → last figure 2 < 5 → down = 73,410)",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "1270590",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "73410"
+  }
+}

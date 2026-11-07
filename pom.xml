@@ -193,6 +193,8 @@
                 <configuration>
                     <!-- @{argLine} preserves the JaCoCo agent injected by prepare-agent. -->
                     <argLine>@{argLine}</argLine>
+                    <!-- Timings depend on the machine, so benchmarks run only under -Pbenchmark (W-143). -->
+                    <excludedGroups>benchmark</excludedGroups>
                 </configuration>
             </plugin>
 
@@ -283,20 +285,99 @@
                             </rules>
                         </configuration>
                     </execution>
+                    <!--
+                      The tax engine, judged as two wholes as DR 07 X5.5 states them (W-144, D-461): the engine outside its rules
+                      vocabulary, and the rules vocabulary (taxrules, folded into taxengine.rules by D-048). Lines hold X5.5's
+                      figures (95 %, 90 %). Branches are a RATCHET at the level measured on 2026-11-07 (81.56 %, 76.91 %),
+                      below X5.5's 90 % and 85 %: raise each minimum as tests close the gap (W-240), never lower it.
+                    -->
+                    <execution>
+                        <id>check-taxengine</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <haltOnFailure>true</haltOnFailure>
+                            <includes>
+                                <include>com/thiru/wealthlens/taxengine/**</include>
+                            </includes>
+                            <excludes>
+                                <exclude>com/thiru/wealthlens/taxengine/rules/**</exclude>
+                            </excludes>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.95</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.81</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>check-taxengine-rules</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <haltOnFailure>true</haltOnFailure>
+                            <includes>
+                                <include>com/thiru/wealthlens/taxengine/rules/**</include>
+                            </includes>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.90</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.76</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.4.0</version>
+                <version>3.6.0</version>
+                <dependencies>
+                    <!-- 9.3 predates Java 25 syntax; W-045a / D-045 -->
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>10.26.1</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
+                    <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
+                    <suppressionsLocation>${maven.multiModuleProjectDirectory}/checkstyle-suppressions.xml</suppressionsLocation>
                     <consoleOutput>true</consoleOutput>
-                    <failsOnError>false</failsOnError>
-                    <failOnViolation>false</failOnViolation>
+                    <failsOnError>true</failsOnError>
+                    <failOnViolation>true</failOnViolation>
+                    <violationSeverity>warning</violationSeverity>
                     <linkXRef>false</linkXRef>
-                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -321,6 +402,16 @@
                         <endWithNewline />
                     </java>
                 </configuration>
+                <executions>
+                    <execution>
+                        <!-- CI already runs spotless:check; W-045a makes every local build do the same -->
+                        <id>spotless-check</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>
@@ -341,6 +432,7 @@
             ./mvnw test              → everything (needs Docker)
             ./mvnw test -Punit       → unit only, no Docker, seconds
             ./mvnw test -Pintegration → integration only
+            ./mvnw test -pl backend -Pbenchmark → the performance budgets only (W-143), uninstrumented
         -->
         <profile>
             <id>unit</id>
@@ -350,7 +442,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>integration</excludedGroups>
+                            <excludedGroups>integration,benchmark</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -366,6 +458,69 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <groups>integration</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>benchmark</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- No JaCoCo agent: instrumentation would time the coverage, not the engine. -->
+                            <argLine combine.self="override"></argLine>
+                            <groups>benchmark</groups>
+                            <excludedGroups>integration</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+          Mutation testing of the tax engine's cap shapes and marginal reliefs (PRD N11; DR 07 X5.5; W-144). Separate
+          from the profile below because N11's threshold is 90, not 85. About six minutes, so not in CI.
+              ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation-taxengine -pl backend
+        -->
+        <profile>
+            <id>mutation-taxengine</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>${pitest.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>${pitest-junit5.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <targetClasses>
+                                <param>com.thiru.wealthlens.taxengine.rules.cap.*</param>
+                                <param>com.thiru.wealthlens.taxengine.rules.relief.*</param>
+                            </targetClasses>
+                            <targetTests>
+                                <param>com.thiru.wealthlens.taxengine.*</param>
+                            </targetTests>
+                            <excludedGroups>
+                                <excludedGroup>integration</excludedGroup>
+                                <excludedGroup>benchmark</excludedGroup>
+                            </excludedGroups>
+                            <threads>4</threads>
+                            <mutationThreshold>90</mutationThreshold>
+                            <outputFormats>
+                                <outputFormat>HTML</outputFormat>
+                                <outputFormat>XML</outputFormat>
+                            </outputFormats>
+                            <timestampedReports>false</timestampedReports>
                         </configuration>
                     </plugin>
                 </plugins>

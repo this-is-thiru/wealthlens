@@ -1,16 +1,16 @@
 package com.thiru.wealthlens.portfolio.service;
 import com.thiru.wealthlens.corporate.entity.CorporateActionEntity;
+import com.thiru.wealthlens.portfolio.dto.Acquisition;
+import com.thiru.wealthlens.portfolio.dto.TradeVenue;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
-import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
+import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,8 +29,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TradeMatchingService {
 
-    private final HoldingPeriodService holdingPeriodService;
-
     /**
      * Builds virtual BuyLots from BUY TransactionEntity records.
      * Merges same-day buys (same stock, broker, holder, date) with weighted average price,
@@ -45,81 +43,84 @@ public class TradeMatchingService {
         for (Map.Entry<String, List<TransactionEntity>> entry : grouped.entrySet()) {
             List<TransactionEntity> txns = entry.getValue();
             if (txns.isEmpty()) continue;
-
-            TransactionEntity first = txns.getFirst();
-            String email = first.getEmail();
-            String stockCode = first.getStockCode();
-            String stockName = first.getStockName();
-            String exchangeName = first.getExchangeName();
-            BrokerName brokerName = first.getBrokerName();
-            AssetType assetType = first.getAssetType();
-            AccountType accountType = first.getAccountType();
-            String accountHolder = first.getAccountHolder();
-            LocalDate buyDate = first.getTransactionDate();
-
-            // Merge: sum quantities, weighted average price, sum charges
-            double totalQuantity = 0;
-            double weightedPriceSum = 0;
-            double totalBrokerCharges = 0;
-            double totalMiscCharges = 0;
-            List<String> buyTransactionIds = new ArrayList<>();
-            boolean corporateActionDerived = false;
-            List<CorporateActionEntity> corporateActions = new ArrayList<>();
-
-            for (TransactionEntity txn : txns) {
-                double qty = txn.getQuantity() != null ? txn.getQuantity() : 0.0;
-                double price = txn.getPrice();
-                double brokerCharges = txn.getBrokerCharges();
-                double miscCharges = txn.getMiscCharges();
-
-                totalQuantity += qty;
-                weightedPriceSum += qty * price;
-                totalBrokerCharges += brokerCharges;
-                totalMiscCharges += miscCharges;
-                buyTransactionIds.add(txn.getId());
-
-                // Check if CA-derived
-                if (txn.getCorporateActionType() != null || price == 0) {
-                    corporateActionDerived = true;
-                }
-
-                // Collect corporate actions
-                if (txn.getCorporateActions() != null) {
-                    corporateActions.addAll(txn.getCorporateActions());
-                }
-            }
-
-            double newPrice = totalQuantity > 0 ? weightedPriceSum / totalQuantity : 0;
-
-            // Synthetic ID for the lot
-            String lotId = "lot-" + stockCode + "-" + buyDate;
-
-            BuyLot lot = BuyLot.builder()
-                    .id(lotId)
-                    .email(email)
-                    .stockCode(stockCode)
-                    .stockName(stockName)
-                    .exchangeName(exchangeName)
-                    .brokerName(brokerName)
-                    .assetType(assetType)
-                    .accountType(accountType)
-                    .accountHolder(accountHolder)
-                    .buyPrice(newPrice)
-                    .quantity(totalQuantity)
-                    .brokerCharges(totalBrokerCharges)
-                    .miscCharges(totalMiscCharges)
-                    .buyDate(buyDate)
-                    .buyTransactionIds(buyTransactionIds)
-                    .corporateActions(corporateActions.isEmpty() ? null : corporateActions)
-                    .corporateActionDerived(corporateActionDerived)
-                    .build();
-
-            lots.add(lot);
+            lots.add(lotOf(txns));
         }
 
         // Sort by buyDate
         lots.sort(Comparator.comparing(BuyLot::getBuyDate));
         return lots;
+    }
+
+    /** One lot from one key's same-day buys: their quantities summed, the price weighted, the charges summed. */
+    private static BuyLot lotOf(List<TransactionEntity> txns) {
+        TransactionEntity first = txns.getFirst();
+        SameDayBuys merged = new SameDayBuys();
+        txns.forEach(merged::add);
+
+        double newPrice = merged.totalQuantity > 0 ? merged.weightedPriceSum / merged.totalQuantity : 0;
+
+        // Synthetic ID for the lot
+        String lotId = "lot-" + first.getStockCode() + "-" + first.getTransactionDate();
+
+        return BuyLot.builder()
+                .id(lotId)
+                .email(first.getEmail())
+                .stockCode(first.getStockCode())
+                .stockName(first.getStockName())
+                .exchangeName(first.getExchangeName())
+                .brokerName(first.getBrokerName())
+                .assetType(first.getAssetType())
+                .accountType(first.getAccountType())
+                .accountHolder(first.getAccountHolder())
+                .buyPrice(newPrice)
+                .quantity(merged.totalQuantity)
+                .brokerCharges(merged.totalBrokerCharges)
+                .miscCharges(merged.totalMiscCharges)
+                .buyDate(first.getTransactionDate())
+                .buyTransactionIds(merged.buyTransactionIds)
+                .corporateActions(merged.corporateActions.isEmpty() ? null : merged.corporateActions)
+                .corporateActionDerived(merged.corporateActionDerived)
+                .acquisition(Acquisition.common(merged.acquisitions))
+                .venue(TradeVenue.common(merged.venues))
+                .build();
+    }
+
+    /** What one key's same-day buys add up to, accumulated in the order they are read. */
+    private static final class SameDayBuys {
+        private double totalQuantity = 0;
+        private double weightedPriceSum = 0;
+        private double totalBrokerCharges = 0;
+        private double totalMiscCharges = 0;
+        private final List<String> buyTransactionIds = new ArrayList<>();
+        private boolean corporateActionDerived = false;
+        private final List<Acquisition> acquisitions = new ArrayList<>();
+        private final List<TradeVenue> venues = new ArrayList<>();
+        private final List<CorporateActionEntity> corporateActions = new ArrayList<>();
+
+        void add(TransactionEntity txn) {
+            double qty = txn.getQuantity() != null ? txn.getQuantity() : 0.0;
+            double price = txn.getPrice();
+            double brokerCharges = txn.getBrokerCharges();
+            double miscCharges = txn.getMiscCharges();
+
+            totalQuantity += qty;
+            weightedPriceSum += qty * price;
+            totalBrokerCharges += brokerCharges;
+            totalMiscCharges += miscCharges;
+            buyTransactionIds.add(txn.getId());
+            acquisitions.add(Acquisition.of(txn.getCorporateActionType()));
+            venues.add(TradeVenue.stored(txn.getExchangeName(), txn.getSegment()));
+
+            // Check if CA-derived
+            if (txn.getCorporateActionType() != null || price == 0) {
+                corporateActionDerived = true;
+            }
+
+            // Collect corporate actions
+            if (txn.getCorporateActions() != null) {
+                corporateActions.addAll(txn.getCorporateActions());
+            }
+        }
     }
 
     private String buildCompositeKey(TransactionEntity txn) {
@@ -138,83 +139,19 @@ public class TradeMatchingService {
     public List<MatchedTrade> matchSellToLots(SellRequest sell, List<BuyLot> lots) {
         List<MatchedTrade> matchedTrades = new ArrayList<>();
 
-        // Filter lots to those matching: stockCode, brokerName, accountHolder, email
-        List<BuyLot> eligibleLots = lots.stream()
-                .filter(lot -> lot.getEmail().equals(sell.getEmail()))
-                .filter(lot -> lot.getStockCode().equals(sell.getStockCode()))
-                .filter(lot -> lot.getBrokerName() == sell.getBrokerName())
-                .filter(lot -> Objects.equals(lot.getAccountHolder(), sell.getAccountHolder()))
-                .sorted(Comparator.comparing(BuyLot::getBuyDate))
-                .toList();
-
         double sellRemaining = sell.getQuantity();
 
-        for (BuyLot lot : eligibleLots) {
+        for (BuyLot lot : eligibleLots(sell, lots)) {
             if (sellRemaining <= 0) break;
 
             double lotRemainingQty = lot.getQuantity();
             if (lotRemainingQty <= 0) continue;
 
             double matchedQty = Math.min(lotRemainingQty, sellRemaining);
-
-            // Pro-rate buy charges
-            double buyBrokerCharges = (lot.getBrokerCharges() / lot.getQuantity()) * matchedQty;
-            double buyMiscCharges = (lot.getMiscCharges() / lot.getQuantity()) * matchedQty;
-
-            // Pro-rate sell charges
-            double sellBrokerCharges = (sell.getBrokerCharges() / sell.getQuantity()) * matchedQty;
-            double sellMiscCharges = (sell.getMiscCharges() / sell.getQuantity()) * matchedQty;
-
-            // Computed values
-            double totalBuyValue = (lot.getBuyPrice() * matchedQty) + buyBrokerCharges + buyMiscCharges;
-            double totalSellValue = (sell.getSellPrice() * matchedQty) - sellBrokerCharges - sellMiscCharges;
-            double netProfit = totalSellValue - totalBuyValue;
-            double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
-            long holdingPeriodDays = ChronoUnit.DAYS.between(lot.getBuyDate(), sell.getSellDate());
-
-            // Capital gains type, resolved rather than counted: 365 days is the listed-equity rule and
-            // was being applied to mutual funds, bonds and gold bonds too.
-            CapitalGainsType capitalGainsType = holdingPeriodService
-                    .classify(lot.getAssetType(), null, lot.getBuyDate(), sell.getSellDate())
-                    .capitalGainsType();
-
-            // Financial year
-            String financialYear = deriveFinancialYear(sell.getSellDate());
-
-            MatchedTrade trade = MatchedTrade.builder()
-                    .email(sell.getEmail())
-                    .stockCode(sell.getStockCode())
-                    .stockName(sell.getStockName())
-                    .exchangeName(sell.getExchangeName())
-                    .brokerName(sell.getBrokerName())
-                    .assetType(sell.getAssetType())
-                    .accountType(sell.getAccountType())
-                    .accountHolder(sell.getAccountHolder())
-                    .originalBuyPrice(lot.getBuyPrice())
-                    .corporateActionAdjustedBuyPrice(lot.getBuyPrice())
-                    .buyQuantity(matchedQty)
-                    .buyDate(lot.getBuyDate())
-                    .buyBrokerCharges(buyBrokerCharges)
-                    .buyMiscCharges(buyMiscCharges)
-                    .sellPrice(sell.getSellPrice())
-                    .sellQuantity(matchedQty)
-                    .sellDate(sell.getSellDate())
-                    .sellBrokerCharges(sellBrokerCharges)
-                    .sellMiscCharges(sellMiscCharges)
-                    .totalBuyValue(totalBuyValue)
-                    .totalSellValue(totalSellValue)
-                    .netProfit(netProfit)
-                    .profitPercentage(profitPercentage)
-                    .holdingPeriodDays(holdingPeriodDays)
-                    .capitalGainsType(capitalGainsType)
-                    .financialYear(financialYear)
-                    .sourceSellTransactionId(sell.getId())
-                    .sourceBuyLotId(lot.getId())
-                    .corporateActionDerived(lot.isCorporateActionDerived())
-                    .appliedCorporateActions(lot.getCorporateActions())
-                    .build();
-
-            matchedTrades.add(trade);
+            // Deducted once per match, from what earlier sells left (B-8), before the quantity falls
+            double buyBrokerCharges = LotChargeAllocator.deductBroker(lot, matchedQty, lotRemainingQty);
+            double buyMiscCharges = LotChargeAllocator.deductMisc(lot, matchedQty, lotRemainingQty);
+            matchedTrades.add(matchedTrade(sell, lot, matchedQty, buyBrokerCharges, buyMiscCharges));
 
             // Update lot remaining quantity
             lot.setQuantity(lot.getQuantity() - matchedQty);
@@ -222,6 +159,72 @@ public class TradeMatchingService {
         }
 
         return matchedTrades;
+    }
+
+    /** The lots a sell may consume — same email, stock, broker and holder — oldest first. */
+    private static List<BuyLot> eligibleLots(SellRequest sell, List<BuyLot> lots) {
+        return lots.stream()
+                .filter(lot -> lot.getEmail().equals(sell.getEmail()))
+                .filter(lot -> lot.getStockCode().equals(sell.getStockCode()))
+                .filter(lot -> lot.getBrokerName() == sell.getBrokerName())
+                .filter(lot -> Objects.equals(lot.getAccountHolder(), sell.getAccountHolder()))
+                .sorted(Comparator.comparing(BuyLot::getBuyDate))
+                .toList();
+    }
+
+    /** One matched portion: the identity from the sell, the buy side from the lot. */
+    private MatchedTrade matchedTrade(SellRequest sell, BuyLot lot, double matchedQty, double buyBrokerCharges,
+            double buyMiscCharges) {
+        TradeFigures figures = figures(sell, lot, matchedQty, buyBrokerCharges, buyMiscCharges);
+        return MatchedTrade.builder()
+                .email(sell.getEmail())
+                .stockCode(sell.getStockCode())
+                .stockName(sell.getStockName())
+                .exchangeName(sell.getExchangeName())
+                .brokerName(sell.getBrokerName())
+                .assetType(sell.getAssetType())
+                .accountType(sell.getAccountType())
+                .accountHolder(sell.getAccountHolder())
+                .originalBuyPrice(lot.getBuyPrice())
+                .corporateActionAdjustedBuyPrice(lot.getBuyPrice())
+                .buyQuantity(matchedQty)
+                .buyDate(lot.getBuyDate())
+                .buyBrokerCharges(figures.buyBrokerCharges())
+                .buyMiscCharges(figures.buyMiscCharges())
+                .sellPrice(sell.getSellPrice())
+                .sellQuantity(matchedQty)
+                .sellDate(sell.getSellDate())
+                .sellBrokerCharges(figures.sellBrokerCharges())
+                .sellMiscCharges(figures.sellMiscCharges())
+                .totalBuyValue(figures.totalBuyValue())
+                .totalSellValue(figures.totalSellValue())
+                .netProfit(figures.netProfit())
+                .profitPercentage(figures.profitPercentage())
+                .holdingPeriodDays(ChronoUnit.DAYS.between(lot.getBuyDate(), sell.getSellDate()))
+                .financialYear(FinancialYear.containing(sell.getSellDate()).label())
+                .sourceSellTransactionId(sell.getId())
+                .sourceBuyLotId(lot.getId())
+                .corporateActionDerived(lot.isCorporateActionDerived())
+                .appliedCorporateActions(lot.getCorporateActions())
+                .acquisition(lot.getAcquisition())
+                .buyVenue(lot.getVenue())
+                .sellVenue(TradeVenue.stored(sell.getExchangeName(), sell.getSegment()))
+                .build();
+    }
+
+    /** The buy charges as allocated, the sell's pro-rated to the matched quantity, and the portion's values. */
+    private static TradeFigures figures(SellRequest sell, BuyLot lot, double matchedQty, double buyBrokerCharges,
+            double buyMiscCharges) {
+        // Pro-rate sell charges
+        double sellBrokerCharges = (sell.getBrokerCharges() / sell.getQuantity()) * matchedQty;
+        double sellMiscCharges = (sell.getMiscCharges() / sell.getQuantity()) * matchedQty;
+
+        double totalBuyValue = (lot.getBuyPrice() * matchedQty) + buyBrokerCharges + buyMiscCharges;
+        double totalSellValue = (sell.getSellPrice() * matchedQty) - sellBrokerCharges - sellMiscCharges;
+        double netProfit = totalSellValue - totalBuyValue;
+        double profitPercentage = totalBuyValue > 0 ? (netProfit / totalBuyValue) * 100 : 0.0;
+        return new TradeFigures(buyBrokerCharges, buyMiscCharges, sellBrokerCharges, sellMiscCharges,
+                totalBuyValue, totalSellValue, netProfit, profitPercentage);
     }
 
     /**
@@ -253,12 +256,17 @@ public class TradeMatchingService {
                 .netProfit(trade.getNetProfit())
                 .profitPercentage(trade.getProfitPercentage())
                 .holdingPeriodDays(trade.getHoldingPeriodDays())
-                .capitalGainsType(trade.getCapitalGainsType())
                 .financialYear(trade.getFinancialYear())
                 .sourceSellTransactionId(trade.getSourceSellTransactionId())
                 .sourceBuyLotId(trade.getSourceBuyLotId())
                 .corporateActionDerived(trade.isCorporateActionDerived())
                 .appliedCorporateActions(trade.getAppliedCorporateActions())
+                .acquisitionMode(trade.getAcquisition().mode())
+                .acquisitionCorporateAction(trade.getAcquisition().corporateAction().orElse(null))
+                .buyExchangeName(trade.getBuyVenue().exchange().orElse(null))
+                .buySegment(trade.getBuyVenue().segment().orElse(null))
+                .sellExchangeName(trade.getSellVenue().exchange().orElse(null))
+                .sellSegment(trade.getSellVenue().segment().orElse(null))
                 .build();
     }
 
@@ -292,14 +300,18 @@ public class TradeMatchingService {
         entity.setNetProfit(trade.getNetProfit());
         entity.setProfitPercentage(trade.getProfitPercentage());
         entity.setHoldingPeriodDays(trade.getHoldingPeriodDays());
-        entity.setCapitalGainsType(trade.getCapitalGainsType());
         entity.setFinancialYear(trade.getFinancialYear());
         entity.setSourceSellTransactionId(trade.getSourceSellTransactionId());
         entity.setSourceBuyLotId(trade.getSourceBuyLotId());
         entity.setCorporateActionDerived(trade.isCorporateActionDerived());
         entity.setAppliedCorporateActions(trade.getAppliedCorporateActions());
+        entity.setAcquisitionMode(trade.getAcquisition().mode());
+        entity.setAcquisitionCorporateAction(trade.getAcquisition().corporateAction().orElse(null));
+        entity.setBuyExchangeName(trade.getBuyVenue().exchange().orElse(null));
+        entity.setBuySegment(trade.getBuyVenue().segment().orElse(null));
+        entity.setSellExchangeName(trade.getSellVenue().exchange().orElse(null));
+        entity.setSellSegment(trade.getSellVenue().segment().orElse(null));
 
-        entity.setAuditMetadata(buildAuditMetadata());
 
         return entity;
     }
@@ -314,6 +326,7 @@ public class TradeMatchingService {
                 .stockCode(sellTxn.getStockCode())
                 .stockName(sellTxn.getStockName())
                 .exchangeName(sellTxn.getExchangeName())
+                .segment(sellTxn.getSegment())
                 .brokerName(sellTxn.getBrokerName())
                 .assetType(sellTxn.getAssetType())
                 .accountType(sellTxn.getAccountType())
@@ -324,29 +337,6 @@ public class TradeMatchingService {
                 .miscCharges(sellTxn.getMiscCharges())
                 .sellDate(sellTxn.getTransactionDate())
                 .build();
-    }
-
-    private String deriveFinancialYear(LocalDate transactionDate) {
-        if (transactionDate == null) {
-            return "UNKNOWN";
-        }
-        int year = transactionDate.getYear();
-        int month = transactionDate.getMonthValue();
-        if (month <= 3) {
-            return String.format("FY%d-%02d", year - 1, (year % 100));
-        } else {
-            return String.format("FY%d-%02d", year, ((year + 1) % 100));
-        }
-    }
-
-    private AuditMetadata buildAuditMetadata() {
-        LocalDateTime now = LocalDateTime.now();
-        AuditMetadata metadata = new AuditMetadata();
-        metadata.setCreatedBy("TransactionBasedTradeOutcomeMigration");
-        metadata.setCreatedAt(now);
-        metadata.setUpdatedBy("TransactionBasedTradeOutcomeMigration@" + now);
-        metadata.setUpdatedAt(now);
-        return metadata;
     }
 
     @Data
@@ -369,6 +359,16 @@ public class TradeMatchingService {
         private List<String> buyTransactionIds;
         private List<CorporateActionEntity> corporateActions;
         private boolean corporateActionDerived;
+        /** How the lot was acquired; a lot built without saying is unrecorded. */
+        @Builder.Default
+        private Acquisition acquisition = Acquisition.UNRECORDED;
+        /** Where and how the lot's buys were traded; a lot built without saying is unrecorded (D-295). */
+        @Builder.Default
+        private TradeVenue venue = TradeVenue.UNRECORDED;
+        /** What earlier sells have already charged of {@code brokerCharges} ({@link LotChargeAllocator}). */
+        private double allocatedBrokerCharges;
+        /** What earlier sells have already charged of {@code miscCharges}. */
+        private double allocatedMiscCharges;
     }
 
     @Data
@@ -388,6 +388,8 @@ public class TradeMatchingService {
         private double brokerCharges;
         private double miscCharges;
         private LocalDate sellDate;
+        /** The segment the sale was recorded in; absent where a request does not say. */
+        private TradeSegment segment;
     }
 
     @Data
@@ -420,12 +422,20 @@ public class TradeMatchingService {
         private double netProfit;
         private double profitPercentage;
         private long holdingPeriodDays;
-        private CapitalGainsType capitalGainsType;
         private String financialYear;
 
         private String sourceSellTransactionId;
         private String sourceBuyLotId;
         private boolean corporateActionDerived;
         private List<CorporateActionEntity> appliedCorporateActions;
+        /** How the lot was acquired; a lot built without saying is unrecorded. */
+        @Builder.Default
+        private Acquisition acquisition = Acquisition.UNRECORDED;
+        /** Where and how the lot's buys were traded; unrecorded unless said (D-295). */
+        @Builder.Default
+        private TradeVenue buyVenue = TradeVenue.UNRECORDED;
+        /** Where and how the sale was traded; unrecorded unless said. */
+        @Builder.Default
+        private TradeVenue sellVenue = TradeVenue.UNRECORDED;
     }
 }

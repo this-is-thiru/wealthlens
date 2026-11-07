@@ -1,0 +1,122 @@
+{
+  "ruleId": "CG-DERIVATIVE",
+  "ruleSet": "RS-CG-NOT-COMPUTED",
+  "_note": "Futures and options are outside the capital-gains head: a specified derivative transaction is not speculative, so it is non-speculative business income, which this engine does not compute; a bucket it reaches is refused (W-160a, D-363). TY 2026-27: Income-tax Act, 2025 s.66(31)(a), \"other than the following transactions:— (a) a specified derivative transaction as defined in clause (33)\", and s.66(33), \"any transaction in respect of trading in derivatives referred to in section 2 (ac) of the Securities Contracts (Regulation) Act, 1956 … carried out … electronically on screen-based systems of a recognised stock exchange\" (p.103). TY 2025-26: Income-tax Act, 1961 s.43(5) proviso (d), \"an eligible transaction in respect of trading in derivatives referred to in clause (ac) of section 2 of the Securities Contracts (Regulation) Act, 1956 … carried out in a recognised stock exchange\" shall not be deemed speculative (thc p.237). Either way the transaction is business income, so the exchange and contract-note conditions do not change the refusal and are not conditions here. Reached by trade.transfer.segment = FUTURES or OPTIONS. Conditions only. Every regime. Sources: docs/taxplanning-build/sources/2026-10-24-speculative-transaction.md S1 – S3.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.43(5) proviso (d)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.66(31)(a), (33)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "trade.transfer.segment",
+              "code": "FUTURES"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "trade.transfer.segment",
+              "code": "OPTIONS"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.21 — Income-tax Act, 1961 s.43(5): \"recognised stock exchange\" for \"recognised association\" in proviso (e), and Explanation 2 clause (iii) substituted, w.e.f. 1-4-2020; proviso (d) ins. by Act 18 of 2005, s.14 (w.e.f. 1-4-2006), as the thc copy's footnote states",
+        "gazetteRef": "CG-DL-E-27032020-218938",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2020-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.43(5) and its provisos and Explanation 1, pp.236–237; the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 searched for s.43 — only the Finance Act, 2020 s.21 touches clause (5), proviso (e) and Explanation 2 (Gazette CG-DL-E-27032020-218938, p.23) (docs/taxplanning-build/sources/2026-10-24-speculative-transaction.md)",
+        "accessedOn": "2026-10-24",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.43(5) proviso (d)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.66(31)(a), (33)",
+        "presence": "PRESENT"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "trade.transfer.segment",
+              "code": "FUTURES"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "trade.transfer.segment",
+              "code": "OPTIONS"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.66(31)(a), (33)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.66(31), (33), pp.102–103 (docs/taxplanning-build/sources/2026-10-24-speculative-transaction.md)",
+        "accessedOn": "2026-10-24",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.66(31), (33), pp.102–103 (docs/taxplanning-build/sources/2026-10-24-speculative-transaction.md)",
+    "accessedOn": "2026-10-24",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

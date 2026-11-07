@@ -1,0 +1,28 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(y): \"contribution made by an individual to a pension scheme notified by the Central Government, to the extent of (i) 10% of salary, including dearness allowance, if the terms of employment so provide, but excluding all other allowances and perquisites, during the tax year in the case of an employee of the Central Government or any other employer; or (ii) 20% of gross total income during the tax year in the case of any other individual\" (Gazette 265620, p.563). D-130. DED-SCHEDULE-XV sub-caps it at limb (i); limb (ii) is not modelled (D-130); what s.123 does not allow feeds DED-NPS-OWN (s.124(3), (5), (10)). Withheld from pay or paid by the employee, SALARIES as DR 05 M2 names it. TY 2025-26: Income-tax Act, 1961 s.80CCD(1), (1B) (thc pp.338–339): paid \"in his account under a pension scheme notified … by the Central Government\" — s.80CCD(1) within ten per cent of salary for an employee, inside s.80CCE; what that leaves under (1B). sources/2026-10-07-chapter-via.md; D-144.",
+  "code": "EMPLOYEE_NPS",
+  "displayName": "Your own National Pension System contribution",
+  "head": "SALARIES",
+  "kind": "EMPLOYEE_CONTRIBUTION",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV",
+    "DED-NPS-OWN"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(y), p.563; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80CCD(1), (1B), pp.338–339",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

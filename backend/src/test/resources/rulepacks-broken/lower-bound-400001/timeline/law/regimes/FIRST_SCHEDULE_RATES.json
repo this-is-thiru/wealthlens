@@ -1,0 +1,103 @@
+{
+  "code": "FIRST_SCHEDULE_RATES",
+  "displayName": "Rates of income-tax, Finance Act First Schedule Part I-B Paragraph A (option under s.202(4))",
+  "appliesTo": [
+    "INDIVIDUAL"
+  ],
+  "rateTable": "RATE-SLAB-FIRST-SCHEDULE",
+  "disallowances": [],
+  "eligibility": [],
+  "isDefault": false,
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.115BAC(6)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.202(4)",
+    "presence": "PRESENT"
+  },
+  "elections": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2024-04-01"
+      },
+      "protocol": {
+        "kind": "OPT_OUT",
+        "vehicle": "IN_THE_RETURN",
+        "deadline": {
+          "type": "DueDateUnder",
+          "section": "263(1)"
+        },
+        "binding": {
+          "bindsSubsequentYears": true,
+          "maxWithdrawals": 1,
+          "afterWithdrawal": {
+            "type": "IneligibleUnless",
+            "revival": {
+              "type": "Not",
+              "condition": {
+                "type": "HasIncomeUnderHead",
+                "head": "BUSINESS_OR_PROFESSION"
+              }
+            },
+            "thenUse": "NO_BUSINESS_OR_PROFESSION"
+          },
+          "firstReturnOnly": false,
+          "bindingAppliesWhen": [
+            {
+              "type": "HasIncomeUnderHead",
+              "head": "BUSINESS_OR_PROFESSION"
+            }
+          ]
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+          "sourceDescription": "Income-tax Rules 2026, r.136 + Table Sl. 4 — the option is in the return, with no separate form",
+          "accessedOn": "2026-09-18",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
+    }
+  ],
+  "lifecycle": {
+    "entryWindow": {
+      "from": "2024-04-01"
+    },
+    "inForceWindow": {
+      "from": "2024-04-01"
+    },
+    "onSunset": {
+      "type": "ContinueIndefinitely"
+    },
+    "onConditionFailure": {
+      "type": "NoInvalidation"
+    },
+    "provenance": {
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "sourceDescription": "s.202(4) — no entry window and no sunset stated",
+      "accessedOn": "2026-09-18",
+      "verificationLevel": "SOURCE_CHECKED"
+    }
+  },
+  "pipeline": {
+    "nodeRefs": [
+      "inputs.components",
+      "salary.gross",
+      "totalincome",
+      "round.totalincome",
+      "tax.bybasis",
+      "tax.cess",
+      "tax.netpayable",
+      "round.netpayable"
+    ]
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(4)",
+    "accessedOn": "2026-09-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

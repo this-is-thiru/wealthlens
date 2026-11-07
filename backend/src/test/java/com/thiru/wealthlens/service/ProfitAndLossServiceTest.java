@@ -19,22 +19,17 @@ import com.thiru.wealthlens.portfolio.dto.ReportModelResponse;
 import com.thiru.wealthlens.portfolio.dto.context.BuyContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitAndLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
+import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
-import com.thiru.wealthlens.portfolio.entity.HoldingPeriodPolicyEntity;
 import com.thiru.wealthlens.portfolio.entity.ProfitAndLossEntity;
 import com.thiru.wealthlens.portfolio.entity.model.FinancialReport;
 import com.thiru.wealthlens.portfolio.entity.model.FortnightReport;
 import com.thiru.wealthlens.portfolio.entity.model.MonthlyReport;
 import com.thiru.wealthlens.portfolio.entity.model.RealisedProfits;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolver;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
-import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
-import com.thiru.wealthlens.portfolio.repository.HoldingPeriodPolicyRepository;
 import com.thiru.wealthlens.portfolio.repository.ProfitAndLossRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
 import com.thiru.wealthlens.portfolio.service.LotChargeAllocator;
@@ -59,7 +54,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.core.io.ClassPathResource;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -77,29 +71,11 @@ class ProfitAndLossServiceTest {
     @Mock
     private ChargeRecordingGateway chargeRecordingGateway;
 
-    @Mock
-    private HoldingPeriodPolicyRepository holdingPeriodPolicyRepository;
-
     private ProfitAndLossService profitAndLossService;
 
-    /**
-     * A real classifier over the shipped policies rather than a mock. These tests assert which
-     * bucket a gain lands in, and a stubbed classifier would make that assertion say only what the
-     * stub was told to say.
-     */
     @BeforeEach
-    void setUp() throws Exception {
-        String json = new String(new ClassPathResource(
-                "data/holding-periods/holding-period-policies.json").getInputStream().readAllBytes());
-        when(holdingPeriodPolicyRepository.findAll())
-                .thenReturn(TJsonMapper.readAsList(json, HoldingPeriodPolicyEntity.class));
-        HoldingPeriodService holdingPeriodService =
-                new HoldingPeriodService(new HoldingPeriodResolver(holdingPeriodPolicyRepository));
-        profitAndLossService = new ProfitAndLossService(
-                profitAndLossRepository,
-                holdingPeriodService,
-                new TradeClassifier(holdingPeriodService),
-                chargeRecordingGateway);
+    void setUp() {
+        profitAndLossService = new ProfitAndLossService(profitAndLossRepository, chargeRecordingGateway);
     }
 
     // ========================================
@@ -137,74 +113,6 @@ class ProfitAndLossServiceTest {
     }
 
     @Test
-    void updateProfitAndLoss_sellShortTerm_updatesStcg() {
-        // Given: Buy date more than 1 year before sell date -> Long term
-        // For short term: sell within 1 year of buy
-        UserMail userMail = UserMail.from(TEST_EMAIL);
-        LocalDate buyDate = LocalDate.of(2023, 1, 15);
-        LocalDate sellDate = LocalDate.of(2023, 12, 15); // < 1 year = short term
-        BuyContext buyContext = new BuyContext(10.0, buyDate, 100.0);
-
-        ProfitLossContext context = new ProfitLossContext(
-                "txn-sell-1", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
-                AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
-                List.of(buyContext)
-        );
-
-        // Dec 15, 2023 -> FY 2023-2024 (after March 31, 2023)
-        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2023-2024")))
-                .thenReturn(Optional.empty());
-        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
-        profitAndLossService.updateProfitAndLoss(userMail, context);
-
-        // Then
-        ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
-        verify(profitAndLossRepository).save(captor.capture());
-
-        ProfitAndLossEntity savedEntity = captor.getValue();
-        assertNotNull(savedEntity.getRealisedProfits());
-        assertNotNull(savedEntity.getRealisedProfits().getShortTermCapitalGains());
-        assertEquals("2023-2024", savedEntity.getFinancialYear());
-    }
-
-    @Test
-    void updateProfitAndLoss_sellLongTerm_updatesLtcg() {
-        // Given: Buy date more than 1 year before sell date -> Long term
-        UserMail userMail = UserMail.from(TEST_EMAIL);
-        LocalDate buyDate = LocalDate.of(2022, 1, 15);
-        LocalDate sellDate = LocalDate.of(2023, 6, 15); // > 1 year = long term
-        BuyContext buyContext = new BuyContext(10.0, buyDate, 100.0);
-
-        ProfitLossContext context = new ProfitLossContext(
-                "txn-sell-2", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
-                AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
-                List.of(buyContext)
-        );
-
-        // June 15, 2023 -> FY 2022-2023 (before April 1, 2023)
-        when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2022-2023")))
-                .thenReturn(Optional.empty());
-        when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
-        profitAndLossService.updateProfitAndLoss(userMail, context);
-
-        // Then
-        ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
-        verify(profitAndLossRepository).save(captor.capture());
-
-        ProfitAndLossEntity savedEntity = captor.getValue();
-        assertNotNull(savedEntity.getRealisedProfits());
-        assertNotNull(savedEntity.getRealisedProfits().getLongTermCapitalGains());
-        // STCG should be empty/not set
-        assertNull(savedEntity.getRealisedProfits().getShortTermCapitalGains());
-    }
-
-    @Test
     void updateProfitAndLoss_sellMultipleLots_allRecorded() {
         // Given: Sell spanning multiple buy lots
         UserMail userMail = UserMail.from(TEST_EMAIL);
@@ -212,8 +120,8 @@ class ProfitAndLossServiceTest {
         LocalDate buyDate2 = LocalDate.of(2023, 2, 15);
         LocalDate sellDate = LocalDate.of(2023, 12, 15); // short term for both
 
-        BuyContext buyContext1 = new BuyContext(5.0, buyDate1, 100.0);
-        BuyContext buyContext2 = new BuyContext(5.0, buyDate2, 120.0);
+        BuyContext buyContext1 = new BuyContext(5.0, buyDate1, 100.0, Optional.empty());
+        BuyContext buyContext2 = new BuyContext(5.0, buyDate2, 120.0, Optional.empty());
 
         ProfitLossContext context = new ProfitLossContext(
                 "txn-sell-3", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
@@ -228,7 +136,7 @@ class ProfitAndLossServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        profitAndLossService.updateProfitAndLoss(userMail, context);
+        profitAndLossService.recordSale(userMail, context, Optional.empty(), rowsOf(context));
 
         // Then
         ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
@@ -236,7 +144,7 @@ class ProfitAndLossServiceTest {
 
         ProfitAndLossEntity savedEntity = captor.getValue();
         assertNotNull(savedEntity.getRealisedProfits());
-        assertNotNull(savedEntity.getRealisedProfits().getShortTermCapitalGains());
+        assertNotNull(splitOf(savedEntity.getRealisedProfits(), AssetType.EQUITY, TradeSegment.DELIVERY));
 
         // Purchase and sell amounts should be aggregated from both lots
         // Lot1: 5 * 100 = 500 purchase, Lot2: 5 * 120 = 600 purchase, total = 1100
@@ -249,7 +157,7 @@ class ProfitAndLossServiceTest {
         UserMail userMail = UserMail.from(TEST_EMAIL);
         LocalDate buyDate = LocalDate.of(2023, 1, 15);
         LocalDate sellDate = LocalDate.of(2023, 12, 15);
-        BuyContext buyContext = new BuyContext(10.0, buyDate, 100.0);
+        BuyContext buyContext = new BuyContext(10.0, buyDate, 100.0, Optional.empty());
 
         ProfitLossContext context = new ProfitLossContext(
                 "txn-sell-4", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
@@ -264,7 +172,7 @@ class ProfitAndLossServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        profitAndLossService.updateProfitAndLoss(userMail, context);
+        profitAndLossService.recordSale(userMail, context, Optional.empty(), rowsOf(context));
 
         // Then
         ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
@@ -273,7 +181,7 @@ class ProfitAndLossServiceTest {
         ProfitAndLossEntity savedEntity = captor.getValue();
         // P&L should still be saved even without broker template
         assertNotNull(savedEntity.getRealisedProfits());
-        assertNotNull(savedEntity.getRealisedProfits().getShortTermCapitalGains());
+        assertNotNull(splitOf(savedEntity.getRealisedProfits(), AssetType.EQUITY, TradeSegment.DELIVERY));
     }
 
     @Test
@@ -329,7 +237,7 @@ class ProfitAndLossServiceTest {
         UserMail userMail = UserMail.from(TEST_EMAIL);
         LocalDate buyDate = LocalDate.of(2023, 1, 15);
         LocalDate sellDate = LocalDate.of(2023, 12, 15);
-        BuyContext buyContext = new BuyContext(10.0, buyDate, 100.0);
+        BuyContext buyContext = new BuyContext(10.0, buyDate, 100.0, Optional.empty());
 
         ProfitLossContext context = new ProfitLossContext(
                 "txn-sell-ca", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
@@ -387,7 +295,7 @@ class ProfitAndLossServiceTest {
         ProfitLossContext context = new ProfitLossContext(
                 "txn-shadow-sell", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
-                List.of(new BuyContext(10.0, LocalDate.of(2024, 1, 15), 100.0))
+                List.of(new BuyContext(10.0, LocalDate.of(2024, 1, 15), 100.0, Optional.empty()))
         );
 
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2024-2025")))
@@ -396,7 +304,7 @@ class ProfitAndLossServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        profitAndLossService.updateProfitAndLoss(userMail, context);
+        profitAndLossService.recordSale(userMail, context, Optional.empty(), rowsOf(context));
 
         // Then
         verify(chargeRecordingGateway).record(userMail, context);
@@ -442,11 +350,11 @@ class ProfitAndLossServiceTest {
         ProfitLossContext context = new ProfitLossContext(
                 "txn-shadow-ignored", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE,
                 AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
-                List.of(new BuyContext(10.0, LocalDate.of(2024, 1, 15), 100.0))
+                List.of(new BuyContext(10.0, LocalDate.of(2024, 1, 15), 100.0, Optional.empty()))
         );
 
         when(chargeRecordingGateway.record(any(), any())).thenReturn(Optional.of(
-                new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+                new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
                         ChargeResolution.RESOLVED, List.of(), 999.99)));
         when(profitAndLossRepository.findByEmailAndFinancialYear(eq(TEST_EMAIL), eq("2024-2025")))
                 .thenReturn(Optional.empty());
@@ -454,7 +362,7 @@ class ProfitAndLossServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        profitAndLossService.updateProfitAndLoss(userMail, context);
+        profitAndLossService.recordSale(userMail, context, Optional.empty(), rowsOf(context));
 
         // Then
         ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
@@ -465,7 +373,7 @@ class ProfitAndLossServiceTest {
         // 999.99 reached no bucket at all. (getProfit() is 0 here because the yearly report
         // accumulates purchase and sell amounts only; that is pre-existing behaviour, not a
         // consequence of shadow recording.)
-        FinancialReport stcg = savedEntity.getRealisedProfits().getShortTermCapitalGains();
+        FinancialReport stcg = splitOf(savedEntity.getRealisedProfits(), AssetType.EQUITY, TradeSegment.DELIVERY);
         assertEquals(1000.0, stcg.getPurchaseAmount());
         assertEquals(1500.0, stcg.getSellAmount());
         assertEquals(0.0, stcg.getBrokerage());
@@ -503,7 +411,7 @@ class ProfitAndLossServiceTest {
 
     private static ChargeComputation computedWith(double brokerage, double stt, double gst) {
         List<ChargeLine> lines = List.of(line("BROKERAGE", brokerage), line("STT", stt), line("GST", gst));
-        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
                 ChargeResolution.RESOLVED, lines, brokerage + stt + gst);
     }
 
@@ -691,16 +599,16 @@ class ProfitAndLossServiceTest {
         expectNoExistingPnl("2025-2026");
         ProfitLossContext sell = new ProfitLossContext("txn-cut1", 10.0, LocalDate.of(2025, 6, 15), 150.0,
                 STOCK_CODE, BROKER, EXCHANGE, AssetType.EQUITY, TransactionType.SELL, null,
-                AccountType.SELF, ACCOUNT_HOLDER, List.of(new BuyContext(10.0, LocalDate.of(2025, 1, 5), 100.0)));
+                AccountType.SELF, ACCOUNT_HOLDER, List.of(new BuyContext(10.0, LocalDate.of(2025, 1, 5), 100.0, Optional.empty())));
 
         // When
-        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), sell);
+        profitAndLossService.recordSale(UserMail.from(TEST_EMAIL), sell, Optional.empty(), rowsOf(sell));
 
         // Then
     }
 
     // ========================================
-    // D8 -- the classification map, beside the legacy pair
+    // Helpers for a V2 sale
     // ========================================
 
     private ProfitAndLossEntity sellAndCapture(ProfitLossContext context, String financialYear) {
@@ -709,7 +617,7 @@ class ProfitAndLossServiceTest {
         when(profitAndLossRepository.save(any(ProfitAndLossEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context);
+        profitAndLossService.recordSale(UserMail.from(TEST_EMAIL), context, Optional.empty(), rowsOf(context));
 
         ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
         verify(profitAndLossRepository).save(captor.capture());
@@ -721,92 +629,240 @@ class ProfitAndLossServiceTest {
         return new ProfitLossContext(
                 "txn-d8", 10.0, sellDate, 150.0, STOCK_CODE, BROKER, EXCHANGE, assetType,
                 TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
-                List.of(new BuyContext(10.0, buyDate, 100.0)), segment);
+                List.of(new BuyContext(10.0, buyDate, 100.0, Optional.empty())), segment);
+    }
+
+    // ========================================
+    // D-366 -- the split by asset type and segment
+    // ========================================
+
+    /**
+     * The rows {@code TradeOutcomeRecorder} would save for {@code context}'s lots, with no charges, so each lot's net
+     * profit is its price difference times its quantity.
+     */
+    private static List<TradeOutcomeContext> rowsOf(ProfitLossContext context) {
+        return context.buyContexts().stream()
+                .map(lot -> row(lot.price(), context.price(), lot.quantity(), 0, 0, 0, 0))
+                .toList();
+    }
+
+    private static TradeOutcomeContext row(double buyPrice, double sellPrice, double quantity, double buyCharges,
+                                           double buyMisc, double sellCharges, double sellMisc) {
+        double totalBuy = buyPrice * quantity + buyCharges + buyMisc;
+        double totalSell = sellPrice * quantity - sellCharges - sellMisc;
+        return TradeOutcomeContext.builder().corporateActionAdjustedBuyPrice(buyPrice).buyQuantity(quantity)
+                .sellPrice(sellPrice).sellQuantity(quantity).buyBrokerCharges(buyCharges).buyMiscCharges(buyMisc)
+                .sellBrokerCharges(sellCharges).sellMiscCharges(sellMisc).netProfit(totalSell - totalBuy).build();
+    }
+
+    private void sellThrough(ProfitLossContext context) {
+        profitAndLossService.recordSale(UserMail.from(TEST_EMAIL), context, Optional.empty(), rowsOf(context));
     }
 
     @Test
-    void updateProfitAndLoss_sellShortTerm_recordsTheClassificationInTheMap() {
+    void recordSale_whenTheRowsCarryCharges_recordsProfitBrokerageAndMisc() {
+        // Given -- lot 1: 10 bought at 100 (buy charge 20, misc 5), sold at 150 with sell charges 30;
+        // lot 2: 5 bought at 120 (charge 4, misc 1), sold at 150 with sell charges 15
+        ProfitLossContext context = sellLots(AssetType.EQUITY, AccountType.SELF, List.of(
+                new BuyContext(10.0, LocalDate.of(2023, 1, 15), 100.0, Optional.empty()),
+                new BuyContext(5.0, LocalDate.of(2023, 6, 15), 120.0, Optional.empty())));
+        List<TradeOutcomeContext> rows = List.of(row(100, 150, 10, 20, 5, 30, 0), row(120, 150, 5, 4, 1, 15, 0));
+        when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024")).thenReturn(Optional.empty());
+
+        // When
+        profitAndLossService.recordSale(UserMail.from(TEST_EMAIL), context, Optional.empty(), rows);
+
+        // Then -- purchase 1,000 + 600 = 1,600; sell 1,500 + 750 = 2,250; brokerage 20 + 30 + 4 + 15 = 69;
+        // misc 5 + 1 = 6; profit (1,500 - 30) - (1,000 + 25) = 445 and (750 - 15) - (600 + 5) = 130, so 575
+        ArgumentCaptor<ProfitAndLossEntity> captor = ArgumentCaptor.forClass(ProfitAndLossEntity.class);
+        verify(profitAndLossRepository).save(captor.capture());
+        FinancialReport year = splitOf(captor.getValue().getRealisedProfits(), AssetType.EQUITY, TradeSegment.DELIVERY);
+        MoneyAssert.assertMoney(1600.0, year.getPurchaseAmount());
+        MoneyAssert.assertMoney(2250.0, year.getSellAmount());
+        MoneyAssert.assertMoney(69.0, year.getBrokerage());
+        MoneyAssert.assertMoney(6.0, year.getMiscCharges());
+        MoneyAssert.assertMoney(575.0, year.getProfit());
+        MoneyAssert.assertMoney(575.0, year.getMonthlyReport().get(Month.DECEMBER).getProfit());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenASaleIsSentWithoutItsRows_isRefused() {
         // Given
+        ProfitLossContext context = sellLots(AssetType.EQUITY, AccountType.SELF,
+                List.of(new BuyContext(10.0, LocalDate.of(2023, 1, 15), 100.0, Optional.empty())));
+
+        // When / Then -- a sale recorded without its rows would have no profit, brokerage or misc (W-169)
+        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class,
+                () -> profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context));
+        assertTrue(refused.getMessage().contains("recordSale"));
+        verify(profitAndLossRepository, never()).save(any());
+    }
+
+    @Test
+    void recordSale_whenTheRowsDoNotMatchTheLots_isRefused() {
+        // Given -- two lots, one row
+        ProfitLossContext context = sellLots(AssetType.EQUITY, AccountType.SELF, List.of(
+                new BuyContext(10.0, LocalDate.of(2023, 1, 15), 100.0, Optional.empty()),
+                new BuyContext(5.0, LocalDate.of(2023, 6, 15), 120.0, Optional.empty())));
+        List<TradeOutcomeContext> oneRow = List.of(row(100, 150, 10, 0, 0, 0, 0));
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class,
+                () -> profitAndLossService.recordSale(UserMail.from(TEST_EMAIL), context, Optional.empty(), oneRow));
+        verify(profitAndLossRepository, never()).save(any());
+    }
+
+    private static FinancialReport splitOf(RealisedProfits realisedProfits, AssetType assetType, TradeSegment segment) {
+        return realisedProfits.getGainsByAssetAndSegment().get(assetType).get(segment);
+    }
+
+    /** A V2 sale of {@code lots} at Rs.150 on 2023-12-15, by the given account. */
+    private static ProfitLossContext sellLots(AssetType assetType, AccountType accountType, List<BuyContext> lots) {
+        double quantity = lots.stream().mapToDouble(BuyContext::quantity).sum();
+        return new ProfitLossContext("txn-split", quantity, LocalDate.of(2023, 12, 15), 150.0, STOCK_CODE, BROKER,
+                EXCHANGE, assetType, TransactionType.SELL, null, accountType, ACCOUNT_HOLDER, lots,
+                TradeSegment.DELIVERY);
+    }
+
+    /** A V1 sale: 10 of a lot bought at Rs.100 on 2022-06-15, sold at Rs.150 on 2023-12-15. */
+    private static ProfitAndLossContext v1Sale(AssetType soldAs, AssetType lotAs, TradeSegment segment) {
+        AssetEntity lot = new AssetEntity();
+        lot.setPrice(100.0);
+        lot.setQuantity(10.0);
+        lot.setTransactionDate(LocalDate.of(2022, 6, 15));
+        lot.setAssetType(lotAs);
+        AssetRequest sell = new AssetRequest();
+        sell.setStockCode(STOCK_CODE);
+        sell.setPrice(150.0);
+        sell.setQuantity(10.0);
+        sell.setBrokerCharges(30.0);
+        sell.setTransactionDate(LocalDate.of(2023, 12, 15));
+        sell.setAssetType(soldAs);
+        sell.setSegment(segment);
+        sell.setAccountType(AccountType.SELF);
+        return ProfitAndLossContext.from(lot, sell, 10.0, 20.0, 5.0);
+    }
+
+    private ProfitAndLossEntity v1SellAndCapture(ProfitAndLossContext context) {
+        ProfitAndLossEntity entity = new ProfitAndLossEntity(TEST_EMAIL, "2023-2024");
+        when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024"))
+                .thenReturn(Optional.of(entity));
+        profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context);
+        return entity;
+    }
+
+    @Test
+    void updateProfitAndLoss_whenV2SellsDelivery_recordsTheSplitBesideThePair() {
+        // Given -- 10 bought at 100, sold at 150: purchase 1,000, sell 1,500
         ProfitLossContext context = sell(AssetType.EQUITY, TradeSegment.DELIVERY,
                 LocalDate.of(2023, 1, 15), LocalDate.of(2023, 12, 15));
 
         // When
-        ProfitAndLossEntity saved = sellAndCapture(context, "2023-2024");
+        RealisedProfits saved = sellAndCapture(context, "2023-2024").getRealisedProfits();
 
         // Then
-        Map<CapitalGainsType, FinancialReport> byType = saved.getRealisedProfits().getGainsByClassification();
-        assertEquals(Set.of(CapitalGainsType.SHORT_TERM), byType.keySet());
-        MoneyAssert.assertMoney(1500.0, byType.get(CapitalGainsType.SHORT_TERM).getSellAmount());
+        FinancialReport split = splitOf(saved, AssetType.EQUITY, TradeSegment.DELIVERY);
+        MoneyAssert.assertMoney(1000.0, split.getPurchaseAmount());
+        MoneyAssert.assertMoney(1500.0, split.getSellAmount());
     }
 
     @Test
-    void updateProfitAndLoss_sellIntradayEquity_recordsSpeculativeRatherThanACapitalGain() {
-        // Given -- bought and sold the same day, intraday
-        LocalDate sameDay = LocalDate.of(2023, 12, 15);
-        ProfitLossContext context = sell(AssetType.EQUITY, TradeSegment.INTRADAY, sameDay, sameDay);
-
-        // When
-        ProfitAndLossEntity saved = sellAndCapture(context, "2023-2024");
-
-        // Then
-        Map<CapitalGainsType, FinancialReport> byType = saved.getRealisedProfits().getGainsByClassification();
-        assertEquals(Set.of(CapitalGainsType.SPECULATIVE), byType.keySet());
-        assertFalse(CapitalGainsType.SPECULATIVE.countsAsCapitalGains());
-    }
-
-    @Test
-    void updateProfitAndLoss_sellFixedDeposit_recordsADifferentHeadOfIncome() {
+    void updateProfitAndLoss_whenV2SellsIntraday_recordsItUnderIntraday() {
         // Given
-        ProfitLossContext context = sell(AssetType.FD, TradeSegment.DELIVERY,
-                LocalDate.of(2023, 1, 15), LocalDate.of(2023, 12, 15));
-
-        // When
-        ProfitAndLossEntity saved = sellAndCapture(context, "2023-2024");
-
-        // Then -- interest income, which does not belong under capital gains at all
-        Map<CapitalGainsType, FinancialReport> byType = saved.getRealisedProfits().getGainsByClassification();
-        assertEquals(Set.of(CapitalGainsType.NOT_CAPITAL_GAINS), byType.keySet());
-    }
-
-    @Test
-    void updateProfitAndLoss_sellMutualFundWithNoSubClass_recordsTheUnknownRatherThanGuessing() {
-        // Given -- D7: the sub-class is unavailable until the instrument registry ships
-        ProfitLossContext context = sell(AssetType.MUTUAL_FUND, TradeSegment.DELIVERY,
-                LocalDate.of(2023, 1, 15), LocalDate.of(2025, 12, 15));
-
-        // When
-        ProfitAndLossEntity saved = sellAndCapture(context, "2025-2026");
-
-        // Then
-        Map<CapitalGainsType, FinancialReport> byType = saved.getRealisedProfits().getGainsByClassification();
-        assertEquals(Set.of(CapitalGainsType.UNCLASSIFIED), byType.keySet());
-    }
-
-    @Test
-    void updateProfitAndLoss_whenTheClassificationIsNotACapitalGain_theLegacyPairIsUnchanged() {
-        // Given -- the cutover contract: existing readers must see exactly what they saw before
         LocalDate sameDay = LocalDate.of(2023, 12, 15);
         ProfitLossContext context = sell(AssetType.EQUITY, TradeSegment.INTRADAY, sameDay, sameDay);
 
         // When
-        ProfitAndLossEntity saved = sellAndCapture(context, "2023-2024");
+        RealisedProfits saved = sellAndCapture(context, "2023-2024").getRealisedProfits();
 
-        // Then -- still counted short-term in the pair, as it is today, and no long-term leakage
-        assertNotNull(saved.getRealisedProfits().getShortTermCapitalGains());
-        assertNull(saved.getRealisedProfits().getLongTermCapitalGains());
-        MoneyAssert.assertMoney(1500.0,
-                saved.getRealisedProfits().getShortTermCapitalGains().getSellAmount());
+        // Then
+        assertEquals(Set.of(TradeSegment.INTRADAY), saved.getGainsByAssetAndSegment().get(AssetType.EQUITY).keySet());
     }
 
     @Test
-    void getProfitAndLoss_carriesTheClassificationMapThroughToTheResponse() {
-        // Given -- a stored period holding a speculative bucket, which the legacy pair cannot express
+    void updateProfitAndLoss_whenV2LotsWereHeldForDifferentPeriods_recordsOneEntrySummingBoth() {
+        // Given -- 5 at 100 bought 2022-01-15 (over a year) and 5 at 120 bought 2023-06-15 (under), both sold at 150
+        ProfitLossContext context = sellLots(AssetType.EQUITY, AccountType.SELF, List.of(
+                new BuyContext(5.0, LocalDate.of(2022, 1, 15), 100.0, Optional.empty()),
+                new BuyContext(5.0, LocalDate.of(2023, 6, 15), 120.0, Optional.empty())));
+
+        // When
+        RealisedProfits saved = sellAndCapture(context, "2023-2024").getRealisedProfits();
+
+        // Then -- purchase 500 + 600 = 1,100, sell 750 + 750 = 1,500, in one entry
+        FinancialReport split = splitOf(saved, AssetType.EQUITY, TradeSegment.DELIVERY);
+        MoneyAssert.assertMoney(1100.0, split.getPurchaseAmount());
+        MoneyAssert.assertMoney(1500.0, split.getSellAmount());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenV2SellsTwoAssetTypes_recordsEachUnderItsOwn() {
+        // Given
+        ProfitAndLossEntity accumulating = new ProfitAndLossEntity(TEST_EMAIL, "2023-2024");
+        when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024"))
+                .thenReturn(Optional.of(accumulating));
+        List<BuyContext> lot = List.of(new BuyContext(10.0, LocalDate.of(2023, 1, 15), 100.0, Optional.empty()));
+
+        // When
+        sellThrough(
+                sellLots(AssetType.EQUITY, AccountType.SELF, lot));
+        sellThrough(
+                sellLots(AssetType.MUTUAL_FUND, AccountType.SELF, lot));
+
+        // Then
+        assertEquals(Set.of(AssetType.EQUITY, AssetType.MUTUAL_FUND),
+                accumulating.getRealisedProfits().getGainsByAssetAndSegment().keySet());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenV1Sells_recordsItsFiguresInTheSplit() {
+        // When
+        RealisedProfits saved = v1SellAndCapture(v1Sale(AssetType.EQUITY, AssetType.EQUITY, TradeSegment.DELIVERY))
+                .getRealisedProfits();
+
+        // Then -- purchase 1,000, sell 1,500, brokerage 20 + 30 = 50, misc 5, profit 500 - 50 - 5 = 445
+        FinancialReport split = splitOf(saved, AssetType.EQUITY, TradeSegment.DELIVERY);
+        MoneyAssert.assertMoney(1000.0, split.getPurchaseAmount());
+        MoneyAssert.assertMoney(1500.0, split.getSellAmount());
+        MoneyAssert.assertMoney(50.0, split.getBrokerage());
+        MoneyAssert.assertMoney(5.0, split.getMiscCharges());
+        MoneyAssert.assertMoney(445.0, split.getProfit());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenV1SaleHasNoSegment_recordsItUnderDelivery() {
+        // When -- the entry default, D-295
+        RealisedProfits saved = v1SellAndCapture(v1Sale(AssetType.EQUITY, AssetType.EQUITY, null))
+                .getRealisedProfits();
+
+        // Then
+        assertEquals(Set.of(TradeSegment.DELIVERY), saved.getGainsByAssetAndSegment().get(AssetType.EQUITY).keySet());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenTheAccountIsOutsourced_recordsTheSplitThere() {
+        // Given
+        ProfitLossContext context = sellLots(AssetType.EQUITY, AccountType.OUTSOURCED,
+                List.of(new BuyContext(10.0, LocalDate.of(2023, 1, 15), 100.0, Optional.empty())));
+
+        // When
+        ProfitAndLossEntity saved = sellAndCapture(context, "2023-2024");
+
+        // Then
+        assertNull(saved.getRealisedProfits());
+        MoneyAssert.assertMoney(1500.0,
+                splitOf(saved.getOutSourcedRealisedProfits(), AssetType.EQUITY, TradeSegment.DELIVERY).getSellAmount());
+    }
+
+    @Test
+    void getProfitAndLoss_carriesTheSplitThroughToTheResponse() {
+        // Given
         ProfitAndLossEntity entity = new ProfitAndLossEntity(TEST_EMAIL, "2023-2024");
         RealisedProfits realisedProfits = RealisedProfits.empty();
-        FinancialReport speculative = FinancialReport.empty();
-        speculative.setSellAmount(1500.0);
-        realisedProfits.setGainsByClassification(
-                new EnumMap<>(Map.of(CapitalGainsType.SPECULATIVE, speculative)));
+        FinancialReport intraday = FinancialReport.empty();
+        intraday.setSellAmount(1500.0);
+        realisedProfits.setGainsByAssetAndSegment(new EnumMap<>(Map.of(AssetType.EQUITY,
+                new EnumMap<>(Map.of(TradeSegment.INTRADAY, intraday)))));
         entity.setRealisedProfits(realisedProfits);
         when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024"))
                 .thenReturn(Optional.of(entity));
@@ -816,10 +872,48 @@ class ProfitAndLossServiceTest {
                 UserMail.from(TEST_EMAIL), "2023-2024");
 
         // Then
-        FinancialReportResponse mapped =
-                response.getRealisedProfits().getGainsByClassification().get(CapitalGainsType.SPECULATIVE);
-        assertNotNull(mapped, "the classification map must survive the response copy");
+        FinancialReportResponse mapped = response.getRealisedProfits().getGainsByAssetAndSegment()
+                .get(AssetType.EQUITY).get(TradeSegment.INTRADAY);
+        assertNotNull(mapped, "the split must survive the response copy");
         MoneyAssert.assertMoney(1500.0, mapped.getSellAmount());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenTheV2SaleHasNoAssetType_usesTheLots() {
+        // Given
+        ProfitLossContext context = sellLots(null, AccountType.SELF, List.of(
+                new BuyContext(10.0, LocalDate.of(2023, 1, 15), 100.0, Optional.of(AssetType.EQUITY))));
+
+        // When
+        RealisedProfits saved = sellAndCapture(context, "2023-2024").getRealisedProfits();
+
+        // Then
+        assertEquals(Set.of(AssetType.EQUITY), saved.getGainsByAssetAndSegment().keySet());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenTheV1SaleHasNoAssetType_usesTheLots() {
+        // When
+        RealisedProfits saved = v1SellAndCapture(v1Sale(null, AssetType.EQUITY, TradeSegment.DELIVERY))
+                .getRealisedProfits();
+
+        // Then
+        assertEquals(Set.of(AssetType.EQUITY), saved.getGainsByAssetAndSegment().keySet());
+    }
+
+    @Test
+    void updateProfitAndLoss_whenNeitherTheSaleNorTheLotHasAnAssetType_isRefusedAndSavesNothing() {
+        // Given
+        ProfitLossContext context = sellLots(null, AccountType.SELF,
+                List.of(new BuyContext(10.0, LocalDate.of(2023, 1, 15), 100.0, Optional.empty())));
+        when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024"))
+                .thenReturn(Optional.empty());
+
+        // When / Then
+        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class,
+                () -> sellThrough(context));
+        assertTrue(refused.getMessage().contains("Neither the sale of RELIANCE"));
+        verify(profitAndLossRepository, never()).save(any());
     }
 
     @Test
@@ -847,7 +941,8 @@ class ProfitAndLossServiceTest {
         yearly.setMonthlyReport(new java.util.HashMap<>(Map.of(Month.DECEMBER, monthly)));
 
         RealisedProfits realisedProfits = RealisedProfits.empty();
-        realisedProfits.setShortTermCapitalGains(yearly);
+        realisedProfits.setGainsByAssetAndSegment(new EnumMap<>(Map.of(AssetType.EQUITY,
+                new EnumMap<>(Map.of(TradeSegment.DELIVERY, yearly)))));
         ProfitAndLossEntity entity = new ProfitAndLossEntity(TEST_EMAIL, "2023-2024");
         entity.setRealisedProfits(realisedProfits);
         when(profitAndLossRepository.findByEmailAndFinancialYear(TEST_EMAIL, "2023-2024"))
@@ -858,7 +953,8 @@ class ProfitAndLossServiceTest {
                 UserMail.from(TEST_EMAIL), "2023-2024");
 
         // Then
-        FinancialReportResponse year = response.getRealisedProfits().getShortTermCapitalGains();
+        FinancialReportResponse year = response.getRealisedProfits().getGainsByAssetAndSegment().get(AssetType.EQUITY)
+                .get(TradeSegment.DELIVERY);
         MoneyAssert.assertMoney("yearly purchase", 1000.0, year.getPurchaseAmount());
         MoneyAssert.assertMoney("yearly sell", 1500.0, year.getSellAmount());
         MoneyAssert.assertMoney("yearly brokerage", 30.0, year.getBrokerage());
@@ -925,13 +1021,13 @@ class ProfitAndLossServiceTest {
             ProfitLossContext context = new ProfitLossContext(
                     "txn-" + i, 1.0, LocalDate.of(2023, 12, 15), 0.10, STOCK_CODE, BROKER, EXCHANGE,
                     AssetType.EQUITY, TransactionType.SELL, null, AccountType.SELF, ACCOUNT_HOLDER,
-                    List.of(new BuyContext(1.0, LocalDate.of(2023, 6, 15), 0.05)),
+                    List.of(new BuyContext(1.0, LocalDate.of(2023, 6, 15), 0.05, Optional.empty())),
                     TradeSegment.DELIVERY);
-            profitAndLossService.updateProfitAndLoss(UserMail.from(TEST_EMAIL), context);
+            profitAndLossService.recordSale(UserMail.from(TEST_EMAIL), context, Optional.empty(), rowsOf(context));
         }
 
         // Then -- exact equality, deliberately
-        FinancialReport yearly = accumulating.getRealisedProfits().getShortTermCapitalGains();
+        FinancialReport yearly = splitOf(accumulating.getRealisedProfits(), AssetType.EQUITY, TradeSegment.DELIVERY);
         assertEquals(1.00, yearly.getSellAmount());
         assertEquals(0.50, yearly.getPurchaseAmount());
     }
@@ -966,7 +1062,7 @@ class ProfitAndLossServiceTest {
         }
 
         // Then -- raw += gives 0.9999999999999999 here too
-        FinancialReport yearly = accumulating.getRealisedProfits().getShortTermCapitalGains();
+        FinancialReport yearly = splitOf(accumulating.getRealisedProfits(), AssetType.EQUITY, TradeSegment.DELIVERY);
         MoneyAssert.assertCanonical("V1 sell amount", 1.00, yearly.getSellAmount());
         MoneyAssert.assertCanonical("V1 purchase amount", 0.50, yearly.getPurchaseAmount());
     }
@@ -1007,7 +1103,7 @@ class ProfitAndLossServiceTest {
                         LotChargeAllocator.deductMisc(zeroQuantityLot, 1.0, zeroQuantityLot.getQuantity())));
 
         // Then -- nothing stored may be non-finite, at any level of the hierarchy
-        FinancialReport yearly = accumulating.getRealisedProfits().getShortTermCapitalGains();
+        FinancialReport yearly = splitOf(accumulating.getRealisedProfits(), AssetType.EQUITY, TradeSegment.DELIVERY);
         assertTrue(Double.isFinite(yearly.getBrokerage()), "brokerage was " + yearly.getBrokerage());
         assertTrue(Double.isFinite(yearly.getMiscCharges()), "miscCharges was " + yearly.getMiscCharges());
         assertTrue(Double.isFinite(yearly.getProfit()), "profit was " + yearly.getProfit());

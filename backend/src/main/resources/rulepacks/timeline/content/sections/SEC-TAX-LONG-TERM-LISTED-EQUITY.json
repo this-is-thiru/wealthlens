@@ -1,0 +1,49 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-244). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.112A / 2025 s.198 (coverage MODELLED, D-244). summary: S2 s.198(1), (2) (pp.222–223); 1961 s.112A(2) as substituted by FA (No. 2) 2024 s.31 (docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 18–20). routes[0]: RATE-CG-LONG-LISTED-EQUITY (OQ-33 for the allowance after a shift). routes[1]: s.198(3) / s.112A(2) proviso, RATE-CG-SHORTFALL-ORDER. disqualifiers[0]: s.198(6) / s.112A(5). The rebate limit of s.198(7) / s.112A(6) is W-089's.",
+  "key": "SEC-TAX-LONG-TERM-LISTED-EQUITY",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.112A",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.198",
+    "presence": "PRESENT"
+  },
+  "plainName": "Tax on long-term gains from listed shares and equity funds",
+  "summary": "Long-term gains on equity shares bought and sold with securities transaction tax, or on equity-oriented fund or business-trust units sold with it, are taxed at their own flat rate on the part above a yearly allowance, apart from the rest of the income.",
+  "routes": [
+    {
+      "name": "The flat rate above the allowance",
+      "description": "The gains above the yearly allowance are taxed at their own rate; the rest of the income at slab rates.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RATE-CG-LONG-LISTED-EQUITY"
+        }
+      ]
+    },
+    {
+      "name": "Unused basic exemption set against the gains",
+      "description": "For a resident individual or Hindu undivided family, any part of the basic exemption the rest of the income does not use reduces these gains before they are taxed.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RATE-CG-SHORTFALL-ORDER"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Deductions from gross total income are not allowed against these gains; they are allowed only from the rest of the income.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-WITHIN-GROSS-TOTAL"
+      }
+    }
+  ]
+}

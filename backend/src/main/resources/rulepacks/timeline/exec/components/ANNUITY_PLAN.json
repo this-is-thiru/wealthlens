@@ -1,0 +1,26 @@
+{
+  "_note": "A sum qualifying under Income-tax Act, 2025 s.123 — Schedule XV para 1(l): \"sum paid to effect or to keep in force a contract for annuity plan of the Life Insurance Corporation or any other insurer notified by the Central Government\" (Gazette 265620, p.562). Counted in full: para 2 excludes \"a contract for a deferred annuity\", which para 1(b) treats this plan as (\"a deferred annuity contract other than the annuity plan referred to in clause (l)\"), and reaches para 1(a) alone (OQ-17 answered by the owner, D-154 C2a). Not para 1(x)'s pension-fund annuity (PENSION_FUND_ANNUITY). TY 2025-26: Income-tax Act, 1961 s.80C(2)(xii) (sources B21). D-154.",
+  "code": "ANNUITY_PLAN",
+  "displayName": "Annuity plan of the LIC or a notified insurer",
+  "kind": "QUALIFYING_PAYMENT",
+  "cashNature": "CASH_OUTFLOW",
+  "treatment": "DEDUCTIBLE",
+  "feedsInto": [
+    "DED-SCHEDULE-XV"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(l), p.562; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(xii), pp.330–333",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

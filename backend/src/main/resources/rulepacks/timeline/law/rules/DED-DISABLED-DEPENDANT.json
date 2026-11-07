@@ -1,0 +1,127 @@
+{
+  "ruleId": "DED-DISABLED-DEPENDANT",
+  "ruleSet": "RS-DED-DISABLED-DEPENDANT",
+  "_note": "A dependant with disability: s.127(1): a resident individual \"shall be allowed a deduction up to ₹ 75000 … if during that year he has (a) incurred expenditure for the medical treatment (including nursing), training and rehabilitation of a dependant, being a person with disability; or (b) paid or deposited any amount under a scheme … for the maintenance of a dependant\" (pp.162–163); \"dependant\" — the spouse, children, parents, brothers and sisters \"dependant wholly or mainly\" on the individual (s.127(9)(b)); not one who claimed s.154 (s.127(8)); the certificate with the return (s.127(6)–(7)) and (2)'s scheme conditions are entry conditions. ChapterEightNode allows the lesser of the amount spent or deposited and this limit — \"up to\" read as a ceiling (OQ-19); more than one disabled dependant is refused (OQ-19). rulebook DED-80DD-001. Old regime only (s.202(2)(a)(xii), p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80DD, is the TY 2025-26 version (W-075d3). D-138. The \"lesser of\" is in the cap since W-075d3 (LeastOf), not the node (D-146). TY 2025-26: Income-tax Act, 1961 s.80DD(1) (thc p.343): a resident individual who has incurred expenditure for the medical treatment, training and rehabilitation of a dependant with disability, or paid or deposited under an approved scheme, \"be allowed a deduction of a sum of seventy-five thousand rupees\" — a FIXED sum (Fixed 75000), unlike TY 2026-27's \"up to\" (the LeastOf above; OQ-19); nothing spent or deposited gives nothing (the node). FA 2022 s.21 (p.28) changes only the scheme's payout (2)(a), (3A). sources/2026-10-07-chapter-via.md B14, M9. D-146. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches the dependant by the certified severity (disability.severity = DISABILITY) — s.154(1) \"respectively\" / s.127(3) (W-156c, D-348).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80DD(1); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.127(1)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "Fixed",
+        "amount": "75000"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "disability.severity",
+          "code": "DISABILITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2022 (6 of 2022), s.21 — s.80DD(2)(a), (3A) (the scheme's payout); s.80DD(1) as subs. by Act 20 of 2015, s.20 (w.e.f. 1-4-2016)",
+        "gazetteRef": "CG-DL-E-31032022-234693",
+        "notifiedOn": "2022-03-31",
+        "effectiveFrom": "2023-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2022/234693.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2022/234693.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80DD(1), (4), Explanation, pp.343–344; Gazette CG-DL-E-31032022-234693, Finance Act, 2022 s.21, p.28",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80DD after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019 and the Finance Acts of 2020 to 2025 (all searched for Chapter VI-A in W-075d0, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80DD(1); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.127(1)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "LeastOf",
+        "limbs": [
+          {
+            "name": "the amount spent or deposited",
+            "shape": {
+              "type": "PercentOfBase",
+              "percent": "100",
+              "base": "AMOUNT_CLAIMED"
+            }
+          },
+          {
+            "name": "the limit",
+            "shape": {
+              "type": "Fixed",
+              "amount": "75000"
+            }
+          }
+        ]
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "disability.severity",
+          "code": "DISABILITY"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.127(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.127(1), (8), (9), pp.162–164",
+        "accessedOn": "2026-10-06",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.127(1), (8), (9), pp.162–164",
+    "accessedOn": "2026-10-06",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

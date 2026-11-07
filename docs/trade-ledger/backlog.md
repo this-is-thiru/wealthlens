@@ -60,8 +60,8 @@ rows are rewritten. Harmless until something groups by the field.
 and there is no way to recompute either — so any correction to them is a careful manual edit against
 a nested document.
 
-`trade_outcomes` already has exactly this: drop the collection, restart, and
-`TradeOutcomeMigrationRunner` rebuilds it from raw transactions. That is why, of the three derived
+`trade_outcomes` already has exactly this: delete a user's rows and `POST /trade-outcomes/rebuild`
+recomputes them from raw transactions (W-088u8b, D-284; the startup runner it replaced is gone). That is why, of the three derived
 collections, it is the only one that is easy to correct.
 
 **Why it matters.** It surfaced writing the duplicate-remediation section of

@@ -7,18 +7,19 @@ import static org.mockito.Mockito.*;
 import com.thiru.wealthlens.brokercharges.config.ChargeEngineProperties;
 import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
+import com.thiru.wealthlens.portfolio.dto.AssetResponse;
 import com.thiru.wealthlens.portfolio.dto.context.ProfitLossContext;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
 import com.thiru.wealthlens.portfolio.dto.context.TransactionRecord;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
+import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
 import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolution;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
 import com.thiru.wealthlens.portfolio.repository.PortfolioRepository;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
 import com.thiru.wealthlens.portfolio.service.ChargeRecordingGateway;
@@ -35,10 +36,12 @@ import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.exception.BadRequestException;
 import com.thiru.wealthlens.shared.util.money.TMoney;
+import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,9 +82,6 @@ class PortfolioServiceTest {
     private ChargeViewAssembler chargeViewAssembler;
 
     @Mock
-    private HoldingPeriodService holdingPeriodService;
-
-    @Mock
     private TradeOutcomeRecorder tradeOutcomeRecorder;
 
     private TestablePortfolioService portfolioService;
@@ -112,7 +112,6 @@ class PortfolioServiceTest {
                 chargeRecordingGateway,
                 chargeViewAssembler,
                 properties,
-                holdingPeriodService,
                 tradeOutcomeRecorder
         );
     }
@@ -133,12 +132,12 @@ class PortfolioServiceTest {
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
-                HoldingPeriodService holdingPeriodService, TradeOutcomeRecorder tradeOutcomeRecorder) {
+                TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
                     chargeEngineProperties,
-                    holdingPeriodService, tradeOutcomeRecorder);
+                    tradeOutcomeRecorder);
         }
 
         void resetAddTransactionBehaviour() {
@@ -182,13 +181,12 @@ class PortfolioServiceTest {
                 ChargeRecordingGateway chargeRecordingGateway,
                 ChargeViewAssembler chargeViewAssembler,
                 ChargeEngineProperties chargeEngineProperties,
-                HoldingPeriodService holdingPeriodService,
                 TradeOutcomeRecorder tradeOutcomeRecorder) {
             super(transactionService, portfolioRepository, profitAndLossService,
                     mongoTemplateService, tradeOutcomeService, transactionRepository,
                     temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
                     chargeEngineProperties,
-                    holdingPeriodService, tradeOutcomeRecorder);
+                    tradeOutcomeRecorder);
         }
 
         @Override
@@ -205,7 +203,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(true);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -223,7 +221,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
         when(temporaryTransactionService.hasTemporaryTransactions(userMail)).thenReturn(false);
         AssetRequest request = createAssetRequest("STOCK1");
 
@@ -365,7 +363,7 @@ class PortfolioServiceTest {
     }
 
     private static ChargeComputation computed() {
-        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null,
+        return new ChargeComputation("sched-1", "ZERODHA_EQ_DELIVERY_2025_04", null, null, null,
                 ChargeResolution.RESOLVED, List.of(), COMPUTED_CHARGES);
     }
 
@@ -570,6 +568,30 @@ class PortfolioServiceTest {
     }
 
     @Test
+    void updateQuantityBySavingReportAndProfitAndLoss1_recordsTheSaleFromTheRowsTheRecorderSaved() {
+        // Given -- the recorder computes the sale's charges and net profit; the P&L must fold those rows (W-169)
+        List<AssetEntity> lots = new ArrayList<>(List.of(sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10))));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(3.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+        Optional<ChargeComputation> priced = Optional.of(computed());
+        when(chargeRecordingGateway.record(any(), any())).thenReturn(priced);
+        List<TradeOutcomeContext> rows = List.of(TradeOutcomeContext.builder().netProfit(290.0).build());
+        when(tradeOutcomeRecorder.record(any(), any(), any(), any(), any())).thenReturn(rows);
+
+        // When
+        portfolioService.updateQuantityBySavingReportAndProfitAndLoss1(userMail, "sell-1", lots, sell);
+
+        // Then -- priced, then recorded, then the P&L given those very rows
+        InOrder order = inOrder(chargeRecordingGateway, tradeOutcomeRecorder, profitAndLossService);
+        order.verify(chargeRecordingGateway).record(eq(userMail), any(ProfitLossContext.class));
+        order.verify(tradeOutcomeRecorder).record(eq(userMail), eq(sell), eq("sell-1"), any(), eq(priced));
+        order.verify(profitAndLossService).recordSale(eq(userMail), any(ProfitLossContext.class), eq(priced),
+                same(rows));
+    }
+
+    @Test
     void updateQuantityBySavingReportAndProfitAndLoss_v1_doesNotRecordTradeOutcomesThroughTheNewPath() {
         // Given -- V1 is in live use and writes its outcomes through toTradeOutcomeContext.
         // If it ever reaches the recorder as well, every V1 sell is double-counted.
@@ -584,8 +606,6 @@ class PortfolioServiceTest {
                 .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(
                         any(), any(), any(), any()))
                 .thenReturn(lots);
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
 
         // When
         portfolioService.sellStock(userMail, "sell-1", sell);
@@ -629,7 +649,7 @@ class PortfolioServiceTest {
                 portfolioRepository, transactionService, profitAndLossService,
                 mongoTemplateService, tradeOutcomeService, transactionRepository,
                 temporaryTransactionService, chargeRecordingGateway, chargeViewAssembler,
-                new ChargeEngineProperties(true, true, false), holdingPeriodService, tradeOutcomeRecorder);
+                new ChargeEngineProperties(true, true, false), tradeOutcomeRecorder);
 
         // When
         String result = realService.addTransaction(userMail, request, new ArrayList<>());
@@ -665,8 +685,6 @@ class PortfolioServiceTest {
         when(portfolioRepository
                 .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
                 .thenReturn(new ArrayList<>(List.of(asset)));
-        when(holdingPeriodService.classify(any(), any(), any(), any())).thenReturn(
-                new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
 
         // When -- three successive single-unit sells
         for (int i = 0; i < 3; i++) {
@@ -685,5 +703,155 @@ class PortfolioServiceTest {
             deducted = TMoney.add(deducted, row.getBuyBrokerCharges());
         }
         MoneyAssert.assertCanonical("V1 lifetime buy charge", 10.00, deducted);
+    }
+
+    @Test
+    void sellStock_v1_writesEveryFieldOfTheOutcome() {
+        // Given -- a lot of 4 @ 100 (broker 10, misc 2) at Upstox on BSE; 3 sold @ 200 (broker 6, misc 1.5)
+        AssetEntity asset = sellableLot("buy-1", 4.0, 100.0, LocalDate.of(2024, 1, 10));
+        asset.setStockName("Lot Co");
+        asset.setExchangeName("BSE");
+        asset.setBrokerName(BrokerName.UPSTOX);
+        asset.setBrokerCharges(10.0);
+        asset.setMiscCharges(2.0);
+        when(portfolioRepository
+                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setAccountType(AccountType.OUTSOURCED);
+        sell.setAccountHolder("main");
+        sell.setQuantity(3.0);
+        sell.setPrice(200.0);
+        sell.setBrokerCharges(6.0);
+        sell.setMiscCharges(1.5);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        TradeOutcomeContext row = captor.getValue();
+        assertV1Identity(row);
+        assertV1Figures(row);
+    }
+
+    /** The fields V1 takes from the lot (stock, exchange, broker, asset type) and from the request (account). */
+    private void assertV1Identity(TradeOutcomeContext row) {
+        assertEquals(userMail.getEmail(), row.getEmail());
+        assertEquals("STOCK1", row.getStockCode());
+        assertEquals("Lot Co", row.getStockName());
+        assertEquals("BSE", row.getExchangeName());
+        assertEquals(BrokerName.UPSTOX, row.getBrokerName());
+        assertEquals(AssetType.EQUITY, row.getAssetType());
+        assertEquals(AccountType.OUTSOURCED, row.getAccountType());
+        assertEquals("main", row.getAccountHolder());
+        assertEquals(LocalDate.of(2024, 1, 10), row.getBuyDate());
+        assertEquals(LocalDate.of(2025, 8, 10), row.getSellDate());
+        // 2024-01-10 -> 2025-01-10 is 366 days (leap year); then 21+28+31+30+31+30+31+10 = 212
+        assertEquals(578L, row.getHoldingPeriodDays());
+        assertEquals("2025-2026", row.getFinancialYear());
+        assertEquals("sell-1", row.getSourceSellTransactionId());
+        assertEquals("asset-buy-1", row.getSourceBuyLotId());
+        assertEquals(Boolean.FALSE, row.getCorporateActionDerived());
+        assertEquals(List.of(), row.getAppliedCorporateActions());
+        assertEquals(AcquisitionMode.PURCHASE, row.getAcquisitionMode());
+        assertNull(row.getAcquisitionCorporateAction());
+    }
+
+    private static void assertV1Figures(TradeOutcomeContext row) {
+        MoneyAssert.assertMoney(100.0, row.getOriginalBuyPrice());
+        MoneyAssert.assertMoney(100.0, row.getCorporateActionAdjustedBuyPrice());
+        assertEquals(3.0, row.getBuyQuantity(), 0.0);
+        assertEquals(3.0, row.getSellQuantity(), 0.0);
+        MoneyAssert.assertMoney(7.5, row.getBuyBrokerCharges());   // LotChargeAllocator: 10 × 3 ÷ 4, nothing allocated before
+        MoneyAssert.assertMoney(1.5, row.getBuyMiscCharges());     // 2 × 3 ÷ 4
+        MoneyAssert.assertMoney(200.0, row.getSellPrice());
+        MoneyAssert.assertMoney(6.0, row.getSellBrokerCharges());  // 6 ÷ 3 × 3
+        MoneyAssert.assertMoney(1.5, row.getSellMiscCharges());    // 1.5 ÷ 3 × 3
+        MoneyAssert.assertMoney(309.0, row.getTotalBuyValue());    // 100 × 3 + 7.5 + 1.5
+        MoneyAssert.assertMoney(592.5, row.getTotalSellValue());   // 200 × 3 − 6 − 1.5
+        MoneyAssert.assertMoney(283.5, row.getNetProfit());
+        assertEquals(283.5 / 309.0 * 100, row.getProfitPercentage(), 1e-9);
+    }
+
+    @Test
+    void sellStock_v1_whenTheLotWasABonusAllotment_recordsItsAcquisition() {
+        // Given -- the lot's own record says how it was acquired; S.O. 5054(E) turns on it (W-088f)
+        AssetEntity asset = sellableLot("buy-1", 3.0, 0.0, LocalDate.of(2020, 1, 10));
+        asset.setCorporateActionType(CorporateActionType.BONUS);
+        when(portfolioRepository
+                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(1.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        assertEquals(AcquisitionMode.CORPORATE_ACTION, captor.getValue().getAcquisitionMode());
+        assertEquals(CorporateActionType.BONUS, captor.getValue().getAcquisitionCorporateAction());
+    }
+
+    @Test
+    void sellStock_v1_whenTheLotAndTheSaleWereTradedApart_recordsEachSidesVenue() {
+        // Given -- the lot on BSE for delivery, the sale on NSE intraday; V1's exchange_name is the lot's (D-295)
+        AssetEntity asset = sellableLot("buy-1", 3.0, 100.0, LocalDate.of(2024, 1, 10));
+        asset.setExchangeName("BSE");
+        asset.setSegment(TradeSegment.DELIVERY);
+        when(portfolioRepository
+                .findByEmailAndStockCodeAndBrokerNameAndAccountHolderOrderByTransactionDate(any(), any(), any(), any()))
+                .thenReturn(new ArrayList<>(List.of(asset)));
+        AssetRequest sell = createAssetRequest("STOCK1");
+        sell.setQuantity(1.0);
+        sell.setPrice(200.0);
+        sell.setTransactionDate(LocalDate.of(2025, 8, 10));
+        sell.setExchangeName("NSE");
+        sell.setSegment(TradeSegment.INTRADAY);
+
+        // When
+        portfolioService.sellStock(userMail, "sell-1", sell);
+
+        // Then
+        ArgumentCaptor<TradeOutcomeContext> captor = ArgumentCaptor.forClass(TradeOutcomeContext.class);
+        verify(tradeOutcomeService).saveTradeOutcome(eq(userMail), captor.capture());
+        assertEquals("BSE", captor.getValue().getBuyExchangeName());
+        assertEquals(TradeSegment.DELIVERY, captor.getValue().getBuySegment());
+        assertEquals("NSE", captor.getValue().getSellExchangeName());
+        assertEquals(TradeSegment.INTRADAY, captor.getValue().getSellSegment());
+    }
+
+    @Test
+    void getAllStocks_whenAHoldingWasBoughtOnTwoDates_reportsTheDaysHeldForEach() {
+        // Given -- 5 bought 400 days ago and 3 bought 30 days ago, one stock at one broker
+        LocalDate today = TLocalDate.today();
+        when(portfolioRepository.findByEmail(userMail.getEmail()))
+                .thenReturn(List.of(lot(today.minusDays(400), 5.0), lot(today.minusDays(30), 3.0)));
+
+        // When
+        List<AssetResponse> holdings = portfolioService.getAllStocks(userMail);
+
+        // Then
+        assertEquals(1, holdings.size());
+        assertEquals(Map.of(today.minusDays(400).toString(), 400L, today.minusDays(30).toString(), 30L),
+                holdings.getFirst().getDaysHeld());
+        assertEquals(List.copyOf(holdings.getFirst().getTransactionQuantities().keySet()),
+                List.copyOf(holdings.getFirst().getDaysHeld().keySet()));
+    }
+
+    private static AssetEntity lot(LocalDate boughtOn, double quantity) {
+        AssetEntity lot = new AssetEntity();
+        lot.setStockCode("STOCK1");
+        lot.setBrokerName(BrokerName.ZERODHA);
+        lot.setPrice(100.0);
+        lot.setQuantity(quantity);
+        lot.setTransactionDate(boughtOn);
+        return lot;
     }
 }

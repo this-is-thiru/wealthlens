@@ -1,0 +1,195 @@
+package com.thiru.wealthlens.taxengine.node;
+
+import com.thiru.wealthlens.taxengine.input.Employment;
+import com.thiru.wealthlens.taxengine.input.LeaveAtRetirement;
+import com.thiru.wealthlens.taxengine.input.MonthOfPay;
+import com.thiru.wealthlens.taxengine.input.RetirementEntry;
+import com.thiru.wealthlens.taxengine.input.RetirementPayment;
+import com.thiru.wealthlens.taxengine.input.Separation;
+import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
+import com.thiru.wealthlens.taxengine.rules.cap.CapContext;
+import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
+import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
+import com.thiru.wealthlens.taxengine.rules.definition.SalaryAveragingPeriod;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.BaseId;
+import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.IntStream;
+
+/**
+ * The retirement limits the Central Government sets by notification, for {@link RetirementNode} (S2 s.19(1) Table
+ * Sl. 6, 14 and s.19(2)(a), (b), (f); 1961 s.10(10)(iii), (10AA)(ii) and their provisos; D-106).
+ *
+ * <p>Other gratuity is measured on half a month's salary for each completed year, the salary averaged over the months
+ * {@code RET-GRATUITY-AVERAGING} names before the event's month by {@code SAL-SALARY-FOR-GRATUITY}'s own inclusions, so DA counts only where the
+ * terms provide. Other leave encashment reads the employer's figures. Each notification covers events from a day —
+ * the version's {@code introducedBy.effectiveFrom} — and an earlier event is refused, its limit being another
+ * notification. Across employers and years each is capped at A − B, the notified limit less what earlier years
+ * allowed.
+ */
+final class NotifiedRetirementLimits {
+
+
+    /** An entry the ledger holds earlier amounts for — what {@code RS-RET-AGGREGATE-HISTORY}'s rows read (D-339). */
+    private static final ItemFactId EARLIER_ENTRY = new ItemFactId("retirement.earlier.entry");
+
+    private NotifiedRetirementLimits() {
+    }
+
+    /** Whether the payment's entry is capped by notification: whether the aggregate set has a row for it (D-253). */
+    static boolean isNotified(NodeContext ctx, RetirementPayment payment) {
+        return ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.factsOf(ctx, payment)).isPresent();
+    }
+
+    /** Refuses an employment's gratuity and leave encashment that name different days: one employment ends once. */
+    static void requireOneDay(List<RetirementPayment> payments) {
+        payments.stream().map(RetirementPayment::employment).distinct().forEach(employment -> {
+            List<RetirementPayment> its = payments.stream().filter(payment -> payment.employment() == employment)
+                    .toList();
+            Optional<LocalDate> separated = its.stream()
+                    .flatMap(payment -> payment.separation().stream()).map(Separation::separatedOn).findFirst();
+            Optional<LocalDate> retired = its.stream()
+                    .flatMap(payment -> payment.leave().stream()).map(LeaveAtRetirement::retiredOn).findFirst();
+            if (separated.isPresent() && retired.isPresent() && !separated.equals(retired)) {
+                throw new IllegalArgumentException("Employment " + employment + "'s gratuity is entered for a"
+                        + " separation on " + separated.get() + " and its leave encashment for a retirement on "
+                        + retired.get() + "; one employment ends once");
+            }
+        });
+    }
+
+    /**
+     * The amounts the entry's least-of reads, from the facts the payment carries, after refusing an event its
+     * notification does not cover. Which of them the row reads is its cap's to say (W-155c1).
+     */
+    static CapContext context(NodeContext ctx, RetirementPayment payment,
+            RuleVersion version, Map<BaseId, Money> received) {
+        Map<BaseId, Money> bases = new HashMap<>(received);
+        payment.separation().ifPresent(separation -> {
+            requireCovered(version, separation.separatedOn(), payment);
+            Money average = averageSalary(ctx, separation, ctx.inputs().entered().employments().get(payment.employment()));
+            bases.put(EntryFacts.AVERAGE_SALARY_BY_COMPLETED_YEARS, average.times(separation.completedYears()));
+        });
+        payment.leave().ifPresent(leave -> {
+            requireCovered(version, leave.retiredOn(), payment);
+            bases.put(EntryFacts.LEAVE_SALARY_AT_CREDIT, leave.leaveSalaryAtCredit());
+            bases.put(EntryFacts.AVERAGE_MONTHLY_SALARY, leave.averageMonthlySalary());
+        });
+        return new CapContext(Map.copyOf(bases));
+    }
+
+    /**
+     * The line as the aggregate leaves it: unchanged where what A − B leaves is not below it, else a line citing the
+     * aggregate rule, with what the entry alone allowed as its input and what is left as its output. A − B caps the
+     * year's total from every employer (S2 s.19(2)(a), (f); 1961 provisos), so this year's earlier payments of the
+     * entry, in the order entered, come off it first; which payment absorbs the cut changes no tax (D-225).
+     */
+    static TraceLine capped(NodeContext ctx, RetirementPayment payment, Money allowedThisYear, TraceLine line) {
+        RuleId aggregateId = ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE, RetirementNode.factsOf(ctx, payment))
+                .orElseThrow().id();
+        RuleVersion version = TemporallyApportionedCap.governingVersion(ctx.rule(aggregateId), ctx.inputs().temporal());
+        Money limit = TemporallyApportionedCap.apply(ctx.rule(aggregateId), ctx.inputs().temporal(),
+                new CapContext(Map.of())).value();
+        Money allowedBefore = allowedBefore(ctx, payment);
+        Money remaining = limit.minus(allowedBefore).floorAtZero().minus(allowedThisYear).floorAtZero();
+        Money allowed = line.out().asMoney();
+        if (allowed.isLessThanOrEqual(remaining)) {
+            return line;
+        }
+        String why = "notified limit less the " + allowedBefore + " allowed in earlier years";
+        if (allowedThisYear.isGreaterThan(Money.ZERO)) {
+            why += " and the " + allowedThisYear + " allowed on this year's earlier payments, in the order entered (the"
+                    + " split changes no tax; D-225)";
+        }
+        return TraceLine.of(line.sequence(), line.node(), aggregateId, line.kind(), MoneyValue.of(allowed),
+                        MoneyValue.of(remaining), version.provenance())
+                .withLimitedBy(why);
+    }
+
+    /**
+     * The aggregate's B: what earlier years allowed under each entry an {@code RS-RET-AGGREGATE-HISTORY} row counts
+     * towards the payment's aggregate (S2 s.19(2)(a), (f); D-339). Which entries count is the rows' to say.
+     */
+    private static Money allowedBefore(NodeContext ctx, RetirementPayment payment) {
+        ItemFacts facts = RetirementNode.factsOf(ctx, payment);
+        return ctx.inputs().ledgers().retirementAllowedBefore().entrySet().stream()
+                .filter(earlier -> ctx.optionalRuleOf(RuleSetIds.RS_RET_AGGREGATE_HISTORY,
+                        withEarlierEntry(facts, earlier.getKey())).isPresent())
+                .map(Map.Entry::getValue)
+                .reduce(Money.ZERO, Money::plus);
+    }
+
+    private static ItemFacts withEarlierEntry(ItemFacts facts, RetirementEntry earlier) {
+        Map<ItemFactId, String> codes = new HashMap<>(facts.codes());
+        codes.put(EARLIER_ENTRY, earlier.name());
+        return new ItemFacts(codes, facts.quantities(), facts.dates());
+    }
+
+    private static void requireCovered(RuleVersion version, LocalDate event, RetirementPayment payment) {
+        LocalDate covered = version.introducedBy().effectiveFrom();
+        if (event.isBefore(covered)) {
+            throw new IllegalArgumentException(payment.component() + ": the event on " + event + " precedes "
+                    + covered + ", from which " + version.introducedBy().gazetteRef() + " sets the limit; an earlier"
+                    + " event's limit is another notification, which is not built");
+        }
+    }
+
+    /**
+     * The salary averaged over the months {@code RET-GRATUITY-AVERAGING} names, immediately preceding the event's month
+     * (S2 s.19(1) Table Sl. 6; 1961 s.10(10)(iii); D-317).
+     *
+     * @throws IllegalArgumentException if the months entered are not exactly those months
+     */
+    private static Money averageSalary(NodeContext ctx, Separation separation, Employment employment) {
+        GoverningRow row = GoverningRow.of(ctx, RuleSetIds.RS_RET_GRATUITY_AVERAGING);
+        int months = RuleDefinitions.require(row.version().definition(), SalaryAveragingPeriod.class, row.id()).months();
+        YearMonth eventMonth = YearMonth.from(separation.separatedOn());
+        List<YearMonth> expected = IntStream.rangeClosed(1, months)
+                .mapToObj(back -> eventMonth.minusMonths(months + 1L - back)).toList();
+        List<YearMonth> entered = separation.monthsBefore().stream().map(MonthOfPay::month).sorted().toList();
+        if (!entered.equals(expected)) {
+            throw new IllegalArgumentException(row.id() + " averages the " + months + " months immediately preceding"
+                    + " the month of the event on " + separation.separatedOn() + ", " + expected.getFirst() + " to "
+                    + expected.getLast() + ", but " + entered + " were entered");
+        }
+        Money total = Money.ZERO;
+        for (MonthOfPay month : separation.monthsBefore()) {
+            for (Map.Entry<ComponentCode, Money> line : month.amounts().entrySet()) {
+                if (inGratuityBase(ctx, line.getKey(), employment)) {
+                    total = total.plus(line.getValue());
+                }
+            }
+        }
+        return total.apportioned(1, months);
+    }
+
+    private static boolean inGratuityBase(NodeContext ctx, ComponentCode code, Employment employment) {
+        ComponentDefinition definition = ctx.pack().components().get(code);
+        if (definition == null) {
+            throw new IllegalArgumentException(code + " in the months averaged before the separation is not a known pay"
+                    + " component");
+        }
+        return definition.salaryBaseFor().stream()
+                .filter(inclusion -> ctx.pack().ruleSet(RuleSetIds.RS_SAL_SALARY_FOR_GRATUITY).members()
+                        .contains(inclusion.rule()))
+                .findFirst()
+                .map(SalaryBaseInclusion::onlyWhereTermsProvide)
+                .map(onlyWhereTerms -> !onlyWhereTerms || employment.termsIncludeDearnessAllowance())
+                .orElse(false);
+    }
+}

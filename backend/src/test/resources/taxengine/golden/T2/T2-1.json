@@ -1,0 +1,14 @@
+{
+  "id": "T2-1",
+  "source": "DR 08 T2-1 — New regime, at the surcharge threshold. TI ₹50,00,000",
+  "_source": "**Expected: ₹11,23,200.**",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "5000000",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "1123200"
+  }
+}

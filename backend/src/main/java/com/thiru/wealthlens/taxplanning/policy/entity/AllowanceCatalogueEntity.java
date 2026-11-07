@@ -1,5 +1,7 @@
 package com.thiru.wealthlens.taxplanning.policy.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thiru.wealthlens.shared.dto.enums.EntityStatus;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
@@ -19,7 +21,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
 @Document(value = "allowance_catalogue")
-@AllArgsConstructor
+// A body binds through the no-arg constructor, so an omitted field keeps its initialiser (W-205).
+@AllArgsConstructor(onConstructor_ = @JsonCreator(mode = JsonCreator.Mode.DISABLED))
 @NoArgsConstructor
 @Data
 public class AllowanceCatalogueEntity implements AuditableEntity {
@@ -107,5 +110,6 @@ public class AllowanceCatalogueEntity implements AuditableEntity {
 
     @Field("audit_metadata")
     @Setter(value = AccessLevel.NONE)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private AuditMetadata auditMetadata = new AuditMetadata();
 }

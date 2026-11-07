@@ -1,0 +1,73 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-152). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: DED-SPECIFIED-DISEASE* provision1961 (s.80DDB) and provision2025 (s.128). summary: S2 s.128(1), (3), (4); 1961 s.80DDB and its third proviso (sources B15; D-138, D-146). routes[0]: DED-SPECIFIED-DISEASE. routes[1]: DED-SPECIFIED-DISEASE-SENIOR (s.128(4)). disqualifiers[0]: the rows' regimes. disqualifiers[1]: DED-DEPENDANT (s.128(5)(a), s.127(9)(b); W-156c). disqualifiers[2]: OQ-20, DisabilityDeduction. disqualifiers[3]: D-138. disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists DED-SPECIFIED-DISEASE (D-166; until then DED-SPECIFIED-DISEASE's ExceptIn).",
+  "key": "SEC-SPECIFIED-DISEASE",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.80DDB",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.128",
+    "presence": "PRESENT"
+  },
+  "plainName": "Treatment of a specified disease",
+  "summary": "If you are resident and paid for the treatment of a prescribed disease or ailment for yourself or a dependant, the amount paid is deducted up to a limit, larger where the person treated is a senior citizen. What an insurer paid or an employer reimbursed for it is taken off first. Only the old regime allows it.",
+  "routes": [
+    {
+      "name": "Treatment for you or a dependant",
+      "description": "The amount paid, less what was insured or reimbursed, up to the limit.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-SPECIFIED-DISEASE"
+        }
+      ]
+    },
+    {
+      "name": "Treatment for a senior citizen",
+      "description": "The larger limit where the person treated is a senior citizen.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "DED-SPECIFIED-DISEASE-SENIOR"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "It is not deducted in the default regime.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Someone who is not a spouse, child, parent, brother or sister wholly or mainly dependent on the assessee is not a dependant for this deduction.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-DEPENDANT"
+      }
+    },
+    {
+      "kind": "CONDITION_FAILED",
+      "description": "Treatment for a senior citizen and for someone who is not, in the same year, is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "which limit applies is not settled"
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "A Hindu undivided family's claim under this deduction is not computed.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "the deduction for a Hindu undivided family is not built"
+      }
+    }
+  ]
+}

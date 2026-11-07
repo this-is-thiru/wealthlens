@@ -1,0 +1,49 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-244). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.111A / 2025 s.196 (coverage MODELLED, D-244). summary: S2 s.196(1) (Gazette 265620 p.220); 1961 s.111A(1) as substituted by FA (No. 2) 2024 s.29 (docs/taxplanning-build/sources/2026-10-18-capital-gains-basis.md rows 16, 19). routes[0]: RATE-CG-SHORT-LISTED-EQUITY. routes[1]: s.196(2) / s.111A(1) first proviso, RATE-CG-SHORTFALL-ORDER. disqualifiers[0]: s.196(4) / s.111A(2), enforced in ChapterEightNode within DED-WITHIN-GROSS-TOTAL.",
+  "key": "SEC-TAX-SHORT-TERM-LISTED-EQUITY",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.111A",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.196",
+    "presence": "PRESENT"
+  },
+  "plainName": "Tax on short-term gains from listed shares and equity funds",
+  "summary": "Short-term gains on equity shares, equity-oriented fund units or business-trust units sold with securities transaction tax are taxed at their own flat rate, apart from the rest of the income, which is taxed at slab rates.",
+  "routes": [
+    {
+      "name": "The flat rate on the gains",
+      "description": "The gains are taxed at their own rate; the rest of the income at slab rates.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RATE-CG-SHORT-LISTED-EQUITY"
+        }
+      ]
+    },
+    {
+      "name": "Unused basic exemption set against the gains",
+      "description": "For a resident individual or Hindu undivided family, any part of the basic exemption the rest of the income does not use reduces these gains before they are taxed.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "RATE-CG-SHORTFALL-ORDER"
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "Deductions from gross total income are not allowed against these gains; they are allowed only from the rest of the income.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "DED-WITHIN-GROSS-TOTAL"
+      }
+    }
+  ]
+}

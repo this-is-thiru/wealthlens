@@ -1,0 +1,48 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "summary: NEW_TAX_REGIME.json (isDefault, election DEFAULT_NO_ACTION), 01-rulebook.md REG-NEW-DISALLOW-001 and DED-NEWREGIME-001 (what the default disallows), FIRST_SCHEDULE_RATES.json (the option's rates). routes[1]: 01-rulebook.md REG-OPTOUT-SAL-001 (in the return, s.202(4)(b)); DR 22 C5 REG-OPTOUT-SAL-001 (not bound by what you told your employer; re-decide every year). disqualifiers[0]: FIRST_SCHEDULE_RATES.json election (vehicle IN_THE_RETURN, deadline DueDateUnder 263(1)). disqualifiers[1]: FIRST_SCHEDULE_RATES.json election.binding (bindingAppliesWhen HasIncomeUnderHead BUSINESS_OR_PROFESSION, maxWithdrawals 1, afterWithdrawal IneligibleUnless not that income); DR 22 C5, s.202(4)(a).",
+  "key": "SEC-DEFAULT-TAX-REGIME",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.115BAC",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.202",
+    "presence": "PRESENT"
+  },
+  "plainName": "The default tax regime, and the option to leave it",
+  "summary": "Unless you choose otherwise, your tax is worked out under the default regime, which has its own slab rates and does not allow most exemptions and deductions. You may opt out instead, and be taxed at the rates in the Finance Act's First Schedule with those exemptions and deductions, by making the choice in your return.",
+  "routes": [
+    {
+      "name": "Stay in the default regime",
+      "description": "Do nothing. The default applies unless you opt out.",
+      "conditions": [
+        { "type": "ByRule", "rule": "RATE-SLAB-NEW-TAX-REGIME" }
+      ]
+    },
+    {
+      "name": "Opt out in your return",
+      "description": "Choose the other rates in the return you file for the year. What you told your employer does not bind the return, and with no business or professional income you can choose afresh each year.",
+      "conditions": [
+        { "type": "ByRule", "rule": "RATE-SLAB-FIRST-SCHEDULE" }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "PROCESS_MISSED",
+      "description": "The opt-out is made only in the return filed by its due date. If it is not made there, the default regime applies.",
+      "enforcedBy": {
+        "type": "NotModelled",
+        "reason": "The opt-out is the election the FIRST_SCHEDULE_RATES regime carries, made in the return by its due date. An election is neither a rule nor a Condition, so there is nothing here yet for this to link to."
+      }
+    },
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "With income from a business or profession, opting out binds later years too; after withdrawing from it once, you cannot opt out again while that income continues.",
+      "enforcedBy": { "type": "ByCondition", "condition": "HasIncomeUnderHead" }
+    }
+  ]
+}

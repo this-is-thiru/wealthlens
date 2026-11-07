@@ -1,0 +1,100 @@
+{
+  "ruleId": "HP-ANNUAL-VALUE",
+  "ruleSet": "RS-HP-ANNUAL-VALUE",
+  "_note": "The annual value of a property let or not let (D-155; rulebook HP-AV-001, HP-AV-VACANCY-001, HP-AV-TAX-001). TY 2026-27: Income-tax Act, 2025 s.21(1) \"the higher of … (a) the sum for which it might reasonably be expected to let from year to year; or (b) the actual rent received or receivable by the owner, if the property or any part of it is let\"; (2) where let and vacant and owing to the vacancy the rent is less than (1)(a), \"the amount so received or receivable\"; (3) \"reduced by the taxes … levied by a local authority … actually paid during the tax year by the owner\" (Gazette 265620, p.47). TY 2025-26: Income-tax Act, 1961 s.23(1)(a)–(c) and its proviso (thc p.146) — the same three cases and the same reduction. HousePropertyNode works the higher of, the vacancy and the reduction and hands the annual value in; the row is cited on the line. Unrealised rent (s.21(4); 1961 s.23(1) Explanation) is W-078c. Every regime.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.23(1) and proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.21(1)–(3)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "ANNUAL_VALUE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.23 — subs. by Act 14 of 2001, s.14 (w.e.f. 1-4-2002)",
+        "gazetteRef": "Gazette of India, Extraordinary, Part II, Section 1, 11-5-2001 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 8, 26-5-2005, pp.107, 117–118",
+        "notifiedOn": "2001-05-11",
+        "effectiveFrom": "2002-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0506/0506-8-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.23(1) and proviso, p.146 (footnote: Act 14 of 2001 s.14, w.e.f. 1-4-2002); Income-tax Act, 1961 s.23(1) and proviso: the amending Acts from the Finance (No. 2) Act, 2019 to the Finance Act, 2026 (twelve, Gazette texts) read for it, none amends it beyond what is cited (docs/taxplanning-build/sources/2026-10-10-act-chain-2019-2026.md)",
+        "accessedOn": "2026-10-10",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.23(1) and proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.21(1)–(3)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "100",
+        "base": "ANNUAL_VALUE"
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.21(1)–(3)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.21(1)–(3), p.47",
+        "accessedOn": "2026-10-08",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.21(1)–(3), p.47",
+    "accessedOn": "2026-10-08",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

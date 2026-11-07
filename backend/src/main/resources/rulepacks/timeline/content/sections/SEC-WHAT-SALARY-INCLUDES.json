@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-091). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: SAL-SALARY-INCLUDES.json (1961 s.17(1); 2025 s.16). summary: S2 s.16 (a)–(l), pp.37–38 (\"'salary' includes— (a) wages; (b) any annuity or pension; … (e) perquisites; …\"); 1961 s.17(1) (i)–(ix). routes[0]: SAL-SALARY-INCLUDES (HeadTotal SALARIES). No disqualifiers: a definition has no exception.",
+  "key": "SEC-WHAT-SALARY-INCLUDES",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.17(1)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.16",
+    "presence": "PRESENT"
+  },
+  "plainName": "What counts as salary",
+  "summary": "Your salary is more than your basic pay. It includes wages, any pension or annuity, gratuity, fees and commission, perquisites, amounts paid in place of or on top of salary, advances of salary, pay for leave you did not take, and certain provident fund and pension contributions made for you.",
+  "routes": [
+    {
+      "name": "Always applied",
+      "description": "Nothing to claim or choose: every pay component you enter under salary is added into your gross salary.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-SALARY-INCLUDES"
+        }
+      ]
+    }
+  ]
+}

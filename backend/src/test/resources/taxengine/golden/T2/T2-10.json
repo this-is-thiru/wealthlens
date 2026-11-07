@@ -1,0 +1,14 @@
+{
+  "id": "T2-10",
+  "source": "W-140a — New regime, at the 2-crore surcharge threshold (TI = 20000000)",
+  "_source": "Worked by hand in docs/taxplanning-build/sources/2026-11-07-boundary-figures.md, row T2-10",
+  "regime": "NEW_TAX_REGIME",
+  "totalIncome": "20000000",
+  "taxYears": [
+    "2025-26",
+    "2026-27"
+  ],
+  "expected": {
+    "payable": "6673680"
+  }
+}

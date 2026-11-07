@@ -1,0 +1,143 @@
+{
+  "ruleId": "DED-DONATION-QUALIFYING",
+  "ruleSet": "RS-DED-DONATION-QUALIFYING",
+  "_note": "The qualifying limit: \"Where the aggregate of the sums referred to in sub-section (1)(a)(xxiii) and (xxiv), and sub-section (1)(b)(ii) to (vi) exceeds 10% of the adjusted gross total income, then the amount in excess of 10% of the adjusted gross total income shall be ignored for the purpose of computing the aggregate of the sums in respect of which deduction is to be allowed\" (s.133(2), p.169) — the limit is on the sums, before the 100% or 50%. ADJUSTED_GTI: \"gross total income as reduced by any portion thereof on which income-tax is not payable under any provision of this Act and by any amount in respect of which the assessee is entitled to a deduction under any other provision of this Chapter\" (s.133(7)(a), p.170) — the other deductions held within gross total income; no untaxed portion of gross total income exists in the engine yet, and the words name no other exclusion (special-rate capital gains are not named here; ChapterEightNode takes them out of gross total income for every Chapter VIII base, s.196(4), s.197(5), s.198(6) / 1961 ss.111A(2), 112(2), 112A(5); D-244). Which sums lose the excess where 100% and 50% sums mix is OQ-24; where the limit binds with s.134 claimed, the pair is circular (OQ-23). Old regime only: s.202(2)(a)(xii) excludes Chapter VIII other than ss.124(1), 124(2), 125(2) and 146 (p.227). TY 2026-27 and TY 2025-26; the 1961 counterpart, s.80G, is the TY 2025-26 version (W-075d5). rulebook DED-80G-001. D-142. TY 2025-26: Income-tax Act, 1961 s.80G(4) (thc p.351): \"Where the aggregate of the sums referred to in sub-clauses (iv), (v), (vi), (via) and (vii) of clause (a) and in clauses (b) and (c) of sub-section (2) exceeds ten per cent of the gross total income (as reduced by any portion thereof on which income-tax is not payable under any provision of this Act and by any amount in respect of which the assessee is entitled to a deduction under any other provision of this Chapter), then the amount in excess of ten per cent of the gross total income shall be ignored\" — the same limit and base; it reaches 100% (a)(vii) and 50% sums together, so OQ-24 arises, and its base is net of 80GG, so OQ-23 does. sources/2026-10-07-chapter-via.md B26. D-148. In every regime as a row; the new regime forbids it through DIS-NEW-TAX-REGIME-NO-EXEMPTION, whose basis REG-NEW-TAX-REGIME-NO-EXEMPTION (S2 s.202(2)(a); 1961 s.115BAC(2)(i)) every explanation cites (D-166). The row reaches the donations it limits by their clause (donation.clause): FAMILY_PLANNING ((1)(a)(xxiii)), CHARITABLE_INSTITUTION and PUBLIC_BODY ((1)(b)(ii)–(vi)); (xxiv) is a company's and not built (W-156a, D-344).",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80G(4); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(2), (7)(a); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "ADJUSTED_GTI"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "FAMILY_PLANNING"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "CHARITABLE_INSTITUTION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "PUBLIC_BODY"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 1961 (43 of 1961), s.80G(4) — subs. by Act 4 of 1988, s.25 (w.e.f. 1-4-1989); (vi), (via) and (vii) by Act 22 of 1995, s.16; clauses (b) and (c) by Act 10 of 2000, s.31 (w.e.f. 1-4-2001)",
+        "gazetteRef": "Act 4 of 1988 s.25(c): read in Chaturvedi and Pithisaria's Income Tax Law vol. 7 (1988) (D-185); Act 22 of 1995 s.16: Gazette of India, Extraordinary, Part II, Section 1, No. 52, 27-5-1995 (assent 26-5-1995) — read in the thc.nic.in copy (Central Governmental Acts, Finance Act, 1995, pp.7–8), an OCR re-typeset of the Gazette, s.16(c) through its glyph errors (D-214); Act 10 of 2000 s.31(c): Gazette of India, Extraordinary, Part II, Section 1, 12-5-2000 — as stated in its reprint, Official Gazette, Government of Goa, Series I No. 46, 13-2-2003, p.1193",
+        "notifiedOn": "2000-05-12",
+        "effectiveFrom": "2001-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://goaprintingpress.gov.in/downloads/0203/0203-46-SI-OG.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://thc.nic.in/Central%20Governmental%20Acts/Income%20Tax%20Act%201961_.pdf",
+        "sourceDescription": "Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80G(4), p.351; new regime: s.115BAC(2)(i) as substituted by Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.52(C), pp.33–34",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED",
+        "whatToCheck": "Amendments to the Income-tax Act, 1961 s.80G after Act 7 of 2019 by Acts other than the Finance (No. 2) Act, 2019, the Taxation Laws (Amendment) Act, 2019, the Taxation and Other Laws (Relaxation and Amendment of Certain Provisions) Act, 2020 and the Finance Acts of 2020 to 2025 (read for Chapter VI-A in W-075d0 and W-075d5, sources/2026-10-07-chapter-via.md) were not searched."
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.80G(4); excluded by s.115BAC(2)(i)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.133(2), (7)(a); excluded by s.202(2)(a)(xii)",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "PercentOfBase",
+        "percent": "10",
+        "base": "ADJUSTED_GTI"
+      },
+      "conditions": [
+        {
+          "type": "AnyOf",
+          "any": [
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "FAMILY_PLANNING"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "CHARITABLE_INSTITUTION"
+            },
+            {
+              "type": "ItemFactIs",
+              "fact": "donation.clause",
+              "code": "PUBLIC_BODY"
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.133(2), (7)(a)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(2), p.169; s.133(7)(a), p.170; s.202(2)(a)(xii), p.227",
+        "accessedOn": "2026-10-07",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.133(2), p.169; s.133(7)(a), p.170; s.202(2)(a)(xii), p.227",
+    "accessedOn": "2026-10-07",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

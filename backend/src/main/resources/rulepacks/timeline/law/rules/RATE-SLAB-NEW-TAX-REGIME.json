@@ -1,0 +1,178 @@
+{
+  "ruleId": "RATE-SLAB-NEW-TAX-REGIME",
+  "ruleSet": "RS-RATE-SLAB",
+  "_note": "TY 2025-26 (W-052c, D-082): FA 2025 s.25 inserts 1961 s.115BAC(1A)(iii), \"for any previous year relevant to the assessment year beginning on or after the 1st April, 2026\" — the same seven bands as S2 s.202(1). AY 2026-27 = TY 2025-26; effectiveFrom is the date as FA 2025 states it.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.115BAC(1A)(iii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.202(1) Table",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "SlabLadder",
+        "base": "ROUNDED_TOTAL_INCOME",
+        "bands": [
+          {
+            "lowerExclusive": "0",
+            "upperInclusive": "400000",
+            "rate": "0"
+          },
+          {
+            "lowerExclusive": "400000",
+            "upperInclusive": "800000",
+            "rate": "5"
+          },
+          {
+            "lowerExclusive": "800000",
+            "upperInclusive": "1200000",
+            "rate": "10"
+          },
+          {
+            "lowerExclusive": "1200000",
+            "upperInclusive": "1600000",
+            "rate": "15"
+          },
+          {
+            "lowerExclusive": "1600000",
+            "upperInclusive": "2000000",
+            "rate": "20"
+          },
+          {
+            "lowerExclusive": "2000000",
+            "upperInclusive": "2400000",
+            "rate": "25"
+          },
+          {
+            "lowerExclusive": "2400000",
+            "upperInclusive": null,
+            "rate": "30"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2025 (7 of 2025), s.25",
+        "gazetteRef": "CG-DL-E-29032025-262125",
+        "notifiedOn": "2025-03-29",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/262125.pdf",
+        "sourceDescription": "Gazette CG-DL-E-29032025-262125, Finance Act, 2025 s.25 (1961 s.115BAC(1A)(iii)), p.25",
+        "accessedOn": "2026-09-25",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "OnlyIn",
+        "regimes": [
+          "NEW_TAX_REGIME"
+        ]
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.115BAC(1A)(iii)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.202(1) Table",
+        "presence": "PRESENT"
+      },
+      "cap": {
+        "type": "SlabLadder",
+        "base": "ROUNDED_TOTAL_INCOME",
+        "bands": [
+          {
+            "lowerExclusive": "0",
+            "upperInclusive": "400000",
+            "rate": "0"
+          },
+          {
+            "lowerExclusive": "400000",
+            "upperInclusive": "800000",
+            "rate": "5"
+          },
+          {
+            "lowerExclusive": "800000",
+            "upperInclusive": "1200000",
+            "rate": "10"
+          },
+          {
+            "lowerExclusive": "1200000",
+            "upperInclusive": "1600000",
+            "rate": "15"
+          },
+          {
+            "lowerExclusive": "1600000",
+            "upperInclusive": "2000000",
+            "rate": "20"
+          },
+          {
+            "lowerExclusive": "2000000",
+            "upperInclusive": "2400000",
+            "rate": "25"
+          },
+          {
+            "lowerExclusive": "2400000",
+            "upperInclusive": null,
+            "rate": "30"
+          }
+        ]
+      },
+      "conditions": [],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.202(1)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
+        "accessedOn": "2026-09-18",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, s.202(1) Table",
+    "accessedOn": "2026-09-18",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

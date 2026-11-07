@@ -83,8 +83,7 @@ public class TaxComputationService {
         computation.setStatus(EntityStatus.ACTIVE);
 
         TaxComputationEntity saved = computationRepo.save(computation);
-        log.info("Computed tax for profile {}: new={} old={} recommended={}",
-                profileId, newResult.getTotalTax(), oldResult.getTotalTax(), recommendedRegime);
+        log.info("Computed tax for profile {}: recommended={}", profileId, recommendedRegime);
 
         return saved;
     }

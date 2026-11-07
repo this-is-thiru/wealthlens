@@ -1,0 +1,26 @@
+{
+  "name": "fyers-equity-futures-sell-10l-in-2025-06",
+  "describes": "A Rs 10,00,000 futures sell at Fyers in June 2025: the older window's brokerage, exchange, IPFT and STT rates, and the clearing charge at 0.0005% that the page states without a date (W-186).",
+  "context": {
+    "brokerName": "FYERS",
+    "assetType": "EQUITY",
+    "segment": "FUTURES",
+    "exchange": "NSE",
+    "event": "SELL",
+    "price": 1000,
+    "quantity": 1000,
+    "transactionDate": "2025-06-02"
+  },
+  "expected": {
+    "lines": {
+      "BROKERAGE": 20.0,
+      "STT": 200.0,
+      "EXCHANGE_TXN": 17.3,
+      "SEBI_FEE": 1.0,
+      "IPFT": 1.0,
+      "CLEARING": 5.0,
+      "GST": 7.97
+    },
+    "total": 252.27
+  }
+}

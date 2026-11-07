@@ -243,6 +243,48 @@ class ChargeScheduleValidatorTest {
     }
 
     @Test
+    void validate_whenAStatutoryCardTaxesCodesOnTheBrokersCard_passes() {
+        // Given — no broker, so a statutory card (D-381 D1a): its GST taxes BROKERAGE and DP, which
+        // live on the broker's card; both are catalogued
+        ChargeScheduleEntity statutory = statutory(flat("STT", 100.0, 20), derived("GST", 100, List.of("BROKERAGE", "DP")));
+
+        assertThatCode(() -> validator.validate(statutory)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void validate_whenAStatutoryCardTaxesACodeNotInTheCatalogue_isRejected() {
+        ChargeScheduleEntity statutory = statutory(derived("GST", 100, List.of("BROKERGE")));
+
+        assertThatThrownBy(() -> validator.validate(statutory))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("GST")
+                .hasMessageContaining("BROKERGE");
+    }
+
+    @Test
+    void validate_whenAStatutoryCardNamesAPlan_isRejected() {
+        // Given — a plan is a broker's negotiated terms; the law has none
+        ChargeScheduleEntity statutory = statutory(flat("STT", 100.0, 20));
+        statutory.setPlanCode("PLAN_A");
+
+        assertThatThrownBy(() -> validator.validate(statutory))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("statutory")
+                .hasMessageContaining("PLAN_A");
+    }
+
+    @Test
+    void validate_whenAStatutoryCardRequiresAnInstrumentProfile_isRejected() {
+        ChargeScheduleEntity statutory = statutory(flat("STT", 100.0, 20));
+        statutory.setRequiresInstrumentProfile(true);
+
+        assertThatThrownBy(() -> validator.validate(statutory))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("statutory")
+                .hasMessageContaining("instrument profile");
+    }
+
+    @Test
     void validate_whenADerivedRuleNamesACodeEvaluatedAfterIt_isRejected() {
         // Given — the accumulator holds only what has already been applied, so this taxes a line
         // that does not exist yet and quietly under-collects
@@ -487,6 +529,13 @@ class ChargeScheduleValidatorTest {
         schedule.setStartDate(LocalDate.of(2025, 4, 1));
         schedule.setStatus(EntityStatus.ACTIVE);
         schedule.setRules(new ArrayList<>(Arrays.asList(rules)));
+        return schedule;
+    }
+
+    private static ChargeScheduleEntity statutory(ChargeRule... rules) {
+        ChargeScheduleEntity schedule = schedule(rules);
+        schedule.setScheduleCode("STATUTORY_EQ_DELIVERY_2025_04");
+        schedule.setBrokerName(null);
         return schedule;
     }
 

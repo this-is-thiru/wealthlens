@@ -6,11 +6,15 @@ import com.thiru.wealthlens.auth.dto.LoginResponse;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
 import com.thiru.wealthlens.auth.repository.UserDetailsRepository;
+import com.thiru.wealthlens.shared.privacy.HeldAccounts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,6 +38,9 @@ public class AuthService {
     private final UserDetailsRepository userDetailsRepo;
     private final PasswordEncoder passwordEncoder;
     private final SecurityConfig securityConfig;
+    private final HeldAccounts heldAccounts;
+    private final RegisteredUserDirectory signIns;
+    private final Clock clock;
 
     public String addUser(RegistrationRequest request) {
 
@@ -41,11 +48,16 @@ public class AuthService {
         if (optionalUserDetails.isPresent()) {
             throw new IllegalArgumentException("User with email " + request.getEmail() + " already exists");
         }
+        // The login is erased last; until the erasure is recorded done, the email is not free (W-237d).
+        if (heldAccounts.contains(request.getEmail())) {
+            throw new IllegalArgumentException("The account " + request.getEmail() + " is being erased");
+        }
 
         UserDetail userEntity = new UserDetail();
         userEntity.setEmail(request.getEmail());
         userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
         userEntity.setRoles(request.getRole().name());
+        userEntity.setLastSignedInAt(nowUtc());
         userDetailsRepo.save(userEntity);
         return "user with username " + request.getEmail() + " added to system ";
     }
@@ -128,8 +140,14 @@ public class AuthService {
         return email + "'s password changed successfully";
     }
 
+    /** Called only after a successful sign-in, which is what keeps the account's purpose served (W-249). */
     public LoginResponse generateToken(String username, Authentication authentication) {
+        signIns.recordSignIn(username, nowUtc());
         return createToken(username, authentication);
+    }
+
+    private LocalDateTime nowUtc() {
+        return LocalDateTime.now(clock.withZone(ZoneOffset.UTC));
     }
 
     private LoginResponse createToken(String username, Authentication authentication) {

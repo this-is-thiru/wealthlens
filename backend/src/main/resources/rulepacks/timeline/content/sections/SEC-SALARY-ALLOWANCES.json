@@ -1,0 +1,77 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-101, D-102). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: SAL-ALW-*.json (1961 s.10(14) with Rules 1962 r.2BB; 2025 Sch. III Table Sl. 12–13 with Rules 2026 r.280). routes[0]: SAL-ALW-UNIFORM, SAL-ALW-CONVEYANCE (Sl. 12, actually incurred). routes[1]: SAL-ALW-CHILDREN-EDUCATION, SAL-ALW-HOSTEL (Sl. 13, per month per child, two children). disqualifiers[0]: s.202(2)(a)(ii) / r.2BB(3), each row's regimes; conveyance survives, its TY 2026-27 version read on r.280(3) by the owner's ruling (D-216). routes[2]: SAL-ALW-TRANSPORT-DISABLED (Sl. 13 / r.2BB(2) Sl. 11, r.280(2) Sl. 10; per month, the city class and DA thereon as stated, OQ-7), surviving the new regime; its TY 2026-27 version read by the owner's ruling (D-102, D-216). routes[3]: the other Sl. 12 allowances and the armed-forces and area allowances, not modelled (D-101). disqualifiers[0]: enforced by REG-NEW-TAX-REGIME-NO-EXEMPTION, the basis of DIS-NEW-TAX-REGIME-NO-EXEMPTION, which lists SAL-ALW-UNIFORM (D-166; until then SAL-ALW-UNIFORM's ExceptIn).",
+  "key": "SEC-SALARY-ALLOWANCES",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.10(14)",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "Sch. III Table Sl. 12, 13",
+    "presence": "PRESENT"
+  },
+  "plainName": "Salary allowances",
+  "summary": "Some allowances in your salary are partly or wholly free of tax. An allowance for expenses of the job, such as a uniform or conveyance for duties, is exempt only as far as you actually spent the money on that purpose. An allowance for your children's education or hostel is exempt up to a fixed amount a month for each child, for at most two children. An employee who is blind, deaf and dumb, or orthopaedically handicapped may have a transport allowance for commuting exempt up to a fixed amount a month. In the default regime only a few of these survive, such as conveyance for duties and that transport allowance.",
+  "routes": [
+    {
+      "name": "Allowances for expenses of the job",
+      "description": "Uniform and conveyance for duties: exempt up to what you actually spent, and no more than the allowance paid.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-UNIFORM"
+        },
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-CONVEYANCE"
+        }
+      ]
+    },
+    {
+      "name": "Allowances for your children",
+      "description": "Children education and hostel allowances: exempt up to a fixed amount a month for each child, for at most two children.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-CHILDREN-EDUCATION"
+        },
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-HOSTEL"
+        }
+      ]
+    },
+    {
+      "name": "Transport allowance for a disabled employee",
+      "description": "Commuting allowance for an employee who is blind, deaf and dumb, or orthopaedically handicapped: exempt up to a fixed amount for each month it was paid, and no more than the allowance paid. Which disabilities qualify, and whether the amount depends on the city, differ by year.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "SAL-ALW-TRANSPORT-DISABLED"
+        }
+      ]
+    },
+    {
+      "name": "Other allowances",
+      "description": "Travel on tour or transfer, daily allowance, helper, academic pursuits, and allowances for the armed forces or remote areas.",
+      "conditions": [
+        {
+          "type": "NotModelled",
+          "reason": "Not built: rarely on a salary slip, or outside this product's scope."
+        }
+      ]
+    }
+  ],
+  "disqualifiers": [
+    {
+      "kind": "NOT_ELIGIBLE",
+      "description": "In the default regime only the allowances the rules list survive; uniform and the children's allowances do not.",
+      "enforcedBy": {
+        "type": "ByRule",
+        "rule": "REG-NEW-TAX-REGIME-NO-EXEMPTION"
+      }
+    }
+  ]
+}

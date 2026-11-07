@@ -111,6 +111,13 @@ public class UserChargeEntity implements AuditableEntity {
     @Field("schedule_code")
     private String scheduleCode;
 
+    /** Which statutory card priced the law's lines, where one did (D-380). Absent on rows written before. */
+    @Field("statutory_schedule_id")
+    private String statutoryScheduleId;
+
+    @Field("statutory_schedule_code")
+    private String statutoryScheduleCode;
+
     /** Which instrument profile contributed scheme-level lines, where one did. */
     @Field("instrument_id")
     private String instrumentId;

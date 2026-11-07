@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.209 / 2025 s.405 (coverage MODELLED by ADV-LIABILITY); sources/2026-11-06-advance-tax-interest.md; D-446",
+  "key": "SEC-ADVANCE-TAX-COMPUTATION",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.209",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.405",
+    "presence": "PRESENT"
+  },
+  "plainName": "How advance tax is computed",
+  "summary": "The year's tax on the estimated income, less tax that will be deducted or collected at source.",
+  "routes": [
+    {
+      "name": "How advance tax is computed",
+      "description": "The year's tax on the estimated income, less tax that will be deducted or collected at source.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "ADV-LIABILITY"
+        }
+      ]
+    }
+  ]
+}

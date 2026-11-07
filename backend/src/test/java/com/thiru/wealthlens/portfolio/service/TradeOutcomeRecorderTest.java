@@ -12,27 +12,28 @@ import com.thiru.wealthlens.brokercharges.dto.context.ChargeComputation;
 import com.thiru.wealthlens.brokercharges.dto.enums.ChargeResolution;
 import com.thiru.wealthlens.brokercharges.entity.ChargeLine;
 import com.thiru.wealthlens.brokercharges.entity.UserChargeEntity;
-import com.thiru.wealthlens.brokercharges.service.ChargeDeductibilityService;
 import com.thiru.wealthlens.brokercharges.service.UserChargeService;
+import com.thiru.wealthlens.corporate.dto.enums.CorporateActionType;
 import com.thiru.wealthlens.portfolio.dto.AssetRequest;
 import com.thiru.wealthlens.portfolio.dto.context.TradeOutcomeContext;
+import com.thiru.wealthlens.portfolio.dto.enums.AcquisitionMode;
 import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
-import com.thiru.wealthlens.portfolio.dto.enums.CapitalGainsType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.AssetEntity;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodResolution;
-import com.thiru.wealthlens.portfolio.holding.HoldingPeriodService;
-import com.thiru.wealthlens.portfolio.holding.TradeClassifier;
+import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.portfolio.repository.TransactionRepository;
+import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.dto.user.UserMail;
 import com.thiru.wealthlens.shared.util.money.TMoney;
 import com.thiru.wealthlens.testsupport.MoneyAssert;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -54,8 +55,6 @@ class TradeOutcomeRecorderTest {
     private static final LocalDate SELL_DATE = LocalDate.of(2025, 6, 10);
 
     @Mock private TradeOutcomeService tradeOutcomeService;
-    @Mock private HoldingPeriodService holdingPeriodService;
-    @Mock private ChargeDeductibilityService chargeDeductibilityService;
     @Mock private UserChargeService userChargeService;
     @Mock private TransactionRepository transactionRepository;
 
@@ -63,10 +62,7 @@ class TradeOutcomeRecorderTest {
 
     @BeforeEach
     void setUp() {
-        recorder = new TradeOutcomeRecorder(tradeOutcomeService, new TradeClassifier(holdingPeriodService),
-                chargeDeductibilityService, userChargeService, transactionRepository);
-        when(holdingPeriodService.classify(any(), any(), any(), any()))
-                .thenReturn(new HoldingPeriodResolution(CapitalGainsType.LONG_TERM, "EQUITY_LISTED", "held beyond 12 months"));
+        recorder = new TradeOutcomeRecorder(tradeOutcomeService, userChargeService, transactionRepository);
     }
 
     private static AssetEntity lot(String txnId, double quantity, double price, double brokerCharges) {
@@ -111,7 +107,7 @@ class TradeOutcomeRecorderTest {
                     return line;
                 }).toList();
         double total = byCode.values().stream().mapToDouble(Double::doubleValue).sum();
-        return new ChargeComputation("sched-1", "ZER-EQ", null, ChargeResolution.RESOLVED, lines, total);
+        return new ChargeComputation("sched-1", "ZER-EQ", null, null, null, ChargeResolution.RESOLVED, lines, total);
     }
 
     private List<TradeOutcomeContext> captureSaved(int expected) {
@@ -213,24 +209,8 @@ class TradeOutcomeRecorderTest {
     }
 
     @Test
-    @DisplayName("deductible cost is a sum over codes, and excludes STT")
-    void record_recordsDeductibleCostSeparatelyFromTheTotal() {
-        // Given
-        when(chargeDeductibilityService.deductibleTotal(any())).thenReturn(20.0);
-        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
-                new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 20.0), 1.0, 1.0));
-
-        // When
-        recorder.record(UserMail.from(EMAIL), sell(1.0, 200.0, TradeSegment.DELIVERY), "sell-1",
-                lots, Optional.of(computation(Map.of("BROKERAGE", 20.0, "STT", 100.0))));
-
-        // Then
-        MoneyAssert.assertMoney(20.0, captureSaved(1).getFirst().getDeductibleSellCharges());
-    }
-
-    @Test
-    @DisplayName("intraday equity is recorded as speculative, with its segment on the row")
-    void record_whenIntraday_classifiesAsSpeculativeAndRecordsTheSegment() {
+    @DisplayName("intraday equity is recorded with its segment on the row")
+    void record_whenIntraday_recordsTheSegment() {
         // Given
         List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
                 new TradeOutcomeRecorder.MatchedLot(lot("buy-1", 0.0, 100.0, 20.0), 1.0, 1.0));
@@ -241,7 +221,6 @@ class TradeOutcomeRecorderTest {
 
         // Then
         TradeOutcomeContext row = captureSaved(1).getFirst();
-        assertEquals(CapitalGainsType.SPECULATIVE, row.getCapitalGainsType());
         assertEquals(TradeSegment.INTRADAY, row.getSegment());
     }
 
@@ -394,5 +373,190 @@ class TradeOutcomeRecorderTest {
             allocated = TMoney.add(allocated, row.getBuyBrokerCharges());
         }
         MoneyAssert.assertCanonical("lifetime buy charge allocated", 10.00, allocated);
+    }
+
+    @Test
+    void record_whenTheLotIsADemergerAllotment_recordsItsAcquisition() {
+        // Given -- a lot created by a demerger carries it on its own record (W-088f)
+        AssetEntity demerged = lot("buy-1", 0.0, 100.0, 0.0);
+        demerged.setCorporateActionType(CorporateActionType.DEMERGER);
+        List<TradeOutcomeRecorder.MatchedLot> lots = List.of(
+                new TradeOutcomeRecorder.MatchedLot(demerged, 1.0, 1.0),
+                new TradeOutcomeRecorder.MatchedLot(lot("buy-2", 1.0, 150.0, 0.0), 1.0, 2.0));
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell(2.0, 200.0, TradeSegment.DELIVERY), "sell-1", lots,
+                Optional.empty());
+
+        // Then -- the demerged lot and the purchased one, each its own
+        List<TradeOutcomeContext> rows = captureSaved(2);
+        assertEquals(AcquisitionMode.CORPORATE_ACTION, rows.get(0).getAcquisitionMode());
+        assertEquals(CorporateActionType.DEMERGER, rows.get(0).getAcquisitionCorporateAction());
+        assertEquals(AcquisitionMode.PURCHASE, rows.get(1).getAcquisitionMode());
+        assertNull(rows.get(1).getAcquisitionCorporateAction());
+    }
+
+    @Test
+    void record_whenOneLot_writesEveryFieldOfTheRow() {
+        // Given -- 3 of a 4-unit lot (bought @ 95, now @ 100 after an adjustment; broker 10, misc 2, buy breakup
+        // BROKERAGE 8 / STT 2), sold @ 200 with misc 1 and an engine breakup of BROKERAGE 20 / STT 6
+        AssetEntity asset = lot("buy-1", 1.0, 100.0, 10.0);
+        asset.setStockName("Lot Co");
+        asset.setExchangeName("BSE");
+        asset.setBrokerName(BrokerName.UPSTOX);
+        asset.setMiscCharges(2.0);
+        TransactionEntity bought = new TransactionEntity();
+        bought.setPrice(95.0);
+        when(transactionRepository.findById("buy-1")).thenReturn(Optional.of(bought));
+        UserChargeEntity buyCharges = new UserChargeEntity();
+        buyCharges.setAmountByCode(new LinkedHashMap<>(Map.of("BROKERAGE", 8.0, "STT", 2.0)));
+        when(userChargeService.findOptionalForTransaction(EMAIL, "buy-1")).thenReturn(Optional.of(buyCharges));
+        AssetRequest sell = sell(3.0, 200.0, TradeSegment.DELIVERY);
+        sell.setStockName("Sell Co");
+        sell.setAccountType(AccountType.OUTSOURCED);
+        sell.setAccountHolder("main");
+        sell.setMiscCharges(1.0);
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell, "sell-1",
+                List.of(new TradeOutcomeRecorder.MatchedLot(asset, 3.0, 4.0)),
+                Optional.of(computation(new LinkedHashMap<>(Map.of("BROKERAGE", 20.0, "STT", 6.0)))));
+
+        // Then
+        TradeOutcomeContext row = captureSaved(1).getFirst();
+        assertRowIdentity(row);
+        assertRowFigures(row);
+    }
+
+    /** The fields the row takes from the sell, the lot and the classification. */
+    private static void assertRowIdentity(TradeOutcomeContext row) {
+        assertEquals(EMAIL, row.getEmail());
+        assertEquals("INFY", row.getStockCode());
+        assertEquals("Sell Co", row.getStockName());
+        assertEquals("NSE", row.getExchangeName());
+        assertEquals(BrokerName.ZERODHA, row.getBrokerName());
+        assertEquals(AssetType.EQUITY, row.getAssetType());
+        assertEquals(AccountType.OUTSOURCED, row.getAccountType());
+        assertEquals("main", row.getAccountHolder());
+        assertEquals(TradeSegment.DELIVERY, row.getSegment());
+        assertEquals(BUY_DATE, row.getBuyDate());
+        assertEquals(SELL_DATE, row.getSellDate());
+        // 2024-01-10 -> 2025-01-10 is 366 days (leap year); then 21+28+31+30+31+10 = 151
+        assertEquals(517L, row.getHoldingPeriodDays());
+        assertNull(row.getInstrumentSubClass());
+        assertEquals("2025-2026", row.getFinancialYear());
+        assertEquals("sell-1", row.getSourceSellTransactionId());
+        assertEquals("asset-buy-1", row.getSourceBuyLotId());
+        assertEquals(Boolean.FALSE, row.getCorporateActionDerived());
+        assertEquals(List.of(), row.getAppliedCorporateActions());
+        assertEquals(AcquisitionMode.PURCHASE, row.getAcquisitionMode());
+        assertNull(row.getAcquisitionCorporateAction());
+    }
+
+    private static void assertRowFigures(TradeOutcomeContext row) {
+        MoneyAssert.assertMoney(95.0, row.getOriginalBuyPrice());
+        MoneyAssert.assertMoney(100.0, row.getCorporateActionAdjustedBuyPrice());
+        assertEquals(3.0, row.getBuyQuantity(), 0.0);
+        assertEquals(3.0, row.getSellQuantity(), 0.0);
+        MoneyAssert.assertMoney(7.5, row.getBuyBrokerCharges());     // LotChargeAllocator: 10 × 3 ÷ 4
+        MoneyAssert.assertMoney(1.5, row.getBuyMiscCharges());       // 2 × 3 ÷ 4
+        // The buy breakup's share, 3 of 4: BROKERAGE 8 × 0.75 = 6, STT 2 × 0.75 = 1.5
+        MoneyAssert.assertBreakdown(Map.of("BROKERAGE", 6.0, "STT", 1.5), row.getBuyChargeBreakup());
+        MoneyAssert.assertMoney(200.0, row.getSellPrice());
+        // One lot takes the whole sell breakup: 20 + 6 = 26
+        MoneyAssert.assertBreakdown(Map.of("BROKERAGE", 20.0, "STT", 6.0), row.getSellChargeBreakup());
+        MoneyAssert.assertMoney(26.0, row.getSellBrokerCharges());
+        MoneyAssert.assertMoney(1.0, row.getSellMiscCharges());      // 1 × the whole sell
+        MoneyAssert.assertMoney(309.0, row.getTotalBuyValue());      // 100 × 3 + 7.5 + 1.5
+        MoneyAssert.assertMoney(573.0, row.getTotalSellValue());     // 200 × 3 − 26 − 1
+        MoneyAssert.assertMoney(264.0, row.getNetProfit());
+        assertEquals(264.0 / 309.0 * 100, row.getProfitPercentage(), 1e-9);
+    }
+
+    @Test
+    void record_whenTheLotAndTheSaleWereTradedApart_recordsEachSidesVenue() {
+        // Given -- the lot bought on BSE for delivery, the sale recorded on NSE intraday: each side its own (D-295)
+        AssetEntity asset = lot("buy-1", 1.0, 100.0, 10.0);
+        asset.setExchangeName("BSE");
+        AssetRequest sell = sell(1.0, 200.0, TradeSegment.INTRADAY);
+
+        // When
+        recorder.record(UserMail.from(EMAIL), sell, "sell-1",
+                List.of(new TradeOutcomeRecorder.MatchedLot(asset, 1.0, 1.0)), Optional.empty());
+
+        // Then
+        TradeOutcomeContext row = captureSaved(1).getFirst();
+        assertEquals("BSE", row.getBuyExchangeName());
+        assertEquals(TradeSegment.DELIVERY, row.getBuySegment());
+        assertEquals("NSE", row.getSellExchangeName());
+        assertEquals(TradeSegment.INTRADAY, row.getSellSegment());
+    }
+
+    private List<TradeOutcomeContext> sold(double entered, Optional<ChargeComputation> computation,
+            TradeOutcomeRecorder.MatchedLot... lots) {
+        double quantity = Arrays.stream(lots).mapToDouble(TradeOutcomeRecorder.MatchedLot::quantity).sum();
+        AssetRequest sale = sell(quantity, 5100.0, TradeSegment.DELIVERY);
+        sale.setBrokerCharges(entered);
+        recorder.record(UserMail.from(EMAIL), sale, "sell-1", List.of(lots), computation);
+        return captureSaved(lots.length);
+    }
+
+    private static TradeOutcomeRecorder.MatchedLot held(String id, double quantity) {
+        return new TradeOutcomeRecorder.MatchedLot(lot(id, 0.0, 5000.0, 0.0), quantity, quantity);
+    }
+
+    @Test
+    void record_whenNoCardPricesTheSale_keepsTheEnteredChargeOutsideTheBreakdown() {
+        // When
+        TradeOutcomeContext row = sold(30.0, Optional.of(ChargeComputation.empty(ChargeResolution.NO_SCHEDULE)),
+                held("buy-1", 10.0)).getFirst();
+
+        // Then — 51,000 − 30 − 50,000 = 970
+        MoneyAssert.assertMoney(30.0, row.getSellBrokerCharges());
+        assertEquals(Map.of(), row.getSellChargeBreakup());
+        MoneyAssert.assertMoney(970.0, row.getNetProfit());
+    }
+
+    @Test
+    void record_whenTheEngineDeclines_splitsTheEnteredChargeByQuantity() {
+        // When
+        List<TradeOutcomeContext> rows = sold(30.0, Optional.empty(), held("buy-1", 6.0), held("buy-2", 4.0));
+
+        // Then
+        MoneyAssert.assertMoney(18.0, rows.get(0).getSellBrokerCharges());
+        MoneyAssert.assertMoney(12.0, rows.get(1).getSellBrokerCharges());
+    }
+
+    @Test
+    void record_whenTheEnteredChargeDoesNotDivideEvenly_thePartsSumToIt() {
+        // When
+        List<TradeOutcomeContext> rows = sold(100.0, Optional.of(ChargeComputation.empty(ChargeResolution.NO_MATCHING_RULES)),
+                held("buy-1", 1.0), held("buy-2", 1.0), held("buy-3", 1.0));
+
+        // Then — running totals 33.33, 66.67, 100.00 (allocate's method), so each part is the difference
+        MoneyAssert.assertMoney(33.33, rows.get(0).getSellBrokerCharges());
+        MoneyAssert.assertMoney(33.34, rows.get(1).getSellBrokerCharges());
+        MoneyAssert.assertMoney(33.33, rows.get(2).getSellBrokerCharges());
+    }
+
+    @Test
+    void record_whenTheEngineHasAFigure_ignoresTheEnteredCharge() {
+        // When
+        TradeOutcomeContext row = sold(30.0, Optional.of(computation(Map.of("BROKERAGE", 45.5))), held("buy-1", 10.0))
+                .getFirst();
+
+        // Then
+        MoneyAssert.assertMoney(45.5, row.getSellBrokerCharges());
+        assertEquals(Set.of("BROKERAGE"), row.getSellChargeBreakup().keySet());
+    }
+
+    @Test
+    void record_whenNoCardAndNothingEntered_recordsNil() {
+        // When
+        TradeOutcomeContext row = sold(0.0, Optional.of(ChargeComputation.empty(ChargeResolution.NO_SCHEDULE)),
+                held("buy-1", 10.0)).getFirst();
+
+        // Then
+        MoneyAssert.assertMoney(0.0, row.getSellBrokerCharges());
     }
 }

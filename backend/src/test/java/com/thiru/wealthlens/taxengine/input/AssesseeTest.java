@@ -1,0 +1,344 @@
+package com.thiru.wealthlens.taxengine.input;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
+import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Member;
+import com.thiru.wealthlens.taxengine.input.FamilySnapshot.Relationship;
+import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
+import com.thiru.wealthlens.taxengine.rules.condition.PersonType;
+import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import java.lang.reflect.RecordComponent;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+/**
+ * The facts the engine is given about an assessee, and the history behind them. Formerly
+ * {@code TaxpayerFactsTest}; the assessee family replaced {@code TaxpayerFacts} (D-039, D-062).
+ */
+class AssesseeTest {
+
+    private static final LocalDate DOB = LocalDate.of(1966, 11, 20);
+
+    private static Individual individual() {
+        return new Individual(DOB, ResidentialStatus.RESIDENT, Optional.empty(), Optional.empty());
+    }
+
+    private static Member child(LocalDate dateOfBirth) {
+        return new Member(
+                Relationship.CHILD,
+                dateOfBirth,
+                true,
+                Optional.empty(),
+                Optional.empty(),
+                false, true);
+    }
+
+    @Nested
+    @DisplayName("Assessee — one record per type, each carrying only the facts that type has (D-039)")
+    class Assessees {
+
+        @Test
+        void permittedSubclasses_whenTheFamilyIsListed_areExactlyTheTypesBuilt() {
+            // When
+            List<String> members = Arrays.stream(Assessee.class.getPermittedSubclasses())
+                    .map(Class::getSimpleName)
+                    .toList();
+
+            // Then — Firm, Company and the rest join as they are built
+            assertThat(members).containsExactlyInAnyOrder("Individual", "Huf");
+        }
+
+        @Test
+        void type_whenAsked_isFixedByTheRecordRatherThanStored() {
+            // When / Then — a person has one type; the old Set<PersonType> was a modelling error
+            assertThat(individual().type()).isEqualTo(PersonType.INDIVIDUAL);
+            assertThat(new Huf(ResidentialStatus.RESIDENT).type()).isEqualTo(PersonType.HUF);
+        }
+
+        @Test
+        void recordComponents_whenTheAssesseeIsAnHuf_carryOnlyResidence() {
+            // When / Then — an HUF has no date of birth and no disability; karta and members
+            // arrive with the first rule that reads them (brief rule B2)
+            assertThat(Huf.class.getRecordComponents())
+                    .extracting(RecordComponent::getName)
+                    .containsExactly("residence");
+        }
+
+        @Test
+        void recordComponents_whenTheAssesseeIsAnIndividual_carryADateOfBirthAndNoPanOrAge() {
+            // When / Then — D-025: a date of birth, because F2's senior-citizen test is "at any
+            // time during the previous year", which an age cannot answer. No PAN: no rule
+            // computes on one and O1.1 wants it masked wherever it is logged.
+            assertThat(Individual.class.getRecordComponents())
+                    .extracting(RecordComponent::getName)
+                    .containsExactly("dateOfBirth", "residence", "disability", "dateOfDeath");
+        }
+
+        @Test
+        void residentialStatus_whenListed_hasThreeStatesRatherThanTwo() {
+            // When / Then — ConditionContext collapses these to boolean resident, which is lossy:
+            // RNOR is resident for some provisions and not others. The projection keeps what was known.
+            assertThat(ResidentialStatus.values())
+                    .containsExactly(
+                            ResidentialStatus.RESIDENT,
+                            ResidentialStatus.RNOR,
+                            ResidentialStatus.NON_RESIDENT);
+        }
+
+        @Test
+        void disability_whenCertified_isTheSeverityAndNotTheCertificate() {
+            // Given — DED-80U-001 and DED-80DD-001 read the severity; nothing reads the certificate
+            Individual individual = new Individual(
+                    DOB, ResidentialStatus.RESIDENT, Optional.of(DisabilitySeverity.SEVERE_DISABILITY), Optional.empty());
+
+            // When / Then
+            assertThat(individual.disability()).contains(DisabilitySeverity.SEVERE_DISABILITY);
+        }
+
+        @Test
+        void individual_whenDeathPrecedesBirth_isRejected() {
+            // When / Then
+            assertThatThrownBy(() -> new Individual(
+                            DOB, ResidentialStatus.RESIDENT, Optional.empty(), Optional.of(DOB.minusDays(1))))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("precedes");
+        }
+
+        @Test
+        void individual_whenAnOptionalIsNull_isRejectedRatherThanTreatedAsAbsent() {
+            // When / Then
+            assertThatThrownBy(() -> new Individual(DOB, ResidentialStatus.RESIDENT, null, Optional.empty()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Optional.empty()");
+        }
+
+        @Test
+        void individual_whenNoDateOfBirth_isRejected() {
+            // When / Then
+            assertThatThrownBy(() -> new Individual(null, ResidentialStatus.RESIDENT, Optional.empty(), Optional.empty()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("date of birth");
+        }
+
+        @Test
+        void constructors_whenNoResidence_areRejected() {
+            // When / Then
+            assertThatThrownBy(() -> new Individual(DOB, null, Optional.empty(), Optional.empty()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("residential status");
+            assertThatThrownBy(() -> new Huf(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("residential status");
+        }
+    }
+
+    @Nested
+    @DisplayName("FamilySnapshot — the persons that per-person rules needed and did not have")
+    class Family {
+
+        @Test
+        void theMemberListIsDefensivelyCopied() {
+            List<Member> mutable = new ArrayList<>();
+            mutable.add(child(LocalDate.of(2010, 1, 1)));
+            FamilySnapshot snapshot = new FamilySnapshot(mutable);
+
+            mutable.add(child(LocalDate.of(2012, 1, 1)));
+
+            assertThat(snapshot.members()).hasSize(1);
+        }
+
+        @Test
+        void relationshipSelectsTheSeparateCeilings() {
+            // DED-80D-001 versus -002: self/family and parents are separate Rs 50,000 ceilings.
+            Member parent = new Member(
+                    Relationship.PARENT,
+                    LocalDate.of(1950, 3, 3),
+                    true,
+                    Optional.empty(),
+                    Optional.empty(),
+                    false, true);
+            FamilySnapshot snapshot =
+                    new FamilySnapshot(List.of(child(LocalDate.of(2010, 1, 1)), parent));
+
+            assertThat(snapshot.withRelationship(Relationship.PARENT)).containsExactly(parent);
+            assertThat(snapshot.withRelationship(Relationship.SPOUSE)).isEmpty();
+        }
+
+        @Test
+        void theMultipleBirthExceptionIsAFactAndNotADerivation() {
+            // SAL-LEAVE-TRAVEL-CHILDREN's second exception is a fact about a birth, not derivable from a date of
+            // birth; the first, born before the rule's date, is read from the date of birth (D-212)
+            Member twin = new Member(
+                    Relationship.CHILD,
+                    LocalDate.of(2001, 5, 5),
+                    true,
+                    Optional.empty(),
+                    Optional.empty(),
+                    true, true);
+
+            assertThat(twin.multipleBirthAfterFirstChild()).isTrue();
+        }
+
+        @Test
+        void noFamilyIsAnEmptyListRatherThanNull() {
+            assertThat(FamilySnapshot.none().members()).isEmpty();
+            assertThatThrownBy(() -> new FamilySnapshot(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("nobody asked");
+        }
+
+        @Test
+        void memberOrderIsPreserved() {
+            Member first = child(LocalDate.of(2010, 1, 1));
+            Member second = child(LocalDate.of(2012, 1, 1));
+
+            assertThat(new FamilySnapshot(List.of(first, second)).members())
+                    .containsExactly(first, second);
+        }
+
+        @Test
+        void aMemberWithoutARelationshipIsRejected() {
+            assertThatThrownBy(() -> new Member(
+                            null,
+                            LocalDate.of(2010, 1, 1),
+                            true,
+                            Optional.empty(),
+                            Optional.empty(),
+                            false, true))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("relationship");
+        }
+    }
+
+    @Nested
+    @DisplayName("LedgerSnapshot — what a single year cannot hold")
+    class Ledgers {
+
+        @Test
+        void theCarryForwardMapIsDefensivelyCopied() {
+            Map<TaxYearId, CarriedHousePropertyLoss> mutable = new HashMap<>();
+            mutable.put(TaxYearId.of(2024), new CarriedHousePropertyLoss(Money.of("200000"), Money.ZERO, Money.ZERO));
+            LedgerSnapshot ledgers = new LedgerSnapshot(
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    mutable,
+                    Optional.empty(), Map.of());
+
+            mutable.put(TaxYearId.of(2024), new CarriedHousePropertyLoss(Money.of("999999"), Money.ZERO, Money.ZERO));
+
+            assertThat(ledgers.housePropertyLossCarriedForward().get(TaxYearId.of(2024)).loss())
+                    .isEqualTo(Money.of("200000"));
+        }
+
+        @Test
+        void everyFigureIsWhatWasConsumedRatherThanWhatRemains() {
+            // A remaining balance is a subtraction, and the subtraction is the engine's job. This
+            // is also why M3.4 wants append-only ledgers: a decremented counter cannot reproduce
+            // a past year's answer.
+            LedgerSnapshot ledgers = new LedgerSnapshot(
+                    Map.of(2022, new LeaveTravelBlock(2, true)),
+                    Map.of(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2020)),
+                    Map.of(RetirementEntry.OTHER_GRATUITY, Money.of("500000"),
+                            RetirementEntry.OTHER_LEAVE_ENCASHMENT, Money.of("300000")),
+                    Map.of(),
+                    Optional.of(TaxYearId.of(2022)), Map.of());
+
+            assertThat(ledgers.retirementAllowedBefore()).containsEntry(RetirementEntry.OTHER_GRATUITY, Money.of("500000"));
+            assertThat(ledgers.leaveTravelBlock(2022)).isEqualTo(new LeaveTravelBlock(2, true));
+        }
+
+        @Test
+        void deductionAllowedIn_whenAnEntryWasAllowed_holdsItsYearAndIsDefensivelyCopied() {
+            // Given — W-155b: the year per entry; which entries are once only is RS-RET-BAR's to say
+            Map<RetirementEntry, TaxYearId> mutable = new HashMap<>();
+            mutable.put(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2019));
+
+            // When
+            LedgerSnapshot claimed = new LedgerSnapshot(
+                    Map.of(),
+                    mutable,
+                    Map.of(),
+                    Map.of(),
+                    Optional.empty(), Map.of());
+            mutable.put(RetirementEntry.OTHER_GRATUITY, TaxYearId.of(2020));
+
+            // Then
+            assertThat(LedgerSnapshot.empty().deductionAllowedIn()).isEmpty();
+            assertThat(claimed.deductionAllowedIn())
+                    .containsExactly(Map.entry(RetirementEntry.VOLUNTARY_RETIREMENT, TaxYearId.of(2019)));
+        }
+
+        @Test
+        void aNullAggregateIsRejectedBecauseNothingYetDiffersFromNeverAsked() {
+            assertThatThrownBy(() -> new LedgerSnapshot(
+                            Map.of(),
+                            Map.of(),
+                            null,
+                            Map.of(),
+                            Optional.empty(), Map.of()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("different ceilings");
+        }
+
+        @Test
+        void retirementAllowedBefore_whenAnAmountIsNegative_isRefused() {
+            // When / Then — an amount allowed is a fact of history, never below nil
+            assertThatThrownBy(() -> new LedgerSnapshot(
+                            Map.of(),
+                            Map.of(),
+                            Map.of(RetirementEntry.OTHER_GRATUITY, Money.of("-1")),
+                            Map.of(),
+                            Optional.empty(), Map.of()))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("never negative");
+        }
+
+        @Test
+        void aNegativeBlockCountIsRejected() {
+            assertThatThrownBy(() -> new LeaveTravelBlock(-1, false))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("negative");
+        }
+
+        @Test
+        void carriedHousePropertyLoss_whenAPartExceedsTheLoss_isRefused() {
+            // D-218: totals consumed, never remaining — the attributable part and the absorbed amount are parts of the loss
+            assertThatThrownBy(() -> new CarriedHousePropertyLoss(Money.of("100000"), Money.of("100001"), Money.ZERO))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("each at most the loss");
+            assertThatThrownBy(() -> new CarriedHousePropertyLoss(Money.of("100000"), Money.ZERO, Money.of("100001")))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("each at most the loss");
+            assertThatThrownBy(() -> new CarriedHousePropertyLoss(Money.of("-1"), Money.ZERO, Money.ZERO))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("may not be negative");
+        }
+
+        @Test
+        void aBlockNeverClaimedInIsNilRatherThanAbsent() {
+            // D-100: a tax year spans two calendar blocks (R-12), so the ledger holds each block by its first year
+            assertThat(LedgerSnapshot.empty().leaveTravelBlock(2026)).isEqualTo(new LeaveTravelBlock(0, false));
+        }
+
+        @Test
+        void anEmptyLedgerIsAFirstReturn() {
+            LedgerSnapshot empty = LedgerSnapshot.empty();
+
+            assertThat(empty.retirementAllowedBefore()).isEmpty();
+            assertThat(empty.housePropertyLossCarriedForward()).isEmpty();
+            assertThat(empty.leaveTravelByBlock()).isEmpty();
+        }
+    }
+}

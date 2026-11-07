@@ -1,0 +1,29 @@
+{
+  "_note": "Section catalogue entry (D-042, D-060, D-076). Content: it changes no number. Figures, rates, dates and section numbers never appear in text (SC-2); availability and history are derived from rule versions, never authored (SC-4).",
+  "_sources": "provisions: 1961 s.234F / 2025 s.428(a) (coverage MODELLED by FEE-LATE-RETURN); sources/2026-11-06-advance-tax-interest.md; D-446",
+  "key": "SEC-FEE-LATE-RETURN",
+  "provision1961": {
+    "instrument": "Income-tax Act, 1961",
+    "reference": "s.234F",
+    "presence": "PRESENT"
+  },
+  "provision2025": {
+    "instrument": "Income-tax Act, 2025",
+    "reference": "s.428",
+    "presence": "PRESENT"
+  },
+  "plainName": "Fee for a late return",
+  "summary": "A fixed fee for a return furnished after it was due, lower where total income is small; it does not grow with the delay.",
+  "routes": [
+    {
+      "name": "Fee for a late return",
+      "description": "Charged once where the return is furnished after its due date.",
+      "conditions": [
+        {
+          "type": "ByRule",
+          "rule": "FEE-LATE-RETURN"
+        }
+      ]
+    }
+  ]
+}

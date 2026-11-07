@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,10 +44,11 @@ import org.springframework.stereotype.Service;
  * rate card on file for the date. Those are the same number and completely different facts, so
  * every empty computation names which one it was rather than returning a bare zero.
  *
- * <h2>Two sources of rules, one ordered evaluation</h2>
- * The broker's card and the instrument's own profile are resolved separately and merged into a
- * single list sorted by {@code order}, rather than evaluated one after the other. That is what lets
- * a derived rule on the broker's card include an instrument-sourced line in its base.
+ * <h2>Three sources of rules, one ordered evaluation</h2>
+ * The broker's card, the statutory card (which names no broker, D-380) and the instrument's own
+ * profile are resolved separately and merged into a single list sorted by {@code order}, rather than
+ * evaluated one after the other. That is what lets a derived rule on one source include another
+ * source's line in its base: GST on the statutory card taxes the broker's brokerage.
  */
 @Log4j2
 @Service
@@ -83,25 +85,28 @@ public class ChargeEngine {
             return ChargeComputation.empty(ChargeResolution.NO_SCHEDULE);
         }
 
+        ChargeScheduleEntity statutory = scheduleResolver.resolveStatutory(context).orElse(null);
         ChargeInstrumentEntity instrument = resolveInstrument(schedule, context);
         boolean profileMissing = schedule.isRequiresInstrumentProfile() && instrument == null;
         ChargeContext enriched = withInstrumentAttributes(context, instrument);
 
         ChargeAccumulator accumulator = new ChargeAccumulator();
-        for (SourcedRule sourced : applicableRules(schedule, instrument, enriched)) {
+        for (SourcedRule sourced : applicableRules(new Cards(schedule, statutory), instrument, enriched)) {
             evaluate(sourced, enriched, accumulator);
         }
 
         List<ChargeLine> lines = accumulator.lines();
         if (lines.isEmpty()) {
-            return ChargeComputation.empty(emptyResolution(context, profileMissing));
+            return ChargeComputation.empty(emptyResolution(context, statutory == null, profileMissing));
         }
 
         BigDecimal total = ChargeRounding.apply(accumulator.total(), RoundingPolicy.HALF_UP_2);
         return new ChargeComputation(
                 schedule.getId(), schedule.getScheduleCode(),
+                statutory == null ? null : statutory.getId(),
+                statutory == null ? null : statutory.getScheduleCode(),
                 instrument == null ? null : instrument.getId(),
-                profileMissing ? ChargeResolution.NO_INSTRUMENT_PROFILE : ChargeResolution.RESOLVED,
+                pricedResolution(statutory == null, profileMissing),
                 List.copyOf(lines), total.doubleValue());
     }
 
@@ -167,14 +172,29 @@ public class ChargeEngine {
     }
 
     /**
-     * Why nothing was charged. A deliberate exemption, a card with no applicable rule and a missing
-     * scheme profile are the same number and three different facts.
+     * Why nothing was charged. A deliberate exemption, a card with no applicable rule, a missing
+     * statutory card and a missing scheme profile are the same number and four different facts.
      */
-    private static ChargeResolution emptyResolution(ChargeContext context, boolean profileMissing) {
+    private static ChargeResolution emptyResolution(
+            ChargeContext context, boolean statutoryMissing, boolean profileMissing) {
         if (context.isCorporateAction()) {
             return ChargeResolution.CORPORATE_ACTION_EXEMPT;
         }
-        return profileMissing ? ChargeResolution.NO_INSTRUMENT_PROFILE : ChargeResolution.NO_MATCHING_RULES;
+        if (statutoryMissing || profileMissing) {
+            return pricedResolution(statutoryMissing, profileMissing);
+        }
+        return ChargeResolution.NO_MATCHING_RULES;
+    }
+
+    /**
+     * A missing statutory card is reported before a missing scheme profile when both are absent: it
+     * leaves out the law's charges on every trade in the scope, a profile only one scheme's.
+     */
+    private static ChargeResolution pricedResolution(boolean statutoryMissing, boolean profileMissing) {
+        if (statutoryMissing) {
+            return ChargeResolution.NO_STATUTORY_SCHEDULE;
+        }
+        return profileMissing ? ChargeResolution.NO_INSTRUMENT_PROFILE : ChargeResolution.RESOLVED;
     }
 
     /**
@@ -185,21 +205,51 @@ public class ChargeEngine {
      * evaluation, so the question is asked at the point the rule is priced.
      */
     private static List<SourcedRule> applicableRules(
-            ChargeScheduleEntity schedule, ChargeInstrumentEntity instrument, ChargeContext context) {
+            Cards cards, ChargeInstrumentEntity instrument, ChargeContext context) {
 
-        Stream<SourcedRule> fromSchedule = sourced(schedule.getRules(), ChargeRuleSource.SCHEDULE);
+        Stream<SourcedRule> fromSchedule = sourced(cards.broker().getRules(), ChargeRuleSource.SCHEDULE);
+        Stream<SourcedRule> fromStatutory = cards.statutory() == null
+                ? Stream.empty()
+                : sourced(cards.statutory().getRules(), ChargeRuleSource.STATUTORY);
         Stream<SourcedRule> fromInstrument = instrument == null
                 ? Stream.empty()
                 : sourced(instrument.getRules(), ChargeRuleSource.INSTRUMENT);
 
-        List<SourcedRule> applicable = Stream.concat(fromSchedule, fromInstrument)
+        List<SourcedRule> applicable = Stream.of(fromSchedule, fromStatutory, fromInstrument)
+                .flatMap(stream -> stream)
                 .filter(sourced -> sourced.rule().isActive())
                 .filter(sourced -> declaresEvent(sourced.rule(), context))
                 .filter(sourced -> sideMatches(sourced.rule(), context))
                 .filter(sourced -> survivesCorporateActionExemption(sourced.rule(), context))
                 .toList();
 
-        return resolveOverrides(applicable).stream().sorted(EVALUATION_ORDER).toList();
+        List<SourcedRule> ordered = resolveOverrides(applicable, cards).stream().sorted(EVALUATION_ORDER).toList();
+        rejectLateBaseCodes(ordered);
+        return ordered;
+    }
+
+    /**
+     * A derived rule reads only the lines priced before it. Within one source the validator rejects
+     * a late base when the card is written, and the engine degrades rather than throws. Across
+     * sources the validator cannot see, so a base line from another source ordered after its derived
+     * rule would drop out of the base without a word. Refused instead, naming both rules.
+     */
+    private static void rejectLateBaseCodes(List<SourcedRule> ordered) {
+        for (int i = 0; i < ordered.size(); i++) {
+            SourcedRule sourced = ordered.get(i);
+            ChargeRule derived = sourced.rule();
+            if (derived.getBasis() != ChargeBasis.DERIVED || derived.getBaseCodes() == null) {
+                continue;
+            }
+            for (SourcedRule later : ordered.subList(i + 1, ordered.size())) {
+                if (later.source() != sourced.source() && derived.getBaseCodes().contains(later.rule().getCode())) {
+                    throw new BadRequestException("Charge rule " + derived.getCode() + " (order "
+                            + derived.getOrder() + ") taxes " + later.rule().getCode() + ", which is priced after it"
+                            + " (order " + later.rule().getOrder() + "), so that line would be left out of its base."
+                            + " Order the base before the rule that reads it.");
+                }
+            }
+        }
     }
 
     /**
@@ -212,14 +262,24 @@ public class ChargeEngine {
      * <p>Overrides are resolved among the rules that actually apply, not across every rule declared.
      * A scheme's exit load levied on redemption alone drops out on a purchase, and suppressing the
      * broker's rule alongside it would lose a charge that does apply.
+     *
+     * <p>The broker's card and the statutory card declaring the same code is refused (D-381 D2a):
+     * applying both charges the tax twice, and letting either win would hide a card defect.
      */
-    private static Collection<SourcedRule> resolveOverrides(List<SourcedRule> applicable) {
+    private static Collection<SourcedRule> resolveOverrides(List<SourcedRule> applicable, Cards cards) {
         Map<String, SourcedRule> byCode = new LinkedHashMap<>();
 
         for (SourcedRule sourced : applicable) {
             SourcedRule existing = byCode.putIfAbsent(sourced.rule().getCode(), sourced);
             if (existing == null) {
                 continue;
+            }
+            if (EnumSet.of(existing.source(), sourced.source())
+                    .equals(EnumSet.of(ChargeRuleSource.SCHEDULE, ChargeRuleSource.STATUTORY))) {
+                throw new BadRequestException("Charge code " + sourced.rule().getCode()
+                        + " is declared on both the broker's card " + cards.broker().getScheduleCode()
+                        + " and the statutory card " + cards.statutory().getScheduleCode()
+                        + ", so it would be charged twice. Remove it from one of them.");
             }
             if (sourced.source() == ChargeRuleSource.INSTRUMENT && existing.source() != ChargeRuleSource.INSTRUMENT) {
                 byCode.put(sourced.rule().getCode(), sourced);
@@ -369,6 +429,10 @@ public class ChargeEngine {
      * resolver cache.
      */
     private record SourcedRule(ChargeRule rule, ChargeRuleSource source) {
+    }
+
+    /** The broker's card, always present here, and the statutory card, where one resolved. */
+    private record Cards(ChargeScheduleEntity broker, ChargeScheduleEntity statutory) {
     }
 
     private static ChargeLine lineOf(SourcedRule sourced, BigDecimal baseAmount, BigDecimal amount) {

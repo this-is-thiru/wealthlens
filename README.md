@@ -135,12 +135,12 @@ erDiagram
         AssetType asset_type
         LocalDate record_date
         LocalDate ex_date
+        LocalDate allotment_date
         Integer priority
         String ratio
         String action_price
         DemergerDetail demerger_detail
         String description
-        LocalDate date
         AuditMetadata audit_metadata
     }
 
@@ -351,7 +351,7 @@ the same engine using `ChargeEvent.AMC_CYCLE`, and is idempotent per account and
 
 | Flag | Ships | Effect |
 |---|---|---|
-| `engine-enabled` | `true` | Master kill switch. `false` → simulate, backfill and the AMC cycle answer **503**, and nothing is shadow-recorded. Reads of already-recorded charges keep working |
+| `engine-enabled` | `true` | Master kill switch. `false` → `POST /charges/simulate`, `GET /charge-accounts/due` and `POST /charges/amc/impose` answer **503**, and nothing is shadow-recorded. Reads of already-recorded charges keep working |
 | `shadow-recording` | `false` | The trade path prices and records every V2 trade; the result is ignored |
 | `authoritative` | `false` | The computed total becomes the cost basis on a V2 buy |
 
@@ -657,6 +657,27 @@ curl -X POST "http://localhost:8080/portfolio/user/user@example.com/transaction/
     "transactionDate": "2024-01-15",
     "accountType": "SELF",
     "accountHolder": "user@example.com"
+  }'
+```
+
+### Record a Property Sale
+
+A land or building is not a broker trade, so its sale is entered here, once, with what was paid to buy and sell it by
+code (`STAMP_DUTY`, `REGISTRATION`, `BROKERAGE`, `LEGAL_FEE`). It writes the row the capital-gains summary reads, not a
+holding or a P&L entry. A purchase only; amounts are the user's own share. The same sale posted twice is refused.
+
+```bash
+curl -X POST "http://localhost:8080/properties/user/user@example.com/sales" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "propertyName": "Plot 7",
+    "acquiredOn": "2015-06-01",
+    "costRupees": 4000000,
+    "acquisitionExpenses": {"STAMP_DUTY": 280000, "REGISTRATION": 40000, "BROKERAGE": 40000},
+    "transferredOn": "2025-09-01",
+    "considerationRupees": 10000000,
+    "transferExpenses": {"BROKERAGE": 100000, "LEGAL_FEE": 20000}
   }'
 ```
 

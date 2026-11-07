@@ -1,17 +1,21 @@
 package com.thiru.wealthlens.taxplanning.controller;
 
 import com.thiru.wealthlens.taxplanning.document.TaxComparisonReportGenerator;
+import com.thiru.wealthlens.taxplanning.policy.dto.PolicySeedReport;
 import com.thiru.wealthlens.taxplanning.policy.entity.AllowanceCatalogueEntity;
 import com.thiru.wealthlens.taxplanning.policy.entity.PerquisitePolicyEntity;
 import com.thiru.wealthlens.taxplanning.policy.entity.TaxSlabPolicyEntity;
+import com.thiru.wealthlens.taxplanning.policy.service.PolicySeederService;
 import com.thiru.wealthlens.taxplanning.policy.service.PolicyService;
 import com.thiru.wealthlens.taxplanning.recommendation.RestructuringResult;
+import com.thiru.wealthlens.taxplanning.salary.dto.KnownErrorsComputation;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileRequest;
 import com.thiru.wealthlens.taxplanning.salary.dto.SalaryProfileResponse;
 import com.thiru.wealthlens.taxplanning.salary.entity.SalaryProfileEntity;
 import com.thiru.wealthlens.taxplanning.salary.entity.TaxComputationEntity;
 import com.thiru.wealthlens.taxplanning.salary.service.SalaryProfileService;
 import com.thiru.wealthlens.taxplanning.service.TaxComputationService;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +44,7 @@ public class TaxPlanningController {
     private final SalaryProfileService salaryProfileService;
     private final TaxComputationService taxComputationService;
     private final PolicyService policyService;
+    private final PolicySeederService policySeederService;
     private final TaxComparisonReportGenerator reportGenerator;
     private final com.thiru.wealthlens.taxplanning.recommendation.RestructuringEngine restructuringEngine;
 
@@ -74,8 +79,8 @@ public class TaxPlanningController {
     // ========== Tax Computation ==========
 
     @PostMapping("/user/{email}/profile/{profileId}/compute")
-    public ResponseEntity<TaxComputationEntity> computeTax(@PathVariable String email, @PathVariable String profileId) {
-        return ResponseEntity.ok(taxComputationService.compute(email, profileId));
+    public ResponseEntity<KnownErrorsComputation> computeTax(@PathVariable String email, @PathVariable String profileId) {
+        return ResponseEntity.ok(KnownErrorsComputation.of(taxComputationService.compute(email, profileId)));
     }
 
     // ========== Restructuring ==========
@@ -97,6 +102,17 @@ public class TaxPlanningController {
     }
 
     // ========== Admin Endpoints (SUPER_USER only) ==========
+
+    /**
+     * Seeds the TY 2025-26 tax policies that are missing — a manual operation, not a startup hook (D-280); the
+     * caller is recorded on every document written, and {@code dryRun} defaults to true so the writing call says so.
+     */
+    @PostMapping("/admin/policies/seed")
+    @PreAuthorize("hasRole('SUPER_USER')")
+    public ResponseEntity<PolicySeedReport> seedPolicies(@RequestParam(defaultValue = "true") boolean dryRun,
+            Principal principal) {
+        return ResponseEntity.ok(policySeederService.seed(dryRun, principal.getName()));
+    }
 
     @PostMapping("/admin/policies/slab")
     @PreAuthorize("hasRole('SUPER_USER')")

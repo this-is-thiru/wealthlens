@@ -28,6 +28,15 @@ public interface ChargeScheduleRepository extends MongoRepository<ChargeSchedule
             + " $or: [ { 'end_date': null }, { 'end_date': { $gte: ?1 } } ] }")
     List<ChargeScheduleEntity> findCandidates(BrokerName brokerName, LocalDate transactionDate);
 
+    /**
+     * Every statutory card that could apply on a date, under the same window and status as
+     * {@link #findCandidates}. A statutory card names no broker: the law levies its charges whoever
+     * executes the trade (D-380). {@code broker_name: null} matches the field absent as well as null.
+     */
+    @Query("{ 'broker_name': null, 'status': { $ne: 'INACTIVE' }, 'start_date': { $lte: ?0 },"
+            + " $or: [ { 'end_date': null }, { 'end_date': { $gte: ?0 } } ] }")
+    List<ChargeScheduleEntity> findStatutoryCandidates(LocalDate transactionDate);
+
     Optional<ChargeScheduleEntity> findByScheduleCode(String scheduleCode);
 
     /**

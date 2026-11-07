@@ -1,0 +1,28 @@
+{
+  "code": "VRS_COMPENSATION",
+  "_note": "Paid in money on retirement or termination, and salary: compensation \"at or in connection with the termination of his employment\", profits in lieu of salary (S2 s.18(1)(a)(i), s.16(f); 1961 s.17(3)(i)); its deduction is RET-VOLUNTARY-RETIREMENT (D-103). In no salary base. CASH: paid in money (DR 05 M2).",
+  "displayName": "Voluntary retirement compensation",
+  "head": "SALARIES",
+  "kind": "SALARY",
+  "cashNature": "CASH",
+  "treatment": "TAXABLE",
+  "feedsInto": [
+    "SAL-SALARY-INCLUDES",
+    "RET-VOLUNTARY-RETIREMENT"
+  ],
+  "salaryBaseFor": [],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16(f), s.18(1)(a) and s.19(1) Table Sl. 12; Income-tax Act, 1961 s.10(10)–(10C) and s.17",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

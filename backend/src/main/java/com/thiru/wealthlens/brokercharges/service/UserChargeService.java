@@ -154,6 +154,8 @@ public class UserChargeService {
         row.setResolution(computation.resolution());
         row.setScheduleId(computation.scheduleId());
         row.setScheduleCode(computation.scheduleCode());
+        row.setStatutoryScheduleId(computation.statutoryScheduleId());
+        row.setStatutoryScheduleCode(computation.statutoryScheduleCode());
         row.setInstrumentId(computation.instrumentId());
         row.setTurnover(context.amount(AmountBasis.TURNOVER));
         row.setQuantity(context.quantity());

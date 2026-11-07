@@ -3,6 +3,7 @@ package com.thiru.wealthlens.auth.filter;
 import com.thiru.wealthlens.auth.dto.AuthHelper;
 import com.thiru.wealthlens.auth.service.AuthService;
 import com.thiru.wealthlens.auth.service.UserValidator;
+import com.thiru.wealthlens.shared.privacy.HeldAccounts;
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
@@ -25,9 +26,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class AuthFilter extends OncePerRequestFilter {
 
     private final AuthService authService;
+    private final HeldAccounts heldAccounts;
 
-    AuthFilter(final AuthService authService) {
+    AuthFilter(final AuthService authService, final HeldAccounts heldAccounts) {
         this.authService = authService;
+        this.heldAccounts = heldAccounts;
     }
 
     @Override
@@ -51,7 +54,8 @@ public class AuthFilter extends OncePerRequestFilter {
                     throw new BadCredentialsException("User: " + username + " does not have access");
                 }
 
-                if (authService.validateToken(claims)) {
+                // A held account's token stops working at once, not when it expires (W-237d C3a).
+                if (authService.validateToken(claims) && !heldAccounts.contains(username)) {
                     final UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, null, userAuthorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);

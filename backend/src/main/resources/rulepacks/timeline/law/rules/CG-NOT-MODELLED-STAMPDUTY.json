@@ -1,0 +1,113 @@
+{
+  "ruleId": "CG-NOT-MODELLED-STAMPDUTY",
+  "ruleSet": "RS-CG-NOT-MODELLED",
+  "ruleSetPosition": 1,
+  "_note": "A land or building sale is computed on the price recorded, while 2025 s.78(1) / 1961 s.50C(1) put the stamp-duty value in its place where the price is below it (and not within the tolerance those sections state) — which can raise the tax. Not built (W-088g6): no stamp-duty value is held. This row only says so, as an ACTION_REQUIRED notice on the bucket's term line (W-088g4, D-432); building W-088g6 deletes it. Sources: docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 1, 6–8.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.50C(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.78(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "NotModelledProvision",
+        "subject": "the stamp-duty value in place of the price, where the price is below it",
+        "effect": "MAY_RAISE"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "LAND_OR_BUILDING"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2020 (12 of 2020), s.27 — Income-tax Act, 1961 s.50C(1), third proviso: the tolerance widened, applicable from 1-4-2021; s.50C itself ins. by Act 20 of 2002 (thc copy, footnote to s.50C)",
+        "gazetteRef": "CG-DL-E-27032020-218938",
+        "notifiedOn": "2020-03-27",
+        "effectiveFrom": "2021-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2020/218938.pdf",
+        "sourceDescription": "Gazette CG-DL-E-27032020-218938, Finance Act, 2020 s.27, p.24; Income-tax Act, 1961 s.50C(1) as on thc.nic.in (current to Act 7 of 2019), p.277; Finance (No. 2) Act, 2019 s.18, p.13; no other amendment of s.50C in the Acts of 2019–2026 searched (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md rows 6–8)",
+        "accessedOn": "2026-11-01",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.50C(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.78(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "NotModelledProvision",
+        "subject": "the stamp-duty value in place of the price, where the price is below it",
+        "effect": "MAY_RAISE"
+      },
+      "conditions": [
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "LAND_OR_BUILDING"
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.78(1) — the stamp-duty value deemed the full value of the consideration for land or building",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.78(1), p.125 (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md row 1)",
+        "accessedOn": "2026-11-01",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.78(1), p.125 (docs/taxplanning-build/sources/2026-11-01-land-sale-provisions.md row 1)",
+    "accessedOn": "2026-11-01",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

@@ -1,0 +1,166 @@
+package com.thiru.wealthlens.taxengine.node;
+
+import com.thiru.wealthlens.taxengine.input.EducationLoanInterest;
+import com.thiru.wealthlens.taxengine.input.Individual;
+import com.thiru.wealthlens.taxengine.input.PurposeLoanInterest;
+import com.thiru.wealthlens.taxengine.pipeline.NodeContext;
+import com.thiru.wealthlens.taxengine.rules.condition.ItemFacts;
+import com.thiru.wealthlens.taxengine.rules.definition.RuleDefinitions;
+import com.thiru.wealthlens.taxengine.rules.definition.SanctionedLoanLimit;
+import com.thiru.wealthlens.taxengine.rules.definition.TaxYearSpan;
+import com.thiru.wealthlens.taxengine.rules.generated.RuleSetIds;
+import com.thiru.wealthlens.taxengine.rules.id.ItemFactId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleId;
+import com.thiru.wealthlens.taxengine.rules.id.RuleSetId;
+import com.thiru.wealthlens.taxengine.rules.money.Money;
+import com.thiru.wealthlens.taxengine.rules.pack.TemporallyApportionedCap;
+import com.thiru.wealthlens.taxengine.rules.temporal.RuleVersion;
+import com.thiru.wealthlens.taxengine.trace.StepKind;
+import com.thiru.wealthlens.taxengine.trace.TraceLine;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+/**
+ * s.129–132 — interest on an education loan, a first-home loan and an electric-vehicle loan — for
+ * {@link ChapterEightNode} (S2; D-139). A line per loan: the whole education-loan interest within its run of years;
+ * a house or vehicle loan's interest within its section's limit where every condition of its loan holds, else nil
+ * with the first that fails. A house loan is tried under s.130 first, under s.131 only where s.130 fails (s.131(1)).
+ */
+final class LoanInterestDeduction {
+
+    /** The loan's purpose — the {@code LoanPurpose} name — which the purpose rows read (W-156d, D-349). */
+    private static final ItemFactId PURPOSE = new ItemFactId("loan.purpose");
+
+    static final Set<RuleSetId> RULES = Set.of(RuleSetIds.RS_DED_EDUCATION_LOAN, RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER,
+            RuleSetIds.RS_DED_HOUSE_LOAN, RuleSetIds.RS_DED_ELECTRIC_VEHICLE_LOAN);
+
+    private LoanInterestDeduction() {
+    }
+
+    /** The lines, numbered from {@code firstSequence}; none where no loan is entered. */
+    static List<TraceLine> lines(NodeContext ctx, int firstSequence) {
+        List<EducationLoanInterest> education = ctx.inputs().entered().educationLoanInterest();
+        List<PurposeLoanInterest> loans = ctx.inputs().entered().purposeLoanInterest();
+        if (education.isEmpty() && loans.isEmpty()) {
+            return List.of();
+        }
+        if (!(ctx.inputs().assessee() instanceof Individual)) {
+            throw new IllegalArgumentException("s.129–132 are an individual's deductions (D-139)");
+        }
+        List<TraceLine> lines = new ArrayList<>();
+        for (EducationLoanInterest loan : education) {
+            lines.add(education(ctx, loan, firstSequence + lines.size()));
+        }
+        for (PurposeLoanInterest loan : loans) {
+            lines.add(purpose(ctx, loan, firstSequence + lines.size()));
+        }
+        return lines;
+    }
+
+    /** s.129: the whole interest, in the initial tax year and the span of years after it. */
+    private static TraceLine education(NodeContext ctx, EducationLoanInterest loan, int sequence) {
+        RuleVersion version = version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN));
+        Money interest = loan.interestPaid();
+        if (!applies(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version)) {
+            return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
+                            interest, Money.ZERO)
+                    .withLimitedBy(ctx.inRegime(ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), version).whyNot());
+        }
+        TaxYearSpan span = RuleDefinitions.require(version.definition(), TaxYearSpan.class,
+                ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN));
+        if (!span.holds(loan.initialTaxYear(), ctx.inputs().taxYear())) {
+            return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
+                            interest, Money.ZERO)
+                    .withLimitedBy("outside the initial"
+                    + " tax year " + loan.initialTaxYear().label() + " and the " + span.succeedingYears() + " after it");
+        }
+        return ctx.traceLine(sequence, ctx.ruleIdOf(RuleSetIds.RS_DED_EDUCATION_LOAN), StepKind.DEDUCTION,
+                        interest, interest)
+                .withLimitedBy("the interest paid");
+    }
+
+    /**
+     * s.130–132: a vehicle loan under s.132; a house loan under s.130, else s.131 — which purpose each row takes is its
+     * own condition (W-156d, D-349).
+     */
+    private static TraceLine purpose(NodeContext ctx, PurposeLoanInterest loan, int sequence) {
+        ItemFacts purpose = ItemFacts.of(PURPOSE, loan.purpose().name());
+        RuleId vehicle = ctx.ruleIdOf(RuleSetIds.RS_DED_ELECTRIC_VEHICLE_LOAN);
+        if (RowReach.holdsFor(ctx, ctx.rule(vehicle), purpose)) {
+            return limited(ctx, loan, vehicle, sequence);
+        }
+        List<RuleId> house = List.of(ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER),
+                ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN));
+        if (!house.stream().allMatch(row -> RowReach.holdsFor(ctx, ctx.rule(row), purpose))) {
+            throw new IllegalArgumentException("A loan for " + loan.purpose() + " is reached by neither " + vehicle
+                    + " nor " + house);
+        }
+        Optional<String> earlier = failure(RuleDefinitions.require(version(ctx, ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER)).definition(), SanctionedLoanLimit.class,
+                ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER)), loan);
+        return limited(ctx, loan, earlier.isEmpty() ? ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN_EARLIER) : ctx.ruleIdOf(RuleSetIds.RS_DED_HOUSE_LOAN),
+                sequence);
+    }
+
+    private static TraceLine limited(NodeContext ctx, PurposeLoanInterest loan, RuleId row, int sequence) {
+        RuleVersion version = version(ctx, row);
+        Money interest = loan.interestPayable();
+        if (!applies(ctx, row, version)) {
+            return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, Money.ZERO)
+                    .withLimitedBy(ctx.inRegime(row, version).whyNot());
+        }
+        SanctionedLoanLimit limit = RuleDefinitions.require(version.definition(), SanctionedLoanLimit.class, row);
+        Optional<String> failed = failure(limit, loan);
+        if (failed.isPresent()) {
+            return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, Money.ZERO).withLimitedBy(failed.get());
+        }
+        Money allowed = Money.min(interest, limit.limit());
+        return ctx.traceLine(sequence, row, StepKind.DEDUCTION, interest, allowed)
+                .withLimitedBy(allowed.isLessThan(interest) ? "the limit " + limit.limit() : "the interest payable");
+    }
+
+    /** The first of the loan's conditions that fails, if any. */
+    private static Optional<String> failure(SanctionedLoanLimit limit, PurposeLoanInterest loan) {
+        if (loan.sanctionedOn().isBefore(limit.sanctionedFrom()) || loan.sanctionedOn().isAfter(limit.sanctionedTo())) {
+            return Optional.of("sanctioned " + loan.sanctionedOn() + ", outside " + limit.sanctionedFrom() + " to "
+                    + limit.sanctionedTo());
+        }
+        if (limit.maxAmountSanctioned().filter(max -> loan.amountSanctioned().isGreaterThan(max)).isPresent()) {
+            return Optional.of("loan sanctioned " + loan.amountSanctioned() + ", above "
+                    + limit.maxAmountSanctioned().get());
+        }
+        Optional<String> value = withinValue("value of the house", limit.maxPropertyValue(), loan.propertyValue());
+        if (value.isPresent()) {
+            return value;
+        }
+        Optional<String> stampDuty = withinValue("stamp duty value", limit.maxStampDutyValue(), loan.stampDutyValue());
+        if (stampDuty.isPresent()) {
+            return stampDuty;
+        }
+        if (limit.requiresNoHouseOwned() && loan.ownedResidentialHouseOnSanction()) {
+            return Optional.of("a residential house was owned on the date of sanction");
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<String> withinValue(String what, Optional<Money> max, Optional<Money> entered) {
+        if (max.isEmpty()) {
+            return Optional.empty();
+        }
+        if (entered.isEmpty()) {
+            return Optional.of("the " + what + " was not entered");
+        }
+        return entered.get().isGreaterThan(max.get())
+                ? Optional.of("the " + what + " " + entered.get() + ", above " + max.get())
+                : Optional.empty();
+    }
+
+    private static boolean applies(NodeContext ctx, RuleId row, RuleVersion version) {
+        return ctx.inRegime(row, version).applies();
+    }
+
+    private static RuleVersion version(NodeContext ctx, RuleId row) {
+        return TemporallyApportionedCap.governingVersion(ctx.rule(row), ctx.inputs().temporal());
+    }
+}

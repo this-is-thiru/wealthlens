@@ -1,0 +1,49 @@
+{
+  "_brokenOnPurpose": "Filed as 2097-98 but declares 2099-00.",
+  "taxYear": "2099-00",
+  "layers": {
+    "law": {
+      "version": "2097-98.law.3",
+      "checksum": "sha256:83eaf5da8014fb62bd65a3214f9ae98dc68a0953fcfd3bca584f03cf19594ef3"
+    },
+    "exec": {
+      "version": "2097-98.exec.1",
+      "checksum": "sha256:7b4b18546f3837e9b11e1e94757cd016ffa444690f417014d5cad133ddd6a42b"
+    },
+    "forms": {
+      "version": "2097-98.forms.2",
+      "checksum": "sha256:e4e3ee30d84e7eeed400f6e535452cd5b84670da1c1fe776cc0e1da74b552f82"
+    },
+    "content": {
+      "version": "2097-98.content.7",
+      "checksum": "sha256:29f8a32de376a5eea0ad7856021db0adab80f58637603811c7041b03c7a0b44e"
+    }
+  },
+  "rules": {},
+  "instruments": {
+    "_note": "Fixture instruments, as RulePackLoadTest's: a lock must name them (D-210); these years are not law.",
+    "act": {
+      "citation": "Income-tax Act, 2025 (30 of 2025)",
+      "assentedOn": "2025-08-21",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-22082025-265620",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    },
+    "financeAct": {
+      "citation": "Income-tax Act, 2025 (30 of 2025)",
+      "assentedOn": "2025-08-21",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-22082025-265620",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    },
+    "rules": {
+      "citation": "Income-tax Rules, 2026",
+      "inForceFrom": "2026-04-01",
+      "gazetteRef": "CG-DL-E-20032026-271092",
+      "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/271092.pdf",
+      "verificationLevel": "SOURCE_CHECKED"
+    }
+  }
+}

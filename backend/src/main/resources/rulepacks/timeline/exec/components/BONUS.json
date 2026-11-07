@@ -1,0 +1,32 @@
+{
+  "code": "BONUS",
+  "_note": "Paid in money in addition to salary. In no salary base until OQ-5 is answered: the definitions do not exclude it by their words, and the cited case law is split (D-094). Salary under the head: S2 s.16 (pp.37–38) \"'salary' includes— (a) wages; … (d) any fees or commission; … (f) profits in lieu of, or in addition to, any salary or wages\"; TY 2025-26 1961 s.17(1) (thc p.140) \"(i) wages; … (iv) any fees, commissions, perquisites or profits in lieu of or in addition to any salary or wages\". Which clause covers an allowance is not settled by the words; the engine reads only the head and feedsInto, so nothing turns on it. CASH: paid in money (DR 05 M2).",
+  "displayName": "Bonus",
+  "head": "SALARIES",
+  "kind": "SALARY",
+  "cashNature": "CASH",
+  "treatment": "TAXABLE",
+  "feedsInto": [
+    "SAL-SALARY-INCLUDES"
+  ],
+  "salaryBaseFor": [
+    {
+      "rule": "SAL-SALARY-FOR-ACCOM",
+      "onlyWhereTermsProvide": false
+    }
+  ],
+  "lifecycle": {
+    "validity": {
+      "from": "2025-04-01"
+    },
+    "onWithdrawal": {
+      "type": "HistoricalOnly"
+    }
+  },
+  "provenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.16, pp.37–38; Income-tax Act, 1961 s.17(1) as on thc.nic.in, p.140",
+    "accessedOn": "2026-09-27",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

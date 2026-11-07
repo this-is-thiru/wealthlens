@@ -1,0 +1,34 @@
+{
+  "id": "T6-3b",
+  "source": "DR 08 T6-3, TY 2026-27 — the same property, self-occupied, new regime",
+  "_source": "DR 08's W-080 erratum (D-211; D-156 C1(a)): in TY 2026-27 the new regime disallows s.22(1)(b) only (S2 s.202(2)(a)(v)), so the ₹40,000 pre-construction instalment is allowed and the house comes to −₹40,000; the loss \"may not be set off against another head (s.202(2)(b)(ii))\" and is deemed given full effect to (s.202(3)) — DR 08 T6-3's second line, \"SETOFF-NEW-002 … destroyed\". T6-1's house and loan, not let; dates as T6-1. INFERENCE, not DR 08's (D-217 C5): the other-sources deposit interest of ₹3,00,000 that absorbs the loss — DR 08 states no income under another head, and any amount of ₹2,00,000 or more gives the same set-off.",
+  "regime": "NEW_TAX_REGIME",
+  "taxYears": [
+    "2026-27"
+  ],
+  "houseProperties": [
+    {
+      "occupancy": "OWN_RESIDENCE",
+      "expectedLettingValue": "540000",
+      "rentReceivable": "0",
+      "localTaxesPaid": "18000",
+      "interestPayable": "320000",
+      "preConstructionInterest": "200000",
+      "preConstructionInstalment": 3
+    }
+  ],
+  "otherSources": [
+    {
+      "kind": "DEPOSIT_INTEREST",
+      "received": "300000"
+    }
+  ],
+  "expected": {
+    "housePropertyIncome": "-40000",
+    "nilRules": [
+      "HP-OWN-RESIDENCE-INTEREST"
+    ],
+    "housePropertyLossDestroyed": "40000",
+    "housePropertyLossSetOff": "0"
+  }
+}

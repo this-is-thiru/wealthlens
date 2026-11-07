@@ -1,0 +1,160 @@
+{
+  "ruleId": "CG-EXEMPT-RESIDENTIAL-HOUSE",
+  "ruleSet": "RS-CG-EXEMPTION",
+  "_note": "A long-term capital gain on an asset other than a residential house, put into one residential house in India, is not charged (W-088i). TY 2025-26: Income-tax Act, 1961 s.54F(1) — the new house bought within one year before or two years after the transfer, or constructed within three years after it; where the cost of the new house is at least the net consideration the whole gain is exempt (clause (a)), otherwise so much of it as the cost bears to the net consideration (clause (b)); the second proviso, inserted by the Finance Act, 2023 s.30 w.e.f. 1-4-2024, ignores so much of the cost as exceeds ten crore rupees (Gazette 244830, p.28). TY 2026-27: Income-tax Act, 2025 s.86(1), (8) (Gazette 265620, pp.130–131) — the same exemption and the same cap, restated. The proviso to s.54F(1) / s.86(5) bars the exemption where the assessee owns more than one other residential house on the transfer date, or buys one within a year or builds one within three years of it, so long as the income from such a house is chargeable under the head Income from house property; those two counts are the entered facts, because no record in this engine knows whether a house's income is so chargeable. The rows serve the EQUITY asset kind: land or building is withheld because AssetType.LAND_OR_BUILDING does not separate a residential house, which s.86(1) / s.54F(1) exclude as the original asset, from a plot or a commercial building, which they do not — widening the row is a data change once a kind tells them apart. Net consideration is the consideration less the charges the charge rows deduct as transfer expenditure (s.86(10); s.54F Explanation), which leaves securities transaction tax out — OQ-38's reading, approved with W-088i. The periods are counted in calendar months from the transfer date. Not modelled here: the deposit route (s.86(2)–(4); s.54F(4)), the charge-backs (s.86(6), (7); s.54F(2), (3)) and the ten-crore cap on net consideration (s.86(9)) — W-088i2 and W-088i3. Sources: docs/taxplanning-build/sources/2026-10-31-reinvestment-exemption.md rows 1–3.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.54F(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.86(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "ExemptReinvestment",
+        "monthsBeforePurchase": 12,
+        "monthsAfterPurchase": 24,
+        "monthsAfterConstruction": 36,
+        "newAssetCostCap": "100000000"
+      },
+      "conditions": [
+        {
+          "type": "HasPersonType",
+          "types": [
+            "INDIVIDUAL",
+            "HUF"
+          ]
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.term",
+          "code": "LONG_TERM"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "EQUITY"
+        },
+        {
+          "type": "ItemFactAtMost",
+          "fact": "capitalgains.reinvestment.other.houses.owned",
+          "limit": 1
+        },
+        {
+          "type": "ItemFactAtMost",
+          "fact": "capitalgains.reinvestment.other.houses.acquired",
+          "limit": 0
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance Act, 2023 (7 of 2023), s.30 — Income-tax Act, 1961 s.54F(1): the second proviso inserted, ignoring so much of the cost of the new house as exceeds ten crore rupees, applicable from 1-4-2024; s.54F(4) made subject to it. The exemption's earlier history stands on the thc copy's footnotes: inserted by Act 14 of 1982 s.12 (1-4-1983); \"two years\" inserted by Act 11 of 1987 s.23 (1-4-1988); \"one residential house in India\" substituted by Act 25 of 2014 s.24 (1-4-2015)",
+        "gazetteRef": "CG-DL-E-31032023-244830",
+        "notifiedOn": "2023-03-31",
+        "effectiveFrom": "2024-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2023/244830.pdf",
+        "sourceDescription": "Gazette CG-DL-E-31032023-244830, Finance Act, 2023 s.30, p.28 (s.54F(1)'s second proviso and s.54F(4)); Income-tax Act, 1961 s.54F(1)–(4), thc.nic.in copy pp.292–293 (current to Act 7 of 2019, so the 2023 proviso is not in it); no other amendment of s.54F in the Acts of 2019–2026 searched (docs/taxplanning-build/sources/2026-10-31-reinvestment-exemption.md rows 2–5)",
+        "accessedOn": "2026-10-31",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.54F(1)",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.86(1)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "ExemptReinvestment",
+        "monthsBeforePurchase": 12,
+        "monthsAfterPurchase": 24,
+        "monthsAfterConstruction": 36,
+        "newAssetCostCap": "100000000"
+      },
+      "conditions": [
+        {
+          "type": "HasPersonType",
+          "types": [
+            "INDIVIDUAL",
+            "HUF"
+          ]
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.term",
+          "code": "LONG_TERM"
+        },
+        {
+          "type": "ItemFactIs",
+          "fact": "capitalgains.asset",
+          "code": "EQUITY"
+        },
+        {
+          "type": "ItemFactAtMost",
+          "fact": "capitalgains.reinvestment.other.houses.owned",
+          "limit": 1
+        },
+        {
+          "type": "ItemFactAtMost",
+          "fact": "capitalgains.reinvestment.other.houses.acquired",
+          "limit": 0
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.86(1), (5), (8) — the house-reinvestment exemption, its bar and the cap on the cost of the new house",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.86(1)–(10), pp.130–131; not amended by the Finance Act, 2026 or the Taxation Laws (Amendment) Act, 2025 (docs/taxplanning-build/sources/2026-10-31-reinvestment-exemption.md rows 1, 6)",
+        "accessedOn": "2026-10-31",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.86, pp.130–131; Income-tax Act, 1961 s.54F, thc.nic.in copy pp.292–293",
+    "accessedOn": "2026-10-31",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}

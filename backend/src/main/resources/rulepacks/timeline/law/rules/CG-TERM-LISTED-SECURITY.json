@@ -1,0 +1,150 @@
+{
+  "ruleId": "CG-TERM-LISTED-SECURITY",
+  "ruleSet": "RS-CG-TERM",
+  "_note": "An equity share whose sale is recorded on a recognised stock exchange is a security listed in a recognised stock exchange in India, short-term if held for not more than twelve months immediately preceding the date of its transfer (D-305). TY 2025-26: Income-tax Act, 1961 s.2(42A) first proviso, as amended w.e.f. 23-7-2024 by the Finance (No. 2) Act, 2024 s.3(b) (\"(other than a unit)\" omitted; the base period twenty-four months), thc copy p.49 and egazette 2024/256436 p.17. TY 2026-27: Income-tax Act, 2025 s.2(101)(b)(i), egazette 2025/265620 p.20. No later amendment (Finance Act, 2025; Taxation Laws (Amendment) Act, 2025; Finance Act, 2026 searched). Every TY 2025-26 transfer falls after 23-7-2024, so the amended text alone governs that year. Listing is read from the sale: a sale recorded on NSE or BSE (the recognised exchanges, D-297) shows the share traded there at transfer, which this row reads as listed — a reading (D-305 C1): SCRA also lets an exchange permit trading in a security not listed on it. A sale with no recorded exchange, or another string, matches no row and the bucket is refused. The months are calendar months — long-term only after the same date twelve months on — by the owner's ruling D-303. Period of holding: a demerged lot carries the demerged company's date as recorded (Explanation 1(i)(g); s.2(101)(c)(B)(III)); a bonus lot is dated at the corporate action's ex-date, not its allotment (Explanation 1(i)(f); s.2(101)(c)(C)(IV)) until W-088k4. Sources: docs/taxplanning-build/sources/2026-10-21-holding-period.md rows 1–3, 4, 6–8, 10.",
+  "axis": "TAX_YEAR",
+  "midYearCombination": "LATEST_VERSION_GOVERNS",
+  "versions": [
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2025-04-01",
+        "to": "2026-03-31"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.2(42A), first proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.2(101)(b)(i)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "ShortTermHoldingPeriod",
+        "months": 12
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "trade.transfer.exchange",
+                  "code": "NSE"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "trade.transfer.exchange",
+                  "code": "BSE"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Finance (No. 2) Act, 2024 (15 of 2024), s.3(b) — Income-tax Act, 1961 s.2(42A): the first proviso's \"(other than a unit)\" omitted and its period of other assets made twenty-four months, deemed w.e.f. 23-7-2024",
+        "gazetteRef": "CG-DL-E-16082024-256436",
+        "notifiedOn": "2024-08-16",
+        "effectiveFrom": "2024-07-23",
+        "retrospective": true,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2024/256436.pdf",
+        "sourceDescription": "Gazette CG-DL-E-16082024-256436, Finance (No. 2) Act, 2024 s.3(b), p.17; Income-tax Act, 1961 s.2(42A), thc.nic.in copy p.49 (it predates the 2024 amendment); no later amendment of s.2(42A) in the Acts of 2025–2026 (searched; docs/taxplanning-build/sources/2026-10-21-holding-period.md rows 1–3, 6)",
+        "accessedOn": "2026-10-21",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    },
+    {
+      "validity": {
+        "type": "Between",
+        "from": "2026-04-01"
+      },
+      "regimes": {
+        "type": "AllRegimes"
+      },
+      "provision1961": {
+        "instrument": "Income-tax Act, 1961",
+        "reference": "s.2(42A), first proviso",
+        "presence": "PRESENT"
+      },
+      "provision2025": {
+        "instrument": "Income-tax Act, 2025",
+        "reference": "s.2(101)(b)(i)",
+        "presence": "PRESENT"
+      },
+      "definition": {
+        "type": "ShortTermHoldingPeriod",
+        "months": 12
+      },
+      "conditions": [
+        {
+          "type": "AllOf",
+          "all": [
+            {
+              "type": "ItemFactIs",
+              "fact": "capitalgains.asset",
+              "code": "EQUITY"
+            },
+            {
+              "type": "AnyOf",
+              "any": [
+                {
+                  "type": "ItemFactIs",
+                  "fact": "trade.transfer.exchange",
+                  "code": "NSE"
+                },
+                {
+                  "type": "ItemFactIs",
+                  "fact": "trade.transfer.exchange",
+                  "code": "BSE"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "introducedBy": {
+        "instrumentCitation": "Income-tax Act, 2025 (30 of 2025), s.2(101)(b)(i)",
+        "gazetteRef": "CG-DL-E-22082025-265620",
+        "notifiedOn": "2025-08-21",
+        "effectiveFrom": "2026-04-01",
+        "retrospective": false,
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "verificationLevel": "SOURCE_CHECKED"
+      },
+      "legalStatus": "IN_FORCE",
+      "publicationStatus": "PUBLISHED",
+      "provenance": {
+        "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+        "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.2(101), p.20; not amended by the Finance Act, 2026 (Part B s.35 amends s.2(32), (40) only) or the Taxation Laws (Amendment) Act, 2025 (docs/taxplanning-build/sources/2026-10-21-holding-period.md rows 7, 10)",
+        "accessedOn": "2026-10-21",
+        "verificationLevel": "SOURCE_CHECKED"
+      }
+    }
+  ],
+  "headProvenance": {
+    "sourceUrl": "https://egazette.gov.in/WriteReadData/2025/265620.pdf",
+    "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 s.2(101), pp.20–21",
+    "accessedOn": "2026-10-21",
+    "verificationLevel": "SOURCE_CHECKED"
+  }
+}
