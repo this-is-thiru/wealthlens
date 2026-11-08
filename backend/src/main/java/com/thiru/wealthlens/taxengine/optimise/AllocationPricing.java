@@ -12,6 +12,7 @@ import com.thiru.wealthlens.taxengine.input.Employment;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
 import com.thiru.wealthlens.taxengine.input.EnteredFacts;
 import com.thiru.wealthlens.taxengine.input.SalaryComponent;
+import com.thiru.wealthlens.taxengine.node.FundHistoryRequiredException;
 import com.thiru.wealthlens.taxengine.pipeline.MoneyValue;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
@@ -37,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -60,7 +62,9 @@ final class AllocationPricing {
     private final int employment;
     private final Following following;
     private final Map<Allocation, Priced> priced = new HashMap<>();
-    private final Map<RegimeCode, Map<Allocation, Money>> totalIncome = new HashMap<>();
+    private final Map<RegimeCode, Map<Allocation, Optional<Money>>> totalIncome = new HashMap<>();
+    private final Set<Allocation> unpricedAllocations = new HashSet<>();
+    private Optional<Optimisation.UnpricedNotice> unpriced = Optional.empty();
     private int pipelineRuns;
 
     private AllocationPricing(NodeRegistry registry, RulePack pack, RegimeSpec computing, EngineInputs base,
@@ -166,14 +170,53 @@ final class AllocationPricing {
         return priced.computeIfAbsent(allocation, this::resolve);
     }
 
-    /** Total income before rounding under {@code regime} — the measure a candidate's saturation is found on (C1a). */
-    Money totalIncome(Allocation allocation, RegimeCode regime) {
+    /**
+     * Whether the engine can price {@code allocation}. One it refuses for want of the funds' history is not priced, and
+     * the refusal is kept for the answer (W-238h C1a); any other refusal propagates.
+     */
+    boolean isPriced(Allocation allocation) {
+        if (priced.containsKey(allocation)) {
+            return true;
+        }
+        if (unpricedAllocations.contains(allocation)) {
+            return false;
+        }
+        try {
+            price(allocation);
+            return true;
+        } catch (FundHistoryRequiredException refused) {
+            note(refused);
+            unpricedAllocations.add(allocation);
+            return false;
+        }
+    }
+
+    /** Why some allocations tried were not priced; empty where every one was. */
+    Optional<Optimisation.UnpricedNotice> unpriced() {
+        return unpriced;
+    }
+
+    private void note(FundHistoryRequiredException refused) {
+        unpriced = Optional.of(new Optimisation.UnpricedNotice(FundHistoryRequiredException.MISSING_INPUT,
+                refused.rule().value()));
+    }
+
+    /**
+     * Total income before rounding under {@code regime} — the measure a candidate's saturation is found on (C1a); empty
+     * where the engine cannot price the allocation for want of the funds' history (W-238h C1a).
+     */
+    Optional<Money> totalIncome(Allocation allocation, RegimeCode regime) {
         return totalIncome.computeIfAbsent(regime, code -> new HashMap<>()).computeIfAbsent(allocation, key -> {
             RegimeElection election = new RegimeElection();
             pipelineRuns++;
-            PipelineRunner.Result run = PipelineRunner.run(registry, pack, election.regimeFor(regime, computing, pack),
-                    election.choosing(regime, applied(key)));
-            return ((MoneyValue) run.valueOf(NodeIds.TOTALINCOME)).amount();
+            try {
+                PipelineRunner.Result run = PipelineRunner.run(registry, pack, election.regimeFor(regime, computing, pack),
+                        election.choosing(regime, applied(key)));
+                return Optional.of(((MoneyValue) run.valueOf(NodeIds.TOTALINCOME)).amount());
+            } catch (FundHistoryRequiredException refused) {
+                note(refused);
+                return Optional.empty();
+            }
         });
     }
 

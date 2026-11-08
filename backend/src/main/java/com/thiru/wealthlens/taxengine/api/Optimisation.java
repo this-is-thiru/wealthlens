@@ -22,10 +22,12 @@ import java.util.Optional;
  * @param pipelineRuns the whole computations run to reach the answer
  * @param discrepancy where the greedy answer was not the least, the notice saying so — a sign the candidates miss a
  *     breakpoint (G6.3)
+ * @param unpriced where an allocation tried could not be priced for want of an entered fact, which fact and the rule
+ *     that needs it; the search kept to what the engine could price, so entering the fact may widen the answer (W-238h)
  */
 public record Optimisation(String regimeBefore, Money billBefore, String regimeAfter, Money billAfter,
         List<Change> changes, List<FundChange> fundChanges, List<FollowingChange> followingChanges, Money residualAfter,
-        List<String> verified, int pipelineRuns, Optional<String> discrepancy) {
+        List<String> verified, int pipelineRuns, Optional<String> discrepancy, Optional<UnpricedNotice> unpriced) {
 
     public Optimisation {
         changes = List.copyOf(changes);
@@ -43,7 +45,7 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * @param current its amount as entered
      * @param suggested its amount in the answer
      * @param savingAlone the bill as entered less the bill with only this change; empty where the residual as entered
-     *     cannot fund this change by itself
+     *     cannot fund this change by itself, or the engine cannot price it alone (W-238h)
      * @param cashImpact the change in cash before tax when the residual funds this move: what the move costs in hand,
      *     which a saving in tax does not show (A2.6, D-CASHFLAG)
      */
@@ -60,7 +62,7 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * @param current the contribution as entered, nil where none was
      * @param suggested the contribution in the answer
      * @param savingAlone the bill as entered less the bill with only this change; empty where the residual as entered
-     *     cannot fund it by itself
+     *     cannot fund it by itself, or the engine cannot price it alone (W-238h)
      * @param cashImpact the change in cash before tax: the residual's pay given up, since a contribution is never in hand
      * @param liquidity when the money paid in can come out, from the fund's row in the year's pack (W-238e1)
      */
@@ -143,5 +145,14 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * @param reason why the pack states none
      */
     public record UnstatedTerms(LocalDate from, Optional<LocalDate> to, String reason) {
+    }
+
+    /**
+     * Why some allocations were not tried (W-238h C2a): the engine refused them for want of an entered fact.
+     *
+     * @param missingInput the entered fact, by its name in the inputs
+     * @param rule the rule whose computation needs it
+     */
+    public record UnpricedNotice(String missingInput, String rule) {
     }
 }

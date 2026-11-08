@@ -147,7 +147,7 @@ public final class SalaryOptimiser {
     }
 
     private static boolean admissible(AllocationPricing pricing, Allocation allocation, Money floor) {
-        return allocation.isFeasible() && !pricing.takeHome(allocation).isLessThan(floor);
+        return allocation.isFeasible() && pricing.isPriced(allocation) && !pricing.takeHome(allocation).isLessThan(floor);
     }
 
     private static Optimisation result(AllocationPricing pricing, Allocation entered, Allocation greedy, Allocation answer,
@@ -169,7 +169,7 @@ public final class SalaryOptimiser {
                 continue;
             }
             Allocation alone = entered.moved(item, suggested);
-            Optional<Money> savingAlone = alone.isFeasible()
+            Optional<Money> savingAlone = alone.isFeasible() && pricing.isPriced(alone)
                     ? Optional.of(before.bill().minus(pricing.price(alone).bill()))
                     : Optional.empty();
             Money cashImpact = pricing.cashImpact(item, entered, alone);
@@ -185,6 +185,7 @@ public final class SalaryOptimiser {
                 + " (bill " + pricing.price(greedy).bill() + ") was not the least: the exhaustive check over "
                 + verifiedNames + " found " + after.bill() + " — the candidates miss a breakpoint (G6.3)");
         return new Optimisation(before.regime().value(), before.bill(), after.regime().value(), after.bill(), changes,
-                fundChanges, followingChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy);
+                fundChanges, followingChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy,
+                pricing.unpriced());
     }
 }

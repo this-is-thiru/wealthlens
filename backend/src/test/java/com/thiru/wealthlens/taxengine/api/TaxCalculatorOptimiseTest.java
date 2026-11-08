@@ -346,13 +346,55 @@ class TaxCalculatorOptimiseTest {
         assertThat(outline(optimised.fundChanges().getFirst().liquidity()))
                 .containsExactly("Payment from the fund from 2026-04-01");
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("50000"));
+        assertThat(optimised.unpriced()).isEmpty();
+    }
+
+    /** What the answer says when an allocation tried needed the funds' history for the accretion (W-238h C2a). */
+    private static final Optimisation.UnpricedNotice HISTORY_NEEDED = new Optimisation.UnpricedNotice(
+            "retirementFundHistory", "PERQ-EMPLOYER-ACCRETION");
+
+    @Test
+    void optimise_whenAMoveCrossesTheLimitWithNoFundHistory_stopsAtTheLimitAndSaysWhy() {
+        // Given — the search probes superannuation above 7,50,000, where the accretion needs the funds' figures; below
+        // it the case is the one above, worked by hand: 0 → 7,50,000, 2,92,500 → 1,20,900, saving 1,71,600
+        AllocationSpace space = funds(Fixtures.salaried("1600000", "800000", List.of(), Optional.empty()),
+                Set.of(EmployerFund.APPROVED_SUPERANNUATION_FUND));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("120900"));
+        assertThat(optimised.fundChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+                new Optimisation.FundChange("APPROVED_SUPERANNUATION_FUND", AGGREGATE_FEEDS, Money.ZERO,
+                        Money.of("750000"), Optional.of(Money.of("171600")), Money.of("-750000"), NO_LIQUIDITY));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.of("50000"));
+        assertThat(optimised.unpriced()).contains(HISTORY_NEEDED);
     }
 
     @Test
-    void optimise_whenAMoveCrossesTheLimitWithNoFundHistory_isRefusedByTheEngine() {
-        // Given — the search tries superannuation above 7,50,000, where the accretion needs the funds' figures
+    void optimise_whenTwoFundsMayMoveWithNoFundHistory_answersAtTheLimit() {
+        // Given — together the funds cross 7,50,000 where neither does alone. Within the limit superannuation lowers
+        // salary rupee for rupee, and the NPS does up to its 2,24,000 deduction; beyond it the excess is a perquisite.
+        // So the least bill is salary 7,50,000 lower however it is split: 15,75,000 taxable → 1,20,900
         AllocationSpace space = funds(Fixtures.salaried("1600000", "800000", List.of(), Optional.empty()),
-                Set.of(EmployerFund.APPROVED_SUPERANNUATION_FUND));
+                Set.of(EmployerFund.NOTIFIED_PENSION_SCHEME, EmployerFund.APPROVED_SUPERANNUATION_FUND));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("120900"));
+        assertThat(optimised.unpriced()).contains(HISTORY_NEEDED);
+    }
+
+    @Test
+    void optimise_whenThePayAsEnteredIsAboveTheLimitWithNoFundHistory_isRefusedNamingTheHistory() {
+        // Given — 8,00,000 entered to the provident fund is already beyond 7,50,000, so nothing can be priced
+        AllocationSpace space = funds(Fixtures.salaried("1600000", "800000", List.of(new EmployerFundContribution(0,
+                EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("800000"))), Optional.empty()),
+                Set.of(EmployerFund.NOTIFIED_PENSION_SCHEME));
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)

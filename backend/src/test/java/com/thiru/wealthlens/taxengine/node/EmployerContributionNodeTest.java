@@ -160,7 +160,8 @@ class EmployerContributionNodeTest {
     void evaluate_whenAnExcessHasNoFundHistory_isRefused() {
         // When / Then — the accretion cannot be nil by default
         assertThatThrownBy(() -> run(2026, WORKED_EXAMPLE))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOfSatisfying(FundHistoryRequiredException.class,
+                        refused -> assertThat(refused.rule()).isEqualTo(RuleIds.PERQ_EMPLOYER_ACCRETION))
                 .hasMessageContaining("retirement fund history");
     }
 

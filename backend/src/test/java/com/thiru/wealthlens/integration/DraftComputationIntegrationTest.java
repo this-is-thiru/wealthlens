@@ -775,6 +775,45 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void optimise_whenSuperannuationIsMovableWithNoFundHistory_answersAtTheLimitAndSaysWhy() {
+        // Given — TaxCalculatorOptimiseTest's case: 0 → 7,50,000, 2,92,500 → 1,20,900; probes above 7,50,000 need the
+        // funds' history for the accretion, and the draft has none (W-238h)
+        String draftId = salariedDraft();
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [], \"movableFunds\":"
+                + " [\"APPROVED_SUPERANNUATION_FUND\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
+        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("120900");
+        assertThat(amountAt(view, "/fundChanges/0/suggested")).isEqualByComparingTo("750000");
+        assertThat(view.at("/unpriced/missingInput").asString()).isEqualTo("retirementFundHistory");
+        assertThat(view.at("/unpriced/rule").asString()).isEqualTo("PERQ-EMPLOYER-ACCRETION");
+    }
+
+    @Test
+    void optimise_whenTheDraftHasAFundHistory_pricesEveryProbeAndSaysNothingIsCut() {
+        // Given — a history with nothing accrued, so the accretion beyond the limit is nil and the answer the same
+        String draftId = salariedDraft(1600000, 800000, """
+                {"op": "add", "path": "/entered/retirementFundHistory", "value": {
+                  "earlierExcessContributions": {"amountInRupees": 0}, "earlierTaxedAccretions": {"amountInRupees": 0},
+                  "incomeAccrued": {"amountInRupees": 0}, "openingBalance": {"amountInRupees": 100000},
+                  "closingBalance": {"amountInRupees": 100000}}},""");
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [], \"movableFunds\":"
+                + " [\"APPROVED_SUPERANNUATION_FUND\"], \"residual\": \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\"}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
+        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("120900");
+        assertThat(view.at("/unpriced").isMissingNode() || view.at("/unpriced").isNull()).isTrue();
+    }
+
+    @Test
     void optimise_whenTheEmployersNpsIsMovable_suggestsItAsAFundChange() {
         // Given — TaxCalculatorOptimiseTest's case: 2,92,500 → 2,34,260 in the new regime with 2,24,000 (14 % of basic)
         // into the NPS; the move is not take-home, so its cash impact is the whole of it

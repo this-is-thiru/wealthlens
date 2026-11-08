@@ -113,9 +113,8 @@ public final class EmployerContributionNode implements ComputationNode {
         if (!excess.isGreaterThan(Money.ZERO) && history.isEmpty()) {
             return excess;
         }
-        RetirementFundHistory fund = history.orElseThrow(() -> new IllegalArgumentException(
-                "The accretion on employer contributions beyond the limit (S2 s.17(1)(i); 1961 s.17(2)(viia)) needs"
-                        + " the funds' income and balances for the year; enter the retirement fund history"));
+        RetirementFundHistory fund = history.orElseThrow(() -> new FundHistoryRequiredException(
+                ctx.ruleIdOf(RuleSetIds.RS_PERQ_EMPLOYER_ACCRETION)));
         Money earlier = Money.min(fund.earlierExcessContributions().plus(fund.earlierTaxedAccretions()),
                 fund.openingBalance());
         RuleRow rule = ctx.ruleOf(RuleSetIds.RS_PERQ_EMPLOYER_ACCRETION);

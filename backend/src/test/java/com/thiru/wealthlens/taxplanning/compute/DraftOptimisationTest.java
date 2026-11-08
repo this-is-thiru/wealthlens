@@ -40,7 +40,7 @@ class DraftOptimisationTest {
                         Money.ZERO, NONE)),
                 List.of(new FollowingChange("RECOGNISED_PROVIDENT_FUND", List.of(), Money.ZERO, Money.TEN, "BASIC",
                         NONE)),
-                Money.ZERO, List.of("HRA"), 1, Optional.empty());
+                Money.ZERO, List.of("HRA"), 1, Optional.empty(), Optional.empty());
 
         // When
         DraftOptimisation view = DraftOptimisation.of(optimisation, TABLE);

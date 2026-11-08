@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.optimise;
 
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import java.util.Optional;
 
 /**
  * A movable item's saturation point, found by measurement rather than by a formula ({@code 03-advisory.md} A2.4 step 2;
@@ -13,6 +14,10 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
  * convex in the one component — each cap A2.3 lists (a least-of, an aggregate cap, an excess taxed back) makes it so —
  * since then the slope only rises. Where it is not, the greedy answer can miss, and the exhaustive check is what
  * catches and reports it (G6.3).
+ *
+ * <p>An amount the engine cannot price for want of the funds' history counts as stopping: a larger contribution only
+ * adds to the aggregate, so every amount past the first unpriced one is unpriced too, and the bisection stays sound
+ * (W-238h C1a).
  */
 final class Saturation {
 
@@ -37,9 +42,12 @@ final class Saturation {
 
     private static boolean stopsFalling(AllocationPricing pricing, Allocation from, Movable code, RegimeCode regime,
             Money amount) {
-        Money here = pricing.totalIncome(from.moved(code, amount), regime);
-        Money next = pricing.totalIncome(from.moved(code, amount.plus(RUPEE)), regime);
-        return !next.isLessThan(here);
+        Optional<Money> here = pricing.totalIncome(from.moved(code, amount), regime);
+        Optional<Money> next = pricing.totalIncome(from.moved(code, amount.plus(RUPEE)), regime);
+        if (here.isEmpty() || next.isEmpty()) {
+            return true;
+        }
+        return !next.get().isLessThan(here.get());
     }
 
     /** Paise dropped: rounding to a multiple of one rupee, up only from a whole rupee left over, is a floor. */
