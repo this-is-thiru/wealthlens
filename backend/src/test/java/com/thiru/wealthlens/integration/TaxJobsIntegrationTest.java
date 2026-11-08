@@ -29,6 +29,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,6 +136,12 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         return mongoTemplate.findById(id, FilingDraft.class);
     }
 
+    /** The actor as the row holds it, past the converter (W-256). */
+    private String rawUpdatedBy(String collection, String id) {
+        return mongoTemplate.getCollection(collection).find(new Document("_id", id)).first()
+                .get("audit_metadata", Document.class).getString("updatedBy");
+    }
+
     @Test
     void autoArchive_whenADraftWasUntouchedForEighteenMonths_archivesItButNotThePrimaryOrAReadyOne() {
         // Given — run on 2026-11-06T06:30Z; the cutoff is 2025-05-06T06:30
@@ -155,6 +162,8 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(stored("primary").getStatus()).isEqualTo(DraftStatus.DRAFT);
         assertThat(stored("ready").getStatus()).isEqualTo(DraftStatus.READY);
         assertThat(mongoTemplate.findAll(JobLease.class)).isEmpty();
+        assertThat(stored("old").getAuditMetadata().getUpdatedBy()).isEqualTo("auto-archive");
+        assertThat(rawUpdatedBy("tax_filing_drafts", "old")).isEqualTo(storedIdentifier("auto-archive"));
     }
 
     @Test
@@ -183,6 +192,8 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(mongoTemplate.findAll(DraftRevision.class)).isEmpty();
         assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
         assertThat(mongoTemplate.findById("workspace-1", TaxYearWorkspace.class).getPrimaryDraftId()).isNull();
+        assertThat(mongoTemplate.findById("workspace-1", TaxYearWorkspace.class).getAuditMetadata().getUpdatedBy())
+                .isEqualTo("retention-purge");
         assertThat(stored("young")).isNotNull();
     }
 
@@ -318,6 +329,7 @@ class TaxJobsIntegrationTest extends AbstractIntegrationTest {
         assertThat(staleness.current()).isEqualTo(taxCalculator.packVersions(TaxYearId.of(2026)).orElseThrow());
         assertThat(staleness.since()).isEqualTo(LocalDateTime.parse("2026-11-06T06:30:00"));
         assertThat(mongoTemplate.findAll(DraftComputation.class)).hasSize(1);
+        assertThat(stored("ready").getAuditMetadata().getUpdatedBy()).isEqualTo("staleness-sweep");
     }
 
     @Test

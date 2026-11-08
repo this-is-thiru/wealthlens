@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxplanning.jobs;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.thiru.wealthlens.auth.config.SecurityAuditorAware;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
@@ -16,7 +17,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * Runs a job under its lease ({@code DR 19} E8), so that two instances never run one job at once. A failure inside the job is not
- * caught here: it reaches the scheduler, which logs it, and the lease lapses at its timeout.
+ * caught here: it reaches the scheduler, which logs it, and the lease lapses at its timeout. A job writes as its own name, so its
+ * rows say which job wrote them (W-257).
  */
 @Service
 @Log4j2
@@ -26,6 +28,7 @@ public class TaxJobRunner {
     private final MongoTemplate mongoTemplate;
     private final JobFailureRepository failures;
     private final Clock clock;
+    private final SecurityAuditorAware auditor;
 
     /** Runs {@code job} if no other run holds it; false where one does. */
     public boolean run(TaxJob job) {
@@ -35,7 +38,7 @@ public class TaxJobRunner {
             return false;
         }
         try {
-            job.run(new JobContext(job.name(), clock, () -> holds(job, holder), failures));
+            auditor.runAs(job.name(), () -> job.run(new JobContext(job.name(), clock, () -> holds(job, holder), failures)));
         } finally {
             mongoTemplate.remove(query(where("_id").is(job.name()).and("holder").is(holder)), JobLease.class);
         }
