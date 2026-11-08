@@ -63,6 +63,7 @@ public final class ComponentCodes {
     public static final ComponentCode SPECIAL_ALLOWANCE = new ComponentCode("SPECIAL_ALLOWANCE");
     public static final ComponentCode TRANSPORT_ALLOWANCE_DISABLED = new ComponentCode("TRANSPORT_ALLOWANCE_DISABLED");
     public static final ComponentCode TUITION_FEES = new ComponentCode("TUITION_FEES");
+    public static final ComponentCode UNCOMMUTED_PENSION = new ComponentCode("UNCOMMUTED_PENSION");
     public static final ComponentCode UNIFORM_ALLOWANCE = new ComponentCode("UNIFORM_ALLOWANCE");
     public static final ComponentCode UNIT_LINKED_INSURANCE_PLAN = new ComponentCode("UNIT_LINKED_INSURANCE_PLAN");
     public static final ComponentCode VRS_COMPENSATION = new ComponentCode("VRS_COMPENSATION");

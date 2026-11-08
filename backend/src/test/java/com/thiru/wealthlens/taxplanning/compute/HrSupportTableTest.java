@@ -72,13 +72,14 @@ class HrSupportTableTest {
 
     @Test
     void fromClasspath_whenTheShippedTableIsRead_givesTheOwnersValues() {
-        // Given — three of the 22 values adopted by the owner (W-238f C4, D-495)
+        // Given — four of the 23 values adopted by the owner (W-238f C4, D-495; W-242 C2a, D-514)
         HrSupportTable table = HrSupportTable.fromClasspath();
 
         // When / Then
-        assertThat(table.likelihoods()).hasSize(22);
+        assertThat(table.likelihoods()).hasSize(23);
         assertThat(table.likelihoodOf("SPECIAL_ALLOWANCE")).isEqualTo(HrSupportLikelihood.HIGH);
         assertThat(table.likelihoodOf("BASIC")).isEqualTo(HrSupportLikelihood.LOW);
+        assertThat(table.likelihoodOf("UNCOMMUTED_PENSION")).isEqualTo(HrSupportLikelihood.NOT_APPLICABLE);
         assertThat(table.likelihoodOf("NOTIFIED_PENSION_SCHEME")).isEqualTo(HrSupportLikelihood.EMPLOYER_DISCRETION);
     }
 }

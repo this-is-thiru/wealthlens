@@ -346,4 +346,25 @@ class SalaryBaseNodeTest {
         assertThat(notForRetirement.of(RuleIds.SAL_SALARY_FOR_ACCOM, 0)).isEqualTo(Money.of("720000"));
         assertThat(forRetirement.of(RuleIds.SAL_SALARY_FOR_ACCOM, 0)).isEqualTo(Money.of("780000"));
     }
+
+    @Test
+    void evaluate_whenTheShippedRegistryMeasuresAPension_countsItForTheAccommodationSalaryOnly() {
+        // Given — a pension of 6,00,000 from a former employer, nothing else (W-242 C1a)
+        TaxYearId taxYear = TaxYearId.of(2026);
+        RulePack shipped = new ClasspathRulePackProvider(
+                        "rulepacks", Set.of(taxYear), new JsonPackAssembler(LockedInstruments.of(taxYear)))
+                .load(taxYear);
+        List<Employment> employments = List.of(employment(true, line(ComponentCodes.UNCOMMUTED_PENSION, "600000")));
+
+        // When
+        SalaryBases measured = bases(run(shipped, 2026, employments));
+
+        // Then — r.15(8)(k) "any monetary payment … from one or more employers" takes it; the bases that exclude "all
+        // other allowances and perquisites" name no pension and are read as not reaching it, as for bonus (D-094)
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_ACCOM, 0)).isEqualTo(Money.of("600000"));
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_HRA, 0)).isEqualTo(Money.ZERO);
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_GRATUITY, 0)).isEqualTo(Money.ZERO);
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_EMPLOYER_PENSION, 0)).isEqualTo(Money.ZERO);
+        assertThat(measured.of(RuleIds.SAL_SALARY_FOR_EMPLOYEE_PENSION, 0)).isEqualTo(Money.ZERO);
+    }
 }

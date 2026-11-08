@@ -91,12 +91,11 @@ public final class Fixtures {
 
     /**
      * PR-3 Anand: 62, retired, a pension of ₹6,00,000 from his former employer, interest of ₹14,000 on savings and
-     * ₹90,000 on term deposits, and a health-insurance premium of ₹40,000 for himself. The pension is entered as basic
-     * pay because the component vocabulary has no uncommuted pension (W-242); both are salary under s.16, so no figure
-     * turns on it.
+     * ₹90,000 on term deposits, and a health-insurance premium of ₹40,000 for himself. The pension is salary under
+     * s.16(b), entered as an uncommuted pension.
      */
     public static EngineInputs anand() {
-        EnteredFacts entered = entered(List.of(employment(pay(ComponentCodes.BASIC, "600000"))), List.of(),
+        EnteredFacts entered = entered(List.of(employment(pay(ComponentCodes.UNCOMMUTED_PENSION, "600000"))), List.of(),
                 List.of(),
                 List.of(new HealthPayment(HealthPaymentKind.INSURANCE_PREMIUM, true, List.of(), Money.of("40000"),
                         false, 1)),
