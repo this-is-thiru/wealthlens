@@ -185,10 +185,10 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
     private void aRowInEveryCollectionFor(String email) {
         personCollections().forEach((collection, field) -> {
             if (count(collection, field, email) == 0) {
-                // A string id, as the entities' own ids are, so the app reads and deletes the row as one of its own; and a
-                // value of its own in each other uniquely indexed field, so two seeded rows never collide on an absent one.
-                Document row = "_id".equals(field) ? new Document(field, email)
-                        : new Document("_id", UUID.randomUUID().toString()).append(field, email);
+                // A string id, as the entities' own ids are, so the app reads and deletes the row as one of its own; the
+                // identifier as stored (W-253); and a value of its own in each other uniquely indexed field, so two seeded rows
+                // never collide on an absent one.
+                Document row = new Document("_id", UUID.randomUUID().toString()).append(field, storedIdentifier(email));
                 for (Document index : mongoTemplate.getCollection(collection).listIndexes()) {
                     if (Boolean.TRUE.equals(index.getBoolean("unique"))) {
                         index.get("key", Document.class).keySet().stream().filter(key -> !row.containsKey(key))
@@ -201,7 +201,7 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
     }
 
     private long count(String collection, String field, String email) {
-        return mongoTemplate.getCollection(collection).countDocuments(new Document(field, email));
+        return mongoTemplate.getCollection(collection).countDocuments(new Document(field, storedIdentifier(email)));
     }
 
     private Map<String, Long> rowsOf(String email) {
@@ -349,7 +349,7 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
 
         // Then — the login goes last, so it is still there, and the account is still held
         assertThat(theRequest().getErasedAt()).isNull();
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNotNull();
+        assertThat(storedLogin(ANU)).isNotNull();
         login().statusCode(401);
 
         // When — the next run

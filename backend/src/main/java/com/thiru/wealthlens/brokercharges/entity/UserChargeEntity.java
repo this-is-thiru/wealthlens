@@ -8,6 +8,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.BrokerName;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -62,10 +64,12 @@ public class UserChargeEntity implements AuditableEntity {
     private String id;
 
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     /** Whose demat account the trade settled in. Part of every deduplication scope. */
     @Field("account_holder")
+    @ValueConverter(SearchableIdentifier.class)
     private String accountHolder;
 
     @Field(name = "broker_name", targetType = FieldType.STRING)

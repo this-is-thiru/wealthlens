@@ -78,7 +78,7 @@ and seed before anyone trades. On staging the owner is the only user.
 |---|---|---|
 | 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
 | 0.1.2 | MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` warns at startup (§1.7) |
-| 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /auth/register`, then `db.user_details.updateOne({ _id: "<owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })`, then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
+| 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /auth/register`, then `db.user_details.updateOne({ email: "<stored owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })` with the stored form from §0.7 (from W-253 the email is stored encrypted and is no longer the `_id`), then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
 
 ### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **every database · before the deploy that first carries TL-7**
 
@@ -143,7 +143,7 @@ db.transactions.find({ _id: dup })    // note its email, stock_code, transaction
 
 *A duplicate `{email, financial_year}`.* Two documents for one user and year, each holding part of the totals, the
 result of a race the `version` field (§0.3) now prevents. There is no merge tool. Look at each
-(`db.profit_and_loss.find({ email: "<email>", financial_year: "<fy>" })`); if one is a stub written to once, keep the
+(`db.profit_and_loss.find({ email: "<stored email>", financial_year: "<fy>" })`, §0.7 from W-253; the `email` the duplicate check grouped by is already that form); if one is a stub written to once, keep the
 fuller one and delete the stub. If both hold real figures, add them together by hand at the year, each month and each
 half. **Never simply delete one:** the figures do not come back.
 
@@ -261,6 +261,25 @@ here are what W-159's plan has to account for.
    Expected: `W-159 D`. Anything else holds the deploy unless the owner records a waiver D-row naming W-134a.
 
 Safe to repeat; it writes nothing, so there is nothing to undo.
+
+### 0.7 W-253 (D-485) — an identifier's stored form, for a console query · owner · **whenever a step names `<stored …>`**
+
+From W-253 every email, account holder and demat account id is stored encrypted, one value always storing the same
+form (`k1:…`). A console query that matches one by its plain value finds nothing, silently. Where a step says
+`<stored email>` (or `<stored owner email>`, `<stored user email>`), compute it in a terminal with the database's own
+keys, the `TAX_DATA_KEY` and `TAX_DIGEST_KEY` of the environment the database belongs to (§0.5):
+
+```bash
+TAX_DATA_KEY='<data key>' TAX_DIGEST_KEY='<digest key>' node -e 'const c = require("crypto"), e = process.argv[1];
+const n = c.createHmac("sha256", Buffer.from(process.env.TAX_DIGEST_KEY, "base64")).update("identifier-nonce:" + e).digest().subarray(0, 12);
+const g = c.createCipheriv("aes-256-gcm", Buffer.from(process.env.TAX_DATA_KEY, "base64"), n);
+console.log("k1:" + Buffer.concat([n, g.update(e, "utf8"), g.final(), g.getAuthTag()]).toString("base64"))' '<email>'
+```
+
+It prints the `k1:` value to paste. The value is exact: the email's case and spaces count, as they do at sign-in. Check it
+once per environment: for the test keys of `FieldCipherTest` (`AAECAw…Hh8=` / `HyAhIi…PT4=`) and `a@b.in` it prints
+`k1:S2S9g4PmcIjT3j52RiPQbAfhd5GQLs4wzEgLXeegdyJPvg==`. It reads nothing and writes nothing. Do not paste the keys into a
+shared terminal history: prefix the command with a space where the shell ignores those, or clear the history after.
 
 ## 1. On every deploy — startup, automatic; confirm in the log
 
@@ -409,15 +428,15 @@ about them stay until their year (§1.t). Nothing to seed or correct.
 
 **Before the first start:** the hold moved from `app.tax.retention.erasure-hold` to `app.privacy.erasure-hold` (env var
 `APP_PRIVACY_ERASUREHOLD`); the run log has no §1.z run, so no environment carries the old name. **After a run that
-logged `Account erasure <id> done`** (read-only; replace `<email>`):
+logged `Account erasure <id> done`** (read-only; replace `<stored email>` with the erased email's stored form, §0.7 — W-253):
 
 ```js
 db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
-  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const e = "<email>";
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n); const e = "<stored email>";
     return { database: n, left: ["assets", "transactions", "trade_outcomes", "profit_and_loss", "user_charges",
       "charge_accounts", "lastly_performed_corporate_action", "insurances", "salary_profiles", "tax_computations",
       "tax_profiles", "tax_draft_computations", "privacy_grievances", "privacy_breach_intimations"].reduce((sum, c) =>
-        sum + d.getCollection(c).countDocuments({ email: e }), d.user_details.countDocuments({ _id: e })
+        sum + d.getCollection(c).countDocuments({ email: e }), d.user_details.countDocuments({ email: e })
         + d.tax_access_log.countDocuments({ principal: e }) + d.privacy_processing_log.countDocuments({ principal: e })
         + d.privacy_breach_notices.countDocuments({ affected: e })),
       heldOverdue: d.privacy_erasure_requests.countDocuments({ erased_at: null,
@@ -563,7 +582,7 @@ import was wrong, import the exports again and repeat step 4. **Profile-erasure 
 `email`, `profile_id`, `requested_at`, `erased_at`) are new with W-237f. They are written by each single-profile request
 from that deploy on, and erased a year after `erased_at` by §1.t's `log-retention` job. Nothing to seed.
 
-### 1.r W-248 (D-479) — personal data stored before W-248, encrypted · owner, `SUPER_USER` · **every database · right after the first start carrying W-248, before users**
+### 1.r W-248 (D-479), W-253 (D-485) — personal data and identifiers stored before them, encrypted · owner, `SUPER_USER` · **every database · right after the first start carrying W-253, before users**
 
 From W-248 these fields are stored encrypted under `TAX_DATA_KEY` (§0.5): `privacy_grievances` `text` and `answer`;
 `privacy_processing_log` `remote_address`; `insurances` `insurance_id`, `agent_name`, `agent_email`, `agent_contact`,
@@ -572,32 +591,65 @@ From W-248 these fields are stored encrypted under `TAX_DATA_KEY` (§0.5): `priv
 until this step has run. The key properties moved from `app.tax.*` to `app.personal-data.data-key` / `digest-key`; they
 read the same `TAX_DATA_KEY` / `TAX_DIGEST_KEY`, so the environment does not change and every `k1:` row still reads.
 
-1. **Backup first** (the copy is personal data in plain text: delete it as the header says):
-   `mongodump --uri "<uri>" --db <db> --collection <c> --out <dir>` for `privacy_grievances`, `privacy_processing_log`
-   and `insurances`.
-2. **Check before** (read-only):
+From W-253 the identifiers are stored encrypted too, in a form one value always stores the same, so queries and unique
+indexes still work: `email` in `transactions` (and in a temporary transaction's `asset_request`), `assets`,
+`profit_and_loss`, `trade_outcomes`, `user_charges`, `charge_accounts`, `lastly_performed_corporate_action`, `insurances`,
+`salary_profiles`, `tax_computations`, `tax_profiles`, `tax_profile_erasures`, `tax_draft_computations`,
+`privacy_consents`, `privacy_erasure_requests`, `privacy_breach_intimations`, `privacy_grievances`; `account_holder` in
+`transactions` (and `asset_request.accountHolder`), `assets`, `trade_outcomes`, `user_charges`, `charge_accounts`;
+`charge_accounts.demat_account_id`; `principal` in `privacy_processing_log` and `tax_access_log`, and
+`privacy_processing_log.subject_email`; each email in `privacy_breach_notices.affected`. A login (`user_details`) held its
+email as `_id`; it is re-keyed to a generated `_id` and an encrypted `email` (unique index `user_email_idx`, created at
+startup by `LoginIndexInitializer`). **Until this step runs, no stored row is found by its user** — portfolios read empty,
+and nobody can sign in — and a write in that gap starts a second row beside the plain one (step 5). Hence before users.
+
+1. **A `SUPER_USER` token from the previous build.** Sign-in cannot find a login until step 4 re-keys it, but a token is
+   read from its own claims, not from the database (`AuthFilter`). Right before switching the build, sign in on the
+   previous build as your `SUPER_USER` account and keep the token: it lasts 30 minutes. If it runs out first, deploy the
+   previous build again, sign in, and switch back.
+2. **Backup first** (the copy is personal data in plain text: delete it as the header says):
+   `mongodump --uri "<uri>" --db <db> --out <dir>` — the whole database, since the step writes to 24 collections.
+3. **Check before** (read-only):
 
 ```js
 db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
   .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
     const plain = f => ({ [f]: { $regex: "^(?!k1:)" } });
     const agent = ["agent_name", "agent_email", "agent_contact", "agent_address", "notes"];
+    const ids = { transactions: ["email", "account_holder", "asset_request.email", "asset_request.accountHolder"],
+      assets: ["email", "account_holder"], profit_and_loss: ["email"], trade_outcomes: ["email", "account_holder"],
+      user_charges: ["email", "account_holder"], charge_accounts: ["email", "account_holder", "demat_account_id"],
+      lastly_performed_corporate_action: ["email"], salary_profiles: ["email"], tax_computations: ["email"],
+      tax_profiles: ["email"], tax_profile_erasures: ["email"], tax_draft_computations: ["email"],
+      tax_access_log: ["principal"], privacy_consents: ["email"], privacy_erasure_requests: ["email"],
+      privacy_breach_intimations: ["email"], privacy_breach_notices: ["affected"] };
     return { database: n,
-      grievances: d.privacy_grievances.countDocuments({ $or: ["text", "answer"].map(plain) }),
-      processingLog: d.privacy_processing_log.countDocuments(plain("remote_address")),
-      insurances: d.insurances.countDocuments({ $or: ["insurance_id", ...agent].map(plain).concat([{ policyDetails:
-        { $elemMatch: { $or: ["policy_id", "policy_description", ...agent].map(plain) } } }]) }) }; }) }])
+      grievances: d.privacy_grievances.countDocuments({ $or: ["text", "answer", "email"].map(plain) }),
+      processingLog: d.privacy_processing_log.countDocuments({ $or: ["remote_address", "principal", "subject_email"].map(plain) }),
+      insurances: d.insurances.countDocuments({ $or: ["insurance_id", "email", ...agent].map(plain).concat([{ policyDetails:
+        { $elemMatch: { $or: ["policy_id", "policy_description", ...agent].map(plain) } } }]) }),
+      identifiers: Object.entries(ids).map(([c, fs]) => ({ c, plain: d.getCollection(c).countDocuments({ $or: fs.map(plain) }) }))
+        .filter(x => x.plain > 0),
+      loginsToRekey: d.user_details.countDocuments({ email: { $exists: false } }) }; }) }])
 ```
 
-3. **Dry run**, then the real run, with a `SUPER_USER` token:
+4. **Dry run**, then the real run, with step 1's token:
    `curl -X POST -H "Authorization: Bearer <token>" "<host>/privacy/stored-fields/encrypt"` (a dry run by default),
-   then the same URL ending `?dryRun=false`. Expected: the dry run's `plainRows` per collection
-   equal step 2's counts and `encryptedRows` 0; the real run's `encryptedRows` equal `plainRows`.
-4. **Check after:** step 2 again — `0` everywhere.
+   then the same URL ending `?dryRun=false`. Expected: the dry run's `plainRows` per collection equal step 3's counts
+   (`user_details` equals `loginsToRekey`) and `encryptedRows` 0; the real run's `encryptedRows` equal `plainRows` and
+   `conflicts` is 0 everywhere.
+5. **If a collection reports `conflicts` > 0:** a row was written in the gap (a trade, a P&L year, a consent) beside its
+   plain twin, and the plain one was left as it was (the log names each `_id`: `left plain: its encrypted identifier
+   duplicates a unique index entry`). Compare the two in the backup and the database; keep the fuller, merging figures by
+   hand as §0.2 describes for a duplicate `{email, financial_year}`, delete the other, and run step 4 again.
+6. **Check after:** step 3 again — `0` everywhere, `identifiers` empty, `loginsToRekey` 0. Then sign in on the new build:
+   it works.
 
 A second run is safe: it finds nothing and changes nothing. Each update is conditioned on the plain value it read, so
-a row that changed during a run is left for the next run, and a run that failed part-way is completed by the next.
-**Way back:** restore the three collections from step 1 and redeploy the previous build, which reads plain text.
+a row that changed during a run is left for the next run, and a run that failed part-way is completed by the next; a
+login whose new row was inserted before a failure is only deleted by the next run, not inserted twice.
+**Way back:** restore the database from step 2 and redeploy the previous build, which reads plain text and the email as
+the login's `_id`.
 **One-time:** removed by W-254 (YouTrack WL-43) once this step's run is logged for every database.
 
 ### 1.q W-249 (D-480) — erasure once the purpose has lapsed · owner · **first deploy carrying it, then after the first run**
@@ -682,7 +734,8 @@ db.user_details.updateMany({ _id: { $in: ["<email>", "<email>"] }, roles: { $ne:
 
 Then run the read-only query again: `aboveUser` is your account alone. A second run of the update matches nothing. A
 token issued before keeps its old role until it expires (30 minutes at most); the next sign-in carries `USER`. **Way
-back:** set each account's old role from the kept output with `updateOne({ _id: "<email>" }, { $set: { roles: "<old>" } })`.
+back:** set each account's old role from the kept output with `updateOne({ _id: "<email>" }, { $set: { roles: "<old>" } })`;
+once §1.r has re-keyed the logins (W-253), match `{ email: "<stored email>" }` (§0.7) instead of the `_id`.
 The dump is the fallback; restoring it whole would also undo later sign-ins' `last_signed_in_at`.
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
@@ -959,7 +1012,7 @@ A failing user is an error naming them; the users before stay written.
    be in it. On staging and prod as they stand, that is users who never sold, giving 0 rows, plus any user whose
    rows were deleted.
 2. **Write:** the same call with `?dryRun=false`.
-3. **Verify:** for each rebuilt user, `db.trade_outcomes.countDocuments({ email: "<user>" })` equals the rows the
+3. **Verify:** for each rebuilt user, `db.trade_outcomes.countDocuments({ email: "<stored user email>" })` (§0.7, from W-253) equals the rows the
    report gave for them, and each row's `audit_metadata.createdBy` is the caller. A second call reports
    `rowsWritten` 0.
 

@@ -970,12 +970,12 @@ public class PortfolioIntegrationTest extends AbstractIntegrationTest {
 
     /** A document carrying nothing but the email, which is all the wipe keys on. */
     private org.bson.Document emailOnly() {
-        return new org.bson.Document("email", TEST_EMAIL);
+        return new org.bson.Document("email", storedIdentifier(TEST_EMAIL));
     }
 
     private long countFor(String collection) {
         return mongoTemplate.getCollection(collection)
-                .countDocuments(new org.bson.Document("email", TEST_EMAIL));
+                .countDocuments(new org.bson.Document("email", storedIdentifier(TEST_EMAIL)));
     }
 
     @Test

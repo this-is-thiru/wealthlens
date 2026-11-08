@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.taxplanning.protection;
 
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.Instant;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -22,6 +24,7 @@ public class AccessRecord {
     private String id;
 
     @Field("principal")
+    @ValueConverter(SearchableIdentifier.class)
     private String principal;
 
     @Field(name = "subject", targetType = FieldType.STRING)

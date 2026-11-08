@@ -10,6 +10,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.*;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -49,6 +51,7 @@ public class TradeOutcomeEntity implements AuditableEntity {
 
     // Identity fields
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     @Field("stock_code")
@@ -70,6 +73,7 @@ public class TradeOutcomeEntity implements AuditableEntity {
     private AccountType accountType;
 
     @Field("account_holder")
+    @ValueConverter(SearchableIdentifier.class)
     private String accountHolder;
 
     // Buy side

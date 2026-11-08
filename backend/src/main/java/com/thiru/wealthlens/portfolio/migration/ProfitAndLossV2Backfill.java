@@ -6,6 +6,7 @@ import com.thiru.wealthlens.portfolio.dto.V2BackfillReport.UnplacedRow;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.time.LocalDateTime;
@@ -47,6 +48,7 @@ public class ProfitAndLossV2Backfill {
     private static final int FORTNIGHT_BOUNDARY = 15;
 
     private final MongoTemplate mongoTemplate;
+    private final FieldCipher cipher;
 
     /** Add every uncounted recorder row written before {@code recordedBefore}, unless {@code dryRun}. */
     public V2BackfillReport backfill(boolean dryRun, LocalDateTime recordedBefore, String auditor) {
@@ -87,7 +89,7 @@ public class ProfitAndLossV2Backfill {
         }
         String year = FinancialYear.containing(row.getSellDate()).label();
         String side = row.getAccountType() == AccountType.SELF ? "realised_profits" : "out_sourced_realised_profits";
-        Document pnl = mongoTemplate.findOne(Query.query(Criteria.where("email").is(row.getEmail())
+        Document pnl = mongoTemplate.findOne(Query.query(Criteria.where("email").is(cipher.encryptSearchable(row.getEmail()))
                 .and("financial_year").is(year)), Document.class, COLLECTION);
         if (pnl == null) {
             return Target.refused("no P&L document for " + year);

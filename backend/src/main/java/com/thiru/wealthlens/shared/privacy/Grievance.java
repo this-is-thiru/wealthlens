@@ -3,6 +3,7 @@ package com.thiru.wealthlens.shared.privacy;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ public class Grievance implements AuditableEntity {
 
     @Indexed
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     @ValueConverter(EncryptedField.class)

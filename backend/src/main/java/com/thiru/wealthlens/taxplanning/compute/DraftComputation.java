@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxplanning.compute;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -30,6 +31,7 @@ public class DraftComputation implements AuditableEntity {
     private String receipt;
 
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     @Indexed

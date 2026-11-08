@@ -20,7 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // A held account signs in no more from the moment of the request (W-237d C3a); it reads as unknown, as a wrong
         // password does, so the answer says nothing about the account.
-        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findById(username)
+        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findByEmail(username)
                 .filter(user -> !heldAccounts.contains(username));
         return optionalUserDetails.map(UserDetailsImpl::new)
                 .orElseThrow(() -> new UsernameNotFoundException("user not found " + username));

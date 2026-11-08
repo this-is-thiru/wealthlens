@@ -12,6 +12,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.TransactionType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -36,6 +38,7 @@ public class TransactionEntity implements AuditableEntity {
 	private String id;
 
 	@Field("email")
+	@ValueConverter(SearchableIdentifier.class)
 	private String email;
 
 	@Field("stock_code")
@@ -95,6 +98,7 @@ public class TransactionEntity implements AuditableEntity {
 	private AccountType accountType;
 
 	@Field("account_holder")
+	@ValueConverter(SearchableIdentifier.class)
 	private String accountHolder;
 
 	@Field(name = "transaction_type", targetType = FieldType.STRING)

@@ -47,7 +47,7 @@ public class AuthService {
 
     public String addUser(RegistrationRequest request) {
 
-        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findById(request.getEmail());
+        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findByEmail(request.getEmail());
         if (optionalUserDetails.isPresent()) {
             throw new IllegalArgumentException("User with email " + request.getEmail() + " already exists");
         }
@@ -110,7 +110,7 @@ public class AuthService {
             throw new IllegalArgumentException("Old password cannot be same as new password");
         }
 
-        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findById(email);
+        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findByEmail(email);
         if (optionalUserDetails.isEmpty()) {
             throw new UsernameNotFoundException("User with email " + email + " not found");
         }

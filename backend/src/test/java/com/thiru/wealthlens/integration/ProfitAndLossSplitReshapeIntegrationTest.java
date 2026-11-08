@@ -40,7 +40,7 @@ class ProfitAndLossSplitReshapeIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void insertPnl(String id, Document realised, Document outsourced) {
-        Document pnl = new Document("_id", id).append("email", EMAIL).append("financial_year", YEAR);
+        Document pnl = new Document("_id", id).append("email", storedIdentifier(EMAIL)).append("financial_year", YEAR);
         if (realised != null) {
             pnl.append("realised_profits", realised);
         }
@@ -217,7 +217,7 @@ class ProfitAndLossSplitReshapeIntegrationTest extends AbstractIntegrationTest {
         insertPnl("p1", pairAndMap(), null);
         outcome("o1", AssetType.EQUITY, TradeSegment.DELIVERY, AccountType.SELF);
         reshape.reshape(false, "first");
-        Document other = new Document("_id", "p2").append("email", EMAIL).append("financial_year", "2023-2024")
+        Document other = new Document("_id", "p2").append("email", storedIdentifier(EMAIL)).append("financial_year", "2023-2024")
                 .append("realised_profits", pairAndMap());
         mongoTemplate.getCollection("profit_and_loss").insertOne(other);
         TradeOutcomeEntity earlier = new TradeOutcomeEntity();

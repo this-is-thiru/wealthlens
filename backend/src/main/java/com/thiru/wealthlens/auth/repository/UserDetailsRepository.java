@@ -7,4 +7,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface UserDetailsRepository extends MongoRepository<UserDetail, String> {
 
 	Optional<UserDetail> findByEmail(String email);
+
+	void deleteByEmail(String email);
 }

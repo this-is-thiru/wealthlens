@@ -81,7 +81,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
                 .then()
                 .statusCode(400)
                 .body(containsString("role"));
-        assertNull(mongoTemplate.findById("chooser@test.com", UserDetail.class));
+        assertNull(storedLogin("chooser@test.com"));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
         given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then().statusCode(200);
 
         // THEN
-        assertEquals("USER", mongoTemplate.findById("plain@test.com", UserDetail.class).getRoles());
+        assertEquals("USER", storedLogin("plain@test.com").getRoles());
     }
 
     @Test

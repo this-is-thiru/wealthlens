@@ -34,7 +34,7 @@ public class RegisteredUserDirectory implements RegisteredUsers {
 
     /** A targeted update, so a sign-in never overwrites a password changed at the same moment. */
     public void recordSignIn(String email, LocalDateTime atUtc) {
-        mongoTemplate.updateFirst(query(where("_id").is(email)), new Update().set(LAST_SIGNED_IN_AT, atUtc), UserDetail.class);
+        mongoTemplate.updateFirst(query(where("email").is(email)), new Update().set(LAST_SIGNED_IN_AT, atUtc), UserDetail.class);
     }
 
     @Override

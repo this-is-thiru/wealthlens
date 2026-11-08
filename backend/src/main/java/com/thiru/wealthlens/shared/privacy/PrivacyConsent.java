@@ -2,9 +2,11 @@ package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -25,6 +27,7 @@ public class PrivacyConsent implements AuditableEntity {
 
     @Indexed(unique = true)
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     /** The {@link PrivacyNotice#version()} the person was shown. */

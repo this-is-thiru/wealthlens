@@ -19,7 +19,7 @@ public class LoginErasure implements PersonalDataHolder {
 
     @Override
     public void erase(String email) {
-        repository.deleteById(email);
+        repository.deleteByEmail(email);
     }
 
     @Override

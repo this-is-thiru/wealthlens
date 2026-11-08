@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.taxengine.input.Assessee.ResidentialStatus;
 import com.thiru.wealthlens.taxengine.rules.condition.DisabilitySeverity;
@@ -33,6 +34,7 @@ public class TaxpayerProfile implements AuditableEntity {
 
     @Indexed
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     @ValueConverter(EncryptedField.class)

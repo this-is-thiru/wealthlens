@@ -46,6 +46,6 @@ class StoredFieldEncryptionTest {
         assertThat(condition.getValue().getQueryObject())
                 .isEqualTo(new Document("_id", "g1").append("text", "Wrong address shown"));
         assertThat(report.collections().getFirst())
-                .isEqualTo(new StoredFieldEncryptionReport.CollectionCount("privacy_grievances", 1, 0));
+                .isEqualTo(new StoredFieldEncryptionReport.CollectionCount("privacy_grievances", 1, 0, 0));
     }
 }

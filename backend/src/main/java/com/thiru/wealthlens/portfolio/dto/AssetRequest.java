@@ -11,6 +11,7 @@ import com.thiru.wealthlens.portfolio.entity.TransactionEntity;
 import com.thiru.wealthlens.shared.dto.AssetEntityProtoType;
 import com.thiru.wealthlens.shared.dto.TransactionEntityProtoType;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import com.thiru.wealthlens.shared.util.collection.TCollectionUtil;
 import com.thiru.wealthlens.shared.util.time.TLocalDate;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
@@ -22,6 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.convert.ValueConverter;
 
 @Getter
 @Setter
@@ -40,6 +42,7 @@ public class AssetRequest implements AssetEntityProtoType, TransactionEntityProt
      * fallback cannot distinguish from a retry.
      */
     private String idempotencyKey;
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
     private String stockCode;
     private String stockName;
@@ -50,6 +53,7 @@ public class AssetRequest implements AssetEntityProtoType, TransactionEntityProt
     private Double quantity;
     private TransactionType transactionType;
     private AccountType accountType = AccountType.SELF;
+    @ValueConverter(SearchableIdentifier.class)
     private String accountHolder;
     private String orderId;
 

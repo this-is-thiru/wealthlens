@@ -35,7 +35,7 @@ class LegacyDocumentUpgradeIntegrationTest extends AbstractIntegrationTest {
         // Given -- exactly what production holds: no `version` key at all
         mongoTemplate.getCollection("profit_and_loss").insertOne(new Document()
                 .append("_id", "pnl-legacy-1")
-                .append("email", "legacy@example.com")
+                .append("email", storedIdentifier("legacy@example.com"))
                 .append("financial_year", "2023-2024"));
 
         ProfitAndLossEntity loaded = profitAndLossRepository
@@ -55,7 +55,7 @@ class LegacyDocumentUpgradeIntegrationTest extends AbstractIntegrationTest {
         // Given
         mongoTemplate.getCollection("profit_and_loss").insertOne(new Document()
                 .append("_id", "pnl-legacy-2")
-                .append("email", "legacy@example.com")
+                .append("email", storedIdentifier("legacy@example.com"))
                 .append("financial_year", "2024-2025"));
 
         // When -- the migration exactly as the runbook states it
@@ -81,7 +81,7 @@ class LegacyDocumentUpgradeIntegrationTest extends AbstractIntegrationTest {
         // the mapper can bypass field initialisers, leaving the new maps null rather than empty.
         mongoTemplate.getCollection("trade_outcomes").insertOne(new Document()
                 .append("_id", "outcome-legacy-1")
-                .append("email", "legacy@example.com")
+                .append("email", storedIdentifier("legacy@example.com"))
                 .append("stock_code", "INFY"));
 
         // When

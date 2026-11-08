@@ -2,11 +2,13 @@ package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -45,6 +47,7 @@ public class BreachNotice implements AuditableEntity {
 
     /** The emails the notice was posted to, resolved when it was posted. */
     @Field("affected")
+    @ValueConverter(SearchableIdentifier.class)
     private List<String> affected = new ArrayList<>();
 
     /** UTC. */

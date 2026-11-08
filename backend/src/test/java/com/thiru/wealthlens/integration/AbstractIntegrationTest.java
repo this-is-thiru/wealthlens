@@ -1,5 +1,10 @@
 package com.thiru.wealthlens.integration;
 
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
+import com.thiru.wealthlens.auth.entity.UserDetail;
+import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.taxplanning.policy.service.PolicySeederService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -98,6 +103,9 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     private PolicySeederService policySeederService;
 
+    @Autowired
+    private FieldCipher fieldCipher;
+
     @BeforeAll
     void setUpRestAssured() {
         RestAssured.baseURI = "http://localhost";
@@ -125,6 +133,16 @@ public abstract class AbstractIntegrationTest {
             }
             mongoTemplate.getDb().getCollection(collectionName).deleteMany(new Document());
         }
+    }
+
+    /** An identifier as stored (W-253): what a raw document holds and a raw query matches. */
+    protected String storedIdentifier(String identifier) {
+        return fieldCipher.encryptSearchable(identifier);
+    }
+
+    /** The login of {@code email}, which is a field now rather than the id (W-253 C2a); {@code null} when there is none. */
+    protected UserDetail storedLogin(String email) {
+        return mongoTemplate.findOne(query(where("email").is(email)), UserDetail.class);
     }
 
     protected String generateToken(String email) {

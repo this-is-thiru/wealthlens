@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,10 +28,12 @@ public class ProcessingRecord {
     /** The signed-in user, or the email a login was attempted for. */
     @Indexed
     @Field("principal")
+    @ValueConverter(SearchableIdentifier.class)
     private String principal;
 
     /** The person whose data the request reached: the path's {@code {email}}, else the principal. */
     @Field("subject_email")
+    @ValueConverter(SearchableIdentifier.class)
     private String subjectEmail;
 
     @Field("method")

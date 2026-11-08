@@ -2,10 +2,12 @@ package com.thiru.wealthlens.shared.privacy;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -26,6 +28,7 @@ public class AccountErasureRequest implements AuditableEntity {
 
     @Indexed
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     /** UTC; the last processing, from which Rules r.8(3)'s year is counted; for a lapse, the moment the purpose lapsed. */

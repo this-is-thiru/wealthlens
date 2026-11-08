@@ -120,7 +120,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
     }
 
     private LocalDateTime lastSignedInAt(String email) {
-        return mongoTemplate.findById(email, UserDetail.class).getLastSignedInAt();
+        return storedLogin(email).getLastSignedInAt();
     }
 
     private List<AccountErasureRequest> requestsOf(String email) {
@@ -153,7 +153,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         runner.run(accountErasure);
 
         // Then
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNotNull();
+        assertThat(storedLogin(ANU)).isNotNull();
         assertThat(requestsOf(ANU)).isEmpty();
     }
 
@@ -168,8 +168,8 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         runner.run(accountErasure);
 
         // Then — Bala lapses a second later, so is untouched
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNull();
-        assertThat(mongoTemplate.findById(BALA, UserDetail.class)).isNotNull();
+        assertThat(storedLogin(ANU)).isNull();
+        assertThat(storedLogin(BALA)).isNotNull();
         assertThat(requestsOf(ANU)).singleElement().satisfies(request -> {
             assertThat(request.getCause()).isEqualTo(ErasureCause.PURPOSE_LAPSED);
             assertThat(request.getRequestedAt()).isEqualTo(LAPSED_AT);
@@ -222,7 +222,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         runner.run(accountErasure);
 
         // Then
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNotNull();
+        assertThat(storedLogin(ANU)).isNotNull();
         assertThat(lastSignedInAt(ANU)).isEqualTo(LocalDateTime.parse("2028-01-01T00:00:00"));
 
         // When — the moved lapse
@@ -230,7 +230,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         runner.run(accountErasure);
 
         // Then
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNull();
+        assertThat(storedLogin(ANU)).isNull();
     }
 
     @Test
@@ -262,7 +262,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         runner.run(accountErasure);
 
         // Then
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNotNull();
+        assertThat(storedLogin(ANU)).isNotNull();
         assertThat(requestsOf(ANU)).singleElement().satisfies(request -> {
             assertThat(request.getCause()).isEqualTo(ErasureCause.REQUESTED);
             assertThat(request.getErasedAt()).isNull();
@@ -280,7 +280,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         assertThatIllegalStateException().isThrownBy(() -> runner.run(accountErasure)).withMessage("store unavailable");
 
         // Then — the login goes last, so it is still there, held
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNotNull();
+        assertThat(storedLogin(ANU)).isNotNull();
         assertThat(requestsOf(ANU)).singleElement()
                 .satisfies(request -> assertThat(request.getErasedAt()).isNull());
 
@@ -289,7 +289,7 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         runner.run(accountErasure);
 
         // Then
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNull();
+        assertThat(storedLogin(ANU)).isNull();
         assertThat(requestsOf(ANU)).singleElement().satisfies(request -> assertThat(request.getErasedAt())
                 .isEqualTo(LocalDateTime.parse("2030-06-11T08:00:00")));
     }
@@ -307,6 +307,6 @@ class PurposeLapseIntegrationTest extends AbstractIntegrationTest {
         erasures.reapply(new ErasureReapplication(LocalDateTime.parse("2030-06-01T00:00:00")));
 
         // Then
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNull();
+        assertThat(storedLogin(ANU)).isNull();
     }
 }

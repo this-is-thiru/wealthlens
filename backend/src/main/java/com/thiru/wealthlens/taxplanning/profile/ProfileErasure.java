@@ -2,9 +2,11 @@ package com.thiru.wealthlens.taxplanning.profile;
 
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -24,6 +26,7 @@ public class ProfileErasure implements AuditableEntity {
     private String id;
 
     @Field("email")
+    @ValueConverter(SearchableIdentifier.class)
     private String email;
 
     @Field("profile_id")

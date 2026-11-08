@@ -7,6 +7,7 @@ import com.thiru.wealthlens.insurance.entity.model.PolicyDetails;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ public class InsuranceEntity implements AuditableEntity {
 	private String id;
 
 	@Field("email")
+	@ValueConverter(SearchableIdentifier.class)
 	private String email;
 	@Field("port_from")
 	private String portFrom;

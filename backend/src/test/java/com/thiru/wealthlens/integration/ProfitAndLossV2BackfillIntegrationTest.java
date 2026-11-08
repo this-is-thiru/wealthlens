@@ -44,7 +44,7 @@ class ProfitAndLossV2BackfillIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void insertPnl(String id) {
-        mongoTemplate.getCollection("profit_and_loss").insertOne(new Document("_id", id).append("email", EMAIL)
+        mongoTemplate.getCollection("profit_and_loss").insertOne(new Document("_id", id).append("email", storedIdentifier(EMAIL))
                 .append("financial_year", "2024-2025").append("realised_profits", new Document(
                         "gains_by_asset_and_segment", new Document("EQUITY", new Document("DELIVERY", v2Entry())))));
     }
@@ -254,7 +254,7 @@ class ProfitAndLossV2BackfillIntegrationTest extends AbstractIntegrationTest {
         tradeOutcomeService.saveTradeOutcome(UserMail.from(EMAIL), row);
 
         // Then -- the field is there, so it marks the row as the recorder's
-        Document stored = mongoTemplate.getCollection("trade_outcomes").find(new Document("email", EMAIL)).first();
+        Document stored = mongoTemplate.getCollection("trade_outcomes").find(new Document("email", storedIdentifier(EMAIL))).first();
         assertThat(stored).containsKey("sell_charge_breakup");
         assertThat(stored.get("sell_charge_breakup", Document.class)).isEmpty();
     }

@@ -7,6 +7,7 @@ import com.thiru.wealthlens.portfolio.dto.enums.AssetType;
 import com.thiru.wealthlens.portfolio.dto.enums.TradeSegment;
 import com.thiru.wealthlens.portfolio.entity.TradeOutcomeEntity;
 import com.thiru.wealthlens.shared.dto.enums.AccountType;
+import com.thiru.wealthlens.shared.protection.FieldCipher;
 import com.thiru.wealthlens.shared.util.time.FinancialYear;
 import com.thiru.wealthlens.shared.util.time.TLocalDateTime;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ public class ProfitAndLossSplitReshape {
     private static final String SPLIT = "gains_by_asset_and_segment";
 
     private final MongoTemplate mongoTemplate;
+    private final FieldCipher cipher;
 
     /** Place every side still carrying the pair or the map, unless {@code dryRun}; {@code auditor} is who asked. */
     public SplitReshapeReport reshape(boolean dryRun, String auditor) {
@@ -89,7 +91,8 @@ public class ProfitAndLossSplitReshape {
                 || realised.containsKey(BY_CLASSIFICATION))) {
             return;
         }
-        String email = pnl.getString("email");
+        // The raw row holds the stored form; the typed query below encrypts the plain email itself (W-253).
+        String email = cipher.decrypt(pnl.getString("email"));
         String year = pnl.getString("financial_year");
         Document pair = StoredReport.sum(realised.get(SHORT, Document.class), realised.get(LONG, Document.class));
         if (pair == null) {

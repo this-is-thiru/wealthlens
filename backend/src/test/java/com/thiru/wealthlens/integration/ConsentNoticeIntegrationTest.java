@@ -61,7 +61,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
         // Then — given at the registration, the moment the account's sign-in count also starts (W-249)
         PrivacyConsent consent = onlyConsentOf(ANU);
         assertThat(consent.getNoticeVersion()).isEqualTo(version);
-        assertThat(consent.getGivenAt()).isEqualTo(mongoTemplate.findById(ANU, UserDetail.class).getLastSignedInAt());
+        assertThat(consent.getGivenAt()).isEqualTo(storedLogin(ANU).getLastSignedInAt());
         assertThat(consent.getNoticedAt()).isNull();
     }
 
@@ -69,7 +69,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
     void register_whenNoVersionIsSent_isRefusedAndStoresNothing() {
         // When / Then
         register(null).statusCode(400);
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNull();
+        assertThat(storedLogin(ANU)).isNull();
         assertThat(mongoTemplate.find(query(where("email").is(ANU)), PrivacyConsent.class)).isEmpty();
     }
 
@@ -77,7 +77,7 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
     void register_whenAnotherVersionIsSent_isRefusedAndStoresNothing() {
         // When / Then — a notice the person was not shown
         register("0").statusCode(400);
-        assertThat(mongoTemplate.findById(ANU, UserDetail.class)).isNull();
+        assertThat(storedLogin(ANU)).isNull();
         assertThat(mongoTemplate.find(query(where("email").is(ANU)), PrivacyConsent.class)).isEmpty();
     }
 

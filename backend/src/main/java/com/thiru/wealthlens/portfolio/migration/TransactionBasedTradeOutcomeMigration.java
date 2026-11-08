@@ -10,6 +10,7 @@ import com.thiru.wealthlens.portfolio.service.TradeMatchingService;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.BuyLot;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.MatchedTrade;
 import com.thiru.wealthlens.portfolio.service.TradeMatchingService.SellRequest;
+import com.thiru.wealthlens.shared.protection.FieldCipher;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -46,6 +47,7 @@ public class TransactionBasedTradeOutcomeMigration {
     private final MongoTemplate mongoTemplate;
     private final TradeOutcomeRepository tradeOutcomeRepository;
     private final TradeMatchingService tradeMatchingService;
+    private final FieldCipher cipher;
 
     /** Rebuild every user with transactions and no rows, unless {@code dryRun}; {@code auditor} is who asked. */
     public TradeOutcomeRebuildReport rebuild(boolean dryRun, String auditor) {
@@ -126,6 +128,8 @@ public class TransactionBasedTradeOutcomeMigration {
         return results.stream()
                 .map(doc -> doc.getString("email"))
                 .filter(email -> email != null && !email.isBlank())
+                // Raw rows hold the stored form; the typed query below encrypts the plain email itself (W-253).
+                .map(cipher::decrypt)
                 .collect(Collectors.toSet());
     }
 

@@ -64,4 +64,31 @@ class FieldCipherTest {
         assertThatThrownBy(() -> cipher(null)).isInstanceOf(IllegalStateException.class).hasMessageContaining("app.personal-data.data-key");
         assertThatThrownBy(() -> cipher("AAEC")).isInstanceOf(IllegalStateException.class).hasMessageContaining("32 bytes");
     }
+
+    /**
+     * Derived outside the code with Python {@code cryptography} 49.0.0: nonce = the first 12 bytes of HMAC-SHA256(digest key,
+     * "identifier-nonce:a@b.in"), then AES-256-GCM under the data key, stored as {@code k1:} + base64(nonce, ciphertext, tag).
+     */
+    @Test
+    void encryptSearchable_whenGivenAnIdentifier_storesTheFormDerivedIndependently() {
+        // Given
+        FieldCipher cipher = new FieldCipher(new PersonalDataKeys(KEY, OTHER_KEY));
+
+        // When / Then
+        assertThat(cipher.encryptSearchable("a@b.in")).isEqualTo("k1:S2S9g4PmcIjT3j52RiPQbAfhd5GQLs4wzEgLXeegdyJPvg==");
+        assertThat(cipher.encryptSearchable("A@b.in")).isEqualTo("k1:5Dl7Zb6GJ6OMKbWR6Bm62BFn9IuNs3eTkxUEBpIBnnTfFQ==");
+    }
+
+    @Test
+    void encryptSearchable_whenOneValueIsEncryptedTwice_storesOneFormThatDecryptsBack() {
+        // Given
+        FieldCipher cipher = new FieldCipher(new PersonalDataKeys(KEY, OTHER_KEY));
+
+        // When
+        String stored = cipher.encryptSearchable("a@b.in");
+
+        // Then — equal values store equally, so a query and a unique index match them
+        assertThat(cipher.encryptSearchable("a@b.in")).isEqualTo(stored);
+        assertThat(cipher.decrypt(stored)).isEqualTo("a@b.in");
+    }
 }
