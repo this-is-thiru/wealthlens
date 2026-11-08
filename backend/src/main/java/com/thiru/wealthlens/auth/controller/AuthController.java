@@ -3,7 +3,6 @@ package com.thiru.wealthlens.auth.controller;
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.LoginResponse;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
-import com.thiru.wealthlens.auth.dto.RoleUpgradeRequest;
 import com.thiru.wealthlens.auth.service.AuthService;
 import com.thiru.wealthlens.shared.privacy.ProcessingLogFilter;
 import lombok.AllArgsConstructor;
@@ -49,11 +48,6 @@ public class AuthController {
     @PostMapping("/register")
     public String addNewUser(@RequestBody RegistrationRequest request) {
         return authService.addUser(request);
-    }
-
-    @PostMapping("/test")
-    public RoleUpgradeRequest testUserRole(@RequestBody RoleUpgradeRequest request) {
-        return request;
     }
 
     @GetMapping("/login")

@@ -36,19 +36,22 @@ Publishing a rate card and running the AMC cycle both require `SUPER_USER`. Ever
 only a logged-in user.
 
 ```bash
+export NOTICE_VERSION=$(curl -sS "$BASE/privacy/rights" | jq -r '.data.version')
 curl -sS -X POST "$BASE/auth/register" \
   -H 'Content-Type: application/json' \
   -d '{
         "email": "charges-admin@wealthlens.test",
         "password": "Charges@123",
-        "role": "SUPER_USER"
+        "privacyNoticeVersion": "'"$NOTICE_VERSION"'"
       }'
 ```
 
-> **Note, and it is not a small one:** `AuthService.addUser` writes `request.getRole()` verbatim, so
-> anyone who can reach `/auth/register` can register themselves as `SUPER_USER`. That is what makes
-> this step possible at all. It is fine in staging and is worth raising separately for production —
-> the `SUPER_USER` guard on rate-card publishing is only as strong as registration is.
+Registration makes a `USER` only; a body naming `role` is refused with 400 (W-255). Grant the role in the staging
+database, as the deploy runbook's §0.1.3 does:
+
+```js
+db.user_details.updateOne({ _id: "charges-admin@wealthlens.test", roles: "USER" }, { $set: { roles: "SUPER_USER" } })
+```
 
 ## 2. Log in and keep the token
 

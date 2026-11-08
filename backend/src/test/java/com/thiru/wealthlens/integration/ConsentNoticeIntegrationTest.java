@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import com.thiru.wealthlens.auth.dto.AuthHelper;
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
@@ -189,7 +188,6 @@ class ConsentNoticeIntegrationTest extends AbstractIntegrationTest {
         RegistrationRequest request = new RegistrationRequest();
         request.setEmail(ANU);
         request.setPassword(PASSWORD);
-        request.setRole(AuthHelper.Role.USER);
         request.setPrivacyNoticeVersion(version);
         return given().contentType(ContentType.JSON).body(request).when().post("/auth/register").then();
     }

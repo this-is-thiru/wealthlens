@@ -78,7 +78,7 @@ and seed before anyone trades. On staging the owner is the only user.
 |---|---|---|
 | 0.1.1 | `MONGO_USER`, `MONGO_PASSWORD`, `JWT_SECURITY_KEY`, `TAX_DATA_KEY`, `TAX_DIGEST_KEY`, `PRIVACY_CONTACT` are set | The app does not start without the JWT key, deliberately: a defaulted signing key is a forged-token vulnerability. Nor without the two tax keys (W-134, D-447): they encrypt stored personal data and digest PANs, §0.5. Nor without the privacy contact (W-235; app-wide and renamed from `TAX_PRIVACY_CONTACT` by W-237a, never set under the old name): who answers questions about the processing of personal data, returned in every erasure receipt (DPDP Rules, 2025 r.9), §1.z |
 | 0.1.2 | MongoDB is a **replica set** | Multi-document `@Transactional` writes need one. Without it `app.mongodb.transactions-enabled` cannot help, and `TransactionSafetyAuditor` warns at startup (§1.7) |
-| 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only |
+| 0.1.3 | A `SUPER_USER` account exists | §1B, §2 and §5 need one: seeding, publishing rate cards, the AMC cycle and every `/admin`-style correction are `SUPER_USER`-only. Registration makes only `USER` accounts (W-255), so the owner grants the role in that database: register through `POST /auth/register`, then `db.user_details.updateOne({ _id: "<owner email>", roles: "USER" }, { $set: { roles: "SUPER_USER" } })`, then sign in again (a token carries the role read at sign-in). A second run matches nothing. Way back: the same update with the two roles swapped |
 
 ### 0.2 TL-7 — duplicates that would block a unique index · owner, `mongosh` · **every database · before the deploy that first carries TL-7**
 
@@ -658,6 +658,32 @@ Expected before: `consents` 0, `noticed` 0, `unique` 0. A week after: `unique` 1
 nothing: the index already exists, and a row is never written twice for one account. **Way back:** redeploy the earlier
 build. `privacy_consents` can stay (nothing else reads it) or be dropped (`db.privacy_consents.drop()`, after
 `mongodump --collection privacy_consents`), and nothing else changes.
+
+### 1.o W-255 (D-482) — accounts that chose their own role · owner · **every database · before the deploy carrying W-255, then after any correction**
+
+Until W-255, `POST /auth/register` stored whatever `role` the body sent, so anyone could register as `SUPER_USER`. Now
+every registration stores `USER`, and a body naming `role` is refused with 400. Roles already stored are not changed
+by the deploy. **Read-only, before the deploy:**
+
+```js
+db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }).databases.map(x => x.name)
+  .filter(n => !["admin", "local", "config"].includes(n)).map(n => { const d = db.getSiblingDB(n);
+    return { database: n,
+      byRole: d.user_details.aggregate([{ $group: { _id: "$roles", accounts: { $sum: 1 } } }]).toArray(),
+      aboveUser: d.user_details.find({ roles: { $ne: "USER" } }, { roles: 1 }).toArray() }; }) }])
+```
+
+Expected: `aboveUser` lists only your own account. **Only if it lists another account**, in that database, after
+`mongodump --db <database> --collection user_details` and keeping this output (the old roles):
+
+```js
+db.user_details.updateMany({ _id: { $in: ["<email>", "<email>"] }, roles: { $ne: "USER" } }, { $set: { roles: "USER" } })
+```
+
+Then run the read-only query again: `aboveUser` is your account alone. A second run of the update matches nothing. A
+token issued before keeps its old role until it expires (30 minutes at most); the next sign-in carries `USER`. **Way
+back:** set each account's old role from the kept output with `updateOne({ _id: "<email>" }, { $set: { roles: "<old>" } })`.
+The dump is the fallback; restoring it whole would also undo later sign-ins' `last_signed_in_at`.
 
 ### 1.x W-096 – W-098 (D-440) — the profile collections' indexes · owner · **first deploy carrying them**
 

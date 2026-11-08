@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import com.thiru.wealthlens.auth.dto.AuthHelper;
 import com.thiru.wealthlens.auth.dto.LoginRequest;
 import com.thiru.wealthlens.auth.dto.RegistrationRequest;
 import com.thiru.wealthlens.auth.entity.UserDetail;
@@ -252,7 +251,6 @@ class AccountErasureIntegrationTest extends AbstractIntegrationTest {
         RegistrationRequest again = new RegistrationRequest();
         again.setEmail(ANU);
         again.setPassword(PASSWORD);
-        again.setRole(AuthHelper.Role.USER);
 
         // When / Then — the token was issued before the request and has not expired
         given().header("Authorization", "Bearer " + generateToken(ANU)).contentType(ContentType.JSON)

@@ -60,7 +60,8 @@ public class AuthService {
         UserDetail userEntity = new UserDetail();
         userEntity.setEmail(request.getEmail());
         userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
-        userEntity.setRoles(request.getRole().name());
+        // A role above USER is granted by the owner, never chosen at registration (W-255; runbook §0.1.3).
+        userEntity.setRoles(AuthHelper.Role.USER.name());
         LocalDateTime registeredAt = nowUtc();
         userEntity.setLastSignedInAt(registeredAt);
         userDetailsRepo.save(userEntity);
@@ -68,29 +69,6 @@ public class AuthService {
         return "user with username " + request.getEmail() + " added to system ";
     }
 
-
-    /**
-     * This needs to be re-visited
-     * This method upgrades the role of a user in the system
-     *
-     * @param request The object containing the email and the role to be upgraded
-     * @return a success message
-     * @throws IllegalArgumentException if the user already exists
-     */
-    public String upgradeRole(RegistrationRequest request) {
-
-        Optional<UserDetail> optionalUserDetails = userDetailsRepo.findById(request.getEmail());
-        if (optionalUserDetails.isPresent()) {
-            throw new IllegalArgumentException("User with email " + request.getEmail() + " already exists");
-        }
-
-        UserDetail userEntity = new UserDetail();
-        userEntity.setEmail(request.getEmail());
-        userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
-        userEntity.setRoles(request.getRole().name());
-        userDetailsRepo.save(userEntity);
-        return "user with username " + request.getEmail() + " added to system";
-    }
 
     public Claims extractAllClaims(String authToken) {
         try {
