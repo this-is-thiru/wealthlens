@@ -60,15 +60,6 @@ final class Saturation {
         return !next.get().isLessThan(here.get());
     }
 
-    /**
-     * The least addition to {@code code} that keeps total income under {@code regime} at what it is in {@code from} — the
-     * addition with what Schedule XV would not take cut off. A later move can raise what follows basic after the
-     * addition's point was measured, and the bill cannot see the excess, so the answer is trimmed by this (W-238k1 C2a).
-     */
-    static Money leastKeeping(AllocationPricing pricing, Allocation from, Movable.Contribution code, RegimeCode regime) {
-        return leastReaching(wholeRupees(from.amount(code)), totalIncome(pricing, from, code, regime));
-    }
-
     private static Function<Money, Money> totalIncome(AllocationPricing pricing, Allocation from,
             Movable.Contribution code, RegimeCode regime) {
         return amount -> pricing.totalIncome(from.moved(code, amount), regime)

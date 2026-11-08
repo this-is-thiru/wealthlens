@@ -57,24 +57,31 @@ public final class SalaryOptimiser {
                         .thenComparing(Map.Entry.comparingByKey(Movable.ORDER)))
                 .limit(space.verificationBreadth()).map(Map.Entry::getKey).toList();
         Allocation exhaustive = exhaustive(pricing, greedy.answer(), candidates, verified, space.cashFloor());
-        return result(pricing, entered, greedy.answer(), exhaustive, trimmed(pricing, exhaustive), verified);
+        return result(pricing, entered, greedy.answer(), exhaustive, refilled(pricing, exhaustive, space.cashFloor()),
+                verified);
     }
 
     /**
-     * Each addition cut to the least that keeps the answer's total income under its regime (W-238k1 C2a): its point was
-     * measured at the pay as entered, and a later basic move raises what follows basic beneath the same ceiling. Only
-     * Schedule XV reads the addition, and it reaches the bill only through total income, so the bill stays as it is and
-     * cash rises.
+     * Each addition re-measured at the answer under its regime: its point was measured at the pay as entered, and a
+     * later basic move shifts what follows basic beneath the same ceiling. Where the addition over-fills, it is cut to
+     * the least keeping total income (W-238k1 C2a) — the bill stays and cash rises. Where basic fell and the headroom
+     * grew, it is raised to the point, but only if the floor still holds; a raise the floor cannot pay in full is not
+     * taken, as a binding floor drops any candidate whole (W-238k3 C1a).
      */
-    private static Allocation trimmed(AllocationPricing pricing, Allocation answer) {
+    private static Allocation refilled(AllocationPricing pricing, Allocation answer, Money floor) {
         RegimeCode regime = pricing.price(answer).regime();
-        Allocation trimmed = answer;
+        Allocation refilled = answer;
         for (Movable item : answer.amounts().keySet()) {
             if (item instanceof Movable.Contribution contribution) {
-                trimmed = trimmed.moved(contribution, Saturation.leastKeeping(pricing, trimmed, contribution, regime));
+                Allocation remeasured = refilled.moved(contribution,
+                        Saturation.of(pricing, refilled, contribution, regime));
+                boolean raised = remeasured.amount(contribution).isGreaterThan(refilled.amount(contribution));
+                if (!raised || admissible(pricing, remeasured, floor)) {
+                    refilled = remeasured;
+                }
             }
         }
-        return trimmed;
+        return refilled;
     }
 
     private static SortedMap<Movable, SortedSet<Money>> candidates(AllocationPricing pricing, Allocation entered) {
@@ -167,7 +174,7 @@ public final class SalaryOptimiser {
         return allocation.isFeasible() && pricing.isPriced(allocation) && !pricing.takeHome(allocation).isLessThan(floor);
     }
 
-    /** The answer reported; the discrepancy is between the greedy and the exhaustive answers, before any trim. */
+    /** The answer reported; the discrepancy is between the greedy and the exhaustive answers, before any refill. */
     private static Optimisation result(AllocationPricing pricing, Allocation entered, Allocation greedy,
             Allocation exhaustive, Allocation answer, List<Movable> verified) {
         AllocationPricing.Priced before = pricing.price(entered);
@@ -207,7 +214,7 @@ public final class SalaryOptimiser {
         List<String> verifiedNames = verified.stream().map(Movable::name).toList();
         Optional<String> discrepancy = exhaustive.equals(greedy) ? Optional.empty() : Optional.of("The greedy answer"
                 + " (bill " + pricing.price(greedy).bill() + ") was not the least: the exhaustive check over "
-                + verifiedNames + " found " + after.bill() + " — the candidates miss a breakpoint (G6.3)");
+                + verifiedNames + " found " + pricing.price(exhaustive).bill() + " — the candidates miss a breakpoint (G6.3)");
         return new Optimisation(new Optimisation.Bill(before.regime().value(), before.bill()),
                 new Optimisation.Bill(after.regime().value(), after.bill()),
                 new Optimisation.Changes(changes, fundChanges, followingChanges, contributionChanges),

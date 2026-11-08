@@ -155,22 +155,22 @@ class SaturationTest {
     }
 
     /**
-     * At basic 12,00,000 an addition of 90,000 writes 1,62,000, of which Schedule XV takes 1,50,000: total income is the
-     * same from 78,000 up, so 78,000 keeps it (W-238k1 C2a). An addition of 50,000 is all deducted, so it is kept whole.
+     * At basic 12,00,000 the headroom is 1,50,000 − 72,000 = 78,000 whatever the addition already is: an addition of
+     * 90,000 is cut to it (W-238k1 C2a) and one of 50,000 raised to it (W-238k3), so the answer is re-measured both ways.
      */
     @Test
-    void leastKeeping_whenTheAdditionOverfillsTheCeiling_trimsItToTheHeadroom() {
+    void of_whenTheAdditionIsAboveOrBelowTheHeadroom_isTheHeadroomEitherWay() {
         // Given
         AllocationSpace space = followingSpace();
         AllocationPricing pricing = pricingOver(space);
         Allocation moved = pricing.entered(space).moved(new Movable.Pay(ComponentCodes.BASIC), Money.of("1200000"));
 
         // When
-        Money overfilled = Saturation.leastKeeping(pricing, moved.moved(OWN_PF, Money.of("90000")), OWN_PF, OLD);
-        Money within = Saturation.leastKeeping(pricing, moved.moved(OWN_PF, Money.of("50000")), OWN_PF, OLD);
+        Money overfilled = Saturation.of(pricing, moved.moved(OWN_PF, Money.of("90000")), OWN_PF, OLD);
+        Money underfilled = Saturation.of(pricing, moved.moved(OWN_PF, Money.of("50000")), OWN_PF, OLD);
 
         // Then
         assertThat(overfilled).isEqualTo(Money.of("78000"));
-        assertThat(within).isEqualTo(Money.of("50000"));
+        assertThat(underfilled).isEqualTo(Money.of("78000"));
     }
 }

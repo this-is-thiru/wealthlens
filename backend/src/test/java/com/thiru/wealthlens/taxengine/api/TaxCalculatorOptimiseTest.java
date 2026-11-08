@@ -988,6 +988,59 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.search().discrepancy()).isEmpty();
     }
 
+    /**
+     * Basic 24L, HRA 8L entered and held, special 4L, rent 9.6L in Mumbai; the employee's provident fund 1,20,000 (5 %)
+     * follows basic and no employer share is entered (W-238k3). The rent limb binds above basic 16L, so the answer
+     * lowers basic.
+     */
+    private static EngineInputs fallingInMumbai() {
+        EngineInputs paid = Fixtures.rentingInMumbai("2400000", "400000", "960000", List.of());
+        Employment held = paid.entered().employments().getFirst();
+        List<SalaryComponent> components = new ArrayList<>(held.components());
+        components.add(new SalaryComponent(HRA, Money.of("800000")));
+        components.add(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000")));
+        Employment changed = new Employment(components, held.termsIncludeDearnessAllowance(), held.employerKind(),
+                held.dearnessAllowanceCountsForRetirement(), held.companyEmployer());
+        return new EngineInputs(paid.taxYear(), paid.regime(), paid.temporal(),
+                paid.entered().withEmployments(List.of(changed)), paid.assessee(), paid.family(), paid.ledgers(),
+                paid.elections(), paid.capitalGains(), paid.filing());
+    }
+
+    @Test
+    void optimise_whenBasicFallsUnderAFollowingProvidentFund_raisesTheAdditionToTheHeadroomLeft() {
+        // Given — old salary 36L; HRA = min(8L, 9.6L − 0.1b, 0.5b); PF deduction min(0.05b + a, 1,50,000). Entered: TI
+        // 36L − 50,000 − 7,20,000 − 1,20,000 = 27,10,000 → 6,25,500, + 4 % = 6,50,520 (new 35,25,000 → 6,63,000).
+        // Round 1: the addition's 30,000 headroom (TI 26,80,000 → 6,41,160, 0.312 a rupee) over basic 16L (TI
+        // 26,70,000 → 6,38,040, 0.0156 a rupee). Round 2: basic 16L, TI 26,40,000 → 6,28,680. The follower is then
+        // 80,000, so the addition is raised to 70,000 (W-238k3): TI 26,00,000 → 5,92,500, + 4 % = 6,16,200; take-home
+        // 36L − 1,50,000 − 6,16,200 = 28,33,800. Basic alone: 6,38,040, saving 12,480; cash +40,000 (PF withheld
+        // falls). The addition alone, at basic 24L: 1,90,000 capped at 1,50,000, TI 26,80,000 → 6,41,160, saving 9,360.
+        AllocationSpace space = contributing(fallingInMumbai(), Set.of(BASIC), Set.of(ComponentCodes.EMPLOYEE_PF), "0");
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.before().regime()).isEqualTo(OLD);
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("650520"));
+        assertThat(optimised.after().regime()).isEqualTo(OLD);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("616200"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+                Money.of("2400000"), Money.of("1600000"), Optional.of(Money.of("12480")), Money.of("40000")));
+        assertThat(optimised.changes().following()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+                .containsExactly(new Optimisation.FollowingChange("EMPLOYEE_PF", List.of("DED-SCHEDULE-XV"),
+                        Money.of("120000"), Money.of("80000"), List.of("BASIC"), NO_LIQUIDITY));
+        assertThat(optimised.changes().contributions()).hasSize(1);
+        Optimisation.Change pf = optimised.changes().contributions().getFirst();
+        assertThat(pf.component()).isEqualTo("EMPLOYEE_PF");
+        assertThat(pf.current()).isEqualTo(Money.of("80000"));
+        assertThat(pf.suggested()).isEqualTo(Money.of("150000"));
+        assertThat(pf.savingAlone()).contains(Money.of("9360"));
+        assertThat(pf.cashImpact()).isEqualTo(Money.of("-70000"));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.of("1200000"));
+        assertThat(optimised.search().discrepancy()).isEmpty();
+    }
+
     /** {@code GOVERNMENT_DEFERRED_ANNUITY} is measured on the Government salary; this employer is OTHER (D-154). */
     @Test
     void optimise_whenTheGovernmentDeferredAnnuityIsAddedForAnotherEmployer_isRefusedByTheEngine() {
