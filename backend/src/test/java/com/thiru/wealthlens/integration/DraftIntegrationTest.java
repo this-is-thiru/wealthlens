@@ -31,6 +31,8 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /** A draft over HTTP and into Mongo: its revisions, its locking, its freeze and its election (W-099, W-100, W-108, W-110, W-082d; D-441). */
 class DraftIntegrationTest extends AbstractIntegrationTest {
@@ -123,8 +125,12 @@ class DraftIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<String> stale = save(ADD_EMPLOYMENT.formatted("999"), "\"rev-0\"");
 
         // Then
+        // The body is parsed: its raw text carries the draft's random ids, and one held "999" (W-252)
         assertThat(stale.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(stale.getBody()).contains("175000").doesNotContain("999");
+        JsonNode employments = JsonMapper.builder().build().readTree(stale.getBody()).at("/current/inputs/entered/employments");
+        assertThat(employments).hasSize(1);
+        assertThat(employments.at("/0/components/0/annualAmount/amountInRupees").decimalValue())
+                .isEqualByComparingTo("175000");
         assertThat(mongoTemplate.findAll(DraftRevision.class)).hasSize(2);
     }
 

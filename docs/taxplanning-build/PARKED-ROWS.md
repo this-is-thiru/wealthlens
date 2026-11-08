@@ -62,6 +62,7 @@ if it gives a wrong figure with no refusal or notice; anything else is a line un
 | W-226 | PARKED | A property acquired by gift or inheritance | The deploy gate | **Wrong if misused:** the entry says purchase only and cannot detect an inherited plot |
 | W-227 | PARKED | Whether a property sale is a trade in the performance metrics | The deploy gate | No figure at risk (row read, D-445) |
 | W-228 | PARKED | The trade-outcome rebuild beside property sales | The deploy gate | No figure at risk (row read, D-445) |
+| W-251 | PARKED | A client's privacy duties: the notice linked, the copies offered, the notice before registration | When a website or app is started, else waived at the deploy gate (D-483) | No client exists; the app serves the notice at public `GET /privacy`, and registration needs its version (W-247, W-250) |
 
 ## Noted
 
