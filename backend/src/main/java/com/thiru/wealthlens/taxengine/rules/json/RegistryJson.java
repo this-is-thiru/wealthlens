@@ -68,7 +68,8 @@ public final class RegistryJson {
                         node.get("informationalOnly") != null && PackJson.bool(node, "informationalOnly", where),
                         lifecycle(PackJson.object(node, "lifecycle", where), where + ".lifecycle"),
                         ValueJson.provenance(
-                                PackJson.object(node, "provenance", where), where + ".provenance")));
+                                PackJson.object(node, "provenance", where), where + ".provenance"),
+                        LiquidityJson.of(node, where)));
     }
 
     // ----------------------------------------------------------------- funds
@@ -94,7 +95,8 @@ public final class RegistryJson {
                 PackJson.text(node, "displayName", where),
                 ruleIds(node, "feedsInto", where),
                 ValueJson.dateRange(PackJson.object(node, "validity", where), where + ".validity"),
-                ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance")));
+                ValueJson.provenance(PackJson.object(node, "provenance", where), where + ".provenance"),
+                LiquidityJson.of(node, where)));
     }
 
     static ComponentLifecycle lifecycle(JsonNode node, String path) {

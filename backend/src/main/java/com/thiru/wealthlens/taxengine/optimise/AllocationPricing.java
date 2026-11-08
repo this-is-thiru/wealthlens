@@ -18,6 +18,9 @@ import com.thiru.wealthlens.taxengine.pipeline.PipelineRunner;
 import com.thiru.wealthlens.taxengine.rules.component.CashNature;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.EmployerFundDefinition;
+import com.thiru.wealthlens.taxengine.rules.component.Liquidity;
+import com.thiru.wealthlens.taxengine.rules.component.UnstatedTerms;
+import com.thiru.wealthlens.taxengine.rules.component.WithdrawalTerm;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
 import com.thiru.wealthlens.taxengine.rules.generated.NodeIds;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
@@ -28,6 +31,7 @@ import com.thiru.wealthlens.taxengine.rules.money.Money;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePack;
 import com.thiru.wealthlens.taxengine.rules.regime.RegimeSpec;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -184,7 +188,7 @@ final class AllocationPricing {
     Optimisation.ComponentFacts facts(Movable.Pay pay) {
         ComponentDefinition row = pack.components().get(pay.code());
         return new Optimisation.ComponentFacts(row.kind().name(), row.cashNature().name(),
-                row.feedsInto().stream().map(RuleId::value).sorted().toList());
+                row.feedsInto().stream().map(RuleId::value).sorted().toList(), published(row.liquidity()));
     }
 
     /**
@@ -197,14 +201,43 @@ final class AllocationPricing {
         return switch (item) {
             case Movable.Pay pay -> pack.components().get(pay.code()).feedsInto().stream().map(RuleId::value)
                     .sorted().toList();
-            case Movable.Fund fund -> {
-                EmployerFundDefinition row = pack.funds().get(new EmployerFundCode(fund.name()));
-                if (row == null) {
-                    throw new IllegalArgumentException(pack.taxYear().label() + " defines no employer fund " + fund.name());
-                }
-                yield row.feedsInto().stream().map(RuleId::value).sorted().toList();
-            }
+            case Movable.Fund fund -> fundRow(fund).feedsInto().stream().map(RuleId::value).sorted().toList();
         };
+    }
+
+    /**
+     * When the money {@code item} puts into a fund can come out (W-238e1): its component's row, or its fund's.
+     *
+     * @throws IllegalArgumentException if the year's pack has no row for the fund
+     */
+    Optimisation.Liquidity liquidity(Movable item) {
+        return published(switch (item) {
+            case Movable.Pay pay -> pack.components().get(pay.code()).liquidity();
+            case Movable.Fund fund -> fundRow(fund).liquidity();
+        });
+    }
+
+    private EmployerFundDefinition fundRow(Movable.Fund fund) {
+        EmployerFundDefinition row = pack.funds().get(new EmployerFundCode(fund.name()));
+        if (row == null) {
+            throw new IllegalArgumentException(pack.taxYear().label() + " defines no employer fund " + fund.name());
+        }
+        return row;
+    }
+
+    private static Optimisation.Liquidity published(Liquidity liquidity) {
+        return new Optimisation.Liquidity(
+                liquidity.terms().stream()
+                        .sorted(Comparator.comparing((WithdrawalTerm term) -> term.validity().from())
+                                .thenComparing(WithdrawalTerm::event))
+                        .map(term -> new Optimisation.WithdrawalTerm(term.event(), term.terms(), term.validity().from(),
+                                term.validity().to(), term.provenance().sourceDescription()))
+                        .toList(),
+                liquidity.unstated().stream()
+                        .sorted(Comparator.comparing((UnstatedTerms gap) -> gap.validity().from()))
+                        .map(gap -> new Optimisation.UnstatedTerms(gap.validity().from(), gap.validity().to(),
+                                gap.reason()))
+                        .toList());
     }
 
     /**

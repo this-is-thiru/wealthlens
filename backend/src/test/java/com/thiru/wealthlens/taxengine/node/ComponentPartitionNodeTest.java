@@ -16,6 +16,7 @@ import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentLifecycle;
 import com.thiru.wealthlens.taxengine.rules.component.DeprecationPolicy;
+import com.thiru.wealthlens.taxengine.rules.component.Liquidity;
 import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
 import com.thiru.wealthlens.taxengine.rules.generated.RuleIds;
@@ -76,7 +77,7 @@ class ComponentPartitionNodeTest {
                 Set.of(RuleIds.RATE_SLAB_NEW_TAX_REGIME), Set.of(), false,
                 new ComponentLifecycle(DateRange.fromOnwards(LocalDate.of(2025, 4, 1)), Optional.empty(),
                         new DeprecationPolicy.HistoricalOnly()),
-                shipped.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME).headProvenance()));
+                shipped.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME).headProvenance(), Liquidity.NONE));
         return new RulePack(shipped.taxYear(), shipped.layers(), shipped.instruments(), shipped.rules(), shipped.ruleSets(), registry,
                 shipped.regimes(), shipped.disallowanceSets(), shipped.conditionSets(), shipped.funds());
     }
@@ -85,7 +86,7 @@ class ComponentPartitionNodeTest {
         return new ComponentDefinition(code, "Fixture " + code.value(), Optional.of(head), ComponentKind.SALARY, CashNature.CASH,
                 TaxTreatment.TAXABLE, Set.of(RuleIds.RATE_SLAB_NEW_TAX_REGIME), Set.of(), false,
                 new ComponentLifecycle(live, Optional.empty(), new DeprecationPolicy.HistoricalOnly()),
-                pack.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME).headProvenance());
+                pack.rule(RuleIds.RATE_SLAB_NEW_TAX_REGIME).headProvenance(), Liquidity.NONE);
     }
 
     private static EngineInputs entering(int year, List<Employment> employments) {

@@ -17,9 +17,10 @@ import java.util.Set;
  *     with it, each said in the row's note; never empty, since a fund no rule reads is one the engine ignores
  * @param validity when the row exists
  * @param provenance where it was sourced
+ * @param liquidity when money paid in can come out (W-238e1)
  */
 public record EmployerFundDefinition(EmployerFundCode code, String displayName, Set<RuleId> feedsInto,
-        DateRange validity, Provenance provenance) {
+        DateRange validity, Provenance provenance, Liquidity liquidity) {
 
     public EmployerFundDefinition {
         if (code == null) {
@@ -31,8 +32,8 @@ public record EmployerFundDefinition(EmployerFundCode code, String displayName, 
         if (feedsInto == null || feedsInto.isEmpty()) {
             throw new IllegalArgumentException(code + " feeds no rule; a fund no rule reads is one the engine ignores");
         }
-        if (validity == null || provenance == null) {
-            throw new IllegalArgumentException(code + " must say when it exists and where it was sourced");
+        if (validity == null || provenance == null || liquidity == null) {
+            throw new IllegalArgumentException(code + " must say when it exists, where it was sourced and its liquidity");
         }
         feedsInto = Set.copyOf(feedsInto);
     }

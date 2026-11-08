@@ -17,6 +17,7 @@ import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentLifecycle;
 import com.thiru.wealthlens.taxengine.rules.component.DeprecationPolicy;
+import com.thiru.wealthlens.taxengine.rules.component.Liquidity;
 import com.thiru.wealthlens.taxengine.rules.component.SalaryBaseInclusion;
 import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
@@ -114,7 +115,7 @@ class SalaryBaseNodeTest {
                 CashNature.CASH, TaxTreatment.TAXABLE, Set.of(RuleIds.SAL_SALARY_INCLUDES), bases, false,
                 new ComponentLifecycle(DateRange.fromOnwards(LocalDate.of(2025, 4, 1)), Optional.empty(),
                         new DeprecationPolicy.HistoricalOnly()),
-                pack.rule(RuleIds.SAL_SALARY_INCLUDES).headProvenance());
+                pack.rule(RuleIds.SAL_SALARY_INCLUDES).headProvenance(), Liquidity.NONE);
     }
 
     private static Employment employment(boolean termsIncludeDearnessAllowance, SalaryComponent... components) {

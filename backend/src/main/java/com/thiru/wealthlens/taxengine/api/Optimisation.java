@@ -1,6 +1,7 @@
 package com.thiru.wealthlens.taxengine.api;
 
 import com.thiru.wealthlens.taxengine.rules.money.Money;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,9 +62,10 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * @param savingAlone the bill as entered less the bill with only this change; empty where the residual as entered
      *     cannot fund it by itself
      * @param cashImpact the change in cash before tax: the residual's pay given up, since a contribution is never in hand
+     * @param liquidity when the money paid in can come out, from the fund's row in the year's pack (W-238e1)
      */
     public record FundChange(String fund, List<String> feedsInto, Money current, Money suggested,
-            Optional<Money> savingAlone, Money cashImpact) {
+            Optional<Money> savingAlone, Money cashImpact, Liquidity liquidity) {
 
         public FundChange {
             feedsInto = List.copyOf(feedsInto);
@@ -80,8 +82,10 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * @param current its amount as entered
      * @param suggested its amount in the answer
      * @param follows the component it follows
+     * @param liquidity when the money paid in can come out, from its component's or fund's row (W-238e1)
      */
-    public record FollowingChange(String name, List<String> feedsInto, Money current, Money suggested, String follows) {
+    public record FollowingChange(String name, List<String> feedsInto, Money current, Money suggested, String follows,
+            Liquidity liquidity) {
 
         public FollowingChange {
             feedsInto = List.copyOf(feedsInto);
@@ -94,11 +98,50 @@ public record Optimisation(String regimeBefore, Money billBefore, String regimeA
      * @param kind its {@code ComponentKind}'s name
      * @param cashNature its {@code CashNature}'s name
      * @param feedsInto the rules it feeds, sorted
+     * @param liquidity when money paid in can come out, for a contribution into a fund; no terms and no unstated
+     *     periods for pay (W-238e1)
      */
-    public record ComponentFacts(String kind, String cashNature, List<String> feedsInto) {
+    public record ComponentFacts(String kind, String cashNature, List<String> feedsInto, Liquidity liquidity) {
 
         public ComponentFacts {
             feedsInto = List.copyOf(feedsInto);
         }
+    }
+
+    /**
+     * When money paid into a fund can come out, as the year's pack states it (A2.6 {@code liquidity}; W-238e1): facts
+     * dated within the year, never a verdict such as "locked" drawn from them (CLAUDE.md §4).
+     *
+     * @param terms each withdrawal term overlapping the year, by first day then event
+     * @param unstated each period of the year for which the pack states no terms, and why
+     */
+    public record Liquidity(List<WithdrawalTerm> terms, List<UnstatedTerms> unstated) {
+
+        public Liquidity {
+            terms = List.copyOf(terms);
+            unstated = List.copyOf(unstated);
+        }
+    }
+
+    /**
+     * One withdrawal term.
+     *
+     * @param event when it applies, as the governing instrument names it
+     * @param terms what may then be withdrawn, in the instrument's figures
+     * @param from its first day
+     * @param to its last day; empty where the pack states no end
+     * @param source the Gazette copy and provision it was read from
+     */
+    public record WithdrawalTerm(String event, String terms, LocalDate from, Optional<LocalDate> to, String source) {
+    }
+
+    /**
+     * A period without stated terms.
+     *
+     * @param from its first day
+     * @param to its last day; empty where the pack states no end
+     * @param reason why the pack states none
+     */
+    public record UnstatedTerms(LocalDate from, Optional<LocalDate> to, String reason) {
     }
 }

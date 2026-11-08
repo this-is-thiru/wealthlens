@@ -11,6 +11,7 @@ import com.thiru.wealthlens.taxengine.rules.component.CashNature;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentDefinition;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentKind;
 import com.thiru.wealthlens.taxengine.rules.component.ComponentLifecycle;
+import com.thiru.wealthlens.taxengine.rules.component.Liquidity;
 import com.thiru.wealthlens.taxengine.rules.component.TaxTreatment;
 import com.thiru.wealthlens.taxengine.rules.condition.Condition;
 import com.thiru.wealthlens.taxengine.rules.condition.HeadCode;
@@ -392,7 +393,7 @@ class PackValidatorTest {
                             Set.of(),
                             false,
                             ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)),
-                            provenance()));
+                            provenance(), Liquidity.NONE));
 
             assertThatThrownBy(() -> PackValidator.validate(pack.build()))
                     .isInstanceOf(PackValidationException.class)

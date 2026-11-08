@@ -48,7 +48,8 @@ class EmployerFundReferencesTest {
     }
 
     private static EmployerFundDefinition feeding(EmployerFundDefinition row, Set<RuleId> feedsInto) {
-        return new EmployerFundDefinition(row.code(), row.displayName(), feedsInto, row.validity(), row.provenance());
+        return new EmployerFundDefinition(row.code(), row.displayName(), feedsInto, row.validity(), row.provenance(),
+                row.liquidity());
     }
 
     @Test

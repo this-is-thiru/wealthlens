@@ -91,6 +91,7 @@ public final class PackValidator {
         checkEveryRuleIsReached(pack, problems);                 // D-252
         CapitalGainsPartReferences.check(pack, problems);        // D-309
         EmployerFundReferences.check(pack, problems);            // W-238e
+        LiquidityCoverage.check(pack, problems);                 // W-238e1
 
         if (!problems.isEmpty()) {
             throw new PackValidationException(

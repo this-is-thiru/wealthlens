@@ -54,7 +54,7 @@ class ComponentLifecycleTest {
                 Set.of(new SalaryBaseInclusion(SAL_HRA_004, false)),
                 informational,
                 lifecycle,
-                provenance());
+                provenance(), Liquidity.NONE);
     }
 
     private static ComponentDefinition hra() {
@@ -178,7 +178,7 @@ class ComponentLifecycleTest {
                     Set.of(),
                     false,
                     ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)),
-                    provenance());
+                    provenance(), Liquidity.NONE);
 
             assertThat(car.isCash()).isFalse();
         }
@@ -197,7 +197,7 @@ class ComponentLifecycleTest {
                     Set.of(),
                     false,
                     ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)),
-                    provenance());
+                    provenance(), Liquidity.NONE);
 
             assertThat(employeePf.isCash()).isFalse();
             assertThat(employeePf.cashNature()).isEqualTo(CashNature.CASH_OUTFLOW);
@@ -211,7 +211,7 @@ class ComponentLifecycleTest {
         private ComponentDefinition tuitionFees(Optional<HeadCode> head, ComponentKind kind) {
             return new ComponentDefinition(new ComponentCode("TUITION_FEES"), "Tuition fees", head, kind,
                     CashNature.CASH_OUTFLOW, TaxTreatment.DEDUCTIBLE, Set.of(new RuleId("DED-SCHEDULE-XV")),
-                    Set.of(), false, ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)), provenance());
+                    Set.of(), false, ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)), provenance(), Liquidity.NONE);
         }
 
         @Test
@@ -270,7 +270,7 @@ class ComponentLifecycleTest {
                             new ComponentDefinition(
                                     HRA, "House rent allowance", Optional.of(HeadCode.SALARIES), ComponentKind.SALARY,
                                     null, TaxTreatment.TAXABLE, Set.of(SAL_HRA_001), Set.of(), false,
-                                    ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)), provenance()))
+                                    ComponentLifecycle.openEndedFrom(LocalDate.of(2026, 4, 1)), provenance(), Liquidity.NONE))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("branched on");
         }

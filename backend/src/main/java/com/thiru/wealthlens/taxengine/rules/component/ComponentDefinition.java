@@ -46,6 +46,8 @@ import java.util.Set;
  *     nobody consumes is a figure the user enters and the computation ignores
  * @param lifecycle when it existed and what happens to drafts when it does not
  * @param provenance where the definition was sourced
+ * @param liquidity when money paid in can come out, for a contribution into a fund (W-238e1); {@link Liquidity#NONE}
+ *     for pay
  */
 public record ComponentDefinition(
         ComponentCode code,
@@ -58,7 +60,8 @@ public record ComponentDefinition(
         Set<SalaryBaseInclusion> salaryBaseFor,
         boolean informationalOnly,
         ComponentLifecycle lifecycle,
-        Provenance provenance) {
+        Provenance provenance,
+        Liquidity liquidity) {
 
     public ComponentDefinition {
         requireDescribed(code, displayName, head, kind, cashNature, treatment);
@@ -67,6 +70,9 @@ public record ComponentDefinition(
         }
         if (provenance == null) {
             throw new IllegalArgumentException(code + " must say where it was sourced");
+        }
+        if (liquidity == null) {
+            throw new IllegalArgumentException(code + " must state its liquidity, NONE for pay");
         }
         feedsInto = feedsInto == null ? Set.of() : Set.copyOf(feedsInto);
         salaryBaseFor = salaryBaseFor == null ? Set.of() : Set.copyOf(salaryBaseFor);

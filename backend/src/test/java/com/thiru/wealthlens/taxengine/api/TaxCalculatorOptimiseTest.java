@@ -42,12 +42,14 @@ class TaxCalculatorOptimiseTest {
     private static final ComponentCode SPECIAL = ComponentCodes.SPECIAL_ALLOWANCE;
     private static final String NEW = "NEW_TAX_REGIME";
     private static final String OLD = "FIRST_SCHEDULE_RATES";
+    /** Pay in hand: its row states no withdrawal term and no unstated period (W-238e1). */
+    private static final Optimisation.Liquidity NO_LIQUIDITY = new Optimisation.Liquidity(List.of(), List.of());
     /** HRA's pack row ({@code components/HRA.json}): SALARY, CASH, feeding the two rules named, sorted. */
     private static final Optimisation.ComponentFacts HRA_FACTS = new Optimisation.ComponentFacts("SALARY", "CASH",
-            List.of("SAL-HOUSE-RENT-ALLOWANCE", "SAL-SALARY-INCLUDES"));
+            List.of("SAL-HOUSE-RENT-ALLOWANCE", "SAL-SALARY-INCLUDES"), NO_LIQUIDITY);
     /** The uniform allowance's pack row ({@code components/UNIFORM_ALLOWANCE.json}). */
     private static final Optimisation.ComponentFacts UNIFORM_FACTS = new Optimisation.ComponentFacts("SALARY", "CASH",
-            List.of("SAL-ALW-UNIFORM", "SAL-SALARY-INCLUDES"));
+            List.of("SAL-ALW-UNIFORM", "SAL-SALARY-INCLUDES"), NO_LIQUIDITY);
 
     /** Basic 16L, special 8L, rent 9.6L: HRA saturates at min(9.6L − 1.6L, 8L) = 8L, all the special allowance. */
     private static EngineInputs flipsWithHra() {
@@ -212,6 +214,32 @@ class TaxCalculatorOptimiseTest {
             "SAL-INCLUDES-PENSION-CONTRIBUTION");
     private static final List<String> AGGREGATE_FEEDS = List.of("PERQ-EMPLOYER-ACCRETION", "PERQ-EMPLOYER-CONTRIBUTION");
 
+    /**
+     * The NPS terms in force in TY 2026-27, by first day then event: the 2025 amendment's regulations 3(1)(a), (b),
+     * 4(1)(a), (b) and 8(1), each from its Gazette issue of 15-12-2025 (C1a); the 2026 amendment leaves them alone.
+     */
+    private static final List<String> NPS_2026_27 = List.of(
+            "Exit after fifteen years, at sixty or on superannuation, non-government sector from 2025-12-15",
+            "Exit at superannuation, government sector from 2025-12-15",
+            "Exit on resignation, dismissal or removal, government sector from 2025-12-15",
+            "Partial withdrawal from 2025-12-15",
+            "Voluntary exit before then, non-government sector from 2025-12-15");
+    /** The 1952 Scheme's terms unstated until the 2026 Scheme of 29-06-2026 superseded it (C2a); then paras 49 and 46. */
+    private static final List<String> EPF_2026_27 = List.of(
+            "Full withdrawal from 2026-06-29",
+            "Partial withdrawal from 2026-06-29",
+            "unstated from 2025-04-01 to 2026-06-28");
+
+    /** Each term as "event from day [to day]", then each unstated period, in published order. */
+    private static List<String> outline(Optimisation.Liquidity liquidity) {
+        List<String> lines = new ArrayList<>();
+        liquidity.terms().forEach(term -> lines.add(term.event() + " from " + term.from()
+                + term.to().map(end -> " to " + end).orElse("")));
+        liquidity.unstated().forEach(gap -> lines.add("unstated from " + gap.from()
+                + gap.to().map(end -> " to " + end).orElse("")));
+        return lines;
+    }
+
     private static AllocationSpace funds(EngineInputs inputs, Set<EmployerFund> movable) {
         return new AllocationSpace(inputs, Set.of(), movable, SPECIAL, Money.ZERO, 6);
     }
@@ -234,8 +262,14 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.regimeAfter()).isEqualTo(NEW);
         assertThat(optimised.billAfter()).isEqualTo(Money.of("234260"));
         assertThat(optimised.changes()).isEmpty();
-        assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME",
-                NPS_FEEDS, Money.ZERO, Money.of("224000"), Optional.of(Money.of("58240")), Money.of("-224000")));
+        assertThat(optimised.fundChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+                new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME", NPS_FEEDS, Money.ZERO, Money.of("224000"),
+                        Optional.of(Money.of("58240")), Money.of("-224000"), NO_LIQUIDITY));
+        assertThat(outline(optimised.fundChanges().getFirst().liquidity())).containsExactlyElementsOf(NPS_2026_27);
+        // reg. 4(1)(a) as the 2025 amendment substitutes it: "at least twenty percent" buys an annuity; up to "rupees
+        // eight lakh" may all be withdrawn
+        assertThat(optimised.fundChanges().getFirst().liquidity().terms().getFirst().terms())
+                .contains("at least 20% of the accumulated pension wealth buys an annuity").contains("eight lakh rupees or less may all be withdrawn");
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("576000"));
         assertThat(optimised.verified()).containsExactly("NOTIFIED_PENSION_SCHEME");
     }
@@ -254,8 +288,9 @@ class TaxCalculatorOptimiseTest {
         // Then
         assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
         assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
-        assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME",
-                NPS_FEEDS, Money.ZERO, Money.of("150000"), Optional.of(Money.of("39000")), Money.of("-150000")));
+        assertThat(optimised.fundChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+                new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME", NPS_FEEDS, Money.ZERO, Money.of("150000"),
+                        Optional.of(Money.of("39000")), Money.of("-150000"), NO_LIQUIDITY));
     }
 
     @Test
@@ -271,8 +306,11 @@ class TaxCalculatorOptimiseTest {
         // Then
         assertThat(optimised.regimeAfter()).isEqualTo(NEW);
         assertThat(optimised.billAfter()).isEqualTo(Money.of("120900"));
-        assertThat(optimised.fundChanges()).containsExactly(new Optimisation.FundChange("APPROVED_SUPERANNUATION_FUND",
-                AGGREGATE_FEEDS, Money.ZERO, Money.of("750000"), Optional.of(Money.of("171600")), Money.of("-750000")));
+        assertThat(optimised.fundChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+                new Optimisation.FundChange("APPROVED_SUPERANNUATION_FUND", AGGREGATE_FEEDS, Money.ZERO,
+                        Money.of("750000"), Optional.of(Money.of("171600")), Money.of("-750000"), NO_LIQUIDITY));
+        assertThat(outline(optimised.fundChanges().getFirst().liquidity()))
+                .containsExactly("Payment from the fund from 2026-04-01");
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("50000"));
     }
 
@@ -302,7 +340,7 @@ class TaxCalculatorOptimiseTest {
     private static final ComponentCode BASIC = ComponentCodes.BASIC;
     /** Basic pay's pack row ({@code components/BASIC.json}): SALARY, CASH, feeding salary only. */
     private static final Optimisation.ComponentFacts BASIC_FACTS = new Optimisation.ComponentFacts("SALARY", "CASH",
-            List.of("SAL-SALARY-INCLUDES"));
+            List.of("SAL-SALARY-INCLUDES"), NO_LIQUIDITY);
     private static final EmployerFundContribution PROVIDENT_FUND_120000 = new EmployerFundContribution(0,
             EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("120000"));
 
@@ -346,8 +384,10 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-150000")));
         assertThat(optimised.fundChanges()).isEmpty();
-        assertThat(optimised.followingChanges()).containsExactly(new Optimisation.FollowingChange(
-                "RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"), Money.of("270000"), "BASIC"));
+        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(new Optimisation.FollowingChange(
+                "RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"), Money.of("270000"), "BASIC",
+                NO_LIQUIDITY));
+        assertThat(outline(optimised.followingChanges().getFirst().liquidity())).containsExactlyElementsOf(EPF_2026_27);
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
     }
 
@@ -368,11 +408,13 @@ class TaxCalculatorOptimiseTest {
         assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
         assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-300000")));
-        assertThat(optimised.followingChanges()).containsExactly(
+        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
                 new Optimisation.FollowingChange("EMPLOYEE_PF", List.of("DED-SCHEDULE-XV"), Money.of("120000"),
-                        Money.of("270000"), "BASIC"),
+                        Money.of("270000"), "BASIC", NO_LIQUIDITY),
                 new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"),
-                        Money.of("270000"), "BASIC"));
+                        Money.of("270000"), "BASIC", NO_LIQUIDITY));
+        assertThat(optimised.followingChanges()).allSatisfy(change ->
+                assertThat(outline(change.liquidity())).containsExactlyElementsOf(EPF_2026_27));
     }
 
     @Test

@@ -165,7 +165,7 @@ public final class SalaryOptimiser {
             }
             if (entered.following().follows(item)) {
                 followingChanges.add(new Optimisation.FollowingChange(item.name(), pricing.feedsInto(item), current,
-                        suggested, entered.following().leader().name()));
+                        suggested, entered.following().leader().name(), pricing.liquidity(item)));
                 continue;
             }
             Allocation alone = entered.moved(item, suggested);
@@ -177,7 +177,7 @@ public final class SalaryOptimiser {
                 case Movable.Pay pay -> changes.add(new Optimisation.Change(pay.name(), pricing.facts(pay), current,
                         suggested, savingAlone, cashImpact));
                 case Movable.Fund fund -> fundChanges.add(new Optimisation.FundChange(fund.name(),
-                        pricing.feedsInto(fund), current, suggested, savingAlone, cashImpact));
+                        pricing.feedsInto(fund), current, suggested, savingAlone, cashImpact, pricing.liquidity(fund)));
             }
         }
         List<String> verifiedNames = verified.stream().map(Movable::name).toList();

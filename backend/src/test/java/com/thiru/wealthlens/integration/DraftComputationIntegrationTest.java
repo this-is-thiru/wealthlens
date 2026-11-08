@@ -782,6 +782,16 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("224000");
         assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("58240");
         assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-224000");
+        // W-238e1: TY 2026-27 holds the NPS regulations as the 2025 amendment left them, from its issue of 15-12-2025
+        // (C1a) — five events, none ending, and no unstated period
+        JsonNode terms = change.at("/liquidity/terms");
+        assertThat(terms.size()).isEqualTo(5);
+        assertThat(terms.valueStream().map(term -> term.get("from").asString()).distinct().toList())
+                .containsExactly("2025-12-15");
+        assertThat(terms.at("/0/event").asString())
+                .isEqualTo("Exit after fifteen years, at sixty or on superannuation, non-government sector");
+        assertThat(terms.at("/0/source").asString()).contains("CG-DL-E-16122025-268548");
+        assertThat(change.at("/liquidity/unstated").size()).isZero();
         assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
     }
 

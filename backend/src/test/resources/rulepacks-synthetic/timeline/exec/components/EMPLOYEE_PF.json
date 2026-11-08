@@ -23,5 +23,44 @@
     "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(f), p.561; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(vi), p.330",
     "accessedOn": "2026-10-06",
     "verificationLevel": "SOURCE_CHECKED"
+  },
+  "liquidity": {
+    "terms": [
+      {
+        "event": "Full withdrawal",
+        "terms": "The whole balance: on retirement after the age of fifty-five; on retirement for permanent and total incapacity; before migrating abroad; on retrenchment or a voluntary retirement scheme; otherwise on ceasing to be an employee, after twelve months out of covered employment. These are the terms of the fund the EPFO runs; an exempted establishment's fund has its own rules.",
+        "validity": {
+          "from": "2026-06-29"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/273957.pdf",
+          "sourceDescription": "Employees' Provident Funds Scheme, 2026, G.S.R. 525(E), Gazette Part II s.3(i) No. 473 of 29-06-2026, CG-DL-E-01072026-273957, para. 49(1), (2), p.89",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      },
+      {
+        "event": "Partial withdrawal",
+        "terms": "At least one thousand rupees, up to the whole balance above a minimum balance of 25% of all contributions (the employee's and the employer's, with interest), after twelve months' membership: for illness, for education (at most ten times), for marriage (five times), for housing (five times), and in special circumstances (twice in a financial year).",
+        "validity": {
+          "from": "2026-06-29"
+        },
+        "provenance": {
+          "sourceUrl": "https://egazette.gov.in/WriteReadData/2026/273957.pdf",
+          "sourceDescription": "Employees' Provident Funds Scheme, 2026, G.S.R. 525(E), Gazette Part II s.3(i) No. 473 of 29-06-2026, CG-DL-E-01072026-273957, para. 46, p.87",
+          "accessedOn": "2026-11-08",
+          "verificationLevel": "SOURCE_CHECKED"
+        }
+      }
+    ],
+    "unstated": [
+      {
+        "validity": {
+          "from": "2025-04-01",
+          "to": "2026-06-28"
+        },
+        "reason": "The Employees' Provident Funds Scheme, 1952 governed until the 2026 Scheme superseded it; the pack holds no Gazette copy of it to read its terms from (W-238e2)"
+      }
+    ]
   }
 }

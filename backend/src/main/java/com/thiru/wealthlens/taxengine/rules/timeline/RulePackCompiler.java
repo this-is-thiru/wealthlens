@@ -7,6 +7,7 @@ import com.thiru.wealthlens.taxengine.rules.id.NodeId;
 import com.thiru.wealthlens.taxengine.rules.id.RegimeCode;
 import com.thiru.wealthlens.taxengine.rules.id.RuleId;
 import com.thiru.wealthlens.taxengine.rules.id.TaxYearId;
+import com.thiru.wealthlens.taxengine.rules.json.ValueJson;
 import com.thiru.wealthlens.taxengine.rules.pack.RulePackRef;
 import com.thiru.wealthlens.taxengine.rules.pack.RuleRow;
 import com.thiru.wealthlens.taxengine.rules.regime.ConditionSetId;
@@ -41,7 +42,8 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>A component is projected into the year: its {@code feedsInto} and {@code salaryBaseFor} keep only the rules
  * the year holds, since a pay line outlives a rule the law states for one year only — an entertainment allowance is
  * salary in both years, deductible in one (D-105). That would hide a misspelt rule, so a reference to a rule the
- * timeline states in no year is refused here, before any year is compiled.
+ * timeline states in no year is refused here, before any year is compiled. A component's or fund's {@code liquidity}
+ * keeps only the periods that overlap the year (W-238e1).
  *
  * <p>The output is canonical — keys sorted, no whitespace, identities sorted, note fields
  * ({@code _}-prefixed) dropped — so a checksum moves when the law moves and not when a note does.
@@ -128,8 +130,8 @@ public final class RulePackCompiler {
         ArrayNode components = MAPPER.createArrayNode();
         for (ComponentCode code : sorted(timeline.components().keySet(), ComponentCode::value)) {
             if (timeline.components().get(code).lifecycle().isLiveIn(taxYear)) {
-                components.add(canonical(projected(MAPPER.readTree(timeline.componentSources().get(code)),
-                        rules)));
+                components.add(canonical(liquidityIn(projected(MAPPER.readTree(timeline.componentSources().get(code)),
+                        rules), taxYear)));
             }
         }
         return components;
@@ -141,7 +143,7 @@ public final class RulePackCompiler {
         for (EmployerFundCode code : sorted(timeline.funds().keySet(), EmployerFundCode::value)) {
             if (timeline.funds().get(code).validity().coversTaxYear(taxYear)) {
                 ObjectNode fund = (ObjectNode) MAPPER.readTree(timeline.fundSources().get(code));
-                funds.add(canonical(fund.set("feedsInto", held(fund.path("feedsInto"), rules))));
+                funds.add(canonical(liquidityIn(fund.set("feedsInto", held(fund.path("feedsInto"), rules)), taxYear)));
             }
         }
         return funds;
@@ -184,6 +186,28 @@ public final class RulePackCompiler {
         });
         copy.set("feedsInto", feeds);
         copy.set("salaryBaseFor", bases);
+        return copy;
+    }
+
+    /**
+     * The row as the year sees its liquidity (W-238e1): only the terms and the unstated periods that overlap the year,
+     * since a term the regulator replaced mid-year belongs to both years it touches and to no other.
+     */
+    private static JsonNode liquidityIn(JsonNode row, TaxYearId taxYear) {
+        if (!row.path("liquidity").isObject()) {
+            return row;
+        }
+        ObjectNode copy = (ObjectNode) row.deepCopy();
+        ObjectNode liquidity = (ObjectNode) copy.get("liquidity");
+        for (String periods : List.of("terms", "unstated")) {
+            ArrayNode kept = MAPPER.createArrayNode();
+            liquidity.path(periods).forEach(period -> {
+                if (ValueJson.dateRange(period.path("validity"), "liquidity." + periods).overlapsTaxYear(taxYear)) {
+                    kept.add(period);
+                }
+            });
+            liquidity.set(periods, kept);
+        }
         return copy;
     }
 

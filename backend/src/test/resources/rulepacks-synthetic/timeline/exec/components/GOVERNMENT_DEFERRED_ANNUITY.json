@@ -23,5 +23,16 @@
     "sourceDescription": "Gazette CG-DL-E-22082025-265620, Income-tax Act, 2025 Schedule XV para 1(c), p.561; s.123, p.159; Income-tax Act, 1961 as on thc.nic.in (current to Act 7 of 2019), s.80C(2)(iii), pp.330–333",
     "accessedOn": "2026-10-08",
     "verificationLevel": "SOURCE_CHECKED"
+  },
+  "liquidity": {
+    "terms": [],
+    "unstated": [
+      {
+        "validity": {
+          "from": "2025-04-01"
+        },
+        "reason": "The terms of a Government's deferred annuity are its own scheme's; the pack holds no Gazette copy of one (W-238e2)"
+      }
+    ]
   }
 }
