@@ -110,7 +110,7 @@ class EngineBenchmarkTest {
                 List.of(new AllowanceUse(ComponentCodes.UNIFORM_ALLOWANCE, Optional.of(Money.of("60000")), Optional.empty(),
                         Optional.empty()))), new AllocationSpace.Moves(Set.of(ComponentCodes.HRA, ComponentCodes.UNIFORM_ALLOWANCE), Set.of(), Set.of()),
                 ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
-        log.info("W-238a N3 optimisation: {} whole runs", CALCULATOR.optimise(space).pipelineRuns());
+        log.info("W-238a N3 optimisation: {} whole runs", CALCULATOR.optimise(space).search().pipelineRuns());
 
         // When
         Timing timing = timed("N3 optimiser (W-238a)", () -> CALCULATOR.optimise(space), OPTIMISER_WARM_UP,

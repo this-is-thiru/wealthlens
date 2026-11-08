@@ -653,12 +653,12 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
         JsonNode body = JSON.readTree(optimised.getBody());
         JsonNode view = body.get("optimisation");
-        assertThat(view.get("regimeBefore").asString()).isEqualTo("NEW_TAX_REGIME");
-        assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
-        assertThat(view.get("regimeAfter").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
-        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("288600");
-        assertThat(view.get("changes").size()).isEqualTo(1);
-        JsonNode change = view.at("/changes/0");
+        assertThat(view.get("before").get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(amountAt(view, "/before/netPayable")).isEqualByComparingTo("292500");
+        assertThat(view.get("after").get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("288600");
+        assertThat(view.get("changes").get("pay").size()).isEqualTo(1);
+        JsonNode change = view.at("/changes/pay/0");
         assertThat(change.get("component").asString()).isEqualTo("HRA");
         assertThat(amountAt(change, "/current")).isEqualByComparingTo("0");
         assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("800000");
@@ -669,7 +669,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(change.at("/facts/feedsInto").toString())
                 .isEqualTo("[\"SAL-HOUSE-RENT-ALLOWANCE\",\"SAL-SALARY-INCLUDES\"]");
         assertThat(amountAt(view, "/residualAfter")).isEqualByComparingTo("0");
-        assertThat(view.get("verified").toString()).isEqualTo("[\"HRA\"]");
+        assertThat(view.get("search").get("verified").toString()).isEqualTo("[\"HRA\"]");
         // W-238f: the owner's table gives HRA HIGH (D-495)
         assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"HRA\",\"likelihood\":\"HIGH\"}]");
         assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
@@ -733,10 +733,10 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
         JsonNode body = JSON.readTree(optimised.getBody());
         JsonNode view = body.get("optimisation");
-        assertThat(view.get("regimeAfter").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
-        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("226200");
-        assertThat(view.get("contributionChanges").size()).isEqualTo(1);
-        JsonNode nps = view.at("/contributionChanges/0");
+        assertThat(view.get("after").get("regime").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("226200");
+        assertThat(view.get("changes").get("contributions").size()).isEqualTo(1);
+        JsonNode nps = view.at("/changes/contributions/0");
         assertThat(nps.get("component").asString()).isEqualTo("EMPLOYEE_NPS");
         assertThat(amountAt(nps, "/current")).isEqualByComparingTo("0");
         assertThat(amountAt(nps, "/suggested")).isEqualByComparingTo("210000");
@@ -815,10 +815,10 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
         JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
-        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("120900");
-        assertThat(amountAt(view, "/fundChanges/0/suggested")).isEqualByComparingTo("750000");
-        assertThat(view.at("/unpriced/missingInput").asString()).isEqualTo("retirementFundHistory");
-        assertThat(view.at("/unpriced/rule").asString()).isEqualTo("PERQ-EMPLOYER-ACCRETION");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("120900");
+        assertThat(amountAt(view, "/changes/funds/0/suggested")).isEqualByComparingTo("750000");
+        assertThat(view.at("/search/unpriced/missingInput").asString()).isEqualTo("retirementFundHistory");
+        assertThat(view.at("/search/unpriced/rule").asString()).isEqualTo("PERQ-EMPLOYER-ACCRETION");
     }
 
     @Test
@@ -837,8 +837,8 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
         JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
-        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("120900");
-        assertThat(view.at("/unpriced").isMissingNode() || view.at("/unpriced").isNull()).isTrue();
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("120900");
+        assertThat(view.get("search").get("unpriced") == null || view.get("search").get("unpriced").isNull()).isTrue();
     }
 
     @Test
@@ -855,11 +855,11 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
         JsonNode body = JSON.readTree(optimised.getBody());
         JsonNode view = body.get("optimisation");
-        assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
-        assertThat(view.get("regimeAfter").asString()).isEqualTo("NEW_TAX_REGIME");
-        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("234260");
-        assertThat(view.get("changes").size()).isZero();
-        JsonNode change = view.at("/fundChanges/0");
+        assertThat(amountAt(view, "/before/netPayable")).isEqualByComparingTo("292500");
+        assertThat(view.get("after").get("regime").asString()).isEqualTo("NEW_TAX_REGIME");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("234260");
+        assertThat(view.get("changes").get("pay").size()).isZero();
+        JsonNode change = view.at("/changes/funds/0");
         assertThat(change.get("fund").asString()).isEqualTo("NOTIFIED_PENSION_SCHEME");
         assertThat(change.get("feedsInto").valueStream().map(JsonNode::asString).toList()).containsExactly(
                 "DED-NPS-EMPLOYER-GOVT", "DED-NPS-EMPLOYER-NEW-TAX-REGIME", "DED-NPS-EMPLOYER-OTHER",
@@ -914,18 +914,18 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
         JsonNode body = JSON.readTree(optimised.getBody());
         JsonNode view = body.get("optimisation");
-        assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
-        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("253500");
-        JsonNode change = view.at("/changes/0");
+        assertThat(amountAt(view, "/before/netPayable")).isEqualByComparingTo("292500");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("253500");
+        JsonNode change = view.at("/changes/pay/0");
         assertThat(change.get("component").asString()).isEqualTo("BASIC");
         assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("2250000");
         assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("39000");
         assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-150000");
-        JsonNode following = view.at("/followingChanges/0");
+        JsonNode following = view.at("/changes/following/0");
         assertThat(following.get("name").asString()).isEqualTo("RECOGNISED_PROVIDENT_FUND");
         assertThat(amountAt(following, "/suggested")).isEqualByComparingTo("270000");
         assertThat(following.get("follows").toString()).isEqualTo("[\"BASIC\"]");
-        assertThat(view.get("fundChanges").size()).isZero();
+        assertThat(view.get("changes").get("funds").size()).isZero();
         // W-238f: basic is LOW in the owner's table (D-495); the provident fund only follows it, so has no entry
         assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"BASIC\",\"likelihood\":\"LOW\"}]");
     }
@@ -948,13 +948,13 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
         JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
-        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("253500");
-        JsonNode change = view.at("/changes/0");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("253500");
+        JsonNode change = view.at("/changes/pay/0");
         assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("2250000");
         assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("39000");
         assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-150000");
-        assertThat(view.get("followingChanges").size()).isEqualTo(1);
-        assertThat(view.at("/followingChanges/0/name").asString()).isEqualTo("RECOGNISED_PROVIDENT_FUND");
+        assertThat(view.get("changes").get("following").size()).isEqualTo(1);
+        assertThat(view.at("/changes/following/0/name").asString()).isEqualTo("RECOGNISED_PROVIDENT_FUND");
     }
 
     @Test
@@ -990,9 +990,9 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // Then
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
         JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
-        assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("351000");
-        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("305500");
-        assertThat(amountAt(view.at("/changes/0"), "/savingAlone")).isEqualByComparingTo("45500");
-        assertThat(amountAt(view.at("/followingChanges/0"), "/suggested")).isEqualByComparingTo("294000");
+        assertThat(amountAt(view, "/before/netPayable")).isEqualByComparingTo("351000");
+        assertThat(amountAt(view, "/after/netPayable")).isEqualByComparingTo("305500");
+        assertThat(amountAt(view.at("/changes/pay/0"), "/savingAlone")).isEqualByComparingTo("45500");
+        assertThat(amountAt(view.at("/changes/following/0"), "/suggested")).isEqualByComparingTo("294000");
     }
 }

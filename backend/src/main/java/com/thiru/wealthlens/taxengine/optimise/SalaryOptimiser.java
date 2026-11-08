@@ -208,9 +208,11 @@ public final class SalaryOptimiser {
         Optional<String> discrepancy = exhaustive.equals(greedy) ? Optional.empty() : Optional.of("The greedy answer"
                 + " (bill " + pricing.price(greedy).bill() + ") was not the least: the exhaustive check over "
                 + verifiedNames + " found " + after.bill() + " — the candidates miss a breakpoint (G6.3)");
-        return new Optimisation(before.regime().value(), before.bill(), after.regime().value(), after.bill(), changes,
-                fundChanges, followingChanges, contributionChanges, answer.residualAmount(), verifiedNames, pricing.pipelineRuns(), discrepancy,
-                pricing.unpriced());
+        return new Optimisation(new Optimisation.Bill(before.regime().value(), before.bill()),
+                new Optimisation.Bill(after.regime().value(), after.bill()),
+                new Optimisation.Changes(changes, fundChanges, followingChanges, contributionChanges),
+                answer.residualAmount(),
+                new Optimisation.Search(verifiedNames, pricing.pipelineRuns(), discrepancy, pricing.unpriced()));
     }
 
     /**

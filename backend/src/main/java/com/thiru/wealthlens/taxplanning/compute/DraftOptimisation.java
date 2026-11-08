@@ -23,8 +23,8 @@ public record DraftOptimisation(Optimisation optimisation, List<HrSupport> hrSup
     /** The answer with each move's value from {@code table}. */
     static DraftOptimisation of(Optimisation optimisation, HrSupportTable table) {
         List<HrSupport> support = Stream.concat(
-                        optimisation.changes().stream().map(Optimisation.Change::component),
-                        optimisation.fundChanges().stream().map(Optimisation.FundChange::fund))
+                        optimisation.changes().pay().stream().map(Optimisation.Change::component),
+                        optimisation.changes().funds().stream().map(Optimisation.FundChange::fund))
                 .map(name -> new HrSupport(name, table.likelihoodOf(name)))
                 .toList();
         return new DraftOptimisation(optimisation, support);

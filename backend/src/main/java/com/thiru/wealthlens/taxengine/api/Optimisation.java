@@ -10,34 +10,62 @@ import java.util.Optional;
  * ({@code 06-algorithms.md} G6.1; W-238a). The regime is part of the answer: it is chosen on every allocation tried
  * (A2.1), so the regime before and after can differ.
  *
- * @param regimeBefore the regime the rules choose on the pay as entered
- * @param billBefore that regime's net payable
- * @param regimeAfter the regime the rules choose on the suggested pay
- * @param billAfter that regime's net payable — never more than {@code billBefore}
- * @param changes each movable component whose amount changes, in code order
- * @param fundChanges each movable fund whose contribution changes, by fund name (W-238c)
- * @param followingChanges each amount that changes only because what it follows moved, by name (W-238d)
- * @param contributionChanges each employee's own contribution the answer adds to, in code order (W-238k): current is
- *     the amount entered, suggested that amount with the addition, and the cash impact the addition paid from take-home
+ * @param before the regime the rules choose on the pay as entered, and its net payable
+ * @param after the regime the rules choose on the suggested pay, and its net payable — never more than before's
+ * @param changes what the answer moves, by kind (W-238k2)
  * @param residualAfter the residual component's amount after every change
- * @param verified the components the exhaustive check covered, recorded because the breadth is a tuning knob (G6.3)
- * @param pipelineRuns the whole computations run to reach the answer
- * @param discrepancy where the greedy answer was not the least, the notice saying so — a sign the candidates miss a
- *     breakpoint (G6.3)
- * @param unpriced where an allocation tried could not be priced for want of an entered fact, which fact and the rule
- *     that needs it; the search kept to what the engine could price, so entering the fact may widen the answer (W-238h)
+ * @param search what the search covered and what it could not do (G6.3; W-238h)
  */
-public record Optimisation(String regimeBefore, Money billBefore, String regimeAfter, Money billAfter,
-        List<Change> changes, List<FundChange> fundChanges, List<FollowingChange> followingChanges,
-        List<Change> contributionChanges, Money residualAfter,
-        List<String> verified, int pipelineRuns, Optional<String> discrepancy, Optional<UnpricedNotice> unpriced) {
+public record Optimisation(Bill before, Bill after, Changes changes, Money residualAfter, Search search) {
 
-    public Optimisation {
-        changes = List.copyOf(changes);
-        fundChanges = List.copyOf(fundChanges);
-        followingChanges = List.copyOf(followingChanges);
-        contributionChanges = List.copyOf(contributionChanges);
-        verified = List.copyOf(verified);
+    /**
+     * A regime and its bill.
+     *
+     * @param regime the regime the rules choose
+     * @param netPayable that regime's net payable
+     */
+    public record Bill(String regime, Money netPayable) {
+    }
+
+    /**
+     * What the answer moves, one list per kind of move (W-238k2): the kinds are kept apart because each carries different
+     * facts — a component its pack row, a fund its own row, a follower what it follows.
+     *
+     * @param pay each movable component whose amount changes, in code order
+     * @param funds each movable fund whose contribution changes, by fund name (W-238c)
+     * @param following each amount that changes only because what it follows moved, by name (W-238d)
+     * @param contributions each employee's own contribution the answer adds to, in code order (W-238k): current is the
+     *     amount entered, or the share's following amount at the answer where it follows basic (W-238k1 C1a);
+     *     suggested is current with the addition; and the cash impact is the addition paid from take-home
+     */
+    public record Changes(List<Change> pay, List<FundChange> funds, List<FollowingChange> following,
+            List<Change> contributions) {
+
+        public Changes {
+            pay = List.copyOf(pay);
+            funds = List.copyOf(funds);
+            following = List.copyOf(following);
+            contributions = List.copyOf(contributions);
+        }
+    }
+
+    /**
+     * What the search did (W-238k2).
+     *
+     * @param verified the components the exhaustive check covered, recorded because the breadth is a tuning knob (G6.3)
+     * @param pipelineRuns the whole computations run to reach the answer
+     * @param discrepancy where the greedy answer was not the least, the notice saying so — a sign the candidates miss a
+     *     breakpoint (G6.3)
+     * @param unpriced where an allocation tried could not be priced for want of an entered fact, which fact and the rule
+     *     that needs it; the search kept to what the engine could price, so entering the fact may widen the answer
+     *     (W-238h)
+     */
+    public record Search(List<String> verified, int pipelineRuns, Optional<String> discrepancy,
+            Optional<UnpricedNotice> unpriced) {
+
+        public Search {
+            verified = List.copyOf(verified);
+        }
     }
 
     /**

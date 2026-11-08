@@ -35,13 +35,15 @@ class DraftOptimisationTest {
     void of_whenComponentsFundsAFollowerAndAContributionMove_givesComponentsThenFundsAndNoneForTheOthers() {
         // Given — the provident fund only follows basic, and the employee's NPS is their own declaration (W-238k C5a);
         // the table holds no EMPLOYEE_NPS, so asking it would throw
-        Optimisation optimisation = new Optimisation("NEW_TAX_REGIME", Money.TEN, "NEW_TAX_REGIME", Money.ZERO,
+        Optimisation optimisation = new Optimisation(new Optimisation.Bill("NEW_TAX_REGIME", Money.TEN),
+                new Optimisation.Bill("NEW_TAX_REGIME", Money.ZERO), new Optimisation.Changes(
                 List.of(change("HRA"), change("CONVEYANCE_ALLOWANCE")),
                 List.of(new FundChange("NOTIFIED_PENSION_SCHEME", List.of(), Money.ZERO, Money.TEN, Optional.empty(),
                         Money.ZERO, NONE)),
                 List.of(new FollowingChange("RECOGNISED_PROVIDENT_FUND", List.of(), Money.ZERO, Money.TEN, List.of("BASIC"),
                         NONE)),
-                List.of(change("EMPLOYEE_NPS")), Money.ZERO, List.of("HRA"), 1, Optional.empty(), Optional.empty());
+                List.of(change("EMPLOYEE_NPS"))), Money.ZERO,
+                new Optimisation.Search(List.of("HRA"), 1, Optional.empty(), Optional.empty()));
 
         // When
         DraftOptimisation view = DraftOptimisation.of(optimisation, TABLE);

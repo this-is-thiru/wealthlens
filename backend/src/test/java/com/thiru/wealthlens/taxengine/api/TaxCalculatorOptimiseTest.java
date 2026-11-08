@@ -77,15 +77,15 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeBefore()).isEqualTo(NEW);
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
-        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("288600"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
+        assertThat(optimised.before().regime()).isEqualTo(NEW);
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.after().regime()).isEqualTo(OLD);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("288600"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
                 Money.of("800000"), Optional.of(Money.of("3900")), Money.ZERO));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
-        assertThat(optimised.verified()).containsExactly("HRA");
-        assertThat(optimised.discrepancy()).isEmpty();
+        assertThat(optimised.search().verified()).containsExactly("HRA");
+        assertThat(optimised.search().discrepancy()).isEmpty();
     }
 
     @Test
@@ -100,10 +100,10 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
-        assertThat(optimised.billBefore()).isEqualTo(Money.ZERO);
-        assertThat(optimised.billAfter()).isEqualTo(Money.ZERO);
-        assertThat(optimised.changes()).isEmpty();
+        assertThat(optimised.after().regime()).isEqualTo(NEW);
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.ZERO);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.ZERO);
+        assertThat(optimised.changes().pay()).isEmpty();
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("600000"));
     }
 
@@ -119,17 +119,17 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("297700"));
-        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("291720"));
-        assertThat(optimised.changes()).containsExactly(
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("297700"));
+        assertThat(optimised.after().regime()).isEqualTo(OLD);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("291720"));
+        assertThat(optimised.changes().pay()).containsExactly(
                 new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO, Money.of("750000"), Optional.of(Money.ZERO),
                         Money.ZERO),
                 new Optimisation.Change("UNIFORM_ALLOWANCE", UNIFORM_FACTS, Money.ZERO, Money.of("60000"),
                         Optional.of(Money.ZERO), Money.ZERO));
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("10000"));
-        assertThat(optimised.verified()).containsExactly("HRA", "UNIFORM_ALLOWANCE");
-        assertThat(optimised.discrepancy()).hasValueSatisfying(notice -> assertThat(notice)
+        assertThat(optimised.search().verified()).containsExactly("HRA", "UNIFORM_ALLOWANCE");
+        assertThat(optimised.search().discrepancy()).hasValueSatisfying(notice -> assertThat(notice)
                 .contains("297700").contains("291720").contains("G6.3"));
     }
 
@@ -143,10 +143,10 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("297700"));
-        assertThat(optimised.changes()).isEmpty();
-        assertThat(optimised.verified()).containsExactly("HRA");
-        assertThat(optimised.discrepancy()).isEmpty();
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("297700"));
+        assertThat(optimised.changes().pay()).isEmpty();
+        assertThat(optimised.search().verified()).containsExactly("HRA");
+        assertThat(optimised.search().discrepancy()).isEmpty();
     }
 
     @Test
@@ -158,7 +158,7 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then — moving pay between cash components cannot lower cash; the bill falls, so take-home rises to 21,11,400
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("288600"));
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("288600"));
     }
 
     @Test
@@ -292,21 +292,21 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeBefore()).isEqualTo(NEW);
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
-        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("234260"));
-        assertThat(optimised.changes()).isEmpty();
-        assertThat(optimised.fundChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+        assertThat(optimised.before().regime()).isEqualTo(NEW);
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.after().regime()).isEqualTo(NEW);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("234260"));
+        assertThat(optimised.changes().pay()).isEmpty();
+        assertThat(optimised.changes().funds()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
                 new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME", NPS_FEEDS, Money.ZERO, Money.of("224000"),
                         Optional.of(Money.of("58240")), Money.of("-224000"), NO_LIQUIDITY));
-        assertThat(outline(optimised.fundChanges().getFirst().liquidity())).containsExactlyElementsOf(NPS_2026_27);
+        assertThat(outline(optimised.changes().funds().getFirst().liquidity())).containsExactlyElementsOf(NPS_2026_27);
         // reg. 4(1)(a) as the 2025 amendment substitutes it: "at least twenty percent" buys an annuity; up to "rupees
         // eight lakh" may all be withdrawn
-        assertThat(optimised.fundChanges().getFirst().liquidity().terms().getFirst().terms())
+        assertThat(optimised.changes().funds().getFirst().liquidity().terms().getFirst().terms())
                 .contains("at least 20% of the accumulated pension wealth buys an annuity").contains("eight lakh rupees or less may all be withdrawn");
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("576000"));
-        assertThat(optimised.verified()).containsExactly("NOTIFIED_PENSION_SCHEME");
+        assertThat(optimised.search().verified()).containsExactly("NOTIFIED_PENSION_SCHEME");
     }
 
     @Test
@@ -321,9 +321,9 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
-        assertThat(optimised.fundChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("253500"));
+        assertThat(optimised.changes().funds()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
                 new Optimisation.FundChange("NOTIFIED_PENSION_SCHEME", NPS_FEEDS, Money.ZERO, Money.of("150000"),
                         Optional.of(Money.of("39000")), Money.of("-150000"), NO_LIQUIDITY));
     }
@@ -339,15 +339,15 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("120900"));
-        assertThat(optimised.fundChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+        assertThat(optimised.after().regime()).isEqualTo(NEW);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("120900"));
+        assertThat(optimised.changes().funds()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
                 new Optimisation.FundChange("APPROVED_SUPERANNUATION_FUND", AGGREGATE_FEEDS, Money.ZERO,
                         Money.of("750000"), Optional.of(Money.of("171600")), Money.of("-750000"), NO_LIQUIDITY));
-        assertThat(outline(optimised.fundChanges().getFirst().liquidity()))
+        assertThat(outline(optimised.changes().funds().getFirst().liquidity()))
                 .containsExactly("Payment from the fund from 2026-04-01");
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("50000"));
-        assertThat(optimised.unpriced()).isEmpty();
+        assertThat(optimised.search().unpriced()).isEmpty();
     }
 
     /** What the answer says when an allocation tried needed the funds' history for the accretion (W-238h C2a). */
@@ -365,13 +365,13 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("120900"));
-        assertThat(optimised.fundChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("120900"));
+        assertThat(optimised.changes().funds()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
                 new Optimisation.FundChange("APPROVED_SUPERANNUATION_FUND", AGGREGATE_FEEDS, Money.ZERO,
                         Money.of("750000"), Optional.of(Money.of("171600")), Money.of("-750000"), NO_LIQUIDITY));
         assertThat(optimised.residualAfter()).isEqualTo(Money.of("50000"));
-        assertThat(optimised.unpriced()).contains(HISTORY_NEEDED);
+        assertThat(optimised.search().unpriced()).contains(HISTORY_NEEDED);
     }
 
     @Test
@@ -386,8 +386,8 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("120900"));
-        assertThat(optimised.unpriced()).contains(HISTORY_NEEDED);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("120900"));
+        assertThat(optimised.search().unpriced()).contains(HISTORY_NEEDED);
     }
 
     @Test
@@ -455,16 +455,16 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
-        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.after().regime()).isEqualTo(NEW);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("253500"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-150000")));
-        assertThat(optimised.fundChanges()).isEmpty();
-        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(new Optimisation.FollowingChange(
+        assertThat(optimised.changes().funds()).isEmpty();
+        assertThat(optimised.changes().following()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(new Optimisation.FollowingChange(
                 "RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"), Money.of("270000"), List.of("BASIC"),
                 NO_LIQUIDITY));
-        assertThat(outline(optimised.followingChanges().getFirst().liquidity())).containsExactlyElementsOf(EPF_2026_27);
+        assertThat(outline(optimised.changes().following().getFirst().liquidity())).containsExactlyElementsOf(EPF_2026_27);
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
     }
 
@@ -481,16 +481,16 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+        assertThat(optimised.after().regime()).isEqualTo(NEW);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("253500"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-300000")));
-        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
+        assertThat(optimised.changes().following()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity").containsExactly(
                 new Optimisation.FollowingChange("EMPLOYEE_PF", List.of("DED-SCHEDULE-XV"), Money.of("120000"),
                         Money.of("270000"), List.of("BASIC"), NO_LIQUIDITY),
                 new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS, Money.of("120000"),
                         Money.of("270000"), List.of("BASIC"), NO_LIQUIDITY));
-        assertThat(optimised.followingChanges()).allSatisfy(change ->
+        assertThat(optimised.changes().following()).allSatisfy(change ->
                 assertThat(outline(change.liquidity())).containsExactlyElementsOf(EPF_2026_27));
     }
 
@@ -503,9 +503,9 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("292500"));
-        assertThat(optimised.changes()).isEmpty();
-        assertThat(optimised.followingChanges()).isEmpty();
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.changes().pay()).isEmpty();
+        assertThat(optimised.changes().following()).isEmpty();
     }
 
     @Test
@@ -568,10 +568,10 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("292500"));
-        assertThat(optimised.changes()).isEmpty();
-        assertThat(optimised.followingChanges()).isEmpty();
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.changes().pay()).isEmpty();
+        assertThat(optimised.changes().following()).isEmpty();
     }
 
     @Test
@@ -587,11 +587,11 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+        assertThat(optimised.after().regime()).isEqualTo(NEW);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("253500"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-150000")));
-        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+        assertThat(optimised.changes().following()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
                 .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
                         Money.of("120000"), Money.of("270000"), List.of("BASIC"), NO_LIQUIDITY));
     }
@@ -608,9 +608,9 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("319800"));
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("319800"));
-        assertThat(optimised.changes()).isEmpty();
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("319800"));
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("319800"));
+        assertThat(optimised.changes().pay()).isEmpty();
     }
 
     @Test
@@ -656,12 +656,12 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("351000"));
-        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("305500"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("351000"));
+        assertThat(optimised.after().regime()).isEqualTo(NEW);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("305500"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("45500")), Money.of("-150000")));
-        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+        assertThat(optimised.changes().following()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
                 .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
                         Money.of("144000"), Money.of("294000"), List.of("BASIC"), NO_LIQUIDITY));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
@@ -678,10 +678,10 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("305500"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("305500"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("45500")), Money.of("-150000")));
-        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+        assertThat(optimised.changes().following()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
                 .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
                         Money.of("120000"), Money.of("270000"), List.of("BASIC"), NO_LIQUIDITY));
     }
@@ -729,13 +729,13 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("351000"));
-        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("305500"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("DEARNESS_ALLOWANCE",
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("351000"));
+        assertThat(optimised.after().regime()).isEqualTo(NEW);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("305500"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("DEARNESS_ALLOWANCE",
                 DEARNESS_ALLOWANCE_FACTS, Money.of("200000"), Money.of("1450000"), Optional.of(Money.of("45500")),
                 Money.of("-150000")));
-        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+        assertThat(optimised.changes().following()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
                 .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
                         Money.of("144000"), Money.of("294000"), List.of("DEARNESS_ALLOWANCE"), NO_LIQUIDITY));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
@@ -764,9 +764,9 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("351000"));
-        assertThat(optimised.changes()).isEmpty();
-        assertThat(optimised.followingChanges()).isEmpty();
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("351000"));
+        assertThat(optimised.changes().pay()).isEmpty();
+        assertThat(optimised.changes().following()).isEmpty();
     }
 
     @Test
@@ -829,12 +829,12 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("226200"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
+        assertThat(optimised.after().regime()).isEqualTo(OLD);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("226200"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
                 Money.of("800000"), Optional.of(Money.of("3900")), Money.ZERO));
-        assertThat(optimised.contributionChanges()).hasSize(1);
-        Optimisation.Change nps = optimised.contributionChanges().getFirst();
+        assertThat(optimised.changes().contributions()).hasSize(1);
+        Optimisation.Change nps = optimised.changes().contributions().getFirst();
         assertThat(nps.component()).isEqualTo("EMPLOYEE_NPS");
         assertThat(nps.facts().kind()).isEqualTo("EMPLOYEE_CONTRIBUTION");
         assertThat(nps.facts().cashNature()).isEqualTo("CASH_OUTFLOW");
@@ -845,8 +845,8 @@ class TaxCalculatorOptimiseTest {
         assertThat(nps.savingAlone()).contains(Money.ZERO);
         assertThat(nps.cashImpact()).isEqualTo(Money.of("-210000"));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
-        assertThat(optimised.verified()).containsExactly("HRA", "EMPLOYEE_NPS");
-        assertThat(optimised.discrepancy()).isEmpty();
+        assertThat(optimised.search().verified()).containsExactly("HRA", "EMPLOYEE_NPS");
+        assertThat(optimised.search().discrepancy()).isEmpty();
     }
 
     @Test
@@ -860,10 +860,10 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("288600"));
-        assertThat(optimised.changes()).extracting(Optimisation.Change::component).containsExactly("HRA");
-        assertThat(optimised.contributionChanges()).isEmpty();
+        assertThat(optimised.after().regime()).isEqualTo(OLD);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("288600"));
+        assertThat(optimised.changes().pay()).extracting(Optimisation.Change::component).containsExactly("HRA");
+        assertThat(optimised.changes().contributions()).isEmpty();
     }
 
     @Test
@@ -879,12 +879,12 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("241800"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
+        assertThat(optimised.after().regime()).isEqualTo(OLD);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("241800"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("HRA", HRA_FACTS, Money.ZERO,
                 Money.of("800000"), Optional.of(Money.of("35100")), Money.ZERO));
-        assertThat(optimised.contributionChanges()).hasSize(1);
-        Optimisation.Change pf = optimised.contributionChanges().getFirst();
+        assertThat(optimised.changes().contributions()).hasSize(1);
+        Optimisation.Change pf = optimised.changes().contributions().getFirst();
         assertThat(pf.component()).isEqualTo("EMPLOYEE_PF");
         assertThat(pf.facts().feedsInto()).containsExactly("DED-SCHEDULE-XV");
         assertThat(outline(pf.facts().liquidity())).isEqualTo(EPF_2026_27);
@@ -965,27 +965,27 @@ class TaxCalculatorOptimiseTest {
         Optimisation optimised = CALCULATOR.optimise(space);
 
         // Then
-        assertThat(optimised.regimeBefore()).isEqualTo(OLD);
-        assertThat(optimised.billBefore()).isEqualTo(Money.of("619320"));
-        assertThat(optimised.regimeAfter()).isEqualTo(OLD);
-        assertThat(optimised.billAfter()).isEqualTo(Money.of("585000"));
-        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+        assertThat(optimised.before().regime()).isEqualTo(OLD);
+        assertThat(optimised.before().netPayable()).isEqualTo(Money.of("619320"));
+        assertThat(optimised.after().regime()).isEqualTo(OLD);
+        assertThat(optimised.after().netPayable()).isEqualTo(Money.of("585000"));
+        assertThat(optimised.changes().pay()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
                 Money.of("1600000"), Money.of("2600000"), Optional.of(Money.of("18720")), Money.of("-157500")));
-        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+        assertThat(optimised.changes().following()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
                 .containsExactly(
                         new Optimisation.FollowingChange("EMPLOYEE_PF", List.of("DED-SCHEDULE-XV"), Money.of("60000"),
                                 Money.of("97500"), List.of("BASIC"), NO_LIQUIDITY),
                         new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
                                 Money.of("192000"), Money.of("312000"), List.of("BASIC"), NO_LIQUIDITY));
-        assertThat(optimised.contributionChanges()).hasSize(1);
-        Optimisation.Change pf = optimised.contributionChanges().getFirst();
+        assertThat(optimised.changes().contributions()).hasSize(1);
+        Optimisation.Change pf = optimised.changes().contributions().getFirst();
         assertThat(pf.component()).isEqualTo("EMPLOYEE_PF");
         assertThat(pf.current()).isEqualTo(Money.of("97500"));
         assertThat(pf.suggested()).isEqualTo(Money.of("150000"));
         assertThat(pf.savingAlone()).contains(Money.of("16380"));
         assertThat(pf.cashImpact()).isEqualTo(Money.of("-52500"));
         assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
-        assertThat(optimised.discrepancy()).isEmpty();
+        assertThat(optimised.search().discrepancy()).isEmpty();
     }
 
     /** {@code GOVERNMENT_DEFERRED_ANNUITY} is measured on the Government salary; this employer is OTHER (D-154). */
