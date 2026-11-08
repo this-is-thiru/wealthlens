@@ -562,7 +562,7 @@ class TaxCalculatorOptimiseTest {
         // 24,00,000 whatever the split, so salary and the bill (2,92,500) do not move. With the share following, the
         // same input saves 39,000.
         AllocationSpace space = basicMovesUnder(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false),
-                new ProvidentFundTerms(false, true));
+                new ProvidentFundTerms(false, true, Optional.empty()));
 
         // When
         Optimisation optimised = CALCULATOR.optimise(space);
@@ -581,7 +581,7 @@ class TaxCalculatorOptimiseTest {
         // +12,50,000 − 14,00,000 = −1,50,000, not −3,00,000.
         AllocationSpace space = basicMovesUnder(paidBasic("1000000",
                 List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))),
-                List.of(PROVIDENT_FUND_120000), false), new ProvidentFundTerms(true, false));
+                List.of(PROVIDENT_FUND_120000), false), new ProvidentFundTerms(true, false, Optional.empty()));
 
         // When
         Optimisation optimised = CALCULATOR.optimise(space);
@@ -602,7 +602,7 @@ class TaxCalculatorOptimiseTest {
         // any split. 25,00,000 − 75,000 = 24,25,000 → 3,00,000 + 30 % × 25,000 = 3,07,500, + 4 % = 3,19,800.
         AllocationSpace space = basicMovesUnder(paidBasic("1000000",
                 List.of(new SalaryComponent(ComponentCodes.DEARNESS_ALLOWANCE, Money.of("100000"))),
-                List.of(PROVIDENT_FUND_120000), true), new ProvidentFundTerms(false, true));
+                List.of(PROVIDENT_FUND_120000), true), new ProvidentFundTerms(false, true, Optional.empty()));
 
         // When
         Optimisation optimised = CALCULATOR.optimise(space);
@@ -617,7 +617,7 @@ class TaxCalculatorOptimiseTest {
     void optimise_whenAShareIsHeldButNotEntered_isRefused() {
         // Given
         AllocationSpace space = basicMovesUnder(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false),
-                new ProvidentFundTerms(true, false));
+                new ProvidentFundTerms(true, false, Optional.empty()));
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
@@ -628,10 +628,100 @@ class TaxCalculatorOptimiseTest {
     void optimise_whenAShareIsHeldButBasicIsNotMovable_isRefused() {
         // Given
         AllocationSpace space = new AllocationSpace(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false),
-                Set.of(UNIFORM), Set.of(), SPECIAL, Money.ZERO, 6, new ProvidentFundTerms(false, true));
+                Set.of(UNIFORM), Set.of(), SPECIAL, Money.ZERO, 6, new ProvidentFundTerms(false, true, Optional.empty()));
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("employerShareFollowsBasic is false").hasMessageContaining("BASIC is not movable");
+    }
+
+    private static final SalaryComponent DEARNESS_ALLOWANCE_200000 = new SalaryComponent(
+            ComponentCodes.DEARNESS_ALLOWANCE, Money.of("200000"));
+
+    private static ProvidentFundTerms baseIncludesDearnessAllowance(boolean includes) {
+        return new ProvidentFundTerms(true, true, Optional.of(includes));
+    }
+
+    @Test
+    void optimise_whenTheBaseIncludesDearnessAllowance_followsOverBasicAndTheAllowance() {
+        // Given — basic 10L, DA 2L counting for retirement, special 14L, the employer's 1,44,000 = 12 % of 12L. Before:
+        // 26L − 75,000 = 25,25,000 → 3,00,000 + 37,500 = 3,37,500, + 4 % = 3,51,000. DA is held, so each rupee of basic
+        // takes 1 + 0.12 from special: 14,00,000 ÷ 1.12 = 12,50,000, basic 22,50,000, the fund 0.12 × 24,50,000 =
+        // 2,94,000. After: 24,50,000 − 75,000 = 23,75,000 → 2,00,000 + 93,750 = 2,93,750, + 4 % = 3,05,500; saving
+        // 45,500. Old after: 24,00,000 → 1,12,500 + 4,20,000 = 5,32,500, + 4 % = 5,53,800 — more.
+        AllocationSpace space = basicMovesUnder(paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000),
+                List.of(new EmployerFundContribution(0, EmployerFund.RECOGNISED_PROVIDENT_FUND, Money.of("144000"))),
+                true), baseIncludesDearnessAllowance(true));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("351000"));
+        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("305500"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+                Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("45500")), Money.of("-150000")));
+        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+                .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
+                        Money.of("144000"), Money.of("294000"), "BASIC", NO_LIQUIDITY));
+        assertThat(optimised.residualAfter()).isEqualTo(Money.ZERO);
+    }
+
+    @Test
+    void optimise_whenTheBaseExcludesDearnessAllowance_followsOverBasicAlone() {
+        // Given — as above with the employer's 1,20,000 = 12 % of basic alone: 14,00,000 ÷ 1.12 = 12,50,000, basic
+        // 22,50,000, the fund 2,70,000; salary after 24,50,000 as above, so the bill 3,05,500 and the saving 45,500
+        AllocationSpace space = basicMovesUnder(paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000),
+                List.of(PROVIDENT_FUND_120000), true), baseIncludesDearnessAllowance(false));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("305500"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+                Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("45500")), Money.of("-150000")));
+        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+                .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
+                        Money.of("120000"), Money.of("270000"), "BASIC", NO_LIQUIDITY));
+    }
+
+    @Test
+    void optimise_whenTheAllowanceInTheBaseIsMovable_isRefused() {
+        // Given — stated in the base, and (second) not stated but counting for retirement
+        EngineInputs inputs = paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000), List.of(PROVIDENT_FUND_120000),
+                true);
+        Set<ComponentCode> movable = Set.of(BASIC, ComponentCodes.DEARNESS_ALLOWANCE);
+        AllocationSpace stated = new AllocationSpace(inputs, movable, Set.of(), SPECIAL, Money.ZERO, 6,
+                baseIncludesDearnessAllowance(true));
+        AllocationSpace unstated = new AllocationSpace(inputs, movable, Set.of(), SPECIAL, Money.ZERO, 6,
+                ProvidentFundTerms.FOLLOW_BASIC);
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(stated)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("DEARNESS_ALLOWANCE cannot move here");
+        assertThatThrownBy(() -> CALCULATOR.optimise(unstated)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("DEARNESS_ALLOWANCE cannot move here");
+    }
+
+    @Test
+    void optimise_whenTheBaseIsStatedButChangesNothing_isRefusedSayingWhy() {
+        // Given — BASIC not movable; no share following; no dearness allowance entered
+        AllocationSpace basicStill = new AllocationSpace(paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000),
+                List.of(PROVIDENT_FUND_120000), false), Set.of(UNIFORM), Set.of(), SPECIAL, Money.ZERO, 6,
+                baseIncludesDearnessAllowance(true));
+        AllocationSpace nothingFollows = basicMovesUnder(paidBasic("1000000", List.of(DEARNESS_ALLOWANCE_200000),
+                List.of(), false), baseIncludesDearnessAllowance(true));
+        AllocationSpace noAllowance = basicMovesUnder(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000),
+                false), baseIncludesDearnessAllowance(false));
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(basicStill)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("BASIC is not movable");
+        assertThatThrownBy(() -> CALCULATOR.optimise(nothingFollows)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no provident fund share follows basic");
+        assertThatThrownBy(() -> CALCULATOR.optimise(noAllowance)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no dearness allowance is entered");
     }
 }

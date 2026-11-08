@@ -21,13 +21,12 @@ import java.util.stream.Collectors;
  * @param residual the code of the taxable component that funds every move
  * @param cashFloor the least cash take-home after tax, in rupees
  * @param verificationBreadth how many components the exhaustive check covers; the setting when absent
- * @param employerShareFollowsBasic whether the employer's provident fund contribution moves with basic; it does when
- *     absent (W-238i)
- * @param employeeShareFollowsBasic whether {@code EMPLOYEE_PF} moves with basic; it does when absent (W-238i)
+ * @param providentFund how the provident fund moves with basic (W-238i, W-238j); each share following basic, the base
+ *     not stated, when absent
  */
 public record DraftOptimisationRequest(List<String> movable, Optional<List<String>> movableFunds, String residual,
-        String cashFloor, Optional<Integer> verificationBreadth, Optional<Boolean> employerShareFollowsBasic,
-        Optional<Boolean> employeeShareFollowsBasic) {
+        String cashFloor, Optional<Integer> verificationBreadth,
+        Optional<DraftProvidentFundTerms> providentFund) {
 
     public DraftOptimisationRequest {
         if (movable == null || residual == null || cashFloor == null) {
@@ -38,17 +37,14 @@ public record DraftOptimisationRequest(List<String> movable, Optional<List<Strin
         if (verificationBreadth == null) {
             verificationBreadth = Optional.empty();
         }
-        if (employerShareFollowsBasic == null) {
-            employerShareFollowsBasic = Optional.empty();
-        }
-        if (employeeShareFollowsBasic == null) {
-            employeeShareFollowsBasic = Optional.empty();
+        if (providentFund == null) {
+            providentFund = Optional.empty();
         }
     }
 
     /** The provident fund terms, each share following basic where the request does not say otherwise (W-238i). */
     ProvidentFundTerms providentFundTerms() {
-        return new ProvidentFundTerms(employerShareFollowsBasic.orElse(true), employeeShareFollowsBasic.orElse(true));
+        return providentFund.map(DraftProvidentFundTerms::toTerms).orElse(ProvidentFundTerms.FOLLOW_BASIC);
     }
 
     Set<ComponentCode> movableCodes() {

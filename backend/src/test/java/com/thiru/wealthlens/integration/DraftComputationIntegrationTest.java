@@ -915,7 +915,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
         // When
         ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [\"BASIC\"], \"residual\":"
-                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"employeeShareFollowsBasic\": false}");
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"providentFund\": {\"employeeShareFollowsBasic\": false}}");
 
         // Then
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
@@ -936,10 +936,35 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
         // When
         ResponseEntity<String> refused = optimise(OWNER, draftId, "{\"movable\": [\"BASIC\"], \"residual\":"
-                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"employerShareFollowsBasic\": false}");
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"providentFund\": {\"employerShareFollowsBasic\": false}}");
 
         // Then
         assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(refused.getBody()).contains("employerShareFollowsBasic is false");
+    }
+
+    @Test
+    void optimise_whenTheBaseIncludesDearnessAllowance_followsOverBasicAndTheAllowance() {
+        // Given — TaxCalculatorOptimiseTest's W-238j case: basic 10L, DA 2L, special 14L, the fund 1,44,000 = 12 % of 12L;
+        // basic → 22,50,000, the fund → 0.12 × 24,50,000 = 2,94,000, 3,51,000 → 3,05,500, saving 45,500
+        String draftId = salariedDraft(1000000, 1400000, """
+                {"op": "add", "path": "/entered/employments/0/components/-", "value": {
+                  "code": {"value": "DEARNESS_ALLOWANCE"}, "annualAmount": {"amountInRupees": 200000}}},
+                {"op": "add", "path": "/entered/employerContributions/-", "value": {"employment": 0,
+                  "fund": "RECOGNISED_PROVIDENT_FUND", "amount": {"amountInRupees": 144000}}},
+                """);
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [\"BASIC\"], \"residual\":"
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\","
+                + " \"providentFund\": {\"baseIncludesDearnessAllowance\": true}}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
+        assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("351000");
+        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("305500");
+        assertThat(amountAt(view.at("/changes/0"), "/savingAlone")).isEqualByComparingTo("45500");
+        assertThat(amountAt(view.at("/followingChanges/0"), "/suggested")).isEqualByComparingTo("294000");
     }
 }

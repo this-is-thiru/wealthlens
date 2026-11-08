@@ -71,4 +71,10 @@ class AllocationSpaceTest {
                 ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6, null)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("provident fund terms");
     }
+
+    @Test
+    void providentFundTerms_whenTheBaseIsNull_isRefused() {
+        assertThatThrownBy(() -> new ProvidentFundTerms(true, true, null)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Optional.empty()");
+    }
 }
