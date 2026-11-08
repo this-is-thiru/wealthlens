@@ -651,7 +651,8 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
-        JsonNode view = JSON.readTree(optimised.getBody());
+        JsonNode body = JSON.readTree(optimised.getBody());
+        JsonNode view = body.get("optimisation");
         assertThat(view.get("regimeBefore").asString()).isEqualTo("NEW_TAX_REGIME");
         assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
         assertThat(view.get("regimeAfter").asString()).isEqualTo("FIRST_SCHEDULE_RATES");
@@ -669,6 +670,8 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
                 .isEqualTo("[\"SAL-HOUSE-RENT-ALLOWANCE\",\"SAL-SALARY-INCLUDES\"]");
         assertThat(amountAt(view, "/residualAfter")).isEqualByComparingTo("0");
         assertThat(view.get("verified").toString()).isEqualTo("[\"HRA\"]");
+        // W-238f: the owner's table gives HRA HIGH (D-495)
+        assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"HRA\",\"likelihood\":\"HIGH\"}]");
         assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
         assertThat(mongoTemplate.findAll(DraftComputation.class)).isEmpty();
     }
@@ -769,7 +772,8 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
-        JsonNode view = JSON.readTree(optimised.getBody());
+        JsonNode body = JSON.readTree(optimised.getBody());
+        JsonNode view = body.get("optimisation");
         assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
         assertThat(view.get("regimeAfter").asString()).isEqualTo("NEW_TAX_REGIME");
         assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("234260");
@@ -792,6 +796,9 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
                 .isEqualTo("Exit after fifteen years, at sixty or on superannuation, non-government sector");
         assertThat(terms.at("/0/source").asString()).contains("CG-DL-E-16122025-268548");
         assertThat(change.at("/liquidity/unstated").size()).isZero();
+        // W-238f: the owner's table gives the NPS EMPLOYER_DISCRETION (D-495)
+        assertThat(body.get("hrSupport").toString())
+                .isEqualTo("[{\"name\":\"NOTIFIED_PENSION_SCHEME\",\"likelihood\":\"EMPLOYER_DISCRETION\"}]");
         assertThat(mongoTemplate.findAll(FilingDraft.class).getFirst().getCurrentRevision()).isEqualTo(1);
     }
 
@@ -824,7 +831,8 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
-        JsonNode view = JSON.readTree(optimised.getBody());
+        JsonNode body = JSON.readTree(optimised.getBody());
+        JsonNode view = body.get("optimisation");
         assertThat(amountAt(view, "/billBefore")).isEqualByComparingTo("292500");
         assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("253500");
         JsonNode change = view.at("/changes/0");
@@ -837,5 +845,7 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         assertThat(amountAt(following, "/suggested")).isEqualByComparingTo("270000");
         assertThat(following.get("follows").asString()).isEqualTo("BASIC");
         assertThat(view.get("fundChanges").size()).isZero();
+        // W-238f: basic is LOW in the owner's table (D-495); the provident fund only follows it, so has no entry
+        assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"BASIC\",\"likelihood\":\"LOW\"}]");
     }
 }
