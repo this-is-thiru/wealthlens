@@ -65,7 +65,7 @@ public class ProfitAndLossSplitReshape {
                 reshapeSide(pnl, side, update, placed, unplaced);
             }
             if (!dryRun && !update.getUpdateObject().isEmpty()) {
-                update.set("audit_metadata.updatedBy", auditor).set("audit_metadata.updatedAt", TLocalDateTime.now());
+                update.set("audit_metadata.updatedBy", cipher.encryptSearchable(auditor)).set("audit_metadata.updatedAt", TLocalDateTime.now());
                 mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(pnl.get("_id"))), update, COLLECTION);
             }
         }

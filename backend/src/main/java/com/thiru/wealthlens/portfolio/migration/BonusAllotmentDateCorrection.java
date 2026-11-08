@@ -126,6 +126,7 @@ public class BonusAllotmentDateCorrection {
     }
 
     private static Update audited(Update update, String auditor, LocalDateTime now) {
-        return update.set("audit_metadata.updatedBy", auditor).set("audit_metadata.updatedAt", now);
+        // The Java name, so the actor is stored through its converter; the stored name would bypass it (W-256).
+        return update.set("auditMetadata.updatedBy", auditor).set("audit_metadata.updatedAt", now);
     }
 }

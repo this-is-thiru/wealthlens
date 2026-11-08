@@ -16,6 +16,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
@@ -31,6 +34,8 @@ class StoredFieldEncryptionTest {
     void encrypt_whenARowChangesUnderneathTheRun_conditionsTheUpdateOnThePlainValueAndCountsItUnchanged() {
         // Given — the row read holds "Wrong address shown"; by the update it holds something else, so nothing matches
         StoredFieldEncryption encryption = new StoredFieldEncryption(mongoTemplate, new FieldCipher(new PersonalDataKeys(KEY, KEY)));
+        // An empty mapping: no audited collection, so only the fixed lists run (W-256 reads the audited ones from it)
+        when(mongoTemplate.getConverter()).thenReturn(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, new MongoMappingContext()));
         when(mongoTemplate.stream(any(Query.class), eq(Document.class), anyString())).thenAnswer(call ->
                 "privacy_grievances".equals(call.getArgument(2))
                         ? Stream.of(new Document("_id", "g1").append("text", "Wrong address shown")) : Stream.empty());

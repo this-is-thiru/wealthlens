@@ -70,9 +70,9 @@ class TradeOutcomeDeductibleChargeRemovalIntegrationTest extends AbstractIntegra
             assertThat(row.getString("stock_code")).isEqualTo("INFY");
             assertThat(row.getLong("holding_period_days")).isEqualTo(400L);
         }
-        assertThat(stored("both").get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo("test");
+        assertThat(stored("both").get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo(storedIdentifier("test"));
         assertThat(stored("sell-only").get("audit_metadata", Document.class).getString("updatedBy"))
-                .isEqualTo("test");
+                .isEqualTo(storedIdentifier("test"));
         assertThat(stored("neither").containsKey("audit_metadata")).isFalse();
     }
 
@@ -87,7 +87,7 @@ class TradeOutcomeDeductibleChargeRemovalIntegrationTest extends AbstractIntegra
 
         // Then — no row matched, so none restamped
         assertThat(second).isZero();
-        assertThat(stored("both").get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo("first");
+        assertThat(stored("both").get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo(storedIdentifier("first"));
     }
 
     @Test
@@ -115,7 +115,7 @@ class TradeOutcomeDeductibleChargeRemovalIntegrationTest extends AbstractIntegra
                 .then().statusCode(200).body("dryRun", equalTo(false)).body("rows", equalTo(2));
         assertThat(carriesACharge(stored("both"))).isFalse();
         assertThat(stored("both").get("audit_metadata", Document.class).getString("updatedBy"))
-                .isEqualTo("admin@example.com");
+                .isEqualTo(storedIdentifier("admin@example.com"));
     }
 
     @Test

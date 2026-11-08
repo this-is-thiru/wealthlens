@@ -227,7 +227,7 @@ class ProfitAndLossV2BackfillIntegrationTest extends AbstractIntegrationTest {
                 .then().statusCode(200).body("placed.size()", equalTo(1));
         MoneyAssert.assertMoney(445.0, entry("p1").getDouble("profit"));
         assertThat(mongoTemplate.getCollection("profit_and_loss").find(new Document("_id", "p1")).first()
-                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo("admin@example.com");
+                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo(storedIdentifier("admin@example.com"));
     }
 
     @Test

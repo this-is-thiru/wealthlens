@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxplanning.workspace;
 import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import com.thiru.wealthlens.shared.entity.model.AuditableEntity;
 import com.thiru.wealthlens.shared.protection.EncryptedField;
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.convert.ValueConverter;
@@ -38,6 +39,7 @@ public class DraftRevision implements AuditableEntity {
     @Field("change_set_json")
     private String changeSetJson;
 
+    @ValueConverter(SearchableIdentifier.class)
     @Field("changed_by")
     private String changedBy;
 

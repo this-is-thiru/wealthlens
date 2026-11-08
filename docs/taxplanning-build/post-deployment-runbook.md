@@ -264,9 +264,9 @@ Safe to repeat; it writes nothing, so there is nothing to undo.
 
 ### 0.7 W-253 (D-485) — an identifier's stored form, for a console query · owner · **whenever a step names `<stored …>`**
 
-From W-253 every email, account holder and demat account id is stored encrypted, one value always storing the same
+From W-253 every email, account holder and demat account id — and from W-256 the email of whoever wrote a row — is stored encrypted, one value always storing the same
 form (`k1:…`). A console query that matches one by its plain value finds nothing, silently. Where a step says
-`<stored email>` (or `<stored owner email>`, `<stored user email>`), compute it in a terminal with the database's own
+`<stored email>` (or `<stored owner email>`, `<stored user email>`, `<stored caller email>`), compute it in a terminal with the database's own
 keys, the `TAX_DATA_KEY` and `TAX_DIGEST_KEY` of the environment the database belongs to (§0.5):
 
 ```bash
@@ -582,7 +582,7 @@ import was wrong, import the exports again and repeat step 4. **Profile-erasure 
 `email`, `profile_id`, `requested_at`, `erased_at`) are new with W-237f. They are written by each single-profile request
 from that deploy on, and erased a year after `erased_at` by §1.t's `log-retention` job. Nothing to seed.
 
-### 1.r W-248 (D-479), W-253 (D-485) — personal data and identifiers stored before them, encrypted · owner, `SUPER_USER` · **every database · right after the first start carrying W-253, before users**
+### 1.r W-248 (D-479), W-253 (D-485), W-256 (D-486) — personal data, identifiers and actors stored before them, encrypted · owner, `SUPER_USER` · **every database · right after the first start carrying W-253 and W-256, with the tax jobs off, before users**
 
 From W-248 these fields are stored encrypted under `TAX_DATA_KEY` (§0.5): `privacy_grievances` `text` and `answer`;
 `privacy_processing_log` `remote_address`; `insurances` `insurance_id`, `agent_name`, `agent_email`, `agent_contact`,
@@ -603,12 +603,21 @@ email as `_id`; it is re-keyed to a generated `_id` and an encrypted `email` (un
 startup by `LoginIndexInitializer`). **Until this step runs, no stored row is found by its user** — portfolios read empty,
 and nobody can sign in — and a write in that gap starts a second row beside the plain one (step 5). Hence before users.
 
+From W-256 the email of whoever wrote a row is stored the same way: `audit_metadata.createdBy` and `updatedBy` in every
+collection that carries `audit_metadata`, `tax_draft_revisions.changed_by` and `tax_gazette_cursor.updated_by`, whatever
+the value (`unknown`, a job's name and an email alike). **Until this step runs, a row whose actor is still plain cannot be
+read at all** (a `500`) — reference data included: charge cards, tax policies, corporate actions. And the staleness sweep
+that runs on every start reads each `READY` or `ACTED_ON` filing draft, so on a database holding one **the start itself
+fails** (`StoredActorEncryptionIntegrationTest`). Hence the first start with the tax jobs off (step 1) and back on after
+(step 7).
+
 1. **A `SUPER_USER` token from the previous build.** Sign-in cannot find a login until step 4 re-keys it, but a token is
    read from its own claims, not from the database (`AuthFilter`). Right before switching the build, sign in on the
    previous build as your `SUPER_USER` account and keep the token: it lasts 30 minutes. If it runs out first, deploy the
-   previous build again, sign in, and switch back.
+   previous build again, sign in, and switch back. **Start the new build with `APP_TAX_JOBS_ENABLED=false`**
+   (`app.tax.jobs.enabled`), so no job reads a plain row before step 4.
 2. **Backup first** (the copy is personal data in plain text: delete it as the header says):
-   `mongodump --uri "<uri>" --db <db> --out <dir>` — the whole database, since the step writes to 24 collections.
+   `mongodump --uri "<uri>" --db <db> --out <dir>` — the whole database, since the step writes to nearly every collection.
 3. **Check before** (read-only):
 
 ```js
@@ -630,6 +639,9 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
         { $elemMatch: { $or: ["policy_id", "policy_description", ...agent].map(plain) } } }]) }),
       identifiers: Object.entries(ids).map(([c, fs]) => ({ c, plain: d.getCollection(c).countDocuments({ $or: fs.map(plain) }) }))
         .filter(x => x.plain > 0),
+      actors: d.getCollectionNames().map(c => ({ c, plain: d.getCollection(c).countDocuments({ $or:
+        ["audit_metadata.createdBy", "audit_metadata.updatedBy", "changed_by", "updated_by"].map(plain) }) }))
+        .filter(x => x.plain > 0),
       loginsToRekey: d.user_details.countDocuments({ email: { $exists: false } }) }; }) }])
 ```
 
@@ -642,8 +654,11 @@ db.aggregate([{ $documents: db.adminCommand({ listDatabases: 1, nameOnly: true }
    plain twin, and the plain one was left as it was (the log names each `_id`: `left plain: its encrypted identifier
    duplicates a unique index entry`). Compare the two in the backup and the database; keep the fuller, merging figures by
    hand as §0.2 describes for a duplicate `{email, financial_year}`, delete the other, and run step 4 again.
-6. **Check after:** step 3 again — `0` everywhere, `identifiers` empty, `loginsToRekey` 0. Then sign in on the new build:
-   it works.
+6. **Check after:** step 3 again — `0` everywhere, `identifiers` and `actors` empty, `loginsToRekey` 0. Then sign in on
+   the new build: it works.
+7. **Turn the tax jobs back on:** restart without `APP_TAX_JOBS_ENABLED=false`. The start completes and the log shows
+   `Job staleness-sweep flagged <n> draft(s)`; a stack trace naming `A stored field is not encrypted` means step 6 was
+   not `0` — stop the jobs again and repeat step 4.
 
 A second run is safe: it finds nothing and changes nothing. Each update is conditioned on the plain value it read, so
 a row that changed during a run is left for the next run, and a run that failed part-way is completed by the next; a
@@ -908,7 +923,7 @@ should report everything already present, so there is nothing to write.
    db.perquisite_policies.countDocuments({ tax_year: "2025-26", status: "ACTIVE" })   // 1
    db.allowance_catalogue.countDocuments({ tax_year: "2025-26" })                    // 39
    db.allowance_limits.countDocuments({ tax_year: "2025-26" })                       // 14
-   // each document written by this step carries audit_metadata.createdBy = the caller
+   // each document written by this step carries audit_metadata.createdBy = <stored caller email> (§0.7, W-256)
    ```
 
 **Idempotent, per document.** A document is skipped when one with its key is on file:
@@ -926,7 +941,7 @@ load is an error naming it; the files before it stay seeded.
 - **Policies the old boot seeder wrote carry no `audit_metadata` at all.** Jackson 3 built them through the
   all-arguments constructor, leaving it null. Their author is unrecorded; nothing re-seeds them.
 
-**Way back:** delete the documents this step wrote, by `audit_metadata.createdBy` and `createdAt`.
+**Way back:** delete the documents this step wrote, by `audit_metadata.createdBy` (`<stored caller email>`, §0.7) and `createdAt`.
 
 **Removed after use:** W-148 / WL-30, once this step is logged for every database.
 
@@ -1013,14 +1028,14 @@ A failing user is an error naming them; the users before stay written.
    rows were deleted.
 2. **Write:** the same call with `?dryRun=false`.
 3. **Verify:** for each rebuilt user, `db.trade_outcomes.countDocuments({ email: "<stored user email>" })` (§0.7, from W-253) equals the rows the
-   report gave for them, and each row's `audit_metadata.createdBy` is the caller. A second call reports
+   report gave for them, and each row's `audit_metadata.createdBy` is `<stored caller email>` (§0.7). A second call reports
    `rowsWritten` 0.
 
 **Know this:** rebuilt rows carry no charge breakdown, so the capital-gains summary refuses a user whose rebuilt rows
 have broker charges (D-238 C2a; §3.1). Rebuild one user at a time (delete only that user's rows), never the whole
 collection.
 
-**Way back:** delete the rows this run wrote (`audit_metadata.createdBy` = the caller, `createdAt` = the run).
+**Way back:** delete the rows this run wrote (`audit_metadata.createdBy` = `<stored caller email>` (§0.7), `createdAt` = the run).
 
 ### 2.3 W-088u8c (D-285) — rewrite the `FY`-form financial years · `SUPER_USER` · **prod only · once · outstanding**
 

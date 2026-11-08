@@ -151,13 +151,14 @@ public class RebuildBuyChargeCorrection {
         BulkOperations bulk = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, TradeOutcomeEntity.class);
         for (Correction correction : changed) {
             TradeOutcomeEntity rebuilt = correction.rebuilt();
+            // The Java name, so the actor is stored through its converter; the stored name would bypass it (W-256).
             bulk.updateOne(Query.query(Criteria.where("id").is(correction.stored().getId())), new Update()
                     .set("buy_broker_charges", rebuilt.getBuyBrokerCharges())
                     .set("buy_misc_charges", rebuilt.getBuyMiscCharges())
                     .set("total_buy_value", rebuilt.getTotalBuyValue())
                     .set("net_profit", rebuilt.getNetProfit())
                     .set("profit_percentage", rebuilt.getProfitPercentage())
-                    .set("audit_metadata.updatedBy", auditor)
+                    .set("auditMetadata.updatedBy", auditor)
                     .set("audit_metadata.updatedAt", now));
         }
         int written = bulk.execute().getModifiedCount();

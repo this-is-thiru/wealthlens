@@ -1,8 +1,10 @@
 package com.thiru.wealthlens.taxplanning.gazette;
 
+import com.thiru.wealthlens.shared.protection.SearchableIdentifier;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -31,6 +33,7 @@ public class GazetteCursor {
     @Field("updated_at")
     private LocalDateTime updatedAt;
 
+    @ValueConverter(SearchableIdentifier.class)
     @Field("updated_by")
     private String updatedBy;
 }

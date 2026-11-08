@@ -40,8 +40,9 @@ public class TradeOutcomeStoredTermRemoval {
             return new StoredTermRemovalReport(true, auditor,
                     mongoTemplate.count(carrying, TradeOutcomeEntity.class));
         }
+        // The Java name, so the actor is stored through its converter; the stored name would bypass it (W-256).
         Update remove = new Update().unset(TERM).unset(REASON)
-                .set("audit_metadata.updatedBy", auditor)
+                .set("auditMetadata.updatedBy", auditor)
                 .set("audit_metadata.updatedAt", TLocalDateTime.now());
         long removed = mongoTemplate.updateMulti(carrying, remove, TradeOutcomeEntity.class).getModifiedCount();
         log.info("Removed the stored term from {} trade outcomes, by {}", removed, auditor);

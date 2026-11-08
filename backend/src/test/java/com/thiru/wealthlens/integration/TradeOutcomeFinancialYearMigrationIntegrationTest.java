@@ -117,7 +117,7 @@ class TradeOutcomeFinancialYearMigrationIntegrationTest extends AbstractIntegrat
                 .then().statusCode(200).body("dryRun", equalTo(false)).body("rows", equalTo(1));
         assertThat(yearOf("june")).isEqualTo("2024-2025");
         assertThat(mongoTemplate.getCollection("trade_outcomes").find(new Document("_id", "june")).first()
-                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo("admin@example.com");
+                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo(storedIdentifier("admin@example.com"));
     }
 
     @Test

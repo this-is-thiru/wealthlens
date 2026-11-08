@@ -208,7 +208,7 @@ class ProfitAndLossSplitReshapeIntegrationTest extends AbstractIntegrationTest {
         MoneyAssert.assertMoney(1600.0, split(side("p1", "realised_profits"), AssetType.EQUITY,
                 TradeSegment.DELIVERY).getDouble("purchase_amount"));
         assertThat(mongoTemplate.getCollection("profit_and_loss").find(new Document("_id", "p1")).first()
-                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo("first");
+                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo(storedIdentifier("first"));
     }
 
     @Test
@@ -251,7 +251,7 @@ class ProfitAndLossSplitReshapeIntegrationTest extends AbstractIntegrationTest {
                 .then().statusCode(200).body("dryRun", equalTo(false)).body("placed.size()", equalTo(1));
         assertThat(carriesOldFields(side("p1", "realised_profits"))).isFalse();
         assertThat(mongoTemplate.getCollection("profit_and_loss").find(new Document("_id", "p1")).first()
-                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo("admin@example.com");
+                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo(storedIdentifier("admin@example.com"));
     }
 
     @Test

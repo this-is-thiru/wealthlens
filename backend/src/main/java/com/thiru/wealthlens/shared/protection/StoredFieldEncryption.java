@@ -3,25 +3,30 @@ package com.thiru.wealthlens.shared.protection;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.thiru.wealthlens.shared.entity.helper.AuditMetadata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 /**
- * Encrypts, in rows stored before W-248 and W-253, the fields they put under {@link EncryptedField} and {@link SearchableIdentifier},
- * which would otherwise refuse those rows on read (D-479 C3a, D-485 C3a). Works on raw documents, so a converter never meets a plain
+ * Encrypts, in rows stored before W-248, W-253 and W-256, the fields they put under {@link EncryptedField} and
+ * {@link SearchableIdentifier}, which would otherwise refuse those rows on read (D-479 C3a, D-485 C3a, D-486 C3a). Works on raw documents, so a converter never meets a plain
  * value. Each update is conditioned on the plain values it read still being there, so a second run, or one after a run that failed
  * part-way, encrypts only what is left. A row whose encrypted identifier would duplicate a unique index entry — one written between
  * the deploy and the run — is counted as a conflict and left as it is. Asked for by a {@code SUPER_USER}, never at startup (D-280).
@@ -66,15 +71,47 @@ public class StoredFieldEncryption {
             identifiers("privacy_breach_intimations", EMAIL),
             identifiers("privacy_breach_notices", "affected"));
 
+    /** {@link AuditMetadata}'s actors carry no {@code @Field}, so each is stored under its Java name. */
+    private static final List<String> AUDIT_ACTORS = List.of("createdBy", "updatedBy");
+
+    /** The actors stored outside {@link AuditMetadata} (W-256). */
+    private static final Map<String, String> OWN_ACTORS = Map.of("tax_draft_revisions", "changed_by", "tax_gazette_cursor", "updated_by");
+
     private final MongoTemplate mongoTemplate;
     private final FieldCipher cipher;
 
     public StoredFieldEncryptionReport encrypt(boolean dryRun, String caller) {
         List<StoredFieldEncryptionReport.CollectionCount> counts = new ArrayList<>(
-                FIELDS.stream().map(fields -> encrypt(fields, dryRun)).toList());
+                storedFields().stream().map(fields -> encrypt(fields, dryRun)).toList());
         counts.add(rekeyLogins(dryRun));
         log.info("Stored-field encryption by {}, dry run {}: {}", caller, dryRun, counts);
         return new StoredFieldEncryptionReport(dryRun, caller, counts);
+    }
+
+    /**
+     * {@link #FIELDS} with each row's actor added (W-256). The audited collections are read from the mapping rather than listed, so an
+     * entity given {@link AuditMetadata} later is covered without an edit here.
+     */
+    private List<StoredFields> storedFields() {
+        Map<String, List<String>> actors = new TreeMap<>();
+        OWN_ACTORS.forEach((collection, field) -> actors.computeIfAbsent(collection, any -> new ArrayList<>()).add(field));
+        for (MongoPersistentEntity<?> entity : mongoTemplate.getConverter().getMappingContext().getPersistentEntities()) {
+            if (entity.isAnnotationPresent(org.springframework.data.mongodb.core.mapping.Document.class)) {
+                entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> {
+                    if (property.getType() == AuditMetadata.class) {
+                        AUDIT_ACTORS.forEach(actor -> actors.computeIfAbsent(entity.getCollection(), any -> new ArrayList<>())
+                                .add(property.getFieldName() + "." + actor));
+                    }
+                });
+            }
+        }
+        List<StoredFields> stored = new ArrayList<>();
+        for (StoredFields fields : FIELDS) {
+            List<String> own = actors.remove(fields.collection());
+            stored.add(own == null ? fields : fields.withIdentifiers(own));
+        }
+        actors.forEach((collection, paths) -> stored.add(identifiers(collection, paths.toArray(String[]::new))));
+        return stored;
     }
 
     private StoredFieldEncryptionReport.CollectionCount encrypt(StoredFields fields, boolean dryRun) {
@@ -207,5 +244,9 @@ public class StoredFieldEncryption {
      * searchable form and may be dotted paths into a sub-document or name a list of identifiers.
      */
     private record StoredFields(String collection, List<String> fields, Map<String, List<String>> listFields, List<String> identifiers) {
+
+        StoredFields withIdentifiers(List<String> more) {
+            return new StoredFields(collection, fields, listFields, Stream.concat(identifiers.stream(), more.stream()).toList());
+        }
     }
 }

@@ -576,7 +576,7 @@ public class TaxPlanningControllerIntegrationTest extends AbstractIntegrationTes
             org.bson.Document stored = mongoTemplate.getCollection(name).find().first();
             org.bson.Document audit = stored.get("audit_metadata", org.bson.Document.class);
             assertNotNull(audit, name + " has no audit_metadata; keys " + stored.keySet());
-            assertEquals(USER_A, audit.getString("createdBy"), name);
+            assertEquals(storedIdentifier(USER_A), audit.getString("createdBy"), name);
         });
         RestAssured.given().header("Authorization", "Bearer " + token)
                 .post("/tax-planning/admin/policies/seed?dryRun=false")

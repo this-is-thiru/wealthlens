@@ -121,7 +121,7 @@ public class ProfitAndLossV2Backfill {
         Document sale = threeFigures(row).append("capital_gains", months);
         String path = target.side() + "." + SPLIT + "." + row.getAssetType() + "." + segmentOf(row);
         Update update = new Update().set(path, StoredReport.sum(target.entry(), sale)).addToSet(COUNTED, row.getId())
-                .set("audit_metadata.updatedBy", auditor).set("audit_metadata.updatedAt", TLocalDateTime.now());
+                .set("audit_metadata.updatedBy", cipher.encryptSearchable(auditor)).set("audit_metadata.updatedAt", TLocalDateTime.now());
         mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(target.pnl().get("_id"))
                 .and(COUNTED).ne(row.getId())), update, COLLECTION);
     }

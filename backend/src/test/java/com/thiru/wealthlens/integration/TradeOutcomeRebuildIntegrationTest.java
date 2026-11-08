@@ -72,7 +72,7 @@ class TradeOutcomeRebuildIntegrationTest extends AbstractIntegrationTest {
         assertThat(tradeOutcomeRepository.findByEmail(B)).hasSize(2);
         assertThat(tradeOutcomeRepository.findByEmail(C)).extracting(TradeOutcomeEntity::getId).containsExactly("c-v2-row");
         assertThat(mongoTemplate.getCollection("trade_outcomes").find(new Document("email", storedIdentifier(A))).first()
-                .get("audit_metadata", Document.class).getString("createdBy")).isEqualTo(ADMIN);
+                .get("audit_metadata", Document.class).getString("createdBy")).isEqualTo(storedIdentifier(ADMIN));
     }
 
     @Test

@@ -40,8 +40,9 @@ public class TradeOutcomeDeductibleChargeRemoval {
             return new DeductibleChargeRemovalReport(true, auditor,
                     mongoTemplate.count(carrying, TradeOutcomeEntity.class));
         }
+        // The Java name, so the actor is stored through its converter; the stored name would bypass it (W-256).
         Update remove = new Update().unset(BUY).unset(SELL)
-                .set("audit_metadata.updatedBy", auditor)
+                .set("auditMetadata.updatedBy", auditor)
                 .set("audit_metadata.updatedAt", TLocalDateTime.now());
         long removed = mongoTemplate.updateMulti(carrying, remove, TradeOutcomeEntity.class).getModifiedCount();
         log.info("Removed the stored deductible charges from {} trade outcomes, by {}", removed, auditor);

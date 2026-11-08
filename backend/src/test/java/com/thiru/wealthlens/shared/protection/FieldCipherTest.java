@@ -79,6 +79,16 @@ class FieldCipherTest {
         assertThat(cipher.encryptSearchable("A@b.in")).isEqualTo("k1:5Dl7Zb6GJ6OMKbWR6Bm62BFn9IuNs3eTkxUEBpIBnnTfFQ==");
     }
 
+    /** Derived as above, for "unknown": the actor auditing records with no signed-in user is stored like any other (W-256 C2a). */
+    @Test
+    void encryptSearchable_whenGivenAnActorThatIsNotAnEmail_storesTheFormDerivedIndependently() {
+        // Given
+        FieldCipher cipher = new FieldCipher(new PersonalDataKeys(KEY, OTHER_KEY));
+
+        // When / Then
+        assertThat(cipher.encryptSearchable("unknown")).isEqualTo("k1:vA4K6mlg0YnCDfGYuiUMQ1LqUPLHZMdzC7aLTgbbD7hryKM=");
+    }
+
     @Test
     void encryptSearchable_whenOneValueIsEncryptedTwice_storesOneFormThatDecryptsBack() {
         // Given

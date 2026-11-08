@@ -210,7 +210,7 @@ class BonusAllotmentDateCorrectionIntegrationTest extends AbstractIntegrationTes
                 .then().statusCode(200).body("dryRun", equalTo(false)).body("actions[0].assets", equalTo(1));
         assertThat(lotDate("bonus")).isEqualTo(ALLOTTED);
         assertThat(mongoTemplate.getCollection("trade_outcomes").find(new Document("_id", "sale")).first()
-                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo("admin@example.com");
+                .get("audit_metadata", Document.class).getString("updatedBy")).isEqualTo(storedIdentifier("admin@example.com"));
     }
 
     @Test

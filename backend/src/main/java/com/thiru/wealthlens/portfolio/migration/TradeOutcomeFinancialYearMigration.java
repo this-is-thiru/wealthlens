@@ -51,9 +51,10 @@ public class TradeOutcomeFinancialYearMigration {
                 throw new IllegalStateException("The trade outcome " + row.getId() + " has an FY financial year but"
                         + " no sell date, so its year cannot be recomputed; correct it by hand");
             }
+            // The Java name, so the actor is stored through its converter; the stored name would bypass it (W-256).
             bulk.updateOne(Query.query(Criteria.where("id").is(row.getId())),
                     Update.update("financialYear", FinancialYear.containing(row.getSellDate()).label())
-                            .set("audit_metadata.updatedBy", auditor)
+                            .set("auditMetadata.updatedBy", auditor)
                             .set("audit_metadata.updatedAt", now));
         }
         if (dryRun) {
