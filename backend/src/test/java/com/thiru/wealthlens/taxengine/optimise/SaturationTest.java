@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.optimise;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxengine.api.AllocationSpace;
+import com.thiru.wealthlens.taxengine.api.ProvidentFundTerms;
 import com.thiru.wealthlens.taxengine.node.ShippedNodes;
 import com.thiru.wealthlens.taxengine.pipeline.NodeRegistry;
 import com.thiru.wealthlens.taxengine.rules.generated.ComponentCodes;
@@ -28,7 +29,7 @@ class SaturationTest {
     private static final RegimeCode NEW = new RegimeCode("NEW_TAX_REGIME");
     private static final AllocationSpace SPACE = new AllocationSpace(
             Fixtures.rentingInMumbai("600000", "600000", "300000", List.of()), Set.of(ComponentCodes.HRA), Set.of(),
-            ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6);
+            ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
 
     private static Money saturation(RegimeCode regime) {
         AllocationPricing pricing = AllocationPricing.over(NodeRegistry.of(ShippedNodes.all()), PACK,

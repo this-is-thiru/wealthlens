@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thiru.wealthlens.shared.exception.BadRequestException;
+import com.thiru.wealthlens.taxengine.api.ProvidentFundTerms;
 import com.thiru.wealthlens.taxengine.input.EmployerFund;
 import com.thiru.wealthlens.taxengine.rules.id.ComponentCode;
 import com.thiru.wealthlens.taxengine.rules.money.Money;
@@ -17,14 +18,16 @@ class DraftOptimisationRequestTest {
     @Test
     void constructor_whenTheResidualIsMissing_isRefused() {
         // Given / When / Then
-        assertThatThrownBy(() -> new DraftOptimisationRequest(List.of("HRA"), Optional.empty(), null, "0", Optional.empty()))
+        assertThatThrownBy(() -> new DraftOptimisationRequest(List.of("HRA"), Optional.empty(), null, "0", Optional.empty(),
+                Optional.empty(), Optional.empty()))
                 .isInstanceOf(BadRequestException.class).hasMessageContaining("movable, residual and cashFloor");
     }
 
     @Test
     void constructor_whenTheBreadthAndFundsAreNull_holdsThemAsAbsent() {
         // Given / When
-        DraftOptimisationRequest request = new DraftOptimisationRequest(List.of("HRA"), null, "SPECIAL_ALLOWANCE", "0", null);
+        DraftOptimisationRequest request = new DraftOptimisationRequest(List.of("HRA"), null, "SPECIAL_ALLOWANCE", "0", null,
+                null, null);
 
         // Then
         assertThat(request.verificationBreadth()).isEmpty();
@@ -35,7 +38,7 @@ class DraftOptimisationRequestTest {
     void movableFundNames_whenANameIsNotAFund_isRefusedNamingIt() {
         // Given
         DraftOptimisationRequest request = new DraftOptimisationRequest(List.of(), Optional.of(List.of("NPS")),
-                "SPECIAL_ALLOWANCE", "0", Optional.empty());
+                "SPECIAL_ALLOWANCE", "0", Optional.empty(), Optional.empty(), Optional.empty());
 
         // When / Then
         assertThatThrownBy(request::movableFundNames).isInstanceOf(BadRequestException.class)
@@ -46,7 +49,7 @@ class DraftOptimisationRequestTest {
     void cashFloorRupees_whenNotAnAmount_isRefusedNamingIt() {
         // Given
         DraftOptimisationRequest request = new DraftOptimisationRequest(List.of("HRA"), Optional.empty(), "SPECIAL_ALLOWANCE", "lots",
-                Optional.empty());
+                Optional.empty(), Optional.empty(), Optional.empty());
 
         // When / Then
         assertThatThrownBy(request::cashFloorRupees).isInstanceOf(BadRequestException.class)
@@ -57,7 +60,8 @@ class DraftOptimisationRequestTest {
     void codes_whenWellFormed_areTheEngineCodes() {
         // Given
         DraftOptimisationRequest request = new DraftOptimisationRequest(List.of("HRA", "UNIFORM_ALLOWANCE"),
-                Optional.of(List.of("NOTIFIED_PENSION_SCHEME")), "SPECIAL_ALLOWANCE", "150000", Optional.of(2));
+                Optional.of(List.of("NOTIFIED_PENSION_SCHEME")), "SPECIAL_ALLOWANCE", "150000", Optional.of(2),
+                Optional.empty(), Optional.empty());
 
         // When / Then
         assertThat(request.movableCodes()).containsExactlyInAnyOrder(new ComponentCode("HRA"),
@@ -65,5 +69,25 @@ class DraftOptimisationRequestTest {
         assertThat(request.residualCode()).isEqualTo(new ComponentCode("SPECIAL_ALLOWANCE"));
         assertThat(request.cashFloorRupees()).isEqualTo(Money.of("150000"));
         assertThat(request.movableFundNames()).containsExactly(EmployerFund.NOTIFIED_PENSION_SCHEME);
+    }
+
+    @Test
+    void providentFundTerms_whenAbsent_bothSharesFollowBasic() {
+        // Given
+        DraftOptimisationRequest request = new DraftOptimisationRequest(List.of("BASIC"), null, "SPECIAL_ALLOWANCE", "0",
+                null, null, null);
+
+        // When / Then
+        assertThat(request.providentFundTerms()).isEqualTo(ProvidentFundTerms.FOLLOW_BASIC);
+    }
+
+    @Test
+    void providentFundTerms_whenOneShareIsHeld_holdsOnlyThatShare() {
+        // Given
+        DraftOptimisationRequest request = new DraftOptimisationRequest(List.of("BASIC"), Optional.empty(),
+                "SPECIAL_ALLOWANCE", "0", Optional.empty(), Optional.of(true), Optional.of(false));
+
+        // When / Then
+        assertThat(request.providentFundTerms()).isEqualTo(new ProvidentFundTerms(true, false));
     }
 }

@@ -2,6 +2,7 @@ package com.thiru.wealthlens.taxengine.optimise;
 
 import com.thiru.wealthlens.taxengine.api.AllocationSpace;
 import com.thiru.wealthlens.taxengine.api.Optimisation;
+import com.thiru.wealthlens.taxengine.api.ProvidentFundTerms;
 import com.thiru.wealthlens.taxengine.election.ElectionOutcome;
 import com.thiru.wealthlens.taxengine.election.ElectionResolver;
 import com.thiru.wealthlens.taxengine.election.PricedAlternative;
@@ -119,32 +120,60 @@ final class AllocationPricing {
 
     /**
      * What follows basic where basic may move (A2.2 C8; W-238d): the employer's provident fund contribution and the
-     * employee's, as entered for the employment. Refused where the facts cannot say how much follows: dearness allowance
-     * that counts for retirement may be in the provident fund's base too, and a follower entered twice has no one ratio.
+     * employee's, as entered for the employment, each only where the terms say it follows (W-238i); a share that does
+     * not is left out and so held as entered. Refused where the facts cannot say how much follows: dearness allowance
+     * that counts for retirement may be in the provident fund's base too, and a follower entered twice has no one ratio;
+     * and refused where a term holds a share that does not move with basic anyway, since it would hold nothing.
      */
     private static Following following(AllocationSpace space, Employment held, int employment) {
         Movable.Pay basic = new Movable.Pay(ComponentCodes.BASIC);
         SortedMap<Movable, Money> followers = new TreeMap<>(Movable.ORDER);
-        if (!space.movable().contains(ComponentCodes.BASIC)) {
+        ProvidentFundTerms terms = space.providentFundTerms();
+        boolean basicMoves = space.movable().contains(ComponentCodes.BASIC);
+        requireHeldShareEntered(terms.employerShareFollowsBasic(), "employerShareFollowsBasic", basicMoves,
+                contributions(space.base(), employment, EmployerFund.RECOGNISED_PROVIDENT_FUND) > 0);
+        requireHeldShareEntered(terms.employeeShareFollowsBasic(), "employeeShareFollowsBasic", basicMoves,
+                count(held, ComponentCodes.EMPLOYEE_PF) > 0);
+        if (!basicMoves) {
             return new Following(basic, Money.ZERO, followers);
-        }
-        if (held.dearnessAllowanceCountsForRetirement() && count(held, ComponentCodes.DEARNESS_ALLOWANCE) > 0) {
-            throw new IllegalArgumentException("BASIC cannot move here: the employment's dearness allowance counts for"
-                    + " retirement, and whether the provident fund follows it too is not entered (A2.2 C8)");
         }
         if (count(held, ComponentCodes.EMPLOYEE_PF) > 1
                 || contributions(space.base(), employment, EmployerFund.RECOGNISED_PROVIDENT_FUND) > 1) {
             throw new IllegalArgumentException("A provident fund contribution that follows BASIC is entered more than"
                     + " once for the employment, so it has no one ratio to basic (A2.2 C8)");
         }
-        held.components().stream().filter(component -> component.code().equals(ComponentCodes.EMPLOYEE_PF))
-                .forEach(component -> followers.put(new Movable.Pay(component.code()), component.annualAmount()));
-        space.base().entered().employerContributions().stream()
-                .filter(each -> each.employment() == employment && each.fund() == EmployerFund.RECOGNISED_PROVIDENT_FUND)
-                .forEach(each -> followers.put(new Movable.Fund(each.fund()), each.amount()));
+        if (terms.employeeShareFollowsBasic()) {
+            held.components().stream().filter(component -> component.code().equals(ComponentCodes.EMPLOYEE_PF))
+                    .forEach(component -> followers.put(new Movable.Pay(component.code()), component.annualAmount()));
+        }
+        if (terms.employerShareFollowsBasic()) {
+            space.base().entered().employerContributions().stream()
+                    .filter(each -> each.employment() == employment
+                            && each.fund() == EmployerFund.RECOGNISED_PROVIDENT_FUND)
+                    .forEach(each -> followers.put(new Movable.Fund(each.fund()), each.amount()));
+        }
+        if (!followers.isEmpty() && held.dearnessAllowanceCountsForRetirement()
+                && count(held, ComponentCodes.DEARNESS_ALLOWANCE) > 0) {
+            throw new IllegalArgumentException("BASIC cannot move here: the employment's dearness allowance counts for"
+                    + " retirement, and whether the provident fund follows it too is not entered (A2.2 C8)");
+        }
         Money basicEntered = held.components().stream().filter(component -> component.code().equals(ComponentCodes.BASIC))
                 .map(SalaryComponent::annualAmount).findFirst().orElse(Money.ZERO);
         return new Following(basic, basicEntered, followers);
+    }
+
+    /** A share held by its term ({@code follows} false) must be one that would otherwise move with basic (W-238i C3a). */
+    private static void requireHeldShareEntered(boolean follows, String term, boolean basicMoves, boolean entered) {
+        if (follows) {
+            return;
+        }
+        if (!basicMoves) {
+            throw new IllegalArgumentException(term + " is false, but BASIC is not movable, so nothing follows it to hold");
+        }
+        if (!entered) {
+            throw new IllegalArgumentException(term + " is false, but that provident fund share is not entered for the"
+                    + " employment the residual is in, so there is nothing to hold");
+        }
     }
 
     /** The movable pay and funds as entered; a movable code or fund not entered for the employment starts at nil. */

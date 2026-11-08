@@ -22,9 +22,10 @@ import java.util.Set;
  * @param residual the taxable balancing component that funds every move, itself pay ({@code SALARY})
  * @param cashFloor the least cash take-home after tax the user accepts
  * @param verificationBreadth how many components the exhaustive check covers
+ * @param providentFundTerms whether each provident fund share of the residual's employment follows basic (W-238i)
  */
 public record AllocationSpace(EngineInputs base, Set<ComponentCode> movable, Set<EmployerFund> movableFunds,
-        ComponentCode residual, Money cashFloor, int verificationBreadth) {
+        ComponentCode residual, Money cashFloor, int verificationBreadth, ProvidentFundTerms providentFundTerms) {
 
     public AllocationSpace {
         if (base == null || movable == null || movableFunds == null || residual == null || cashFloor == null) {
@@ -49,7 +50,15 @@ public record AllocationSpace(EngineInputs base, Set<ComponentCode> movable, Set
             throw new IllegalArgumentException("The exhaustive check must cover at least one component, not "
                     + verificationBreadth);
         }
+        requireTerms(providentFundTerms);
         movable = Set.copyOf(movable);
         movableFunds = Set.copyOf(movableFunds);
+    }
+
+    private static void requireTerms(ProvidentFundTerms providentFundTerms) {
+        if (providentFundTerms == null) {
+            throw new IllegalArgumentException("An allocation space needs the provident fund terms;"
+                    + " ProvidentFundTerms.FOLLOW_BASIC where both shares follow basic");
+        }
     }
 }

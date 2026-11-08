@@ -901,4 +901,45 @@ class DraftComputationIntegrationTest extends AbstractIntegrationTest {
         // W-238f: basic is LOW in the owner's table (D-495); the provident fund only follows it, so has no entry
         assertThat(body.get("hrSupport").toString()).isEqualTo("[{\"name\":\"BASIC\",\"likelihood\":\"LOW\"}]");
     }
+
+    @Test
+    void optimise_whenTheEmployeesShareIsHeld_movesBasicAndTheEmployersShareOnly() {
+        // Given — TaxCalculatorOptimiseTest's W-238i case: as above plus EMPLOYEE_PF 1,20,000, held; the employer's share
+        // follows (basic 22,50,000, fund 2,70,000, saving 39,000), the withholding stays, so the cash impact is −1,50,000
+        String draftId = salariedDraft(1000000, 1400000, """
+                {"op": "add", "path": "/entered/employments/0/components/-", "value": {
+                  "code": {"value": "EMPLOYEE_PF"}, "annualAmount": {"amountInRupees": 120000}}},
+                {"op": "add", "path": "/entered/employerContributions/-", "value": {"employment": 0,
+                  "fund": "RECOGNISED_PROVIDENT_FUND", "amount": {"amountInRupees": 120000}}},
+                """);
+
+        // When
+        ResponseEntity<String> optimised = optimise(OWNER, draftId, "{\"movable\": [\"BASIC\"], \"residual\":"
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"employeeShareFollowsBasic\": false}");
+
+        // Then
+        assertThat(optimised.getStatusCode()).as(optimised.getBody()).isEqualTo(HttpStatus.OK);
+        JsonNode view = JSON.readTree(optimised.getBody()).get("optimisation");
+        assertThat(amountAt(view, "/billAfter")).isEqualByComparingTo("253500");
+        JsonNode change = view.at("/changes/0");
+        assertThat(amountAt(change, "/suggested")).isEqualByComparingTo("2250000");
+        assertThat(amountAt(change, "/savingAlone")).isEqualByComparingTo("39000");
+        assertThat(amountAt(change, "/cashImpact")).isEqualByComparingTo("-150000");
+        assertThat(view.get("followingChanges").size()).isEqualTo(1);
+        assertThat(view.at("/followingChanges/0/name").asString()).isEqualTo("RECOGNISED_PROVIDENT_FUND");
+    }
+
+    @Test
+    void optimise_whenAShareIsHeldButNotEntered_expected400NamingTheTerm() {
+        // Given
+        String draftId = salariedDraft(1000000, 1400000, "");
+
+        // When
+        ResponseEntity<String> refused = optimise(OWNER, draftId, "{\"movable\": [\"BASIC\"], \"residual\":"
+                + " \"SPECIAL_ALLOWANCE\", \"cashFloor\": \"0\", \"employerShareFollowsBasic\": false}");
+
+        // Then
+        assertThat(refused.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(refused.getBody()).contains("employerShareFollowsBasic is false");
+    }
 }

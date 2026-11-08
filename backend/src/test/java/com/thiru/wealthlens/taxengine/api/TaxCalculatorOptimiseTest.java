@@ -63,7 +63,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     private static AllocationSpace space(EngineInputs inputs, Set<ComponentCode> movable, String floor, int breadth) {
-        return new AllocationSpace(inputs, movable, Set.of(), SPECIAL, Money.of(floor), breadth);
+        return new AllocationSpace(inputs, movable, Set.of(), SPECIAL, Money.of(floor), breadth, ProvidentFundTerms.FOLLOW_BASIC);
     }
 
     @Test
@@ -175,7 +175,7 @@ class TaxCalculatorOptimiseTest {
     void optimise_whenTheResidualIsNotInAnyEmployment_isRefused() {
         // Given
         AllocationSpace space = new AllocationSpace(flipsWithHra(), Set.of(HRA), Set.of(), ComponentCodes.CONVEYANCE_ALLOWANCE,
-                Money.ZERO, 6);
+                Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
@@ -219,7 +219,7 @@ class TaxCalculatorOptimiseTest {
     void optimise_whenTheResidualIsNotPay_isRefusedNamingItsKind() {
         // Given
         AllocationSpace space = new AllocationSpace(flipsWithHra(), Set.of(HRA), Set.of(),
-                ComponentCodes.LIFE_INSURANCE_PREMIUM, Money.ZERO, 6);
+                ComponentCodes.LIFE_INSURANCE_PREMIUM, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
@@ -275,7 +275,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     private static AllocationSpace funds(EngineInputs inputs, Set<EmployerFund> movable) {
-        return new AllocationSpace(inputs, Set.of(), movable, SPECIAL, Money.ZERO, 6);
+        return new AllocationSpace(inputs, Set.of(), movable, SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
     }
 
     @Test
@@ -438,7 +438,7 @@ class TaxCalculatorOptimiseTest {
     }
 
     private static AllocationSpace basicMoves(EngineInputs inputs) {
-        return new AllocationSpace(inputs, Set.of(BASIC), Set.of(), SPECIAL, Money.ZERO, 6);
+        return new AllocationSpace(inputs, Set.of(BASIC), Set.of(), SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
     }
 
     @Test
@@ -545,10 +545,93 @@ class TaxCalculatorOptimiseTest {
         // Given
         AllocationSpace space = new AllocationSpace(paidBasic("1000000",
                 List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))), List.of(), false),
-                Set.of(BASIC, ComponentCodes.EMPLOYEE_PF), Set.of(), SPECIAL, Money.ZERO, 6);
+                Set.of(BASIC, ComponentCodes.EMPLOYEE_PF), Set.of(), SPECIAL, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
 
         // When / Then
         assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("EMPLOYEE_PF").hasMessageContaining("EMPLOYEE_CONTRIBUTION");
+    }
+
+    private static AllocationSpace basicMovesUnder(EngineInputs inputs, ProvidentFundTerms terms) {
+        return new AllocationSpace(inputs, Set.of(BASIC), Set.of(), SPECIAL, Money.ZERO, 6, terms);
+    }
+
+    @Test
+    void optimise_whenTheEmployersShareDoesNotFollowBasic_holdsItAndSuggestsNoChange() {
+        // Given — as the first W-238d case, but the employer's 1,20,000 is held (W-238i C2a): basic + special stay
+        // 24,00,000 whatever the split, so salary and the bill (2,92,500) do not move. With the share following, the
+        // same input saves 39,000.
+        AllocationSpace space = basicMovesUnder(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false),
+                new ProvidentFundTerms(false, true));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("292500"));
+        assertThat(optimised.changes()).isEmpty();
+        assertThat(optimised.followingChanges()).isEmpty();
+    }
+
+    @Test
+    void optimise_whenOnlyTheEmployeesShareIsHeld_movesTheEmployersAloneAndLeavesTheWithholdingOutOfTheCashImpact() {
+        // Given — the second W-238d case with EMPLOYEE_PF held: the employer's share follows as before (basic 22,50,000,
+        // fund 2,70,000, bill 2,53,500, saving 39,000), but the withholding stays 1,20,000, so the cash impact is only
+        // +12,50,000 − 14,00,000 = −1,50,000, not −3,00,000.
+        AllocationSpace space = basicMovesUnder(paidBasic("1000000",
+                List.of(new SalaryComponent(ComponentCodes.EMPLOYEE_PF, Money.of("120000"))),
+                List.of(PROVIDENT_FUND_120000), false), new ProvidentFundTerms(true, false));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.regimeAfter()).isEqualTo(NEW);
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("253500"));
+        assertThat(optimised.changes()).containsExactly(new Optimisation.Change("BASIC", BASIC_FACTS,
+                Money.of("1000000"), Money.of("2250000"), Optional.of(Money.of("39000")), Money.of("-150000")));
+        assertThat(optimised.followingChanges()).usingRecursiveFieldByFieldElementComparatorIgnoringFields("liquidity")
+                .containsExactly(new Optimisation.FollowingChange("RECOGNISED_PROVIDENT_FUND", AGGREGATE_FEEDS,
+                        Money.of("120000"), Money.of("270000"), "BASIC", NO_LIQUIDITY));
+    }
+
+    @Test
+    void optimise_whenDearnessAllowanceCountsForRetirementButNothingFollowsBasic_answers() {
+        // Given — basic 10,00,000, DA 1,00,000, special 14,00,000, the employer's share held: salary is 25,00,000 under
+        // any split. 25,00,000 − 75,000 = 24,25,000 → 3,00,000 + 30 % × 25,000 = 3,07,500, + 4 % = 3,19,800.
+        AllocationSpace space = basicMovesUnder(paidBasic("1000000",
+                List.of(new SalaryComponent(ComponentCodes.DEARNESS_ALLOWANCE, Money.of("100000"))),
+                List.of(PROVIDENT_FUND_120000), true), new ProvidentFundTerms(false, true));
+
+        // When
+        Optimisation optimised = CALCULATOR.optimise(space);
+
+        // Then
+        assertThat(optimised.billBefore()).isEqualTo(Money.of("319800"));
+        assertThat(optimised.billAfter()).isEqualTo(Money.of("319800"));
+        assertThat(optimised.changes()).isEmpty();
+    }
+
+    @Test
+    void optimise_whenAShareIsHeldButNotEntered_isRefused() {
+        // Given
+        AllocationSpace space = basicMovesUnder(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false),
+                new ProvidentFundTerms(true, false));
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("employeeShareFollowsBasic is false").hasMessageContaining("not entered");
+    }
+
+    @Test
+    void optimise_whenAShareIsHeldButBasicIsNotMovable_isRefused() {
+        // Given
+        AllocationSpace space = new AllocationSpace(paidBasic("1000000", List.of(), List.of(PROVIDENT_FUND_120000), false),
+                Set.of(UNIFORM), Set.of(), SPECIAL, Money.ZERO, 6, new ProvidentFundTerms(false, true));
+
+        // When / Then
+        assertThatThrownBy(() -> CALCULATOR.optimise(space)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("employerShareFollowsBasic is false").hasMessageContaining("BASIC is not movable");
     }
 }

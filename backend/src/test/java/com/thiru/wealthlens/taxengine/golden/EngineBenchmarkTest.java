@@ -3,6 +3,7 @@ package com.thiru.wealthlens.taxengine.golden;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thiru.wealthlens.taxengine.api.AllocationSpace;
+import com.thiru.wealthlens.taxengine.api.ProvidentFundTerms;
 import com.thiru.wealthlens.taxengine.api.TaxCalculator;
 import com.thiru.wealthlens.taxengine.input.AllowanceUse;
 import com.thiru.wealthlens.taxengine.input.EngineInputs;
@@ -108,7 +109,7 @@ class EngineBenchmarkTest {
         AllocationSpace space = new AllocationSpace(Fixtures.rentingInMumbai("1600000", "820000", "910000",
                 List.of(new AllowanceUse(ComponentCodes.UNIFORM_ALLOWANCE, Optional.of(Money.of("60000")), Optional.empty(),
                         Optional.empty()))), Set.of(ComponentCodes.HRA, ComponentCodes.UNIFORM_ALLOWANCE), Set.of(),
-                ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6);
+                ComponentCodes.SPECIAL_ALLOWANCE, Money.ZERO, 6, ProvidentFundTerms.FOLLOW_BASIC);
         log.info("W-238a N3 optimisation: {} whole runs", CALCULATOR.optimise(space).pipelineRuns());
 
         // When
